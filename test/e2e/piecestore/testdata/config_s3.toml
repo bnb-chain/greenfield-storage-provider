@@ -1,0 +1,17 @@
+[PieceStore]
+Shards = 0
+
+[PieceStore.Store]
+Storage = "s3"
+BucketURL = "https://s3.us-east-1.amazonaws.com/test"
+AccessKey = "ACCESSKEY"
+SecretKey = "SECRETKEY"
+SessionToken = "SESSIONTOKEN"
+NoSignRequest = false
+MaxRetries = 5
+TlsInsecureSkipVerify = false
+
+[Log]
+FilePath = "./logs"
+Level = "debug"
+MaxBytesSize = 10240000

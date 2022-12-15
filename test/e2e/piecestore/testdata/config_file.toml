@@ -1,0 +1,10 @@
+[PieceStore]
+Shards = 0
+
+[PieceStore.Store]
+Storage = "file"
+
+[Log]
+FilePath = "./logs"
+Level = "debug"
+MaxBytesSize = 10240000
