@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
+	"github.com/bnb-chain/inscription-storage-provider/config"
 )
 
 type sharded struct {
@@ -15,7 +15,7 @@ type sharded struct {
 	DefaultObjectStorage
 }
 
-func NewSharded(cfg *model.PieceStoreConfig) (ObjectStorage, error) {
+func NewSharded(cfg *config.PieceStoreConfig) (ObjectStorage, error) {
 	stores := make([]ObjectStorage, cfg.Shards)
 	var err error
 	for i := range stores {

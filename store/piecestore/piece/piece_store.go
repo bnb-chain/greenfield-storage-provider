@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/bnb-chain/inscription-storage-provider/config"
 	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
@@ -20,7 +21,7 @@ var (
 
 // NewPieceStore returns an instance of PieceStore
 func NewPieceStore(filePath string) (*PieceStore, error) {
-	cfg := checkConfig(model.LoadConfig(filePath))
+	cfg := checkConfig(config.LoadConfig(filePath))
 	initLog(&cfg.Log)
 	blob, err := createStorage(&cfg.PieceStore)
 	if err != nil {
@@ -34,7 +35,7 @@ func NewPieceStore(filePath string) (*PieceStore, error) {
 }
 
 // checkConfig checks config if right
-func checkConfig(cfg *model.Config) *model.Config {
+func checkConfig(cfg *config.Config) *config.Config {
 	if cfg.PieceStore.Shards > 256 {
 		log.Panicf("too many shards: %d", cfg.PieceStore.Shards)
 	}
@@ -59,12 +60,12 @@ func checkConfig(cfg *model.Config) *model.Config {
 }
 
 // initLog initialize log config
-func initLog(cfg *model.LogConfig) {
+func initLog(cfg *config.LogConfig) {
 	lvl, _ := log.ParseLevel(cfg.Level)
 	log.Init(lvl, log.StandardizePath(cfg.FilePath, serviceName))
 }
 
-func createStorage(cfg *model.PieceStoreConfig) (storage.ObjectStorage, error) {
+func createStorage(cfg *config.PieceStoreConfig) (storage.ObjectStorage, error) {
 	var (
 		object storage.ObjectStorage
 		err    error

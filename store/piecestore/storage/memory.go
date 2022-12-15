@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bnb-chain/inscription-storage-provider/config"
 	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -27,7 +28,7 @@ type memoryObject struct {
 	modTime time.Time
 }
 
-func newMemoryStore(cfg *model.ObjectStorage) (ObjectStorage, error) {
+func newMemoryStore(cfg *config.ObjectStorage) (ObjectStorage, error) {
 	store := &memoryStore{name: cfg.BucketURL}
 	store.objects = make(map[string]*memoryObject)
 	return store, nil

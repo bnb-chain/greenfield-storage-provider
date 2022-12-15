@@ -16,7 +16,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bnb-chain/inscription-storage-provider/config"
 	"github.com/bnb-chain/inscription-storage-provider/model"
+	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,7 +34,7 @@ import (
 var (
 	// Re-used AWS sessions dramatically improve performance
 	s3SessionCache = &SessionCache{
-		sessions: map[model.ObjectStorage]*session.Session{},
+		sessions: map[config.ObjectStorage]*session.Session{},
 	}
 	disableSSL         bool
 	isVirtualHostStyle bool
@@ -43,7 +45,7 @@ type s3Store struct {
 	api        s3iface.S3API
 }
 
-func newS3Store(cfg *model.ObjectStorage) (ObjectStorage, error) {
+func newS3Store(cfg *config.ObjectStorage) (ObjectStorage, error) {
 	awsSession, bucket, err := s3SessionCache.newSession(*cfg)
 	if err != nil {
 		log.Errorw("s3 newSession error", "error", err)
@@ -94,7 +96,7 @@ func (s *s3Store) GetObject(ctx context.Context, key string, offset, limit int64
 		return nil, err
 	}
 	if offset == 0 && limit == -1 {
-		cs := resp.Metadata[model.ChecksumAlgo]
+		cs := resp.Metadata[piecestore.ChecksumAlgo]
 		if cs != nil {
 			resp.Body = verifyChecksum(resp.Body, aws.StringValue(cs))
 		}
@@ -119,8 +121,8 @@ func (s *s3Store) PutObject(ctx context.Context, key string, reader io.Reader) e
 		Bucket:      aws.String(s.bucketName),
 		Key:         aws.String(key),
 		Body:        body,
-		ContentType: aws.String(model.OctetStream),
-		Metadata:    map[string]*string{model.ChecksumAlgo: aws.String(checksum)},
+		ContentType: aws.String(piecestore.OctetStream),
+		Metadata:    map[string]*string{piecestore.ChecksumAlgo: aws.String(checksum)},
 	}
 	_, err := s.api.PutObjectWithContext(ctx, params)
 	return err
@@ -220,11 +222,11 @@ func (s *s3Store) ListAllObjects(ctx context.Context, prefix, marker string) (<-
 // SessionCache holds session.Session according to model.ObjectStorage and it synchronizes access/modification
 type SessionCache struct {
 	sync.Mutex
-	sessions map[model.ObjectStorage]*session.Session
+	sessions map[config.ObjectStorage]*session.Session
 }
 
 // newSession initializes a new AWS session with region fallback and custom config
-func (sc *SessionCache) newSession(cfg model.ObjectStorage) (*session.Session, string, error) {
+func (sc *SessionCache) newSession(cfg config.ObjectStorage) (*session.Session, string, error) {
 	sc.Lock()
 	defer sc.Unlock()
 
@@ -264,7 +266,7 @@ func (sc *SessionCache) newSession(cfg model.ObjectStorage) (*session.Session, s
 func (sc *SessionCache) clear() {
 	sc.Lock()
 	defer sc.Unlock()
-	sc.sessions = map[model.ObjectStorage]*session.Session{}
+	sc.sessions = map[config.ObjectStorage]*session.Session{}
 }
 
 func parseEndPoint(endPoint string) (string, string, error) {

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bnb-chain/inscription-storage-provider/config"
 	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -26,7 +27,7 @@ type diskFileStore struct {
 	DefaultObjectStorage
 }
 
-func newDiskFileStore(cfg *model.ObjectStorage) (ObjectStorage, error) {
+func newDiskFileStore(cfg *config.ObjectStorage) (ObjectStorage, error) {
 	// For Windows, the path looks like /C:/a/b/c/
 	endPoint := cfg.BucketURL
 	if runtime.GOOS == windowsOS && strings.HasPrefix(endPoint, "/") {
