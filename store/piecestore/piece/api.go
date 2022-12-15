@@ -4,11 +4,11 @@ import (
 	"context"
 	"io"
 
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/store"
+	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
 )
 
 type PieceStore struct {
-	storeAPI store.ObjectStorage
+	storeAPI storage.ObjectStorage
 }
 
 // Get one piece from PieceStore

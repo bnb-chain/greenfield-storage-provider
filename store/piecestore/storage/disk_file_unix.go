@@ -1,7 +1,7 @@
 //go:build !windows
 // +build !windows
 
-package store
+package storage
 
 import (
 	"os"

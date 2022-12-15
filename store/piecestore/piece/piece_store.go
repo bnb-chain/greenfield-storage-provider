@@ -10,7 +10,7 @@ import (
 	"runtime"
 
 	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/model"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/store"
+	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -64,15 +64,15 @@ func initLog(cfg *model.LogConfig) {
 	log.Init(lvl, log.StandardizePath(cfg.FilePath, serviceName))
 }
 
-func createStorage(cfg *model.PieceStoreConfig) (store.ObjectStorage, error) {
+func createStorage(cfg *model.PieceStoreConfig) (storage.ObjectStorage, error) {
 	var (
-		object store.ObjectStorage
+		object storage.ObjectStorage
 		err    error
 	)
 	if cfg.Shards > 1 {
-		object, err = store.NewSharded(cfg)
+		object, err = storage.NewSharded(cfg)
 	} else {
-		object, err = store.NewObjectStorage(&cfg.Store)
+		object, err = storage.NewObjectStorage(&cfg.Store)
 	}
 	if err != nil {
 		log.Errorw("createStorage error", "error", err, "object", object)
@@ -89,19 +89,19 @@ func createStorage(cfg *model.PieceStoreConfig) (store.ObjectStorage, error) {
 }
 
 // checkBucket checks bucket if exists
-func checkBucket(ctx context.Context, storage store.ObjectStorage) error {
-	if err := storage.HeadBucket(ctx); err != nil {
+func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
+	if err := store.HeadBucket(ctx); err != nil {
 		log.Errorw("HeadBucket error", "error", err)
 		if errors.Is(err, model.BucketNotExisted) {
-			if err2 := storage.CreateBucket(ctx); err2 != nil {
-				return fmt.Errorf("Failed to create bucket in %s: %s, previous err: %s", storage, err2, err)
+			if err2 := store.CreateBucket(ctx); err2 != nil {
+				return fmt.Errorf("Failed to create bucket in %s: %s, previous err: %s", store, err2, err)
 			}
 			log.Info("Create bucket successfully!")
 			return nil
 		}
 		return fmt.Errorf("Check if you have the permission to access the bucket")
 	}
-	log.Infof("HeadBucket succeeds in %s, bucketName %s", storage)
+	log.Infof("HeadBucket succeeds in %s, bucketName %s", store)
 	return nil
 }
 
