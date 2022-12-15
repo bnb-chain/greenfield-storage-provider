@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/model"
+	"github.com/bnb-chain/inscription-storage-provider/model"
 )
 
 type sharded struct {
