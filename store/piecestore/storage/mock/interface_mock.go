@@ -10,7 +10,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	store "github.com/bnb-chain/inscription-storage-provider/store/piecestore/store"
+	storage "github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -95,10 +95,10 @@ func (mr *MockObjectStorageMockRecorder) HeadBucket(ctx interface{}) *gomock.Cal
 }
 
 // HeadObject mocks base method.
-func (m *MockObjectStorage) HeadObject(ctx context.Context, key string) (store.Object, error) {
+func (m *MockObjectStorage) HeadObject(ctx context.Context, key string) (storage.Object, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HeadObject", ctx, key)
-	ret0, _ := ret[0].(store.Object)
+	ret0, _ := ret[0].(storage.Object)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -110,10 +110,10 @@ func (mr *MockObjectStorageMockRecorder) HeadObject(ctx, key interface{}) *gomoc
 }
 
 // ListAllObjects mocks base method.
-func (m *MockObjectStorage) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan store.Object, error) {
+func (m *MockObjectStorage) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan storage.Object, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAllObjects", ctx, prefix, marker)
-	ret0, _ := ret[0].(<-chan store.Object)
+	ret0, _ := ret[0].(<-chan storage.Object)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -125,10 +125,10 @@ func (mr *MockObjectStorageMockRecorder) ListAllObjects(ctx, prefix, marker inte
 }
 
 // ListObjects mocks base method.
-func (m *MockObjectStorage) ListObjects(ctx context.Context, prefix, marker, delimiter string, limit int64) ([]store.Object, error) {
+func (m *MockObjectStorage) ListObjects(ctx context.Context, prefix, marker, delimiter string, limit int64) ([]storage.Object, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListObjects", ctx, prefix, marker, delimiter, limit)
-	ret0, _ := ret[0].([]store.Object)
+	ret0, _ := ret[0].([]storage.Object)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
