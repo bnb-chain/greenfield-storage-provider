@@ -1,0 +1,75 @@
+syntax = "proto3";
+package service.types.v1;
+import "pkg/types/v1/object.proto";
+import "service/types/v1/uploader.proto";
+import "service/types/v1/stone_node.proto";
+option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
+
+message StoneHubServiceCreateObjectRequest {
+  uint64 trace_id = 1;
+  bytes tx_hash = 2;
+  pkg.types.v1.ObjectInfo object_info = 3;
+}
+
+message StoneHubServiceCreateObjectResponse {
+  uint64 trace_id = 1;
+  ErrMessage err_message = 2;
+}
+
+message StoneHubServiceBeginUploadPayloadRequest {
+  uint64 trace_id = 1;
+  bytes tx_hash = 2;
+  uint64 job_id = 3; // optional
+}
+
+message StoneHubServiceBeginUploadPayloadResponse {
+  uint64 trace_id = 1;
+  uint64 job_id = 2;
+  bytes tx_hash = 3;
+  uint64 payload_size = 4;
+  uint64 segment_size = 5;
+  ErrMessage err_message = 6;
+}
+
+message StoneHubServiceDonePrimaryPieceJobRequest {
+  uint64 trace_id = 1;
+  uint64 job_id = 2;
+  uint32 segment_idx = 3;
+  ErrMessage err_message = 4;
+}
+
+message StoneHubServiceDonePrimaryPieceJobResponse {
+  uint64 trace_id = 1;
+  ErrMessage err_message = 2;
+}
+
+message StoneHubServiceAllocStoneJobRequest {
+  uint64 trace_id = 1;
+}
+
+message StoneHubServiceAllocStoneJobResponse {
+  uint64 trace_id = 1;
+  oneof stone_job_oneof {
+    SecondaryPieceJob secondary_piece_job = 2;
+  }
+}
+
+message StoneHubServiceDoneSecondaryPieceJobRequest {
+  uint64 trace_id = 1;
+  uint64 job_id = 2;
+  StorageProviderInfo secondary_sp = 3;
+  ErrMessage err_message = 4;
+}
+
+message StoneHubServiceDoneSecondaryPieceJobResponse {
+  uint64 trace_id = 1;
+  ErrMessage err_message = 2;
+}
+
+service StoneHubService {
+  rpc CreateObject(StoneHubServiceCreateObjectRequest) returns (StoneHubServiceCreateObjectResponse) {};
+  rpc BeginUploadPayload(StoneHubServiceBeginUploadPayloadRequest) returns (StoneHubServiceBeginUploadPayloadResponse) {};
+  rpc DonePrimaryPieceJob(StoneHubServiceDonePrimaryPieceJobRequest) returns (StoneHubServiceDonePrimaryPieceJobResponse) {};
+  rpc AllocStoneJob(StoneHubServiceAllocStoneJobRequest) returns (StoneHubServiceAllocStoneJobResponse) {};
+  rpc DoneSecondaryPieceJob(StoneHubServiceDoneSecondaryPieceJobRequest) returns (StoneHubServiceDoneSecondaryPieceJobResponse) {};
+}

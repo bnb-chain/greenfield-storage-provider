@@ -1,0 +1,20 @@
+syntax = "proto3";
+package service.types.v1;
+option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
+
+message StorageProviderInfo {
+  string storage_provider_id = 1;
+  repeated uint32 ec_idx = 2;
+  bytes integrity_hash = 3;
+  bytes signature = 4;
+}
+
+message SecondaryPieceJob {
+  string trace_id = 1;
+  uint64 job_id = 2;
+  string bucket_name = 3;
+  string object_name = 4;
+  uint32 segment_count = 5;
+  uint32 ec_m = 6;
+  uint32 ec_k = 7;
+}
