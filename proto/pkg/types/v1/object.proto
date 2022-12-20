@@ -1,0 +1,35 @@
+syntax = "proto3";
+package pkg.types.v1;
+import "cosmos_proto/cosmos.proto";
+option go_package = "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1";
+
+message StorageProviderInfo {
+  string sp_id = 1;   // identifies storage provider
+  uint32 idx = 2;     // order of secondary storage provider
+  bytes checksum = 3;
+}
+
+enum RedundancyType {
+  REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED = 0;
+  REDUNDANCY_TYPE_REPLICA_TYPE = 1;
+  REDUNDANCY_TYPE_INLINE_TYPE = 2;
+}
+
+message ObjectInfo {
+  // fixed after init
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string bucket_name = 2;
+  string object_name = 3;
+  uint64 size = 5;
+  bytes checksum = 6;
+  bool is_private = 7;
+  string content_type = 8;
+  StorageProviderInfo primary_sp = 9;
+
+  // fixed after successfully executing creat object transaction
+  uint64 height = 10;
+  bytes tx_hash = 11;
+  // fixed before seal
+  RedundancyType redundancy_type = 12;
+  repeated StorageProviderInfo secondary_sps = 13;
+}
