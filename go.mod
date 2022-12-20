@@ -6,6 +6,8 @@ require (
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/golang/mock v1.6.0
+	github.com/google/uuid v1.3.0
+	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.12
 	github.com/naoina/toml v0.1.1
 	github.com/pkg/sftp v1.13.5

@@ -1,0 +1,3 @@
+port = "9090"
+domain = "bfs.nodereal.com"
+debugDir = "./gateway_debug"
