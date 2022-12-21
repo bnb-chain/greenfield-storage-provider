@@ -1,0 +1,93 @@
+syntax = "proto3";
+package pkg.types.v1;
+import "pkg/types/v1/object.proto";
+option go_package = "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1";
+
+enum JobType {
+  JOB_TYPE_UNSPECIFIED = 0;
+  JOB_TYPE_CREATE_OBJECT = 1;
+  JOB_TYPE_ALLOC_SECONDARY = 2;
+  JOB_TYPE_SEAL_OBJECT = 3;
+
+  JOB_TYPE_UPLOAD_PRIMARY = 4;
+  JOB_TYPE_UPLOAD_SECONDARY_REPLICA = 5;
+  JOB_TYPE_UPLOAD_SECONDARY_EC = 6;
+  JOB_TYPE_UPLOAD_SECONDARY_INLINE = 7;
+}
+
+enum JobState {
+  JOB_STATE_INIT_UNSPECIFIED = 0;
+  JOB_STATE_DONE = 1;
+  JOB_STATE_ERROR = 2;
+
+  JOB_STATE_CREATE_OBJECT_INIT = 3;
+  JOB_STATE_CREATE_OBJECT_TX_DOING = 4;
+  JOB_STATE_CREATE_OBJECT_DONE = 5;
+
+  JOB_STATE_UPLOAD_PAYLOAD_INIT = 6;
+  JOB_STATE_UPLOAD_PAYLOAD_DOING = 7;
+  JOB_STATE_UPLOAD_PAYLOAD_DONE = 8;
+
+  JOB_STATE_ALLOC_SECONDARY_INIT = 9;
+  JOB_STATE_ALLOC_SECONDARY_DOING = 10;
+  JOB_STATE_ALLOC_SECONDARY_DONE = 11;
+
+  JOB_STATE_SEAL_OBJECT_INIT = 12;
+  JOB_STATE_SEAL_OBJECT_SIGNATURE_DONE = 13;
+  JOB_STATE_SEAL_OBJECT_TX_DOING = 14;
+  JOB_STATE_SEAL_OBJECT_DONE = 15;
+}
+
+message JobContext {
+  uint64 job_id = 1;          // unique, identifies one job
+  JobType job_type = 2;
+  JobState job_state = 3;
+  string job_err = 4;         // default empty, if the job is interrupted, will log the error message
+  uint64 create_time = 5;     // the job create time, used to jobs garbage collection
+  uint64 modify_time = 6;     // the job last modified time, used to judge timeout
+  ObjectInfo object_info = 7;
+}
+
+message BatchSegmentPieceJob {
+  repeated SegmentPieceJob segment_piece_job = 1;
+}
+
+message SegmentPieceJob {
+  string bucket_name = 1;
+  string object_name = 2;
+  bool done = 3;
+  uint32 segment_idx = 4;     // the index of segment in payload data
+  string secondary_sp = 5;
+  bytes check_sum = 6;
+}
+
+message InlinePieceJob {
+  string bucket_name = 1;
+  string object_name = 2;
+  bool done = 3;
+  string secondary_sp = 4;
+  bytes check_sum = 5;
+}
+
+message BatchECPieceJob {
+  string bucket_name = 1;
+  string object_name = 2;
+  bool done = 3;
+  uint32 ec_m = 4;
+  uint32 ec_k = 5;
+  repeated uint32 ec_idx = 6;
+  repeated string secondary_sp = 7;
+  repeated bytes check_sum = 8;
+}
+
+message ECPieceJob {
+  string bucket_name = 1;
+  string object_name = 2;
+  bool done = 3;
+  uint32 segment_idx = 4;     // the index of segment in payload data
+  uint32 segment_ec_idx = 5;  // the index of ec-piece in segment data
+  string secondary_sp = 6;
+  uint32 ec_m = 7;
+  uint32 ec_k = 8;
+  bytes check_sum = 9;
+}
