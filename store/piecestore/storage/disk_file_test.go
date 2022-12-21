@@ -11,8 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	errors2 "github.com/bnb-chain/inscription-storage-provider/model/errors"
-
+	errors2 "github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/stretchr/testify/assert"
 )
 

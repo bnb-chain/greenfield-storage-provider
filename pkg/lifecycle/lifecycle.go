@@ -50,9 +50,9 @@ func (s *ServiceLifecycle) Init(ctx context.Context, components ...Component) *S
 		if err := c.Init(ctx); err != nil {
 			log.Panicf("Init %s error: %v", c.Name(), err)
 			s.failure = true
-			return s
+		} else {
+			log.Infof("Init %s successfully!", c.Name())
 		}
-		log.Infof("Init %s successfully!", c.Name())
 	}
 	return s
 }
@@ -79,9 +79,9 @@ func (s *ServiceLifecycle) start(ctx context.Context, service Service) {
 	defer s.innerCancel()
 	if err := service.Start(ctx); err != nil {
 		log.Panicf("Service %s starts error: %v", service.Name(), err)
-		return
+	} else {
+		log.Infof("Service %s starts successfully", service.Name())
 	}
-	log.Infof("Service %s starts successfully", service.Name())
 }
 
 // Signals registers monitor signals
@@ -124,8 +124,7 @@ func (s *ServiceLifecycle) GracefulShutdown(ctx context.Context) {
 
 	<-gCtx.Done()
 	if errors.Is(gCtx.Err(), context.Canceled) {
-		log.Infow("Service graceful shutdown, context canceled, service stops working", "service config timeout",
-			s.timeout)
+		log.Infow("Service graceful shutdown", "service config timeout", s.timeout)
 	} else if errors.Is(gCtx.Err(), context.DeadlineExceeded) {
 		log.Panic("Timeout while stopping service, killing instance manually")
 	}

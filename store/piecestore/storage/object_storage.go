@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/bnb-chain/inscription-storage-provider/config"
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
+	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -36,11 +36,11 @@ func (s DefaultObjectStorage) CreateBucket(ctx context.Context) error {
 }
 
 func (s DefaultObjectStorage) ListObjects(ctx context.Context, prefix, marker, delimiter string, limit int64) ([]Object, error) {
-	return nil, errors.NotSupportedMethod
+	return nil, model.NotSupportedMethod
 }
 
 func (s DefaultObjectStorage) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan Object, error) {
-	return nil, errors.NotSupportedMethod
+	return nil, model.NotSupportedMethod
 }
 
 type file struct {

@@ -7,8 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
-
+	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,12 +61,12 @@ func TestMemory_GetError(t *testing.T) {
 		{
 			name:      "memory_get_error_test1",
 			key:       emptyString,
-			wantedErr: errors.EmptyObjectKey,
+			wantedErr: model.EmptyObjectKey,
 		},
 		{
 			name:      "memory_get_error_test2",
 			key:       mockKey,
-			wantedErr: errors.EmptyMemoryObject,
+			wantedErr: model.EmptyMemoryObject,
 		},
 	}
 	for _, tt := range cases {
@@ -94,7 +93,7 @@ func TestMemory_Put(t *testing.T) {
 			name:      "memory_put_test1",
 			key:       emptyString,
 			data:      endPoint,
-			wantedErr: errors.EmptyObjectKey,
+			wantedErr: model.EmptyObjectKey,
 		},
 		{
 			name:      "memory_put_test2",
@@ -178,7 +177,7 @@ func TestMemory_HeadError(t *testing.T) {
 		{
 			name:      "memory_head_error_test1",
 			key:       emptyString,
-			wantedErr: errors.EmptyObjectKey,
+			wantedErr: model.EmptyObjectKey,
 		},
 		{
 			name:      "memory_head_error_test2",
@@ -230,7 +229,7 @@ func TestMemory_ListError(t *testing.T) {
 		{
 			name:      "memory_list_error_test1",
 			delimiter: mockKey,
-			wantedErr: errors.NotSupportedDelimiter,
+			wantedErr: model.NotSupportedDelimiter,
 		},
 	}
 	for _, tt := range cases {
@@ -246,5 +245,5 @@ func TestMemory_ListError(t *testing.T) {
 func TestMemory_ListAll(t *testing.T) {
 	store := setupMemoryTest(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
-	assert.Equal(t, errors.NotSupportedMethod, err)
+	assert.Equal(t, model.NotSupportedMethod, err)
 }
