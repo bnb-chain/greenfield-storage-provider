@@ -20,5 +20,5 @@ message SyncerServiceUploadECPieceResponse {
 }
 
 service SyncerService {
-  rpc UploadECPiece(SyncerServiceUploadECPieceRequest) returns (SyncerServiceUploadECPieceResponse) {};
+  rpc UploadECPiece(stream SyncerServiceUploadECPieceRequest) returns (SyncerServiceUploadECPieceResponse) {};
 }
