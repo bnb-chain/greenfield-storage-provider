@@ -1,0 +1,38 @@
+syntax = "proto3";
+package service.types.v1;
+import "pkg/types/v1/object.proto";
+option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
+
+message ErrMessage {
+  string err_code = 1;
+  string err_msg = 2;
+}
+
+message UploaderServiceCreateObjectRequest {
+  uint64 trace_id = 1;
+  pkg.types.v1.ObjectInfo object_info = 2;
+}
+
+message UploaderServiceCreateObjectResponse {
+  uint64 trace_id = 1;
+  bytes tx_hash = 2;
+  uint64 job_id = 3; // optional
+  ErrMessage err_message = 4;
+}
+
+message UploaderServiceUploadPayloadRequest {
+  uint64 trace_id = 1;
+  bytes tx_hash = 2;
+  uint64 job_id = 3;
+  bytes payload_data = 4;
+}
+
+message UploaderServiceUploadPayloadResponse {
+  uint64 trace_id = 1;
+  ErrMessage err_message = 2;
+}
+
+service UploaderService {
+  rpc CreateObject(UploaderServiceCreateObjectRequest) returns (UploaderServiceCreateObjectResponse) {};
+  rpc UploadPayload(stream UploaderServiceUploadPayloadRequest) returns (UploaderServiceUploadPayloadResponse) {};
+}
