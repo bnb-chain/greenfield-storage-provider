@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
+
 	"github.com/stretchr/testify/assert"
 )
 
