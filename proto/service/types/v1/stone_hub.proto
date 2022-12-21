@@ -28,7 +28,8 @@ message StoneHubServiceBeginUploadPayloadResponse {
   bytes tx_hash = 3;
   uint64 payload_size = 4;
   uint64 segment_size = 5;
-  ErrMessage err_message = 6;
+  pkg.types.v1.RedundancyType redundancy_type = 6;
+  ErrMessage err_message = 7;
 }
 
 message StoneHubServiceDonePrimaryPieceJobRequest {
@@ -50,7 +51,7 @@ message StoneHubServiceAllocStoneJobRequest {
 message StoneHubServiceAllocStoneJobResponse {
   uint64 trace_id = 1;
   oneof stone_job_oneof {
-    SecondaryPieceJob secondary_piece_job = 2;
+    SecondaryJob secondary_piece_job = 2;
   }
 }
 

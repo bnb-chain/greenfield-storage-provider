@@ -48,6 +48,10 @@ message JobContext {
   ObjectInfo object_info = 7;
 }
 
+message BatchSegmentPieceJob {
+  repeated SegmentPieceJob segment_piece_job = 1;
+}
+
 message SegmentPieceJob {
   string bucket_name = 1;
   string object_name = 2;
@@ -69,10 +73,11 @@ message BatchECPieceJob {
   string bucket_name = 1;
   string object_name = 2;
   bool done = 3;
-  uint32 segment_idx = 4;
-  uint32 ec_m = 5;
-  uint32 ec_k = 6;
-  bytes check_sum = 7;
+  uint32 ec_m = 4;
+  uint32 ec_k = 5;
+  repeated uint32 ec_idx = 6;
+  repeated string secondary_sp = 7;
+  repeated bytes check_sum = 8;
 }
 
 message ECPieceJob {
