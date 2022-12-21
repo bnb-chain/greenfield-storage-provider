@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/bnb-chain/inscription-storage-provider/config"
-	"github.com/bnb-chain/inscription-storage-provider/model"
+	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -145,7 +145,7 @@ func (d *diskFileStore) DeleteObject(ctx context.Context, key string) error {
 func (d *diskFileStore) HeadBucket(ctx context.Context) error {
 	if _, err := os.Stat(d.root); err != nil {
 		if os.IsNotExist(err) {
-			return model.BucketNotExisted
+			return errors.BucketNotExisted
 		}
 		return err
 	}

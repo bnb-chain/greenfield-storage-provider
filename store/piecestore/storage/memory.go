@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/inscription-storage-provider/config"
-	"github.com/bnb-chain/inscription-storage-provider/model"
+	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -43,11 +43,11 @@ func (m *memoryStore) GetObject(ctx context.Context, key string, offset, limit i
 	defer m.Unlock()
 	// Minimum length is 1
 	if key == "" {
-		return nil, model.EmptyObjectKey
+		return nil, errors.EmptyObjectKey
 	}
 	d, ok := m.objects[key]
 	if !ok {
-		return nil, model.EmptyMemoryObject
+		return nil, errors.EmptyMemoryObject
 	}
 
 	if offset > int64(len(d.data)) {
@@ -65,7 +65,7 @@ func (m *memoryStore) PutObject(ctx context.Context, key string, reader io.Reade
 	defer m.Unlock()
 	// Minimum length is 1
 	if key == "" {
-		return model.EmptyObjectKey
+		return errors.EmptyObjectKey
 	}
 	if _, ok := m.objects[key]; ok {
 		log.Info("overwrite key: ", key)
@@ -95,7 +95,7 @@ func (m *memoryStore) HeadObject(ctx context.Context, key string) (Object, error
 	defer m.Unlock()
 	// Minimum length is 1
 	if key == "" {
-		return nil, model.EmptyObjectKey
+		return nil, errors.EmptyObjectKey
 	}
 	o, ok := m.objects[key]
 	if !ok {
@@ -112,7 +112,7 @@ func (m *memoryStore) HeadObject(ctx context.Context, key string) (Object, error
 
 func (m *memoryStore) ListObjects(ctx context.Context, prefix, marker, delimiter string, limit int64) ([]Object, error) {
 	if delimiter != "" {
-		return nil, model.NotSupportedDelimiter
+		return nil, errors.NotSupportedDelimiter
 	}
 	m.Lock()
 	defer m.Unlock()

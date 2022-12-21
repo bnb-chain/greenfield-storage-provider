@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
+	errors2 "github.com/bnb-chain/inscription-storage-provider/model/errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -283,7 +283,7 @@ func TestS3_ListSuccess(t *testing.T) {
 func TestS3_ListAll(t *testing.T) {
 	store := setupS3Test(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
-	assert.Equal(t, model.NotSupportedMethod, err)
+	assert.Equal(t, errors2.NotSupportedMethod, err)
 }
 
 type mockS3ClientError struct {
