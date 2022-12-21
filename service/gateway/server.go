@@ -10,9 +10,13 @@ import (
 )
 
 type gatewayConfig struct {
-	Port     string
-	Domain   string
-	DebugDir string
+	Port      string
+	Domain    string
+	DebugDir  string
+	LogConfig struct {
+		FilePath string
+		Level    string
+	}
 }
 
 type GatewayService struct {
@@ -47,6 +51,21 @@ func (g *GatewayService) Init(configFile string) bool {
 	if ok := g.initConfig(configFile); !ok {
 		return false
 	}
+
+	level := log.DebugLevel
+	switch g.config.LogConfig.Level {
+	case "debug":
+		level = log.DebugLevel
+	case "info":
+		level = log.InfoLevel
+	case "warn":
+		level = log.WarnLevel
+	case "error":
+		level = log.ErrorLevel
+	default:
+		level = log.InfoLevel
+	}
+	log.Init(level, g.config.LogConfig.FilePath)
 
 	if g.config.DebugDir != "" {
 		if err := os.Mkdir(g.config.DebugDir, 0777); err != nil && !os.IsExist(err) {

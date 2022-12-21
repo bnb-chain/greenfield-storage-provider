@@ -1,0 +1,7 @@
+Port = "9099"
+Domain = "bfs.nodereal.com"
+DebugDir = "./tmptestdata"
+
+[LogConfig]
+FilePath = "./tmptestdata/gateway.log"
+Level = "info"

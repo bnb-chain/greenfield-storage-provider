@@ -1,3 +1,7 @@
-port = "9090"
-domain = "bfs.nodereal.com"
-debugDir = "./gateway_debug"
+Port = "9090"
+Domain = "bfs.nodereal.com"
+DebugDir = "./gateway_debug"
+
+[LogConfig]
+FilePath = "./gateway_debug/gateway.log"
+Level = "info"
