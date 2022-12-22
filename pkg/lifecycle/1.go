@@ -1,36 +1,26 @@
 package lifecycle
 
-import (
-	"context"
-	"errors"
-	"os"
-	"os/signal"
-	"sync"
-	"time"
-
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
-)
-
+/*
 // Service provides abstract methods to control the lifecycle of a service
-type Service interface {
+type Service1 interface {
 	Name() string
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
 }
 
 // ServiceLifecycle is a lifecycle of one service
-type ServiceLifecycle struct {
+type ServiceLifecycle1 struct {
 	innerCtx    context.Context
 	innerCancel context.CancelFunc
-	services    []Service
+	services    []Service1
 	failure     bool
 	timeout     time.Duration
 }
 
 // NewService returns an initialized service lifecycle
-func NewService(timeout time.Duration) *ServiceLifecycle {
+func NewService1(timeout time.Duration) *ServiceLifecycle1 {
 	innerCtx, innerCancel := context.WithCancel(context.Background())
-	return &ServiceLifecycle{
+	return &ServiceLifecycle1{
 		innerCtx:    innerCtx,
 		innerCancel: innerCancel,
 		timeout:     timeout,
@@ -38,12 +28,12 @@ func NewService(timeout time.Duration) *ServiceLifecycle {
 }
 
 // StartServices starts running services
-func (s *ServiceLifecycle) StartServices(ctx context.Context, services ...Service) *ServiceLifecycle {
+func (s *ServiceLifecycle1) StartServices(ctx context.Context, services ...Service1) *ServiceLifecycle1 {
 	if s.failure {
 		return s
 	}
 	s.services = append(s.services, services...)
-	for _, service := range s.services {
+	for _, service := range services {
 		select {
 		case <-s.innerCtx.Done():
 			s.failure = true
@@ -55,17 +45,17 @@ func (s *ServiceLifecycle) StartServices(ctx context.Context, services ...Servic
 	return s
 }
 
-func (s *ServiceLifecycle) start(ctx context.Context, service Service) {
+func (s *ServiceLifecycle1) start(ctx context.Context, service Service1) {
 	defer s.innerCancel()
 	if err := service.Start(ctx); err != nil {
-		log.Errorf("Service %s starts error: %v", service.Name(), err)
+		log.Panicf("Service %s starts error: %v", service.Name(), err)
 	} else {
-		log.Infof("Service %s starts successfully", service.Name())
+		log.Printf("Service %s starts successfully", service.Name())
 	}
 }
 
 // Signals registers monitor signals
-func (s *ServiceLifecycle) Signals(sigs ...os.Signal) *ServiceLifecycle {
+func (s *ServiceLifecycle1) Signals(sigs ...os.Signal) *ServiceLifecycle1 {
 	if s.failure {
 		return s
 	}
@@ -73,7 +63,7 @@ func (s *ServiceLifecycle) Signals(sigs ...os.Signal) *ServiceLifecycle {
 	return s
 }
 
-func (s *ServiceLifecycle) signals(sigs ...os.Signal) {
+func (s *ServiceLifecycle1) signals(sigs ...os.Signal) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, sigs...)
 	for {
@@ -92,34 +82,34 @@ func (s *ServiceLifecycle) signals(sigs ...os.Signal) {
 }
 
 // Wait blocks until context is done
-func (s *ServiceLifecycle) Wait(ctx context.Context) {
+func (s *ServiceLifecycle1) Wait(ctx context.Context) {
 	<-s.innerCtx.Done()
 	s.StopServices(ctx)
 }
 
 // StopServices can stop services when context is done or timeout
-func (s *ServiceLifecycle) StopServices(ctx context.Context) {
+func (s *ServiceLifecycle1) StopServices(ctx context.Context) {
 	gCtx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	go s.stop(ctx, cancel)
 
 	<-gCtx.Done()
 	if errors.Is(gCtx.Err(), context.Canceled) {
-		log.Infow("Services stop working", "service config timeout", s.timeout)
+		log.Printf("Services stop working, service config timeout : %s", s.timeout)
 	} else if errors.Is(gCtx.Err(), context.DeadlineExceeded) {
 		log.Panic("Timeout while stopping service, killing instance manually")
 	}
 }
 
-func (s *ServiceLifecycle) stop(ctx context.Context, cancel context.CancelFunc) {
+func (s *ServiceLifecycle1) stop(ctx context.Context, cancel context.CancelFunc) {
 	var wg sync.WaitGroup
 	for _, service := range s.services {
 		wg.Add(1)
-		go func(ctx context.Context, service Service) {
+		go func(ctx context.Context, service Service1) {
 			defer wg.Done()
 			if err := service.Stop(ctx); err != nil {
-				log.Errorf("Service %s stops failure: %v", service.Name(), err)
+				log.Panicf("Service %s stops failure: %v", service.Name(), err)
 			} else {
-				log.Infof("Service %s stops successfully!", service.Name())
+				log.Printf("Service %s stops successfully!", service.Name())
 			}
 		}(ctx, service)
 	}
@@ -128,6 +118,8 @@ func (s *ServiceLifecycle) stop(ctx context.Context, cancel context.CancelFunc) 
 }
 
 // Done check context is done
-func (s *ServiceLifecycle) Done() <-chan struct{} {
+func (s *ServiceLifecycle1) Done() <-chan struct{} {
 	return s.innerCtx.Done()
 }
+
+*/
