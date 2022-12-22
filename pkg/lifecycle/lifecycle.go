@@ -11,12 +11,14 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
+// Service provides abstract methods to control the lifecycle of a service
 type Service interface {
 	Name() string
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
 }
 
+// ServiceLifecycle is a lifecycle of one service
 type ServiceLifecycle struct {
 	innerCtx    context.Context
 	innerCancel context.CancelFunc
@@ -114,23 +116,23 @@ func (s *ServiceLifecycle) signals(sigs ...os.Signal) {
 // Wait blocks until context is done
 func (s *ServiceLifecycle) Wait(ctx context.Context) {
 	<-s.innerCtx.Done()
-	s.GracefulShutdown(ctx)
+	s.StopServices(ctx)
 }
 
-// GracefulShutdown can stop services when context is done or timeout
-func (s *ServiceLifecycle) GracefulShutdown(ctx context.Context) {
+// StopServices can stop services when context is done or timeout
+func (s *ServiceLifecycle) StopServices(ctx context.Context) {
 	gCtx, cancel := context.WithTimeout(context.Background(), s.timeout)
-	go s.stopService(ctx, cancel)
+	go s.stop(ctx, cancel)
 
 	<-gCtx.Done()
 	if errors.Is(gCtx.Err(), context.Canceled) {
-		log.Infow("Service graceful shutdown", "service config timeout", s.timeout)
+		log.Infow("Services stop working", "service config timeout", s.timeout)
 	} else if errors.Is(gCtx.Err(), context.DeadlineExceeded) {
 		log.Panic("Timeout while stopping service, killing instance manually")
 	}
 }
 
-func (s *ServiceLifecycle) stopService(ctx context.Context, cancel context.CancelFunc) {
+func (s *ServiceLifecycle) stop(ctx context.Context, cancel context.CancelFunc) {
 	var wg sync.WaitGroup
 	for _, service := range s.services {
 		wg.Add(1)
