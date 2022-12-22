@@ -6,8 +6,8 @@ This package provides useful method to manage the lifecycle of a service or a gr
 
 ```go
 type Component interface {
-    Name() string
-    Init(ctx context.Context) error
+	Name() string
+	Init(ctx context.Context) error
 }
 
 type Service interface {
