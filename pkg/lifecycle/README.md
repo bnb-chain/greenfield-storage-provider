@@ -1,6 +1,6 @@
 # Service Lifecycle
 
-This package provides useful method to manage the lifecycle of a service with convenient initializations of components.
+This package provides useful method to manage the lifecycle of a service or a group of services with convenient initializations of components.
 
 ## Interface
 
