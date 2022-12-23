@@ -1,21 +1,19 @@
 syntax = "proto3";
 package service.types.v1;
 import "service/types/v1/uploader.proto";
-import "service/types/v1/stone_node.proto";
+import "service/types/v1/stone_hub.proto";
 option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
 
 message SyncerServiceUploadECPieceRequest {
   uint64 trace_id = 1;
-  string bucket_name = 2;
-  string object_name = 3;
-  repeated uint32 ec_idx = 4;
-  repeated bytes check_sum = 5;
-  repeated bytes piece_data = 6;
+  uint64 primary_job_id = 2;
+  repeated PieceJob piece_jobs = 3;
+  repeated bytes piece_data = 4;
 }
 
 message SyncerServiceUploadECPieceResponse {
   uint64 trace_id = 1;
-  StorageProviderInfo secondary_sp_info = 2;
+  StorageProviderSealInfo secondary_sp_info = 2;
   ErrMessage err_message = 3;
 }
 
