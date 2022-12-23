@@ -1,5 +1,8 @@
 package lifecycle
 
-func Test() {
+import "testing"
+
+// TODO(VM):Make up later
+func Test(t *testing.T) {
 
 }
