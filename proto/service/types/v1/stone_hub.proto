@@ -34,6 +34,7 @@ message StoneHubServiceBeginUploadPayloadRequest {
 
 message StoneHubServiceBeginUploadPayloadResponse {
   uint64 trace_id = 1;
+
   bytes tx_hash = 2;
   uint64 payload_size = 3;
   uint64 segment_size = 4;
