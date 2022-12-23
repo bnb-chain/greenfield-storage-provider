@@ -1,150 +1,106 @@
 package job
 
-import types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-
-var _ UploadPayload = &UploadPayloadJob{}
+import (
+	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	"sync"
+)
 
 type UploadPayloadJob struct {
-	UploadPrimaryJob   *UploadPrimaryJob
-	UploadSecondaryJob *UploadSecondaryJob
-}
-
-func NewUploadPayloadJob() *UploadPayloadJob {
-	return &UploadPayloadJob{}
-}
-
-func (job *UploadPayloadJob) DonePrimaryPieceJob(pieceKey, secondary string) error {
-	return job.UploadPrimaryJob.DonePieceJob(pieceKey, secondary)
+	primaryJob   *UploadSubJob
+	secondaryJob *UploadSubJob
 }
 
 func (job *UploadPayloadJob) IsCompletedPrimaryJob() bool {
-	return job.UploadPrimaryJob.IsCompleted()
-}
-
-func (job *UploadPayloadJob) PopPrimaryJob() []UploadPiece {
-	return job.UploadPrimaryJob.PopPieceJob()
-}
-
-func (job *UploadPayloadJob) PopAccumulateSecondaryJob() []UploadPiece {
-	return []UploadPiece{}
-}
-
-func (job *UploadPayloadJob) DoneSecondaryPieceJob(pieceKey, secondary string) error {
-	return job.UploadSecondaryJob.DonePieceJob(pieceKey, secondary)
+	return job.primaryJob.Done()
 }
 
 func (job *UploadPayloadJob) IsCompletedSecondaryJob() bool {
-	return job.UploadSecondaryJob.IsCompleted()
+	if job.secondaryJob == nil {
+		return true
+	}
+	return job.secondaryJob.Done()
 }
 
-func (job *UploadPayloadJob) GetSecondaryPieceJobBySegmentIdx(segmentKey string) []UploadPiece {
-	return job.UploadSecondaryJob.GetPieceJobBySegmentIdx(segmentKey)
-}
-
-func (job *UploadPayloadJob) ReplaceSecondaryByBackup(oldSP string) ([]UploadPiece, error) {
-	return job.UploadSecondaryJob.ReplaceSecondaryByBackup(oldSP)
-}
-
-func (job *UploadPayloadJob) IsCompleted() bool {
-	return job.UploadSecondaryJob.IsCompleted()
-}
-
-var _ UploadPrimary = &UploadPrimaryJob{}
-
-type UploadPrimaryJob struct {
-	PieceJob        map[string]UploadPiece
-	PieceJobCounter uint32
-	Completed       uint32
-}
-
-func NewUploadPrimaryJob(object *types.ObjectInfo) *UploadPrimaryJob {
+func (job *UploadPayloadJob) SetUploadPrimaryJob(primaryJob *UploadSubJob) error {
+	if job.primaryJob != nil {
+		// return error
+		return nil
+	}
+	job.primaryJob = primaryJob
 	return nil
 }
 
-func (job *UploadPrimaryJob) PopPieceJob() []UploadPiece {
-	var pieceJobs []UploadPiece
-	for _, piece := range job.PieceJob {
-		if piece.GetDone() {
+func (job *UploadPayloadJob) SetUploadSecondaryJob(secondaryJob *UploadSubJob) error {
+	if job.secondaryJob != nil {
+		// return error
+		return nil
+	}
+	job.secondaryJob = secondaryJob
+	return nil
+}
+
+func (job *UploadPayloadJob) DonePrimaryPieceJob(piece *service.PieceJob) error {
+	return job.primaryJob.DonePieceJob(piece)
+}
+
+func (job *UploadPayloadJob) DoneSecondaryPieceJob(piece *service.PieceJob) error {
+	return job.secondaryJob.DonePieceJob(piece)
+}
+
+func (job *UploadPayloadJob) PopPendingPrimaryJob() []uint32 {
+	return job.primaryJob.PopPendingPieceJob()
+}
+
+func (job *UploadPayloadJob) PopPendingSecondaryJob() []uint32 {
+	return job.secondaryJob.PopPendingPieceJob()
+}
+
+type UploadSubJob struct {
+	pieceJob  []bool
+	checkSum  [][]byte
+	completed uint32
+	mu        sync.RWMutex
+}
+
+func (job *UploadSubJob) Done() bool {
+	job.mu.RLock()
+	defer job.mu.RUnlock()
+	return job.completed == uint32(len(job.pieceJob))
+}
+
+func (job *UploadSubJob) DonePieceJob(piece *service.PieceJob) error {
+	job.mu.Lock()
+	defer job.mu.Unlock()
+	if !piece.GetDone() {
+		// return error
+		return nil
+	}
+	for _, sp := range piece.StorageProviderSealInfo {
+		for i, piece := range sp.PieceIdx {
+			if piece < 0 || piece > uint32(len(job.pieceJob)) {
+				// return error
+				return nil
+			}
+			if job.pieceJob[piece] {
+				continue
+			}
+			job.pieceJob[piece] = true
+			job.checkSum[piece] = sp.CheckSum[i]
+			job.completed++
+		}
+	}
+	return nil
+}
+
+func (job *UploadSubJob) PopPendingPieceJob() []uint32 {
+	job.mu.RLock()
+	defer job.mu.RUnlock()
+	var pieceIdx []uint32
+	for idx, piece := range job.pieceJob {
+		if piece {
 			continue
 		}
-		pieceJobs = append(pieceJobs, piece)
+		pieceIdx = append(pieceIdx, uint32(idx))
 	}
-	return pieceJobs
-}
-
-func (job *UploadPrimaryJob) DonePieceJob(pieceKey, secondary string) error {
-	if piece, ok := job.PieceJob[pieceKey]; ok {
-		if piece.GetDone() {
-			return nil
-		}
-		if piece.GetSecondarySP() != secondary {
-			return nil
-		}
-		piece.Done()
-		job.Completed++
-	} else {
-		return nil
-	}
-	return nil
-}
-
-func (job *UploadPrimaryJob) IsCompleted() bool {
-	return job.PieceJobCounter == job.Completed
-}
-
-var _ UploadSecondary = &UploadSecondaryJob{}
-
-type UploadSecondaryJob struct {
-	PieceJob        map[string]UploadPiece
-	SPToPieceJob    map[string][]UploadPiece
-	IdxToPieceJob   map[string][]UploadPiece
-	BackupSecondary []string
-	PieceJobCounter uint32
-	Completed       uint32
-}
-
-func NewUploadSecondaryJob(object *types.ObjectInfo, secondarySP []string) (*UploadSecondaryJob, error) {
-	return nil, nil
-}
-
-func (job *UploadSecondaryJob) GetPieceJobBySegmentIdx(segmentKey string) []UploadPiece {
-	return job.IdxToPieceJob[segmentKey]
-}
-
-func (job *UploadSecondaryJob) DonePieceJob(pieceKey, secondary string) error {
-	if piece, ok := job.PieceJob[pieceKey]; ok {
-		if piece.GetDone() {
-			return nil
-		}
-		if piece.GetSecondarySP() != secondary {
-			return nil
-		}
-		piece.Done()
-		job.Completed++
-	} else {
-		return nil
-	}
-	return nil
-}
-
-func (job *UploadSecondaryJob) IsCompleted() bool {
-	return job.PieceJobCounter == job.Completed
-}
-
-func (job *UploadSecondaryJob) ReplaceSecondaryByBackup(oldSP string) ([]UploadPiece, error) {
-	var pieceJobs []UploadPiece
-	if len(job.BackupSecondary) == 0 {
-		return pieceJobs, nil
-	}
-	newSP := job.BackupSecondary[0]
-	job.BackupSecondary = job.BackupSecondary[1:]
-	pieces, ok := job.SPToPieceJob[oldSP]
-	if !ok {
-		return pieceJobs, nil
-	}
-	for _, piece := range pieces {
-		piece.SetSecondarySP(newSP)
-	}
-	job.SPToPieceJob[newSP] = append(job.SPToPieceJob[newSP], pieces...)
-	return pieces, nil
+	return pieceIdx
 }

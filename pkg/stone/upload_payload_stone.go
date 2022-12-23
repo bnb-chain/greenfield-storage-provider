@@ -5,233 +5,281 @@ import (
 	"errors"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/job"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store"
 	"github.com/looplab/fsm"
 )
 
-type UploadPayloadStone struct {
-	jobCtx           *JobContextWrapper
-	uploadPayloadJob *job.UploadPayloadJob
-	jobFSM           *fsm.FSM
-	primaryStone     *UploadPrimaryStone
-	secondaryStone   *UploadSecondaryStone
-	gcCh             chan uint64
+type StoneJob interface {
 }
 
-var (
-	JobContextKey                      string = "JobContextKey"
-	JobContextErrKey                   string = "JobContextErrKey"
-	JobContextUploadPayloadJobStoneKey string = "JobContextUploadPayloadJobStoneKey"
+const (
+	CtxStoneKey string = "UploadPayloadStone"
 )
 
-func NewUploadPayloadStone(jobCtx *types.JobContext, jobCh chan StoneJob,
-	gcCh chan uint64, jobDB store.JobDB, metaDB store.MetaDB) *UploadPayloadStone {
-	stone := &UploadPayloadStone{
-		jobCtx: NewJobContextWrapper(jobCtx, jobCh, jobDB, metaDB, gcCh),
-		jobFSM: fsm.NewFSM(
-			types.JOB_STATE_CREATE_OBJECT_DONE,
-			UploadPayloadFsmEvent,
-			UploadPayLoadFsmCallBack),
+type UploadPayloadStone struct {
+	jobCtx *JobContextWrapper
+	jobFsm *fsm.FSM
+	job    *job.UploadPayloadJob
+	jobCh  chan StoneJob
+	gcCh   chan uint64
+}
+
+func NewUploadPayloadStone(jobContext *types.JobContext, jobDB store.JobDB, metaDB store.MetaDB, jobCh chan StoneJob, gcCh chan uint64) (*UploadPayloadStone, error) {
+	if jobContext == nil || jobCh == nil || gcCh == nil {
+		// return error
+		return nil, nil
 	}
-	stone.primaryStone = NewUploadPrimaryStone(stone.jobCtx, stone)
-	stone.secondaryStone = NewUploadSecondaryStone(stone.jobCtx, stone)
-	return stone
-}
-
-func (stone *UploadPayloadStone) GetUploadPrimaryStone() *UploadPrimaryStone {
-	return stone.primaryStone
-}
-
-func (stone *UploadPayloadStone) GetUploadSecondaryStone() *UploadSecondaryStone {
-	return stone.secondaryStone
-}
-
-func (stone *UploadPayloadStone) GetUploadPayloadJob() *job.UploadPayloadJob {
-	return stone.uploadPayloadJob
-}
-
-func (stone *UploadPayloadStone) SetUploadPayloadJob(job *job.UploadPayloadJob) {
-	stone.uploadPayloadJob = job
-}
-
-func (stone *UploadPayloadStone) GetUploadPrimaryJob() *job.UploadPrimaryJob {
-	return stone.uploadPayloadJob.UploadPrimaryJob
-}
-
-func (stone *UploadPayloadStone) SetUploadPrimaryJob(UploadPrimaryJob *job.UploadPrimaryJob) {
-	stone.uploadPayloadJob.UploadPrimaryJob = UploadPrimaryJob
-}
-
-func (stone *UploadPayloadStone) GetSecondaryPrimaryJob() *job.UploadSecondaryJob {
-	return stone.uploadPayloadJob.UploadSecondaryJob
-}
-
-func (stone *UploadPayloadStone) SetUploadSecondaryJob(uploadPayloadJob *job.UploadSecondaryJob) {
-	stone.uploadPayloadJob.UploadSecondaryJob = uploadPayloadJob
+	jobCtx := NewJobContextWrapper(jobContext, jobDB, metaDB)
+	if jobCtx.JobErr() != nil {
+		// return error
+		return nil, nil
+	}
+	state, err := jobCtx.GetJobState()
+	if err != nil {
+		return nil, err
+	}
+	if !UploadPayLoadState[state] {
+		// return error
+		return nil, nil
+	}
+	if state == types.JOB_STATE_SEAL_OBJECT_DONE {
+		// return  error
+		return nil, nil
+	}
+	primaryJob, err := jobCtx.GetUploadPrimaryJob()
+	if err != nil {
+		// return  error
+		return nil, nil
+	}
+	secondaryJob, err := jobCtx.GetUploadSecondaryJob()
+	if err != nil {
+		// return  error
+		return nil, nil
+	}
+	if secondaryJob.Done() {
+		state = types.JOB_STATE_UPLOAD_SECONDARY_DONE
+	} else if primaryJob.Done() {
+		state = types.JOB_STATE_UPLOAD_PRIMARY_DONE
+	}
+	stone := &UploadPayloadStone{
+		jobCtx: jobCtx,
+		jobFsm: fsm.NewFSM(state, UploadPayloadFsmEvent, UploadPayLoadFsmCallBack),
+		jobCh:  jobCh,
+		gcCh:   gcCh,
+	}
+	stone.job = &job.UploadPayloadJob{}
+	stone.job.SetUploadPrimaryJob(primaryJob)
+	stone.job.SetUploadSecondaryJob(secondaryJob)
+	if err := stone.selfActionEvent(context.Background()); err != nil {
+		return nil, err
+	}
+	return stone, nil
 }
 
 func (stone *UploadPayloadStone) ActionEvent(ctx context.Context, event string, args ...interface{}) error {
-	if stone.jobCtx.JobError() != nil {
-		return stone.jobCtx.JobError()
+	if stone.jobCtx.JobErr() != nil || stone.jobFsm.Current() == types.JOB_STATE_ERROR {
+		// log error
+		return stone.jobCtx.JobErr()
 	}
-	ctx = context.WithValue(ctx, JobContextKey, stone.jobCtx)
-	ctx = context.WithValue(ctx, JobContextUploadPayloadJobStoneKey, stone)
-	if err := stone.jobFSM.Event(ctx, event, args...); err != nil {
-		// only log, not return err
+	ctx = context.WithValue(ctx, CtxStoneKey, stone)
+	actionFsm := func(ctx context.Context, event string, args ...interface{}) {
+		if err := stone.jobFsm.Event(ctx, event, args...); err != nil {
+			// only log warning
+		}
 	}
-	err := ctx.Value(JobContextErrKey).(error)
-	if err != nil {
-		stone.jobFSM.Event(ctx, InterruptEvent)
-		return err
+	actionFsm(ctx, event, args...)
+	return stone.selfActionEvent(ctx, args...)
+}
+
+func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...interface{}) error {
+	actionFsm := func(ctx context.Context, event string, args ...interface{}) {
+		if err := stone.jobFsm.Event(ctx, event, args...); err != nil {
+			// only log warning
+		}
 	}
-	currentState := stone.jobFSM.Current()
-	stone.jobCtx.SetJobState(currentState)
-	switch currentState {
-	case types.JOB_STATE_UPLOAD_PAYLOAD_INIT:
-		stone.ActionEvent(ctx, UploadPayloadDoingEvent)
-	case types.JOB_STATE_UPLOAD_PAYLOAD_DONE:
-		stone.ActionEvent(ctx, SealObjectInitEvent)
-	case types.JOB_STATE_SEAL_OBJECT_SIGNATURE_DONE:
-		stone.ActionEvent(ctx, SealObjectDoingEvent)
+	if stone.jobCtx.JobErr() != nil {
+		// log error
+		actionFsm(ctx, InterruptEvent)
+		return stone.jobCtx.JobErr()
+	}
+	var current string
+	for {
+		current = stone.jobFsm.Current()
+		switch current {
+		case types.JOB_STATE_CREATE_OBJECT_DONE:
+			actionFsm(ctx, UploadPayloadInitEvent)
+		case types.JOB_STATE_UPLOAD_PRIMARY_INIT:
+			actionFsm(ctx, UploadPrimaryDoingEvent)
+		case types.JOB_STATE_UPLOAD_PRIMARY_DOING:
+			if stone.job.IsCompletedPrimaryJob() {
+				actionFsm(ctx, UploadPrimaryDoneEvent)
+			}
+		case types.JOB_STATE_UPLOAD_PRIMARY_DONE:
+			actionFsm(ctx, UploadSecondaryInitEvent)
+		case types.JOB_STATE_UPLOAD_SECONDARY_INIT:
+			actionFsm(ctx, UploadSecondaryDoingEvent)
+		case types.JOB_STATE_UPLOAD_SECONDARY_DOING:
+			if stone.job.IsCompletedSecondaryJob() {
+				actionFsm(ctx, UploadSecondaryDoneEvent)
+			}
+		case types.JOB_STATE_UPLOAD_SECONDARY_DONE:
+			actionFsm(ctx, SealObjectInitEvent)
+		case types.JOB_STATE_SEAL_OBJECT_INIT:
+			actionFsm(ctx, SealObjectDoingEvent)
+		default:
+			return nil
+		}
+		if stone.jobCtx.JobErr() != nil {
+			// log error
+			actionFsm(ctx, InterruptEvent)
+			return stone.jobCtx.JobErr()
+		}
 	}
 	return nil
 }
 
-func (stone *UploadPayloadStone) ActionPrimaryEvent(ctx context.Context, event string, args ...interface{}) error {
-	return stone.primaryStone.ActionEvent(ctx, event, args...)
+func (stone *UploadPayloadStone) InterruptStone(ctx context.Context, err error) error {
+	if stone.jobCtx.JobErr() != nil || stone.jobFsm.Current() == types.JOB_STATE_ERROR {
+		// log error
+		return stone.jobCtx.JobErr()
+	}
+	stone.jobCtx.SetJobErr(err)
+	stone.jobFsm.Event(ctx, InterruptEvent)
+	return nil
 }
 
-func (stone *UploadPayloadStone) ActionSecondaryEvent(ctx context.Context, event string, args ...interface{}) error {
-	return stone.secondaryStone.ActionEvent(ctx, event, args...)
+func (stone *UploadPayloadStone) GetJobState() (string, error) {
+	return stone.jobCtx.GetJobState()
 }
 
-// fsm callbacks
-
-func InitUploadPayloadJobContextFromDB(ctx context.Context, event *fsm.Event) {
-	jobCtx := ctx.Value(JobContextKey).(*JobContextWrapper)
-	if jobCtx == nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
-		return
-	}
-	upPayloadJobStone := ctx.Value(JobContextUploadPayloadJobStoneKey).(*UploadPayloadStone)
-	if upPayloadJobStone == nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
-		return
-	}
-	jobDB := jobCtx.GetJobDB()
-	jobContext, err := jobDB.GetJobContext(jobCtx.GetJobId())
-	if err != nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
-		return
-	}
-	jobCtx.SetJobContext(jobContext)
-	if jobCtx.GetJobState() != types.JOB_STATE_CREATE_OBJECT_DONE {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
-		return
-	}
-	upPayloadJobStone.SetUploadPayloadJob(job.NewUploadPayloadJob())
+func EnterStateUploadPrimaryInit(ctx context.Context, event *fsm.Event) {
 	return
 }
 
-func StartUploadPrimaryAndSecondaryJob(ctx context.Context, event *fsm.Event) {
-	upPayloadJobStone := ctx.Value(JobContextUploadPayloadJobStoneKey).(*UploadPayloadStone)
-	if upPayloadJobStone == nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
-		return
-	}
-	upPayloadJobStone.GetUploadPrimaryStone().ActionEvent(ctx, UploadPrimaryInitEvent)
-	upPayloadJobStone.GetUploadSecondaryStone().ActionEvent(ctx, AllocSecondaryInitEvent)
+func EnterStateUploadPrimaryDoing(ctx context.Context, event *fsm.Event) {
+	return
 }
 
-func UpdateUploadPayloadJobStateDoneToDB(ctx context.Context, event *fsm.Event) {
-	jobCtx := ctx.Value(JobContextKey).(*JobContextWrapper)
-	if jobCtx == nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
+func AfterUploadPrimaryPieceDone(ctx context.Context, event *fsm.Event) {
+	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
+	if stone == nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
 		return
 	}
-	jobDB := jobCtx.GetJobDB()
-	if err := jobDB.SetUploadJobState(jobCtx.GetJobId(), types.JOB_STATE_UPLOAD_PAYLOAD_DONE); err != nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
+	if len(event.Args) < 1 {
+		stone.jobCtx.SetJobErr(errors.New(""))
+		return
+	}
+	pieceInfo := event.Args[0].(*service.PieceJob)
+	if err := stone.job.DonePrimaryPieceJob(pieceInfo); err != nil {
+		// log error
+		return
+	}
+	if err := stone.jobCtx.SetPrimaryPieceJobState(pieceInfo, types.JOB_STATE_UPLOAD_PAYLOAD_DONE); err != nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
 		return
 	}
 	return
 }
 
-func CreateIntegrityHashJob(ctx context.Context, event *fsm.Event) {
-	jobCtx := ctx.Value(JobContextKey).(*JobContextWrapper)
-	if jobCtx == nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
+func EnterUploadPrimaryDone(ctx context.Context, event *fsm.Event) {
+	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
+	if stone == nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
 		return
 	}
-	// create and send integrity hash job
-	jobCtx.SendJob(struct{}{})
-	return
-}
-
-func UpdateIntegrityHashToDB(ctx context.Context, event *fsm.Event) {
-	jobCtx := ctx.Value(JobContextKey).(*JobContextWrapper)
-	if jobCtx == nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
-		return
-	}
-	metaDB := jobCtx.GetMetaDB()
-	if len(event.Args) <= 2 {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
-		return
-	}
-	primarySP := event.Args[0].(types.StorageProviderInfo)
-	secondarySP := event.Args[1].([]types.StorageProviderInfo)
-	// first write memory, if occurs err, no need write db
-	if err := jobCtx.SetIntegrityHash(primarySP, secondarySP); err != nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, err)
-		return
-	}
-	if err := metaDB.SetIntegrityHash(primarySP, secondarySP); err != nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, err)
+	if err := stone.jobCtx.SetJobState(types.JOB_STATE_UPLOAD_PRIMARY_DONE); err != nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
 		return
 	}
 	return
 }
 
-func CreateSealObjectJob(ctx context.Context, event *fsm.Event) {
-	jobCtx := ctx.Value(JobContextKey).(*JobContextWrapper)
-	if jobCtx == nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
+func EnterUploadSecondaryInit(ctx context.Context, event *fsm.Event) {
+	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
+	if stone == nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
 		return
 	}
-	// create and send seal object job
-	jobCtx.SendJob(struct{}{})
-	return
-}
-
-func UpdateUploadPayloadJobStateSealDoneToDB(ctx context.Context, event *fsm.Event) {
-	jobCtx := ctx.Value(JobContextKey).(*JobContextWrapper)
-	if jobCtx == nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
-		return
-	}
-	jobDB := jobCtx.GetJobDB()
-	if err := jobDB.SetUploadJobState(jobCtx.GetJobId(), types.JOB_STATE_SEAL_OBJECT_DONE); err != nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, err)
-		return
-	}
-}
-
-func InterruptUploadPayloadJob(ctx context.Context, event *fsm.Event) {
-	jobErr := ctx.Value(JobContextErrKey).(error)
-	if jobErr == nil {
-		// log warning
-	}
-	jobCtx := ctx.Value(JobContextKey).(*JobContextWrapper)
-	if jobCtx == nil {
-		ctx = context.WithValue(ctx, JobContextErrKey, errors.New(""))
-		return
-	}
-	if err := jobCtx.InterruptJob(jobErr); err != nil {
-		// log warning
+	for _, pieceJob := range stone.job.PopPendingSecondaryJob() {
+		// 组装
+		stone.jobCh <- pieceJob
 	}
 	return
 }
 
-func InspectUploadPayloadJobBeforeEvent(ctx context.Context, event *fsm.Event) {}
-func InspectUploadPayloadJobAfterEvent(ctx context.Context, event *fsm.Event)  {}
+func EnterUploadSecondaryDoing(ctx context.Context, event *fsm.Event) {
+	return
+}
+
+func AfterUploadSecondaryPieceDone(ctx context.Context, event *fsm.Event) {
+	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
+	if stone == nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
+		return
+	}
+	if len(event.Args) < 1 {
+		stone.jobCtx.SetJobErr(errors.New(""))
+		return
+	}
+	spInfo := event.Args[0].(*service.PieceJob)
+	if err := stone.job.DoneSecondaryPieceJob(spInfo); err != nil {
+		// log error
+		return
+	}
+	if err := stone.jobCtx.SetSecondaryJobState(spInfo, types.JOB_STATE_UPLOAD_PAYLOAD_DONE); err != nil {
+		stone.jobCtx.SetJobErr(err)
+		return
+	}
+	return
+}
+
+func EnterUploadSecondaryDone(ctx context.Context, event *fsm.Event) {
+	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
+	if stone == nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
+		return
+	}
+	if err := stone.jobCtx.SetJobState(types.JOB_STATE_UPLOAD_SECONDARY_DONE); err != nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
+		return
+	}
+	return
+}
+
+func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
+	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
+	if stone == nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
+		return
+	}
+	// create seal object job
+	stone.jobCh <- struct{}{}
+	return
+}
+
+func EnterSealObjectDoing(ctx context.Context, event *fsm.Event) {
+	return
+}
+
+func EnterSealObjectDone(ctx context.Context, event *fsm.Event) {
+	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
+	if stone == nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
+		return
+	}
+	if err := stone.jobCtx.SetJobState(types.JOB_STATE_SEAL_OBJECT_DONE); err != nil {
+		stone.jobCtx.SetJobErr(errors.New(""))
+		return
+	}
+	return
+}
+
+func AfterInterrupt(ctx context.Context, event *fsm.Event) {
+	return
+}
+
+func ShowJobInfo(ctx context.Context, event *fsm.Event) {
+	return
+}

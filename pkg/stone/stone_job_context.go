@@ -1,115 +1,108 @@
 package stone
 
 import (
+	"errors"
+	"github.com/bnb-chain/inscription-storage-provider/pkg/job"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store"
 	"sync"
 )
 
-type StoneJob interface{}
-
 type JobContextWrapper struct {
 	jobCtx *types.JobContext
-	jobCh  chan StoneJob
+	jobErr error
 	jobDB  store.JobDB
 	metaDB store.MetaDB
-	gcCh   chan uint64
-	jobErr error
 	mu     sync.RWMutex
 }
 
-func NewJobContextWrapper(jobCtx *types.JobContext, jobCh chan StoneJob, jobDB store.JobDB, metaDB store.MetaDB, gcCh chan uint64) *JobContextWrapper {
+func NewJobContextWrapper(jobCtx *types.JobContext, jobDB store.JobDB, metaDB store.MetaDB) *JobContextWrapper {
 	return &JobContextWrapper{
 		jobCtx: jobCtx,
-		jobCh:  jobCh,
 		jobDB:  jobDB,
 		metaDB: metaDB,
-		gcCh:   gcCh,
 	}
 }
 
-func (wrapper *JobContextWrapper) SetJobContext(jobCtx *types.JobContext) {
-	wrapper.mu.Lock()
-	defer wrapper.mu.Unlock()
-	wrapper.jobCtx = jobCtx
-}
-
-func (wrapper *JobContextWrapper) GetObjectInfo() *types.ObjectInfo {
+func (wrapper *JobContextWrapper) GetJobState() (string, error) {
 	wrapper.mu.RLock()
 	defer wrapper.mu.RUnlock()
-	return wrapper.jobCtx.ObjectInfo
-}
-
-func (wrapper *JobContextWrapper) GetBucketName() string {
-	wrapper.mu.RLock()
-	defer wrapper.mu.RUnlock()
-	return wrapper.jobCtx.ObjectInfo.BucketName
-}
-
-func (wrapper *JobContextWrapper) GetObjectName() string {
-	wrapper.mu.RLock()
-	defer wrapper.mu.RUnlock()
-	return wrapper.jobCtx.ObjectInfo.ObjectName
-}
-
-func (wrapper *JobContextWrapper) GetJobId() uint64 {
-	wrapper.mu.RLock()
-	defer wrapper.mu.RUnlock()
-	return wrapper.jobCtx.GetJobId()
-}
-
-func (wrapper *JobContextWrapper) GetJobState() string {
-	wrapper.mu.RLock()
-	defer wrapper.mu.RUnlock()
-	return types.JobState_name[int32(wrapper.jobCtx.GetJobState())]
+	state, ok := types.JobState_name[int32(wrapper.jobCtx.JobState)]
+	if !ok {
+		// return error
+		return "", errors.New("")
+	}
+	return state, nil
 }
 
 func (wrapper *JobContextWrapper) SetJobState(state string) error {
 	wrapper.mu.Lock()
 	defer wrapper.mu.Unlock()
-	jobState, ok := types.JobState_value[state]
-	if !ok {
-		return nil
-	}
-	wrapper.jobCtx.JobState = types.JobState(jobState)
-	return nil
+	return wrapper.jobDB.SetUploadPayloadJobState(wrapper.jobCtx.JobId, state)
 }
 
-func (wrapper *JobContextWrapper) GetJobDB() store.JobDB {
-	return wrapper.jobDB
-}
-
-func (wrapper *JobContextWrapper) GetMetaDB() store.MetaDB {
-	return wrapper.metaDB
-}
-
-func (wrapper *JobContextWrapper) SetIntegrityHash(primary types.StorageProviderInfo, secondary []types.StorageProviderInfo) error {
-	wrapper.mu.Lock()
-	defer wrapper.mu.Unlock()
-	return wrapper.jobCtx.ObjectInfo.SetIntegrityHash(primary, secondary)
-}
-
-func (wrapper *JobContextWrapper) SendJob(job StoneJob) {
-	wrapper.jobCh <- job
-}
-
-func (wrapper *JobContextWrapper) InterruptJob(jobErr error) error {
-	wrapper.mu.Lock()
-	wrapper.jobCtx.JobState = types.JobState(types.JobState_value[types.JOB_STATE_ERROR])
-	wrapper.jobErr = jobErr
-	wrapper.jobCtx.JobErr = wrapper.jobCtx.JobErr + jobErr.Error() + "\n"
-	wrapper.mu.Unlock()
-	wrapper.jobDB.SetJobError(wrapper.jobCtx.JobId, types.JOB_STATE_ERROR, wrapper.jobCtx.JobErr)
-	wrapper.gcCh <- wrapper.jobCtx.GetJobId()
-	return nil
-}
-
-func (wrapper *JobContextWrapper) JobStateException() bool {
-	return types.JobState_name[int32(wrapper.jobCtx.GetJobState())] == types.JOB_STATE_ERROR
-}
-
-func (wrapper *JobContextWrapper) JobError() error {
+func (wrapper *JobContextWrapper) JobErr() error {
 	wrapper.mu.RLock()
 	defer wrapper.mu.RUnlock()
 	return wrapper.jobErr
+}
+
+func (wrapper *JobContextWrapper) SetJobErr(err error) error {
+	wrapper.mu.Lock()
+	defer wrapper.mu.Unlock()
+	wrapper.jobErr = err
+	wrapper.jobCtx.JobErr = wrapper.jobCtx.JobErr + err.Error()
+	if err := wrapper.jobDB.SetUploadPayloadJobJobError(wrapper.jobCtx.JobId,
+		types.JOB_STATE_ERROR, wrapper.jobCtx.JobErr); err != nil {
+		// log error
+	}
+	return err
+}
+
+func (wrapper *JobContextWrapper) GetUploadPrimaryJob() (*job.UploadSubJob, error) {
+	wrapper.mu.RLock()
+	jobID := wrapper.jobCtx.JobId
+	wrapper.mu.RUnlock()
+	return wrapper.jobDB.GetUploadPrimaryJob(jobID)
+}
+
+func (wrapper *JobContextWrapper) GetUploadSecondaryJob() (*job.UploadSubJob, error) {
+	wrapper.mu.RLock()
+	jobID := wrapper.jobCtx.JobId
+	wrapper.mu.RUnlock()
+	return wrapper.jobDB.GetUploadSecondaryJob(jobID)
+}
+
+func (wrapper *JobContextWrapper) SetPrimaryPieceJobState(pieceJob *service.PieceJob, state string) error {
+	wrapper.mu.RLock()
+	jobID := wrapper.jobCtx.JobId
+	wrapper.mu.RUnlock()
+	return wrapper.jobDB.SetUploadPrimaryPieceJobState(jobID, pieceJob, state)
+}
+
+func (wrapper *JobContextWrapper) SetSecondaryJobState(pieceJob *service.PieceJob, state string) error {
+	wrapper.mu.RLock()
+	for _, spSealInfo := range pieceJob.StorageProviderSealInfo {
+		for i, idx := range spSealInfo.PieceIdx {
+			sp := &types.StorageProviderInfo{
+				SpId:      spSealInfo.StorageProviderId,
+				Idx:       idx,
+				Checksum:  spSealInfo.CheckSum[i],
+				Signature: spSealInfo.Signature,
+			}
+			wrapper.jobCtx.ObjectInfo.SecondarySps[spSealInfo.StorageProviderId] = sp
+		}
+	}
+	jobID := wrapper.jobCtx.JobId
+	bucketName := wrapper.jobCtx.ObjectInfo.BucketName
+	objectName := wrapper.jobCtx.ObjectInfo.ObjectName
+	wrapper.mu.RUnlock()
+	if err := wrapper.metaDB.SetIntegrityHash(bucketName, objectName, pieceJob); err != nil {
+		return err
+	}
+	if err := wrapper.jobDB.SetUploadSecondaryJobState(jobID, pieceJob, state); err != nil {
+		return err
+	}
+	return nil
 }
