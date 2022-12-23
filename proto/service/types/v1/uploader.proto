@@ -3,8 +3,13 @@ package service.types.v1;
 import "pkg/types/v1/object.proto";
 option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
 
+enum ErrCode {
+  ERR_CODE_SUCCESS_UNSPECIFIED = 0;
+  ERR_CODE_FAILED = 1;
+}
+
 message ErrMessage {
-  string err_code = 1;
+  ErrCode err_code = 1;
   string err_msg = 2;
 }
 

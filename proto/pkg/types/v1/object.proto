@@ -7,6 +7,7 @@ message StorageProviderInfo {
   string sp_id = 1;   // identifies storage provider
   uint32 idx = 2;     // order of secondary storage provider
   bytes checksum = 3;
+  bytes signature = 4;
 }
 
 enum RedundancyType {
@@ -31,5 +32,5 @@ message ObjectInfo {
   bytes tx_hash = 11;
   // fixed before seal
   RedundancyType redundancy_type = 12;
-  repeated StorageProviderInfo secondary_sps = 13;
+  map<string, StorageProviderInfo> secondary_sps = 13;
 }
