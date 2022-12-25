@@ -2,7 +2,6 @@ syntax = "proto3";
 package service.types.v1;
 import "pkg/types/v1/object.proto";
 import "service/types/v1/uploader.proto";
-import "service/types/v1/stone_node.proto";
 option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
 
 message StoneHubServiceCreateObjectRequest {
@@ -13,35 +12,67 @@ message StoneHubServiceCreateObjectRequest {
 
 message StoneHubServiceCreateObjectResponse {
   uint64 trace_id = 1;
+  bytes tx_hash = 2;
+  ErrMessage err_message = 3;
+}
+
+message StoneHubServiceSetObjectCreateHeightRequest {
+  uint64 trace_id = 1;
+  bytes tx_hash = 2;
+  uint64 tx_height = 3;
+}
+
+message StoneHubServiceSetObjectCreateHeightResponse {
+  uint64 trace_id = 1;
   ErrMessage err_message = 2;
 }
 
 message StoneHubServiceBeginUploadPayloadRequest {
   uint64 trace_id = 1;
   bytes tx_hash = 2;
-  uint64 job_id = 3; // optional
 }
 
 message StoneHubServiceBeginUploadPayloadResponse {
   uint64 trace_id = 1;
-  uint64 job_id = 2;
+  bytes tx_hash = 2;
+  uint64 payload_size = 3;
+  uint64 segment_size = 4;
+  pkg.types.v1.RedundancyType redundancy_type = 5;
+  ErrMessage err_message = 6;
+  bool primary_done = 7;
+}
+
+message StorageProviderSealInfo {
+  string storage_provider_id = 1;
+  repeated uint32 piece_idx = 2;
+  repeated bytes check_sum = 3;
+  bytes integrity_hash = 4;
+  bytes signature = 5;
+}
+
+message PieceJob {
+  string bucket_name = 1;
+  string object_name = 2;
   bytes tx_hash = 3;
-  uint64 payload_size = 4;
-  uint64 segment_size = 5;
-  pkg.types.v1.RedundancyType redundancy_type = 6;
-  ErrMessage err_message = 7;
+  pkg.types.v1.RedundancyType redundancy_type = 4;
+  uint32 segment_count = 5;
+  uint32 ec_k = 6;
+  uint32 ec_m = 7;
+  bool done = 8;
+  repeated StorageProviderSealInfo storage_provider_seal_info = 9;
 }
 
 message StoneHubServiceDonePrimaryPieceJobRequest {
   uint64 trace_id = 1;
-  uint64 job_id = 2;
-  uint32 segment_idx = 3;
-  ErrMessage err_message = 4;
+  bytes tx_hash = 2;
+  ErrMessage err_message = 3;
+  PieceJob piece_job = 4;
 }
 
 message StoneHubServiceDonePrimaryPieceJobResponse {
   uint64 trace_id = 1;
-  ErrMessage err_message = 2;
+  bytes tx_hash = 2;
+  ErrMessage err_message = 3;
 }
 
 message StoneHubServiceAllocStoneJobRequest {
@@ -50,25 +81,25 @@ message StoneHubServiceAllocStoneJobRequest {
 
 message StoneHubServiceAllocStoneJobResponse {
   uint64 trace_id = 1;
-  oneof stone_job_oneof {
-    SecondaryJob secondary_piece_job = 2;
-  }
+  bytes tx_hash = 2;
+  PieceJob piece_job = 4;
 }
 
 message StoneHubServiceDoneSecondaryPieceJobRequest {
   uint64 trace_id = 1;
-  uint64 job_id = 2;
-  StorageProviderInfo secondary_sp = 3;
+  bytes tx_hash = 2;
+  PieceJob piece_job = 3;
   ErrMessage err_message = 4;
 }
 
 message StoneHubServiceDoneSecondaryPieceJobResponse {
   uint64 trace_id = 1;
-  ErrMessage err_message = 2;
+  ErrMessage err_message = 3;
 }
 
 service StoneHubService {
   rpc CreateObject(StoneHubServiceCreateObjectRequest) returns (StoneHubServiceCreateObjectResponse) {};
+  rpc SetObjectCreateHeight(StoneHubServiceSetObjectCreateHeightRequest) returns (StoneHubServiceSetObjectCreateHeightResponse) {};
   rpc BeginUploadPayload(StoneHubServiceBeginUploadPayloadRequest) returns (StoneHubServiceBeginUploadPayloadResponse) {};
   rpc DonePrimaryPieceJob(StoneHubServiceDonePrimaryPieceJobRequest) returns (StoneHubServiceDonePrimaryPieceJobResponse) {};
   rpc AllocStoneJob(StoneHubServiceAllocStoneJobRequest) returns (StoneHubServiceAllocStoneJobResponse) {};
