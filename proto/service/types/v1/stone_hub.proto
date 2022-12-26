@@ -58,7 +58,7 @@ message PieceJob {
   uint32 segment_count = 5;
   uint32 ec_k = 6;
   uint32 ec_m = 7;
-  bool done = 8;
+  repeated uint32 target_idx  = 8;
   repeated StorageProviderSealInfo storage_provider_seal_info = 9;
 }
 
