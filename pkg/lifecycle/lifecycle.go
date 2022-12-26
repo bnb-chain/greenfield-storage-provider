@@ -11,11 +11,14 @@ import (
 )
 
 // Service provides abstract methods to control the lifecycle of a service
+//
+//go:generate mockgen -source=./lifecycle.go -destination=./mock/lifecycle_mock.go -package=mock
 type Service interface {
 	// Name describe service name
 	Name() string
-	// Start and Stop should be used in non-block form
+	// Start a service, this method should be used in non-block form
 	Start(ctx context.Context) error
+	// Stop a service, this method should be used in non-block form
 	Stop(ctx context.Context) error
 }
 
