@@ -1,0 +1,6 @@
+Port = "9091"
+StoreConfigFile = "./config/store.toml"
+
+[LogConfig]
+FilePath = "./uploader.log"
+Level = "info"

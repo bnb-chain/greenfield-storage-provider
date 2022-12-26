@@ -1,22 +1,26 @@
 package gateway
 
 import (
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
-	"github.com/gorilla/mux"
-	"github.com/naoina/toml"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/naoina/toml"
+
+	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
 type gatewayConfig struct {
 	Port      string
 	Domain    string
-	DebugDir  string
 	LogConfig struct {
 		FilePath string
 		Level    string
 	}
+	UploaderConfig   uploaderClientConfig
+	ChainConfig      chainClientConfig
+	DownloaderConfig downloaderClientConfig
 }
 
 type GatewayService struct {
@@ -66,18 +70,15 @@ func (g *GatewayService) Init(configFile string) bool {
 		level = log.InfoLevel
 	}
 	log.Init(level, g.config.LogConfig.FilePath)
-
-	if g.config.DebugDir != "" {
-		if err := os.Mkdir(g.config.DebugDir, 0777); err != nil && !os.IsExist(err) {
-			log.Warnw("failed to make debug dir", "err", err)
-			return false
-		}
-	}
 	log.Infow("succeed to init")
 	return true
 }
 
 func (g *GatewayService) Start() bool {
+	var (
+		err error
+	)
+
 	router := mux.NewRouter().SkipClean(true)
 	g.registerhandler(router)
 	var server = &http.Server{
@@ -91,9 +92,18 @@ func (g *GatewayService) Start() bool {
 		}
 	}()
 	g.httpServer = server
-	g.uploader = newUploaderClient()
-	g.downloader = newDownloaderClient()
-	g.chain = newChainClient()
+	if g.uploader, err = newUploaderClient(g.config.UploaderConfig); err != nil {
+		log.Warnw("failed to create uploader", "err", err)
+		return false
+	}
+	if g.downloader, err = newDownloaderClient(g.config.DownloaderConfig); err != nil {
+		log.Warnw("failed to create downloader", "err", err)
+		return false
+	}
+	if g.chain, err = newChainClient(g.config.ChainConfig); err != nil {
+		log.Warnw("failed to create chainer client", "err", err)
+		return false
+	}
 	g.retriever = newRetrieverClient()
 	log.Info("gateway startup")
 	return true

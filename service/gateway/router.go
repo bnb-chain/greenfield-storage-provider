@@ -1,10 +1,12 @@
 package gateway
 
 import (
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/gorilla/mux"
+
+	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
 // echo impl
@@ -12,6 +14,7 @@ func (g *GatewayService) notFoundHandler(w http.ResponseWriter, r *http.Request)
 	s, _ := ioutil.ReadAll(r.Body)
 	log.Warnw("not found handler", "header", r.Header, "host", r.Host)
 	w.Write(s)
+
 }
 
 func (g *GatewayService) registerhandler(r *mux.Router) {

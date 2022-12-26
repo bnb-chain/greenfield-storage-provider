@@ -1,11 +1,17 @@
 package gateway
 
 import (
+	"net/http"
+
 	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
-	"net/http"
 )
 
+// putObjectTxHandler handle put object tx request, include steps:
+// 1.check request params validation;
+// 2.check request signature;
+// 3.check account acl;
+// 4.put object tx by uploaderClient.
 func (g *GatewayService) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
@@ -20,9 +26,9 @@ func (g *GatewayService) putObjectTxHandler(w http.ResponseWriter, r *http.Reque
 			_ = errorDescription.errorResponse(w, reqCtx)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(reqCtx))
+			log.Infof("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(reqCtx))
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(reqCtx))
+			log.Warnf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(reqCtx))
 		}
 	}()
 
@@ -45,8 +51,7 @@ func (g *GatewayService) putObjectTxHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	var opt = &putObjectTxOption{
-		reqCtx:   reqCtx,
-		debugDir: g.config.DebugDir,
+		reqCtx: reqCtx,
 	}
 	info, err := g.uploader.putObjectTx(reqCtx.object, opt)
 	if err != nil {
@@ -63,6 +68,11 @@ func (g *GatewayService) putObjectTxHandler(w http.ResponseWriter, r *http.Reque
 	w.Header().Set(TransactionHashHeader, info.txHash)
 }
 
+// putObjectHandler handle put object request, include steps:
+// 1.check request params validation;
+// 2.check request signature;
+// 3.check account acl;
+// 4.put object data by uploaderClient.
 func (g *GatewayService) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
@@ -103,8 +113,8 @@ func (g *GatewayService) putObjectHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	var opt = &putObjectOption{
-		reqCtx:   reqCtx,
-		debugDir: g.config.DebugDir,
+		reqCtx: reqCtx,
+		//debugDir: g.config.DebugDir,
 	}
 	info, err := g.uploader.putObject(reqCtx.object, r.Body, opt)
 	if err != nil {
@@ -120,6 +130,11 @@ func (g *GatewayService) putObjectHandler(w http.ResponseWriter, r *http.Request
 	w.Header().Set(ETagHeader, info.eTag)
 }
 
+// getObjectHandler handle get object request, include steps:
+// 1.check request params validation;
+// 2.check request signature;
+// 3.check account acl;
+// 4.get object data by downloaderClient.
 func (g *GatewayService) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
@@ -160,8 +175,7 @@ func (g *GatewayService) getObjectHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	var opt = &getObjectOption{
-		reqCtx:   reqCtx,
-		debugDir: g.config.DebugDir,
+		reqCtx: reqCtx,
 	}
 	err = g.downloader.getObject(reqCtx.object, w, opt)
 	if err != nil {

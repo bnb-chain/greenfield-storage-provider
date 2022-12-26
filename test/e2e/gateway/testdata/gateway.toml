@@ -1,7 +1,19 @@
 Port = "9099"
 Domain = "bfs.nodereal.com"
-DebugDir = "./tmptestdata"
 
 [LogConfig]
 FilePath = "./tmptestdata/gateway.log"
 Level = "info"
+
+[UploaderConfig]
+Mode = "DebugMode"
+DebugDir = "./tmptestdata"
+GrpcAddr = "127.0.0.1:9091"
+
+[ChainConfig]
+Mode = "DebugMode"
+DebugDir = "./tmptestdata"
+
+[DownloaderConfig]
+Mode = "DebugMode"
+DebugDir = "./tmptestdata"

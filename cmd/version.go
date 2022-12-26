@@ -12,7 +12,7 @@ var (
 	BuildTime  string
 )
 
-func VersionString() string {
+func DumpVersion() string {
 	return fmt.Sprintf("Version : %s\n"+
 		"Branch  : %s\n"+
 		"Commit  : %s\n"+

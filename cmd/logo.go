@@ -11,6 +11,6 @@ const (
 `
 )
 
-func LogoString() string {
+func DumpLogo() string {
 	return BFSLogo
 }

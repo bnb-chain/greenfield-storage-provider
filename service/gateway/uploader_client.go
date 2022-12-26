@@ -2,66 +2,101 @@ package gateway
 
 import (
 	"bufio"
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"fmt"
 	"io"
 	"os"
+
+	"google.golang.org/grpc"
+
+	"github.com/bnb-chain/inscription-storage-provider/model/errors"
+	pbPkg "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	pbService "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
-type debugUploaderImpl struct {
+type putObjectTxOption struct {
+	reqCtx *requestContext
 }
 
-func (uc *debugUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
-	var (
-		bucketDir    = opt.debugDir + "/" + opt.reqCtx.bucket
-		objectTxFile = bucketDir + "/" + name + ".tx"
-	)
+type objectTxInfo struct {
+	txHash string
+	weight uint64
+}
 
-	s, err := os.Stat(bucketDir)
-	if err != nil || !s.IsDir() {
-		log.Warnw("put object tx failed, due to stat bucket dir", "err", err)
+type putObjectOption struct {
+	reqCtx *requestContext
+	txHash []byte
+}
+
+type objectInfo struct {
+	size uint64
+	eTag string
+}
+
+// uploaderClientInterface define interface to upload object. BFS upload process is divided into two stages:
+// 1.putObjectTx: set object meta to blockchain;
+// 2.putObject: write object data to BFS, and update object seal info to blockchain.
+type uploaderClientInterface interface {
+	putObjectTx(string, *putObjectTxOption) (*objectTxInfo, error)
+	putObject(string, io.Reader, *putObjectOption) (*objectInfo, error)
+}
+
+// debugUploaderImpl is an implement of upload for local debugging.
+type debugUploaderImpl struct {
+	localDir string
+}
+
+// putObjectTx is used to put object tx to local directory file for debugging.
+func (dui *debugUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (*objectTxInfo, error) {
+	var (
+		innerErr     error
+		bucketDir    = dui.localDir + "/" + opt.reqCtx.bucket
+		objectTxFile = bucketDir + "/" + name + ".tx"
+		txJson       []byte
+	)
+	defer func() {
+		if innerErr != nil {
+			log.Warnw("put object tx failed", "err", innerErr)
+		}
+	}()
+
+	if s, innerErr := os.Stat(bucketDir); innerErr != nil || !s.IsDir() {
 		return nil, errors.ErrInternalError
 	}
-	_, err = os.Stat(objectTxFile)
-	if err == nil {
-		log.Warn("put object tx failed, due to has existed")
+	if _, innerErr = os.Stat(objectTxFile); innerErr == nil {
 		return nil, errors.ErrDuplicateObject
 	}
-
+	// mock tx info
 	var txInfo = struct {
 		TxHash string `json:"TxHash"`
 		Weight uint64 `json:"Weight"`
 	}{
-		TxHash: "mockhash-123",
+		TxHash: "debugmode-hash",
 		Weight: 2012,
 	}
-
-	txJson, err := json.Marshal(txInfo)
-	if err != nil {
-		log.Warnw("put object tx failed, due to json marshal", "err", err)
+	if txJson, innerErr = json.Marshal(txInfo); innerErr != nil {
 		return nil, errors.ErrInternalError
 	}
-
-	f, err := os.OpenFile(objectTxFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
-	defer f.Close()
-	if err != nil {
-		log.Warnw("put object tx failed, due to open file", "err", err)
+	if f, innerErr := os.OpenFile(objectTxFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777); innerErr != nil {
 		return nil, errors.ErrInternalError
+	} else {
+		defer f.Close()
+		if n, innerErr := f.Write(txJson); innerErr == nil && n < len(txJson) {
+			return nil, errors.ErrInternalError
+		}
+		return &objectTxInfo{txHash: txInfo.TxHash, weight: txInfo.Weight}, nil
 	}
-	n, err := f.Write(txJson)
-	if err == nil && n < len(txJson) {
-		log.Warnw("put object tx failed, due to write file", "err", err)
-		return nil, errors.ErrInternalError
-	}
-	return &objectTxInfo{txHash: txInfo.TxHash, weight: txInfo.Weight}, nil
 }
 
+// putObject is used to put object data to local directory file for debugging.
 func (dui *debugUploaderImpl) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
 	var (
-		bucketDir      = opt.debugDir + "/" + opt.reqCtx.bucket
+		innerErr       error
+		bucketDir      = dui.localDir + "/" + opt.reqCtx.bucket
 		objectTxFile   = bucketDir + "/" + name + ".tx"
 		objectDataFile = bucketDir + "/" + name + ".data"
 
@@ -72,27 +107,95 @@ func (dui *debugUploaderImpl) putObject(name string, reader io.Reader, opt *putO
 		md5Hash       = md5.New()
 		md5Value      string
 	)
+	defer func() {
+		if innerErr != nil {
+			log.Warnw("put object failed", "err", innerErr)
+		}
+	}()
 
-	s, err := os.Stat(bucketDir)
-	if err != nil || !s.IsDir() {
-		log.Warnw("put object failed, due to stat bucket dir", "err", err)
+	if s, innerErr := os.Stat(bucketDir); innerErr != nil || !s.IsDir() {
 		return nil, errors.ErrInternalError
 	}
-	_, err = os.Stat(objectTxFile)
-	if err != nil && os.IsNotExist(err) {
-		log.Warn("put object failed, due to tx is not existed")
+	if _, innerErr = os.Stat(objectTxFile); innerErr != nil && os.IsNotExist(innerErr) {
 		return nil, errors.ErrObjectTxNotExist
 	}
 
 	// todo: check tx-hash by json
-	f, err := os.OpenFile(objectDataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-	defer f.Close()
+	if f, innerErr := os.OpenFile(objectDataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777); innerErr != nil {
+		return nil, errors.ErrInternalError
+	} else {
+		defer f.Close()
+		writer := bufio.NewWriter(f)
+		for {
+			if readN, innerErr = reader.Read(buf); innerErr != nil && innerErr != io.EOF {
+				return nil, errors.ErrInternalError
+			}
+			if readN > 0 {
+				if writeN, innerErr = writer.Write(buf[:readN]); innerErr != nil {
+					return nil, errors.ErrInternalError
+				}
+				writer.Flush()
+				size += uint64(writeN)
+				copy(hashBuf, buf[:readN])
+				md5Hash.Write(hashBuf[:readN])
+			}
+			if innerErr == io.EOF {
+				innerErr = nil
+				break
+			}
+		}
+		md5Value = hex.EncodeToString(md5Hash.Sum(nil))
+		return &objectInfo{eTag: md5Value, size: size}, nil
+	}
+}
+
+// grpcUploaderImpl is an implement of call grpc uploader service.
+type grpcUploaderImpl struct {
+	grpcAddr string
+}
+
+// putObjectTx is used to call uploaderService's CreateObject by grpc.
+func (gui *grpcUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (*objectTxInfo, error) {
+	conn, err := grpc.Dial(gui.grpcAddr, grpc.WithInsecure())
 	if err != nil {
-		log.Warnw("put object failed, due to open file", "err", err)
+		log.Warnw("failed to dail to uploader", "err", err)
 		return nil, errors.ErrInternalError
 	}
-	writer := bufio.NewWriter(f)
+	defer conn.Close()
+	client := pbService.NewUploaderServiceClient(conn)
+	resp, err := client.CreateObject(context.Background(), &pbService.UploaderServiceCreateObjectRequest{
+		ObjectInfo: &pbPkg.ObjectInfo{BucketName: opt.reqCtx.bucket, ObjectName: name},
+	})
+	if err != nil {
+		log.Warnw("failed to rpc to uploader", "err", err)
+		return nil, errors.ErrInternalError
+	}
+	return &objectTxInfo{txHash: string(resp.TxHash)}, nil
+}
 
+// putObject is used to call uploaderService's UploadPayload by grpc.
+func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
+	var (
+		buf      = make([]byte, 65536)
+		readN    int
+		size     uint64
+		hashBuf  = make([]byte, 65536)
+		md5Hash  = md5.New()
+		md5Value string
+	)
+
+	conn, err := grpc.Dial(gui.grpcAddr, grpc.WithInsecure())
+	if err != nil {
+		log.Warnw("failed to dail to uploader", "err", err)
+		return nil, errors.ErrInternalError
+	}
+	defer conn.Close()
+	client := pbService.NewUploaderServiceClient(conn)
+	stream, err := client.UploadPayload(context.Background())
+	if err != nil {
+		log.Warnw("failed to dail to uploader", "err", err)
+		return nil, errors.ErrInternalError
+	}
 	for {
 		readN, err = reader.Read(buf)
 		if err != nil && err != io.EOF {
@@ -100,66 +203,67 @@ func (dui *debugUploaderImpl) putObject(name string, reader io.Reader, opt *putO
 			return nil, errors.ErrInternalError
 		}
 		if readN > 0 {
-			if writeN, err = writer.Write(buf[:readN]); err != nil {
-				log.Warnw("put object failed, due to writer", "err", err)
+			var req pbService.UploaderServiceUploadPayloadRequest
+			//req.TxHash = opt.txHash
+			req.TxHash = []byte("123")
+			req.PayloadData = buf[:readN]
+			if err := stream.Send(&req); err != nil {
+				log.Warnw("put object failed, due to stream send", "err", err)
 				return nil, errors.ErrInternalError
 			}
-			writer.Flush()
-			size += uint64(writeN)
+			size += uint64(readN)
 			copy(hashBuf, buf[:readN])
 			md5Hash.Write(hashBuf[:readN])
 		}
 		if err == io.EOF {
 			err = nil
+			_, err := stream.CloseAndRecv()
+			if err != nil {
+				log.Warnw("put object failed, due to stream close", "err", err)
+				return nil, errors.ErrInternalError
+			}
 			break
 		}
 	}
 	md5Value = hex.EncodeToString(md5Hash.Sum(nil))
+	log.Info("gateway total size:", size)
 	return &objectInfo{eTag: md5Value, size: size}, nil
 }
 
-// todo: impl of call UploaderService
+// uploaderClientConfig is the configuration information when creating uploaderClient.
+// currently Mode support "DebugMode" and "GrpcMode".
+type uploaderClientConfig struct {
+	Mode     string
+	DebugDir string
+	GrpcAddr string
+}
+
 type uploaderClient struct {
+	impl uploaderClientInterface
 }
 
-func newUploaderClient() *uploaderClient {
-	return &uploaderClient{}
-}
-
-type putObjectTxOption struct {
-	reqCtx   *requestContext
-	debugDir string
-}
-
-type objectTxInfo struct {
-	txHash string
-	weight uint64
+func newUploaderClient(c uploaderClientConfig) (*uploaderClient, error) {
+	switch {
+	case c.Mode == "DebugMode":
+		if c.DebugDir == "" {
+			return nil, fmt.Errorf("has no debug dir")
+		}
+		if err := os.Mkdir(c.DebugDir, 0777); err != nil && !os.IsExist(err) {
+			log.Warnw("failed to make debug dir", "err", err)
+			return nil, err
+		}
+		return &uploaderClient{impl: &debugUploaderImpl{localDir: c.DebugDir}}, nil
+	case c.Mode == "GrpcMode":
+		return &uploaderClient{impl: &grpcUploaderImpl{grpcAddr: c.GrpcAddr}}, nil
+	default:
+		return nil, fmt.Errorf("not support mode, %v", c.Mode)
+	}
 }
 
 func (uc *uploaderClient) putObjectTx(name string, opt *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
-	if opt.debugDir != "" {
-		dui := &debugUploaderImpl{}
-		return dui.putObjectTx(name, opt)
-	}
-	return &objectTxInfo{}, nil
+	return uc.impl.putObjectTx(name, opt)
 }
 
-// todo: pick policy
-type putObjectOption struct {
-	reqCtx   *requestContext
-	debugDir string
-}
-
-type objectInfo struct {
-	size uint64
-	eTag string
-}
-
-// todo: check md5
 func (uc *uploaderClient) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
-	if opt.debugDir != "" {
-		dui := &debugUploaderImpl{}
-		return dui.putObject(name, reader, opt)
-	}
-	return &objectInfo{eTag: "2012"}, nil
+	return uc.impl.putObject(name, reader, opt)
 }

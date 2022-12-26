@@ -3,14 +3,16 @@ package e2e
 import (
 	"crypto/md5"
 	"fmt"
-	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"math/rand"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
 )
 
 var (
@@ -53,13 +55,13 @@ func TestGateway(t *testing.T) {
 		req1, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/", nil)
 		req1.Host = "test.bfs.nodereal.com"
 		res1, _ := http.DefaultClient.Do(req1)
-		assert.Equal(t, res1.StatusCode, 200)
+		assert.Equal(t, 200, res1.StatusCode)
 
 		// failed due to has existed
 		req2, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/", nil)
 		req2.Host = "test.bfs.nodereal.com"
 		res2, _ := http.DefaultClient.Do(req2)
-		assert.Equal(t, res2.StatusCode, 409)
+		assert.Equal(t, 409, res2.StatusCode)
 	}
 	// put object
 	{
@@ -67,25 +69,25 @@ func TestGateway(t *testing.T) {
 		req1, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/testobject", strings.NewReader(payload))
 		req1.Host = "testa.bfs.nodereal.com"
 		res1, _ := http.DefaultClient.Do(req1)
-		assert.Equal(t, res1.StatusCode, 500)
+		assert.Equal(t, 500, res1.StatusCode)
 
 		// failed due to tx not found
 		req2, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/testobject", strings.NewReader(payload))
 		req2.Host = "test.bfs.nodereal.com"
 		res2, _ := http.DefaultClient.Do(req2)
-		assert.Equal(t, res2.StatusCode, 404)
+		assert.Equal(t, 404, res2.StatusCode)
 
 		// succeed
 		req3, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/testobject?transaction", nil)
 		req3.Host = "test.bfs.nodereal.com"
 		res3, _ := http.DefaultClient.Do(req3)
-		assert.Equal(t, res3.StatusCode, 200)
+		assert.Equal(t, 200, res3.StatusCode)
 
 		req4, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/testobject", strings.NewReader(payload))
 		req4.Host = "test.bfs.nodereal.com"
 		res4, _ := http.DefaultClient.Do(req4)
-		assert.Equal(t, res4.StatusCode, 200)
-		assert.Equal(t, res4.Header.Get("etag"), md5str)
+		assert.Equal(t, 200, res4.StatusCode)
+		assert.Equal(t, md5str, res4.Header.Get("etag"))
 	}
 	// get object
 	{
@@ -93,12 +95,12 @@ func TestGateway(t *testing.T) {
 		req1, _ := http.NewRequest(http.MethodGet, "http://127.0.0.1:9099/testobjecta", nil)
 		req1.Host = "test.bfs.nodereal.com"
 		res1, _ := http.DefaultClient.Do(req1)
-		assert.Equal(t, res1.StatusCode, 404)
+		assert.Equal(t, 404, res1.StatusCode)
 		// succeed
 		req2, _ := http.NewRequest(http.MethodGet, "http://127.0.0.1:9099/testobject", nil)
 		req2.Host = "test.bfs.nodereal.com"
 		res2, _ := http.DefaultClient.Do(req2)
-		assert.Equal(t, res2.StatusCode, 200)
+		assert.Equal(t, 200, res2.StatusCode)
 		// assert.Equal(t, res2.Header.Get("Content-Length"), 65*1024)
 	}
 	tearDown()

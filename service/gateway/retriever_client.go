@@ -10,7 +10,6 @@ func newRetrieverClient() *retrieverClient {
 
 type queryACLOption struct {
 	reqCtx *requestContext
-	// todo:
 }
 
 func (rc *retrieverClient) queryACL(name string, opt *queryACLOption) error {

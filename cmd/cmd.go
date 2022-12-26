@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
-	"os"
+	"github.com/bnb-chain/inscription-storage-provider/service/uploader"
 )
 
 var (
@@ -17,7 +19,7 @@ var (
 func main() {
 	flag.Parse()
 	if *version {
-		fmt.Print(LogoString() + VersionString())
+		fmt.Print(DumpLogo() + DumpVersion())
 		os.Exit(0)
 	}
 
@@ -25,19 +27,18 @@ func main() {
 	switch *module {
 	case "gateway":
 		service = gateway.NewGatewayService()
-		ok := service.Init(*configFile)
-		if !ok {
-			fmt.Printf("%s init failed, configfile:%s", *module, *configFile)
-			os.Exit(1)
-		}
-		ok = service.Start()
-		if !ok {
-			fmt.Printf("%s start failed, configfile:%s", *module, *configFile)
-			os.Exit(1)
-		}
-		// fmt.Println(service.Description())
+	case "uploader":
+		service = uploader.NewUploaderService()
 	default:
 		fmt.Printf("Fatal: module mismatch: %s", *module)
+		os.Exit(1)
+	}
+	if ok := service.Init(*configFile); !ok {
+		fmt.Printf("%s init failed, configfile:%s", *module, *configFile)
+		os.Exit(1)
+	}
+	if ok := service.Start(); !ok {
+		fmt.Printf("%s start failed, configfile:%s", *module, *configFile)
 		os.Exit(1)
 	}
 

@@ -1,11 +1,16 @@
 package gateway
 
 import (
+	"net/http"
+
 	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
-	"net/http"
 )
 
+// createBucketHandler handle create bucket request, include steps:
+// 1.check request params validation;
+// 2.check request signature;
+// 3.forward createBucket metadata to blockchain by chainClient.
 func (g *GatewayService) createBucketHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
@@ -37,8 +42,7 @@ func (g *GatewayService) createBucketHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	var opt = &createBucketOption{
-		reqCtx:   reqCtx,
-		debugDir: g.config.DebugDir,
+		reqCtx: reqCtx,
 	}
 	err = g.chain.createBucket(reqCtx.bucket, opt)
 	if err != nil {

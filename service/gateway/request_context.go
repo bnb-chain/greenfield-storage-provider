@@ -2,12 +2,14 @@ package gateway
 
 import (
 	"fmt"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+
+	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
 type requestContext struct {
