@@ -5,7 +5,7 @@ option go_package = "github.com/bnb-chain/inscription-storage-provider/service/t
 
 enum ErrCode {
   ERR_CODE_SUCCESS_UNSPECIFIED = 0;
-  ERR_CODE_FAILED = 1;
+  ERR_CODE_ERROR= 1;
 }
 
 message ErrMessage {
