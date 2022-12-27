@@ -5,14 +5,14 @@ import "service/types/v1/stone_hub.proto";
 option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
 
 message SyncerServiceUploadECPieceRequest {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   uint64 primary_job_id = 2;
   repeated PieceJob piece_jobs = 3;
   repeated bytes piece_data = 4;
 }
 
 message SyncerServiceUploadECPieceResponse {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   StorageProviderSealInfo secondary_sp_info = 2;
   ErrMessage err_message = 3;
 }
