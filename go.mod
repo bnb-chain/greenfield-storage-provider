@@ -7,6 +7,7 @@ require (
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/golang/mock v1.6.0
 	github.com/json-iterator/go v1.1.12
+	github.com/klauspost/reedsolomon v1.11.3
 	github.com/naoina/toml v0.1.1
 	github.com/pkg/sftp v1.13.5
 	github.com/stretchr/testify v1.8.1
@@ -18,6 +19,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.1.1 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
