@@ -30,9 +30,9 @@ message StoneHubServiceSetObjectCreateHeightResponse {
 message StorageProviderSealInfo {
   string storage_provider_id = 1;
   repeated uint32 piece_idx = 2;
-  map<uint32, bytes> piece_checksum = 3;
-  bytes integrity_hash = 4;
-  bytes signature = 5;
+  map<uint32, bytes> piece_checksum = 3; // key is piece index, value is checksum of one piece
+  bytes integrity_hash = 4; // 各个Piece的checksum
+  bytes signature = 5; // 签名
 }
 
 message PieceJob {
@@ -40,7 +40,7 @@ message PieceJob {
   string object_name = 2;
   bytes tx_hash = 3;
   uint64 payload_size = 4;
-  repeated uint32 target_idx = 5;
+  repeated uint32 target_idx = 5; // 传过来的Piece有多个，[0,1,2,3,4,5]，当0和3成功，其余出错时，可以利用target_idx进行重试，只重试出错的Piece
   pkg.types.v1.RedundancyType redundancy_type = 6;
   repeated StorageProviderSealInfo storage_provider_seal_info = 7;
 }
@@ -89,7 +89,7 @@ message StoneHubServiceDoneSecondaryPieceJobRequest {
 
 message StoneHubServiceDoneSecondaryPieceJobResponse {
   string trace_id = 1;
-  ErrMessage err_message = 3;
+  ErrMessage err_message = 2;
 }
 
 service StoneHubService {

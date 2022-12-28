@@ -6,9 +6,8 @@ option go_package = "github.com/bnb-chain/inscription-storage-provider/service/t
 
 message SyncerServiceUploadECPieceRequest {
   string trace_id = 1;
-  uint64 primary_job_id = 2;
-  repeated PieceJob piece_jobs = 3;
-  repeated bytes piece_data = 4;
+  repeated PieceJob piece_jobs = 2;
+  repeated bytes piece_data = 3;
 }
 
 message SyncerServiceUploadECPieceResponse {
