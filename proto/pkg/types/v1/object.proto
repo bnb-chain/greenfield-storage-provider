@@ -33,4 +33,5 @@ message ObjectInfo {
   // fixed before seal
   RedundancyType redundancy_type = 12;
   map<string, StorageProviderInfo> secondary_sps = 13;
+  uint64 job_id = 14;
 }
