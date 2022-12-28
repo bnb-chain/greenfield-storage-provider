@@ -7,8 +7,8 @@ type RedundancyConfig struct {
 }
 
 type ECConfig struct {
-	DATABLOCKS   uint
-	PARITYBLOCKS uint
+	DataBlocks   uint
+	ParityBlocks uint
 }
 
 var Redundancy map[int]RedundancyConfig
@@ -27,8 +27,8 @@ type ObjectInfo struct {
 
 func initConfig() ECConfig {
 	return ECConfig{
-		DATABLOCKS:   4,
-		PARITYBLOCKS: 2,
+		DataBlocks:   4,
+		ParityBlocks: 2,
 	}
 }
 

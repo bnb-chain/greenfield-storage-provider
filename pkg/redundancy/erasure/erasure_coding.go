@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/klauspost/reedsolomon"
 	"log"
 	"sync"
+
+	"github.com/klauspost/reedsolomon"
 )
 
 // RSEncoder - reedSolomon RSEncoder encoding details.
