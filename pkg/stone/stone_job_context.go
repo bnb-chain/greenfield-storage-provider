@@ -2,10 +2,11 @@ package stone
 
 import (
 	"errors"
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
 	"sync"
 	"time"
+
+	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
 )
 
 // JobContextWrapper maintain job context, goroutine safe

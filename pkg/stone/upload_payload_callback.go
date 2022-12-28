@@ -3,11 +3,13 @@ package stone
 import (
 	"context"
 	"errors"
+
+	"github.com/looplab/fsm"
+
 	"github.com/bnb-chain/inscription-storage-provider/pkg/job"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
-	"github.com/looplab/fsm"
 )
 
 /*

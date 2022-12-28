@@ -3,13 +3,14 @@ package job
 import (
 	"crypto/sha256"
 	"errors"
+	"sync"
+
 	model "github.com/bnb-chain/inscription-storage-provider/model/job"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
 	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
-	"sync"
 )
 
 // ObjectInfoContext maintains the object info, goroutine safe.

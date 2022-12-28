@@ -1,8 +1,9 @@
 package stone
 
 import (
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	"github.com/looplab/fsm"
+
+	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 )
 
 /*

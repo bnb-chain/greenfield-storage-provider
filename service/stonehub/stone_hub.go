@@ -3,6 +3,10 @@ package stonehub
 import (
 	"context"
 	"errors"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
@@ -10,9 +14,6 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 	"github.com/oleiade/lane"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 var (
