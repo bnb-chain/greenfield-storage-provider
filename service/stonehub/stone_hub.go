@@ -3,9 +3,14 @@ package stonehub
 import (
 	"context"
 	"errors"
+	"net"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/oleiade/lane"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
@@ -13,7 +18,6 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
 	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
-	"github.com/oleiade/lane"
 )
 
 var (
@@ -51,6 +55,8 @@ type MonitorInscription interface {
 
 // StoneHub manage all stones, the stone is an abstraction of job context and fsm.
 type StoneHub struct {
+	config *StoneHubConfig
+	name   string
 	jobDB  jobdb.JobDB   // job context db
 	metaDB metadb.MetaDB // storage provider meta db
 	stone  sync.Map      // stone map(stoneKey->stone), goroutine safe
@@ -70,18 +76,36 @@ type StoneHub struct {
 	events MonitorInscription
 }
 
+func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
+	hub := &StoneHub{
+		config:            hubCfg,
+		name:              "StoneHub",
+		secondaryJobQueue: lane.NewQueue(),
+		jobCh:             make(chan stone.StoneJob, 100),
+		stoneGC:           make(chan string, 10),
+		stopCH:            make(chan struct{}),
+	}
+	return hub, nil
+}
+
+// Name implement the lifecycle interface
+func (hub *StoneHub) Name() string {
+	return hub.name
+}
+
 // Start implement the lifecycle interface
-func (hub *StoneHub) Start() error {
+func (hub *StoneHub) Start(ctx context.Context) error {
 	if hub.running.Swap(true) {
 		return errors.New("stone hub has started")
 	}
 	go hub.eventLoop()
 	go hub.listenInscription()
+	go hub.Serve()
 	return nil
 }
 
 // Stop implement the lifecycle interface
-func (hub *StoneHub) Stop() error {
+func (hub *StoneHub) Stop(ctx context.Context) error {
 	if !hub.running.Swap(false) {
 		return errors.New("stone hub has stopped")
 	}
@@ -113,6 +137,23 @@ func (hub *StoneHub) PopUploadSecondaryPieceJob() *service.PieceJob {
 	stoneJob := hub.secondaryJobQueue.Dequeue()
 	pieceJob := stoneJob.(*service.PieceJob)
 	return pieceJob
+}
+
+// Serve starts grpc stone hub service.
+func (hub *StoneHub) Serve() {
+	lis, err := net.Listen("tcp", hub.config.Address)
+	if err != nil {
+		log.Errorf("stone hub service failed to listen: %v", err)
+		return
+	}
+	grpcServer := grpc.NewServer()
+	service.RegisterStoneHubServiceServer(grpcServer, hub)
+	// register reflection service
+	reflection.Register(grpcServer)
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Errorf("stone hub service failed to listen: %v", err)
+		return
+	}
 }
 
 // eventLoop background goroutine, responsible for GC, seal object, piece job receiving, etc.
