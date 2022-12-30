@@ -10,7 +10,7 @@ type PieceJob struct {
 
 type JobDB interface {
 	CreateUploadPayloadJob(txHash []byte, info *types.ObjectInfo) error
-	SetObjectCreateHeight(txHash []byte, height uint64) error
+	SetObjectCreateHeightAndObjectID(txHash []byte, height uint64, objectID uint64) error
 
 	GetObjectInfo(txHash []byte) (*types.ObjectInfo, error)
 	GetJobContext(jobId uint64) (*types.JobContext, error)

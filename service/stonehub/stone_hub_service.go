@@ -50,15 +50,15 @@ func (hub *StoneHub) CreateObject(ctx context.Context, req *service.StoneHubServ
 	return rsp, nil
 }
 
-// SetObjectCreateHeight set CreateObjectTX the height on the inscription chain
-func (hub *StoneHub) SetObjectCreateHeight(ctx context.Context, req *service.StoneHubServiceSetObjectCreateHeightRequest) (*service.StoneHubServiceSetObjectCreateHeightResponse, error) {
-	rsp := &service.StoneHubServiceSetObjectCreateHeightResponse{TraceId: req.TraceId}
+// SetObjectCreateInfo set CreateObjectTX the height and object resource id on the inscription chain
+func (hub *StoneHub) SetObjectCreateInfo(ctx context.Context, req *service.StoneHubServiceSetObjectCreateInfoRequest) (*service.StoneHubServiceSetSetObjectCreateInfoResponse, error) {
+	rsp := &service.StoneHubServiceSetSetObjectCreateInfoResponse{TraceId: req.TraceId}
 	if len(req.TxHash) != hash.LengthHash {
 		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrTxHash)
 		log.Error("set object height error", "trace_id", req.TraceId, "hash", req.TxHash, "error", rsp.ErrMessage)
 		return rsp, nil
 	}
-	if err := hub.jobDB.SetObjectCreateHeight(req.TxHash, req.TxHeight); err != nil {
+	if err := hub.jobDB.SetObjectCreateHeightAndObjectID(req.TxHash, req.TxHeight, req.ObjectId); err != nil {
 		rsp.ErrMessage = model.MakeErrMsgResponse(err)
 		log.Error("set object height error", "trace_id", req.TraceId, "hash", req.TxHash, "error", rsp.ErrMessage)
 		return rsp, nil
