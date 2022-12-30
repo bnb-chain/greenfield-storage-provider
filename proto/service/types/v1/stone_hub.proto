@@ -28,10 +28,11 @@ message StoneHubServiceSetObjectCreateHeightResponse {
 }
 
 message StorageProviderSealInfo {
-  string storage_provider_id = 8;
-  repeated bytes piece_checksum = 1; // key is piece key, value is checksum of one piece
-  bytes integrity_hash = 2; // 各个Piece的checksum
-  bytes signature = 3; // 签名
+  string storage_provider_id = 1;
+  uint32 piece_idx = 2;
+  repeated bytes piece_checksum = 3; // key is piece key, value is checksum of one piece
+  bytes integrity_hash = 4; // 各个Piece的checksum
+  bytes signature = 5; // 签名
 }
 
 message PieceJob {
