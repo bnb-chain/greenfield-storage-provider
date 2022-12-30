@@ -28,10 +28,9 @@ message StoneHubServiceSetObjectCreateHeightResponse {
 }
 
 message StorageProviderSealInfo {
-  uint32 piece_idx = 1;
-  map<uint32, bytes> piece_checksum = 2; // key is piece index, value is checksum of one piece
-  bytes integrity_hash = 3; // 各个Piece的checksum
-  bytes signature = 4; // 签名
+  map<string, bytes> piece_checksum = 1; // key is piece key, value is checksum of one piece
+  bytes integrity_hash = 2; // 各个Piece的checksum
+  bytes signature = 3; // 签名
 }
 
 message PieceJob {
