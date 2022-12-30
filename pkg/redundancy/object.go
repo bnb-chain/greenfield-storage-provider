@@ -7,8 +7,8 @@ type RedundancyConfig struct {
 }
 
 type ECConfig struct {
-	DataBlocks   uint
-	ParityBlocks uint
+	dataBlocks   int
+	parityBlocks int
 }
 
 var Redundancy map[int]RedundancyConfig
@@ -27,15 +27,7 @@ type ObjectInfo struct {
 
 func initConfig() ECConfig {
 	return ECConfig{
-		DataBlocks:   4,
-		ParityBlocks: 2,
+		dataBlocks:   4,
+		parityBlocks: 2,
 	}
-}
-
-func SpiltSegments(object *Object) ([]*Segment, error) {
-	return nil, nil
-}
-
-func MergeSegments(segments []*Segment, offset, size uint) ([]byte, error) {
-	return nil, nil
 }

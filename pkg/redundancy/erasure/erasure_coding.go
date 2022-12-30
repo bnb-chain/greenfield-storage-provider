@@ -2,7 +2,6 @@ package erasure
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"sync"
@@ -14,10 +13,10 @@ import (
 type RSEncoder struct {
 	encoder                  func() reedsolomon.Encoder
 	dataShards, parityShards int
-	blockSize                int64 // t	`he data size to be encoded
+	blockSize                int64 // the data size to be encoded
 }
 
-// NewRSEncoder creates a new RSEncoderStorage.
+// NewRSEncoder creates a new RSEncoder with reedsolomon encoder
 func NewRSEncoder(dataShards, parityShards int, blockSize int64) (r RSEncoder, err error) {
 	// Check the parameters for sanity now.
 	if dataShards <= 0 || parityShards < 0 {
@@ -54,7 +53,7 @@ func NewRSEncoder(dataShards, parityShards int, blockSize int64) (r RSEncoder, e
 }
 
 // EncodeData encodes the given data and returns the reedsolomon encoded shards
-func (r *RSEncoder) EncodeData(ctx context.Context, content []byte) ([][]byte, error) {
+func (r *RSEncoder) EncodeData(content []byte) ([][]byte, error) {
 	if len(content) == 0 {
 		return make([][]byte, r.dataShards+r.parityShards), nil
 	}
@@ -88,7 +87,7 @@ func (r *RSEncoder) DecodeDataShards(content [][]byte) error {
 
 // DecodeShards decodes the input erasure encoded data and verifies it.
 // The func recreate the missing shards if possible.
-func (r *RSEncoder) DecodeShards(ctx context.Context, data [][]byte) error {
+func (r *RSEncoder) DecodeShards(data [][]byte) error {
 	if err := r.encoder().Reconstruct(data); err != nil {
 		log.Println("recreate the missing shard fail", err)
 		return err
@@ -116,7 +115,7 @@ func (r *RSEncoder) ShardSize() int64 {
 }
 
 // GetOriginalData decode the shards and reconstruct the original content
-func (r *RSEncoder) GetOriginalData(ctx context.Context, shardsData [][]byte, originLength int64) ([]byte, error) {
+func (r *RSEncoder) GetOriginalData(shardsData [][]byte, originLength int64) ([]byte, error) {
 	err := r.DecodeDataShards(shardsData)
 	if err != nil {
 		log.Printf("decode shards fail:%s", err.Error())

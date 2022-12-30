@@ -2,7 +2,6 @@ package erasure
 
 import (
 	"bytes"
-	"context"
 	"log"
 	"math/rand"
 	"testing"
@@ -13,11 +12,12 @@ const parityShards int = 2
 
 func TestRSEncoder(t *testing.T) {
 	blockSize := 16 * 1024 * 1024
+
 	RSEncoderStorage, err := NewRSEncoder(dataShards, parityShards, int64(blockSize))
 	if err != nil {
 		t.Errorf("new RSEncoder fail")
 	}
-	ctx := context.Background()
+
 	// generate encode source data
 	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	originData := make([]byte, blockSize)
@@ -25,7 +25,7 @@ func TestRSEncoder(t *testing.T) {
 		originData[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 
-	shards, err := RSEncoderStorage.EncodeData(ctx, originData)
+	shards, err := RSEncoderStorage.EncodeData(originData)
 	if err != nil {
 		t.Errorf("encode fail")
 	}
@@ -68,7 +68,7 @@ func TestRSEncoder(t *testing.T) {
 	shardsToRecover[0] = nil
 	shardsToRecover[1] = nil
 
-	deCodeContent, err := RSEncoderStorage.GetOriginalData(ctx, shardsToRecover, int64(len(originData)))
+	deCodeContent, err := RSEncoderStorage.GetOriginalData(shardsToRecover, int64(len(originData)))
 	if err != nil {
 		t.Errorf("decode fail")
 	}
@@ -80,7 +80,7 @@ func TestRSEncoder(t *testing.T) {
 	// set 2 priorityBlock of origin as empty block
 	shardsToRecover[4] = nil
 	shardsToRecover[5] = nil
-	deCodeContent, err = RSEncoderStorage.GetOriginalData(ctx, shardsToRecover, int64(len(originData)))
+	deCodeContent, err = RSEncoderStorage.GetOriginalData(shardsToRecover, int64(len(originData)))
 	if err != nil {
 		t.Errorf("decode fail")
 	}
