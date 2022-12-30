@@ -96,22 +96,24 @@ func (ctx *ObjectInfoContext) GetSecondaryJob() (*UploadJob, error) {
 
 // SetPrimaryPieceJobDone set the primary piece jod completed and update DB.
 func (ctx *ObjectInfoContext) SetPrimaryPieceJobDone(piece *UploadPieceJob) error {
+	object := ctx.GetObjectInfo()
 	job := &jobdb.PieceJob{
 		PieceId:         piece.PieceId,
 		CheckSum:        piece.CheckSum,
 		StorageProvider: piece.StorageProvider,
 	}
-	return ctx.jobDB.SetPrimaryPieceJobDone(job)
+	return ctx.jobDB.SetPrimaryPieceJobDone(object.TxHash, job)
 }
 
 // SetSecondaryPieceJobDone set the secondary piece jod completed and update DB.
 func (ctx *ObjectInfoContext) SetSecondaryPieceJobDone(piece *UploadPieceJob) error {
+	object := ctx.GetObjectInfo()
 	job := &jobdb.PieceJob{
 		PieceId:         piece.PieceId,
 		CheckSum:        piece.CheckSum,
 		StorageProvider: piece.StorageProvider,
 	}
-	return ctx.jobDB.SetSecondaryPieceJobDone(job)
+	return ctx.jobDB.SetSecondaryPieceJobDone(object.TxHash, job)
 }
 
 // UploadPayloadJob maintains the object info and piece job meta

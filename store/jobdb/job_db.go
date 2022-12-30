@@ -20,6 +20,6 @@ type JobDB interface {
 
 	GetPrimaryJob(txHash []byte) ([]*PieceJob, error)
 	GetSecondaryJob(txHash []byte) ([]*PieceJob, error)
-	SetPrimaryPieceJobDone(*PieceJob) error
-	SetSecondaryPieceJobDone(*PieceJob) error
+	SetPrimaryPieceJobDone(txHash []byte, piece *PieceJob) error
+	SetSecondaryPieceJobDone(txHash []byte, piece *PieceJob) error
 }
