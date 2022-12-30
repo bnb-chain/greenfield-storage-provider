@@ -39,18 +39,22 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 	}
 }
 
+const (
+	segmentSize = 16 * 1024 * 1024
+)
+
 // syncer服务生成signature与checksum，stone node校验signature与完整性hash
 // Piece写入哪个sp，按照数组里的顺序写入即可？
 func handleRequest(req *service.SyncerServiceUploadECPieceRequest) error {
-	if len(req.GetPieceData()) != len(req.GetPieceJobs()) {
-		log.Errorw("the number of PieceData is not equal to PieceJobs", "PieceData length", len(req.GetPieceData()),
-			"PieceJobs length", len(req.GetPieceJobs()))
+	objectID := req.GetPieceJob().GetObjectId()
+	objectID = objectID
+	payloadSize := req.GetPieceJob().GetPayloadSize()
+	var segmentNumber uint64
+	if payloadSize%segmentSize == 0 {
+		segmentNumber = payloadSize / segmentSize
+	} else {
+		segmentNumber = payloadSize/segmentSize + 1
 	}
-	for _, i := range req.GetPieceJobs() {
-		for _, j := range i.GetStorageProviderSealInfo() {
-			spID := j.GetStorageProviderId()
-			log.Infof("spID: %s", spID)
-		}
-	}
+	segmentNumber = segmentNumber
 	return nil
 }

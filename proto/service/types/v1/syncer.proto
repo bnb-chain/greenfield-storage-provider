@@ -6,8 +6,8 @@ option go_package = "github.com/bnb-chain/inscription-storage-provider/service/t
 
 message SyncerServiceUploadECPieceRequest {
   string trace_id = 1;
-  PieceJob piece_jobs = 2; // pieceJob不需要多个？
-  repeated bytes piece_data = 3;
+  PieceJob piece_job = 2; // pieceJob不需要多个？
+  repeated bytes piece_data = 3; // 对相同ec的六个数据
 }
 
 message SyncerServiceUploadECPieceResponse {

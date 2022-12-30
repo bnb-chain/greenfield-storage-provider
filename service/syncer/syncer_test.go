@@ -9,7 +9,11 @@ import (
 
 func TestGenerateChecksum(t *testing.T) {
 	pieceData := "secondary service"
-	checksum := generateChecksum([]byte(pieceData))
-	fmt.Println(checksum)
-	assert.NotEmpty(t, checksum)
+	p2 := "test"
+	checksum1 := generateChecksum([]byte(pieceData))
+	checksum2 := generateChecksum([]byte(p2))
+	fmt.Println(checksum1 + checksum2)
+	checksum3 := generateChecksum([]byte(pieceData + p2))
+	fmt.Println(checksum3)
+	assert.NotEmpty(t, checksum1)
 }
