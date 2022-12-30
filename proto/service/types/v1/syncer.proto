@@ -6,7 +6,7 @@ option go_package = "github.com/bnb-chain/inscription-storage-provider/service/t
 
 message SyncerServiceUploadECPieceRequest {
   string trace_id = 1;
-  repeated PieceJob piece_jobs = 2;
+  PieceJob piece_jobs = 2; // pieceJob不需要多个？
   repeated bytes piece_data = 3;
 }
 
@@ -16,6 +16,13 @@ message SyncerServiceUploadECPieceResponse {
   ErrMessage err_message = 3;
 }
 
+// 一个object会被切分为多个segment，一个segment进行ec，拆分为多个piece；
+// stone node从stone hub周期性获取job和metaData；stone node拿到的就是拆分后的全部segment，根据redundancyType决定是否ec，
+// stone node从pieceStore获取object切分后的segment实体数据；
+// syncer服务只负责校验和存数据，syncer服务从stone node拿到的是ec后的piece数据
+// 假如object小于4M，primary和secondary SP存的是原生object，没有被切分过
+// 一个被ec过的segment会有n个piece，不同的piece写入不同的n个sp
 service SyncerService {
   rpc UploadECPiece(stream SyncerServiceUploadECPieceRequest) returns (SyncerServiceUploadECPieceResponse) {};
 }
+// 不用stream？
