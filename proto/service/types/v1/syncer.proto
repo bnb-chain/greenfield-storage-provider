@@ -9,7 +9,7 @@ message SecondaryJob {
   string object_id = 1;
   uint64 payload_size = 2;
   pkg.types.v1.RedundancyType redundancy_type = 3;
-  repeated string storage_provider_id = 4;
+  string storage_provider_id = 4;
 }
 
 message SyncerServiceUploadECPieceRequest {
