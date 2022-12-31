@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 )
 
-func generateChecksum(pieceData []byte) []byte {
+func generateChecksum(pieceData []byte) string {
 	//方法一：
 	//创建一个基于SHA256算法的hash.Hash接口的对象
 	hash := sha256.New()
