@@ -5,7 +5,7 @@ import "service/types/v1/uploader.proto";
 import "service/types/v1/stone_hub.proto";
 option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
 
-message SecondaryJob {
+message SyncerInfo {
   string object_id = 1;
   uint64 payload_size = 2;
   pkg.types.v1.RedundancyType redundancy_type = 3;
@@ -14,7 +14,7 @@ message SecondaryJob {
 
 message SyncerServiceUploadECPieceRequest {
   string trace_id = 1;
-  SecondaryJob piece_job = 2;
+  SyncerInfo syncer_info = 2;
   repeated bytes piece_data = 3; // 对相同ec的六个数据
 }
 
