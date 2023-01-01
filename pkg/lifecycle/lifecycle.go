@@ -10,6 +10,8 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
+var StopTimeout = 30
+
 // Service provides abstract methods to control the lifecycle of a service
 //
 //go:generate mockgen -source=./lifecycle.go -destination=./mock/lifecycle_mock.go -package=mock
@@ -30,13 +32,13 @@ type ServiceLifecycle struct {
 	timeout     time.Duration
 }
 
-// NewService returns an initialized service lifecycle
-func NewService(timeout time.Duration) *ServiceLifecycle {
+// NewServiceLifecycle returns an initialized service lifecycle
+func NewServiceLifecycle() *ServiceLifecycle {
 	innerCtx, innerCancel := context.WithCancel(context.Background())
 	return &ServiceLifecycle{
 		innerCtx:    innerCtx,
 		innerCancel: innerCancel,
-		timeout:     timeout,
+		timeout:     time.Duration(StopTimeout) * time.Second,
 	}
 }
 
