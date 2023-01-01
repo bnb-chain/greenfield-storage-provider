@@ -46,9 +46,9 @@ const (
 // syncer服务生成signature与checksum，stone node校验signature与完整性hash
 // Piece写入哪个sp，按照数组里的顺序写入即可？
 func handleRequest(req *service.SyncerServiceUploadECPieceRequest) error {
-	objectID := req.GetPieceJob().GetObjectId()
+	objectID := req.GetSyncerInfo().GetObjectId()
 	objectID = objectID
-	payloadSize := req.GetPieceJob().GetPayloadSize()
+	payloadSize := req.GetSyncerInfo().GetPayloadSize()
 	var segmentNumber uint64
 	if payloadSize%segmentSize == 0 {
 		segmentNumber = payloadSize / segmentSize
