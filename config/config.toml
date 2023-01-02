@@ -1,17 +1,11 @@
-[PieceStore]
-Shards = 0
+Service = [
+    "StoneHub",
+]
 
-[PieceStore.Store]
-Storage = "s3"
-BucketURL = "https://s3.us-east-1.amazonaws.com/example"
-AccessKey = "ACCESSKEY"
-SecretKey = "SECRETKEY"
-SessionToken = "SESSIONTOKEN"
-NoSignRequest = false
-MaxRetries = 5
-TlsInsecureSkipVerify = false
+[StoneHubCfg]
+    Address = "127.0.0.1:5323"
+    [StoneHubCfg.MockConfig]
+    Mock = true
+    JobDB = "memdb"
+    MetaDB = "memdb"
 
-[Log]
-FilePath = "./logs"
-Level = "debug"
-MaxBytesSize = 10240000

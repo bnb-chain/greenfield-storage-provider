@@ -1,9 +1,18 @@
 package stonehub
 
+type MockStoneHubConfig struct {
+	Mock   bool
+	JobDB  string
+	MetaDB string
+}
+
 type StoneHubConfig struct {
-	Address string
+	StorageProvider string
+	Address         string
+	MockConfig      *MockStoneHubConfig
 }
 
 var DefaultStoneHubConfig = &StoneHubConfig{
-	Address: "127.0.0.1:5323",
+	StorageProvider: "bnb-sp",
+	Address:         "127.0.0.1:5323",
 }

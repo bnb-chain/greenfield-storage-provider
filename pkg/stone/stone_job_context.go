@@ -55,7 +55,11 @@ func (wrapper *JobContextWrapper) SetJobErr(err error) error {
 	wrapper.mu.Lock()
 	defer wrapper.mu.Unlock()
 	wrapper.jobErr = err
-	wrapper.jobCtx.JobErr = wrapper.jobCtx.JobErr + err.Error()
+	if err == nil {
+		wrapper.jobCtx.JobErr = ""
+	} else {
+		wrapper.jobCtx.JobErr = wrapper.jobCtx.JobErr + err.Error()
+	}
 	if err := wrapper.jobDB.SetUploadPayloadJobJobError(wrapper.jobCtx.JobId,
 		types.JOB_STATE_ERROR, wrapper.jobCtx.JobErr, time.Now().Unix()); err != nil {
 		return err
