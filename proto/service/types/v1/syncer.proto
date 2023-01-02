@@ -9,16 +9,14 @@ message SyncerInfo {
   string object_id = 1;
   uint64 payload_size = 2;
   string storage_provider_id = 3;
-  uint64 segmentIndex = 4;
-  uint64 pieceIndex = 5;
-  pkg.types.v1.RedundancyType redundancy_type = 6;
+  pkg.types.v1.RedundancyType redundancy_type = 4;
 }
 
 message SyncerServiceUploadECPieceRequest {
   string trace_id = 1;
   SyncerInfo syncer_info = 2;
-  repeated bytes piece_data = 3; // 对相同ec的六个数据
   map<string, bytes> piece_data1 = 4; // key is piece key, value is piece_data
+  repeated bytes piece_data = 3; // 对相同ec的六个数据
 }
 
 message SyncerServiceUploadECPieceResponse {
