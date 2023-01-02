@@ -36,12 +36,17 @@ func (s *SyncerService) Start(ctx context.Context) error {
 		return err
 	}
 	s.grpcSever = grpc.NewServer()
-	service.RegisterSyncerServiceServer(s.grpcSever, &Syncer{})
+	service.RegisterSyncerServiceServer(s.grpcSever, &SyncerImpl{syncer: s})
 	go func() {
 		if err := s.grpcSever.Serve(lis); err != nil {
 			log.Errorw("gRPC server Serve error", "error", err)
 		}
 	}()
+	s.signer = newSignerClient()
+	if s.store, err = newStoreClient(s.cfg.PieceStoreConfigFile); err != nil {
+		log.Errorw("Syncer service starts newStoreClient failed", "error", err)
+		return err
+	}
 	log.Info("Start SyncerService successfully")
 	return nil
 }

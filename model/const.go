@@ -1,4 +1,4 @@
-package piecestore
+package model
 
 // constant
 const (

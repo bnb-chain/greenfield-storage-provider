@@ -14,9 +14,8 @@ message SyncerInfo {
 
 message SyncerServiceUploadECPieceRequest {
   string trace_id = 1;
-  SyncerInfo syncer_info = 2;
-  map<string, bytes> piece_data1 = 3; // key is piece key, value is piece_data
-  repeated bytes piece_data = 4; // 对相同ec的六个数据
+  string storage_provider_id = 2;
+  map<string, bytes> piece_data = 3; // key is piece key, value is piece_data
 }
 
 message SyncerServiceUploadECPieceResponse {

@@ -48,9 +48,9 @@ func (s *StoneNode) UploadECPiece(ctx context.Context) error {
 
 	for i := 0; i <= int(segmentNumber); i++ {
 		if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
-			TraceId:    "",
-			SyncerInfo: nil,
-			PieceData:  nil,
+			TraceId:           "",
+			StorageProviderId: "",
+			PieceData:         nil,
 		}); err != nil {
 			log.Errorw("client send request error", "error", err)
 			return err

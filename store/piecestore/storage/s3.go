@@ -18,7 +18,6 @@ import (
 
 	"github.com/bnb-chain/inscription-storage-provider/config"
 	"github.com/bnb-chain/inscription-storage-provider/model"
-	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -96,7 +95,7 @@ func (s *s3Store) GetObject(ctx context.Context, key string, offset, limit int64
 		return nil, err
 	}
 	if offset == 0 && limit == -1 {
-		cs := resp.Metadata[piecestore.ChecksumAlgo]
+		cs := resp.Metadata[model.ChecksumAlgo]
 		if cs != nil {
 			resp.Body = verifyChecksum(resp.Body, aws.StringValue(cs))
 		}
@@ -121,8 +120,8 @@ func (s *s3Store) PutObject(ctx context.Context, key string, reader io.Reader) e
 		Bucket:      aws.String(s.bucketName),
 		Key:         aws.String(key),
 		Body:        body,
-		ContentType: aws.String(piecestore.OctetStream),
-		Metadata:    map[string]*string{piecestore.ChecksumAlgo: aws.String(checksum)},
+		ContentType: aws.String(model.OctetStream),
+		Metadata:    map[string]*string{model.ChecksumAlgo: aws.String(checksum)},
 	}
 	_, err := s.api.PutObjectWithContext(ctx, params)
 	return err
