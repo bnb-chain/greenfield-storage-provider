@@ -28,9 +28,11 @@ message ObjectInfo {
   StorageProviderInfo primary_sp = 9;
 
   // fixed after successfully executing creat object transaction
-  uint64 height = 10;
-  bytes tx_hash = 11;
+  uint64 job_id = 10;
+  uint64 height = 11;
+  bytes tx_hash = 12;
+  uint64 object_id = 13;
   // fixed before seal
-  RedundancyType redundancy_type = 12;
-  map<string, StorageProviderInfo> secondary_sps = 13;
+  RedundancyType redundancy_type = 14;
+  map<string, StorageProviderInfo> secondary_sps = 15;
 }

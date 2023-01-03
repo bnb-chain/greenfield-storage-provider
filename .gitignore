@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+*.pb.go
 
 # OSX trash
 .DS_Store
