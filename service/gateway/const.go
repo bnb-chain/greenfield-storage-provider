@@ -4,13 +4,19 @@ const (
 	// query key
 	TransactionQuery = "transaction"
 
-	// header key
-	TransactionHeader     = "TransactionValue"
-	RequestIDHeader       = "x-bfs-request-id"
-	ContextTypeHeader     = "Content-Type"
-	ContextLengthHeader   = "Content-Length"
-	ETagHeader            = "ETag"
-	TransactionHashHeader = "x-bfs-transaction-hash"
+	// bfs header key
+	BFSRequestIDHeader       = "x-bfs-request-id"
+	BFSContentLengthHeader   = "x-bfs-content-length"
+	BFSContentTypeHeader     = "x-bfs-content-type"
+	BFSCheckSumHeader        = "x-bfs-checksum"
+	BFSIsPrivateHeader       = "x-bfs-is-private"
+	BFSTransactionHashHeader = "x-bfs-transaction-hash"
+	TransactionHeader        = "TransactionValue"
+
+	// http header key
+	ContentTypeHeader   = "Content-Type"
+	ContentLengthHeader = "Content-Length"
+	ETagHeader          = "ETag"
 
 	// header value
 	ContentTypeXMLHeaderValue = "application/xml"

@@ -11,7 +11,7 @@ import (
 // 1.check request params validation;
 // 2.check request signature;
 // 3.forward createBucket metadata to blockchain by chainClient.
-func (g *GatewayService) createBucketHandler(w http.ResponseWriter, r *http.Request) {
+func (g *Gateway) createBucketHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription

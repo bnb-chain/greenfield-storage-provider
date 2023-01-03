@@ -14,5 +14,5 @@ func newSignerClient() *signerClient {
 }
 
 func (sc *signerClient) coSignTx(ctx context.Context, req *pbService.UploaderServiceCreateObjectRequest) ([]byte, error) {
-	return []byte("txHash"), nil
+	return []byte("12345678123456781234567812345678"), nil
 }

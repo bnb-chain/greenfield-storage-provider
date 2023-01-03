@@ -10,14 +10,15 @@ import (
 )
 
 // echo impl
-func (g *GatewayService) notFoundHandler(w http.ResponseWriter, r *http.Request) {
+func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	s, _ := ioutil.ReadAll(r.Body)
 	log.Warnw("not found handler", "header", r.Header, "host", r.Host)
 	w.Write(s)
 
 }
 
-func (g *GatewayService) registerhandler(r *mux.Router) {
+// registerhandler is used to register mux handlers.
+func (g *Gateway) registerhandler(r *mux.Router) {
 	bucketRouter := r.Host("{bucket:.+}." + g.config.Domain).Subrouter()
 	bucketRouter.NewRoute().
 		Name("PutObject").

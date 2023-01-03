@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// errorDescription describe error info.
 type errorDescription struct {
 	errorCode    string
 	errorMessage string
@@ -27,6 +28,7 @@ var (
 	InternalError = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
 )
 
+// errorResponse is used to error response xml.
 func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *requestContext) error {
 	var (
 		xmlBody []byte
@@ -48,7 +50,7 @@ func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *reque
 	}
 
 	w.WriteHeader(desc.statusCode)
-	w.Header().Set(ContextTypeHeader, ContentTypeXMLHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	if _, err = w.Write(xmlBody); err != nil {
 		return err
 	}

@@ -10,13 +10,13 @@ import (
 	"runtime"
 
 	errors2 "github.com/bnb-chain/inscription-storage-provider/model/errors"
-
 	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
+
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
 // NewPieceStore returns an instance of PieceStore
-func NewPieceStore(pieceConfig *PieceStoreConfig) (*PieceStore, error) {
+func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 	cfg := checkConfig(pieceConfig)
 	blob, err := createStorage(cfg)
 	if err != nil {
@@ -30,7 +30,7 @@ func NewPieceStore(pieceConfig *PieceStoreConfig) (*PieceStore, error) {
 }
 
 // checkConfig checks config if right
-func checkConfig(cfg *PieceStoreConfig) *PieceStoreConfig {
+func checkConfig(cfg *storage.PieceStoreConfig) *storage.PieceStoreConfig {
 	if cfg.Shards > 256 {
 		log.Panicf("too many shards: %d", cfg.Shards)
 	}
@@ -54,7 +54,7 @@ func checkConfig(cfg *PieceStoreConfig) *PieceStoreConfig {
 	return cfg
 }
 
-func createStorage(cfg *PieceStoreConfig) (storage.ObjectStorage, error) {
+func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error) {
 	var (
 		object storage.ObjectStorage
 		err    error
@@ -62,7 +62,7 @@ func createStorage(cfg *PieceStoreConfig) (storage.ObjectStorage, error) {
 	if cfg.Shards > 1 {
 		object, err = storage.NewSharded(cfg)
 	} else {
-		object, err = storage.NewObjectStorage(&cfg.Store)
+		object, err = storage.NewObjectStorage(cfg.Store)
 	}
 	if err != nil {
 		log.Errorw("createStorage error", "error", err, "object", object)

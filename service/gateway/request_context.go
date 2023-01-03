@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
+// requestContext is a request context.
 type requestContext struct {
 	requestID string
 	bucket    string
@@ -20,6 +21,7 @@ type requestContext struct {
 	startTime time.Time
 }
 
+// generateRequestID is used to generate requestID.
 func generateRequestID() (string, error) {
 	var uUID uuid.UUID
 	var err error
@@ -29,6 +31,7 @@ func generateRequestID() (string, error) {
 	return strings.ReplaceAll(uUID.String(), "-", ""), nil
 }
 
+// newRequestContext return a request context.
 func newRequestContext(r *http.Request) *requestContext {
 	requestID, err := generateRequestID()
 	if err != nil {
@@ -44,6 +47,7 @@ func newRequestContext(r *http.Request) *requestContext {
 	}
 }
 
+// generateRequestDetail is used to log print detailed info.
 func generateRequestDetail(r *requestContext) string {
 	var headerToString = func(header http.Header) string {
 		var sb = strings.Builder{}

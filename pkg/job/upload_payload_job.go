@@ -16,16 +16,16 @@ import (
 type ObjectInfoContext struct {
 	object *types.ObjectInfo
 	jobDB  jobdb.JobDB
-	meatDB metadb.MetaDB
+	metaDB metadb.MetaDB
 	mu     sync.RWMutex
 }
 
 // NewObjectInfoContext return the instance of ObjectInfoContext.
-func NewObjectInfoContext(object *types.ObjectInfo, jobDB jobdb.JobDB, meatDB metadb.MetaDB) *ObjectInfoContext {
+func NewObjectInfoContext(object *types.ObjectInfo, jobDB jobdb.JobDB, metaDB metadb.MetaDB) *ObjectInfoContext {
 	return &ObjectInfoContext{
 		object: object,
 		jobDB:  jobDB,
-		meatDB: meatDB,
+		metaDB: metaDB,
 	}
 }
 

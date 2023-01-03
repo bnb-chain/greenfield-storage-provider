@@ -17,9 +17,9 @@ import (
 	"time"
 
 	"github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/piece"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
+
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -35,7 +35,7 @@ import (
 var (
 	// Re-used AWS sessions dramatically improve performance
 	s3SessionCache = &SessionCache{
-		sessions: map[piece.ObjectStorage]*session.Session{},
+		sessions: map[ObjectStorageConfig]*session.Session{},
 	}
 	disableSSL         bool
 	isVirtualHostStyle bool
@@ -46,7 +46,7 @@ type s3Store struct {
 	api        s3iface.S3API
 }
 
-func newS3Store(cfg *piece.ObjectStorage) (ObjectStorage, error) {
+func newS3Store(cfg *ObjectStorageConfig) (ObjectStorage, error) {
 	awsSession, bucket, err := s3SessionCache.newSession(*cfg)
 	if err != nil {
 		log.Errorw("s3 newSession error", "error", err)
@@ -223,11 +223,11 @@ func (s *s3Store) ListAllObjects(ctx context.Context, prefix, marker string) (<-
 // SessionCache holds session.Session according to model.ObjectStorage and it synchronizes access/modification
 type SessionCache struct {
 	sync.Mutex
-	sessions map[piece.ObjectStorage]*session.Session
+	sessions map[ObjectStorageConfig]*session.Session
 }
 
 // newSession initializes a new AWS session with region fallback and custom config
-func (sc *SessionCache) newSession(cfg piece.ObjectStorage) (*session.Session, string, error) {
+func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, string, error) {
 	sc.Lock()
 	defer sc.Unlock()
 
@@ -267,7 +267,7 @@ func (sc *SessionCache) newSession(cfg piece.ObjectStorage) (*session.Session, s
 func (sc *SessionCache) clear() {
 	sc.Lock()
 	defer sc.Unlock()
-	sc.sessions = map[piece.ObjectStorage]*session.Session{}
+	sc.sessions = map[ObjectStorageConfig]*session.Session{}
 }
 
 func parseEndPoint(endPoint string) (string, string, error) {

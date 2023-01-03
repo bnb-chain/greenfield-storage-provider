@@ -18,20 +18,28 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
+// putObjectTxOption is the putObjectTx Option.
 type putObjectTxOption struct {
-	reqCtx *requestContext
+	reqCtx      *requestContext
+	size        uint64
+	contentType string
+	checksum    []byte
+	isPrivate   bool
 }
 
+// objectTxInfo is the return of putObjectTx.
 type objectTxInfo struct {
 	txHash string
 	weight uint64
 }
 
+// putObjectOption is the putObject Option.
 type putObjectOption struct {
 	reqCtx *requestContext
 	txHash []byte
 }
 
+// objectInfo is the return of putObject.
 type objectInfo struct {
 	size uint64
 	eTag string
@@ -151,24 +159,36 @@ func (dui *debugUploaderImpl) putObject(name string, reader io.Reader, opt *putO
 
 // grpcUploaderImpl is an implement of call grpc uploader service.
 type grpcUploaderImpl struct {
-	grpcAddr string
+	Address string
 }
 
 // putObjectTx is used to call uploaderService's CreateObject by grpc.
 func (gui *grpcUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (*objectTxInfo, error) {
-	conn, err := grpc.Dial(gui.grpcAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(gui.Address, grpc.WithInsecure())
 	if err != nil {
 		log.Warnw("failed to dail to uploader", "err", err)
 		return nil, errors.ErrInternalError
 	}
 	defer conn.Close()
 	client := pbService.NewUploaderServiceClient(conn)
+	// todo: fill more info
 	resp, err := client.CreateObject(context.Background(), &pbService.UploaderServiceCreateObjectRequest{
-		ObjectInfo: &pbPkg.ObjectInfo{BucketName: opt.reqCtx.bucket, ObjectName: name},
+		ObjectInfo: &pbPkg.ObjectInfo{
+			BucketName:  opt.reqCtx.bucket,
+			ObjectName:  name,
+			Size:        opt.size,
+			ContentType: opt.contentType,
+			Checksum:    opt.checksum,
+			IsPrivate:   opt.isPrivate,
+		},
 	})
 	if err != nil {
 		log.Warnw("failed to rpc to uploader", "err", err)
 		return nil, errors.ErrInternalError
+	}
+	if errMsg := resp.GetErrMessage(); errMsg != nil && errMsg.ErrCode != pbService.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		log.Warnw("failed to grpc", "err", resp.ErrMessage)
+		return nil, fmt.Errorf(resp.ErrMessage.ErrMsg)
 	}
 	return &objectTxInfo{txHash: string(resp.TxHash)}, nil
 }
@@ -184,7 +204,7 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 		md5Value string
 	)
 
-	conn, err := grpc.Dial(gui.grpcAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(gui.Address, grpc.WithInsecure())
 	if err != nil {
 		log.Warnw("failed to dail to uploader", "err", err)
 		return nil, errors.ErrInternalError
@@ -204,9 +224,9 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 		}
 		if readN > 0 {
 			var req pbService.UploaderServiceUploadPayloadRequest
-			//req.TxHash = opt.txHash
-			req.TxHash = []byte("123")
+			req.TxHash = opt.txHash
 			req.PayloadData = buf[:readN]
+			// todo: fill job_id??
 			if err := stream.Send(&req); err != nil {
 				log.Warnw("put object failed, due to stream send", "err", err)
 				return nil, errors.ErrInternalError
@@ -217,10 +237,14 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 		}
 		if err == io.EOF {
 			err = nil
-			_, err := stream.CloseAndRecv()
+			resp, err := stream.CloseAndRecv()
 			if err != nil {
 				log.Warnw("put object failed, due to stream close", "err", err)
 				return nil, errors.ErrInternalError
+			}
+			if errMsg := resp.GetErrMessage(); errMsg != nil && errMsg.ErrCode != pbService.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+				log.Warnw("failed to grpc", "err", resp.ErrMessage)
+				return nil, fmt.Errorf(resp.ErrMessage.ErrMsg)
 			}
 			break
 		}
@@ -235,13 +259,15 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 type uploaderClientConfig struct {
 	Mode     string
 	DebugDir string
-	GrpcAddr string
+	Address  string
 }
 
+// uploaderClient is a wrapper of uploader.
 type uploaderClient struct {
 	impl uploaderClientInterface
 }
 
+// newUploaderClient return a uploaderClient.
 func newUploaderClient(c uploaderClientConfig) (*uploaderClient, error) {
 	switch {
 	case c.Mode == "DebugMode":
@@ -254,16 +280,18 @@ func newUploaderClient(c uploaderClientConfig) (*uploaderClient, error) {
 		}
 		return &uploaderClient{impl: &debugUploaderImpl{localDir: c.DebugDir}}, nil
 	case c.Mode == "GrpcMode":
-		return &uploaderClient{impl: &grpcUploaderImpl{grpcAddr: c.GrpcAddr}}, nil
+		return &uploaderClient{impl: &grpcUploaderImpl{Address: c.Address}}, nil
 	default:
 		return nil, fmt.Errorf("not support mode, %v", c.Mode)
 	}
 }
 
+// putObjectTx call uploader's putObjectTx interface.
 func (uc *uploaderClient) putObjectTx(name string, opt *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
 	return uc.impl.putObjectTx(name, opt)
 }
 
+// putObject call uploader's putObject interface.
 func (uc *uploaderClient) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
 	return uc.impl.putObject(name, reader, opt)
 }

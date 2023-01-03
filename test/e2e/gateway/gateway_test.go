@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"context"
 	"crypto/md5"
 	"fmt"
 	"io"
@@ -16,7 +17,7 @@ import (
 )
 
 var (
-	g       *gateway.GatewayService
+	g       *gateway.Gateway
 	payload string
 	md5str  string
 )
@@ -32,19 +33,23 @@ func generateRandString(n int) string {
 }
 
 func setUp() {
-	g = gateway.NewGatewayService()
-	g.Init("./testdata/gateway.toml")
-	g.Start()
-	payload = generateRandString(65 * 1024)
+	c := gateway.DefaultGatewayConfig
+	c.Address = "127.0.0.1:9099"
+	c.UploaderConfig.DebugDir = "./tmptestdata"
+	c.DownloaderConfig.DebugDir = "./tmptestdata"
+	c.ChainConfig.DebugDir = "./tmptestdata"
 
+	g, _ = gateway.NewGatewayService(c)
+	_ = g.Start(context.Background())
+	payload = generateRandString(65 * 1024)
 	w := md5.New()
 	io.WriteString(w, payload)
 	md5str = fmt.Sprintf("%x", w.Sum(nil))
 }
 
 func tearDown() {
-	g.Stop()
 	os.RemoveAll("./tmptestdata")
+	// g.Stop(context.Background())
 }
 
 func TestGateway(t *testing.T) {

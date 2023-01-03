@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
@@ -12,11 +13,12 @@ import (
 // 2.check request signature;
 // 3.check account acl;
 // 4.put object tx by uploaderClient.
-func (g *GatewayService) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
+func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
 		reqCtx           *requestContext
+		opt              *putObjectTxOption
 	)
 
 	defer func() {
@@ -50,8 +52,16 @@ func (g *GatewayService) putObjectTxHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	var opt = &putObjectTxOption{
-		reqCtx: reqCtx,
+	// todo: check more params
+	sizeStr := reqCtx.r.Header.Get(BFSContentLengthHeader)
+	sizeInt, _ := strconv.Atoi(sizeStr)
+	isPrivate, _ := strconv.ParseBool(reqCtx.r.Header.Get(BFSIsPrivateHeader))
+	opt = &putObjectTxOption{
+		reqCtx:      reqCtx,
+		size:        uint64(sizeInt),
+		contentType: reqCtx.r.Header.Get(BFSContentTypeHeader),
+		checksum:    []byte(reqCtx.r.Header.Get(BFSCheckSumHeader)),
+		isPrivate:   isPrivate,
 	}
 	info, err := g.uploader.putObjectTx(reqCtx.object, opt)
 	if err != nil {
@@ -64,8 +74,8 @@ func (g *GatewayService) putObjectTxHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	// succeed ack
-	w.Header().Set(RequestIDHeader, reqCtx.requestID)
-	w.Header().Set(TransactionHashHeader, info.txHash)
+	w.Header().Set(BFSRequestIDHeader, reqCtx.requestID)
+	w.Header().Set(BFSTransactionHashHeader, info.txHash)
 }
 
 // putObjectHandler handle put object request, include steps:
@@ -73,11 +83,12 @@ func (g *GatewayService) putObjectTxHandler(w http.ResponseWriter, r *http.Reque
 // 2.check request signature;
 // 3.check account acl;
 // 4.put object data by uploaderClient.
-func (g *GatewayService) putObjectHandler(w http.ResponseWriter, r *http.Request) {
+func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
 		reqCtx           *requestContext
+		opt              *putObjectOption
 	)
 
 	defer func() {
@@ -87,9 +98,9 @@ func (g *GatewayService) putObjectHandler(w http.ResponseWriter, r *http.Request
 			_ = errorDescription.errorResponse(w, reqCtx)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(reqCtx))
+			log.Infof("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(reqCtx))
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(reqCtx))
+			log.Warnf("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(reqCtx))
 		}
 	}()
 
@@ -112,10 +123,11 @@ func (g *GatewayService) putObjectHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var opt = &putObjectOption{
+	opt = &putObjectOption{
 		reqCtx: reqCtx,
-		//debugDir: g.config.DebugDir,
+		txHash: []byte(reqCtx.r.Header.Get(BFSTransactionHashHeader)),
 	}
+
 	info, err := g.uploader.putObject(reqCtx.object, r.Body, opt)
 	if err != nil {
 		if err == errors.ErrObjectTxNotExist {
@@ -126,7 +138,7 @@ func (g *GatewayService) putObjectHandler(w http.ResponseWriter, r *http.Request
 		errorDescription = InternalError
 		return
 	}
-	w.Header().Set(RequestIDHeader, reqCtx.requestID)
+	w.Header().Set(BFSRequestIDHeader, reqCtx.requestID)
 	w.Header().Set(ETagHeader, info.eTag)
 }
 
@@ -135,7 +147,7 @@ func (g *GatewayService) putObjectHandler(w http.ResponseWriter, r *http.Request
 // 2.check request signature;
 // 3.check account acl;
 // 4.get object data by downloaderClient.
-func (g *GatewayService) getObjectHandler(w http.ResponseWriter, r *http.Request) {
+func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
@@ -149,9 +161,9 @@ func (g *GatewayService) getObjectHandler(w http.ResponseWriter, r *http.Request
 			_ = errorDescription.errorResponse(w, reqCtx)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(reqCtx))
+			log.Infof("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(reqCtx))
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(reqCtx))
+			log.Warnf("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(reqCtx))
 		}
 	}()
 

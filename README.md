@@ -11,8 +11,6 @@ bash build.sh
 ```shell
 # Print Version
 ./bfs -v
-# Run gateway
-./bfs -m gateway -c config/gateway.toml
-# Run uploader
-./bfs -m uploader -c config/uploader.toml
+# Run Services
+./bfs -config config/config.toml
 ```

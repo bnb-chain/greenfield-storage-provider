@@ -8,12 +8,14 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
+// streamReader is a wrapper of grpc stream request.
 type streamReader struct {
 	pr     *io.PipeReader
 	pw     *io.PipeWriter
 	txHash []byte
 }
 
+// newStreamReader is used to stream read UploaderService_UploadPayloadServer.
 func newStreamReader(stream pbService.UploaderService_UploadPayloadServer, ch chan []byte) *streamReader {
 	var sr = &streamReader{}
 	sr.pr, sr.pw = io.Pipe()

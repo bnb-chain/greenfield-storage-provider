@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
+// getObjectOption is the getObject Option.
 type getObjectOption struct {
 	reqCtx *requestContext
 	offset uint64
@@ -94,6 +95,7 @@ type downloaderClient struct {
 	impl downloaderClientInterface
 }
 
+// newDownloaderClient return a downloader wrapper.
 func newDownloaderClient(c downloaderClientConfig) (*downloaderClient, error) {
 	switch {
 	case c.Mode == "DebugMode":
@@ -103,6 +105,7 @@ func newDownloaderClient(c downloaderClientConfig) (*downloaderClient, error) {
 	}
 }
 
+// getObject get object from downloader.
 func (dc *downloaderClient) getObject(name string, writer io.Writer, opt *getObjectOption) error {
 	return dc.impl.getObject(name, writer, opt)
 }

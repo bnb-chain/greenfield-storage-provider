@@ -10,11 +10,11 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/piece"
+	//"github.com/bnb-chain/inscription-storage-provider/store/piecestore/piece"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
-func NewObjectStorage(cfg *piece.ObjectStorage) (ObjectStorage, error) {
+func NewObjectStorage(cfg *ObjectStorageConfig) (ObjectStorage, error) {
 	if fn, ok := storageMap[strings.ToLower(cfg.Storage)]; ok {
 		log.Infof("Creating %s storage at endpoint %s", cfg.Storage, cfg.BucketURL)
 		return fn(cfg)
@@ -22,7 +22,7 @@ func NewObjectStorage(cfg *piece.ObjectStorage) (ObjectStorage, error) {
 	return nil, fmt.Errorf("Invalid object storage: %s", cfg.Storage)
 }
 
-type StorageFn func(cfg *piece.ObjectStorage) (ObjectStorage, error)
+type StorageFn func(cfg *ObjectStorageConfig) (ObjectStorage, error)
 
 var storageMap = map[string]StorageFn{
 	"s3":     newS3Store,

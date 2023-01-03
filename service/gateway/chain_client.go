@@ -8,6 +8,7 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
+// createBucketOption is the createBucket option.
 type createBucketOption struct {
 	reqCtx *requestContext
 }
