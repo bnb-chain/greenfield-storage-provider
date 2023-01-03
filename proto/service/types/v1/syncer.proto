@@ -7,14 +7,13 @@ option go_package = "github.com/bnb-chain/inscription-storage-provider/service/t
 
 message SyncerInfo {
   string object_id = 1;
-  uint64 payload_size = 2;
-  string storage_provider_id = 3;
-  pkg.types.v1.RedundancyType redundancy_type = 4;
+  string storage_provider_id = 2;
+  pkg.types.v1.RedundancyType redundancy_type = 3;
 }
 
 message SyncerServiceUploadECPieceRequest {
   string trace_id = 1;
-  string storage_provider_id = 2;
+  SyncerInfo syncer_info = 2;
   map<string, bytes> piece_data = 3; // key is piece key, value is piece_data
 }
 
