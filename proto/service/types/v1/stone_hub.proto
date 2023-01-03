@@ -1,6 +1,7 @@
 syntax = "proto3";
 package service.types.v1;
 import "pkg/types/v1/object.proto";
+import "pkg/types/v1/job.proto";
 import "service/types/v1/uploader.proto";
 option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
 
@@ -94,6 +95,18 @@ message StoneHubServiceDoneSecondaryPieceJobResponse {
   ErrMessage err_message = 3;
 }
 
+message StoneHubServiceQueryStoneRequest {
+  bytes tx_hash = 2;
+}
+
+message StoneHubServiceQueryStoneResponse {
+  pkg.types.v1.JobContext job_info = 1;
+  pkg.types.v1.ObjectInfo object_info = 2;
+  PieceJob pending_primary_job = 3;
+  PieceJob pending_secondary_job = 4;
+  ErrMessage err_message = 5;
+}
+
 service StoneHubService {
   rpc CreateObject(StoneHubServiceCreateObjectRequest) returns (StoneHubServiceCreateObjectResponse) {};
   rpc SetObjectCreateInfo(StoneHubServiceSetObjectCreateInfoRequest) returns (StoneHubServiceSetSetObjectCreateInfoResponse) {};
@@ -101,4 +114,5 @@ service StoneHubService {
   rpc DonePrimaryPieceJob(StoneHubServiceDonePrimaryPieceJobRequest) returns (StoneHubServiceDonePrimaryPieceJobResponse) {};
   rpc AllocStoneJob(StoneHubServiceAllocStoneJobRequest) returns (StoneHubServiceAllocStoneJobResponse) {};
   rpc DoneSecondaryPieceJob(StoneHubServiceDoneSecondaryPieceJobRequest) returns (StoneHubServiceDoneSecondaryPieceJobResponse) {};
+  rpc QueryStone(StoneHubServiceQueryStoneRequest) returns (StoneHubServiceQueryStoneResponse) {};
 }

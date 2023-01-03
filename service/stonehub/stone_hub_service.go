@@ -35,6 +35,17 @@ func (hub *StoneHub) CreateObject(ctx context.Context, req *service.StoneHubServ
 		log.Error("create object error", "trace_id", req.TraceId, "hash", req.TxHash, "error", rsp.ErrMessage)
 		return rsp, nil
 	}
+	if req.ObjectInfo.ObjectId == 0 {
+		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrObjectID)
+		log.Error("create object error", "trace_id", req.TraceId, "hash", req.TxHash, "error", rsp.ErrMessage)
+		return rsp, nil
+	}
+	if req.ObjectInfo.Height == 0 {
+		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrObjectCreateHeight)
+		log.Error("create object error", "trace_id", req.TraceId, "hash", req.TxHash, "error", rsp.ErrMessage)
+		return rsp, nil
+	}
+	req.ObjectInfo.TxHash = req.TxHash
 	if req.ObjectInfo.Size <= mjob.InlineSize {
 		log.Warn("create object adjust to inline type", "trace_id", req.TraceId, "hash", req.TxHash)
 		req.ObjectInfo.RedundancyType = types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
@@ -164,6 +175,16 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context, req *service.Stone
 		log.Error("tx hash format error", "trace_id", req.TraceId, "hash", req.TxHash)
 		return rsp, nil
 	}
+	if req.PieceJob.StorageProviderSealInfo.StorageProviderId != hub.config.StorageProvider {
+		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrPrimaryStorageProvider)
+		log.Error("tx hash format error", "trace_id", req.TraceId, "hash", req.TxHash)
+		return rsp, nil
+	}
+	if len(req.PieceJob.StorageProviderSealInfo.PieceCheckSum) != 1 {
+		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrPrimaryPieceChecksum)
+		log.Error("tx hash format error", "trace_id", req.TraceId, "hash", req.TxHash)
+		return rsp, nil
+	}
 	st := hub.GetStone(string(req.TxHash))
 	if st == nil {
 		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrUploadPayloadJobNotExist)
@@ -171,7 +192,7 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context, req *service.Stone
 		return rsp, nil
 	}
 	uploadStone := st.(*stone.UploadPayloadStone)
-	if req.ErrMessage.ErrCode != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+	if req.ErrMessage != nil && req.ErrMessage.ErrCode != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.Error("done primary job error", "trace_id", req.TraceId, "hash", req.TxHash, "error", req.ErrMessage)
 		if err := uploadStone.InterruptStone(ctx, errors.New(req.ErrMessage.ErrMsg)); err != nil {
 			rsp.ErrMessage = model.MakeErrMsgResponse(err)
@@ -217,7 +238,7 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context, req *service.Sto
 		return rsp, nil
 	}
 	uploadStone := st.(*stone.UploadPayloadStone)
-	if req.ErrMessage.ErrCode != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+	if req.ErrMessage != nil && req.ErrMessage.ErrCode != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.Error("done primary job error", "trace_id", req.TraceId, "hash", req.TxHash, "error", req.ErrMessage)
 		if err := uploadStone.InterruptStone(ctx, errors.New(req.ErrMessage.ErrMsg)); err != nil {
 			rsp.ErrMessage = model.MakeErrMsgResponse(err)
@@ -231,5 +252,29 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context, req *service.Sto
 	} else {
 		log.Info("done primary piece job success", "trace_id", req.TraceId, "hash", req.TxHash)
 	}
+	return rsp, nil
+}
+
+// QueryStone return the stone info
+func (hub *StoneHub) QueryStone(ctx context.Context, req *service.StoneHubServiceQueryStoneRequest) (*service.StoneHubServiceQueryStoneResponse, error) {
+	rsp := &service.StoneHubServiceQueryStoneResponse{}
+	if len(req.TxHash) != hash.LengthHash {
+		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrTxHash)
+		log.Error("tx hash format error", "hash", req.TxHash)
+		return rsp, nil
+	}
+	rsp.ObjectInfo, _ = hub.jobDB.GetObjectInfo(req.TxHash)
+	st := hub.GetStone(string(req.TxHash))
+	if st == nil {
+		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrUploadPayloadJobNotExist)
+		log.Error("get stone error", "hash", req.TxHash, "error", rsp.ErrMessage)
+		return rsp, nil
+	}
+	uploadStone := st.(*stone.UploadPayloadStone)
+	jobInfo := uploadStone.GetJobContext()
+
+	rsp.JobInfo = &jobInfo
+	rsp.PendingPrimaryJob = uploadStone.PopPendingPrimarySPJob()
+	rsp.PendingSecondaryJob = uploadStone.PopPendingSecondarySPJob()
 	return rsp, nil
 }
