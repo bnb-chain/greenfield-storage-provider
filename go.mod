@@ -8,6 +8,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/golang/mock v1.6.0
 	github.com/json-iterator/go v1.1.12
+	github.com/klauspost/reedsolomon v1.11.3
 	github.com/looplab/fsm v1.0.0
 	github.com/naoina/toml v0.1.1
 	github.com/oleiade/lane v1.0.1
@@ -24,6 +25,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.1.1 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
