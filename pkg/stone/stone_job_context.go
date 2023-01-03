@@ -40,6 +40,7 @@ func (wrapper *JobContextWrapper) GetJobState() (string, error) {
 func (wrapper *JobContextWrapper) SetJobState(state string) error {
 	wrapper.mu.Lock()
 	defer wrapper.mu.Unlock()
+	wrapper.jobCtx.JobState = types.JobState(types.JobState_value[state])
 	return wrapper.jobDB.SetUploadPayloadJobState(wrapper.jobCtx.JobId, state, time.Now().Unix())
 }
 
@@ -60,6 +61,7 @@ func (wrapper *JobContextWrapper) SetJobErr(err error) error {
 	} else {
 		wrapper.jobCtx.JobErr = wrapper.jobCtx.JobErr + err.Error()
 	}
+	wrapper.jobCtx.JobState = types.JobState_JOB_STATE_ERROR
 	if err := wrapper.jobDB.SetUploadPayloadJobJobError(wrapper.jobCtx.JobId,
 		types.JOB_STATE_ERROR, wrapper.jobCtx.JobErr, time.Now().Unix()); err != nil {
 		return err
@@ -72,4 +74,11 @@ func (wrapper *JobContextWrapper) ModifyTime() int64 {
 	wrapper.mu.RLock()
 	defer wrapper.mu.RUnlock()
 	return wrapper.jobCtx.ModifyTime
+}
+
+// JobContext return the copy of job context
+func (wrapper *JobContextWrapper) JobContext() types.JobContext {
+	wrapper.mu.RLock()
+	defer wrapper.mu.RUnlock()
+	return *wrapper.jobCtx
 }

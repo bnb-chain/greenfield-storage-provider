@@ -188,6 +188,11 @@ func (stone *UploadPayloadStone) PopPendingPrimarySPJob() *service.PieceJob {
 	return stone.job.PopPendingPrimarySPJob()
 }
 
+// PopPendingSecondarySPJob return the uncompleted upload secondary storage provider job
+func (stone *UploadPayloadStone) PopPendingSecondarySPJob() *service.PieceJob {
+	return stone.job.PopPendingSecondarySPJob()
+}
+
 // LastModifyTime return the last modify job state time
 func (stone *UploadPayloadStone) LastModifyTime() int64 {
 	return stone.jobCtx.ModifyTime()
@@ -201,4 +206,14 @@ func (stone *UploadPayloadStone) StoneKey() string {
 // GetStoneState return the state of job
 func (stone *UploadPayloadStone) GetStoneState() (string, error) {
 	return stone.jobCtx.GetJobState()
+}
+
+// GetJobContext return the job context
+func (stone *UploadPayloadStone) GetJobContext() types.JobContext {
+	return stone.jobCtx.JobContext()
+}
+
+// GetObjectInfo return the object info
+func (stone *UploadPayloadStone) GetObjectInfo() types.ObjectInfo {
+	return stone.objCtx.GetObjectInfo()
 }
