@@ -12,6 +12,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/bnb-chain/inscription-storage-provider/mock"
+
 	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
@@ -44,13 +46,14 @@ type InscriptionClient interface {
 // Signer defines the storage provider signer service interface
 // TBD::temporary interface, need to wait for the final version
 type Signer interface {
-	BroadcastMessage(interface{}) []byte
+	BroadcastCreateObjectMessage(object *types.ObjectInfo) []byte
+	BroadcastSealObjectMessage(object *types.ObjectInfo) []byte
 }
 
 // MonitorInscription defines the storage provider event monitor interface
 // TBD::temporary interface, need to wait for the final version
 type MonitorInscription interface {
-	SubscribeEvent(interface{}) chan interface{}
+	SubscribeEvent(string) chan interface{}
 }
 
 // StoneHub manage all stones, the stone is an abstraction of job context and fsm.
@@ -76,6 +79,7 @@ type StoneHub struct {
 	events MonitorInscription
 }
 
+// NewStoneHubService rerurn the StoneHub instance
 func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
 	hub := &StoneHub{
 		config:            hubCfg,
@@ -84,6 +88,10 @@ func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
 		jobCh:             make(chan stone.StoneJob, 100),
 		stoneGC:           make(chan string, 10),
 		stopCH:            make(chan struct{}),
+	}
+	// mock mode for test
+	if hubCfg.MockConfig.Mock {
+		hub.InitMock()
 	}
 	return hub, nil
 }
@@ -99,7 +107,7 @@ func (hub *StoneHub) Start(ctx context.Context) error {
 		return errors.New("stone hub has started")
 	}
 	go hub.eventLoop()
-	go hub.listenInscription()
+	//go hub.listenInscription()
 	go hub.Serve()
 	return nil
 }
@@ -109,8 +117,8 @@ func (hub *StoneHub) Stop(ctx context.Context) error {
 	if !hub.running.Swap(false) {
 		return errors.New("stone hub has stopped")
 	}
-	close(hub.stoneGC)
 	close(hub.stopCH)
+	close(hub.stoneGC)
 	return nil
 }
 
@@ -175,7 +183,11 @@ func (hub *StoneHub) eventLoop() {
 					log.Error("stone has gone", "hash", job.StoneKey)
 					break
 				}
-				sealHash := hub.signer.BroadcastMessage(job)
+				object := &types.ObjectInfo{
+					BucketName: job.BucketName,
+					ObjectName: job.ObjectName,
+				}
+				sealHash := hub.signer.BroadcastSealObjectMessage(object)
 				hub.sealStone.Store(string(sealHash), stone)
 				hub.stone.Delete(txHash)
 			default:
@@ -217,7 +229,7 @@ func (hub *StoneHub) eventLoop() {
 // listenInscription listen to the concerned events of inscription chain
 // TBD::temporarily use the interface mock.
 func (hub *StoneHub) listenInscription() {
-	ch := hub.events.SubscribeEvent(struct{}{})
+	ch := hub.events.SubscribeEvent(mock.SealObject)
 	for {
 		select {
 		case sealHash := <-ch:
@@ -234,5 +246,18 @@ func (hub *StoneHub) listenInscription() {
 		case <-hub.stopCH:
 			return
 		}
+	}
+}
+
+var _ InscriptionClient = &mock.InscriptionChainMock{}
+
+// InitMock init dependent resource for mocking
+func (hub *StoneHub) InitMock() {
+	hub.insCli = mock.NewInscriptionChainMock()
+	hub.signer = mock.NewSignerServerMock(hub.insCli.(*mock.InscriptionChainMock))
+	hub.events = hub.insCli.(MonitorInscription)
+	hub.insCli.(*mock.InscriptionChainMock).Start()
+	if hub.config.MockConfig.JobDB == "memdb" {
+		hub.jobDB = jobdb.NewMemJobDB()
 	}
 }

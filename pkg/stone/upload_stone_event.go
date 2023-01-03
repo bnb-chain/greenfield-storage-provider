@@ -49,7 +49,18 @@ var UploadPayloadFsmEvent = fsm.Events{
 	{Name: SealObjectInitEvent, Src: []string{types.JOB_STATE_UPLOAD_SECONDARY_DONE}, Dst: types.JOB_STATE_SEAL_OBJECT_INIT},
 	{Name: SealObjectDoingEvent, Src: []string{types.JOB_STATE_SEAL_OBJECT_INIT}, Dst: types.JOB_STATE_SEAL_OBJECT_TX_DOING},
 	{Name: SealObjectDoneEvent, Src: []string{types.JOB_STATE_SEAL_OBJECT_TX_DOING}, Dst: types.JOB_STATE_SEAL_OBJECT_DONE},
-	{Name: InterruptEvent, Src: []string{}, Dst: types.JOB_STATE_ERROR},
+	{Name: InterruptEvent, Src: []string{
+		types.JOB_STATE_CREATE_OBJECT_DONE,
+		types.JOB_STATE_UPLOAD_PRIMARY_INIT,
+		types.JOB_STATE_UPLOAD_PRIMARY_DOING,
+		types.JOB_STATE_UPLOAD_PRIMARY_DONE,
+		types.JOB_STATE_UPLOAD_SECONDARY_INIT,
+		types.JOB_STATE_UPLOAD_SECONDARY_DOING,
+		types.JOB_STATE_UPLOAD_SECONDARY_DONE,
+		types.JOB_STATE_SEAL_OBJECT_INIT,
+		types.JOB_STATE_SEAL_OBJECT_TX_DOING,
+		types.JOB_STATE_SEAL_OBJECT_DONE},
+		Dst: types.JOB_STATE_ERROR},
 }
 
 // define FSM action, the Action associated with callback

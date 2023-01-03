@@ -16,12 +16,15 @@ var configFile = flag.String("config", "../../config/config.toml", "config file 
 
 func main() {
 	flag.Parse()
-	spCfg := config.LoadSPConfig(*configFile)
+	spCfg := config.LoadConfig(*configFile)
 
 	lifecycle := lifecycle.NewServiceLifecycle()
 	for _, serviceName := range spCfg.Service {
 		switch serviceName {
 		case "StoneHub":
+			if spCfg.StoneHubCfg == nil {
+				spCfg.StoneHubCfg = config.DefaultStorageProviderConfig.StoneHubCfg
+			}
 			server, err := stonehub.NewStoneHubService(spCfg.StoneHubCfg)
 			if err != nil {
 				log.Error("stone hub init fail", "error", err)

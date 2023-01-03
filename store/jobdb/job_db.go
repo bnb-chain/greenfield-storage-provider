@@ -4,7 +4,7 @@ import types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 
 type PieceJob struct {
 	PieceId         uint32
-	CheckSum        []byte
+	CheckSum        [][]byte
 	StorageProvider string
 }
 

@@ -30,8 +30,8 @@ message StoneHubServiceSetSetObjectCreateInfoResponse {
 
 message StorageProviderSealInfo {
   string storage_provider_id = 1;
-  repeated uint32 piece_idx = 2;
-  map<uint32, bytes> piece_check_sum = 3;
+  uint32 piece_idx = 2;
+  repeated bytes piece_check_sum = 3;
   bytes integrity_hash = 4;
   bytes signature = 5;
 }
@@ -44,7 +44,7 @@ message PieceJob {
   uint64 payload_size = 5;
   repeated uint32 target_idx = 6;
   pkg.types.v1.RedundancyType redundancy_type = 7;
-  repeated StorageProviderSealInfo storage_provider_seal_info = 8;
+  StorageProviderSealInfo storage_provider_seal_info = 8;
 }
 
 message StoneHubServiceBeginUploadPayloadRequest {

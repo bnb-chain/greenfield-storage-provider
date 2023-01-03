@@ -2,6 +2,7 @@ package stone
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 
 	"github.com/looplab/fsm"
@@ -102,34 +103,44 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 		return stone.jobCtx.JobErr()
 	}
 	var current string
+	var txHash string
+	var event string
+	if len(stone.objCtx.TxHash()) > 6 {
+		txHash = hex.EncodeToString(stone.objCtx.TxHash())[:6]
+	}
 	for {
 		current = stone.jobFsm.Current()
 		switch current {
 		case types.JOB_STATE_CREATE_OBJECT_DONE:
-			actionFsm(ctx, UploadPayloadInitEvent)
+			event = UploadPayloadInitEvent
 		case types.JOB_STATE_UPLOAD_PRIMARY_INIT:
-			actionFsm(ctx, UploadPrimaryDoingEvent)
+			event = UploadPrimaryDoingEvent
 		case types.JOB_STATE_UPLOAD_PRIMARY_DOING:
 			if stone.job.PrimarySPCompleted() {
-				log.Info("stone primary job has done", "hash", stone.StoneKey())
-				actionFsm(ctx, UploadPrimaryDoneEvent)
+				event = UploadPrimaryDoneEvent
+			} else {
+				return nil
 			}
 		case types.JOB_STATE_UPLOAD_PRIMARY_DONE:
-			actionFsm(ctx, UploadSecondaryInitEvent)
+			event = UploadSecondaryInitEvent
 		case types.JOB_STATE_UPLOAD_SECONDARY_INIT:
-			actionFsm(ctx, UploadSecondaryDoingEvent)
+			event = UploadSecondaryDoingEvent
 		case types.JOB_STATE_UPLOAD_SECONDARY_DOING:
 			if stone.job.SecondarySPCompleted() {
-				log.Info("stone secondary job has done", "hash", stone.StoneKey())
-				actionFsm(ctx, UploadSecondaryDoneEvent)
+				event = UploadSecondaryDoneEvent
+			} else {
+				return nil
 			}
 		case types.JOB_STATE_UPLOAD_SECONDARY_DONE:
-			actionFsm(ctx, SealObjectInitEvent)
+			event = SealObjectInitEvent
 		case types.JOB_STATE_SEAL_OBJECT_INIT:
-			actionFsm(ctx, SealObjectDoingEvent)
+			event = SealObjectDoingEvent
 		default:
+			log.Info("stone fsm self action stop, ", "tx_hash", txHash, " state", current)
 			return nil
 		}
+		log.Info("stone fsm self action, ", "tx_hash: ", txHash, " state: ", current, " event: ", event)
+		actionFsm(ctx, event)
 		if stone.jobCtx.JobErr() != nil {
 			actionFsm(ctx, InterruptEvent)
 			return stone.jobCtx.JobErr()
@@ -160,8 +171,9 @@ func (stone *UploadPayloadStone) InterruptStone(ctx context.Context, err error) 
 		// log error
 		return stone.jobCtx.JobErr()
 	}
-	log.Error("interrupt stone", "hash", stone.StoneKey(), "error", stone.jobCtx.JobErr())
+	log.Error("interrupt stone", "hash", stone.StoneKey(), "error", err)
 	stone.jobCtx.SetJobErr(err)
+	ctx = context.WithValue(ctx, CtxStoneKey, stone)
 	stone.jobFsm.Event(ctx, InterruptEvent)
 	return nil
 }

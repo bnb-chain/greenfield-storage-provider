@@ -10,7 +10,6 @@ import (
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
 	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
 // ObjectInfoContext maintains the object info, goroutine safe.
@@ -214,7 +213,10 @@ func (job *UploadPayloadJob) PrimarySPSealInfo() (*SealInfo, error) {
 	}
 	hash := sha256.New()
 	for _, pieceJob := range job.primaryJob.pieceJobs {
-		hash.Write(pieceJob.CheckSum)
+		if len(pieceJob.CheckSum) != 1 {
+			return sealInfo, errors.New("primary storage provider checksum error")
+		}
+		hash.Write(pieceJob.CheckSum[0])
 	}
 	sealInfo.IntegrityHash = hash.Sum(nil)
 	return sealInfo, nil
@@ -231,6 +233,9 @@ func (job *UploadPayloadJob) SecondarySPSealInfo() ([]*SealInfo, error) {
 	var sealInfos []*SealInfo
 	for _, pieceJob := range job.secondaryJob.pieceJobs {
 		sp := pieceJob.StorageProvider
+		if _, ok := job.secondaryJob.spInfo[sp]; !ok {
+			return sealInfos, errors.New("less storage provider seal info")
+		}
 		sealInfos = append(sealInfos, job.secondaryJob.spInfo[sp])
 	}
 	return sealInfos, nil
@@ -247,7 +252,7 @@ type SealInfo struct {
 // the piece jobmay be segment piece or ec piece (belong to one secondary).
 type UploadPieceJob struct {
 	PieceId         uint32
-	CheckSum        []byte
+	CheckSum        [][]byte
 	StorageProvider string
 	Done            bool
 }
@@ -293,8 +298,9 @@ func NewUploadJob(objectCtx *ObjectInfoContext, primary bool) (*UploadJob, error
 	}
 	return &UploadJob{
 		objectCtx:      objectCtx,
-		redundancyType: object.RedundancyType,
 		pieceJobs:      pieces,
+		spInfo:         make(map[string]*SealInfo),
+		redundancyType: object.RedundancyType,
 	}, nil
 }
 
@@ -312,35 +318,35 @@ func (job *UploadJob) Done(pieceJob *service.PieceJob, primary bool) error {
 	if job.complete == len(job.pieceJobs) {
 		return nil
 	}
-	for _, sp := range pieceJob.StorageProviderSealInfo {
-		for _, idx := range sp.PieceIdx {
-			if int(idx) > len(job.pieceJobs) {
-				return errors.New("piece idx out of bounds")
-			}
-			if job.pieceJobs[idx].Done {
-				continue
-			}
-			job.pieceJobs[idx].CheckSum = sp.PieceCheckSum[idx]
-			job.pieceJobs[idx].StorageProvider = sp.StorageProviderId
-			if primary {
-				if err := job.objectCtx.SetPrimaryPieceJobDone(job.pieceJobs[idx]); err != nil {
-					return err
-				}
-			} else {
-				if err := job.objectCtx.SetSecondaryPieceJobDone(job.pieceJobs[idx]); err != nil {
-					return err
-				}
-			}
-			job.pieceJobs[idx].Done = true
-			job.complete++
-			log.Info("done piece job", "idx", idx)
+	pieceIdx := pieceJob.StorageProviderSealInfo.PieceIdx
+	if pieceIdx > uint32(len(job.pieceJobs)) {
+		return errors.New("piece idx out of bounds")
+	}
+	if job.pieceJobs[pieceIdx].Done {
+		return errors.New("piece job has already completed")
+	}
+	uploadPieceJob := &UploadPieceJob{
+		PieceId:         pieceIdx,
+		CheckSum:        pieceJob.StorageProviderSealInfo.PieceCheckSum,
+		StorageProvider: pieceJob.StorageProviderSealInfo.StorageProviderId,
+		Done:            true,
+	}
+	if primary {
+		if err := job.objectCtx.SetPrimaryPieceJobDone(uploadPieceJob); err != nil {
+			return err
 		}
-		job.spInfo[sp.StorageProviderId] = &SealInfo{
-			StorageProvider: sp.StorageProviderId,
-			IntegrityHash:   sp.IntegrityHash,
-			Signature:       sp.Signature,
+	} else {
+		if err := job.objectCtx.SetSecondaryPieceJobDone(uploadPieceJob); err != nil {
+			return err
 		}
 	}
+	job.pieceJobs[pieceIdx] = uploadPieceJob
+	job.spInfo[pieceJob.StorageProviderSealInfo.StorageProviderId] = &SealInfo{
+		StorageProvider: pieceJob.StorageProviderSealInfo.StorageProviderId,
+		IntegrityHash:   pieceJob.StorageProviderSealInfo.IntegrityHash,
+		Signature:       pieceJob.StorageProviderSealInfo.Signature,
+	}
+	job.complete++
 	return nil
 }
 
