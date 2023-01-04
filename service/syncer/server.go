@@ -27,14 +27,20 @@ type Syncer struct {
 	store *storeClient
 }
 
+// NewSyncerService creates a syncer service to upload piece to piece store
 func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
-	return &Syncer{
+	s := &Syncer{
 		cfg:  config,
 		name: syncerServiceName,
-	}, nil
+	}
+	if err := s.InitClient(); err != nil {
+		log.Errorw("syncer service init client failed", "error", err)
+		return nil, err
+	}
+	return s, nil
 }
 
-func (s *Syncer) Init() error {
+func (s *Syncer) InitClient() error {
 	store, err := newStoreClient(s.cfg.PieceConfig)
 	if err != nil {
 		log.Errorw("Syncer starts newStoreClient failed", "error", err)
@@ -57,7 +63,7 @@ func (s *Syncer) Start(ctx context.Context) error {
 
 // Stop running SyncerService
 func (s *Syncer) Stop(ctx context.Context) error {
-	log.Info("Stop syncer service")
+	log.Info("Stop syncer service!")
 	return nil
 }
 

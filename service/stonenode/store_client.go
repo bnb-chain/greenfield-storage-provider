@@ -21,8 +21,8 @@ func newStoreClient(pieceConfig *piece.PieceStoreConfig) (*storeClient, error) {
 	return &storeClient{ps: ps}, nil
 }
 
-func (sc *storeClient) getPiece(key string, offset, limit int64) ([]byte, error) {
-	rc, err := sc.ps.Get(context.Background(), key, offset, limit)
+func (sc *storeClient) getPiece(ctx context.Context, key string, offset, limit int64) ([]byte, error) {
+	rc, err := sc.ps.Get(ctx, key, offset, limit)
 	if err != nil {
 		log.Errorw("stone node service invoke PieceStore Get failed", "error", err)
 		return nil, err

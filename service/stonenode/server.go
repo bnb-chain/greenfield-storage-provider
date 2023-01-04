@@ -19,25 +19,23 @@ type StoneNodeService struct {
 	syncer   service.SyncerServiceClient
 	stoneHub service.StoneHubServiceClient
 	store    *storeClient
-	//segChan  chan []byte
-	errChan chan error
 }
 
-func NewStoneNodeService(config *StoneNodeConfig) *StoneNodeService {
+// NewStoneNodeService creates a stone node service
+func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 	s := &StoneNodeService{
-		cfg:     config,
-		name:    stoneNodeServiceName,
-		errChan: make(chan error),
+		cfg:  config,
+		name: stoneNodeServiceName,
 	}
-	store, err := newStoreClient(s.cfg.PieceConfig)
-	if err != nil {
-		log.Errorw("stone node inits newStoreClient failed", "error", err)
-		return err
+	if err := s.InitClient(); err != nil {
+		log.Errorw("stone node init client failed", "error", err)
+		return nil, err
 	}
-	s.store = store
+	return s, nil
 }
 
-func (s *StoneNodeService) Init() error {
+// InitClient inits store client and rpc client
+func (s *StoneNodeService) InitClient() error {
 	store, err := newStoreClient(s.cfg.PieceConfig)
 	if err != nil {
 		log.Errorw("stone node inits newStoreClient failed", "error", err)
@@ -67,13 +65,6 @@ func (s *StoneNodeService) Name() string {
 // Start running StoneNodeService
 func (s *StoneNodeService) Start(ctx context.Context) error {
 	go func() {
-		if err := s.Init(); err != nil {
-			log.Errorw("stone node init failed", "error", err)
-			return
-		}
-	}()
-
-	go func() {
 		for {
 			if err := s.doEC(ctx); err != nil {
 				log.Errorw("do ec failed", "error", err)
@@ -88,7 +79,6 @@ func (s *StoneNodeService) Start(ctx context.Context) error {
 
 // Stop running StoneNodeService
 func (s *StoneNodeService) Stop(ctx context.Context) error {
-	close(s.errChan)
 	log.Info("Stop stone node!")
 	return nil
 }
