@@ -194,6 +194,16 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context, req *service.Stone
 		log.CtxErrorw(ctx, "primary storage provider piece job checksum error")
 		return rsp, nil
 	}
+	if req.PieceJob.StorageProviderSealInfo.StorageProviderId != hub.config.StorageProvider {
+		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrPrimaryStorageProvider)
+		log.Error("tx hash format error", "trace_id", req.TraceId, "hash", req.TxHash)
+		return rsp, nil
+	}
+	if len(req.PieceJob.StorageProviderSealInfo.PieceCheckSum) != 1 {
+		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrPrimaryPieceChecksum)
+		log.Error("tx hash format error", "trace_id", req.TraceId, "hash", req.TxHash)
+		return rsp, nil
+	}
 	st := hub.GetStone(string(req.TxHash))
 	if st == nil {
 		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrUploadPayloadJobNotExist)
@@ -293,3 +303,4 @@ func (hub *StoneHub) QueryStone(ctx context.Context, req *service.StoneHubServic
 	rsp.PendingSecondaryJob = uploadStone.PopPendingSecondarySPJob()
 	return rsp, nil
 }
+
