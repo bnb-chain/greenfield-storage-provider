@@ -26,6 +26,9 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 
 	objectID := allocResp.GetPieceJob().GetObjectId()
 	payloadSize := allocResp.GetPieceJob().GetPayloadSize()
+	traceID := allocResp.GetTraceId()
+	txHash := allocResp.GetTxHash()
+	rType := allocResp.GetPieceJob().GetRedundancyType()
 	segNumber := getSegmentNumber(payloadSize)
 	segChan := make(chan seg, segNumber)
 	sInfoChan := make(chan *service.StorageProviderSealInfo)
@@ -33,6 +36,7 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 		close(segChan)
 		close(sInfoChan)
 	}()
+
 	// 1. get data from primary storage provider
 	for i := 0; i <= int(segNumber); i++ {
 		go func(i int) {
@@ -54,7 +58,6 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 	for v := range segChan {
 		pieceMap := &sync.Map{}
 		go func(sd seg) {
-			rType := allocResp.GetPieceJob().GetRedundancyType()
 			pieceMap, err = ecOrReplicaOrInline(rType, objectID, uint64(sd.segIndex), sd.segData)
 			if err != nil {
 				log.Errorw("stone node ecOrReplicaOrInline failed", "error", err)
@@ -66,9 +69,10 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 				go func() {
 					resp, err := s.UploadECPiece(ctx, segNumber, &service.SyncerInfo{
 						ObjectId:          objectID,
+						TxHash:            txHash,
 						StorageProviderId: mockGetStorageProviderID()[sd.segIndex],
 						RedundancyType:    allocResp.GetPieceJob().GetRedundancyType(),
-					}, k, val)
+					}, k, val, traceID)
 					if err != nil {
 						log.Errorw("UploadECPiece failed", "error", err)
 						s.errChan <- err
@@ -81,9 +85,18 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 	}
 
 	// 3. notify stone hub when a segment is done
-	txHash := allocResp.GetTxHash()
 	for v := range sInfoChan {
-		if err := s.DoneSecondaryPieceJob(ctx, txHash, v); err != nil {
+		pieceJob := &service.PieceJob{
+			BucketName:              allocResp.GetPieceJob().GetBucketName(),
+			ObjectName:              allocResp.GetPieceJob().GetObjectName(),
+			TxHash:                  txHash,
+			ObjectId:                objectID,
+			PayloadSize:             payloadSize,
+			TargetIdx:               allocResp.GetPieceJob().GetTargetIdx(),
+			RedundancyType:          rType,
+			StorageProviderSealInfo: v,
+		}
+		if err := s.DoneSecondaryPieceJob(ctx, pieceJob, traceID); err != nil {
 			log.Errorw("done secondary piece job failed", "error", err)
 			s.errChan <- err
 		}

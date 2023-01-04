@@ -69,7 +69,10 @@ func (s *StoneNodeService) Start(ctx context.Context) error {
 
 	go func() {
 		for {
-			s.doEC(ctx)
+			if err := s.doEC(ctx); err != nil {
+				log.Errorw("do ec failed", "error", err)
+				return
+			}
 			time.Sleep(1 * time.Second)
 		}
 	}()

@@ -30,11 +30,11 @@ message StoneHubServiceSetSetObjectCreateInfoResponse {
 }
 
 message StorageProviderSealInfo {
-  string storage_provider_id = 1;// 一个 storage_provider_id 只写同一个ec的数据
-  uint32 piece_idx = 2; // ec1
-  repeated bytes piece_checksum = 3; // 六个ec1的checksum
-  bytes integrity_hash = 4; // 各个Piece的checksum之和，十六进制相加
-  bytes signature = 5; // 签名
+  string storage_provider_id = 1;
+  uint32 piece_idx = 2;
+  repeated bytes piece_checksum = 3;
+  bytes integrity_hash = 4;
+  bytes signature = 5;
 }
 
 message PieceJob {
@@ -43,7 +43,7 @@ message PieceJob {
   bytes tx_hash = 3;
   uint64 object_id = 4;
   uint64 payload_size = 5;
-  repeated uint32 target_idx = 6; // 传过来的Piece有多个，[0,1,2,3,4,5]，当0和3成功，其余出错时，可以利用target_idx进行重试，只重试出错的Piece
+  repeated uint32 target_idx = 6;
   pkg.types.v1.RedundancyType redundancy_type = 7;
   StorageProviderSealInfo storage_provider_seal_info = 8;
 }
@@ -74,6 +74,7 @@ message StoneHubServiceDonePrimaryPieceJobResponse {
 }
 
 // StoneHubServiceAllocStoneJobRequest 周期性从 stone hub拉 job
+
 message StoneHubServiceAllocStoneJobRequest {
   string trace_id = 1;
 }

@@ -34,11 +34,11 @@ func (s *StoneNodeService) AllocStoneJob(ctx context.Context) (
 	return resp, nil
 }
 
-func (s *StoneNodeService) DoneSecondaryPieceJob(ctx context.Context, txHash []byte, sInfo *service.StorageProviderSealInfo) error {
+func (s *StoneNodeService) DoneSecondaryPieceJob(ctx context.Context, pieceJob *service.PieceJob, traceID string) error {
 	resp, err := s.stoneHub.DoneSecondaryPieceJob(ctx, &service.StoneHubServiceDoneSecondaryPieceJobRequest{
-		TraceId:    "test",
-		TxHash:     txHash,
-		PieceJob:   nil,
+		TraceId:    traceID,
+		TxHash:     pieceJob.GetTxHash(),
+		PieceJob:   pieceJob,
 		ErrMessage: nil,
 	})
 	if err != nil {
