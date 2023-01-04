@@ -27,7 +27,6 @@ func NewStoneNodeService(config *StoneNodeConfig) *StoneNodeService {
 	return &StoneNodeService{
 		cfg:     config,
 		name:    stoneNodeServiceName,
-		segChan: make(chan []byte),
 		errChan: make(chan error),
 	}
 }

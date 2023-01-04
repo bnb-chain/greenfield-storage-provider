@@ -61,7 +61,7 @@ func handleRequest(req *service.SyncerServiceUploadECPieceRequest, store *storeC
 		checksum := generateChecksum(value)
 		pieceChecksumList = append(pieceChecksumList, checksum)
 		if err := store.putPiece(key, value); err != nil {
-			log.Errorw("UploadECPiece put piece error", "error", err)
+			log.Errorw("UploadECPiece put piece failed", "error", err)
 			return nil, err
 		}
 	}
