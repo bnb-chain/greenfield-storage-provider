@@ -38,21 +38,27 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 	}()
 
 	// 1. get data from primary storage provider
-	for i := 0; i <= int(segNumber); i++ {
-		go func(i int) {
-			pieceKey := piecestore.EncodeSegmentPieceKey(objectID, int(segNumber))
-			data, err := s.store.getPiece(pieceKey, 0, 0)
-			if err != nil {
-				log.Errorw("stone node gets segment data from piece store failed", "error", err, "piece key", pieceKey)
-				s.errChan <- err
-			}
-			se := seg{
-				segIndex: i,
-				segData:  data,
-			}
-			segChan <- se
-		}(i)
-	}
+	var wg sync.WaitGroup
+	go func() {
+		for i := 0; i <= int(segNumber); i++ {
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				pieceKey := piecestore.EncodeSegmentPieceKey(objectID, int(segNumber))
+				data, err := s.store.getPiece(pieceKey, 0, 0)
+				if err != nil {
+					log.Errorw("stone node gets segment data from piece store failed", "error", err, "piece key", pieceKey)
+					s.errChan <- err
+				}
+				se := seg{
+					segIndex: i,
+					segData:  data,
+				}
+				segChan <- se
+			}(i)
+		}
+	}()
+	wg.Wait()
 
 	// 2. send data to secondary storage provider
 	for v := range segChan {
