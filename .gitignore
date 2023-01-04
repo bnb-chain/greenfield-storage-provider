@@ -5,6 +5,7 @@
 *.so
 *.dylib
 *.pb.go
+.storage_provider_cli_history
 
 # OSX trash
 .DS_Store

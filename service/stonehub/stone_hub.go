@@ -130,7 +130,10 @@ func (hub *StoneHub) HasStone(stoneKey string) bool {
 
 // GetStone return the stone corresponding to the stoneKey
 func (hub *StoneHub) GetStone(stoneKey string) Stone {
-	st, _ := hub.stone.Load(stoneKey)
+	st, ok := hub.stone.Load(stoneKey)
+	if !ok {
+		return nil
+	}
 	return st.(Stone)
 }
 
