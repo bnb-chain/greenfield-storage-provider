@@ -43,8 +43,6 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 	}
 }
 
-// syncer服务生成signature与checksum，stone node校验signature与完整性hash
-// Piece写入哪个sp，按照数组里的顺序写入即可？
 func handleRequest(req *service.SyncerServiceUploadECPieceRequest, store *storeClient) (
 	*service.StorageProviderSealInfo, error) {
 	var (
@@ -65,12 +63,15 @@ func handleRequest(req *service.SyncerServiceUploadECPieceRequest, store *storeC
 			return nil, err
 		}
 	}
+
+	spID := req.GetSyncerInfo().GetStorageProviderId()
+	integrityHash := generateIntegrityHash(pieceChecksumList, spID)
 	resp := &service.StorageProviderSealInfo{
-		StorageProviderId: req.GetSyncerInfo().GetStorageProviderId(),
+		StorageProviderId: spID,
 		PieceIdx:          uint32(pieceIndex),
 		PieceChecksum:     pieceChecksumList,
-		IntegrityHash:     nil,
-		Signature:         nil,
+		IntegrityHash:     integrityHash,
+		Signature:         nil, // TODO(mock)
 	}
 	return resp, nil
 }

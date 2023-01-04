@@ -73,8 +73,6 @@ message StoneHubServiceDonePrimaryPieceJobResponse {
   ErrMessage err_message = 3;
 }
 
-// StoneHubServiceAllocStoneJobRequest 周期性从 stone hub拉 job
-
 message StoneHubServiceAllocStoneJobRequest {
   string trace_id = 1;
 }

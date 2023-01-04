@@ -18,6 +18,8 @@ const StopTimeout = 30
 type Service interface {
 	// Name describe service name
 	Name() string
+	// Init a service such as the initialization of mysql or redis
+	Init(ctx context.Context) error
 	// Start a service, this method should be used in non-block form
 	Start(ctx context.Context) error
 	// Stop a service, this method should be used in non-block form
@@ -43,8 +45,14 @@ func NewServiceLifecycle() *ServiceLifecycle {
 }
 
 // RegisterServices register services of an application
-func (s *ServiceLifecycle) RegisterServices(services ...Service) {
+func (s *ServiceLifecycle) RegisterServices(services ...Service) *ServiceLifecycle {
 	s.services = append(s.services, services...)
+}
+
+func (s *ServiceLifecycle) InitServices(ctx context.Context) {
+	for i, service := range s.services {
+
+	}
 }
 
 // StartServices starts running services

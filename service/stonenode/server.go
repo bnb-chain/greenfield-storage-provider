@@ -24,11 +24,17 @@ type StoneNodeService struct {
 }
 
 func NewStoneNodeService(config *StoneNodeConfig) *StoneNodeService {
-	return &StoneNodeService{
+	s := &StoneNodeService{
 		cfg:     config,
 		name:    stoneNodeServiceName,
 		errChan: make(chan error),
 	}
+	store, err := newStoreClient(s.cfg.PieceConfig)
+	if err != nil {
+		log.Errorw("stone node inits newStoreClient failed", "error", err)
+		return err
+	}
+	s.store = store
 }
 
 func (s *StoneNodeService) Init() error {
