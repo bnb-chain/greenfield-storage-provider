@@ -10,15 +10,15 @@ import (
 func TestEncodeSegmentPieceKey(t *testing.T) {
 	cases := []struct {
 		name       string
-		req1       string
+		req1       uint64
 		req2       int
 		wantedResp string
 	}{
 		{
 			name:       "encode segment piece key successfully",
-			req1:       "ABCD123",
+			req1:       123456789,
 			req2:       0,
-			wantedResp: "ABCD123_s0",
+			wantedResp: "123456789_s0",
 		},
 	}
 	for _, tt := range cases {
@@ -33,49 +33,49 @@ func TestDecodeSegmentPieceKey(t *testing.T) {
 	cases := []struct {
 		name        string
 		req         string
-		wantedResp1 string
+		wantedResp1 uint64
 		wantedResp2 int
 		wantedErr   error
 	}{
 		{
 			name:        "decode segment piece key successfully",
-			req:         "ABCD123_s0",
-			wantedResp1: "ABCD123",
+			req:         "123456789_s0",
+			wantedResp1: 123456789,
 			wantedResp2: 0,
 			wantedErr:   nil,
 		},
 		{
 			name:        "invalid piece key 1",
-			req:         "testID",
-			wantedResp1: "",
+			req:         "testID_s2",
+			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedErr:   fmt.Errorf("Invalid segment piece key"),
 		},
 		{
 			name:        "invalid piece key 2",
-			req:         "testID_p",
-			wantedResp1: "",
+			req:         "123456789_p",
+			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedErr:   fmt.Errorf("Invalid segment piece key"),
 		},
 		{
 			name:        "invalid piece key 3",
-			req:         "testID_s123r",
-			wantedResp1: "",
+			req:         "123456789_s123r",
+			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedErr:   fmt.Errorf("Invalid segment piece key"),
 		},
 		{
 			name:        "invalid piece key 4",
-			req:         "testID_ss.123",
-			wantedResp1: "",
+			req:         "123456789_ss.123",
+			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedErr:   fmt.Errorf("Invalid segment piece key"),
 		},
 		{
 			name:        "invalid segment piece key 4",
-			req:         "testID_s123/111",
-			wantedResp1: "",
+			req:         "123456789_s123/111",
+			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedErr:   fmt.Errorf("Invalid segment piece key"),
 		},
@@ -93,17 +93,17 @@ func TestDecodeSegmentPieceKey(t *testing.T) {
 func TestEncodeECPieceKey(t *testing.T) {
 	cases := []struct {
 		name       string
-		req1       string
+		req1       uint64
 		req2       int
 		req3       int
 		wantedResp string
 	}{
 		{
 			name:       "encode ec piece key successfully",
-			req1:       "ABCD123",
+			req1:       123456789,
 			req2:       1,
 			req3:       3,
-			wantedResp: "ABCD123_s1_p3",
+			wantedResp: "123456789_s1_p3",
 		},
 	}
 	for _, tt := range cases {
@@ -118,15 +118,15 @@ func TestDecodeECPieceKey(t *testing.T) {
 	cases := []struct {
 		name        string
 		req         string
-		wantedResp1 string
+		wantedResp1 uint64
 		wantedResp2 int
 		wantedResp3 int
 		wantedErr   error
 	}{
 		{
 			name:        "encode ec piece key successfully",
-			req:         "ABCD123_s1_p3",
-			wantedResp1: "ABCD123",
+			req:         "123456789_s1_p3",
+			wantedResp1: 123456789,
 			wantedResp2: 1,
 			wantedResp3: 3,
 			wantedErr:   nil,
@@ -134,39 +134,39 @@ func TestDecodeECPieceKey(t *testing.T) {
 		{
 			name:        "invalid ec piece key 1",
 			req:         "ABCD123_s1",
-			wantedResp1: "",
+			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedResp3: 0,
 			wantedErr:   fmt.Errorf("Invalid EC piece key"),
 		},
 		{
 			name:        "invalid ec piece key 2",
-			req:         "ABCD123_s1_p",
-			wantedResp1: "",
+			req:         "123456789_s1_p",
+			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedResp3: 0,
 			wantedErr:   fmt.Errorf("Invalid EC piece key"),
 		},
 		{
 			name:        "invalid ec piece key 3",
-			req:         "ABCD123_s1_ps2",
-			wantedResp1: "",
+			req:         "123456789_s1_ps2",
+			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedResp3: 0,
 			wantedErr:   fmt.Errorf("Invalid EC piece key"),
 		},
 		{
 			name:        "invalid ec piece key 4",
-			req:         "ABCD123_s1_p2_p3",
-			wantedResp1: "",
+			req:         "123456789_s1_p2_p3",
+			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedResp3: 0,
 			wantedErr:   fmt.Errorf("Invalid EC piece key"),
 		},
 		{
 			name:        "invalid ec piece key 5",
-			req:         "ABCD123_s1_p2n",
-			wantedResp1: "",
+			req:         "123456789_s1_p2n",
+			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedResp3: 0,
 			wantedErr:   fmt.Errorf("Invalid EC piece key"),
@@ -191,7 +191,7 @@ func TestCheckSegmentPieceKey(t *testing.T) {
 	}{
 		{
 			name:       "check segment piece key successfully",
-			req:        []string{"ABCD", "s3"},
+			req:        []string{"123456789", "s3"},
 			wantedResp: true,
 		},
 		{
@@ -201,12 +201,12 @@ func TestCheckSegmentPieceKey(t *testing.T) {
 		},
 		{
 			name:       "invalid segment piece key 2",
-			req:        []string{"ABCD", "s3.."},
+			req:        []string{"123456789", "s3.."},
 			wantedResp: false,
 		},
 		{
 			name:       "invalid segment piece key 3",
-			req:        []string{"ABCD", "s3m2"},
+			req:        []string{"123456789", "s3m2"},
 			wantedResp: false,
 		},
 	}
@@ -226,22 +226,22 @@ func TestCheckECPieceKey(t *testing.T) {
 	}{
 		{
 			name:       "check ec piece key successfully",
-			req:        []string{"ABCD", "s3", "p5"},
+			req:        []string{"123456789", "s3", "p5"},
 			wantedResp: true,
 		},
 		{
 			name:       "invalid ec piece key 1",
-			req:        []string{"ABCD", "s3", "y7"},
+			req:        []string{"ABCD", "s3", "p7"},
 			wantedResp: false,
 		},
 		{
 			name:       "invalid ec piece key 2",
-			req:        []string{"ABCD", "s3..", "p5/"},
+			req:        []string{"123456789", "s3..", "p5/"},
 			wantedResp: false,
 		},
 		{
 			name:       "invalid ec piece key 3",
-			req:        []string{"ABCD", "s3m2", "p5*/"},
+			req:        []string{"123456789", "s3m2", "p5*/"},
 			wantedResp: false,
 		},
 	}

@@ -12,20 +12,20 @@ import (
 var numberRegex = regexp.MustCompile("[0-9]+")
 
 // EncodeSegmentPieceKey encodes segment piece store key
-func EncodeSegmentPieceKey(objectID string, segmentIndex int) string {
-	return fmt.Sprintf("%s_s%d", objectID, segmentIndex)
+func EncodeSegmentPieceKey(objectID uint64, segmentIndex int) string {
+	return fmt.Sprintf("%d_s%d", objectID, segmentIndex)
 }
 
 // DecodeSegmentPieceKey decodes segment piece store key
 // Valid segment piece key: objectID_s0
-func DecodeSegmentPieceKey(pieceKey string) (string, int, error) {
+func DecodeSegmentPieceKey(pieceKey string) (uint64, int, error) {
 	keys := strings.Split(pieceKey, "_")
 	if valid := CheckSegmentPieceKey(keys); !valid {
 		log.Errorw("Invalid segment piece key", "piece key", pieceKey)
-		return "", 0, fmt.Errorf("Invalid segment piece key")
+		return 0, 0, fmt.Errorf("Invalid segment piece key")
 	}
 
-	objectID := keys[0]
+	objectID, _ := strconv.ParseUint(keys[0], 10, 64)
 	s := numberRegex.FindString(keys[1])
 	segmentIndex, _ := strconv.Atoi(s)
 
@@ -33,20 +33,20 @@ func DecodeSegmentPieceKey(pieceKey string) (string, int, error) {
 }
 
 // EncodeECPieceKey encodes ec piece store key
-func EncodeECPieceKey(objectID string, segmentIndex, pieceIndex int) string {
-	return fmt.Sprintf("%s_s%d_p%d", objectID, segmentIndex, pieceIndex)
+func EncodeECPieceKey(objectID uint64, segmentIndex, pieceIndex int) string {
+	return fmt.Sprintf("%d_s%d_p%d", objectID, segmentIndex, pieceIndex)
 }
 
 // DecodeECPieceKey decodes ec piece store key
 // Valid EC piece key: objectID_s0_p0
-func DecodeECPieceKey(pieceKey string) (string, int, int, error) {
+func DecodeECPieceKey(pieceKey string) (uint64, int, int, error) {
 	keys := strings.Split(pieceKey, "_")
 	if valid := CheckECPieceKey(keys); !valid {
 		log.Errorw("Invalid EC piece key", "piece key", pieceKey)
-		return "", 0, 0, fmt.Errorf("Invalid EC piece key")
+		return 0, 0, 0, fmt.Errorf("Invalid EC piece key")
 	}
 
-	objectID := keys[0]
+	objectID, _ := strconv.ParseUint(keys[0], 10, 64)
 	s := numberRegex.FindString(keys[1])
 	segmentIndex, _ := strconv.Atoi(s)
 	e := numberRegex.FindString(keys[2])
@@ -56,6 +56,7 @@ func DecodeECPieceKey(pieceKey string) (string, int, int, error) {
 }
 
 var (
+	objectRegex  = regexp.MustCompile("^[0-9]+$")
 	segmentRegex = regexp.MustCompile("^[s][0-9]+$")
 	ecRegex      = regexp.MustCompile("^[p][0-9]+$")
 )
@@ -67,7 +68,7 @@ func CheckSegmentPieceKey(keys []string) bool {
 		return false
 	}
 
-	if segmentRegex.MatchString(keys[1]) {
+	if objectRegex.MatchString(keys[0]) && segmentRegex.MatchString(keys[1]) {
 		return true
 	}
 	return false
@@ -80,7 +81,7 @@ func CheckECPieceKey(keys []string) bool {
 		return false
 	}
 
-	if segmentRegex.MatchString(keys[1]) && ecRegex.MatchString(keys[2]) {
+	if objectRegex.MatchString(keys[0]) && segmentRegex.MatchString(keys[1]) && ecRegex.MatchString(keys[2]) {
 		return true
 	}
 	return false

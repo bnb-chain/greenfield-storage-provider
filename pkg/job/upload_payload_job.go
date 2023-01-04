@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sync"
 
-	model "github.com/bnb-chain/inscription-storage-provider/model/job"
+	"github.com/bnb-chain/inscription-storage-provider/model"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
@@ -249,7 +249,7 @@ type SealInfo struct {
 }
 
 // UploadPieceJob stands one piece job.
-// the piece jobmay be segment piece or ec piece (belong to one secondary).
+// the piece job may be segment piece or ec piece (belong to one secondary).
 type UploadPieceJob struct {
 	PieceId         uint32
 	CheckSum        [][]byte
@@ -327,7 +327,7 @@ func (job *UploadJob) Done(pieceJob *service.PieceJob, primary bool) error {
 	}
 	uploadPieceJob := &UploadPieceJob{
 		PieceId:         pieceIdx,
-		CheckSum:        pieceJob.StorageProviderSealInfo.PieceCheckSum,
+		CheckSum:        pieceJob.StorageProviderSealInfo.PieceChecksum,
 		StorageProvider: pieceJob.StorageProviderSealInfo.StorageProviderId,
 		Done:            true,
 	}

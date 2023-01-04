@@ -79,7 +79,7 @@ type StoneHub struct {
 	events MonitorInscription
 }
 
-// NewStoneHubService rerurn the StoneHub instance
+// NewStoneHubService returns the StoneHub instance
 func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
 	hub := &StoneHub{
 		config:            hubCfg,

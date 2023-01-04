@@ -13,12 +13,8 @@ type UploadECPieceAPI interface {
 	UploadECPiece(stream service.SyncerService_UploadECPieceServer) error
 }
 
-type SyncerImpl struct {
-	syncer *SyncerService
-}
-
 // UploadECPiece uploads piece data encoded using the ec algorithm to secondary storage provider
-func (s *SyncerImpl) UploadECPiece(stream service.SyncerService_UploadECPieceServer) error {
+func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer) error {
 	for {
 		req, err := stream.Recv()
 		if err != nil {
@@ -27,7 +23,7 @@ func (s *SyncerImpl) UploadECPiece(stream service.SyncerService_UploadECPieceSer
 		}
 		if err == io.EOF {
 			log.Info("UploadECPiece client closed")
-			spInfo, err := handleRequest(req, s.syncer.store)
+			spInfo, err := handleRequest(req, s.store)
 			if err != nil {
 				log.Errorw("UploadECPiece handleRequest failed", "error", err)
 				return err
@@ -70,7 +66,7 @@ func handleRequest(req *service.SyncerServiceUploadECPieceRequest, store *storeC
 		}
 	}
 	resp := &service.StorageProviderSealInfo{
-		StorageProviderId: req.GetStorageProviderId(),
+		StorageProviderId: req.GetSyncerInfo().GetStorageProviderId(),
 		PieceIdx:          uint32(pieceIndex),
 		PieceChecksum:     pieceChecksumList,
 		IntegrityHash:     nil,

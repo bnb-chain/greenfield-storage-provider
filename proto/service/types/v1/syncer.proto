@@ -6,7 +6,7 @@ import "service/types/v1/stone_hub.proto";
 option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
 
 message SyncerInfo {
-  string object_id = 1;
+  uint64 object_id = 1;
   string storage_provider_id = 2;
   pkg.types.v1.RedundancyType redundancy_type = 3;
 }

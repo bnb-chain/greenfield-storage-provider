@@ -10,7 +10,7 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
-var StopTimeout = 30
+const StopTimeout = 30
 
 // Service provides abstract methods to control the lifecycle of a service
 //

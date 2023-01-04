@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
-	mjob "github.com/bnb-chain/inscription-storage-provider/model/job"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
@@ -35,7 +34,7 @@ func (hub *StoneHub) CreateObject(ctx context.Context, req *service.StoneHubServ
 		log.Error("create object error", "trace_id", req.TraceId, "hash", req.TxHash, "error", rsp.ErrMessage)
 		return rsp, nil
 	}
-	if req.ObjectInfo.Size <= mjob.InlineSize {
+	if req.ObjectInfo.Size <= model.InlineSize {
 		log.Warn("create object adjust to inline type", "trace_id", req.TraceId, "hash", req.TxHash)
 		req.ObjectInfo.RedundancyType = types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
 	}

@@ -75,13 +75,13 @@ func TestJobMeta(t *testing.T) {
 		jmi, _ := NewJobMetaImpl()
 		err := jmi.SetPrimaryPieceJobDone([]byte("123"), &PieceJob{
 			PieceId:         0,
-			CheckSum:        []byte("123-0-sum"),
+			Checksum:        []byte("123-0-sum"),
 			StorageProvider: "123-0-sp",
 		})
 		assert.Equal(t, nil, err)
 		err = jmi.SetPrimaryPieceJobDone([]byte("123"), &PieceJob{
 			PieceId:         1,
-			CheckSum:        []byte("123-1-sum"),
+			Checksum:        []byte("123-1-sum"),
 			StorageProvider: "123-1-sp",
 		})
 		assert.Equal(t, nil, err)
@@ -94,13 +94,13 @@ func TestJobMeta(t *testing.T) {
 		jmi, _ := NewJobMetaImpl()
 		err := jmi.SetSecondaryPieceJobDone([]byte("456"), &PieceJob{
 			PieceId:         0,
-			CheckSum:        []byte("456-0-sum"),
+			Checksum:        []byte("456-0-sum"),
 			StorageProvider: "456-0-sp",
 		})
 		assert.Equal(t, nil, err)
 		err = jmi.SetSecondaryPieceJobDone([]byte("456"), &PieceJob{
 			PieceId:         1,
-			CheckSum:        []byte("456-1-sum"),
+			Checksum:        []byte("456-1-sum"),
 			StorageProvider: "456-1-sp",
 		})
 		assert.Equal(t, nil, err)
