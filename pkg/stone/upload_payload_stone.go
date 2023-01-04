@@ -2,7 +2,6 @@ package stone
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 
 	"github.com/looplab/fsm"
@@ -35,7 +34,7 @@ type UploadPayloadStone struct {
 }
 
 // NewUploadPayloadStone return the instance of UploadPayloadStone
-func NewUploadPayloadStone(jobContext *types.JobContext, object *types.ObjectInfo, jobDB jobdb.JobDB,
+func NewUploadPayloadStone(ctx context.Context, jobContext *types.JobContext, object *types.ObjectInfo, jobDB jobdb.JobDB,
 	metaDB metadb.MetaDB, jobCh chan StoneJob, gcCh chan string) (*UploadPayloadStone, error) {
 	if jobContext == nil || object == nil || jobCh == nil || gcCh == nil {
 		return nil, errors.New("new upload payload stone params error")
@@ -59,8 +58,7 @@ func NewUploadPayloadStone(jobContext *types.JobContext, object *types.ObjectInf
 		jobCh:  jobCh,
 		gcCh:   gcCh,
 	}
-	if err := stone.selfActionEvent(context.Background()); err != nil {
-		log.Error("self action stone fsm error", "error", err)
+	if err := stone.selfActionEvent(ctx); err != nil {
 		return nil, err
 	}
 	return stone, nil
@@ -95,7 +93,7 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 	actionFsm := func(ctx context.Context, event string, args ...interface{}) {
 		ctx = context.WithValue(ctx, CtxStoneKey, stone)
 		if err := stone.jobFsm.Event(ctx, event, args...); err != nil {
-			log.Warn("action stone fsm error", "error", err)
+			log.CtxWarnw(ctx, "ignore self action stone fsm error", "event", event, "error", err)
 		}
 	}
 	if stone.jobCtx.JobErr() != nil {
@@ -103,11 +101,7 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 		return stone.jobCtx.JobErr()
 	}
 	var current string
-	var txHash string
 	var event string
-	if len(stone.objCtx.TxHash()) > 6 {
-		txHash = hex.EncodeToString(stone.objCtx.TxHash())[:6]
-	}
 	for {
 		current = stone.jobFsm.Current()
 		switch current {
@@ -136,11 +130,11 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 		case types.JOB_STATE_SEAL_OBJECT_INIT:
 			event = SealObjectDoingEvent
 		default:
-			log.Info("stone fsm self action stop, ", "tx_hash", txHash, " state", current)
 			return nil
 		}
-		log.Info("stone fsm self action, ", "tx_hash: ", txHash, " state: ", current, " event: ", event)
 		actionFsm(ctx, event)
+		to := stone.jobFsm.Current()
+		log.CtxInfow(ctx, "self action upload stone fsm", "from", current, "to", to)
 		if stone.jobCtx.JobErr() != nil {
 			actionFsm(ctx, InterruptEvent)
 			return stone.jobCtx.JobErr()
@@ -158,22 +152,24 @@ func (stone *UploadPayloadStone) ActionEvent(ctx context.Context, event string, 
 	actionFsm := func(ctx context.Context, event string, args ...interface{}) {
 		ctx = context.WithValue(ctx, CtxStoneKey, stone)
 		if err := stone.jobFsm.Event(ctx, event, args...); err != nil {
-			log.Warn("action stone fsm error", "error", err)
+			log.CtxDebugw(ctx, "ignore external action stone fsm error", "event", event, "error", err)
 		}
 	}
+	from := stone.jobFsm.Current()
 	actionFsm(ctx, event, args...)
+	to := stone.jobFsm.Current()
+	log.CtxInfow(ctx, "external action upload stone fsm", "from", from, "to", to)
 	return stone.selfActionEvent(ctx, args...)
 }
 
 // InterruptStone interrupt the fsm and stop the stone
 func (stone *UploadPayloadStone) InterruptStone(ctx context.Context, err error) error {
 	if stone.jobCtx.JobErr() != nil || stone.jobFsm.Current() == types.JOB_STATE_ERROR {
-		// log error
+		log.CtxWarnw(ctx, "interrupt stone fsm params error")
 		return stone.jobCtx.JobErr()
 	}
-	log.Error("interrupt stone", "hash", stone.StoneKey(), "error", err)
-	stone.jobCtx.SetJobErr(err)
 	ctx = context.WithValue(ctx, CtxStoneKey, stone)
+	stone.jobCtx.SetJobErr(err)
 	stone.jobFsm.Event(ctx, InterruptEvent)
 	return nil
 }

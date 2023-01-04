@@ -2,12 +2,17 @@ package log
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bytedance/gopkg/cloud/metainfo"
 
 	"github.com/bnb-chain/inscription-storage-provider/util/log/internal/types"
 	"github.com/bnb-chain/inscription-storage-provider/util/log/internal/zap"
@@ -323,4 +328,30 @@ func CtxErrorw(ctx context.Context, msg string, kvs ...interface{}) {
 // message as fields.
 func CtxPanicw(ctx context.Context, msg string, kvs ...interface{}) {
 	logger.CtxPanicw(ctx, msg, kvs...)
+}
+
+func Context(ctx context.Context, req interface{}) context.Context {
+	if reflect.ValueOf(req).MethodByName("GetTraceId").IsValid() {
+		valList := reflect.ValueOf(req).MethodByName("GetTraceId").Call([]reflect.Value{})
+		if len(valList) > 0 && !valList[0].IsZero() {
+			traceID := uint64(valList[0].Uint())
+			ctx = metainfo.WithValue(ctx, "trace_id", strconv.FormatUint(traceID, 10))
+		}
+	}
+	if reflect.ValueOf(req).MethodByName("GetTxHash").IsValid() {
+		valList := reflect.ValueOf(req).MethodByName("GetTxHash").Call([]reflect.Value{})
+		if len(valList) > 0 && !valList[0].IsZero() {
+			hashBytes := valList[0].Bytes()
+			hashStr := hex.EncodeToString(hashBytes)
+			if len(hashStr) > 8 {
+				hashStr = hashStr[0:8]
+			}
+			ctx = metainfo.WithValue(ctx, "create_hash", hashStr)
+		}
+	}
+	return ctx
+}
+
+func WithValue(ctx context.Context, k, v string) context.Context {
+	return metainfo.WithValue(ctx, k, v)
 }

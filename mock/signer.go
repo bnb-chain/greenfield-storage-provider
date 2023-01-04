@@ -24,7 +24,10 @@ func (signer *SignerServerMock) BroadcastCreateObjectMessage(object *types.Objec
 	hash := sha256.New()
 	hash.Write([]byte(time.Now().String()))
 	txHash := hash.Sum(nil)
-	signer.InscriptionChain.CreateObjectByTxHash(txHash, object)
+	go func() {
+		time.Sleep(1 * time.Second)
+		signer.InscriptionChain.CreateObjectByTxHash(txHash, object)
+	}()
 	return txHash
 }
 
@@ -33,6 +36,9 @@ func (signer *SignerServerMock) BroadcastSealObjectMessage(object *types.ObjectI
 	hash := sha256.New()
 	hash.Write([]byte(time.Now().String()))
 	txHash := hash.Sum(nil)
-	signer.InscriptionChain.SealObjectByTxHash(txHash, object)
+	go func() {
+		time.Sleep(1 * time.Second)
+		signer.InscriptionChain.SealObjectByTxHash(txHash, object)
+	}()
 	return txHash
 }

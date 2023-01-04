@@ -47,7 +47,7 @@ func InitENV() (*UploadPayloadStone, error) {
 	if err != nil {
 		return nil, err
 	}
-	stone, err := NewUploadPayloadStone(jobCtx, object, jobDB, jobDB, jobCh, gcCh)
+	stone, err := NewUploadPayloadStone(context.Background(), jobCtx, object, jobDB, jobDB, jobCh, gcCh)
 	if err != nil {
 		return nil, err
 	}
