@@ -41,16 +41,15 @@ func AfterUploadPrimaryPieceDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
 	if len(event.Args) < 1 {
 		stone.jobCtx.SetJobErr(errors.New("miss piece job params"))
-		log.Error("primary piece done miss params", "hash", stone.StoneKey())
+		log.CtxErrorw(ctx, "primary piece done miss params")
 		return
 	}
 	pieceInfo := event.Args[0].(*service.PieceJob)
 	if err := stone.job.DonePrimarySPJob(pieceInfo); err != nil {
 		stone.jobCtx.SetJobErr(errors.New("primary piece job error"))
-		log.Error("done primary piece job error", "hash", stone.StoneKey(), "bucket", pieceInfo.BucketName, "object", pieceInfo.ObjectName, "error", err)
+		log.CtxErrorw(ctx, "done primary piece job error", "piece info", pieceInfo, "error", err)
 		return
 	}
-	log.Info("done primary piece job success", "hash", stone.StoneKey(), "bucket", pieceInfo.BucketName, "object", pieceInfo.ObjectName, "idx")
 	return
 }
 
@@ -60,7 +59,7 @@ func EnterUploadPrimaryDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
 	if err := stone.jobCtx.SetJobState(types.JOB_STATE_UPLOAD_PRIMARY_DONE); err != nil {
 		stone.jobCtx.SetJobErr(err)
-		log.Error("update primary done job state error", "hash", stone.StoneKey(), "error", err)
+		log.CtxErrorw(ctx, "update primary done job state error", "error", err)
 		return
 	}
 	return
@@ -88,16 +87,15 @@ func AfterUploadSecondaryPieceDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
 	if len(event.Args) < 1 {
 		stone.jobCtx.SetJobErr(errors.New("mis piece job params"))
-		log.Error("secondary piece done miss params", "hash", stone.StoneKey())
+		log.CtxErrorw(ctx, "secondary piece job done miss params")
 		return
 	}
 	pieceInfo := event.Args[0].(*service.PieceJob)
 	if err := stone.job.DoneSecondarySPJob(pieceInfo); err != nil {
 		stone.jobCtx.SetJobErr(errors.New("secondary piece job error"))
-		log.Error("done secondary piece job error", "hash", stone.StoneKey(), "bucket", pieceInfo.BucketName, "object", pieceInfo.ObjectName, "error", err)
+		log.CtxErrorw(ctx, "done secondary piece job error", "piece info", pieceInfo, "error", err)
 		return
 	}
-	log.Info("done secondary piece job success", "hash", stone.StoneKey(), "bucket", pieceInfo.BucketName, "object", pieceInfo.ObjectName, "idx")
 	return
 }
 
@@ -107,6 +105,7 @@ func EnterUploadSecondaryDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
 	if err := stone.jobCtx.SetJobState(types.JOB_STATE_UPLOAD_SECONDARY_DONE); err != nil {
 		stone.jobCtx.SetJobErr(err)
+		log.CtxErrorw(ctx, "update primary done job state error", "error", err)
 		return
 	}
 	return
@@ -128,13 +127,13 @@ func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 	primarySealInfo, err := stone.job.PrimarySPSealInfo()
 	if err != nil {
 		stone.jobCtx.SetJobErr(err)
-		log.Error("get primary seal info error", "hash", stone.StoneKey(), "error", err)
+		log.CtxErrorw(ctx, "get primary seal info error", "error", err)
 		return
 	}
 	secondarySealInfo, err := stone.job.SecondarySPSealInfo()
 	if err != nil {
 		stone.jobCtx.SetJobErr(err)
-		log.Error("get secondary seal info error", "hash", stone.StoneKey(), "error", err)
+		log.CtxErrorw(ctx, "get secondary seal info error", "error", err)
 		return
 	}
 	object := stone.objCtx.GetObjectInfo()
@@ -160,10 +159,9 @@ func EnterSealObjectDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
 	if err := stone.jobCtx.SetJobState(types.JOB_STATE_SEAL_OBJECT_DONE); err != nil {
 		stone.jobCtx.SetJobErr(err)
-		log.Error("update seal object done job state error", "hash", stone.StoneKey(), "error", err)
+		log.CtxErrorw(ctx, "update seal object done job state error", "error", err)
 		return
 	}
-	log.Info("seal object done", "hash", stone.StoneKey())
 	return
 }
 
@@ -171,6 +169,7 @@ func EnterSealObjectDone(ctx context.Context, event *fsm.Event) {
 // and send the stone key to gc
 func AfterInterrupt(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
+	log.CtxErrorw(ctx, "interrupt stone fsm", "error", stone.jobCtx.JobErr())
 	stone.gcCh <- stone.StoneKey()
 	return
 }

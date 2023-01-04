@@ -248,7 +248,10 @@ func (zl *logger) getMetaInfo(ctx context.Context) []zap.Field {
 		return nil
 	}
 
-	return []zap.Field{zap.String("trace_id", metadata.GetTraceID(ctx))}
+	return []zap.Field{
+		zap.String("trace_id", metadata.GetTraceID(ctx)),
+		zap.String("create_hash", metadata.GetTraceHash(ctx)),
+	}
 }
 
 func (zl *logger) getMessage(template string, fmtArgs []interface{}) string {
