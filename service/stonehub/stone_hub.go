@@ -79,7 +79,7 @@ type StoneHub struct {
 	events MonitorInscription
 }
 
-// NewStoneHubService returns the StoneHub instance
+// NewStoneHubService return the StoneHub instance
 func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
 	hub := &StoneHub{
 		config:            hubCfg,
@@ -107,7 +107,7 @@ func (hub *StoneHub) Start(ctx context.Context) error {
 		return errors.New("stone hub has started")
 	}
 	go hub.eventLoop()
-	//go hub.listenInscription()
+	go hub.listenInscription()
 	go hub.Serve()
 	return nil
 }
@@ -176,14 +176,13 @@ func (hub *StoneHub) eventLoop() {
 		case stoneJob := <-hub.jobCh:
 			switch job := stoneJob.(type) {
 			case *service.PieceJob:
-				log.Info("stone hub receive the piece job", "hash", job.TxHash, "bucket", job.BucketName, "object", job.ObjectName)
+				log.Infow("stone hub receive the piece job", "job info", job)
 				hub.secondaryJobQueue.Enqueue(job)
 			case *stone.SealObjectJob:
-				log.Info("stone hub receive the seal object job", "hash", job.StoneKey, "bucket", job.BucketName, "object", job.ObjectName)
 				txHash := job.StoneKey
 				stone, ok := hub.stone.Load(txHash)
 				if !ok {
-					log.Error("stone has gone", "hash", job.StoneKey)
+					log.Warnw("stone has gone", "hash", job.StoneKey)
 					break
 				}
 				object := &types.ObjectInfo{
@@ -236,7 +235,8 @@ func (hub *StoneHub) listenInscription() {
 	for {
 		select {
 		case sealHash := <-ch:
-			st, ok := hub.sealStone.Load(sealHash)
+			object := sealHash.(*types.ObjectInfo)
+			st, ok := hub.sealStone.Load(string(object.TxHash))
 			if !ok {
 				break
 			}

@@ -20,6 +20,7 @@ var (
 	ErrTxHash                   = errors.New("tx hash format error")
 	ErrObjectID                 = errors.New("object id is zero")
 	ErrObjectCreateHeight       = errors.New("object create height is zero")
+	ErrParamMissing             = errors.New("params missing")
 	ErrPrimaryStorageProvider   = errors.New("primary storage provider mismatch")
 	ErrPrimaryPieceChecksum     = errors.New("primary storage provider piece checksum error")
 	ErrUploadPayloadJobDone     = errors.New("upload payload job is already completed")
