@@ -28,8 +28,10 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 	payloadSize := allocResp.GetPieceJob().GetPayloadSize()
 	segNumber := getSegmentNumber(payloadSize)
 	segChan := make(chan seg, segNumber)
+	sInfoChan := make(chan *service.StorageProviderSealInfo)
 	defer func() {
 		close(segChan)
+		close(sInfoChan)
 	}()
 	// 1. get data from primary storage provider
 	for i := 0; i <= int(segNumber); i++ {
@@ -49,7 +51,6 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 	}
 
 	// 2. send data to secondary storage provider
-	sInfoChan := make(chan *service.StorageProviderSealInfo)
 	for v := range segChan {
 		pieceMap := &sync.Map{}
 		go func(sd seg) {
