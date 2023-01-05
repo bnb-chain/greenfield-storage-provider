@@ -16,8 +16,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/inscription-storage-provider/config"
+	"github.com/bnb-chain/inscription-storage-provider/model/errors"
+
 	"github.com/bnb-chain/inscription-storage-provider/model"
+
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -33,7 +35,7 @@ import (
 var (
 	// Re-used AWS sessions dramatically improve performance
 	s3SessionCache = &SessionCache{
-		sessions: map[config.ObjectStorage]*session.Session{},
+		sessions: map[ObjectStorageConfig]*session.Session{},
 	}
 	disableSSL         bool
 	isVirtualHostStyle bool
@@ -44,7 +46,7 @@ type s3Store struct {
 	api        s3iface.S3API
 }
 
-func newS3Store(cfg *config.ObjectStorage) (ObjectStorage, error) {
+func newS3Store(cfg *ObjectStorageConfig) (ObjectStorage, error) {
 	awsSession, bucket, err := s3SessionCache.newSession(*cfg)
 	if err != nil {
 		log.Errorw("s3 newSession error", "error", err)
@@ -147,7 +149,7 @@ func (s *s3Store) HeadBucket(ctx context.Context) error {
 		log.Errorw("ObjectStorage S3 HeadBucket error", "error", err)
 		if reqErr, ok := err.(awserr.RequestFailure); ok {
 			if reqErr.StatusCode() == http.StatusNotFound {
-				return model.BucketNotExisted
+				return errors.BucketNotExisted
 			}
 		}
 		return err
@@ -215,17 +217,17 @@ func (s *s3Store) ListObjects(ctx context.Context, prefix, marker, delimiter str
 }
 
 func (s *s3Store) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan Object, error) {
-	return nil, model.NotSupportedMethod
+	return nil, errors.NotSupportedMethod
 }
 
 // SessionCache holds session.Session according to model.ObjectStorage and it synchronizes access/modification
 type SessionCache struct {
 	sync.Mutex
-	sessions map[config.ObjectStorage]*session.Session
+	sessions map[ObjectStorageConfig]*session.Session
 }
 
 // newSession initializes a new AWS session with region fallback and custom config
-func (sc *SessionCache) newSession(cfg config.ObjectStorage) (*session.Session, string, error) {
+func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, string, error) {
 	sc.Lock()
 	defer sc.Unlock()
 
@@ -265,7 +267,7 @@ func (sc *SessionCache) newSession(cfg config.ObjectStorage) (*session.Session, 
 func (sc *SessionCache) clear() {
 	sc.Lock()
 	defer sc.Unlock()
-	sc.sessions = map[config.ObjectStorage]*session.Session{}
+	sc.sessions = map[ObjectStorageConfig]*session.Session{}
 }
 
 func parseEndPoint(endPoint string) (string, string, error) {

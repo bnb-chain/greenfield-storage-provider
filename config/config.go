@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"os"
 
+	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
 	"github.com/bnb-chain/inscription-storage-provider/service/stonehub"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/piece"
+	"github.com/bnb-chain/inscription-storage-provider/service/uploader"
+	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
 	"github.com/bnb-chain/inscription-storage-provider/util"
 
 	"github.com/naoina/toml"
@@ -14,12 +16,16 @@ import (
 type StorageProviderConfig struct {
 	Service          []string
 	StoneHubCfg      *stonehub.StoneHubConfig
-	PieceStoreConfig *piece.PieceStoreConfig
+	PieceStoreConfig *storage.PieceStoreConfig
+	GatewayCfg       *gateway.GatewayConfig
+	UploaderCfg      *uploader.UploaderConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
 	StoneHubCfg:      stonehub.DefaultStoneHubConfig,
-	PieceStoreConfig: piece.DefaultPieceStoreConfig,
+	PieceStoreConfig: storage.DefaultPieceStoreConfig,
+	GatewayCfg:       gateway.DefaultGatewayConfig,
+	UploaderCfg:      uploader.DefaultUploaderConfig,
 }
 
 // LoadConfig loads the config file
