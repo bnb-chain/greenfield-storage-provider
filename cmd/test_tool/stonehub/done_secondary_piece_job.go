@@ -61,7 +61,7 @@ func doneSecondaryPieceJob(c *cli.Context) {
 			StorageProviderSealInfo: &service.StorageProviderSealInfo{
 				PieceIdx:          uint32(c.Uint64("i")),
 				StorageProviderId: c.String("s"),
-				PieceCheckSum:     checkSums,
+				PieceChecksum:     checkSums,
 			},
 		},
 	}

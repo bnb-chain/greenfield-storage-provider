@@ -108,7 +108,7 @@ func Test_FSM_Secondary_PIECE_JOB_DONE(t *testing.T) {
 		StorageProviderSealInfo: &service.StorageProviderSealInfo{
 			StorageProviderId: "bnb-test-sp",
 			PieceIdx:          0,
-			PieceCheckSum:     [][]byte{[]byte{1}},
+			PieceChecksum:     [][]byte{[]byte{1}},
 		},
 	}
 	err = stone.ActionEvent(context.Background(), UploadPrimaryPieceDoneEvent, primaryPieceJob)
@@ -131,7 +131,7 @@ func Test_FSM_Secondary_PIECE_JOB_DONE(t *testing.T) {
 		StorageProviderSealInfo: &service.StorageProviderSealInfo{
 			StorageProviderId: "bnb-test-sp",
 			PieceIdx:          0,
-			PieceCheckSum:     [][]byte{[]byte{1}, []byte{2}, []byte{3}, []byte{4}, []byte{5}, []byte{6}},
+			PieceChecksum:     [][]byte{[]byte{1}, []byte{2}, []byte{3}, []byte{4}, []byte{5}, []byte{6}},
 			IntegrityHash:     []byte{123},
 			Signature:         []byte{123},
 		},
@@ -163,7 +163,7 @@ func Test_FSM_INTERRUPT(t *testing.T) {
 		StorageProviderSealInfo: &service.StorageProviderSealInfo{
 			StorageProviderId: "bnb-test-sp",
 			PieceIdx:          0,
-			PieceCheckSum:     [][]byte{[]byte{1}},
+			PieceChecksum:     [][]byte{[]byte{1}},
 		},
 	}
 	err = stone.ActionEvent(context.Background(), UploadPrimaryPieceDoneEvent, primaryPieceJob)

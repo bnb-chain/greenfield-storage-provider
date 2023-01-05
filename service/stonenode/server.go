@@ -66,7 +66,7 @@ func (s *StoneNodeService) Name() string {
 func (s *StoneNodeService) Start(ctx context.Context) error {
 	go func() {
 		for {
-			if err := s.doEC(ctx); err != nil {
+			if err := s.doEC(ctx, s.cfg.StorageProvider); err != nil {
 				log.Errorw("do ec failed", "error", err)
 				return
 			}

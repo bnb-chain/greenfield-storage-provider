@@ -97,7 +97,7 @@ message StoneHubServiceDoneSecondaryPieceJobResponse {
 }
 
 message StoneHubServiceQueryStoneRequest {
-  bytes tx_hash = 2;
+  bytes tx_hash = 1;
 }
 
 message StoneHubServiceQueryStoneResponse {

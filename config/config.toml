@@ -51,3 +51,15 @@ Service = [
         NoSignRequest = false
         MaxRetries = 5
         TlsInsecureSkipVerify = false
+
+
+[StoneNodeCfg]
+    StorageProvider = "bnb-sp"
+    Address = "127.0.0.1:5325"
+    StoneHubServiceAddress = "127.0.0.1:5323"
+    SyncerServiceAddress = "127.0.0.1:5324"
+
+
+[SyncerCfg]
+    StorageProvider = "bnb-sp"
+    Address = "127.0.0.1:5324"

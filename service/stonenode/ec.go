@@ -1,6 +1,7 @@
 package stonenode
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"sync"
@@ -10,10 +11,11 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/pkg/redundancy"
 	ptypes "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/util/hash"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
-func (s *StoneNodeService) doEC(ctx context.Context) error {
+func (s *StoneNodeService) doEC(ctx context.Context, storageProvider string) error {
 	allocResp, err := s.AllocStoneJob(ctx)
 	if err != nil {
 		log.Errorw("doEC calls AllocStoneJob failed", "error", err, "traceID", allocResp.GetTraceId())
@@ -28,20 +30,17 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 		rType       = allocResp.GetPieceJob().GetRedundancyType()
 		segNumber   = getSegmentNumber(payloadSize)
 
-		wg        = new(sync.WaitGroup)
-		errChan   = make(chan error)
-		pieceChan = make(chan map[string]map[string][]byte, segNumber)
-		bigMap    = make(map[string]map[string][]byte)
+		wg       = new(sync.WaitGroup)
+		mu       = new(sync.RWMutex)
+		errChan  = make(chan error, 10)
+		pieceMap = make(map[string]map[string][]byte)
 	)
 
 	// 1. get data from primary storage provider and ec
-	wg.Add(int(segNumber))
 	for i := 0; i <= int(segNumber); i++ {
+		wg.Add(1)
 		go func(i int) {
-			defer func() {
-				close(pieceChan)
-				wg.Done()
-			}()
+			defer wg.Done()
 			pieceKey := piecestore.EncodeSegmentPieceKey(objectID, int(segNumber))
 			data, err := s.store.getPiece(ctx, pieceKey, 0, 0)
 			if err != nil {
@@ -49,34 +48,40 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 				errChan <- err
 			}
 
-			pieceMap, err := ecOrReplicaOrInline(rType, objectID, uint64(i), data)
+			dataSlice, err := ecOrReplicaOrInline(rType, objectID, uint64(i), data)
 			if err != nil {
 				log.Errorw("stone node ecOrReplicaOrInline failed", "error", err)
 				errChan <- err
 			}
-			pieceChan <- pieceMap
+
+			for k, v := range dataSlice {
+				mu.Lock()
+				pieceMap[idKey(k)] = v
+				mu.Unlock()
+			}
 		}(i)
 	}
 	wg.Wait()
 
-	for pm := range pieceChan {
-		for k, v := range pm {
-			bigMap[k] = v
-		}
-	}
-
 	// 2. send data to secondary storage provider and notify stone hub when a segment is done
-	for _, v := range bigMap {
+	for _, v := range pieceMap {
 		go func(value map[string][]byte) {
 			resp, err := s.UploadECPiece(ctx, segNumber, &service.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
-				StorageProviderId: mockGetStorageProviderID()[1],
+				StorageProviderId: storageProvider,
 				RedundancyType:    allocResp.GetPieceJob().GetRedundancyType(),
 			}, value, traceID)
 			if err != nil {
 				log.Errorw("UploadECPiece failed", "error", err)
 				errChan <- err
+			}
+
+			// check integrity hash of secondary sp if is equal to integrity hash of primary sp
+			slice := mapValueToSlice(value, len(value))
+			integrityHash := hash.GenerateIntegrityHash(slice, "bnb-sp")
+			if equal := bytes.Equal(integrityHash, resp.GetSecondarySpInfo().GetIntegrityHash()); !equal {
+				errChan <- fmt.Errorf("integrity hash of secondary sp is not equal to integrity hash of primary sp")
 			}
 
 			// notify stone hub when an ec segment is done
@@ -103,13 +108,16 @@ func (s *StoneNodeService) doEC(ctx context.Context) error {
 	}
 }
 
-func mockGetStorageProviderID() []string {
-	return []string{"sp1", "sp2", "sp3", "sp4", "sp5", "sp6"}
+func mapValueToSlice(m map[string][]byte, length int) [][]byte {
+	slice := make([][]byte, 0, length)
+	for _, v := range m {
+		slice = append(slice, v)
+	}
+	return slice
 }
 
-func ecOrReplicaOrInline(rType ptypes.RedundancyType, objectID, segIndex uint64, data []byte) (map[string]map[string][]byte, error) {
-	var pieceMap map[string][]byte
-	var bigMap map[string]map[string][]byte
+func ecOrReplicaOrInline(rType ptypes.RedundancyType, objectID, segIndex uint64, data []byte) ([]map[string][]byte, error) {
+	mapSlice := make([]map[string][]byte, 0)
 	switch rType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		ecData, err := redundancy.EncodeRawSegment(data)
@@ -118,23 +126,21 @@ func ecOrReplicaOrInline(rType ptypes.RedundancyType, objectID, segIndex uint64,
 			return nil, err
 		}
 		for i, j := range ecData {
+			pieceMap := make(map[string][]byte)
 			ecPieceKey := piecestore.EncodeECPieceKey(objectID, int(segIndex), i)
 			pieceMap[ecPieceKey] = j
-			bigMap[encodeEC(i)] = pieceMap
+			mapSlice = append(mapSlice, pieceMap)
 		}
 	default:
+		pieceMap := make(map[string][]byte)
 		pieceMap[piecestore.EncodeSegmentPieceKey(objectID, int(segIndex))] = data
-		bigMap[encodeSegment(int(segIndex))] = pieceMap
+		mapSlice = append(mapSlice, pieceMap)
 	}
-	return bigMap, nil
+	return mapSlice, nil
 }
 
-func encodeEC(ecIndex int) string {
-	return fmt.Sprintf("p%d", ecIndex)
-}
-
-func encodeSegment(segIndex int) string {
-	return fmt.Sprintf("s%d", segIndex)
+func idKey(index int) string {
+	return fmt.Sprintf("i%d", index)
 }
 
 func getSegmentNumber(payloadSize uint64) uint64 {

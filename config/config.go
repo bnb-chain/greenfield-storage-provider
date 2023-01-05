@@ -6,6 +6,8 @@ import (
 
 	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
 	"github.com/bnb-chain/inscription-storage-provider/service/stonehub"
+	"github.com/bnb-chain/inscription-storage-provider/service/stonenode"
+	"github.com/bnb-chain/inscription-storage-provider/service/syncer"
 	"github.com/bnb-chain/inscription-storage-provider/service/uploader"
 	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
 	"github.com/bnb-chain/inscription-storage-provider/util"
@@ -19,6 +21,8 @@ type StorageProviderConfig struct {
 	PieceStoreConfig *storage.PieceStoreConfig
 	GatewayCfg       *gateway.GatewayConfig
 	UploaderCfg      *uploader.UploaderConfig
+	StoneNodeCfg     *stonenode.StoneNodeConfig
+	SyncerCfg        *syncer.SyncerConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
@@ -26,6 +30,8 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	PieceStoreConfig: storage.DefaultPieceStoreConfig,
 	GatewayCfg:       gateway.DefaultGatewayConfig,
 	UploaderCfg:      uploader.DefaultUploaderConfig,
+	StoneNodeCfg:     stonenode.DefaultStoneNodeConfig,
+	SyncerCfg:        syncer.DefaultSyncerConfig,
 }
 
 // LoadConfig loads the config file
