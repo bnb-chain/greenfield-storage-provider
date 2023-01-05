@@ -53,7 +53,7 @@ type DBPieceJob struct {
 	PieceType       uint32 `gorm:"index:idx_piece_group"`
 	PieceIdx        uint32
 	PieceState      uint32
-	CheckSum        string
+	Checksum        string
 	StorageProvider string
 	IntegrityHash   string
 	Signature       string

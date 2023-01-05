@@ -105,8 +105,8 @@ func (ui *uploaderImpl) UploadPayload(stream pbService.UploaderService_UploadPay
 				}
 				hash := sha256.New()
 				hash.Write(piece.PieceData)
-				checkSum := hash.Sum(nil)
-				if err := ui.uploader.stoneHub.reportJobProgress(jm, piece.Index, checkSum); err != nil {
+				checksum := hash.Sum(nil)
+				if err := ui.uploader.stoneHub.reportJobProgress(jm, piece.Index, checksum); err != nil {
 					errChan <- err
 					return
 				}
