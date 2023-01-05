@@ -1,4 +1,4 @@
-package database
+package jobdb
 
 import (
 	"fmt"
@@ -213,12 +213,6 @@ func (jmi *JobMetaImpl) SetUploadPayloadJobJobError(jobID uint64, jobState strin
 	return nil
 }
 
-type PieceJob struct {
-	PieceId         uint32
-	Checksum        []byte
-	StorageProvider string
-}
-
 // SetPrimaryPieceJobDone create primary DBPieceJob record.
 func (jmi *JobMetaImpl) SetPrimaryPieceJobDone(txHash []byte, pj *PieceJob) error {
 	var (
@@ -230,7 +224,7 @@ func (jmi *JobMetaImpl) SetPrimaryPieceJobDone(txHash []byte, pj *PieceJob) erro
 		CreateHash:      string(txHash),
 		PieceType:       uint32(types.JobType_JOB_TYPE_UPLOAD_PRIMARY),
 		PieceIdx:        pj.PieceId,
-		CheckSum:        string(pj.Checksum),
+		CheckSum:        string(pj.CheckSum[0]),
 		PieceState:      0, // todo: fill what?
 		StorageProvider: pj.StorageProvider,
 		IntegrityHash:   "",
@@ -260,7 +254,7 @@ func (jmi *JobMetaImpl) GetPrimaryJob(txHash []byte) ([]*PieceJob, error) {
 	for _, job := range queryReturns {
 		pieceJobs = append(pieceJobs, &PieceJob{
 			PieceId:         job.PieceIdx,
-			Checksum:        []byte(job.IntegrityHash),
+			CheckSum:        [][]byte{[]byte(job.IntegrityHash)},
 			StorageProvider: job.StorageProvider})
 	}
 	return pieceJobs, nil
@@ -277,7 +271,7 @@ func (jmi *JobMetaImpl) SetSecondaryPieceJobDone(txHash []byte, pj *PieceJob) er
 		CreateHash:      string(txHash),
 		PieceType:       uint32(types.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC),
 		PieceIdx:        pj.PieceId,
-		CheckSum:        string(pj.Checksum),
+		CheckSum:        string(pj.CheckSum[0]),
 		PieceState:      0, // todo: fill what?
 		StorageProvider: pj.StorageProvider,
 		IntegrityHash:   "",
@@ -307,7 +301,7 @@ func (jmi *JobMetaImpl) GetSecondaryJob(txHash []byte) ([]*PieceJob, error) {
 	for _, job := range queryReturns {
 		pieceJobs = append(pieceJobs, &PieceJob{
 			PieceId:         job.PieceIdx,
-			Checksum:        []byte(job.IntegrityHash),
+			CheckSum:        [][]byte{[]byte(job.IntegrityHash)},
 			StorageProvider: job.StorageProvider})
 	}
 	return pieceJobs, nil

@@ -1,4 +1,4 @@
-package model
+package errors
 
 import (
 	"errors"
@@ -13,12 +13,19 @@ var (
 	EmptyObjectKey        = errors.New("Object key cannot be empty")
 	EmptyMemoryObject     = errors.New("Memory object is empty")
 	BucketNotExisted      = errors.New("Bucket not existed")
+
+	ErrInternalError    = errors.New("internal error")
+	ErrDuplicateBucket  = errors.New("duplicate bucket")
+	ErrDuplicateObject  = errors.New("duplicate object")
+	ErrObjectTxNotExist = errors.New("object tx not exist")
+	ErrObjectNotExist   = errors.New("object not exist")
 )
 
 // stone hub service errors
 var (
 	ErrTxHash                   = errors.New("tx hash format error")
 	ErrObjectID                 = errors.New("object id is zero")
+	ErrObjectSize               = errors.New("object size is zero")
 	ErrObjectCreateHeight       = errors.New("object create height is zero")
 	ErrParamMissing             = errors.New("params missing")
 	ErrPrimaryStorageProvider   = errors.New("primary storage provider mismatch")

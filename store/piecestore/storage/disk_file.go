@@ -12,8 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bnb-chain/inscription-storage-provider/config"
-	"github.com/bnb-chain/inscription-storage-provider/model"
+	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -27,7 +26,7 @@ type diskFileStore struct {
 	DefaultObjectStorage
 }
 
-func newDiskFileStore(cfg *config.ObjectStorage) (ObjectStorage, error) {
+func newDiskFileStore(cfg *ObjectStorageConfig) (ObjectStorage, error) {
 	// For Windows, the path looks like /C:/a/b/c/
 	endPoint := cfg.BucketURL
 	if runtime.GOOS == windowsOS && strings.HasPrefix(endPoint, "/") {
@@ -145,7 +144,7 @@ func (d *diskFileStore) DeleteObject(ctx context.Context, key string) error {
 func (d *diskFileStore) HeadBucket(ctx context.Context) error {
 	if _, err := os.Stat(d.root); err != nil {
 		if os.IsNotExist(err) {
-			return model.BucketNotExisted
+			return errors.BucketNotExisted
 		}
 		return err
 	}
