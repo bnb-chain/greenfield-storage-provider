@@ -56,7 +56,7 @@ func handleRequest(req *service.SyncerServiceUploadECPieceRequest, store *storeC
 			log.Errorw("UploadECPiece DecodeECPieceKey failed", "error", err)
 			return nil, err
 		}
-		checksum := generateChecksum(value)
+		checksum := hash.generateChecksum(value)
 		pieceChecksumList = append(pieceChecksumList, checksum)
 		if err := store.putPiece(key, value); err != nil {
 			log.Errorw("UploadECPiece put piece failed", "error", err)
@@ -65,7 +65,7 @@ func handleRequest(req *service.SyncerServiceUploadECPieceRequest, store *storeC
 	}
 
 	spID := req.GetSyncerInfo().GetStorageProviderId()
-	integrityHash := generateIntegrityHash(pieceChecksumList, spID)
+	integrityHash := hash.generateIntegrityHash(pieceChecksumList, spID)
 	resp := &service.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          uint32(pieceIndex),

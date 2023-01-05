@@ -21,9 +21,6 @@ func newSyncerClient(address string) (service.SyncerServiceClient, error) {
 	return service.NewSyncerServiceClient(conn), nil
 }
 
-// stone node 的数据都是从Primary SP获取
-// stone node 无状态，与stone hub、syncer服务交互，居中调度
-// RPC接口如何做e2e测试，或者不用e2e测试？
 func (s *StoneNodeService) UploadECPiece(ctx context.Context, segmentNumber uint64, sInfo *service.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*service.SyncerServiceUploadECPieceResponse, error) {
 	stream, err := s.syncer.UploadECPiece(ctx)
