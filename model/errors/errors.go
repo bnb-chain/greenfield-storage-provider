@@ -25,6 +25,7 @@ var (
 var (
 	ErrTxHash                   = errors.New("tx hash format error")
 	ErrObjectID                 = errors.New("object id is zero")
+	ErrObjectSize               = errors.New("object size is zero")
 	ErrObjectCreateHeight       = errors.New("object create height is zero")
 	ErrParamMissing             = errors.New("params missing")
 	ErrPrimaryStorageProvider   = errors.New("primary storage provider mismatch")

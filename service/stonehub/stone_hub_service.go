@@ -37,6 +37,11 @@ func (hub *StoneHub) CreateObject(ctx context.Context, req *service.StoneHubServ
 		return rsp, nil
 	}
 	req.ObjectInfo.TxHash = req.TxHash
+	if req.ObjectInfo.Size == 0 {
+		rsp.ErrMessage = errors2.MakeErrMsgResponse(errors2.ErrObjectSize)
+		log.CtxErrorw(ctx, "object size error")
+		return rsp, nil
+	}
 	if req.ObjectInfo.Size <= model.InlineSize {
 		log.CtxWarnw(ctx, "create object adjust to inline type", "object size", req.ObjectInfo.Size)
 		req.ObjectInfo.RedundancyType = types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
