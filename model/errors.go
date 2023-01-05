@@ -6,7 +6,7 @@ import (
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 )
 
-// errors
+// piece store errors
 var (
 	NotSupportedMethod    = errors.New("Not supported method")
 	NotSupportedDelimiter = errors.New("Not supported delimiter")

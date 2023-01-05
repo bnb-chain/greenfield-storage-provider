@@ -6,33 +6,33 @@ import "service/types/v1/uploader.proto";
 option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
 
 message StoneHubServiceCreateObjectRequest {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bytes tx_hash = 2;
   pkg.types.v1.ObjectInfo object_info = 3;
 }
 
 message StoneHubServiceCreateObjectResponse {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bytes tx_hash = 2;
   ErrMessage err_message = 3;
 }
 
 message StoneHubServiceSetObjectCreateInfoRequest {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bytes tx_hash = 2;
   uint64 tx_height = 3;
   uint64 object_id = 4;
 }
 
 message StoneHubServiceSetSetObjectCreateInfoResponse {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   ErrMessage err_message = 2;
 }
 
 message StorageProviderSealInfo {
   string storage_provider_id = 1;
   uint32 piece_idx = 2;
-  repeated bytes piece_check_sum = 3;
+  repeated bytes piece_checksum = 3;
   bytes integrity_hash = 4;
   bytes signature = 5;
 }
@@ -49,50 +49,51 @@ message PieceJob {
 }
 
 message StoneHubServiceBeginUploadPayloadRequest {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bytes tx_hash = 2;
 }
 
 message StoneHubServiceBeginUploadPayloadResponse {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bool primary_done = 2;
   PieceJob piece_job = 3;
   ErrMessage err_message = 4;
 }
 
 message StoneHubServiceDonePrimaryPieceJobRequest {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bytes tx_hash = 2;
   ErrMessage err_message = 3;
   PieceJob piece_job = 4;
 }
 
 message StoneHubServiceDonePrimaryPieceJobResponse {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bytes tx_hash = 2;
   ErrMessage err_message = 3;
 }
 
 message StoneHubServiceAllocStoneJobRequest {
-  uint64 trace_id = 1;
+  string trace_id = 1;
 }
 
 message StoneHubServiceAllocStoneJobResponse {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bytes tx_hash = 2;
-  PieceJob piece_job = 4;
+  PieceJob piece_job = 3;
+  ErrMessage err_message = 4;
 }
 
 message StoneHubServiceDoneSecondaryPieceJobRequest {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bytes tx_hash = 2;
   PieceJob piece_job = 3;
   ErrMessage err_message = 4;
 }
 
 message StoneHubServiceDoneSecondaryPieceJobResponse {
-  uint64 trace_id = 1;
-  ErrMessage err_message = 3;
+  string trace_id = 1;
+  ErrMessage err_message = 2;
 }
 
 message StoneHubServiceQueryStoneRequest {

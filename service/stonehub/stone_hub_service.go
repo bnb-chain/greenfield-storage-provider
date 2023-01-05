@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
-	mjob "github.com/bnb-chain/inscription-storage-provider/model/job"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
@@ -37,7 +36,7 @@ func (hub *StoneHub) CreateObject(ctx context.Context, req *service.StoneHubServ
 		return rsp, nil
 	}
 	req.ObjectInfo.TxHash = req.TxHash
-	if req.ObjectInfo.Size <= mjob.InlineSize {
+	if req.ObjectInfo.Size <= model.InlineSize {
 		log.CtxWarnw(ctx, "create object adjust to inline type", "object size", req.ObjectInfo.Size)
 		req.ObjectInfo.RedundancyType = types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
 	}
@@ -189,7 +188,7 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context, req *service.Stone
 		log.CtxErrorw(ctx, "primary storage provider mismatch")
 		return rsp, nil
 	}
-	if len(req.PieceJob.StorageProviderSealInfo.PieceCheckSum) != 1 {
+	if len(req.PieceJob.StorageProviderSealInfo.PieceChecksum) != 1 {
 		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrPrimaryPieceChecksum)
 		log.CtxErrorw(ctx, "primary storage provider piece job checksum error")
 		return rsp, nil
@@ -199,7 +198,7 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context, req *service.Stone
 		log.Error("tx hash format error", "trace_id", req.TraceId, "hash", req.TxHash)
 		return rsp, nil
 	}
-	if len(req.PieceJob.StorageProviderSealInfo.PieceCheckSum) != 1 {
+	if len(req.PieceJob.StorageProviderSealInfo.PieceChecksum) != 1 {
 		rsp.ErrMessage = model.MakeErrMsgResponse(model.ErrPrimaryPieceChecksum)
 		log.Error("tx hash format error", "trace_id", req.TraceId, "hash", req.TxHash)
 		return rsp, nil
@@ -303,4 +302,3 @@ func (hub *StoneHub) QueryStone(ctx context.Context, req *service.StoneHubServic
 	rsp.PendingSecondaryJob = uploadStone.PopPendingSecondarySPJob()
 	return rsp, nil
 }
-

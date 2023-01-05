@@ -14,26 +14,26 @@ message ErrMessage {
 }
 
 message UploaderServiceCreateObjectRequest {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   pkg.types.v1.ObjectInfo object_info = 2;
 }
 
 message UploaderServiceCreateObjectResponse {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bytes tx_hash = 2;
   uint64 job_id = 3; // optional
   ErrMessage err_message = 4;
 }
 
 message UploaderServiceUploadPayloadRequest {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   bytes tx_hash = 2;
   uint64 job_id = 3;
   bytes payload_data = 4;
 }
 
 message UploaderServiceUploadPayloadResponse {
-  uint64 trace_id = 1;
+  string trace_id = 1;
   ErrMessage err_message = 2;
 }
 

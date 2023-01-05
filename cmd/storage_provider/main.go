@@ -18,7 +18,7 @@ func main() {
 	flag.Parse()
 	spCfg := config.LoadConfig(*configFile)
 
-	lifecycle := lifecycle.NewServiceLifecycle()
+	slc := lifecycle.NewServiceLifecycle()
 	for _, serviceName := range spCfg.Service {
 		switch serviceName {
 		case "StoneHub":
@@ -31,9 +31,9 @@ func main() {
 				os.Exit(1)
 			}
 			log.Info("init service success", serviceName)
-			lifecycle.RegisterServices(server)
+			slc.RegisterServices(server)
 		}
 	}
 	ctx := context.Background()
-	lifecycle.Signals(syscall.SIGINT, syscall.SIGTERM).StartServices(ctx).Wait(ctx)
+	slc.Signals(syscall.SIGINT, syscall.SIGTERM).StartServices(ctx).Wait(ctx)
 }

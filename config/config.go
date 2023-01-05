@@ -5,18 +5,21 @@ import (
 	"os"
 
 	"github.com/bnb-chain/inscription-storage-provider/service/stonehub"
+	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/piece"
 	"github.com/bnb-chain/inscription-storage-provider/util"
 
 	"github.com/naoina/toml"
 )
 
 type StorageProviderConfig struct {
-	Service     []string
-	StoneHubCfg *stonehub.StoneHubConfig
+	Service          []string
+	StoneHubCfg      *stonehub.StoneHubConfig
+	PieceStoreConfig *piece.PieceStoreConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
-	StoneHubCfg: stonehub.DefaultStoneHubConfig,
+	StoneHubCfg:      stonehub.DefaultStoneHubConfig,
+	PieceStoreConfig: piece.DefaultPieceStoreConfig,
 }
 
 // LoadConfig loads the config file

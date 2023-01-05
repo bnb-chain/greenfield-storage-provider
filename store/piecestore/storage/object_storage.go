@@ -9,7 +9,6 @@ import (
 
 	"github.com/bnb-chain/inscription-storage-provider/config"
 	"github.com/bnb-chain/inscription-storage-provider/model"
-	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -58,7 +57,7 @@ func (f *file) IsSymlink() bool   { return f.isSymlink }
 
 var bufPool = sync.Pool{
 	New: func() any {
-		buf := make([]byte, piecestore.BufPoolSize)
+		buf := make([]byte, model.BufPoolSize)
 		return &buf
 	},
 }
