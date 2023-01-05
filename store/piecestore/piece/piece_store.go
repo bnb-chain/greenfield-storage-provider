@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	errors2 "github.com/bnb-chain/inscription-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
 
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
@@ -82,7 +82,7 @@ func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error)
 func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 	if err := store.HeadBucket(ctx); err != nil {
 		log.Errorw("HeadBucket error", "error", err)
-		if errors.Is(err, errors2.BucketNotExisted) {
+		if errors.Is(err, merrors.BucketNotExisted) {
 			if err2 := store.CreateBucket(ctx); err2 != nil {
 				return fmt.Errorf("Failed to create bucket in %s: %s, previous err: %s", store, err2, err)
 			}
