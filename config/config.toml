@@ -1,5 +1,5 @@
 Service = [
-    "StoneHub", "Gateway", "Uploader",
+    "StoneHub", "Gateway", "Uploader", "StoneNode", "Syncer",
 ]
 
 
@@ -58,8 +58,30 @@ Service = [
     Address = "127.0.0.1:5325"
     StoneHubServiceAddress = "127.0.0.1:5323"
     SyncerServiceAddress = "127.0.0.1:5324"
+    [StoneNodeCfg.PieceConfig]
+        Shards = 0
+        [StoneNodeCfg.PieceConfig.Store]
+            Storage = "file"
+            BucketURL = "./debug"
+            AccessKey = "ACCESSKEY"
+            SecretKey = "SECRETKEY"
+            SessionToken = "SESSIONTOKEN"
+            NoSignRequest = false
+            MaxRetries = 5
+            TlsInsecureSkipVerify = false
 
 
 [SyncerCfg]
     StorageProvider = "bnb-sp"
     Address = "127.0.0.1:5324"
+    [SyncerCfg.PieceConfig]
+        Shards = 0
+        [SyncerCfg.PieceConfig.Store]
+            Storage = "file"
+            BucketURL = "./debug"
+            AccessKey = "ACCESSKEY"
+            SecretKey = "SECRETKEY"
+            SessionToken = "SESSIONTOKEN"
+            NoSignRequest = false
+            MaxRetries = 5
+            TlsInsecureSkipVerify = false

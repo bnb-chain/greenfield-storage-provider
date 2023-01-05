@@ -70,6 +70,7 @@ func main() {
 			server, err := stonenode.NewStoneNodeService(spCfg.StoneNodeCfg)
 			if err != nil {
 				log.Errorw("stone node init failed", "error", err)
+				os.Exit(1)
 			}
 			slc.RegisterServices(server)
 		case "Syncer":
@@ -79,6 +80,7 @@ func main() {
 			server, err := syncer.NewSyncerService(spCfg.SyncerCfg)
 			if err != nil {
 				log.Errorw("syncer init failed", "error", err)
+				os.Exit(1)
 			}
 			slc.RegisterServices(server)
 		}

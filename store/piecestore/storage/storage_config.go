@@ -16,7 +16,7 @@ var DefaultPieceStoreConfig = &PieceStoreConfig{
 		SecretKey:             "",
 		SessionToken:          "",
 		NoSignRequest:         false,
-		MaxRetries:            3,
+		MaxRetries:            5,
 		MinRetryDelay:         0,
 		TlsInsecureSkipVerify: false,
 	},
