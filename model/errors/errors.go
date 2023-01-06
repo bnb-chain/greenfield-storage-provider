@@ -36,6 +36,11 @@ var (
 	ErrUploadPayloadJobNotExist = errors.New("upload payload job not exist")
 )
 
+// stone node service errors
+var (
+	ErrIntegrityHash = errors.New("integrity hash of secondary sp is not equal to integrity hash of primary sp")
+)
+
 func MakeErrMsgResponse(err error) *service.ErrMessage {
 	return &service.ErrMessage{
 		ErrCode: service.ErrCode_ERR_CODE_ERROR,

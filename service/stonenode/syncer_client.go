@@ -21,7 +21,7 @@ func newSyncerClient(address string) (service.SyncerServiceClient, error) {
 	return service.NewSyncerServiceClient(conn), nil
 }
 
-func (s *StoneNodeService) UploadECPiece(ctx context.Context, segmentNumber uint64, sInfo *service.SyncerInfo,
+func (s *StoneNodeService) UploadECPiece(ctx context.Context, segmentNumber uint32, sInfo *service.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*service.SyncerServiceUploadECPieceResponse, error) {
 	stream, err := s.syncer.UploadECPiece(ctx)
 	if err != nil {

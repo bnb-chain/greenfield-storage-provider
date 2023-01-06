@@ -47,7 +47,7 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 func handleRequest(req *service.SyncerServiceUploadECPieceRequest, store *storeClient) (
 	*service.StorageProviderSealInfo, error) {
 	var (
-		pieceIndex int
+		pieceIndex uint64
 		err        error
 	)
 	pieceChecksumList := make([][]byte, 0)
