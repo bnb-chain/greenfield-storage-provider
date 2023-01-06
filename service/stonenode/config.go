@@ -8,6 +8,7 @@ type StoneNodeConfig struct {
 	SyncerServiceAddress   string
 	StorageProvider        string
 	PieceConfig            *storage.PieceStoreConfig
+	StoneJobLimit          int64
 }
 
 var DefaultStoneNodeConfig = &StoneNodeConfig{
@@ -16,4 +17,5 @@ var DefaultStoneNodeConfig = &StoneNodeConfig{
 	SyncerServiceAddress:   "127.0.0.1:5324",
 	StorageProvider:        "bnb-sp",
 	PieceConfig:            storage.DefaultPieceStoreConfig,
+	StoneJobLimit:          64,
 }

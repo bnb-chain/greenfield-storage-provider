@@ -16,7 +16,6 @@ type storeClient struct {
 func newStoreClient(pieceConfig *storage.PieceStoreConfig) (*storeClient, error) {
 	ps, err := piece.NewPieceStore(pieceConfig)
 	if err != nil {
-		log.Errorw("SyncerService NewPieceStore failed", "error", err)
 		return nil, err
 	}
 	return &storeClient{ps: ps}, nil

@@ -37,6 +37,11 @@ func EncodeECPieceKey(objectID uint64, segmentIndex, pieceIndex int) string {
 	return fmt.Sprintf("%d_s%d_p%d", objectID, segmentIndex, pieceIndex)
 }
 
+// EncodeECPieceKeyBySegmentKey encodes ec piece store key
+func EncodeECPieceKeyBySegmentKey(segmentKey string, pieceIndex int) string {
+	return fmt.Sprintf("%s_p%d", segmentKey, pieceIndex)
+}
+
 // DecodeECPieceKey decodes ec piece store key
 // Valid EC piece key: objectID_s0_p0
 func DecodeECPieceKey(pieceKey string) (uint64, int, int, error) {
