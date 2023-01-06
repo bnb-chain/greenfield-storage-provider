@@ -43,14 +43,14 @@ Service = [
     [UploaderCfg.PieceStoreConfig]
         Shards = 0
         [UploaderCfg.PieceStoreConfig.Store]
-        Storage = "file"
-        BucketURL = "./debug"
-        AccessKey = "ACCESSKEY"
-        SecretKey = "SECRETKEY"
-        SessionToken = "SESSIONTOKEN"
-        NoSignRequest = false
-        MaxRetries = 5
-        TlsInsecureSkipVerify = false
+            Storage = "file"
+            BucketURL = "./debug"
+            AccessKey = "ACCESSKEY"
+            SecretKey = "SECRETKEY"
+            SessionToken = "SESSIONTOKEN"
+            NoSignRequest = false
+            MaxRetries = 5
+            TlsInsecureSkipVerify = false
 
 
 [StoneNodeCfg]

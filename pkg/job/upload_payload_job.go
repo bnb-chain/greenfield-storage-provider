@@ -59,7 +59,7 @@ func (ctx *ObjectInfoContext) GetPrimaryJob() (*UploadJob, error) {
 	for _, piece := range pieces {
 		job.pieceJobs = append(job.pieceJobs, &UploadPieceJob{
 			PieceId:         piece.PieceId,
-			CheckSum:        piece.CheckSum,
+			Checksum:        piece.Checksum,
 			StorageProvider: piece.StorageProvider,
 			Done:            true,
 		})
@@ -84,7 +84,7 @@ func (ctx *ObjectInfoContext) GetSecondaryJob() (*UploadJob, error) {
 	for _, piece := range pieces {
 		job.pieceJobs = append(job.pieceJobs, &UploadPieceJob{
 			PieceId:         piece.PieceId,
-			CheckSum:        piece.CheckSum,
+			Checksum:        piece.Checksum,
 			StorageProvider: piece.StorageProvider,
 			Done:            true,
 		})
@@ -98,7 +98,7 @@ func (ctx *ObjectInfoContext) SetPrimaryPieceJobDone(piece *UploadPieceJob) erro
 	object := ctx.GetObjectInfo()
 	job := &jobdb.PieceJob{
 		PieceId:         piece.PieceId,
-		CheckSum:        piece.CheckSum,
+		Checksum:        piece.Checksum,
 		StorageProvider: piece.StorageProvider,
 	}
 	return ctx.jobDB.SetPrimaryPieceJobDone(object.TxHash, job)
@@ -109,7 +109,7 @@ func (ctx *ObjectInfoContext) SetSecondaryPieceJobDone(piece *UploadPieceJob) er
 	object := ctx.GetObjectInfo()
 	job := &jobdb.PieceJob{
 		PieceId:         piece.PieceId,
-		CheckSum:        piece.CheckSum,
+		Checksum:        piece.Checksum,
 		StorageProvider: piece.StorageProvider,
 	}
 	return ctx.jobDB.SetSecondaryPieceJobDone(object.TxHash, job)
@@ -213,10 +213,10 @@ func (job *UploadPayloadJob) PrimarySPSealInfo() (*SealInfo, error) {
 	}
 	hash := sha256.New()
 	for _, pieceJob := range job.primaryJob.pieceJobs {
-		if len(pieceJob.CheckSum) != 1 {
+		if len(pieceJob.Checksum) != 1 {
 			return sealInfo, errors.New("primary storage provider checksum error")
 		}
-		hash.Write(pieceJob.CheckSum[0])
+		hash.Write(pieceJob.Checksum[0])
 	}
 	sealInfo.IntegrityHash = hash.Sum(nil)
 	return sealInfo, nil
@@ -252,7 +252,7 @@ type SealInfo struct {
 // the piece job may be segment piece or ec piece (belong to one secondary).
 type UploadPieceJob struct {
 	PieceId         uint32
-	CheckSum        [][]byte
+	Checksum        [][]byte
 	StorageProvider string
 	Done            bool
 }
@@ -332,7 +332,7 @@ func (job *UploadJob) Done(pieceJob *service.PieceJob, primary bool) error {
 	}
 	uploadPieceJob := &UploadPieceJob{
 		PieceId:         pieceIdx,
-		CheckSum:        pieceJob.StorageProviderSealInfo.PieceChecksum,
+		Checksum:        pieceJob.StorageProviderSealInfo.PieceChecksum,
 		StorageProvider: pieceJob.StorageProviderSealInfo.StorageProviderId,
 		Done:            true,
 	}

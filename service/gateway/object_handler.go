@@ -60,7 +60,7 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 		reqCtx:      reqCtx,
 		size:        uint64(sizeInt),
 		contentType: reqCtx.r.Header.Get(BFSContentTypeHeader),
-		checksum:    []byte(reqCtx.r.Header.Get(BFSCheckSumHeader)),
+		checksum:    []byte(reqCtx.r.Header.Get(BFSChecksumHeader)),
 		isPrivate:   isPrivate,
 	}
 	info, err := g.uploader.putObjectTx(reqCtx.object, opt)
