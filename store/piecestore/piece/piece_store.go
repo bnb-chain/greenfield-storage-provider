@@ -20,7 +20,7 @@ func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 	cfg := checkConfig(pieceConfig)
 	blob, err := createStorage(cfg)
 	if err != nil {
-		log.Panicw("create storage error", "error", err)
+		log.Errorw("create storage error", "error", err)
 		return nil, err
 	}
 	log.Infow("PieceStore is running", "Storage", cfg.Store.Storage, "BucketURL",
