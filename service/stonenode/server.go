@@ -120,7 +120,7 @@ func (node *StoneNodeService) allocStone(ctx context.Context) {
 	}
 	// TBD:: stone node will support more types of stone job,
 	// currently only support upload secondary piece job.
-	if err := node.doSyncToSecondarySP(ctx, resp); err != nil {
+	if err := node.syncPieceToSecondarySP(ctx, resp); err != nil {
 		log.CtxErrorw(ctx, "upload secondary piece job failed", "error", err)
 		return
 	}
