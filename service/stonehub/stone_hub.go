@@ -2,7 +2,6 @@ package stonehub
 
 import (
 	"context"
-	"errors"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -104,7 +103,7 @@ func (hub *StoneHub) Name() string {
 // Start implement the lifecycle interface
 func (hub *StoneHub) Start(ctx context.Context) error {
 	if hub.running.Swap(true) {
-		return errors.New("stone hub has started")
+		return nil
 	}
 	go hub.eventLoop()
 	go hub.listenInscription()
@@ -115,7 +114,7 @@ func (hub *StoneHub) Start(ctx context.Context) error {
 // Stop implement the lifecycle interface
 func (hub *StoneHub) Stop(ctx context.Context) error {
 	if !hub.running.Swap(false) {
-		return errors.New("stone hub has stopped")
+		return nil
 	}
 	close(hub.stopCH)
 	close(hub.stoneGC)

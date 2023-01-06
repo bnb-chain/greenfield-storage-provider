@@ -2,83 +2,147 @@ package stonenode
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"sync/atomic"
 	"time"
 
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/service/client"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
 const (
-	stoneNodeServiceName string = "StoneNode"
-	grpcTimeout                 = time.Second * 5
+	StoneNodeServiceName string = "StoneNode"
+	AllocStonePeriod            = time.Second * 1
 )
 
+// StoneNodeService manages stone execution units
 type StoneNodeService struct {
-	cfg      *StoneNodeConfig
-	name     string
-	syncer   service.SyncerServiceClient
-	stoneHub service.StoneHubServiceClient
-	store    *storeClient
+	cfg        *StoneNodeConfig
+	name       string
+	syncer     *client.SyncerClient
+	stoneHub   *client.StoneHubClient
+	store      *storeClient
+	stoneLimit int64
+
+	running atomic.Bool
+	stopCh  chan struct{}
 }
 
-// NewStoneNodeService creates a stone node service
+// NewStoneNodeService returns StoneNodeService instance
 func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
-	s := &StoneNodeService{
-		cfg:  config,
-		name: stoneNodeServiceName,
+	node := &StoneNodeService{
+		cfg:        config,
+		name:       StoneNodeServiceName,
+		stopCh:     make(chan struct{}),
+		stoneLimit: config.StoneJobLimit,
 	}
-	if err := s.InitClient(); err != nil {
-		log.Errorw("stone node init client failed", "error", err)
+	if err := node.InitClient(); err != nil {
 		return nil, err
 	}
-	return s, nil
+	return node, nil
 }
 
 // InitClient inits store client and rpc client
-func (s *StoneNodeService) InitClient() error {
-	store, err := newStoreClient(s.cfg.PieceConfig)
+func (node *StoneNodeService) InitClient() error {
+	if node.running.Load() == true {
+		return errors.New("stone node resource has inited")
+	}
+	store, err := newStoreClient(node.cfg.PieceConfig)
 	if err != nil {
 		log.Errorw("stone node inits newStoreClient failed", "error", err)
 		return err
 	}
-	s.store = store
-
-	stoneHub, err := newStoneHubClient(s.cfg.StoneHubServiceAddress)
+	stoneHub, err := client.NewStoneHubClient(node.cfg.StoneHubServiceAddress)
 	if err != nil {
 		log.Errorw("stone node inits newStoneHubClient failed", "error", err)
+		return err
 	}
-	s.stoneHub = stoneHub
-
-	syncer, err := newSyncerClient(s.cfg.SyncerServiceAddress)
+	syncer, err := client.NewSyncerClient(node.cfg.SyncerServiceAddress)
 	if err != nil {
 		log.Errorw("stone node inits newSyncerClient failed", "error", err)
+		return err
 	}
-	s.syncer = syncer
+	node.store = store
+	node.stoneHub = stoneHub
+	node.syncer = syncer
 	return nil
 }
 
-// Name describes the name of StoneNodeService
-func (s *StoneNodeService) Name() string {
-	return s.name
+// Name returns the name of StoneNodeService, implement lifecycle interface
+func (node *StoneNodeService) Name() string {
+	return node.name
 }
 
-// Start running StoneNodeService
-func (s *StoneNodeService) Start(ctx context.Context) error {
+// Start running StoneNodeService, implement lifecycle interface
+func (node *StoneNodeService) Start(ctx context.Context) error {
+	if node.running.Swap(true) {
+		return nil
+	}
 	go func() {
+		var stoneJobCounter int64 // atomic
+		allocTimer := time.NewTimer(AllocStonePeriod)
+		ctx, cancel := context.WithCancel(context.Background())
 		for {
-			if err := s.doEC(ctx, s.cfg.StorageProvider); err != nil {
-				log.Errorw("do ec failed", "error", err)
+			select {
+			case <-allocTimer.C:
+				go func() {
+					if node.running.Swap(true) {
+						log.Errorw("stone node service stopped, can not alloc stone.")
+						return
+					}
+					atomic.AddInt64(&stoneJobCounter, 1)
+					defer atomic.AddInt64(&stoneJobCounter, -1)
+					if atomic.LoadInt64(&stoneJobCounter) > node.stoneLimit {
+						log.Errorw("stone job running number exceeded, skip current alloc stone.")
+						return
+					}
+					// TBD::exceed stoneLimit or alloc empty stone,
+					// stone node need one backoff strategy.
+					node.allocStone(ctx)
+				}()
+			case <-node.stopCh:
+				cancel()
 				return
 			}
-			time.Sleep(1 * time.Second)
 		}
 	}()
-	log.Info("Start StoneNodeService successfully")
 	return nil
 }
 
-// Stop running StoneNodeService
-func (s *StoneNodeService) Stop(ctx context.Context) error {
-	log.Info("Stop stone node!")
+// allocStone sends rpc request to stone hub alloc stone job.
+func (node *StoneNodeService) allocStone(ctx context.Context) {
+	resp, err := node.AllocStoneJob(ctx)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "alloc stone from stone hub failed", "error", err)
+		return
+	}
+	// TBD:: stone node will support more types of stone job,
+	// currently only support upload secondary piece job.
+	if err := node.doSyncToSecondarySP(ctx, resp); err != nil {
+		log.CtxErrorw(ctx, "upload secondary piece job failed", "error", err)
+		return
+	}
+	log.CtxInfow(ctx, "upload secondary piece job success!")
+	return
+}
+
+// Stop running StoneNodeService, implement lifecycle interface
+func (node *StoneNodeService) Stop(ctx context.Context) error {
+	if !node.running.Swap(false) {
+		return nil
+	}
+	close(node.stopCh)
+	var errs []error
+	if err := node.stoneHub.Close(); err != nil {
+		errs = append(errs, err)
+	}
+	if err := node.syncer.Close(); err != nil {
+		errs = append(errs, err)
+	}
+	if errs != nil {
+		return fmt.Errorf("%v", errs)
+	}
 	return nil
 }
