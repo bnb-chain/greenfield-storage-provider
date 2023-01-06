@@ -224,7 +224,7 @@ func (jmi *JobMetaImpl) SetPrimaryPieceJobDone(txHash []byte, pj *PieceJob) erro
 		CreateHash:      string(txHash),
 		PieceType:       uint32(types.JobType_JOB_TYPE_UPLOAD_PRIMARY),
 		PieceIdx:        pj.PieceId,
-		CheckSum:        string(pj.CheckSum[0]),
+		Checksum:        string(pj.Checksum[0]),
 		PieceState:      0, // todo: fill what?
 		StorageProvider: pj.StorageProvider,
 		IntegrityHash:   "",
@@ -254,7 +254,7 @@ func (jmi *JobMetaImpl) GetPrimaryJob(txHash []byte) ([]*PieceJob, error) {
 	for _, job := range queryReturns {
 		pieceJobs = append(pieceJobs, &PieceJob{
 			PieceId:         job.PieceIdx,
-			CheckSum:        [][]byte{[]byte(job.IntegrityHash)},
+			Checksum:        [][]byte{[]byte(job.IntegrityHash)},
 			StorageProvider: job.StorageProvider})
 	}
 	return pieceJobs, nil
@@ -271,7 +271,7 @@ func (jmi *JobMetaImpl) SetSecondaryPieceJobDone(txHash []byte, pj *PieceJob) er
 		CreateHash:      string(txHash),
 		PieceType:       uint32(types.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC),
 		PieceIdx:        pj.PieceId,
-		CheckSum:        string(pj.CheckSum[0]),
+		Checksum:        string(pj.Checksum[0]),
 		PieceState:      0, // todo: fill what?
 		StorageProvider: pj.StorageProvider,
 		IntegrityHash:   "",
@@ -301,7 +301,7 @@ func (jmi *JobMetaImpl) GetSecondaryJob(txHash []byte) ([]*PieceJob, error) {
 	for _, job := range queryReturns {
 		pieceJobs = append(pieceJobs, &PieceJob{
 			PieceId:         job.PieceIdx,
-			CheckSum:        [][]byte{[]byte(job.IntegrityHash)},
+			Checksum:        [][]byte{[]byte(job.IntegrityHash)},
 			StorageProvider: job.StorageProvider})
 	}
 	return pieceJobs, nil

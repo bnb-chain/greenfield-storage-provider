@@ -27,4 +27,4 @@ tidy:
 	go mod verify
 
 clean:
-	rm -rf ./pkg/types/v1 && rm -rf ./service/types/v1
+	rm -rf ./pkg/types/v1/*.pb.go && rm -rf ./service/types/v1/*.pb.go

@@ -49,14 +49,14 @@ func donePrimaryPieceJob(c *cli.Context) {
 	// fake the piece checksum
 	hash := sha256.New()
 	hash.Write([]byte(time.Now().String()))
-	checkSum := hash.Sum(nil)
+	checksum := hash.Sum(nil)
 	req := &service.StoneHubServiceDonePrimaryPieceJobRequest{
 		TxHash: txHash,
 		PieceJob: &service.PieceJob{
 			StorageProviderSealInfo: &service.StorageProviderSealInfo{
 				PieceIdx:          uint32(c.Uint64("i")),
 				StorageProviderId: c.String("s"),
-				PieceChecksum:     [][]byte{checkSum},
+				PieceChecksum:     [][]byte{checksum},
 			},
 		},
 	}
