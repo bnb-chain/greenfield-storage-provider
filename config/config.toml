@@ -61,11 +61,11 @@ Service = [
     [StoneNodeCfg.PieceConfig]
         Shards = 0
         [StoneNodeCfg.PieceConfig.Store]
-            Storage = "file"
-            BucketURL = "./debug"
-            AccessKey = "ACCESSKEY"
-            SecretKey = "SECRETKEY"
-            SessionToken = "SESSIONTOKEN"
+            Storage = "s3"
+            BucketURL = "https://s3.ap-northeast-1.amazonaws.com/tf-nodereal-dev-bsc-storage
+            AccessKey = ""
+            SecretKey = ""
+            SessionToken = ""
             NoSignRequest = false
             MaxRetries = 5
             TlsInsecureSkipVerify = false
@@ -77,11 +77,11 @@ Service = [
     [SyncerCfg.PieceConfig]
         Shards = 0
         [SyncerCfg.PieceConfig.Store]
-            Storage = "file"
-            BucketURL = "./debug"
-            AccessKey = "ACCESSKEY"
-            SecretKey = "SECRETKEY"
-            SessionToken = "SESSIONTOKEN"
+            Storage = "s3"
+            BucketURL = "https://s3.ap-northeast-1.amazonaws.com/tf-nodereal-dev-bsc-storage"
+            AccessKey = ""
+            SecretKey = ""
+            SessionToken = ""
             NoSignRequest = false
             MaxRetries = 5
             TlsInsecureSkipVerify = false

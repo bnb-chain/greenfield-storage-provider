@@ -68,6 +68,7 @@ func (s *StoneNodeService) Start(ctx context.Context) error {
 		for {
 			if err := s.doEC(ctx, s.cfg.StorageProvider); err != nil {
 				log.Errorw("do ec failed", "error", err)
+				time.Sleep(15 * time.Second)
 				continue
 			}
 			time.Sleep(1 * time.Second)
