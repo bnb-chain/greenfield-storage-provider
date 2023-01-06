@@ -1,0 +1,65 @@
+{"t":"2023-01-05T21:08:35.338+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:08:35.347+0800","l":"info","caller":"storage_provider/main.go:85","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:08:35.347+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:08:35.348+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:08:35.348+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:10:27.985+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:10:27.985+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:10:27.985+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:10:27.985+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:10:27.985+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:13:02.704+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:13:02.722+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:13:02.722+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:13:02.722+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:13:02.722+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:13:43.566+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:13:43.566+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:13:43.567+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:13:43.567+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:13:43.567+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:21:02.803+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:21:02.803+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:21:02.803+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:21:02.803+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:21:02.803+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:23:12.758+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:23:12.759+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:23:12.759+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:23:12.759+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:23:12.759+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:27:13.937+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:27:13.952+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:27:13.952+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:27:13.952+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:27:13.952+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:28:18.683+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:28:18.701+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:28:18.701+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:28:18.701+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:28:18.701+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:28:30.436+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:28:30.436+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:28:30.436+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:28:30.436+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:28:30.436+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:31:03.883+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:31:03.893+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:31:03.893+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:31:03.893+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:31:03.893+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:34:08.099+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:34:08.106+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:34:08.106+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:34:08.107+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:34:08.107+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:37:47.667+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:37:47.685+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:37:47.685+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:37:47.685+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:37:47.686+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:41:02.740+0800","l":"info","caller":"gateway/gateway_service.go:65","msg":"gateway succeed to init"}
+{"t":"2023-01-05T21:41:02.783+0800","l":"info","caller":"storage_provider/main.go:87","msg":"init service success Gateway"}
+{"t":"2023-01-05T21:41:02.783+0800","l":"info","caller":"storage/object_storage.go:19","msg":"Creating file storage at endpoint /Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
+{"t":"2023-01-05T21:41:02.783+0800","l":"info","caller":"piece/piece_store.go:94","msg":"HeadBucket succeeds in file:///Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/, bucketName %!s(MISSING)"}
+{"t":"2023-01-05T21:41:02.783+0800","l":"info","caller":"piece/piece_store.go:26","msg":"PieceStore is running","Storage":"file","BucketURL":"/Users/zhaoyu/corp/bnbchain/inscription-storage-provider/cmd/storage_provider/debug/"}
