@@ -46,12 +46,14 @@ func (s *StoneNodeService) InitClient() error {
 	stoneHub, err := newStoneHubClient(s.cfg.StoneHubServiceAddress)
 	if err != nil {
 		log.Errorw("stone node inits newStoneHubClient failed", "error", err)
+		return err
 	}
 	s.stoneHub = stoneHub
 
 	syncer, err := newSyncerClient(s.cfg.SyncerServiceAddress)
 	if err != nil {
 		log.Errorw("stone node inits newSyncerClient failed", "error", err)
+		return err
 	}
 	s.syncer = syncer
 	return nil
