@@ -28,12 +28,12 @@ func (node *StoneNodeService) AllocStoneJob(ctx context.Context) (*service.Stone
 }
 
 // DoneSecondaryPieceJob sends rpc request to stone hub to report upload secondary piece job.
-func (node *StoneNodeService) DoneSecondaryPieceJob(ctx context.Context, pieceJob *service.PieceJob, traceID string) error {
+func (node *StoneNodeService) DoneSecondaryPieceJob(ctx context.Context, traceID string, pieceJob *service.PieceJob, errMsg *service.ErrMessage) error {
 	resp, err := node.stoneHub.DoneSecondaryPieceJob(ctx, &service.StoneHubServiceDoneSecondaryPieceJobRequest{
 		TraceId:    traceID,
 		TxHash:     pieceJob.GetTxHash(),
 		PieceJob:   pieceJob,
-		ErrMessage: nil,
+		ErrMessage: errMsg,
 	})
 	ctx = log.Context(ctx, resp)
 	if err != nil {

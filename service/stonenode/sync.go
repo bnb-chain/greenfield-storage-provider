@@ -141,7 +141,7 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceData map[string][][]byte,
 	return secondaryPieceData, nil
 }
 
-// syncPieceToSecondarySP send piece data to the secondary and report stone hub.
+// syncPieceToSecondarySP send piece data to the secondary
 func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, resp *service.StoneHubServiceAllocStoneJobResponse,
 	secondaryPieceData map[string]map[string][]byte) error {
 	var (
@@ -153,7 +153,26 @@ func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, resp *
 	)
 
 	for secondary, pieceData := range secondaryPieceData {
-		go func() {
+		go func(secondary string, pieceData map[string][]byte) {
+			errMsg := &service.ErrMessage{}
+			pieceJob := &service.PieceJob{
+				BucketName:     resp.GetPieceJob().GetBucketName(),
+				ObjectName:     resp.GetPieceJob().GetObjectName(),
+				TxHash:         txHash,
+				ObjectId:       objectID,
+				PayloadSize:    payloadSize,
+				RedundancyType: redundancyType,
+			}
+
+			defer func() {
+				// notify stone hub when an ec segment is done
+				if err := node.DoneSecondaryPieceJob(ctx, resp.TraceId, pieceJob, errMsg); err != nil {
+					log.CtxErrorw(ctx, "done secondary piece job to stone hub failed", "error", err)
+					return
+				}
+				log.CtxInfow(ctx, "upload secondary piece job secondary", "secondary sp", secondary)
+			}()
+
 			syncResp, err := node.UploadECPiece(ctx, segmentCount, &service.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
@@ -163,6 +182,8 @@ func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, resp *
 			// TBD:: retry alloc secondary sp and rat again.
 			if err != nil {
 				log.CtxErrorw(ctx, "sync to secondary piece job failed", "error", err)
+				errMsg.ErrCode = service.ErrCode_ERR_CODE_ERROR
+				errMsg.ErrMsg = err.Error()
 				return
 			}
 			var pieceHash [][]byte
@@ -174,24 +195,13 @@ func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, resp *
 				syncResp.GetSecondarySpInfo().GetIntegrityHash() == nil ||
 				bytes.Equal(integrityHash, syncResp.GetSecondarySpInfo().GetIntegrityHash()) {
 				log.CtxErrorw(ctx, "secondary integrity hash check error")
+				errMsg.ErrCode = service.ErrCode_ERR_CODE_ERROR
+				errMsg.ErrMsg = errors.New("secondary integrity hash check error").Error()
 				return
 			}
-			// notify stone hub when an ec segment is done
-			pieceJob := &service.PieceJob{
-				BucketName:              resp.GetPieceJob().GetBucketName(),
-				ObjectName:              resp.GetPieceJob().GetObjectName(),
-				TxHash:                  txHash,
-				ObjectId:                objectID,
-				PayloadSize:             payloadSize,
-				RedundancyType:          redundancyType,
-				StorageProviderSealInfo: syncResp.GetSecondarySpInfo(),
-			}
-			if err := node.DoneSecondaryPieceJob(ctx, pieceJob, resp.TraceId); err != nil {
-				log.CtxErrorw(ctx, "done secondary piece job to stone hub failed", "error", err)
-				return
-			}
-			log.CtxInfow(ctx, "upload secondary piece job secondary", "piece_idx", syncResp.GetSecondarySpInfo().GetPieceIdx(), "secondary sp", syncResp.GetSecondarySpInfo().GetStorageProviderId())
-		}()
+			pieceJob.StorageProviderSealInfo = syncResp.GetSecondarySpInfo()
+			return
+		}(secondary, pieceData)
 	}
 	return nil
 }

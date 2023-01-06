@@ -97,6 +97,8 @@ func (node *StoneNodeService) Start(ctx context.Context) error {
 						log.Errorw("stone job running number exceeded, skip current alloc stone.")
 						return
 					}
+					// TBD::exceed stoneLimit or alloc empty stone,
+					// stone node need one backoff strategy.
 					node.allocStone(ctx)
 				}()
 			case <-node.stopCh:
