@@ -91,7 +91,7 @@ func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 		}
 		return fmt.Errorf("Check if you have the permission to access the bucket")
 	}
-	log.Infof("HeadBucket succeeds in %s, bucketName %s", store)
+	log.Infof("HeadBucket succeeds in %s", store)
 	return nil
 }
 

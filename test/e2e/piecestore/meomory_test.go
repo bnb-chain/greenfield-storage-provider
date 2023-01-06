@@ -13,7 +13,7 @@ import (
 
 func TestMemoryStore(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setUp(t, "./testdata/config_memory.toml")
+	handler, err := setUp(t, memory, "")
 	assert.Equal(t, err, nil)
 
 	// 2. put piece

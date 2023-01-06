@@ -16,14 +16,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
-
 	"github.com/bnb-chain/inscription-storage-provider/model"
-
+	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -34,7 +33,7 @@ import (
 var (
 	// Re-used AWS sessions dramatically improve performance
 	s3SessionCache = &SessionCache{
-		sessions: map[ObjectStorageConfig]*session.Session{},
+		sessions: map[*ObjectStorageConfig]*session.Session{},
 	}
 	disableSSL         bool
 	isVirtualHostStyle bool
@@ -46,7 +45,7 @@ type s3Store struct {
 }
 
 func newS3Store(cfg *ObjectStorageConfig) (ObjectStorage, error) {
-	awsSession, bucket, err := s3SessionCache.newSession(*cfg)
+	awsSession, bucket, err := s3SessionCache.newSession(cfg)
 	if err != nil {
 		log.Errorw("s3 newSession error", "error", err)
 		return nil, err
@@ -222,11 +221,11 @@ func (s *s3Store) ListAllObjects(ctx context.Context, prefix, marker string) (<-
 // SessionCache holds session.Session according to model.ObjectStorage and it synchronizes access/modification
 type SessionCache struct {
 	sync.Mutex
-	sessions map[ObjectStorageConfig]*session.Session
+	sessions map[*ObjectStorageConfig]*session.Session
 }
 
 // newSession initializes a new AWS session with region fallback and custom config
-func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, string, error) {
+func (sc *SessionCache) newSession(cfg *ObjectStorageConfig) (*session.Session, string, error) {
 	sc.Lock()
 	defer sc.Unlock()
 
@@ -248,14 +247,13 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
 		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
 	}
-	/*
-		TODO(for test)
-			if cfg.NoSignRequest {
-				awsConfig.Credentials = credentials.AnonymousCredentials
-			} else if cfg.AccessKey != "" && cfg.SecretKey != "" {
-				awsConfig.Credentials = credentials.NewStaticCredentials(cfg.AccessKey, cfg.SecretKey, cfg.SessionToken)
-			}
-	*/
+	if cfg.TestMode == false {
+		if cfg.NoSignRequest {
+			awsConfig.Credentials = credentials.AnonymousCredentials
+		} else if cfg.AccessKey != "" && cfg.SecretKey != "" {
+			awsConfig.Credentials = credentials.NewStaticCredentials(cfg.AccessKey, cfg.SecretKey, cfg.SessionToken)
+		}
+	}
 
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {
@@ -269,7 +267,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 func (sc *SessionCache) clear() {
 	sc.Lock()
 	defer sc.Unlock()
-	sc.sessions = map[ObjectStorageConfig]*session.Session{}
+	sc.sessions = map[*ObjectStorageConfig]*session.Session{}
 }
 
 func parseEndPoint(endPoint string) (string, string, error) {

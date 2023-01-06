@@ -132,10 +132,12 @@ func ecOrReplicaOrInline(rType ptypes.RedundancyType, objectID uint64, segIndex 
 			pieceMap[ecPieceKey] = j
 			mapSlice = append(mapSlice, pieceMap)
 		}
-	default:
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		pieceMap := make(map[string][]byte)
 		pieceMap[piecestore.EncodeSegmentPieceKey(objectID, segIndex)] = data
 		mapSlice = append(mapSlice, pieceMap)
+	default:
+		return nil, fmt.Errorf("Unknown redundancy type")
 	}
 	return mapSlice, nil
 }
