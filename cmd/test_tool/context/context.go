@@ -6,13 +6,13 @@ import (
 )
 
 var (
-	StoneHubService   string = "StoneHubService"
-	StoneNodeService  string = "StoneNodeService"
-	UploaderService   string = "UploaderService"
-	DownloaderService string = "DownloaderService"
-	SyncerService     string = "SyncerService"
-	GatewayService    string = "GateWayService"
-	RootService       string = "RootService"
+	StoneHubService   = "StoneHubService"
+	StoneNodeService  = "StoneNodeService"
+	UploaderService   = "UploaderService"
+	DownloaderService = "DownloaderService"
+	SyncerService     = "SyncerService"
+	GatewayService    = "GateWayService"
+	RootService       = "RootService"
 )
 
 var ServiceSupport = map[string]string{
