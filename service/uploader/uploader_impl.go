@@ -2,12 +2,12 @@ package uploader
 
 import (
 	"context"
-	"crypto/sha256"
 	"sync"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	pbService "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/util/hash"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -92,25 +92,23 @@ func (ui *uploaderImpl) UploadPayload(stream pbService.UploaderService_UploadPay
 			}
 		}
 		for piece := range pieceChan {
-			go func() {
+			go func(segPiece *SegmentContext) {
 				defer wg.Done()
-				if _, ok := jm.toUploadedIDs[piece.Index]; !ok {
+				if _, ok := jm.toUploadedIDs[segPiece.Index]; !ok {
 					// has uploaded, and skip.
 					return
 				}
-				pieceKey := piecestore.EncodeSegmentPieceKey(jm.objectID, int(piece.Index))
-				if err := ui.uploader.store.putPiece(pieceKey, piece.PieceData); err != nil {
+				pieceKey := piecestore.EncodeSegmentPieceKey(jm.objectID, int(segPiece.Index))
+				if err := ui.uploader.store.putPiece(pieceKey, segPiece.PieceData); err != nil {
 					errChan <- err
 					return
 				}
-				hash := sha256.New()
-				hash.Write(piece.PieceData)
-				checkSum := hash.Sum(nil)
-				if err := ui.uploader.stoneHub.reportJobProgress(jm, piece.Index, checkSum); err != nil {
+				checksum := hash.GenerateChecksum(segPiece.PieceData)
+				if err := ui.uploader.stoneHub.reportJobProgress(jm, segPiece.Index, checksum); err != nil {
 					errChan <- err
 					return
 				}
-			}()
+			}(piece)
 		}
 	}()
 
