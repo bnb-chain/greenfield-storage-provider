@@ -11,4 +11,9 @@ go build -ldflags "\
 -X 'main.CommitID=${CommitID}' \
 -X 'main.BranchName=${BranchName}' \
 -X 'main.BuildTime=${BuildTime}'" \
--o bfs cmd/storage_provider/*.go
+-o storage_provider cmd/storage_provider/*.go
+
+if [ ! -d build  ];then
+  mkdir build
+fi
+mv storage_provider ./build
