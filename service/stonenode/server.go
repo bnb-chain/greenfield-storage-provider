@@ -22,7 +22,7 @@ type StoneNodeService struct {
 	name       string
 	syncer     *client.SyncerClient
 	stoneHub   *client.StoneHubClient
-	store      *storeClient
+	store      *client.StoreClient
 	stoneLimit int64
 
 	running atomic.Bool
@@ -48,7 +48,7 @@ func (node *StoneNodeService) InitClient() error {
 	if node.running.Load() == true {
 		return errors.New("stone node resource is running")
 	}
-	store, err := newStoreClient(node.cfg.PieceConfig)
+	store, err := client.NewStoreClient(node.cfg.PieceConfig)
 	if err != nil {
 		log.Errorw("stone node inits piece store client failed", "error", err)
 		return err
@@ -132,7 +132,6 @@ func (node *StoneNodeService) Stop(ctx context.Context) error {
 // allocStone sends rpc request to stone hub alloc stone job.
 func (node *StoneNodeService) allocStone(ctx context.Context) {
 	resp, err := node.stoneHub.AllocStoneJob(ctx)
-	node.stoneHub.AllocStoneJob(ctx)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "alloc stone from stone hub failed", "error", err)
