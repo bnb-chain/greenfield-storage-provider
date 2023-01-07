@@ -1,4 +1,4 @@
-package stonenode
+package client
 
 import (
 	"context"
@@ -9,20 +9,20 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
-type storeClient struct {
+type StoreClient struct {
 	ps *piece.PieceStore
 }
 
-func newStoreClient(pieceConfig *storage.PieceStoreConfig) (*storeClient, error) {
+func NewStoreClient(pieceConfig *storage.PieceStoreConfig) (*StoreClient, error) {
 	ps, err := piece.NewPieceStore(pieceConfig)
 	if err != nil {
 		return nil, err
 	}
-	return &storeClient{ps: ps}, nil
+	return &StoreClient{ps: ps}, nil
 }
 
-func (sc *storeClient) getPiece(ctx context.Context, key string, offset, limit int64) ([]byte, error) {
-	rc, err := sc.ps.Get(ctx, key, offset, limit)
+func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, limit int64) ([]byte, error) {
+	rc, err := client.ps.Get(ctx, key, offset, limit)
 	if err != nil {
 		log.Errorw("stone node service invoke PieceStore Get failed", "error", err)
 		return nil, err

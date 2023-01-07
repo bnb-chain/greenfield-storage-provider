@@ -70,7 +70,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		case <-interruptCh:
 			break
 		default:
-			data, err := node.store.getPiece(ctx, segment.pieceKey, 0, 0)
+			data, err := node.store.GetPiece(ctx, segment.pieceKey, 0, 0)
 			if err != nil {
 				log.CtxErrorw(ctx, "gets segment data from piece store failed", "error", err, "piece key", segment.pieceKey)
 				return err
