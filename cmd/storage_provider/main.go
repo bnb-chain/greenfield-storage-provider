@@ -22,6 +22,15 @@ var (
 	configFile = flag.String("config", "../../config/config.toml", "config file path")
 )
 
+// define the storage provider supports service names
+var (
+	StoneHubService  string = "StoneHub"
+	GetaWayService   string = "Gateway"
+	UploaderService  string = "Uploader"
+	StoneNodeService string = "StoneNode"
+	SyncerService    string = "Syncer"
+)
+
 func main() {
 	flag.Parse()
 	if *version {
@@ -29,62 +38,67 @@ func main() {
 		os.Exit(0)
 	}
 
-	spCfg := config.LoadConfig(*configFile)
-	slc := lifecycle.NewServiceLifecycle()
-	for _, serviceName := range spCfg.Service {
+	var (
+		ctx = context.Background()
+		cfg = config.LoadConfig(*configFile)
+		slc = lifecycle.NewServiceLifecycle()
+	)
+	for _, serviceName := range cfg.Service {
 		switch serviceName {
-		case "StoneHub":
-			if spCfg.StoneHubCfg == nil {
-				spCfg.StoneHubCfg = config.DefaultStorageProviderConfig.StoneHubCfg
+		case GetaWayService:
+			if cfg.GatewayCfg == nil {
+				cfg.GatewayCfg = config.DefaultStorageProviderConfig.GatewayCfg
 			}
-			server, err := stonehub.NewStoneHubService(spCfg.StoneHubCfg)
-			if err != nil {
-				log.Errorw("stone hub init failed", "error", err)
-				os.Exit(1)
-			}
-			slc.RegisterServices(server)
-		case "Gateway":
-			if spCfg.GatewayCfg == nil {
-				spCfg.GatewayCfg = config.DefaultStorageProviderConfig.GatewayCfg
-			}
-			server, err := gateway.NewGatewayService(spCfg.GatewayCfg)
+			server, err := gateway.NewGatewayService(cfg.GatewayCfg)
 			if err != nil {
 				log.Errorw("gateway init failed", "error", err)
 				os.Exit(1)
 			}
 			slc.RegisterServices(server)
-		case "Uploader":
-			if spCfg.UploaderCfg == nil {
-				spCfg.UploaderCfg = config.DefaultStorageProviderConfig.UploaderCfg
+		case UploaderService:
+			if cfg.UploaderCfg == nil {
+				cfg.UploaderCfg = config.DefaultStorageProviderConfig.UploaderCfg
 			}
-			server, err := uploader.NewUploaderService(spCfg.UploaderCfg)
+			server, err := uploader.NewUploaderService(cfg.UploaderCfg)
 			if err != nil {
 				log.Errorw("uploader init failed", "error", err)
 				os.Exit(1)
 			}
 			slc.RegisterServices(server)
-		case "StoneNode":
-			if spCfg.StoneNodeCfg == nil {
-				spCfg.StoneNodeCfg = config.DefaultStorageProviderConfig.StoneNodeCfg
+		case StoneHubService:
+			if cfg.StoneHubCfg == nil {
+				cfg.StoneHubCfg = config.DefaultStorageProviderConfig.StoneHubCfg
 			}
-			server, err := stonenode.NewStoneNodeService(spCfg.StoneNodeCfg)
+			server, err := stonehub.NewStoneHubService(cfg.StoneHubCfg)
 			if err != nil {
-				log.Errorw("stone node init failed", "error", err)
+				log.Errorw("stone hub init failed", "error", err)
+				os.Exit(1)
 			}
 			slc.RegisterServices(server)
-		case "Syncer":
-			if spCfg.SyncerCfg == nil {
-				spCfg.SyncerCfg = config.DefaultStorageProviderConfig.SyncerCfg
+		case StoneNodeService:
+			if cfg.StoneNodeCfg == nil {
+				cfg.StoneNodeCfg = config.DefaultStorageProviderConfig.StoneNodeCfg
 			}
-			server, err := syncer.NewSyncerService(spCfg.SyncerCfg)
+			server, err := stonenode.NewStoneNodeService(cfg.StoneNodeCfg)
+			if err != nil {
+				log.Errorw("stone node init failed", "error", err)
+				os.Exit(1)
+			}
+			slc.RegisterServices(server)
+		case SyncerService:
+			if cfg.SyncerCfg == nil {
+				cfg.SyncerCfg = config.DefaultStorageProviderConfig.SyncerCfg
+			}
+			server, err := syncer.NewSyncerService(cfg.SyncerCfg)
 			if err != nil {
 				log.Errorw("syncer init failed", "error", err)
+				os.Exit(1)
 			}
 			slc.RegisterServices(server)
 		}
 		log.Info("init service success ", serviceName)
 
 	}
-	ctx := context.Background()
-	slc.Signals(syscall.SIGINT, syscall.SIGTERM).StartServices(ctx).Wait(ctx)
+	// start all services, and listen signals
+	slc.Signals(syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP).StartServices(ctx).Wait(ctx)
 }

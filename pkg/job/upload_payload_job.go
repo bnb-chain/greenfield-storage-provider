@@ -10,6 +10,7 @@ import (
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
 	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
+	"github.com/bnb-chain/inscription-storage-provider/util"
 )
 
 // ObjectInfoContext maintains the object info, goroutine safe.
@@ -291,14 +292,11 @@ func NewUploadJob(objectCtx *ObjectInfoContext, primary bool) (*UploadJob, error
 	var pieceCount int
 	object := objectCtx.GetObjectInfo()
 	if primary {
-		pieceCount = int(object.Size / model.SegmentSize)
-		if object.Size%model.SegmentSize != 0 {
-			pieceCount++
-		}
+		pieceCount = util.ComputeSegmentCount(object.Size)
 	} else {
 		pieceCount = model.EC_M + model.EC_K
 	}
-	for i := 0; i < int(pieceCount); i++ {
+	for i := 0; i < pieceCount; i++ {
 		pieces = append(pieces, &UploadPieceJob{PieceId: uint32(i)})
 	}
 	return &UploadJob{
