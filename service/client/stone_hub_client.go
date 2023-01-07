@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"io"
 	"time"
 
@@ -42,11 +43,35 @@ func NewStoneHubClient(address string) (*StoneHubClient, error) {
 
 func (client *StoneHubClient) AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (*service.StoneHubServiceAllocStoneJobResponse, error) {
 	req := &service.StoneHubServiceAllocStoneJobRequest{TraceId: util.GenerateRequestID()}
-	return client.stoneHub.AllocStoneJob(ctx, req, opts...)
+	resp, err := client.stoneHub.AllocStoneJob(ctx, req, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "alloc stone job failed", "error", err)
+		return nil, err
+	}
+	if resp.PieceJob == nil {
+		log.CtxErrorw(ctx, "alloc stone job empty.")
+		return nil, errors.New("alloc stone job empty")
+	}
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		log.CtxErrorw(ctx, "alloc stone job failed", "error", resp.GetErrMessage().GetErrMsg())
+		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+	}
+	return resp, nil
 }
 
 func (client *StoneHubClient) DoneSecondaryPieceJob(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
-	return client.stoneHub.DoneSecondaryPieceJob(ctx, in, opts...)
+	resp, err := client.stoneHub.DoneSecondaryPieceJob(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "done secondary piece job failed", "error", err)
+		return nil, err
+	}
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		log.CtxErrorw(ctx, "done secondary piece job response code is not success", "error", resp.GetErrMessage().GetErrMsg())
+		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+	}
+	return resp, nil
 }
 
 func (client *StoneHubClient) Close() error {
