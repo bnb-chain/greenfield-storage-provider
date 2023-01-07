@@ -8,7 +8,7 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
-// UploadECPiece send rpc request to secondary storage provider to sync the peice data.
+// UploadECPiece send rpc request to secondary storage provider to sync the piece data.
 func (node *StoneNodeService) UploadECPiece(ctx context.Context, segmentCount int, sInfo *service.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*service.SyncerServiceUploadECPieceResponse, error) {
 	stream, err := node.syncer.UploadECPiece(ctx)

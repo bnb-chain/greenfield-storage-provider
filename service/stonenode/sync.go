@@ -3,11 +3,11 @@ package stonenode
 import (
 	"bytes"
 	"context"
-	"errors"
 	"sync"
 	"sync/atomic"
 
 	"github.com/bnb-chain/inscription-storage-provider/mock"
+	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/redundancy"
 	ptypes "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
@@ -59,6 +59,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		redundancyType = allocResp.GetPieceJob().GetRedundancyType()
 		segmentCount   = util.ComputeSegmentCount(payloadSize)
 	)
+
 	loadFunc := func(ctx context.Context, segment *segment) error {
 		select {
 		case <-interruptCh:
@@ -66,13 +67,15 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		default:
 			data, err := node.store.getPiece(ctx, segment.pieceKey, 0, 0)
 			if err != nil {
-				log.CtxErrorw(ctx, "stone node gets segment data from piece store failed", "error", err, "piece key", segment.pieceKey)
+				log.CtxErrorw(ctx, "stone node gets segment data from piece store failed", "error", err,
+					"piece key", segment.pieceKey)
 				return err
 			}
 			segment.segmentData = data
 		}
 		return nil
 	}
+
 	spiltFunc := func(ctx context.Context, segment *segment) error {
 		select {
 		case <-interruptCh:
@@ -87,38 +90,39 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		}
 		return nil
 	}
+
 	for i := 0; i < int(segmentCount); i++ {
 		go func(segmentIdx int) {
-			segment := &segment{
+			seg := &segment{
 				objectID:       objectID,
-				pieceKey:       piecestore.EncodeSegmentPieceKey(objectID, segmentIdx),
+				pieceKey:       piecestore.EncodeSegmentPieceKey(objectID, uint32(segmentIdx)),
 				redundancyType: redundancyType,
 			}
 			defer func() {
-				if segment.pieceErr != nil || atomic.AddInt64(&doneSegments, 1) == int64(segmentCount) {
+				if seg.pieceErr != nil || atomic.AddInt64(&doneSegments, 1) == int64(segmentCount) {
 					close(interruptCh)
 					close(segmentCh)
 				}
 			}()
-			if loadSegmentErr = loadFunc(ctx, segment); loadSegmentErr != nil {
+			if loadSegmentErr = loadFunc(ctx, seg); loadSegmentErr != nil {
 				return
 			}
-			if loadSegmentErr = spiltFunc(ctx, segment); loadSegmentErr != nil {
+			if loadSegmentErr = spiltFunc(ctx, seg); loadSegmentErr != nil {
 				return
 			}
 			select {
 			case <-interruptCh:
 				return
 			default:
-				segmentCh <- segment
+				segmentCh <- seg
 			}
 		}(i)
 	}
 
 	var mu sync.Mutex
-	for segment := range segmentCh {
+	for seg := range segmentCh {
 		mu.Lock()
-		pieces[segment.pieceKey] = segment.pieceData
+		pieces[seg.pieceKey] = seg.pieceData
 		mu.Unlock()
 	}
 	return pieces, loadSegmentErr
@@ -137,19 +141,22 @@ func (node *StoneNodeService) spiltSegmentData(ctx context.Context, redundancyTy
 			log.CtxErrorw(ctx, "ec encode failed", "error", err)
 			return pieceData, err
 		}
-	default:
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		pieceData = append(pieceData, segmentData)
+	default:
+		return nil, merrors.ErrRedundancyType
 	}
 	return pieceData, nil
 }
 
 // dispatchSecondarySP dispatch piece data to secondary storage provider.
-func (node *StoneNodeService) dispatchSecondarySP(pieceData map[string][][]byte, redundancyType ptypes.RedundancyType, secondarySPs []string) (map[string]map[string][]byte, error) {
+func (node *StoneNodeService) dispatchSecondarySP(pieceData map[string][][]byte, redundancyType ptypes.RedundancyType,
+	secondarySPs []string) (map[string]map[string][]byte, error) {
 	var secondaryPieceData map[string]map[string][]byte
-	for pieceKey, pieceData := range pieceData {
-		for idx, data := range pieceData {
+	for pieceKey, pData := range pieceData {
+		for idx, data := range pData {
 			if idx >= len(secondarySPs) {
-				return secondaryPieceData, errors.New("secondary sp is not enough")
+				return secondaryPieceData, merrors.ErrSecondarySPNumber
 			}
 			if redundancyType == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
 				if _, ok := secondaryPieceData[secondarySPs[idx]]; !ok {
@@ -157,7 +164,8 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceData map[string][][]byte,
 				}
 				key := piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, idx)
 				secondaryPieceData[secondarySPs[idx]][key] = data
-			} else {
+			} else if redundancyType == ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE ||
+				redundancyType == ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
 				if _, ok := secondaryPieceData[secondarySPs[idx]]; !ok {
 					secondaryPieceData[secondarySPs[idx]] = make(map[string][]byte)
 				}
@@ -199,7 +207,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				log.CtxInfow(ctx, "upload secondary piece job secondary", "secondary sp", secondary)
 			}()
 
-			syncResp, err := node.UploadECPiece(ctx, segmentCount, &service.SyncerInfo{
+			syncResp, err := node.UploadECPiece(ctx, int(segmentCount), &service.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
 				StorageProviderId: secondary,
@@ -222,7 +230,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				bytes.Equal(integrityHash, syncResp.GetSecondarySpInfo().GetIntegrityHash()) {
 				log.CtxErrorw(ctx, "secondary integrity hash check error")
 				errMsg.ErrCode = service.ErrCode_ERR_CODE_ERROR
-				errMsg.ErrMsg = errors.New("secondary integrity hash check error").Error()
+				errMsg.ErrMsg = merrors.ErrIntegrityHash.Error()
 				return
 			}
 			pieceJob.StorageProviderSealInfo = syncResp.GetSecondarySpInfo()

@@ -38,8 +38,11 @@ var (
 
 // stone node service errors
 var (
-	ErrIntegrityHash  = errors.New("integrity hash of secondary sp is not equal to integrity hash of primary sp")
-	ErrRedundancyType = errors.New("unknown redundancy type")
+	ErrStoneNodeInitialized = errors.New("stone node resource has been initialized")
+	ErrIntegrityHash        = errors.New("secondary integrity hash check error")
+	ErrRedundancyType       = errors.New("unknown redundancy type")
+	ErrEmptyJob             = errors.New("job is empty")
+	ErrSecondarySPNumber    = errors.New("secondary sp is not enough")
 )
 
 func MakeErrMsgResponse(err error) *service.ErrMessage {

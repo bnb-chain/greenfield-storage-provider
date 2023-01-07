@@ -2,8 +2,9 @@ package stonenode
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
+	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -18,11 +19,11 @@ func (node *StoneNodeService) AllocStoneJob(ctx context.Context) (*service.Stone
 	}
 	if resp.PieceJob == nil {
 		log.CtxErrorw(ctx, "stone node invokes AllocStoneJob empty.")
-		return nil, errors.New("job is empty")
+		return nil, merrors.ErrEmptyJob
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "stone node invokes AllocStoneJob failed", "error", resp.GetErrMessage().GetErrMsg())
-		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+		return nil, fmt.Errorf(resp.GetErrMessage().GetErrMsg())
 	}
 	return resp, nil
 }
@@ -42,7 +43,7 @@ func (node *StoneNodeService) DoneSecondaryPieceJob(ctx context.Context, traceID
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "done secondary piece job response code is not success", "error", resp.GetErrMessage().GetErrMsg())
-		return errors.New(resp.GetErrMessage().GetErrMsg())
+		return fmt.Errorf(resp.GetErrMessage().GetErrMsg())
 	}
 	return nil
 }

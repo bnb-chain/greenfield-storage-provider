@@ -2,11 +2,11 @@ package stonenode
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync/atomic"
 	"time"
 
+	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/service/client"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -46,7 +46,7 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 // InitClient inits store client and rpc client
 func (node *StoneNodeService) InitClient() error {
 	if node.running.Load() == true {
-		return errors.New("stone node resource has inited")
+		return errors.ErrStoneNodeInitialized
 	}
 	store, err := newStoreClient(node.cfg.PieceConfig)
 	if err != nil {
