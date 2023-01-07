@@ -46,21 +46,21 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 // InitClient inits store client and rpc client
 func (node *StoneNodeService) InitClient() error {
 	if node.running.Load() == true {
-		return errors.New("stone node resource has inited")
+		return errors.New("stone node resource is running")
 	}
 	store, err := newStoreClient(node.cfg.PieceConfig)
 	if err != nil {
-		log.Errorw("stone node inits newStoreClient failed", "error", err)
+		log.Errorw("stone node inits piece store client failed", "error", err)
 		return err
 	}
 	stoneHub, err := client.NewStoneHubClient(node.cfg.StoneHubServiceAddress)
 	if err != nil {
-		log.Errorw("stone node inits newStoneHubClient failed", "error", err)
+		log.Errorw("stone node inits stone hub client failed", "error", err)
 		return err
 	}
 	syncer, err := client.NewSyncerClient(node.cfg.SyncerServiceAddress)
 	if err != nil {
-		log.Errorw("stone node inits newSyncerClient failed", "error", err)
+		log.Errorw("stone node inits syncer client failed", "error", err)
 		return err
 	}
 	node.store = store
@@ -77,7 +77,7 @@ func (node *StoneNodeService) Name() string {
 // Start running StoneNodeService, implement lifecycle interface
 func (node *StoneNodeService) Start(ctx context.Context) error {
 	if node.running.Swap(true) {
-		return nil
+		return errors.New("stone node resource is running")
 	}
 	go func() {
 		var stoneJobCounter int64 // atomic
@@ -87,7 +87,7 @@ func (node *StoneNodeService) Start(ctx context.Context) error {
 			select {
 			case <-allocTimer.C:
 				go func() {
-					if node.running.Swap(true) {
+					if !node.running.Load() {
 						log.Errorw("stone node service stopped, can not alloc stone.")
 						return
 					}
@@ -110,28 +110,10 @@ func (node *StoneNodeService) Start(ctx context.Context) error {
 	return nil
 }
 
-// allocStone sends rpc request to stone hub alloc stone job.
-func (node *StoneNodeService) allocStone(ctx context.Context) {
-	resp, err := node.AllocStoneJob(ctx)
-	ctx = log.Context(ctx, resp)
-	if err != nil {
-		log.CtxErrorw(ctx, "alloc stone from stone hub failed", "error", err)
-		return
-	}
-	// TBD:: stone node will support more types of stone job,
-	// currently only support upload secondary piece job.
-	if err := node.syncPieceToSecondarySP(ctx, resp); err != nil {
-		log.CtxErrorw(ctx, "upload secondary piece job failed", "error", err)
-		return
-	}
-	log.CtxInfow(ctx, "upload secondary piece job success!")
-	return
-}
-
 // Stop running StoneNodeService, implement lifecycle interface
 func (node *StoneNodeService) Stop(ctx context.Context) error {
 	if !node.running.Swap(false) {
-		return nil
+		return errors.New("stone node service has stopped")
 	}
 	close(node.stopCh)
 	var errs []error
@@ -145,4 +127,23 @@ func (node *StoneNodeService) Stop(ctx context.Context) error {
 		return fmt.Errorf("%v", errs)
 	}
 	return nil
+}
+
+// allocStone sends rpc request to stone hub alloc stone job.
+func (node *StoneNodeService) allocStone(ctx context.Context) {
+	resp, err := node.stoneHub.AllocStoneJob(ctx)
+	node.stoneHub.AllocStoneJob(ctx)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "alloc stone from stone hub failed", "error", err)
+		return
+	}
+	// TBD:: stone node will support more types of stone job,
+	// currently only support upload secondary piece job.
+	if err := node.syncPieceToSecondarySP(ctx, resp); err != nil {
+		log.CtxErrorw(ctx, "upload secondary piece job failed", "error", err)
+		return
+	}
+	log.CtxInfow(ctx, "upload secondary piece job success!")
+	return
 }
