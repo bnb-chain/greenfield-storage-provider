@@ -8,7 +8,7 @@ const (
 	BFSRequestIDHeader       = "x-bfs-request-id"
 	BFSContentLengthHeader   = "x-bfs-content-length"
 	BFSContentTypeHeader     = "x-bfs-content-type"
-	BFSCheckSumHeader        = "x-bfs-checksum"
+	BFSChecksumHeader        = "x-bfs-checksum"
 	BFSIsPrivateHeader       = "x-bfs-is-private"
 	BFSTransactionHashHeader = "x-bfs-transaction-hash"
 	TransactionHeader        = "TransactionValue"
