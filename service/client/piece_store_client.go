@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"io"
 
@@ -33,4 +34,8 @@ func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, lim
 		return nil, err
 	}
 	return data, nil
+}
+
+func (client *StoreClient) PutPiece(key string, value []byte) error {
+	return client.ps.Put(context.Background(), key, bytes.NewReader(value))
 }
