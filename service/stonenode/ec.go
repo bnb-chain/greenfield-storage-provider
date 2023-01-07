@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/redundancy"
 	ptypes "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
@@ -42,14 +41,14 @@ func (s *StoneNodeService) doEC(ctx context.Context, storageProvider string) err
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			pieceKey := piecestore.EncodeSegmentPieceKey(objectID, segNumber)
+			pieceKey := piecestore.EncodeSegmentPieceKey(objectID, int(segNumber))
 			data, err := s.store.getPiece(ctx, pieceKey, 0, 0)
 			if err != nil {
 				log.Errorw("stone node gets segment data from piece store failed", "error", err, "piece key", pieceKey)
 				errChan <- err
 			}
 
-			dataSlice, err := ecOrReplicaOrInline(rType, objectID, uint32(i), data)
+			dataSlice, err := ecOrReplicaOrInline(rType, objectID, uint64(i), data)
 			if err != nil {
 				log.Errorw("stone node ecOrReplicaOrInline failed", "error", err)
 				errChan <- err
@@ -82,7 +81,7 @@ func (s *StoneNodeService) doEC(ctx context.Context, storageProvider string) err
 			slice := mapValueToSlice(value, len(value))
 			integrityHash := hash.GenerateIntegrityHash(slice, "bnb-sp")
 			if equal := bytes.Equal(integrityHash, resp.GetSecondarySpInfo().GetIntegrityHash()); !equal {
-				errChan <- errors.ErrIntegrityHash
+				errChan <- fmt.Errorf("integrity hash of secondary sp is not equal to integrity hash of primary sp")
 			}
 
 			// notify stone hub when an ec segment is done
@@ -117,7 +116,7 @@ func mapValueToSlice(m map[string][]byte, length int) [][]byte {
 	return slice
 }
 
-func ecOrReplicaOrInline(rType ptypes.RedundancyType, objectID uint64, segIndex uint32, data []byte) ([]map[string][]byte, error) {
+func ecOrReplicaOrInline(rType ptypes.RedundancyType, objectID, segIndex uint64, data []byte) ([]map[string][]byte, error) {
 	mapSlice := make([]map[string][]byte, 0)
 	switch rType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
@@ -128,17 +127,14 @@ func ecOrReplicaOrInline(rType ptypes.RedundancyType, objectID uint64, segIndex 
 		}
 		for i, j := range ecData {
 			pieceMap := make(map[string][]byte)
-			ecPieceKey := piecestore.EncodeECPieceKey(objectID, segIndex, uint32(i))
+			ecPieceKey := piecestore.EncodeECPieceKey(objectID, int(segIndex), i)
 			pieceMap[ecPieceKey] = j
 			mapSlice = append(mapSlice, pieceMap)
 		}
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		pieceMap := make(map[string][]byte)
-		pieceMap[piecestore.EncodeSegmentPieceKey(objectID, segIndex)] = data
-		mapSlice = append(mapSlice, pieceMap)
 	default:
-		log.Errorw("unknown redundancy type", "redundancy type", rType)
-		return nil, errors.ErrRedundancyType
+		pieceMap := make(map[string][]byte)
+		pieceMap[piecestore.EncodeSegmentPieceKey(objectID, int(segIndex))] = data
+		mapSlice = append(mapSlice, pieceMap)
 	}
 	return mapSlice, nil
 }
@@ -147,13 +143,13 @@ func idKey(index int) string {
 	return fmt.Sprintf("i%d", index)
 }
 
-func getSegmentNumber(payloadSize uint64) uint32 {
-	var segmentNumber uint32
+func getSegmentNumber(payloadSize uint64) uint64 {
+	var segmentNumber uint64
 	if payloadSize >= model.SegmentSize {
 		if payloadSize%model.SegmentSize == 0 {
-			segmentNumber = uint32(payloadSize / model.SegmentSize)
+			segmentNumber = payloadSize / model.SegmentSize
 		} else {
-			segmentNumber = uint32(payloadSize/model.SegmentSize + 1)
+			segmentNumber = payloadSize/model.SegmentSize + 1
 		}
 	} else {
 		segmentNumber = 0
