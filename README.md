@@ -10,7 +10,7 @@ bash build.sh
 ## Deploy
 ```shell
 # Print Version
-./storage_provider -v
+./build/storage_provider -v
 # Run Services
-./storage_provider -config config/config.toml
+./build/storage_provider -config config/config.toml
 ```
