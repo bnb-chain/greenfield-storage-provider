@@ -53,9 +53,10 @@ func (s *Syncer) Name() string {
 
 // Start running SyncerService
 func (s *Syncer) Start(ctx context.Context) error {
-	resCh := make(chan struct{})
-	go s.serve(resCh)
-	return nil
+	errCh := make(chan error)
+	go s.serve(errCh)
+	err := <-errCh
+	return err
 }
 
 // Stop running SyncerService
@@ -64,8 +65,9 @@ func (s *Syncer) Stop(ctx context.Context) error {
 }
 
 // serve start syncer rpc service
-func (s *Syncer) serve(resCh chan struct{}) {
+func (s *Syncer) serve(errCh chan error) {
 	lis, err := net.Listen("tcp", s.cfg.Address)
+	errCh <- err
 	if err != nil {
 		log.Errorw("syncer listen failed", "error", err)
 		return
@@ -73,9 +75,9 @@ func (s *Syncer) serve(resCh chan struct{}) {
 	grpcServer := grpc.NewServer()
 	service.RegisterSyncerServiceServer(grpcServer, s)
 	reflection.Register(grpcServer)
-	if err := grpcServer.Serve(lis); err != nil {
+	if err = grpcServer.Serve(lis); err != nil {
 		log.Errorw("syncer serve failed", "error", err)
 		return
 	}
-	resCh <- struct{}{}
+	return
 }

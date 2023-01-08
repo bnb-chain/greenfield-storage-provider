@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	StoneNodeServiceName string = "StoneNode"
+	ServiceNameStoneNode string = "StoneNode"
 	AllocStonePeriod            = time.Second * 1
 )
 
@@ -33,7 +33,7 @@ type StoneNodeService struct {
 func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 	node := &StoneNodeService{
 		cfg:        config,
-		name:       StoneNodeServiceName,
+		name:       ServiceNameStoneNode,
 		stopCh:     make(chan struct{}),
 		stoneLimit: config.StoneJobLimit,
 	}
