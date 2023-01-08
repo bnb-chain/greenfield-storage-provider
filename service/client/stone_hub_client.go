@@ -41,6 +41,62 @@ func NewStoneHubClient(address string) (*StoneHubClient, error) {
 	return client, nil
 }
 
+func (client *StoneHubClient) CreateObject(ctx context.Context, in *service.StoneHubServiceCreateObjectRequest, opts ...grpc.CallOption) (*service.StoneHubServiceCreateObjectResponse, error) {
+	resp, err := client.stoneHub.CreateObject(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "create object failed", "error", err)
+		return nil, err
+	}
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		log.CtxErrorw(ctx, "create object response code is not success", "error", resp.GetErrMessage().GetErrMsg())
+		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+	}
+	return resp, nil
+}
+
+func (client *StoneHubClient) SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*service.StoneHubServiceSetSetObjectCreateInfoResponse, error) {
+	resp, err := client.stoneHub.SetObjectCreateInfo(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "set object height and object id failed", "error", err)
+		return nil, err
+	}
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		log.CtxErrorw(ctx, "set object height and object id response code is not success", "error", resp.GetErrMessage().GetErrMsg())
+		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+	}
+	return resp, nil
+}
+
+func (client *StoneHubClient) BeginUploadPayload(ctx context.Context, in *service.StoneHubServiceBeginUploadPayloadRequest, opts ...grpc.CallOption) (*service.StoneHubServiceBeginUploadPayloadResponse, error) {
+	resp, err := client.stoneHub.BeginUploadPayload(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "begin upload stone failed", "error", err)
+		return nil, err
+	}
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		log.CtxErrorw(ctx, "begin upload stone response code is not success", "error", resp.GetErrMessage().GetErrMsg())
+		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+	}
+	return resp, nil
+}
+
+func (client *StoneHubClient) DonePrimaryPieceJob(ctx context.Context, in *service.StoneHubServiceDonePrimaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDonePrimaryPieceJobResponse, error) {
+	resp, err := client.stoneHub.DonePrimaryPieceJob(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "done primary piece job failed", "error", err)
+		return nil, err
+	}
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		log.CtxErrorw(ctx, "done primary piece job response code is not success", "error", resp.GetErrMessage().GetErrMsg())
+		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+	}
+	return resp, nil
+}
+
 func (client *StoneHubClient) AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (*service.StoneHubServiceAllocStoneJobResponse, error) {
 	req := &service.StoneHubServiceAllocStoneJobRequest{TraceId: util.GenerateRequestID()}
 	resp, err := client.stoneHub.AllocStoneJob(ctx, req, opts...)
