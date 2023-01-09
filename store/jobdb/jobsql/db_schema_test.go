@@ -1,4 +1,4 @@
-package jobdb
+package jobsql
 
 import (
 	"testing"

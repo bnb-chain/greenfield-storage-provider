@@ -13,11 +13,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobsql"
+
 	"github.com/bnb-chain/inscription-storage-provider/mock"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobmemory"
 	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -84,23 +87,29 @@ func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
 }
 
 // initDB init job, meta, etc. db instance
-func (hub *StoneHub) initDB() error {
-	switch hub.config.JobDB {
+func (hub *StoneHub) initDB() (err error) {
+	switch hub.config.JobDBType {
 	case MemoryDB:
-		hub.jobDB = jobdb.NewMemJobDB()
+		hub.jobDB = jobmemory.NewMemJobDB()
 	case MySqlDB:
 		// TODO:: add mysql db
-		return errors.New("job db not support mysql db")
+		if hub.config.JobDB == nil {
+			hub.config.JobDB = DefaultStoneHubConfig.JobDB
+		}
+		hub.jobDB, err = jobsql.NewJobMetaImpl(hub.config.JobDB)
+		if err != nil {
+			return
+		}
 	default:
-		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.JobDB))
+		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.JobDBType))
 	}
 
-	switch hub.config.MetaDB {
+	switch hub.config.MetaDBType {
 	case LevelDB:
 		// TODO:: add leveldb, temporarily replace with memory job db
-		hub.metaDB = jobdb.NewMemJobDB()
+		hub.metaDB = jobmemory.NewMemJobDB()
 	default:
-		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.MetaDB))
+		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.MetaDBType))
 	}
 	return nil
 }

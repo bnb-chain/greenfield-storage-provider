@@ -1,4 +1,4 @@
-package jobdb
+package jobsql
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
 
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 )
@@ -73,13 +75,13 @@ func TestJobMeta(t *testing.T) {
 	// case7 SetPrimaryPieceJobDone/GetPrimaryJob
 	{
 		jmi, _ := NewJobMetaImpl()
-		err := jmi.SetPrimaryPieceJobDone([]byte("123"), &PieceJob{
+		err := jmi.SetPrimaryPieceJobDone([]byte("123"), &jobdb.PieceJob{
 			PieceId:         0,
 			Checksum:        [][]byte{[]byte("123-0-sum")},
 			StorageProvider: "123-0-sp",
 		})
 		assert.Equal(t, nil, err)
-		err = jmi.SetPrimaryPieceJobDone([]byte("123"), &PieceJob{
+		err = jmi.SetPrimaryPieceJobDone([]byte("123"), &jobdb.PieceJob{
 			PieceId:         1,
 			Checksum:        [][]byte{[]byte("123-1-sum")},
 			StorageProvider: "123-1-sp",
@@ -92,13 +94,13 @@ func TestJobMeta(t *testing.T) {
 	// case8 SetSecondaryPieceJobDone/GetSecondaryJob
 	{
 		jmi, _ := NewJobMetaImpl()
-		err := jmi.SetSecondaryPieceJobDone([]byte("456"), &PieceJob{
+		err := jmi.SetSecondaryPieceJobDone([]byte("456"), &jobdb.PieceJob{
 			PieceId:         0,
 			Checksum:        [][]byte{[]byte("456-0-sum")},
 			StorageProvider: "456-0-sp",
 		})
 		assert.Equal(t, nil, err)
-		err = jmi.SetSecondaryPieceJobDone([]byte("456"), &PieceJob{
+		err = jmi.SetSecondaryPieceJobDone([]byte("456"), &jobdb.PieceJob{
 			PieceId:         1,
 			Checksum:        [][]byte{[]byte("456-1-sum")},
 			StorageProvider: "456-1-sp",
