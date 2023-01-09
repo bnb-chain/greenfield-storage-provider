@@ -10,7 +10,7 @@ import (
 
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobmemory"
 )
 
 var (
@@ -35,7 +35,7 @@ func InitENV() (*UploadPayloadStone, error) {
 			SpId: "bnb-test-sp",
 		},
 	}
-	jobDB := jobdb.NewMemJobDB()
+	jobDB := jobmemory.NewMemJobDB()
 	if err := jobDB.CreateUploadPayloadJob(txHash, object); err != nil {
 		return nil, err
 	}

@@ -13,6 +13,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
+
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobsql"
 
 	"github.com/bnb-chain/inscription-storage-provider/mock"
@@ -107,7 +109,13 @@ func (hub *StoneHub) initDB() (err error) {
 	switch hub.config.MetaDBType {
 	case LevelDB:
 		// TODO:: add leveldb, temporarily replace with memory job db
-		hub.metaDB = jobmemory.NewMemJobDB()
+		if hub.config.MetaDB == nil {
+			hub.config.MetaDB = DefaultStoneHubConfig.MetaDB
+		}
+		hub.metaDB, err = leveldb.NewMetaDB(hub.config.MetaDB)
+		if err != nil {
+			return
+		}
 	default:
 		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.MetaDBType))
 	}

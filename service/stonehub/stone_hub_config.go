@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobsql"
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
 )
 
 var (
@@ -19,6 +20,7 @@ type StoneHubConfig struct {
 	JobDBType       string
 	JobDB           *jobsql.DBOption
 	MetaDBType      string
+	MetaDB          *leveldb.MetaLevelDBConfig
 }
 
 var DefaultStorageProvider = "bnb-sp"
@@ -40,4 +42,5 @@ var DefaultStoneHubConfig = &StoneHubConfig{
 		Database: "job_context",
 	},
 	MetaDBType: LevelDB,
+	MetaDB:     leveldb.DefaultMetaLevelDBConfig,
 }
