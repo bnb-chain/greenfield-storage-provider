@@ -2,6 +2,8 @@ package stonehub
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -36,25 +38,6 @@ type Stone interface {
 	GetStoneState() (string, error)
 }
 
-// InscriptionClient defines the inscription client interface
-// TBD::temporary interface, need to wait for the final version
-type InscriptionClient interface {
-	QueryObjectByTx(txHash []byte) (*types.ObjectInfo, error)
-}
-
-// Signer defines the storage provider signer service interface
-// TBD::temporary interface, need to wait for the final version
-type Signer interface {
-	BroadcastCreateObjectMessage(object *types.ObjectInfo) []byte
-	BroadcastSealObjectMessage(object *types.ObjectInfo) []byte
-}
-
-// MonitorInscription defines the storage provider event monitor interface
-// TBD::temporary interface, need to wait for the final version
-type MonitorInscription interface {
-	SubscribeEvent(string) chan interface{}
-}
-
 // StoneHub manage all stones, the stone is an abstraction of job context and fsm.
 type StoneHub struct {
 	config *StoneHubConfig
@@ -62,7 +45,7 @@ type StoneHub struct {
 	jobDB  jobdb.JobDB   // job context db
 	metaDB metadb.MetaDB // storage provider meta db
 	stone  sync.Map      // stone map(stoneKey->stone), goroutine safe
-	// entering the seal object stage will transfer the sealStone map,
+	// entering the seal object stage will transfer the stone to sealStone map,
 	// because the index is converted from CreateObjectTX hash to SealObjectTX hash
 	sealStone         sync.Map
 	secondaryJobQueue *lane.Queue         // store secondary piece job, waiting pop by remote service
@@ -72,10 +55,10 @@ type StoneHub struct {
 	stopCH  chan struct{}
 	running atomic.Bool
 
-	// TBD::temporary interface, need to wait for the final version
-	insCli InscriptionClient
-	signer Signer
-	events MonitorInscription
+	// TBD::temporary mock interface, need to wait for the final version
+	insCli *mock.InscriptionChainMock
+	signer *mock.SignerServerMock
+	events *mock.InscriptionChainMock
 }
 
 // NewStoneHubService return the StoneHub instance
@@ -88,11 +71,39 @@ func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
 		stoneGC:           make(chan string, 10),
 		stopCH:            make(chan struct{}),
 	}
-	// mock mode for test
-	if hubCfg.MockConfig.Mock {
-		hub.InitMock()
+	// mock inscription chain related resource
+	{
+		hub.insCli = mock.NewInscriptionChainMock()
+		hub.signer = mock.NewSignerServerMock(hub.insCli)
+		hub.events = hub.insCli
+	}
+	// init job and meta db
+	if err := hub.initDB(); err != nil {
+		return nil, err
 	}
 	return hub, nil
+}
+
+// initDB init job, meta, etc. db instance
+func (hub *StoneHub) initDB() error {
+	switch hub.config.JobDB {
+	case MemoryDB:
+		hub.jobDB = jobdb.NewMemJobDB()
+	case MySqlDB:
+		// TODO:: add mysql db
+		return errors.New("job db not support mysql db")
+	default:
+		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.JobDB))
+	}
+
+	switch hub.config.MetaDB {
+	case LevelDB:
+		// TODO:: add leveldb, temporarily replace with memory job db
+		hub.metaDB = jobdb.NewMemJobDB()
+	default:
+		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.MetaDB))
+	}
+	return nil
 }
 
 // Name implement the lifecycle interface
@@ -103,54 +114,28 @@ func (hub *StoneHub) Name() string {
 // Start implement the lifecycle interface
 func (hub *StoneHub) Start(ctx context.Context) error {
 	if hub.running.Swap(true) {
-		return nil
+		return errors.New("stone hub has started")
 	}
+	hub.insCli.Start()
 	go hub.eventLoop()
 	go hub.listenInscription()
-	go hub.Serve()
+	go hub.serve()
 	return nil
 }
 
 // Stop implement the lifecycle interface
 func (hub *StoneHub) Stop(ctx context.Context) error {
 	if !hub.running.Swap(false) {
-		return nil
+		return errors.New("stone hub has already stop")
 	}
+	hub.insCli.Stop()
 	close(hub.stopCH)
 	close(hub.stoneGC)
 	return nil
 }
 
-// HasStone return whether exist the stone corresponding to the stoneKey
-func (hub *StoneHub) HasStone(stoneKey string) bool {
-	_, ok := hub.stone.Load(stoneKey)
-	return ok
-}
-
-// GetStone return the stone corresponding to the stoneKey
-func (hub *StoneHub) GetStone(stoneKey string) Stone {
-	st, ok := hub.stone.Load(stoneKey)
-	if !ok {
-		return nil
-	}
-	return st.(Stone)
-}
-
-// SetStoneExclude set the stone, returns false if already exists
-func (hub *StoneHub) SetStoneExclude(stone Stone) bool {
-	_, exist := hub.stone.LoadOrStore(stone.StoneKey(), stone)
-	return !exist
-}
-
-// PopUploadSecondaryPieceJob return secondary piece job from secondaryJobQueue
-func (hub *StoneHub) PopUploadSecondaryPieceJob() *service.PieceJob {
-	stoneJob := hub.secondaryJobQueue.Dequeue()
-	pieceJob := stoneJob.(*service.PieceJob)
-	return pieceJob
-}
-
 // Serve starts grpc stone hub service.
-func (hub *StoneHub) Serve() {
+func (hub *StoneHub) serve() {
 	lis, err := net.Listen("tcp", hub.config.Address)
 	if err != nil {
 		log.Errorf("stone hub service failed to listen: %v", err)
@@ -251,15 +236,30 @@ func (hub *StoneHub) listenInscription() {
 	}
 }
 
-var _ InscriptionClient = &mock.InscriptionChainMock{}
+// HasStone return whether exist the stone corresponding to the stoneKey
+func (hub *StoneHub) HasStone(stoneKey string) bool {
+	_, ok := hub.stone.Load(stoneKey)
+	return ok
+}
 
-// InitMock init dependent resource for mocking
-func (hub *StoneHub) InitMock() {
-	hub.insCli = mock.NewInscriptionChainMock()
-	hub.signer = mock.NewSignerServerMock(hub.insCli.(*mock.InscriptionChainMock))
-	hub.events = hub.insCli.(MonitorInscription)
-	hub.insCli.(*mock.InscriptionChainMock).Start()
-	if hub.config.MockConfig.JobDB == "memdb" {
-		hub.jobDB = jobdb.NewMemJobDB()
+// GetStone return the stone corresponding to the stoneKey
+func (hub *StoneHub) GetStone(stoneKey string) Stone {
+	st, ok := hub.stone.Load(stoneKey)
+	if !ok {
+		return nil
 	}
+	return st.(Stone)
+}
+
+// SetStoneExclude set the stone, returns false if already exists
+func (hub *StoneHub) SetStoneExclude(stone Stone) bool {
+	_, exist := hub.stone.LoadOrStore(stone.StoneKey(), stone)
+	return !exist
+}
+
+// PopUploadSecondaryPieceJob return secondary piece job from secondaryJobQueue
+func (hub *StoneHub) PopUploadSecondaryPieceJob() *service.PieceJob {
+	stoneJob := hub.secondaryJobQueue.Dequeue()
+	pieceJob := stoneJob.(*service.PieceJob)
+	return pieceJob
 }
