@@ -9,14 +9,13 @@ import (
 	"github.com/urfave/cli"
 
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-
-	cliCtx "github.com/bnb-chain/inscription-storage-provider/cmd/test_tool/context"
+	cliCtx "github.com/bnb-chain/inscription-storage-provider/test/test_tool/context"
 )
 
-var QueryStoneCommand = cli.Command{
-	Name:   "query_stone",
-	Usage:  "Query the stone from stone hub",
-	Action: queryStone,
+var BeginUploadPayloadCommand = cli.Command{
+	Name:   "begin_stone",
+	Usage:  "Begin upload payload data",
+	Action: beginStone,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "t,TxHash",
@@ -25,7 +24,7 @@ var QueryStoneCommand = cli.Command{
 	},
 }
 
-func queryStone(c *cli.Context) {
+func beginStone(c *cli.Context) {
 	ctx := cliCtx.GetContext()
 	if ctx.CurrentService != cliCtx.StoneHubService {
 		fmt.Println("please cd StoneHubService namespace, try again")
@@ -34,9 +33,8 @@ func queryStone(c *cli.Context) {
 	txHash, err := hex.DecodeString(c.String("t"))
 	if err != nil {
 		fmt.Println("tx hash param decode error: ", err)
-		return
 	}
-	req := &service.StoneHubServiceQueryStoneRequest{
+	req := &service.StoneHubServiceBeginUploadPayloadRequest{
 		TxHash: txHash,
 	}
 	client, err := GetStoneHubClient()
@@ -45,28 +43,15 @@ func queryStone(c *cli.Context) {
 	}
 	rpcCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	rsp, err := client.QueryStone(rpcCtx, req)
+	rsp, err := client.BeginUploadPayload(rpcCtx, req)
 	if err != nil {
 		fmt.Println("send create object rpc error:", err)
 		return
-	}
-	if rsp.ObjectInfo != nil {
-		fmt.Println("object info: ", rsp.ObjectInfo)
 	}
 	if rsp.ErrMessage != nil {
 		fmt.Println(rsp.ErrMessage)
 		return
 	}
-	fmt.Println("job info: ", rsp.JobInfo)
-	if rsp.PendingPrimaryJob != nil && len(rsp.PendingPrimaryJob.TargetIdx) > 0 {
-		fmt.Println("pending primary piece job: ", rsp.PendingPrimaryJob.TargetIdx)
-	} else {
-		fmt.Println("primary piece jobs are completed.")
-	}
-	if rsp.PendingSecondaryJob != nil && len(rsp.PendingSecondaryJob.TargetIdx) > 0 {
-		fmt.Println("pending secondary piece job: ", rsp.PendingSecondaryJob.TargetIdx)
-	} else {
-		fmt.Println("secondary piece jobs are completed.")
-	}
+	fmt.Println("begin upload payload data success")
 	return
 }

@@ -13,7 +13,7 @@ import (
 
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 
-	cliCtx "github.com/bnb-chain/inscription-storage-provider/cmd/test_tool/context"
+	cliCtx "github.com/bnb-chain/inscription-storage-provider/test/test_tool/context"
 )
 
 var CreateObjectCommand = cli.Command{

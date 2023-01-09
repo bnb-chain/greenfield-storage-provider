@@ -70,6 +70,7 @@ func (u *Uploader) Start(ctx context.Context) error {
 		return errors.New("uploader has started")
 	}
 	errCh := make(chan error)
+	u.eventWaiter.Start()
 	go u.serve(errCh)
 	err := <-errCh
 	return err
@@ -98,6 +99,7 @@ func (u *Uploader) Stop(ctx context.Context) error {
 		return errors.New("uploader has stopped")
 	}
 	u.grpcServer.GracefulStop()
+	u.eventWaiter.Stop()
 	var errs []error
 	if err := u.stoneHub.Close(); err != nil {
 		errs = append(errs, err)

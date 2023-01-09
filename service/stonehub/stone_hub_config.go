@@ -1,18 +1,34 @@
 package stonehub
 
-type MockStoneHubConfig struct {
-	Mock   bool
-	JobDB  string
-	MetaDB string
-}
+import (
+	"crypto/sha256"
+	"encoding/hex"
+)
+
+var (
+	MemoryDB string = "memory"
+	MySqlDB  string = "MySql"
+	LevelDB  string = "leveldb"
+)
 
 type StoneHubConfig struct {
 	StorageProvider string
 	Address         string
-	MockConfig      *MockStoneHubConfig
+	JobDB           string
+	MetaDB          string
+}
+
+var DefaultStorageProvider = "bnb-sp"
+
+func DefaultStorageProviderID() string {
+	hash := sha256.New()
+	hash.Write([]byte(DefaultStorageProvider))
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
 var DefaultStoneHubConfig = &StoneHubConfig{
-	StorageProvider: "bnb-sp",
+	StorageProvider: DefaultStorageProviderID(),
 	Address:         "127.0.0.1:5323",
+	JobDB:           MemoryDB,
+	MetaDB:          LevelDB,
 }

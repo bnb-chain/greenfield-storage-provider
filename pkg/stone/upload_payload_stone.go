@@ -205,11 +205,11 @@ func (stone *UploadPayloadStone) GetStoneState() (string, error) {
 }
 
 // GetJobContext return the job context
-func (stone *UploadPayloadStone) GetJobContext() types.JobContext {
+func (stone *UploadPayloadStone) GetJobContext() *types.JobContext {
 	return stone.jobCtx.JobContext()
 }
 
 // GetObjectInfo return the object info
-func (stone *UploadPayloadStone) GetObjectInfo() types.ObjectInfo {
+func (stone *UploadPayloadStone) GetObjectInfo() *types.ObjectInfo {
 	return stone.objCtx.GetObjectInfo()
 }

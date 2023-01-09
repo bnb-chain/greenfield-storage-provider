@@ -31,17 +31,31 @@ func NewObjectInfoContext(object *types.ObjectInfo, jobDB jobdb.JobDB, metaDB me
 }
 
 // GetObjectInfo return the object info.
-func (ctx *ObjectInfoContext) GetObjectInfo() types.ObjectInfo {
+func (ctx *ObjectInfoContext) GetObjectInfo() *types.ObjectInfo {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
-	return *ctx.object
+	return ctx.object.SafeCopy()
+}
+
+// GetObjectSize return the object size.
+func (ctx *ObjectInfoContext) GetObjectSize() uint64 {
+	ctx.mu.RLock()
+	defer ctx.mu.RUnlock()
+	return ctx.object.GetSize()
+}
+
+// GetObjectRedundancyType return the object redundancy type.
+func (ctx *ObjectInfoContext) GetObjectRedundancyType() types.RedundancyType {
+	ctx.mu.RLock()
+	defer ctx.mu.RUnlock()
+	return ctx.object.GetRedundancyType()
 }
 
 // TxHash return the CreateObjectTX hash.
 func (ctx *ObjectInfoContext) TxHash() []byte {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
-	return ctx.object.TxHash
+	return ctx.object.GetTxHash()
 }
 
 // GetPrimaryJob load the primary piece job from db and return.
@@ -96,24 +110,22 @@ func (ctx *ObjectInfoContext) GetSecondaryJob() (*UploadJob, error) {
 
 // SetPrimaryPieceJobDone set the primary piece jod completed and update DB.
 func (ctx *ObjectInfoContext) SetPrimaryPieceJobDone(piece *UploadPieceJob) error {
-	object := ctx.GetObjectInfo()
 	job := &jobdb.PieceJob{
 		PieceId:         piece.PieceId,
 		Checksum:        piece.Checksum,
 		StorageProvider: piece.StorageProvider,
 	}
-	return ctx.jobDB.SetPrimaryPieceJobDone(object.TxHash, job)
+	return ctx.jobDB.SetPrimaryPieceJobDone(ctx.object.GetTxHash(), job)
 }
 
 // SetSecondaryPieceJobDone set the secondary piece jod completed and update DB.
 func (ctx *ObjectInfoContext) SetSecondaryPieceJobDone(piece *UploadPieceJob) error {
-	object := ctx.GetObjectInfo()
 	job := &jobdb.PieceJob{
 		PieceId:         piece.PieceId,
 		Checksum:        piece.Checksum,
 		StorageProvider: piece.StorageProvider,
 	}
-	return ctx.jobDB.SetSecondaryPieceJobDone(object.TxHash, job)
+	return ctx.jobDB.SetSecondaryPieceJobDone(ctx.object.GetTxHash(), job)
 }
 
 // UploadPayloadJob maintains the object info and piece job meta
@@ -290,9 +302,8 @@ func NewUploadJob(objectCtx *ObjectInfoContext, primary bool) (*UploadJob, error
 	}
 	var pieces []*UploadPieceJob
 	var pieceCount uint32
-	object := objectCtx.GetObjectInfo()
 	if primary {
-		pieceCount = util.ComputeSegmentCount(object.Size)
+		pieceCount = util.ComputeSegmentCount(objectCtx.GetObjectSize())
 	} else {
 		pieceCount = model.EC_M + model.EC_K
 	}
@@ -303,7 +314,7 @@ func NewUploadJob(objectCtx *ObjectInfoContext, primary bool) (*UploadJob, error
 		objectCtx:      objectCtx,
 		pieceJobs:      pieces,
 		spInfo:         make(map[string]*SealInfo),
-		redundancyType: object.RedundancyType,
+		redundancyType: objectCtx.GetObjectRedundancyType(),
 	}, nil
 }
 

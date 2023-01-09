@@ -8,10 +8,10 @@ import (
 	linenoise "github.com/GeertJohan/go.linenoise"
 	"github.com/urfave/cli"
 
-	"github.com/bnb-chain/inscription-storage-provider/cmd/test_tool/context"
+	"github.com/bnb-chain/inscription-storage-provider/test/test_tool/context"
 
-	"github.com/bnb-chain/inscription-storage-provider/cmd/test_tool/common"
-	stoneHub "github.com/bnb-chain/inscription-storage-provider/cmd/test_tool/stonehub"
+	"github.com/bnb-chain/inscription-storage-provider/test/test_tool/common"
+	stoneHub "github.com/bnb-chain/inscription-storage-provider/test/test_tool/stonehub"
 )
 
 var rootCommands = []cli.Command{
