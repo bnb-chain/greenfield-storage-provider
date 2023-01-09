@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	syncerServiceName string = "Syncer"
+	ServiceNameSyncer string = "Syncer"
 )
 
 // SyncerService synchronizes ec data to piece store
@@ -28,7 +28,7 @@ type Syncer struct {
 func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	s := &Syncer{
 		cfg:  config,
-		name: syncerServiceName,
+		name: ServiceNameSyncer,
 	}
 	if err := s.InitClient(); err != nil {
 		return nil, err

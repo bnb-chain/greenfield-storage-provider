@@ -11,7 +11,7 @@ func TestEncodeSegmentPieceKey(t *testing.T) {
 	cases := []struct {
 		name       string
 		req1       uint64
-		req2       int
+		req2       uint32
 		wantedResp string
 	}{
 		{
@@ -34,7 +34,7 @@ func TestDecodeSegmentPieceKey(t *testing.T) {
 		name        string
 		req         string
 		wantedResp1 uint64
-		wantedResp2 int
+		wantedResp2 uint32
 		wantedErr   error
 	}{
 		{
@@ -94,8 +94,8 @@ func TestEncodeECPieceKey(t *testing.T) {
 	cases := []struct {
 		name       string
 		req1       uint64
-		req2       int
-		req3       int
+		req2       uint32
+		req3       uint32
 		wantedResp string
 	}{
 		{
@@ -119,8 +119,8 @@ func TestDecodeECPieceKey(t *testing.T) {
 		name        string
 		req         string
 		wantedResp1 uint64
-		wantedResp2 int
-		wantedResp3 int
+		wantedResp2 uint32
+		wantedResp3 uint32
 		wantedErr   error
 	}{
 		{

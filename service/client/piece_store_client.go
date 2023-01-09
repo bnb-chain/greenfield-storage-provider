@@ -28,6 +28,9 @@ func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, lim
 		log.Errorw("stone node service invoke PieceStore Get failed", "error", err)
 		return nil, err
 	}
+	//b := make([]byte, 0)
+	//a := bytes.NewReader(b)
+	//io.Copy(rc, a)
 	data, err := io.ReadAll(rc)
 	if err != nil {
 		log.Errorw("stone node service invoke io.ReadAll failed", "error", err)

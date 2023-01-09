@@ -13,7 +13,7 @@ import (
 
 func TestDiskFileStore(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setUp(t, "./testdata/config_file.toml")
+	handler, err := setUp(t, file, "")
 	assert.Equal(t, err, nil)
 
 	// 2. put piece

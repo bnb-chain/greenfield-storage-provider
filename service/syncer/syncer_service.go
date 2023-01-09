@@ -50,7 +50,7 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServiceUploadECPieceRequest) (
 	*service.StorageProviderSealInfo, error) {
 	var (
-		pieceIndex int
+		pieceIndex uint32
 		err        error
 	)
 	pieceChecksumList := make([][]byte, 0)
@@ -72,7 +72,7 @@ func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServi
 	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList, spID)
 	resp := &service.StorageProviderSealInfo{
 		StorageProviderId: spID,
-		PieceIdx:          uint32(pieceIndex),
+		PieceIdx:          pieceIndex,
 		PieceChecksum:     pieceChecksumList,
 		IntegrityHash:     integrityHash,
 		Signature:         nil, // TODO(mock)

@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"os"
 
+	"github.com/naoina/toml"
+
 	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
 	"github.com/bnb-chain/inscription-storage-provider/service/stonehub"
 	"github.com/bnb-chain/inscription-storage-provider/service/stonenode"
@@ -11,8 +13,6 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/service/uploader"
 	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
 	"github.com/bnb-chain/inscription-storage-provider/util"
-
-	"github.com/naoina/toml"
 )
 
 type StorageProviderConfig struct {

@@ -16,14 +16,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
-
 	"github.com/bnb-chain/inscription-storage-provider/model"
-
+	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -248,14 +247,13 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
 		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
 	}
-	/*
-		TODO(for test)
-			if cfg.NoSignRequest {
-				awsConfig.Credentials = credentials.AnonymousCredentials
-			} else if cfg.AccessKey != "" && cfg.SecretKey != "" {
-				awsConfig.Credentials = credentials.NewStaticCredentials(cfg.AccessKey, cfg.SecretKey, cfg.SessionToken)
-			}
-	*/
+	if cfg.TestMode == false {
+		if cfg.NoSignRequest {
+			awsConfig.Credentials = credentials.AnonymousCredentials
+		} else if cfg.AccessKey != "" && cfg.SecretKey != "" {
+			awsConfig.Credentials = credentials.NewStaticCredentials(cfg.AccessKey, cfg.SecretKey, cfg.SessionToken)
+		}
+	}
 
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {

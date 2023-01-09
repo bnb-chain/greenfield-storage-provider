@@ -8,11 +8,12 @@ import (
 
 // piece store errors
 var (
-	NotSupportedMethod    = errors.New("Not supported method")
-	NotSupportedDelimiter = errors.New("Not supported delimiter")
-	EmptyObjectKey        = errors.New("Object key cannot be empty")
-	EmptyMemoryObject     = errors.New("Memory object is empty")
-	BucketNotExisted      = errors.New("Bucket not existed")
+	NotSupportedMethod          = errors.New("not supported method")
+	NotSupportedDelimiter       = errors.New("not supported delimiter")
+	EmptyObjectKey              = errors.New("object key cannot be empty")
+	EmptyMemoryObject           = errors.New("memory object is empty")
+	BucketNotExisted            = errors.New("bucket not existed")
+	ErrNoPermissionAccessBucket = errors.New("no permission to access the bucket")
 
 	ErrInternalError    = errors.New("internal error")
 	ErrDuplicateBucket  = errors.New("duplicate bucket")
@@ -34,6 +35,16 @@ var (
 	ErrUploadPayloadJobRunning  = errors.New("upload payload job is running")
 	ErrObjectInfoOnInscription  = errors.New("object info not on the inscription")
 	ErrUploadPayloadJobNotExist = errors.New("upload payload job not exist")
+)
+
+// stone node service errors
+var (
+	ErrStoneNodeStarted  = errors.New("stone node resource is running")
+	ErrStoneNodeStopped  = errors.New("stone node service has stopped")
+	ErrIntegrityHash     = errors.New("secondary integrity hash check error")
+	ErrRedundancyType    = errors.New("unknown redundancy type")
+	ErrEmptyJob          = errors.New("job is empty")
+	ErrSecondarySPNumber = errors.New("secondary sp is not enough")
 )
 
 func MakeErrMsgResponse(err error) *service.ErrMessage {

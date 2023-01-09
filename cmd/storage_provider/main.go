@@ -24,11 +24,11 @@ var (
 
 // define the storage provider supports service names
 var (
-	StoneHubService  string = "StoneHub"
-	GetaWayService   string = "Gateway"
-	UploaderService  string = "Uploader"
-	StoneNodeService string = "StoneNode"
-	SyncerService    string = "Syncer"
+	StoneHubService  = "StoneHub"
+	GetaWayService   = "Gateway"
+	UploaderService  = "Uploader"
+	StoneNodeService = "StoneNode"
+	SyncerService    = "Syncer"
 )
 
 // initService init service instance by name and config.

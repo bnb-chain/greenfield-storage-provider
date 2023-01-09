@@ -11,7 +11,6 @@ import (
 
 	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
-
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -20,7 +19,7 @@ func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 	cfg := checkConfig(pieceConfig)
 	blob, err := createStorage(cfg)
 	if err != nil {
-		log.Panicw("create storage error", "error", err)
+		log.Errorw("create storage error", "error", err)
 		return nil, err
 	}
 	log.Infow("PieceStore is running", "Storage", cfg.Store.Storage, "BucketURL",
@@ -89,9 +88,9 @@ func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 			log.Info("Create bucket successfully!")
 			return nil
 		}
-		return fmt.Errorf("Check if you have the permission to access the bucket")
+		return merrors.ErrNoPermissionAccessBucket
 	}
-	log.Infof("HeadBucket succeeds in %s, bucketName %s", store)
+	log.Infof("HeadBucket succeeds in %s", store)
 	return nil
 }
 
