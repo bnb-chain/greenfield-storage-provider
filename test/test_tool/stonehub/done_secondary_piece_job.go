@@ -9,14 +9,14 @@ import (
 
 	"github.com/urfave/cli"
 
-	cliCtx "github.com/bnb-chain/inscription-storage-provider/cmd/test_tool/context"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	cliCtx "github.com/bnb-chain/inscription-storage-provider/test/test_tool/context"
 )
 
-var DonePrimaryPieceJobCommand = cli.Command{
-	Name:   "done_primary_piece_job",
-	Usage:  "Complete primary piece job",
-	Action: donePrimaryPieceJob,
+var DoneSecondaryPieceJobCommand = cli.Command{
+	Name:   "done_secondary_piece_job",
+	Usage:  "Complete secondary piece job",
+	Action: doneSecondaryPieceJob,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "t,TxHash",
@@ -25,15 +25,15 @@ var DonePrimaryPieceJobCommand = cli.Command{
 		cli.StringFlag{
 			Name:  "s,StorageProvider",
 			Value: "",
-			Usage: "StorageProvider id of primary"},
+			Usage: "StorageProvider id of secondary"},
 		cli.Uint64Flag{
 			Name:  "i,PieceIdx",
 			Value: 0,
-			Usage: "Index of primary piece job"},
+			Usage: "Index of secondary piece job"},
 	},
 }
 
-func donePrimaryPieceJob(c *cli.Context) {
+func doneSecondaryPieceJob(c *cli.Context) {
 	ctx := cliCtx.GetContext()
 	if ctx.CurrentService != cliCtx.StoneHubService {
 		fmt.Println("please cd StoneHubService namespace, try again")
@@ -47,16 +47,21 @@ func donePrimaryPieceJob(c *cli.Context) {
 	}
 
 	// fake the piece checksum
-	hash := sha256.New()
-	hash.Write([]byte(time.Now().String()))
-	checksum := hash.Sum(nil)
-	req := &service.StoneHubServiceDonePrimaryPieceJobRequest{
+	var checksums [][]byte
+	for i := 0; i < 6; i++ {
+		hash := sha256.New()
+		hash.Write([]byte(time.Now().String() + string(i)))
+		checksum := hash.Sum(nil)
+		checksums = append(checksums, checksum)
+	}
+
+	req := &service.StoneHubServiceDoneSecondaryPieceJobRequest{
 		TxHash: txHash,
 		PieceJob: &service.PieceJob{
 			StorageProviderSealInfo: &service.StorageProviderSealInfo{
 				PieceIdx:          uint32(c.Uint64("i")),
 				StorageProviderId: c.String("s"),
-				PieceChecksum:     [][]byte{checksum},
+				PieceChecksum:     checksums,
 			},
 		},
 	}
@@ -67,7 +72,7 @@ func donePrimaryPieceJob(c *cli.Context) {
 	}
 	rpcCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	rsp, err := client.DonePrimaryPieceJob(rpcCtx, req)
+	rsp, err := client.DoneSecondaryPieceJob(rpcCtx, req)
 	if err != nil {
 		fmt.Println("send create object rpc error:", err)
 		return
