@@ -2,11 +2,12 @@ package stonenode
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync/atomic"
 	"time"
 
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/service/client"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -77,7 +78,7 @@ func (node *StoneNodeService) Name() string {
 // Start running StoneNodeService, implement lifecycle interface
 func (node *StoneNodeService) Start(ctx context.Context) error {
 	if node.running.Swap(true) {
-		return errors.New("stone node resource is running")
+		return merrors.ErrStoneNodeStarted
 	}
 	go func() {
 		var stoneJobCounter int64 // atomic
@@ -113,7 +114,7 @@ func (node *StoneNodeService) Start(ctx context.Context) error {
 // Stop running StoneNodeService, implement lifecycle interface
 func (node *StoneNodeService) Stop(ctx context.Context) error {
 	if !node.running.Swap(false) {
-		return errors.New("stone node service has stopped")
+		return merrors.ErrStoneNodeStopped
 	}
 	close(node.stopCh)
 	var errs []error

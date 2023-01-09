@@ -9,6 +9,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
+
 	"github.com/bnb-chain/inscription-storage-provider/util"
 
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
@@ -107,7 +109,7 @@ func (client *StoneHubClient) AllocStoneJob(ctx context.Context, opts ...grpc.Ca
 	}
 	if resp.PieceJob == nil {
 		log.CtxErrorw(ctx, "alloc stone job empty.")
-		return nil, errors.New("alloc stone job empty")
+		return nil, merrors.ErrEmptyJob
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "alloc stone job failed", "error", resp.GetErrMessage().GetErrMsg())
