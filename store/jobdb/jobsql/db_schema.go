@@ -27,7 +27,7 @@ func (DBJob) TableName() string {
 
 // DBObject table schema
 type DBObject struct {
-	CreateHash     string `gorm:"primary_key"`
+	CreateHash     string `gorm:"primary_key"` // encode hex str
 	JobID          uint64 // Job.JobID
 	SealHash       string
 	Owner          string
@@ -38,6 +38,7 @@ type DBObject struct {
 	IsPrivate      bool
 	ContentType    string
 	PrimarySP      string
+	ObjectID       uint64
 	Height         uint64
 	RedundancyType uint32
 }
@@ -49,7 +50,7 @@ func (DBObject) TableName() string {
 
 // DBPieceJob table schema
 type DBPieceJob struct {
-	CreateHash      string `gorm:"index:idx_piece_group"` // Object.CreateHash
+	CreateHash      string `gorm:"index:idx_piece_group"` // Object.CreateHash, encode hex str
 	PieceType       uint32 `gorm:"index:idx_piece_group"`
 	PieceIdx        uint32
 	PieceState      uint32
