@@ -131,7 +131,7 @@ func (ui *uploaderImpl) UploadPayload(stream pbService.UploaderService_UploadPay
 					// has uploaded, and skip.
 					return
 				}
-				pieceKey := piecestore.EncodeSegmentPieceKey(jm.objectID, int(segPiece.Index))
+				pieceKey := piecestore.EncodeSegmentPieceKey(jm.objectID, segPiece.Index)
 				if err := ui.uploader.store.PutPiece(pieceKey, segPiece.PieceData); err != nil {
 					errChan <- err
 					return
