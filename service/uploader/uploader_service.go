@@ -56,6 +56,7 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 	u.store = store
 	u.eventWaiter = mock.NewInscriptionChainMock()
 	u.signer = mock.NewSignerServerMock(u.eventWaiter)
+	u.eventWaiter.Start()
 	return u, err
 }
 

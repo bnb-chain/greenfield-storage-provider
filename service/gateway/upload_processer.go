@@ -10,10 +10,9 @@ import (
 	"io"
 	"os"
 
-	"google.golang.org/grpc"
-
 	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	pbPkg "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/service/client"
 	pbService "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -29,7 +28,7 @@ type putObjectTxOption struct {
 
 // objectTxInfo is the return of putObjectTx.
 type objectTxInfo struct {
-	txHash string
+	txHash []byte
 	weight uint64
 }
 
@@ -96,7 +95,7 @@ func (dui *debugUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (
 		if n, innerErr := f.Write(txJson); innerErr == nil && n < len(txJson) {
 			return nil, errors.ErrInternalError
 		}
-		return &objectTxInfo{txHash: txInfo.TxHash, weight: txInfo.Weight}, nil
+		return &objectTxInfo{txHash: []byte(txInfo.TxHash), weight: txInfo.Weight}, nil
 	}
 }
 
@@ -159,20 +158,13 @@ func (dui *debugUploaderImpl) putObject(name string, reader io.Reader, opt *putO
 
 // grpcUploaderImpl is an implement of call grpc uploader service.
 type grpcUploaderImpl struct {
-	Address string
+	uploader *client.UploaderClient
 }
 
 // putObjectTx is used to call uploaderService's CreateObject by grpc.
 func (gui *grpcUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (*objectTxInfo, error) {
-	conn, err := grpc.Dial(gui.Address, grpc.WithInsecure())
-	if err != nil {
-		log.Warnw("failed to dail to uploader", "err", err)
-		return nil, errors.ErrInternalError
-	}
-	defer conn.Close()
-	client := pbService.NewUploaderServiceClient(conn)
-	// todo: fill more info
-	resp, err := client.CreateObject(context.Background(), &pbService.UploaderServiceCreateObjectRequest{
+	resp, err := gui.uploader.CreateObject(context.Background(), &pbService.UploaderServiceCreateObjectRequest{
+		TraceId: opt.reqCtx.requestID,
 		ObjectInfo: &pbPkg.ObjectInfo{
 			BucketName:  opt.reqCtx.bucket,
 			ObjectName:  name,
@@ -186,11 +178,7 @@ func (gui *grpcUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (*
 		log.Warnw("failed to rpc to uploader", "err", err)
 		return nil, errors.ErrInternalError
 	}
-	if errMsg := resp.GetErrMessage(); errMsg != nil && errMsg.ErrCode != pbService.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-		log.Warnw("failed to grpc", "err", resp.ErrMessage)
-		return nil, fmt.Errorf(resp.ErrMessage.ErrMsg)
-	}
-	return &objectTxInfo{txHash: string(resp.TxHash)}, nil
+	return &objectTxInfo{txHash: resp.TxHash}, nil
 }
 
 // putObject is used to call uploaderService's UploadPayload by grpc.
@@ -204,14 +192,7 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 		md5Value string
 	)
 
-	conn, err := grpc.Dial(gui.Address, grpc.WithInsecure())
-	if err != nil {
-		log.Warnw("failed to dail to uploader", "err", err)
-		return nil, errors.ErrInternalError
-	}
-	defer conn.Close()
-	client := pbService.NewUploaderServiceClient(conn)
-	stream, err := client.UploadPayload(context.Background())
+	stream, err := gui.uploader.UploadPayload(context.Background())
 	if err != nil {
 		log.Warnw("failed to dail to uploader", "err", err)
 		return nil, errors.ErrInternalError
@@ -224,6 +205,7 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 		}
 		if readN > 0 {
 			var req pbService.UploaderServiceUploadPayloadRequest
+			req.TraceId = opt.reqCtx.requestID
 			req.TxHash = opt.txHash
 			req.PayloadData = buf[:readN]
 			// todo: fill job_id??
@@ -256,19 +238,19 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 
 // uploaderClientConfig is the configuration information when creating uploaderClient.
 // currently Mode support "DebugMode" and "GrpcMode".
-type uploaderClientConfig struct {
+type uploadProcesserConfig struct {
 	Mode     string
 	DebugDir string
 	Address  string
 }
 
-// uploaderClient is a wrapper of uploader.
-type uploaderClient struct {
+// uploadProcesser is a wrapper of uploader client.
+type uploadProcesser struct {
 	impl uploaderClientInterface
 }
 
 // newUploaderClient return a uploaderClient.
-func newUploaderClient(c uploaderClientConfig) (*uploaderClient, error) {
+func newUploadProcesser(c *uploadProcesserConfig) (*uploadProcesser, error) {
 	switch {
 	case c.Mode == "DebugMode":
 		if c.DebugDir == "" {
@@ -278,20 +260,32 @@ func newUploaderClient(c uploaderClientConfig) (*uploaderClient, error) {
 			log.Warnw("failed to make debug dir", "err", err)
 			return nil, err
 		}
-		return &uploaderClient{impl: &debugUploaderImpl{localDir: c.DebugDir}}, nil
+		return &uploadProcesser{impl: &debugUploaderImpl{localDir: c.DebugDir}}, nil
 	case c.Mode == "GrpcMode":
-		return &uploaderClient{impl: &grpcUploaderImpl{Address: c.Address}}, nil
+		u, err := client.NewUploaderClient(c.Address)
+		if err != nil {
+			return nil, err
+		}
+		return &uploadProcesser{impl: &grpcUploaderImpl{uploader: u}}, nil
 	default:
 		return nil, fmt.Errorf("not support mode, %v", c.Mode)
 	}
 }
 
-// putObjectTx call uploader's putObjectTx interface.
-func (uc *uploaderClient) putObjectTx(name string, opt *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
-	return uc.impl.putObjectTx(name, opt)
+// putObjectTx call uploaderClient putObjectTx interface.
+func (up *uploadProcesser) putObjectTx(name string, opt *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
+	return up.impl.putObjectTx(name, opt)
 }
 
-// putObject call uploader's putObject interface.
-func (uc *uploaderClient) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
-	return uc.impl.putObject(name, reader, opt)
+// putObject call uploaderClient putObject interface.
+func (up *uploadProcesser) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
+	return up.impl.putObject(name, reader, opt)
+}
+
+// Close release uploadProcesser resource.
+func (up *uploadProcesser) Close() error {
+	if p, ok := up.impl.(*grpcUploaderImpl); ok {
+		return p.uploader.Close()
+	}
+	return nil
 }

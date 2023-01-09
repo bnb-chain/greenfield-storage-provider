@@ -3,11 +3,16 @@ package gateway
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync/atomic"
 
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 	"github.com/gorilla/mux"
+)
+
+const (
+	ServiceNameGateway string = "GatewayService"
 )
 
 // Gateway is the primary entry point of SP.
@@ -16,11 +21,11 @@ type Gateway struct {
 	name    string
 	running atomic.Bool
 
-	httpServer *http.Server
-	uploader   *uploaderClient
-	downloader *downloaderClient
-	chain      *chainClient
-	retriever  *retrieverClient
+	httpServer      *http.Server
+	uploadProcesser *uploadProcesser
+	downloader      *downloaderClient
+	chain           *chainClient
+	retriever       *retrieverClient
 }
 
 // NewGatewayService return the gateway instance
@@ -32,9 +37,9 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 
 	g = &Gateway{
 		config: cfg,
-		name:   "Gateway",
+		name:   ServiceNameGateway,
 	}
-	if g.uploader, err = newUploaderClient(g.config.UploaderConfig); err != nil {
+	if g.uploadProcesser, err = newUploadProcesser(&g.config.UploaderConfig); err != nil {
 		log.Warnw("failed to create uploader", "err", err)
 		return nil, err
 	}
@@ -47,21 +52,6 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		return nil, err
 	}
 	g.retriever = newRetrieverClient()
-
-	level := log.DebugLevel
-	switch g.config.LogConfig.Level {
-	case "debug":
-		level = log.DebugLevel
-	case "info":
-		level = log.InfoLevel
-	case "warn":
-		level = log.WarnLevel
-	case "error":
-		level = log.ErrorLevel
-	default:
-		level = log.InfoLevel
-	}
-	log.Init(level, g.config.LogConfig.FilePath)
 	log.Infow("gateway succeed to init")
 	return g, nil
 }
@@ -101,7 +91,16 @@ func (g *Gateway) Stop(ctx context.Context) error {
 	if !g.running.Swap(false) {
 		return errors.New("gateway has stopped")
 	}
-	_ = g.httpServer.Shutdown(ctx)
+	var errs []error
+	if err := g.httpServer.Shutdown(ctx); err != nil {
+		errs = append(errs, err)
+	}
+	if err := g.uploadProcesser.Close(); err != nil {
+		errs = append(errs, err)
+	}
+	if errs != nil {
+		return fmt.Errorf("%v", errs)
+	}
 	log.Info("gateway succeed to stop")
 	return nil
 }

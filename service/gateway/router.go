@@ -9,10 +9,10 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
-// echo impl
+// notFoundHandler log not found request info.
 func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	s, _ := ioutil.ReadAll(r.Body)
-	log.Warnw("not found handler", "header", r.Header, "host", r.Host)
+	log.Warnw("not found handler", "header", r.Header, "host", r.Host, "url", r.URL)
 	w.Write(s)
 
 }

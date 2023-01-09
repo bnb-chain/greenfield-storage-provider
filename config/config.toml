@@ -15,9 +15,6 @@ Service = [
 [GatewayCfg]
     Address = "127.0.0.1:5310"
     Domain = "bfs.nodereal.com"
-    [GatewayCfg.LogConfig]
-        FilePath = "./debug/gateway.log"
-        Level = "info"
     [GatewayCfg.UploaderConfig]
         #Mode = "DebugMode"
         Mode = "GrpcMode"
@@ -34,12 +31,7 @@ Service = [
 [UploaderCfg]
     StorageProvider = "bnb-sp"
     Address = "127.0.0.1:5311"
-    [UploaderCfg.LogConfig]
-        FilePath = "./debug/uploader.log"
-        Level = "info"
-    [UploaderCfg.StoneHubConfig]
-        Address = "127.0.0.1:5323"
-        TimeoutSec = 5
+    StoneHubServiceAddress = "127.0.0.1:5323"
     [UploaderCfg.PieceStoreConfig]
         Shards = 0
         [UploaderCfg.PieceStoreConfig.Store]
