@@ -1,6 +1,7 @@
 package jobsql
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -44,7 +45,7 @@ func (jmi *JobMetaImpl) CreateUploadPayloadJob(txHash []byte, info *types.Object
 		return fmt.Errorf("insert job record failed, %s", result.Error)
 	}
 	insertObjectRecord = &DBObject{
-		CreateHash:     string(txHash),
+		CreateHash:     hex.EncodeToString(txHash),
 		JobID:          insertJobRecord.JobID,
 		Owner:          info.Owner,
 		BucketName:     info.BucketName,
@@ -71,7 +72,7 @@ func (jmi *JobMetaImpl) SetObjectCreateHeight(txHash []byte, height uint64) erro
 	)
 
 	queryCondition = &DBObject{
-		CreateHash: string(txHash),
+		CreateHash: hex.EncodeToString(txHash),
 	}
 	updateFields = &DBObject{
 		Height: height,
@@ -91,11 +92,15 @@ func (jmi *JobMetaImpl) GetObjectInfo(txHash []byte) (*types.ObjectInfo, error) 
 	)
 
 	// If the primary key is a string, the query will be written as follows:
-	result = jmi.db.First(&queryReturn, "create_hash = ?", string(txHash))
+	result = jmi.db.First(&queryReturn, "create_hash = ?", hex.EncodeToString(txHash))
 	if result.Error != nil {
 		return nil, fmt.Errorf("select object record's failed, %s", result.Error)
 	}
 
+	txHash, err := hex.DecodeString(queryReturn.CreateHash)
+	if err != nil {
+		return nil, err
+	}
 	return &types.ObjectInfo{
 		JobId:          queryReturn.JobID,
 		Owner:          queryReturn.Owner,
@@ -107,7 +112,7 @@ func (jmi *JobMetaImpl) GetObjectInfo(txHash []byte) (*types.ObjectInfo, error) 
 		ContentType:    queryReturn.ContentType,
 		PrimarySp:      nil, // todo: how to decode sp info
 		Height:         queryReturn.Height,
-		TxHash:         []byte(queryReturn.CreateHash),
+		TxHash:         txHash,
 		RedundancyType: types.RedundancyType(queryReturn.RedundancyType),
 		SecondarySps:   nil, // todo: how to fill
 	}, nil
@@ -126,6 +131,10 @@ func (jmi *JobMetaImpl) ScanObjectInfo(offset int, limit int) ([]*types.ObjectIn
 		return objects, fmt.Errorf("select primary piece jobs failed, %s", result.Error)
 	}
 	for _, object := range queryReturns {
+		txHash, err := hex.DecodeString(object.CreateHash)
+		if err != nil {
+			return objects, err
+		}
 		objects = append(objects, &types.ObjectInfo{
 			JobId:          object.JobID,
 			Owner:          object.Owner,
@@ -137,7 +146,7 @@ func (jmi *JobMetaImpl) ScanObjectInfo(offset int, limit int) ([]*types.ObjectIn
 			ContentType:    object.ContentType,
 			PrimarySp:      nil, // todo: how to decode sp info
 			Height:         object.Height,
-			TxHash:         []byte(object.CreateHash),
+			TxHash:         txHash,
 			RedundancyType: types.RedundancyType(object.RedundancyType),
 			SecondarySps:   nil, // todo: how to fill
 		})
@@ -224,7 +233,7 @@ func (jmi *JobMetaImpl) SetPrimaryPieceJobDone(txHash []byte, pj *jobdb.PieceJob
 	)
 
 	insertPieceJobRecord = &DBPieceJob{
-		CreateHash:      string(txHash),
+		CreateHash:      hex.EncodeToString(txHash),
 		PieceType:       uint32(types.JobType_JOB_TYPE_UPLOAD_PRIMARY),
 		PieceIdx:        pj.PieceId,
 		Checksum:        string(pj.Checksum[0]),
@@ -249,7 +258,7 @@ func (jmi *JobMetaImpl) GetPrimaryJob(txHash []byte) ([]*jobdb.PieceJob, error) 
 	)
 
 	result = jmi.db.
-		Where("create_hash = ? AND piece_type = ?", string(txHash), types.JobType_JOB_TYPE_UPLOAD_PRIMARY).
+		Where("create_hash = ? AND piece_type = ?", hex.EncodeToString(txHash), types.JobType_JOB_TYPE_UPLOAD_PRIMARY).
 		Find(&queryReturns)
 	if result.Error != nil {
 		return pieceJobs, fmt.Errorf("select primary piece jobs failed, %s", result.Error)
@@ -271,7 +280,7 @@ func (jmi *JobMetaImpl) SetSecondaryPieceJobDone(txHash []byte, pj *jobdb.PieceJ
 	)
 
 	insertPieceJobRecord = &DBPieceJob{
-		CreateHash:      string(txHash),
+		CreateHash:      hex.EncodeToString(txHash),
 		PieceType:       uint32(types.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC),
 		PieceIdx:        pj.PieceId,
 		Checksum:        string(pj.Checksum[0]),
@@ -296,7 +305,7 @@ func (jmi *JobMetaImpl) GetSecondaryJob(txHash []byte) ([]*jobdb.PieceJob, error
 	)
 
 	result = jmi.db.
-		Where("create_hash = ? AND piece_type = ?", string(txHash), types.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC).
+		Where("create_hash = ? AND piece_type = ?", hex.EncodeToString(txHash), types.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC).
 		Find(&queryReturns)
 	if result.Error != nil {
 		return pieceJobs, fmt.Errorf("select secondary piece jobs failed, %s", result.Error)
@@ -312,6 +321,22 @@ func (jmi *JobMetaImpl) GetSecondaryJob(txHash []byte) ([]*jobdb.PieceJob, error
 
 // SetObjectCreateHeightAndObjectID set object height and id
 func (jmi *JobMetaImpl) SetObjectCreateHeightAndObjectID(txHash []byte, height uint64, objectID uint64) error {
-	//TODO implement me
-	panic("implement me")
+	var (
+		result         *gorm.DB
+		queryCondition *DBObject
+		updateFields   *DBObject
+	)
+
+	queryCondition = &DBObject{
+		CreateHash: hex.EncodeToString(txHash),
+	}
+	updateFields = &DBObject{
+		Height:   height,
+		ObjectID: objectID,
+	}
+	result = jmi.db.Model(queryCondition).Updates(updateFields)
+	if result.Error != nil || result.RowsAffected != 1 {
+		return fmt.Errorf("update object record's height and objectid failed, %s", result.Error)
+	}
+	return nil
 }
