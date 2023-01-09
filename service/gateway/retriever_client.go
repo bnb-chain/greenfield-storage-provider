@@ -1,6 +1,6 @@
 package gateway
 
-// todo: impl of call RetriverService
+// todo: impl of call RetrieverService
 type retrieverClient struct {
 }
 

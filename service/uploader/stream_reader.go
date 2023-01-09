@@ -10,9 +10,10 @@ import (
 
 // streamReader is a wrapper of grpc stream request.
 type streamReader struct {
-	pr     *io.PipeReader
-	pw     *io.PipeWriter
-	txHash []byte
+	pr      *io.PipeReader
+	pw      *io.PipeWriter
+	txHash  []byte
+	traceID string
 }
 
 // newStreamReader is used to stream read UploaderService_UploadPayloadServer.
@@ -21,11 +22,12 @@ func newStreamReader(stream pbService.UploaderService_UploadPayloadServer, ch ch
 	sr.pr, sr.pw = io.Pipe()
 	go func() {
 		for {
-			res, err := stream.Recv()
+			req, err := stream.Recv()
 			if err == io.EOF {
 				if sr.txHash == nil {
-					sr.txHash = res.TxHash
-					ch <- res.TxHash
+					sr.txHash = req.TxHash
+					sr.traceID = req.TraceId
+					ch <- req.TxHash
 				}
 				sr.pw.Close()
 				return
@@ -38,10 +40,11 @@ func newStreamReader(stream pbService.UploaderService_UploadPayloadServer, ch ch
 				return
 			}
 			if sr.txHash == nil {
-				sr.txHash = res.TxHash
-				ch <- res.TxHash
+				sr.txHash = req.TxHash
+				sr.traceID = req.TraceId
+				ch <- req.TxHash
 			}
-			sr.pw.Write(res.PayloadData)
+			sr.pw.Write(req.PayloadData)
 		}
 	}()
 	return sr
