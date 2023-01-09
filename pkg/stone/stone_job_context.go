@@ -29,7 +29,7 @@ func NewJobContextWrapper(jobCtx *types.JobContext, jobDB jobdb.JobDB) *JobConte
 func (wrapper *JobContextWrapper) GetJobState() (string, error) {
 	wrapper.mu.RLock()
 	defer wrapper.mu.RUnlock()
-	state, ok := types.JobState_name[int32(wrapper.jobCtx.JobState)]
+	state, ok := types.JobState_name[int32(wrapper.jobCtx.GetJobState())]
 	if !ok {
 		return "", errors.New("job state error")
 	}
@@ -77,8 +77,8 @@ func (wrapper *JobContextWrapper) ModifyTime() int64 {
 }
 
 // JobContext return the copy of job context
-func (wrapper *JobContextWrapper) JobContext() types.JobContext {
+func (wrapper *JobContextWrapper) JobContext() *types.JobContext {
 	wrapper.mu.RLock()
 	defer wrapper.mu.RUnlock()
-	return *wrapper.jobCtx
+	return wrapper.jobCtx.SafeCopy()
 }

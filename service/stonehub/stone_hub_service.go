@@ -305,7 +305,7 @@ func (hub *StoneHub) QueryStone(ctx context.Context, req *service.StoneHubServic
 	}
 	uploadStone := st.(*stone.UploadPayloadStone)
 	jobInfo := uploadStone.GetJobContext()
-	rsp.JobInfo = &jobInfo
+	rsp.JobInfo = jobInfo
 	rsp.PendingPrimaryJob = uploadStone.PopPendingPrimarySPJob()
 	rsp.PendingSecondaryJob = uploadStone.PopPendingSecondarySPJob()
 	return rsp, nil

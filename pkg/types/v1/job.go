@@ -24,3 +24,16 @@ const (
 	JOB_STATE_SEAL_OBJECT_TX_DOING       string = "JOB_STATE_SEAL_OBJECT_TX_DOING"
 	JOB_STATE_SEAL_OBJECT_DONE           string = "JOB_STATE_SEAL_OBJECT_DONE"
 )
+
+func (x *JobContext) SafeCopy() *JobContext {
+	if x == nil {
+		return nil
+	}
+	return &JobContext{
+		JobId:      x.GetJobId(),
+		JobType:    x.GetJobType(),
+		JobErr:     x.GetJobErr(),
+		CreateTime: x.GetCreateTime(),
+		ModifyTime: x.GetModifyTime(),
+	}
+}
