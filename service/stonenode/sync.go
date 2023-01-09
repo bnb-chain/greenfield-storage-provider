@@ -153,7 +153,8 @@ func (node *StoneNodeService) generatePieceData(redundancyType ptypes.Redundancy
 }
 
 // dispatchSecondarySP dispatch piece data to secondary storage provider.
-func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string][][]byte, redundancyType ptypes.RedundancyType, secondarySPs []string) (map[string]map[string][]byte, error) {
+func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string][][]byte, redundancyType ptypes.RedundancyType,
+	secondarySPs []string) (map[string]map[string][]byte, error) {
 	var pieceDataBySecondary map[string]map[string][]byte
 	for pieceKey, pieceData := range pieceDataBySegment {
 		for idx, data := range pieceData {
@@ -161,17 +162,21 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string]
 				return pieceDataBySecondary, merrors.ErrSecondarySPNumber
 			}
 			sp := secondarySPs[idx]
-			if redundancyType == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+
+			switch redundancyType {
+			case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 				if _, ok := pieceDataBySecondary[sp]; !ok {
 					pieceDataBySecondary[sp] = make(map[string][]byte)
 				}
 				key := piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, idx)
 				pieceDataBySecondary[sp][key] = data
-			} else {
+			case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 				if _, ok := pieceDataBySecondary[sp]; !ok {
 					pieceDataBySecondary[sp] = make(map[string][]byte)
 				}
 				pieceDataBySecondary[sp][pieceKey] = data
+			default:
+				return nil, merrors.ErrRedundancyType
 			}
 		}
 	}
@@ -199,6 +204,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				PayloadSize:    payloadSize,
 				RedundancyType: redundancyType,
 			}
+
 			defer func() {
 				// notify stone hub when an ec segment is done
 				req := &service.StoneHubServiceDoneSecondaryPieceJobRequest{

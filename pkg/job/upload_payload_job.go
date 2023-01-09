@@ -289,14 +289,14 @@ func NewUploadJob(objectCtx *ObjectInfoContext, primary bool) (*UploadJob, error
 		}
 	}
 	var pieces []*UploadPieceJob
-	var pieceCount int
+	var pieceCount uint32
 	object := objectCtx.GetObjectInfo()
 	if primary {
 		pieceCount = util.ComputeSegmentCount(object.Size)
 	} else {
 		pieceCount = model.EC_M + model.EC_K
 	}
-	for i := 0; i < pieceCount; i++ {
+	for i := 0; i < int(pieceCount); i++ {
 		pieces = append(pieces, &UploadPieceJob{PieceId: uint32(i)})
 	}
 	return &UploadJob{
