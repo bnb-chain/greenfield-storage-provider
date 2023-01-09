@@ -8,11 +8,12 @@ import (
 
 // piece store errors
 var (
-	NotSupportedMethod    = errors.New("Not supported method")
-	NotSupportedDelimiter = errors.New("Not supported delimiter")
-	EmptyObjectKey        = errors.New("Object key cannot be empty")
-	EmptyMemoryObject     = errors.New("Memory object is empty")
-	BucketNotExisted      = errors.New("Bucket not existed")
+	NotSupportedMethod          = errors.New("not supported method")
+	NotSupportedDelimiter       = errors.New("not supported delimiter")
+	EmptyObjectKey              = errors.New("object key cannot be empty")
+	EmptyMemoryObject           = errors.New("memory object is empty")
+	BucketNotExisted            = errors.New("bucket not existed")
+	ErrNoPermissionAccessBucket = errors.New("no permission to access the bucket")
 
 	ErrInternalError    = errors.New("internal error")
 	ErrDuplicateBucket  = errors.New("duplicate bucket")

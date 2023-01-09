@@ -3,7 +3,7 @@ package stonenode
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"sync"
 	"sync/atomic"
 
@@ -295,7 +295,7 @@ func (node *StoneNodeService) UploadECPiece(ctx context.Context, segmentCount ui
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.Errorw("alloc stone from stone hub response code is not success", "error", err, "traceID", resp.GetTraceId())
-		return nil, fmt.Errorf(resp.GetErrMessage().GetErrMsg())
+		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	log.Infof("traceID: %s", resp.GetTraceId())
 	return resp, nil

@@ -11,7 +11,6 @@ import (
 
 	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
-
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -89,7 +88,7 @@ func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 			log.Info("Create bucket successfully!")
 			return nil
 		}
-		return fmt.Errorf("Check if you have the permission to access the bucket")
+		return merrors.ErrNoPermissionAccessBucket
 	}
 	log.Infof("HeadBucket succeeds in %s", store)
 	return nil

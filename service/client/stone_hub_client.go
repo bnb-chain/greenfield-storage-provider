@@ -10,12 +10,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-
-	"github.com/bnb-chain/inscription-storage-provider/util"
-
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
-
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/util"
+	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
 var ClientRpcTimeout = time.Second * 5
