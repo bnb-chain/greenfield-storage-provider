@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/inscription-storage-provider/mock"
-
 	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"

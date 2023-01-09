@@ -3,12 +3,22 @@ package uploader
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"sync/atomic"
 
+	"google.golang.org/grpc"
+
+	"github.com/bnb-chain/inscription-storage-provider/service/client"
+
+	"github.com/bnb-chain/inscription-storage-provider/mock"
+
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
-	"google.golang.org/grpc"
+)
+
+const (
+	ServiceNameUploader string = "UploaderService"
 )
 
 // Uploader respond to putObjectTx/putObject impl.
@@ -18,10 +28,10 @@ type Uploader struct {
 	running atomic.Bool
 
 	grpcServer  *grpc.Server
-	signer      *signerClient
-	stoneHub    *stoneHubClient
-	eventWaiter *eventClient
-	store       *storeClient
+	stoneHub    *client.StoneHubClient
+	signer      *mock.SignerServerMock
+	eventWaiter *mock.InscriptionChainMock
+	store       *client.StoreClient
 }
 
 // NewUploaderService return the uploader instance
@@ -32,31 +42,20 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 	)
 	u = &Uploader{
 		config: cfg,
-		name:   "Uploader",
+		name:   ServiceNameUploader,
 	}
-	u.signer = newSignerClient()
-	u.stoneHub = newStoneHubClient(&cfg.StoneHubConfig, cfg.StorageProvider)
-	u.eventWaiter = newEventClient()
-	if u.store, err = newStoreClient(&u.config.PieceStoreConfig); err != nil {
-		log.Warnw("failed to new store", "err", err)
+	stoneHub, err := client.NewStoneHubClient(cfg.StoneHubServiceAddress)
+	if err != nil {
 		return nil, err
 	}
-
-	level := log.DebugLevel
-	switch u.config.LogConfig.Level {
-	case "debug":
-		level = log.DebugLevel
-	case "info":
-		level = log.InfoLevel
-	case "warn":
-		level = log.WarnLevel
-	case "error":
-		level = log.ErrorLevel
-	default:
-		level = log.InfoLevel
+	store, err := client.NewStoreClient(&cfg.PieceStoreConfig)
+	if err != nil {
+		return nil, err
 	}
-	log.Init(level, u.config.LogConfig.FilePath)
-	log.Infow("uploader succeed to init")
+	u.stoneHub = stoneHub
+	u.store = store
+	u.eventWaiter = mock.NewInscriptionChainMock()
+	u.signer = mock.NewSignerServerMock(u.eventWaiter)
 	return u, err
 }
 
@@ -70,14 +69,16 @@ func (u *Uploader) Start(ctx context.Context) error {
 	if u.running.Swap(true) {
 		return errors.New("uploader has started")
 	}
-	go u.Serve()
-	log.Info("uploader succeed to start")
-	return nil
+	errCh := make(chan error)
+	go u.serve(errCh)
+	err := <-errCh
+	return err
 }
 
 // Serve starts grpc service.
-func (u *Uploader) Serve() {
+func (u *Uploader) serve(errCh chan error) {
 	lis, err := net.Listen("tcp", u.config.Address)
+	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "err", err)
 		return
@@ -92,11 +93,17 @@ func (u *Uploader) Serve() {
 }
 
 // Stop implement the lifecycle interface
-func (g *Uploader) Stop(ctx context.Context) error {
-	if !g.running.Swap(false) {
+func (u *Uploader) Stop(ctx context.Context) error {
+	if !u.running.Swap(false) {
 		return errors.New("uploader has stopped")
 	}
-	g.grpcServer.GracefulStop()
-	log.Info("uploader succeed to stop")
+	u.grpcServer.GracefulStop()
+	var errs []error
+	if err := u.stoneHub.Close(); err != nil {
+		errs = append(errs, err)
+	}
+	if errs != nil {
+		return fmt.Errorf("%v", errs)
+	}
 	return nil
 }

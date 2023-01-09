@@ -20,11 +20,13 @@ type ChainEvent struct {
 
 // InscriptionChainMock mock the inscription chain
 type InscriptionChainMock struct {
-	object   map[string]*types.ObjectInfo
-	events   map[string][]chan interface{}
-	notifyCh chan *ChainEvent
-	stopCh   chan struct{}
-	mu       sync.Mutex
+	object       map[string]*types.ObjectInfo
+	events       map[string][]chan interface{}
+	notifyCh     chan *ChainEvent
+	stopCh       chan struct{}
+	objectID     uint64
+	objectHeight uint64
+	mu           sync.Mutex
 }
 
 // NewInscriptionChainMock return the InscriptionChainMock instance
@@ -86,7 +88,12 @@ func (cli *InscriptionChainMock) QueryObjectByTx(txHash []byte) (*types.ObjectIn
 func (cli *InscriptionChainMock) CreateObjectByTxHash(txHash []byte, object *types.ObjectInfo) {
 	cli.mu.Lock()
 	defer cli.mu.Unlock()
+	cli.objectID++
+	cli.objectHeight++
+
 	object.TxHash = txHash
+	object.ObjectId = cli.objectID
+	object.Height = cli.objectHeight
 	cli.object[string(txHash)] = object
 	cli.notifyCh <- &ChainEvent{
 		EventType: CreateObject,

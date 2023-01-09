@@ -1,14 +1,23 @@
 package uploader
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"sync"
+	"time"
 
+	"github.com/bnb-chain/inscription-storage-provider/mock"
 	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
+	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	pbService "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util/hash"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
+)
+
+var (
+	CreateObjectTimeout = time.Second * 5
 )
 
 // uploaderImpl is a grpc server handler implement.
@@ -17,38 +26,61 @@ type uploaderImpl struct {
 	uploader *Uploader
 }
 
-// CreateObject handle grpc CreateObject request, include steps:
-// 1.co-sign object tx by signerService;
-// 2.register object job meta by stoneHub;
-// 3.await co-sign object tx to on-chain;
-// 4.update object job meta(tx's block height) by stoneHub.
+// CreateObject handle grpc CreateObject request, send create object tx to chain
 func (ui *uploaderImpl) CreateObject(ctx context.Context, req *pbService.UploaderServiceCreateObjectRequest) (resp *pbService.UploaderServiceCreateObjectResponse, err error) {
-	var (
-		txHash   []byte
-		height   uint64
-		objectID uint64
-	)
-
-	resp = &pbService.UploaderServiceCreateObjectResponse{}
+	ctx = log.Context(ctx, req)
+	resp = &pbService.UploaderServiceCreateObjectResponse{TraceId: req.GetTraceId()}
 	defer func(r *pbService.UploaderServiceCreateObjectResponse, err error) {
 		if err != nil {
 			r.ErrMessage.ErrCode = pbService.ErrCode_ERR_CODE_ERROR
 			r.ErrMessage.ErrMsg = err.Error()
+			log.CtxErrorw(ctx, "create object failed", "error", err)
 		}
-		log.Infow("create object tx", "response", resp, "error", err)
+		log.CtxInfow(ctx, "create object success")
 	}(resp, err)
 
-	if txHash, err = ui.uploader.signer.coSignTx(ctx, req); err != nil {
-		return resp, err
+	// TODO:: 1. query object from inscription chain
+	// 2. send create object tx to inscription chain
+	txHash := ui.uploader.signer.BroadcastCreateObjectMessage(req.ObjectInfo)
+	// 3.1 subscribe inscription chain create object event
+	createObjectCh := ui.uploader.eventWaiter.SubscribeEvent(mock.CreateObject)
+	// 3.2 register the object info to stone hub
+	if _, err = ui.uploader.stoneHub.CreateObject(ctx, &pbService.StoneHubServiceCreateObjectRequest{
+		TxHash:     txHash,
+		ObjectInfo: req.ObjectInfo,
+	}); err != nil {
+		return
 	}
-	if err = ui.uploader.stoneHub.registerJobMeta(ctx, req, txHash); err != nil {
-		return resp, err
+	// 3.3 wait create object tx to inscription chain
+	createObjectTimer := time.After(CreateObjectTimeout)
+	var objectInfo *types.ObjectInfo
+	for {
+		if objectInfo != nil {
+			break
+		}
+		select {
+		case event := <-createObjectCh:
+			chainEvent := event.(mock.ChainEvent)
+			object := chainEvent.Event.(*types.ObjectInfo)
+			if bytes.Equal(object.TxHash, txHash) {
+				objectInfo = object
+			}
+		case <-createObjectTimer:
+			err = errors.New("creat object to chain timeout")
+			return
+		}
 	}
-	if height, objectID, err = ui.uploader.eventWaiter.waitChainEvent(txHash); err != nil {
-		return resp, err
+	if objectInfo == nil {
+		err = errors.New("creat object to chain failed")
+		return
 	}
-	if err = ui.uploader.stoneHub.updateJobMeta(txHash, height, objectID); err != nil {
-		return resp, err
+	// 4. update object height and object id to stone hub
+	if _, err = ui.uploader.stoneHub.SetObjectCreateInfo(ctx, &pbService.StoneHubServiceSetObjectCreateInfoRequest{
+		TxHash:   txHash,
+		TxHeight: objectInfo.Height,
+		ObjectId: objectInfo.ObjectId,
+	}); err != nil {
+		return
 	}
 	resp.TxHash = txHash
 	return resp, err
@@ -68,6 +100,7 @@ func (ui *uploaderImpl) UploadPayload(stream pbService.UploaderService_UploadPay
 		resp      pbService.UploaderServiceUploadPayloadResponse
 		waitDone  = make(chan bool)
 		errChan   = make(chan error)
+		ctx       = context.Background()
 	)
 	defer func(resp *pbService.UploaderServiceUploadPayloadResponse, err error) {
 		if err != nil {
@@ -86,7 +119,7 @@ func (ui *uploaderImpl) UploadPayload(stream pbService.UploaderService_UploadPay
 			if !ok {
 				return
 			}
-			if jm, err = ui.uploader.stoneHub.fetchJobMeta(txHash); err != nil {
+			if jm, err = ui.fetchJobMeta(ctx, txHash); err != nil {
 				errChan <- err
 				return
 			}
@@ -98,13 +131,13 @@ func (ui *uploaderImpl) UploadPayload(stream pbService.UploaderService_UploadPay
 					// has uploaded, and skip.
 					return
 				}
-				pieceKey := piecestore.EncodeSegmentPieceKey(jm.objectID, segPiece.Index)
-				if err := ui.uploader.store.putPiece(pieceKey, segPiece.PieceData); err != nil {
+				pieceKey := piecestore.EncodeSegmentPieceKey(jm.objectID, int(segPiece.Index))
+				if err := ui.uploader.store.PutPiece(pieceKey, segPiece.PieceData); err != nil {
 					errChan <- err
 					return
 				}
 				checksum := hash.GenerateChecksum(segPiece.PieceData)
-				if err := ui.uploader.stoneHub.reportJobProgress(jm, segPiece.Index, checksum); err != nil {
+				if err := ui.reportJobProgress(ctx, jm, segPiece.Index, checksum); err != nil {
 					errChan <- err
 					return
 				}
@@ -132,4 +165,64 @@ func (ui *uploaderImpl) UploadPayload(stream pbService.UploaderService_UploadPay
 		log.Warnw("failed to upload", "err", err)
 		return
 	}
+}
+
+// JobMeta is Job Context, got from stone hub.
+type JobMeta struct {
+	objectID      uint64
+	toUploadedIDs map[uint32]bool
+	txHash        []byte
+	pieceJob      *pbService.PieceJob
+	done          bool
+}
+
+// fetchJobMeta fetch job meta from stone hub.
+func (ui *uploaderImpl) fetchJobMeta(ctx context.Context, txHash []byte) (*JobMeta, error) {
+	resp, err := ui.uploader.stoneHub.BeginUploadPayload(ctx, &pbService.StoneHubServiceBeginUploadPayloadRequest{
+		TxHash: txHash,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp.GetPieceJob() == nil {
+		return nil, errors.New("stone dispatch piece job is nil")
+	}
+	if resp.GetPrimaryDone() {
+
+	}
+	jm := &JobMeta{
+		objectID:      resp.GetPieceJob().GetObjectId(),
+		pieceJob:      resp.GetPieceJob(),
+		done:          resp.GetPrimaryDone(),
+		txHash:        txHash,
+		toUploadedIDs: make(map[uint32]bool),
+	}
+	if targetIdx := resp.PieceJob.GetTargetIdx(); targetIdx != nil {
+		for idx := range targetIdx {
+			jm.toUploadedIDs[uint32(idx)] = true
+		}
+	}
+	return jm, err
+}
+
+// reportJobProgress report done piece index to stone hub.
+func (ui *uploaderImpl) reportJobProgress(ctx context.Context, jm *JobMeta, uploadID uint32, checkSum []byte) error {
+	var (
+		req        *pbService.StoneHubServiceDonePrimaryPieceJobRequest
+		spSealInfo *pbService.StorageProviderSealInfo
+	)
+	spSealInfo = &pbService.StorageProviderSealInfo{
+		StorageProviderId: ui.uploader.config.StorageProvider,
+		PieceIdx:          uploadID,
+		PieceChecksum:     [][]byte{checkSum},
+	}
+	req = &pbService.StoneHubServiceDonePrimaryPieceJobRequest{
+		TxHash:   jm.txHash,
+		PieceJob: jm.pieceJob,
+	}
+	req.PieceJob.StorageProviderSealInfo = spSealInfo
+	if _, err := ui.uploader.stoneHub.DonePrimaryPieceJob(ctx, req); err != nil {
+		return err
+	}
+	return nil
 }

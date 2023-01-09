@@ -21,14 +21,17 @@ import (
 func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, allocResp *service.StoneHubServiceAllocStoneJobResponse) error {
 	// TBD:: check secondarySPs count by redundancyType.
 	// EC_TYPE need EC_M + EC_K + backup
-	// REPLICA_TYPE and INLINE_TYPE need segments
+	// REPLICA_TYPE and INLINE_TYPE need segments count + backup
 	secondarySPs := mock.AllocUploadSecondarySP()
+
+	// 1. load all segments data from primary piece store and do ec or not
 	pieceData, err := node.loadSegmentsData(ctx, allocResp)
 	if err != nil {
 		node.reportErrToStoneHub(ctx, allocResp, err)
 		return err
 	}
 
+	// 2. dispatch the piece data to different secondary
 	redundancyType := allocResp.GetPieceJob().GetRedundancyType()
 	secondaryPieceData, err := node.dispatchSecondarySP(pieceData, redundancyType, secondarySPs)
 	if err != nil {
@@ -36,6 +39,7 @@ func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, allocR
 		return err
 	}
 
+	// 3. send piece data to the secondary
 	node.doSyncToSecondarySP(ctx, allocResp, secondaryPieceData)
 	return nil
 }
@@ -68,10 +72,9 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		case <-interruptCh:
 			break
 		default:
-			data, err := node.store.getPiece(ctx, seg.pieceKey, 0, 0)
+			data, err := node.store.GetPiece(ctx, segment.pieceKey, 0, 0)
 			if err != nil {
-				log.CtxErrorw(ctx, "stone node gets segment data from piece store failed", "error", err,
-					"piece key", seg.pieceKey)
+				log.CtxErrorw(ctx, "gets segment data from piece store failed", "error", err, "piece key", segment.pieceKey)
 				return err
 			}
 			seg.segmentData = data
@@ -84,9 +87,9 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		case <-interruptCh:
 			break
 		default:
-			pieceData, err := node.spiltSegmentData(ctx, redundancyType, seg.segmentData)
+			pieceData, err := node.generatePieceData(redundancyType, segment.segmentData)
 			if err != nil {
-				log.CtxErrorw(ctx, "stone node ec failed", "error", err, "piece key", seg.pieceKey)
+				log.CtxErrorw(ctx, "ec encode failed", "error", err, "piece key", segment.pieceKey)
 				return err
 			}
 			seg.pieceData = pieceData
@@ -132,57 +135,50 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 }
 
 // spiltSegmentData spilt segment data into pieces data.
-func (node *StoneNodeService) spiltSegmentData(ctx context.Context, redundancyType ptypes.RedundancyType,
-	segmentData []byte) ([][]byte, error) {
-	var (
-		pieceData [][]byte
-		err       error
-	)
+func (node *StoneNodeService) generatePieceData(redundancyType ptypes.RedundancyType, segmentData []byte) (pieceData [][]byte, err error) {
 	switch redundancyType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		pieceData, err = redundancy.EncodeRawSegment(segmentData)
 		if err != nil {
-			log.CtxErrorw(ctx, "ec encode failed", "error", err)
-			return pieceData, err
+			return
 		}
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		pieceData = append(pieceData, segmentData)
 	default:
 		return nil, merrors.ErrRedundancyType
 	}
-	return pieceData, nil
+	return
 }
 
 // dispatchSecondarySP dispatch piece data to secondary storage provider.
-func (node *StoneNodeService) dispatchSecondarySP(pieceData map[string][][]byte, redundancyType ptypes.RedundancyType,
-	secondarySPs []string) (map[string]map[string][]byte, error) {
-	var secondaryPieceData map[string]map[string][]byte
-	for pieceKey, pData := range pieceData {
-		for idx, data := range pData {
+func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string][][]byte, redundancyType ptypes.RedundancyType, secondarySPs []string) (map[string]map[string][]byte, error) {
+	var pieceDataBySecondary map[string]map[string][]byte
+	for pieceKey, pieceData := range pieceDataBySegment {
+		for idx, data := range pieceData {
 			if idx >= len(secondarySPs) {
-				return secondaryPieceData, merrors.ErrSecondarySPNumber
+				return pieceDataBySecondary, errors.New("secondary sp is not enough")
 			}
+			sp := secondarySPs[idx]
 			if redundancyType == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
-				if _, ok := secondaryPieceData[secondarySPs[idx]]; !ok {
-					secondaryPieceData[secondarySPs[idx]] = make(map[string][]byte)
+				if _, ok := pieceDataBySecondary[sp]; !ok {
+					pieceDataBySecondary[sp] = make(map[string][]byte)
 				}
 				key := piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, idx)
-				secondaryPieceData[secondarySPs[idx]][key] = data
-			} else if redundancyType == ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE ||
-				redundancyType == ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
-				if _, ok := secondaryPieceData[secondarySPs[idx]]; !ok {
-					secondaryPieceData[secondarySPs[idx]] = make(map[string][]byte)
+				pieceDataBySecondary[sp][key] = data
+			} else {
+				if _, ok := pieceDataBySecondary[sp]; !ok {
+					pieceDataBySecondary[sp] = make(map[string][]byte)
 				}
-				secondaryPieceData[secondarySPs[idx]][pieceKey] = data
+				pieceDataBySecondary[sp][pieceKey] = data
 			}
 		}
 	}
-	return secondaryPieceData, nil
+	return pieceDataBySecondary, nil
 }
 
 // doSyncToSecondarySP send piece data to the secondary.
 func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *service.StoneHubServiceAllocStoneJobResponse,
-	secondaryPieceData map[string]map[string][]byte) error {
+	pieceDataBySecondary map[string]map[string][]byte) error {
 	var (
 		objectID       = resp.GetPieceJob().GetObjectId()
 		payloadSize    = resp.GetPieceJob().GetPayloadSize()
@@ -190,7 +186,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 		segmentCount   = util.ComputeSegmentCount(payloadSize)
 		txHash         = resp.GetTxHash()
 	)
-	for secondary, pieceData := range secondaryPieceData {
+	for secondary, pieceData := range pieceDataBySecondary {
 		go func(secondary string, pieceData map[string][]byte) {
 			errMsg := &service.ErrMessage{}
 			pieceJob := &service.PieceJob{
@@ -201,17 +197,22 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				PayloadSize:    payloadSize,
 				RedundancyType: redundancyType,
 			}
-
 			defer func() {
 				// notify stone hub when an ec segment is done
-				if err := node.DoneSecondaryPieceJob(ctx, resp.TraceId, pieceJob, errMsg); err != nil {
+				req := &service.StoneHubServiceDoneSecondaryPieceJobRequest{
+					TraceId:    resp.TraceId,
+					TxHash:     pieceJob.GetTxHash(),
+					PieceJob:   pieceJob,
+					ErrMessage: errMsg,
+				}
+				// TBD:: according to the secondary to pick up the address
+				if _, err := node.stoneHub.DoneSecondaryPieceJob(ctx, req); err != nil {
 					log.CtxErrorw(ctx, "done secondary piece job to stone hub failed", "error", err)
 					return
 				}
 				log.CtxInfow(ctx, "upload secondary piece job secondary", "secondary sp", secondary)
 			}()
-
-			syncResp, err := node.UploadECPiece(ctx, int(segmentCount), &service.SyncerInfo{
+			syncResp, err := node.UploadECPiece(ctx, segmentCount, &service.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
 				StorageProviderId: secondary,
@@ -251,27 +252,48 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *ser
 	if reportErr == nil {
 		return
 	}
-	var (
-		objectID       = resp.GetPieceJob().GetObjectId()
-		payloadSize    = resp.GetPieceJob().GetPayloadSize()
-		redundancyType = resp.GetPieceJob().GetRedundancyType()
-		txHash         = resp.GetTxHash()
-	)
-	pieceJob := &service.PieceJob{
-		BucketName:     resp.GetPieceJob().GetBucketName(),
-		ObjectName:     resp.GetPieceJob().GetObjectName(),
-		TxHash:         txHash,
-		ObjectId:       objectID,
-		PayloadSize:    payloadSize,
-		RedundancyType: redundancyType,
+	req := &service.StoneHubServiceDoneSecondaryPieceJobRequest{
+		TraceId: resp.TraceId,
+		TxHash:  resp.GetTxHash(),
+		ErrMessage: &service.ErrMessage{
+			ErrCode: service.ErrCode_ERR_CODE_ERROR,
+			ErrMsg:  reportErr.Error(),
+		},
 	}
-	errMsg := &service.ErrMessage{
-		ErrCode: service.ErrCode_ERR_CODE_ERROR,
-		ErrMsg:  reportErr.Error(),
-	}
-	if err := node.DoneSecondaryPieceJob(ctx, resp.TraceId, pieceJob, errMsg); err != nil {
+	if _, err := node.stoneHub.DoneSecondaryPieceJob(ctx, req); err != nil {
 		log.CtxErrorw(ctx, "report stone hub err msg failed", "error", err)
 		return
 	}
 	log.CtxInfow(ctx, "report stone hub err msg success")
+}
+
+// UploadECPiece send rpc request to secondary storage provider to sync the peice data.
+func (node *StoneNodeService) UploadECPiece(ctx context.Context, segmentCount int, sInfo *service.SyncerInfo,
+	pieceData map[string][]byte, traceID string) (*service.SyncerServiceUploadECPieceResponse, error) {
+	stream, err := node.syncer.UploadECPiece(ctx)
+	if err != nil {
+		log.Errorw("upload secondary job piece job error", "err", err)
+		return nil, err
+	}
+	for i := 0; i < segmentCount; i++ {
+		if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
+			TraceId:    traceID,
+			SyncerInfo: sInfo,
+			PieceData:  pieceData,
+		}); err != nil {
+			log.Errorw("client send request error", "error", err)
+			return nil, err
+		}
+	}
+	resp, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Errorw("client close error", "error", err, "traceID", resp.GetTraceId())
+		return nil, err
+	}
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		log.Errorw("alloc stone from stone hub response code is not success", "error", err, "traceID", resp.GetTraceId())
+		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+	}
+	log.Infof("traceID: %s", resp.GetTraceId())
+	return resp, nil
 }
