@@ -1,10 +1,11 @@
-package jobdb
+package jobmemory
 
 import (
 	"errors"
 	"sync"
 
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
 )
 
 // MemJobDB is a memory db, maintains job, object and piece job table.
@@ -12,8 +13,8 @@ type MemJobDB struct {
 	JobCount               uint64
 	JobTable               map[uint64]types.JobContext
 	ObjectTable            map[string]types.ObjectInfo
-	PrimaryPieceJobTable   map[string]map[uint32]PieceJob
-	SecondaryPieceJobTable map[string]map[uint32]PieceJob
+	PrimaryPieceJobTable   map[string]map[uint32]jobdb.PieceJob
+	SecondaryPieceJobTable map[string]map[uint32]jobdb.PieceJob
 	mu                     sync.RWMutex
 }
 
@@ -23,8 +24,8 @@ func NewMemJobDB() *MemJobDB {
 		JobCount:               0,
 		JobTable:               make(map[uint64]types.JobContext),
 		ObjectTable:            make(map[string]types.ObjectInfo),
-		PrimaryPieceJobTable:   make(map[string]map[uint32]PieceJob),
-		SecondaryPieceJobTable: make(map[string]map[uint32]PieceJob),
+		PrimaryPieceJobTable:   make(map[string]map[uint32]jobdb.PieceJob),
+		SecondaryPieceJobTable: make(map[string]map[uint32]jobdb.PieceJob),
 	}
 }
 
@@ -120,13 +121,13 @@ func (db *MemJobDB) SetUploadPayloadJobJobError(jobId uint64, state string, jobE
 }
 
 // GetPrimaryJob returns the primary piece jobs by create object transaction hash.
-func (db *MemJobDB) GetPrimaryJob(txHash []byte) ([]*PieceJob, error) {
+func (db *MemJobDB) GetPrimaryJob(txHash []byte) ([]*jobdb.PieceJob, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	if _, ok := db.PrimaryPieceJobTable[string(txHash)]; !ok {
-		return []*PieceJob{}, nil
+		return []*jobdb.PieceJob{}, nil
 	}
-	pieces := make([]*PieceJob, len(db.PrimaryPieceJobTable[string(txHash)]))
+	pieces := make([]*jobdb.PieceJob, len(db.PrimaryPieceJobTable[string(txHash)]))
 	for idx, job := range db.PrimaryPieceJobTable[string(txHash)] {
 		pieces[idx] = &job
 	}
@@ -134,13 +135,13 @@ func (db *MemJobDB) GetPrimaryJob(txHash []byte) ([]*PieceJob, error) {
 }
 
 // GetSecondaryJob returns the secondary piece jobs by create object transaction hash.
-func (db *MemJobDB) GetSecondaryJob(txHash []byte) ([]*PieceJob, error) {
+func (db *MemJobDB) GetSecondaryJob(txHash []byte) ([]*jobdb.PieceJob, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	if _, ok := db.SecondaryPieceJobTable[string(txHash)]; !ok {
-		return []*PieceJob{}, nil
+		return []*jobdb.PieceJob{}, nil
 	}
-	pieces := make([]*PieceJob, len(db.SecondaryPieceJobTable[string(txHash)]))
+	pieces := make([]*jobdb.PieceJob, len(db.SecondaryPieceJobTable[string(txHash)]))
 	for idx, job := range db.SecondaryPieceJobTable[string(txHash)] {
 		pieces[idx] = &job
 	}
@@ -148,22 +149,22 @@ func (db *MemJobDB) GetSecondaryJob(txHash []byte) ([]*PieceJob, error) {
 }
 
 // SetPrimaryPieceJobDone set one primary piece job is completed.
-func (db *MemJobDB) SetPrimaryPieceJobDone(txHash []byte, piece *PieceJob) error {
+func (db *MemJobDB) SetPrimaryPieceJobDone(txHash []byte, piece *jobdb.PieceJob) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	if _, ok := db.PrimaryPieceJobTable[string(txHash)]; !ok {
-		db.PrimaryPieceJobTable[string(txHash)] = make(map[uint32]PieceJob)
+		db.PrimaryPieceJobTable[string(txHash)] = make(map[uint32]jobdb.PieceJob)
 	}
 	db.PrimaryPieceJobTable[string(txHash)][piece.PieceId] = *piece
 	return nil
 }
 
 // SetSecondaryPieceJobDone set one secondary piece job is completed.
-func (db *MemJobDB) SetSecondaryPieceJobDone(txHash []byte, piece *PieceJob) error {
+func (db *MemJobDB) SetSecondaryPieceJobDone(txHash []byte, piece *jobdb.PieceJob) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	if _, ok := db.SecondaryPieceJobTable[string(txHash)]; !ok {
-		db.SecondaryPieceJobTable[string(txHash)] = make(map[uint32]PieceJob)
+		db.SecondaryPieceJobTable[string(txHash)] = make(map[uint32]jobdb.PieceJob)
 	}
 	db.SecondaryPieceJobTable[string(txHash)][piece.PieceId] = *piece
 	return nil

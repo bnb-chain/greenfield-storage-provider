@@ -1,4 +1,4 @@
-package jobdb
+package jobsql
 
 import (
 	"fmt"
@@ -7,15 +7,18 @@ import (
 	"gorm.io/gorm"
 
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
 )
+
+var _ jobdb.JobDB = &JobMetaImpl{}
 
 // JobMetaImpl is an implement of JobDB interface
 type JobMetaImpl struct {
 	db *gorm.DB
 }
 
-func NewJobMetaImpl() (*JobMetaImpl, error) {
-	db, err := InitDB(DefaultDBOption)
+func NewJobMetaImpl(option *DBOption) (*JobMetaImpl, error) {
+	db, err := InitDB(option)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +217,7 @@ func (jmi *JobMetaImpl) SetUploadPayloadJobJobError(jobID uint64, jobState strin
 }
 
 // SetPrimaryPieceJobDone create primary DBPieceJob record.
-func (jmi *JobMetaImpl) SetPrimaryPieceJobDone(txHash []byte, pj *PieceJob) error {
+func (jmi *JobMetaImpl) SetPrimaryPieceJobDone(txHash []byte, pj *jobdb.PieceJob) error {
 	var (
 		result               *gorm.DB
 		insertPieceJobRecord *DBPieceJob
@@ -238,11 +241,11 @@ func (jmi *JobMetaImpl) SetPrimaryPieceJobDone(txHash []byte, pj *PieceJob) erro
 }
 
 // GetPrimaryJob query DBPieceJob by txHash and primary type, and convert to PieceJob.
-func (jmi *JobMetaImpl) GetPrimaryJob(txHash []byte) ([]*PieceJob, error) {
+func (jmi *JobMetaImpl) GetPrimaryJob(txHash []byte) ([]*jobdb.PieceJob, error) {
 	var (
 		result       *gorm.DB
 		queryReturns []DBPieceJob
-		pieceJobs    []*PieceJob
+		pieceJobs    []*jobdb.PieceJob
 	)
 
 	result = jmi.db.
@@ -252,7 +255,7 @@ func (jmi *JobMetaImpl) GetPrimaryJob(txHash []byte) ([]*PieceJob, error) {
 		return pieceJobs, fmt.Errorf("select primary piece jobs failed, %s", result.Error)
 	}
 	for _, job := range queryReturns {
-		pieceJobs = append(pieceJobs, &PieceJob{
+		pieceJobs = append(pieceJobs, &jobdb.PieceJob{
 			PieceId:         job.PieceIdx,
 			Checksum:        [][]byte{[]byte(job.IntegrityHash)},
 			StorageProvider: job.StorageProvider})
@@ -261,7 +264,7 @@ func (jmi *JobMetaImpl) GetPrimaryJob(txHash []byte) ([]*PieceJob, error) {
 }
 
 // SetSecondaryPieceJobDone create secondary DBPieceJob record.
-func (jmi *JobMetaImpl) SetSecondaryPieceJobDone(txHash []byte, pj *PieceJob) error {
+func (jmi *JobMetaImpl) SetSecondaryPieceJobDone(txHash []byte, pj *jobdb.PieceJob) error {
 	var (
 		result               *gorm.DB
 		insertPieceJobRecord *DBPieceJob
@@ -285,11 +288,11 @@ func (jmi *JobMetaImpl) SetSecondaryPieceJobDone(txHash []byte, pj *PieceJob) er
 }
 
 // GetSecondaryJob query DBPieceJob by txHash and secondary type, and convert to PieceJob.
-func (jmi *JobMetaImpl) GetSecondaryJob(txHash []byte) ([]*PieceJob, error) {
+func (jmi *JobMetaImpl) GetSecondaryJob(txHash []byte) ([]*jobdb.PieceJob, error) {
 	var (
 		result       *gorm.DB
 		queryReturns []DBPieceJob
-		pieceJobs    []*PieceJob
+		pieceJobs    []*jobdb.PieceJob
 	)
 
 	result = jmi.db.
@@ -299,10 +302,16 @@ func (jmi *JobMetaImpl) GetSecondaryJob(txHash []byte) ([]*PieceJob, error) {
 		return pieceJobs, fmt.Errorf("select secondary piece jobs failed, %s", result.Error)
 	}
 	for _, job := range queryReturns {
-		pieceJobs = append(pieceJobs, &PieceJob{
+		pieceJobs = append(pieceJobs, &jobdb.PieceJob{
 			PieceId:         job.PieceIdx,
 			Checksum:        [][]byte{[]byte(job.IntegrityHash)},
 			StorageProvider: job.StorageProvider})
 	}
 	return pieceJobs, nil
+}
+
+// SetObjectCreateHeightAndObjectID set object height and id
+func (jmi *JobMetaImpl) SetObjectCreateHeightAndObjectID(txHash []byte, height uint64, objectID uint64) error {
+	//TODO implement me
+	panic("implement me")
 }

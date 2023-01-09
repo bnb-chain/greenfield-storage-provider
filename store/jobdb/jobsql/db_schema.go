@@ -1,4 +1,4 @@
-package jobdb
+package jobsql
 
 import (
 	"fmt"
@@ -76,7 +76,7 @@ var DefaultDBOption = &DBOption{
 	User:     "root",
 	Passwd:   "test_pwd",
 	Address:  "127.0.0.1:3306",
-	Database: "bfs_meta",
+	Database: "job_context",
 }
 
 func InitDB(opt *DBOption) (*gorm.DB, error) {
