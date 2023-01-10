@@ -13,3 +13,9 @@ const (
 	ChecksumAlgo = "Crc32c"
 	OctetStream  = "application/octet-stream"
 )
+
+var (
+	MemoryDB string = "memory"
+	MySqlDB  string = "MySql"
+	LevelDB  string = "leveldb"
+)

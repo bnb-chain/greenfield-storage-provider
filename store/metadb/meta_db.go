@@ -19,4 +19,6 @@ type MetaDB interface {
 	SetIntegrityMeta(meta *IntegrityMeta) error
 	// GetIntegrityMeta return the integrity hash info
 	GetIntegrityMeta(objectID uint64) (*IntegrityMeta, error)
+	// Close the low level db
+	Close() error
 }

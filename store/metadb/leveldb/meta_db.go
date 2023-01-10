@@ -99,6 +99,9 @@ func (db *Database) GetIntegrityMeta(objectID uint64) (*metadb.IntegrityMeta, er
 	if err != nil {
 		return nil, err
 	}
+	if len(data) == 0 {
+		return nil, errors.New("integrity info not exits")
+	}
 	var meta metadb.IntegrityMeta
 	err = json.Unmarshal(data, &meta)
 	return &meta, err
