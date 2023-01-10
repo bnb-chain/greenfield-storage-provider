@@ -8,9 +8,10 @@ import (
 	context "context"
 	reflect "reflect"
 
-	v1 "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	gomock "github.com/golang/mock/gomock"
 	grpc "google.golang.org/grpc"
+
+	v1 "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 )
 
 // MockStoneHubAPI is a mock of StoneHubAPI interface.
@@ -151,14 +152,14 @@ func (mr *MockStoneHubAPIMockRecorder) DoneSecondaryPieceJob(ctx, in interface{}
 }
 
 // SetObjectCreateInfo mocks base method.
-func (m *MockStoneHubAPI) SetObjectCreateInfo(ctx context.Context, in *v1.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*v1.StoneHubServiceSetSetObjectCreateInfoResponse, error) {
+func (m *MockStoneHubAPI) SetObjectCreateInfo(ctx context.Context, in *v1.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*v1.StoneHubServiceSetObjectCreateInfoResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SetObjectCreateInfo", varargs...)
-	ret0, _ := ret[0].(*v1.StoneHubServiceSetSetObjectCreateInfoResponse)
+	ret0, _ := ret[0].(*v1.StoneHubServiceSetObjectCreateInfoResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
