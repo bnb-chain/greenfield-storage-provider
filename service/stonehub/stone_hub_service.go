@@ -58,9 +58,9 @@ func (hub *StoneHub) CreateObject(ctx context.Context, req *service.StoneHubServ
 }
 
 // SetObjectCreateInfo set CreateObjectTX the height and object resource id on the inscription chain
-func (hub *StoneHub) SetObjectCreateInfo(ctx context.Context, req *service.StoneHubServiceSetObjectCreateInfoRequest) (*service.StoneHubServiceSetSetObjectCreateInfoResponse, error) {
+func (hub *StoneHub) SetObjectCreateInfo(ctx context.Context, req *service.StoneHubServiceSetObjectCreateInfoRequest) (*service.StoneHubServiceSetObjectCreateInfoResponse, error) {
 	ctx = log.Context(ctx, req)
-	rsp := &service.StoneHubServiceSetSetObjectCreateInfoResponse{TraceId: req.TraceId}
+	rsp := &service.StoneHubServiceSetObjectCreateInfoResponse{TraceId: req.TraceId}
 	if len(req.TxHash) != hash.LengthHash {
 		rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrTxHash)
 		log.CtxErrorw(ctx, "hash format error")

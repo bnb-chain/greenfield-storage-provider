@@ -54,7 +54,7 @@ func (client *StoneHubClient) CreateObject(ctx context.Context, in *service.Ston
 	return resp, nil
 }
 
-func (client *StoneHubClient) SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*service.StoneHubServiceSetSetObjectCreateInfoResponse, error) {
+func (client *StoneHubClient) SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*service.StoneHubServiceSetObjectCreateInfoResponse, error) {
 	resp, err := client.stoneHub.SetObjectCreateInfo(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {

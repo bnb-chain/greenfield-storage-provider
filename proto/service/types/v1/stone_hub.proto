@@ -24,7 +24,7 @@ message StoneHubServiceSetObjectCreateInfoRequest {
   uint64 object_id = 4;
 }
 
-message StoneHubServiceSetSetObjectCreateInfoResponse {
+message StoneHubServiceSetObjectCreateInfoResponse {
   string trace_id = 1;
   ErrMessage err_message = 2;
 }
@@ -110,7 +110,7 @@ message StoneHubServiceQueryStoneResponse {
 
 service StoneHubService {
   rpc CreateObject(StoneHubServiceCreateObjectRequest) returns (StoneHubServiceCreateObjectResponse) {};
-  rpc SetObjectCreateInfo(StoneHubServiceSetObjectCreateInfoRequest) returns (StoneHubServiceSetSetObjectCreateInfoResponse) {};
+  rpc SetObjectCreateInfo(StoneHubServiceSetObjectCreateInfoRequest) returns (StoneHubServiceSetObjectCreateInfoResponse) {};
   rpc BeginUploadPayload(StoneHubServiceBeginUploadPayloadRequest) returns (StoneHubServiceBeginUploadPayloadResponse) {};
   rpc DonePrimaryPieceJob(StoneHubServiceDonePrimaryPieceJobRequest) returns (StoneHubServiceDonePrimaryPieceJobResponse) {};
   rpc AllocStoneJob(StoneHubServiceAllocStoneJobRequest) returns (StoneHubServiceAllocStoneJobResponse) {};
