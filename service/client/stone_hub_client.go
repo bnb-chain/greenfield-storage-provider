@@ -15,9 +15,23 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
-var ClientRpcTimeout = time.Second * 5
+var ClientRPCTimeout = time.Second * 5
 
 var _ io.Closer = &StoneHubClient{}
+
+// StoneHubAPI provides an interface to enable mocking the
+// StoneHubClient's API operation. This makes unit test to test your code easier.
+//
+//go:generate mockgen -source=./stone_hub_client.go -destination=./mock/stone_hub_mock.go -package=mock
+type StoneHubAPI interface {
+	CreateObject(ctx context.Context, in *service.StoneHubServiceCreateObjectRequest, opts ...grpc.CallOption) (*service.StoneHubServiceCreateObjectResponse, error)
+	SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*service.StoneHubServiceSetSetObjectCreateInfoResponse, error)
+	BeginUploadPayload(ctx context.Context, in *service.StoneHubServiceBeginUploadPayloadRequest, opts ...grpc.CallOption) (*service.StoneHubServiceBeginUploadPayloadResponse, error)
+	DonePrimaryPieceJob(ctx context.Context, in *service.StoneHubServiceDonePrimaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDonePrimaryPieceJobResponse, error)
+	AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (*service.StoneHubServiceAllocStoneJobResponse, error)
+	DoneSecondaryPieceJob(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDoneSecondaryPieceJobResponse, error)
+	Close() error
+}
 
 type StoneHubClient struct {
 	address  string
@@ -26,7 +40,7 @@ type StoneHubClient struct {
 }
 
 func NewStoneHubClient(address string) (*StoneHubClient, error) {
-	ctx, _ := context.WithTimeout(context.Background(), ClientRpcTimeout)
+	ctx, _ := context.WithTimeout(context.Background(), ClientRPCTimeout)
 	conn, err := grpc.DialContext(ctx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Errorw("invoke stoneHub service grpc.DialContext failed", "error", err)
@@ -40,7 +54,8 @@ func NewStoneHubClient(address string) (*StoneHubClient, error) {
 	return client, nil
 }
 
-func (client *StoneHubClient) CreateObject(ctx context.Context, in *service.StoneHubServiceCreateObjectRequest, opts ...grpc.CallOption) (*service.StoneHubServiceCreateObjectResponse, error) {
+func (client *StoneHubClient) CreateObject(ctx context.Context, in *service.StoneHubServiceCreateObjectRequest,
+	opts ...grpc.CallOption) (*service.StoneHubServiceCreateObjectResponse, error) {
 	resp, err := client.stoneHub.CreateObject(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -54,7 +69,8 @@ func (client *StoneHubClient) CreateObject(ctx context.Context, in *service.Ston
 	return resp, nil
 }
 
-func (client *StoneHubClient) SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*service.StoneHubServiceSetSetObjectCreateInfoResponse, error) {
+func (client *StoneHubClient) SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest,
+	opts ...grpc.CallOption) (*service.StoneHubServiceSetSetObjectCreateInfoResponse, error) {
 	resp, err := client.stoneHub.SetObjectCreateInfo(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -68,7 +84,8 @@ func (client *StoneHubClient) SetObjectCreateInfo(ctx context.Context, in *servi
 	return resp, nil
 }
 
-func (client *StoneHubClient) BeginUploadPayload(ctx context.Context, in *service.StoneHubServiceBeginUploadPayloadRequest, opts ...grpc.CallOption) (*service.StoneHubServiceBeginUploadPayloadResponse, error) {
+func (client *StoneHubClient) BeginUploadPayload(ctx context.Context, in *service.StoneHubServiceBeginUploadPayloadRequest,
+	opts ...grpc.CallOption) (*service.StoneHubServiceBeginUploadPayloadResponse, error) {
 	resp, err := client.stoneHub.BeginUploadPayload(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -82,7 +99,8 @@ func (client *StoneHubClient) BeginUploadPayload(ctx context.Context, in *servic
 	return resp, nil
 }
 
-func (client *StoneHubClient) DonePrimaryPieceJob(ctx context.Context, in *service.StoneHubServiceDonePrimaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDonePrimaryPieceJobResponse, error) {
+func (client *StoneHubClient) DonePrimaryPieceJob(ctx context.Context, in *service.StoneHubServiceDonePrimaryPieceJobRequest,
+	opts ...grpc.CallOption) (*service.StoneHubServiceDonePrimaryPieceJobResponse, error) {
 	resp, err := client.stoneHub.DonePrimaryPieceJob(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -96,7 +114,8 @@ func (client *StoneHubClient) DonePrimaryPieceJob(ctx context.Context, in *servi
 	return resp, nil
 }
 
-func (client *StoneHubClient) AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (*service.StoneHubServiceAllocStoneJobResponse, error) {
+func (client *StoneHubClient) AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (
+	*service.StoneHubServiceAllocStoneJobResponse, error) {
 	req := &service.StoneHubServiceAllocStoneJobRequest{TraceId: util.GenerateRequestID()}
 	resp, err := client.stoneHub.AllocStoneJob(ctx, req, opts...)
 	ctx = log.Context(ctx, resp)
@@ -115,7 +134,8 @@ func (client *StoneHubClient) AllocStoneJob(ctx context.Context, opts ...grpc.Ca
 	return resp, nil
 }
 
-func (client *StoneHubClient) DoneSecondaryPieceJob(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
+func (client *StoneHubClient) DoneSecondaryPieceJob(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest,
+	opts ...grpc.CallOption) (*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
 	resp, err := client.stoneHub.DoneSecondaryPieceJob(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
