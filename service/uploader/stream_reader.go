@@ -14,6 +14,11 @@ type streamReader struct {
 	pw      *io.PipeWriter
 	txHash  []byte
 	traceID string
+
+	// Temporary fields
+	bucket string
+	object string
+	size   uint64
 }
 
 // newStreamReader is used to stream read UploaderService_UploadPayloadServer.
@@ -42,6 +47,46 @@ func newStreamReader(stream pbService.UploaderService_UploadPayloadServer, ch ch
 			if sr.txHash == nil {
 				sr.txHash = req.TxHash
 				sr.traceID = req.TraceId
+				ch <- req.TxHash
+			}
+			sr.pw.Write(req.PayloadData)
+		}
+	}()
+	return sr
+}
+
+// newStreamReaderV2 is used to stream read UploaderService_UploadPayloadV2Server.
+func newStreamReaderV2(stream pbService.UploaderService_UploadPayloadV2Server, ch chan []byte) *streamReader {
+	var sr = &streamReader{}
+	sr.pr, sr.pw = io.Pipe()
+	go func() {
+		for {
+			req, err := stream.Recv()
+			if err == io.EOF {
+				if sr.txHash == nil {
+					sr.txHash = req.TxHash
+					sr.traceID = req.TraceId
+					sr.bucket = req.BucketName
+					sr.object = req.ObjectName
+					sr.size = req.ObjectSize
+					ch <- req.TxHash
+				}
+				sr.pw.Close()
+				return
+			}
+			if err != nil {
+				if sr.txHash == nil {
+					close(ch)
+				}
+				sr.pw.CloseWithError(err)
+				return
+			}
+			if sr.txHash == nil {
+				sr.txHash = req.TxHash
+				sr.traceID = req.TraceId
+				sr.bucket = req.BucketName
+				sr.object = req.ObjectName
+				sr.size = req.ObjectSize
 				ch <- req.TxHash
 			}
 			sr.pw.Write(req.PayloadData)

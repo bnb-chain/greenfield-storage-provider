@@ -14,12 +14,16 @@ var (
 	EmptyMemoryObject           = errors.New("memory object is empty")
 	BucketNotExisted            = errors.New("bucket not existed")
 	ErrNoPermissionAccessBucket = errors.New("no permission to access the bucket")
+)
 
+// gateway errors
+var (
 	ErrInternalError    = errors.New("internal error")
 	ErrDuplicateBucket  = errors.New("duplicate bucket")
 	ErrDuplicateObject  = errors.New("duplicate object")
 	ErrObjectTxNotExist = errors.New("object tx not exist")
 	ErrObjectNotExist   = errors.New("object not exist")
+	ErrObjectIsEmpty    = errors.New("object payload is empty")
 )
 
 // stone hub service errors

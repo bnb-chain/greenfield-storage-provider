@@ -7,6 +7,8 @@ import (
 	"net"
 	"sync/atomic"
 
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/inscription-storage-provider/service/client"
@@ -32,6 +34,7 @@ type Uploader struct {
 	signer      *mock.SignerServerMock
 	eventWaiter *mock.InscriptionChainMock
 	store       *client.StoreClient
+	metaDB      metadb.MetaDB // store auth info
 }
 
 // NewUploaderService return the uploader instance
@@ -57,7 +60,19 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 	u.eventWaiter = mock.NewInscriptionChainMock()
 	u.signer = mock.NewSignerServerMock(u.eventWaiter)
 	u.eventWaiter.Start()
+	if err := u.initDB(cfg.MetaDBConfig); err != nil {
+		return nil, err
+	}
 	return u, err
+}
+
+func (u *Uploader) initDB(config *leveldb.MetaLevelDBConfig) (err error) {
+	u.metaDB, err = leveldb.NewMetaDB(config)
+	if err != nil {
+		log.Errorw("failed to init metaDB", "err", err)
+		return err
+	}
+	return nil
 }
 
 // Name implement the lifecycle interface

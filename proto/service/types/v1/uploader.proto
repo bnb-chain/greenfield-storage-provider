@@ -37,11 +37,25 @@ message UploaderServiceUploadPayloadResponse {
   ErrMessage err_message = 2;
 }
 
+message UploaderServiceUploadPayloadV2Request {
+  string trace_id = 1;
+  bytes tx_hash = 2;
+  string bucket_name = 3;  // Temporary field
+  string object_name = 4;  // Temporary field
+  uint64 object_size = 5;  // Temporary field
+  uint64 job_id = 6;
+  bytes payload_data = 7;
+}
+
+message UploaderServiceUploadPayloadV2Response {
+  string trace_id = 1;
+  ErrMessage err_message = 2;
+}
+
 message UploaderServiceGetAuthenticationRequest {
   string trace_id = 1;
-  // resource = bucket + object
-  string bucket = 2;
-  string object = 3; // optional
+  string bucket = 2;  // resource = bucket + object, object is optional
+  string object = 3;
   string action = 4;
 }
 
@@ -55,5 +69,5 @@ service UploaderService {
   rpc CreateObject(UploaderServiceCreateObjectRequest) returns (UploaderServiceCreateObjectResponse) {};
   rpc UploadPayload(stream UploaderServiceUploadPayloadRequest) returns (UploaderServiceUploadPayloadResponse) {};
   rpc GetAuthentication(UploaderServiceGetAuthenticationRequest) returns (UploaderServiceGetAuthenticationResponse) {};
-  rpc UploadPayloadV2(stream UploaderServiceUploadPayloadRequest) returns (UploaderServiceUploadPayloadResponse) {};
+  rpc UploadPayloadV2(stream UploaderServiceUploadPayloadV2Request) returns (UploaderServiceUploadPayloadV2Response) {};
 }

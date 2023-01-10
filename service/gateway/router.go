@@ -13,8 +13,8 @@ import (
 func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	s, _ := ioutil.ReadAll(r.Body)
 	log.Warnw("not found handler", "header", r.Header, "host", r.Host, "url", r.URL)
+	w.WriteHeader(404)
 	w.Write(s)
-
 }
 
 // registerhandler is used to register mux handlers.
@@ -50,14 +50,21 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	// admin router, path style.
-	adminRouter := r.PathPrefix(AdminPath).Subrouter()
-	adminRouter.NewRoute().
+	/*
+		adminRouter := r.PathPrefix(AdminPath).Subrouter()
+		adminRouter.NewRoute().
+			Name("GetAuthentication").
+			Path(GetApprovalSubPath).
+			Methods(http.MethodGet).
+			Queries(ActionQuery, "{action}").
+			HandlerFunc(g.getAuthenticationHandler)
+		adminRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
+	*/
+	r.Path("/greenfield/admin/v1/get-approval").
 		Name("GetAuthentication").
-		Path(GetApprovalSubPath).
 		Methods(http.MethodGet).
 		Queries(ActionQuery, "{action}").
 		HandlerFunc(g.getAuthenticationHandler)
-	adminRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }

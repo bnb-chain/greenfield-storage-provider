@@ -250,23 +250,28 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// todo
 	txHash, err := hex.DecodeString(reqCtx.r.Header.Get(BFSTransactionHashHeader))
 	if err != nil {
 		errorDescription = InvalidTxHash
 		return
 	}
 
-	// todo: check tx format
+	sizeStr := reqCtx.r.Header.Get(ContentLengthHeader)
+	sizeInt, _ := strconv.Atoi(sizeStr)
 	opt = &putObjectOption{
 		reqCtx: reqCtx,
 		txHash: txHash,
+		size:   uint64(sizeInt),
 	}
 
 	info, err := g.uploadProcesser.putObjectV2(reqCtx.object, r.Body, opt)
 	if err != nil {
 		if err == errors.ErrObjectTxNotExist {
 			errorDescription = ObjectTxNotFound
+			return
+		}
+		if err == errors.ErrObjectIsEmpty {
+			errorDescription = InvalidPayload
 			return
 		}
 		// else common.ErrInternalError
