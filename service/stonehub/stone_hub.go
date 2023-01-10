@@ -13,6 +13,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/bnb-chain/inscription-storage-provider/model"
+
 	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
 
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobsql"
@@ -91,9 +93,9 @@ func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
 // initDB init job, meta, etc. db instance
 func (hub *StoneHub) initDB() (err error) {
 	switch hub.config.JobDBType {
-	case MemoryDB:
+	case model.MemoryDB:
 		hub.jobDB = jobmemory.NewMemJobDB()
-	case MySqlDB:
+	case model.MySqlDB:
 		// TODO:: add mysql db
 		if hub.config.JobDB == nil {
 			hub.config.JobDB = DefaultStoneHubConfig.JobDB
@@ -107,7 +109,7 @@ func (hub *StoneHub) initDB() (err error) {
 	}
 
 	switch hub.config.MetaDBType {
-	case LevelDB:
+	case model.LevelDB:
 		// TODO:: add leveldb, temporarily replace with memory job db
 		if hub.config.MetaDB == nil {
 			hub.config.MetaDB = DefaultStoneHubConfig.MetaDB
@@ -147,6 +149,13 @@ func (hub *StoneHub) Stop(ctx context.Context) error {
 	hub.insCli.Stop()
 	close(hub.stopCH)
 	close(hub.stoneGC)
+	var errs []error
+	if err := hub.metaDB.Close(); err != nil {
+		errs = append(errs, err)
+	}
+	if errs != nil {
+		return fmt.Errorf("%v", errs)
+	}
 	return nil
 }
 
