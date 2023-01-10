@@ -1,0 +1,35 @@
+syntax = "proto3";
+package service.types.v1;
+import "service/types/v1/uploader.proto";
+option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
+
+message DownloaderServiceDownloaderObjectRequest {
+  string trace_id = 1;
+  uint64 object_id = 2;
+  uint64 object_size = 3;
+  uint64 offset = 4;
+  uint64 length = 5; // if length == 0, download all object data
+}
+
+message DownloaderServiceDownloaderObjectResponse {
+  string trace_id = 1;
+  bytes data = 2;
+  ErrMessage err_message = 9;
+}
+
+message DownloaderServiceDownloaderSegmentRequest {
+  string trace_id = 1;
+  uint64 object_id = 2;
+  uint32 segment_idx = 3;
+}
+
+message DownloaderServiceDownloaderSegmentResponse {
+  string trace_id = 1;
+  bytes data = 2;
+  ErrMessage err_message = 9;
+}
+
+service DownloaderService {
+  rpc DownloaderObject(DownloaderServiceDownloaderObjectRequest) returns (stream DownloaderServiceDownloaderObjectResponse) {};
+  rpc DownloaderSegment(DownloaderServiceDownloaderSegmentRequest) returns (DownloaderServiceDownloaderSegmentResponse) {};
+}

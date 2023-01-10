@@ -9,6 +9,7 @@ import (
 
 	"github.com/bnb-chain/inscription-storage-provider/config"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/inscription-storage-provider/service/challenge"
 	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
 	"github.com/bnb-chain/inscription-storage-provider/service/stonehub"
 	"github.com/bnb-chain/inscription-storage-provider/service/stonenode"
@@ -29,6 +30,7 @@ var (
 	UploaderService  = "Uploader"
 	StoneNodeService = "StoneNode"
 	SyncerService    = "Syncer"
+	ChallengeService = "Challenge"
 )
 
 // initService init service instance by name and config.
@@ -71,6 +73,14 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.SyncerCfg = config.DefaultStorageProviderConfig.SyncerCfg
 		}
 		server, err = syncer.NewSyncerService(cfg.SyncerCfg)
+		if err != nil {
+			return nil, err
+		}
+	case ChallengeService:
+		if cfg.ChallengeCfg == nil {
+			cfg.ChallengeCfg = config.DefaultStorageProviderConfig.ChallengeCfg
+		}
+		server, err = challenge.NewChallengeService(cfg.ChallengeCfg)
 		if err != nil {
 			return nil, err
 		}

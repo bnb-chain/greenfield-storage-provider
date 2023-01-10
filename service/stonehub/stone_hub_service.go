@@ -46,7 +46,7 @@ func (hub *StoneHub) CreateObject(ctx context.Context, req *service.StoneHubServ
 		log.CtxWarnw(ctx, "create object adjust to inline type", "object size", req.ObjectInfo.Size)
 		req.ObjectInfo.RedundancyType = types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
 	}
-	err := hub.jobDB.CreateUploadPayloadJob(req.TxHash, req.ObjectInfo)
+	_, err := hub.jobDB.CreateUploadPayloadJob(req.TxHash, req.ObjectInfo)
 	if err != nil {
 		// maybe query retrieve service
 		rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
@@ -58,9 +58,9 @@ func (hub *StoneHub) CreateObject(ctx context.Context, req *service.StoneHubServ
 }
 
 // SetObjectCreateInfo set CreateObjectTX the height and object resource id on the inscription chain
-func (hub *StoneHub) SetObjectCreateInfo(ctx context.Context, req *service.StoneHubServiceSetObjectCreateInfoRequest) (*service.StoneHubServiceSetSetObjectCreateInfoResponse, error) {
+func (hub *StoneHub) SetObjectCreateInfo(ctx context.Context, req *service.StoneHubServiceSetObjectCreateInfoRequest) (*service.StoneHubServiceSetObjectCreateInfoResponse, error) {
 	ctx = log.Context(ctx, req)
-	rsp := &service.StoneHubServiceSetSetObjectCreateInfoResponse{TraceId: req.TraceId}
+	rsp := &service.StoneHubServiceSetObjectCreateInfoResponse{TraceId: req.TraceId}
 	if len(req.TxHash) != hash.LengthHash {
 		rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrTxHash)
 		log.CtxErrorw(ctx, "hash format error")
@@ -135,7 +135,7 @@ func (hub *StoneHub) BeginUploadPayload(ctx context.Context, req *service.StoneH
 			log.CtxWarnw(ctx, "payload has uploaded")
 			return rsp, nil
 		}
-		err = hub.jobDB.CreateUploadPayloadJob(req.TxHash, objectInfo)
+		_, err = hub.jobDB.CreateUploadPayloadJob(req.TxHash, objectInfo)
 		if err != nil {
 			rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
 			log.CtxErrorw(ctx, "create upload payload job error", "error", err)
@@ -173,6 +173,74 @@ func (hub *StoneHub) BeginUploadPayload(ctx context.Context, req *service.StoneH
 	rsp.PieceJob = uploadStone.PopPendingPrimarySPJob()
 	log.CtxInfow(ctx, "begin upload payload success")
 	return rsp, nil
+}
+
+// BeginUploadPayloadV2 merge CreateObject, SetObjectCreateInfo and BeginUploadPayload, special for heavy client use.
+func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *service.StoneHubServiceBeginUploadPayloadV2Request) (resp *service.StoneHubServiceBeginUploadPayloadV2Response, err error) {
+	ctx = log.Context(ctx, req)
+	resp = &service.StoneHubServiceBeginUploadPayloadV2Response{
+		TraceId: req.TraceId,
+	}
+	defer func() {
+		if err != nil {
+			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
+		}
+		log.CtxInfow(ctx, "begin upload payload stone success")
+	}()
+	// 1. set object info to db
+	if req.ObjectInfo == nil {
+		err = merrors.ErrObjectInfo
+		return
+	}
+	if len(req.ObjectInfo.TxHash) != hash.LengthHash {
+		err = merrors.ErrTxHash
+		return
+	}
+	if req.ObjectInfo.Size == 0 {
+		err = merrors.ErrObjectSize
+		return
+	}
+	if req.ObjectInfo.ObjectId == 0 {
+		err = merrors.ErrObjectID
+		return
+	}
+	if req.ObjectInfo.Height == 0 {
+		err = merrors.ErrObjectCreateHeight
+		return
+	}
+	if req.ObjectInfo.JobId, err = hub.jobDB.CreateUploadPayloadJob(req.ObjectInfo.TxHash, req.ObjectInfo); err != nil {
+		return
+	}
+
+	// 2. begin upload payload stone
+	// 2.1 check the stone whether already running
+	if hub.HasStone(string(req.ObjectInfo.TxHash)) {
+		err = merrors.ErrUploadPayloadJobRunning
+		return
+	}
+	// 2.2 load the stone context from db
+	var jobCtx *types.JobContext
+	jobCtx, err = hub.jobDB.GetJobContext(req.ObjectInfo.JobId)
+	if err != nil {
+		return
+	}
+	// 2.3 create upload stone
+	var uploadStone *stone.UploadPayloadStone
+	uploadStone, err = stone.NewUploadPayloadStone(ctx, jobCtx, req.ObjectInfo, hub.jobDB, hub.metaDB, hub.jobCh, hub.stoneGC)
+	if err != nil {
+		return
+	}
+	if uploadStone.PrimarySPJobDone() {
+		log.CtxInfow(ctx, "upload primary storage provider has completed")
+		resp.PrimaryDone = true
+	}
+	if !hub.SetStoneExclude(uploadStone) {
+		err = merrors.ErrUploadPayloadJobRunning
+		return
+	}
+	resp.PieceJob = uploadStone.PopPendingPrimarySPJob()
+	log.CtxInfow(ctx, "begin upload payload success")
+	return resp, nil
 }
 
 // DonePrimaryPieceJob set the primary piece job completed state

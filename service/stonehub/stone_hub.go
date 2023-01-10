@@ -13,11 +13,18 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/bnb-chain/inscription-storage-provider/model"
+
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
+
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobsql"
+
 	"github.com/bnb-chain/inscription-storage-provider/mock"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobmemory"
 	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -84,23 +91,35 @@ func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
 }
 
 // initDB init job, meta, etc. db instance
-func (hub *StoneHub) initDB() error {
-	switch hub.config.JobDB {
-	case MemoryDB:
-		hub.jobDB = jobdb.NewMemJobDB()
-	case MySqlDB:
+func (hub *StoneHub) initDB() (err error) {
+	switch hub.config.JobDBType {
+	case model.MemoryDB:
+		hub.jobDB = jobmemory.NewMemJobDB()
+	case model.MySqlDB:
 		// TODO:: add mysql db
-		return errors.New("job db not support mysql db")
+		if hub.config.JobDB == nil {
+			hub.config.JobDB = DefaultStoneHubConfig.JobDB
+		}
+		hub.jobDB, err = jobsql.NewJobMetaImpl(hub.config.JobDB)
+		if err != nil {
+			return
+		}
 	default:
-		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.JobDB))
+		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.JobDBType))
 	}
 
-	switch hub.config.MetaDB {
-	case LevelDB:
+	switch hub.config.MetaDBType {
+	case model.LevelDB:
 		// TODO:: add leveldb, temporarily replace with memory job db
-		hub.metaDB = jobdb.NewMemJobDB()
+		if hub.config.MetaDB == nil {
+			hub.config.MetaDB = DefaultStoneHubConfig.MetaDB
+		}
+		hub.metaDB, err = leveldb.NewMetaDB(hub.config.MetaDB)
+		if err != nil {
+			return
+		}
 	default:
-		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.MetaDB))
+		return errors.New(fmt.Sprintf("job db not support type %s", hub.config.MetaDBType))
 	}
 	return nil
 }
@@ -130,6 +149,13 @@ func (hub *StoneHub) Stop(ctx context.Context) error {
 	hub.insCli.Stop()
 	close(hub.stopCH)
 	close(hub.stoneGC)
+	var errs []error
+	if err := hub.metaDB.Close(); err != nil {
+		errs = append(errs, err)
+	}
+	if errs != nil {
+		return fmt.Errorf("%v", errs)
+	}
 	return nil
 }
 

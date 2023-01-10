@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"encoding/hex"
 	"net/http"
 	"strconv"
 
@@ -63,7 +64,7 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 		checksum:    []byte(reqCtx.r.Header.Get(BFSChecksumHeader)),
 		isPrivate:   isPrivate,
 	}
-	info, err := g.uploader.putObjectTx(reqCtx.object, opt)
+	info, err := g.uploadProcesser.putObjectTx(reqCtx.object, opt)
 	if err != nil {
 		if err == errors.ErrDuplicateObject {
 			errorDescription = ObjectAlreadyExists
@@ -75,7 +76,7 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// succeed ack
 	w.Header().Set(BFSRequestIDHeader, reqCtx.requestID)
-	w.Header().Set(BFSTransactionHashHeader, info.txHash)
+	w.Header().Set(BFSTransactionHashHeader, hex.EncodeToString(info.txHash))
 }
 
 // putObjectHandler handle put object request, include steps:
@@ -122,13 +123,19 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = UnauthorizedAccess
 		return
 	}
-
-	opt = &putObjectOption{
-		reqCtx: reqCtx,
-		txHash: []byte(reqCtx.r.Header.Get(BFSTransactionHashHeader)),
+	txHash, err := hex.DecodeString(reqCtx.r.Header.Get(BFSTransactionHashHeader))
+	if err != nil {
+		errorDescription = InvalidTxHash
+		return
 	}
 
-	info, err := g.uploader.putObject(reqCtx.object, r.Body, opt)
+	// todo: check tx format
+	opt = &putObjectOption{
+		reqCtx: reqCtx,
+		txHash: txHash,
+	}
+
+	info, err := g.uploadProcesser.putObject(reqCtx.object, r.Body, opt)
 	if err != nil {
 		if err == errors.ErrObjectTxNotExist {
 			errorDescription = ObjectTxNotFound

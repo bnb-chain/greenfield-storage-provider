@@ -17,6 +17,7 @@ require (
 	github.com/oleiade/lane v1.0.1
 	github.com/pkg/sftp v1.13.5
 	github.com/stretchr/testify v1.8.1
+	github.com/syndtr/goleveldb v1.0.0
 	github.com/urfave/cli v1.22.10
 	github.com/viki-org/dnscache v0.0.0-20130720023526-c70c1f23c5d8
 	go.uber.org/multierr v1.9.0
@@ -32,6 +33,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect

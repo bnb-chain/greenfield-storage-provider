@@ -3,19 +3,19 @@ package stonehub
 import (
 	"crypto/sha256"
 	"encoding/hex"
-)
 
-var (
-	MemoryDB string = "memory"
-	MySqlDB  string = "MySql"
-	LevelDB  string = "leveldb"
+	"github.com/bnb-chain/inscription-storage-provider/model"
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobsql"
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
 )
 
 type StoneHubConfig struct {
 	StorageProvider string
 	Address         string
-	JobDB           string
-	MetaDB          string
+	JobDBType       string
+	JobDB           *jobsql.DBOption
+	MetaDBType      string
+	MetaDB          *leveldb.MetaLevelDBConfig
 }
 
 var DefaultStorageProvider = "bnb-sp"
@@ -29,6 +29,13 @@ func DefaultStorageProviderID() string {
 var DefaultStoneHubConfig = &StoneHubConfig{
 	StorageProvider: DefaultStorageProviderID(),
 	Address:         "127.0.0.1:5323",
-	JobDB:           MemoryDB,
-	MetaDB:          LevelDB,
+	JobDBType:       model.MemoryDB,
+	JobDB: &jobsql.DBOption{
+		User:     "root",
+		Passwd:   "bfs-test",
+		Address:  "127.0.0.1:3306",
+		Database: "job_context",
+	},
+	MetaDBType: model.LevelDB,
+	MetaDB:     leveldb.DefaultMetaLevelDBConfig,
 }

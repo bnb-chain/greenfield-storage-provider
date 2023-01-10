@@ -1,13 +1,9 @@
 package gateway
 
 type GatewayConfig struct {
-	Address   string
-	Domain    string
-	LogConfig struct {
-		FilePath string
-		Level    string
-	}
-	UploaderConfig   uploaderClientConfig
+	Address          string
+	Domain           string
+	UploaderConfig   uploadProcesserConfig
 	ChainConfig      chainClientConfig
 	DownloaderConfig downloaderClientConfig
 }
@@ -15,10 +11,6 @@ type GatewayConfig struct {
 var DefaultGatewayConfig = &GatewayConfig{
 	Address: "127.0.0.1:5310",
 	Domain:  "bfs.nodereal.com",
-	LogConfig: struct {
-		FilePath string
-		Level    string
-	}{FilePath: "./debug/gateway.log", Level: "info"},
 	UploaderConfig: struct {
 		Mode     string
 		DebugDir string
