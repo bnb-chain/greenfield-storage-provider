@@ -6,10 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/bnb-chain/inscription-storage-provider/util"
 	"github.com/gorilla/mux"
-
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
 // requestContext is a request context.
@@ -19,27 +17,39 @@ type requestContext struct {
 	object    string
 	r         *http.Request
 	startTime time.Time
-}
 
-// generateRequestID is used to generate requestID.
-func generateRequestID() (string, error) {
-	var uUID uuid.UUID
-	var err error
-	if uUID, err = uuid.NewRandom(); err != nil {
-		return "", err
-	}
-	return strings.ReplaceAll(uUID.String(), "-", ""), nil
+	// admin
+	action string
 }
 
 // newRequestContext return a request context.
 func newRequestContext(r *http.Request) *requestContext {
-	requestID, err := generateRequestID()
-	if err != nil {
-		log.Warnw("generate request id failed", "err", err)
-	}
 	vars := mux.Vars(r)
+	// admin router
+	if mux.CurrentRoute(r).GetName() == "GetAuthentication" {
+		var (
+			bucket string
+			object string
+		)
+		bucket = r.Header.Get(BFSResourceHeader)
+		fields := strings.Split(bucket, "/")
+		if len(fields) > 2 {
+			bucket = fields[0]
+			object = strings.Join(fields[1:], "/")
+		}
+		return &requestContext{
+			requestID: util.GenerateRequestID(),
+			bucket:    bucket,
+			object:    object,
+			action:    vars["action"],
+			r:         r,
+			startTime: time.Now(),
+		}
+	}
+
+	// bucket router
 	return &requestContext{
-		requestID: requestID,
+		requestID: util.GenerateRequestID(),
 		bucket:    vars["bucket"],
 		object:    vars["object"],
 		r:         r,

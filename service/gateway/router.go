@@ -19,13 +19,20 @@ func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 
 // registerhandler is used to register mux handlers.
 func (g *Gateway) registerhandler(r *mux.Router) {
+	// bucket router, virtual-hosted style
 	bucketRouter := r.Host("{bucket:.+}." + g.config.Domain).Subrouter()
 	bucketRouter.NewRoute().
 		Name("PutObject").
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
-		Queries("transaction", "").
+		Queries(TransactionQuery, "").
 		HandlerFunc(g.putObjectTxHandler)
+	bucketRouter.NewRoute().
+		Name("PutObject").
+		Methods(http.MethodPut).
+		Path("/{object:.+}").
+		Queries(PutObjectV2Query, "").
+		HandlerFunc(g.putObjectV2Handler)
 	bucketRouter.NewRoute().
 		Name("PutObject").
 		Methods(http.MethodPut).
@@ -41,5 +48,16 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		Path("/{object:.+}").
 		HandlerFunc(g.getObjectHandler)
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
+
+	// admin router, path style.
+	adminRouter := r.PathPrefix(AdminPath).Subrouter()
+	adminRouter.NewRoute().
+		Name("GetAuthentication").
+		Path(GetApprovalSubPath).
+		Methods(http.MethodGet).
+		Queries(ActionQuery, "{action}").
+		HandlerFunc(g.getAuthenticationHandler)
+	adminRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
+
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }

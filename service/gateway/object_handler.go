@@ -208,3 +208,71 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	return
 }
+
+// putObjectV2Handler handle put object request v2.
+func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err              error
+		errorDescription *errorDescription
+		reqCtx           *requestContext
+		opt              *putObjectOption
+	)
+
+	defer func() {
+		statusCode := 200
+		if errorDescription != nil {
+			statusCode = errorDescription.statusCode
+			_ = errorDescription.errorResponse(w, reqCtx)
+		}
+		if statusCode == 200 {
+			log.Infof("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(reqCtx))
+		} else {
+			log.Warnf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(reqCtx))
+		}
+	}()
+
+	reqCtx = newRequestContext(r)
+	if reqCtx.bucket == "" {
+		errorDescription = InvalidBucketName
+		return
+	}
+	if reqCtx.object == "" {
+		errorDescription = InvalidKey
+		return
+	}
+
+	if err := reqCtx.verifySign(); err != nil {
+		errorDescription = SignatureDoesNotMatch
+		return
+	}
+	if err := reqCtx.verifyAuth(g.retriever); err != nil {
+		errorDescription = UnauthorizedAccess
+		return
+	}
+
+	// todo
+	txHash, err := hex.DecodeString(reqCtx.r.Header.Get(BFSTransactionHashHeader))
+	if err != nil {
+		errorDescription = InvalidTxHash
+		return
+	}
+
+	// todo: check tx format
+	opt = &putObjectOption{
+		reqCtx: reqCtx,
+		txHash: txHash,
+	}
+
+	info, err := g.uploadProcesser.putObjectV2(reqCtx.object, r.Body, opt)
+	if err != nil {
+		if err == errors.ErrObjectTxNotExist {
+			errorDescription = ObjectTxNotFound
+			return
+		}
+		// else common.ErrInternalError
+		errorDescription = InternalError
+		return
+	}
+	w.Header().Set(BFSRequestIDHeader, reqCtx.requestID)
+	w.Header().Set(ETagHeader, info.eTag)
+}
