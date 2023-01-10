@@ -25,7 +25,7 @@ var _ io.Closer = &StoneHubClient{}
 //go:generate mockgen -source=./stone_hub_client.go -destination=./mock/stone_hub_mock.go -package=mock
 type StoneHubAPI interface {
 	CreateObject(ctx context.Context, in *service.StoneHubServiceCreateObjectRequest, opts ...grpc.CallOption) (*service.StoneHubServiceCreateObjectResponse, error)
-	SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*service.StoneHubServiceSetSetObjectCreateInfoResponse, error)
+	SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*service.StoneHubServiceSetObjectCreateInfoResponse, error)
 	BeginUploadPayload(ctx context.Context, in *service.StoneHubServiceBeginUploadPayloadRequest, opts ...grpc.CallOption) (*service.StoneHubServiceBeginUploadPayloadResponse, error)
 	DonePrimaryPieceJob(ctx context.Context, in *service.StoneHubServiceDonePrimaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDonePrimaryPieceJobResponse, error)
 	AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (*service.StoneHubServiceAllocStoneJobResponse, error)
@@ -70,7 +70,7 @@ func (client *StoneHubClient) CreateObject(ctx context.Context, in *service.Ston
 }
 
 func (client *StoneHubClient) SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest,
-	opts ...grpc.CallOption) (*service.StoneHubServiceSetSetObjectCreateInfoResponse, error) {
+	opts ...grpc.CallOption) (*service.StoneHubServiceSetObjectCreateInfoResponse, error) {
 	resp, err := client.stoneHub.SetObjectCreateInfo(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
