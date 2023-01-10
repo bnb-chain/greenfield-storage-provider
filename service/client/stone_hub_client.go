@@ -43,7 +43,7 @@ func NewStoneHubClient(address string) (*StoneHubClient, error) {
 	ctx, _ := context.WithTimeout(context.Background(), ClientRPCTimeout)
 	conn, err := grpc.DialContext(ctx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Errorw("invoke stoneHub service grpc.DialContext failed", "error", err)
+		log.Errorw("invoke stoneHub service dail failed", "error", err)
 		return nil, err
 	}
 	client := &StoneHubClient{

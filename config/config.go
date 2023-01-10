@@ -6,6 +6,8 @@ import (
 
 	"github.com/naoina/toml"
 
+	"github.com/bnb-chain/inscription-storage-provider/service/downloader"
+
 	"github.com/bnb-chain/inscription-storage-provider/service/challenge"
 	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
 	"github.com/bnb-chain/inscription-storage-provider/service/stonehub"
@@ -22,6 +24,7 @@ type StorageProviderConfig struct {
 	PieceStoreConfig *storage.PieceStoreConfig
 	GatewayCfg       *gateway.GatewayConfig
 	UploaderCfg      *uploader.UploaderConfig
+	DownloaderCfg    *downloader.DownloaderConfig
 	StoneNodeCfg     *stonenode.StoneNodeConfig
 	SyncerCfg        *syncer.SyncerConfig
 	ChallengeCfg     *challenge.ChallengeConfig
@@ -32,6 +35,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	PieceStoreConfig: storage.DefaultPieceStoreConfig,
 	GatewayCfg:       gateway.DefaultGatewayConfig,
 	UploaderCfg:      uploader.DefaultUploaderConfig,
+	DownloaderCfg:    downloader.DefaultDownloaderConfig,
 	StoneNodeCfg:     stonenode.DefaultStoneNodeConfig,
 	SyncerCfg:        syncer.DefaultSyncerConfig,
 	ChallengeCfg:     challenge.DefaultChallengeConfig,
