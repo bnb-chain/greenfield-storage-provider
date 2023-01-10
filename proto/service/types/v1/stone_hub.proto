@@ -60,6 +60,18 @@ message StoneHubServiceBeginUploadPayloadResponse {
   ErrMessage err_message = 4;
 }
 
+message StoneHubServiceBeginUploadPayloadV2Request {
+  string trace_id = 1;
+  bytes tx_hash = 2;
+  pkg.types.v1.ObjectInfo object_info = 3;
+}
+message StoneHubServiceBeginUploadPayloadV2Response {
+  string trace_id = 1;
+  bool primary_done = 2;
+  PieceJob piece_job = 3;
+  ErrMessage err_message = 4;
+}
+
 message StoneHubServiceDonePrimaryPieceJobRequest {
   string trace_id = 1;
   bytes tx_hash = 2;
@@ -112,6 +124,7 @@ service StoneHubService {
   rpc CreateObject(StoneHubServiceCreateObjectRequest) returns (StoneHubServiceCreateObjectResponse) {};
   rpc SetObjectCreateInfo(StoneHubServiceSetObjectCreateInfoRequest) returns (StoneHubServiceSetObjectCreateInfoResponse) {};
   rpc BeginUploadPayload(StoneHubServiceBeginUploadPayloadRequest) returns (StoneHubServiceBeginUploadPayloadResponse) {};
+  rpc BeginUploadPayloadV2(StoneHubServiceBeginUploadPayloadV2Request) returns (StoneHubServiceBeginUploadPayloadV2Response) {};
   rpc DonePrimaryPieceJob(StoneHubServiceDonePrimaryPieceJobRequest) returns (StoneHubServiceDonePrimaryPieceJobResponse) {};
   rpc AllocStoneJob(StoneHubServiceAllocStoneJobRequest) returns (StoneHubServiceAllocStoneJobResponse) {};
   rpc DoneSecondaryPieceJob(StoneHubServiceDoneSecondaryPieceJobRequest) returns (StoneHubServiceDoneSecondaryPieceJobResponse) {};
