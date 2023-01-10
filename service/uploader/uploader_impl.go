@@ -9,9 +9,11 @@ import (
 
 	"github.com/bnb-chain/inscription-storage-provider/mock"
 	"github.com/bnb-chain/inscription-storage-provider/model"
+	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	pbService "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
 	"github.com/bnb-chain/inscription-storage-provider/util/hash"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -233,4 +235,186 @@ func (ui *uploaderImpl) reportJobProgress(ctx context.Context, jm *JobMeta, uplo
 		return err
 	}
 	return nil
+}
+
+// GetAuthentication get auth info, currently is mock.
+func (ui *uploaderImpl) GetAuthentication(ctx context.Context, req *pbService.UploaderServiceGetAuthenticationRequest) (resp *pbService.UploaderServiceGetAuthenticationResponse, err error) {
+	defer func() {
+		if err != nil {
+			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
+			log.CtxErrorw(ctx, "failed to get authentication", "err", err)
+		} else {
+			log.CtxInfow(ctx, "succeed to get authentication")
+		}
+	}()
+
+	resp = &pbService.UploaderServiceGetAuthenticationResponse{TraceId: req.TraceId}
+	meta := &metadb.UploadPayloadAskingMeta{
+		BucketName: req.Bucket,
+		ObjectName: req.Object,
+		Timeout:    time.Now().Unix() + 3600,
+	}
+	if err = ui.uploader.metaDB.SetUploadPayloadAskingMeta(meta); err != nil {
+		log.Errorw("failed to insert metaDB")
+		return
+	}
+	// mock
+	resp.PreSignature = hash.GenerateChecksum([]byte(time.Now().String()))
+	_ = ui.uploader.signer.BroadcastCreateObjectMessage(&types.ObjectInfo{
+		Owner:          "",
+		BucketName:     req.Bucket,
+		ObjectName:     req.Object,
+		Size:           0,
+		Checksum:       nil,
+		IsPrivate:      false,
+		ContentType:    "",
+		PrimarySp:      nil,
+		JobId:          0,
+		Height:         0,
+		TxHash:         nil,
+		ObjectId:       0,
+		RedundancyType: 0,
+		SecondarySps:   nil,
+	})
+	return resp, nil
+}
+
+// UploadPayloadV2 merge CreateObject, SetObjectCreateInfo and BeginUploadPayload, special for heavy client use.
+func (ui *uploaderImpl) UploadPayloadV2(stream pbService.UploaderService_UploadPayloadV2Server) (err error) {
+	var (
+		txChan    = make(chan []byte)
+		pieceChan = make(chan *SegmentContext, 500)
+		wg        sync.WaitGroup
+		resp      pbService.UploaderServiceUploadPayloadResponse
+		waitDone  = make(chan bool)
+		errChan   = make(chan error)
+		ctx       = context.Background()
+		sr        *streamReader
+	)
+	defer func(resp *pbService.UploaderServiceUploadPayloadResponse, err error) {
+		if err != nil {
+			resp.ErrMessage.ErrCode = pbService.ErrCode_ERR_CODE_ERROR
+			resp.ErrMessage.ErrMsg = err.Error()
+		}
+		err = stream.SendAndClose(resp)
+		log.Infow("upload object payload v2", "response", resp, "error", err)
+	}(&resp, err)
+
+	// fetch job meta, concurrently write payload's segments and report progresses.
+	go func() {
+		var jm *JobMeta
+		select {
+		case txHash, ok := <-txChan:
+			if !ok {
+				return
+			}
+			// todo: move logic to a func; checkAndPrepareMeta
+			// get object info
+			createObjectCh := ui.uploader.eventWaiter.SubscribeEvent(mock.CreateObject)
+			createObjectTimer := time.After(CreateObjectTimeout)
+			var objectInfo *types.ObjectInfo
+			select {
+			case event := <-createObjectCh:
+				objectInfo = event.(*types.ObjectInfo)
+				break
+			case <-createObjectTimer:
+				err = errors.New("create object to chain timeout")
+				errChan <- err
+				return
+			}
+			objectInfo.TxHash = txHash
+			// check object info
+			meta, err := ui.uploader.metaDB.GetUploadPayloadAskingMeta(objectInfo.BucketName, objectInfo.ObjectName)
+			if err != nil {
+				log.Errorw("failed to query metaDB")
+				errChan <- err
+				return
+			}
+			if time.Now().Unix() > meta.Timeout {
+				err = errors.New("auth info has timeout")
+				errChan <- err
+				return
+			}
+			// begin upload
+			ctx := context.WithValue(ctx, "traceID", sr.traceID)
+			if jm, err = ui.fetchJobMetaV2(ctx, objectInfo); err != nil {
+				errChan <- err
+				return
+			}
+		}
+		for piece := range pieceChan {
+			go func(segPiece *SegmentContext) {
+				defer wg.Done()
+
+				if _, ok := jm.toUploadedIDs[segPiece.Index]; !ok {
+					// has uploaded, and skip.
+					return
+				}
+
+				pieceKey := piecestore.EncodeSegmentPieceKey(jm.objectID, segPiece.Index)
+				if err := ui.uploader.store.PutPiece(pieceKey, segPiece.PieceData); err != nil {
+					errChan <- err
+					return
+				}
+				checksum := hash.GenerateChecksum(segPiece.PieceData)
+				ctx := context.WithValue(ctx, "traceID", sr.traceID)
+				if err := ui.reportJobProgress(ctx, jm, segPiece.Index, checksum); err != nil {
+					errChan <- err
+					return
+				}
+			}(piece)
+		}
+	}()
+
+	// stream read and split segments
+	sr = newStreamReader(stream, txChan)
+	err = sr.splitSegment(model.SegmentSize, pieceChan, &wg)
+	if err != nil {
+		return
+	}
+
+	go func() {
+		wg.Wait()
+		close(waitDone)
+	}()
+
+	select {
+	case <-waitDone:
+		log.Info("succeed to upload")
+		return
+	case err = <-errChan:
+		log.Warnw("failed to upload", "err", err)
+		return
+	}
+}
+
+// fetchJobMeta fetch job meta from stone hub.
+func (ui *uploaderImpl) fetchJobMetaV2(ctx context.Context, objectInfo *types.ObjectInfo) (*JobMeta, error) {
+	traceID, _ := ctx.Value("traceID").(string)
+	resp, err := ui.uploader.stoneHub.BeginUploadPayloadV2(ctx, &pbService.StoneHubServiceBeginUploadPayloadV2Request{
+		TraceId:    traceID,
+		ObjectInfo: objectInfo,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp.GetPieceJob() == nil {
+		return nil, errors.New("stone dispatch piece job is nil")
+	}
+	if resp.GetPrimaryDone() {
+
+	}
+	jm := &JobMeta{
+		objectID:      resp.GetPieceJob().GetObjectId(),
+		pieceJob:      resp.GetPieceJob(),
+		done:          resp.GetPrimaryDone(),
+		txHash:        objectInfo.TxHash,
+		toUploadedIDs: make(map[uint32]bool),
+	}
+	if targetIdx := resp.PieceJob.GetTargetIdx(); targetIdx != nil {
+		for idx := range targetIdx {
+			jm.toUploadedIDs[uint32(idx)] = true
+		}
+	}
+	return jm, err
 }

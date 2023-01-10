@@ -40,9 +40,8 @@ type putObjectOption struct {
 
 // objectInfo is the return of putObject.
 type objectInfo struct {
-	size         uint64
-	eTag         string
-	preSignature []byte
+	size uint64
+	eTag string
 }
 
 // uploaderClientInterface define interface to upload object. BFS upload process is divided into two stages:

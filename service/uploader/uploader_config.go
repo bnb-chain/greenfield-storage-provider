@@ -1,12 +1,16 @@
 package uploader
 
-import "github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
+import (
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
+	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
+)
 
 type UploaderConfig struct {
 	StorageProvider        string
 	Address                string
 	StoneHubServiceAddress string
 	PieceStoreConfig       storage.PieceStoreConfig
+	MetaDBConfig           *leveldb.MetaLevelDBConfig
 }
 
 var DefaultUploaderConfig = &UploaderConfig{
@@ -27,4 +31,5 @@ var DefaultUploaderConfig = &UploaderConfig{
 		MinRetryDelay:         0,
 		TlsInsecureSkipVerify: false,
 	}},
+	MetaDBConfig: leveldb.DefaultMetaLevelDBConfig,
 }
