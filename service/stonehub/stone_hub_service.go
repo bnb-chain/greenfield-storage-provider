@@ -175,6 +175,11 @@ func (hub *StoneHub) BeginUploadPayload(ctx context.Context, req *service.StoneH
 	return rsp, nil
 }
 
+// BeginUploadPayloadV2 merge CreateObject, SetObjectCreateInfo and BeginUploadPayload, special for heavy client use.
+func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *service.StoneHubServiceBeginUploadPayloadV2Request) (*service.StoneHubServiceBeginUploadPayloadV2Response, error) {
+	return nil, nil
+}
+
 // DonePrimaryPieceJob set the primary piece job completed state
 func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context, req *service.StoneHubServiceDonePrimaryPieceJobRequest) (*service.StoneHubServiceDonePrimaryPieceJobResponse, error) {
 	ctx = log.Context(ctx, req)

@@ -21,6 +21,8 @@ const (
 	minHandles = 16
 )
 
+var _ metadb.MetaDB = &Database{}
+
 // Database is a persistent key-value store.
 type Database struct {
 	Path      string
@@ -103,6 +105,32 @@ func (db *Database) GetIntegrityMeta(objectID uint64) (*metadb.IntegrityMeta, er
 		return nil, errors.New("integrity info not exits")
 	}
 	var meta metadb.IntegrityMeta
+	err = json.Unmarshal(data, &meta)
+	return &meta, err
+}
+
+// SetUploadPayloadAskingMeta put payload asking info to db.
+func (db *Database) SetUploadPayloadAskingMeta(meta *metadb.UploadPayloadAskingMeta) error {
+	if meta == nil {
+		return errors.New("upload payload meta is nil")
+	}
+	data, err := json.Marshal(meta)
+	if err != nil {
+		return err
+	}
+	return db.db.Put(UploadPayloadAsingKey(db.Namespace, meta.BucketName, meta.ObjectName), data, nil)
+}
+
+// GetUploadPayloadAskingMeta return the payload asking info.
+func (db *Database) GetUploadPayloadAskingMeta(bucket, object string) (*metadb.UploadPayloadAskingMeta, error) {
+	data, err := db.db.Get(UploadPayloadAsingKey(db.Namespace, bucket, object), nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) == 0 {
+		return nil, errors.New("upload payload meta not exits")
+	}
+	var meta metadb.UploadPayloadAskingMeta
 	err = json.Unmarshal(data, &meta)
 	return &meta, err
 }
