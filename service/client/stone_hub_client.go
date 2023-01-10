@@ -82,6 +82,20 @@ func (client *StoneHubClient) BeginUploadPayload(ctx context.Context, in *servic
 	return resp, nil
 }
 
+func (client *StoneHubClient) BeginUploadPayloadV2(ctx context.Context, in *service.StoneHubServiceBeginUploadPayloadV2Request, opts ...grpc.CallOption) (*service.StoneHubServiceBeginUploadPayloadV2Response, error) {
+	resp, err := client.stoneHub.BeginUploadPayloadV2(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "begin upload stone failed", "error", err)
+		return nil, err
+	}
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		log.CtxErrorw(ctx, "begin upload stone response code is not success", "error", resp.GetErrMessage().GetErrMsg())
+		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+	}
+	return resp, nil
+}
+
 func (client *StoneHubClient) DonePrimaryPieceJob(ctx context.Context, in *service.StoneHubServiceDonePrimaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDonePrimaryPieceJobResponse, error) {
 	resp, err := client.stoneHub.DonePrimaryPieceJob(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)

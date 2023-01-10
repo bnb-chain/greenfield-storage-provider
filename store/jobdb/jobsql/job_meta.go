@@ -27,7 +27,7 @@ func NewJobMetaImpl(option *DBOption) (*JobMetaImpl, error) {
 }
 
 // CreateUploadPayloadJob create DBJob record and DBObject record, Use JobID field for association.
-func (jmi *JobMetaImpl) CreateUploadPayloadJob(txHash []byte, info *types.ObjectInfo) error {
+func (jmi *JobMetaImpl) CreateUploadPayloadJob(txHash []byte, info *types.ObjectInfo) (uint64, error) {
 	var (
 		result             *gorm.DB
 		insertJobRecord    *DBJob
@@ -36,13 +36,13 @@ func (jmi *JobMetaImpl) CreateUploadPayloadJob(txHash []byte, info *types.Object
 
 	insertJobRecord = &DBJob{
 		JobType:    uint32(types.JobType_JOB_TYPE_CREATE_OBJECT),
-		JobState:   uint32(types.JobState_JOB_STATE_CREATE_OBJECT_INIT),
+		JobState:   uint32(types.JobState_JOB_STATE_CREATE_OBJECT_DONE),
 		CreateTime: time.Now(),
 		ModifyTime: time.Now(),
 	}
 	result = jmi.db.Create(insertJobRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("insert job record failed, %s", result.Error)
+		return 0, fmt.Errorf("insert job record failed, %s", result.Error)
 	}
 	insertObjectRecord = &DBObject{
 		CreateHash:     hex.EncodeToString(txHash),
@@ -58,9 +58,9 @@ func (jmi *JobMetaImpl) CreateUploadPayloadJob(txHash []byte, info *types.Object
 	}
 	result = jmi.db.Create(insertObjectRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("insert object record failed, %s", result.Error)
+		return 0, fmt.Errorf("insert object record failed, %s", result.Error)
 	}
-	return nil
+	return insertJobRecord.JobID, nil
 }
 
 // SetObjectCreateHeight update DBObject record's height.

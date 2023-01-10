@@ -30,9 +30,9 @@ func NewMemJobDB() *MemJobDB {
 }
 
 // CreateUploadPayloadJob create a job info for special object.
-func (db *MemJobDB) CreateUploadPayloadJob(txHash []byte, info *types.ObjectInfo) error {
+func (db *MemJobDB) CreateUploadPayloadJob(txHash []byte, info *types.ObjectInfo) (uint64, error) {
 	if info == nil {
-		return errors.New("object info is nil")
+		return 0, errors.New("object info is nil")
 	}
 	db.mu.Lock()
 	defer db.mu.Unlock()
@@ -43,7 +43,7 @@ func (db *MemJobDB) CreateUploadPayloadJob(txHash []byte, info *types.ObjectInfo
 	info.JobId = db.JobCount
 	db.ObjectTable[string(txHash)] = *info
 	db.JobCount++
-	return nil
+	return db.JobCount - 1, nil
 }
 
 // SetObjectCreateHeightAndObjectID set the object create height and object resource id after successful chaining.

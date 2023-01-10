@@ -25,6 +25,7 @@ var (
 // stone hub service errors
 var (
 	ErrTxHash                   = errors.New("tx hash format error")
+	ErrObjectInfo               = errors.New("object info is empty")
 	ErrObjectID                 = errors.New("object id is zero")
 	ErrObjectSize               = errors.New("object size is zero")
 	ErrObjectCreateHeight       = errors.New("object create height is zero")
