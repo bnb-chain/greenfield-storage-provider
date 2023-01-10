@@ -1,7 +1,10 @@
 package stonenode
 
 import (
+	"context"
 	"testing"
+
+	"google.golang.org/grpc"
 
 	ptypes "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
@@ -66,4 +69,39 @@ func dispatchInlineMap() map[string][][]byte {
 	iMap := make(map[string][][]byte)
 	iMap["543_s0"] = inlineList
 	return iMap
+}
+
+func makeStreamMock() *StreamMock {
+	return &StreamMock{
+		ctx:          context.Background(),
+		recvToServer: make(chan *service.SyncerServiceUploadECPieceRequest, 10),
+	}
+}
+
+type StreamMock struct {
+	grpc.ClientStream
+	ctx          context.Context
+	recvToServer chan *service.SyncerServiceUploadECPieceRequest
+}
+
+func (m *StreamMock) Send(resp *service.SyncerServiceUploadECPieceRequest) error {
+	m.recvToServer <- resp
+	return nil
+}
+
+func (m *StreamMock) CloseAndRecv() (*service.SyncerServiceUploadECPieceResponse, error) {
+	return &service.SyncerServiceUploadECPieceResponse{
+		TraceId: "test_traceID",
+		SecondarySpInfo: &service.StorageProviderSealInfo{
+			StorageProviderId: "sp1",
+			PieceIdx:          1,
+			PieceChecksum:     [][]byte{[]byte("1"), []byte("2"), []byte("3"), []byte("4"), []byte("5"), []byte("6")},
+			IntegrityHash:     []byte("a"),
+			Signature:         nil,
+		},
+		ErrMessage: &service.ErrMessage{
+			ErrCode: service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
+			ErrMsg:  "Success",
+		},
+	}, nil
 }

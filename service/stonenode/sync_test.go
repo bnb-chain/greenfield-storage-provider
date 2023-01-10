@@ -216,7 +216,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			req3:          spList,
 			req4:          []uint32{},
-			wantedResult1: 2,
+			wantedResult1: 3,
 			wantedErr:     nil,
 		},
 		{
@@ -229,11 +229,20 @@ func Test_dispatchSecondarySP(t *testing.T) {
 			wantedErr:     nil,
 		},
 		{
-			name:          "4",
+			name:          "ec type data retransmission",
 			req1:          dispatchPieceMap(),
 			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 			req3:          spList,
 			req4:          []uint32{2, 3},
+			wantedResult1: 2,
+			wantedErr:     nil,
+		},
+		{
+			name:          "replica type data retransmission",
+			req1:          dispatchSegmentMap(),
+			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req3:          spList,
+			req4:          []uint32{1, 2},
 			wantedResult1: 2,
 			wantedErr:     nil,
 		},
@@ -255,6 +264,15 @@ func Test_dispatchSecondarySP(t *testing.T) {
 			wantedResult1: 0,
 			wantedErr:     merrors.ErrSecondarySPNumber,
 		},
+		{
+			name:          "wrong replica/inline segment data length",
+			req1:          dispatchPieceMap(),
+			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req3:          spList,
+			req4:          []uint32{},
+			wantedResult1: 0,
+			wantedErr:     merrors.ErrInvalidSegmentData,
+		},
 	}
 
 	node := setup(t)
@@ -267,61 +285,90 @@ func Test_dispatchSecondarySP(t *testing.T) {
 	}
 }
 
-func TestUploadECPiece(t *testing.T) {
+// TODO:need improved
+func Test_doSyncToSecondarySP(t *testing.T) {
+	data := map[string]map[string][]byte{
+		"sp1": {
+			"123456_s0_p0": []byte("test1"),
+			"123456_s1_p0": []byte("test2"),
+			"123456_s2_p0": []byte("test3"),
+			"123456_s3_p0": []byte("test4"),
+			"123456_s4_p0": []byte("test5"),
+			"123456_s5_p0": []byte("test6"),
+		},
+	}
+	cases := []struct {
+		name string
+		req1 *service.StoneHubServiceAllocStoneJobResponse
+		req2 map[string]map[string][]byte
+	}{
+		{
+			name: "1",
+			req1: nil,
+			req2: data,
+		},
+	}
+
 	node := setup(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	// stoneHub service stub
+	//stoneHub := mock.NewMockStoneHubAPI(ctrl)
+	//node.stoneHub = stoneHub
+	//stoneHub.EXPECT().DoneSecondaryPieceJob(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+	//	func(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (
+	//		*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
+	//		return nil, nil
+	//	})
+
+	// syncer service stub
+	streamClient := makeStreamMock()
 	syncer := mock.NewMockSyncerAPI(ctrl)
 	node.syncer = syncer
 	syncer.EXPECT().UploadECPiece(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_UploadECPieceClient, error) {
-			return nil, nil
+			return streamClient, nil
 		}).AnyTimes()
 
-}
-
-func makeStreamMock() *StreamMock {
-	return &StreamMock{
-		ctx:            context.Background(),
-		recvToServer:   make(chan *service.SyncerServiceUploadECPieceRequest, 10),
-		sentFromServer: make(chan *service.SyncerServiceUploadECPieceResponse, 10),
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			allocResp := mockAllocResp(123456, 20*1024*1024, ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
+			err := node.doSyncToSecondarySP(context.TODO(), allocResp, tt.req2)
+			assert.Equal(t, nil, err)
+		})
 	}
 }
 
-type StreamMock struct {
-	grpc.ServerStream
-	ctx            context.Context
-	recvToServer   chan *service.SyncerServiceUploadECPieceRequest
-	sentFromServer chan *service.SyncerServiceUploadECPieceResponse
-}
+func TestUploadECPieceSuccess(t *testing.T) {
+	node := setup(t)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-func (m *StreamMock) Context() context.Context {
-	return m.ctx
-}
+	streamClient := makeStreamMock()
+	syncer := mock.NewMockSyncerAPI(ctrl)
+	node.syncer = syncer
+	syncer.EXPECT().UploadECPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_UploadECPieceClient, error) {
+			return streamClient, nil
+		}).AnyTimes()
 
-func (m *StreamMock) Send(resp *service.SyncerServiceUploadECPieceResponse) error {
-	m.sentFromServer <- resp
-	return nil
-}
-
-func (m *StreamMock) Recv() (*service.SyncerServiceUploadECPieceRequest, error) {
-	req, more := <-m.recvToServer
-	if !more {
-		return nil, errors.New("empty")
+	sInfo := &service.SyncerInfo{
+		ObjectId:          123456,
+		TxHash:            []byte("i"),
+		StorageProviderId: "sp1",
+		RedundancyType:    ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 	}
-	return req, nil
-}
-
-func (m *StreamMock) SendFromClient(req *service.SyncerServiceUploadECPieceRequest) error {
-	m.recvToServer <- req
-	return nil
-}
-
-func (m *StreamMock) RecvToClient() (*service.SyncerServiceUploadECPieceResponse, error) {
-	response, more := <-m.sentFromServer
-	if !more {
-		return nil, errors.New("empty")
+	data := map[string][]byte{
+		"123456_s0_p0": []byte("test1"),
+		"123456_s1_p0": []byte("test2"),
+		"123456_s2_p0": []byte("test3"),
+		"123456_s3_p0": []byte("test4"),
+		"123456_s4_p0": []byte("test5"),
+		"123456_s5_p0": []byte("test6"),
 	}
-	return response, nil
+	resp, err := node.UploadECPiece(context.TODO(), 3, sInfo, data, "test_traceID")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp.GetTraceId(), "test_traceID")
+	assert.Equal(t, resp.GetSecondarySpInfo().GetPieceIdx(), uint32(1))
 }
