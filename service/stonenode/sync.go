@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"sort"
 	"sync"
 	"sync/atomic"
 
@@ -47,6 +49,7 @@ func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, allocR
 }
 
 // loadSegmentsData load segment data from primary storage provider.
+// returned map key is segmentKey, value is corresponding ec data from ec1 to ec6, or segment data
 func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *service.StoneHubServiceAllocStoneJobResponse) (
 	map[string][][]byte, error) {
 	type segment struct {
@@ -155,60 +158,133 @@ func (node *StoneNodeService) generatePieceData(redundancyType ptypes.Redundancy
 }
 
 // dispatchSecondarySP dispatch piece data to secondary storage provider.
+// returned map key is spID, value map key is piece key or segment key, value map's value is piece data
 func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string][][]byte, redundancyType ptypes.RedundancyType,
 	secondarySPs []string, targetIdx []uint32) (map[string]map[string][]byte, error) {
-	var pieceDataBySecondary map[string]map[string][]byte
+	pieceDataBySecondary := make(map[string]map[string][]byte)
 
 	// pieceDataBySegment key is segment key, value is ec data from ec1 to ec6
-	for pieceKey, pieceData := range pieceDataBySegment {
+	var err error
+	switch redundancyType {
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+		pieceDataBySecondary, err = fillECData(pieceDataBySegment, secondarySPs, targetIdx)
+		if err != nil {
+			return map[string]map[string][]byte{}, err
+		}
+		return pieceDataBySecondary, nil
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+		pieceDataBySecondary, err = fillReplicaOrInlineData(pieceDataBySegment, secondarySPs, targetIdx)
+		if err != nil {
+			return map[string]map[string][]byte{}, err
+		}
+		return pieceDataBySecondary, nil
+	default:
+		return map[string]map[string][]byte{}, merrors.ErrRedundancyType
+	}
+}
+
+func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, targetIdx []uint32) (
+	map[string]map[string][]byte, error) {
+	ecPieceDataMap := make(map[string]map[string][]byte)
+
+	// iterate map in order
+	keys := sortedKeys(pieceDataBySegment)
+	for _, pieceKey := range keys {
+		pieceData := pieceDataBySegment[pieceKey]
 		for idx, data := range pieceData {
 			if idx >= len(secondarySPs) {
-				return pieceDataBySecondary, merrors.ErrSecondarySPNumber
+				return map[string]map[string][]byte{}, merrors.ErrSecondarySPNumber
 			}
+			// initialize data map
 			sp := secondarySPs[idx]
-
-			var err error
-			// if targetIdx is not equal to zero, retry to get data which idx is equal to targetIdx
-			if len(targetIdx) != 0 {
+			if len(targetIdx) == 0 {
+				if _, ok := ecPieceDataMap[sp]; !ok {
+					ecPieceDataMap[sp] = make(map[string][]byte)
+				}
+			} else {
 				for _, j := range targetIdx {
-					if int(j) == idx {
-						pieceDataBySecondary, err = fillECData(sp, pieceKey, data, redundancyType, idx)
-						if err != nil {
-							return nil, err
+					if int(j-1) == idx {
+						if _, ok := ecPieceDataMap[sp]; !ok {
+							ecPieceDataMap[sp] = make(map[string][]byte)
 						}
 					}
 				}
-			} else {
-				pieceDataBySecondary, err = fillECData(sp, pieceKey, data, redundancyType, idx)
-				if err != nil {
-					return nil, err
+			}
+
+			var key string
+			// if targetIdx is not equal to zero, retry to get data which idx is equal to targetIdx
+			if len(targetIdx) != 0 {
+				for _, j := range targetIdx {
+					if int(j-1) == idx {
+						key = piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, idx)
+						ecPieceDataMap[sp][key] = data
+					}
 				}
+			} else {
+				key = piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, idx)
+				ecPieceDataMap[sp][key] = data
 			}
 		}
 	}
-	return pieceDataBySecondary, nil
+	fmt.Println(ecPieceDataMap)
+	return ecPieceDataMap, nil
 }
 
-// fillECData
-func fillECData(spID string, pieceKey string, data []byte, redundancyType ptypes.RedundancyType, index int) (
+func fillReplicaOrInlineData(pieceDataBySegment map[string][][]byte, secondarySPs []string, targetIdx []uint32) (
 	map[string]map[string][]byte, error) {
-	var pieceDataBySecondary map[string]map[string][]byte
-	switch redundancyType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
-		if _, ok := pieceDataBySecondary[spID]; !ok {
-			pieceDataBySecondary[spID] = make(map[string][]byte)
-		}
-		key := piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, index)
-		pieceDataBySecondary[spID][key] = data
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		if _, ok := pieceDataBySecondary[spID]; !ok {
-			pieceDataBySecondary[spID] = make(map[string][]byte)
-		}
-		pieceDataBySecondary[spID][pieceKey] = data
-	default:
-		return nil, merrors.ErrRedundancyType
+	replicaOrInlineDataMap := make(map[string]map[string][]byte)
+	if len(pieceDataBySegment) >= len(secondarySPs) {
+		return map[string]map[string][]byte{}, merrors.ErrSecondarySPNumber
 	}
-	return pieceDataBySecondary, nil
+
+	// iterate map in order
+	keys := sortedKeys(pieceDataBySegment)
+	for i := 0; i < len(keys); i++ {
+		pieceKey := keys[i]
+		pieceData := pieceDataBySegment[pieceKey]
+		if len(pieceData) != 1 {
+			return nil, merrors.ErrInvalidSegmentData
+		}
+
+		sp := secondarySPs[i]
+		if len(targetIdx) == 0 {
+			if _, ok := replicaOrInlineDataMap[sp]; !ok {
+				replicaOrInlineDataMap[sp] = make(map[string][]byte)
+			}
+		} else {
+			for _, index := range targetIdx {
+				if int(index) == i {
+					if _, ok := replicaOrInlineDataMap[sp]; !ok {
+						replicaOrInlineDataMap[sp] = make(map[string][]byte)
+					}
+				}
+			}
+		}
+
+		var key string
+		if len(targetIdx) != 0 {
+			for _, index := range targetIdx {
+				if int(index) == i {
+					key = pieceKey
+					replicaOrInlineDataMap[sp][key] = pieceData[0]
+				}
+			}
+		} else {
+			key = pieceKey
+			replicaOrInlineDataMap[sp][key] = pieceData[0]
+		}
+	}
+	fmt.Println(replicaOrInlineDataMap)
+	return replicaOrInlineDataMap, nil
+}
+
+func sortedKeys(dataMap map[string][][]byte) []string {
+	keys := make([]string, 0, len(dataMap))
+	for k := range dataMap {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // doSyncToSecondarySP send piece data to the secondary.
@@ -270,7 +346,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 			integrityHash := hash.GenerateIntegrityHash(pieceHash, secondary)
 			if syncResp.GetSecondarySpInfo() == nil ||
 				syncResp.GetSecondarySpInfo().GetIntegrityHash() == nil ||
-				bytes.Equal(integrityHash, syncResp.GetSecondarySpInfo().GetIntegrityHash()) {
+				!bytes.Equal(integrityHash, syncResp.GetSecondarySpInfo().GetIntegrityHash()) {
 				log.CtxErrorw(ctx, "secondary integrity hash check error")
 				errMsg.ErrCode = service.ErrCode_ERR_CODE_ERROR
 				errMsg.ErrMsg = merrors.ErrIntegrityHash.Error()

@@ -10,11 +10,6 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
-// UploadECPieceAPI used to mock
-type UploadECPieceAPI interface {
-	UploadECPiece(stream service.SyncerService_UploadECPieceServer) error
-}
-
 // UploadECPiece uploads piece data encoded using the ec algorithm to secondary storage provider
 func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer) (err error) {
 	var req *service.SyncerServiceUploadECPieceRequest

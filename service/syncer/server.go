@@ -21,7 +21,7 @@ const (
 type Syncer struct {
 	cfg   *SyncerConfig
 	name  string
-	store *client.StoreClient
+	store client.PieceStoreAPI
 }
 
 // NewSyncerService creates a syncer service to upload piece to piece store

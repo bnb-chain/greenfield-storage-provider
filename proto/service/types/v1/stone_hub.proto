@@ -43,7 +43,7 @@ message PieceJob {
   bytes tx_hash = 3;
   uint64 object_id = 4;
   uint64 payload_size = 5;
-  repeated uint32 target_idx = 6; // ec number: 1, 2, 3...
+  repeated uint32 target_idx = 6; // ec number: 1, 2, 3..., start at 1; segment number: 0, 1, 2..., start at 0
   pkg.types.v1.RedundancyType redundancy_type = 7;
   StorageProviderSealInfo storage_provider_seal_info = 8;
 }

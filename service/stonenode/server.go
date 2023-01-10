@@ -2,7 +2,6 @@ package stonenode
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync/atomic"
 	"time"
@@ -19,11 +18,14 @@ const (
 
 // StoneNodeService manages stone execution units
 type StoneNodeService struct {
-	cfg        *StoneNodeConfig
-	name       string
-	syncer     *client.SyncerClient
-	stoneHub   *client.StoneHubClient
-	store      *client.StoreClient
+	cfg  *StoneNodeConfig
+	name string
+	//syncer   *client.SyncerClient
+	//stoneHub *client.StoneHubClient
+	//store    *client.StoreClient
+	syncer     client.SyncerAPI
+	stoneHub   client.StoneHubAPI
+	store      client.PieceStoreAPI
 	stoneLimit int64
 
 	running atomic.Bool
@@ -47,7 +49,7 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 // InitClient inits store client and rpc client
 func (node *StoneNodeService) InitClient() error {
 	if node.running.Load() == true {
-		return errors.New("stone node resource is running")
+		return merrors.ErrStoneNodeStarted
 	}
 	store, err := client.NewStoreClient(node.cfg.PieceConfig)
 	if err != nil {
