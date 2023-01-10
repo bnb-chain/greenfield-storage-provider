@@ -25,7 +25,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *service.Cha
 		}
 		log.CtxInfow(ctx, "change success")
 	}()
-	if req.StorageProviderId != challenge.config.StorageProvider {
+	if req.GetStorageProviderId() != challenge.config.StorageProvider {
 		err = errors.New("storage provider id mismatch")
 		return
 	}
@@ -40,7 +40,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *service.Cha
 	resp.RedundancyType = integrityMeta.RedundancyType
 	resp.ChallengePieceKey = piecestore.EncodeECPieceKey(req.ObjectId, req.ChallengeIdx, integrityMeta.PieceIdx)
 	var data []byte
-	data, err = challenge.pieceStore.GetPiece(ctx, resp.ChallengePieceKey, 0, 0)
+	data, err = challenge.pieceStore.GetPiece(ctx, resp.ChallengePieceKey, 0, -1)
 	if err != nil {
 		return
 	}

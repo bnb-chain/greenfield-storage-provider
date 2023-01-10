@@ -185,7 +185,7 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *service.Ston
 		if err != nil {
 			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
 		}
-		log.CtxInfow(ctx, "begin upload payload stone success")
+		log.CtxInfow(ctx, "begin upload payload stone completed", "error", err)
 	}()
 	// 1. set object info to db
 	if req.ObjectInfo == nil {

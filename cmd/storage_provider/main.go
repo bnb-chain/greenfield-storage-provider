@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/config"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/inscription-storage-provider/service/challenge"
+	"github.com/bnb-chain/inscription-storage-provider/service/downloader"
 	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
 	"github.com/bnb-chain/inscription-storage-provider/service/stonehub"
 	"github.com/bnb-chain/inscription-storage-provider/service/stonenode"
@@ -25,12 +26,13 @@ var (
 
 // define the storage provider supports service names
 var (
-	StoneHubService  = "StoneHub"
-	GetaWayService   = "Gateway"
-	UploaderService  = "Uploader"
-	StoneNodeService = "StoneNode"
-	SyncerService    = "Syncer"
-	ChallengeService = "Challenge"
+	StoneHubService   = "StoneHub"
+	GetaWayService    = "Gateway"
+	UploaderService   = "Uploader"
+	DownloaderService = "Downloader"
+	StoneNodeService  = "StoneNode"
+	SyncerService     = "Syncer"
+	ChallengeService  = "Challenge"
 )
 
 // initService init service instance by name and config.
@@ -49,6 +51,14 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.UploaderCfg = config.DefaultStorageProviderConfig.UploaderCfg
 		}
 		server, err = uploader.NewUploaderService(cfg.UploaderCfg)
+		if err != nil {
+			return nil, err
+		}
+	case DownloaderService:
+		if cfg.DownloaderCfg == nil {
+			cfg.DownloaderCfg = config.DefaultStorageProviderConfig.DownloaderCfg
+		}
+		server, err = downloader.NewDownloaderService(cfg.DownloaderCfg)
 		if err != nil {
 			return nil, err
 		}
