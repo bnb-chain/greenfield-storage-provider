@@ -314,13 +314,13 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	defer ctrl.Finish()
 
 	// stoneHub service stub
-	//stoneHub := mock.NewMockStoneHubAPI(ctrl)
-	//node.stoneHub = stoneHub
-	//stoneHub.EXPECT().DoneSecondaryPieceJob(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-	//	func(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (
-	//		*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
-	//		return nil, nil
-	//	})
+	stoneHub := mock.NewMockStoneHubAPI(ctrl)
+	node.stoneHub = stoneHub
+	stoneHub.EXPECT().DoneSecondaryPieceJob(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (
+			*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
+			return nil, nil
+		})
 
 	// syncer service stub
 	streamClient := makeStreamMock()
