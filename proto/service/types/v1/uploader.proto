@@ -37,7 +37,23 @@ message UploaderServiceUploadPayloadResponse {
   ErrMessage err_message = 2;
 }
 
+message UploaderServiceGetAuthenticationRequest {
+  string trace_id = 1;
+  // resource = bucket + object
+  string bucket = 2;
+  string object = 3; // optional
+  string action = 4;
+}
+
+message UploaderServiceGetAuthenticationResponse {
+  string trace_id = 1;
+  bytes pre_signature = 2;
+  ErrMessage err_message = 3;
+}
+
 service UploaderService {
   rpc CreateObject(UploaderServiceCreateObjectRequest) returns (UploaderServiceCreateObjectResponse) {};
   rpc UploadPayload(stream UploaderServiceUploadPayloadRequest) returns (UploaderServiceUploadPayloadResponse) {};
+  rpc GetAuthentication(UploaderServiceGetAuthenticationRequest) returns (UploaderServiceGetAuthenticationResponse) {};
+  rpc UploadPayloadV2(stream UploaderServiceUploadPayloadRequest) returns (UploaderServiceUploadPayloadResponse) {};
 }

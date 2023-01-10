@@ -54,6 +54,26 @@ func (client *UploaderClient) UploadPayload(ctx context.Context, opts ...grpc.Ca
 	return client.uploader.UploadPayload(ctx, opts...)
 }
 
+// GetAuthentication invoke uploader service GetAuthentication interface.
+func (client *UploaderClient) GetAuthentication(ctx context.Context, in *service.UploaderServiceGetAuthenticationRequest, opts ...grpc.CallOption) (*service.UploaderServiceGetAuthenticationResponse, error) {
+	resp, err := client.uploader.GetAuthentication(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "send get authentication rpc failed", "error", err)
+		return nil, err
+	}
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		log.CtxErrorw(ctx, "get authentication response code is not success", "error", resp.GetErrMessage().GetErrMsg())
+		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+	}
+	return resp, nil
+}
+
+// UploadPayloadV2 return grpc stream client, and be used to upload payload.
+func (client *UploaderClient) UploadPayloadV2(ctx context.Context, opts ...grpc.CallOption) (service.UploaderService_UploadPayloadClient, error) {
+	return client.uploader.UploadPayloadV2(ctx, opts...)
+}
+
 func (client *UploaderClient) Close() error {
 	return client.conn.Close()
 }

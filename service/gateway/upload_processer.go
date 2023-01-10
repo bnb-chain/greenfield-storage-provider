@@ -40,8 +40,9 @@ type putObjectOption struct {
 
 // objectInfo is the return of putObject.
 type objectInfo struct {
-	size uint64
-	eTag string
+	size         uint64
+	eTag         string
+	preSignature []byte
 }
 
 // uploaderClientInterface define interface to upload object. BFS upload process is divided into two stages:
@@ -236,6 +237,76 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 	return &objectInfo{eTag: md5Value, size: size}, nil
 }
 
+// getAuthentication is used to call uploaderService's getAuthentication by grpc.
+func (gui *grpcUploaderImpl) getAuthentication(opt *getAuthenticationOption) (*authenticationInfo, error) {
+	resp, err := gui.uploader.GetAuthentication(context.Background(), &pbService.UploaderServiceGetAuthenticationRequest{
+		TraceId: opt.reqCtx.requestID,
+		Bucket:  opt.reqCtx.bucket,
+		Object:  opt.reqCtx.object,
+		Action:  opt.reqCtx.action,
+	})
+	if err != nil {
+		log.Warnw("failed to rpc to uploader", "err", err)
+		return nil, errors.ErrInternalError
+	}
+	return &authenticationInfo{preSignature: resp.PreSignature}, nil
+}
+
+// putObjectV2 copy from putObject.
+func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
+	var (
+		buf      = make([]byte, 65536)
+		readN    int
+		size     uint64
+		hashBuf  = make([]byte, 65536)
+		md5Hash  = md5.New()
+		md5Value string
+	)
+
+	stream, err := gui.uploader.UploadPayload(context.Background())
+	if err != nil {
+		log.Warnw("failed to dail to uploader", "err", err)
+		return nil, errors.ErrInternalError
+	}
+	for {
+		readN, err = reader.Read(buf)
+		if err != nil && err != io.EOF {
+			log.Warnw("put object failed, due to reader", "err", err)
+			return nil, errors.ErrInternalError
+		}
+		if readN > 0 {
+			var req pbService.UploaderServiceUploadPayloadRequest
+			req.TraceId = opt.reqCtx.requestID
+			req.TxHash = opt.txHash
+			req.PayloadData = buf[:readN]
+			// todo: fill job_id??
+			if err := stream.Send(&req); err != nil {
+				log.Warnw("put object failed, due to stream send", "err", err)
+				return nil, errors.ErrInternalError
+			}
+			size += uint64(readN)
+			copy(hashBuf, buf[:readN])
+			md5Hash.Write(hashBuf[:readN])
+		}
+		if err == io.EOF {
+			err = nil
+			resp, err := stream.CloseAndRecv()
+			if err != nil {
+				log.Warnw("put object failed, due to stream close", "err", err)
+				return nil, errors.ErrInternalError
+			}
+			if errMsg := resp.GetErrMessage(); errMsg != nil && errMsg.ErrCode != pbService.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+				log.Warnw("failed to grpc", "err", resp.ErrMessage)
+				return nil, fmt.Errorf(resp.ErrMessage.ErrMsg)
+			}
+			break
+		}
+	}
+	md5Value = hex.EncodeToString(md5Hash.Sum(nil))
+	log.Info("gateway total size:", size)
+	return &objectInfo{eTag: md5Value, size: size}, nil
+}
+
 // uploaderClientConfig is the configuration information when creating uploaderClient.
 // currently Mode support "DebugMode" and "GrpcMode".
 type uploadProcesserConfig struct {
@@ -280,6 +351,29 @@ func (up *uploadProcesser) putObjectTx(name string, opt *putObjectTxOption) (obj
 // putObject call uploaderClient putObject interface.
 func (up *uploadProcesser) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
 	return up.impl.putObject(name, reader, opt)
+}
+
+type getAuthenticationOption struct {
+	reqCtx *requestContext
+}
+type authenticationInfo struct {
+	preSignature []byte
+}
+
+// getAuthentication call uploaderService getAuthentication interface.
+func (up *uploadProcesser) getAuthentication(opt *getAuthenticationOption) (*authenticationInfo, error) {
+	if p, ok := up.impl.(*grpcUploaderImpl); ok {
+		return p.getAuthentication(opt)
+	}
+	return nil, fmt.Errorf("not supported")
+}
+
+// putObjectV2 call uploaderService putObjectV2 interface.
+func (up *uploadProcesser) putObjectV2(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
+	if p, ok := up.impl.(*grpcUploaderImpl); ok {
+		return p.putObjectV2(name, reader, opt)
+	}
+	return nil, fmt.Errorf("not supported")
 }
 
 // Close release uploadProcesser resource.
