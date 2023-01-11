@@ -28,6 +28,14 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 		}
 		log.CtxInfow(ctx, "upload ec piece closed", "error", err)
 	}()
+	//defer func(ctx context.Context, resp *service.SyncerServiceUploadECPieceResponse, err error) {
+	//	if err != nil {
+	//		resp.ErrMessage.ErrCode = service.ErrCode_ERR_CODE_ERROR
+	//		resp.ErrMessage.ErrMsg = err.Error()
+	//	}
+	//	err = stream.SendAndClose(resp)
+	//	log.CtxInfow(ctx, "upload ec piece closed", "response", resp, "error", err)
+	//}(ctx, resp, err)
 
 	for {
 		req, err = stream.Recv()
@@ -40,20 +48,23 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 		}
 		if err == io.EOF {
 			err = nil
+			log.Info("50")
 			if req.GetSyncerInfo() != nil {
+				log.Info("51")
 				sealInfo, err = s.handleUploadPiece(ctx, req)
 				if err != nil {
 					log.CtxErrorw(ctx, "handle upload piece error", "error", err)
 					return
 				}
 			}
-			return
+			//return
 		}
 		sealInfo, err = s.handleUploadPiece(ctx, req)
 		if err != nil {
 			log.CtxErrorw(ctx, "handle upload piece error", "error", err)
 			break
 		}
+		return
 	}
 	return
 }
@@ -69,6 +80,7 @@ func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServi
 		"traceID", req.GetTraceId())
 	pieceChecksumList := make([][]byte, 0)
 	for key, value := range req.GetPieceData() {
+		// if redundancyType is ec, if check all pieceIndex is equal
 		pieceIndex, err = parsePieceIndex(req.GetSyncerInfo().GetRedundancyType(), key)
 		if err != nil {
 			return nil, err

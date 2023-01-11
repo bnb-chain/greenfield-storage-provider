@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
+	"io"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -231,7 +231,6 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 			}
 		}
 	}
-	fmt.Println(ecPieceDataMap)
 	return ecPieceDataMap, nil
 }
 
@@ -279,7 +278,6 @@ func fillReplicaOrInlineData(pieceDataBySegment map[string][][]byte, secondarySP
 			replicaOrInlineDataMap[sp][key] = pieceData[0]
 		}
 	}
-	fmt.Println(replicaOrInlineDataMap)
 	return replicaOrInlineDataMap, nil
 }
 
@@ -330,7 +328,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				log.CtxInfow(ctx, "upload secondary piece job secondary", "secondary sp", secondary)
 			}()
 
-			//log.CtxInfow(ctx, "doSyncToSecondarySP", "")
 			syncResp, err := node.UploadECPiece(ctx, &service.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
@@ -407,12 +404,12 @@ func (node *StoneNodeService) UploadECPiece(ctx context.Context, sInfo *service.
 	}
 
 	resp, err := stream.CloseAndRecv()
-	if err != nil {
+	if err != nil && err != io.EOF {
 		log.Errorw("client close error", "error", err, "traceID", resp.GetTraceId())
 		return nil, err
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-		log.Errorw("alloc stone from stone hub response code is not success", "error", err, "traceID", resp.GetTraceId())
+		log.Errorw("upload ec piece sends to stone node response code is not success", "error", err, "traceID", resp.GetTraceId())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	log.Infof("traceID: %s", resp.GetTraceId())
