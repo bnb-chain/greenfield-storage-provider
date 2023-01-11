@@ -23,5 +23,5 @@ const (
 // RPC config
 const (
 	// server and client max send or recv msg size
-	MaxCallMsgSize = 10 * 1024 * 1024
+	MaxCallMsgSize = 50 * 1024 * 1024
 )

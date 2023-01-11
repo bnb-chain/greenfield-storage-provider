@@ -152,7 +152,7 @@ func (node *StoneNodeService) generatePieceData(redundancyType ptypes.Redundancy
 	switch redundancyType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		pieceData, err = redundancy.EncodeRawSegment(segmentData)
-		log.Info("generatePieceData length", len(pieceData))
+		log.Info("generatePieceData length: ", len(pieceData))
 		if err != nil {
 			return
 		}
@@ -410,18 +410,27 @@ func (node *StoneNodeService) UploadECPiece(ctx context.Context, sInfo *service.
 		return nil, err
 	}
 
-	for k, v := range pieceData {
-		log.Infow("pieceData", "key", k, "length", len(pieceData))
-		innerMap := make(map[string][]byte)
-		innerMap[k] = v
-		if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
-			TraceId:    traceID,
-			SyncerInfo: sInfo,
-			PieceData:  innerMap,
-		}); err != nil {
-			log.Errorw("client send request error", "error", err)
-			return nil, err
-		}
+	//for k, v := range pieceData {
+	//	log.Infow("pieceData", "key", k, "length", len(pieceData))
+	//	innerMap := make(map[string][]byte)
+	//	innerMap[k] = v
+	//	if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
+	//		TraceId:    traceID,
+	//		SyncerInfo: sInfo,
+	//		PieceData:  innerMap,
+	//	}); err != nil {
+	//		log.Errorw("client send request error", "error", err)
+	//		return nil, err
+	//	}
+	//}
+
+	if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
+		TraceId:    traceID,
+		SyncerInfo: sInfo,
+		PieceData:  pieceData,
+	}); err != nil {
+		log.Errorw("client send request error", "error", err)
+		return nil, err
 	}
 
 	resp, err := stream.CloseAndRecv()
