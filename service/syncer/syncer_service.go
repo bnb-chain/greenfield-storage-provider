@@ -12,9 +12,11 @@ import (
 
 // UploadECPiece uploads piece data encoded using the ec algorithm to secondary storage provider
 func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer) (err error) {
-	var req *service.SyncerServiceUploadECPieceRequest
-	var sealInfo *service.StorageProviderSealInfo
-	var ctx = context.Background()
+	var (
+		req      *service.SyncerServiceUploadECPieceRequest
+		sealInfo *service.StorageProviderSealInfo
+		ctx      = context.Background()
+	)
 	for {
 		req, err = stream.Recv()
 		log.Context(ctx, req)
@@ -33,10 +35,6 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 				TraceId:         req.GetTraceId(),
 				SecondarySpInfo: sealInfo,
 			})
-			//if err != nil {
-			//	log.CtxErrorw(ctx, "upload piece send response failed", "error", err)
-			//	break
-			//}
 			log.CtxInfow(ctx, "upload ec piece closed", "error", err)
 			return
 		}
@@ -51,6 +49,7 @@ func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServi
 		pieceIndex uint32
 		err        error
 	)
+	log.Infow("first", "req", req.GetSyncerInfo(), "traceID", req.GetTraceId())
 	pieceChecksumList := make([][]byte, 0)
 	for key, value := range req.GetPieceData() {
 		_, _, pieceIndex, err = piecestore.DecodeECPieceKey(key)
@@ -68,6 +67,8 @@ func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServi
 
 	spID := req.GetSyncerInfo().GetStorageProviderId()
 	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList, spID)
+	log.CtxInfow(ctx, "handleUploadPiece", "spID", spID, "pieceIndex", pieceIndex,
+		"pieceChecksum", pieceChecksumList, "IntegrityHash", integrityHash)
 	resp := &service.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          pieceIndex,
