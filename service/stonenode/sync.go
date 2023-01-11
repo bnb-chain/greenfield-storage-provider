@@ -152,6 +152,7 @@ func (node *StoneNodeService) generatePieceData(redundancyType ptypes.Redundancy
 	switch redundancyType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		pieceData, err = redundancy.EncodeRawSegment(segmentData)
+		log.Info("generatePieceData length", len(pieceData))
 		if err != nil {
 			return
 		}

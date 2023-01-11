@@ -113,8 +113,8 @@ func (s *Syncer) handleUploadPiece(req *service.SyncerServiceUploadECPieceReques
 		"traceID", req.GetTraceId())
 	pieceChecksumList := make([][]byte, 0)
 	keys := util.SortedKeys(req.GetPieceData())
+	log.Info("SortedKeys", "keys", keys)
 	for _, key := range keys {
-		log.Info("")
 		// if redundancyType is ec, if check all pieceIndex is equal
 		pieceIndex, err = parsePieceIndex(req.GetSyncerInfo().GetRedundancyType(), key)
 		if err != nil {
