@@ -285,6 +285,9 @@ func (hub *StoneHub) SetStoneExclude(stone Stone) bool {
 // PopUploadSecondaryPieceJob return secondary piece job from secondaryJobQueue
 func (hub *StoneHub) PopUploadSecondaryPieceJob() *service.PieceJob {
 	stoneJob := hub.secondaryJobQueue.Dequeue()
+	if stoneJob == nil {
+		return nil
+	}
 	pieceJob := stoneJob.(*service.PieceJob)
 	return pieceJob
 }

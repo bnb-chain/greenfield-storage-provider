@@ -74,7 +74,7 @@ var (
 	ActionAfterEventUploadPrimaryPieceDone   string = ActionAfterEvent + UploadPrimaryPieceDoneEvent
 	ActionEnterUploadPrimaryDone             string = ActionEnterState + types.JOB_STATE_UPLOAD_PRIMARY_DONE
 	ActionEnterUploadSecondaryInit           string = ActionEnterState + types.JOB_STATE_UPLOAD_SECONDARY_INIT
-	ActionEnterUploadSecondaryDoing          string = ActionEnterState + types.JOB_STATE_UPLOAD_SECONDARY_INIT
+	ActionEnterUploadSecondaryDoing          string = ActionEnterState + types.JOB_STATE_UPLOAD_SECONDARY_DOING
 	ActionAfterEventUploadSecondaryPieceDone string = ActionAfterEvent + UploadSecondaryPieceDoneEvent
 	ActionEnterUploadSecondaryDone           string = ActionEnterState + UploadSecondaryDoneEvent
 	ActionEnterSealObjectInit                string = ActionEnterState + types.JOB_STATE_SEAL_OBJECT_INIT
