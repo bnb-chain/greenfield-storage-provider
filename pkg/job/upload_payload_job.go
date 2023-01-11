@@ -3,10 +3,10 @@ package job
 import (
 	"crypto/sha256"
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
+	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
@@ -363,7 +363,7 @@ func (job *UploadJob) Done(pieceJob *service.PieceJob, primary bool) error {
 		return errors.New("piece idx out of bounds")
 	}
 	if job.pieceJobs[pieceIdx].Done {
-		return fmt.Errorf("piece job repeat %d", pieceIdx)
+		return merrors.ErrUploadPayloadJobDone
 	}
 	uploadPieceJob := &UploadPieceJob{
 		PieceId:         pieceIdx,
