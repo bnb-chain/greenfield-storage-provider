@@ -56,14 +56,14 @@ type MapKeySorted interface {
 }
 
 // SortedKeys sort keys of a map
-func GenericSortedKeys[M MapKeySorted](dataMap M) []string {
-	keys := make([]string, 0, len(dataMap))
-	for k := range dataMap {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}
+//func GenericSortedKeys[M MapKeySorted](dataMap M) []string {
+//	keys := make([]string, 0, len(dataMap))
+//	for k := range dataMap {
+//		keys = append(keys, k)
+//	}
+//	sort.Strings(keys)
+//	return keys
+//}
 
 func SortedKeys(dataMap map[string][]byte) []string {
 	keys := make([]string, 0, len(dataMap))
