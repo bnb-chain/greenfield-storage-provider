@@ -346,7 +346,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 			for _, data := range pieceData {
 				pieceHash = append(pieceHash, hash.GenerateChecksum(data))
 			}
-			integrityHash := hash.GenerateIntegrityHash(pieceHash, secondary)
+			integrityHash := hash.GenerateIntegrityHash(pieceHash)
 			log.Infow("compute locally", "pieceHash", pieceHash, "integrityHash", integrityHash, "secondary", secondary)
 			log.CtxInfow(ctx, "syncResp", "spInfo", syncResp.GetSecondarySpInfo(), "GetIntegrityHash",
 				syncResp.GetSecondarySpInfo().GetIntegrityHash())

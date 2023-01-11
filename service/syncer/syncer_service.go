@@ -126,7 +126,7 @@ func (s *Syncer) handleUploadPiece(req *service.SyncerServiceUploadECPieceReques
 	}
 
 	spID := req.GetSyncerInfo().GetStorageProviderId()
-	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList, spID)
+	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
 	log.Infow("handleUploadPiece", "spID", spID, "pieceIndex", pieceIndex,
 		"pieceChecksum", pieceChecksumList, "IntegrityHash", integrityHash)
 	resp := &service.StorageProviderSealInfo{
