@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"sort"
 	"sync"
@@ -347,6 +348,10 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				pieceHash = append(pieceHash, hash.GenerateChecksum(data))
 			}
 			integrityHash := hash.GenerateIntegrityHash(pieceHash, secondary)
+			fmt.Println(pieceHash, integrityHash, secondary)
+			log.Infow("compute locally", "pieceHash", pieceHash, "integrityHash", integrityHash, "secondary", secondary)
+			log.CtxInfow(ctx, "syncResp", "spInfo", syncResp.GetSecondarySpInfo(), "GetIntegrityHash",
+				syncResp.GetSecondarySpInfo().GetIntegrityHash())
 			if syncResp.GetSecondarySpInfo() == nil ||
 				syncResp.GetSecondarySpInfo().GetIntegrityHash() == nil ||
 				!bytes.Equal(integrityHash, syncResp.GetSecondarySpInfo().GetIntegrityHash()) {
