@@ -30,8 +30,8 @@ type SyncerClient struct {
 }
 
 func NewSyncerClient(address string) (*SyncerClient, error) {
-	ctx, _ := context.WithTimeout(context.Background(), ClientRPCTimeout)
-	conn, err := grpc.DialContext(ctx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	//ctx, _ := context.WithTimeout(context.Background(), ClientRPCTimeout)
+	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Errorw("invoke syncer service grpc.DialContext failed", "error", err)
 		return nil, err
