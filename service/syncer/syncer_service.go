@@ -19,15 +19,24 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 		sealInfo *service.StorageProviderSealInfo
 		ctx      = context.Background()
 	)
-	defer func() {
-		if err != nil {
-			err = stream.SendAndClose(&service.SyncerServiceUploadECPieceResponse{
-				TraceId:         req.GetTraceId(),
-				SecondarySpInfo: sealInfo,
-			})
+	defer func(sealInfo *service.StorageProviderSealInfo, err error) {
+		//if err != nil {
+		//	err = stream.SendAndClose(&service.SyncerServiceUploadECPieceResponse{
+		//		TraceId:         req.GetTraceId(),
+		//		SecondarySpInfo: sealInfo,
+		//	})
+		//}
+		resp := &service.SyncerServiceUploadECPieceResponse{
+			TraceId:         req.GetTraceId(),
+			SecondarySpInfo: sealInfo,
 		}
+		if err != nil {
+			resp.ErrMessage.ErrCode = service.ErrCode_ERR_CODE_ERROR
+			resp.ErrMessage.ErrMsg = err.Error()
+		}
+		err = stream.SendAndClose(resp)
 		log.CtxInfow(ctx, "upload ec piece closed", "error", err)
-	}()
+	}(sealInfo, err)
 	//defer func(ctx context.Context, resp *service.SyncerServiceUploadECPieceResponse, err error) {
 	//	if err != nil {
 	//		resp.ErrMessage.ErrCode = service.ErrCode_ERR_CODE_ERROR
