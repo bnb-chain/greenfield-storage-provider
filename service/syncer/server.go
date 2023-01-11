@@ -30,13 +30,13 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 		cfg:  config,
 		name: ServiceNameSyncer,
 	}
-	if err := s.InitClient(); err != nil {
+	if err := s.initClient(); err != nil {
 		return nil, err
 	}
 	return s, nil
 }
 
-func (s *Syncer) InitClient() error {
+func (s *Syncer) initClient() error {
 	store, err := client.NewStoreClient(s.cfg.PieceConfig)
 	if err != nil {
 		log.Errorw("syncer starts piece store client failed", "error", err)

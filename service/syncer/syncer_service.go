@@ -1,7 +1,6 @@
 package syncer
 
 import (
-	"context"
 	"io"
 
 	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
@@ -13,6 +12,7 @@ import (
 )
 
 // UploadECPiece uploads piece data encoded using the ec algorithm to secondary storage provider
+/*
 func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer) (err error) {
 	var (
 		req      *service.SyncerServiceUploadECPieceRequest
@@ -70,9 +70,40 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 	}
 	return
 }
+*/
+
+func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer) error {
+	var sealInfo *service.StorageProviderSealInfo
+	for {
+		req, err := stream.Recv()
+		log.Infow("first", "object_id", req.GetSyncerInfo().GetObjectId(), "tx_hash", req.GetSyncerInfo().GetTxHash(),
+			"storage_provider_id", req.GetSyncerInfo().GetStorageProviderId(), "rType", req.GetSyncerInfo().GetRedundancyType(), "traceID", req.GetTraceId())
+		if err == io.EOF {
+			log.Info("70")
+			log.Infow("upload ec piece closed", "error", err, "storage_provider_id", sealInfo.GetStorageProviderId(),
+				"piece_idx", sealInfo.GetPieceIdx(), "piece_checksum", sealInfo.GetPieceChecksum(), "integrity_hash", sealInfo.GetIntegrityHash())
+			return stream.SendAndClose(&service.SyncerServiceUploadECPieceResponse{
+				TraceId:         req.GetTraceId(),
+				SecondarySpInfo: sealInfo,
+				ErrMessage:      nil,
+			})
+		}
+		if err != nil {
+			log.Errorw("stream recv failed", "error", err)
+			return err
+		}
+		log.Info("71")
+		sealInfo, err = s.handleUploadPiece(req)
+		log.Info("72")
+		if err != nil {
+			log.Errorw("handle upload piece error", "error", err)
+			return err
+		}
+	}
+}
 
 // handleUploadPiece store piece data to piece store and compute integrity hash.
-func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServiceUploadECPieceRequest) (
+func (s *Syncer) handleUploadPiece(req *service.SyncerServiceUploadECPieceRequest) (
 	*service.StorageProviderSealInfo, error) {
 	var (
 		pieceIndex uint32
@@ -90,14 +121,14 @@ func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServi
 		checksum := hash.GenerateChecksum(value)
 		pieceChecksumList = append(pieceChecksumList, checksum)
 		if err = s.store.PutPiece(key, value); err != nil {
-			log.CtxErrorw(ctx, "put piece failed", "error", err)
+			log.Errorw("put piece failed", "error", err)
 			return nil, err
 		}
 	}
 
 	spID := req.GetSyncerInfo().GetStorageProviderId()
 	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList, spID)
-	log.CtxInfow(ctx, "handleUploadPiece", "spID", spID, "pieceIndex", pieceIndex,
+	log.Infow("handleUploadPiece", "spID", spID, "pieceIndex", pieceIndex,
 		"pieceChecksum", pieceChecksumList, "IntegrityHash", integrityHash)
 	resp := &service.StorageProviderSealInfo{
 		StorageProviderId: spID,
