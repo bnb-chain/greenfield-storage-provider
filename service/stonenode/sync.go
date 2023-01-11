@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"sort"
 	"sync"
@@ -348,7 +347,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				pieceHash = append(pieceHash, hash.GenerateChecksum(data))
 			}
 			integrityHash := hash.GenerateIntegrityHash(pieceHash, secondary)
-			fmt.Println(pieceHash, integrityHash, secondary)
 			log.Infow("compute locally", "pieceHash", pieceHash, "integrityHash", integrityHash, "secondary", secondary)
 			log.CtxInfow(ctx, "syncResp", "spInfo", syncResp.GetSecondarySpInfo(), "GetIntegrityHash",
 				syncResp.GetSecondarySpInfo().GetIntegrityHash())
@@ -418,5 +416,7 @@ func (node *StoneNodeService) UploadECPiece(ctx context.Context, sInfo *service.
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	log.Infof("traceID: %s", resp.GetTraceId())
+	log.CtxInfow(ctx, "UploadECPiece", "spInfo", resp.GetSecondarySpInfo(), "GetIntegrityHash",
+		resp.GetSecondarySpInfo().GetIntegrityHash())
 	return resp, nil
 }
