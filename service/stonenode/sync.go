@@ -330,6 +330,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				log.CtxInfow(ctx, "upload secondary piece job secondary", "secondary sp", secondary)
 			}()
 
+			//log.CtxInfow(ctx, "doSyncToSecondarySP", "")
 			syncResp, err := node.UploadECPiece(ctx, segmentCount, &service.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
@@ -388,6 +389,8 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *ser
 // UploadECPiece send rpc request to secondary storage provider to sync the piece data.
 func (node *StoneNodeService) UploadECPiece(ctx context.Context, segmentCount uint32, sInfo *service.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*service.SyncerServiceUploadECPieceResponse, error) {
+	log.CtxInfow(ctx, "stone node UploadECPiece", "segmentCount", segmentCount, "rType", sInfo.GetRedundancyType(),
+		"spID", sInfo.GetStorageProviderId(), "traceID", traceID)
 	stream, err := node.syncer.UploadECPiece(ctx)
 	if err != nil {
 		log.Errorw("upload secondary job piece job error", "err", err)
