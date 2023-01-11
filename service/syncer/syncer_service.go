@@ -28,14 +28,15 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 				log.CtxErrorw(ctx, "handle upload piece error", "error", err)
 				break
 			}
-			if err := stream.SendAndClose(&service.SyncerServiceUploadECPieceResponse{
+			err1 := stream.SendAndClose(&service.SyncerServiceUploadECPieceResponse{
 				TraceId:         req.GetTraceId(),
 				SecondarySpInfo: sealInfo,
-			}); err != nil {
-				log.CtxErrorw(ctx, "upload piece send response failed", "error", err)
-				break
-			}
-			log.Info("upload ec piece closed")
+			})
+			//if err != nil {
+			//	log.CtxErrorw(ctx, "upload piece send response failed", "error", err)
+			//	break
+			//}
+			log.CtxInfow(ctx, "upload ec piece closed", "error", err1)
 		}
 	}
 	return
