@@ -6,9 +6,13 @@ import (
 
 	"github.com/looplab/fsm"
 
+	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
+	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/job"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
+	"github.com/bnb-chain/inscription-storage-provider/util"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -57,6 +61,26 @@ func AfterUploadPrimaryPieceDone(ctx context.Context, event *fsm.Event) {
 // and update the job state to the DB
 func EnterUploadPrimaryDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
+	sealInfo, err := stone.job.PrimarySPSealInfo()
+	if err != nil {
+		stone.jobCtx.SetJobErr(err)
+		log.CtxErrorw(ctx, "get primary integrity hash info failed", "error", err)
+		return
+	}
+	object := stone.job.GetObjectCtx().GetObjectInfo()
+	integrity := &metadb.IntegrityMeta{
+		IsPrimary:      true,
+		ObjectID:       object.ObjectId,
+		RedundancyType: object.RedundancyType,
+		IntegrityHash:  sealInfo.IntegrityHash,
+		PieceHash:      sealInfo.PieceCheckSum,
+		PieceCount:     util.ComputeSegmentCount(object.Size),
+	}
+	if err = stone.job.GetObjectCtx().SetSetIntegrityHash(integrity); err != nil {
+		stone.jobCtx.SetJobErr(err)
+		log.CtxErrorw(ctx, "set primary integrity hash info to meat db failed", "error", err)
+		return
+	}
 	if err := stone.jobCtx.SetJobState(types.JOB_STATE_UPLOAD_PRIMARY_DONE); err != nil {
 		stone.jobCtx.SetJobErr(err)
 		log.CtxErrorw(ctx, "update primary done job state error", "error", err)
@@ -91,6 +115,35 @@ func AfterUploadSecondaryPieceDone(ctx context.Context, event *fsm.Event) {
 		return
 	}
 	pieceInfo := event.Args[0].(*service.PieceJob)
+	object := stone.job.GetObjectCtx().GetObjectInfo()
+	integrity := &metadb.IntegrityMeta{
+		ObjectID:       object.ObjectId,
+		PieceIdx:       pieceInfo.GetStorageProviderSealInfo().GetPieceIdx(),
+		PieceCount:     util.ComputeSegmentCount(object.Size),
+		IsPrimary:      false,
+		RedundancyType: object.RedundancyType,
+		IntegrityHash:  pieceInfo.GetStorageProviderSealInfo().GetIntegrityHash(),
+	}
+	for idx, checksum := range pieceInfo.GetStorageProviderSealInfo().GetPieceChecksum() {
+		var pieceKey string
+		if integrity.RedundancyType == types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+			pieceKey = piecestore.EncodeECPieceKey(object.ObjectId, uint32(idx), integrity.PieceIdx)
+		} else if integrity.RedundancyType == types.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
+			pieceKey = piecestore.EncodeSegmentPieceKey(object.ObjectId, integrity.PieceIdx)
+		} else if integrity.RedundancyType == types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
+			pieceKey = piecestore.EncodeSegmentPieceKey(object.ObjectId, integrity.PieceIdx)
+		} else {
+			stone.jobCtx.SetJobErr(merrors.ErrRedundancyType)
+			log.CtxErrorw(ctx, "done secondary piece job failed", "error", merrors.ErrRedundancyType)
+			return
+		}
+		integrity.PieceHash[pieceKey] = checksum
+	}
+	if err := stone.job.GetObjectCtx().SetSetIntegrityHash(integrity); err != nil {
+		stone.jobCtx.SetJobErr(err)
+		log.CtxErrorw(ctx, "set secondary integrity hash info to meat db failed", "error", err)
+		return
+	}
 	if err := stone.job.DoneSecondarySPJob(pieceInfo); err != nil {
 		stone.jobCtx.SetJobErr(errors.New("secondary piece job error"))
 		log.CtxErrorw(ctx, "done secondary piece job error", "piece info", pieceInfo, "error", err)

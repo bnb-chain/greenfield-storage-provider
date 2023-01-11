@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
+	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
@@ -35,6 +36,13 @@ func (ctx *ObjectInfoContext) GetObjectInfo() *types.ObjectInfo {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
 	return ctx.object.SafeCopy()
+}
+
+// GetObjectID return the object resource id.
+func (ctx *ObjectInfoContext) GetObjectID() uint64 {
+	ctx.mu.RLock()
+	defer ctx.mu.RUnlock()
+	return ctx.object.GetObjectId()
 }
 
 // GetObjectSize return the object size.
@@ -128,6 +136,11 @@ func (ctx *ObjectInfoContext) SetSecondaryPieceJobDone(piece *UploadPieceJob) er
 	return ctx.jobDB.SetSecondaryPieceJobDone(ctx.object.GetTxHash(), job)
 }
 
+// SetSetIntegrityHash set integrity hash info to meta db.
+func (ctx *ObjectInfoContext) SetSetIntegrityHash(meta *metadb.IntegrityMeta) error {
+	return ctx.metaDB.SetIntegrityMeta(meta)
+}
+
 // UploadPayloadJob maintains the object info and piece job meta
 type UploadPayloadJob struct {
 	objectCtx    *ObjectInfoContext
@@ -147,6 +160,11 @@ func NewUploadPayloadJob(objectCtx *ObjectInfoContext) (job *UploadPayloadJob, e
 		return nil, err
 	}
 	return job, nil
+}
+
+// GetObjectCtx return the object context.
+func (job *UploadPayloadJob) GetObjectCtx() *ObjectInfoContext {
+	return job.objectCtx
 }
 
 // Completed return whether upload payload job is completed.
@@ -224,11 +242,17 @@ func (job *UploadPayloadJob) PrimarySPSealInfo() (*SealInfo, error) {
 	sealInfo := &SealInfo{
 		StorageProvider: sp,
 	}
+	objectId := job.objectCtx.GetObjectID()
 	hash := sha256.New()
-	for _, pieceJob := range job.primaryJob.pieceJobs {
+	for segmentIdx, pieceJob := range job.primaryJob.pieceJobs {
 		if len(pieceJob.Checksum) != 1 {
 			return sealInfo, errors.New("primary storage provider checksum error")
 		}
+		pieceKey := piecestore.EncodeSegmentPieceKey(objectId, uint32(segmentIdx))
+		if segmentIdx >= len(pieceJob.Checksum) {
+			return nil, errors.New("primary piece checksum idx is out of bound")
+		}
+		sealInfo.PieceCheckSum[pieceKey] = pieceJob.Checksum[segmentIdx]
 		hash.Write(pieceJob.Checksum[0])
 	}
 	sealInfo.IntegrityHash = hash.Sum(nil)
@@ -257,6 +281,7 @@ func (job *UploadPayloadJob) SecondarySPSealInfo() ([]*SealInfo, error) {
 // SealInfo records the storage provider info for sealing.
 type SealInfo struct {
 	StorageProvider string
+	PieceCheckSum   map[string][]byte
 	IntegrityHash   []byte
 	Signature       []byte
 }
