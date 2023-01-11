@@ -396,16 +396,16 @@ func (node *StoneNodeService) UploadECPiece(ctx context.Context, segmentCount ui
 		log.Errorw("upload secondary job piece job error", "err", err)
 		return nil, err
 	}
-	for i := 0; i < int(segmentCount); i++ {
-		if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
-			TraceId:    traceID,
-			SyncerInfo: sInfo,
-			PieceData:  pieceData,
-		}); err != nil {
-			log.Errorw("client send request error", "error", err)
-			return nil, err
-		}
+
+	if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
+		TraceId:    traceID,
+		SyncerInfo: sInfo,
+		PieceData:  pieceData,
+	}); err != nil {
+		log.Errorw("client send request error", "error", err)
+		return nil, err
 	}
+
 	resp, err := stream.CloseAndRecv()
 	if err != nil {
 		log.Errorw("client close error", "error", err, "traceID", resp.GetTraceId())
