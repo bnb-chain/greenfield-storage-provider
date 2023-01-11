@@ -72,7 +72,7 @@ func (s *Syncer) serve(errCh chan error) {
 		log.Errorw("syncer listen failed", "error", err)
 		return
 	}
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.MaxSendMsgSize(1024*1024*10), grpc.MaxRecvMsgSize(1024*1024*10))
 	service.RegisterSyncerServiceServer(grpcServer, s)
 	reflection.Register(grpcServer)
 	if err = grpcServer.Serve(lis); err != nil {

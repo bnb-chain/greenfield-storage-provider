@@ -80,7 +80,6 @@ func (node *StoneNodeService) Name() string {
 // Start running StoneNodeService, implement lifecycle interface
 func (node *StoneNodeService) Start(ctx context.Context) error {
 	if node.running.Swap(true) {
-		log.Info("1")
 		return merrors.ErrStoneNodeStarted
 	}
 	go func() {
@@ -88,40 +87,30 @@ func (node *StoneNodeService) Start(ctx context.Context) error {
 		var stoneJobCounter int64 // atomic
 		allocTimer := time.NewTicker(AllocStonePeriod)
 		ctx, cancel := context.WithCancel(context.Background())
-		log.Info("3")
 		for {
 			select {
 			case <-allocTimer.C:
-				log.Info("4")
 				go func() {
-					log.Info("5")
 					if !node.running.Load() {
-						log.Info("6")
 						log.Errorw("stone node service stopped, can not alloc stone.")
 						return
 					}
-					log.Info("7")
 					atomic.AddInt64(&stoneJobCounter, 1)
 					defer atomic.AddInt64(&stoneJobCounter, -1)
-					log.Infow("8")
 					if atomic.LoadInt64(&stoneJobCounter) > node.stoneLimit {
-						log.Info("9")
 						log.Errorw("stone job running number exceeded, skip current alloc stone.")
 						return
 					}
-					log.Info("10")
 					// TBD::exceed stoneLimit or alloc empty stone,
 					// stone node need one backoff strategy.
 					node.allocStone(ctx)
 				}()
 			case <-node.stopCh:
-				log.Info("11")
 				cancel()
 				return
 			}
 		}
 	}()
-	log.Info("12")
 	return nil
 }
 
