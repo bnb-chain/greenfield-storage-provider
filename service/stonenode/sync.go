@@ -299,8 +299,8 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 		objectID       = resp.GetPieceJob().GetObjectId()
 		payloadSize    = resp.GetPieceJob().GetPayloadSize()
 		redundancyType = resp.GetPieceJob().GetRedundancyType()
-		segmentCount   = util.ComputeSegmentCount(payloadSize)
-		txHash         = resp.GetTxHash()
+		//segmentCount   = util.ComputeSegmentCount(payloadSize)
+		txHash = resp.GetTxHash()
 	)
 	for secondary, pieceData := range pieceDataBySecondary {
 		go func(secondary string, pieceData map[string][]byte) {
@@ -331,7 +331,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 			}()
 
 			//log.CtxInfow(ctx, "doSyncToSecondarySP", "")
-			syncResp, err := node.UploadECPiece(ctx, segmentCount, &service.SyncerInfo{
+			syncResp, err := node.UploadECPiece(ctx, &service.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
 				StorageProviderId: secondary,
@@ -387,9 +387,9 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *ser
 }
 
 // UploadECPiece send rpc request to secondary storage provider to sync the piece data.
-func (node *StoneNodeService) UploadECPiece(ctx context.Context, segmentCount uint32, sInfo *service.SyncerInfo,
+func (node *StoneNodeService) UploadECPiece(ctx context.Context, sInfo *service.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*service.SyncerServiceUploadECPieceResponse, error) {
-	log.CtxInfow(ctx, "stone node UploadECPiece", "segmentCount", segmentCount, "rType", sInfo.GetRedundancyType(),
+	log.CtxInfow(ctx, "stone node UploadECPiece", "rType", sInfo.GetRedundancyType(),
 		"spID", sInfo.GetStorageProviderId(), "traceID", traceID)
 	stream, err := node.syncer.UploadECPiece(ctx)
 	if err != nil {

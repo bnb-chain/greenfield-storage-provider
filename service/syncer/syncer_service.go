@@ -4,7 +4,9 @@ import (
 	"context"
 	"io"
 
+	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
+	ptypes "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util/hash"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
@@ -66,9 +68,8 @@ func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServi
 	log.Infow("second", "req", req.GetSyncerInfo(), "traceID", req.GetTraceId())
 	pieceChecksumList := make([][]byte, 0)
 	for key, value := range req.GetPieceData() {
-		_, _, pieceIndex, err = piecestore.DecodeECPieceKey(key)
+		pieceIndex, err = parsePieceIndex(req.GetSyncerInfo().GetRedundancyType(), key)
 		if err != nil {
-			log.CtxErrorw(ctx, "decode piece key failed", "error", err)
 			return nil, err
 		}
 		checksum := hash.GenerateChecksum(value)
@@ -91,4 +92,28 @@ func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServi
 		Signature:         nil, // TODO(mock)
 	}
 	return resp, nil
+}
+
+func parsePieceIndex(redundancyType ptypes.RedundancyType, key string) (uint32, error) {
+	var (
+		err        error
+		pieceIndex uint32
+	)
+	switch redundancyType {
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+		_, _, pieceIndex, err = piecestore.DecodeECPieceKey(key)
+		if err != nil {
+			log.Errorw("decode ec piece key failed", "error", err)
+			return 0, err
+		}
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+		_, pieceIndex, err = piecestore.DecodeSegmentPieceKey(key)
+		if err != nil {
+			log.Errorw("decode segment piece key failed", "error", err)
+			return 0, err
+		}
+	default:
+		return 0, merrors.ErrRedundancyType
+	}
+	return pieceIndex, nil
 }
