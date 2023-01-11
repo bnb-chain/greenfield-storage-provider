@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
-
+	"github.com/bnb-chain/inscription-storage-provider/model"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
 var _ io.Closer = &SyncerClient{}
@@ -32,7 +32,7 @@ type SyncerClient struct {
 func NewSyncerClient(address string) (*SyncerClient, error) {
 	ctx, _ := context.WithTimeout(context.Background(), ClientRPCTimeout)
 	conn, err := grpc.DialContext(ctx, address, grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(10*1024*1024), grpc.MaxCallSendMsgSize(10*1024*1024)))
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize), grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
 	if err != nil {
 		log.Errorw("invoke syncer service grpc.DialContext failed", "error", err)
 		return nil, err

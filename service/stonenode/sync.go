@@ -390,7 +390,7 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *ser
 func (node *StoneNodeService) UploadECPiece(ctx context.Context, sInfo *service.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*service.SyncerServiceUploadECPieceResponse, error) {
 	log.CtxInfow(ctx, "stone node UploadECPiece", "rType", sInfo.GetRedundancyType(),
-		"spID", sInfo.GetStorageProviderId(), "traceID", traceID)
+		"spID", sInfo.GetStorageProviderId(), "traceID", traceID, "length", len(pieceData))
 	stream, err := node.syncer.UploadECPiece(ctx)
 	if err != nil {
 		log.Errorw("upload secondary job piece job error", "err", err)
@@ -398,6 +398,7 @@ func (node *StoneNodeService) UploadECPiece(ctx context.Context, sInfo *service.
 	}
 
 	for k, v := range pieceData {
+		log.Infow("pieceData", "key", k, "value", v, "length", len(pieceData))
 		innerMap := make(map[string][]byte)
 		innerMap[k] = v
 		if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{

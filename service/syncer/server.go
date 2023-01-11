@@ -2,13 +2,15 @@ package syncer
 
 import (
 	"context"
+	"errors"
 	"net"
+	"sync/atomic"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/service/client"
-
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -19,9 +21,10 @@ const (
 
 // SyncerService synchronizes ec data to piece store
 type Syncer struct {
-	cfg   *SyncerConfig
-	name  string
-	store client.PieceStoreAPI
+	cfg     *SyncerConfig
+	name    string
+	store   client.PieceStoreAPI
+	running atomic.Bool
 }
 
 // NewSyncerService creates a syncer service to upload piece to piece store
@@ -53,6 +56,9 @@ func (s *Syncer) Name() string {
 
 // Start running SyncerService
 func (s *Syncer) Start(ctx context.Context) error {
+	if s.running.Swap(true) {
+		return errors.New("syncer service is running")
+	}
 	errCh := make(chan error)
 	go s.serve(errCh)
 	err := <-errCh
@@ -61,6 +67,9 @@ func (s *Syncer) Start(ctx context.Context) error {
 
 // Stop running SyncerService
 func (s *Syncer) Stop(ctx context.Context) error {
+	if !s.running.Swap(false) {
+		return errors.New("syncer service has already stopped")
+	}
 	return nil
 }
 
@@ -72,7 +81,7 @@ func (s *Syncer) serve(errCh chan error) {
 		log.Errorw("syncer listen failed", "error", err)
 		return
 	}
-	grpcServer := grpc.NewServer(grpc.MaxSendMsgSize(1024*1024*10), grpc.MaxRecvMsgSize(1024*1024*10))
+	grpcServer := grpc.NewServer(grpc.MaxSendMsgSize(model.MaxCallMsgSize), grpc.MaxRecvMsgSize(model.MaxCallMsgSize))
 	service.RegisterSyncerServiceServer(grpcServer, s)
 	reflection.Register(grpcServer)
 	if err = grpcServer.Serve(lis); err != nil {

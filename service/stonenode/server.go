@@ -18,11 +18,8 @@ const (
 
 // StoneNodeService manages stone execution units
 type StoneNodeService struct {
-	cfg  *StoneNodeConfig
-	name string
-	//syncer   *client.SyncerClient
-	//stoneHub *client.StoneHubClient
-	//store    *client.StoreClient
+	cfg        *StoneNodeConfig
+	name       string
 	syncer     client.SyncerAPI
 	stoneHub   client.StoneHubAPI
 	store      client.PieceStoreAPI
