@@ -103,6 +103,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 				return err
 			}
 			seg.pieceData = pieceData
+			log.Infow("spiltFunc", "length", len(seg.pieceData))
 		}
 		return nil
 	}
@@ -141,6 +142,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 	for seg := range segmentCh {
 		mu.Lock()
 		pieces[seg.pieceKey] = seg.pieceData
+		log.Infow("range segmentCh", "length", len(pieces[seg.pieceKey]))
 		mu.Unlock()
 	}
 	return pieces, loadSegmentErr
@@ -165,7 +167,7 @@ func (node *StoneNodeService) generatePieceData(redundancyType ptypes.Redundancy
 }
 
 // dispatchSecondarySP dispatch piece data to secondary storage provider.
-// returned map key is spID, value map key is piece key or segment key, value map's value is piece data
+// returned map key is spID, value map key is ec piece key or segment key, value map's value is piece data
 func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string][][]byte, redundancyType ptypes.RedundancyType,
 	secondarySPs []string, targetIdx []uint32) (map[string]map[string][]byte, error) {
 	pieceDataBySecondary := make(map[string]map[string][]byte)
@@ -199,6 +201,7 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 	keys := sortedKeys(pieceDataBySegment)
 	for _, pieceKey := range keys {
 		pieceData := pieceDataBySegment[pieceKey]
+		log.Infow("fillECData", "length", len(pieceData))
 		for idx, data := range pieceData {
 			if idx >= len(secondarySPs) {
 				return map[string]map[string][]byte{}, merrors.ErrSecondarySPNumber
@@ -211,7 +214,7 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 				}
 			} else {
 				for _, j := range targetIdx {
-					if int(j-1) == idx {
+					if int(j) == idx {
 						if _, ok := ecPieceDataMap[sp]; !ok {
 							ecPieceDataMap[sp] = make(map[string][]byte)
 						}
@@ -223,7 +226,7 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 			// if targetIdx is not equal to zero, retry to get data which idx is equal to targetIdx
 			if len(targetIdx) != 0 {
 				for _, j := range targetIdx {
-					if int(j-1) == idx {
+					if int(j) == idx {
 						key = piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, idx)
 						ecPieceDataMap[sp][key] = data
 					}
@@ -234,6 +237,7 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 			}
 		}
 	}
+	log.Info("ecPieceDataMap", "length", len(ecPieceDataMap))
 	return ecPieceDataMap, nil
 }
 
