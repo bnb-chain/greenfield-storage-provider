@@ -397,13 +397,17 @@ func (node *StoneNodeService) UploadECPiece(ctx context.Context, sInfo *service.
 		return nil, err
 	}
 
-	if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
-		TraceId:    traceID,
-		SyncerInfo: sInfo,
-		PieceData:  pieceData,
-	}); err != nil {
-		log.Errorw("client send request error", "error", err)
-		return nil, err
+	for k, v := range pieceData {
+		innerMap := make(map[string][]byte)
+		innerMap[k] = v
+		if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
+			TraceId:    traceID,
+			SyncerInfo: sInfo,
+			PieceData:  innerMap,
+		}); err != nil {
+			log.Errorw("client send request error", "error", err)
+			return nil, err
+		}
 	}
 
 	resp, err := stream.CloseAndRecv()

@@ -94,7 +94,6 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 		}
 		log.Info("71")
 		sealInfo, err = s.handleUploadPiece(req)
-		log.Info("72")
 		if err != nil {
 			log.Errorw("handle upload piece error", "error", err)
 			return err
