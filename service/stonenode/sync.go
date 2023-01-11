@@ -25,9 +25,11 @@ func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, allocR
 	// TBD:: check secondarySPs count by redundancyType.
 	// EC_TYPE need EC_M + EC_K + backup
 	// REPLICA_TYPE and INLINE_TYPE need segments count + backup
+	log.Info("20")
 	secondarySPs := mock.AllocUploadSecondarySP()
 
 	// 1. load all segments data from primary piece store and do ec or not
+	log.Info("21")
 	pieceData, err := node.loadSegmentsData(ctx, allocResp)
 	if err != nil {
 		node.reportErrToStoneHub(ctx, allocResp, err)
@@ -72,6 +74,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		segmentCount   = util.ComputeSegmentCount(payloadSize)
 	)
 
+	log.Info("22")
 	loadFunc := func(ctx context.Context, seg *segment) error {
 		select {
 		case <-interruptCh:
@@ -103,6 +106,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		return nil
 	}
 
+	log.Info("23")
 	for i := 0; i < int(segmentCount); i++ {
 		go func(segmentIdx int) {
 			seg := &segment{
@@ -131,6 +135,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		}(i)
 	}
 
+	log.Info("24")
 	var mu sync.Mutex
 	for seg := range segmentCh {
 		mu.Lock()

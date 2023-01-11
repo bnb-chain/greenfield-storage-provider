@@ -40,14 +40,14 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 		stopCh:     make(chan struct{}),
 		stoneLimit: config.StoneJobLimit,
 	}
-	if err := node.InitClient(); err != nil {
+	if err := node.initClient(); err != nil {
 		return nil, err
 	}
 	return node, nil
 }
 
 // InitClient inits store client and rpc client
-func (node *StoneNodeService) InitClient() error {
+func (node *StoneNodeService) initClient() error {
 	if node.running.Load() == true {
 		return merrors.ErrStoneNodeStarted
 	}
@@ -80,48 +80,48 @@ func (node *StoneNodeService) Name() string {
 // Start running StoneNodeService, implement lifecycle interface
 func (node *StoneNodeService) Start(ctx context.Context) error {
 	if node.running.Swap(true) {
-		log.Info("wejdnwe")
+		log.Info("1")
 		return merrors.ErrStoneNodeStarted
 	}
 	go func() {
-		log.Info("238vhief")
+		log.Info("2")
 		var stoneJobCounter int64 // atomic
 		allocTimer := time.NewTimer(AllocStonePeriod)
 		ctx, cancel := context.WithCancel(context.Background())
-		log.Info("pqke12901290")
+		log.Info("3")
 		for {
 			select {
 			case <-allocTimer.C:
-				log.Info("12001nknmala")
+				log.Info("4")
 				go func() {
-					log.Info("ppp120932i734jhjn")
+					log.Info("5")
 					if !node.running.Load() {
-						log.Info("19023eucjnj")
+						log.Info("6")
 						log.Errorw("stone node service stopped, can not alloc stone.")
 						return
 					}
-					log.Info("3974nsdmawxcw")
+					log.Info("7")
 					atomic.AddInt64(&stoneJobCounter, 1)
 					defer atomic.AddInt64(&stoneJobCounter, -1)
-					log.Infow("888228288")
+					log.Infow("8")
 					if atomic.LoadInt64(&stoneJobCounter) > node.stoneLimit {
-						log.Info("009898987")
+						log.Info("9")
 						log.Errorw("stone job running number exceeded, skip current alloc stone.")
 						return
 					}
-					log.Info("340934inkm")
+					log.Info("10")
 					// TBD::exceed stoneLimit or alloc empty stone,
 					// stone node need one backoff strategy.
 					node.allocStone(ctx)
 				}()
 			case <-node.stopCh:
-				log.Info("865u59kll")
+				log.Info("11")
 				cancel()
 				return
 			}
 		}
 	}()
-	log.Info("llqpwp02102")
+	log.Info("12")
 	return nil
 }
 
@@ -146,12 +146,15 @@ func (node *StoneNodeService) Stop(ctx context.Context) error {
 
 // allocStone sends rpc request to stone hub alloc stone job.
 func (node *StoneNodeService) allocStone(ctx context.Context) {
+	log.Info("enter into allocStone")
 	resp, err := node.stoneHub.AllocStoneJob(ctx)
 	ctx = log.Context(ctx, resp)
+	log.Info("18")
 	if err != nil {
 		log.CtxErrorw(ctx, "alloc stone from stone hub failed", "error", err)
 		return
 	}
+	log.Info("19")
 	// TBD:: stone node will support more types of stone job,
 	// currently only support upload secondary piece job.
 	if err := node.syncPieceToSecondarySP(ctx, resp); err != nil {
