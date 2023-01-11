@@ -65,7 +65,8 @@ func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServi
 		pieceIndex uint32
 		err        error
 	)
-	log.Infow("second", "req", req.GetSyncerInfo(), "traceID", req.GetTraceId())
+	log.Infow("second", "req", req.GetSyncerInfo(), "rType", req.GetSyncerInfo().GetRedundancyType(),
+		"traceID", req.GetTraceId())
 	pieceChecksumList := make([][]byte, 0)
 	for key, value := range req.GetPieceData() {
 		pieceIndex, err = parsePieceIndex(req.GetSyncerInfo().GetRedundancyType(), key)
@@ -99,6 +100,7 @@ func parsePieceIndex(redundancyType ptypes.RedundancyType, key string) (uint32, 
 		err        error
 		pieceIndex uint32
 	)
+	log.Infow("parsePieceIndex", "rType", redundancyType, "key", key)
 	switch redundancyType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		_, _, pieceIndex, err = piecestore.DecodeECPieceKey(key)
