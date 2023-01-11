@@ -19,6 +19,8 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 	)
 	for {
 		req, err = stream.Recv()
+		log.Infow("first", "object_id", req.GetSyncerInfo().GetObjectId(), "tx_hash", req.GetSyncerInfo().GetTxHash(),
+			"storage_provider_id", req.GetSyncerInfo().GetStorageProviderId(), "rType", req.GetSyncerInfo().GetRedundancyType(), "traceID", req.GetTraceId())
 		log.Context(ctx, req)
 		if err != nil && err != io.EOF {
 			log.CtxErrorw(ctx, "upload piece receive data error", "error", err)
@@ -49,7 +51,7 @@ func (s *Syncer) handleUploadPiece(ctx context.Context, req *service.SyncerServi
 		pieceIndex uint32
 		err        error
 	)
-	log.Infow("first", "req", req.GetSyncerInfo(), "traceID", req.GetTraceId())
+	log.Infow("second", "req", req.GetSyncerInfo(), "traceID", req.GetTraceId())
 	pieceChecksumList := make([][]byte, 0)
 	for key, value := range req.GetPieceData() {
 		_, _, pieceIndex, err = piecestore.DecodeECPieceKey(key)
