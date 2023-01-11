@@ -3,6 +3,7 @@ package stonenode
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"io"
 	"sort"
@@ -347,14 +348,20 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 			//for _, data := range pieceData {
 			//	pieceHash = append(pieceHash, hash.GenerateChecksum(data))
 			//}
+			var pieceIndex uint32
 			keys := util.SortedKeys(pieceData)
+			log.Infow("sorted keys", "keys", keys)
 			for _, key := range keys {
 				pieceHash = append(pieceHash, hash.GenerateChecksum(pieceData[key]))
+				_, _, pieceIndex, _ = piecestore.DecodeECPieceKey(key)
 			}
 			integrityHash := hash.GenerateIntegrityHash(pieceHash)
-			log.Infow("compute locally", "pieceHash", pieceHash, "integrityHash", integrityHash, "secondary", secondary)
-			log.CtxInfow(ctx, "syncResp", "spInfo", syncResp.GetSecondarySpInfo(), "GetIntegrityHash",
-				syncResp.GetSecondarySpInfo().GetIntegrityHash())
+			log.Infow("compute locally", "integrityHash", hex.EncodeToString(integrityHash)[:10], "secondary", secondary,
+				"pieceIndex", pieceIndex)
+
+			log.CtxInfow(ctx, "syncResp", "GetIntegrityHash", syncResp.GetSecondarySpInfo().GetIntegrityHash(),
+				"secondary", syncResp.GetSecondarySpInfo().GetStorageProviderId())
+
 			if syncResp.GetSecondarySpInfo() == nil ||
 				syncResp.GetSecondarySpInfo().GetIntegrityHash() == nil ||
 				!bytes.Equal(integrityHash, syncResp.GetSecondarySpInfo().GetIntegrityHash()) {

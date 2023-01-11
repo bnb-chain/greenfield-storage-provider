@@ -114,6 +114,7 @@ func (s *Syncer) handleUploadPiece(req *service.SyncerServiceUploadECPieceReques
 	pieceChecksumList := make([][]byte, 0)
 	keys := util.SortedKeys(req.GetPieceData())
 	for _, key := range keys {
+		log.Info("")
 		// if redundancyType is ec, if check all pieceIndex is equal
 		pieceIndex, err = parsePieceIndex(req.GetSyncerInfo().GetRedundancyType(), key)
 		if err != nil {
@@ -143,8 +144,7 @@ func (s *Syncer) handleUploadPiece(req *service.SyncerServiceUploadECPieceReques
 
 	spID := req.GetSyncerInfo().GetStorageProviderId()
 	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
-	log.Infow("handleUploadPiece", "spID", spID, "pieceIndex", pieceIndex,
-		"pieceChecksum", pieceChecksumList, "IntegrityHash", integrityHash)
+	log.Infow("handleUploadPiece", "spID", spID, "pieceIndex", pieceIndex, "IntegrityHash", integrityHash)
 	resp := &service.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          pieceIndex,
