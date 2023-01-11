@@ -35,7 +35,8 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 			resp.ErrMessage.ErrMsg = err.Error()
 		}
 		err = stream.SendAndClose(resp)
-		log.CtxInfow(ctx, "upload ec piece closed", "error", err)
+		log.CtxInfow(ctx, "upload ec piece closed", "error", err, "storage_provider_id", sealInfo.GetStorageProviderId(),
+			"piece_idx", sealInfo.GetPieceIdx(), "piece_checksum", sealInfo.GetPieceChecksum(), "integrity_hash", sealInfo.GetIntegrityHash())
 	}(sealInfo, err)
 
 	for {
