@@ -398,7 +398,7 @@ func (node *StoneNodeService) UploadECPiece(ctx context.Context, sInfo *service.
 	}
 
 	for k, v := range pieceData {
-		log.Infow("pieceData", "key", k, "value", v, "length", len(pieceData))
+		log.Infow("pieceData", "key", k, "length", len(pieceData))
 		innerMap := make(map[string][]byte)
 		innerMap[k] = v
 		if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
@@ -422,6 +422,6 @@ func (node *StoneNodeService) UploadECPiece(ctx context.Context, sInfo *service.
 	}
 	log.Infof("traceID: %s", resp.GetTraceId())
 	log.CtxInfow(ctx, "UploadECPiece", "spInfo", resp.GetSecondarySpInfo(), "GetIntegrityHash",
-		resp.GetSecondarySpInfo().GetIntegrityHash())
+		resp.GetSecondarySpInfo().GetIntegrityHash(), "traceID", resp.GetTraceId())
 	return resp, nil
 }
