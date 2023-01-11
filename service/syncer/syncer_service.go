@@ -17,6 +17,16 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 		sealInfo *service.StorageProviderSealInfo
 		ctx      = context.Background()
 	)
+	defer func() {
+		if err != nil {
+			err = stream.SendAndClose(&service.SyncerServiceUploadECPieceResponse{
+				TraceId:         req.GetTraceId(),
+				SecondarySpInfo: sealInfo,
+			})
+		}
+		log.CtxInfow(ctx, "upload ec piece closed", "error", err)
+	}()
+
 	for {
 		req, err = stream.Recv()
 		log.Infow("first", "object_id", req.GetSyncerInfo().GetObjectId(), "tx_hash", req.GetSyncerInfo().GetTxHash(),
@@ -28,17 +38,19 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 		}
 		if err == io.EOF {
 			err = nil
-			sealInfo, err = s.handleUploadPiece(ctx, req)
-			if err != nil {
-				log.CtxErrorw(ctx, "handle upload piece error", "error", err)
-				break
+			if req.GetSyncerInfo() != nil {
+				sealInfo, err = s.handleUploadPiece(ctx, req)
+				if err != nil {
+					log.CtxErrorw(ctx, "handle upload piece error", "error", err)
+					return
+				}
 			}
-			err = stream.SendAndClose(&service.SyncerServiceUploadECPieceResponse{
-				TraceId:         req.GetTraceId(),
-				SecondarySpInfo: sealInfo,
-			})
-			log.CtxInfow(ctx, "upload ec piece closed", "error", err)
 			return
+		}
+		sealInfo, err = s.handleUploadPiece(ctx, req)
+		if err != nil {
+			log.CtxErrorw(ctx, "handle upload piece error", "error", err)
+			break
 		}
 	}
 	return
