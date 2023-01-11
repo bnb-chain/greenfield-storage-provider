@@ -362,7 +362,7 @@ func (job *UploadJob) Done(pieceJob *service.PieceJob, primary bool) error {
 		return errors.New("piece idx out of bounds")
 	}
 	if job.pieceJobs[pieceIdx].Done {
-		return errors.New("piece job has already completed")
+		return nil
 	}
 	uploadPieceJob := &UploadPieceJob{
 		PieceId:         pieceIdx,
