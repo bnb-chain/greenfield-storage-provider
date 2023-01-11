@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -48,4 +49,27 @@ func ComputeSegmentCount(size uint64) uint32 {
 		segmentCount++
 	}
 	return segmentCount
+}
+
+type MapKeySorted interface {
+	map[string][]byte | map[string][][]byte
+}
+
+// SortedKeys sort keys of a map
+func GenericSortedKeys[M MapKeySorted](dataMap M) []string {
+	keys := make([]string, 0, len(dataMap))
+	for k := range dataMap {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func SortedKeys(dataMap map[string][]byte) []string {
+	keys := make([]string, 0, len(dataMap))
+	for k := range dataMap {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }

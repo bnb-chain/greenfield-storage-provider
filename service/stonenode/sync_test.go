@@ -314,13 +314,13 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	defer ctrl.Finish()
 
 	// stoneHub service stub
-	stoneHub := mock.NewMockStoneHubAPI(ctrl)
-	node.stoneHub = stoneHub
-	stoneHub.EXPECT().DoneSecondaryPieceJob(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (
-			*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
-			return nil, nil
-		})
+	//stoneHub := mock.NewMockStoneHubAPI(ctrl)
+	//node.stoneHub = stoneHub
+	//stoneHub.EXPECT().DoneSecondaryPieceJob(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+	//	func(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (
+	//		*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
+	//		return nil, nil
+	//	})
 
 	// syncer service stub
 	streamClient := makeStreamMock()
@@ -367,7 +367,7 @@ func TestUploadECPieceSuccess(t *testing.T) {
 		"123456_s4_p0": []byte("test5"),
 		"123456_s5_p0": []byte("test6"),
 	}
-	resp, err := node.UploadECPiece(context.TODO(), 3, sInfo, data, "test_traceID")
+	resp, err := node.UploadECPiece(context.TODO(), sInfo, data, "test_traceID")
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.GetTraceId(), "test_traceID")
 	assert.Equal(t, resp.GetSecondarySpInfo().GetPieceIdx(), uint32(1))

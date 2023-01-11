@@ -7,6 +7,7 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
 	ptypes "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	"github.com/bnb-chain/inscription-storage-provider/util"
 	"github.com/bnb-chain/inscription-storage-provider/util/hash"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -111,12 +112,14 @@ func (s *Syncer) handleUploadPiece(req *service.SyncerServiceUploadECPieceReques
 	log.Infow("second", "req", req.GetSyncerInfo(), "rType", req.GetSyncerInfo().GetRedundancyType(),
 		"traceID", req.GetTraceId())
 	pieceChecksumList := make([][]byte, 0)
-	for key, value := range req.GetPieceData() {
+	keys := util.SortedKeys(req.GetPieceData())
+	for _, key := range keys {
 		// if redundancyType is ec, if check all pieceIndex is equal
 		pieceIndex, err = parsePieceIndex(req.GetSyncerInfo().GetRedundancyType(), key)
 		if err != nil {
 			return nil, err
 		}
+		value := req.GetPieceData()[key]
 		checksum := hash.GenerateChecksum(value)
 		pieceChecksumList = append(pieceChecksumList, checksum)
 		if err = s.store.PutPiece(key, value); err != nil {
@@ -124,6 +127,19 @@ func (s *Syncer) handleUploadPiece(req *service.SyncerServiceUploadECPieceReques
 			return nil, err
 		}
 	}
+	//for key, value := range req.GetPieceData() {
+	//	// if redundancyType is ec, if check all pieceIndex is equal
+	//	pieceIndex, err = parsePieceIndex(req.GetSyncerInfo().GetRedundancyType(), key)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	checksum := hash.GenerateChecksum(value)
+	//	pieceChecksumList = append(pieceChecksumList, checksum)
+	//	if err = s.store.PutPiece(key, value); err != nil {
+	//		log.Errorw("put piece failed", "error", err)
+	//		return nil, err
+	//	}
+	//}
 
 	spID := req.GetSyncerInfo().GetStorageProviderId()
 	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList)

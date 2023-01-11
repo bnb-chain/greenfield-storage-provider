@@ -37,9 +37,9 @@ func (m *MockStoneHubAPI) EXPECT() *MockStoneHubAPIMockRecorder {
 }
 
 // AllocStoneJob mocks base method.
-func (m *MockStoneHubAPI) AllocStoneJob(ctx context.Context, in *v1.StoneHubServiceAllocStoneJobRequest, opts ...grpc.CallOption) (*v1.StoneHubServiceAllocStoneJobResponse, error) {
+func (m *MockStoneHubAPI) AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (*v1.StoneHubServiceAllocStoneJobResponse, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, in}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -50,9 +50,9 @@ func (m *MockStoneHubAPI) AllocStoneJob(ctx context.Context, in *v1.StoneHubServ
 }
 
 // AllocStoneJob indicates an expected call of AllocStoneJob.
-func (mr *MockStoneHubAPIMockRecorder) AllocStoneJob(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+func (mr *MockStoneHubAPIMockRecorder) AllocStoneJob(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, in}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllocStoneJob", reflect.TypeOf((*MockStoneHubAPI)(nil).AllocStoneJob), varargs...)
 }
 
@@ -168,26 +168,6 @@ func (mr *MockStoneHubAPIMockRecorder) DoneSecondaryPieceJob(ctx, in interface{}
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoneSecondaryPieceJob", reflect.TypeOf((*MockStoneHubAPI)(nil).DoneSecondaryPieceJob), varargs...)
-}
-
-// QueryStone mocks base method.
-func (m *MockStoneHubAPI) QueryStone(ctx context.Context, in *v1.StoneHubServiceQueryStoneRequest, opts ...grpc.CallOption) (*v1.StoneHubServiceQueryStoneResponse, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, in}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "QueryStone", varargs...)
-	ret0, _ := ret[0].(*v1.StoneHubServiceQueryStoneResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// QueryStone indicates an expected call of QueryStone.
-func (mr *MockStoneHubAPIMockRecorder) QueryStone(ctx, in interface{}, opts ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryStone", reflect.TypeOf((*MockStoneHubAPI)(nil).QueryStone), varargs...)
 }
 
 // SetObjectCreateInfo mocks base method.

@@ -193,6 +193,7 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 	ecPieceDataMap := make(map[string]map[string][]byte)
 
 	// iterate map in order
+	//keys := util.SortedKeys(pieceDataBySegment)
 	keys := sortedKeys(pieceDataBySegment)
 	for _, pieceKey := range keys {
 		pieceData := pieceDataBySegment[pieceKey]
@@ -343,8 +344,12 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 			}
 
 			var pieceHash [][]byte
-			for _, data := range pieceData {
-				pieceHash = append(pieceHash, hash.GenerateChecksum(data))
+			//for _, data := range pieceData {
+			//	pieceHash = append(pieceHash, hash.GenerateChecksum(data))
+			//}
+			keys := util.SortedKeys(pieceData)
+			for _, key := range keys {
+				pieceHash = append(pieceHash, hash.GenerateChecksum(pieceData[key]))
 			}
 			integrityHash := hash.GenerateIntegrityHash(pieceHash)
 			log.Infow("compute locally", "pieceHash", pieceHash, "integrityHash", integrityHash, "secondary", secondary)
