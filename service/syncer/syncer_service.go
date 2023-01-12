@@ -12,8 +12,8 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
-// UploadECPiece uploads piece data encoded using the ec algorithm to secondary storage provider
-func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer) error {
+// SyncPiece syncs piece data to secondary storage provider
+func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
 	var sealInfo *service.StorageProviderSealInfo
 	var count uint32
 	//var pieceIndex uint32
@@ -23,7 +23,7 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 	defer func() {
 		if err != nil && err != io.EOF {
 			log.Info("entry defer func")
-			err = stream.SendAndClose(&service.SyncerServiceUploadECPieceResponse{
+			err = stream.SendAndClose(&service.SyncerServiceSyncPieceResponse{
 				ErrMessage: &service.ErrMessage{
 					ErrCode: service.ErrCode_ERR_CODE_ERROR,
 					ErrMsg:  err.Error(),
@@ -43,10 +43,9 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 				log.Errorw("syncer service received piece count is wrong")
 				return merrors.ErrReceivedPieceCount
 			}
-			checksumList := sealInfo.GetPieceChecksum()
-			integrityHash := hash.GenerateIntegrityHash(checksumList)
-			sealInfo.IntegrityHash = integrityHash
-			return stream.SendAndClose(&service.SyncerServiceUploadECPieceResponse{
+
+			sealInfo.IntegrityHash = hash.GenerateIntegrityHash(sealInfo.GetPieceChecksum())
+			return stream.SendAndClose(&service.SyncerServiceSyncPieceResponse{
 				TraceId:         req.GetTraceId(),
 				SecondarySpInfo: sealInfo,
 				ErrMessage: &service.ErrMessage{
@@ -70,7 +69,7 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 }
 
 // handleUploadPiece store piece data to piece store and compute integrity hash.
-func (s *Syncer) handleUploadPiece(req *service.SyncerServiceUploadECPieceRequest) (
+func (s *Syncer) handleUploadPiece(req *service.SyncerServiceSyncPieceRequest) (
 	*service.StorageProviderSealInfo, uint32, error) {
 	var (
 		pieceIndex uint32
