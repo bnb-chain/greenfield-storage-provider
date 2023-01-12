@@ -242,6 +242,7 @@ func (job *UploadPayloadJob) PrimarySPSealInfo() (*SealInfo, error) {
 	sp := job.primaryJob.pieceJobs[0].StorageProvider
 	sealInfo := &SealInfo{
 		StorageProvider: sp,
+		PieceCheckSum:   make(map[string][]byte),
 	}
 	objectId := job.objectCtx.GetObjectID()
 	hash := sha256.New()
@@ -250,10 +251,7 @@ func (job *UploadPayloadJob) PrimarySPSealInfo() (*SealInfo, error) {
 			return sealInfo, errors.New("primary storage provider checksum error")
 		}
 		pieceKey := piecestore.EncodeSegmentPieceKey(objectId, uint32(segmentIdx))
-		if segmentIdx >= len(pieceJob.Checksum) {
-			return nil, errors.New("primary piece checksum idx is out of bound")
-		}
-		sealInfo.PieceCheckSum[pieceKey] = pieceJob.Checksum[segmentIdx]
+		sealInfo.PieceCheckSum[pieceKey] = pieceJob.Checksum[0]
 		hash.Write(pieceJob.Checksum[0])
 	}
 	sealInfo.IntegrityHash = hash.Sum(nil)

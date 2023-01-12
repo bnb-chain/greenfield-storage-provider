@@ -43,8 +43,9 @@ message UploaderServiceUploadPayloadV2Request {
   string bucket_name = 3;  // Temporary field
   string object_name = 4;  // Temporary field
   uint64 object_size = 5;  // Temporary field
-  uint64 job_id = 6;
-  bytes payload_data = 7;
+  pkg.types.v1.RedundancyType redundancy_type = 6;  // Temporary field
+  uint64 job_id = 7;
+  bytes payload_data = 8;
 }
 
 message UploaderServiceUploadPayloadV2Response {

@@ -348,10 +348,6 @@ func (ui *uploaderImpl) UploadPayloadV2(stream pbService.UploaderService_UploadP
 // checkAndPrepareMeta check auth by metaDB, and then get meta from stoneHub.
 func (ui *uploaderImpl) checkAndPrepareMeta(sr *streamReader, txHash []byte) (*JobMeta, error) {
 	objectID, height := ui.uploader.eventWaiter.GenerateObjectIDAndHeight()
-	redundancyType := types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
-	if sr.size <= model.InlineSize {
-		redundancyType = types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
-	}
 	objectInfo := &types.ObjectInfo{
 		Owner:          "",
 		BucketName:     sr.bucket,
@@ -365,7 +361,7 @@ func (ui *uploaderImpl) checkAndPrepareMeta(sr *streamReader, txHash []byte) (*J
 		Height:         height,
 		TxHash:         txHash,
 		ObjectId:       objectID,
-		RedundancyType: redundancyType,
+		RedundancyType: sr.redundancyType,
 		SecondarySps:   nil,
 	}
 
