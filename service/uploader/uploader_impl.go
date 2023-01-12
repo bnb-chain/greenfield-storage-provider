@@ -214,11 +214,12 @@ func (ui *uploaderImpl) fetchJobMeta(ctx context.Context, txHash []byte) (*JobMe
 // reportJobProgress report done piece index to stone hub.
 func (ui *uploaderImpl) reportJobProgress(ctx context.Context, jm *JobMeta, uploadID uint32, checkSum []byte) error {
 	var (
-		req        *pbService.StoneHubServiceDonePrimaryPieceJobRequest
-		spSealInfo *pbService.StorageProviderSealInfo
+		req      *pbService.StoneHubServiceDonePrimaryPieceJobRequest
+		pieceJob pbService.PieceJob
 	)
 	traceID, _ := ctx.Value("traceID").(string)
-	spSealInfo = &pbService.StorageProviderSealInfo{
+	pieceJob = *jm.pieceJob
+	pieceJob.StorageProviderSealInfo = &pbService.StorageProviderSealInfo{
 		StorageProviderId: ui.uploader.config.StorageProvider,
 		PieceIdx:          uploadID,
 		PieceChecksum:     [][]byte{checkSum},
@@ -226,9 +227,8 @@ func (ui *uploaderImpl) reportJobProgress(ctx context.Context, jm *JobMeta, uplo
 	req = &pbService.StoneHubServiceDonePrimaryPieceJobRequest{
 		TraceId:  traceID,
 		TxHash:   jm.txHash,
-		PieceJob: jm.pieceJob,
+		PieceJob: &pieceJob,
 	}
-	req.PieceJob.StorageProviderSealInfo = spSealInfo
 	if _, err := ui.uploader.stoneHub.DonePrimaryPieceJob(ctx, req); err != nil {
 		return err
 	}
