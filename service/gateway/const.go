@@ -19,6 +19,8 @@ const (
 	BFSTransactionHashHeader = "X-Bfs-Txn-Hash"
 	BFSResourceHeader        = "X-Bfs-Resource"
 	BFSPreSignatureHeader    = "X-Bfs-Pre-Signature"
+	// BFSRedundancyTypeHeader can be EC or Replica, EC is default
+	BFSRedundancyTypeHeader = "X-Bfs-Redundancy-Type"
 
 	// http header key
 	ContentTypeHeader   = "Content-Type"

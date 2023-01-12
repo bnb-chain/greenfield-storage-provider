@@ -66,6 +66,7 @@ func (client *StoneHubClient) CreateObject(ctx context.Context, in *service.Ston
 		log.CtxErrorw(ctx, "create object response code is not success", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
+	log.CtxInfow(ctx, "create object succeed", "request", in)
 	return resp, nil
 }
 
@@ -110,6 +111,7 @@ func (client *StoneHubClient) BeginUploadPayloadV2(ctx context.Context, in *serv
 		log.CtxErrorw(ctx, "begin upload stone response code is not success", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
+	log.CtxInfow(ctx, "begin upload payload v2 succeed", "request", in)
 	return resp, nil
 }
 
