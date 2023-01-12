@@ -326,8 +326,8 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	streamClient := makeStreamMock()
 	syncer := mock.NewMockSyncerAPI(ctrl)
 	node.syncer = syncer
-	syncer.EXPECT().UploadECPiece(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_UploadECPieceClient, error) {
+	syncer.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_SyncPieceClient, error) {
 			return streamClient, nil
 		}).AnyTimes()
 
@@ -348,8 +348,8 @@ func TestUploadECPieceSuccess(t *testing.T) {
 	streamClient := makeStreamMock()
 	syncer := mock.NewMockSyncerAPI(ctrl)
 	node.syncer = syncer
-	syncer.EXPECT().UploadECPiece(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_UploadECPieceClient, error) {
+	syncer.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_SyncPieceClient, error) {
 			return streamClient, nil
 		}).AnyTimes()
 
@@ -367,7 +367,7 @@ func TestUploadECPieceSuccess(t *testing.T) {
 		"123456_s4_p0": []byte("test5"),
 		"123456_s5_p0": []byte("test6"),
 	}
-	resp, err := node.UploadECPiece(context.TODO(), sInfo, data, "test_traceID")
+	resp, err := node.SyncPiece(context.TODO(), sInfo, data, "test_traceID")
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.GetTraceId(), "test_traceID")
 	assert.Equal(t, resp.GetSecondarySpInfo().GetPieceIdx(), uint32(1))

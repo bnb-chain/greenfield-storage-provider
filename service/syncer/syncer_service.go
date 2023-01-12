@@ -17,6 +17,7 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 	var sealInfo *service.StorageProviderSealInfo
 	var count uint32
 	//var pieceIndex uint32
+	var pieceCount uint32
 	var err error
 
 	defer func() {
@@ -37,8 +38,8 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 			"storage_provider_id", req.GetSyncerInfo().GetStorageProviderId(), "rType", req.GetSyncerInfo().GetRedundancyType(), "traceID", req.GetTraceId())
 		if err == io.EOF {
 			log.Infow("upload ec piece closed", "error", err, "storage_provider_id", sealInfo.GetStorageProviderId(),
-				"piece_idx", sealInfo.GetPieceIdx(), "count", count, "req.GetSyncerInfo().GetPieceCount()", req.GetSyncerInfo().GetPieceCount())
-			if count != req.GetSyncerInfo().GetPieceCount() {
+				"piece_idx", sealInfo.GetPieceIdx(), "count", count)
+			if count != pieceCount {
 				log.Errorw("syncer service received piece count is wrong")
 				return merrors.ErrReceivedPieceCount
 			}
@@ -58,6 +59,7 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 			log.Errorw("stream recv failed", "error", err)
 			return err
 		}
+		pieceCount = req.GetSyncerInfo().GetPieceCount()
 		sealInfo, _, err = s.handleUploadPiece(req)
 		if err != nil {
 			log.Errorw("handle upload piece error", "error", err)

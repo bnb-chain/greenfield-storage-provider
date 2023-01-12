@@ -13,18 +13,18 @@ message SyncerInfo {
   pkg.types.v1.RedundancyType redundancy_type = 5;
 }
 
-message SyncerServiceUploadECPieceRequest {
+message SyncerServiceSyncPieceRequest {
   string trace_id = 1;
   SyncerInfo syncer_info = 2;
   map<string, bytes> piece_data = 3; // key is piece key, value is piece_data
 }
 
-message SyncerServiceUploadECPieceResponse {
+message SyncerServiceSyncPieceResponse {
   string trace_id = 1;
   StorageProviderSealInfo secondary_sp_info = 2;
   ErrMessage err_message = 3;
 }
 
 service SyncerService {
-  rpc UploadECPiece(stream SyncerServiceUploadECPieceRequest) returns (SyncerServiceUploadECPieceResponse) {};
+  rpc SyncPiece(stream SyncerServiceSyncPieceRequest) returns (SyncerServiceSyncPieceResponse) {};
 }

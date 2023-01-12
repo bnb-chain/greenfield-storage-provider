@@ -317,13 +317,11 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				log.CtxInfow(ctx, "upload secondary piece job successfully", "secondary sp", secondary)
 			}()
 
-			length := uint32(len(pieceData))
-			log.Infow("PieceCount", "length", length)
-			syncResp, err := node.UploadECPiece(ctx, &service.SyncerInfo{
+			syncResp, err := node.SyncPiece(ctx, &service.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
 				StorageProviderId: secondary,
-				PieceCount:        length,
+				PieceCount:        uint32(len(pieceData)),
 				RedundancyType:    redundancyType,
 			}, pieceData, resp.GetTraceId())
 			// TBD:: retry alloc secondary sp and rat again.
@@ -340,7 +338,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 			log.Infow("sorted keys", "keys", keys)
 			for _, key := range keys {
 				pieceHash = append(pieceHash, hash.GenerateChecksum(pieceData[key]))
-				//_, _, pieceIndex, _ = piecestore.DecodeECPieceKey(key)
 			}
 			integrityHash := hash.GenerateIntegrityHash(pieceHash)
 			log.Infow("compute locally", "integrityHash", hex.EncodeToString(integrityHash)[:10], "secondary", secondary,
@@ -384,12 +381,12 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *ser
 	log.CtxInfow(ctx, "report stone hub err msg success")
 }
 
-// UploadECPiece send rpc request to secondary storage provider to sync the piece data.
-func (node *StoneNodeService) UploadECPiece(ctx context.Context, syncerInfo *service.SyncerInfo,
-	pieceData map[string][]byte, traceID string) (*service.SyncerServiceUploadECPieceResponse, error) {
+// SyncPiece send rpc request to secondary storage provider to sync the piece data.
+func (node *StoneNodeService) SyncPiece(ctx context.Context, syncerInfo *service.SyncerInfo,
+	pieceData map[string][]byte, traceID string) (*service.SyncerServiceSyncPieceResponse, error) {
 	log.CtxInfow(ctx, "stone node UploadECPiece", "rType", syncerInfo.GetRedundancyType(),
 		"spID", syncerInfo.GetStorageProviderId(), "traceID", traceID, "length", len(pieceData))
-	stream, err := node.syncer.UploadECPiece(ctx)
+	stream, err := node.syncer.SyncPiece(ctx)
 	if err != nil {
 		log.Errorw("upload secondary job piece job error", "err", err)
 		return nil, err
@@ -400,7 +397,7 @@ func (node *StoneNodeService) UploadECPiece(ctx context.Context, syncerInfo *ser
 		log.Infow("pieceData", "key", key, "length", len(pieceData))
 		innerMap := make(map[string][]byte)
 		innerMap[key] = value
-		if err := stream.Send(&service.SyncerServiceUploadECPieceRequest{
+		if err := stream.Send(&service.SyncerServiceSyncPieceRequest{
 			TraceId:    traceID,
 			SyncerInfo: syncerInfo,
 			PieceData:  innerMap,

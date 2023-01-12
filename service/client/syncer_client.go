@@ -19,7 +19,7 @@ var _ io.Closer = &SyncerClient{}
 //
 //go:generate mockgen -source=./syncer_client.go -destination=./mock/syncer_mock.go -package=mock
 type SyncerAPI interface {
-	UploadECPiece(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_UploadECPieceClient, error)
+	SyncPiece(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_SyncPieceClient, error)
 	Close() error
 }
 
@@ -46,9 +46,9 @@ func NewSyncerClient(address string) (*SyncerClient, error) {
 }
 
 // UploadECPiece return SyncerService_UploadECPieceClient, need to be closed by caller
-func (client *SyncerClient) UploadECPiece(ctx context.Context, opts ...grpc.CallOption) (
-	service.SyncerService_UploadECPieceClient, error) {
-	return client.syncer.UploadECPiece(ctx, opts...)
+func (client *SyncerClient) SyncPiece(ctx context.Context, opts ...grpc.CallOption) (
+	service.SyncerService_SyncPieceClient, error) {
+	return client.syncer.SyncPiece(ctx, opts...)
 }
 
 func (client *SyncerClient) Close() error {

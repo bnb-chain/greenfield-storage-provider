@@ -74,23 +74,23 @@ func dispatchInlineMap() map[string][][]byte {
 func makeStreamMock() *StreamMock {
 	return &StreamMock{
 		ctx:          context.Background(),
-		recvToServer: make(chan *service.SyncerServiceUploadECPieceRequest, 10),
+		recvToServer: make(chan *service.SyncerServiceSyncPieceRequest, 10),
 	}
 }
 
 type StreamMock struct {
 	grpc.ClientStream
 	ctx          context.Context
-	recvToServer chan *service.SyncerServiceUploadECPieceRequest
+	recvToServer chan *service.SyncerServiceSyncPieceRequest
 }
 
-func (m *StreamMock) Send(resp *service.SyncerServiceUploadECPieceRequest) error {
+func (m *StreamMock) Send(resp *service.SyncerServiceSyncPieceRequest) error {
 	m.recvToServer <- resp
 	return nil
 }
 
-func (m *StreamMock) CloseAndRecv() (*service.SyncerServiceUploadECPieceResponse, error) {
-	return &service.SyncerServiceUploadECPieceResponse{
+func (m *StreamMock) CloseAndRecv() (*service.SyncerServiceSyncPieceResponse, error) {
+	return &service.SyncerServiceSyncPieceResponse{
 		TraceId: "test_traceID",
 		SecondarySpInfo: &service.StorageProviderSealInfo{
 			StorageProviderId: "sp1",
