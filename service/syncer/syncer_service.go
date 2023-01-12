@@ -69,6 +69,8 @@ func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
 			return err
 		}
 		spID = req.GetSyncerInfo().GetStorageProviderId()
+		log.Infow("kkk", "objectID", req.GetSyncerInfo().GetObjectId(), "PieceCount", req.GetSyncerInfo().GetPieceCount(),
+			"redundancyType", req.GetSyncerInfo().GetRedundancyType(), "spID", spID)
 		integrityMeta, key, value, err = s.gatherPieceData(req)
 		if err != nil {
 			return err
@@ -116,17 +118,18 @@ func (s *Syncer) gatherPieceData(req *service.SyncerServiceSyncPieceRequest) (*m
 		return nil, "", nil, errors.New("the length of piece data map is not equal to 1")
 	}
 
-	var integrityMeta *metadb.IntegrityMeta
 	var key string
 	var value []byte
+	redundancyType := req.GetSyncerInfo().GetRedundancyType()
+	integrityMeta := &metadb.IntegrityMeta{
+		//ObjectID:       req.GetSyncerInfo().GetObjectId(),
+		PieceCount:     req.GetSyncerInfo().GetPieceCount(),
+		IsPrimary:      false,
+		RedundancyType: redundancyType,
+	}
 	for k, v := range req.GetPieceData() {
 		key = k
 		value = v
-		integrityMeta.ObjectID = req.GetSyncerInfo().GetObjectId()
-		integrityMeta.PieceCount = req.GetSyncerInfo().GetPieceCount()
-		integrityMeta.IsPrimary = false
-		redundancyType := req.GetSyncerInfo().GetRedundancyType()
-		integrityMeta.RedundancyType = redundancyType
 		pieceIndex, err := parsePieceIndex(redundancyType, key)
 		if err != nil {
 			return nil, "", nil, err
