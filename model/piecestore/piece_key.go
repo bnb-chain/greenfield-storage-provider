@@ -82,7 +82,7 @@ func CheckSegmentPieceKey(keys []string) bool {
 // CheckECPieceKey checks EC piece key is correct
 func CheckECPieceKey(keys []string) bool {
 	if len(keys) != 3 {
-		log.Errorw("Invalid ec piece key", "piece key", keys)
+		log.Errorw("Invalid EC piece key", "piece key", keys)
 		return false
 	}
 

@@ -338,7 +338,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 			log.Infow("sorted keys", "keys", keys)
 			for _, key := range keys {
 				pieceHash = append(pieceHash, hash.GenerateChecksum(pieceData[key]))
-				_, _, pieceIndex, _ = piecestore.DecodeECPieceKey(key)
+				//_, _, pieceIndex, _ = piecestore.DecodeECPieceKey(key)
 			}
 			integrityHash := hash.GenerateIntegrityHash(pieceHash)
 			log.Infow("compute locally", "integrityHash", hex.EncodeToString(integrityHash)[:10], "secondary", secondary,
