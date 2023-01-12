@@ -36,12 +36,12 @@ func (s *Syncer) UploadECPiece(stream service.SyncerService_UploadECPieceServer)
 		log.Infow("first", "object_id", req.GetSyncerInfo().GetObjectId(), "tx_hash", req.GetSyncerInfo().GetTxHash(),
 			"storage_provider_id", req.GetSyncerInfo().GetStorageProviderId(), "rType", req.GetSyncerInfo().GetRedundancyType(), "traceID", req.GetTraceId())
 		if err == io.EOF {
+			log.Infow("upload ec piece closed", "error", err, "storage_provider_id", sealInfo.GetStorageProviderId(),
+				"piece_idx", sealInfo.GetPieceIdx(), "count", count, "req.GetSyncerInfo().GetPieceCount()", req.GetSyncerInfo().GetPieceCount())
 			if count != req.GetSyncerInfo().GetPieceCount() {
 				log.Errorw("syncer service received piece count is wrong")
 				return merrors.ErrReceivedPieceCount
 			}
-			log.Infow("upload ec piece closed", "error", err, "storage_provider_id", sealInfo.GetStorageProviderId(),
-				"piece_idx", sealInfo.GetPieceIdx(), "count", count, "req.GetSyncerInfo().GetPieceCount()", req.GetSyncerInfo().GetPieceCount())
 			checksumList := sealInfo.GetPieceChecksum()
 			integrityHash := hash.GenerateIntegrityHash(checksumList)
 			sealInfo.IntegrityHash = integrityHash
