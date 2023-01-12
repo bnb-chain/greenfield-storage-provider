@@ -3,11 +3,16 @@ package syncer
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"sync/atomic"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
+
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/service/client"
@@ -24,6 +29,7 @@ type Syncer struct {
 	cfg     *SyncerConfig
 	name    string
 	store   client.PieceStoreAPI
+	metaDB  metadb.MetaDB // storage provider meta db
 	running atomic.Bool
 }
 
@@ -36,6 +42,10 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	if err := s.initClient(); err != nil {
 		return nil, err
 	}
+	// init meta db
+	if err := s.initDB(); err != nil {
+		return nil, err
+	}
 	return s, nil
 }
 
@@ -46,6 +56,23 @@ func (s *Syncer) initClient() error {
 		return err
 	}
 	s.store = store
+	return nil
+}
+
+func (s *Syncer) initDB() error {
+	var err error
+	switch s.cfg.MetaDBType {
+	case model.LevelDB:
+		if s.cfg.MetaDB == nil {
+			s.cfg.MetaDB = DefaultSyncerConfig.MetaDB
+		}
+		s.metaDB, err = leveldb.NewMetaDB(s.cfg.MetaDB)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unsupported meta db type %s", s.cfg.MetaDBType)
+	}
 	return nil
 }
 

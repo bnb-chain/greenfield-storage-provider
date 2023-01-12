@@ -314,7 +314,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 					log.CtxErrorw(ctx, "done secondary piece job to stone hub failed", "error", err)
 					return
 				}
-				log.CtxInfow(ctx, "upload secondary piece job successfully", "secondary sp", secondary)
+				log.CtxInfow(ctx, "sync secondary piece job successfully", "secondary sp", secondary)
 			}()
 
 			syncResp, err := node.SyncPiece(ctx, &service.SyncerInfo{
@@ -388,7 +388,7 @@ func (node *StoneNodeService) SyncPiece(ctx context.Context, syncerInfo *service
 		"spID", syncerInfo.GetStorageProviderId(), "traceID", traceID, "length", len(pieceData))
 	stream, err := node.syncer.SyncPiece(ctx)
 	if err != nil {
-		log.Errorw("upload secondary job piece job error", "err", err)
+		log.Errorw("sync secondary piece job error", "err", err)
 		return nil, err
 	}
 
@@ -413,11 +413,11 @@ func (node *StoneNodeService) SyncPiece(ctx context.Context, syncerInfo *service
 		return nil, err
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-		log.Errorw("upload ec piece sends to stone node response code is not success", "error", err, "traceID", resp.GetTraceId())
+		log.Errorw("sync piece sends to stone node response code is not success", "error", err, "traceID", resp.GetTraceId())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	log.Infof("traceID: %s", resp.GetTraceId())
-	log.CtxInfow(ctx, "UploadECPiece", "spInfo", resp.GetSecondarySpInfo(), "GetIntegrityHash",
+	log.CtxInfow(ctx, "SyncPiece", "spInfo", resp.GetSecondarySpInfo(), "GetIntegrityHash",
 		resp.GetSecondarySpInfo().GetIntegrityHash(), "traceID", resp.GetTraceId())
 	return resp, nil
 }

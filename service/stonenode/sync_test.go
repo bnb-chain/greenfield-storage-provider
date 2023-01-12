@@ -340,7 +340,7 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	}
 }
 
-func TestUploadECPieceSuccess(t *testing.T) {
+func TestSyncPieceSuccess(t *testing.T) {
 	node := setup(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
