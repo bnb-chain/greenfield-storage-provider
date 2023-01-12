@@ -80,13 +80,12 @@ func (node *StoneNodeService) Start(ctx context.Context) error {
 		return merrors.ErrStoneNodeStarted
 	}
 	go func() {
-		log.Info("2")
 		var stoneJobCounter int64 // atomic
-		allocTimer := time.NewTicker(AllocStonePeriod)
+		allocTicker := time.NewTicker(AllocStonePeriod)
 		ctx, cancel := context.WithCancel(context.Background())
 		for {
 			select {
-			case <-allocTimer.C:
+			case <-allocTicker.C:
 				go func() {
 					if !node.running.Load() {
 						log.Errorw("stone node service stopped, can not alloc stone.")
@@ -135,12 +134,10 @@ func (node *StoneNodeService) allocStone(ctx context.Context) {
 	log.Info("enter into allocStone")
 	resp, err := node.stoneHub.AllocStoneJob(ctx)
 	ctx = log.Context(ctx, resp)
-	log.Info("18")
 	if err != nil {
 		log.CtxErrorw(ctx, "alloc stone from stone hub failed", "error", err)
 		return
 	}
-	log.Info("19")
 	// TBD:: stone node will support more types of stone job,
 	// currently only support upload secondary piece job.
 	if err := node.syncPieceToSecondarySP(ctx, resp); err != nil {

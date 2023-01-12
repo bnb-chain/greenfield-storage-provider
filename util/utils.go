@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/naoina/toml"
+	"golang.org/x/exp/constraints"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
 )
@@ -51,25 +52,18 @@ func ComputeSegmentCount(size uint64) uint32 {
 	return segmentCount
 }
 
-type MapKeySorted interface {
-	map[string][]byte | map[string][][]byte
-}
-
 // SortedKeys sort keys of a map
-//func GenericSortedKeys[M MapKeySorted](dataMap M) []string {
-//	keys := make([]string, 0, len(dataMap))
-//	for k := range dataMap {
-//		keys = append(keys, k)
-//	}
-//	sort.Strings(keys)
-//	return keys
-//}
-
-func SortedKeys(dataMap map[string][]byte) []string {
-	keys := make([]string, 0, len(dataMap))
+func GenericSortedKeys[K constraints.Ordered, V any](dataMap map[K]V) []K {
+	keys := make([]K, 0, len(dataMap))
 	for k := range dataMap {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	sortSlice(keys)
 	return keys
+}
+
+func sortSlice[T constraints.Ordered](s []T) {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] < s[j]
+	})
 }

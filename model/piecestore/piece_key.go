@@ -38,7 +38,7 @@ func EncodeECPieceKey(objectID uint64, segmentIndex, pieceIndex uint32) string {
 }
 
 // EncodeECPieceKeyBySegmentKey encodes ec piece store key
-func EncodeECPieceKeyBySegmentKey(segmentKey string, pieceIndex int) string {
+func EncodeECPieceKeyBySegmentKey(segmentKey string, pieceIndex uint32) string {
 	return fmt.Sprintf("%s_p%d", segmentKey, pieceIndex)
 }
 
