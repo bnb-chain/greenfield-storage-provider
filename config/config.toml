@@ -6,10 +6,13 @@ Service = [
 [StoneHubCfg]
     StorageProvider = "bnb-sp"
     Address = "127.0.0.1:5323"
-    [StoneHubCfg.MockConfig]
-        Mock = true
-        JobDB = "memdb"
-        MetaDB = "memdb"
+    JobDBType = "memory"
+    MetaDBType = "leveldb"
+    [StoneHubCfg.JobDB]
+        User = "root"
+        Passwd = "bfs-test"
+        Address = "127.0.0.1:3306"
+        Database = "job_context"
 
 
 [GatewayCfg]
@@ -44,6 +47,12 @@ Service = [
             MaxRetries = 5
             TlsInsecureSkipVerify = false
             TestMode = true
+    [UploaderCfg.MetaDBConfig]
+        Path = "./data"
+        NameSpace = "bnb-sp"
+        Cache = 4096
+        FileHandles = 1000
+        ReadOnly = false
 
 
 [StoneNodeCfg]

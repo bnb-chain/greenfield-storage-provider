@@ -33,7 +33,7 @@ func newRequestContext(r *http.Request) *requestContext {
 		)
 		bucket = r.Header.Get(BFSResourceHeader)
 		fields := strings.Split(bucket, "/")
-		if len(fields) > 2 {
+		if len(fields) >= 2 {
 			bucket = fields[0]
 			object = strings.Join(fields[1:], "/")
 		}

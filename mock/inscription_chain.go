@@ -102,6 +102,15 @@ func (cli *InscriptionChainMock) CreateObjectByTxHash(txHash []byte, object *typ
 	}
 }
 
+// GenerateObjectIDAndHeight generate new objectID and height.
+func (cli *InscriptionChainMock) GenerateObjectIDAndHeight() (uint64, uint64) {
+	cli.mu.Lock()
+	defer cli.mu.Unlock()
+	cli.objectID++
+	cli.objectHeight++
+	return cli.objectID, cli.objectHeight
+}
+
 // SealObjectByTxHash seal the object on the mock inscription chain.
 func (cli *InscriptionChainMock) SealObjectByTxHash(txHash []byte, object *types.ObjectInfo) {
 	cli.mu.Lock()

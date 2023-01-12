@@ -36,13 +36,13 @@ type objectTxInfo struct {
 type putObjectOption struct {
 	reqCtx *requestContext
 	txHash []byte
+	size   uint64
 }
 
 // objectInfo is the return of putObject.
 type objectInfo struct {
-	size         uint64
-	eTag         string
-	preSignature []byte
+	size uint64
+	eTag string
 }
 
 // uploaderClientInterface define interface to upload object. BFS upload process is divided into two stages:
@@ -263,7 +263,7 @@ func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, opt *put
 		md5Value string
 	)
 
-	stream, err := gui.uploader.UploadPayload(context.Background())
+	stream, err := gui.uploader.UploadPayloadV2(context.Background())
 	if err != nil {
 		log.Warnw("failed to dail to uploader", "err", err)
 		return nil, errors.ErrInternalError
@@ -275,10 +275,13 @@ func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, opt *put
 			return nil, errors.ErrInternalError
 		}
 		if readN > 0 {
-			var req pbService.UploaderServiceUploadPayloadRequest
+			var req pbService.UploaderServiceUploadPayloadV2Request
 			req.TraceId = opt.reqCtx.requestID
 			req.TxHash = opt.txHash
 			req.PayloadData = buf[:readN]
+			req.BucketName = opt.reqCtx.bucket
+			req.ObjectName = name
+			req.ObjectSize = opt.size
 			// todo: fill job_id??
 			if err := stream.Send(&req); err != nil {
 				log.Warnw("put object failed, due to stream send", "err", err)
@@ -289,6 +292,10 @@ func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, opt *put
 			md5Hash.Write(hashBuf[:readN])
 		}
 		if err == io.EOF {
+			if size == 0 {
+				log.Warnw("put object failed, due to payload is empty")
+				return nil, errors.ErrObjectIsEmpty
+			}
 			err = nil
 			resp, err := stream.CloseAndRecv()
 			if err != nil {
