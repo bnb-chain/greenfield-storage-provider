@@ -122,7 +122,7 @@ func (s *Syncer) gatherPieceData(req *service.SyncerServiceSyncPieceRequest) (*m
 	var value []byte
 	redundancyType := req.GetSyncerInfo().GetRedundancyType()
 	integrityMeta := &metadb.IntegrityMeta{
-		//ObjectID:       req.GetSyncerInfo().GetObjectId(),
+		ObjectID:       req.GetSyncerInfo().GetObjectId(),
 		PieceCount:     req.GetSyncerInfo().GetPieceCount(),
 		IsPrimary:      false,
 		RedundancyType: redundancyType,
