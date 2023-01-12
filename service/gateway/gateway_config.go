@@ -3,9 +3,9 @@ package gateway
 type GatewayConfig struct {
 	Address          string
 	Domain           string
-	UploaderConfig   uploadProcesserConfig
+	UploaderConfig   uploadProcessorConfig
 	ChainConfig      chainClientConfig
-	DownloaderConfig downloaderClientConfig
+	DownloaderConfig downloadProcessorConfig
 }
 
 var DefaultGatewayConfig = &GatewayConfig{
@@ -23,5 +23,6 @@ var DefaultGatewayConfig = &GatewayConfig{
 	DownloaderConfig: struct {
 		Mode     string
 		DebugDir string
-	}{Mode: "DebugMode", DebugDir: "./debug"},
+		Address  string
+	}{Mode: "DebugMode", DebugDir: "./debug", Address: "127.0.0.1:5523"},
 }

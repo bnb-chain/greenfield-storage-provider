@@ -330,21 +330,21 @@ func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, opt *put
 	return &objectInfo{eTag: md5Value, size: size}, nil
 }
 
-// uploaderClientConfig is the configuration information when creating uploaderClient.
+// uploadProcessorConfig is the configuration information when creating uploaderClient.
 // currently Mode support "DebugMode" and "GrpcMode".
-type uploadProcesserConfig struct {
+type uploadProcessorConfig struct {
 	Mode     string
 	DebugDir string
 	Address  string
 }
 
-// uploadProcesser is a wrapper of uploader client.
-type uploadProcesser struct {
+// uploadProcessor is a wrapper of uploader client.
+type uploadProcessor struct {
 	impl uploaderClientInterface
 }
 
 // newUploaderClient return a uploaderClient.
-func newUploadProcesser(c *uploadProcesserConfig) (*uploadProcesser, error) {
+func newUploadProcessor(c *uploadProcessorConfig) (*uploadProcessor, error) {
 	switch {
 	case c.Mode == "DebugMode":
 		if c.DebugDir == "" {
@@ -354,25 +354,25 @@ func newUploadProcesser(c *uploadProcesserConfig) (*uploadProcesser, error) {
 			log.Warnw("failed to make debug dir", "err", err)
 			return nil, err
 		}
-		return &uploadProcesser{impl: &debugUploaderImpl{localDir: c.DebugDir}}, nil
+		return &uploadProcessor{impl: &debugUploaderImpl{localDir: c.DebugDir}}, nil
 	case c.Mode == "GrpcMode":
 		u, err := client.NewUploaderClient(c.Address)
 		if err != nil {
 			return nil, err
 		}
-		return &uploadProcesser{impl: &grpcUploaderImpl{uploader: u}}, nil
+		return &uploadProcessor{impl: &grpcUploaderImpl{uploader: u}}, nil
 	default:
 		return nil, fmt.Errorf("not support mode, %v", c.Mode)
 	}
 }
 
 // putObjectTx call uploaderClient putObjectTx interface.
-func (up *uploadProcesser) putObjectTx(name string, opt *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
+func (up *uploadProcessor) putObjectTx(name string, opt *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
 	return up.impl.putObjectTx(name, opt)
 }
 
 // putObject call uploaderClient putObject interface.
-func (up *uploadProcesser) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
+func (up *uploadProcessor) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
 	return up.impl.putObject(name, reader, opt)
 }
 
@@ -384,7 +384,7 @@ type authenticationInfo struct {
 }
 
 // getAuthentication call uploaderService getAuthentication interface.
-func (up *uploadProcesser) getAuthentication(opt *getAuthenticationOption) (*authenticationInfo, error) {
+func (up *uploadProcessor) getAuthentication(opt *getAuthenticationOption) (*authenticationInfo, error) {
 	if p, ok := up.impl.(*grpcUploaderImpl); ok {
 		return p.getAuthentication(opt)
 	}
@@ -392,15 +392,15 @@ func (up *uploadProcesser) getAuthentication(opt *getAuthenticationOption) (*aut
 }
 
 // putObjectV2 call uploaderService putObjectV2 interface.
-func (up *uploadProcesser) putObjectV2(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
+func (up *uploadProcessor) putObjectV2(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
 	if p, ok := up.impl.(*grpcUploaderImpl); ok {
 		return p.putObjectV2(name, reader, opt)
 	}
 	return nil, fmt.Errorf("not supported")
 }
 
-// Close release uploadProcesser resource.
-func (up *uploadProcesser) Close() error {
+// Close release uploadProcessor resource.
+func (up *uploadProcessor) Close() error {
 	if p, ok := up.impl.(*grpcUploaderImpl); ok {
 		return p.uploader.Close()
 	}

@@ -1,5 +1,5 @@
 Service = [
-    "StoneHub", "Gateway", "Uploader", "StoneNode", "Syncer",
+    "StoneHub", "Gateway", "Uploader", "StoneNode", "Syncer", "Downloader",
 ]
 
 
@@ -29,6 +29,8 @@ Service = [
     [GatewayCfg.DownloaderConfig]
         Mode = "DebugMode"
         DebugDir = "./debug"
+        Address = "127.0.0.1:5523"
+
 
 
 [UploaderCfg]
@@ -107,3 +109,18 @@ Service = [
 #            MaxRetries = 5
 #            TlsInsecureSkipVerify = false
 #            TestMode = true
+
+[DownloaderCfg]
+    Address = "127.0.0.1:5523"
+    [DownloaderCfg.PieceStoreConfig]
+        Shards = 0
+        [DownloaderCfg.PieceStoreConfig.Store]
+            Storage = "file"
+            BucketURL = "./debug"
+            AccessKey = "ACCESSKEY"
+            SecretKey = "SECRETKEY"
+            SessionToken = "SESSIONTOKEN"
+            NoSignRequest = false
+            MaxRetries = 5
+            TlsInsecureSkipVerify = false
+            TestMode = true

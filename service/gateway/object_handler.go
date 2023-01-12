@@ -66,7 +66,7 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 		isPrivate:      isPrivate,
 		redundancyType: reqCtx.r.Header.Get(BFSRedundancyTypeHeader),
 	}
-	info, err := g.uploadProcesser.putObjectTx(reqCtx.object, opt)
+	info, err := g.uploadProcessor.putObjectTx(reqCtx.object, opt)
 	if err != nil {
 		if err == errors.ErrDuplicateObject {
 			errorDescription = ObjectAlreadyExists
@@ -136,7 +136,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		txHash: txHash,
 	}
 
-	info, err := g.uploadProcesser.putObject(reqCtx.object, r.Body, opt)
+	info, err := g.uploadProcessor.putObject(reqCtx.object, r.Body, opt)
 	if err != nil {
 		if err == errors.ErrObjectTxNotExist {
 			errorDescription = ObjectTxNotFound
@@ -197,7 +197,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var opt = &getObjectOption{
 		reqCtx: reqCtx,
 	}
-	err = g.downloader.getObject(reqCtx.object, w, opt)
+	err = g.downloadProcessor.getObject(reqCtx.object, w, opt)
 	if err != nil {
 		if err == errors.ErrObjectNotExist {
 			errorDescription = NoSuchKey
@@ -266,7 +266,7 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		redundancyType: reqCtx.r.Header.Get(BFSRedundancyTypeHeader),
 	}
 
-	info, err := g.uploadProcesser.putObjectV2(reqCtx.object, r.Body, opt)
+	info, err := g.uploadProcessor.putObjectV2(reqCtx.object, r.Body, opt)
 	if err != nil {
 		if err == errors.ErrObjectTxNotExist {
 			errorDescription = ObjectTxNotFound
