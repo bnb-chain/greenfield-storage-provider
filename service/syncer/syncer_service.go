@@ -16,11 +16,7 @@ import (
 
 // SyncPiece syncs piece data to secondary storage provider
 func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
-	var sealInfo *service.StorageProviderSealInfo
 	var count uint32
-	//var pieceIndex uint32
-	//var pieceCount uint32
-	//var err error
 	var integrityMeta *metadb.IntegrityMeta
 	var key string
 	var spID string
@@ -41,15 +37,13 @@ func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
 	for {
 		req, err := stream.Recv()
 		if err == io.EOF {
-			log.Infow("upload ec piece closed", "error", err, "storage_provider_id", sealInfo.GetStorageProviderId(),
-				"piece_idx", sealInfo.GetPieceIdx(), "count", count)
 			if count != integrityMeta.PieceCount {
 				log.Errorw("syncer service received piece count is wrong")
 				return merrors.ErrReceivedPieceCount
 			}
 
 			integrityMeta.PieceHash = pieceHash
-			sealInfo = generateSealInfo(spID, integrityMeta)
+			sealInfo := generateSealInfo(spID, integrityMeta)
 			integrityMeta.IntegrityHash = sealInfo.GetIntegrityHash()
 			if err := s.setIntegrityMeta(s.metaDB, integrityMeta); err != nil {
 				log.Errorw("setIntegrityMeta error", "error", err)
@@ -69,19 +63,12 @@ func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
 			return err
 		}
 		spID = req.GetSyncerInfo().GetStorageProviderId()
-		log.Infow("kkk", "objectID", req.GetSyncerInfo().GetObjectId(), "PieceCount", req.GetSyncerInfo().GetPieceCount(),
-			"redundancyType", req.GetSyncerInfo().GetRedundancyType(), "spID", spID)
 		integrityMeta, key, value, err = s.gatherPieceData(req)
 		if err != nil {
 			return err
 		}
 		pieceHash[key] = hash.GenerateChecksum(value)
 		count++
-		//sealInfo, _, err = s.handleUploadPiece(req)
-		//if err != nil {
-		//	log.Errorw("handle upload piece error", "error", err)
-		//	return err
-		//}
 	}
 }
 
@@ -95,7 +82,6 @@ func (s *Syncer) setIntegrityMeta(db metadb.MetaDB, meta *metadb.IntegrityMeta) 
 
 func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *service.StorageProviderSealInfo {
 	keys := util.GenericSortedKeys(integrityMeta.PieceHash)
-	log.Info("SortedKeys", "keys", keys)
 	pieceChecksumList := make([][]byte, 0)
 	var integrityHash []byte
 	for _, key := range keys {
@@ -145,42 +131,6 @@ func (s *Syncer) gatherPieceData(req *service.SyncerServiceSyncPieceRequest) (*m
 	return integrityMeta, key, value, nil
 }
 
-// handleUploadPiece store piece data to piece store and compute integrity hash.
-func (s *Syncer) handleUploadPiece(req *service.SyncerServiceSyncPieceRequest) (
-	*service.StorageProviderSealInfo, uint32, error) {
-	var (
-		pieceIndex uint32
-		err        error
-	)
-	pieceChecksumList := make([][]byte, 0)
-	keys := util.GenericSortedKeys(req.GetPieceData())
-	log.Info("SortedKeys", "keys", keys)
-	for _, key := range keys {
-		// if redundancyType is ec, check all pieceIndex is equal
-		pieceIndex, err = parsePieceIndex(req.GetSyncerInfo().GetRedundancyType(), key)
-		if err != nil {
-			return nil, 0, err
-		}
-		value := req.GetPieceData()[key]
-		checksum := hash.GenerateChecksum(value)
-		pieceChecksumList = append(pieceChecksumList, checksum)
-		if err = s.store.PutPiece(key, value); err != nil {
-			log.Errorw("put piece failed", "error", err)
-			return nil, 0, err
-		}
-	}
-
-	spID := req.GetSyncerInfo().GetStorageProviderId()
-	log.Infow("handleUploadPiece", "spID", spID, "pieceIndex", pieceIndex)
-	resp := &service.StorageProviderSealInfo{
-		StorageProviderId: spID,
-		PieceIdx:          pieceIndex,
-		PieceChecksum:     pieceChecksumList,
-		Signature:         nil, // TODO(mock)
-	}
-	return resp, pieceIndex, nil
-}
-
 func parsePieceIndex(redundancyType ptypes.RedundancyType, key string) (uint32, error) {
 	var (
 		err        error
@@ -198,20 +148,3 @@ func parsePieceIndex(redundancyType ptypes.RedundancyType, key string) (uint32, 
 	}
 	return pieceIndex, nil
 }
-
-//func writeIntegrityMetaToMetaDb(syncerInfo *service.SyncerInfo, pieceIndex uint32, sealInfo *service.StorageProviderSealInfo) error {
-//	type s struct {
-//		m metadb.MetaDB
-//	}
-//	integritaMeta := &metadb.IntegrityMeta{
-//		ObjectID:       syncerInfo.GetObjectId(),
-//		PieceIdx:       pieceIndex,
-//		PieceCount:     syncerInfo.GetPieceCount(),
-//		IsPrimary:      false,
-//		RedundancyType: syncerInfo.GetRedundancyType(),
-//		IntegrityHash:  sealInfo.GetIntegrityHash(),
-//		//PieceHash:      sealInfo.GetPieceChecksum(),
-//	}
-//	a := s{}
-//	a.m.SetIntegrityMeta()
-//}

@@ -394,7 +394,6 @@ func (node *StoneNodeService) SyncPiece(ctx context.Context, syncerInfo *service
 
 	// send data one by one to avoid exceeding rpc max msg size
 	for key, value := range pieceData {
-		log.Infow("pieceData", "key", key, "length", len(pieceData))
 		innerMap := make(map[string][]byte)
 		innerMap[key] = value
 		if err := stream.Send(&service.SyncerServiceSyncPieceRequest{

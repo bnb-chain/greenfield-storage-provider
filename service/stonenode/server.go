@@ -131,7 +131,6 @@ func (node *StoneNodeService) Stop(ctx context.Context) error {
 
 // allocStone sends rpc request to stone hub alloc stone job.
 func (node *StoneNodeService) allocStone(ctx context.Context) {
-	log.Info("enter into allocStone")
 	resp, err := node.stoneHub.AllocStoneJob(ctx)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
