@@ -317,11 +317,13 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				log.CtxInfow(ctx, "upload secondary piece job successfully", "secondary sp", secondary)
 			}()
 
+			length := uint32(len(pieceData))
+			log.Infow("PieceCount", "length", length)
 			syncResp, err := node.UploadECPiece(ctx, &service.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
 				StorageProviderId: secondary,
-				PieceCount:        uint32(len(pieceData)),
+				PieceCount:        length,
 				RedundancyType:    redundancyType,
 			}, pieceData, resp.GetTraceId())
 			// TBD:: retry alloc secondary sp and rat again.
