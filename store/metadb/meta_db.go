@@ -10,8 +10,8 @@ type IntegrityMeta struct {
 	IsPrimary      bool                 `json:"IsPrimary"`
 	RedundancyType types.RedundancyType `json:"RedundancyType"`
 
-	IntegrityHash []byte            `json:"IntegrityHash"`
-	PieceHash     map[string][]byte `json:"PieceHash"`
+	IntegrityHash []byte   `json:"IntegrityHash"`
+	PieceHash     [][]byte `json:"PieceHash"`
 }
 
 // UploadPayloadAskingMeta defines the payload asking info

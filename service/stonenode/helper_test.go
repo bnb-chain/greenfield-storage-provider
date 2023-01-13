@@ -29,8 +29,6 @@ func mockAllocResp(objectID uint64, payloadSize uint64, redundancyType ptypes.Re
 		TraceId: "123456",
 		TxHash:  []byte("blockchain_one"),
 		PieceJob: &service.PieceJob{
-			BucketName:     "bucket1",
-			ObjectName:     "object1",
 			TxHash:         []byte("blockchain_one"),
 			ObjectId:       objectID,
 			PayloadSize:    payloadSize,

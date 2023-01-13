@@ -32,7 +32,7 @@ var DefaultStoneHubConfig = &StoneHubConfig{
 	JobDBType:       model.MemoryDB,
 	JobDB: &jobsql.DBOption{
 		User:     "root",
-		Passwd:   "bfs-test",
+		Passwd:   "green-field-test",
 		Address:  "127.0.0.1:3306",
 		Database: "job_context",
 	},

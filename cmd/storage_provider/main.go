@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/bnb-chain/inscription-storage-provider/config"
+	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/inscription-storage-provider/service/challenge"
 	"github.com/bnb-chain/inscription-storage-provider/service/downloader"
@@ -24,21 +25,10 @@ var (
 	configFile = flag.String("config", "../../config/config.toml", "config file path")
 )
 
-// define the storage provider supports service names
-var (
-	StoneHubService   = "StoneHub"
-	GetaWayService    = "Gateway"
-	UploaderService   = "Uploader"
-	DownloaderService = "Downloader"
-	StoneNodeService  = "StoneNode"
-	SyncerService     = "Syncer"
-	ChallengeService  = "Challenge"
-)
-
 // initService init service instance by name and config.
 func initService(serviceName string, cfg *config.StorageProviderConfig) (server lifecycle.Service, err error) {
 	switch serviceName {
-	case GetaWayService:
+	case model.GatewayService:
 		if cfg.GatewayCfg == nil {
 			cfg.GatewayCfg = config.DefaultStorageProviderConfig.GatewayCfg
 		}
@@ -46,7 +36,7 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-	case UploaderService:
+	case model.UploaderService:
 		if cfg.UploaderCfg == nil {
 			cfg.UploaderCfg = config.DefaultStorageProviderConfig.UploaderCfg
 		}
@@ -54,7 +44,7 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-	case DownloaderService:
+	case model.DownloaderService:
 		if cfg.DownloaderCfg == nil {
 			cfg.DownloaderCfg = config.DefaultStorageProviderConfig.DownloaderCfg
 		}
@@ -62,7 +52,7 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-	case StoneHubService:
+	case model.StoneHubService:
 		if cfg.StoneHubCfg == nil {
 			cfg.StoneHubCfg = config.DefaultStorageProviderConfig.StoneHubCfg
 		}
@@ -70,7 +60,7 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-	case StoneNodeService:
+	case model.StoneNodeService:
 		if cfg.StoneNodeCfg == nil {
 			cfg.StoneNodeCfg = config.DefaultStorageProviderConfig.StoneNodeCfg
 		}
@@ -78,7 +68,7 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-	case SyncerService:
+	case model.SyncerService:
 		if cfg.SyncerCfg == nil {
 			cfg.SyncerCfg = config.DefaultStorageProviderConfig.SyncerCfg
 		}
@@ -86,7 +76,7 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-	case ChallengeService:
+	case model.ChallengeService:
 		if cfg.ChallengeCfg == nil {
 			cfg.ChallengeCfg = config.DefaultStorageProviderConfig.ChallengeCfg
 		}
@@ -111,7 +101,7 @@ func main() {
 		// 1. init service instance.
 		service, err := initService(serviceName, cfg)
 		if err != nil {
-			log.Errorw("init service failed ", "error", err)
+			log.Errorw("init service failed", "service", serviceName, "error", err)
 		}
 		log.Infow("init service success", "service", serviceName)
 		// 2. register service to lifecycle.

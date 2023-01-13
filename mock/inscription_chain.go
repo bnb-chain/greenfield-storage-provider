@@ -80,7 +80,7 @@ func (cli *InscriptionChainMock) QueryObjectByTx(txHash []byte) (*types.ObjectIn
 	defer cli.mu.Unlock()
 	obj, ok := cli.object[string(txHash)]
 	if !ok {
-		return nil, errors.New("object is not exist.")
+		return nil, errors.New("object is not exist")
 	}
 	return obj, nil
 }

@@ -17,6 +17,5 @@ func GenerateIntegrityHash(checksumList [][]byte, storageProviderID string) []by
 	for _, j := range checksumList {
 		hash.Write(j)
 	}
-	hash.Write([]byte(storageProviderID))
 	return hash.Sum(nil)
 }

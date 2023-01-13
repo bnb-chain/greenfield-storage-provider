@@ -1,5 +1,17 @@
 package model
 
+// define storage provider support service name.
+const (
+	GatewayService    = "Gateway"
+	UploaderService   = "Uploader"
+	DownloaderService = "Downloader"
+	ChallengeService  = "Challenge"
+	StoneHubService   = "StoneHub"
+	StoneNodeService  = "StoneNode"
+	SyncerService     = "Syncer"
+)
+
+// define payload data redundancy size.
 const (
 	InlineSize  = 1 * 1024 * 1024
 	SegmentSize = 16 * 1024 * 1024
@@ -7,15 +19,23 @@ const (
 	EC_K        = 2
 )
 
-// Piece store constants
+type PieceType int32
+
+const (
+	SegmentPieceType PieceType = 0
+	ECPieceType      PieceType = 1
+)
+
+// define piece store constants.
 const (
 	BufPoolSize  = 32 << 10
 	ChecksumAlgo = "Crc32c"
 	OctetStream  = "application/octet-stream"
 )
 
-var (
+// define backend store type name.
+const (
 	MemoryDB string = "memory"
-	MySqlDB  string = "MySql"
+	MySqlDB  string = "mysql"
 	LevelDB  string = "leveldb"
 )

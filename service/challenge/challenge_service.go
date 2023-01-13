@@ -35,7 +35,6 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *service.Cha
 		return
 	}
 	resp.IntegrityHash = integrityMeta.IntegrityHash
-	resp.PieceHash = integrityMeta.PieceHash
 	resp.IsPrimary = integrityMeta.IsPrimary
 	resp.RedundancyType = integrityMeta.RedundancyType
 	resp.ChallengePieceKey = piecestore.EncodeECPieceKey(req.ObjectId, req.ChallengeIdx, integrityMeta.PieceIdx)

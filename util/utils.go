@@ -2,12 +2,13 @@ package util
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"unicode"
 
-	"github.com/google/uuid"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
@@ -33,12 +34,7 @@ var TomlSettings = toml.Config{
 
 // GenerateRequestID is used to generate random requestID.
 func GenerateRequestID() string {
-	var uUID uuid.UUID
-	var err error
-	if uUID, err = uuid.NewRandom(); err != nil {
-		return ""
-	}
-	return strings.ReplaceAll(uUID.String(), "-", "")
+	return strconv.FormatUint(rand.Uint64(), 10)
 }
 
 // ComputeSegmentCount return the segments counter by payload size.
@@ -48,4 +44,9 @@ func ComputeSegmentCount(size uint64) uint32 {
 		segmentCount++
 	}
 	return segmentCount
+}
+
+// ReadJobState parser the job state to readable
+func ReadJobState(state string) string {
+	return strings.ToLower(strings.TrimPrefix(state, "JOB_STATE_"))
 }
