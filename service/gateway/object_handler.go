@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/util/hash"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
@@ -19,7 +20,7 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
-		reqCtx           *requestContext
+		requestContext   *requestContext
 		opt              *putObjectTxOption
 	)
 
@@ -27,46 +28,46 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 		statusCode := 200
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
-			_ = errorDescription.errorResponse(w, reqCtx)
+			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(reqCtx))
+			log.Infof("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(requestContext))
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(reqCtx))
+			log.Warnf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(requestContext))
 		}
 	}()
 
-	reqCtx = newRequestContext(r)
-	if reqCtx.bucket == "" {
+	requestContext = newRequestContext(r)
+	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
 	}
-	if reqCtx.object == "" {
+	if requestContext.objectName == "" {
 		errorDescription = InvalidKey
 		return
 	}
-	if err := reqCtx.verifySign(); err != nil {
+	if err := requestContext.verifySign(); err != nil {
 		errorDescription = SignatureDoesNotMatch
 		return
 	}
-	if err := reqCtx.verifyAuth(g.retriever); err != nil {
+	if err := requestContext.verifyAuth(g.retriever); err != nil {
 		errorDescription = UnauthorizedAccess
 		return
 	}
 
 	// todo: check more params
-	sizeStr := reqCtx.r.Header.Get(BFSContentLengthHeader)
+	sizeStr := requestContext.r.Header.Get(model.BFSContentLengthHeader)
 	sizeInt, _ := strconv.Atoi(sizeStr)
-	isPrivate, _ := strconv.ParseBool(reqCtx.r.Header.Get(BFSIsPrivateHeader))
+	isPrivate, _ := strconv.ParseBool(requestContext.r.Header.Get(model.BFSIsPrivateHeader))
 	opt = &putObjectTxOption{
-		reqCtx:         reqCtx,
-		size:           uint64(sizeInt),
-		contentType:    reqCtx.r.Header.Get(BFSContentTypeHeader),
-		checksum:       []byte(reqCtx.r.Header.Get(BFSChecksumHeader)),
+		requestContext: requestContext,
+		objectSize:     uint64(sizeInt),
+		contentType:    requestContext.r.Header.Get(model.BFSContentTypeHeader),
+		checksum:       []byte(requestContext.r.Header.Get(model.BFSChecksumHeader)),
 		isPrivate:      isPrivate,
-		redundancyType: reqCtx.r.Header.Get(BFSRedundancyTypeHeader),
+		redundancyType: requestContext.r.Header.Get(model.BFSRedundancyTypeHeader),
 	}
-	info, err := g.uploadProcessor.putObjectTx(reqCtx.object, opt)
+	info, err := g.uploadProcessor.putObjectTx(requestContext.objectName, opt)
 	if err != nil {
 		if err == errors.ErrDuplicateObject {
 			errorDescription = ObjectAlreadyExists
@@ -77,8 +78,8 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// succeed ack
-	w.Header().Set(BFSRequestIDHeader, reqCtx.requestID)
-	w.Header().Set(BFSTransactionHashHeader, hex.EncodeToString(info.txHash))
+	w.Header().Set(model.BFSRequestIDHeader, requestContext.requestID)
+	w.Header().Set(model.BFSTransactionHashHeader, hex.EncodeToString(info.txHash))
 }
 
 // putObjectHandler handle put object request, include steps:
@@ -90,7 +91,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
-		reqCtx           *requestContext
+		requestContext   *requestContext
 		opt              *putObjectOption
 	)
 
@@ -98,45 +99,45 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		statusCode := 200
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
-			_ = errorDescription.errorResponse(w, reqCtx)
+			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(reqCtx))
+			log.Infof("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(requestContext))
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(reqCtx))
+			log.Warnf("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(requestContext))
 		}
 	}()
 
-	reqCtx = newRequestContext(r)
-	if reqCtx.bucket == "" {
+	requestContext = newRequestContext(r)
+	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
 	}
-	if reqCtx.object == "" {
+	if requestContext.objectName == "" {
 		errorDescription = InvalidKey
 		return
 	}
 
-	if err := reqCtx.verifySign(); err != nil {
+	if err := requestContext.verifySign(); err != nil {
 		errorDescription = SignatureDoesNotMatch
 		return
 	}
-	if err := reqCtx.verifyAuth(g.retriever); err != nil {
+	if err := requestContext.verifyAuth(g.retriever); err != nil {
 		errorDescription = UnauthorizedAccess
 		return
 	}
-	txHash, err := hex.DecodeString(reqCtx.r.Header.Get(BFSTransactionHashHeader))
+	txHash, err := hex.DecodeString(requestContext.r.Header.Get(model.BFSTransactionHashHeader))
 	if err != nil && len(txHash) != hash.LengthHash {
 		errorDescription = InvalidTxHash
 		return
 	}
 
 	opt = &putObjectOption{
-		reqCtx: reqCtx,
-		txHash: txHash,
+		requestContext: requestContext,
+		txHash:         txHash,
 	}
 
-	info, err := g.uploadProcessor.putObject(reqCtx.object, r.Body, opt)
+	info, err := g.uploadProcessor.putObject(requestContext.objectName, r.Body, opt)
 	if err != nil {
 		if err == errors.ErrObjectTxNotExist {
 			errorDescription = ObjectTxNotFound
@@ -146,8 +147,8 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = InternalError
 		return
 	}
-	w.Header().Set(BFSRequestIDHeader, reqCtx.requestID)
-	w.Header().Set(ETagHeader, info.eTag)
+	w.Header().Set(model.BFSRequestIDHeader, requestContext.requestID)
+	w.Header().Set(model.ETagHeader, info.eTag)
 }
 
 // getObjectHandler handle get object request, include steps:
@@ -159,45 +160,45 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
-		reqCtx           *requestContext
+		requestContext   *requestContext
 	)
 
 	defer func() {
 		statusCode := 200
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
-			_ = errorDescription.errorResponse(w, reqCtx)
+			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(reqCtx))
+			log.Infof("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(requestContext))
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(reqCtx))
+			log.Warnf("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(requestContext))
 		}
 	}()
 
-	reqCtx = newRequestContext(r)
-	if reqCtx.bucket == "" {
+	requestContext = newRequestContext(r)
+	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
 	}
-	if reqCtx.object == "" {
+	if requestContext.objectName == "" {
 		errorDescription = InvalidKey
 		return
 	}
 
-	if err := reqCtx.verifySign(); err != nil {
+	if err := requestContext.verifySign(); err != nil {
 		errorDescription = SignatureDoesNotMatch
 		return
 	}
-	if err := reqCtx.verifyAuth(g.retriever); err != nil {
+	if err := requestContext.verifyAuth(g.retriever); err != nil {
 		errorDescription = UnauthorizedAccess
 		return
 	}
 
-	var opt = &getObjectOption{
-		reqCtx: reqCtx,
+	option := &getObjectOption{
+		requestContext: requestContext,
 	}
-	err = g.downloadProcessor.getObject(reqCtx.object, w, opt)
+	err = g.downloadProcessor.getObject(requestContext.objectName, w, option)
 	if err != nil {
 		if err == errors.ErrObjectNotExist {
 			errorDescription = NoSuchKey
@@ -215,58 +216,57 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
-		reqCtx           *requestContext
-		opt              *putObjectOption
+		requestContext   *requestContext
 	)
 
 	defer func() {
 		statusCode := 200
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
-			_ = errorDescription.errorResponse(w, reqCtx)
+			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(reqCtx))
+			log.Infof("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(requestContext))
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(reqCtx))
+			log.Warnf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(requestContext))
 		}
 	}()
 
-	reqCtx = newRequestContext(r)
-	if reqCtx.bucket == "" {
+	requestContext = newRequestContext(r)
+	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
 	}
-	if reqCtx.object == "" {
+	if requestContext.objectName == "" {
 		errorDescription = InvalidKey
 		return
 	}
 
-	if err := reqCtx.verifySign(); err != nil {
+	if err := requestContext.verifySign(); err != nil {
 		errorDescription = SignatureDoesNotMatch
 		return
 	}
-	if err := reqCtx.verifyAuth(g.retriever); err != nil {
+	if err := requestContext.verifyAuth(g.retriever); err != nil {
 		errorDescription = UnauthorizedAccess
 		return
 	}
 
-	txHash, err := hex.DecodeString(reqCtx.r.Header.Get(BFSTransactionHashHeader))
+	txHash, err := hex.DecodeString(requestContext.r.Header.Get(model.BFSTransactionHashHeader))
 	if err != nil && len(txHash) != hash.LengthHash {
 		errorDescription = InvalidTxHash
 		return
 	}
 
-	sizeStr := reqCtx.r.Header.Get(ContentLengthHeader)
+	sizeStr := requestContext.r.Header.Get(model.ContentLengthHeader)
 	sizeInt, _ := strconv.Atoi(sizeStr)
-	opt = &putObjectOption{
-		reqCtx:         reqCtx,
+	option := &putObjectOption{
+		requestContext: requestContext,
 		txHash:         txHash,
 		size:           uint64(sizeInt),
-		redundancyType: reqCtx.r.Header.Get(BFSRedundancyTypeHeader),
+		redundancyType: requestContext.r.Header.Get(model.BFSRedundancyTypeHeader),
 	}
 
-	info, err := g.uploadProcessor.putObjectV2(reqCtx.object, r.Body, opt)
+	info, err := g.uploadProcessor.putObjectV2(requestContext.objectName, r.Body, option)
 	if err != nil {
 		if err == errors.ErrObjectTxNotExist {
 			errorDescription = ObjectTxNotFound
@@ -280,6 +280,6 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = InternalError
 		return
 	}
-	w.Header().Set(BFSRequestIDHeader, reqCtx.requestID)
-	w.Header().Set(ETagHeader, info.eTag)
+	w.Header().Set(model.BFSRequestIDHeader, requestContext.requestID)
+	w.Header().Set(model.ETagHeader, info.eTag)
 }

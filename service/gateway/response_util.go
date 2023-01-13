@@ -3,6 +3,8 @@ package gateway
 import (
 	"encoding/xml"
 	"net/http"
+
+	"github.com/bnb-chain/inscription-storage-provider/model"
 )
 
 // errorDescription describe error info.
@@ -52,7 +54,7 @@ func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *reque
 	}
 
 	w.WriteHeader(desc.statusCode)
-	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
 	if _, err = w.Write(xmlBody); err != nil {
 		return err
 	}
