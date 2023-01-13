@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
@@ -25,13 +26,13 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		Name("PutObject").
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
-		Queries(TransactionQuery, "").
+		Queries(model.TransactionQuery, "").
 		HandlerFunc(g.putObjectTxHandler)
 	bucketRouter.NewRoute().
 		Name("PutObject").
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
-		Queries(PutObjectV2Query, "").
+		Queries(model.PutObjectV2Query, "").
 		HandlerFunc(g.putObjectV2Handler)
 	bucketRouter.NewRoute().
 		Name("PutObject").
@@ -60,10 +61,10 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 			HandlerFunc(g.getAuthenticationHandler)
 		adminRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 	*/
-	r.Path("/greenfield/admin/v1/get-approval").
+	r.Path(model.AdminPath+model.GetApprovalSubPath).
 		Name("GetAuthentication").
 		Methods(http.MethodGet).
-		Queries(ActionQuery, "{action}").
+		Queries(model.ActionQuery, "{action}").
 		HandlerFunc(g.getAuthenticationHandler)
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)

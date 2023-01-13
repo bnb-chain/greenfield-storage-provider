@@ -19,11 +19,11 @@ import (
 
 // putObjectTxOption is the putObjectTx Option.
 type putObjectTxOption struct {
-	reqCtx      *requestContext
-	size        uint64
-	contentType string
-	checksum    []byte
-	isPrivate   bool
+	requestContext *requestContext
+	objectSize     uint64
+	contentType    string
+	checksum       []byte
+	isPrivate      bool
 	// redundancyType can be EC or Replica, if != EC, default is Replica
 	redundancyType string
 }
@@ -36,9 +36,9 @@ type objectTxInfo struct {
 
 // putObjectOption is the putObject Option.
 type putObjectOption struct {
-	reqCtx *requestContext
-	txHash []byte
-	size   uint64
+	requestContext *requestContext
+	txHash         []byte
+	size           uint64
 	// redundancyType can be EC or Replica, if != EC, default is Replica
 	redundancyType string
 }
@@ -63,10 +63,10 @@ type debugUploaderImpl struct {
 }
 
 // putObjectTx is used to put object tx to local directory file for debugging.
-func (dui *debugUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (*objectTxInfo, error) {
+func (dui *debugUploaderImpl) putObjectTx(name string, option *putObjectTxOption) (*objectTxInfo, error) {
 	var (
 		innerErr     error
-		bucketDir    = dui.localDir + "/" + opt.reqCtx.bucket
+		bucketDir    = dui.localDir + "/" + option.requestContext.objectName
 		objectTxFile = bucketDir + "/" + name + ".tx"
 		txJson       []byte
 	)
@@ -105,10 +105,10 @@ func (dui *debugUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (
 }
 
 // putObject is used to put object data to local directory file for debugging.
-func (dui *debugUploaderImpl) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
+func (dui *debugUploaderImpl) putObject(name string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
 	var (
 		innerErr       error
-		bucketDir      = dui.localDir + "/" + opt.reqCtx.bucket
+		bucketDir      = dui.localDir + "/" + option.requestContext.bucketName
 		objectTxFile   = bucketDir + "/" + name + ".tx"
 		objectDataFile = bucketDir + "/" + name + ".data"
 
@@ -167,22 +167,18 @@ type grpcUploaderImpl struct {
 }
 
 // putObjectTx is used to call uploaderService's CreateObject by grpc.
-func (gui *grpcUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (*objectTxInfo, error) {
-	log.Infow("put object tx", "option", opt)
-	redundancyType := pbPkg.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
-	if opt.redundancyType == "Replica" {
-		redundancyType = pbPkg.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
-	}
+func (gui *grpcUploaderImpl) putObjectTx(name string, option *putObjectTxOption) (*objectTxInfo, error) {
+	log.Infow("put object tx", "option", option)
 	resp, err := gui.uploader.CreateObject(context.Background(), &pbService.UploaderServiceCreateObjectRequest{
-		TraceId: opt.reqCtx.requestID,
+		TraceId: option.requestContext.requestID,
 		ObjectInfo: &pbPkg.ObjectInfo{
-			BucketName:     opt.reqCtx.bucket,
+			BucketName:     option.requestContext.bucketName,
 			ObjectName:     name,
-			Size:           opt.size,
-			ContentType:    opt.contentType,
-			Checksum:       opt.checksum,
-			IsPrivate:      opt.isPrivate,
-			RedundancyType: redundancyType,
+			Size:           option.objectSize,
+			ContentType:    option.contentType,
+			Checksum:       option.checksum,
+			IsPrivate:      option.isPrivate,
+			RedundancyType: redundancyTypeToEnum(option.redundancyType),
 		},
 	})
 	if err != nil {
@@ -193,7 +189,7 @@ func (gui *grpcUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (*
 }
 
 // putObject is used to call uploaderService's UploadPayload by grpc.
-func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
+func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
 	var (
 		buf      = make([]byte, 65536)
 		readN    int
@@ -217,8 +213,8 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 		if readN > 0 {
 
 			req := &pbService.UploaderServiceUploadPayloadRequest{
-				TraceId:     opt.reqCtx.requestID,
-				TxHash:      opt.txHash,
+				TraceId:     option.requestContext.requestID,
+				TxHash:      option.txHash,
 				PayloadData: buf[:readN],
 			}
 			if err := stream.Send(req); err != nil {
@@ -249,12 +245,12 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 }
 
 // getAuthentication is used to call uploaderService's getAuthentication by grpc.
-func (gui *grpcUploaderImpl) getAuthentication(opt *getAuthenticationOption) (*authenticationInfo, error) {
+func (gui *grpcUploaderImpl) getAuthentication(option *getAuthenticationOption) (*authenticationInfo, error) {
 	resp, err := gui.uploader.GetAuthentication(context.Background(), &pbService.UploaderServiceGetAuthenticationRequest{
-		TraceId: opt.reqCtx.requestID,
-		Bucket:  opt.reqCtx.bucket,
-		Object:  opt.reqCtx.object,
-		Action:  opt.reqCtx.action,
+		TraceId: option.requestContext.requestID,
+		Bucket:  option.requestContext.bucketName,
+		Object:  option.requestContext.objectName,
+		Action:  option.requestContext.actionName,
 	})
 	if err != nil {
 		log.Warnw("failed to rpc to uploader", "err", err)
@@ -264,7 +260,7 @@ func (gui *grpcUploaderImpl) getAuthentication(opt *getAuthenticationOption) (*a
 }
 
 // putObjectV2 copy from putObject.
-func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
+func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
 	var (
 		buf      = make([]byte, 65536)
 		readN    int
@@ -286,18 +282,14 @@ func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, opt *put
 			return nil, errors.ErrInternalError
 		}
 		if readN > 0 {
-			redundancyType := pbPkg.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
-			if opt.redundancyType == "Replica" {
-				redundancyType = pbPkg.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
-			}
 			req := &pbService.UploaderServiceUploadPayloadV2Request{
-				TraceId:        opt.reqCtx.requestID,
-				TxHash:         opt.txHash,
+				TraceId:        option.requestContext.requestID,
+				TxHash:         option.txHash,
 				PayloadData:    buf[:readN],
-				BucketName:     opt.reqCtx.bucket,
+				BucketName:     option.requestContext.bucketName,
 				ObjectName:     name,
-				ObjectSize:     opt.size,
-				RedundancyType: redundancyType,
+				ObjectSize:     option.size,
+				RedundancyType: redundancyTypeToEnum(option.redundancyType),
 			}
 			if err := stream.Send(req); err != nil {
 				log.Warnw("put object failed, due to stream send", "err", err)
@@ -338,6 +330,12 @@ type uploadProcessorConfig struct {
 	Address  string
 }
 
+var defaultUploadProcessorConfig = &uploadProcessorConfig{
+	Mode:     "DebugMode",
+	DebugDir: "./debug",
+	Address:  "127.0.0.1:5311",
+}
+
 // uploadProcessor is a wrapper of uploader client.
 type uploadProcessor struct {
 	impl uploaderClientInterface
@@ -367,34 +365,34 @@ func newUploadProcessor(c *uploadProcessorConfig) (*uploadProcessor, error) {
 }
 
 // putObjectTx call uploaderClient putObjectTx interface.
-func (up *uploadProcessor) putObjectTx(name string, opt *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
-	return up.impl.putObjectTx(name, opt)
+func (up *uploadProcessor) putObjectTx(name string, option *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
+	return up.impl.putObjectTx(name, option)
 }
 
 // putObject call uploaderClient putObject interface.
-func (up *uploadProcessor) putObject(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
-	return up.impl.putObject(name, reader, opt)
+func (up *uploadProcessor) putObject(name string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
+	return up.impl.putObject(name, reader, option)
 }
 
 type getAuthenticationOption struct {
-	reqCtx *requestContext
+	requestContext *requestContext
 }
 type authenticationInfo struct {
 	preSignature []byte
 }
 
 // getAuthentication call uploaderService getAuthentication interface.
-func (up *uploadProcessor) getAuthentication(opt *getAuthenticationOption) (*authenticationInfo, error) {
+func (up *uploadProcessor) getAuthentication(option *getAuthenticationOption) (*authenticationInfo, error) {
 	if p, ok := up.impl.(*grpcUploaderImpl); ok {
-		return p.getAuthentication(opt)
+		return p.getAuthentication(option)
 	}
 	return nil, fmt.Errorf("not supported")
 }
 
 // putObjectV2 call uploaderService putObjectV2 interface.
-func (up *uploadProcessor) putObjectV2(name string, reader io.Reader, opt *putObjectOption) (*objectInfo, error) {
+func (up *uploadProcessor) putObjectV2(name string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
 	if p, ok := up.impl.(*grpcUploaderImpl); ok {
-		return p.putObjectV2(name, reader, opt)
+		return p.putObjectV2(name, reader, option)
 	}
 	return nil, fmt.Errorf("not supported")
 }

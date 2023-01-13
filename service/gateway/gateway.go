@@ -40,7 +40,7 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		config: cfg,
 		name:   ServiceNameGateway,
 	}
-	if g.uploadProcessor, err = newUploadProcessor(&g.config.UploaderConfig); err != nil {
+	if g.uploadProcessor, err = newUploadProcessor(g.config.UploaderConfig); err != nil {
 		log.Warnw("failed to create uploader", "err", err)
 		return nil, err
 	}

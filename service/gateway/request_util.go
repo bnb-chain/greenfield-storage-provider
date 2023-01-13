@@ -6,20 +6,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/inscription-storage-provider/model"
+	pbPkg "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util"
 	"github.com/gorilla/mux"
 )
 
 // requestContext is a request context.
 type requestContext struct {
-	requestID string
-	bucket    string
-	object    string
-	r         *http.Request
-	startTime time.Time
+	requestID  string
+	bucketName string
+	objectName string
+	r          *http.Request
+	startTime  time.Time
 
-	// admin
-	action string
+	// admin fields
+	actionName string
 }
 
 // newRequestContext return a request context.
@@ -31,29 +33,29 @@ func newRequestContext(r *http.Request) *requestContext {
 			bucket string
 			object string
 		)
-		bucket = r.Header.Get(BFSResourceHeader)
+		bucket = r.Header.Get(model.BFSResourceHeader)
 		fields := strings.Split(bucket, "/")
 		if len(fields) >= 2 {
 			bucket = fields[0]
 			object = strings.Join(fields[1:], "/")
 		}
 		return &requestContext{
-			requestID: util.GenerateRequestID(),
-			bucket:    bucket,
-			object:    object,
-			action:    vars["action"],
-			r:         r,
-			startTime: time.Now(),
+			requestID:  util.GenerateRequestID(),
+			bucketName: bucket,
+			objectName: object,
+			actionName: vars["action"],
+			r:          r,
+			startTime:  time.Now(),
 		}
 	}
 
 	// bucket router
 	return &requestContext{
-		requestID: util.GenerateRequestID(),
-		bucket:    vars["bucket"],
-		object:    vars["object"],
-		r:         r,
-		startTime: time.Now(),
+		requestID:  util.GenerateRequestID(),
+		bucketName: vars["bucket"],
+		objectName: vars["object"],
+		r:          r,
+		startTime:  time.Now(),
 	}
 }
 
@@ -84,4 +86,12 @@ func generateRequestDetail(r *requestContext) string {
 	}
 	return fmt.Sprintf("requestID(%v) host(%v) method(%v) url(%v) header(%v) remote(%v) cost(%v)",
 		r.requestID, r.r.Host, r.r.Method, r.r.URL.String(), headerToString(r.r.Header), getRequestIP(r.r), time.Since(r.startTime))
+}
+
+func redundancyTypeToEnum(redundancyType string) pbPkg.RedundancyType {
+	if redundancyType == model.ReplicaRedundancyTypeHeaderValue {
+		return pbPkg.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
+	}
+	return pbPkg.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
+
 }

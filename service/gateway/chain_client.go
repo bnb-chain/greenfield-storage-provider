@@ -10,7 +10,7 @@ import (
 
 // createBucketOption is the createBucket option.
 type createBucketOption struct {
-	reqCtx *requestContext
+	requestContext *requestContext
 }
 
 // chainClientInterface define some interfaces to maintain metadata in the blockchain.
@@ -57,13 +57,18 @@ type chainClientConfig struct {
 	DebugDir string
 }
 
+var defaultChainClientConfig = &chainClientConfig{
+	Mode:     "DebugMode",
+	DebugDir: "./debug",
+}
+
 // chainClient is a wrapper of maintaining metadata in the blockchain.
 // todo: impl of call UpdateChainService, forward msg to blockchain.
 type chainClient struct {
 	impl chainClientInterface
 }
 
-func newChainClient(c chainClientConfig) (*chainClient, error) {
+func newChainClient(c *chainClientConfig) (*chainClient, error) {
 	switch {
 	case c.Mode == "DebugMode":
 		if c.DebugDir == "" {
