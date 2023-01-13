@@ -22,6 +22,7 @@ require (
 	github.com/viki-org/dnscache v0.0.0-20130720023526-c70c1f23c5d8
 	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.24.0
+	golang.org/x/exp v0.0.0-20230111222715-75897c7a292a
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
 	gorm.io/driver/mysql v1.4.4

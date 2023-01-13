@@ -246,7 +246,7 @@ func (job *UploadSpJob) sealPrimary() *types.StorageProviderInfo {
 	// TODO:: sign the primary integrity hash in stone hub level.
 	return &types.StorageProviderInfo{
 		SpId:     job.pieceJobs[0].StorageProvider,
-		Checksum: hash.GenerateIntegrityHash(checksumList, ""),
+		Checksum: hash.GenerateIntegrityHash(checksumList),
 	}
 }
 

@@ -12,7 +12,7 @@ func GenerateChecksum(pieceData []byte) []byte {
 }
 
 // GenerateIntegrityHash generate integrity hash of ec data
-func GenerateIntegrityHash(checksumList [][]byte, storageProviderID string) []byte {
+func GenerateIntegrityHash(checksumList [][]byte) []byte {
 	hash := sha256.New()
 	for _, j := range checksumList {
 		hash.Write(j)

@@ -21,7 +21,7 @@ func TestInitClientFailed(t *testing.T) {
 		stoneLimit: 0,
 	}
 	node.running.Store(true)
-	err := node.InitClient()
+	err := node.initClient()
 	assert.Equal(t, merrors.ErrStoneNodeStarted, err)
 }
 
@@ -193,85 +193,85 @@ func Test_generatePieceData(t *testing.T) {
 func Test_dispatchSecondarySP(t *testing.T) {
 	spList := []string{"sp1", "sp2", "sp3", "sp4", "sp5", "sp6"}
 	cases := []struct {
-		name          string
-		req1          map[string][][]byte
-		req2          ptypes.RedundancyType
-		req3          []string
-		req4          []uint32
-		wantedResult1 int
-		wantedErr     error
+		name         string
+		req1         map[string][][]byte
+		req2         ptypes.RedundancyType
+		req3         []string
+		req4         []uint32
+		wantedResult int
+		wantedErr    error
 	}{
 		{
-			name:          "ec type dispatch",
-			req1:          dispatchPieceMap(),
-			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
-			req3:          spList,
-			req4:          []uint32{},
-			wantedResult1: 6,
-			wantedErr:     nil,
+			name:         "ec type dispatch",
+			req1:         dispatchPieceMap(),
+			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req3:         spList,
+			req4:         []uint32{0, 1, 2, 3, 4, 5},
+			wantedResult: 6,
+			wantedErr:    nil,
 		},
 		{
-			name:          "replica type dispatch",
-			req1:          dispatchSegmentMap(),
-			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
-			req3:          spList,
-			req4:          []uint32{},
-			wantedResult1: 3,
-			wantedErr:     nil,
+			name:         "replica type dispatch",
+			req1:         dispatchSegmentMap(),
+			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req3:         spList,
+			req4:         []uint32{0, 1, 2},
+			wantedResult: 3,
+			wantedErr:    nil,
 		},
 		{
-			name:          "inline type dispatch",
-			req1:          dispatchInlineMap(),
-			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE,
-			req3:          spList,
-			req4:          []uint32{},
-			wantedResult1: 1,
-			wantedErr:     nil,
+			name:         "inline type dispatch",
+			req1:         dispatchInlineMap(),
+			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE,
+			req3:         spList,
+			req4:         []uint32{0},
+			wantedResult: 1,
+			wantedErr:    nil,
 		},
 		{
-			name:          "ec type data retransmission",
-			req1:          dispatchPieceMap(),
-			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
-			req3:          spList,
-			req4:          []uint32{2, 3},
-			wantedResult1: 2,
-			wantedErr:     nil,
+			name:         "ec type data retransmission",
+			req1:         dispatchPieceMap(),
+			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req3:         spList,
+			req4:         []uint32{2, 3},
+			wantedResult: 2,
+			wantedErr:    nil,
 		},
 		{
-			name:          "replica type data retransmission",
-			req1:          dispatchSegmentMap(),
-			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
-			req3:          spList,
-			req4:          []uint32{1, 2},
-			wantedResult1: 2,
-			wantedErr:     nil,
+			name:         "replica type data retransmission",
+			req1:         dispatchSegmentMap(),
+			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req3:         spList,
+			req4:         []uint32{1, 2},
+			wantedResult: 2,
+			wantedErr:    nil,
 		},
 		{
-			name:          "unknown redundancy type",
-			req1:          dispatchPieceMap(),
-			req2:          ptypes.RedundancyType(-1),
-			req3:          spList,
-			req4:          []uint32{},
-			wantedResult1: 0,
-			wantedErr:     merrors.ErrRedundancyType,
+			name:         "wrong secondary sp number",
+			req1:         dispatchPieceMap(),
+			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req3:         []string{},
+			req4:         []uint32{0, 1, 2, 3, 4, 5},
+			wantedResult: 0,
+			wantedErr:    merrors.ErrSecondarySPNumber,
 		},
 		{
-			name:          "wrong secondary sp number",
-			req1:          dispatchPieceMap(),
-			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
-			req3:          []string{},
-			req4:          []uint32{},
-			wantedResult1: 0,
-			wantedErr:     merrors.ErrSecondarySPNumber,
+			name:         "wrong ec segment data length",
+			req1:         dispatchSegmentMap(),
+			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req3:         spList,
+			req4:         []uint32{0, 1, 2, 3, 4, 5},
+			wantedResult: 0,
+			wantedErr:    merrors.ErrInvalidECData,
 		},
 		{
-			name:          "wrong replica/inline segment data length",
-			req1:          dispatchPieceMap(),
-			req2:          ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
-			req3:          spList,
-			req4:          []uint32{},
-			wantedResult1: 0,
-			wantedErr:     merrors.ErrInvalidSegmentData,
+			name:         "wrong replica/inline segment data length",
+			req1:         dispatchPieceMap(),
+			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req3:         spList,
+			req4:         []uint32{0, 1, 2, 3, 4, 5},
+			wantedResult: 0,
+			wantedErr:    merrors.ErrInvalidSegmentData,
 		},
 	}
 
@@ -279,8 +279,8 @@ func Test_dispatchSecondarySP(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := node.dispatchSecondarySP(tt.req1, tt.req2, tt.req3, tt.req4)
-			assert.Equal(t, err, tt.wantedErr)
-			assert.Equal(t, len(result), tt.wantedResult1)
+			assert.Equal(t, tt.wantedErr, err)
+			assert.Equal(t, tt.wantedResult, len(result))
 		})
 	}
 }
@@ -314,20 +314,20 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	defer ctrl.Finish()
 
 	// stoneHub service stub
-	stoneHub := mock.NewMockStoneHubAPI(ctrl)
-	node.stoneHub = stoneHub
-	stoneHub.EXPECT().DoneSecondaryPieceJob(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (
-			*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
-			return nil, nil
-		})
+	//stoneHub := mock.NewMockStoneHubAPI(ctrl)
+	//node.stoneHub = stoneHub
+	//stoneHub.EXPECT().DoneSecondaryPieceJob(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+	//	func(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (
+	//		*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
+	//		return nil, nil
+	//	})
 
 	// syncer service stub
 	streamClient := makeStreamMock()
 	syncer := mock.NewMockSyncerAPI(ctrl)
 	node.syncer = syncer
-	syncer.EXPECT().UploadECPiece(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_UploadECPieceClient, error) {
+	syncer.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_SyncPieceClient, error) {
 			return streamClient, nil
 		}).AnyTimes()
 
@@ -340,7 +340,7 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	}
 }
 
-func TestUploadECPieceSuccess(t *testing.T) {
+func TestSyncPieceSuccess(t *testing.T) {
 	node := setup(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -348,8 +348,8 @@ func TestUploadECPieceSuccess(t *testing.T) {
 	streamClient := makeStreamMock()
 	syncer := mock.NewMockSyncerAPI(ctrl)
 	node.syncer = syncer
-	syncer.EXPECT().UploadECPiece(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_UploadECPieceClient, error) {
+	syncer.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_SyncPieceClient, error) {
 			return streamClient, nil
 		}).AnyTimes()
 
@@ -367,7 +367,7 @@ func TestUploadECPieceSuccess(t *testing.T) {
 		"123456_s4_p0": []byte("test5"),
 		"123456_s5_p0": []byte("test6"),
 	}
-	resp, err := node.UploadECPiece(context.TODO(), 3, sInfo, data, "test_traceID")
+	resp, err := node.SyncPiece(context.TODO(), sInfo, data, "test_traceID")
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.GetTraceId(), "test_traceID")
 	assert.Equal(t, resp.GetSecondarySpInfo().GetPieceIdx(), uint32(1))

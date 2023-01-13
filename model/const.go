@@ -39,3 +39,9 @@ const (
 	MySqlDB  string = "mysql"
 	LevelDB  string = "leveldb"
 )
+
+// RPC config
+const (
+	// server and client max send or recv msg size
+	MaxCallMsgSize = 40 * 1024 * 1024
+)
