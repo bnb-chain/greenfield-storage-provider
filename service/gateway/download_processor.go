@@ -22,7 +22,7 @@ type getObjectOption struct {
 
 // downloaderClientInterface define interface to download object.
 type downloaderClientInterface interface {
-	getObject(name string, writer io.Writer, opt *getObjectOption) error
+	getObject(name string, writer io.Writer, option *getObjectOption) error
 }
 
 // debugDownloaderImpl is an implement of download for local debugging.

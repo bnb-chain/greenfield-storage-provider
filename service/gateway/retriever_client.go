@@ -12,6 +12,6 @@ type queryACLOption struct {
 	reqCtx *requestContext
 }
 
-func (rc *retrieverClient) queryACL(name string, opt *queryACLOption) error {
+func (rc *retrieverClient) queryACL(name string, option *queryACLOption) error {
 	return nil
 }
