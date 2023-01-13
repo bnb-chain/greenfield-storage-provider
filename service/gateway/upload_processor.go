@@ -24,7 +24,6 @@ type putObjectTxOption struct {
 	contentType    string
 	checksum       []byte
 	isPrivate      bool
-	// redundancyType can be EC or Replica, if != EC, default is Replica
 	redundancyType string
 }
 
@@ -39,7 +38,6 @@ type putObjectOption struct {
 	requestContext *requestContext
 	txHash         []byte
 	size           uint64
-	// redundancyType can be EC or Replica, if != EC, default is Replica
 	redundancyType string
 }
 
@@ -63,11 +61,11 @@ type debugUploaderImpl struct {
 }
 
 // putObjectTx is used to put object tx to local directory file for debugging.
-func (dui *debugUploaderImpl) putObjectTx(name string, option *putObjectTxOption) (*objectTxInfo, error) {
+func (dui *debugUploaderImpl) putObjectTx(objectName string, option *putObjectTxOption) (*objectTxInfo, error) {
 	var (
 		innerErr     error
 		bucketDir    = dui.localDir + "/" + option.requestContext.objectName
-		objectTxFile = bucketDir + "/" + name + ".tx"
+		objectTxFile = bucketDir + "/" + objectName + ".tx"
 		txJson       []byte
 	)
 	defer func() {
@@ -105,12 +103,12 @@ func (dui *debugUploaderImpl) putObjectTx(name string, option *putObjectTxOption
 }
 
 // putObject is used to put object data to local directory file for debugging.
-func (dui *debugUploaderImpl) putObject(name string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
+func (dui *debugUploaderImpl) putObject(objectName string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
 	var (
 		innerErr       error
 		bucketDir      = dui.localDir + "/" + option.requestContext.bucketName
-		objectTxFile   = bucketDir + "/" + name + ".tx"
-		objectDataFile = bucketDir + "/" + name + ".data"
+		objectTxFile   = bucketDir + "/" + objectName + ".tx"
+		objectDataFile = bucketDir + "/" + objectName + ".data"
 
 		buf           = make([]byte, 65536)
 		readN, writeN int
@@ -167,13 +165,13 @@ type grpcUploaderImpl struct {
 }
 
 // putObjectTx is used to call uploaderService's CreateObject by grpc.
-func (gui *grpcUploaderImpl) putObjectTx(name string, option *putObjectTxOption) (*objectTxInfo, error) {
+func (gui *grpcUploaderImpl) putObjectTx(objectName string, option *putObjectTxOption) (*objectTxInfo, error) {
 	log.Infow("put object tx", "option", option)
 	resp, err := gui.uploader.CreateObject(context.Background(), &pbService.UploaderServiceCreateObjectRequest{
 		TraceId: option.requestContext.requestID,
 		ObjectInfo: &pbPkg.ObjectInfo{
 			BucketName:     option.requestContext.bucketName,
-			ObjectName:     name,
+			ObjectName:     objectName,
 			Size:           option.objectSize,
 			ContentType:    option.contentType,
 			Checksum:       option.checksum,
@@ -189,7 +187,7 @@ func (gui *grpcUploaderImpl) putObjectTx(name string, option *putObjectTxOption)
 }
 
 // putObject is used to call uploaderService's UploadPayload by grpc.
-func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
+func (gui *grpcUploaderImpl) putObject(objectName string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
 	var (
 		buf      = make([]byte, 65536)
 		readN    int
@@ -260,7 +258,7 @@ func (gui *grpcUploaderImpl) getAuthentication(option *getAuthenticationOption) 
 }
 
 // putObjectV2 copy from putObject.
-func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
+func (gui *grpcUploaderImpl) putObjectV2(objectName string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
 	var (
 		buf      = make([]byte, 65536)
 		readN    int
@@ -287,7 +285,7 @@ func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, option *
 				TxHash:         option.txHash,
 				PayloadData:    buf[:readN],
 				BucketName:     option.requestContext.bucketName,
-				ObjectName:     name,
+				ObjectName:     objectName,
 				ObjectSize:     option.size,
 				RedundancyType: redundancyTypeToEnum(option.redundancyType),
 			}
@@ -365,13 +363,13 @@ func newUploadProcessor(c *uploadProcessorConfig) (*uploadProcessor, error) {
 }
 
 // putObjectTx call uploaderClient putObjectTx interface.
-func (up *uploadProcessor) putObjectTx(name string, option *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
-	return up.impl.putObjectTx(name, option)
+func (up *uploadProcessor) putObjectTx(objectName string, option *putObjectTxOption) (objectInfoTx *objectTxInfo, err error) {
+	return up.impl.putObjectTx(objectName, option)
 }
 
 // putObject call uploaderClient putObject interface.
-func (up *uploadProcessor) putObject(name string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
-	return up.impl.putObject(name, reader, option)
+func (up *uploadProcessor) putObject(objectName string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
+	return up.impl.putObject(objectName, reader, option)
 }
 
 type getAuthenticationOption struct {
@@ -390,9 +388,9 @@ func (up *uploadProcessor) getAuthentication(option *getAuthenticationOption) (*
 }
 
 // putObjectV2 call uploaderService putObjectV2 interface.
-func (up *uploadProcessor) putObjectV2(name string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
+func (up *uploadProcessor) putObjectV2(objectName string, reader io.Reader, option *putObjectOption) (*objectInfo, error) {
 	if p, ok := up.impl.(*grpcUploaderImpl); ok {
-		return p.putObjectV2(name, reader, option)
+		return p.putObjectV2(objectName, reader, option)
 	}
 	return nil, fmt.Errorf("not supported")
 }

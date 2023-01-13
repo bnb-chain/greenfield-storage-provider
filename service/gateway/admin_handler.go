@@ -14,7 +14,6 @@ func (g *Gateway) getAuthenticationHandler(w http.ResponseWriter, r *http.Reques
 		err              error
 		errorDescription *errorDescription
 		requestContext   *requestContext
-		option           *getAuthenticationOption
 	)
 
 	defer func() {
@@ -41,7 +40,7 @@ func (g *Gateway) getAuthenticationHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	option = &getAuthenticationOption{
+	option := &getAuthenticationOption{
 		requestContext: requestContext,
 	}
 	info, err := g.uploadProcessor.getAuthentication(option)
