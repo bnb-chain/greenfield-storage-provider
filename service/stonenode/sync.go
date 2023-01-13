@@ -191,8 +191,8 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string]
 	// which only contains one []byte data
 	var err error
 	switch redundancyType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		pieceDataBySecondary, err = fillReplicaOrInlineData(pieceDataBySegment, secondarySPs, targetIdx)
+	//case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+	//	pieceDataBySecondary, err = fillReplicaOrInlineData(pieceDataBySegment, secondarySPs, targetIdx)
 	default: // ec type
 		pieceDataBySecondary, err = fillECData(pieceDataBySegment, secondarySPs, targetIdx)
 	}
@@ -207,9 +207,9 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 	map[string]map[string][]byte, error) {
 	ecPieceDataMap := make(map[string]map[string][]byte)
 	for pieceKey, pieceData := range pieceDataBySegment {
-		if len(pieceData) != 6 {
-			return map[string]map[string][]byte{}, merrors.ErrInvalidECData
-		}
+		//if len(pieceData) != 6 {
+		//	return map[string]map[string][]byte{}, merrors.ErrInvalidECData
+		//}
 
 		for idx, data := range pieceData {
 			if idx >= len(secondarySPs) {
@@ -317,7 +317,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				log.CtxInfow(ctx, "sync secondary piece job successfully", "secondary sp", secondary)
 			}()
 
-			syncResp, err := node.SyncPiece(ctx, &service.SyncerInfo{
+			syncResp, err := node.syncPiece(ctx, &service.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
 				StorageProviderId: secondary,
@@ -382,7 +382,7 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *ser
 }
 
 // SyncPiece send rpc request to secondary storage provider to sync the piece data.
-func (node *StoneNodeService) SyncPiece(ctx context.Context, syncerInfo *service.SyncerInfo,
+func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *service.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*service.SyncerServiceSyncPieceResponse, error) {
 	log.CtxInfow(ctx, "stone node UploadECPiece", "rType", syncerInfo.GetRedundancyType(),
 		"spID", syncerInfo.GetStorageProviderId(), "traceID", traceID, "length", len(pieceData))
