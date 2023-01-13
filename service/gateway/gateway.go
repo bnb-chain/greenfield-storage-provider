@@ -21,11 +21,11 @@ type Gateway struct {
 	name    string
 	running atomic.Bool
 
-	httpServer      *http.Server
-	uploadProcesser *uploadProcesser
-	downloader      *downloaderClient
-	chain           *chainClient
-	retriever       *retrieverClient
+	httpServer        *http.Server
+	uploadProcessor   *uploadProcessor
+	downloadProcessor *downloadProcessor
+	chain             *chainClient
+	retriever         *retrieverClient
 }
 
 // NewGatewayService return the gateway instance
@@ -39,16 +39,16 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		config: cfg,
 		name:   ServiceNameGateway,
 	}
-	if g.uploadProcesser, err = newUploadProcesser(&g.config.UploaderConfig); err != nil {
+	if g.uploadProcessor, err = newUploadProcessor(&g.config.UploaderConfig); err != nil {
 		log.Warnw("failed to create uploader", "err", err)
 		return nil, err
 	}
-	if g.downloader, err = newDownloaderClient(g.config.DownloaderConfig); err != nil {
+	if g.downloadProcessor, err = newDownloadProcessor(g.config.DownloaderConfig); err != nil {
 		log.Warnw("failed to create downloader", "err", err)
 		return nil, err
 	}
 	if g.chain, err = newChainClient(g.config.ChainConfig); err != nil {
-		log.Warnw("failed to create chainer client", "err", err)
+		log.Warnw("failed to create chain client", "err", err)
 		return nil, err
 	}
 	g.retriever = newRetrieverClient()
@@ -95,7 +95,7 @@ func (g *Gateway) Stop(ctx context.Context) error {
 	if err := g.httpServer.Shutdown(ctx); err != nil {
 		errs = append(errs, err)
 	}
-	if err := g.uploadProcesser.Close(); err != nil {
+	if err := g.uploadProcessor.Close(); err != nil {
 		errs = append(errs, err)
 	}
 	if errs != nil {
