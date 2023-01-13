@@ -46,7 +46,6 @@ func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
 			sealInfo := generateSealInfo(spID, integrityMeta)
 			integrityMeta.IntegrityHash = sealInfo.GetIntegrityHash()
 			if err := s.setIntegrityMeta(s.metaDB, integrityMeta); err != nil {
-				log.Errorw("setIntegrityMeta error", "error", err)
 				return err
 			}
 			return stream.SendAndClose(&service.SyncerServiceSyncPieceResponse{
@@ -63,7 +62,7 @@ func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
 			return err
 		}
 		spID = req.GetSyncerInfo().GetStorageProviderId()
-		integrityMeta, key, value, err = s.gatherPieceData(req)
+		integrityMeta, key, value, err = s.handlePieceData(req)
 		if err != nil {
 			return err
 		}
@@ -99,7 +98,7 @@ func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *service
 	return resp
 }
 
-func (s *Syncer) gatherPieceData(req *service.SyncerServiceSyncPieceRequest) (*metadb.IntegrityMeta, string, []byte, error) {
+func (s *Syncer) handlePieceData(req *service.SyncerServiceSyncPieceRequest) (*metadb.IntegrityMeta, string, []byte, error) {
 	if len(req.GetPieceData()) != 1 {
 		return nil, "", nil, errors.New("the length of piece data map is not equal to 1")
 	}
