@@ -81,7 +81,7 @@ func (node *StoneNodeService) Start(startCtx context.Context) error {
 	}
 	go func() {
 		var stoneJobCounter int64 // atomic
-		allocTicker := time.NewTimer(AllocStonePeriod)
+		allocTicker := time.NewTicker(AllocStonePeriod)
 		ctx, cancel := context.WithCancel(startCtx)
 		for {
 			select {
