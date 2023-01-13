@@ -5,8 +5,8 @@ option go_package = "github.com/bnb-chain/inscription-storage-provider/service/t
 
 message DownloaderServiceDownloaderObjectRequest {
   string trace_id = 1;
-  uint64 object_id = 2;
-  uint64 object_size = 3;
+  string bucket_name = 2;
+  string object_name = 3;
   uint64 offset = 4;
   uint64 length = 5; // if length == 0, download all object data
 }

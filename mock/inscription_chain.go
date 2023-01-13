@@ -20,7 +20,8 @@ type ChainEvent struct {
 
 // InscriptionChainMock mock the inscription chain
 type InscriptionChainMock struct {
-	object       map[string]*types.ObjectInfo
+	objectByHash map[string]*types.ObjectInfo
+	objectByName map[string]*types.ObjectInfo
 	events       map[string][]chan interface{}
 	notifyCh     chan *ChainEvent
 	stopCh       chan struct{}
@@ -32,12 +33,24 @@ type InscriptionChainMock struct {
 // NewInscriptionChainMock return the InscriptionChainMock instance
 func NewInscriptionChainMock() *InscriptionChainMock {
 	cli := &InscriptionChainMock{
-		object:   make(map[string]*types.ObjectInfo),
-		events:   make(map[string][]chan interface{}),
-		notifyCh: make(chan *ChainEvent, 10),
-		stopCh:   make(chan struct{}),
+		objectByHash: make(map[string]*types.ObjectInfo),
+		objectByName: make(map[string]*types.ObjectInfo),
+		events:       make(map[string][]chan interface{}),
+		notifyCh:     make(chan *ChainEvent, 10),
+		stopCh:       make(chan struct{}),
 	}
 	return cli
+}
+
+var singleMockChain *InscriptionChainMock
+var once sync.Once
+
+// GetInscriptionChainMockSingleton return single InscriptionChainMock instance
+func GetInscriptionChainMockSingleton() *InscriptionChainMock {
+	once.Do(func() {
+		singleMockChain = NewInscriptionChainMock()
+	})
+	return singleMockChain
 }
 
 // Start the background thread to publish the chain event.
@@ -78,7 +91,18 @@ func (cli *InscriptionChainMock) eventLoop() {
 func (cli *InscriptionChainMock) QueryObjectByTx(txHash []byte) (*types.ObjectInfo, error) {
 	cli.mu.Lock()
 	defer cli.mu.Unlock()
-	obj, ok := cli.object[string(txHash)]
+	obj, ok := cli.objectByHash[string(txHash)]
+	if !ok {
+		return nil, errors.New("object is not exist")
+	}
+	return obj, nil
+}
+
+// QueryObjectByName return the object info by create object bucketName/objectName.
+func (cli *InscriptionChainMock) QueryObjectByName(name string) (*types.ObjectInfo, error) {
+	cli.mu.Lock()
+	defer cli.mu.Unlock()
+	obj, ok := cli.objectByName[name]
 	if !ok {
 		return nil, errors.New("object is not exist")
 	}
@@ -95,20 +119,25 @@ func (cli *InscriptionChainMock) CreateObjectByTxHash(txHash []byte, object *typ
 	object.TxHash = txHash
 	object.ObjectId = cli.objectID
 	object.Height = cli.objectHeight
-	cli.object[string(txHash)] = object
+	cli.objectByHash[string(txHash)] = object
+	cli.objectByName[object.BucketName+"/"+object.ObjectName] = object
 	cli.notifyCh <- &ChainEvent{
 		EventType: CreateObject,
 		Event:     object,
 	}
 }
 
-// GenerateObjectIDAndHeight generate new objectID and height.
-func (cli *InscriptionChainMock) GenerateObjectIDAndHeight() (uint64, uint64) {
+// CreateObjectByName create the object info on the mock inscription chain.
+func (cli *InscriptionChainMock) CreateObjectByName(txHash []byte, object *types.ObjectInfo) {
 	cli.mu.Lock()
 	defer cli.mu.Unlock()
 	cli.objectID++
 	cli.objectHeight++
-	return cli.objectID, cli.objectHeight
+
+	object.TxHash = txHash
+	object.ObjectId = cli.objectID
+	object.Height = cli.objectHeight
+	cli.objectByName[object.BucketName+"/"+object.ObjectName] = object
 }
 
 // SealObjectByTxHash seal the object on the mock inscription chain.

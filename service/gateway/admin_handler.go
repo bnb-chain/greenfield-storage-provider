@@ -43,7 +43,7 @@ func (g *Gateway) getAuthenticationHandler(w http.ResponseWriter, r *http.Reques
 	opt = &getAuthenticationOption{
 		reqCtx: reqCtx,
 	}
-	info, err := g.uploadProcesser.getAuthentication(opt)
+	info, err := g.uploadProcessor.getAuthentication(opt)
 	if err != nil {
 		errorDescription = InternalError
 		return

@@ -7,6 +7,7 @@ import (
 	"github.com/bnb-chain/inscription-storage-provider/model"
 	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
+	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -38,6 +39,12 @@ func (downloader *Downloader) DownloaderSegment(ctx context.Context, req *servic
 
 // DownloaderObject download the object data and return to client.
 func (downloader *Downloader) DownloaderObject(req *service.DownloaderServiceDownloaderObjectRequest, stream service.DownloaderService_DownloaderObjectServer) (err error) {
+	var (
+		objectInfo *types.ObjectInfo
+		size       int
+		offset     uint64
+		length     uint64
+	)
 	ctx := log.Context(context.Background(), req)
 	resp := &service.DownloaderServiceDownloaderObjectResponse{
 		TraceId: req.TraceId,
@@ -45,24 +52,34 @@ func (downloader *Downloader) DownloaderObject(req *service.DownloaderServiceDow
 	defer func() {
 		if err != nil {
 			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
+			err = stream.Send(resp)
 		}
-		err = stream.Send(resp)
-		log.CtxInfow(ctx, "download object completed", "error", err)
+		log.CtxInfow(ctx, "download object completed", "error", err, "objectSize", objectInfo.Size, "sendSize", size)
 	}()
 
+	objectInfo, err = downloader.mockChain.QueryObjectByName(req.BucketName + "/" + req.ObjectName)
+	if err != nil {
+		return
+	}
+	// if length == 0, download all object data
+	offset, length = req.GetOffset(), req.GetLength()
+	if req.GetLength() == 0 {
+		offset, length = 0, objectInfo.Size
+	}
 	var segmentInfo segments
-	segmentInfo, err = DownloadPieceInfo(req.GetObjectId(), req.GetObjectSize(), req.GetOffset(), req.GetOffset()+req.GetLength()-1)
+	segmentInfo, err = DownloadPieceInfo(objectInfo.ObjectId, objectInfo.Size, offset, offset+length-1)
 	if err != nil {
 		return
 	}
 	for _, segment := range segmentInfo {
-		resp.Data, err = downloader.pieceStore.GetPiece(ctx, segment.pieceKey, int64(segment.offset), int64(segment.offset)+int64(segment.length)-1)
+		resp.Data, err = downloader.pieceStore.GetPiece(ctx, segment.pieceKey, int64(segment.offset), int64(segment.offset)+int64(segment.length))
 		if err != nil {
 			return
 		}
 		if err = stream.Send(resp); err != nil {
 			return
 		}
+		size = size + len(resp.Data)
 	}
 	return nil
 }

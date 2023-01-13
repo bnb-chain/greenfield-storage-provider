@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/bnb-chain/inscription-storage-provider/mock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -17,6 +18,7 @@ type Downloader struct {
 	cfg        *DownloaderConfig
 	name       string
 	pieceStore *client.StoreClient
+	mockChain  *mock.InscriptionChainMock
 }
 
 // NewDownloaderService return a downloader instance.
@@ -25,11 +27,12 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 		cfg:  cfg,
 		name: "Downloader",
 	}
-	pieceStore, err := client.NewStoreClient(cfg.PieceConfig)
+	pieceStore, err := client.NewStoreClient(cfg.PieceStoreConfig)
 	if err != nil {
 		return nil, err
 	}
 	downloader.pieceStore = pieceStore
+	downloader.mockChain = mock.GetInscriptionChainMockSingleton()
 	return downloader, nil
 }
 
