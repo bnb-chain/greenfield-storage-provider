@@ -7,6 +7,7 @@ import (
 
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
 )
 
 // JobContextWrapper maintain job context, goroutine safe
@@ -14,14 +15,16 @@ type JobContextWrapper struct {
 	jobCtx *types.JobContext
 	jobErr error
 	jobDB  jobdb.JobDB
+	metaDB metadb.MetaDB
 	mu     sync.RWMutex
 }
 
 // NewJobContextWrapper return the instance of JobContextWrapper
-func NewJobContextWrapper(jobCtx *types.JobContext, jobDB jobdb.JobDB) *JobContextWrapper {
+func NewJobContextWrapper(jobCtx *types.JobContext, jobDB jobdb.JobDB, metaDB metadb.MetaDB) *JobContextWrapper {
 	return &JobContextWrapper{
 		jobCtx: jobCtx,
 		jobDB:  jobDB,
+		metaDB: metaDB,
 	}
 }
 
@@ -62,11 +65,8 @@ func (wrapper *JobContextWrapper) SetJobErr(err error) error {
 		wrapper.jobCtx.JobErr = wrapper.jobCtx.JobErr + err.Error()
 	}
 	wrapper.jobCtx.JobState = types.JobState_JOB_STATE_ERROR
-	if err := wrapper.jobDB.SetUploadPayloadJobJobError(wrapper.jobCtx.JobId,
-		types.JOB_STATE_ERROR, wrapper.jobCtx.JobErr, time.Now().Unix()); err != nil {
-		return err
-	}
-	return err
+	return wrapper.jobDB.SetUploadPayloadJobJobError(wrapper.jobCtx.JobId,
+		types.JOB_STATE_ERROR, wrapper.jobCtx.JobErr, time.Now().Unix())
 }
 
 // ModifyTime return the last modify timestamp

@@ -7,8 +7,9 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
 	"github.com/gorilla/mux"
+
+	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
 const (

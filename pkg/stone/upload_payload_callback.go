@@ -2,17 +2,12 @@ package stone
 
 import (
 	"context"
-	"errors"
 
 	"github.com/looplab/fsm"
 
 	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
-	"github.com/bnb-chain/inscription-storage-provider/pkg/job"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
-	"github.com/bnb-chain/inscription-storage-provider/util"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -43,17 +38,23 @@ func EnterStateUploadPrimaryDoing(ctx context.Context, event *fsm.Event) {
 // and update the job state to the DB
 func AfterUploadPrimaryPieceDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
+	var err error
+	defer func() {
+		if err != nil {
+			stone.jobCtx.SetJobErr(err)
+			log.CtxErrorw(ctx, "done primary piece job error", "error", err)
+		}
+	}()
 	if len(event.Args) < 1 {
-		stone.jobCtx.SetJobErr(errors.New("miss piece job params"))
-		log.CtxErrorw(ctx, "primary piece done miss params")
+		err = merrors.ErrPieceJobMissing
 		return
 	}
-	pieceInfo := event.Args[0].(*service.PieceJob)
-	if err := stone.job.DonePrimarySPJob(pieceInfo); err != nil {
-		stone.jobCtx.SetJobErr(errors.New("primary piece job error"))
-		log.CtxErrorw(ctx, "done primary piece job error", "piece info", pieceInfo, "error", err)
+	pieceInfo, ok := event.Args[0].(*service.PieceJob)
+	if !ok {
+		err = merrors.ErrPieceJobMissing
 		return
 	}
+	err = stone.job.DonePrimarySPJob(pieceInfo)
 	return
 }
 
@@ -61,26 +62,6 @@ func AfterUploadPrimaryPieceDone(ctx context.Context, event *fsm.Event) {
 // and update the job state to the DB
 func EnterUploadPrimaryDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
-	sealInfo, err := stone.job.PrimarySPSealInfo()
-	if err != nil {
-		stone.jobCtx.SetJobErr(err)
-		log.CtxErrorw(ctx, "get primary integrity hash info failed", "error", err)
-		return
-	}
-	object := stone.job.GetObjectCtx().GetObjectInfo()
-	integrity := &metadb.IntegrityMeta{
-		IsPrimary:      true,
-		ObjectID:       object.ObjectId,
-		RedundancyType: object.RedundancyType,
-		IntegrityHash:  sealInfo.IntegrityHash,
-		PieceHash:      sealInfo.PieceCheckSum,
-		PieceCount:     util.ComputeSegmentCount(object.Size),
-	}
-	if err = stone.job.GetObjectCtx().SetSetIntegrityHash(integrity); err != nil {
-		stone.jobCtx.SetJobErr(err)
-		log.CtxErrorw(ctx, "set primary integrity hash info to meat db failed", "error", err)
-		return
-	}
 	if err := stone.jobCtx.SetJobState(types.JOB_STATE_UPLOAD_PRIMARY_DONE); err != nil {
 		stone.jobCtx.SetJobErr(err)
 		log.CtxErrorw(ctx, "update primary done job state error", "error", err)
@@ -109,44 +90,23 @@ func EnterUploadSecondaryDoing(ctx context.Context, event *fsm.Event) {
 // and update the job state to the DB
 func AfterUploadSecondaryPieceDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
-	if len(event.Args) < 1 {
-		stone.jobCtx.SetJobErr(errors.New("mis piece job params"))
-		log.CtxErrorw(ctx, "secondary piece job done miss params")
-		return
-	}
-	pieceInfo := event.Args[0].(*service.PieceJob)
-	object := stone.job.GetObjectCtx().GetObjectInfo()
-	integrity := &metadb.IntegrityMeta{
-		ObjectID:       object.ObjectId,
-		PieceIdx:       pieceInfo.GetStorageProviderSealInfo().GetPieceIdx(),
-		PieceCount:     util.ComputeSegmentCount(object.Size),
-		IsPrimary:      false,
-		RedundancyType: object.RedundancyType,
-		IntegrityHash:  pieceInfo.GetStorageProviderSealInfo().GetIntegrityHash(),
-	}
-	for idx, checksum := range pieceInfo.GetStorageProviderSealInfo().GetPieceChecksum() {
-		var pieceKey string
-		if integrity.RedundancyType == types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
-			pieceKey = piecestore.EncodeECPieceKey(object.ObjectId, uint32(idx), integrity.PieceIdx)
-		} else if integrity.RedundancyType == types.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
-			pieceKey = piecestore.EncodeSegmentPieceKey(object.ObjectId, integrity.PieceIdx)
-		} else if integrity.RedundancyType == types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
-			pieceKey = piecestore.EncodeSegmentPieceKey(object.ObjectId, integrity.PieceIdx)
-		} else {
-			stone.jobCtx.SetJobErr(merrors.ErrRedundancyType)
-			log.CtxErrorw(ctx, "done secondary piece job failed", "error", merrors.ErrRedundancyType)
-			return
+	var interruptErr error
+	defer func() {
+		if interruptErr != nil {
+			stone.jobCtx.SetJobErr(interruptErr)
+			log.CtxErrorw(ctx, "done secondary piece job failed", "error", interruptErr)
 		}
-		integrity.PieceHash[pieceKey] = checksum
-	}
-	if err := stone.job.GetObjectCtx().SetSetIntegrityHash(integrity); err != nil {
-		stone.jobCtx.SetJobErr(err)
-		log.CtxErrorw(ctx, "set secondary integrity hash info to meat db failed", "error", err)
+	}()
+	if len(event.Args) < 1 {
+		interruptErr = merrors.ErrPieceJobMissing
 		return
 	}
-	if err := stone.job.DoneSecondarySPJob(pieceInfo); err != nil {
-		stone.jobCtx.SetJobErr(errors.New("secondary piece job error"))
-		log.CtxErrorw(ctx, "done secondary piece job error", "piece info", pieceInfo, "error", err)
+	pieceInfo, ok := event.Args[0].(*service.PieceJob)
+	if !ok {
+		interruptErr = merrors.ErrPieceJobMissing
+		return
+	}
+	if interruptErr = stone.job.DoneSecondarySPJob(pieceInfo); interruptErr != nil {
 		return
 	}
 	return
@@ -166,34 +126,36 @@ func EnterUploadSecondaryDone(ctx context.Context, event *fsm.Event) {
 
 // SealObjectJob defines the job to transfer StoneHub
 type SealObjectJob struct {
-	StoneKey          string
-	BucketName        string
-	ObjectName        string
-	PrimarySealInfo   *job.SealInfo
-	SecondarySealInfo []*job.SealInfo
+	ObjectInfo        *types.ObjectInfo
+	PrimarySealInfo   []*types.StorageProviderInfo
+	SecondarySealInfo []*types.StorageProviderInfo
 }
 
 // EnterSealObjectInit is called when enter JOB_STATE_SEAL_OBJECT_INIT,
 // and sent SealObjectJob to StoneHub
 func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
-	primarySealInfo, err := stone.job.PrimarySPSealInfo()
+	var (
+		primarySealInfo   []*types.StorageProviderInfo
+		secondarySealInfo []*types.StorageProviderInfo
+		err               error
+	)
+	defer func() {
+		if err != nil {
+			stone.jobCtx.SetJobErr(err)
+			log.CtxErrorw(ctx, "seal object init failed", "error", err)
+		}
+	}()
+	primarySealInfo, err = stone.job.PrimarySPSealInfo()
 	if err != nil {
-		stone.jobCtx.SetJobErr(err)
-		log.CtxErrorw(ctx, "get primary seal info error", "error", err)
 		return
 	}
-	secondarySealInfo, err := stone.job.SecondarySPSealInfo()
+	secondarySealInfo, err = stone.job.SecondarySPSealInfo()
 	if err != nil {
-		stone.jobCtx.SetJobErr(err)
-		log.CtxErrorw(ctx, "get secondary seal info error", "error", err)
 		return
 	}
-	object := stone.objCtx.GetObjectInfo()
 	job := &SealObjectJob{
-		StoneKey:          stone.StoneKey(),
-		BucketName:        object.BucketName,
-		ObjectName:        object.ObjectName,
+		ObjectInfo:        stone.GetObjectInfo(),
 		PrimarySealInfo:   primarySealInfo,
 		SecondarySealInfo: secondarySealInfo,
 	}

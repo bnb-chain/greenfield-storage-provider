@@ -5,6 +5,21 @@ import (
 	"runtime"
 )
 
+const (
+	StorageProviderLogo = `Green Field Storage Provider
+         __                                                       _     __         
+   _____/ /_____  _________ _____ ____     ____  _________ _   __(_)___/ /__  _____
+  / ___/ __/ __ \/ ___/ __  / __  / _ \   / __ \/ ___/ __ \ | / / / __  / _ \/ ___/
+ (__  ) /_/ /_/ / /  / /_/ / /_/ /  __/  / /_/ / /  / /_/ / |/ / / /_/ /  __/ /
+/____/\__/\____/_/   \__,_/\__, /\___/  / .___/_/   \____/|___/_/\__,_/\___/_/
+                          /____/       /_/
+`
+)
+
+func DumpLogo() string {
+	return StorageProviderLogo
+}
+
 var (
 	Version    string
 	CommitID   string
