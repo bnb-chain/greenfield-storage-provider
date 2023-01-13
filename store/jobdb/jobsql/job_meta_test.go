@@ -22,7 +22,7 @@ func TestJobMeta(t *testing.T) {
 	// case1 CreateUploadPayloadJob
 	{
 		jmi, _ := NewJobMetaImpl(DefaultDBOption)
-		err := jmi.CreateUploadPayloadJob(
+		_, err := jmi.CreateUploadPayloadJob(
 			txHash,
 			&types.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject"})
 		assert.Equal(t, nil, err)

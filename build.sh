@@ -6,6 +6,8 @@ BuildTime=`date +%Y-%m-%d\ %H:%M`
 
 #[[ "-$GOPATH" == "-" ]] && { echo "GOPATH not set"; exit 1; }
 
+buf generate
+
 go build -ldflags "\
 -X 'main.Version=${Version}' \
 -X 'main.CommitID=${CommitID}' \

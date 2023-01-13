@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/bnb-chain/inscription-storage-provider/model/errors"
+	"github.com/bnb-chain/inscription-storage-provider/util/hash"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -58,11 +59,12 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 	sizeInt, _ := strconv.Atoi(sizeStr)
 	isPrivate, _ := strconv.ParseBool(reqCtx.r.Header.Get(BFSIsPrivateHeader))
 	opt = &putObjectTxOption{
-		reqCtx:      reqCtx,
-		size:        uint64(sizeInt),
-		contentType: reqCtx.r.Header.Get(BFSContentTypeHeader),
-		checksum:    []byte(reqCtx.r.Header.Get(BFSChecksumHeader)),
-		isPrivate:   isPrivate,
+		reqCtx:         reqCtx,
+		size:           uint64(sizeInt),
+		contentType:    reqCtx.r.Header.Get(BFSContentTypeHeader),
+		checksum:       []byte(reqCtx.r.Header.Get(BFSChecksumHeader)),
+		isPrivate:      isPrivate,
+		redundancyType: reqCtx.r.Header.Get(BFSRedundancyTypeHeader),
 	}
 	info, err := g.uploadProcesser.putObjectTx(reqCtx.object, opt)
 	if err != nil {
@@ -124,12 +126,11 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	txHash, err := hex.DecodeString(reqCtx.r.Header.Get(BFSTransactionHashHeader))
-	if err != nil {
+	if err != nil && len(txHash) != hash.LengthHash {
 		errorDescription = InvalidTxHash
 		return
 	}
 
-	// todo: check tx format
 	opt = &putObjectOption{
 		reqCtx: reqCtx,
 		txHash: txHash,
@@ -250,23 +251,29 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// todo
 	txHash, err := hex.DecodeString(reqCtx.r.Header.Get(BFSTransactionHashHeader))
-	if err != nil {
+	if err != nil && len(txHash) != hash.LengthHash {
 		errorDescription = InvalidTxHash
 		return
 	}
 
-	// todo: check tx format
+	sizeStr := reqCtx.r.Header.Get(ContentLengthHeader)
+	sizeInt, _ := strconv.Atoi(sizeStr)
 	opt = &putObjectOption{
-		reqCtx: reqCtx,
-		txHash: txHash,
+		reqCtx:         reqCtx,
+		txHash:         txHash,
+		size:           uint64(sizeInt),
+		redundancyType: reqCtx.r.Header.Get(BFSRedundancyTypeHeader),
 	}
 
 	info, err := g.uploadProcesser.putObjectV2(reqCtx.object, r.Body, opt)
 	if err != nil {
 		if err == errors.ErrObjectTxNotExist {
 			errorDescription = ObjectTxNotFound
+			return
+		}
+		if err == errors.ErrObjectIsEmpty {
+			errorDescription = InvalidPayload
 			return
 		}
 		// else common.ErrInternalError

@@ -5,7 +5,7 @@ import types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 // IntegrityMeta defines the integrity hash info
 type IntegrityMeta struct {
 	ObjectID       uint64               `json:"ObjectID"`
-	PieceIdx       uint32               `json:"PieceIdx"`
+	PieceIdx       uint32               `json:"PieceIdx"` // only use for ec piece and secondary
 	PieceCount     uint32               `json:"PieceCount"`
 	IsPrimary      bool                 `json:"IsPrimary"`
 	RedundancyType types.RedundancyType `json:"RedundancyType"`

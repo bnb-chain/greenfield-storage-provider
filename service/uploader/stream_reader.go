@@ -1,9 +1,11 @@
 package uploader
 
 import (
+	"fmt"
 	"io"
 	"sync"
 
+	pbPkg "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	pbService "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
@@ -14,6 +16,22 @@ type streamReader struct {
 	pw      *io.PipeWriter
 	txHash  []byte
 	traceID string
+
+	// Temporary fields
+	bucket         string
+	object         string
+	size           uint64
+	redundancyType pbPkg.RedundancyType
+}
+
+// initSteamReaderOnce init stream reader content, is not thread safely.
+func (sr *streamReader) initSteamReaderOnce(req *pbService.UploaderServiceUploadPayloadRequest) error {
+	if sr.txHash == nil {
+		sr.txHash = req.TxHash
+		sr.traceID = req.TraceId
+		return nil
+	}
+	return fmt.Errorf("stream content has inited")
 }
 
 // newStreamReader is used to stream read UploaderService_UploadPayloadServer.
@@ -24,9 +42,7 @@ func newStreamReader(stream pbService.UploaderService_UploadPayloadServer, ch ch
 		for {
 			req, err := stream.Recv()
 			if err == io.EOF {
-				if sr.txHash == nil {
-					sr.txHash = req.TxHash
-					sr.traceID = req.TraceId
+				if err = sr.initSteamReaderOnce(req); err == nil {
 					ch <- req.TxHash
 				}
 				sr.pw.Close()
@@ -39,9 +55,51 @@ func newStreamReader(stream pbService.UploaderService_UploadPayloadServer, ch ch
 				sr.pw.CloseWithError(err)
 				return
 			}
-			if sr.txHash == nil {
-				sr.txHash = req.TxHash
-				sr.traceID = req.TraceId
+			if err = sr.initSteamReaderOnce(req); err == nil {
+				ch <- req.TxHash
+			}
+			sr.pw.Write(req.PayloadData)
+		}
+	}()
+	return sr
+}
+
+// initSteamReaderOnceV2 init stream reader content, is not thread safely.
+func (sr *streamReader) initSteamReaderOnceV2(req *pbService.UploaderServiceUploadPayloadV2Request) error {
+	if sr.txHash == nil {
+		sr.txHash = req.TxHash
+		sr.traceID = req.TraceId
+		sr.bucket = req.BucketName
+		sr.object = req.ObjectName
+		sr.size = req.ObjectSize
+		sr.redundancyType = req.RedundancyType
+		return nil
+	}
+	return fmt.Errorf("stream content has inited")
+}
+
+// newStreamReaderV2 is used to stream read UploaderService_UploadPayloadV2Server.
+func newStreamReaderV2(stream pbService.UploaderService_UploadPayloadV2Server, ch chan []byte) *streamReader {
+	var sr = &streamReader{}
+	sr.pr, sr.pw = io.Pipe()
+	go func() {
+		for {
+			req, err := stream.Recv()
+			if err == io.EOF {
+				if err = sr.initSteamReaderOnceV2(req); err == nil {
+					ch <- req.TxHash
+				}
+				sr.pw.Close()
+				return
+			}
+			if err != nil {
+				if sr.txHash == nil {
+					close(ch)
+				}
+				sr.pw.CloseWithError(err)
+				return
+			}
+			if err = sr.initSteamReaderOnceV2(req); err == nil {
 				ch <- req.TxHash
 			}
 			sr.pw.Write(req.PayloadData)

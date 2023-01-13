@@ -24,6 +24,8 @@ type putObjectTxOption struct {
 	contentType string
 	checksum    []byte
 	isPrivate   bool
+	// redundancyType can be EC or Replica, if != EC, default is Replica
+	redundancyType string
 }
 
 // objectTxInfo is the return of putObjectTx.
@@ -36,13 +38,15 @@ type objectTxInfo struct {
 type putObjectOption struct {
 	reqCtx *requestContext
 	txHash []byte
+	size   uint64
+	// redundancyType can be EC or Replica, if != EC, default is Replica
+	redundancyType string
 }
 
 // objectInfo is the return of putObject.
 type objectInfo struct {
-	size         uint64
-	eTag         string
-	preSignature []byte
+	size uint64
+	eTag string
 }
 
 // uploaderClientInterface define interface to upload object. BFS upload process is divided into two stages:
@@ -164,15 +168,21 @@ type grpcUploaderImpl struct {
 
 // putObjectTx is used to call uploaderService's CreateObject by grpc.
 func (gui *grpcUploaderImpl) putObjectTx(name string, opt *putObjectTxOption) (*objectTxInfo, error) {
+	log.Infow("put object tx", "option", opt)
+	redundancyType := pbPkg.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
+	if opt.redundancyType == "Replica" {
+		redundancyType = pbPkg.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
+	}
 	resp, err := gui.uploader.CreateObject(context.Background(), &pbService.UploaderServiceCreateObjectRequest{
 		TraceId: opt.reqCtx.requestID,
 		ObjectInfo: &pbPkg.ObjectInfo{
-			BucketName:  opt.reqCtx.bucket,
-			ObjectName:  name,
-			Size:        opt.size,
-			ContentType: opt.contentType,
-			Checksum:    opt.checksum,
-			IsPrivate:   opt.isPrivate,
+			BucketName:     opt.reqCtx.bucket,
+			ObjectName:     name,
+			Size:           opt.size,
+			ContentType:    opt.contentType,
+			Checksum:       opt.checksum,
+			IsPrivate:      opt.isPrivate,
+			RedundancyType: redundancyType,
 		},
 	})
 	if err != nil {
@@ -205,12 +215,13 @@ func (gui *grpcUploaderImpl) putObject(name string, reader io.Reader, opt *putOb
 			return nil, errors.ErrInternalError
 		}
 		if readN > 0 {
-			var req pbService.UploaderServiceUploadPayloadRequest
-			req.TraceId = opt.reqCtx.requestID
-			req.TxHash = opt.txHash
-			req.PayloadData = buf[:readN]
-			// todo: fill job_id??
-			if err := stream.Send(&req); err != nil {
+
+			req := &pbService.UploaderServiceUploadPayloadRequest{
+				TraceId:     opt.reqCtx.requestID,
+				TxHash:      opt.txHash,
+				PayloadData: buf[:readN],
+			}
+			if err := stream.Send(req); err != nil {
 				log.Warnw("put object failed, due to stream send", "err", err)
 				return nil, errors.ErrInternalError
 			}
@@ -263,7 +274,7 @@ func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, opt *put
 		md5Value string
 	)
 
-	stream, err := gui.uploader.UploadPayload(context.Background())
+	stream, err := gui.uploader.UploadPayloadV2(context.Background())
 	if err != nil {
 		log.Warnw("failed to dail to uploader", "err", err)
 		return nil, errors.ErrInternalError
@@ -275,12 +286,20 @@ func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, opt *put
 			return nil, errors.ErrInternalError
 		}
 		if readN > 0 {
-			var req pbService.UploaderServiceUploadPayloadRequest
-			req.TraceId = opt.reqCtx.requestID
-			req.TxHash = opt.txHash
-			req.PayloadData = buf[:readN]
-			// todo: fill job_id??
-			if err := stream.Send(&req); err != nil {
+			redundancyType := pbPkg.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
+			if opt.redundancyType == "Replica" {
+				redundancyType = pbPkg.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
+			}
+			req := &pbService.UploaderServiceUploadPayloadV2Request{
+				TraceId:        opt.reqCtx.requestID,
+				TxHash:         opt.txHash,
+				PayloadData:    buf[:readN],
+				BucketName:     opt.reqCtx.bucket,
+				ObjectName:     name,
+				ObjectSize:     opt.size,
+				RedundancyType: redundancyType,
+			}
+			if err := stream.Send(req); err != nil {
 				log.Warnw("put object failed, due to stream send", "err", err)
 				return nil, errors.ErrInternalError
 			}
@@ -289,6 +308,10 @@ func (gui *grpcUploaderImpl) putObjectV2(name string, reader io.Reader, opt *put
 			md5Hash.Write(hashBuf[:readN])
 		}
 		if err == io.EOF {
+			if size == 0 {
+				log.Warnw("put object failed, due to payload is empty")
+				return nil, errors.ErrObjectIsEmpty
+			}
 			err = nil
 			resp, err := stream.CloseAndRecv()
 			if err != nil {

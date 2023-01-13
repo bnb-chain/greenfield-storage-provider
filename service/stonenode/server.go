@@ -75,14 +75,14 @@ func (node *StoneNodeService) Name() string {
 }
 
 // Start running StoneNodeService, implement lifecycle interface
-func (node *StoneNodeService) Start(ctx context.Context) error {
+func (node *StoneNodeService) Start(startCtx context.Context) error {
 	if node.running.Swap(true) {
 		return merrors.ErrStoneNodeStarted
 	}
 	go func() {
 		var stoneJobCounter int64 // atomic
-		allocTicker := time.NewTicker(AllocStonePeriod)
-		ctx, cancel := context.WithCancel(context.Background())
+		allocTicker := time.NewTimer(AllocStonePeriod)
+		ctx, cancel := context.WithCancel(startCtx)
 		for {
 			select {
 			case <-allocTicker.C:

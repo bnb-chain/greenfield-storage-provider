@@ -70,7 +70,7 @@ func (client *UploaderClient) GetAuthentication(ctx context.Context, in *service
 }
 
 // UploadPayloadV2 return grpc stream client, and be used to upload payload.
-func (client *UploaderClient) UploadPayloadV2(ctx context.Context, opts ...grpc.CallOption) (service.UploaderService_UploadPayloadClient, error) {
+func (client *UploaderClient) UploadPayloadV2(ctx context.Context, opts ...grpc.CallOption) (service.UploaderService_UploadPayloadV2Client, error) {
 	return client.uploader.UploadPayloadV2(ctx, opts...)
 }
 
