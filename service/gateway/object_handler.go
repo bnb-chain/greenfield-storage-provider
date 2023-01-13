@@ -21,7 +21,6 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 		err              error
 		errorDescription *errorDescription
 		requestContext   *requestContext
-		opt              *putObjectTxOption
 	)
 
 	defer func() {
@@ -59,7 +58,7 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 	sizeStr := requestContext.r.Header.Get(model.BFSContentLengthHeader)
 	sizeInt, _ := strconv.Atoi(sizeStr)
 	isPrivate, _ := strconv.ParseBool(requestContext.r.Header.Get(model.BFSIsPrivateHeader))
-	opt = &putObjectTxOption{
+	option := &putObjectTxOption{
 		requestContext: requestContext,
 		objectSize:     uint64(sizeInt),
 		contentType:    requestContext.r.Header.Get(model.BFSContentTypeHeader),
@@ -67,7 +66,7 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 		isPrivate:      isPrivate,
 		redundancyType: requestContext.r.Header.Get(model.BFSRedundancyTypeHeader),
 	}
-	info, err := g.uploadProcessor.putObjectTx(requestContext.objectName, opt)
+	info, err := g.uploadProcessor.putObjectTx(requestContext.objectName, option)
 	if err != nil {
 		if err == errors.ErrDuplicateObject {
 			errorDescription = ObjectAlreadyExists
@@ -92,7 +91,6 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err              error
 		errorDescription *errorDescription
 		requestContext   *requestContext
-		opt              *putObjectOption
 	)
 
 	defer func() {
@@ -132,12 +130,12 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	opt = &putObjectOption{
+	option := &putObjectOption{
 		requestContext: requestContext,
 		txHash:         txHash,
 	}
 
-	info, err := g.uploadProcessor.putObject(requestContext.objectName, r.Body, opt)
+	info, err := g.uploadProcessor.putObject(requestContext.objectName, r.Body, option)
 	if err != nil {
 		if err == errors.ErrObjectTxNotExist {
 			errorDescription = ObjectTxNotFound

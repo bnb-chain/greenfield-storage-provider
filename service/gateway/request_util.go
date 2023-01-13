@@ -88,6 +88,7 @@ func generateRequestDetail(r *requestContext) string {
 		r.requestID, r.r.Host, r.r.Method, r.r.URL.String(), headerToString(r.r.Header), getRequestIP(r.r), time.Since(r.startTime))
 }
 
+// redundancyType can be EC or Replica, if != EC, default is Replica
 func redundancyTypeToEnum(redundancyType string) pbPkg.RedundancyType {
 	if redundancyType == model.ReplicaRedundancyTypeHeaderValue {
 		return pbPkg.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE

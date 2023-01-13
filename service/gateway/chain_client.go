@@ -15,7 +15,7 @@ type createBucketOption struct {
 
 // chainClientInterface define some interfaces to maintain metadata in the blockchain.
 type chainClientInterface interface {
-	createBucket(name string, opt *createBucketOption) error
+	createBucket(bucketName string, option *createBucketOption) error
 }
 
 // debugChainImpl is an implement of Chain interface for local debugging.
@@ -24,7 +24,7 @@ type debugChainImpl struct {
 }
 
 // createBucket is used to create bucket directory for local debugging.
-func (dci *debugChainImpl) createBucket(name string, opt *createBucketOption) error {
+func (dci *debugChainImpl) createBucket(bucketName string, option *createBucketOption) error {
 	var (
 		innerErr error
 		msg      string
@@ -39,7 +39,7 @@ func (dci *debugChainImpl) createBucket(name string, opt *createBucketOption) er
 		msg = "failed to stat"
 		return errors.ErrInternalError
 	}
-	if innerErr = os.Mkdir(dci.localDir+"/"+name, 0777); os.IsExist(innerErr) {
+	if innerErr = os.Mkdir(dci.localDir+"/"+bucketName, 0777); os.IsExist(innerErr) {
 		msg = "bucket has existed"
 		return errors.ErrDuplicateBucket
 	}
@@ -84,6 +84,6 @@ func newChainClient(c *chainClientConfig) (*chainClient, error) {
 	}
 }
 
-func (cc *chainClient) createBucket(name string, opt *createBucketOption) error {
-	return cc.impl.createBucket(name, opt)
+func (cc *chainClient) createBucket(bucketName string, option *createBucketOption) error {
+	return cc.impl.createBucket(bucketName, option)
 }
