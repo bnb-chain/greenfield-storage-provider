@@ -194,7 +194,7 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string]
 	//case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 	//	pieceDataBySecondary, err = fillReplicaOrInlineData(pieceDataBySegment, secondarySPs, targetIdx)
 	default: // ec type
-		pieceDataBySecondary, err = fillECData(pieceDataBySegment, secondarySPs, targetIdx)
+		pieceDataBySecondary, err = fillECData(pieceDataBySegment, secondarySPs, targetIdx, redundancyType)
 	}
 	if err != nil {
 		log.Errorw("fill piece data by secondary error", "error", err)
@@ -203,8 +203,8 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string]
 	return pieceDataBySecondary, nil
 }
 
-func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, targetIdx []uint32) (
-	map[string]map[string][]byte, error) {
+func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, targetIdx []uint32,
+	redundancyType ptypes.RedundancyType) (map[string]map[string][]byte, error) {
 	ecPieceDataMap := make(map[string]map[string][]byte)
 	for pieceKey, pieceData := range pieceDataBySegment {
 		//if len(pieceData) != 6 {
@@ -230,8 +230,13 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 			if len(targetIdx) != 0 {
 				for _, index := range targetIdx {
 					if int(index) == idx {
-						key := piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, uint32(idx))
-						ecPieceDataMap[sp][key] = data
+						switch redundancyType {
+						case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+							ecPieceDataMap[sp][pieceKey] = data
+						default:
+							key := piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, uint32(idx))
+							ecPieceDataMap[sp][key] = data
+						}
 					}
 				}
 			}
