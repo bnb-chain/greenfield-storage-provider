@@ -15,9 +15,9 @@ import (
 
 // getObjectOption is the getObject Option.
 type getObjectOption struct {
-	reqCtx *requestContext
-	offset uint64
-	length uint64
+	requestContext *requestContext
+	offset         uint64
+	length         uint64
 }
 
 // downloaderClientInterface define interface to download object.
@@ -31,10 +31,10 @@ type debugDownloaderImpl struct {
 }
 
 // getObject is used to get object data from local directory file for debugging.
-func (ddl *debugDownloaderImpl) getObject(name string, writer io.Writer, option *getObjectOption) error {
+func (ddl *debugDownloaderImpl) getObject(objectName string, writer io.Writer, option *getObjectOption) error {
 	var (
-		bucketDir      = ddl.localDir + "/" + option.reqCtx.bucket
-		objectDataFile = bucketDir + "/" + name + ".data"
+		bucketDir      = ddl.localDir + "/" + option.requestContext.bucketName
+		objectDataFile = bucketDir + "/" + objectName + ".data"
 		buf            = make([]byte, 65536)
 		readN, writeN  int
 		size           uint64
@@ -93,13 +93,19 @@ type downloadProcessorConfig struct {
 	Address  string
 }
 
+var defaultDownloadProcessorConfig = &downloadProcessorConfig{
+	Mode:     "DebugMode",
+	DebugDir: "./debug",
+	Address:  "127.0.0.1:5523",
+}
+
 // downloaderClient is a wrapper of download object.
 type downloadProcessor struct {
 	impl downloaderClientInterface
 }
 
 // newDownloaderClient return a downloader wrapper.
-func newDownloadProcessor(c downloadProcessorConfig) (*downloadProcessor, error) {
+func newDownloadProcessor(c *downloadProcessorConfig) (*downloadProcessor, error) {
 	switch {
 	case c.Mode == "DebugMode":
 		return &downloadProcessor{impl: &debugDownloaderImpl{localDir: c.DebugDir}}, nil
@@ -115,8 +121,8 @@ func newDownloadProcessor(c downloadProcessorConfig) (*downloadProcessor, error)
 }
 
 // getObject get object from downloader.
-func (dc *downloadProcessor) getObject(name string, writer io.Writer, option *getObjectOption) error {
-	return dc.impl.getObject(name, writer, option)
+func (dc *downloadProcessor) getObject(objectName string, writer io.Writer, option *getObjectOption) error {
+	return dc.impl.getObject(objectName, writer, option)
 }
 
 // grpcDownloaderImpl is an implement of call grpc downloader service.
@@ -125,7 +131,7 @@ type grpcDownloaderImpl struct {
 }
 
 // getObject get object from downloader.
-func (d *grpcDownloaderImpl) getObject(name string, writer io.Writer, option *getObjectOption) error {
+func (d *grpcDownloaderImpl) getObject(objectName string, writer io.Writer, option *getObjectOption) error {
 	var (
 		err           error
 		readN, writeN int
@@ -133,9 +139,9 @@ func (d *grpcDownloaderImpl) getObject(name string, writer io.Writer, option *ge
 	)
 
 	req := &service.DownloaderServiceDownloaderObjectRequest{
-		TraceId:    option.reqCtx.requestID,
-		BucketName: option.reqCtx.bucket,
-		ObjectName: option.reqCtx.object,
+		TraceId:    option.requestContext.requestID,
+		BucketName: option.requestContext.bucketName,
+		ObjectName: objectName,
 	}
 	ctx := log.Context(context.Background(), req)
 	defer func() {

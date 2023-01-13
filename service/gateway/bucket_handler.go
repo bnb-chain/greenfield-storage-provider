@@ -15,36 +15,36 @@ func (g *Gateway) createBucketHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
-		reqCtx           *requestContext
+		requestContext   *requestContext
 	)
 
 	defer func() {
 		statusCode := 200
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
-			_ = errorDescription.errorResponse(w, reqCtx)
+			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(reqCtx))
+			log.Infof("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(requestContext))
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(reqCtx))
+			log.Warnf("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(requestContext))
 		}
 	}()
 
-	reqCtx = newRequestContext(r)
-	if reqCtx.bucket == "" {
+	requestContext = newRequestContext(r)
+	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
 	}
-	if err := reqCtx.verifySign(); err != nil {
+	if err := requestContext.verifySign(); err != nil {
 		errorDescription = SignatureDoesNotMatch
 		return
 	}
 
-	var opt = &createBucketOption{
-		reqCtx: reqCtx,
+	option := &createBucketOption{
+		requestContext: requestContext,
 	}
-	err = g.chain.createBucket(reqCtx.bucket, opt)
+	err = g.chain.createBucket(requestContext.bucketName, option)
 	if err != nil {
 		if err == errors.ErrDuplicateBucket {
 			errorDescription = BucketAlreadyExists
