@@ -50,22 +50,22 @@ func (mr *MockSyncerAPIMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockSyncerAPI)(nil).Close))
 }
 
-// UploadECPiece mocks base method.
-func (m *MockSyncerAPI) UploadECPiece(ctx context.Context, opts ...grpc.CallOption) (v1.SyncerService_UploadECPieceClient, error) {
+// SyncPiece mocks base method.
+func (m *MockSyncerAPI) SyncPiece(ctx context.Context, opts ...grpc.CallOption) (v1.SyncerService_SyncPieceClient, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "UploadECPiece", varargs...)
-	ret0, _ := ret[0].(v1.SyncerService_UploadECPieceClient)
+	ret := m.ctrl.Call(m, "SyncPiece", varargs...)
+	ret0, _ := ret[0].(v1.SyncerService_SyncPieceClient)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// UploadECPiece indicates an expected call of UploadECPiece.
-func (mr *MockSyncerAPIMockRecorder) UploadECPiece(ctx interface{}, opts ...interface{}) *gomock.Call {
+// SyncPiece indicates an expected call of SyncPiece.
+func (mr *MockSyncerAPIMockRecorder) SyncPiece(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadECPiece", reflect.TypeOf((*MockSyncerAPI)(nil).UploadECPiece), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncPiece", reflect.TypeOf((*MockSyncerAPI)(nil).SyncPiece), varargs...)
 }

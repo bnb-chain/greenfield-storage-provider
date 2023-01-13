@@ -51,6 +51,13 @@ var (
 	ErrEmptyJob           = errors.New("job is empty")
 	ErrSecondarySPNumber  = errors.New("secondary sp is not enough")
 	ErrInvalidSegmentData = errors.New("invalid segment data, length is not equal to 1")
+	ErrInvalidECData      = errors.New("invalid ec data, length is not equal to 6")
+	ErrEmptyTargetIdx     = errors.New("target index array is empty")
+)
+
+// syncer service errors
+var (
+	ErrReceivedPieceCount = errors.New("syncer service received piece count is wrong")
 )
 
 func MakeErrMsgResponse(err error) *service.ErrMessage {

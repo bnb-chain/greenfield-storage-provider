@@ -38,7 +38,7 @@ func EncodeECPieceKey(objectID uint64, segmentIndex, pieceIndex uint32) string {
 }
 
 // EncodeECPieceKeyBySegmentKey encodes ec piece store key
-func EncodeECPieceKeyBySegmentKey(segmentKey string, pieceIndex int) string {
+func EncodeECPieceKeyBySegmentKey(segmentKey string, pieceIndex uint32) string {
 	return fmt.Sprintf("%s_p%d", segmentKey, pieceIndex)
 }
 
@@ -82,7 +82,7 @@ func CheckSegmentPieceKey(keys []string) bool {
 // CheckECPieceKey checks EC piece key is correct
 func CheckECPieceKey(keys []string) bool {
 	if len(keys) != 3 {
-		log.Errorw("Invalid ec piece key", "piece key", keys)
+		log.Errorw("Invalid EC piece key", "piece key", keys)
 		return false
 	}
 

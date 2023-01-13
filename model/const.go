@@ -14,8 +14,14 @@ const (
 	OctetStream  = "application/octet-stream"
 )
 
-var (
-	MemoryDB string = "memory"
-	MySqlDB  string = "MySql"
-	LevelDB  string = "leveldb"
+const (
+	MemoryDB = "memory"
+	MySqlDB  = "MySQL"
+	LevelDB  = "leveldb"
+)
+
+// RPC config
+const (
+	// server and client max send or recv msg size
+	MaxCallMsgSize = 40 * 1024 * 1024
 )

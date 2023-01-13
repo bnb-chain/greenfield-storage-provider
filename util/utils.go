@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 	"unicode"
 
 	"github.com/google/uuid"
 	"github.com/naoina/toml"
+	"golang.org/x/exp/constraints"
 
 	"github.com/bnb-chain/inscription-storage-provider/model"
 )
@@ -48,4 +50,20 @@ func ComputeSegmentCount(size uint64) uint32 {
 		segmentCount++
 	}
 	return segmentCount
+}
+
+// SortedKeys sort keys of a map
+func GenericSortedKeys[K constraints.Ordered, V any](dataMap map[K]V) []K {
+	keys := make([]K, 0, len(dataMap))
+	for k := range dataMap {
+		keys = append(keys, k)
+	}
+	sortSlice(keys)
+	return keys
+}
+
+func sortSlice[T constraints.Ordered](s []T) {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] < s[j]
+	})
 }

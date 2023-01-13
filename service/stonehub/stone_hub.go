@@ -13,19 +13,16 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
-
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
-
-	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobsql"
-
 	"github.com/bnb-chain/inscription-storage-provider/mock"
+	"github.com/bnb-chain/inscription-storage-provider/model"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
 	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobmemory"
+	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobsql"
 	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
+	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 

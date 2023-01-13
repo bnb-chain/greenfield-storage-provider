@@ -18,11 +18,8 @@ const (
 
 // StoneNodeService manages stone execution units
 type StoneNodeService struct {
-	cfg  *StoneNodeConfig
-	name string
-	//syncer   *client.SyncerClient
-	//stoneHub *client.StoneHubClient
-	//store    *client.StoreClient
+	cfg        *StoneNodeConfig
+	name       string
 	syncer     client.SyncerAPI
 	stoneHub   client.StoneHubAPI
 	store      client.PieceStoreAPI
@@ -40,14 +37,14 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 		stopCh:     make(chan struct{}),
 		stoneLimit: config.StoneJobLimit,
 	}
-	if err := node.InitClient(); err != nil {
+	if err := node.initClient(); err != nil {
 		return nil, err
 	}
 	return node, nil
 }
 
 // InitClient inits store client and rpc client
-func (node *StoneNodeService) InitClient() error {
+func (node *StoneNodeService) initClient() error {
 	if node.running.Load() == true {
 		return merrors.ErrStoneNodeStarted
 	}
@@ -84,11 +81,11 @@ func (node *StoneNodeService) Start(startCtx context.Context) error {
 	}
 	go func() {
 		var stoneJobCounter int64 // atomic
-		allocTimer := time.NewTimer(AllocStonePeriod)
+		allocTicker := time.NewTicker(AllocStonePeriod)
 		ctx, cancel := context.WithCancel(startCtx)
 		for {
 			select {
-			case <-allocTimer.C:
+			case <-allocTicker.C:
 				go func() {
 					if !node.running.Load() {
 						log.Errorw("stone node service stopped, can not alloc stone.")
