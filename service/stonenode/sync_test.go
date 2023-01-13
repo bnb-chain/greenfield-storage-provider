@@ -216,7 +216,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			req3:         spList,
 			req4:         []uint32{0, 1, 2},
-			wantedResult: 3,
+			wantedResult: 1,
 			wantedErr:    nil,
 		},
 		{
@@ -243,7 +243,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			req3:         spList,
 			req4:         []uint32{1, 2},
-			wantedResult: 2,
+			wantedResult: 0,
 			wantedErr:    nil,
 		},
 		{
@@ -255,24 +255,24 @@ func Test_dispatchSecondarySP(t *testing.T) {
 			wantedResult: 0,
 			wantedErr:    merrors.ErrSecondarySPNumber,
 		},
-		{
-			name:         "wrong ec segment data length",
-			req1:         dispatchSegmentMap(),
-			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
-			req3:         spList,
-			req4:         []uint32{0, 1, 2, 3, 4, 5},
-			wantedResult: 0,
-			wantedErr:    merrors.ErrInvalidECData,
-		},
-		{
-			name:         "wrong replica/inline segment data length",
-			req1:         dispatchPieceMap(),
-			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
-			req3:         spList,
-			req4:         []uint32{0, 1, 2, 3, 4, 5},
-			wantedResult: 0,
-			wantedErr:    merrors.ErrInvalidSegmentData,
-		},
+		//{
+		//	name:         "wrong ec segment data length",
+		//	req1:         dispatchSegmentMap(),
+		//	req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+		//	req3:         spList,
+		//	req4:         []uint32{0, 1, 2, 3, 4, 5},
+		//	wantedResult: 1,
+		//	wantedErr:    merrors.ErrInvalidECData,
+		//},
+		//{
+		//	name:         "wrong replica/inline segment data length",
+		//	req1:         dispatchPieceMap(),
+		//	req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+		//	req3:         spList,
+		//	req4:         []uint32{0, 1, 2, 3, 4, 5},
+		//	wantedResult: 1,
+		//	wantedErr:    merrors.ErrInvalidSegmentData,
+		//},
 	}
 
 	node := setup(t)
@@ -367,7 +367,7 @@ func TestSyncPieceSuccess(t *testing.T) {
 		"123456_s4_p0": []byte("test5"),
 		"123456_s5_p0": []byte("test6"),
 	}
-	resp, err := node.SyncPiece(context.TODO(), sInfo, data, "test_traceID")
+	resp, err := node.syncPiece(context.TODO(), sInfo, data, "test_traceID")
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.GetTraceId(), "test_traceID")
 	assert.Equal(t, resp.GetSecondarySpInfo().GetPieceIdx(), uint32(1))

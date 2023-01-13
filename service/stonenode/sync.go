@@ -190,16 +190,24 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string]
 	// if redundancyType is replica or inline, value is [][]byte type, a two-dimensional array
 	// which only contains one []byte data
 	var err error
-	switch redundancyType {
-	//case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-	//	pieceDataBySecondary, err = fillReplicaOrInlineData(pieceDataBySegment, secondarySPs, targetIdx)
-	default: // ec type
-		pieceDataBySecondary, err = fillECData(pieceDataBySegment, secondarySPs, targetIdx, redundancyType)
-	}
+	pieceDataBySecondary, err = fillECData(pieceDataBySegment, secondarySPs, targetIdx, redundancyType)
 	if err != nil {
 		log.Errorw("fill piece data by secondary error", "error", err)
 		return nil, err
 	}
+
+	/*
+		switch redundancyType {
+		case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+			pieceDataBySecondary, err = fillReplicaOrInlineData(pieceDataBySegment, secondarySPs, targetIdx)
+		default: // ec type
+			pieceDataBySecondary, err = fillECData(pieceDataBySegment, secondarySPs, targetIdx, redundancyType)
+		}
+		if err != nil {
+			log.Errorw("fill piece data by secondary error", "error", err)
+			return nil, err
+		}
+	*/
 	return pieceDataBySecondary, nil
 }
 
