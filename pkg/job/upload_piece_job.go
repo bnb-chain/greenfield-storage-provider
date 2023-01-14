@@ -138,9 +138,6 @@ func (job *UploadSpJob) Done(pieceJob *service.PieceJob) error {
 	} else {
 		err = job.doneEC(piece, pieceJob)
 	}
-	if err == nil {
-		job.complete++
-	}
 	return err
 }
 
