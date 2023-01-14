@@ -360,8 +360,8 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
 			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
 		}
 		if interruptErr != nil && uploadStone != nil {
+			log.CtxWarnw(ctx, "interrupt stone error", "error", interruptErr)
 			err = uploadStone.InterruptStone(ctx, interruptErr)
-			log.CtxWarnw(ctx, "interrupt stone error", "error", err)
 		}
 		log.CtxInfow(ctx, "done secondary piece job completed", "error", err)
 	}()
