@@ -264,13 +264,14 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context,
 // DonePrimaryPieceJob set the primary piece job completed state
 func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context,
 	req *service.StoneHubServiceDonePrimaryPieceJobRequest) (
-	resp *service.StoneHubServiceDonePrimaryPieceJobResponse, err error) {
+	*service.StoneHubServiceDonePrimaryPieceJobResponse, error) {
 	ctx = log.Context(ctx, req, req.GetPieceJob())
-	resp = &service.StoneHubServiceDonePrimaryPieceJobResponse{TraceId: req.TraceId, TxHash: req.TxHash}
+	resp := &service.StoneHubServiceDonePrimaryPieceJobResponse{TraceId: req.TraceId, TxHash: req.TxHash}
 	var (
 		uploadStone  *stone.UploadPayloadStone
 		job          Stone
 		interruptErr error
+		err          error
 		pieceIdx     = -1
 		typeCast     bool
 	)
@@ -286,40 +287,40 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context,
 	}()
 	if req.GetPieceJob() == nil || req.GetPieceJob().GetObjectId() == 0 {
 		err = merrors.ErrObjectIdZero
-		return
+		return resp, nil
 	}
 	if job = hub.GetStone(req.GetPieceJob().GetObjectId()); job == nil {
 		err = merrors.ErrUploadPayloadJobNotExist
-		return
+		return resp, nil
 	}
 	if uploadStone, typeCast = job.(*stone.UploadPayloadStone); !typeCast {
 		err = merrors.ErrUploadPayloadJobNotExist
-		return
+		return resp, nil
 	}
 	if req.GetErrMessage() != nil && req.GetErrMessage().GetErrCode() ==
 		service.ErrCode_ERR_CODE_ERROR {
 		interruptErr = errors.New(resp.GetErrMessage().GetErrMsg())
-		return
+		return resp, nil
 	}
 
 	if req.GetPieceJob().GetStorageProviderSealInfo() == nil {
 		err = merrors.ErrSealInfoMissing
-		return
+		return resp, nil
 	}
 	pieceIdx = int(req.GetPieceJob().GetStorageProviderSealInfo().GetPieceIdx())
 	if len(req.GetPieceJob().GetStorageProviderSealInfo().GetPieceChecksum()) != 1 {
 		err = merrors.ErrCheckSumCountMismatch
-		return
+		return resp, nil
 	}
 	if req.GetPieceJob().GetStorageProviderSealInfo().GetStorageProviderId() != hub.config.StorageProvider {
 		err = merrors.ErrPrimarySPMismatch
-		return
+		return resp, nil
 	}
 	interruptErr = uploadStone.ActionEvent(ctx, stone.UploadPrimaryPieceDoneEvent, req.PieceJob)
 	if interruptErr != nil {
-		return
+		return resp, nil
 	}
-	return
+	return resp, nil
 }
 
 // AllocStoneJob pop the secondary piece job
@@ -346,13 +347,14 @@ func (hub *StoneHub) AllocStoneJob(ctx context.Context,
 // DoneSecondaryPieceJob set the secondary piece job completed state
 func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
 	req *service.StoneHubServiceDoneSecondaryPieceJobRequest) (
-	resp *service.StoneHubServiceDoneSecondaryPieceJobResponse, err error) {
+	*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
 	ctx = log.Context(ctx, req, req.GetPieceJob())
-	resp = &service.StoneHubServiceDoneSecondaryPieceJobResponse{TraceId: req.TraceId}
+	resp := &service.StoneHubServiceDoneSecondaryPieceJobResponse{TraceId: req.TraceId}
 	var (
 		uploadStone  *stone.UploadPayloadStone
 		job          Stone
 		interruptErr error
+		err          error
 		typeCast     bool
 		pieceIdx     = -1
 	)
@@ -368,39 +370,39 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
 	}()
 	if req.GetPieceJob() == nil || req.GetPieceJob().GetObjectId() == 0 {
 		err = merrors.ErrObjectIdZero
-		return
+		return resp, nil
 	}
 	if job = hub.GetStone(req.GetPieceJob().GetObjectId()); job == nil {
 		err = merrors.ErrUploadPayloadJobNotExist
-		return
+		return resp, nil
 	}
 	if uploadStone, typeCast = job.(*stone.UploadPayloadStone); !typeCast {
 		err = merrors.ErrUploadPayloadJobNotExist
-		return
+		return resp, nil
 	}
 	if req.GetErrMessage() != nil && req.GetErrMessage().GetErrCode() ==
 		service.ErrCode_ERR_CODE_ERROR {
 		interruptErr = errors.New(resp.GetErrMessage().GetErrMsg())
-		return
+		return resp, nil
 	}
 
 	if req.GetPieceJob().GetStorageProviderSealInfo() == nil {
 		err = merrors.ErrSealInfoMissing
-		return
+		return resp, nil
 	}
 	if len(req.GetPieceJob().GetStorageProviderSealInfo().GetPieceChecksum()) == 0 {
 		err = merrors.ErrCheckSumCountMismatch
-		return
+		return resp, nil
 	}
 	pieceIdx = int(req.GetPieceJob().GetStorageProviderSealInfo().GetPieceIdx())
 	if len(req.GetPieceJob().GetStorageProviderSealInfo().GetStorageProviderId()) == 0 {
 		err = merrors.ErrStorageProviderMissing
-		return
+		return resp, nil
 	}
 	if interruptErr = uploadStone.ActionEvent(ctx, stone.UploadSecondaryPieceDoneEvent, req.PieceJob); interruptErr != nil {
-		return
+		return resp, nil
 	}
-	return
+	return resp, nil
 }
 
 // QueryStone return the stone info, debug interface
