@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -339,8 +340,8 @@ func Context(ctx context.Context, opts ...interface{}) context.Context {
 		if reflect.ValueOf(req).MethodByName("GetObjectId").IsValid() {
 			valList := reflect.ValueOf(req).MethodByName("GetObjectId").Call([]reflect.Value{})
 			if len(valList) > 0 && !valList[0].IsZero() {
-				traceID := valList[0].String()
-				ctx = metainfo.WithValue(ctx, "object_id", traceID)
+				objectID := valList[0].Uint()
+				ctx = metainfo.WithValue(ctx, "object_id", strconv.FormatUint(objectID, 10))
 			}
 		}
 	}

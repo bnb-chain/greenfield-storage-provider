@@ -249,11 +249,11 @@ func (zl *logger) getMetaInfo(ctx context.Context) []zap.Field {
 	}
 
 	fields := make([]zap.Field, 0)
-	if objectID, ok := metadata.GetValue(ctx, "object_id"); ok {
-		fields = append(fields, zap.String("object_id", objectID))
-	}
 	if traceID, ok := metadata.GetValue(ctx, "trace_id"); ok {
 		fields = append(fields, zap.String("trace_id", traceID))
+	}
+	if objectID, ok := metadata.GetValue(ctx, "object_id"); ok {
+		fields = append(fields, zap.String("object_id", objectID))
 	}
 	return fields
 }

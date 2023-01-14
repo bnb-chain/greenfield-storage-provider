@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/bnb-chain/inscription-storage-provider/model"
 	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
@@ -225,6 +226,12 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context,
 		err = merrors.ErrUploadPayloadJobRunning
 		return
 	}
+
+	// TODO:: inline type check and change move to gate
+	if req.GetObjectInfo().GetSize() <= model.InlineSize {
+		req.GetObjectInfo().RedundancyType = types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
+	}
+
 	var (
 		jobCtx      *types.JobContext
 		uploadStone *stone.UploadPayloadStone
