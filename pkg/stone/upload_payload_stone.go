@@ -117,11 +117,11 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 		case types.JOB_STATE_UPLOAD_PRIMARY_INIT:
 			event = UploadPrimaryDoingEvent
 		case types.JOB_STATE_UPLOAD_PRIMARY_DOING:
-			log.CtxInfow(ctx, "remaining primary piece job",
-				"piece_idx", stone.job.PopPendingSecondarySPJob())
 			if stone.job.PrimarySPCompleted() {
 				event = UploadPrimaryDoneEvent
 			} else {
+				log.CtxInfow(ctx, "remaining primary piece job",
+					"piece_idx", stone.job.PopPendingPrimarySPJob().TargetIdx)
 				return nil
 			}
 		case types.JOB_STATE_UPLOAD_PRIMARY_DONE:
@@ -129,11 +129,11 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 		case types.JOB_STATE_UPLOAD_SECONDARY_INIT:
 			event = UploadSecondaryDoingEvent
 		case types.JOB_STATE_UPLOAD_SECONDARY_DOING:
-			log.CtxInfow(ctx, "remaining secondary piece job",
-				"piece_idx", stone.job.PopPendingSecondarySPJob())
 			if stone.job.SecondarySPCompleted() {
 				event = UploadSecondaryDoneEvent
 			} else {
+				log.CtxInfow(ctx, "remaining secondary piece job",
+					"piece_idx", stone.job.PopPendingSecondarySPJob().TargetIdx)
 				return nil
 			}
 		case types.JOB_STATE_UPLOAD_SECONDARY_DONE:
