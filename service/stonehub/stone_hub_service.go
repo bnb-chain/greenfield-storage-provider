@@ -323,6 +323,7 @@ func (hub *StoneHub) AllocStoneJob(ctx context.Context,
 	stoneJob := hub.ConsumeJob()
 	if stoneJob == nil {
 		log.CtxDebugw(ctx, "no stone job to dispatch")
+		return resp, nil
 	}
 	switch job := stoneJob.(type) {
 	case *service.PieceJob:

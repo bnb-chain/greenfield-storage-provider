@@ -31,8 +31,10 @@ func NewSegmentUploadSpJob(objectCtx *ObjectInfoContext, secondary bool) (*Uploa
 		pieceType:  model.SegmentPieceType,
 		redundancy: objectCtx.GetObjectRedundancyType(),
 	}
-	objectCtx.GetObjectRedundancyType()
-	segmentCount := util.ComputeSegmentCount(objectCtx.GetObjectSize())
+	var segmentCount uint32 = 1
+	if job.redundancy == types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+		segmentCount = util.ComputeSegmentCount(objectCtx.GetObjectSize())
+	}
 	for idx := 0; idx < int(segmentCount); idx++ {
 		job.pieceJobs = append(job.pieceJobs, &jobdb.PieceJob{
 			PieceId:       uint32(idx),

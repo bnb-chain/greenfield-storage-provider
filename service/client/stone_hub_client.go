@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
@@ -133,26 +132,20 @@ func (client *StoneHubClient) DonePrimaryPieceJob(ctx context.Context, in *servi
 
 func (client *StoneHubClient) AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (
 	*service.StoneHubServiceAllocStoneJobResponse, error) {
-	log.Info("13")
 	req := &service.StoneHubServiceAllocStoneJobRequest{TraceId: util.GenerateRequestID()}
 	resp, err := client.stoneHub.AllocStoneJob(ctx, req, opts...)
 	ctx = log.Context(ctx, resp)
-	log.Info("14")
 	if err != nil {
 		log.CtxErrorw(ctx, "alloc stone job failed", "error", err)
 		return nil, err
 	}
-	log.Info("15")
 	if resp.PieceJob == nil {
-		log.CtxErrorw(ctx, "alloc stone job empty.")
-		return nil, merrors.ErrEmptyJob
+		log.CtxDebugw(ctx, "alloc stone job empty.")
 	}
-	log.Info("16")
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "alloc stone job failed", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
-	log.Info("17")
 	return resp, nil
 }
 
