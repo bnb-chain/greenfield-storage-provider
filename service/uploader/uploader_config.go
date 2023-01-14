@@ -1,8 +1,8 @@
 package uploader
 
 import (
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
 type UploaderConfig struct {

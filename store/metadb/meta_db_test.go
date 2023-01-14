@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 )
 
 func Test_IntegrityMeta_Json_Marshal_Unmarshal(t *testing.T) {

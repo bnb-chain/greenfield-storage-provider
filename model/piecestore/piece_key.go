@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 var numberRegex = regexp.MustCompile("[0-9]+")

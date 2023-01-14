@@ -6,14 +6,14 @@ import (
 
 	"github.com/looplab/fsm"
 
-	"github.com/bnb-chain/inscription-storage-provider/util"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 
-	"github.com/bnb-chain/inscription-storage-provider/pkg/job"
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/job"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 const (

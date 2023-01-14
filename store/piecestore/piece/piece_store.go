@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // NewPieceStore returns an instance of PieceStore

@@ -5,9 +5,9 @@ import (
 	"io"
 	"sync"
 
-	pbPkg "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	pbService "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	pbPkg "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	pbService "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // streamReader is a wrapper of grpc stream request.

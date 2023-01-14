@@ -14,8 +14,8 @@ import (
 	"github.com/bytedance/gopkg/cloud/metainfo"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/bnb-chain/inscription-storage-provider/util/log/internal/types"
-	"github.com/bnb-chain/inscription-storage-provider/util/log/internal/zap"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/zap"
 )
 
 type (

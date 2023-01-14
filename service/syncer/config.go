@@ -1,9 +1,9 @@
 package syncer
 
 import (
-	"github.com/bnb-chain/inscription-storage-provider/model"
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
 type SyncerConfig struct {

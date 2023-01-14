@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // createBucketOption is the createBucket option.

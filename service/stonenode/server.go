@@ -6,9 +6,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/service/client"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/service/client"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 const (

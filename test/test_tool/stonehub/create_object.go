@@ -9,11 +9,11 @@ import (
 
 	"github.com/urfave/cli"
 
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 
-	cliCtx "github.com/bnb-chain/inscription-storage-provider/test/test_tool/context"
+	cliCtx "github.com/bnb-chain/greenfield-storage-provider/test/test_tool/context"
 )
 
 var CreateObjectCommand = cli.Command{

@@ -8,15 +8,15 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/bnb-chain/inscription-storage-provider/mock"
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
-	"github.com/bnb-chain/inscription-storage-provider/pkg/redundancy"
-	ptypes "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/util"
-	"github.com/bnb-chain/inscription-storage-provider/util/hash"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/mock"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/redundancy"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // syncPieceToSecondarySP load segment data from primary and sync to secondary.

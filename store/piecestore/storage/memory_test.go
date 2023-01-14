@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"io"
 	"os"
 	"strings"

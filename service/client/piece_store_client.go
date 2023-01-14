@@ -5,9 +5,9 @@ import (
 	"context"
 	"io"
 
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/piece"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // PieceStoreAPI provides an interface to enable mocking the

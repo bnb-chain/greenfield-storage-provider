@@ -28,7 +28,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bnb-chain/inscription-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"http_server"
 	"rpc_server"
 )

@@ -4,10 +4,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/gorilla/mux"
 
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // notFoundHandler log not found request info.

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package pkg.types.v1;
 import "cosmos_proto/cosmos.proto";
-option go_package = "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1";
 
 message StorageProviderInfo {
   string sp_id = 1;   // identifies storage provider

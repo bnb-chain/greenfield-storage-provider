@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bnb-chain/inscription-storage-provider/pkg/redundancy/erasure"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/redundancy/erasure"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // PieceObject - details of the erasure encoded piece

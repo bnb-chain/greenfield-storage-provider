@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 	"net/http"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 // errorDescription describe error info.

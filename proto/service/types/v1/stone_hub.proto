@@ -3,7 +3,7 @@ package service.types.v1;
 import "pkg/types/v1/object.proto";
 import "pkg/types/v1/job.proto";
 import "service/types/v1/uploader.proto";
-option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/types/v1";
 
 message StoneHubServiceCreateObjectRequest {
   string trace_id = 1;

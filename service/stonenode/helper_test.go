@@ -6,8 +6,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	ptypes "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 func setup(t *testing.T) *StoneNodeService {

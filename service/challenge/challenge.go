@@ -9,13 +9,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/bnb-chain/inscription-storage-provider/service/client"
+	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // Challenge manage the integrity hash check

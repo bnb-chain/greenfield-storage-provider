@@ -3,8 +3,8 @@ package mock
 import (
 	"time"
 
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/util/hash"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 )
 
 // SignerServerMock mock signer service

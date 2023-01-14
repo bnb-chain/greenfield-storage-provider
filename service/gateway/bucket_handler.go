@@ -3,8 +3,8 @@ package gateway
 import (
 	"net/http"
 
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // createBucketHandler handle create bucket request, include steps:

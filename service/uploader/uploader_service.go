@@ -7,15 +7,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/inscription-storage-provider/mock"
-	"github.com/bnb-chain/inscription-storage-provider/model"
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	pbService "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
-	"github.com/bnb-chain/inscription-storage-provider/util/hash"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/mock"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	pbService "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 var (

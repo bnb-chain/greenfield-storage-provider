@@ -6,14 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 
-	"github.com/bnb-chain/inscription-storage-provider/util/hash"
+	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/store/jobdb/jobmemory"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobmemory"
 )
 
 func InitEnv(rType types.RedundancyType) (*UploadPayloadJob, *types.ObjectInfo) {

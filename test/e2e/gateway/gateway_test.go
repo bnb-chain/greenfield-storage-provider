@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 )
 
 var (

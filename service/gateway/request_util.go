@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
-	pbPkg "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/util"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	pbPkg "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/gorilla/mux"
 )
 

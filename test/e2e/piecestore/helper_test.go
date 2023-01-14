@@ -3,8 +3,8 @@ package e2e
 import (
 	"testing"
 
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/piece"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
 const (

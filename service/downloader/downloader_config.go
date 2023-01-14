@@ -1,6 +1,6 @@
 package downloader
 
-import "github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
+import "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 
 type DownloaderConfig struct {
 	Address          string

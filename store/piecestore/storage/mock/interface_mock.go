@@ -10,7 +10,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	storage "github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
+	storage "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 	gomock "github.com/golang/mock/gomock"
 )
 

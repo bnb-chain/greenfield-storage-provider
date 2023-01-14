@@ -2,7 +2,7 @@ syntax = "proto3";
 package service.types.v1;
 import "service/types/v1/uploader.proto";
 import "pkg/types/v1/object.proto";
-option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/types/v1";
 
 message ChallengeServiceChallengePieceRequest {
     string trace_id = 1;

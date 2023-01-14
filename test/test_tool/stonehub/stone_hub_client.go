@@ -5,9 +5,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	cliCtx "github.com/bnb-chain/inscription-storage-provider/test/test_tool/context"
+	cliCtx "github.com/bnb-chain/greenfield-storage-provider/test/test_tool/context"
 
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 func GetStoneHubClient() (service.StoneHubServiceClient, error) {

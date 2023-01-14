@@ -3,7 +3,7 @@ package errors
 import (
 	"errors"
 
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 // piece store errors

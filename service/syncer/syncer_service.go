@@ -4,14 +4,14 @@ import (
 	"errors"
 	"io"
 
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
-	ptypes "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
-	"github.com/bnb-chain/inscription-storage-provider/util"
-	"github.com/bnb-chain/inscription-storage-provider/util/hash"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // SyncPiece syncs piece data to secondary storage provider

@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-	"github.com/bnb-chain/inscription-storage-provider/pkg/stone"
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/stone"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 /* stone_hub_service.go implement StoneHubServiceServer grpc interface.

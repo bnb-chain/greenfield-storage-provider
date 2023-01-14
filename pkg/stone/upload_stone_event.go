@@ -3,7 +3,7 @@ package stone
 import (
 	"github.com/looplab/fsm"
 
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 )
 
 /*

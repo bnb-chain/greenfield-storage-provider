@@ -13,7 +13,7 @@ import (
 	"github.com/naoina/toml"
 	"golang.org/x/exp/constraints"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 // TomlSettings - These settings ensure that TOML keys use the same names as Go struct fields.

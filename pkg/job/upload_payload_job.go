@@ -1,9 +1,9 @@
 package job
 
 import (
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 // UploadPayloadJob maintains the object info and piece job meta

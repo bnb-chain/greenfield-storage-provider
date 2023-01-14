@@ -1,6 +1,6 @@
 syntax = "proto3";
 package pkg.types.v1;
-option go_package = "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1";
 
 enum JobType {
   JOB_TYPE_UNSPECIFIED = 0;

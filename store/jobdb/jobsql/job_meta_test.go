@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 )
 
 // need to install mysql

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package service.types.v1;
 import "service/types/v1/uploader.proto";
-option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/types/v1";
 
 message DownloaderServiceDownloaderObjectRequest {
   string trace_id = 1;

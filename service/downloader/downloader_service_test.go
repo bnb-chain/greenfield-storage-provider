@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bnb-chain/inscription-storage-provider/model/piecestore"
+	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 )
 
 func Test_Spilt_Segment_info(t *testing.T) {

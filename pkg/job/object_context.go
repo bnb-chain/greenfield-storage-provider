@@ -3,9 +3,9 @@ package job
 import (
 	"sync"
 
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 )
 
 // ObjectInfoContext maintains the object info, goroutine safe.

@@ -8,7 +8,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 )
 
 const (

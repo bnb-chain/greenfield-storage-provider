@@ -1,6 +1,6 @@
 package stonenode
 
-import "github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
+import "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 
 type StoneNodeConfig struct {
 	Address                string

@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	v1 "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	v1 "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	gomock "github.com/golang/mock/gomock"
 	grpc "google.golang.org/grpc"
 )

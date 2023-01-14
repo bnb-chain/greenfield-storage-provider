@@ -7,17 +7,17 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/bnb-chain/inscription-storage-provider/config"
-	"github.com/bnb-chain/inscription-storage-provider/model"
-	"github.com/bnb-chain/inscription-storage-provider/pkg/lifecycle"
-	"github.com/bnb-chain/inscription-storage-provider/service/challenge"
-	"github.com/bnb-chain/inscription-storage-provider/service/downloader"
-	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
-	"github.com/bnb-chain/inscription-storage-provider/service/stonehub"
-	"github.com/bnb-chain/inscription-storage-provider/service/stonenode"
-	"github.com/bnb-chain/inscription-storage-provider/service/syncer"
-	"github.com/bnb-chain/inscription-storage-provider/service/uploader"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/config"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
+	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
+	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 var (

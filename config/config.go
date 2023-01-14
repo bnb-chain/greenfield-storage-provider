@@ -6,16 +6,16 @@ import (
 
 	"github.com/naoina/toml"
 
-	"github.com/bnb-chain/inscription-storage-provider/service/downloader"
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 
-	"github.com/bnb-chain/inscription-storage-provider/service/challenge"
-	"github.com/bnb-chain/inscription-storage-provider/service/gateway"
-	"github.com/bnb-chain/inscription-storage-provider/service/stonehub"
-	"github.com/bnb-chain/inscription-storage-provider/service/stonenode"
-	"github.com/bnb-chain/inscription-storage-provider/service/syncer"
-	"github.com/bnb-chain/inscription-storage-provider/service/uploader"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
-	"github.com/bnb-chain/inscription-storage-provider/util"
+	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
+	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
+	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 type StorageProviderConfig struct {

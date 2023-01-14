@@ -1,6 +1,6 @@
 package jobdb
 
-import types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
+import types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 
 // PieceJob record the piece job context, interact with db.
 // For primary:

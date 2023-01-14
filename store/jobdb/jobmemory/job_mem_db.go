@@ -4,8 +4,8 @@ import (
 	"errors"
 	"sync"
 
-	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/store/jobdb"
+	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 )
 
 // MemJobDB is a memory db, maintains job, object and piece job table.

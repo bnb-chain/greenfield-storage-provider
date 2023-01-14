@@ -5,7 +5,7 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/bnb-chain/inscription-storage-provider/test/test_tool/context"
+	"github.com/bnb-chain/greenfield-storage-provider/test/test_tool/context"
 )
 
 var ListCommand = cli.Command{

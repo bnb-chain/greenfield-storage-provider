@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
-	ptypes "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/service/client/mock"
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/service/client/mock"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 func TestInitClientFailed(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
-	"github.com/bnb-chain/inscription-storage-provider/store/metadb/leveldb"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
 type ChallengeConfig struct {

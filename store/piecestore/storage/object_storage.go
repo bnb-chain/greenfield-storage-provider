@@ -7,11 +7,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bnb-chain/inscription-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 
-	"github.com/bnb-chain/inscription-storage-provider/model"
-	//"github.com/bnb-chain/inscription-storage-provider/store/piecestore/piece"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	//"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 func NewObjectStorage(cfg *ObjectStorageConfig) (ObjectStorage, error) {

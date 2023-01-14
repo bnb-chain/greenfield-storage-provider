@@ -1,7 +1,7 @@
 syntax = "proto3";
 package service.types.v1;
 import "pkg/types/v1/object.proto";
-option go_package = "github.com/bnb-chain/inscription-storage-provider/service/types/v1";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/types/v1";
 
 enum ErrCode {
   ERR_CODE_SUCCESS_UNSPECIFIED = 0;

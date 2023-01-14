@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bnb-chain/inscription-storage-provider/util/hash"
+	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/stretchr/testify/assert"
 )
 

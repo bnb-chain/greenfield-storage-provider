@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 
 	"github.com/stretchr/testify/assert"
 )

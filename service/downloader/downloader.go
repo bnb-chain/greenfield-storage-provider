@@ -4,13 +4,13 @@ import (
 	"context"
 	"net"
 
-	"github.com/bnb-chain/inscription-storage-provider/mock"
+	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/bnb-chain/inscription-storage-provider/service/client"
-	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/client"
+	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // Downloader manage the payload data download
