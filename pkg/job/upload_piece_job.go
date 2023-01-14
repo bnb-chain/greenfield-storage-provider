@@ -157,11 +157,12 @@ func (job *UploadSpJob) doneSegment(segmentPiece *jobdb.PieceJob, pieceJob *serv
 				"second", job.secondary, "piece_idx", segmentPiece.PieceId, "error", merrors.ErrIntegrityHashLengthMismatch)
 			return merrors.ErrIntegrityHashLengthMismatch
 		}
-		if len(pieceJob.GetStorageProviderSealInfo().GetSignature()) != hash.LengthHash {
-			log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(),
-				"second", job.secondary, "piece_idx", segmentPiece.PieceId, "error", merrors.ErrSignatureLengthMismatch)
-			return merrors.ErrSignatureLengthMismatch
-		}
+		// TODO:: currrent signer service is not completed
+		//if len(pieceJob.GetStorageProviderSealInfo().GetSignature()) != hash.LengthHash {
+		//	log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(),
+		//		"second", job.secondary, "piece_idx", segmentPiece.PieceId, "error", merrors.ErrSignatureLengthMismatch)
+		//	return merrors.ErrSignatureLengthMismatch
+		//}
 		segmentPiece.IntegrityHash = pieceJob.GetStorageProviderSealInfo().GetIntegrityHash()
 		segmentPiece.Signature = pieceJob.GetStorageProviderSealInfo().GetSignature()
 	}
@@ -205,11 +206,12 @@ func (job *UploadSpJob) doneEC(ecPiece *jobdb.PieceJob, pieceJob *service.PieceJ
 			"piece_idx", ecPiece.PieceId, "error", merrors.ErrIntegrityHashLengthMismatch)
 		return merrors.ErrIntegrityHashLengthMismatch
 	}
-	if len(pieceJob.GetStorageProviderSealInfo().GetSignature()) != hash.LengthHash {
-		log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(),
-			"piece_idx", ecPiece.PieceId, "error", merrors.ErrSignatureLengthMismatch)
-		return merrors.ErrSignatureLengthMismatch
-	}
+	// TODO:: currrent signer service is not completed
+	//if len(pieceJob.GetStorageProviderSealInfo().GetSignature()) != hash.LengthHash {
+	//	log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(),
+	//		"piece_idx", ecPiece.PieceId, "error", merrors.ErrSignatureLengthMismatch)
+	//	return merrors.ErrSignatureLengthMismatch
+	//}
 	ecPiece.Checksum = pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()
 	ecPiece.IntegrityHash = pieceJob.GetStorageProviderSealInfo().GetIntegrityHash()
 	ecPiece.Signature = pieceJob.GetStorageProviderSealInfo().GetSignature()

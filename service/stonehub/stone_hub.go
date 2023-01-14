@@ -163,7 +163,7 @@ func (hub *StoneHub) eventLoop() {
 		case stoneJob := <-hub.jobCh:
 			go hub.processStoneJob(stoneJob)
 		case stoneKey := <-hub.gcCh:
-			log.Infow("delete stone", "key", stoneKey)
+			log.Infow("delete stone", "job_key", stoneKey)
 			hub.stone.Delete(stoneKey)
 		case <-gcMemTicker.C:
 			go hub.gcMemoryStone()
