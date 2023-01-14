@@ -21,10 +21,6 @@ import (
 
 // syncPieceToSecondarySP load segment data from primary and sync to secondary.
 func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, allocResp *service.StoneHubServiceAllocStoneJobResponse) error {
-	if allocResp.GetPieceJob() == nil {
-		log.CtxDebugw(ctx, "alloc stone job empty.")
-		return nil
-	}
 	// TBD:: check secondarySPs count by redundancyType.
 	// EC_TYPE need EC_M + EC_K + backup
 	// REPLICA_TYPE and INLINE_TYPE need segments count + backup
