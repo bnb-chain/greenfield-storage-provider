@@ -402,7 +402,7 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
 	if interruptErr = uploadStone.ActionEvent(ctx, stone.UploadSecondaryPieceDoneEvent, req.PieceJob); interruptErr != nil {
 		return resp, nil
 	}
-	return
+	return resp, nil
 }
 
 // QueryStone return the stone info, debug interface
