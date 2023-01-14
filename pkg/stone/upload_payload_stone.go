@@ -6,6 +6,8 @@ import (
 
 	"github.com/looplab/fsm"
 
+	"github.com/bnb-chain/inscription-storage-provider/util"
+
 	"github.com/bnb-chain/inscription-storage-provider/pkg/job"
 	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/inscription-storage-provider/service/types/v1"
@@ -30,21 +32,23 @@ type UploadPayloadStone struct {
 	jobFsm *fsm.FSM               // fsm of upload payload
 	job    *job.UploadPayloadJob  // records the upload payload job information
 	jobCh  chan StoneJob          // the channel of transfer job to StoneHub
-	gcCh   chan string            // the channel of notify StoneHub to delete stone
+	gcCh   chan uint64            // the channel of notify StoneHub to delete stone
+	jobDB  jobdb.JobDB
+	metaDB metadb.MetaDB
 }
 
 // NewUploadPayloadStone return the instance of UploadPayloadStone
-func NewUploadPayloadStone(ctx context.Context, jobContext *types.JobContext, object *types.ObjectInfo, jobDB jobdb.JobDB,
-	metaDB metadb.MetaDB, jobCh chan StoneJob, gcCh chan string) (*UploadPayloadStone, error) {
-	if jobContext == nil || object == nil || jobCh == nil || gcCh == nil {
-		return nil, errors.New("new upload payload stone params error")
-	}
+func NewUploadPayloadStone(ctx context.Context,
+	jobContext *types.JobContext, object *types.ObjectInfo,
+	jobDB jobdb.JobDB, metaDB metadb.MetaDB,
+	jobCh chan StoneJob, gcCh chan uint64) (*UploadPayloadStone, error) {
+	jobCtx := NewJobContextWrapper(jobContext, jobDB, metaDB)
 	objectCtx := job.NewObjectInfoContext(object, jobDB, metaDB)
 	uploadJob, err := job.NewUploadPayloadJob(objectCtx)
 	if err != nil {
 		return nil, err
 	}
-	jobCtx := NewJobContextWrapper(jobContext, jobDB)
+
 	state, err := repairState(jobCtx, uploadJob)
 	if err != nil {
 		log.Error("repair upload payload state error", "error", err)
@@ -57,6 +61,8 @@ func NewUploadPayloadStone(ctx context.Context, jobContext *types.JobContext, ob
 		jobFsm: fsm.NewFSM(state, UploadPayloadFsmEvent, UploadPayLoadFsmCallBack),
 		jobCh:  jobCh,
 		gcCh:   gcCh,
+		jobDB:  jobDB,
+		metaDB: metaDB,
 	}
 	if err := stone.selfActionEvent(ctx); err != nil {
 		return nil, err
@@ -74,10 +80,11 @@ func repairState(jobCtx *JobContextWrapper, job *job.UploadPayloadJob) (string, 
 		return state, errors.New("upload payload job has been successfully completed")
 	}
 	state = types.JOB_STATE_CREATE_OBJECT_DONE
+	if job.PrimarySPCompleted() {
+		state = types.JOB_STATE_UPLOAD_PRIMARY_DONE
+	}
 	if job.SecondarySPCompleted() {
 		state = types.JOB_STATE_UPLOAD_SECONDARY_DONE
-	} else if job.PrimarySPCompleted() {
-		state = types.JOB_STATE_UPLOAD_PRIMARY_DONE
 	}
 	if err := jobCtx.SetJobErr(nil); err != nil {
 		return state, err
@@ -133,14 +140,11 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 			return nil
 		}
 		actionFsm(ctx, event)
-		to := stone.jobFsm.Current()
-		log.CtxInfow(ctx, "self action upload stone fsm", "from", current, "to", to)
 		if stone.jobCtx.JobErr() != nil {
 			actionFsm(ctx, InterruptEvent)
 			return stone.jobCtx.JobErr()
 		}
 	}
-	return nil
 }
 
 // ActionEvent receive the event and propelled fsm execution
@@ -157,9 +161,11 @@ func (stone *UploadPayloadStone) ActionEvent(ctx context.Context, event string, 
 	}
 	from := stone.jobFsm.Current()
 	actionFsm(ctx, event, args...)
+	err := stone.selfActionEvent(ctx, args...)
 	to := stone.jobFsm.Current()
-	log.CtxInfow(ctx, "external action upload stone fsm", "from", from, "to", to)
-	return stone.selfActionEvent(ctx, args...)
+	log.CtxInfow(ctx, "external action upload stone fsm", "from",
+		util.ReadJobState(from), "to", util.ReadJobState(to))
+	return err
 }
 
 // InterruptStone interrupt the fsm and stop the stone
@@ -195,8 +201,8 @@ func (stone *UploadPayloadStone) LastModifyTime() int64 {
 }
 
 // StoneKey return the key of stone, use to index in StoneHub
-func (stone *UploadPayloadStone) StoneKey() string {
-	return string(stone.objCtx.TxHash())
+func (stone *UploadPayloadStone) StoneKey() uint64 {
+	return stone.objCtx.GetObjectID()
 }
 
 // GetStoneState return the state of job

@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	merrors "github.com/bnb-chain/inscription-storage-provider/model/errors"
+	types "github.com/bnb-chain/inscription-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/inscription-storage-provider/util/log"
 )
 
@@ -30,6 +32,21 @@ func DecodeSegmentPieceKey(pieceKey string) (uint64, uint32, error) {
 	segmentIndex, _ := (strconv.ParseUint(s, 10, 32))
 
 	return objectID, uint32(segmentIndex), nil
+}
+
+// EncodePieceKey encodes piece store key
+func EncodePieceKey(rType types.RedundancyType, objectId uint64, segmentIndex, pieceIndex uint32) (string, error) {
+	var pieceKey string
+	if rType == types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+		pieceKey = EncodeECPieceKey(objectId, segmentIndex, pieceIndex)
+	} else if rType == types.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
+		pieceKey = EncodeSegmentPieceKey(objectId, pieceIndex)
+	} else if rType == types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
+		pieceKey = EncodeSegmentPieceKey(objectId, pieceIndex)
+	} else {
+		return "", merrors.ErrRedundancyType
+	}
+	return pieceKey, nil
 }
 
 // EncodeECPieceKey encodes ec piece store key

@@ -82,7 +82,6 @@ func (cli *InscriptionChainMock) eventLoop() {
 			for _, ch := range cli.events[chainEvent.EventType] {
 				ch <- chainEvent.Event
 			}
-			cli.events[chainEvent.EventType] = make([]chan any, 0)
 		}
 	}
 }

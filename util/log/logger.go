@@ -2,12 +2,12 @@ package log
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -328,23 +328,21 @@ func CtxPanicw(ctx context.Context, msg string, kvs ...interface{}) {
 	logger.CtxPanicw(ctx, msg, kvs...)
 }
 
-func Context(ctx context.Context, req interface{}) context.Context {
-	if reflect.ValueOf(req).MethodByName("GetTraceId").IsValid() {
-		valList := reflect.ValueOf(req).MethodByName("GetTraceId").Call([]reflect.Value{})
-		if len(valList) > 0 && !valList[0].IsZero() {
-			traceID := valList[0].String()
-			ctx = metainfo.WithValue(ctx, "trace_id", traceID)
-		}
-	}
-	if reflect.ValueOf(req).MethodByName("GetTxHash").IsValid() {
-		valList := reflect.ValueOf(req).MethodByName("GetTxHash").Call([]reflect.Value{})
-		if len(valList) > 0 && !valList[0].IsZero() {
-			hashBytes := valList[0].Bytes()
-			hashStr := hex.EncodeToString(hashBytes)
-			if len(hashStr) > 8 {
-				hashStr = hashStr[0:8]
+func Context(ctx context.Context, opts ...interface{}) context.Context {
+	for _, req := range opts {
+		if reflect.ValueOf(req).MethodByName("GetTraceId").IsValid() {
+			valList := reflect.ValueOf(req).MethodByName("GetTraceId").Call([]reflect.Value{})
+			if len(valList) > 0 && !valList[0].IsZero() {
+				traceID := valList[0].String()
+				ctx = metainfo.WithValue(ctx, "trace_id", traceID)
 			}
-			ctx = metainfo.WithValue(ctx, "create_hash", hashStr)
+		}
+		if reflect.ValueOf(req).MethodByName("GetObjectId").IsValid() {
+			valList := reflect.ValueOf(req).MethodByName("GetObjectId").Call([]reflect.Value{})
+			if len(valList) > 0 && !valList[0].IsZero() {
+				objectID := valList[0].Uint()
+				ctx = metainfo.WithValue(ctx, "object_id", strconv.FormatUint(objectID, 10))
+			}
 		}
 	}
 	return ctx

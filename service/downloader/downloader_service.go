@@ -29,7 +29,7 @@ func (downloader *Downloader) DownloaderSegment(ctx context.Context, req *servic
 		log.CtxInfow(ctx, "download segment success", "object", req.ObjectId, "segment idx", req.SegmentIdx)
 	}()
 	if req.GetObjectId() == 0 {
-		err = merrors.ErrObjectID
+		err = merrors.ErrObjectIdZero
 		return
 	}
 	pieceKey := piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())

@@ -306,8 +306,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 		go func(secondary string, pieceData map[string][]byte) {
 			errMsg := &service.ErrMessage{}
 			pieceJob := &service.PieceJob{
-				BucketName:     resp.GetPieceJob().GetBucketName(),
-				ObjectName:     resp.GetPieceJob().GetObjectName(),
 				TxHash:         txHash,
 				ObjectId:       objectID,
 				PayloadSize:    payloadSize,
