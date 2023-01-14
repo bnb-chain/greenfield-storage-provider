@@ -132,11 +132,16 @@ func (job *UploadSpJob) Done(pieceJob *service.PieceJob) error {
 		return nil
 	}
 	// 4. update piece state
+	var err error
 	if job.pieceType == model.SegmentPieceType {
-		return job.doneSegment(piece, pieceJob)
+		err = job.doneSegment(piece, pieceJob)
 	} else {
-		return job.doneEC(piece, pieceJob)
+		err = job.doneEC(piece, pieceJob)
 	}
+	if err == nil {
+		job.complete++
+	}
+	return err
 }
 
 // donePrimary update primary piece job state, include memory and db.
