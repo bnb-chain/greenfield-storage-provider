@@ -120,8 +120,6 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 			if stone.job.PrimarySPCompleted() {
 				event = UploadPrimaryDoneEvent
 			} else {
-				log.CtxInfow(ctx, "remaining primary piece job",
-					"piece_idx", stone.job.PopPendingPrimarySPJob().TargetIdx)
 				return nil
 			}
 		case types.JOB_STATE_UPLOAD_PRIMARY_DONE:
@@ -132,8 +130,6 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 			if stone.job.SecondarySPCompleted() {
 				event = UploadSecondaryDoneEvent
 			} else {
-				log.CtxInfow(ctx, "remaining secondary piece job",
-					"piece_idx", stone.job.PopPendingSecondarySPJob().TargetIdx)
 				return nil
 			}
 		case types.JOB_STATE_UPLOAD_SECONDARY_DONE:
@@ -144,15 +140,11 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 			return nil
 		}
 		actionFsm(ctx, event)
-		to := stone.jobFsm.Current()
-		log.CtxDebugw(ctx, "self action upload stone fsm", "from",
-			util.ReadJobState(current), "to", util.ReadJobState(to))
 		if stone.jobCtx.JobErr() != nil {
 			actionFsm(ctx, InterruptEvent)
 			return stone.jobCtx.JobErr()
 		}
 	}
-	return nil
 }
 
 // ActionEvent receive the event and propelled fsm execution
@@ -169,10 +161,11 @@ func (stone *UploadPayloadStone) ActionEvent(ctx context.Context, event string, 
 	}
 	from := stone.jobFsm.Current()
 	actionFsm(ctx, event, args...)
+	err := stone.selfActionEvent(ctx, args...)
 	to := stone.jobFsm.Current()
 	log.CtxInfow(ctx, "external action upload stone fsm", "from",
 		util.ReadJobState(from), "to", util.ReadJobState(to))
-	return stone.selfActionEvent(ctx, args...)
+	return err
 }
 
 // InterruptStone interrupt the fsm and stop the stone
