@@ -9,63 +9,51 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/bnb-chain/inscription-storage-provider/config"
-	"github.com/bnb-chain/inscription-storage-provider/model"
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/storage"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
-)
-
-var (
-	serviceName = "piece_store"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // NewPieceStore returns an instance of PieceStore
-func NewPieceStore(filePath string) (*PieceStore, error) {
-	cfg := checkConfig(config.LoadConfig(filePath))
-	initLog(&cfg.Log)
-	blob, err := createStorage(&cfg.PieceStore)
+func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
+	cfg := checkConfig(pieceConfig)
+	blob, err := createStorage(cfg)
 	if err != nil {
-		log.Panicw("create storage error", "error", err)
+		log.Errorw("create storage error", "error", err)
 		return nil, err
 	}
-	log.Infow("PieceStore is running", "Storage", cfg.PieceStore.Store.Storage, "BucketURL",
-		cfg.PieceStore.Store.BucketURL)
+	log.Infow("PieceStore is running", "Storage", cfg.Store.Storage, "BucketURL",
+		cfg.Store.BucketURL)
 
 	return &PieceStore{blob}, nil
 }
 
 // checkConfig checks config if right
-func checkConfig(cfg *config.Config) *config.Config {
-	if cfg.PieceStore.Shards > 256 {
-		log.Panicf("too many shards: %d", cfg.PieceStore.Shards)
+func checkConfig(cfg *storage.PieceStoreConfig) *storage.PieceStoreConfig {
+	if cfg.Shards > 256 {
+		log.Panicf("too many shards: %d", cfg.Shards)
 	}
-	if cfg.PieceStore.Store.MaxRetries < 0 {
+	if cfg.Store.MaxRetries < 0 {
 		log.Panic("MaxRetries should be equal or greater than zero")
 	}
-	if cfg.PieceStore.Store.MinRetryDelay < 0 {
+	if cfg.Store.MinRetryDelay < 0 {
 		log.Panic("MinRetryDelay should be equal or greater than zero")
 	}
-	if cfg.PieceStore.Store.Storage == "file" {
-		if cfg.PieceStore.Store.BucketURL == "" {
-			cfg.PieceStore.Store.BucketURL = setDefaultFileStorePath()
+	if cfg.Store.Storage == "file" {
+		if cfg.Store.BucketURL == "" {
+			cfg.Store.BucketURL = setDefaultFileStorePath()
 		}
-		p, err := filepath.Abs(cfg.PieceStore.Store.BucketURL)
+		p, err := filepath.Abs(cfg.Store.BucketURL)
 		if err != nil {
-			log.Panicw("Failed to get absolute path", "bucket", cfg.PieceStore.Store.BucketURL, "error", err)
+			log.Panicw("Failed to get absolute path", "bucket", cfg.Store.BucketURL, "error", err)
 		}
-		cfg.PieceStore.Store.BucketURL = p
-		cfg.PieceStore.Store.BucketURL += "/"
+		cfg.Store.BucketURL = p
+		cfg.Store.BucketURL += "/"
 	}
 	return cfg
 }
 
-// initLog initialize log config
-func initLog(cfg *config.LogConfig) {
-	lvl, _ := log.ParseLevel(cfg.Level)
-	log.Init(lvl, log.StandardizePath(cfg.FilePath, serviceName))
-}
-
-func createStorage(cfg *config.PieceStoreConfig) (storage.ObjectStorage, error) {
+func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error) {
 	var (
 		object storage.ObjectStorage
 		err    error
@@ -73,7 +61,7 @@ func createStorage(cfg *config.PieceStoreConfig) (storage.ObjectStorage, error) 
 	if cfg.Shards > 1 {
 		object, err = storage.NewSharded(cfg)
 	} else {
-		object, err = storage.NewObjectStorage(&cfg.Store)
+		object, err = storage.NewObjectStorage(cfg.Store)
 	}
 	if err != nil {
 		log.Errorw("createStorage error", "error", err, "object", object)
@@ -93,16 +81,16 @@ func createStorage(cfg *config.PieceStoreConfig) (storage.ObjectStorage, error) 
 func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 	if err := store.HeadBucket(ctx); err != nil {
 		log.Errorw("HeadBucket error", "error", err)
-		if errors.Is(err, model.BucketNotExisted) {
+		if errors.Is(err, merrors.BucketNotExisted) {
 			if err2 := store.CreateBucket(ctx); err2 != nil {
 				return fmt.Errorf("Failed to create bucket in %s: %s, previous err: %s", store, err2, err)
 			}
 			log.Info("Create bucket successfully!")
 			return nil
 		}
-		return fmt.Errorf("Check if you have the permission to access the bucket")
+		return merrors.ErrNoPermissionAccessBucket
 	}
-	log.Infof("HeadBucket succeeds in %s, bucketName %s", store)
+	log.Infof("HeadBucket succeeds in %s", store)
 	return nil
 }
 

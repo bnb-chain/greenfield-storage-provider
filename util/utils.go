@@ -2,11 +2,18 @@ package util
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"reflect"
+	"sort"
+	"strconv"
+	"strings"
 	"unicode"
 
 	"github.com/naoina/toml"
+	"golang.org/x/exp/constraints"
+
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 // TomlSettings - These settings ensure that TOML keys use the same names as Go struct fields.
@@ -25,4 +32,39 @@ var TomlSettings = toml.Config{
 		_, _ = fmt.Fprintf(os.Stderr, "field '%s' is not defined in %s%s\n", field, rt.String(), link)
 		return nil
 	},
+}
+
+// GenerateRequestID is used to generate random requestID.
+func GenerateRequestID() string {
+	return strconv.FormatUint(rand.Uint64(), 10)
+}
+
+// ComputeSegmentCount return the segments counter by payload size.
+func ComputeSegmentCount(size uint64) uint32 {
+	segmentCount := uint32(size / model.SegmentSize)
+	if (size % model.SegmentSize) > 0 {
+		segmentCount++
+	}
+	return segmentCount
+}
+
+// SortedKeys sort keys of a map
+func GenericSortedKeys[K constraints.Ordered, V any](dataMap map[K]V) []K {
+	keys := make([]K, 0, len(dataMap))
+	for k := range dataMap {
+		keys = append(keys, k)
+	}
+	sortSlice(keys)
+	return keys
+}
+
+func sortSlice[T constraints.Ordered](s []T) {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] < s[j]
+	})
+}
+
+// ReadJobState parser the job state to readable
+func ReadJobState(state string) string {
+	return strings.ToLower(strings.TrimPrefix(state, "JOB_STATE_"))
 }

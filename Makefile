@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: all check format vet generate build tidy
+.PHONY: all check format vet generate build tidy clean
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
@@ -25,3 +25,6 @@ build:
 tidy:
 	go mod tidy
 	go mod verify
+
+clean:
+	rm -rf ./pkg/types/v1/*.pb.go && rm -rf ./service/types/v1/*.pb.go

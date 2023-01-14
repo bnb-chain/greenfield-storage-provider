@@ -4,52 +4,52 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/bnb-chain/inscription-storage-provider/util"
-
 	"github.com/naoina/toml"
+
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
+
+	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
+	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
+	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
-// Config toml config
-type Config struct {
-	PieceStore PieceStoreConfig
-	Log        LogConfig
+type StorageProviderConfig struct {
+	Service          []string
+	StoneHubCfg      *stonehub.StoneHubConfig
+	PieceStoreConfig *storage.PieceStoreConfig
+	GatewayCfg       *gateway.GatewayConfig
+	UploaderCfg      *uploader.UploaderConfig
+	DownloaderCfg    *downloader.DownloaderConfig
+	StoneNodeCfg     *stonenode.StoneNodeConfig
+	SyncerCfg        *syncer.SyncerConfig
+	ChallengeCfg     *challenge.ChallengeConfig
 }
 
-// PieceStoreConfig contains some parameters which are used to run PieceStore
-type PieceStoreConfig struct {
-	Shards int           // store the blocks into N buckets by hash of key
-	Store  ObjectStorage // config of object storage
+var DefaultStorageProviderConfig = &StorageProviderConfig{
+	StoneHubCfg:      stonehub.DefaultStoneHubConfig,
+	PieceStoreConfig: storage.DefaultPieceStoreConfig,
+	GatewayCfg:       gateway.DefaultGatewayConfig,
+	UploaderCfg:      uploader.DefaultUploaderConfig,
+	DownloaderCfg:    downloader.DefaultDownloaderConfig,
+	StoneNodeCfg:     stonenode.DefaultStoneNodeConfig,
+	SyncerCfg:        syncer.DefaultSyncerConfig,
+	ChallengeCfg:     challenge.DefaultChallengeConfig,
 }
 
-// ObjectStorage config
-type ObjectStorage struct {
-	Storage               string // backend storage type (e.g. s3, file, memory)
-	BucketURL             string // the bucket URL of object storage to store data
-	AccessKey             string // access key for object storage
-	SecretKey             string // secret key for object storage
-	SessionToken          string // temporary credential used to access backend storage
-	NoSignRequest         bool   // whether access public bucket
-	MaxRetries            int    // the number of max retries that will be performed
-	MinRetryDelay         int64  // the minimum retry delay after which retry will be performed
-	TlsInsecureSkipVerify bool   // whether skip the certificate verification of HTTPS requests
-}
-
-// LogConfig log config
-type LogConfig struct {
-	FilePath     string // log file path
-	Level        string // log level
-	MaxBytesSize int64  // max bytes size of log file
-}
-
-// LoadConfig is used to parse toml config file
-func LoadConfig(file string) *Config {
+// LoadConfig loads the config file
+func LoadConfig(file string) *StorageProviderConfig {
 	f, err := os.Open(file)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	cfg := Config{}
+	cfg := StorageProviderConfig{}
 	err = util.TomlSettings.NewDecoder(bufio.NewReader(f)).Decode(&cfg)
 	// Add file name to errors that have a line number.
 	if _, ok := err.(*toml.LineError); ok {

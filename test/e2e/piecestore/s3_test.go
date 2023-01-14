@@ -6,15 +6,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bnb-chain/inscription-storage-provider/store/piecestore/piece"
-	"github.com/bnb-chain/inscription-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestS3Store(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setUp(t, "./testdata/config_s3.toml")
+	handler, err := setUp(t, s3, s3Bucket)
 	assert.Equal(t, err, nil)
 
 	// 2. put piece
@@ -36,9 +35,4 @@ func TestS3Store(t *testing.T) {
 	log.Info("Delete piece")
 	err = handler.Delete(context.Background(), "hello.txt")
 	assert.Equal(t, err, nil)
-}
-
-func setUp(t *testing.T, configFile string) (*piece.PieceStore, error) {
-	t.Helper()
-	return piece.NewPieceStore(configFile)
 }

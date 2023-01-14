@@ -7,6 +7,7 @@ import (
 // context key
 const (
 	CtxKeyTraceID      = "trace_id"
+	CtxKeyTraceHash    = "create_hash"
 	CtxKeyTraceSampled = "trace_sampled"
 )
 
@@ -14,6 +15,11 @@ const (
 // return empty if not found
 func GetTraceID(ctx context.Context) (s string) {
 	s, _ = GetValue(ctx, CtxKeyTraceID)
+	return
+}
+
+func GetTraceHash(ctx context.Context) (s string) {
+	s, _ = GetValue(ctx, CtxKeyTraceHash)
 	return
 }
 

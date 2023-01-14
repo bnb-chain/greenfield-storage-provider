@@ -7,8 +7,8 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"github.com/bnb-chain/inscription-storage-provider/util/log/internal/metadata"
-	"github.com/bnb-chain/inscription-storage-provider/util/log/internal/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/types"
 
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -248,7 +248,14 @@ func (zl *logger) getMetaInfo(ctx context.Context) []zap.Field {
 		return nil
 	}
 
-	return []zap.Field{zap.String("trace_id", metadata.GetTraceID(ctx))}
+	fields := make([]zap.Field, 0)
+	if traceID, ok := metadata.GetValue(ctx, "trace_id"); ok {
+		fields = append(fields, zap.String("trace_id", traceID))
+	}
+	if objectID, ok := metadata.GetValue(ctx, "object_id"); ok {
+		fields = append(fields, zap.String("object_id", objectID))
+	}
+	return fields
 }
 
 func (zl *logger) getMessage(template string, fmtArgs []interface{}) string {

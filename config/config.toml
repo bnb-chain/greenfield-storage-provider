@@ -1,17 +1,126 @@
-[PieceStore]
-Shards = 0
+Service = [
+    "StoneHub", "Gateway", "Uploader", "StoneNode", "Syncer", "Downloader",
+]
 
-[PieceStore.Store]
-Storage = "s3"
-BucketURL = "https://s3.us-east-1.amazonaws.com/example"
-AccessKey = "ACCESSKEY"
-SecretKey = "SECRETKEY"
-SessionToken = "SESSIONTOKEN"
-NoSignRequest = false
-MaxRetries = 5
-TlsInsecureSkipVerify = false
 
-[Log]
-FilePath = "./logs"
-Level = "debug"
-MaxBytesSize = 10240000
+[StoneHubCfg]
+    StorageProvider = "bnb-sp"
+    Address = "127.0.0.1:5323"
+    JobDBType = "memory"
+    MetaDBType = "leveldb"
+    [StoneHubCfg.JobDB]
+        User = "root"
+        Passwd = "bfs-test"
+        Address = "127.0.0.1:3306"
+        Database = "job_context"
+
+
+[GatewayCfg]
+    Address = "127.0.0.1:5310"
+    Domain = "bfs.nodereal.com"
+    [GatewayCfg.UploaderConfig]
+        #Mode = "DebugMode"
+        Mode = "GrpcMode"
+        DebugDir = "./debug"
+        Address = "127.0.0.1:5311"
+    [GatewayCfg.ChainConfig]
+        Mode = "DebugMode"
+        DebugDir = "./debug"
+    [GatewayCfg.DownloaderConfig]
+        Mode = "DebugMode"
+        DebugDir = "./debug"
+        Address = "127.0.0.1:5523"
+
+
+
+[UploaderCfg]
+    StorageProvider = "bnb-sp"
+    Address = "127.0.0.1:5311"
+    StoneHubServiceAddress = "127.0.0.1:5323"
+    [UploaderCfg.PieceStoreConfig]
+        Shards = 0
+        [UploaderCfg.PieceStoreConfig.Store]
+            Storage = "file"
+            BucketURL = "./debug"
+            AccessKey = "ACCESSKEY"
+            SecretKey = "SECRETKEY"
+            SessionToken = "SESSIONTOKEN"
+            NoSignRequest = false
+            MaxRetries = 5
+            TlsInsecureSkipVerify = false
+            TestMode = true
+    [UploaderCfg.MetaDBConfig]
+        Path = "./data"
+        NameSpace = "bnb-sp"
+        Cache = 4096
+        FileHandles = 1000
+        ReadOnly = false
+
+
+[StoneNodeCfg]
+    StorageProvider = "bnb-sp"
+    Address = "127.0.0.1:5325"
+    StoneHubServiceAddress = "127.0.0.1:5323"
+    SyncerServiceAddress = "127.0.0.1:5324"
+    [StoneNodeCfg.PieceConfig]
+        Shards = 0
+        [StoneNodeCfg.PieceConfig.Store]
+            Storage = "file"
+            BucketURL = "./debug"
+            AccessKey = "ACCESSKEY"
+            SecretKey = "SECRETKEY"
+            SessionToken = "SESSIONTOKEN"
+            NoSignRequest = false
+            MaxRetries = 5
+            TlsInsecureSkipVerify = false
+            TestMode = true
+#            Storage = "s3"
+#            BucketURL = "https://s3.ap-northeast-1.amazonaws.com/tf-nodereal-dev-bsc-storage"
+#            AccessKey = ""
+#            SecretKey = ""
+#            SessionToken = ""
+#            NoSignRequest = false
+#            MaxRetries = 5
+#            TlsInsecureSkipVerify = false
+#            TestMode = true
+
+
+[SyncerCfg]
+    StorageProvider = "bnb-sp"
+    Address = "127.0.0.1:5324"
+    [SyncerCfg.PieceConfig]
+        Shards = 0
+        [SyncerCfg.PieceConfig.Store]
+            Storage = "file"
+            BucketURL = "./debug"
+            AccessKey = "ACCESSKEY"
+            SecretKey = "SECRETKEY"
+            SessionToken = "SESSIONTOKEN"
+            NoSignRequest = false
+            MaxRetries = 5
+            TlsInsecureSkipVerify = false
+            TestMode = true
+#            Storage = "s3"
+#            BucketURL = "https://s3.ap-northeast-1.amazonaws.com/tf-nodereal-dev-bsc-storage"
+#            AccessKey = ""
+#            SecretKey = ""
+#            SessionToken = ""
+#            NoSignRequest = false
+#            MaxRetries = 5
+#            TlsInsecureSkipVerify = false
+#            TestMode = true
+
+[DownloaderCfg]
+    Address = "127.0.0.1:5523"
+    [DownloaderCfg.PieceStoreConfig]
+        Shards = 0
+        [DownloaderCfg.PieceStoreConfig.Store]
+            Storage = "file"
+            BucketURL = "./debug"
+            AccessKey = "ACCESSKEY"
+            SecretKey = "SECRETKEY"
+            SessionToken = "SESSIONTOKEN"
+            NoSignRequest = false
+            MaxRetries = 5
+            TlsInsecureSkipVerify = false
+            TestMode = true

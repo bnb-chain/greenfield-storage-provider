@@ -1,0 +1,74 @@
+syntax = "proto3";
+package service.types.v1;
+import "pkg/types/v1/object.proto";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/types/v1";
+
+enum ErrCode {
+  ERR_CODE_SUCCESS_UNSPECIFIED = 0;
+  ERR_CODE_ERROR= 1;
+}
+
+message ErrMessage {
+  ErrCode err_code = 1;
+  string err_msg = 2;
+}
+
+message UploaderServiceCreateObjectRequest {
+  string trace_id = 1;
+  pkg.types.v1.ObjectInfo object_info = 2;
+}
+
+message UploaderServiceCreateObjectResponse {
+  string trace_id = 1;
+  bytes tx_hash = 2;
+  uint64 job_id = 3; // optional
+  ErrMessage err_message = 4;
+}
+
+message UploaderServiceUploadPayloadRequest {
+  string trace_id = 1;
+  bytes tx_hash = 2;
+  uint64 job_id = 3;
+  bytes payload_data = 4;
+}
+
+message UploaderServiceUploadPayloadResponse {
+  string trace_id = 1;
+  ErrMessage err_message = 2;
+}
+
+message UploaderServiceUploadPayloadV2Request {
+  string trace_id = 1;
+  bytes tx_hash = 2;
+  string bucket_name = 3;  // Temporary field
+  string object_name = 4;  // Temporary field
+  uint64 object_size = 5;  // Temporary field
+  pkg.types.v1.RedundancyType redundancy_type = 6;  // Temporary field
+  uint64 job_id = 7;
+  bytes payload_data = 8;
+}
+
+message UploaderServiceUploadPayloadV2Response {
+  string trace_id = 1;
+  ErrMessage err_message = 2;
+}
+
+message UploaderServiceGetAuthenticationRequest {
+  string trace_id = 1;
+  string bucket = 2;  // resource = bucket + object, object is optional
+  string object = 3;
+  string action = 4;
+}
+
+message UploaderServiceGetAuthenticationResponse {
+  string trace_id = 1;
+  bytes pre_signature = 2;
+  ErrMessage err_message = 3;
+}
+
+service UploaderService {
+  rpc CreateObject(UploaderServiceCreateObjectRequest) returns (UploaderServiceCreateObjectResponse) {};
+  rpc UploadPayload(stream UploaderServiceUploadPayloadRequest) returns (UploaderServiceUploadPayloadResponse) {};
+  rpc GetAuthentication(UploaderServiceGetAuthenticationRequest) returns (UploaderServiceGetAuthenticationResponse) {};
+  rpc UploadPayloadV2(stream UploaderServiceUploadPayloadV2Request) returns (UploaderServiceUploadPayloadV2Response) {};
+}
