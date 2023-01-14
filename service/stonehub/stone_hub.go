@@ -188,7 +188,7 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 			"object_id", job.GetObjectId(), "object_size", job.GetPayloadSize(),
 			"redundancy", job.GetRedundancyType(), "piece_idx", job.GetTargetIdx())
 	case *stone.SealObjectJob:
-		objectID := job.ObjectInfo.GetJobId()
+		objectID := job.ObjectInfo.GetObjectId()
 		st, ok := hub.stone.Load(objectID)
 		if !ok {
 			log.Warnw("stone has gone", "key", objectID)
