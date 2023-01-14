@@ -386,7 +386,7 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
 		err = merrors.ErrSealInfoMissing
 		return
 	}
-	if len(req.GetPieceJob().GetStorageProviderSealInfo().GetPieceChecksum()) > 0 {
+	if len(req.GetPieceJob().GetStorageProviderSealInfo().GetPieceChecksum()) == 0 {
 		err = merrors.ErrCheckSumCountMismatch
 		return
 	}
