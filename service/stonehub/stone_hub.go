@@ -191,11 +191,11 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 		objectID := job.ObjectInfo.GetObjectId()
 		st, ok := hub.stone.Load(objectID)
 		if !ok {
-			log.Warnw("stone has gone", "key", objectID)
+			log.Warnw("stone has gone", "object_id", objectID)
 			break
 		}
 		if _, ok := st.(*stone.UploadPayloadStone); !ok {
-			log.Warnw("stone typecast to UploadPayloadStone error", "key", objectID)
+			log.Warnw("stone typecast to UploadPayloadStone error", "object_id", objectID)
 			break
 		}
 		object := st.(*stone.UploadPayloadStone).GetObjectInfo()
@@ -243,6 +243,7 @@ func (hub *StoneHub) listenInscription() {
 			}
 			err := uploadStone.ActionEvent(context.Background(), stone.SealObjectDoneEvent)
 			if err != nil {
+				log.Infow("receive seal event, seal done fsm error", "object_id", object.GetObjectId())
 				break
 			}
 			hub.stone.Delete(object.GetObjectId())
