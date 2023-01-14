@@ -297,7 +297,7 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context,
 		return resp, nil
 	}
 	if req.GetErrMessage() != nil && req.GetErrMessage().GetErrCode() ==
-		service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		service.ErrCode_ERR_CODE_ERROR {
 		interruptErr = errors.New(resp.GetErrMessage().GetErrMsg())
 		return resp, nil
 	}
@@ -377,7 +377,7 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
 		return
 	}
 	if req.GetErrMessage() != nil && req.GetErrMessage().GetErrCode() ==
-		service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		service.ErrCode_ERR_CODE_ERROR {
 		interruptErr = errors.New(resp.GetErrMessage().GetErrMsg())
 		return
 	}
