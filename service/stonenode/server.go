@@ -132,7 +132,7 @@ func (node *StoneNodeService) Stop(ctx context.Context) error {
 // allocStone sends rpc request to stone hub alloc stone job.
 func (node *StoneNodeService) allocStone(ctx context.Context) {
 	resp, err := node.stoneHub.AllocStoneJob(ctx)
-	ctx = log.Context(ctx, resp)
+	ctx = log.Context(ctx, resp, resp.GetPieceJob())
 	if err != nil {
 		log.CtxErrorw(ctx, "alloc stone from stone hub failed", "error", err)
 		return
@@ -147,6 +147,6 @@ func (node *StoneNodeService) allocStone(ctx context.Context) {
 		log.CtxErrorw(ctx, "upload secondary piece job failed", "error", err)
 		return
 	}
-	log.CtxInfow(ctx, "upload secondary piece job success!")
+	log.CtxInfow(ctx, "upload secondary piece job success")
 	return
 }

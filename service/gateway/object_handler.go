@@ -30,7 +30,7 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(requestContext))
 		} else {
 			log.Warnf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(requestContext))
 		}
@@ -100,7 +100,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(requestContext))
 		} else {
 			log.Warnf("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(requestContext))
 		}
@@ -168,7 +168,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(requestContext))
 		} else {
 			log.Warnf("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(requestContext))
 		}
@@ -224,7 +224,7 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Infof("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(requestContext))
 		} else {
 			log.Warnf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(requestContext))
 		}

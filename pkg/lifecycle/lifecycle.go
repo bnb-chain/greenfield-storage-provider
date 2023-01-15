@@ -114,7 +114,7 @@ func (s *ServiceLifecycle) stop(ctx context.Context, cancel context.CancelFunc) 
 		if err := service.Stop(ctx); err != nil {
 			log.Errorf("service %s stops failure: %v", service.Name(), err)
 		} else {
-			log.Infof("service %s stops successfully!", service.Name())
+			log.Warnf("service %s stops successfully!", service.Name())
 		}
 	}
 	cancel()

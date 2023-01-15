@@ -83,7 +83,7 @@ func (g *Gateway) Serve() {
 	}
 	g.httpServer = server
 	if err := server.ListenAndServe(); err != nil {
-		log.Warnw("failed to listen", "err", err)
+		log.Errorw("failed to listen", "err", err)
 		return
 	}
 }
