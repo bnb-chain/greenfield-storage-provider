@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -59,7 +60,7 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 
 // Name implement the lifecycle interface
 func (g *Gateway) Name() string {
-	return g.name
+	return model.GatewayService
 }
 
 // Start implement the lifecycle interface
@@ -68,7 +69,7 @@ func (g *Gateway) Start(ctx context.Context) error {
 		return errors.New("gateway has started")
 	}
 	go g.Serve()
-	log.Info("gateway succeed to start")
+	log.Debug("gateway succeed to start")
 	return nil
 }
 
@@ -102,6 +103,6 @@ func (g *Gateway) Stop(ctx context.Context) error {
 	if errs != nil {
 		return fmt.Errorf("%v", errs)
 	}
-	log.Info("gateway succeed to stop")
+	log.Debug("gateway succeed to stop")
 	return nil
 }
