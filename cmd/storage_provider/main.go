@@ -102,6 +102,7 @@ func main() {
 		service, err := initService(serviceName, cfg)
 		if err != nil {
 			log.Errorw("init service failed", "service", serviceName, "error", err)
+			os.Exit(1)
 		}
 		log.Infow("init service success", "service", serviceName)
 		// 2. register service to lifecycle.
