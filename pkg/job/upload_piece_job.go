@@ -140,17 +140,34 @@ func (job *UploadSpJob) Done(pieceJob *service.PieceJob) error {
 
 // donePrimary update primary piece job state, include memory and db.
 func (job *UploadSpJob) doneSegment(segmentPiece *jobdb.PieceJob, pieceJob *service.PieceJob) error {
-	pieceCount := len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum())
-	if pieceCount != 1 {
-		log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(), "second", job.secondary,
-			"piece_idx", segmentPiece.PieceId, "want 1, checksum_count", pieceCount, "error", merrors.ErrCheckSumCountMismatch)
-		return merrors.ErrCheckSumCountMismatch
+	pieceCount := uint32(len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()))
+	segmentCount := util.ComputeSegmentCount(job.objectCtx.GetObjectSize())
+	if job.redundancy == types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+		if pieceCount != 1 {
+			log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(), "second", job.secondary,
+				"piece_idx", segmentPiece.PieceId, "want 1, checksum_count", pieceCount, "error", merrors.ErrCheckSumCountMismatch)
+			return merrors.ErrCheckSumCountMismatch
+		}
+		pieceCheckSumLen := len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()[0])
+		if pieceCheckSumLen != hash.LengthHash {
+			log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(), "second", job.secondary,
+				"piece_idx", segmentPiece.PieceId, "piece_checksum_length", pieceCheckSumLen, "error", merrors.ErrCheckSumLengthMismatch)
+			return merrors.ErrCheckSumLengthMismatch
+		}
 	}
-	pieceCheckSumLen := len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()[0])
-	if pieceCheckSumLen != hash.LengthHash {
-		log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(), "second", job.secondary,
-			"piece_idx", segmentPiece.PieceId, "piece_checksum_length", pieceCheckSumLen, "error", merrors.ErrCheckSumLengthMismatch)
-		return merrors.ErrCheckSumLengthMismatch
+	if job.redundancy == types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+		if pieceCount != segmentCount {
+			log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(), "piece_idx", segmentPiece.PieceId,
+				"want_count", segmentCount, "piece_count", pieceCount, "error", merrors.ErrCheckSumCountMismatch)
+			return merrors.ErrCheckSumCountMismatch
+		}
+		for idx, checkSum := range pieceJob.GetStorageProviderSealInfo().GetPieceChecksum() {
+			if len(checkSum) != hash.LengthHash {
+				log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(), "piece_idx", segmentPiece.PieceId,
+					"checksum_idx", idx, "piece_check_sum_lengeth", len(checkSum), "error", merrors.ErrCheckSumLengthMismatch)
+				return merrors.ErrCheckSumLengthMismatch
+			}
+		}
 	}
 	if job.secondary {
 		integrityHashLen := len(pieceJob.GetStorageProviderSealInfo().GetIntegrityHash())
