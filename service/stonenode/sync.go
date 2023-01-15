@@ -257,7 +257,7 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 func fillReplicaOrInlineData(pieceDataBySegment map[string][][]byte, secondarySPs []string, targetIdx []uint32) (
 	map[string]map[string][]byte, error) {
 	replicaOrInlineDataMap := make(map[string]map[string][]byte)
-	if len(pieceDataBySegment) >= len(secondarySPs) {
+	if len(targetIdx) >= len(secondarySPs) {
 		return replicaOrInlineDataMap, merrors.ErrSecondarySPNumber
 	}
 
