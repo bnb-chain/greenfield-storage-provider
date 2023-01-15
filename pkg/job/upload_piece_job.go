@@ -145,7 +145,8 @@ func (job *UploadSpJob) Done(pieceJob *service.PieceJob) error {
 func (job *UploadSpJob) doneSegment(segmentPiece *jobdb.PieceJob, pieceJob *service.PieceJob) error {
 	pieceCount := uint32(len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()))
 	segmentCount := util.ComputeSegmentCount(job.objectCtx.GetObjectSize())
-	if job.redundancy == types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+	// primary segment
+	if !job.secondary {
 		if pieceCount != 1 {
 			log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(), "second", job.secondary,
 				"piece_idx", segmentPiece.PieceId, "want 1, checksum_count", pieceCount, "error", merrors.ErrCheckSumCountMismatch)
@@ -157,8 +158,8 @@ func (job *UploadSpJob) doneSegment(segmentPiece *jobdb.PieceJob, pieceJob *serv
 				"piece_idx", segmentPiece.PieceId, "piece_checksum_length", pieceCheckSumLen, "error", merrors.ErrCheckSumLengthMismatch)
 			return merrors.ErrCheckSumLengthMismatch
 		}
-	}
-	if job.redundancy == types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+	} else {
+		// secondary replicate or inline redundancy type
 		if pieceCount != segmentCount {
 			log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(), "piece_idx", segmentPiece.PieceId,
 				"want_count", segmentCount, "piece_count", pieceCount, "error", merrors.ErrCheckSumCountMismatch)
