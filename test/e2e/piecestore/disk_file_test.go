@@ -6,9 +6,14 @@ import (
 	"os"
 	"testing"
 
+<<<<<<< HEAD
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 
+=======
+>>>>>>> develop
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 func TestDiskFileStore(t *testing.T) {

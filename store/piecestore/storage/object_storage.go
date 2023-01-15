@@ -7,16 +7,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	//"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 func NewObjectStorage(cfg *ObjectStorageConfig) (ObjectStorage, error) {
 	if fn, ok := storageMap[strings.ToLower(cfg.Storage)]; ok {
-		log.Infof("Creating %s storage at endpoint %s", cfg.Storage, cfg.BucketURL)
+		log.Debugf("creating %s storage at endpoint %s", cfg.Storage, cfg.BucketURL)
 		return fn(cfg)
 	}
 	return nil, fmt.Errorf("Invalid object storage: %s", cfg.Storage)

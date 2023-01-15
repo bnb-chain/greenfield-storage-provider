@@ -2,6 +2,7 @@ package leveldb
 
 import (
 	"encoding/json"
+	"sync"
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
@@ -30,13 +31,22 @@ type Database struct {
 	db        *leveldb.DB // LevelDB instance
 }
 
+var (
+	once   sync.Once
+	metaDB *Database
+)
+
 // NewMetaDB call NewCustomMetaDB return Database instance.
 func NewMetaDB(config *MetaLevelDBConfig) (*Database, error) {
-	return NewCustomMetaDB(config.Path, config.NameSpace, config.Cache, config.FileHandles, config.ReadOnly)
+	var err error
+	once.Do(func() {
+		metaDB, err = newCustomMetaDB(config.Path, config.NameSpace, config.Cache, config.FileHandles, config.ReadOnly)
+	})
+	return metaDB, err
 }
 
 // NewCustomMetaDB return Database instance.
-func NewCustomMetaDB(path string, namespace string, cache int, handles int, readonly bool) (*Database, error) {
+func newCustomMetaDB(path string, namespace string, cache int, handles int, readonly bool) (*Database, error) {
 	// init options
 	optionFunc := func() *opt.Options {
 		options := &opt.Options{
