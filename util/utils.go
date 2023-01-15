@@ -64,7 +64,12 @@ func sortSlice[T constraints.Ordered](s []T) {
 	})
 }
 
-// ReadJobState parser the job state to readable
-func ReadJobState(state string) string {
+// JobStateReadable parser the job state to readable
+func JobStateReadable(state string) string {
 	return strings.ToLower(strings.TrimPrefix(state, "JOB_STATE_"))
+}
+
+// SpReadable parser the storage provider to readable
+func SpReadable(provider string) string {
+	return provider[:8]
 }

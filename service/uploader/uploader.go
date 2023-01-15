@@ -7,15 +7,15 @@ import (
 	"net"
 	"sync/atomic"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/mock"
-
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -77,7 +77,7 @@ func (uploader *Uploader) initDB(config *leveldb.MetaLevelDBConfig) (err error) 
 
 // Name implement the lifecycle interface
 func (uploader *Uploader) Name() string {
-	return uploader.name
+	return model.UploaderService
 }
 
 // Start implement the lifecycle interface

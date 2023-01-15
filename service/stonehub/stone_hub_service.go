@@ -368,6 +368,11 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
 		}
 		log.CtxInfow(ctx, "done secondary piece job completed", "piece_idx", pieceIdx, "error", err)
 	}()
+	if req.GetErrMessage() != nil && req.GetErrMessage().GetErrCode() ==
+		service.ErrCode_ERR_CODE_ERROR {
+		interruptErr = errors.New(resp.GetErrMessage().GetErrMsg())
+		return resp, nil
+	}
 	if req.GetPieceJob() == nil || req.GetPieceJob().GetObjectId() == 0 {
 		err = merrors.ErrObjectIdZero
 		return resp, nil
@@ -380,12 +385,6 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
 		err = merrors.ErrUploadPayloadJobNotExist
 		return resp, nil
 	}
-	if req.GetErrMessage() != nil && req.GetErrMessage().GetErrCode() ==
-		service.ErrCode_ERR_CODE_ERROR {
-		interruptErr = errors.New(resp.GetErrMessage().GetErrMsg())
-		return resp, nil
-	}
-
 	if req.GetPieceJob().GetStorageProviderSealInfo() == nil {
 		err = merrors.ErrSealInfoMissing
 		return resp, nil

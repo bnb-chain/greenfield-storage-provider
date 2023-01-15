@@ -24,7 +24,7 @@ var (
 
 // CreateObject handle grpc CreateObject request, send create object tx to chain
 func (uploader *Uploader) CreateObject(ctx context.Context, req *pbService.UploaderServiceCreateObjectRequest) (resp *pbService.UploaderServiceCreateObjectResponse, err error) {
-	ctx = log.Context(ctx, req)
+	ctx = log.Context(ctx, req, req.GetObjectInfo())
 	resp = &pbService.UploaderServiceCreateObjectResponse{TraceId: req.GetTraceId()}
 	defer func(r *pbService.UploaderServiceCreateObjectResponse, err error) {
 		if err != nil {
@@ -253,7 +253,7 @@ func (uploader *Uploader) GetAuthentication(ctx context.Context, req *pbService.
 		log.Errorw("failed to insert metaDB")
 		return
 	}
-	log.CtxInfow(ctx, "insert to metadb", "bucket", req.Bucket, "object", req.Object)
+	log.CtxInfow(ctx, "insert authentication info to metadb", "bucket", req.Bucket, "object", req.Object)
 	// mock
 	resp.PreSignature = hash.GenerateChecksum([]byte(time.Now().String()))
 	return resp, nil

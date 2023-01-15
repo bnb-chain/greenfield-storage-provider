@@ -101,9 +101,10 @@ func main() {
 		// 1. init service instance.
 		service, err := initService(serviceName, cfg)
 		if err != nil {
-			log.Errorw("init service failed", "service", serviceName, "error", err)
+			log.Errorw("init service failed", "service_name", serviceName, "error", err)
+			os.Exit(1)
 		}
-		log.Infow("init service success", "service", serviceName)
+		log.Debugw("init service success", "service_name", serviceName)
 		// 2. register service to lifecycle.
 		slc.RegisterServices(service)
 	}

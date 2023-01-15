@@ -56,12 +56,12 @@ func (s *ServiceLifecycle) StartServices(ctx context.Context) *ServiceLifecycle 
 func (s *ServiceLifecycle) start(ctx context.Context) {
 	for i, service := range s.services {
 		if err := service.Start(ctx); err != nil {
-			log.Errorf("Service %s starts error: %v", service.Name(), err)
+			log.Errorf("service %s starts error: %v", service.Name(), err)
 			s.services = s.services[:i]
 			s.innerCancel()
 			break
 		} else {
-			log.Infof("Service %s starts successfully", service.Name())
+			log.Infof("service %s starts successfully", service.Name())
 		}
 	}
 }
@@ -103,18 +103,18 @@ func (s *ServiceLifecycle) StopServices(ctx context.Context) {
 
 	<-gCtx.Done()
 	if errors.Is(gCtx.Err(), context.Canceled) {
-		log.Infow("Services stop working", "service config timeout", s.timeout)
+		log.Infow("services stop working", "service config timeout", s.timeout)
 	} else if errors.Is(gCtx.Err(), context.DeadlineExceeded) {
-		log.Error("Timeout while stopping service, killing instance manually")
+		log.Error("timeout while stopping service, killing instance manually")
 	}
 }
 
 func (s *ServiceLifecycle) stop(ctx context.Context, cancel context.CancelFunc) {
 	for _, service := range s.services {
 		if err := service.Stop(ctx); err != nil {
-			log.Errorf("Service %s stops failure: %v", service.Name(), err)
+			log.Errorf("service %s stops failure: %v", service.Name(), err)
 		} else {
-			log.Infof("Service %s stops successfully!", service.Name())
+			log.Warnf("service %s stops successfully!", service.Name())
 		}
 	}
 	cancel()

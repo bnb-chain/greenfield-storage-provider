@@ -1,6 +1,7 @@
 package syncer
 
 import (
+	"context"
 	"errors"
 	"io"
 
@@ -48,14 +49,17 @@ func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
 			if err := s.setIntegrityMeta(s.metaDB, integrityMeta); err != nil {
 				return err
 			}
-			return stream.SendAndClose(&service.SyncerServiceSyncPieceResponse{
+			resp := &service.SyncerServiceSyncPieceResponse{
 				TraceId:         req.GetTraceId(),
 				SecondarySpInfo: sealInfo,
 				ErrMessage: &service.ErrMessage{
 					ErrCode: service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
 					ErrMsg:  "success",
 				},
-			})
+			}
+			ctx := log.Context(context.Background(), resp)
+			log.CtxInfow(ctx, "receive piece data success", "integrity_hash", sealInfo.GetIntegrityHash())
+			return stream.SendAndClose(resp)
 		}
 		if err != nil {
 			log.Errorw("stream recv failed", "error", err)

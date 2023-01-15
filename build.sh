@@ -19,3 +19,4 @@ if [ ! -d build  ];then
   mkdir build
 fi
 mv storage_provider ./build
+cp config/config.toml ./build

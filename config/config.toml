@@ -2,7 +2,6 @@ Service = [
     "StoneHub", "Gateway", "Uploader", "StoneNode", "Syncer", "Downloader",
 ]
 
-
 [StoneHubCfg]
     StorageProvider = "bnb-sp"
     Address = "127.0.0.1:5323"

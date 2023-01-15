@@ -3,7 +3,6 @@ package stonenode
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"errors"
 	"sync"
 	"sync/atomic"
@@ -167,7 +166,6 @@ func (node *StoneNodeService) generatePieceData(redundancyType ptypes.Redundancy
 	switch redundancyType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		pieceData, err = redundancy.EncodeRawSegment(segmentData)
-		log.Info("generatePieceData length: ", len(pieceData))
 		if err != nil {
 			return
 		}
@@ -256,8 +254,8 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 func fillReplicaOrInlineData(pieceDataBySegment map[string][][]byte, secondarySPs []string, targetIdx []uint32) (
 	map[string]map[string][]byte, error) {
 	replicaOrInlineDataMap := make(map[string]map[string][]byte)
-	if len(pieceDataBySegment) >= len(secondarySPs) {
-		return map[string]map[string][]byte{}, merrors.ErrSecondarySPNumber
+	if len(targetIdx) > len(secondarySPs) {
+		return replicaOrInlineDataMap, merrors.ErrSecondarySPNumber
 	}
 
 	// iterate map in order
@@ -325,7 +323,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 					log.CtxErrorw(ctx, "done secondary piece job to stone hub failed", "error", err)
 					return
 				}
-				log.CtxInfow(ctx, "sync secondary piece job successfully", "secondary sp", secondary)
 			}()
 
 			syncResp, err := node.syncPiece(ctx, &service.SyncerInfo{
@@ -344,19 +341,12 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 			}
 
 			var pieceHash [][]byte
-			var pieceIndex uint32
 			keys := util.GenericSortedKeys(pieceData)
-			log.Infow("sorted keys", "keys", keys)
+			log.Debugw("sorted keys", "keys", keys)
 			for _, key := range keys {
 				pieceHash = append(pieceHash, hash.GenerateChecksum(pieceData[key]))
 			}
 			integrityHash := hash.GenerateIntegrityHash(pieceHash)
-			log.Infow("compute locally", "integrityHash", hex.EncodeToString(integrityHash)[:10], "secondary", secondary,
-				"pieceIndex", pieceIndex)
-
-			log.CtxInfow(ctx, "syncResp", "GetIntegrityHash", syncResp.GetSecondarySpInfo().GetIntegrityHash(),
-				"secondary", syncResp.GetSecondarySpInfo().GetStorageProviderId())
-
 			if syncResp.GetSecondarySpInfo() == nil || syncResp.GetSecondarySpInfo().GetIntegrityHash() == nil ||
 				!bytes.Equal(integrityHash, syncResp.GetSecondarySpInfo().GetIntegrityHash()) {
 				log.CtxErrorw(ctx, "secondary integrity hash check error")
@@ -365,6 +355,8 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				return
 			}
 			pieceJob.StorageProviderSealInfo = syncResp.GetSecondarySpInfo()
+			log.CtxDebugw(ctx, "sync piece data to secondary", "secondary_provider", secondary,
+				"local_integrity_hash", integrityHash, "remote_integrity_hash", syncResp.GetSecondarySpInfo().GetIntegrityHash())
 			return
 		}(secondary, pieceData)
 	}
@@ -395,8 +387,8 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *ser
 // SyncPiece send rpc request to secondary storage provider to sync the piece data.
 func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *service.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*service.SyncerServiceSyncPieceResponse, error) {
-	log.CtxInfow(ctx, "stone node UploadECPiece", "rType", syncerInfo.GetRedundancyType(),
-		"spID", syncerInfo.GetStorageProviderId(), "traceID", traceID, "length", len(pieceData))
+	log.CtxInfow(ctx, "stone node upload piece data", "redundancy_type", syncerInfo.GetRedundancyType(),
+		"spID", util.SpReadable(syncerInfo.GetStorageProviderId()), "length", len(pieceData))
 	stream, err := node.syncer.SyncPiece(ctx)
 	if err != nil {
 		log.Errorw("sync secondary piece job error", "err", err)
@@ -426,8 +418,5 @@ func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *service
 		log.Errorw("sync piece sends to stone node response code is not success", "error", err, "traceID", resp.GetTraceId())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
-	log.Infof("traceID: %s", resp.GetTraceId())
-	log.CtxInfow(ctx, "SyncPiece", "spInfo", resp.GetSecondarySpInfo(), "GetIntegrityHash",
-		resp.GetSecondarySpInfo().GetIntegrityHash(), "traceID", resp.GetTraceId())
 	return resp, nil
 }

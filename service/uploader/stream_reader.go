@@ -163,7 +163,7 @@ func (sr *streamReader) splitSegment(segmentSize uint32, ch chan *SegmentContext
 		size = size + readN
 	}
 
-	log.Info("uploader total size:", size, " index:", index)
+	log.Info("uploader total size:", size, " segment_count:", index-1)
 	close(ch)
 	return nil
 }

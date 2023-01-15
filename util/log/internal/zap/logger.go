@@ -7,12 +7,12 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/metadata"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/types"
-
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/types"
 )
 
 const (

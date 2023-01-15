@@ -10,13 +10,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
-
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 

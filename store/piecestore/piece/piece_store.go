@@ -22,7 +22,7 @@ func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 		log.Errorw("create storage error", "error", err)
 		return nil, err
 	}
-	log.Infow("PieceStore is running", "Storage", cfg.Store.Storage, "BucketURL",
+	log.Debugf("pieceStore is running", "Storage", cfg.Store.Storage, "BucketURL",
 		cfg.Store.BucketURL)
 
 	return &PieceStore{blob}, nil
@@ -90,7 +90,7 @@ func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 		}
 		return merrors.ErrNoPermissionAccessBucket
 	}
-	log.Infof("HeadBucket succeeds in %s", store)
+	log.Debugf("HeadBucket succeeds in %s", store)
 	return nil
 }
 
