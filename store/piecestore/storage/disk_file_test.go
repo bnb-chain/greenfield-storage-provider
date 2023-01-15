@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-
 	"github.com/stretchr/testify/assert"
+
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 )
 
 func setupDiskFileTest(t *testing.T) *diskFileStore {

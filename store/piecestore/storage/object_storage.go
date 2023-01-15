@@ -7,10 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	//"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 

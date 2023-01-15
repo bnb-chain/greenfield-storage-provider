@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/request"
+	
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // customS3Retryer wraps aws-sdk-go's built-in DefaultRetryer and adding additional error codes

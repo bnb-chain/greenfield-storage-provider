@@ -4,10 +4,10 @@ import (
 	"context"
 	"net"
 
-	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"

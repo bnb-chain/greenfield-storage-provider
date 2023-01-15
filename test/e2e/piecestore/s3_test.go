@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 func TestS3Store(t *testing.T) {

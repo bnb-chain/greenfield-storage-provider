@@ -6,13 +6,12 @@ import (
 
 	"github.com/looplab/fsm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/job"
 	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
