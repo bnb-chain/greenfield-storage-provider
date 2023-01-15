@@ -101,7 +101,7 @@ func (hub *StoneHub) Start(ctx context.Context) error {
 	// TODO:: use green field chain client replace the mock client
 	{
 		hub.insCli.Start()
-		go hub.listenInscription()
+		go hub.listenChain()
 	}
 
 	// TODO:: scan db load the unfinished stone
@@ -121,12 +121,12 @@ func (hub *StoneHub) Stop(ctx context.Context) error {
 		return errors.New("stone hub has already stop")
 	}
 
+	close(hub.stopCh)
+	close(hub.gcCh)
 	// TODO:: use green field chain client replace the mock client
 	{
 		hub.insCli.Stop()
 	}
-	close(hub.stopCh)
-	close(hub.gcCh)
 	var errs []error
 	if err := hub.metaDB.Close(); err != nil {
 		errs = append(errs, err)
@@ -225,11 +225,14 @@ func (hub *StoneHub) gcMemoryStone() {
 
 // listenInscription listen to the subscribe events of green field chain.
 // TODO::temporarily use the mock green field chain.
-func (hub *StoneHub) listenInscription() {
+func (hub *StoneHub) listenChain() {
 	ch := hub.events.SubscribeEvent(mock.SealObject)
 	for {
 		select {
 		case event := <-ch:
+			if event == nil {
+				continue
+			}
 			object := event.(*types.ObjectInfo)
 			st, ok := hub.stone.Load(object.GetObjectId())
 			if !ok {
