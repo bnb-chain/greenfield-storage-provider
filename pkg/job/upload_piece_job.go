@@ -31,10 +31,7 @@ func NewSegmentUploadSpJob(objectCtx *ObjectInfoContext, secondary bool) (*Uploa
 		pieceType:  model.SegmentPieceType,
 		redundancy: objectCtx.GetObjectRedundancyType(),
 	}
-	var segmentCount uint32 = 1
-	if job.redundancy == types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
-		segmentCount = util.ComputeSegmentCount(objectCtx.GetObjectSize())
-	}
+	segmentCount := util.ComputeSegmentCount(objectCtx.GetObjectSize())
 	for idx := 0; idx < int(segmentCount); idx++ {
 		job.pieceJobs = append(job.pieceJobs, &jobdb.PieceJob{
 			PieceId:       uint32(idx),
@@ -143,20 +140,23 @@ func (job *UploadSpJob) Done(pieceJob *service.PieceJob) error {
 
 // donePrimary update primary piece job state, include memory and db.
 func (job *UploadSpJob) doneSegment(segmentPiece *jobdb.PieceJob, pieceJob *service.PieceJob) error {
-	if len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()) != 1 {
-		log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(),
-			"second", job.secondary, "piece_idx", segmentPiece.PieceId, "error", merrors.ErrCheckSumCountMismatch)
+	pieceCount := len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum())
+	if pieceCount != 1 {
+		log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(), "second", job.secondary,
+			"piece_idx", segmentPiece.PieceId, "want 1, checksum_count", pieceCount, "error", merrors.ErrCheckSumCountMismatch)
 		return merrors.ErrCheckSumCountMismatch
 	}
-	if len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()[0]) != hash.LengthHash {
-		log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(),
-			"second", job.secondary, "piece_idx", segmentPiece.PieceId, "error", merrors.ErrCheckSumLengthMismatch)
+	pieceCheckSumLen := len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()[0])
+	if pieceCheckSumLen != hash.LengthHash {
+		log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(), "second", job.secondary,
+			"piece_idx", segmentPiece.PieceId, "piece_checksum_length", pieceCheckSumLen, "error", merrors.ErrCheckSumLengthMismatch)
 		return merrors.ErrCheckSumLengthMismatch
 	}
 	if job.secondary {
-		if len(pieceJob.GetStorageProviderSealInfo().GetIntegrityHash()) != hash.LengthHash {
-			log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(),
-				"second", job.secondary, "piece_idx", segmentPiece.PieceId, "error", merrors.ErrIntegrityHashLengthMismatch)
+		integrityHashLen := len(pieceJob.GetStorageProviderSealInfo().GetIntegrityHash())
+		if integrityHashLen != hash.LengthHash {
+			log.Errorw("done segment piece error", "object_id", pieceJob.GetObjectId(), "second", job.secondary,
+				"piece_idx", segmentPiece.PieceId, "integrity_hash_length", integrityHashLen, "error", merrors.ErrIntegrityHashLengthMismatch)
 			return merrors.ErrIntegrityHashLengthMismatch
 		}
 		// TODO:: currrent signer service is not completed
@@ -190,22 +190,24 @@ func (job *UploadSpJob) doneSegment(segmentPiece *jobdb.PieceJob, pieceJob *serv
 
 // doneSecondary update primary piece job state, include memory and db.
 func (job *UploadSpJob) doneEC(ecPiece *jobdb.PieceJob, pieceJob *service.PieceJob) error {
-	if uint32(len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum())) !=
-		util.ComputeSegmentCount(job.objectCtx.GetObjectSize()) {
-		log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(),
-			"piece_idx", ecPiece.PieceId, "error", merrors.ErrCheckSumCountMismatch)
+	pieceCount := uint32(len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()))
+	segmentCount := util.ComputeSegmentCount(job.objectCtx.GetObjectSize())
+	if pieceCount != segmentCount {
+		log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(), "piece_idx", ecPiece.PieceId,
+			"want_count", segmentCount, "piece_count", pieceCount, "error", merrors.ErrCheckSumCountMismatch)
 		return merrors.ErrCheckSumCountMismatch
 	}
 	for idx, checkSum := range pieceJob.GetStorageProviderSealInfo().GetPieceChecksum() {
 		if len(checkSum) != hash.LengthHash {
-			log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(),
-				"piece_idx", ecPiece.PieceId, "checksum_idx", idx, "error", merrors.ErrCheckSumLengthMismatch)
+			log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(), "piece_idx", ecPiece.PieceId,
+				"checksum_idx", idx, "piece_check_sum_lengeth", len(checkSum), "error", merrors.ErrCheckSumLengthMismatch)
 			return merrors.ErrCheckSumLengthMismatch
 		}
 	}
-	if len(pieceJob.GetStorageProviderSealInfo().GetIntegrityHash()) != hash.LengthHash {
-		log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(),
-			"piece_idx", ecPiece.PieceId, "error", merrors.ErrIntegrityHashLengthMismatch)
+	integrityHashLen := len(pieceJob.GetStorageProviderSealInfo().GetIntegrityHash())
+	if integrityHashLen != hash.LengthHash {
+		log.Errorw("done ec piece error", "object_id", pieceJob.GetObjectId(), "piece_idx", ecPiece.PieceId,
+			"integrity_hash_length", integrityHashLen, "error", merrors.ErrIntegrityHashLengthMismatch)
 		return merrors.ErrIntegrityHashLengthMismatch
 	}
 	// TODO:: currrent signer service is not completed
