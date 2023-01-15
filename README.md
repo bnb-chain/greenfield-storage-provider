@@ -12,5 +12,5 @@ bash build.sh
 # Print Version
 ./build/storage_provider -v
 # Run Services
-./build/storage_provider -config config/config.toml
+./build/storage_provider -config build/config.toml
 ```
