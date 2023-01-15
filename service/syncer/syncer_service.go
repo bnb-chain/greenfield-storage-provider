@@ -58,8 +58,7 @@ func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
 				},
 			}
 			ctx := log.Context(context.Background(), resp)
-			log.CtxInfow(ctx, "receive piece data success", "storage_provider", sealInfo.GetStorageProviderId(),
-				"piece_idx", sealInfo.GetPieceIdx(), "integrity_hash", sealInfo.GetIntegrityHash())
+			log.CtxInfow(ctx, "receive piece data success", "integrity_hash", sealInfo.GetIntegrityHash())
 			return stream.SendAndClose(resp)
 		}
 		if err != nil {

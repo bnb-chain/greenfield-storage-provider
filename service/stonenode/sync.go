@@ -388,8 +388,8 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *ser
 // SyncPiece send rpc request to secondary storage provider to sync the piece data.
 func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *service.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*service.SyncerServiceSyncPieceResponse, error) {
-	log.CtxInfow(ctx, "stone node upload piece data", "rType", syncerInfo.GetRedundancyType(),
-		"spID", syncerInfo.GetStorageProviderId(), "length", len(pieceData))
+	log.CtxInfow(ctx, "stone node upload piece data", "redundancy_type", syncerInfo.GetRedundancyType(),
+		"spID", util.SpReadable(syncerInfo.GetStorageProviderId()), "length", len(pieceData))
 	stream, err := node.syncer.SyncPiece(ctx)
 	if err != nil {
 		log.Errorw("sync secondary piece job error", "err", err)

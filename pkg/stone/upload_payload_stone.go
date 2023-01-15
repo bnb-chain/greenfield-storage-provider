@@ -163,7 +163,7 @@ func (stone *UploadPayloadStone) ActionEvent(ctx context.Context, event string, 
 	err := stone.selfActionEvent(ctx, args...)
 	to := stone.jobFsm.Current()
 	log.CtxInfow(ctx, "external action upload stone fsm", "from",
-		util.ReadJobState(from), "to", util.ReadJobState(to))
+		util.JobStateReadable(from), "to", util.JobStateReadable(to))
 	return err
 }
 
