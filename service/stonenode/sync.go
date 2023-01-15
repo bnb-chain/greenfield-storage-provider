@@ -183,6 +183,9 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string]
 	secondarySPs []string, targetIdx []uint32) (map[string]map[string][]byte, error) {
 	pieceDataBySecondary := make(map[string]map[string][]byte)
 
+	if redundancyType == ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
+		return fillReplicaOrInlineData(pieceDataBySegment, secondarySPs, targetIdx)
+	}
 	// pieceDataBySegment key is segment key; if redundancyType is EC, value is [][]byte type,
 	// a two-dimensional array which contains ec data from ec1 []byte data to ec6 []byte data
 	// if redundancyType is replica or inline, value is [][]byte type, a two-dimensional array
@@ -255,39 +258,49 @@ func fillReplicaOrInlineData(pieceDataBySegment map[string][][]byte, secondarySP
 	map[string]map[string][]byte, error) {
 	replicaOrInlineDataMap := make(map[string]map[string][]byte)
 	if len(pieceDataBySegment) >= len(secondarySPs) {
-		return map[string]map[string][]byte{}, merrors.ErrSecondarySPNumber
+		return replicaOrInlineDataMap, merrors.ErrSecondarySPNumber
 	}
 
-	// iterate map in order
-	keys := util.GenericSortedKeys(pieceDataBySegment)
-	for i := 0; i < len(keys); i++ {
-		pieceKey := keys[i]
-		pieceData := pieceDataBySegment[pieceKey]
-		if len(pieceData) != 1 {
-			return nil, merrors.ErrInvalidSegmentData
-		}
-
-		// each segment piece data writes to different sp
-		sp := secondarySPs[i]
-		if len(targetIdx) != 0 {
-			for _, index := range targetIdx {
-				if int(index) == i {
-					if _, ok := replicaOrInlineDataMap[sp]; !ok {
-						replicaOrInlineDataMap[sp] = make(map[string][]byte)
-					}
-				}
+	for _, pieceIdx := range targetIdx {
+		replicaOrInlineDataMap[secondarySPs[pieceIdx]] = make(map[string][]byte)
+		for segmentKey, data := range pieceDataBySegment {
+			if len(data) != 1 {
+				return replicaOrInlineDataMap, merrors.ErrInvalidSegmentData
 			}
-		}
-
-		if len(targetIdx) != 0 {
-			for _, index := range targetIdx {
-				if int(index) == i {
-					replicaOrInlineDataMap[sp][pieceKey] = pieceData[0]
-				}
-			}
+			replicaOrInlineDataMap[secondarySPs[pieceIdx]][segmentKey] = data[0]
 		}
 	}
 	return replicaOrInlineDataMap, nil
+	//// iterate map in order
+	//keys := util.GenericSortedKeys(pieceDataBySegment)
+	//for i := 0; i < len(keys); i++ {
+	//	pieceKey := keys[i]
+	//	pieceData := pieceDataBySegment[pieceKey]
+	//	if len(pieceData) != 1 {
+	//		return nil, merrors.ErrInvalidSegmentData
+	//	}
+	//
+	//	// each segment piece data writes to different sp
+	//	sp := secondarySPs[i]
+	//	if len(targetIdx) != 0 {
+	//		for _, index := range targetIdx {
+	//			if int(index) == i {
+	//				if _, ok := replicaOrInlineDataMap[sp]; !ok {
+	//					replicaOrInlineDataMap[sp] = make(map[string][]byte)
+	//				}
+	//			}
+	//		}
+	//	}
+	//
+	//	if len(targetIdx) != 0 {
+	//		for _, index := range targetIdx {
+	//			if int(index) == i {
+	//				replicaOrInlineDataMap[sp][pieceKey] = pieceData[0]
+	//			}
+	//		}
+	//	}
+	//}
+	//return replicaOrInlineDataMap, nil
 }
 
 // doSyncToSecondarySP send piece data to the secondary.
