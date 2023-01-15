@@ -53,7 +53,7 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		return nil, err
 	}
 	g.retriever = newRetrieverClient()
-	log.Infow("gateway succeed to init")
+	log.Debugw("gateway succeed to init")
 	return g, nil
 }
 
