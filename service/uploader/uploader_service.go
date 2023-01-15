@@ -253,7 +253,7 @@ func (uploader *Uploader) GetAuthentication(ctx context.Context, req *pbService.
 		log.Errorw("failed to insert metaDB")
 		return
 	}
-	log.CtxInfow(ctx, "insert to metadb", "bucket", req.Bucket, "object", req.Object)
+	log.CtxInfow(ctx, "insert authentication info to metadb", "bucket", req.Bucket, "object", req.Object)
 	// mock
 	resp.PreSignature = hash.GenerateChecksum([]byte(time.Now().String()))
 	return resp, nil

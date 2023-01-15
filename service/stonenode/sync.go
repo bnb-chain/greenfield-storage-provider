@@ -348,8 +348,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				pieceHash = append(pieceHash, hash.GenerateChecksum(pieceData[key]))
 			}
 			integrityHash := hash.GenerateIntegrityHash(pieceHash)
-			log.CtxInfow(ctx, "sync piece data to secondary", "secondary_provider", secondary,
-				"local_integrity_hash", integrityHash)
 			if syncResp.GetSecondarySpInfo() == nil || syncResp.GetSecondarySpInfo().GetIntegrityHash() == nil ||
 				!bytes.Equal(integrityHash, syncResp.GetSecondarySpInfo().GetIntegrityHash()) {
 				log.CtxErrorw(ctx, "secondary integrity hash check error")
@@ -358,8 +356,8 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				return
 			}
 			pieceJob.StorageProviderSealInfo = syncResp.GetSecondarySpInfo()
-			log.CtxInfow(ctx, "receive sync piece data to secondary response", "secondary_provider", syncResp.GetSecondarySpInfo().GetStorageProviderId(),
-				"remote_integrity_hash", syncResp.GetSecondarySpInfo().GetIntegrityHash())
+			log.CtxDebugw(ctx, "sync piece data to secondary", "secondary_provider", secondary,
+				"local_integrity_hash", integrityHash, "remote_integrity_hash", syncResp.GetSecondarySpInfo().GetIntegrityHash())
 			return
 		}(secondary, pieceData)
 	}
@@ -390,7 +388,7 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *ser
 // SyncPiece send rpc request to secondary storage provider to sync the piece data.
 func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *service.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*service.SyncerServiceSyncPieceResponse, error) {
-	log.CtxInfow(ctx, "stone node UploadECPiece", "rType", syncerInfo.GetRedundancyType(),
+	log.CtxInfow(ctx, "stone node upload piece data", "rType", syncerInfo.GetRedundancyType(),
 		"spID", syncerInfo.GetStorageProviderId(), "length", len(pieceData))
 	stream, err := node.syncer.SyncPiece(ctx)
 	if err != nil {
@@ -421,7 +419,5 @@ func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *service
 		log.Errorw("sync piece sends to stone node response code is not success", "error", err, "traceID", resp.GetTraceId())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
-	log.CtxInfow(ctx, "receive sync secondary success", "secondary_provider_id", resp.GetSecondarySpInfo().GetStorageProviderId(),
-		"piece_idx", resp.GetSecondarySpInfo().GetPieceIdx(), "integrity_hash", resp.GetSecondarySpInfo().GetIntegrityHash())
 	return resp, nil
 }
