@@ -1,125 +1,111 @@
 Service = [
-    "StoneHub", "Gateway", "Uploader", "StoneNode", "Syncer", "Downloader",
+    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer",
 ]
-
-[StoneHubCfg]
-    StorageProvider = "bnb-sp"
-    Address = "127.0.0.1:5323"
-    JobDBType = "memory"
-    MetaDBType = "leveldb"
-    [StoneHubCfg.JobDB]
-        User = "root"
-        Passwd = "bfs-test"
-        Address = "127.0.0.1:3306"
-        Database = "job_context"
 
 
 [GatewayCfg]
-    Address = "127.0.0.1:5310"
-    Domain = "bfs.nodereal.com"
-    [GatewayCfg.UploaderConfig]
-        #Mode = "DebugMode"
-        Mode = "GrpcMode"
-        DebugDir = "./debug"
-        Address = "127.0.0.1:5311"
-    [GatewayCfg.ChainConfig]
-        Mode = "DebugMode"
-        DebugDir = "./debug"
-    [GatewayCfg.DownloaderConfig]
-        Mode = "DebugMode"
-        DebugDir = "./debug"
-        Address = "127.0.0.1:5523"
-
-
+Address = "127.0.0.1:9033"
+Domain = "bfs.nodereal.com"
+[GatewayCfg.UploaderConfig]
+    Mode = "GrpcMode"
+    DebugDir = "./data/debug"
+    Address = "127.0.0.1:9133"
+[GatewayCfg.ChainConfig]
+    Mode = "DebugMode"
+    DebugDir = "./data/debug"
+[GatewayCfg.DownloaderConfig]
+    Mode = "GrpcMode"
+    DebugDir = "./data/debug"
+    Address = "127.0.0.1:9233"
 
 [UploaderCfg]
-    StorageProvider = "bnb-sp"
-    Address = "127.0.0.1:5311"
-    StoneHubServiceAddress = "127.0.0.1:5323"
-    [UploaderCfg.PieceStoreConfig]
-        Shards = 0
-        [UploaderCfg.PieceStoreConfig.Store]
-            Storage = "file"
-            BucketURL = "./debug"
-            AccessKey = "ACCESSKEY"
-            SecretKey = "SECRETKEY"
-            SessionToken = "SESSIONTOKEN"
-            NoSignRequest = false
-            MaxRetries = 5
-            TlsInsecureSkipVerify = false
-            TestMode = true
-    [UploaderCfg.MetaDBConfig]
-        Path = "./data"
-        NameSpace = "bnb-sp"
-        Cache = 4096
-        FileHandles = 1000
-        ReadOnly = false
+StorageProvider = "bnb-sp"
+Address = "127.0.0.1:9133"
+StoneHubServiceAddress = "127.0.0.1:9333"
+[UploaderCfg.PieceStoreConfig]
+Shards = 0
+[UploaderCfg.PieceStoreConfig.Store]
+    Storage = "file"
+    BucketURL = "./data/primary_payload_data"
+    MaxRetries = 5
+    TestMode = true
+    #AccessKey = "ACCESSKEY"
+    #SecretKey = "SECRETKEY"
+    #SessionToken = "SESSIONTOKEN"
+    #NoSignRequest = false
+    #TlsInsecureSkipVerify = false
+[UploaderCfg.MetaDBConfig]
+    Path = "./data/meta"
+    NameSpace = "bnb-sp"
+    Cache = 4096
+    FileHandles = 1000
+    ReadOnly = false
 
+[DownloaderCfg]
+Address = "127.0.0.1:9233"
+[DownloaderCfg.PieceStoreConfig]
+Shards = 0
+[DownloaderCfg.PieceStoreConfig.Store]
+Storage = "file"
+BucketURL = "./data/primary_payload_data"
+MaxRetries = 5
+TestMode = true
+#AccessKey = "ACCESSKEY"
+#SecretKey = "SECRETKEY"
+#SessionToken = "SESSIONTOKEN"
+#NoSignRequest = false
+#TlsInsecureSkipVerify = false
+
+
+[StoneHubCfg]
+StorageProvider = "bnb-sp"
+Address = "127.0.0.1:9333"
+JobDBType = "memory"
+MetaDBType = "leveldb"
+[StoneHubCfg.MetaDB]
+    Path = "./data/meta"
+    NameSpace = "bnb-sp"
+    Cache = 4096
+    FileHandles = 1000
+    ReadOnly = false
 
 [StoneNodeCfg]
-    StorageProvider = "bnb-sp"
-    Address = "127.0.0.1:5325"
-    StoneHubServiceAddress = "127.0.0.1:5323"
-    SyncerServiceAddress = "127.0.0.1:5324"
+StorageProvider = "bnb-sp"
+Address = "127.0.0.1:9433"
+StoneHubServiceAddress = "127.0.0.1:9333"
+SyncerServiceAddress = "127.0.0.1:9533"
+StoneJobLimit = 64
     [StoneNodeCfg.PieceConfig]
-        Shards = 0
-        [StoneNodeCfg.PieceConfig.Store]
-            Storage = "file"
-            BucketURL = "./debug"
-            AccessKey = "ACCESSKEY"
-            SecretKey = "SECRETKEY"
-            SessionToken = "SESSIONTOKEN"
-            NoSignRequest = false
-            MaxRetries = 5
-            TlsInsecureSkipVerify = false
-            TestMode = true
-#            Storage = "s3"
-#            BucketURL = "https://s3.ap-northeast-1.amazonaws.com/tf-nodereal-dev-bsc-storage"
-#            AccessKey = ""
-#            SecretKey = ""
-#            SessionToken = ""
-#            NoSignRequest = false
-#            MaxRetries = 5
-#            TlsInsecureSkipVerify = false
-#            TestMode = true
+    Shards = 0
+    [StoneNodeCfg.PieceConfig.Store]
+    Storage = "file"
+    BucketURL = "./data/primary_payload_data"
+    MaxRetries = 5
+    TestMode = true
+    #AccessKey = "ACCESSKEY"
+    #SecretKey = "SECRETKEY"
+    #SessionToken = "SESSIONTOKEN"
+    #NoSignRequest = false
+    #TlsInsecureSkipVerify = false
 
 
 [SyncerCfg]
-    StorageProvider = "bnb-sp"
-    Address = "127.0.0.1:5324"
-    [SyncerCfg.PieceConfig]
-        Shards = 0
-        [SyncerCfg.PieceConfig.Store]
-            Storage = "file"
-            BucketURL = "./debug"
-            AccessKey = "ACCESSKEY"
-            SecretKey = "SECRETKEY"
-            SessionToken = "SESSIONTOKEN"
-            NoSignRequest = false
-            MaxRetries = 5
-            TlsInsecureSkipVerify = false
-            TestMode = true
-#            Storage = "s3"
-#            BucketURL = "https://s3.ap-northeast-1.amazonaws.com/tf-nodereal-dev-bsc-storage"
-#            AccessKey = ""
-#            SecretKey = ""
-#            SessionToken = ""
-#            NoSignRequest = false
-#            MaxRetries = 5
-#            TlsInsecureSkipVerify = false
-#            TestMode = true
-
-[DownloaderCfg]
-    Address = "127.0.0.1:5523"
-    [DownloaderCfg.PieceStoreConfig]
-        Shards = 0
-        [DownloaderCfg.PieceStoreConfig.Store]
-            Storage = "file"
-            BucketURL = "./debug"
-            AccessKey = "ACCESSKEY"
-            SecretKey = "SECRETKEY"
-            SessionToken = "SESSIONTOKEN"
-            NoSignRequest = false
-            MaxRetries = 5
-            TlsInsecureSkipVerify = false
-            TestMode = true
+StorageProvider = "bnb-sp"
+Address = "127.0.0.1:11600"
+MetaDBType = "leveldb"
+    [SyncerCfg.PieceConfig.Store]
+    Storage = "file"
+    BucketURL = "./data/secondary_payload_data"
+    MaxRetries = 5
+    TestMode = true
+    #AccessKey = "ACCESSKEY"
+    #SecretKey = "SECRETKEY"
+    #SessionToken = "SESSIONTOKEN"
+    #NoSignRequest = false
+    #TlsInsecureSkipVerify = false
+    [SyncerCfg.MetaDB]
+    Path = "./data/meta"
+    NameSpace = "bnb-sp"
+    Cache = 4096
+    FileHandles = 1000
+    ReadOnly = false
