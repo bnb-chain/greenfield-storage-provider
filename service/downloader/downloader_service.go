@@ -54,7 +54,8 @@ func (downloader *Downloader) DownloaderObject(req *service.DownloaderServiceDow
 			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
 			err = stream.Send(resp)
 		}
-		log.CtxInfow(ctx, "download object completed", "error", err, "objectSize", objectInfo.Size, "sendSize", size)
+		// log.CtxInfow(ctx, "download object completed", "error", err, "objectSize", objectInfo.Size, "sendSize", size)
+		log.CtxInfow(ctx, "download object completed", "error", err, "sendSize", size)
 	}()
 
 	objectInfo, err = downloader.mockChain.QueryObjectByName(req.BucketName + "/" + req.ObjectName)

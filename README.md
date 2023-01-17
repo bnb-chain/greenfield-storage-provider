@@ -14,4 +14,6 @@ cd build
 ./storage_provider -v
 # Run Services
 ./storage_provider -config ./config.toml
+# Run Cases
+./test-storage-provider
 ```
