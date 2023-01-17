@@ -138,6 +138,7 @@ func runCase1() {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
+
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -207,6 +208,7 @@ func runCase2() {
 			log.Errorw("put object failed, due to sign signature", "error", err)
 			return
 		}
+
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -214,6 +216,7 @@ func runCase2() {
 		}
 		defer res.Body.Close()
 		_, err = io.ReadAll(res.Body)
+
 		if err != nil {
 			log.Errorw("put object failed, due to read response body", "error", err)
 			return
@@ -227,6 +230,7 @@ func runCase2() {
 		log.Infow("start get object")
 		url := "http://" + gatewayAddress + "/case2"
 		method := getMethod
+
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
@@ -238,6 +242,7 @@ func runCase2() {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
+
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -307,6 +312,7 @@ func runCase3() {
 			log.Errorw("put object failed, due to sign signature", "error", err)
 			return
 		}
+
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -314,6 +320,7 @@ func runCase3() {
 		}
 		defer res.Body.Close()
 		_, err = io.ReadAll(res.Body)
+
 		if err != nil {
 			log.Errorw("put object failed, due to read response body", "error", err)
 			return
@@ -327,6 +334,7 @@ func runCase3() {
 		log.Infow("start get object")
 		url := "http://" + gatewayAddress + "/case3"
 		method := getMethod
+
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
@@ -338,6 +346,7 @@ func runCase3() {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
+
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
