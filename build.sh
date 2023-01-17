@@ -15,8 +15,12 @@ go build -ldflags "\
 -X 'main.BuildTime=${BuildTime}'" \
 -o storage_provider cmd/storage_provider/*.go
 
+go build -o test-storage-provider test/e2e/services/case_driver.go
+
 if [ ! -d build  ];then
   mkdir build
+  mkdir -p build/data
 fi
 mv storage_provider ./build
+mv test-storage-provider ./build
 cp config/config.toml ./build
