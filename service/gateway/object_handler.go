@@ -55,16 +55,16 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// todo: check more params
-	sizeStr := requestContext.r.Header.Get(model.BFSContentLengthHeader)
+	sizeStr := requestContext.r.Header.Get(model.GnfdContentLengthHeader)
 	sizeInt, _ := strconv.Atoi(sizeStr)
-	isPrivate, _ := strconv.ParseBool(requestContext.r.Header.Get(model.BFSIsPrivateHeader))
+	isPrivate, _ := strconv.ParseBool(requestContext.r.Header.Get(model.GnfdIsPrivateHeader))
 	option := &putObjectTxOption{
 		requestContext: requestContext,
 		objectSize:     uint64(sizeInt),
-		contentType:    requestContext.r.Header.Get(model.BFSContentTypeHeader),
-		checksum:       []byte(requestContext.r.Header.Get(model.BFSChecksumHeader)),
+		contentType:    requestContext.r.Header.Get(model.GnfdContentTypeHeader),
+		checksum:       []byte(requestContext.r.Header.Get(model.GnfdChecksumHeader)),
 		isPrivate:      isPrivate,
-		redundancyType: requestContext.r.Header.Get(model.BFSRedundancyTypeHeader),
+		redundancyType: requestContext.r.Header.Get(model.GnfdRedundancyTypeHeader),
 	}
 	info, err := g.uploadProcessor.putObjectTx(requestContext.objectName, option)
 	if err != nil {
@@ -77,8 +77,8 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// succeed ack
-	w.Header().Set(model.BFSRequestIDHeader, requestContext.requestID)
-	w.Header().Set(model.BFSTransactionHashHeader, hex.EncodeToString(info.txHash))
+	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
+	w.Header().Set(model.GnfdTransactionHashHeader, hex.EncodeToString(info.txHash))
 }
 
 // putObjectHandler handle put object request, include steps:
@@ -124,7 +124,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = UnauthorizedAccess
 		return
 	}
-	txHash, err := hex.DecodeString(requestContext.r.Header.Get(model.BFSTransactionHashHeader))
+	txHash, err := hex.DecodeString(requestContext.r.Header.Get(model.GnfdTransactionHashHeader))
 	if err != nil && len(txHash) != hash.LengthHash {
 		errorDescription = InvalidTxHash
 		return
@@ -145,7 +145,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = InternalError
 		return
 	}
-	w.Header().Set(model.BFSRequestIDHeader, requestContext.requestID)
+	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
 	w.Header().Set(model.ETagHeader, info.eTag)
 }
 
@@ -249,7 +249,7 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txHash, err := hex.DecodeString(requestContext.r.Header.Get(model.BFSTransactionHashHeader))
+	txHash, err := hex.DecodeString(requestContext.r.Header.Get(model.GnfdTransactionHashHeader))
 	if err != nil && len(txHash) != hash.LengthHash {
 		errorDescription = InvalidTxHash
 		return
@@ -261,7 +261,7 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		requestContext: requestContext,
 		txHash:         txHash,
 		size:           uint64(sizeInt),
-		redundancyType: requestContext.r.Header.Get(model.BFSRedundancyTypeHeader),
+		redundancyType: requestContext.r.Header.Get(model.GnfdRedundancyTypeHeader),
 	}
 
 	info, err := g.uploadProcessor.putObjectV2(requestContext.objectName, r.Body, option)
@@ -278,6 +278,6 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = InternalError
 		return
 	}
-	w.Header().Set(model.BFSRequestIDHeader, requestContext.requestID)
+	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
 	w.Header().Set(model.ETagHeader, info.eTag)
 }
