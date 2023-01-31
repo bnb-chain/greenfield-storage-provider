@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
@@ -23,20 +23,19 @@ var _ io.Closer = &StoneHubClient{}
 //
 //go:generate mockgen -source=./stone_hub_client.go -destination=./mock/stone_hub_mock.go -package=mock
 type StoneHubAPI interface {
-	CreateObject(ctx context.Context, in *service.StoneHubServiceCreateObjectRequest, opts ...grpc.CallOption) (*service.StoneHubServiceCreateObjectResponse, error)
-	SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*service.StoneHubServiceSetObjectCreateInfoResponse, error)
-	BeginUploadPayload(ctx context.Context, in *service.StoneHubServiceBeginUploadPayloadRequest, opts ...grpc.CallOption) (*service.StoneHubServiceBeginUploadPayloadResponse, error)
-	BeginUploadPayloadV2(ctx context.Context, in *service.StoneHubServiceBeginUploadPayloadV2Request, opts ...grpc.CallOption) (*service.StoneHubServiceBeginUploadPayloadV2Response, error)
-	DonePrimaryPieceJob(ctx context.Context, in *service.StoneHubServiceDonePrimaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDonePrimaryPieceJobResponse, error)
-	AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (*service.StoneHubServiceAllocStoneJobResponse, error)
-	DoneSecondaryPieceJob(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDoneSecondaryPieceJobResponse, error)
-	//QueryStone(ctx context.Context, in *service.StoneHubServiceQueryStoneRequest, opts ...grpc.CallOption) (*service.StoneHubServiceQueryStoneResponse, error)
+	CreateObject(ctx context.Context, in *stypesv1pb.StoneHubServiceCreateObjectRequest, opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceCreateObjectResponse, error)
+	SetObjectCreateInfo(ctx context.Context, in *stypesv1pb.StoneHubServiceSetObjectCreateInfoRequest, opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceSetObjectCreateInfoResponse, error)
+	BeginUploadPayload(ctx context.Context, in *stypesv1pb.StoneHubServiceBeginUploadPayloadRequest, opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceBeginUploadPayloadResponse, error)
+	BeginUploadPayloadV2(ctx context.Context, in *stypesv1pb.StoneHubServiceBeginUploadPayloadV2Request, opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceBeginUploadPayloadV2Response, error)
+	DonePrimaryPieceJob(ctx context.Context, in *stypesv1pb.StoneHubServiceDonePrimaryPieceJobRequest, opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceDonePrimaryPieceJobResponse, error)
+	AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceAllocStoneJobResponse, error)
+	DoneSecondaryPieceJob(ctx context.Context, in *stypesv1pb.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceDoneSecondaryPieceJobResponse, error)
 	Close() error
 }
 
 type StoneHubClient struct {
 	address  string
-	stoneHub service.StoneHubServiceClient
+	stoneHub stypesv1pb.StoneHubServiceClient
 	conn     *grpc.ClientConn
 }
 
@@ -50,20 +49,20 @@ func NewStoneHubClient(address string) (*StoneHubClient, error) {
 	client := &StoneHubClient{
 		address:  address,
 		conn:     conn,
-		stoneHub: service.NewStoneHubServiceClient(conn),
+		stoneHub: stypesv1pb.NewStoneHubServiceClient(conn),
 	}
 	return client, nil
 }
 
-func (client *StoneHubClient) CreateObject(ctx context.Context, in *service.StoneHubServiceCreateObjectRequest,
-	opts ...grpc.CallOption) (*service.StoneHubServiceCreateObjectResponse, error) {
+func (client *StoneHubClient) CreateObject(ctx context.Context, in *stypesv1pb.StoneHubServiceCreateObjectRequest,
+	opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceCreateObjectResponse, error) {
 	resp, err := client.stoneHub.CreateObject(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "create object failed", "error", err)
 		return nil, err
 	}
-	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "create object response code is not success", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
@@ -71,58 +70,60 @@ func (client *StoneHubClient) CreateObject(ctx context.Context, in *service.Ston
 	return resp, nil
 }
 
-func (client *StoneHubClient) SetObjectCreateInfo(ctx context.Context, in *service.StoneHubServiceSetObjectCreateInfoRequest,
-	opts ...grpc.CallOption) (*service.StoneHubServiceSetObjectCreateInfoResponse, error) {
+func (client *StoneHubClient) SetObjectCreateInfo(ctx context.Context, in *stypesv1pb.StoneHubServiceSetObjectCreateInfoRequest,
+	opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceSetObjectCreateInfoResponse, error) {
 	resp, err := client.stoneHub.SetObjectCreateInfo(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "set object height and object id failed", "error", err)
 		return nil, err
 	}
-	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "set object height and object id response code is not success", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	return resp, nil
 }
 
-func (client *StoneHubClient) BeginUploadPayload(ctx context.Context, in *service.StoneHubServiceBeginUploadPayloadRequest,
-	opts ...grpc.CallOption) (*service.StoneHubServiceBeginUploadPayloadResponse, error) {
+func (client *StoneHubClient) BeginUploadPayload(ctx context.Context, in *stypesv1pb.StoneHubServiceBeginUploadPayloadRequest,
+	opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceBeginUploadPayloadResponse, error) {
 	resp, err := client.stoneHub.BeginUploadPayload(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "begin upload stone failed", "error", err)
 		return nil, err
 	}
-	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "begin upload stone response code is not success", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	return resp, nil
 }
 
-func (client *StoneHubClient) BeginUploadPayloadV2(ctx context.Context, in *service.StoneHubServiceBeginUploadPayloadV2Request, opts ...grpc.CallOption) (*service.StoneHubServiceBeginUploadPayloadV2Response, error) {
+func (client *StoneHubClient) BeginUploadPayloadV2(ctx context.Context, in *stypesv1pb.StoneHubServiceBeginUploadPayloadV2Request,
+	opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceBeginUploadPayloadV2Response, error) {
 	resp, err := client.stoneHub.BeginUploadPayloadV2(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "begin upload stone failed", "error", err)
 		return nil, err
 	}
-	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "begin upload stone response code is not success", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	return resp, nil
 }
 
-func (client *StoneHubClient) DonePrimaryPieceJob(ctx context.Context, in *service.StoneHubServiceDonePrimaryPieceJobRequest, opts ...grpc.CallOption) (*service.StoneHubServiceDonePrimaryPieceJobResponse, error) {
+func (client *StoneHubClient) DonePrimaryPieceJob(ctx context.Context, in *stypesv1pb.StoneHubServiceDonePrimaryPieceJobRequest,
+	opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceDonePrimaryPieceJobResponse, error) {
 	resp, err := client.stoneHub.DonePrimaryPieceJob(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "done primary piece job failed", "error", err)
 		return nil, err
 	}
-	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "done primary piece job response code is not success", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
@@ -130,8 +131,8 @@ func (client *StoneHubClient) DonePrimaryPieceJob(ctx context.Context, in *servi
 }
 
 func (client *StoneHubClient) AllocStoneJob(ctx context.Context, opts ...grpc.CallOption) (
-	*service.StoneHubServiceAllocStoneJobResponse, error) {
-	req := &service.StoneHubServiceAllocStoneJobRequest{TraceId: util.GenerateRequestID()}
+	*stypesv1pb.StoneHubServiceAllocStoneJobResponse, error) {
+	req := &stypesv1pb.StoneHubServiceAllocStoneJobRequest{TraceId: util.GenerateRequestID()}
 	resp, err := client.stoneHub.AllocStoneJob(ctx, req, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -141,22 +142,22 @@ func (client *StoneHubClient) AllocStoneJob(ctx context.Context, opts ...grpc.Ca
 	if resp.PieceJob == nil {
 		log.CtxDebugw(ctx, "alloc stone job empty.")
 	}
-	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "alloc stone job failed", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	return resp, nil
 }
 
-func (client *StoneHubClient) DoneSecondaryPieceJob(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest,
-	opts ...grpc.CallOption) (*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
+func (client *StoneHubClient) DoneSecondaryPieceJob(ctx context.Context, in *stypesv1pb.StoneHubServiceDoneSecondaryPieceJobRequest,
+	opts ...grpc.CallOption) (*stypesv1pb.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
 	resp, err := client.stoneHub.DoneSecondaryPieceJob(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "done secondary piece job failed", "error", err)
 		return nil, err
 	}
-	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "done secondary piece job response code is not success", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}

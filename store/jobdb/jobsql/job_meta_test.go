@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 )
 
@@ -23,7 +23,7 @@ func TestJobMeta(t *testing.T) {
 		jmi, _ := NewJobMetaImpl(DefaultDBOption)
 		_, err := jmi.CreateUploadPayloadJob(
 			txHash,
-			&types.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject"})
+			&ptypesv1pb.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject"})
 		assert.Equal(t, nil, err)
 	}
 	fmt.Println(string(txHash))

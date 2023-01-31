@@ -5,8 +5,8 @@ import (
 	"io"
 	"sync"
 
-	pbPkg "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	pbService "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -21,11 +21,11 @@ type streamReader struct {
 	bucket         string
 	object         string
 	size           uint64
-	redundancyType pbPkg.RedundancyType
+	redundancyType ptypesv1pb.RedundancyType
 }
 
 // initSteamReaderOnce init stream reader content, is not thread safely.
-func (sr *streamReader) initSteamReaderOnce(req *pbService.UploaderServiceUploadPayloadRequest) error {
+func (sr *streamReader) initSteamReaderOnce(req *stypesv1pb.UploaderServiceUploadPayloadRequest) error {
 	if sr.txHash == nil {
 		sr.txHash = req.TxHash
 		sr.traceID = req.TraceId
@@ -35,7 +35,7 @@ func (sr *streamReader) initSteamReaderOnce(req *pbService.UploaderServiceUpload
 }
 
 // newStreamReader is used to stream read UploaderService_UploadPayloadServer.
-func newStreamReader(stream pbService.UploaderService_UploadPayloadServer, ch chan []byte) *streamReader {
+func newStreamReader(stream stypesv1pb.UploaderService_UploadPayloadServer, ch chan []byte) *streamReader {
 	var sr = &streamReader{}
 	sr.pr, sr.pw = io.Pipe()
 	go func() {
@@ -65,7 +65,7 @@ func newStreamReader(stream pbService.UploaderService_UploadPayloadServer, ch ch
 }
 
 // initSteamReaderOnceV2 init stream reader content, is not thread safely.
-func (sr *streamReader) initSteamReaderOnceV2(req *pbService.UploaderServiceUploadPayloadV2Request) error {
+func (sr *streamReader) initSteamReaderOnceV2(req *stypesv1pb.UploaderServiceUploadPayloadV2Request) error {
 	if sr.txHash == nil {
 		sr.txHash = req.TxHash
 		sr.traceID = req.TraceId
@@ -79,7 +79,7 @@ func (sr *streamReader) initSteamReaderOnceV2(req *pbService.UploaderServiceUplo
 }
 
 // newStreamReaderV2 is used to stream read UploaderService_UploadPayloadV2Server.
-func newStreamReaderV2(stream pbService.UploaderService_UploadPayloadV2Server, ch chan []byte) *streamReader {
+func newStreamReaderV2(stream stypesv1pb.UploaderService_UploadPayloadV2Server, ch chan []byte) *streamReader {
 	var sr = &streamReader{}
 	sr.pr, sr.pw = io.Pipe()
 	go func() {

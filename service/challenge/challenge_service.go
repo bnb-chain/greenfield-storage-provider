@@ -5,21 +5,22 @@ import (
 	"errors"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // ChallengePiece implement challenge service server interface and handle the grpc request.
-func (challenge *Challenge) ChallengePiece(ctx context.Context, req *service.ChallengeServiceChallengePieceRequest) (resp *service.ChallengeServiceChallengePieceResponse, err error) {
+func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypesv1pb.ChallengeServiceChallengePieceRequest) (
+	resp *stypesv1pb.ChallengeServiceChallengePieceResponse, err error) {
 	ctx = log.Context(ctx, req)
-	resp = &service.ChallengeServiceChallengePieceResponse{
+	resp = &stypesv1pb.ChallengeServiceChallengePieceResponse{
 		TraceId:  req.TraceId,
 		ObjectId: req.ObjectId,
 	}
 	defer func() {
 		if err != nil {
-			resp.ErrMessage.ErrCode = service.ErrCode_ERR_CODE_ERROR
+			resp.ErrMessage.ErrCode = stypesv1pb.ErrCode_ERR_CODE_ERROR
 			resp.ErrMessage.ErrMsg = err.Error()
 			log.CtxErrorw(ctx, "change failed", "error", err)
 		}
