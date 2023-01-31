@@ -9,7 +9,7 @@ import (
 
 	"github.com/urfave/cli"
 
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	cliCtx "github.com/bnb-chain/greenfield-storage-provider/test/test_tool/context"
 )
 
@@ -55,10 +55,10 @@ func doneSecondaryPieceJob(c *cli.Context) {
 		checksums = append(checksums, checksum)
 	}
 
-	req := &service.StoneHubServiceDoneSecondaryPieceJobRequest{
+	req := &stypesv1pb.StoneHubServiceDoneSecondaryPieceJobRequest{
 		TxHash: txHash,
-		PieceJob: &service.PieceJob{
-			StorageProviderSealInfo: &service.StorageProviderSealInfo{
+		PieceJob: &stypesv1pb.PieceJob{
+			StorageProviderSealInfo: &stypesv1pb.StorageProviderSealInfo{
 				PieceIdx:          uint32(c.Uint64("i")),
 				StorageProviderId: c.String("s"),
 				PieceChecksum:     checksums,

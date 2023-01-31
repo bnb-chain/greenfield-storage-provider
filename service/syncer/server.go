@@ -12,7 +12,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -107,7 +107,7 @@ func (s *Syncer) serve(errCh chan error) {
 		return
 	}
 	grpcServer := grpc.NewServer(grpc.MaxSendMsgSize(model.MaxCallMsgSize), grpc.MaxRecvMsgSize(model.MaxCallMsgSize))
-	service.RegisterSyncerServiceServer(grpcServer, s)
+	stypesv1pb.RegisterSyncerServiceServer(grpcServer, s)
 	reflection.Register(grpcServer)
 	if err = grpcServer.Serve(lis); err != nil {
 		log.Errorw("syncer serve failed", "error", err)

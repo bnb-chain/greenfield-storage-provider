@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client/mock"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 func TestInitClientFailed(t *testing.T) {
@@ -30,7 +30,7 @@ func Test_loadSegmentsDataSuccess(t *testing.T) {
 		name          string
 		req1          uint64
 		req2          uint64
-		req3          ptypes.RedundancyType
+		req3          ptypesv1pb.RedundancyType
 		wantedResult1 string
 		wantedResult2 int
 		wantedErr     error
@@ -39,7 +39,7 @@ func Test_loadSegmentsDataSuccess(t *testing.T) {
 			name:          "ec type: payload size greater than 16MB",
 			req1:          20230109001,
 			req2:          20 * 1024 * 1024,
-			req3:          ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req3:          ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 			wantedResult1: "20230109001",
 			wantedResult2: 2,
 			wantedErr:     nil,
@@ -48,7 +48,7 @@ func Test_loadSegmentsDataSuccess(t *testing.T) {
 			name:          "ec type: payload size less than 16MB and greater than 1MB",
 			req1:          20230109002,
 			req2:          15 * 1024 * 1024,
-			req3:          ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req3:          ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 			wantedResult1: "20230109002",
 			wantedResult2: 1,
 			wantedErr:     nil,
@@ -57,7 +57,7 @@ func Test_loadSegmentsDataSuccess(t *testing.T) {
 			name:          "replica type: payload size greater than 16MB",
 			req1:          20230109003,
 			req2:          20 * 1024 * 1024,
-			req3:          ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req3:          ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			wantedResult1: "20230109003",
 			wantedResult2: 2,
 			wantedErr:     nil,
@@ -66,7 +66,7 @@ func Test_loadSegmentsDataSuccess(t *testing.T) {
 			name:          "replica type: payload size less than 16MB and greater than 1MB",
 			req1:          20230109004,
 			req2:          15 * 1024 * 1024,
-			req3:          ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req3:          ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			wantedResult1: "20230109004",
 			wantedResult2: 1,
 			wantedErr:     nil,
@@ -75,7 +75,7 @@ func Test_loadSegmentsDataSuccess(t *testing.T) {
 			name:          "inline type: payload size less than 1MB",
 			req1:          20230109005,
 			req2:          1000 * 1024,
-			req3:          ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE,
+			req3:          ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE,
 			wantedResult1: "20230109005",
 			wantedResult2: 1,
 			wantedErr:     nil,
@@ -119,7 +119,7 @@ func Test_loadSegmentsDataPieceStoreError(t *testing.T) {
 		}).AnyTimes()
 
 	result, err := node.loadSegmentsData(context.TODO(), mockAllocResp(20230109001, 20*1024*1024,
-		ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED))
+		ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED))
 	assert.Equal(t, errors.New("piece store s3 network error"), err)
 	assert.Equal(t, 0, len(result))
 }
@@ -137,7 +137,7 @@ func Test_loadSegmentsDataUnknownRedundancyError(t *testing.T) {
 		}).AnyTimes()
 
 	result, err := node.loadSegmentsData(context.TODO(), mockAllocResp(20230109006, 20*1024*1024,
-		ptypes.RedundancyType(-1)))
+		ptypesv1pb.RedundancyType(-1)))
 	assert.Equal(t, merrors.ErrRedundancyType, err)
 	assert.Equal(t, 0, len(result))
 }
@@ -145,35 +145,35 @@ func Test_loadSegmentsDataUnknownRedundancyError(t *testing.T) {
 func Test_generatePieceData(t *testing.T) {
 	cases := []struct {
 		name         string
-		req1         ptypes.RedundancyType
+		req1         ptypesv1pb.RedundancyType
 		req2         []byte
 		wantedResult int
 		wantedErr    error
 	}{
 		{
 			name:         "ec type",
-			req1:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req1:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 			req2:         []byte("1"),
 			wantedResult: 6,
 			wantedErr:    nil,
 		},
 		{
 			name:         "replica type",
-			req1:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req1:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			req2:         []byte("1"),
 			wantedResult: 1,
 			wantedErr:    nil,
 		},
 		{
 			name:         "inline type",
-			req1:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req1:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			req2:         []byte("1"),
 			wantedResult: 1,
 			wantedErr:    nil,
 		},
 		{
 			name:         "unknown redundancy type",
-			req1:         ptypes.RedundancyType(-1),
+			req1:         ptypesv1pb.RedundancyType(-1),
 			req2:         []byte("1"),
 			wantedResult: 0,
 			wantedErr:    merrors.ErrRedundancyType,
@@ -195,7 +195,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 	cases := []struct {
 		name         string
 		req1         map[string][][]byte
-		req2         ptypes.RedundancyType
+		req2         ptypesv1pb.RedundancyType
 		req3         []string
 		req4         []uint32
 		wantedResult int
@@ -204,7 +204,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 		{
 			name:         "ec type dispatch",
 			req1:         dispatchPieceMap(),
-			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req2:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 			req3:         spList,
 			req4:         []uint32{0, 1, 2, 3, 4, 5},
 			wantedResult: 6,
@@ -213,7 +213,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 		{
 			name:         "replica type dispatch",
 			req1:         dispatchSegmentMap(),
-			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req2:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			req3:         spList,
 			req4:         []uint32{0, 1, 2},
 			wantedResult: 1,
@@ -222,7 +222,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 		{
 			name:         "inline type dispatch",
 			req1:         dispatchInlineMap(),
-			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE,
+			req2:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE,
 			req3:         spList,
 			req4:         []uint32{0},
 			wantedResult: 1,
@@ -231,7 +231,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 		{
 			name:         "ec type data retransmission",
 			req1:         dispatchPieceMap(),
-			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req2:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 			req3:         spList,
 			req4:         []uint32{2, 3},
 			wantedResult: 2,
@@ -240,7 +240,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 		{
 			name:         "replica type data retransmission",
 			req1:         dispatchSegmentMap(),
-			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req2:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			req3:         spList,
 			req4:         []uint32{1, 2},
 			wantedResult: 0,
@@ -249,7 +249,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 		{
 			name:         "wrong secondary sp number",
 			req1:         dispatchPieceMap(),
-			req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req2:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 			req3:         []string{},
 			req4:         []uint32{0, 1, 2, 3, 4, 5},
 			wantedResult: 0,
@@ -299,7 +299,7 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	}
 	cases := []struct {
 		name string
-		req1 *service.StoneHubServiceAllocStoneJobResponse
+		req1 *stypesv1pb.StoneHubServiceAllocStoneJobResponse
 		req2 map[string]map[string][]byte
 	}{
 		{
@@ -327,13 +327,13 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	syncer := mock.NewMockSyncerAPI(ctrl)
 	node.syncer = syncer
 	syncer.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_SyncPieceClient, error) {
+		func(ctx context.Context, opts ...grpc.CallOption) (stypesv1pb.SyncerService_SyncPieceClient, error) {
 			return streamClient, nil
 		}).AnyTimes()
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			allocResp := mockAllocResp(123456, 20*1024*1024, ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
+			allocResp := mockAllocResp(123456, 20*1024*1024, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
 			err := node.doSyncToSecondarySP(context.TODO(), allocResp, tt.req2)
 			assert.Equal(t, nil, err)
 		})
@@ -349,15 +349,15 @@ func TestSyncPieceSuccess(t *testing.T) {
 	syncer := mock.NewMockSyncerAPI(ctrl)
 	node.syncer = syncer
 	syncer.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, opts ...grpc.CallOption) (service.SyncerService_SyncPieceClient, error) {
+		func(ctx context.Context, opts ...grpc.CallOption) (stypesv1pb.SyncerService_SyncPieceClient, error) {
 			return streamClient, nil
 		}).AnyTimes()
 
-	sInfo := &service.SyncerInfo{
+	sInfo := &stypesv1pb.SyncerInfo{
 		ObjectId:          123456,
 		TxHash:            []byte("i"),
 		StorageProviderId: "sp1",
-		RedundancyType:    ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+		RedundancyType:    ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 	}
 	data := map[string][]byte{
 		"123456_s0_p0": []byte("test1"),
