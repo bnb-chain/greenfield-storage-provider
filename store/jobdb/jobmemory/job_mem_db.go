@@ -4,15 +4,15 @@ import (
 	"errors"
 	"sync"
 
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 )
 
 // MemJobDB is a memory db, maintains job, object and piece job table.
 type MemJobDB struct {
 	JobCount               uint64
-	JobTable               map[uint64]types.JobContext
-	ObjectTable            map[string]types.ObjectInfo
+	JobTable               map[uint64]ptypesv1pb.JobContext
+	ObjectTable            map[string]ptypesv1pb.ObjectInfo
 	PrimaryPieceJobTable   map[string]map[uint32]jobdb.PieceJob
 	SecondaryPieceJobTable map[string]map[uint32]jobdb.PieceJob
 	mu                     sync.RWMutex
@@ -22,23 +22,23 @@ type MemJobDB struct {
 func NewMemJobDB() *MemJobDB {
 	return &MemJobDB{
 		JobCount:               0,
-		JobTable:               make(map[uint64]types.JobContext),
-		ObjectTable:            make(map[string]types.ObjectInfo),
+		JobTable:               make(map[uint64]ptypesv1pb.JobContext),
+		ObjectTable:            make(map[string]ptypesv1pb.ObjectInfo),
 		PrimaryPieceJobTable:   make(map[string]map[uint32]jobdb.PieceJob),
 		SecondaryPieceJobTable: make(map[string]map[uint32]jobdb.PieceJob),
 	}
 }
 
 // CreateUploadPayloadJob create a job info for special object.
-func (db *MemJobDB) CreateUploadPayloadJob(txHash []byte, info *types.ObjectInfo) (uint64, error) {
+func (db *MemJobDB) CreateUploadPayloadJob(txHash []byte, info *ptypesv1pb.ObjectInfo) (uint64, error) {
 	if info == nil {
 		return 0, errors.New("object info is nil")
 	}
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	db.JobTable[db.JobCount] = types.JobContext{
+	db.JobTable[db.JobCount] = ptypesv1pb.JobContext{
 		JobId:    db.JobCount,
-		JobState: types.JobState_JOB_STATE_CREATE_OBJECT_DONE,
+		JobState: ptypesv1pb.JobState_JOB_STATE_CREATE_OBJECT_DONE,
 	}
 	info.JobId = db.JobCount
 	db.ObjectTable[string(txHash)] = *info
@@ -62,7 +62,7 @@ func (db *MemJobDB) SetObjectCreateHeightAndObjectID(txHash []byte, height uint6
 }
 
 // GetObjectInfo returns the object info by create object transaction hash.
-func (db *MemJobDB) GetObjectInfo(txHash []byte) (*types.ObjectInfo, error) {
+func (db *MemJobDB) GetObjectInfo(txHash []byte) (*ptypesv1pb.ObjectInfo, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	objectInfo, ok := db.ObjectTable[string(txHash)]
@@ -73,7 +73,7 @@ func (db *MemJobDB) GetObjectInfo(txHash []byte) (*types.ObjectInfo, error) {
 }
 
 // GetJobContext returns the job info .
-func (db *MemJobDB) GetJobContext(jobId uint64) (*types.JobContext, error) {
+func (db *MemJobDB) GetJobContext(jobId uint64) (*ptypesv1pb.JobContext, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	job, ok := db.JobTable[jobId]
@@ -91,11 +91,11 @@ func (db *MemJobDB) SetUploadPayloadJobState(jobId uint64, state string, timesta
 	if !ok {
 		return errors.New("job is not exist")
 	}
-	jobState, ok := types.JobState_value[state]
+	jobState, ok := ptypesv1pb.JobState_value[state]
 	if !ok {
 		return errors.New("state is not correct job state")
 	}
-	job.JobState = (types.JobState)(jobState)
+	job.JobState = (ptypesv1pb.JobState)(jobState)
 	job.ModifyTime = timestamp
 	db.JobTable[jobId] = job
 	return nil
@@ -109,11 +109,11 @@ func (db *MemJobDB) SetUploadPayloadJobJobError(jobId uint64, state string, jobE
 	if !ok {
 		return errors.New("job is not exist")
 	}
-	jobState, ok := types.JobState_value[state]
+	jobState, ok := ptypesv1pb.JobState_value[state]
 	if !ok {
 		return errors.New("state is not correct job state")
 	}
-	job.JobState = (types.JobState)(jobState)
+	job.JobState = (ptypesv1pb.JobState)(jobState)
 	job.ModifyTime = timestamp
 	job.JobErr = jobErr
 	db.JobTable[jobId] = job

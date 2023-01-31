@@ -2,13 +2,14 @@ package storage
 
 import (
 	"context"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"io"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 )
 
 func setupMemoryTest(t *testing.T) *memoryStore {

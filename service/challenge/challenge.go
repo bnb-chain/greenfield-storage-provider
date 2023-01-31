@@ -11,7 +11,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -73,7 +73,7 @@ func (challenge *Challenge) Start(ctx context.Context) error {
 			return
 		}
 		grpcServer := grpc.NewServer()
-		service.RegisterChallengeServiceServer(grpcServer, challenge)
+		stypesv1pb.RegisterChallengeServiceServer(grpcServer, challenge)
 		reflection.Register(grpcServer)
 		if err = grpcServer.Serve(lis); err != nil {
 			log.Errorw("syncer serve failed", "error", err)

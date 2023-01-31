@@ -8,7 +8,7 @@ import (
 
 	"github.com/urfave/cli"
 
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	cliCtx "github.com/bnb-chain/greenfield-storage-provider/test/test_tool/context"
 )
 
@@ -35,7 +35,7 @@ func queryStone(c *cli.Context) {
 		fmt.Println("tx hash param decode error: ", err)
 		return
 	}
-	req := &service.StoneHubServiceQueryStoneRequest{
+	req := &stypesv1pb.StoneHubServiceQueryStoneRequest{
 		TxHash: txHash,
 	}
 	client, err := GetStoneHubClient()

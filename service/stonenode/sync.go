@@ -11,15 +11,15 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/redundancy"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // syncPieceToSecondarySP load segment data from primary and sync to secondary.
-func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, allocResp *service.StoneHubServiceAllocStoneJobResponse) error {
+func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, allocResp *stypesv1pb.StoneHubServiceAllocStoneJobResponse) error {
 	// TBD:: check secondarySPs count by redundancyType.
 	// EC_TYPE need EC_M + EC_K + backup
 	// REPLICA_TYPE and INLINE_TYPE need segments count + backup
@@ -57,11 +57,11 @@ func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, allocR
 	return nil
 }
 
-func checkRedundancyType(redundancyType ptypes.RedundancyType) error {
+func checkRedundancyType(redundancyType ptypesv1pb.RedundancyType) error {
 	switch redundancyType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		return nil
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		return nil
 	default:
 		return merrors.ErrRedundancyType
@@ -70,7 +70,7 @@ func checkRedundancyType(redundancyType ptypes.RedundancyType) error {
 
 // loadSegmentsData load segment data from primary storage provider.
 // returned map key is segmentKey, value is corresponding ec data from ec1 to ec6, or segment data
-func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *service.StoneHubServiceAllocStoneJobResponse) (
+func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *stypesv1pb.StoneHubServiceAllocStoneJobResponse) (
 	map[string][][]byte, error) {
 	type segment struct {
 		objectID       uint64
@@ -78,7 +78,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		segmentData    []byte
 		pieceData      [][]byte
 		pieceErr       error
-		redundancyType ptypes.RedundancyType
+		redundancyType ptypesv1pb.RedundancyType
 	}
 	var (
 		doneSegments   int64
@@ -161,15 +161,15 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 }
 
 // spiltSegmentData spilt segment data into pieces data.
-func (node *StoneNodeService) generatePieceData(redundancyType ptypes.RedundancyType, segmentData []byte) (
+func (node *StoneNodeService) generatePieceData(redundancyType ptypesv1pb.RedundancyType, segmentData []byte) (
 	pieceData [][]byte, err error) {
 	switch redundancyType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		pieceData, err = redundancy.EncodeRawSegment(segmentData)
 		if err != nil {
 			return
 		}
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		pieceData = append(pieceData, segmentData)
 	default:
 		return nil, merrors.ErrRedundancyType
@@ -179,7 +179,7 @@ func (node *StoneNodeService) generatePieceData(redundancyType ptypes.Redundancy
 
 // dispatchSecondarySP dispatch piece data to secondary storage provider.
 // returned map key is spID, value map key is ec piece key or segment key, value map's value is piece data
-func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string][][]byte, redundancyType ptypes.RedundancyType,
+func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string][][]byte, redundancyType ptypesv1pb.RedundancyType,
 	secondarySPs []string, targetIdx []uint32) (map[string]map[string][]byte, error) {
 	pieceDataBySecondary := make(map[string]map[string][]byte)
 
@@ -210,7 +210,7 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string]
 }
 
 func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, targetIdx []uint32,
-	redundancyType ptypes.RedundancyType) (map[string]map[string][]byte, error) {
+	redundancyType ptypesv1pb.RedundancyType) (map[string]map[string][]byte, error) {
 	ecPieceDataMap := make(map[string]map[string][]byte)
 	for pieceKey, pieceData := range pieceDataBySegment {
 		//if len(pieceData) != 6 {
@@ -237,7 +237,7 @@ func fillECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, t
 				for _, index := range targetIdx {
 					if int(index) == idx {
 						switch redundancyType {
-						case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+						case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 							ecPieceDataMap[sp][pieceKey] = data
 						default:
 							key := piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, uint32(idx))
@@ -291,7 +291,7 @@ func fillReplicaOrInlineData(pieceDataBySegment map[string][][]byte, secondarySP
 }
 
 // doSyncToSecondarySP send piece data to the secondary.
-func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *service.StoneHubServiceAllocStoneJobResponse,
+func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *stypesv1pb.StoneHubServiceAllocStoneJobResponse,
 	pieceDataBySecondary map[string]map[string][]byte) error {
 	var (
 		objectID       = resp.GetPieceJob().GetObjectId()
@@ -302,8 +302,8 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 	)
 	for secondary, pieceData := range pieceDataBySecondary {
 		go func(secondary string, pieceData map[string][]byte) {
-			errMsg := &service.ErrMessage{}
-			pieceJob := &service.PieceJob{
+			errMsg := &stypesv1pb.ErrMessage{}
+			pieceJob := &stypesv1pb.PieceJob{
 				TxHash:         txHash,
 				ObjectId:       objectID,
 				PayloadSize:    payloadSize,
@@ -312,7 +312,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 
 			defer func() {
 				// notify stone hub when an ec segment is done
-				req := &service.StoneHubServiceDoneSecondaryPieceJobRequest{
+				req := &stypesv1pb.StoneHubServiceDoneSecondaryPieceJobRequest{
 					TraceId:    resp.GetTraceId(),
 					TxHash:     pieceJob.GetTxHash(),
 					PieceJob:   pieceJob,
@@ -325,7 +325,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 				}
 			}()
 
-			syncResp, err := node.syncPiece(ctx, &service.SyncerInfo{
+			syncResp, err := node.syncPiece(ctx, &stypesv1pb.SyncerInfo{
 				ObjectId:          objectID,
 				TxHash:            txHash,
 				StorageProviderId: secondary,
@@ -335,7 +335,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 			// TBD:: retry alloc secondary sp and rat again.
 			if err != nil {
 				log.CtxErrorw(ctx, "sync to secondary piece job failed", "error", err)
-				errMsg.ErrCode = service.ErrCode_ERR_CODE_ERROR
+				errMsg.ErrCode = stypesv1pb.ErrCode_ERR_CODE_ERROR
 				errMsg.ErrMsg = err.Error()
 				return
 			}
@@ -350,7 +350,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 			if syncResp.GetSecondarySpInfo() == nil || syncResp.GetSecondarySpInfo().GetIntegrityHash() == nil ||
 				!bytes.Equal(integrityHash, syncResp.GetSecondarySpInfo().GetIntegrityHash()) {
 				log.CtxErrorw(ctx, "secondary integrity hash check error")
-				errMsg.ErrCode = service.ErrCode_ERR_CODE_ERROR
+				errMsg.ErrCode = stypesv1pb.ErrCode_ERR_CODE_ERROR
 				errMsg.ErrMsg = merrors.ErrIntegrityHash.Error()
 				return
 			}
@@ -364,16 +364,16 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *ser
 }
 
 // reportErrToStoneHub send error message to stone hub.
-func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *service.StoneHubServiceAllocStoneJobResponse,
+func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *stypesv1pb.StoneHubServiceAllocStoneJobResponse,
 	reportErr error) {
 	if reportErr == nil {
 		return
 	}
-	req := &service.StoneHubServiceDoneSecondaryPieceJobRequest{
+	req := &stypesv1pb.StoneHubServiceDoneSecondaryPieceJobRequest{
 		TraceId: resp.GetTraceId(),
 		TxHash:  resp.GetTxHash(),
-		ErrMessage: &service.ErrMessage{
-			ErrCode: service.ErrCode_ERR_CODE_ERROR,
+		ErrMessage: &stypesv1pb.ErrMessage{
+			ErrCode: stypesv1pb.ErrCode_ERR_CODE_ERROR,
 			ErrMsg:  reportErr.Error(),
 		},
 	}
@@ -385,8 +385,8 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *ser
 }
 
 // SyncPiece send rpc request to secondary storage provider to sync the piece data.
-func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *service.SyncerInfo,
-	pieceData map[string][]byte, traceID string) (*service.SyncerServiceSyncPieceResponse, error) {
+func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *stypesv1pb.SyncerInfo,
+	pieceData map[string][]byte, traceID string) (*stypesv1pb.SyncerServiceSyncPieceResponse, error) {
 	log.CtxInfow(ctx, "stone node upload piece data", "redundancy_type", syncerInfo.GetRedundancyType(),
 		"spID", util.SpReadable(syncerInfo.GetStorageProviderId()), "length", len(pieceData))
 	stream, err := node.syncer.SyncPiece(ctx)
@@ -399,7 +399,7 @@ func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *service
 	for key, value := range pieceData {
 		innerMap := make(map[string][]byte)
 		innerMap[key] = value
-		if err := stream.Send(&service.SyncerServiceSyncPieceRequest{
+		if err := stream.Send(&stypesv1pb.SyncerServiceSyncPieceRequest{
 			TraceId:    traceID,
 			SyncerInfo: syncerInfo,
 			PieceData:  innerMap,
@@ -414,7 +414,7 @@ func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *service
 		log.Errorw("client close error", "error", err, "traceID", resp.GetTraceId())
 		return nil, err
 	}
-	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.Errorw("sync piece sends to stone node response code is not success", "error", err, "traceID", resp.GetTraceId())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}

@@ -6,8 +6,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 func setup(t *testing.T) *StoneNodeService {
@@ -24,18 +24,18 @@ func setup(t *testing.T) *StoneNodeService {
 	}
 }
 
-func mockAllocResp(objectID uint64, payloadSize uint64, redundancyType ptypes.RedundancyType) *service.StoneHubServiceAllocStoneJobResponse {
-	return &service.StoneHubServiceAllocStoneJobResponse{
+func mockAllocResp(objectID uint64, payloadSize uint64, redundancyType ptypesv1pb.RedundancyType) *stypesv1pb.StoneHubServiceAllocStoneJobResponse {
+	return &stypesv1pb.StoneHubServiceAllocStoneJobResponse{
 		TraceId: "123456",
 		TxHash:  []byte("blockchain_one"),
-		PieceJob: &service.PieceJob{
+		PieceJob: &stypesv1pb.PieceJob{
 			TxHash:         []byte("blockchain_one"),
 			ObjectId:       objectID,
 			PayloadSize:    payloadSize,
 			TargetIdx:      nil,
 			RedundancyType: redundancyType,
 		},
-		ErrMessage: &service.ErrMessage{
+		ErrMessage: &stypesv1pb.ErrMessage{
 			ErrCode: 0,
 			ErrMsg:  "Success",
 		},
@@ -72,33 +72,33 @@ func dispatchInlineMap() map[string][][]byte {
 func makeStreamMock() *StreamMock {
 	return &StreamMock{
 		ctx:          context.Background(),
-		recvToServer: make(chan *service.SyncerServiceSyncPieceRequest, 10),
+		recvToServer: make(chan *stypesv1pb.SyncerServiceSyncPieceRequest, 10),
 	}
 }
 
 type StreamMock struct {
 	grpc.ClientStream
 	ctx          context.Context
-	recvToServer chan *service.SyncerServiceSyncPieceRequest
+	recvToServer chan *stypesv1pb.SyncerServiceSyncPieceRequest
 }
 
-func (m *StreamMock) Send(resp *service.SyncerServiceSyncPieceRequest) error {
+func (m *StreamMock) Send(resp *stypesv1pb.SyncerServiceSyncPieceRequest) error {
 	m.recvToServer <- resp
 	return nil
 }
 
-func (m *StreamMock) CloseAndRecv() (*service.SyncerServiceSyncPieceResponse, error) {
-	return &service.SyncerServiceSyncPieceResponse{
+func (m *StreamMock) CloseAndRecv() (*stypesv1pb.SyncerServiceSyncPieceResponse, error) {
+	return &stypesv1pb.SyncerServiceSyncPieceResponse{
 		TraceId: "test_traceID",
-		SecondarySpInfo: &service.StorageProviderSealInfo{
+		SecondarySpInfo: &stypesv1pb.StorageProviderSealInfo{
 			StorageProviderId: "sp1",
 			PieceIdx:          1,
 			PieceChecksum:     [][]byte{[]byte("1"), []byte("2"), []byte("3"), []byte("4"), []byte("5"), []byte("6")},
 			IntegrityHash:     []byte("a"),
 			Signature:         nil,
 		},
-		ErrMessage: &service.ErrMessage{
-			ErrCode: service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
+		ErrMessage: &stypesv1pb.ErrMessage{
+			ErrCode: stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
 			ErrMsg:  "Success",
 		},
 	}, nil
