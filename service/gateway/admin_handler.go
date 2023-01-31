@@ -48,6 +48,6 @@ func (g *Gateway) getAuthenticationHandler(w http.ResponseWriter, r *http.Reques
 		errorDescription = InternalError
 		return
 	}
-	w.Header().Set(model.BFSRequestIDHeader, requestContext.requestID)
-	w.Header().Set(model.BFSPreSignatureHeader, hex.EncodeToString(info.preSignature))
+	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
+	w.Header().Set(model.GnfdPreSignatureHeader, hex.EncodeToString(info.preSignature))
 }
