@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	pbPkg "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/gorilla/mux"
 )
@@ -89,10 +89,9 @@ func generateRequestDetail(r *requestContext) string {
 }
 
 // redundancyType can be EC or Replica, if != EC, default is Replica
-func redundancyTypeToEnum(redundancyType string) pbPkg.RedundancyType {
+func redundancyTypeToEnum(redundancyType string) ptypesv1pb.RedundancyType {
 	if redundancyType == model.ReplicaRedundancyTypeHeaderValue {
-		return pbPkg.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
+		return ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
 	}
-	return pbPkg.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
-
+	return ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
 }

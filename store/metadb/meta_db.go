@@ -1,14 +1,14 @@
 package metadb
 
-import types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+import ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 
 // IntegrityMeta defines the integrity hash info
 type IntegrityMeta struct {
-	ObjectID       uint64               `json:"ObjectID"`
-	PieceIdx       uint32               `json:"PieceIdx"` // only use for ec piece and secondary
-	PieceCount     uint32               `json:"PieceCount"`
-	IsPrimary      bool                 `json:"IsPrimary"`
-	RedundancyType types.RedundancyType `json:"RedundancyType"`
+	ObjectID       uint64                    `json:"ObjectID"`
+	PieceIdx       uint32                    `json:"PieceIdx"` // only use for ec piece and secondary
+	PieceCount     uint32                    `json:"PieceCount"`
+	IsPrimary      bool                      `json:"IsPrimary"`
+	RedundancyType ptypesv1pb.RedundancyType `json:"RedundancyType"`
 
 	IntegrityHash []byte            `json:"IntegrityHash"`
 	PieceHash     map[string][]byte `json:"PieceHash"`

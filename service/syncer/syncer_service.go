@@ -7,8 +7,8 @@ import (
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
@@ -16,7 +16,7 @@ import (
 )
 
 // SyncPiece syncs piece data to secondary storage provider
-func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
+func (s *Syncer) SyncPiece(stream stypesv1pb.SyncerService_SyncPieceServer) error {
 	var count uint32
 	var integrityMeta *metadb.IntegrityMeta
 	var key string
@@ -49,11 +49,11 @@ func (s *Syncer) SyncPiece(stream service.SyncerService_SyncPieceServer) error {
 			if err := s.setIntegrityMeta(s.metaDB, integrityMeta); err != nil {
 				return err
 			}
-			resp := &service.SyncerServiceSyncPieceResponse{
+			resp := &stypesv1pb.SyncerServiceSyncPieceResponse{
 				TraceId:         req.GetTraceId(),
 				SecondarySpInfo: sealInfo,
-				ErrMessage: &service.ErrMessage{
-					ErrCode: service.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
+				ErrMessage: &stypesv1pb.ErrMessage{
+					ErrCode: stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
 					ErrMsg:  "success",
 				},
 			}
@@ -83,7 +83,7 @@ func (s *Syncer) setIntegrityMeta(db metadb.MetaDB, meta *metadb.IntegrityMeta) 
 	return nil
 }
 
-func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *service.StorageProviderSealInfo {
+func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypesv1pb.StorageProviderSealInfo {
 	keys := util.GenericSortedKeys(integrityMeta.PieceHash)
 	pieceChecksumList := make([][]byte, 0)
 	var integrityHash []byte
@@ -92,7 +92,7 @@ func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *service
 		pieceChecksumList = append(pieceChecksumList, value)
 	}
 	integrityHash = hash.GenerateIntegrityHash(pieceChecksumList)
-	resp := &service.StorageProviderSealInfo{
+	resp := &stypesv1pb.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          integrityMeta.PieceIdx,
 		PieceChecksum:     pieceChecksumList,
@@ -102,7 +102,7 @@ func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *service
 	return resp
 }
 
-func (s *Syncer) handlePieceData(req *service.SyncerServiceSyncPieceRequest) (*metadb.IntegrityMeta, string, []byte, error) {
+func (s *Syncer) handlePieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest) (*metadb.IntegrityMeta, string, []byte, error) {
 	if len(req.GetPieceData()) != 1 {
 		return nil, "", nil, errors.New("the length of piece data map is not equal to 1")
 	}
@@ -134,13 +134,13 @@ func (s *Syncer) handlePieceData(req *service.SyncerServiceSyncPieceRequest) (*m
 	return integrityMeta, key, value, nil
 }
 
-func parsePieceIndex(redundancyType ptypes.RedundancyType, key string) (uint32, error) {
+func parsePieceIndex(redundancyType ptypesv1pb.RedundancyType, key string) (uint32, error) {
 	var (
 		err        error
 		pieceIndex uint32
 	)
 	switch redundancyType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		_, pieceIndex, err = piecestore.DecodeSegmentPieceKey(key)
 	default: // ec type
 		_, _, pieceIndex, err = piecestore.DecodeECPieceKey(key)
