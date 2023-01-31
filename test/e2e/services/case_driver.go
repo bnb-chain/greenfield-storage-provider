@@ -43,7 +43,7 @@ func runCase1() {
 			log.Errorw("get auth failed, due to new request", "error", err)
 			return
 		}
-		req.Header.Add(model.BFSResourceHeader, "test_bucket/case1")
+		req.Header.Add(model.GnfdResourceHeader, "test_bucket/case1")
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get auth failed, due to send request", "error", err)
@@ -75,7 +75,7 @@ func runCase1() {
 			return
 		}
 		req.Host = "test_bucket.bfs.nodereal.com"
-		req.Header.Add(model.BFSTransactionHashHeader, generateRandString(64))
+		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "1")
 		res, err := client.Do(req)
 		if err != nil {
@@ -130,7 +130,7 @@ func runCase2() {
 			log.Errorw("get auth failed, due to new request", "error", err)
 			return
 		}
-		req.Header.Add(model.BFSResourceHeader, "test_bucket/case2")
+		req.Header.Add(model.GnfdResourceHeader, "test_bucket/case2")
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get auth failed, due to send request", "error", err)
@@ -162,9 +162,9 @@ func runCase2() {
 			return
 		}
 		req.Host = "test_bucket.bfs.nodereal.com"
-		req.Header.Add(model.BFSTransactionHashHeader, generateRandString(64))
+		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "67108864")
-		req.Header.Add(model.BFSRedundancyTypeHeader, model.ReplicaRedundancyTypeHeaderValue)
+		req.Header.Add(model.GnfdRedundancyTypeHeader, model.ReplicaRedundancyTypeHeaderValue)
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -219,7 +219,7 @@ func runCase3() {
 			log.Errorw("get auth failed, due to new request", "error", err)
 			return
 		}
-		req.Header.Add(model.BFSResourceHeader, "test_bucket/case3")
+		req.Header.Add(model.GnfdResourceHeader, "test_bucket/case3")
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get auth failed, due to send request", "error", err)
@@ -251,7 +251,7 @@ func runCase3() {
 			return
 		}
 		req.Host = "test_bucket.bfs.nodereal.com"
-		req.Header.Add(model.BFSTransactionHashHeader, generateRandString(64))
+		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "209715200")
 		res, err := client.Do(req)
 		if err != nil {
