@@ -5,11 +5,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client/mock"

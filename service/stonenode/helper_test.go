@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"google.golang.org/grpc"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
