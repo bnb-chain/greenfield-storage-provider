@@ -28,11 +28,13 @@ func (node *StoneNodeService) syncPieceToSecondarySP(ctx context.Context, allocR
 	// check redundancyType and targetIdx is valid
 	redundancyType := allocResp.GetPieceJob().GetRedundancyType()
 	if err := checkRedundancyType(redundancyType); err != nil {
+		log.CtxErrorw(ctx, "invalid redundancy type", "redundancy type", redundancyType)
 		node.reportErrToStoneHub(ctx, allocResp, err)
 		return err
 	}
 	targetIdx := allocResp.GetPieceJob().GetTargetIdx()
 	if len(targetIdx) == 0 {
+		log.CtxError(ctx, "invalid target idx length")
 		node.reportErrToStoneHub(ctx, allocResp, merrors.ErrEmptyTargetIdx)
 		return merrors.ErrEmptyTargetIdx
 	}
@@ -160,7 +162,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 	return pieces, loadSegmentErr
 }
 
-// spiltSegmentData spilt segment data into pieces data.
+// generatePieceData spilt segment data into piece data.
 func (node *StoneNodeService) generatePieceData(redundancyType ptypesv1pb.RedundancyType, segmentData []byte) (
 	pieceData [][]byte, err error) {
 	switch redundancyType {
@@ -223,13 +225,6 @@ func dispatchECData(pieceDataBySegment map[string][][]byte, secondarySPs []strin
 					ecPieceDataMap[sp][key] = data
 				}
 			}
-
-			//for _, index := range targetIdx {
-			//	if int(index) == idx {
-			//		key := piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, uint32(idx))
-			//		ecPieceDataMap[sp][key] = data
-			//	}
-			//}
 		}
 	}
 	return ecPieceDataMap, nil
@@ -266,34 +261,6 @@ func dispatchReplicaOrInlineData(pieceDataBySegment map[string][][]byte, seconda
 			}
 		}
 	}
-
-	// iterate map in order
-	/*
-		keys := util.GenericSortedKeys(pieceDataBySegment)
-		for i := 0; i < len(keys); i++ {
-			pieceKey := keys[i]
-			pieceData := pieceDataBySegment[pieceKey]
-			if len(pieceData) != 1 {
-				return nil, merrors.ErrInvalidSegmentData
-			}
-
-			// each segment piece data writes to different sp
-			sp := secondarySPs[i]
-			for _, index := range targetIdx {
-				if int(index) == i {
-					if _, ok := replicaOrInlineDataMap[sp]; !ok {
-						replicaOrInlineDataMap[sp] = make(map[string][]byte)
-					}
-				}
-			}
-
-			for _, index := range targetIdx {
-				if int(index) == i {
-					replicaOrInlineDataMap[sp][pieceKey] = pieceData[0]
-				}
-			}
-		}
-	*/
 	return replicaOrInlineDataMap, nil
 }
 
@@ -393,8 +360,6 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *sty
 // syncPiece send rpc request to secondary storage provider to sync the piece data.
 func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *stypesv1pb.SyncerInfo,
 	pieceData map[string][]byte, traceID string) (*stypesv1pb.SyncerServiceSyncPieceResponse, error) {
-	log.CtxInfow(ctx, "stone node upload piece data", "redundancy_type", syncerInfo.GetRedundancyType(),
-		"spID", util.SpReadable(syncerInfo.GetStorageProviderId()), "length", len(pieceData))
 	stream, err := node.syncer.SyncPiece(ctx)
 	if err != nil {
 		log.Errorw("sync secondary piece job error", "err", err)
