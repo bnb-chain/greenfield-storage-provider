@@ -30,9 +30,9 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, generateRequestDetail(requestContext))
+			log.Warnf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
@@ -55,16 +55,16 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// todo: check more params
-	sizeStr := requestContext.r.Header.Get(model.GnfdContentLengthHeader)
+	sizeStr := requestContext.request.Header.Get(model.GnfdContentLengthHeader)
 	sizeInt, _ := strconv.Atoi(sizeStr)
-	isPrivate, _ := strconv.ParseBool(requestContext.r.Header.Get(model.GnfdIsPrivateHeader))
+	isPrivate, _ := strconv.ParseBool(requestContext.request.Header.Get(model.GnfdIsPrivateHeader))
 	option := &putObjectTxOption{
 		requestContext: requestContext,
 		objectSize:     uint64(sizeInt),
-		contentType:    requestContext.r.Header.Get(model.GnfdContentTypeHeader),
-		checksum:       []byte(requestContext.r.Header.Get(model.GnfdChecksumHeader)),
+		contentType:    requestContext.request.Header.Get(model.GnfdContentTypeHeader),
+		checksum:       []byte(requestContext.request.Header.Get(model.GnfdChecksumHeader)),
 		isPrivate:      isPrivate,
-		redundancyType: requestContext.r.Header.Get(model.GnfdRedundancyTypeHeader),
+		redundancyType: requestContext.request.Header.Get(model.GnfdRedundancyTypeHeader),
 	}
 	info, err := g.uploadProcessor.putObjectTx(requestContext.objectName, option)
 	if err != nil {
@@ -100,9 +100,9 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "putObject", statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "putObject", statusCode, generateRequestDetail(requestContext))
+			log.Warnf("action(%v) statusCode(%v) %v", "putObject", statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
@@ -124,7 +124,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = UnauthorizedAccess
 		return
 	}
-	txHash, err := hex.DecodeString(requestContext.r.Header.Get(model.GnfdTransactionHashHeader))
+	txHash, err := hex.DecodeString(requestContext.request.Header.Get(model.GnfdTransactionHashHeader))
 	if err != nil && len(txHash) != hash.LengthHash {
 		errorDescription = InvalidTxHash
 		return
@@ -168,9 +168,9 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "getObject", statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "getObject", statusCode, generateRequestDetail(requestContext))
+			log.Warnf("action(%v) statusCode(%v) %v", "getObject", statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
@@ -224,9 +224,9 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, generateRequestDetail(requestContext))
+			log.Warnf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
@@ -249,19 +249,19 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txHash, err := hex.DecodeString(requestContext.r.Header.Get(model.GnfdTransactionHashHeader))
+	txHash, err := hex.DecodeString(requestContext.request.Header.Get(model.GnfdTransactionHashHeader))
 	if err != nil && len(txHash) != hash.LengthHash {
 		errorDescription = InvalidTxHash
 		return
 	}
 
-	sizeStr := requestContext.r.Header.Get(model.ContentLengthHeader)
+	sizeStr := requestContext.request.Header.Get(model.ContentLengthHeader)
 	sizeInt, _ := strconv.Atoi(sizeStr)
 	option := &putObjectOption{
 		requestContext: requestContext,
 		txHash:         txHash,
 		size:           uint64(sizeInt),
-		redundancyType: requestContext.r.Header.Get(model.GnfdRedundancyTypeHeader),
+		redundancyType: requestContext.request.Header.Get(model.GnfdRedundancyTypeHeader),
 	}
 
 	info, err := g.uploadProcessor.putObjectV2(requestContext.objectName, r.Body, option)

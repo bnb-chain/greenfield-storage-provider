@@ -23,9 +23,9 @@ func (g *Gateway) getAuthenticationHandler(w http.ResponseWriter, r *http.Reques
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "getAuthentication", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "getAuthentication", statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "getAuthentication", statusCode, generateRequestDetail(requestContext))
+			log.Warnf("action(%v) statusCode(%v) %v", "getAuthentication", statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 

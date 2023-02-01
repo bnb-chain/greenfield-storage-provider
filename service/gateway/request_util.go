@@ -1,14 +1,19 @@
 package gateway
 
 import (
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-sdk-go/pkg/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 )
 
@@ -17,7 +22,7 @@ type requestContext struct {
 	requestID  string
 	bucketName string
 	objectName string
-	r          *http.Request
+	request    *http.Request
 	startTime  time.Time
 
 	// admin fields
@@ -44,7 +49,7 @@ func newRequestContext(r *http.Request) *requestContext {
 			bucketName: bucket,
 			objectName: object,
 			actionName: vars["action"],
-			r:          r,
+			request:    r,
 			startTime:  time.Now(),
 		}
 	}
@@ -54,13 +59,13 @@ func newRequestContext(r *http.Request) *requestContext {
 		requestID:  util.GenerateRequestID(),
 		bucketName: vars["bucket"],
 		objectName: vars["object"],
-		r:          r,
+		request:    r,
 		startTime:  time.Now(),
 	}
 }
 
 // generateRequestDetail is used to log print detailed info.
-func generateRequestDetail(r *requestContext) string {
+func (requestContext *requestContext) generateRequestDetail() string {
 	var headerToString = func(header http.Header) string {
 		var sb = strings.Builder{}
 		for k := range header {
@@ -85,7 +90,75 @@ func generateRequestDetail(r *requestContext) string {
 		return IPAddress
 	}
 	return fmt.Sprintf("requestID(%v) host(%v) method(%v) url(%v) header(%v) remote(%v) cost(%v)",
-		r.requestID, r.r.Host, r.r.Method, r.r.URL.String(), headerToString(r.r.Header), getRequestIP(r.r), time.Since(r.startTime))
+		requestContext.requestID, requestContext.request.Host, requestContext.request.Method,
+		requestContext.request.URL.String(), headerToString(requestContext.request.Header),
+		getRequestIP(requestContext.request), time.Since(requestContext.startTime))
+}
+
+const (
+	AuthSignedRequest = "SignedRequest"
+	AuthSignature     = "Signature"
+)
+
+var (
+	ErrAuthFormat          = errors.New("authorization format error")
+	ErrRequestConsistent   = errors.New("request consistent check failed")
+	ErrSignatureConsistent = errors.New("signature consistent check failed")
+)
+
+// verifySign used to verify request signature, return nil if check succeed
+func (requestContext *requestContext) verifySign() error {
+	var (
+		signedRequest string
+		signature     []byte
+		err           error
+	)
+
+	// parse sign
+	requestSignature := requestContext.request.Header.Get(model.GnfdAuthorizationHeader)
+	if !strings.HasPrefix(requestSignature, model.SignAlgorithm) {
+		// todo: return a has no auth error in future
+		return nil
+	}
+	requestSignature = requestSignature[len(model.SignAlgorithm):]
+	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
+	signatureItems := strings.Split(requestSignature, ",")
+	if len(signatureItems) < 2 {
+		return ErrAuthFormat
+	}
+	for _, item := range signatureItems {
+		pair := strings.Split(item, "=")
+		if len(pair) != 2 {
+			return ErrAuthFormat
+		}
+		switch pair[0] {
+		case AuthSignedRequest:
+			signedRequest = pair[1]
+		case AuthSignature:
+			if signature, err = hex.DecodeString(pair[1]); err != nil {
+				return err
+			}
+		default:
+			return ErrAuthFormat
+		}
+	}
+
+	// check request integrity
+	// todo: GetStringToSign maybe has bug; getCanonicalHeaders
+	if signer.GetStringToSign(*requestContext.request) != signedRequest {
+		return ErrRequestConsistent
+	}
+
+	// check signature consistent
+	signedRequestHash := crypto.Keccak256([]byte(signedRequest))
+	_, pk, err := signer.RecoverAddr(signedRequestHash, signature)
+	if err != nil {
+		return ErrSignatureConsistent
+	}
+	if !secp256k1.VerifySignature(pk.Bytes(), signedRequestHash, signature[:len(signature)-1]) {
+		return ErrSignatureConsistent
+	}
+	return nil
 }
 
 // redundancyType can be EC or Replica, if != EC, default is Replica
