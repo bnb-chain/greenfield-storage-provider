@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"google.golang.org/grpc"
 
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
@@ -19,7 +20,7 @@ func setup(t *testing.T) *StoneNodeService {
 			StorageProvider:        "test",
 			StoneJobLimit:          0,
 		},
-		name:       ServiceNameStoneNode,
+		name:       model.StoneNodeService,
 		stoneLimit: 0,
 	}
 }

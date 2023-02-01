@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
@@ -17,7 +18,7 @@ import (
 
 func TestInitClientFailed(t *testing.T) {
 	node := &StoneNodeService{
-		name:       ServiceNameStoneNode,
+		name:       model.StoneNodeService,
 		stoneLimit: 0,
 	}
 	node.running.Store(true)
