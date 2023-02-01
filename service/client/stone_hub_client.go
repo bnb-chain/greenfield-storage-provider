@@ -6,10 +6,10 @@ import (
 	"io"
 	"time"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
