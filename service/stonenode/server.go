@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	AllocStonePeriod = time.Second * 1
+	allocStonePeriod = time.Second * 1
 )
 
 // StoneNodeService manages stone execution units
@@ -43,7 +43,7 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 	return node, nil
 }
 
-// InitClient inits store client and rpc client
+// initClient inits store client and rpc client
 func (node *StoneNodeService) initClient() error {
 	if node.running.Load() == true {
 		return merrors.ErrStoneNodeStarted
@@ -81,7 +81,7 @@ func (node *StoneNodeService) Start(startCtx context.Context) error {
 	}
 	go func() {
 		var stoneJobCounter int64 // atomic
-		allocTicker := time.NewTicker(AllocStonePeriod)
+		allocTicker := time.NewTicker(allocStonePeriod)
 		ctx, cancel := context.WithCancel(startCtx)
 		for {
 			select {
