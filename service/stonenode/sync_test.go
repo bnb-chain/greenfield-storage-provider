@@ -124,24 +124,6 @@ func Test_loadSegmentsDataPieceStoreError(t *testing.T) {
 	assert.Equal(t, 0, len(result))
 }
 
-func Test_loadSegmentsDataUnknownRedundancyError(t *testing.T) {
-	node := setup(t)
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	ps := mock.NewMockPieceStoreAPI(ctrl)
-	node.store = ps
-	ps.EXPECT().GetPiece(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, key string, offset, limit int64) ([]byte, error) {
-			return []byte("1"), nil
-		}).AnyTimes()
-
-	result, err := node.loadSegmentsData(context.TODO(), mockAllocResp(20230109006, 20*1024*1024,
-		ptypesv1pb.RedundancyType(-1)))
-	assert.Equal(t, merrors.ErrRedundancyType, err)
-	assert.Equal(t, 0, len(result))
-}
-
 func Test_generatePieceData(t *testing.T) {
 	cases := []struct {
 		name         string
@@ -170,13 +152,6 @@ func Test_generatePieceData(t *testing.T) {
 			req2:         []byte("1"),
 			wantedResult: 1,
 			wantedErr:    nil,
-		},
-		{
-			name:         "unknown redundancy type",
-			req1:         ptypesv1pb.RedundancyType(-1),
-			req2:         []byte("1"),
-			wantedResult: 0,
-			wantedErr:    merrors.ErrRedundancyType,
 		},
 	}
 
@@ -216,7 +191,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 			req2:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			req3:         spList,
 			req4:         []uint32{0, 1, 2},
-			wantedResult: 1,
+			wantedResult: 3,
 			wantedErr:    nil,
 		},
 		{
@@ -243,7 +218,7 @@ func Test_dispatchSecondarySP(t *testing.T) {
 			req2:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 			req3:         spList,
 			req4:         []uint32{1, 2},
-			wantedResult: 0,
+			wantedResult: 2,
 			wantedErr:    nil,
 		},
 		{
@@ -255,24 +230,24 @@ func Test_dispatchSecondarySP(t *testing.T) {
 			wantedResult: 0,
 			wantedErr:    merrors.ErrSecondarySPNumber,
 		},
-		//{
-		//	name:         "wrong ec segment data length",
-		//	req1:         dispatchSegmentMap(),
-		//	req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
-		//	req3:         spList,
-		//	req4:         []uint32{0, 1, 2, 3, 4, 5},
-		//	wantedResult: 1,
-		//	wantedErr:    merrors.ErrInvalidECData,
-		//},
-		//{
-		//	name:         "wrong replica/inline segment data length",
-		//	req1:         dispatchPieceMap(),
-		//	req2:         ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
-		//	req3:         spList,
-		//	req4:         []uint32{0, 1, 2, 3, 4, 5},
-		//	wantedResult: 1,
-		//	wantedErr:    merrors.ErrInvalidSegmentData,
-		//},
+		{
+			name:         "wrong ec segment data length",
+			req1:         dispatchSegmentMap(),
+			req2:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+			req3:         spList,
+			req4:         []uint32{0, 1, 2, 3, 4, 5},
+			wantedResult: 0,
+			wantedErr:    merrors.ErrInvalidECData,
+		},
+		{
+			name:         "wrong replica/inline segment data length",
+			req1:         dispatchPieceMap(),
+			req2:         ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+			req3:         spList,
+			req4:         []uint32{0, 1, 2, 3, 4, 5},
+			wantedResult: 0,
+			wantedErr:    merrors.ErrInvalidSegmentData,
+		},
 	}
 
 	node := setup(t)
@@ -356,7 +331,7 @@ func TestSyncPieceSuccess(t *testing.T) {
 	sInfo := &stypesv1pb.SyncerInfo{
 		ObjectId:          123456,
 		TxHash:            []byte("i"),
-		StorageProviderId: "sp1",
+		StorageProviderId: "440246a94fc4257096b8d4fa8db94a5655f455f88555f885b10da1466763f742",
 		RedundancyType:    ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 	}
 	data := map[string][]byte{
