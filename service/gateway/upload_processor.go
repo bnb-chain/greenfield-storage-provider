@@ -247,8 +247,8 @@ func (gui *grpcUploaderImpl) putObject(objectName string, reader io.Reader, opti
 }
 
 // getAuthentication is used to call uploaderService's getAuthentication by grpc.
-func (gui *grpcUploaderImpl) getAuthentication(option *getAuthenticationOption) (*authenticationInfo, error) {
-	resp, err := gui.uploader.GetAuthentication(context.Background(), &stypes.UploaderServiceGetAuthenticationRequest{
+func (gui *grpcUploaderImpl) getApproval(option *getApprovalOption) (*approvalInfo, error) {
+	resp, err := gui.uploader.GetApproval(context.Background(), &stypes.UploaderServiceGetApprovalRequest{
 		TraceId: option.requestContext.requestID,
 		Bucket:  option.requestContext.bucketName,
 		Object:  option.requestContext.objectName,
@@ -258,7 +258,7 @@ func (gui *grpcUploaderImpl) getAuthentication(option *getAuthenticationOption) 
 		log.Warnw("failed to rpc to uploader", "err", err)
 		return nil, errors.ErrInternalError
 	}
-	return &authenticationInfo{preSignature: resp.PreSignature}, nil
+	return &approvalInfo{preSignature: resp.PreSignature}, nil
 }
 
 // putObjectV2 copy from putObject.
@@ -375,17 +375,17 @@ func (up *uploadProcessor) putObject(objectName string, reader io.Reader, option
 	return up.impl.putObject(objectName, reader, option)
 }
 
-type getAuthenticationOption struct {
+type getApprovalOption struct {
 	requestContext *requestContext
 }
-type authenticationInfo struct {
+type approvalInfo struct {
 	preSignature []byte
 }
 
-// getAuthentication call uploaderService getAuthentication interface.
-func (up *uploadProcessor) getAuthentication(option *getAuthenticationOption) (*authenticationInfo, error) {
+// getApproval call uploaderService getAuthentication interface.
+func (up *uploadProcessor) getApproval(option *getApprovalOption) (*approvalInfo, error) {
 	if p, ok := up.impl.(*grpcUploaderImpl); ok {
-		return p.getAuthentication(option)
+		return p.getApproval(option)
 	}
 	return nil, fmt.Errorf("not supported")
 }

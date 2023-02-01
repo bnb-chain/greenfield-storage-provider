@@ -61,6 +61,8 @@ const (
 	GnfdPreSignatureHeader    = "X-Gnfd-Pre-Signature"
 	// GnfdRedundancyTypeHeader can be EC or Replica, EC is default
 	GnfdRedundancyTypeHeader = "X-Gnfd-Redundancy-Type"
+	GnfdAuthorizationHeader  = "Authorization"
+	GnfdDateHeader           = "X-Gnfd-Date"
 
 	// http header key
 	ContentTypeHeader   = "Content-Type"
@@ -70,6 +72,11 @@ const (
 	// header value
 	ContentTypeXMLHeaderValue        = "application/xml"
 	ReplicaRedundancyTypeHeaderValue = "Replica"
+
+	// protocol const value
+	SignAlgorithm = "ECDSA-secp256k1"
+	SignTypeV1    = "authTypeV1"
+	SignTypeV2    = "authTypeV2"
 )
 
 // define backend store type name.

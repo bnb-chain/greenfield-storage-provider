@@ -25,9 +25,9 @@ func (g *Gateway) createBucketHandler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "createBucket", statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "createBucket", statusCode, generateRequestDetail(requestContext))
+			log.Warnf("action(%v) statusCode(%v) %v", "createBucket", statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
@@ -36,8 +36,9 @@ func (g *Gateway) createBucketHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = InvalidBucketName
 		return
 	}
-	if err := requestContext.verifySign(); err != nil {
+	if err = requestContext.verifySign(); err != nil {
 		errorDescription = SignatureDoesNotMatch
+		log.Infow("failed to verify signature", "error", err)
 		return
 	}
 

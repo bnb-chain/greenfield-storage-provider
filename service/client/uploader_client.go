@@ -54,10 +54,10 @@ func (client *UploaderClient) UploadPayload(ctx context.Context, opts ...grpc.Ca
 	return client.uploader.UploadPayload(ctx, opts...)
 }
 
-// GetAuthentication invoke uploader service GetAuthentication interface.
-func (client *UploaderClient) GetAuthentication(ctx context.Context, in *stypes.UploaderServiceGetAuthenticationRequest,
-	opts ...grpc.CallOption) (*stypes.UploaderServiceGetAuthenticationResponse, error) {
-	resp, err := client.uploader.GetAuthentication(ctx, in, opts...)
+// GetApproval invoke uploader service GetApproval interface.
+func (client *UploaderClient) GetApproval(ctx context.Context, in *stypes.UploaderServiceGetApprovalRequest,
+	opts ...grpc.CallOption) (*stypes.UploaderServiceGetApprovalResponse, error) {
+	resp, err := client.uploader.GetApproval(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "send get authentication rpc failed", "error", err)

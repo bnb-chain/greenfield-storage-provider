@@ -28,17 +28,17 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		Path("/{object:.+}").
 		Queries(model.TransactionQuery, "").
 		HandlerFunc(g.putObjectTxHandler)
+	//bucketRouter.NewRoute().
+	//	Name("PutObject").
+	//	Methods(http.MethodPut).
+	//	Path("/{object:.+}").
+	//	Queries(model.PutObjectV2Query, "").
+	//	HandlerFunc(g.putObjectV2Handler)
 	bucketRouter.NewRoute().
 		Name("PutObject").
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
-		Queries(model.PutObjectV2Query, "").
 		HandlerFunc(g.putObjectV2Handler)
-	bucketRouter.NewRoute().
-		Name("PutObject").
-		Methods(http.MethodPut).
-		Path("/{object:.+}").
-		HandlerFunc(g.putObjectHandler)
 	bucketRouter.NewRoute().
 		Name("CreateBucket").
 		Methods(http.MethodPut).

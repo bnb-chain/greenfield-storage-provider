@@ -236,9 +236,9 @@ func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, up
 	return nil
 }
 
-// GetAuthentication get auth info, currently PreSignature is mocked.
-func (uploader *Uploader) GetAuthentication(ctx context.Context, req *stypes.UploaderServiceGetAuthenticationRequest) (
-	resp *stypes.UploaderServiceGetAuthenticationResponse, err error) {
+// GetApproval get auth info, currently PreSignature is mocked.
+func (uploader *Uploader) GetApproval(ctx context.Context, req *stypes.UploaderServiceGetApprovalRequest) (
+	resp *stypes.UploaderServiceGetApprovalResponse, err error) {
 	ctx = log.Context(ctx, req)
 	defer func() {
 		if err != nil {
@@ -249,7 +249,7 @@ func (uploader *Uploader) GetAuthentication(ctx context.Context, req *stypes.Upl
 		}
 	}()
 
-	resp = &stypes.UploaderServiceGetAuthenticationResponse{TraceId: req.TraceId}
+	resp = &stypes.UploaderServiceGetApprovalResponse{TraceId: req.TraceId}
 	meta := &metadb.UploadPayloadAskingMeta{
 		BucketName: req.Bucket,
 		ObjectName: req.Object,

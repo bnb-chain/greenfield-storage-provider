@@ -23,9 +23,9 @@ func (g *Gateway) getAuthenticationHandler(w http.ResponseWriter, r *http.Reques
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "getAuthentication", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "getAuthentication", statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "getAuthentication", statusCode, generateRequestDetail(requestContext))
+			log.Warnf("action(%v) statusCode(%v) %v", "getAuthentication", statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
@@ -35,15 +35,16 @@ func (g *Gateway) getAuthenticationHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := requestContext.verifySign(); err != nil {
+	if err = requestContext.verifySign(); err != nil {
 		errorDescription = SignatureDoesNotMatch
+		log.Infow("failed to verify signature", "error", err)
 		return
 	}
 
-	option := &getAuthenticationOption{
+	option := &getApprovalOption{
 		requestContext: requestContext,
 	}
-	info, err := g.uploadProcessor.getAuthentication(option)
+	info, err := g.uploadProcessor.getApproval(option)
 	if err != nil {
 		errorDescription = InternalError
 		return

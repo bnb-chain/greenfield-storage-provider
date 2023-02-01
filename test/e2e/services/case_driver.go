@@ -9,6 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-sdk-go/pkg/signer"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -35,33 +38,50 @@ const (
 	testDomain = "test_bucket.bfs.nodereal.com"
 )
 
+func signRequest(request *http.Request) error {
+	privKey, _, addr := testdata.KeyEthSecp256k1TestPubAddr()
+	req, err := signer.SignRequest(*request, addr, privKey, signer.AuthInfo{
+		SignType:        model.SignTypeV1,
+		MetaMaskSignStr: "",
+	})
+	if err != nil {
+		log.Errorw("get sign failed, due to ", "error", err)
+		return err
+	}
+	request = req
+	return nil
+}
+
 // case1 128bytes, Inline type, do not need to be segmented(< segment size, 16MB).
 func runCase1() {
 	log.Info("start run case1(128byte, Inline type)")
-	// get auth
+	// get approval
 	{
-		log.Infow("start get auth")
+		log.Infow("start get approval")
 		url := "http://" + gatewayAddress + "/greenfield/admin/v1/get-approval?action=createObject"
 		method := getMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
-			log.Errorw("get auth failed, due to new request", "error", err)
+			log.Errorw("get approval failed, due to new request", "error", err)
 			return
 		}
 		req.Header.Add(model.GnfdResourceHeader, "test_bucket/case1")
+		if err = signRequest(req); err != nil {
+			return
+		}
 		res, err := client.Do(req)
 		if err != nil {
-			log.Errorw("get auth failed, due to send request", "error", err)
+			log.Errorw("get approval failed, due to send request", "error", err)
 			return
 		}
 		defer res.Body.Close()
 		_, err = io.ReadAll(res.Body)
 		if err != nil {
-			log.Errorw("get auth failed, due to read response body", "error", err)
+			log.Errorw("get approval failed, due to read response body", "error", err)
 			return
 		}
-		log.Infow("finish get auth",
+		log.Infow("finish get approval",
 			"preSign", res.Header.Get("X-Bfs-Pre-Signature"),
 			"statusCode", res.StatusCode)
 	}
@@ -72,7 +92,7 @@ func runCase1() {
 		log.Infow("finish prepare data for put object")
 
 		log.Infow("start put object")
-		url := "http://" + gatewayAddress + "/case1?putobjectv2"
+		url := "http://" + gatewayAddress + "/case1"
 		method := putMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(buf))
@@ -82,7 +102,10 @@ func runCase1() {
 		}
 		req.Host = testDomain
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
-		req.Header.Add(model.ContentLengthHeader, "1")
+		req.Header.Add(model.ContentLengthHeader, "64")
+		if err = signRequest(req); err != nil {
+			return
+		}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -110,6 +133,9 @@ func runCase1() {
 			return
 		}
 		req.Host = testDomain
+		if err = signRequest(req); err != nil {
+			return
+		}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -125,30 +151,33 @@ func runCase1() {
 // case2 64MB, Replica type, should be segmented.
 func runCase2() {
 	log.Info("start run case2(64MB, Replica type)")
-	// get auth
+	// get approval
 	{
-		log.Infow("start get auth")
+		log.Infow("start get approval")
 		url := "http://" + gatewayAddress + "/greenfield/admin/v1/get-approval?action=createObject"
 		method := getMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
-			log.Errorw("get auth failed, due to new request", "error", err)
+			log.Errorw("get approval failed, due to new request", "error", err)
 			return
 		}
 		req.Header.Add(model.GnfdResourceHeader, "test_bucket/case2")
+		if err = signRequest(req); err != nil {
+			return
+		}
 		res, err := client.Do(req)
 		if err != nil {
-			log.Errorw("get auth failed, due to send request", "error", err)
+			log.Errorw("get approval failed, due to send request", "error", err)
 			return
 		}
 		defer res.Body.Close()
 		_, err = io.ReadAll(res.Body)
 		if err != nil {
-			log.Errorw("get auth failed, due to read response body", "error", err)
+			log.Errorw("get approval failed, due to read response body", "error", err)
 			return
 		}
-		log.Infow("finish get auth",
+		log.Infow("finish get approval",
 			"preSign", res.Header.Get("X-Bfs-Pre-Signature"),
 			"statusCode", res.StatusCode)
 	}
@@ -159,7 +188,7 @@ func runCase2() {
 		log.Infow("finish prepare data for put object")
 
 		log.Infow("start put object")
-		url := "http://" + gatewayAddress + "/case2?putobjectv2"
+		url := "http://" + gatewayAddress + "/case2"
 		method := putMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(buf))
@@ -171,6 +200,9 @@ func runCase2() {
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "67108864")
 		req.Header.Add(model.GnfdRedundancyTypeHeader, model.ReplicaRedundancyTypeHeaderValue)
+		if err = signRequest(req); err != nil {
+			return
+		}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -198,6 +230,9 @@ func runCase2() {
 			return
 		}
 		req.Host = testDomain
+		if err = signRequest(req); err != nil {
+			return
+		}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -214,30 +249,33 @@ func runCase2() {
 // case3 200MB, EC type, should be segmented.
 func runCase3() {
 	log.Info("start run case3(200MB, EC type)")
-	// get auth
+	// get approval
 	{
-		log.Infow("start get auth")
+		log.Infow("start get approval")
 		url := "http://" + gatewayAddress + "/greenfield/admin/v1/get-approval?action=createObject"
 		method := getMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
-			log.Errorw("get auth failed, due to new request", "error", err)
+			log.Errorw("get approval failed, due to new request", "error", err)
 			return
 		}
 		req.Header.Add(model.GnfdResourceHeader, "test_bucket/case3")
+		if err = signRequest(req); err != nil {
+			return
+		}
 		res, err := client.Do(req)
 		if err != nil {
-			log.Errorw("get auth failed, due to send request", "error", err)
+			log.Errorw("get approval failed, due to send request", "error", err)
 			return
 		}
 		defer res.Body.Close()
 		_, err = io.ReadAll(res.Body)
 		if err != nil {
-			log.Errorw("get auth failed, due to read response body", "error", err)
+			log.Errorw("get approval failed, due to read response body", "error", err)
 			return
 		}
-		log.Infow("finish get auth",
+		log.Infow("finish get approval",
 			"preSign", res.Header.Get("X-Bfs-Pre-Signature"),
 			"statusCode", res.StatusCode)
 	}
@@ -248,7 +286,7 @@ func runCase3() {
 		log.Infow("finish prepare data for put object")
 
 		log.Infow("start put object")
-		url := "http://" + gatewayAddress + "/case3?putobjectv2"
+		url := "http://" + gatewayAddress + "/case3"
 		method := putMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(buf))
@@ -259,6 +297,9 @@ func runCase3() {
 		req.Host = testDomain
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "209715200")
+		if err = signRequest(req); err != nil {
+			return
+		}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -286,6 +327,9 @@ func runCase3() {
 			return
 		}
 		req.Host = testDomain
+		if err = signRequest(req); err != nil {
+			return
+		}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
