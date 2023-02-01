@@ -162,7 +162,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 	return pieces, loadSegmentErr
 }
 
-// generatePieceData spilt segment data into piece data.
+// generatePieceData generates piece data from segment data
 func (node *StoneNodeService) generatePieceData(redundancyType ptypesv1pb.RedundancyType, segmentData []byte) (
 	pieceData [][]byte, err error) {
 	switch redundancyType {
