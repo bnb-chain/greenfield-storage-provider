@@ -327,7 +327,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 				return
 			}
 			pieceJob.StorageProviderSealInfo = syncResp.GetSecondarySpInfo()
-			log.Infow("same integrity hash", "local_integrity_hash", integrityHash, "remote_integrity_hash", syncResp.GetSecondarySpInfo().GetIntegrityHash())
 			log.CtxDebugw(ctx, "sync piece data to secondary", "secondary_provider", secondary,
 				"local_integrity_hash", integrityHash, "remote_integrity_hash", syncResp.GetSecondarySpInfo().GetIntegrityHash())
 			return
