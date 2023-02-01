@@ -88,13 +88,13 @@ func (node *StoneNodeService) Start(startCtx context.Context) error {
 			case <-allocTicker.C:
 				go func() {
 					if !node.running.Load() {
-						log.Errorw("stone node service stopped, can not alloc stone.")
+						log.Errorw("stone node service stopped, can not alloc stone")
 						return
 					}
 					atomic.AddInt64(&stoneJobCounter, 1)
 					defer atomic.AddInt64(&stoneJobCounter, -1)
 					if atomic.LoadInt64(&stoneJobCounter) > node.stoneLimit {
-						log.Errorw("stone job running number exceeded, skip current alloc stone.")
+						log.Errorw("stone job running number exceeded, skip current alloc stone")
 						return
 					}
 					// TBD::exceed stoneLimit or alloc empty stone,
