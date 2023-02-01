@@ -29,7 +29,7 @@ type Challenge struct {
 func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err error) {
 	challenge = &Challenge{
 		config: config,
-		name:   "Challenge",
+		name:   model.ChallengeService,
 	}
 	err = challenge.initClient()
 	return

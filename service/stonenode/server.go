@@ -6,14 +6,14 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 const (
-	ServiceNameStoneNode string = "StoneNode"
-	AllocStonePeriod            = time.Second * 1
+	AllocStonePeriod = time.Second * 1
 )
 
 // StoneNodeService manages stone execution units
@@ -33,7 +33,7 @@ type StoneNodeService struct {
 func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 	node := &StoneNodeService{
 		cfg:        config,
-		name:       ServiceNameStoneNode,
+		name:       model.StoneNodeService,
 		stopCh:     make(chan struct{}),
 		stoneLimit: config.StoneJobLimit,
 	}

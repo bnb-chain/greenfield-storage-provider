@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -25,7 +26,7 @@ type Downloader struct {
 func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 	downloader := &Downloader{
 		cfg:  cfg,
-		name: "Downloader",
+		name: model.DownloaderService,
 	}
 	pieceStore, err := client.NewStoreClient(cfg.PieceStoreConfig)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"io"
 	"time"
 
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -140,7 +141,8 @@ func (client *StoneHubClient) AllocStoneJob(ctx context.Context, opts ...grpc.Ca
 		return nil, err
 	}
 	if resp.PieceJob == nil {
-		log.CtxDebugw(ctx, "alloc stone job empty.")
+		log.CtxDebugw(ctx, "alloc stone job is empty")
+		return nil, merrors.ErrEmptyJob
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "alloc stone job failed", "error", resp.GetErrMessage().GetErrMsg())
