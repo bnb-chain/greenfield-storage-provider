@@ -201,35 +201,6 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string]
 	return pieceDataBySecondary, nil
 }
 
-// dispatchECData dispatched ec data into different sp
-// one sp stores same ec column data: sp1 stores all ec1 data, sp2 stores all ec2 data, etc
-func dispatchECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, targetIdx []uint32) (map[string]map[string][]byte, error) {
-	ecPieceDataMap := make(map[string]map[string][]byte)
-	for pieceKey, pieceData := range pieceDataBySegment {
-		if len(pieceData) != 6 {
-			return map[string]map[string][]byte{}, merrors.ErrInvalidECData
-		}
-
-		for idx, data := range pieceData {
-			if idx >= len(secondarySPs) {
-				return map[string]map[string][]byte{}, merrors.ErrSecondarySPNumber
-			}
-
-			sp := secondarySPs[idx]
-			for _, index := range targetIdx {
-				if int(index) == idx {
-					if _, ok := ecPieceDataMap[sp]; !ok {
-						ecPieceDataMap[sp] = make(map[string][]byte)
-					}
-					key := piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, uint32(idx))
-					ecPieceDataMap[sp][key] = data
-				}
-			}
-		}
-	}
-	return ecPieceDataMap, nil
-}
-
 // dispatchReplicaOrInlineData dispatches replica or inline data into different sp, each sp should store all segments data of an object
 // if an object uses replica type, it's split into 10 segments and there are 6 sp, each sp should store 10 segments data
 // if an object uses inline type, there is only one segment and there are 6 sp, each sp should store 1 segment data
@@ -262,6 +233,35 @@ func dispatchReplicaOrInlineData(pieceDataBySegment map[string][][]byte, seconda
 		}
 	}
 	return replicaOrInlineDataMap, nil
+}
+
+// dispatchECData dispatched ec data into different sp
+// one sp stores same ec column data: sp1 stores all ec1 data, sp2 stores all ec2 data, etc
+func dispatchECData(pieceDataBySegment map[string][][]byte, secondarySPs []string, targetIdx []uint32) (map[string]map[string][]byte, error) {
+	ecPieceDataMap := make(map[string]map[string][]byte)
+	for pieceKey, pieceData := range pieceDataBySegment {
+		if len(pieceData) != 6 {
+			return map[string]map[string][]byte{}, merrors.ErrInvalidECData
+		}
+
+		for idx, data := range pieceData {
+			if idx >= len(secondarySPs) {
+				return map[string]map[string][]byte{}, merrors.ErrSecondarySPNumber
+			}
+
+			sp := secondarySPs[idx]
+			for _, index := range targetIdx {
+				if int(index) == idx {
+					if _, ok := ecPieceDataMap[sp]; !ok {
+						ecPieceDataMap[sp] = make(map[string][]byte)
+					}
+					key := piecestore.EncodeECPieceKeyBySegmentKey(pieceKey, uint32(idx))
+					ecPieceDataMap[sp][key] = data
+				}
+			}
+		}
+	}
+	return ecPieceDataMap, nil
 }
 
 // doSyncToSecondarySP send piece data to the secondary.
