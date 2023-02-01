@@ -2,8 +2,8 @@ package job
 
 import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 // UploadPayloadJob maintains the object info and piece job meta
@@ -22,15 +22,15 @@ func NewUploadPayloadJob(objectCtx *ObjectInfoContext) (job *UploadPayloadJob, e
 		return nil, err
 	}
 	switch objectCtx.GetObjectRedundancyType() {
-	case types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		if job.secondaryJob, err = NewECUploadSpJob(objectCtx, true); err != nil {
 			return nil, err
 		}
-	case types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		if job.secondaryJob, err = NewSegmentUploadSpJob(objectCtx, true); err != nil {
 			return nil, err
 		}
-	case types.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE:
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE:
 		if job.secondaryJob, err = NewSegmentUploadSpJob(objectCtx, true); err != nil {
 			return nil, err
 		}
@@ -61,23 +61,23 @@ func (job *UploadPayloadJob) SecondarySPCompleted() bool {
 }
 
 // DonePrimarySPJob complete one primary piece job and update DB.
-func (job *UploadPayloadJob) DonePrimarySPJob(pieceJob *service.PieceJob) error {
+func (job *UploadPayloadJob) DonePrimarySPJob(pieceJob *stypesv1pb.PieceJob) error {
 	return job.primaryJob.Done(pieceJob)
 }
 
 // DoneSecondarySPJob complete one secondary piece job and update DB.
-func (job *UploadPayloadJob) DoneSecondarySPJob(pieceJob *service.PieceJob) error {
+func (job *UploadPayloadJob) DoneSecondarySPJob(pieceJob *stypesv1pb.PieceJob) error {
 	return job.secondaryJob.Done(pieceJob)
 }
 
 // PopPendingPrimarySPJob return the uncompleted primary piece job.
-func (job *UploadPayloadJob) PopPendingPrimarySPJob() *service.PieceJob {
+func (job *UploadPayloadJob) PopPendingPrimarySPJob() *stypesv1pb.PieceJob {
 	pieces := job.primaryJob.PopPendingJob()
 	if len(pieces) == 0 {
 		return nil
 	}
 	obj := job.objectCtx.GetObjectInfo()
-	pieceJob := &service.PieceJob{
+	pieceJob := &stypesv1pb.PieceJob{
 		ObjectId:       obj.ObjectId,
 		PayloadSize:    obj.Size,
 		TargetIdx:      pieces,
@@ -87,13 +87,13 @@ func (job *UploadPayloadJob) PopPendingPrimarySPJob() *service.PieceJob {
 }
 
 // PopPendingSecondarySPJob return the uncompleted secondary piece job.
-func (job *UploadPayloadJob) PopPendingSecondarySPJob() *service.PieceJob {
+func (job *UploadPayloadJob) PopPendingSecondarySPJob() *stypesv1pb.PieceJob {
 	pieces := job.secondaryJob.PopPendingJob()
 	if len(pieces) == 0 {
 		return nil
 	}
 	obj := job.objectCtx.GetObjectInfo()
-	pieceJob := &service.PieceJob{
+	pieceJob := &stypesv1pb.PieceJob{
 		ObjectId:       obj.ObjectId,
 		PayloadSize:    obj.Size,
 		TargetIdx:      pieces,
@@ -103,11 +103,11 @@ func (job *UploadPayloadJob) PopPendingSecondarySPJob() *service.PieceJob {
 }
 
 // PrimarySPSealInfo return the primary storage provider seal info.
-func (job *UploadPayloadJob) PrimarySPSealInfo() ([]*types.StorageProviderInfo, error) {
+func (job *UploadPayloadJob) PrimarySPSealInfo() ([]*ptypesv1pb.StorageProviderInfo, error) {
 	return job.primaryJob.SealInfo()
 }
 
 // SecondarySPSealInfo  return the secondary storage provider seal info.
-func (job *UploadPayloadJob) SecondarySPSealInfo() ([]*types.StorageProviderInfo, error) {
+func (job *UploadPayloadJob) SecondarySPSealInfo() ([]*ptypesv1pb.StorageProviderInfo, error) {
 	return job.secondaryJob.SealInfo()
 }
