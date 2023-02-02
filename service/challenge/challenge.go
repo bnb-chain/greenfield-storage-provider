@@ -2,7 +2,6 @@ package challenge
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 
@@ -29,7 +28,7 @@ type Challenge struct {
 func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err error) {
 	challenge = &Challenge{
 		config: config,
-		name:   "Challenge",
+		name:   model.ChallengeService,
 	}
 	err = challenge.initClient()
 	return
@@ -47,7 +46,7 @@ func (challenge *Challenge) initClient() (err error) {
 			return
 		}
 	default:
-		return errors.New(fmt.Sprintf("meta db not support type %s", challenge.config.MetaType))
+		return fmt.Errorf("meta db not support type %s", challenge.config.MetaType)
 	}
 	challenge.pieceStore, err = client.NewStoreClient(challenge.config.PieceConfig)
 	if err != nil {

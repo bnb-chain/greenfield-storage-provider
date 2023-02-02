@@ -107,8 +107,6 @@ func (s *Syncer) handlePieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest) 
 		return nil, "", nil, errors.New("the length of piece data map is not equal to 1")
 	}
 
-	var key string
-	var value []byte
 	redundancyType := req.GetSyncerInfo().GetRedundancyType()
 	integrityMeta := &metadb.IntegrityMeta{
 		ObjectID:       req.GetSyncerInfo().GetObjectId(),
@@ -116,9 +114,12 @@ func (s *Syncer) handlePieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest) 
 		IsPrimary:      false,
 		RedundancyType: redundancyType,
 	}
-	for k, v := range req.GetPieceData() {
-		key = k
-		value = v
+
+	var (
+		key   string
+		value []byte
+	)
+	for key, value = range req.GetPieceData() {
 		pieceIndex, err := parsePieceIndex(redundancyType, key)
 		if err != nil {
 			return nil, "", nil, err

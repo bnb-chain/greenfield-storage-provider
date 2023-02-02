@@ -84,6 +84,9 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
+	default:
+		log.Errorw("unknown service", "service", serviceName)
+		return nil, fmt.Errorf("unknow service: %s", serviceName)
 	}
 	return server, nil
 }
