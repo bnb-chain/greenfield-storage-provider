@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"flag"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -50,7 +50,7 @@ func runCase1() {
 			return
 		}
 		defer res.Body.Close()
-		_, err = ioutil.ReadAll(res.Body)
+		_, err = io.ReadAll(res.Body)
 		if err != nil {
 			log.Errorw("get auth failed, due to read response body", "error", err)
 			return
@@ -83,7 +83,7 @@ func runCase1() {
 			return
 		}
 		defer res.Body.Close()
-		_, err = ioutil.ReadAll(res.Body)
+		_, err = io.ReadAll(res.Body)
 		if err != nil {
 			log.Errorw("put object failed, due to read response body", "error", err)
 			return
@@ -137,7 +137,7 @@ func runCase2() {
 			return
 		}
 		defer res.Body.Close()
-		_, err = ioutil.ReadAll(res.Body)
+		_, err = io.ReadAll(res.Body)
 		if err != nil {
 			log.Errorw("get auth failed, due to read response body", "error", err)
 			return
@@ -171,7 +171,7 @@ func runCase2() {
 			return
 		}
 		defer res.Body.Close()
-		_, err = ioutil.ReadAll(res.Body)
+		_, err = io.ReadAll(res.Body)
 		if err != nil {
 			log.Errorw("put object failed, due to read response body", "error", err)
 			return
@@ -226,7 +226,7 @@ func runCase3() {
 			return
 		}
 		defer res.Body.Close()
-		_, err = ioutil.ReadAll(res.Body)
+		_, err = io.ReadAll(res.Body)
 		if err != nil {
 			log.Errorw("get auth failed, due to read response body", "error", err)
 			return
@@ -259,7 +259,7 @@ func runCase3() {
 			return
 		}
 		defer res.Body.Close()
-		_, err = ioutil.ReadAll(res.Body)
+		_, err = io.ReadAll(res.Body)
 		if err != nil {
 			log.Errorw("put object failed, due to read response body", "error", err)
 			return

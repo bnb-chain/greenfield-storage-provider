@@ -64,7 +64,6 @@ func getDir() string {
 	default:
 		return "/" + ctx.CurrentService + "/> "
 	}
-	return "/>"
 }
 
 var ctx *context.Context
