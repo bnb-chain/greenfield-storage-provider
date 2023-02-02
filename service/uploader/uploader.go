@@ -19,10 +19,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-const (
-	ServiceNameUploader string = "UploaderService"
-)
-
 // Uploader respond to putObjectTx/putObject impl.
 type Uploader struct {
 	config  *UploaderConfig
@@ -45,7 +41,7 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 	)
 	u = &Uploader{
 		config: cfg,
-		name:   ServiceNameUploader,
+		name:   model.UploaderService,
 	}
 	stoneHub, err := client.NewStoneHubClient(cfg.StoneHubServiceAddress)
 	if err != nil {
@@ -77,7 +73,7 @@ func (uploader *Uploader) initDB(config *leveldb.MetaLevelDBConfig) (err error) 
 
 // Name implement the lifecycle interface
 func (uploader *Uploader) Name() string {
-	return model.UploaderService
+	return uploader.name
 }
 
 // Start implement the lifecycle interface
