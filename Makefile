@@ -26,5 +26,8 @@ tidy:
 	go mod tidy
 	go mod verify
 
+test:
+	go test -v ./...
+
 clean:
 	rm -rf ./pkg/types/v1/*.pb.go && rm -rf ./service/types/v1/*.pb.go
