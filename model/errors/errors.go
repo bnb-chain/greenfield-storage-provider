@@ -54,7 +54,7 @@ var (
 	ErrStoneNodeStopped   = errors.New("stone node service has stopped")
 	ErrIntegrityHash      = errors.New("secondary integrity hash check error")
 	ErrRedundancyType     = errors.New("unknown redundancy type")
-	ErrEmptyJob           = errors.New("job is empty")
+	ErrEmptyJob           = errors.New("alloc stone job is empty")
 	ErrSecondarySPNumber  = errors.New("secondary sp is not enough")
 	ErrInvalidSegmentData = errors.New("invalid segment data, length is not equal to 1")
 	ErrInvalidECData      = errors.New("invalid ec data, length is not equal to 6")
@@ -63,6 +63,8 @@ var (
 
 // syncer service errors
 var (
+	ErrSyncerStarted      = errors.New("syncer service is running")
+	ErrSyncerStopped      = errors.New("syncer service has already stopped")
 	ErrReceivedPieceCount = errors.New("syncer service received piece count is wrong")
 )
 

@@ -5,8 +5,8 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
@@ -18,7 +18,7 @@ type UploadSpJob struct {
 	objectCtx  *ObjectInfoContext
 	pieceJobs  []*jobdb.PieceJob
 	pieceType  model.PieceType
-	redundancy types.RedundancyType
+	redundancy ptypesv1pb.RedundancyType
 	secondary  bool
 	complete   int
 	mu         sync.RWMutex
@@ -32,7 +32,7 @@ func NewSegmentUploadSpJob(objectCtx *ObjectInfoContext, secondary bool) (*Uploa
 		redundancy: objectCtx.GetObjectRedundancyType(),
 	}
 	pieceCount := util.ComputeSegmentCount(objectCtx.GetObjectSize())
-	if job.secondary && job.redundancy == types.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
+	if job.secondary && job.redundancy == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
 		pieceCount = model.EC_M + model.EC_K
 	}
 	for idx := 0; idx < int(pieceCount); idx++ {
@@ -110,7 +110,7 @@ func (job *UploadSpJob) PopPendingJob() (pieceIdx []uint32) {
 }
 
 // Done completed one piece job and store the state to DB.
-func (job *UploadSpJob) Done(pieceJob *service.PieceJob) error {
+func (job *UploadSpJob) Done(pieceJob *stypesv1pb.PieceJob) error {
 	job.mu.Lock()
 	defer job.mu.Unlock()
 	// 1. check job weather has completed
@@ -142,7 +142,7 @@ func (job *UploadSpJob) Done(pieceJob *service.PieceJob) error {
 }
 
 // donePrimary update primary piece job state, include memory and db.
-func (job *UploadSpJob) doneSegment(segmentPiece *jobdb.PieceJob, pieceJob *service.PieceJob) error {
+func (job *UploadSpJob) doneSegment(segmentPiece *jobdb.PieceJob, pieceJob *stypesv1pb.PieceJob) error {
 	pieceCount := uint32(len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()))
 	segmentCount := util.ComputeSegmentCount(job.objectCtx.GetObjectSize())
 	// primary segment
@@ -210,7 +210,7 @@ func (job *UploadSpJob) doneSegment(segmentPiece *jobdb.PieceJob, pieceJob *serv
 }
 
 // doneSecondary update primary piece job state, include memory and db.
-func (job *UploadSpJob) doneEC(ecPiece *jobdb.PieceJob, pieceJob *service.PieceJob) error {
+func (job *UploadSpJob) doneEC(ecPiece *jobdb.PieceJob, pieceJob *stypesv1pb.PieceJob) error {
 	pieceCount := uint32(len(pieceJob.GetStorageProviderSealInfo().GetPieceChecksum()))
 	segmentCount := util.ComputeSegmentCount(job.objectCtx.GetObjectSize())
 	if pieceCount != segmentCount {
@@ -251,13 +251,13 @@ func (job *UploadSpJob) doneEC(ecPiece *jobdb.PieceJob, pieceJob *service.PieceJ
 }
 
 // SealInfo return the info for seal.
-func (job *UploadSpJob) SealInfo() ([]*types.StorageProviderInfo, error) {
+func (job *UploadSpJob) SealInfo() ([]*ptypesv1pb.StorageProviderInfo, error) {
 	job.mu.RLock()
 	defer job.mu.RUnlock()
 	if job.complete != len(job.pieceJobs) {
 		return nil, merrors.ErrSpJobNotCompleted
 	}
-	var sealInfo []*types.StorageProviderInfo
+	var sealInfo []*ptypesv1pb.StorageProviderInfo
 	if job.secondary {
 		sealInfo = job.sealSecondary()
 	} else {
@@ -267,23 +267,23 @@ func (job *UploadSpJob) SealInfo() ([]*types.StorageProviderInfo, error) {
 }
 
 // PrimarySealInfo compute the primary integrity hash.
-func (job *UploadSpJob) sealPrimary() *types.StorageProviderInfo {
+func (job *UploadSpJob) sealPrimary() *ptypesv1pb.StorageProviderInfo {
 	var checksumList [][]byte
 	for _, pieceJob := range job.pieceJobs {
 		checksumList = append(checksumList, pieceJob.Checksum[0])
 	}
 	// TODO:: sign the primary integrity hash in stone hub level.
-	return &types.StorageProviderInfo{
+	return &ptypesv1pb.StorageProviderInfo{
 		SpId:     job.pieceJobs[0].StorageProvider,
 		Checksum: hash.GenerateIntegrityHash(checksumList),
 	}
 }
 
 // SecondarySealInfo return secondary info for seal, the stone node service report.
-func (job *UploadSpJob) sealSecondary() []*types.StorageProviderInfo {
-	var sealInfo []*types.StorageProviderInfo
+func (job *UploadSpJob) sealSecondary() []*ptypesv1pb.StorageProviderInfo {
+	var sealInfo []*ptypesv1pb.StorageProviderInfo
 	for _, pieceJob := range job.pieceJobs {
-		sealInfo = append(sealInfo, &types.StorageProviderInfo{
+		sealInfo = append(sealInfo, &ptypesv1pb.StorageProviderInfo{
 			SpId:      pieceJob.StorageProvider,
 			Idx:       pieceJob.PieceId,
 			Checksum:  pieceJob.IntegrityHash,

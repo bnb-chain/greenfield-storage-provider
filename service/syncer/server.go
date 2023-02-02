@@ -2,7 +2,6 @@ package syncer
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"sync/atomic"
@@ -11,15 +10,12 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-)
-
-const (
-	ServiceNameSyncer string = "Syncer"
 )
 
 // SyncerService synchronizes ec data to piece store
@@ -35,7 +31,7 @@ type Syncer struct {
 func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	s := &Syncer{
 		cfg:  config,
-		name: ServiceNameSyncer,
+		name: model.SyncerService,
 	}
 	if err := s.initClient(); err != nil {
 		return nil, err
@@ -82,7 +78,7 @@ func (s *Syncer) Name() string {
 // Start running SyncerService
 func (s *Syncer) Start(ctx context.Context) error {
 	if s.running.Swap(true) {
-		return errors.New("syncer service is running")
+		return merrors.ErrSyncerStarted
 	}
 	errCh := make(chan error)
 	go s.serve(errCh)
@@ -93,7 +89,7 @@ func (s *Syncer) Start(ctx context.Context) error {
 // Stop running SyncerService
 func (s *Syncer) Stop(ctx context.Context) error {
 	if !s.running.Swap(false) {
-		return errors.New("syncer service has already stopped")
+		return merrors.ErrSyncerStopped
 	}
 	return nil
 }

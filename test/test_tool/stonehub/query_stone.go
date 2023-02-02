@@ -2,7 +2,6 @@ package stonehub
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -30,14 +29,7 @@ func queryStone(c *cli.Context) {
 		fmt.Println("please cd StoneHubService namespace, try again")
 		return
 	}
-	txHash, err := hex.DecodeString(c.String("t"))
-	if err != nil {
-		fmt.Println("tx hash param decode error: ", err)
-		return
-	}
-	req := &stypesv1pb.StoneHubServiceQueryStoneRequest{
-		TxHash: txHash,
-	}
+	req := &stypesv1pb.StoneHubServiceQueryStoneRequest{}
 	client, err := GetStoneHubClient()
 	if err != nil {
 		return

@@ -48,7 +48,7 @@ func ComputeSegmentCount(size uint64) uint32 {
 	return segmentCount
 }
 
-// SortedKeys sort keys of a map
+// GenericSortedKeys sort keys of a map
 func GenericSortedKeys[K constraints.Ordered, V any](dataMap map[K]V) []K {
 	keys := make([]K, 0, len(dataMap))
 	for k := range dataMap {

@@ -91,7 +91,7 @@ StoneJobLimit = 64
 
 [SyncerCfg]
 StorageProvider = "bnb-sp"
-Address = "127.0.0.1:11600"
+Address = "127.0.0.1:9533"
 MetaDBType = "leveldb"
     [SyncerCfg.PieceConfig.Store]
     Storage = "file"

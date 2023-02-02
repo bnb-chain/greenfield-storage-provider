@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/mock"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -25,7 +26,7 @@ type Downloader struct {
 func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 	downloader := &Downloader{
 		cfg:  cfg,
-		name: "Downloader",
+		name: model.DownloaderService,
 	}
 	pieceStore, err := client.NewStoreClient(cfg.PieceStoreConfig)
 	if err != nil {

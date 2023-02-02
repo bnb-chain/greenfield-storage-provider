@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobmemory"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 )
@@ -24,7 +24,7 @@ var (
 )
 
 func InitENV() (*UploadPayloadStone, error) {
-	object := &types.ObjectInfo{
+	object := &ptypesv1pb.ObjectInfo{
 		Owner:          "test_owner",
 		BucketName:     "test_bucket",
 		ObjectName:     "test_object",
@@ -32,8 +32,8 @@ func InitENV() (*UploadPayloadStone, error) {
 		TxHash:         txHash,
 		Height:         height,
 		ObjectId:       objectID,
-		RedundancyType: types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
-		PrimarySp: &types.StorageProviderInfo{
+		RedundancyType: ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
+		PrimarySp: &ptypesv1pb.StorageProviderInfo{
 			SpId: "bnb-test-sp",
 		},
 	}
@@ -59,7 +59,7 @@ func InitENV() (*UploadPayloadStone, error) {
 func TestFsmPrimaryDoing(t *testing.T) {
 	stone, err := InitENV()
 	assert.Equal(t, nil, err)
-	assert.Equal(t, types.JOB_STATE_UPLOAD_PRIMARY_DOING, stone.jobFsm.Current())
+	assert.Equal(t, ptypesv1pb.JOB_STATE_UPLOAD_PRIMARY_DOING, stone.jobFsm.Current())
 	primaryPieceJob := stone.job.PopPendingPrimarySPJob()
 	assert.Equal(t, 4, len(primaryPieceJob.TargetIdx))
 	secondaryPieceJob := stone.job.PopPendingSecondarySPJob()
@@ -69,8 +69,8 @@ func TestFsmPrimaryDoing(t *testing.T) {
 func TestFsmPrimaryDoingError(t *testing.T) {
 	stone, err := InitENV()
 	assert.Equal(t, nil, err)
-	pieceJob := &service.PieceJob{
-		StorageProviderSealInfo: &service.StorageProviderSealInfo{
+	pieceJob := &stypesv1pb.PieceJob{
+		StorageProviderSealInfo: &stypesv1pb.StorageProviderSealInfo{
 			StorageProviderId: "bnb-test-sp",
 			PieceIdx:          0,
 		},
@@ -96,8 +96,8 @@ func TestFsmPrimaryDoingAndSecondaryDoingError(t *testing.T) {
 	stone, err := InitENV()
 	assert.Equal(t, nil, err)
 	checkSum := hash.GenerateChecksum([]byte(time.Now().String()))
-	primaryPieceJob := &service.PieceJob{
-		StorageProviderSealInfo: &service.StorageProviderSealInfo{
+	primaryPieceJob := &stypesv1pb.PieceJob{
+		StorageProviderSealInfo: &stypesv1pb.StorageProviderSealInfo{
 			StorageProviderId: "bnb-test-sp",
 		},
 	}
@@ -127,8 +127,8 @@ func TestFsmPrimaryDoingAndSecondaryDoingError(t *testing.T) {
 	pendingPrimaryPieceJob = stone.job.PopPendingPrimarySPJob()
 	assert.Equal(t, true, stone.job.PrimarySPCompleted())
 
-	secondaryPieceJob := &service.PieceJob{
-		StorageProviderSealInfo: &service.StorageProviderSealInfo{
+	secondaryPieceJob := &stypesv1pb.PieceJob{
+		StorageProviderSealInfo: &stypesv1pb.StorageProviderSealInfo{
 			StorageProviderId: "bnb-test-sp",
 		},
 	}

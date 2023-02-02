@@ -6,14 +6,14 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 const (
-	ServiceNameStoneNode string = "StoneNode"
-	AllocStonePeriod            = time.Second * 1
+	allocStonePeriod = time.Second * 1
 )
 
 // StoneNodeService manages stone execution units
@@ -33,7 +33,7 @@ type StoneNodeService struct {
 func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 	node := &StoneNodeService{
 		cfg:        config,
-		name:       ServiceNameStoneNode,
+		name:       model.StoneNodeService,
 		stopCh:     make(chan struct{}),
 		stoneLimit: config.StoneJobLimit,
 	}
@@ -43,7 +43,7 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 	return node, nil
 }
 
-// InitClient inits store client and rpc client
+// initClient inits store client and rpc client
 func (node *StoneNodeService) initClient() error {
 	if node.running.Load() == true {
 		return merrors.ErrStoneNodeStarted
@@ -81,20 +81,20 @@ func (node *StoneNodeService) Start(startCtx context.Context) error {
 	}
 	go func() {
 		var stoneJobCounter int64 // atomic
-		allocTicker := time.NewTicker(AllocStonePeriod)
+		allocTicker := time.NewTicker(allocStonePeriod)
 		ctx, cancel := context.WithCancel(startCtx)
 		for {
 			select {
 			case <-allocTicker.C:
 				go func() {
 					if !node.running.Load() {
-						log.Errorw("stone node service stopped, can not alloc stone.")
+						log.Errorw("stone node service stopped, can not alloc stone")
 						return
 					}
 					atomic.AddInt64(&stoneJobCounter, 1)
 					defer atomic.AddInt64(&stoneJobCounter, -1)
 					if atomic.LoadInt64(&stoneJobCounter) > node.stoneLimit {
-						log.Errorw("stone job running number exceeded, skip current alloc stone.")
+						log.Errorw("stone job running number exceeded, skip current alloc stone")
 						return
 					}
 					// TBD::exceed stoneLimit or alloc empty stone,
