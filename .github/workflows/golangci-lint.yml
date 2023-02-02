@@ -1,6 +1,17 @@
 # This file configures github.com/golangci/golangci-lint.
 name: Golang CI Lint
 
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+  pull_request:
+    branches:
+      - master
+      - develop
+
 run:
   concurrency: 4
   timeout: 5m
