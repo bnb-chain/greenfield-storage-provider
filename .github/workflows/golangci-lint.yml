@@ -1,4 +1,5 @@
 # This file configures github.com/golangci/golangci-lint.
+name: Golang CI Lint
 
 run:
   concurrency: 4
