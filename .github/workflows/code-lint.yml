@@ -1,0 +1,86 @@
+name: Golang Code Lint
+# Lint runs golangci-lint over the entire Tendermint repository
+# This workflow is run on every pull request and push to master
+# The `golangci` job will pass without running if no *.{go, mod, sum} files have been modified.
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  golangci:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      matrix:
+        go-version: [1.19.x]
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - uses: ory/build-buf-action@v0
+        with:
+          bufVersion: v1.11.0
+          protocPlugins:
+            go@v1.28.0 go-grpc@v1.2.0
+          bufArgs:
+            generate
+
+      - uses: technote-space/get-diff-action@v6
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          # Required: the version of golangci-lint is required and
+          # must be specified without patch version: we always use the
+          # latest patch version.
+          version: v1.50.1
+          args: --timeout 10m
+          github-token: ${{ secrets.github_token }}
+        if: env.GIT_DIFF
+
+  golang-ci-lint-success:
+    needs: golangci
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack on success
+        uses: rtCamp/action-slack-notify@v2.2.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: greenfield_storage_ci
+          SLACK_USERNAME: SP Golang CI Lint
+          SLACK_ICON_EMOJI: ':heavy_check_mark:'
+          SLACK_COLOR: good
+          SLACK_MESSAGE: Greenfield golang ci lint passed
+          SLACK_FOOTER: ''
+
+  golang-ci-lint-failure:
+    needs: golangci
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack on failure
+        uses: rtCamp/action-slack-notify@v2.2.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: greenfield_storage_ci
+          SLACK_USERNAME: SP Golang CI Lint
+          SLACK_ICON_EMOJI: ':x:'
+          SLACK_COLOR: danger
+          SLACK_MESSAGE: Greenfield golang ci lint failed
+          SLACK_FOOTER: ''

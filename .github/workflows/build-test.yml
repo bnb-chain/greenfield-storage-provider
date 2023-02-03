@@ -1,0 +1,88 @@
+name: Build Test
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-test:
+    strategy:
+      matrix:
+        go-version: [1.19.x]
+        os: [ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - uses: actions/cache@v3
+      with:
+        # In order:
+        # * Module download cache
+        # * Build cache (Linux)
+        # * Build cache (Mac)
+        # * Build cache (Windows)
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+          ~/Library/Caches/go-build
+          %LocalAppData%\go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - uses: ory/build-buf-action@v0
+      with:
+        bufVersion: v1.11.0
+        protocPlugins:
+          go@v1.28.0 go-grpc@v1.2.0
+        bufArgs:
+            generate
+
+    - name: Test Build
+      run: |
+        bash build.sh
+
+  build-test-success:
+    needs: build-test
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack on success
+        uses: rtCamp/action-slack-notify@v2.2.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: greenfield_storage_ci
+          SLACK_USERNAME: SP Build Test
+          SLACK_ICON_EMOJI: ':heavy_check_mark:'
+          SLACK_COLOR: good
+          SLACK_MESSAGE: Greenfield SP build test passed
+          SLACK_FOOTER: ''
+
+  build-test-failure:
+    needs: build-test
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack on failure
+        uses: rtCamp/action-slack-notify@v2.2.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: greenfield_storage_ci
+          SLACK_USERNAME: SP Build Test
+          SLACK_ICON_EMOJI: ':x:'
+          SLACK_COLOR: danger
+          SLACK_MESSAGE: Greenfield SP build test failed
+          SLACK_FOOTER: ''

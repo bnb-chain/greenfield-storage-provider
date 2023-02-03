@@ -43,6 +43,7 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	return s, nil
 }
 
+// initClient
 func (s *Syncer) initClient() error {
 	store, err := client.NewStoreClient(s.cfg.PieceConfig)
 	if err != nil {
