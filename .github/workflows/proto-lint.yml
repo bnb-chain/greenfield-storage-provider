@@ -2,9 +2,6 @@ name: Protobuf Lint
 
 on:
   push:
-    branches:
-      - main
-      - develop
     paths:
       - 'proto/**'
 
