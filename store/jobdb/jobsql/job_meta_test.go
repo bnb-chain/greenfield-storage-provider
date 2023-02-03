@@ -2,7 +2,6 @@ package jobsql
 
 import (
 	"encoding/hex"
-	"fmt"
 	"testing"
 	"time"
 
@@ -16,7 +15,7 @@ import (
 func TestJobMeta(t *testing.T) {
 	var (
 		txHash = []byte("testHash-" + string(time.Now().Format("2006-01-02 15:04:05")))
-		jobId  uint64
+		jobID  uint64
 	)
 	// case1 CreateUploadPayloadJob
 	{
@@ -26,7 +25,6 @@ func TestJobMeta(t *testing.T) {
 			&ptypesv1pb.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject"})
 		assert.Equal(t, nil, err)
 	}
-	fmt.Println(string(txHash))
 	// case2 SetObjectCreateHeight/SetObjectCreateHeightAndObjectID
 	{
 		jmi, _ := NewJobMetaImpl(DefaultDBOption)
@@ -40,7 +38,7 @@ func TestJobMeta(t *testing.T) {
 		jmi, _ := NewJobMetaImpl(DefaultDBOption)
 		info, err := jmi.GetObjectInfo(txHash)
 		assert.Equal(t, nil, err)
-		jobId = info.JobId
+		jobID = info.JobId
 	}
 	// case4 ScanObjectInfo
 	{
@@ -52,22 +50,22 @@ func TestJobMeta(t *testing.T) {
 	// case4 GetJobContext
 	{
 		jmi, _ := NewJobMetaImpl(DefaultDBOption)
-		_, err := jmi.GetJobContext(jobId)
+		_, err := jmi.GetJobContext(jobID)
 		assert.Equal(t, nil, err)
 	}
 	// case5 SetUploadPayloadJobState
 	{
 		jmi, _ := NewJobMetaImpl(DefaultDBOption)
-		err := jmi.SetUploadPayloadJobState(jobId, "JOB_STATE_DONE", time.Now().Unix())
+		err := jmi.SetUploadPayloadJobState(jobID, "JOB_STATE_DONE", time.Now().Unix())
 		assert.Equal(t, nil, err)
 	}
 	// case6 SetUploadPayloadJobJobError
 	{
 		jmi, _ := NewJobMetaImpl(DefaultDBOption)
-		err := jmi.SetUploadPayloadJobJobError(jobId, "JOB_STATE_ERROR", "job-err-msg", time.Now().Unix())
+		err := jmi.SetUploadPayloadJobJobError(jobID, "JOB_STATE_ERROR", "job-err-msg", time.Now().Unix())
 		assert.Equal(t, nil, err)
 	}
-	// clear piecejob table
+	// clear piece_job table
 	{
 		jmi, _ := NewJobMetaImpl(DefaultDBOption)
 		key1 := hex.EncodeToString([]byte("123"))
@@ -111,6 +109,96 @@ func TestJobMeta(t *testing.T) {
 		})
 		assert.Equal(t, nil, err)
 		pieces, err := jmi.GetSecondaryJob([]byte("456"))
+		assert.Equal(t, nil, err)
+		assert.Equal(t, 2, len(pieces))
+	}
+}
+
+func TestJobMetaV2(t *testing.T) {
+	var (
+		objectID = uint64(time.Now().Unix())
+		jobID    uint64
+	)
+	// case1 CreateUploadPayloadJobV2
+	{
+		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		_, err := jmi.CreateUploadPayloadJobV2(
+			&ptypesv1pb.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject", ObjectId: objectID})
+		assert.Equal(t, nil, err)
+	}
+	// case2 GetObjectInfoV2
+	{
+		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		info, err := jmi.GetObjectInfoV2(objectID)
+		assert.Equal(t, nil, err)
+		jobID = info.JobId
+	}
+	// case3 ScanObjectInfoV2
+	{
+		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		objects, err := jmi.ScanObjectInfoV2(0, 10)
+		assert.Equal(t, nil, err)
+		assert.True(t, len(objects) >= 1)
+	}
+	// case4 GetJobContextV2
+	{
+		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		_, err := jmi.GetJobContextV2(jobID)
+		assert.Equal(t, nil, err)
+	}
+	// case5 SetUploadPayloadJobStateV2
+	{
+		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		err := jmi.SetUploadPayloadJobState(jobID, "JOB_STATE_DONE", time.Now().Unix())
+		assert.Equal(t, nil, err)
+	}
+	// case6 SetUploadPayloadJobJobErrorV2
+	{
+		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		err := jmi.SetUploadPayloadJobJobError(jobID, "JOB_STATE_ERROR", "job-err-msg", time.Now().Unix())
+		assert.Equal(t, nil, err)
+	}
+	// clear piece_job_v2 table
+	{
+		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi.db.Exec("DELETE FROM piece_job_v2 where object_id=?", 123)
+		jmi.db.Exec("DELETE FROM piece_job_v2 where object_id=?", 456)
+	}
+	// case7 SetPrimaryPieceJobDoneV2/GetPrimaryJobV2
+	{
+		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		err := jmi.SetPrimaryPieceJobDoneV2(123, &jobdb.PieceJob{
+			PieceId:         0,
+			Checksum:        [][]byte{[]byte("123-0-sum")},
+			StorageProvider: "123-0-sp",
+		})
+		assert.Equal(t, nil, err)
+		err = jmi.SetPrimaryPieceJobDoneV2(123, &jobdb.PieceJob{
+			PieceId:         1,
+			Checksum:        [][]byte{[]byte("123-1-sum")},
+			StorageProvider: "123-1-sp",
+		})
+		assert.Equal(t, nil, err)
+		pieces, err := jmi.GetPrimaryJobV2(123)
+		assert.Equal(t, nil, err)
+		assert.Equal(t, 2, len(pieces))
+	}
+	// case8 SetSecondaryPieceJobDoneV2/GetSecondaryJobV2
+	{
+		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		err := jmi.SetSecondaryPieceJobDoneV2(456, &jobdb.PieceJob{
+			PieceId:         0,
+			Checksum:        [][]byte{[]byte("456-0-sum")},
+			StorageProvider: "456-0-sp",
+		})
+		assert.Equal(t, nil, err)
+		err = jmi.SetSecondaryPieceJobDoneV2(456, &jobdb.PieceJob{
+			PieceId:         1,
+			Checksum:        [][]byte{[]byte("456-1-sum")},
+			StorageProvider: "456-1-sp",
+		})
+		assert.Equal(t, nil, err)
+		pieces, err := jmi.GetSecondaryJobV2(456)
 		assert.Equal(t, nil, err)
 		assert.Equal(t, 2, len(pieces))
 	}
