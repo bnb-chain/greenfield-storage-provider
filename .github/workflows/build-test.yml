@@ -3,12 +3,12 @@ name: Build Test
 on:
   push:
     branches:
-      - master
+      - main
       - develop
 
   pull_request:
     branches:
-      - master
+      - main
       - develop
 
 jobs:
@@ -20,14 +20,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
 
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       with:
         # In order:
         # * Module download cache
@@ -42,5 +42,8 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
+    - name: Buf generate
+      uses: bufbuild/buf-setup-action@v1.8.0
     - name: Test Build
       run: |
+        bash build.sh

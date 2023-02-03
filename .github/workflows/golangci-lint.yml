@@ -1,43 +1,31 @@
-# This file configures github.com/golangci/golangci-lint.
-name: Golang CI Lint
-
+name: Lint
 on:
   push:
     branches:
-      - master
+      - main
       - develop
-
   pull_request:
-    branches:
-      - master
-      - develop
+    - main
+    - develop
 
-run:
-  concurrency: 4
-  timeout: 5m
-  tests: true
-  # default is true. Enables skipping of directories:
-  #   vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
-  skip-dirs-use-default: true
+permissions:
+  contents: read
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  # pull-requests: read
 
-linters:
-  disable-all: true
-  enable:
-    - deadcode
-    - goconst
-    - goimports
-    - gosimple
-    - govet
-    - ineffassign
-    - misspell
-    - staticcheck
-    - unconvert
-    - unused
-    - varcheck
-
-linters-settings:
-  gofmt:
-    simplify: true
-  goconst:
-    min-len: 3 # minimum length of string constant
-    min-occurrences: 6 # minimum number of occurrences
+jobs:
+  golangci:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19.4
+      - uses: actions/checkout@v3
+      - name: Buf generate
+        uses: bufbuild/buf-setup-action@v1.8.0
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+          version: v1.50.0
