@@ -24,8 +24,9 @@ tidy:
 	go mod tidy
 	go mod verify
 
+# only run unit test, exclude e2e tests
 test:
-	go test ./...
+	go test `go list ./... | grep -v /test/`
 	# go test -cover ./...
 
 clean:
