@@ -47,6 +47,8 @@ jobs:
 
       - name: Buf generate
         uses: bufbuild/buf-setup-action@v1.11.0
+        run: |
+          buf generate
 
       - name: Unit Test
         env:

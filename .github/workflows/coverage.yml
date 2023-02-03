@@ -51,6 +51,10 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
+      - name: Buf generate
+        uses: bufbuild/buf-setup-action@v1.11.0
+        run: |
+          buf generate
       - uses: actions/checkout@v3
       - uses: technote-space/get-diff-action@v6
         with:
@@ -74,6 +78,10 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - uses: actions/checkout@v3
+      - name: Buf generate
+        uses: bufbuild/buf-setup-action@v1.11.0
+        run: |
+          buf generate
       - uses: technote-space/get-diff-action@v6
         with:
           PATTERNS: |
@@ -98,6 +106,10 @@ jobs:
     needs: tests
     steps:
       - uses: actions/checkout@v3
+      - name: Buf generate
+        uses: bufbuild/buf-setup-action@v1.11.0
+        run: |
+          buf generate
       - uses: technote-space/get-diff-action@v6
         with:
           PATTERNS: |
