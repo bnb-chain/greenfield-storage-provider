@@ -1,14 +1,12 @@
 SHELL := /bin/bash
 
-.PHONY: all check format vet generate build tidy test clean
+.PHONY: all format vet generate build tidy test clean
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
-	@echo "  check               to do static check"
+	@echo "  vet                 to do static check"
 	@echo "  build               to create bin directory and build"
 	@echo "  generate            to generate code"
-
-check: vet
 
 format:
 	gofmt -w -l .

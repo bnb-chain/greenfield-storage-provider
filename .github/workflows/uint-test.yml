@@ -45,13 +45,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Buf generate
+      - name: Buf install
         uses: bufbuild/buf-setup-action@v1.11.0
+
+      - name: Buf generate
         run: |
           buf generate
 
       - name: Unit Test
-        env:
-          ANDROID_HOME: "" # Skip android test
         run: |
           make test

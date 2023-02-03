@@ -22,6 +22,11 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
+      - name: Buf install
+        uses: bufbuild/buf-setup-action@v1.11.0
+      - name: Buf generate
+        run: |
+          buf generate
       - uses: technote-space/get-diff-action@v6
         with:
           PATTERNS: |
