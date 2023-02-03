@@ -23,6 +23,7 @@ type PieceJob struct {
 	Done            bool
 }
 
+// JobDB use txhash as primary key
 type JobDB interface {
 	CreateUploadPayloadJob(txHash []byte, info *ptypesv1pb.ObjectInfo) (uint64, error)
 	SetObjectCreateHeightAndObjectID(txHash []byte, height uint64, objectID uint64) error
@@ -37,4 +38,22 @@ type JobDB interface {
 	GetSecondaryJob(txHash []byte) ([]*PieceJob, error)
 	SetPrimaryPieceJobDone(txHash []byte, piece *PieceJob) error
 	SetSecondaryPieceJobDone(txHash []byte, piece *PieceJob) error
+}
+
+// JobDBV2 use objectID as primary key
+type JobDBV2 interface {
+	CreateUploadPayloadJobV2(info *ptypesv1pb.ObjectInfo) (uint64, error)
+	// SetObjectCreateHeightAndObjectID maybe useless
+	// SetObjectCreateHeightAndObjectID(txHash []byte, height uint64, objectID uint64) error
+
+	GetObjectInfoV2(objectID uint64) (*ptypesv1pb.ObjectInfo, error)
+	GetJobContextV2(jobId uint64) (*ptypesv1pb.JobContext, error)
+
+	SetUploadPayloadJobStateV2(jobId uint64, state string, timestamp int64) error
+	SetUploadPayloadJobJobErrorV2(jobID uint64, jobState string, jobErr string, timestamp int64) error
+
+	GetPrimaryJobV2(objectID uint64) ([]*PieceJob, error)
+	GetSecondaryJobV2(objectID uint64) ([]*PieceJob, error)
+	SetPrimaryPieceJobDoneV2(objectID uint64, piece *PieceJob) error
+	SetSecondaryPieceJobDoneV2(objectID uint64, piece *PieceJob) error
 }
