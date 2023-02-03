@@ -45,13 +45,46 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Buf install
-        uses: bufbuild/buf-setup-action@v1.11.0
-
-      - name: Buf generate
-        run: |
-          buf generate
+      - uses: ory/build-buf-action@v0
+        with:
+          bufVersion: v1.11.0
+          protocPlugins:
+            go@v1.25.0 go-grpc@v1.2.0
+          bufArgs:
+            generate
 
       - name: Unit Test
         run: |
           make test
+
+  unit-test-success:
+    needs: unit-test
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack on success
+        uses: rtCamp/action-slack-notify@v2.2.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: dylan-yong-zhaoyu
+          SLACK_USERNAME: SP Unit Test
+          SLACK_ICON_EMOJI: ':white_check_mark:'
+          SLACK_COLOR: good
+          SLACK_MESSAGE: SP unit test passed on develop
+          SLACK_FOOTER: ''
+
+  unit-test-failure:
+    needs: unit-test
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack on failure
+        uses: rtCamp/action-slack-notify@v2.2.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: dylan-yong-zhaoyu
+          SLACK_USERNAME: SP Unit Test
+          SLACK_ICON_EMOJI: ':skull:'
+          SLACK_COLOR: danger
+          SLACK_MESSAGE: SP unit test failed on develop
+          SLACK_FOOTER: ''

@@ -22,11 +22,13 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Buf install
-        uses: bufbuild/buf-setup-action@v1.11.0
-      - name: Buf generate
-        run: |
-          buf generate
+      - uses: ory/build-buf-action@v0
+        with:
+          bufVersion: v1.11.0
+          protocPlugins:
+            go@v1.28.0 go-grpc@v1.2.0
+          bufArgs:
+            generate
       - uses: technote-space/get-diff-action@v6
         with:
           PATTERNS: |
@@ -57,4 +59,20 @@ jobs:
           SLACK_ICON_EMOJI: ':skull:'
           SLACK_COLOR: danger
           SLACK_MESSAGE: Golang ci lint failed on develop
+          SLACK_FOOTER: ''
+
+  golang-ci-lint-success:
+    needs: golangci
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack on success
+        uses: rtCamp/action-slack-notify@v2.2.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: dylan-yong-zhaoyu
+          SLACK_USERNAME: Golang CI Lint
+          SLACK_ICON_EMOJI: ':white_check_mark:'
+          SLACK_COLOR: good
+          SLACK_MESSAGE: Golang ci lint passed on develop
           SLACK_FOOTER: ''
