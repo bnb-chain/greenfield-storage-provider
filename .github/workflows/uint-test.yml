@@ -2,6 +2,9 @@ name: Unit Test
 
 on:
   push:
+    branches:
+      - main
+      - develop
     paths-ignore:
       - 'test/**'
 
@@ -9,6 +12,8 @@ on:
     branches:
       - main
       - develop
+    paths-ignore:
+      - 'test/**'
 
 jobs:
   unit-test:
@@ -67,7 +72,7 @@ jobs:
           SLACK_USERNAME: SP Unit Test
           SLACK_ICON_EMOJI: ':white_check_mark:'
           SLACK_COLOR: good
-          SLACK_MESSAGE: SP unit test passed on develop
+          SLACK_MESSAGE: Greenfield SP unit test passed
           SLACK_FOOTER: ''
 
   unit-test-failure:
@@ -83,5 +88,5 @@ jobs:
           SLACK_USERNAME: SP Unit Test
           SLACK_ICON_EMOJI: ':skull:'
           SLACK_COLOR: danger
-          SLACK_MESSAGE: SP unit test failed on develop
+          SLACK_MESSAGE: Greenfield SP unit test failed
           SLACK_FOOTER: ''

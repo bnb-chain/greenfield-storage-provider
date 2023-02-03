@@ -68,7 +68,7 @@ jobs:
           SLACK_USERNAME: SP Build Test
           SLACK_ICON_EMOJI: ':white_check_mark:'
           SLACK_COLOR: good
-          SLACK_MESSAGE: SP build test passed on develop
+          SLACK_MESSAGE: Greenfield SP build test passed
           SLACK_FOOTER: ''
 
   build-test-failure:
@@ -84,5 +84,5 @@ jobs:
           SLACK_USERNAME: SP Build Test
           SLACK_ICON_EMOJI: ':skull:'
           SLACK_COLOR: danger
-          SLACK_MESSAGE: SP build test failed on develop
+          SLACK_MESSAGE: Greenfield SP build test failed
           SLACK_FOOTER: ''
