@@ -8,7 +8,6 @@ require (
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/golang/mock v1.6.0
-	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.12
 	github.com/klauspost/reedsolomon v1.11.3

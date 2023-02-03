@@ -46,7 +46,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Buf generate
-        uses: bufbuild/buf-setup-action@v1.8.0
+        uses: bufbuild/buf-setup-action@v1.11.0
 
       - name: Unit Test
         env:
