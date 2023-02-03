@@ -3,8 +3,12 @@ name: Lint
 # This workflow is run on every pull request and push to master
 # The `golangci` job will pass without running if no *.{go, mod, sum} files have been modified.
 on:
-  pull_request:
   push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
     branches:
       - main
       - develop
@@ -54,7 +58,7 @@ jobs:
         uses: rtCamp/action-slack-notify@v2.2.0
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: dylan-yong-zhaoyu
+          SLACK_CHANNEL: gnfd_storage_ci_cd
           SLACK_USERNAME: Golang CI Lint
           SLACK_ICON_EMOJI: ':skull:'
           SLACK_COLOR: danger
@@ -70,7 +74,7 @@ jobs:
         uses: rtCamp/action-slack-notify@v2.2.0
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: dylan-yong-zhaoyu
+          SLACK_CHANNEL: gnfd_storage_ci_cd
           SLACK_USERNAME: Golang CI Lint
           SLACK_ICON_EMOJI: ':white_check_mark:'
           SLACK_COLOR: good
