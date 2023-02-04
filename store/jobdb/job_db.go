@@ -40,11 +40,13 @@ type JobDB interface {
 	SetSecondaryPieceJobDone(txHash []byte, piece *PieceJob) error
 }
 
+/* Compare to JobDB, JobDBV2 change index from CreateObjectTxHash to ObjectID.
+ * Adapt for changing light client to heavy client, ObjectID as index is necessary for SP.
+ */
+
 // JobDBV2 use objectID as primary key
 type JobDBV2 interface {
 	CreateUploadPayloadJobV2(info *ptypesv1pb.ObjectInfo) (uint64, error)
-	// SetObjectCreateHeightAndObjectID maybe useless
-	// SetObjectCreateHeightAndObjectID(txHash []byte, height uint64, objectID uint64) error
 
 	GetObjectInfoV2(objectID uint64) (*ptypesv1pb.ObjectInfo, error)
 	GetJobContextV2(jobId uint64) (*ptypesv1pb.JobContext, error)
