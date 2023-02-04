@@ -49,35 +49,35 @@ func TestDecodeSegmentPieceKey(t *testing.T) {
 			req:         "testID_s2",
 			wantedResp1: 0,
 			wantedResp2: 0,
-			wantedErr:   fmt.Errorf("Invalid segment piece key"),
+			wantedErr:   fmt.Errorf("invalid segment piece key"),
 		},
 		{
 			name:        "invalid piece key 2",
 			req:         "123456789_p",
 			wantedResp1: 0,
 			wantedResp2: 0,
-			wantedErr:   fmt.Errorf("Invalid segment piece key"),
+			wantedErr:   fmt.Errorf("invalid segment piece key"),
 		},
 		{
 			name:        "invalid piece key 3",
 			req:         "123456789_s123r",
 			wantedResp1: 0,
 			wantedResp2: 0,
-			wantedErr:   fmt.Errorf("Invalid segment piece key"),
+			wantedErr:   fmt.Errorf("invalid segment piece key"),
 		},
 		{
 			name:        "invalid piece key 4",
 			req:         "123456789_ss.123",
 			wantedResp1: 0,
 			wantedResp2: 0,
-			wantedErr:   fmt.Errorf("Invalid segment piece key"),
+			wantedErr:   fmt.Errorf("invalid segment piece key"),
 		},
 		{
 			name:        "invalid segment piece key 4",
 			req:         "123456789_s123/111",
 			wantedResp1: 0,
 			wantedResp2: 0,
-			wantedErr:   fmt.Errorf("Invalid segment piece key"),
+			wantedErr:   fmt.Errorf("invalid segment piece key"),
 		},
 	}
 	for _, tt := range cases {
@@ -137,7 +137,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedResp3: 0,
-			wantedErr:   fmt.Errorf("Invalid EC piece key"),
+			wantedErr:   fmt.Errorf("invalid EC piece key"),
 		},
 		{
 			name:        "invalid ec piece key 2",
@@ -145,7 +145,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedResp3: 0,
-			wantedErr:   fmt.Errorf("Invalid EC piece key"),
+			wantedErr:   fmt.Errorf("invalid EC piece key"),
 		},
 		{
 			name:        "invalid ec piece key 3",
@@ -153,7 +153,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedResp3: 0,
-			wantedErr:   fmt.Errorf("Invalid EC piece key"),
+			wantedErr:   fmt.Errorf("invalid EC piece key"),
 		},
 		{
 			name:        "invalid ec piece key 4",
@@ -161,7 +161,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedResp3: 0,
-			wantedErr:   fmt.Errorf("Invalid EC piece key"),
+			wantedErr:   fmt.Errorf("invalid EC piece key"),
 		},
 		{
 			name:        "invalid ec piece key 5",
@@ -169,7 +169,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 			wantedResp1: 0,
 			wantedResp2: 0,
 			wantedResp3: 0,
-			wantedErr:   fmt.Errorf("Invalid EC piece key"),
+			wantedErr:   fmt.Errorf("invalid EC piece key"),
 		},
 	}
 	for _, tt := range cases {

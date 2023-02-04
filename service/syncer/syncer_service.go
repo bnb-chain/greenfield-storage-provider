@@ -15,6 +15,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
+const segmentPieceIndex = 9999
+
 // SyncPiece syncs piece data to secondary storage provider
 func (s *Syncer) SyncPiece(stream stypesv1pb.SyncerService_SyncPieceServer) error {
 	var count uint32
@@ -142,7 +144,7 @@ func parsePieceIndex(redundancyType ptypesv1pb.RedundancyType, key string) (uint
 	)
 	switch redundancyType {
 	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		_, pieceIndex, err = piecestore.DecodeSegmentPieceKey(key)
+		pieceIndex = segmentPieceIndex
 	default: // ec type
 		_, _, pieceIndex, err = piecestore.DecodeECPieceKey(key)
 	}

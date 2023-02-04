@@ -128,25 +128,3 @@ func (node *StoneNodeService) Stop(ctx context.Context) error {
 	}
 	return nil
 }
-
-// allocStone sends rpc request to stone hub alloc stone job.
-func (node *StoneNodeService) allocStone(ctx context.Context) {
-	resp, err := node.stoneHub.AllocStoneJob(ctx)
-	ctx = log.Context(ctx, resp, resp.GetPieceJob())
-	if err != nil {
-		log.CtxErrorw(ctx, "alloc stone from stone hub failed", "error", err)
-		return
-	}
-	// TBD:: stone node will support more types of stone job,
-	// currently only support upload secondary piece job.
-	if resp.GetPieceJob() == nil {
-		log.CtxDebugw(ctx, "alloc stone job empty.")
-		return
-	}
-	if err := node.syncPieceToSecondarySP(ctx, resp); err != nil {
-		log.CtxErrorw(ctx, "upload secondary piece job failed", "error", err)
-		return
-	}
-	log.CtxInfow(ctx, "upload secondary piece job success")
-	return
-}
