@@ -216,9 +216,8 @@ func (hub *StoneHub) gcMemoryStone() {
 			return true // skip err stone
 		}
 		if val.LastModifyTime() <= current || state == ptypesv1pb.JOB_STATE_ERROR {
-			stoneKey := key.(string)
-			log.Infow("gc memory stone", "key", stoneKey)
-			hub.stone.Delete(stoneKey)
+			log.Infow("gc memory stone", "object_id", key)
+			hub.stone.Delete(key)
 		}
 		return true
 	})
