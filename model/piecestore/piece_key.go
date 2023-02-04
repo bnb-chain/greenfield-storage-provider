@@ -29,7 +29,7 @@ func DecodeSegmentPieceKey(pieceKey string) (uint64, uint32, error) {
 
 	objectID, _ := strconv.ParseUint(keys[0], 10, 64)
 	s := numberRegex.FindString(keys[1])
-	segmentIndex, _ := (strconv.ParseUint(s, 10, 32))
+	segmentIndex, _ := strconv.ParseUint(s, 10, 32)
 
 	return objectID, uint32(segmentIndex), nil
 }

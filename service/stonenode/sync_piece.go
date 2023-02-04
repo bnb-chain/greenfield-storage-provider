@@ -70,11 +70,12 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 				return
 			}
 			if redundancyType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
-				log.Info("test kkkkkkkkkkkk")
+				log.Info("test kkkkkkkkkkkk", "secondary", secondary)
 				pieceIndex, err := decodeSPKey(secondary)
 				if err != nil {
 					log.Errorw("decode sp key error", "error", err)
 				}
+				log.Infow("kankan pieceIndex", "pieceIndex", pieceIndex)
 				pieceJob.StorageProviderSealInfo.PieceIdx = pieceIndex
 			}
 			pieceJob.StorageProviderSealInfo = spInfo
