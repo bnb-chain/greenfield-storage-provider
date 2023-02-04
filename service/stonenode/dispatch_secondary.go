@@ -76,14 +76,14 @@ func encodeSPKey(spIndex int, sp string) string {
 	return fmt.Sprintf("%d_%s", spIndex, sp)
 }
 
-func decodeSPKey(spKey string) (uint32, error) {
+func decodeSPKey(spKey string) (uint32, string, error) {
 	keys := strings.Split(spKey, "_")
 	if valid := checkSPKey(keys); !valid {
 		log.Errorw("sp key is wrong", "sp key", spKey)
-		return 0, fmt.Errorf("invalid sp key")
+		return 0, "", fmt.Errorf("invalid sp key")
 	}
 	spIndex, _ := strconv.ParseUint(keys[0], 10, 32)
-	return uint32(spIndex), nil
+	return uint32(spIndex), keys[1], nil
 }
 
 var spRegex = regexp.MustCompile("^[0-9]+$")
