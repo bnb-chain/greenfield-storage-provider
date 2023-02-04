@@ -223,7 +223,6 @@ func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, up
 	}
 	req = &stypesv1pb.StoneHubServiceDonePrimaryPieceJobRequest{
 		TraceId:  traceID,
-		TxHash:   jm.txHash,
 		PieceJob: &pieceJob,
 	}
 	if _, err := uploader.stoneHub.DonePrimaryPieceJob(ctx, req); err != nil {

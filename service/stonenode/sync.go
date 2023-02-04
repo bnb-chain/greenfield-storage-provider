@@ -271,13 +271,11 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 		objectID       = resp.GetPieceJob().GetObjectId()
 		payloadSize    = resp.GetPieceJob().GetPayloadSize()
 		redundancyType = resp.GetPieceJob().GetRedundancyType()
-		txHash         = resp.GetTxHash()
 	)
 	for secondary, pieceData := range pieceDataBySecondary {
 		go func(secondary string, pieceData map[string][]byte) {
 			errMsg := &stypesv1pb.ErrMessage{}
 			pieceJob := &stypesv1pb.PieceJob{
-				TxHash:         txHash,
 				ObjectId:       objectID,
 				PayloadSize:    payloadSize,
 				RedundancyType: redundancyType,
@@ -287,7 +285,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 				// notify stone hub when an ec segment is done
 				req := &stypesv1pb.StoneHubServiceDoneSecondaryPieceJobRequest{
 					TraceId:    resp.GetTraceId(),
-					TxHash:     pieceJob.GetTxHash(),
 					PieceJob:   pieceJob,
 					ErrMessage: errMsg,
 				}
@@ -300,7 +297,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 
 			syncResp, err := node.syncPiece(ctx, &stypesv1pb.SyncerInfo{
 				ObjectId:          objectID,
-				TxHash:            txHash,
 				StorageProviderId: secondary,
 				PieceCount:        uint32(len(pieceData)),
 				RedundancyType:    redundancyType,
@@ -343,7 +339,6 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *sty
 	}
 	req := &stypesv1pb.StoneHubServiceDoneSecondaryPieceJobRequest{
 		TraceId: resp.GetTraceId(),
-		TxHash:  resp.GetTxHash(),
 		ErrMessage: &stypesv1pb.ErrMessage{
 			ErrCode: stypesv1pb.ErrCode_ERR_CODE_ERROR,
 			ErrMsg:  reportErr.Error(),
