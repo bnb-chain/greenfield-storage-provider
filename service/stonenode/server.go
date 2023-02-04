@@ -99,7 +99,7 @@ func (node *StoneNodeService) Start(startCtx context.Context) error {
 					}
 					// TBD::exceed stoneLimit or alloc empty stone,
 					// stone node need one backoff strategy.
-					node.allocStone(ctx)
+					node.allocStoneJob(ctx)
 				}()
 			case <-node.stopCh:
 				cancel()
