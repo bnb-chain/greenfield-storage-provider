@@ -50,7 +50,7 @@ var _ lifecycle.Service = &StoneHub{}
 // StoneHub manage all stones, the stone is an abstraction of job context and fsm.
 type StoneHub struct {
 	config   *StoneHubConfig
-	jobDB    jobdb.JobDB         // store the stones(include job and fsm) context
+	jobDB    jobdb.JobDBV2       // store the stones(include job and fsm) context
 	metaDB   metadb.MetaDB       // store the storage provider meta
 	stone    sync.Map            // hold all the running stones, goroutine safe
 	jobQueue *lane.Queue         // hold the stones that wait to be requested by stone node service
@@ -259,42 +259,40 @@ func (hub *StoneHub) listenChain() {
 
 // initDB init job, meta, etc. db instance
 func (hub *StoneHub) initDB() error {
-	initMemoryDB := func() {
-		hub.jobDB = jobmemory.NewMemJobDB()
-	}
-	initSqlDB := func() (err error) {
-		if hub.config.JobDB == nil {
-			hub.config.JobDB = DefaultStoneHubConfig.JobDB
-		}
-		hub.jobDB, err = jobsql.NewJobMetaImpl(hub.config.JobDB)
-		return
-	}
-	initLevelDB := func() (err error) {
+	initMetaDB := func() (err error) {
 		if hub.config.MetaDB == nil {
 			hub.config.MetaDB = DefaultStoneHubConfig.MetaDB
 		}
-		hub.metaDB, err = leveldb.NewMetaDB(hub.config.MetaDB)
+		switch hub.config.MetaDBType {
+		case model.LevelDB:
+			hub.metaDB, err = leveldb.NewMetaDB(hub.config.MetaDB)
+		case model.MySqlDB:
+			// TODO:: meta support SQL
+		default:
+			err = fmt.Errorf("meta db not support %s type", hub.config.MetaDBType)
+		}
 		return
 	}
 
-	switch hub.config.JobDBType {
-	case model.MySqlDB:
-		if err := initSqlDB(); err != nil {
-			return err
+	initJobDB := func() (err error) {
+		if hub.config.JobDB == nil {
+			hub.config.JobDB = DefaultStoneHubConfig.JobDB
 		}
-	case model.MemoryDB:
-		initMemoryDB()
-	default:
-		return fmt.Errorf("job db not support %s type", hub.config.JobDBType)
+		switch hub.config.JobDBType {
+		case model.MySqlDB:
+			hub.jobDB, err = jobsql.NewJobMetaImpl(hub.config.JobDB)
+		case model.MemoryDB:
+			hub.jobDB = jobmemory.NewMemJobDBV2()
+		default:
+			err = fmt.Errorf("job db not support %s type", hub.config.JobDBType)
+		}
+		return
 	}
-
-	switch hub.config.MetaDBType {
-	case model.LevelDB:
-		if err := initLevelDB(); err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("meta db not support %s type", hub.config.MetaDBType)
+	if err := initMetaDB(); err != nil {
+		return err
+	}
+	if err := initJobDB(); err != nil {
+		return err
 	}
 	return nil
 }

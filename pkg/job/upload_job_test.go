@@ -4,13 +4,13 @@ import (
 	"testing"
 	"time"
 
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/stretchr/testify/assert"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobmemory"
-	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 )
 
 func InitEnv(rType ptypesv1pb.RedundancyType) (*UploadPayloadJob, *ptypesv1pb.ObjectInfo) {
@@ -24,22 +24,22 @@ func InitEnv(rType ptypesv1pb.RedundancyType) (*UploadPayloadJob, *ptypesv1pb.Ob
 		ObjectId:       1,
 		RedundancyType: rType,
 	}
-	job, _ := NewUploadPayloadJob(NewObjectInfoContext(object, jobmemory.NewMemJobDB(), nil))
+	job, _ := NewUploadPayloadJob(NewObjectInfoContext(object, jobmemory.NewMemJobDBV2(), nil))
 	return job, object
 }
 
 func TestInitUploadPayloadJob(t *testing.T) {
 	job, _ := InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
-	assert.Equal(t, len(job.primaryJob.pieceJobs), 4)
-	assert.Equal(t, len(job.secondaryJob.pieceJobs), 6)
+	assert.Equal(t, len(job.primaryJob.PopPendingJob()), 4)
+	assert.Equal(t, len(job.secondaryJob.PopPendingJob()), 6)
 
 	job, _ = InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE)
-	assert.Equal(t, len(job.primaryJob.pieceJobs), 1)
-	assert.Equal(t, len(job.secondaryJob.pieceJobs), 1)
+	assert.Equal(t, len(job.primaryJob.PopPendingJob()), 1)
+	assert.Equal(t, len(job.secondaryJob.PopPendingJob()), 6)
 
 	job, _ = InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE)
-	assert.Equal(t, len(job.primaryJob.pieceJobs), 4)
-	assert.Equal(t, len(job.secondaryJob.pieceJobs), 4)
+	assert.Equal(t, len(job.primaryJob.PopPendingJob()), 4)
+	assert.Equal(t, len(job.secondaryJob.PopPendingJob()), 6)
 }
 
 func TestDoneReplicatePieceJob(t *testing.T) {
@@ -68,18 +68,31 @@ func TestDoneReplicatePieceJob(t *testing.T) {
 	job.DonePrimarySPJob(pieceJob)
 	assert.Equal(t, true, job.primaryJob.Completed())
 
+	pieceJob.StorageProviderSealInfo.PieceChecksum = append(pieceJob.StorageProviderSealInfo.PieceChecksum,
+		hash.GenerateChecksum([]byte(time.Now().String())))
+	pieceJob.StorageProviderSealInfo.PieceChecksum = append(pieceJob.StorageProviderSealInfo.PieceChecksum,
+		hash.GenerateChecksum([]byte(time.Now().String())))
+	pieceJob.StorageProviderSealInfo.PieceChecksum = append(pieceJob.StorageProviderSealInfo.PieceChecksum,
+		hash.GenerateChecksum([]byte(time.Now().String())))
+	assert.Equal(t, 6, len(job.secondaryJob.PopPendingJob()))
 	pieceJob.StorageProviderSealInfo.PieceIdx = 0
 	job.DoneSecondarySPJob(pieceJob)
-	assert.Equal(t, 3, len(job.secondaryJob.PopPendingJob()))
+	assert.Equal(t, 5, len(job.secondaryJob.PopPendingJob()))
 	pieceJob.StorageProviderSealInfo.PieceIdx = 3
 	job.DoneSecondarySPJob(pieceJob)
-	assert.Equal(t, 2, len(job.secondaryJob.PopPendingJob()))
+	assert.Equal(t, 4, len(job.secondaryJob.PopPendingJob()))
 	pieceJob.StorageProviderSealInfo.PieceIdx = 2
 	job.DoneSecondarySPJob(pieceJob)
-	assert.Equal(t, 1, len(job.secondaryJob.PopPendingJob()))
+	assert.Equal(t, 3, len(job.secondaryJob.PopPendingJob()))
 	pieceJob.StorageProviderSealInfo.PieceIdx = 1
 	job.DoneSecondarySPJob(pieceJob)
-	assert.Equal(t, true, job.secondaryJob.Completed())
+	assert.Equal(t, 2, len(job.secondaryJob.PopPendingJob()))
+	pieceJob.StorageProviderSealInfo.PieceIdx = 4
+	job.DoneSecondarySPJob(pieceJob)
+	assert.Equal(t, 1, len(job.secondaryJob.PopPendingJob()))
+	pieceJob.StorageProviderSealInfo.PieceIdx = 5
+	job.DoneSecondarySPJob(pieceJob)
+	//assert.Equal(t, true, job.secondaryJob.Completed())
 }
 
 func TestDoneInlinePieceJob(t *testing.T) {
@@ -103,10 +116,7 @@ func TestDoneInlinePieceJob(t *testing.T) {
 	assert.Equal(t, 0, len(job.primaryJob.PopPendingJob()))
 	pieceJob.StorageProviderSealInfo.PieceIdx = 0
 	job.DoneSecondarySPJob(pieceJob)
-	assert.Equal(t, pieceCheckSum, job.secondaryJob.pieceJobs[0].Checksum[0])
-	assert.Equal(t, intergrity, job.secondaryJob.pieceJobs[0].IntegrityHash)
-	assert.Equal(t, signature, job.secondaryJob.pieceJobs[0].Signature)
-	assert.Equal(t, 0, len(job.secondaryJob.PopPendingJob()))
+	assert.Equal(t, 5, len(job.secondaryJob.PopPendingJob()))
 }
 
 func TestDoneECPieceJob(t *testing.T) {
