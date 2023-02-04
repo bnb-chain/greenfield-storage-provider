@@ -70,13 +70,16 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 				return
 			}
 			if redundancyType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
-				log.Info("test kkkkkkkkkkkk", "secondary", secondary)
+				log.Infow("test kkkkkkkkkkkk", "secondary", secondary)
 				pieceIndex, err := decodeSPKey(secondary)
 				if err != nil {
 					log.Errorw("decode sp key error", "error", err)
+					errMsg.ErrCode = stypesv1pb.ErrCode_ERR_CODE_ERROR
+					errMsg.ErrMsg = err.Error() // fix as internal error
+					return
 				}
 				log.Infow("kankan pieceIndex", "pieceIndex", pieceIndex)
-				pieceJob.StorageProviderSealInfo.PieceIdx = pieceIndex
+				spInfo.PieceIdx = pieceIndex
 			}
 			pieceJob.StorageProviderSealInfo = spInfo
 			log.CtxDebugw(ctx, "sync piece data to secondary", "secondary_provider", secondary)
