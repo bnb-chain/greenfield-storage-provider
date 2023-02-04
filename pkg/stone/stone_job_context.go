@@ -14,13 +14,13 @@ import (
 type JobContextWrapper struct {
 	jobCtx *ptypesv1pb.JobContext
 	jobErr error
-	jobDB  jobdb.JobDB
+	jobDB  jobdb.JobDBV2
 	metaDB metadb.MetaDB
 	mu     sync.RWMutex
 }
 
 // NewJobContextWrapper return the instance of JobContextWrapper
-func NewJobContextWrapper(jobCtx *ptypesv1pb.JobContext, jobDB jobdb.JobDB, metaDB metadb.MetaDB) *JobContextWrapper {
+func NewJobContextWrapper(jobCtx *ptypesv1pb.JobContext, jobDB jobdb.JobDBV2, metaDB metadb.MetaDB) *JobContextWrapper {
 	return &JobContextWrapper{
 		jobCtx: jobCtx,
 		jobDB:  jobDB,
@@ -44,7 +44,7 @@ func (wrapper *JobContextWrapper) SetJobState(state string) error {
 	wrapper.mu.Lock()
 	defer wrapper.mu.Unlock()
 	wrapper.jobCtx.JobState = ptypesv1pb.JobState(ptypesv1pb.JobState_value[state])
-	return wrapper.jobDB.SetUploadPayloadJobState(wrapper.jobCtx.JobId, state, time.Now().Unix())
+	return wrapper.jobDB.SetUploadPayloadJobStateV2(wrapper.jobCtx.JobId, state, time.Now().Unix())
 }
 
 // JobErr return job error
@@ -65,7 +65,7 @@ func (wrapper *JobContextWrapper) SetJobErr(err error) error {
 		wrapper.jobCtx.JobErr = wrapper.jobCtx.JobErr + err.Error()
 	}
 	wrapper.jobCtx.JobState = ptypesv1pb.JobState_JOB_STATE_ERROR
-	return wrapper.jobDB.SetUploadPayloadJobJobError(wrapper.jobCtx.JobId,
+	return wrapper.jobDB.SetUploadPayloadJobJobErrorV2(wrapper.jobCtx.JobId,
 		ptypesv1pb.JOB_STATE_ERROR, wrapper.jobCtx.JobErr, time.Now().Unix())
 }
 

@@ -233,12 +233,11 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *stypesv1pb.S
 		uploadStone *stone.UploadPayloadStone
 	)
 	// create upload stone
-	if req.ObjectInfo.JobId, err = hub.jobDB.CreateUploadPayloadJob(
-		req.GetObjectInfo().GetTxHash(), req.GetObjectInfo()); err != nil {
+	if req.ObjectInfo.JobId, err = hub.jobDB.CreateUploadPayloadJobV2(req.GetObjectInfo()); err != nil {
 		return
 	}
 	// TODO::CreateUploadPayloadJob return jobContext
-	if jobCtx, err = hub.jobDB.GetJobContext(req.GetObjectInfo().GetJobId()); err != nil {
+	if jobCtx, err = hub.jobDB.GetJobContextV2(req.GetObjectInfo().GetJobId()); err != nil {
 		return
 	}
 	if uploadStone, err = stone.NewUploadPayloadStone(ctx, jobCtx, req.GetObjectInfo(),
@@ -261,7 +260,7 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *stypesv1pb.S
 func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context, req *stypesv1pb.StoneHubServiceDonePrimaryPieceJobRequest) (
 	*stypesv1pb.StoneHubServiceDonePrimaryPieceJobResponse, error) {
 	ctx = log.Context(ctx, req, req.GetPieceJob())
-	resp := &stypesv1pb.StoneHubServiceDonePrimaryPieceJobResponse{TraceId: req.TraceId, TxHash: req.TxHash}
+	resp := &stypesv1pb.StoneHubServiceDonePrimaryPieceJobResponse{TraceId: req.TraceId}
 	var (
 		uploadStone  *stone.UploadPayloadStone
 		job          Stone
@@ -407,6 +406,6 @@ func (hub *StoneHub) QueryStone(ctx context.Context, req *stypesv1pb.StoneHubSer
 	rsp.JobInfo = uploadStone.GetJobContext()
 	rsp.PendingPrimaryJob = uploadStone.PopPendingPrimarySPJob()
 	rsp.PendingSecondaryJob = uploadStone.PopPendingSecondarySPJob()
-	rsp.ObjectInfo, _ = hub.jobDB.GetObjectInfo(uploadStone.GetObjectInfo().GetTxHash())
+	rsp.ObjectInfo, _ = hub.jobDB.GetObjectInfoV2(uploadStone.GetObjectInfo().GetObjectId())
 	return rsp, nil
 }

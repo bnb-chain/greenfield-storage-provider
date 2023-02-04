@@ -13,31 +13,28 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 type StorageProviderConfig struct {
-	Service          []string
-	StoneHubCfg      *stonehub.StoneHubConfig
-	PieceStoreConfig *storage.PieceStoreConfig
-	GatewayCfg       *gateway.GatewayConfig
-	UploaderCfg      *uploader.UploaderConfig
-	DownloaderCfg    *downloader.DownloaderConfig
-	StoneNodeCfg     *stonenode.StoneNodeConfig
-	SyncerCfg        *syncer.SyncerConfig
-	ChallengeCfg     *challenge.ChallengeConfig
+	Service       []string
+	GatewayCfg    *gateway.GatewayConfig
+	UploaderCfg   *uploader.UploaderConfig
+	DownloaderCfg *downloader.DownloaderConfig
+	ChallengeCfg  *challenge.ChallengeConfig
+	StoneHubCfg   *stonehub.StoneHubConfig
+	StoneNodeCfg  *stonenode.StoneNodeConfig
+	SyncerCfg     *syncer.SyncerConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
-	StoneHubCfg:      stonehub.DefaultStoneHubConfig,
-	PieceStoreConfig: storage.DefaultPieceStoreConfig,
-	GatewayCfg:       gateway.DefaultGatewayConfig,
-	UploaderCfg:      uploader.DefaultUploaderConfig,
-	DownloaderCfg:    downloader.DefaultDownloaderConfig,
-	StoneNodeCfg:     stonenode.DefaultStoneNodeConfig,
-	SyncerCfg:        syncer.DefaultSyncerConfig,
-	ChallengeCfg:     challenge.DefaultChallengeConfig,
+	GatewayCfg:    gateway.DefaultGatewayConfig,
+	UploaderCfg:   uploader.DefaultUploaderConfig,
+	DownloaderCfg: downloader.DefaultDownloaderConfig,
+	ChallengeCfg:  challenge.DefaultChallengeConfig,
+	StoneHubCfg:   stonehub.DefaultStoneHubConfig,
+	StoneNodeCfg:  stonenode.DefaultStoneNodeConfig,
+	SyncerCfg:     syncer.DefaultSyncerConfig,
 }
 
 // LoadConfig loads the config file
