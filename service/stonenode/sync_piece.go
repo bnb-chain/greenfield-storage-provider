@@ -61,6 +61,8 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 					errMsg.ErrMsg = err.Error() // fix as internal error
 					return
 				}
+			} else {
+				spID = secondary
 			}
 
 			syncResp, err := node.syncPiece(ctx, &stypesv1pb.SyncerInfo{
