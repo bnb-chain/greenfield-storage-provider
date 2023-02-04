@@ -143,10 +143,10 @@ func (job *PrimaryJob) SealInfo() ([]*ptypesv1pb.StorageProviderInfo, error) {
 	for _, pieceJob := range job.segmentPieceJobs {
 		checksumList = append(checksumList, pieceJob.Checksum[0])
 	}
-	// TODO:: sign the primary integrity hash in stone hub level.
 	sealInfo = append(sealInfo, &ptypesv1pb.StorageProviderInfo{
-		SpId:     job.segmentPieceJobs[0].StorageProvider,
-		Checksum: hash.GenerateIntegrityHash(checksumList),
+		SpId:          job.segmentPieceJobs[0].StorageProvider,
+		IntegrityHash: hash.GenerateIntegrityHash(checksumList),
+		PieceChecksum: checksumList,
 	})
 	return sealInfo, nil
 }
@@ -288,10 +288,11 @@ func (job *SecondarySegmentPieceJob) SealInfo() ([]*ptypesv1pb.StorageProviderIn
 	}
 	for _, pieceJob := range job.copyPieceJobs {
 		sealInfo = append(sealInfo, &ptypesv1pb.StorageProviderInfo{
-			SpId:      pieceJob.StorageProvider,
-			Idx:       pieceJob.PieceId,
-			Checksum:  pieceJob.IntegrityHash,
-			Signature: pieceJob.Signature,
+			SpId:          pieceJob.StorageProvider,
+			Idx:           pieceJob.PieceId,
+			IntegrityHash: pieceJob.IntegrityHash,
+			PieceChecksum: pieceJob.Checksum,
+			Signature:     pieceJob.Signature,
 		})
 	}
 	return sealInfo, nil
@@ -432,10 +433,11 @@ func (job *SecondaryECPieceJob) SealInfo() ([]*ptypesv1pb.StorageProviderInfo, e
 	}
 	for _, pieceJob := range job.ecPieceJobs {
 		sealInfo = append(sealInfo, &ptypesv1pb.StorageProviderInfo{
-			SpId:      pieceJob.StorageProvider,
-			Idx:       pieceJob.PieceId,
-			Checksum:  pieceJob.IntegrityHash,
-			Signature: pieceJob.Signature,
+			SpId:          pieceJob.StorageProvider,
+			Idx:           pieceJob.PieceId,
+			IntegrityHash: pieceJob.IntegrityHash,
+			PieceChecksum: pieceJob.Checksum,
+			Signature:     pieceJob.Signature,
 		})
 	}
 	return sealInfo, nil

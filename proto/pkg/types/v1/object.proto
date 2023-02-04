@@ -6,8 +6,9 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/pkg/types/
 message StorageProviderInfo {
   string sp_id = 1;   // identifies storage provider
   uint32 idx = 2;     // order of secondary storage provider
-  bytes checksum = 3;
-  bytes signature = 4;
+  bytes integrity_hash = 3;
+  repeated bytes piece_checksum = 4;
+  bytes signature = 5;
 }
 
 enum RedundancyType {
