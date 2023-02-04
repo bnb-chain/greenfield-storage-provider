@@ -52,8 +52,9 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 				spID       string
 				err        error
 			)
-			if redundancyType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE ||
-				redundancyType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
+			if redundancyType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+				spID = secondary
+			} else { // replica or inline type
 				pieceIndex, spID, err = decodeSPKey(secondary)
 				if err != nil {
 					log.Errorw("decode sp key error", "error", err)
@@ -61,8 +62,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 					errMsg.ErrMsg = err.Error() // fix as internal error
 					return
 				}
-			} else {
-				spID = secondary
+
 			}
 
 			syncResp, err := node.syncPiece(ctx, &stypesv1pb.SyncerInfo{
@@ -87,7 +87,8 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 				errMsg.ErrMsg = merrors.ErrIntegrityHash.Error()
 				return
 			}
-			if redundancyType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
+			if redundancyType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE ||
+				redundancyType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
 				spInfo.PieceIdx = pieceIndex
 			}
 			pieceJob.StorageProviderSealInfo = spInfo
