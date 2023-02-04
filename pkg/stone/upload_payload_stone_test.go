@@ -37,15 +37,12 @@ func InitENV() (*UploadPayloadStone, error) {
 			SpId: "bnb-test-sp",
 		},
 	}
-	jobDB := jobmemory.NewMemJobDB()
-	if _, err := jobDB.CreateUploadPayloadJob(txHash, object); err != nil {
+	jobDB := jobmemory.NewMemJobDBV2()
+	jobID, err := jobDB.CreateUploadPayloadJobV2(object)
+	if err != nil {
 		return nil, err
 	}
-	if err := jobDB.SetObjectCreateHeightAndObjectID(txHash, height, objectID); err != nil {
-		return nil, err
-	}
-	jobID := jobDB.JobCount - 1
-	jobCtx, err := jobDB.GetJobContext(jobID)
+	jobCtx, err := jobDB.GetJobContextV2(jobID)
 	if err != nil {
 		return nil, err
 	}

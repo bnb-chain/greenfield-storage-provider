@@ -11,13 +11,13 @@ import (
 // ObjectInfoContext maintains the object info, goroutine safe.
 type ObjectInfoContext struct {
 	object *ptypesv1pb.ObjectInfo
-	jobDB  jobdb.JobDB
+	jobDB  jobdb.JobDBV2
 	metaDB metadb.MetaDB
 	mu     sync.RWMutex
 }
 
 // NewObjectInfoContext return the instance of ObjectInfoContext.
-func NewObjectInfoContext(object *ptypesv1pb.ObjectInfo, jobDB jobdb.JobDB, metaDB metadb.MetaDB) *ObjectInfoContext {
+func NewObjectInfoContext(object *ptypesv1pb.ObjectInfo, jobDB jobdb.JobDBV2, metaDB metadb.MetaDB) *ObjectInfoContext {
 	return &ObjectInfoContext{
 		object: object,
 		jobDB:  jobDB,
@@ -64,24 +64,24 @@ func (ctx *ObjectInfoContext) TxHash() []byte {
 func (ctx *ObjectInfoContext) getPrimaryPieceJob() ([]*jobdb.PieceJob, error) {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
-	return ctx.jobDB.GetPrimaryJob(ctx.object.TxHash)
+	return ctx.jobDB.GetPrimaryJobV2(ctx.object.GetObjectId())
 }
 
 // GetSecondaryJob load the secondary piece job from db and return.
 func (ctx *ObjectInfoContext) getSecondaryJob() ([]*jobdb.PieceJob, error) {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
-	return ctx.jobDB.GetSecondaryJob(ctx.object.TxHash)
+	return ctx.jobDB.GetSecondaryJobV2(ctx.object.GetObjectId())
 }
 
 // SetPrimaryPieceJobDone set the primary piece jod completed and update DB.
 func (ctx *ObjectInfoContext) SetPrimaryPieceJobDone(job *jobdb.PieceJob) error {
-	return ctx.jobDB.SetPrimaryPieceJobDone(ctx.object.GetTxHash(), job)
+	return ctx.jobDB.SetPrimaryPieceJobDoneV2(ctx.object.GetObjectId(), job)
 }
 
 // SetSecondaryPieceJobDone set the secondary piece jod completed and update DB.
 func (ctx *ObjectInfoContext) SetSecondaryPieceJobDone(job *jobdb.PieceJob) error {
-	return ctx.jobDB.SetSecondaryPieceJobDone(ctx.object.GetTxHash(), job)
+	return ctx.jobDB.SetSecondaryPieceJobDoneV2(ctx.object.GetObjectId(), job)
 }
 
 // SetSetIntegrityHash set integrity hash info to meta db.

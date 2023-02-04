@@ -330,13 +330,13 @@ func CtxPanicw(ctx context.Context, msg string, kvs ...interface{}) {
 
 func Context(ctx context.Context, opts ...interface{}) context.Context {
 	for _, req := range opts {
-		if reflect.ValueOf(req).MethodByName("GetTraceId").IsValid() {
-			valList := reflect.ValueOf(req).MethodByName("GetTraceId").Call([]reflect.Value{})
-			if len(valList) > 0 && !valList[0].IsZero() {
-				traceID := valList[0].String()
-				ctx = metainfo.WithValue(ctx, "trace_id", traceID)
-			}
-		}
+		//if reflect.ValueOf(req).MethodByName("GetTraceId").IsValid() {
+		//	valList := reflect.ValueOf(req).MethodByName("GetTraceId").Call([]reflect.Value{})
+		//	if len(valList) > 0 && !valList[0].IsZero() {
+		//		traceID := valList[0].String()
+		//		ctx = metainfo.WithValue(ctx, "trace_id", traceID)
+		//	}
+		//}
 		if reflect.ValueOf(req).MethodByName("GetObjectId").IsValid() {
 			valList := reflect.ValueOf(req).MethodByName("GetObjectId").Call([]reflect.Value{})
 			if len(valList) > 0 && !valList[0].IsZero() {

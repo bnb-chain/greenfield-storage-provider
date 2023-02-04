@@ -8,6 +8,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 )
 
+var _ jobdb.JobDB = &MemJobDB{}
+
 // MemJobDB is a memory db, maintains job, object and piece job table.
 type MemJobDB struct {
 	JobCount               uint64

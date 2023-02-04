@@ -134,6 +134,9 @@ func (node *StoneNodeService) allocStone(ctx context.Context) {
 	resp, err := node.stoneHub.AllocStoneJob(ctx)
 	ctx = log.Context(ctx, resp, resp.GetPieceJob())
 	if err != nil {
+		if err == merrors.ErrEmptyJob {
+			return
+		}
 		log.CtxErrorw(ctx, "alloc stone from stone hub failed", "error", err)
 		return
 	}
