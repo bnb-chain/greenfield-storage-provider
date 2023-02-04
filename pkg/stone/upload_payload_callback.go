@@ -3,6 +3,7 @@ package stone
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/looplab/fsm"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -127,7 +128,7 @@ func EnterUploadSecondaryDone(ctx context.Context, event *fsm.Event) {
 // SealObjectJob defines the job to transfer StoneHub
 type SealObjectJob struct {
 	ObjectInfo        *ptypesv1pb.ObjectInfo
-	PrimarySealInfo   []*ptypesv1pb.StorageProviderInfo
+	PrimarySealInfo   *ptypesv1pb.StorageProviderInfo
 	SecondarySealInfo []*ptypesv1pb.StorageProviderInfo
 }
 
@@ -136,7 +137,7 @@ type SealObjectJob struct {
 func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
 	var (
-		primarySealInfo   []*ptypesv1pb.StorageProviderInfo
+		primarySealInfos  []*ptypesv1pb.StorageProviderInfo
 		secondarySealInfo []*ptypesv1pb.StorageProviderInfo
 		err               error
 	)
@@ -146,8 +147,24 @@ func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 			log.CtxErrorw(ctx, "seal object init failed", "error", err)
 		}
 	}()
-	primarySealInfo, err = stone.job.PrimarySPSealInfo()
+	primarySealInfos, err = stone.job.PrimarySPSealInfo()
 	if err != nil {
+		return
+	}
+	// TODO:: signer primary integrity hash
+
+	// write integrity meta to db
+	objectInfo := stone.GetObjectInfo()
+	primarySealInfo := primarySealInfos[0]
+	integrityInfo := &metadb.IntegrityMeta{
+		ObjectID:       objectInfo.GetObjectId(),
+		IsPrimary:      true,
+		RedundancyType: objectInfo.GetRedundancyType(),
+		IntegrityHash:  primarySealInfo.GetIntegrityHash(),
+		PieceHash:      primarySealInfo.GetPieceChecksum(),
+	}
+	integrityInfo.PieceCount = uint32(len(integrityInfo.PieceHash))
+	if err = stone.metaDB.SetIntegrityMeta(integrityInfo); err != nil {
 		return
 	}
 	secondarySealInfo, err = stone.job.SecondarySPSealInfo()

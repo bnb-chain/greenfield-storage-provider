@@ -26,9 +26,10 @@ func (x *StorageProviderInfo) SafeCopy() *StorageProviderInfo {
 		return nil
 	}
 	return &StorageProviderInfo{
-		SpId:      x.GetSpId(),
-		Idx:       x.GetIdx(),
-		Checksum:  x.GetChecksum(),
-		Signature: x.GetSignature(),
+		SpId:          x.GetSpId(),
+		Idx:           x.GetIdx(),
+		IntegrityHash: x.GetIntegrityHash(),
+		PieceChecksum: x.GetPieceChecksum(),
+		Signature:     x.GetSignature(),
 	}
 }
