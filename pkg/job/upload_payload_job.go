@@ -9,8 +9,8 @@ import (
 // UploadPayloadJob maintains the object info and piece job meta
 type UploadPayloadJob struct {
 	objectCtx    *ObjectInfoContext
-	primaryJob   *UploadSpJob // the job of uploading primary storage provider
-	secondaryJob *UploadSpJob // the job of uploading secondary storage provider
+	primaryJob   PieceJob // the job of uploading primary storage provider
+	secondaryJob PieceJob // the job of uploading secondary storage provider
 }
 
 // NewUploadPayloadJob return the instance of UploadPayloadJob.
@@ -18,20 +18,20 @@ func NewUploadPayloadJob(objectCtx *ObjectInfoContext) (job *UploadPayloadJob, e
 	job = &UploadPayloadJob{
 		objectCtx: objectCtx,
 	}
-	if job.primaryJob, err = NewSegmentUploadSpJob(objectCtx, false); err != nil {
+	if job.primaryJob, err = NewPrimaryJob(objectCtx); err != nil {
 		return nil, err
 	}
 	switch objectCtx.GetObjectRedundancyType() {
 	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
-		if job.secondaryJob, err = NewECUploadSpJob(objectCtx, true); err != nil {
+		if job.secondaryJob, err = NewSecondaryECPieceJob(objectCtx); err != nil {
 			return nil, err
 		}
 	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		if job.secondaryJob, err = NewSegmentUploadSpJob(objectCtx, true); err != nil {
+		if job.secondaryJob, err = NewSecondarySegmentPieceJob(objectCtx); err != nil {
 			return nil, err
 		}
 	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE:
-		if job.secondaryJob, err = NewSegmentUploadSpJob(objectCtx, true); err != nil {
+		if job.secondaryJob, err = NewSecondarySegmentPieceJob(objectCtx); err != nil {
 			return nil, err
 		}
 	default:

@@ -10,7 +10,6 @@ import (
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
@@ -45,7 +44,7 @@ func (s *Syncer) SyncPiece(stream stypesv1pb.SyncerService_SyncPieceServer) erro
 				return merrors.ErrReceivedPieceCount
 			}
 
-			integrityMeta.PieceHash = pieceHash
+			//integrityMeta.PieceHash = pieceHash
 			sealInfo := generateSealInfo(spID, integrityMeta)
 			integrityMeta.IntegrityHash = sealInfo.GetIntegrityHash()
 			if err := s.setIntegrityMeta(s.metaDB, integrityMeta); err != nil {
@@ -86,13 +85,13 @@ func (s *Syncer) setIntegrityMeta(db metadb.MetaDB, meta *metadb.IntegrityMeta) 
 }
 
 func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypesv1pb.StorageProviderSealInfo {
-	keys := util.GenericSortedKeys(integrityMeta.PieceHash)
+	//keys := util.GenericSortedKeys(integrityMeta.PieceHash)
 	pieceChecksumList := make([][]byte, 0)
 	var integrityHash []byte
-	for _, key := range keys {
-		value := integrityMeta.PieceHash[key]
-		pieceChecksumList = append(pieceChecksumList, value)
-	}
+	//for _, key := range keys {
+	//	value := integrityMeta.PieceHash[key]
+	//	pieceChecksumList = append(pieceChecksumList, value)
+	//}
 	integrityHash = hash.GenerateIntegrityHash(pieceChecksumList)
 	resp := &stypesv1pb.StorageProviderSealInfo{
 		StorageProviderId: spID,

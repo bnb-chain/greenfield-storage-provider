@@ -30,12 +30,12 @@ func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err err
 		config: config,
 		name:   model.ChallengeService,
 	}
-	err = challenge.initClient()
+	err = challenge.initDB()
 	return
 }
 
 // initClient init related client resource.
-func (challenge *Challenge) initClient() (err error) {
+func (challenge *Challenge) initDB() (err error) {
 	switch challenge.config.MetaType {
 	case model.LevelDB:
 		if challenge.config.MetaDB == nil {
@@ -45,6 +45,8 @@ func (challenge *Challenge) initClient() (err error) {
 		if err != nil {
 			return
 		}
+	case model.MySqlDB:
+		// TODO:: meta support SQL
 	default:
 		return fmt.Errorf("meta db not support type %s", challenge.config.MetaType)
 	}
