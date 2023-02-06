@@ -10,7 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -54,7 +54,7 @@ func (downloader *Downloader) Start(ctx context.Context) error {
 			return
 		}
 		grpcServer := grpc.NewServer()
-		stypesv1pb.RegisterDownloaderServiceServer(grpcServer, downloader)
+		stypes.RegisterDownloaderServiceServer(grpcServer, downloader)
 		reflection.Register(grpcServer)
 		if err = grpcServer.Serve(lis); err != nil {
 			log.Errorw("syncer serve failed", "error", err)

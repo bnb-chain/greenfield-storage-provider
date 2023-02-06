@@ -7,8 +7,8 @@ import (
 	"github.com/looplab/fsm"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -50,7 +50,7 @@ func AfterUploadPrimaryPieceDone(ctx context.Context, event *fsm.Event) {
 		err = merrors.ErrPieceJobMissing
 		return
 	}
-	pieceInfo, ok := event.Args[0].(*stypesv1pb.PieceJob)
+	pieceInfo, ok := event.Args[0].(*stypes.PieceJob)
 	if !ok {
 		err = merrors.ErrPieceJobMissing
 		return
@@ -63,7 +63,7 @@ func AfterUploadPrimaryPieceDone(ctx context.Context, event *fsm.Event) {
 // and update the job state to the DB
 func EnterUploadPrimaryDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
-	if err := stone.jobCtx.SetJobState(ptypesv1pb.JOB_STATE_UPLOAD_PRIMARY_DONE); err != nil {
+	if err := stone.jobCtx.SetJobState(ptypes.JOB_STATE_UPLOAD_PRIMARY_DONE); err != nil {
 		stone.jobCtx.SetJobErr(err)
 		log.CtxErrorw(ctx, "update primary done job state error", "error", err)
 		return
@@ -102,7 +102,7 @@ func AfterUploadSecondaryPieceDone(ctx context.Context, event *fsm.Event) {
 		interruptErr = merrors.ErrPieceJobMissing
 		return
 	}
-	pieceInfo, ok := event.Args[0].(*stypesv1pb.PieceJob)
+	pieceInfo, ok := event.Args[0].(*stypes.PieceJob)
 	if !ok {
 		interruptErr = merrors.ErrPieceJobMissing
 		return
@@ -117,7 +117,7 @@ func AfterUploadSecondaryPieceDone(ctx context.Context, event *fsm.Event) {
 // and update the job state to the DB
 func EnterUploadSecondaryDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
-	if err := stone.jobCtx.SetJobState(ptypesv1pb.JOB_STATE_UPLOAD_SECONDARY_DONE); err != nil {
+	if err := stone.jobCtx.SetJobState(ptypes.JOB_STATE_UPLOAD_SECONDARY_DONE); err != nil {
 		stone.jobCtx.SetJobErr(err)
 		log.CtxErrorw(ctx, "update primary done job state error", "error", err)
 		return
@@ -127,9 +127,9 @@ func EnterUploadSecondaryDone(ctx context.Context, event *fsm.Event) {
 
 // SealObjectJob defines the job to transfer StoneHub
 type SealObjectJob struct {
-	ObjectInfo        *ptypesv1pb.ObjectInfo
-	PrimarySealInfo   *ptypesv1pb.StorageProviderInfo
-	SecondarySealInfo []*ptypesv1pb.StorageProviderInfo
+	ObjectInfo        *ptypes.ObjectInfo
+	PrimarySealInfo   *ptypes.StorageProviderInfo
+	SecondarySealInfo []*ptypes.StorageProviderInfo
 }
 
 // EnterSealObjectInit is called when enter JOB_STATE_SEAL_OBJECT_INIT,
@@ -137,8 +137,8 @@ type SealObjectJob struct {
 func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
 	var (
-		primarySealInfos  []*ptypesv1pb.StorageProviderInfo
-		secondarySealInfo []*ptypesv1pb.StorageProviderInfo
+		primarySealInfos  []*ptypes.StorageProviderInfo
+		secondarySealInfo []*ptypes.StorageProviderInfo
 		err               error
 	)
 	defer func() {
@@ -189,7 +189,7 @@ func EnterSealObjectDoing(ctx context.Context, event *fsm.Event) {
 // and update the job state to the DB
 func EnterSealObjectDone(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
-	if err := stone.jobCtx.SetJobState(ptypesv1pb.JOB_STATE_SEAL_OBJECT_DONE); err != nil {
+	if err := stone.jobCtx.SetJobState(ptypes.JOB_STATE_SEAL_OBJECT_DONE); err != nil {
 		stone.jobCtx.SetJobErr(err)
 		log.CtxErrorw(ctx, "update seal object done job state error", "error", err)
 		return

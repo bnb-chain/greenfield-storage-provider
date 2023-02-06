@@ -9,7 +9,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -138,7 +138,7 @@ func (d *grpcDownloaderImpl) getObject(objectName string, writer io.Writer, opti
 		size          int
 	)
 
-	req := &stypesv1pb.DownloaderServiceDownloaderObjectRequest{
+	req := &stypes.DownloaderServiceDownloaderObjectRequest{
 		TraceId:    option.requestContext.requestID,
 		BucketName: option.requestContext.bucketName,
 		ObjectName: objectName,
@@ -165,7 +165,7 @@ func (d *grpcDownloaderImpl) getObject(objectName string, writer io.Writer, opti
 			log.Warnw("failed to read stream", "error", err)
 			return errors.ErrInternalError
 		}
-		if res.ErrMessage != nil && res.ErrMessage.ErrCode != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		if res.ErrMessage != nil && res.ErrMessage.ErrCode != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 			err = fmt.Errorf(res.ErrMessage.ErrMsg)
 			log.Warnw("failed to read stream", "error", err)
 			return errors.ErrInternalError
