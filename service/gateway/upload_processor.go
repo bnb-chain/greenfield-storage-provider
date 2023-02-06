@@ -67,6 +67,8 @@ func (dui *debugUploaderImpl) putObjectTx(objectName string, option *putObjectTx
 		bucketDir    = dui.localDir + "/" + option.requestContext.objectName
 		objectTxFile = bucketDir + "/" + objectName + ".tx"
 		txJson       []byte
+		fileInfo     os.FileInfo
+		file         *os.File
 	)
 	defer func() {
 		if innerErr != nil {
@@ -74,7 +76,7 @@ func (dui *debugUploaderImpl) putObjectTx(objectName string, option *putObjectTx
 		}
 	}()
 
-	if s, innerErr := os.Stat(bucketDir); innerErr != nil || !s.IsDir() {
+	if fileInfo, innerErr = os.Stat(bucketDir); innerErr != nil || !fileInfo.IsDir() {
 		return nil, errors.ErrInternalError
 	}
 	if _, innerErr = os.Stat(objectTxFile); innerErr == nil {
@@ -91,11 +93,12 @@ func (dui *debugUploaderImpl) putObjectTx(objectName string, option *putObjectTx
 	if txJson, innerErr = json.Marshal(txInfo); innerErr != nil {
 		return nil, errors.ErrInternalError
 	}
-	if f, innerErr := os.OpenFile(objectTxFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777); innerErr != nil {
+	if file, innerErr = os.OpenFile(objectTxFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777); innerErr != nil {
 		return nil, errors.ErrInternalError
 	} else {
-		defer f.Close()
-		if n, innerErr := f.Write(txJson); innerErr == nil && n < len(txJson) {
+		defer file.Close()
+		n := 0
+		if n, innerErr = file.Write(txJson); innerErr == nil && n < len(txJson) {
 			return nil, errors.ErrInternalError
 		}
 		return &objectTxInfo{txHash: []byte(txInfo.TxHash), weight: txInfo.Weight}, nil
@@ -116,6 +119,8 @@ func (dui *debugUploaderImpl) putObject(objectName string, reader io.Reader, opt
 		hashBuf       = make([]byte, 65536)
 		md5Hash       = md5.New()
 		md5Value      string
+		fileInfo      os.FileInfo
+		file          *os.File
 	)
 	defer func() {
 		if innerErr != nil {
@@ -123,7 +128,7 @@ func (dui *debugUploaderImpl) putObject(objectName string, reader io.Reader, opt
 		}
 	}()
 
-	if s, innerErr := os.Stat(bucketDir); innerErr != nil || !s.IsDir() {
+	if fileInfo, innerErr = os.Stat(bucketDir); innerErr != nil || !fileInfo.IsDir() {
 		return nil, errors.ErrInternalError
 	}
 	if _, innerErr = os.Stat(objectTxFile); innerErr != nil && os.IsNotExist(innerErr) {
@@ -131,11 +136,11 @@ func (dui *debugUploaderImpl) putObject(objectName string, reader io.Reader, opt
 	}
 
 	// todo: check tx-hash by json
-	if f, innerErr := os.OpenFile(objectDataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777); innerErr != nil {
+	if file, innerErr = os.OpenFile(objectDataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777); innerErr != nil {
 		return nil, errors.ErrInternalError
 	} else {
-		defer f.Close()
-		writer := bufio.NewWriter(f)
+		defer file.Close()
+		writer := bufio.NewWriter(file)
 		for {
 			if readN, innerErr = reader.Read(buf); innerErr != nil && innerErr != io.EOF {
 				return nil, errors.ErrInternalError
