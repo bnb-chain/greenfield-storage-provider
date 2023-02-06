@@ -264,11 +264,11 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	return sess, bucketName, nil
 }
 
-func (sc *SessionCache) clear() {
-	sc.Lock()
-	defer sc.Unlock()
-	sc.sessions = map[ObjectStorageConfig]*session.Session{}
-}
+//func (sc *SessionCache) clear() {
+//	sc.Lock()
+//	defer sc.Unlock()
+//	sc.sessions = map[ObjectStorageConfig]*session.Session{}
+//}
 
 func parseEndPoint(endPoint string) (string, string, error) {
 	endPoint = strings.Trim(endPoint, "/")
