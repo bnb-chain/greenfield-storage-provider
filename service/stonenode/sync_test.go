@@ -331,7 +331,6 @@ func TestSyncPieceSuccess(t *testing.T) {
 
 	sInfo := &stypesv1pb.SyncerInfo{
 		ObjectId:          123456,
-		TxHash:            []byte("i"),
 		StorageProviderId: "440246a94fc4257096b8d4fa8db94a5655f455f88555f885b10da1466763f742",
 		RedundancyType:    ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED,
 	}
