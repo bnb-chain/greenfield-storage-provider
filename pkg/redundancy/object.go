@@ -24,10 +24,3 @@ type ObjectInfo struct {
 	ObjectSize uint64
 	Redundancy RedundancyConfig
 }
-
-func initConfig() ECConfig {
-	return ECConfig{
-		dataBlocks:   4,
-		parityBlocks: 2,
-	}
-}
