@@ -53,34 +53,34 @@ jobs:
           github-token: ${{ secrets.github_token }}
         if: env.GIT_DIFF
 
-  golang-ci-lint-success:
-    needs: golangci
-    if: ${{ success() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Notify Slack on success
-        uses: rtCamp/action-slack-notify@v2.2.0
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: greenfield_storage_ci
-          SLACK_USERNAME: SP Golang CI Lint
-          SLACK_ICON_EMOJI: ':heavy_check_mark:'
-          SLACK_COLOR: good
-          SLACK_MESSAGE: Greenfield golang ci lint passed
-          SLACK_FOOTER: ''
+#  golang-ci-lint-success:
+#    needs: golangci
+#    if: ${{ success() }}
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Notify Slack on success
+#        uses: rtCamp/action-slack-notify@v2.2.0
+#        env:
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#          SLACK_CHANNEL: greenfield_storage_ci
+#          SLACK_USERNAME: SP Golang CI Lint
+#          SLACK_ICON_EMOJI: ':heavy_check_mark:'
+#          SLACK_COLOR: good
+#          SLACK_MESSAGE: Greenfield golang ci lint passed
+#          SLACK_FOOTER: ''
 
-  golang-ci-lint-failure:
-    needs: golangci
-    if: ${{ failure() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.2.0
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: greenfield_storage_ci
-          SLACK_USERNAME: SP Golang CI Lint
-          SLACK_ICON_EMOJI: ':x:'
-          SLACK_COLOR: danger
-          SLACK_MESSAGE: Greenfield golang ci lint failed
-          SLACK_FOOTER: ''
+#  golang-ci-lint-failure:
+#    needs: golangci
+#    if: ${{ failure() }}
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Notify Slack on failure
+#        uses: rtCamp/action-slack-notify@v2.2.0
+#        env:
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#          SLACK_CHANNEL: greenfield_storage_ci
+#          SLACK_USERNAME: SP Golang CI Lint
+#          SLACK_ICON_EMOJI: ':x:'
+#          SLACK_COLOR: danger
+#          SLACK_MESSAGE: Greenfield golang ci lint failed
+#          SLACK_FOOTER: ''
