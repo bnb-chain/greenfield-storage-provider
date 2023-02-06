@@ -28,9 +28,7 @@ func setup(t *testing.T) *StoneNodeService {
 func mockAllocResp(objectID uint64, payloadSize uint64, redundancyType ptypesv1pb.RedundancyType) *stypesv1pb.StoneHubServiceAllocStoneJobResponse {
 	return &stypesv1pb.StoneHubServiceAllocStoneJobResponse{
 		TraceId: "123456",
-		TxHash:  []byte("blockchain_one"),
 		PieceJob: &stypesv1pb.PieceJob{
-			TxHash:         []byte("blockchain_one"),
 			ObjectId:       objectID,
 			PayloadSize:    payloadSize,
 			TargetIdx:      nil,
