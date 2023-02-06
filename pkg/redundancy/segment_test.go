@@ -125,7 +125,7 @@ func TestRawSegmentEnode(t *testing.T) {
 	shardsToRecover[3] = []byte("")
 	shardsToRecover[4] = []byte("")
 
-	deCodeBytes, err = DecodeRawSegment(shardsToRecover, int64(segmentSize))
+	_, err = DecodeRawSegment(shardsToRecover, int64(segmentSize))
 	if err == nil {
 		t.Errorf("segment decode should fail")
 	}
