@@ -43,7 +43,7 @@ func (db *MemJobDB) CreateUploadPayloadJob(txHash []byte, info *ptypes.ObjectInf
 		JobState: ptypes.JobState_JOB_STATE_CREATE_OBJECT_DONE,
 	}
 	info.JobId = db.JobCount
-	db.ObjectTable[string(txHash)] = *info
+	db.ObjectTable[string(txHash)] = *(info.SafeCopy())
 	db.JobCount++
 	return db.JobCount - 1, nil
 }
