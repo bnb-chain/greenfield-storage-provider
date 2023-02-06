@@ -386,10 +386,6 @@ func (enc *zapJsonEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field
 	return ret, nil
 }
 
-func (enc *zapJsonEncoder) truncate() {
-	enc.buf.Reset()
-}
-
 func (enc *zapJsonEncoder) closeOpenNamespaces() {
 	for i := 0; i < enc.openNamespaces; i++ {
 		enc.buf.AppendByte('}')
