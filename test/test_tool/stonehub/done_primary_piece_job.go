@@ -51,7 +51,6 @@ func donePrimaryPieceJob(c *cli.Context) {
 	hash.Write([]byte(time.Now().String()))
 	checksum := hash.Sum(nil)
 	req := &stypes.StoneHubServiceDonePrimaryPieceJobRequest{
-		TxHash: txHash,
 		PieceJob: &stypes.PieceJob{
 			StorageProviderSealInfo: &stypes.StorageProviderSealInfo{
 				PieceIdx:          uint32(c.Uint64("i")),

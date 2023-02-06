@@ -56,7 +56,6 @@ func doneSecondaryPieceJob(c *cli.Context) {
 	}
 
 	req := &stypes.StoneHubServiceDoneSecondaryPieceJobRequest{
-		TxHash: txHash,
 		PieceJob: &stypes.PieceJob{
 			StorageProviderSealInfo: &stypes.StorageProviderSealInfo{
 				PieceIdx:          uint32(c.Uint64("i")),

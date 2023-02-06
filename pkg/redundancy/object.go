@@ -11,8 +11,6 @@ type ECConfig struct {
 	parityBlocks int
 }
 
-var Redundancy map[int]RedundancyConfig
-
 type Object struct {
 	ObjectInfo *ObjectInfo
 	ObjectData []byte
