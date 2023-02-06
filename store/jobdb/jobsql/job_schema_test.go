@@ -8,6 +8,6 @@ import (
 
 // need to install mysql
 func TestDBSchema(t *testing.T) {
-	_, err := InitDB(DefaultDBOption)
+	_, err := InitDB(DefaultJobSqlDBConfig)
 	assert.Equal(t, nil, err)
 }
