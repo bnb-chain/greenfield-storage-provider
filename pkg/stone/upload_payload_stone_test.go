@@ -121,7 +121,6 @@ func TestFsmPrimaryDoingAndSecondaryDoingError(t *testing.T) {
 	primaryPieceJob.StorageProviderSealInfo.PieceIdx = 3
 	err = stone.ActionEvent(context.Background(), UploadPrimaryPieceDoneEvent, primaryPieceJob)
 	assert.Equal(t, nil, err)
-	pendingPrimaryPieceJob = stone.job.PopPendingPrimarySPJob()
 	assert.Equal(t, true, stone.job.PrimarySPCompleted())
 
 	secondaryPieceJob := &stypes.PieceJob{
