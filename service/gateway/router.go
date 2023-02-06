@@ -1,7 +1,7 @@
 package gateway
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -12,7 +12,7 @@ import (
 
 // notFoundHandler log not found request info.
 func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	s, _ := ioutil.ReadAll(r.Body)
+	s, _ := io.ReadAll(r.Body)
 	log.Warnw("not found handler", "header", r.Header, "host", r.Host, "url", r.URL)
 	w.WriteHeader(404)
 	w.Write(s)
