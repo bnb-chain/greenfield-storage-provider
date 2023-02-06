@@ -13,8 +13,8 @@ var _ jobdb.JobDB = &MemJobDB{}
 // MemJobDB is a memory db, maintains job, object and piece job table.
 type MemJobDB struct {
 	JobCount               uint64
-	JobTable               map[uint64]ptypes.JobContext
-	ObjectTable            map[string]ptypes.ObjectInfo
+	JobTable               map[uint64]*ptypes.JobContext
+	ObjectTable            map[string]*ptypes.ObjectInfo
 	PrimaryPieceJobTable   map[string]map[uint32]jobdb.PieceJob
 	SecondaryPieceJobTable map[string]map[uint32]jobdb.PieceJob
 	mu                     sync.RWMutex
@@ -24,8 +24,8 @@ type MemJobDB struct {
 func NewMemJobDB() *MemJobDB {
 	return &MemJobDB{
 		JobCount:               0,
-		JobTable:               make(map[uint64]ptypes.JobContext),
-		ObjectTable:            make(map[string]ptypes.ObjectInfo),
+		JobTable:               make(map[uint64]*ptypes.JobContext),
+		ObjectTable:            make(map[string]*ptypes.ObjectInfo),
 		PrimaryPieceJobTable:   make(map[string]map[uint32]jobdb.PieceJob),
 		SecondaryPieceJobTable: make(map[string]map[uint32]jobdb.PieceJob),
 	}
@@ -38,12 +38,12 @@ func (db *MemJobDB) CreateUploadPayloadJob(txHash []byte, info *ptypes.ObjectInf
 	}
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	db.JobTable[db.JobCount] = ptypes.JobContext{
+	db.JobTable[db.JobCount] = &ptypes.JobContext{
 		JobId:    db.JobCount,
 		JobState: ptypes.JobState_JOB_STATE_CREATE_OBJECT_DONE,
 	}
 	info.JobId = db.JobCount
-	db.ObjectTable[string(txHash)] = *(info.SafeCopy())
+	db.ObjectTable[string(txHash)] = info
 	db.JobCount++
 	return db.JobCount - 1, nil
 }
@@ -71,7 +71,7 @@ func (db *MemJobDB) GetObjectInfo(txHash []byte) (*ptypes.ObjectInfo, error) {
 	if !ok {
 		return nil, errors.New("object is not exist")
 	}
-	return &objectInfo, nil
+	return objectInfo, nil
 }
 
 // GetJobContext returns the job info .
@@ -82,7 +82,7 @@ func (db *MemJobDB) GetJobContext(jobId uint64) (*ptypes.JobContext, error) {
 	if !ok {
 		return nil, errors.New("job is not exist")
 	}
-	return &job, nil
+	return job, nil
 }
 
 // SetUploadPayloadJobState set the job state.
