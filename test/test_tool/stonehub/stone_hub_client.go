@@ -11,7 +11,7 @@ import (
 
 func GetStoneHubClient() (stypes.StoneHubServiceClient, error) {
 	ctx := cliCtx.GetContext()
-	conn, err := grpc.Dial(ctx.Cfg.StoneHubAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(ctx.Cfg.StoneHubAddr)
 	if err != nil {
 		fmt.Println("dial stone hub error: ", err)
 		return nil, err
