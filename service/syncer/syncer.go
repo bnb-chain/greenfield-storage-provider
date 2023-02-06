@@ -2,10 +2,10 @@ package syncer
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"sync/atomic"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -14,13 +14,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-// SyncerService synchronizes ec data to piece store
+// Syncer synchronizes ec data to piece store
 type Syncer struct {
-	cfg     *SyncerConfig
+	config  *SyncerConfig
 	name    string
 	store   client.PieceStoreAPI
 	metaDB  metadb.MetaDB // storage provider meta db
@@ -30,8 +29,8 @@ type Syncer struct {
 // NewSyncerService creates a syncer service to upload piece to piece store
 func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	s := &Syncer{
-		cfg:  config,
-		name: model.SyncerService,
+		config: config,
+		name:   model.SyncerService,
 	}
 	if err := s.initClient(); err != nil {
 		return nil, err
@@ -45,7 +44,7 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 
 // initClient
 func (s *Syncer) initClient() error {
-	store, err := client.NewStoreClient(s.cfg.PieceConfig)
+	store, err := client.NewStoreClient(s.config.PieceConfig)
 	if err != nil {
 		log.Errorw("syncer starts piece store client failed", "error", err)
 		return err
@@ -54,20 +53,20 @@ func (s *Syncer) initClient() error {
 	return nil
 }
 
+// initDB init a meta-db instance
 func (s *Syncer) initDB() error {
-	var err error
-	switch s.cfg.MetaDBType {
-	case model.LevelDB:
-		if s.cfg.MetaDB == nil {
-			s.cfg.MetaDB = DefaultSyncerConfig.MetaDB
-		}
-		s.metaDB, err = leveldb.NewMetaDB(s.cfg.MetaDB)
-		if err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("unsupported meta db type %s", s.cfg.MetaDBType)
+	var (
+		metaDB metadb.MetaDB
+		err    error
+	)
+
+	metaDB, err = store.NewMetaDB(s.config.MetaDBType,
+		s.config.MetaLevelDBConfig, s.config.MetaSqlDBConfig)
+	if err != nil {
+		log.Errorw("failed to init metaDB", "err", err)
+		return err
 	}
+	s.metaDB = metaDB
 	return nil
 }
 
@@ -97,7 +96,7 @@ func (s *Syncer) Stop(ctx context.Context) error {
 
 // serve start syncer rpc service
 func (s *Syncer) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", s.cfg.Address)
+	lis, err := net.Listen("tcp", s.config.Address)
 	errCh <- err
 	if err != nil {
 		log.Errorw("syncer listen failed", "error", err)

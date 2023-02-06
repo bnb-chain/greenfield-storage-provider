@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -34,30 +34,30 @@ func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err err
 	return
 }
 
-// initClient init related client resource.
-func (challenge *Challenge) initDB() (err error) {
-	switch challenge.config.MetaType {
-	case model.LevelDB:
-		if challenge.config.MetaDB == nil {
-			challenge.config.MetaDB = DefaultChallengeConfig.MetaDB
-		}
-		challenge.metaDB, err = leveldb.NewMetaDB(challenge.config.MetaDB)
-		if err != nil {
-			return
-		}
-	case model.MySqlDB:
-		// TODO:: meta support SQL
-	default:
-		return fmt.Errorf("meta db not support type %s", challenge.config.MetaType)
+// initDB init related client resource.
+func (challenge *Challenge) initDB() error {
+	var (
+		metaDB metadb.MetaDB
+		err    error
+	)
+
+	metaDB, err = store.NewMetaDB(challenge.config.MetaDBType,
+		challenge.config.MetaLevelDBConfig, challenge.config.MetaSqlDBConfig)
+	if err != nil {
+		log.Errorw("failed to init metaDB", "err", err)
+		return err
 	}
+	challenge.metaDB = metaDB
+
 	challenge.pieceStore, err = client.NewStoreClient(challenge.config.PieceConfig)
 	if err != nil {
-		log.Errorw("syncer starts piece store client failed", "error", err)
-		return
+		log.Errorw("challenge starts piece store client failed", "error", err)
+		return err
 	}
-	return
+	return nil
 }
 
+// Name describes the name of Challenge
 func (challenge *Challenge) Name() string {
 	return challenge.name
 }
@@ -70,14 +70,14 @@ func (challenge *Challenge) Start(ctx context.Context) error {
 		lis, err := net.Listen("tcp", challenge.config.Address)
 		errCh <- err
 		if err != nil {
-			log.Errorw("syncer listen failed", "error", err)
+			log.Errorw("challenge listen failed", "error", err)
 			return
 		}
 		grpcServer := grpc.NewServer()
 		stypesv1pb.RegisterChallengeServiceServer(grpcServer, challenge)
 		reflection.Register(grpcServer)
 		if err = grpcServer.Serve(lis); err != nil {
-			log.Errorw("syncer serve failed", "error", err)
+			log.Errorw("challenge serve failed", "error", err)
 			return
 		}
 		return
