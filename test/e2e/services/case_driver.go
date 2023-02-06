@@ -30,8 +30,9 @@ func generateRandString(n int) string {
 }
 
 const (
-	getMethod = "GET"
-	putMethod = "PUT"
+	getMethod  = "GET"
+	putMethod  = "PUT"
+	testDomain = "test_bucket.bfs.nodereal.com"
 )
 
 // case1 128bytes, Inline type, do not need to be segmented(< segment size, 16MB).
@@ -79,7 +80,7 @@ func runCase1() {
 			log.Errorw("put object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "1")
 		res, err := client.Do(req)
@@ -108,7 +109,7 @@ func runCase1() {
 			log.Errorw("get object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -166,7 +167,7 @@ func runCase2() {
 			log.Errorw("put object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "67108864")
 		req.Header.Add(model.GnfdRedundancyTypeHeader, model.ReplicaRedundancyTypeHeaderValue)
@@ -196,7 +197,7 @@ func runCase2() {
 			log.Errorw("get object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -255,7 +256,7 @@ func runCase3() {
 			log.Errorw("put object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "209715200")
 		res, err := client.Do(req)
@@ -284,7 +285,7 @@ func runCase3() {
 			log.Errorw("get object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
