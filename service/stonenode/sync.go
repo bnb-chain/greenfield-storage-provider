@@ -181,13 +181,14 @@ func (node *StoneNodeService) generatePieceData(redundancyType ptypes.Redundancy
 // returned map key is spID, value map key is ec piece key or segment key, value map's value is piece data
 func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string][][]byte, redundancyType ptypes.RedundancyType,
 	secondarySPs []string, targetIdx []uint32) (map[string]map[string][]byte, error) {
-	pieceDataBySecondary := make(map[string]map[string][]byte)
-
 	// pieceDataBySegment key is segment key; if redundancyType is EC, value is [][]byte type,
 	// a two-dimensional array which contains ec data from ec1 []byte data to ec6 []byte data
 	// if redundancyType is replica or inline, value is [][]byte type, a two-dimensional array
 	// which only contains one []byte data
-	var err error
+	var (
+		err                  error
+		pieceDataBySecondary map[string]map[string][]byte
+	)
 	switch redundancyType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		pieceDataBySecondary, err = dispatchReplicaOrInlineData(pieceDataBySegment, secondarySPs, targetIdx)
