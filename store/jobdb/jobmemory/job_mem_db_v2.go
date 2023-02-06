@@ -13,8 +13,8 @@ var _ jobdb.JobDBV2 = &MemJobDBV2{}
 // MemJobDBV2 is a memory db, maintains job, object and piece job table.
 type MemJobDBV2 struct {
 	JobCount               uint64
-	JobTable               map[uint64]ptypes.JobContext
-	ObjectTable            map[uint64]ptypes.ObjectInfo
+	JobTable               map[uint64]*ptypes.JobContext
+	ObjectTable            map[uint64]*ptypes.ObjectInfo
 	PrimaryPieceJobTable   map[uint64]map[uint32]jobdb.PieceJob
 	SecondaryPieceJobTable map[uint64]map[uint32]jobdb.PieceJob
 	mu                     sync.RWMutex
@@ -24,8 +24,8 @@ type MemJobDBV2 struct {
 func NewMemJobDBV2() *MemJobDBV2 {
 	return &MemJobDBV2{
 		JobCount:               0,
-		JobTable:               make(map[uint64]ptypes.JobContext),
-		ObjectTable:            make(map[uint64]ptypes.ObjectInfo),
+		JobTable:               make(map[uint64]*ptypes.JobContext),
+		ObjectTable:            make(map[uint64]*ptypes.ObjectInfo),
 		PrimaryPieceJobTable:   make(map[uint64]map[uint32]jobdb.PieceJob),
 		SecondaryPieceJobTable: make(map[uint64]map[uint32]jobdb.PieceJob),
 	}
@@ -38,12 +38,12 @@ func (db *MemJobDBV2) CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64,
 	}
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	db.JobTable[db.JobCount] = ptypes.JobContext{
+	db.JobTable[db.JobCount] = &ptypes.JobContext{
 		JobId:    db.JobCount,
 		JobState: ptypes.JobState_JOB_STATE_CREATE_OBJECT_DONE,
 	}
 	info.JobId = db.JobCount
-	db.ObjectTable[info.GetObjectId()] = *info
+	db.ObjectTable[info.GetObjectId()] = info
 	db.JobCount++
 	return db.JobCount - 1, nil
 }
@@ -56,7 +56,7 @@ func (db *MemJobDBV2) GetJobContextV2(jobId uint64) (*ptypes.JobContext, error) 
 	if !ok {
 		return nil, errors.New("job is not exist")
 	}
-	return &job, nil
+	return job, nil
 }
 
 // GetObjectInfoV2 returns the object info by object id.
@@ -67,7 +67,7 @@ func (db *MemJobDBV2) GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, erro
 	if !ok {
 		return nil, errors.New("object is not exist")
 	}
-	return &objectInfo, nil
+	return objectInfo, nil
 }
 
 // SetUploadPayloadJobStateV2 set the job state.
