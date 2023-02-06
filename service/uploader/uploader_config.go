@@ -1,7 +1,10 @@
 package uploader
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/store/config"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metalevel"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
@@ -10,7 +13,9 @@ type UploaderConfig struct {
 	Address                string
 	StoneHubServiceAddress string
 	PieceStoreConfig       *storage.PieceStoreConfig
-	MetaDBConfig           *leveldb.MetaLevelDBConfig
+	MetaDBType             string
+	MetaLevelDBConfig      *config.LevelDBConfig
+	MetaSqlDBConfig        *config.SqlDBConfig
 }
 
 var DefaultUploaderConfig = &UploaderConfig{
@@ -18,5 +23,7 @@ var DefaultUploaderConfig = &UploaderConfig{
 	Address:                "127.0.0.1:5311",
 	StoneHubServiceAddress: "127.0.0.1:5323",
 	PieceStoreConfig:       storage.DefaultPieceStoreConfig,
-	MetaDBConfig:           leveldb.DefaultMetaLevelDBConfig,
+	MetaDBType:             model.LevelDB,
+	MetaLevelDBConfig:      metalevel.DefaultMetaLevelDBConfig,
+	MetaSqlDBConfig:        metasql.DefaultMetaSqlDBConfig,
 }

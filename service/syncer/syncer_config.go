@@ -1,9 +1,6 @@
-package challenge
+package syncer
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metalevel"
@@ -11,7 +8,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
-type ChallengeConfig struct {
+type SyncerConfig struct {
 	Address           string
 	StorageProvider   string
 	MetaDBType        string
@@ -20,17 +17,9 @@ type ChallengeConfig struct {
 	PieceConfig       *storage.PieceStoreConfig
 }
 
-var DefaultStorageProvider = "bnb-sp"
-
-func DefaultStorageProviderID() string {
-	hash := sha256.New()
-	hash.Write([]byte(DefaultStorageProvider))
-	return hex.EncodeToString(hash.Sum(nil))
-}
-
-var DefaultChallengeConfig = &ChallengeConfig{
-	Address:           "127.0.0.1:5423",
-	StorageProvider:   DefaultStorageProviderID(),
+var DefaultSyncerConfig = &SyncerConfig{
+	Address:           "127.0.0.1:5324",
+	StorageProvider:   "bnb-sp",
 	MetaDBType:        model.LevelDB,
 	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,
 	MetaSqlDBConfig:   metasql.DefaultMetaSqlDBConfig,

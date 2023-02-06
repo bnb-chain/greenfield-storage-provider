@@ -1,6 +1,8 @@
 package jobdb
 
-import ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+import (
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+)
 
 // PieceJob record the piece job context, interact with db.
 // For primary:

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -125,27 +126,21 @@ func (DBPieceJobV2) TableName() string {
 }
 
 // DBOption is mysql config options
+/*
 type DBOption struct {
 	User     string
 	Passwd   string
 	Address  string
 	Database string
 }
+*/
 
-// DefaultDBOption is default conf, Modify it according to the actual configuration.
-var DefaultDBOption = &DBOption{
-	User:     "root",
-	Passwd:   "test_pwd",
-	Address:  "127.0.0.1:3306",
-	Database: "job_db",
-}
-
-func InitDB(opt *DBOption) (*gorm.DB, error) {
+func InitDB(config *config.SqlDBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		opt.User,
-		opt.Passwd,
-		opt.Address,
-		opt.Database)
+		config.User,
+		config.Passwd,
+		config.Address,
+		config.Database)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Warnw("gorm open db failed", "err", err)

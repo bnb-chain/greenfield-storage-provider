@@ -1,15 +1,9 @@
 package metasql
 
-// DBOption is mysql config options
-type DBOption struct {
-	User     string
-	Passwd   string
-	Address  string
-	Database string
-}
+import "github.com/bnb-chain/greenfield-storage-provider/store/config"
 
-// DefaultDBOption is default conf, Modify it according to the actual configuration.
-var DefaultDBOption = &DBOption{
+// DefaultMetaSqlDBConfig is default conf, Modify it according to the actual configuration.
+var DefaultMetaSqlDBConfig = &config.SqlDBConfig{
 	User:     "root",
 	Passwd:   "test_pwd",
 	Address:  "127.0.0.1:3306",

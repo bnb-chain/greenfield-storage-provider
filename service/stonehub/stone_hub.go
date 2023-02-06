@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"github.com/oleiade/lane"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -20,10 +21,7 @@ import (
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobmemory"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobsql"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -259,41 +257,23 @@ func (hub *StoneHub) listenChain() {
 
 // initDB init job, meta, etc. db instance
 func (hub *StoneHub) initDB() error {
-	initMetaDB := func() (err error) {
-		if hub.config.MetaDB == nil {
-			hub.config.MetaDB = DefaultStoneHubConfig.MetaDB
-		}
-		switch hub.config.MetaDBType {
-		case model.LevelDB:
-			hub.metaDB, err = leveldb.NewMetaDB(hub.config.MetaDB)
-		case model.MySqlDB:
-			// TODO:: meta support SQL
-		default:
-			err = fmt.Errorf("meta db not support %s type", hub.config.MetaDBType)
-		}
-		return
-	}
+	var (
+		jobDB  jobdb.JobDBV2
+		metaDB metadb.MetaDB
+		err    error
+	)
 
-	initJobDB := func() (err error) {
-		if hub.config.JobDB == nil {
-			hub.config.JobDB = DefaultStoneHubConfig.JobDB
-		}
-		switch hub.config.JobDBType {
-		case model.MySqlDB:
-			hub.jobDB, err = jobsql.NewJobMetaImpl(hub.config.JobDB)
-		case model.MemoryDB:
-			hub.jobDB = jobmemory.NewMemJobDBV2()
-		default:
-			err = fmt.Errorf("job db not support %s type", hub.config.JobDBType)
-		}
-		return
-	}
-	if err := initMetaDB(); err != nil {
+	if jobDB, err = store.NewJobDB(hub.config.JobDBType, hub.config.JobDB); err != nil {
+		log.Errorw("failed to init jobDB", "err", err)
 		return err
 	}
-	if err := initJobDB(); err != nil {
+	if metaDB, err = store.NewMetaDB(hub.config.MetaDBType,
+		hub.config.MetaLevelDBConfig, hub.config.MetaSqlDBConfig); err != nil {
+		log.Errorw("failed to init metaDB", "err", err)
 		return err
 	}
+	hub.jobDB = jobDB
+	hub.metaDB = metaDB
 	return nil
 }
 

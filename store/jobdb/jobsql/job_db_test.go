@@ -19,7 +19,7 @@ func TestJobMeta(t *testing.T) {
 	)
 	// case1 CreateUploadPayloadJob
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		_, err := jmi.CreateUploadPayloadJob(
 			txHash,
 			&ptypesv1pb.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject"})
@@ -27,7 +27,7 @@ func TestJobMeta(t *testing.T) {
 	}
 	// case2 SetObjectCreateHeight/SetObjectCreateHeightAndObjectID
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		err := jmi.SetObjectCreateHeight(txHash, 100)
 		assert.Equal(t, nil, err)
 		err = jmi.SetObjectCreateHeightAndObjectID(txHash, 100, 200)
@@ -35,39 +35,39 @@ func TestJobMeta(t *testing.T) {
 	}
 	// case3 GetObjectInfo
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		info, err := jmi.GetObjectInfo(txHash)
 		assert.Equal(t, nil, err)
 		jobID = info.JobId
 	}
 	// case4 ScanObjectInfo
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		objects, err := jmi.ScanObjectInfo(0, 10)
 		assert.Equal(t, nil, err)
 		assert.True(t, len(objects) >= 1)
 	}
 	// case4 GetJobContext
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		_, err := jmi.GetJobContext(jobID)
 		assert.Equal(t, nil, err)
 	}
 	// case5 SetUploadPayloadJobState
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		err := jmi.SetUploadPayloadJobState(jobID, "JOB_STATE_DONE", time.Now().Unix())
 		assert.Equal(t, nil, err)
 	}
 	// case6 SetUploadPayloadJobJobError
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		err := jmi.SetUploadPayloadJobJobError(jobID, "JOB_STATE_ERROR", "job-err-msg", time.Now().Unix())
 		assert.Equal(t, nil, err)
 	}
 	// clear piece_job table
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		key1 := hex.EncodeToString([]byte("123"))
 		key2 := hex.EncodeToString([]byte("456"))
 		jmi.db.Exec("DELETE FROM piece_job where create_hash=?", key1)
@@ -76,7 +76,7 @@ func TestJobMeta(t *testing.T) {
 
 	// case7 SetPrimaryPieceJobDone/GetPrimaryJob
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		err := jmi.SetPrimaryPieceJobDone([]byte("123"), &jobdb.PieceJob{
 			PieceId:         0,
 			Checksum:        [][]byte{[]byte("123-0-sum")},
@@ -95,7 +95,7 @@ func TestJobMeta(t *testing.T) {
 	}
 	// case8 SetSecondaryPieceJobDone/GetSecondaryJob
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		err := jmi.SetSecondaryPieceJobDone([]byte("456"), &jobdb.PieceJob{
 			PieceId:         0,
 			Checksum:        [][]byte{[]byte("456-0-sum")},
@@ -121,52 +121,52 @@ func TestJobMetaV2(t *testing.T) {
 	)
 	// case1 CreateUploadPayloadJobV2
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		_, err := jmi.CreateUploadPayloadJobV2(
 			&ptypesv1pb.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject", ObjectId: objectID})
 		assert.Equal(t, nil, err)
 	}
 	// case2 GetObjectInfoV2
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		info, err := jmi.GetObjectInfoV2(objectID)
 		assert.Equal(t, nil, err)
 		jobID = info.JobId
 	}
 	// case3 ScanObjectInfoV2
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		objects, err := jmi.ScanObjectInfoV2(0, 10)
 		assert.Equal(t, nil, err)
 		assert.True(t, len(objects) >= 1)
 	}
 	// case4 GetJobContextV2
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		_, err := jmi.GetJobContextV2(jobID)
 		assert.Equal(t, nil, err)
 	}
 	// case5 SetUploadPayloadJobStateV2
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		err := jmi.SetUploadPayloadJobState(jobID, "JOB_STATE_DONE", time.Now().Unix())
 		assert.Equal(t, nil, err)
 	}
 	// case6 SetUploadPayloadJobJobErrorV2
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		err := jmi.SetUploadPayloadJobJobError(jobID, "JOB_STATE_ERROR", "job-err-msg", time.Now().Unix())
 		assert.Equal(t, nil, err)
 	}
 	// clear piece_job_v2 table
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		jmi.db.Exec("DELETE FROM piece_job_v2 where object_id=?", 123)
 		jmi.db.Exec("DELETE FROM piece_job_v2 where object_id=?", 456)
 	}
 	// case7 SetPrimaryPieceJobDoneV2/GetPrimaryJobV2
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		err := jmi.SetPrimaryPieceJobDoneV2(123, &jobdb.PieceJob{
 			PieceId:         0,
 			Checksum:        [][]byte{[]byte("123-0-sum")},
@@ -185,7 +185,7 @@ func TestJobMetaV2(t *testing.T) {
 	}
 	// case8 SetSecondaryPieceJobDoneV2/GetSecondaryJobV2
 	{
-		jmi, _ := NewJobMetaImpl(DefaultDBOption)
+		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 		err := jmi.SetSecondaryPieceJobDoneV2(456, &jobdb.PieceJob{
 			PieceId:         0,
 			Checksum:        [][]byte{[]byte("456-0-sum")},

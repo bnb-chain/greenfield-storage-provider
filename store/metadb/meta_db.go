@@ -1,6 +1,8 @@
 package metadb
 
-import ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+import (
+	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+)
 
 // IntegrityMeta defines the integrity hash info
 type IntegrityMeta struct {
