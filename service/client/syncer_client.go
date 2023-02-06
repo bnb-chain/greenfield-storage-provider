@@ -30,7 +30,6 @@ type SyncerClient struct {
 }
 
 func NewSyncerClient(address string) (*SyncerClient, error) {
-	//ctx, _ := context.WithTimeout(context.Background(), ClientRPCTimeout)
 	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize), grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
 	if err != nil {

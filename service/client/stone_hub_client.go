@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -14,8 +13,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
-
-var ClientRPCTimeout = time.Second * 5
 
 var _ io.Closer = &StoneHubClient{}
 
@@ -41,8 +38,7 @@ type StoneHubClient struct {
 }
 
 func NewStoneHubClient(address string) (*StoneHubClient, error) {
-	ctx, _ := context.WithTimeout(context.Background(), ClientRPCTimeout)
-	conn, err := grpc.DialContext(ctx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Errorw("invoke stoneHub service dail failed", "error", err)
 		return nil, err

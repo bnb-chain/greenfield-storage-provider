@@ -18,8 +18,7 @@ type DownloaderClient struct {
 }
 
 func NewDownloaderClient(address string) (*DownloaderClient, error) {
-	ctx, _ := context.WithTimeout(context.Background(), ClientRPCTimeout)
-	conn, err := grpc.DialContext(ctx, address,
+	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(20*1024*1024)))
 	if err != nil {

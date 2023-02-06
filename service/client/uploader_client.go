@@ -20,8 +20,7 @@ type UploaderClient struct {
 
 // NewUploaderClient return a UploaderClient.
 func NewUploaderClient(address string) (*UploaderClient, error) {
-	ctx, _ := context.WithTimeout(context.Background(), ClientRPCTimeout)
-	conn, err := grpc.DialContext(ctx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Errorw("invoke uploader service grpc.DialContext failed", "error", err)
 		return nil, err
