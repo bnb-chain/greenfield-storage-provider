@@ -1,9 +1,10 @@
-package leveldb
+package metalevel
 
 import (
 	"encoding/json"
 	"sync"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/filter"
@@ -37,7 +38,7 @@ var (
 )
 
 // NewMetaDB call NewCustomMetaDB return Database instance.
-func NewMetaDB(config *MetaLevelDBConfig) (*Database, error) {
+func NewMetaDB(config *config.LevelDBConfig) (*Database, error) {
 	var err error
 	once.Do(func() {
 		metaDB, err = newCustomMetaDB(config.Path, config.NameSpace, config.Cache, config.FileHandles, config.ReadOnly)

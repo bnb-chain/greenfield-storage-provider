@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"gorm.io/gorm"
 
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
@@ -19,8 +20,8 @@ type JobMetaImpl struct {
 }
 
 // NewJobMetaImpl return a database instance
-func NewJobMetaImpl(option *DBOption) (*JobMetaImpl, error) {
-	db, err := InitDB(option)
+func NewJobMetaImpl(config *config.SqlDBConfig) (*JobMetaImpl, error) {
+	db, err := InitDB(config)
 	if err != nil {
 		return nil, err
 	}
