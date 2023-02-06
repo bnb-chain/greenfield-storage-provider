@@ -91,6 +91,10 @@ func (node *StoneNodeService) Start(startCtx context.Context) error {
 						log.Errorw("stone node service stopped, can not alloc stone")
 						return
 					}
+					if node.stoneLimit <= 0 {
+						log.Errorw("stone node stone limit is zero, forbid pull stone job")
+						return
+					}
 					atomic.AddInt64(&stoneJobCounter, 1)
 					defer atomic.AddInt64(&stoneJobCounter, -1)
 					if atomic.LoadInt64(&stoneJobCounter) > node.stoneLimit {
