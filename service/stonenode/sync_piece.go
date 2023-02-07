@@ -61,15 +61,17 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 			}
 
 			spInfo := syncResp.GetSecondarySpInfo()
+			log.Infow("spInfo", "spID", spInfo.GetStorageProviderId(), "pieceIdx", spInfo.GetPieceIdx())
 			if ok := verifyIntegrityHash(pieceData, spInfo); !ok {
 				log.CtxErrorw(ctx, "wrong secondary integrity hash", "error", err)
 				errMsg.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 				errMsg.ErrMsg = merrors.ErrIntegrityHash.Error()
 				return
 			}
+			log.Info("verify secondary integrity hash successfully")
 
 			pieceJob.StorageProviderSealInfo = spInfo
-			log.CtxDebugw(ctx, "sync piece data to secondary", "secondary_provider", secondarySPs[index])
+			log.CtxInfow(ctx, "sync piece data to secondary", "secondary_provider", secondarySPs[index])
 			return
 		}(index, pieceData)
 	}
@@ -87,7 +89,7 @@ func verifyIntegrityHash(pieceData [][]byte, spInfo *stypes.StorageProviderSealI
 		log.Error("wrong secondary integrity hash")
 		return false
 	}
-	log.Debugw("verify integrity hash", "local_integrity_hash", integrityHash,
+	log.Infow("verify integrity hash", "local_integrity_hash", integrityHash,
 		"remote_integrity_hash", spInfo.GetIntegrityHash())
 	return true
 }
