@@ -70,6 +70,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 		if err != nil {
 			return err
 		}
+		log.Infow("integrity meta", "piece count", integrityMeta.PieceCount, "count", count)
 		pieceHash = append(pieceHash, hash.GenerateChecksum(value))
 	}
 }
