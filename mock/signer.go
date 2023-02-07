@@ -3,7 +3,7 @@ package mock
 import (
 	"time"
 
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 )
 
@@ -20,7 +20,7 @@ func NewSignerServerMock(chain *InscriptionChainMock) *SignerServerMock {
 }
 
 // BroadcastCreateObjectMessage mock broadcast create object message to inscription chain
-func (signer *SignerServerMock) BroadcastCreateObjectMessage(object *ptypesv1pb.ObjectInfo) []byte {
+func (signer *SignerServerMock) BroadcastCreateObjectMessage(object *ptypes.ObjectInfo) []byte {
 	txHash := hash.GenerateChecksum([]byte(time.Now().String()))
 	go func() {
 		time.Sleep(1 * time.Second)
@@ -30,7 +30,7 @@ func (signer *SignerServerMock) BroadcastCreateObjectMessage(object *ptypesv1pb.
 }
 
 // BroadcastSealObjectMessage mock broadcast seal object message  to inscription chain
-func (signer *SignerServerMock) BroadcastSealObjectMessage(object *ptypesv1pb.ObjectInfo) []byte {
+func (signer *SignerServerMock) BroadcastSealObjectMessage(object *ptypes.ObjectInfo) []byte {
 	txHash := hash.GenerateChecksum([]byte(time.Now().String()))
 	go func() {
 		time.Sleep(1 * time.Second)

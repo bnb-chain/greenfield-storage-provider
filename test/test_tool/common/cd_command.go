@@ -31,5 +31,4 @@ func cdService(c *cli.Context) {
 		fmt.Println(err)
 		return
 	}
-	return
 }

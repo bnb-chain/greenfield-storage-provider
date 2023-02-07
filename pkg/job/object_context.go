@@ -3,21 +3,21 @@ package job
 import (
 	"sync"
 
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 )
 
 // ObjectInfoContext maintains the object info, goroutine safe.
 type ObjectInfoContext struct {
-	object *ptypesv1pb.ObjectInfo
+	object *ptypes.ObjectInfo
 	jobDB  jobdb.JobDBV2
 	metaDB metadb.MetaDB
 	mu     sync.RWMutex
 }
 
 // NewObjectInfoContext return the instance of ObjectInfoContext.
-func NewObjectInfoContext(object *ptypesv1pb.ObjectInfo, jobDB jobdb.JobDBV2, metaDB metadb.MetaDB) *ObjectInfoContext {
+func NewObjectInfoContext(object *ptypes.ObjectInfo, jobDB jobdb.JobDBV2, metaDB metadb.MetaDB) *ObjectInfoContext {
 	return &ObjectInfoContext{
 		object: object,
 		jobDB:  jobDB,
@@ -26,7 +26,7 @@ func NewObjectInfoContext(object *ptypesv1pb.ObjectInfo, jobDB jobdb.JobDBV2, me
 }
 
 // GetObjectInfo return the object info.
-func (ctx *ObjectInfoContext) GetObjectInfo() *ptypesv1pb.ObjectInfo {
+func (ctx *ObjectInfoContext) GetObjectInfo() *ptypes.ObjectInfo {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
 	return ctx.object.SafeCopy()
@@ -47,7 +47,7 @@ func (ctx *ObjectInfoContext) GetObjectSize() uint64 {
 }
 
 // GetObjectRedundancyType return the object redundancy type.
-func (ctx *ObjectInfoContext) GetObjectRedundancyType() ptypesv1pb.RedundancyType {
+func (ctx *ObjectInfoContext) GetObjectRedundancyType() ptypes.RedundancyType {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
 	return ctx.object.GetRedundancyType()

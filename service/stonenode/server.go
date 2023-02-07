@@ -45,7 +45,7 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 
 // initClient inits store client and rpc client
 func (node *StoneNodeService) initClient() error {
-	if node.running.Load() == true {
+	if node.running.Load() {
 		return merrors.ErrStoneNodeStarted
 	}
 	store, err := client.NewStoreClient(node.cfg.PieceConfig)
@@ -155,5 +155,4 @@ func (node *StoneNodeService) allocStone(ctx context.Context) {
 		return
 	}
 	log.CtxInfow(ctx, "upload secondary piece job success")
-	return
 }

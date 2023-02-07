@@ -84,7 +84,7 @@ func TestSegmentPieceEnode(t *testing.T) {
 	shardsToReocver[4] = &PieceObject{}   // priority block
 	shardsToReocver[5] = piecesObjects[5] // priority block
 
-	decodeSegment, err = DecodeSegment(shardsToReocver, int64(segmentSize))
+	_, err = DecodeSegment(shardsToReocver, int64(segmentSize))
 	if err == nil {
 		t.Errorf("segment decode should fail")
 	}
@@ -125,7 +125,7 @@ func TestRawSegmentEnode(t *testing.T) {
 	shardsToRecover[3] = []byte("")
 	shardsToRecover[4] = []byte("")
 
-	deCodeBytes, err = DecodeRawSegment(shardsToRecover, int64(segmentSize))
+	_, err = DecodeRawSegment(shardsToRecover, int64(segmentSize))
 	if err == nil {
 		t.Errorf("segment decode should fail")
 	}

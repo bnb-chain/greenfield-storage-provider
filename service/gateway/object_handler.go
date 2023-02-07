@@ -206,7 +206,6 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = InternalError
 		return
 	}
-	return
 }
 
 // putObjectV2Handler handle put object request v2.
