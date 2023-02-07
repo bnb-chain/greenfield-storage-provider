@@ -65,7 +65,7 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	}
 
 	// 3. send piece data to the secondary
-	node.doSyncNew(ctx, allocResp, secondaryPieceData, secondarySPs)
+	node.doSyncToSecondarySP(ctx, allocResp, secondaryPieceData, secondarySPs)
 	return nil
 }
 
