@@ -8,7 +8,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"gorm.io/gorm"
 
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 )
 
@@ -31,7 +31,7 @@ func NewJobMetaImpl(config *config.SqlDBConfig) (*JobMetaImpl, error) {
 // v1 interface implement
 
 // CreateUploadPayloadJob create DBJob record and DBObject record, Use JobID field for association.
-func (jmi *JobMetaImpl) CreateUploadPayloadJob(txHash []byte, info *ptypesv1pb.ObjectInfo) (uint64, error) {
+func (jmi *JobMetaImpl) CreateUploadPayloadJob(txHash []byte, info *ptypes.ObjectInfo) (uint64, error) {
 	var (
 		result             *gorm.DB
 		insertJobRecord    *DBJob
@@ -39,8 +39,8 @@ func (jmi *JobMetaImpl) CreateUploadPayloadJob(txHash []byte, info *ptypesv1pb.O
 	)
 
 	insertJobRecord = &DBJob{
-		JobType:    uint32(ptypesv1pb.JobType_JOB_TYPE_CREATE_OBJECT),
-		JobState:   uint32(ptypesv1pb.JobState_JOB_STATE_CREATE_OBJECT_DONE),
+		JobType:    uint32(ptypes.JobType_JOB_TYPE_CREATE_OBJECT),
+		JobState:   uint32(ptypes.JobState_JOB_STATE_CREATE_OBJECT_DONE),
 		CreateTime: time.Now(),
 		ModifyTime: time.Now(),
 	}
@@ -89,7 +89,7 @@ func (jmi *JobMetaImpl) SetObjectCreateHeight(txHash []byte, height uint64) erro
 }
 
 // GetObjectInfo query DBObject by txHash, and convert to types.ObjectInfo.
-func (jmi *JobMetaImpl) GetObjectInfo(txHash []byte) (*ptypesv1pb.ObjectInfo, error) {
+func (jmi *JobMetaImpl) GetObjectInfo(txHash []byte) (*ptypes.ObjectInfo, error) {
 	var (
 		result      *gorm.DB
 		queryReturn DBObject
@@ -105,7 +105,7 @@ func (jmi *JobMetaImpl) GetObjectInfo(txHash []byte) (*ptypesv1pb.ObjectInfo, er
 	if err != nil {
 		return nil, err
 	}
-	return &ptypesv1pb.ObjectInfo{
+	return &ptypes.ObjectInfo{
 		JobId:          queryReturn.JobID,
 		Owner:          queryReturn.Owner,
 		BucketName:     queryReturn.BucketName,
@@ -117,17 +117,17 @@ func (jmi *JobMetaImpl) GetObjectInfo(txHash []byte) (*ptypesv1pb.ObjectInfo, er
 		PrimarySp:      nil, // todo: how to decode sp info
 		Height:         queryReturn.Height,
 		TxHash:         txHash,
-		RedundancyType: ptypesv1pb.RedundancyType(queryReturn.RedundancyType),
+		RedundancyType: ptypes.RedundancyType(queryReturn.RedundancyType),
 		SecondarySps:   nil, // todo: how to fill
 	}, nil
 }
 
 // ScanObjectInfo query scan DBObject, and convert to ObjectInfo.
-func (jmi *JobMetaImpl) ScanObjectInfo(offset int, limit int) ([]*ptypesv1pb.ObjectInfo, error) {
+func (jmi *JobMetaImpl) ScanObjectInfo(offset int, limit int) ([]*ptypes.ObjectInfo, error) {
 	var (
 		result       *gorm.DB
 		queryReturns []DBObject
-		objects      []*ptypesv1pb.ObjectInfo
+		objects      []*ptypes.ObjectInfo
 	)
 
 	result = jmi.db.Limit(limit).Offset(offset).Find(&queryReturns)
@@ -139,7 +139,7 @@ func (jmi *JobMetaImpl) ScanObjectInfo(offset int, limit int) ([]*ptypesv1pb.Obj
 		if err != nil {
 			return objects, err
 		}
-		objects = append(objects, &ptypesv1pb.ObjectInfo{
+		objects = append(objects, &ptypes.ObjectInfo{
 			JobId:          object.JobID,
 			Owner:          object.Owner,
 			BucketName:     object.BucketName,
@@ -151,7 +151,7 @@ func (jmi *JobMetaImpl) ScanObjectInfo(offset int, limit int) ([]*ptypesv1pb.Obj
 			PrimarySp:      nil, // todo: how to decode sp info
 			Height:         object.Height,
 			TxHash:         txHash,
-			RedundancyType: ptypesv1pb.RedundancyType(object.RedundancyType),
+			RedundancyType: ptypes.RedundancyType(object.RedundancyType),
 			SecondarySps:   nil, // todo: how to fill
 		})
 	}
@@ -159,7 +159,7 @@ func (jmi *JobMetaImpl) ScanObjectInfo(offset int, limit int) ([]*ptypesv1pb.Obj
 }
 
 // GetJobContext query DBJob by jobID, and convert to types.JobContext.
-func (jmi *JobMetaImpl) GetJobContext(jobId uint64) (*ptypesv1pb.JobContext, error) {
+func (jmi *JobMetaImpl) GetJobContext(jobId uint64) (*ptypes.JobContext, error) {
 	var (
 		result         *gorm.DB
 		queryCondition *DBJob
@@ -174,10 +174,10 @@ func (jmi *JobMetaImpl) GetJobContext(jobId uint64) (*ptypesv1pb.JobContext, err
 	if result.Error != nil {
 		return nil, fmt.Errorf("select job record's failed, %s", result.Error)
 	}
-	return &ptypesv1pb.JobContext{
+	return &ptypes.JobContext{
 		JobId:      queryReturn.JobID,
-		JobType:    ptypesv1pb.JobType(queryReturn.JobType),
-		JobState:   ptypesv1pb.JobState(queryReturn.JobState),
+		JobType:    ptypes.JobType(queryReturn.JobType),
+		JobState:   ptypes.JobState(queryReturn.JobState),
 		JobErr:     queryReturn.JobErr,
 		CreateTime: queryReturn.CreateTime.Unix(),
 		ModifyTime: queryReturn.ModifyTime.Unix(),
@@ -196,7 +196,7 @@ func (jmi *JobMetaImpl) SetUploadPayloadJobState(jobId uint64, jobState string, 
 		JobID: jobId,
 	}
 	updateFields = &DBJob{
-		JobState:   uint32(ptypesv1pb.JobState_value[jobState]),
+		JobState:   uint32(ptypes.JobState_value[jobState]),
 		ModifyTime: time.Unix(timestampSec, 0),
 	}
 	result = jmi.db.Model(queryCondition).Updates(updateFields)
@@ -218,7 +218,7 @@ func (jmi *JobMetaImpl) SetUploadPayloadJobJobError(jobID uint64, jobState strin
 		JobID: jobID,
 	}
 	updateFields = &DBJob{
-		JobState:   uint32(ptypesv1pb.JobState_value[jobState]),
+		JobState:   uint32(ptypes.JobState_value[jobState]),
 		ModifyTime: time.Unix(timestampSec, 0),
 		JobErr:     jobErr,
 	}
@@ -238,7 +238,7 @@ func (jmi *JobMetaImpl) SetPrimaryPieceJobDone(txHash []byte, pj *jobdb.PieceJob
 
 	insertPieceJobRecord = &DBPieceJob{
 		CreateHash:      hex.EncodeToString(txHash),
-		PieceType:       uint32(ptypesv1pb.JobType_JOB_TYPE_UPLOAD_PRIMARY),
+		PieceType:       uint32(ptypes.JobType_JOB_TYPE_UPLOAD_PRIMARY),
 		PieceIdx:        pj.PieceId,
 		Checksum:        string(pj.Checksum[0]),
 		PieceState:      0, // todo: fill what?
@@ -262,7 +262,7 @@ func (jmi *JobMetaImpl) GetPrimaryJob(txHash []byte) ([]*jobdb.PieceJob, error) 
 	)
 
 	result = jmi.db.
-		Where("create_hash = ? AND piece_type = ?", hex.EncodeToString(txHash), ptypesv1pb.JobType_JOB_TYPE_UPLOAD_PRIMARY).
+		Where("create_hash = ? AND piece_type = ?", hex.EncodeToString(txHash), ptypes.JobType_JOB_TYPE_UPLOAD_PRIMARY).
 		Find(&queryReturns)
 	if result.Error != nil {
 		return pieceJobs, fmt.Errorf("select primary piece jobs failed, %s", result.Error)
@@ -285,7 +285,7 @@ func (jmi *JobMetaImpl) SetSecondaryPieceJobDone(txHash []byte, pj *jobdb.PieceJ
 
 	insertPieceJobRecord = &DBPieceJob{
 		CreateHash:      hex.EncodeToString(txHash),
-		PieceType:       uint32(ptypesv1pb.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC),
+		PieceType:       uint32(ptypes.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC),
 		PieceIdx:        pj.PieceId,
 		Checksum:        string(pj.Checksum[0]),
 		PieceState:      0, // todo: fill what?
@@ -309,7 +309,7 @@ func (jmi *JobMetaImpl) GetSecondaryJob(txHash []byte) ([]*jobdb.PieceJob, error
 	)
 
 	result = jmi.db.
-		Where("create_hash = ? AND piece_type = ?", hex.EncodeToString(txHash), ptypesv1pb.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC).
+		Where("create_hash = ? AND piece_type = ?", hex.EncodeToString(txHash), ptypes.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC).
 		Find(&queryReturns)
 	if result.Error != nil {
 		return pieceJobs, fmt.Errorf("select secondary piece jobs failed, %s", result.Error)
@@ -348,7 +348,7 @@ func (jmi *JobMetaImpl) SetObjectCreateHeightAndObjectID(txHash []byte, height u
 // v2 interface implement
 
 // CreateUploadPayloadJobV2 create DBJobV2 record and DBObjectV2 record, Use JobID field for association.
-func (jmi *JobMetaImpl) CreateUploadPayloadJobV2(info *ptypesv1pb.ObjectInfo) (uint64, error) {
+func (jmi *JobMetaImpl) CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, error) {
 	var (
 		result             *gorm.DB
 		insertJobRecord    *DBJobV2
@@ -356,8 +356,8 @@ func (jmi *JobMetaImpl) CreateUploadPayloadJobV2(info *ptypesv1pb.ObjectInfo) (u
 	)
 
 	insertJobRecord = &DBJobV2{
-		JobType:    uint32(ptypesv1pb.JobType_JOB_TYPE_CREATE_OBJECT),
-		JobState:   uint32(ptypesv1pb.JobState_JOB_STATE_CREATE_OBJECT_DONE),
+		JobType:    uint32(ptypes.JobType_JOB_TYPE_CREATE_OBJECT),
+		JobState:   uint32(ptypes.JobState_JOB_STATE_CREATE_OBJECT_DONE),
 		CreateTime: time.Now(),
 		ModifyTime: time.Now(),
 	}
@@ -387,7 +387,7 @@ func (jmi *JobMetaImpl) CreateUploadPayloadJobV2(info *ptypesv1pb.ObjectInfo) (u
 }
 
 // GetObjectInfoV2 query DBObjectV2 by txHash, and convert to types.ObjectInfo.
-func (jmi *JobMetaImpl) GetObjectInfoV2(objectID uint64) (*ptypesv1pb.ObjectInfo, error) {
+func (jmi *JobMetaImpl) GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error) {
 	var (
 		result         *gorm.DB
 		queryCondition *DBObjectV2
@@ -406,7 +406,7 @@ func (jmi *JobMetaImpl) GetObjectInfoV2(objectID uint64) (*ptypesv1pb.ObjectInfo
 	if err != nil {
 		return nil, err
 	}
-	return &ptypesv1pb.ObjectInfo{
+	return &ptypes.ObjectInfo{
 		JobId:          queryReturn.JobID,
 		Owner:          queryReturn.Owner,
 		BucketName:     queryReturn.BucketName,
@@ -418,13 +418,13 @@ func (jmi *JobMetaImpl) GetObjectInfoV2(objectID uint64) (*ptypesv1pb.ObjectInfo
 		PrimarySp:      nil, // todo: how to decode sp info
 		Height:         queryReturn.Height,
 		TxHash:         txHash,
-		RedundancyType: ptypesv1pb.RedundancyType(queryReturn.RedundancyType),
+		RedundancyType: ptypes.RedundancyType(queryReturn.RedundancyType),
 		SecondarySps:   nil, // todo: how to fill
 	}, nil
 }
 
 // GetJobContextV2 query DBJobV2 by jobID, and convert to types.JobContext.
-func (jmi *JobMetaImpl) GetJobContextV2(jobId uint64) (*ptypesv1pb.JobContext, error) {
+func (jmi *JobMetaImpl) GetJobContextV2(jobId uint64) (*ptypes.JobContext, error) {
 	var (
 		result         *gorm.DB
 		queryCondition *DBJobV2
@@ -439,10 +439,10 @@ func (jmi *JobMetaImpl) GetJobContextV2(jobId uint64) (*ptypesv1pb.JobContext, e
 	if result.Error != nil {
 		return nil, fmt.Errorf("select job record's failed, %s", result.Error)
 	}
-	return &ptypesv1pb.JobContext{
+	return &ptypes.JobContext{
 		JobId:      queryReturn.JobID,
-		JobType:    ptypesv1pb.JobType(queryReturn.JobType),
-		JobState:   ptypesv1pb.JobState(queryReturn.JobState),
+		JobType:    ptypes.JobType(queryReturn.JobType),
+		JobState:   ptypes.JobState(queryReturn.JobState),
 		JobErr:     queryReturn.JobErr,
 		CreateTime: queryReturn.CreateTime.Unix(),
 		ModifyTime: queryReturn.ModifyTime.Unix(),
@@ -461,7 +461,7 @@ func (jmi *JobMetaImpl) SetUploadPayloadJobStateV2(jobId uint64, jobState string
 		JobID: jobId,
 	}
 	updateFields = &DBJobV2{
-		JobState:   uint32(ptypesv1pb.JobState_value[jobState]),
+		JobState:   uint32(ptypes.JobState_value[jobState]),
 		ModifyTime: time.Unix(timestampSec, 0),
 	}
 	result = jmi.db.Model(queryCondition).Updates(updateFields)
@@ -483,7 +483,7 @@ func (jmi *JobMetaImpl) SetUploadPayloadJobJobErrorV2(jobID uint64, jobState str
 		JobID: jobID,
 	}
 	updateFields = &DBJobV2{
-		JobState:   uint32(ptypesv1pb.JobState_value[jobState]),
+		JobState:   uint32(ptypes.JobState_value[jobState]),
 		ModifyTime: time.Unix(timestampSec, 0),
 		JobErr:     jobErr,
 	}
@@ -503,7 +503,7 @@ func (jmi *JobMetaImpl) GetPrimaryJobV2(objectId uint64) ([]*jobdb.PieceJob, err
 	)
 
 	result = jmi.db.
-		Where("object_id = ? AND piece_type = ?", objectId, ptypesv1pb.JobType_JOB_TYPE_UPLOAD_PRIMARY).
+		Where("object_id = ? AND piece_type = ?", objectId, ptypes.JobType_JOB_TYPE_UPLOAD_PRIMARY).
 		Find(&queryReturns)
 	if result.Error != nil {
 		return pieceJobs, fmt.Errorf("select primary piece jobs failed, %s", result.Error)
@@ -526,7 +526,7 @@ func (jmi *JobMetaImpl) SetPrimaryPieceJobDoneV2(objectID uint64, pj *jobdb.Piec
 
 	insertPieceJobRecord = &DBPieceJobV2{
 		ObjectID:        objectID,
-		PieceType:       uint32(ptypesv1pb.JobType_JOB_TYPE_UPLOAD_PRIMARY),
+		PieceType:       uint32(ptypes.JobType_JOB_TYPE_UPLOAD_PRIMARY),
 		PieceIdx:        pj.PieceId,
 		Checksum:        string(pj.Checksum[0]),
 		PieceState:      0, // todo: fill what?
@@ -550,7 +550,7 @@ func (jmi *JobMetaImpl) SetSecondaryPieceJobDoneV2(objectID uint64, pj *jobdb.Pi
 
 	insertPieceJobRecord = &DBPieceJobV2{
 		ObjectID:        objectID,
-		PieceType:       uint32(ptypesv1pb.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC),
+		PieceType:       uint32(ptypes.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC),
 		PieceIdx:        pj.PieceId,
 		Checksum:        string(pj.Checksum[0]),
 		PieceState:      0, // todo: fill what?
@@ -574,7 +574,7 @@ func (jmi *JobMetaImpl) GetSecondaryJobV2(objectID uint64) ([]*jobdb.PieceJob, e
 	)
 
 	result = jmi.db.
-		Where("object_id = ? AND piece_type = ?", objectID, ptypesv1pb.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC).
+		Where("object_id = ? AND piece_type = ?", objectID, ptypes.JobType_JOB_TYPE_UPLOAD_SECONDARY_EC).
 		Find(&queryReturns)
 	if result.Error != nil {
 		return pieceJobs, fmt.Errorf("select secondary piece jobs failed, %s", result.Error)
@@ -589,11 +589,11 @@ func (jmi *JobMetaImpl) GetSecondaryJobV2(objectID uint64) ([]*jobdb.PieceJob, e
 }
 
 // ScanObjectInfoV2 query scan DBObjectV2, and convert to ObjectInfo.
-func (jmi *JobMetaImpl) ScanObjectInfoV2(offset int, limit int) ([]*ptypesv1pb.ObjectInfo, error) {
+func (jmi *JobMetaImpl) ScanObjectInfoV2(offset int, limit int) ([]*ptypes.ObjectInfo, error) {
 	var (
 		result       *gorm.DB
 		queryReturns []DBObjectV2
-		objects      []*ptypesv1pb.ObjectInfo
+		objects      []*ptypes.ObjectInfo
 	)
 
 	result = jmi.db.Limit(limit).Offset(offset).Find(&queryReturns)
@@ -605,7 +605,7 @@ func (jmi *JobMetaImpl) ScanObjectInfoV2(offset int, limit int) ([]*ptypesv1pb.O
 		if err != nil {
 			return objects, err
 		}
-		objects = append(objects, &ptypesv1pb.ObjectInfo{
+		objects = append(objects, &ptypes.ObjectInfo{
 			JobId:          object.JobID,
 			Owner:          object.Owner,
 			BucketName:     object.BucketName,
@@ -617,7 +617,7 @@ func (jmi *JobMetaImpl) ScanObjectInfoV2(offset int, limit int) ([]*ptypesv1pb.O
 			PrimarySp:      nil, // todo: how to decode sp info
 			Height:         object.Height,
 			TxHash:         txHash,
-			RedundancyType: ptypesv1pb.RedundancyType(object.RedundancyType),
+			RedundancyType: ptypes.RedundancyType(object.RedundancyType),
 			SecondarySps:   nil, // todo: how to fill
 		})
 	}

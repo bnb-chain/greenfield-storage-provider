@@ -11,9 +11,9 @@ import (
 	"os"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -67,6 +67,8 @@ func (dui *debugUploaderImpl) putObjectTx(objectName string, option *putObjectTx
 		bucketDir    = dui.localDir + "/" + option.requestContext.objectName
 		objectTxFile = bucketDir + "/" + objectName + ".tx"
 		txJson       []byte
+		fileInfo     os.FileInfo
+		file         *os.File
 	)
 	defer func() {
 		if innerErr != nil {
@@ -74,7 +76,7 @@ func (dui *debugUploaderImpl) putObjectTx(objectName string, option *putObjectTx
 		}
 	}()
 
-	if s, innerErr := os.Stat(bucketDir); innerErr != nil || !s.IsDir() {
+	if fileInfo, innerErr = os.Stat(bucketDir); innerErr != nil || !fileInfo.IsDir() {
 		return nil, errors.ErrInternalError
 	}
 	if _, innerErr = os.Stat(objectTxFile); innerErr == nil {
@@ -91,11 +93,12 @@ func (dui *debugUploaderImpl) putObjectTx(objectName string, option *putObjectTx
 	if txJson, innerErr = json.Marshal(txInfo); innerErr != nil {
 		return nil, errors.ErrInternalError
 	}
-	if f, innerErr := os.OpenFile(objectTxFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777); innerErr != nil {
+	if file, innerErr = os.OpenFile(objectTxFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777); innerErr != nil {
 		return nil, errors.ErrInternalError
 	} else {
-		defer f.Close()
-		if n, innerErr := f.Write(txJson); innerErr == nil && n < len(txJson) {
+		defer file.Close()
+		n := 0
+		if n, innerErr = file.Write(txJson); innerErr == nil && n < len(txJson) {
 			return nil, errors.ErrInternalError
 		}
 		return &objectTxInfo{txHash: []byte(txInfo.TxHash), weight: txInfo.Weight}, nil
@@ -116,6 +119,8 @@ func (dui *debugUploaderImpl) putObject(objectName string, reader io.Reader, opt
 		hashBuf       = make([]byte, 65536)
 		md5Hash       = md5.New()
 		md5Value      string
+		fileInfo      os.FileInfo
+		file          *os.File
 	)
 	defer func() {
 		if innerErr != nil {
@@ -123,7 +128,7 @@ func (dui *debugUploaderImpl) putObject(objectName string, reader io.Reader, opt
 		}
 	}()
 
-	if s, innerErr := os.Stat(bucketDir); innerErr != nil || !s.IsDir() {
+	if fileInfo, innerErr = os.Stat(bucketDir); innerErr != nil || !fileInfo.IsDir() {
 		return nil, errors.ErrInternalError
 	}
 	if _, innerErr = os.Stat(objectTxFile); innerErr != nil && os.IsNotExist(innerErr) {
@@ -131,11 +136,11 @@ func (dui *debugUploaderImpl) putObject(objectName string, reader io.Reader, opt
 	}
 
 	// todo: check tx-hash by json
-	if f, innerErr := os.OpenFile(objectDataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777); innerErr != nil {
+	if file, innerErr = os.OpenFile(objectDataFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777); innerErr != nil {
 		return nil, errors.ErrInternalError
 	} else {
-		defer f.Close()
-		writer := bufio.NewWriter(f)
+		defer file.Close()
+		writer := bufio.NewWriter(file)
 		for {
 			if readN, innerErr = reader.Read(buf); innerErr != nil && innerErr != io.EOF {
 				return nil, errors.ErrInternalError
@@ -167,9 +172,9 @@ type grpcUploaderImpl struct {
 // putObjectTx is used to call uploaderService's CreateObject by grpc.
 func (gui *grpcUploaderImpl) putObjectTx(objectName string, option *putObjectTxOption) (*objectTxInfo, error) {
 	log.Infow("put object tx", "option", option)
-	resp, err := gui.uploader.CreateObject(context.Background(), &stypesv1pb.UploaderServiceCreateObjectRequest{
+	resp, err := gui.uploader.CreateObject(context.Background(), &stypes.UploaderServiceCreateObjectRequest{
 		TraceId: option.requestContext.requestID,
-		ObjectInfo: &ptypesv1pb.ObjectInfo{
+		ObjectInfo: &ptypes.ObjectInfo{
 			BucketName:     option.requestContext.bucketName,
 			ObjectName:     objectName,
 			Size:           option.objectSize,
@@ -210,7 +215,7 @@ func (gui *grpcUploaderImpl) putObject(objectName string, reader io.Reader, opti
 		}
 		if readN > 0 {
 
-			req := &stypesv1pb.UploaderServiceUploadPayloadRequest{
+			req := &stypes.UploaderServiceUploadPayloadRequest{
 				TraceId:     option.requestContext.requestID,
 				TxHash:      option.txHash,
 				PayloadData: buf[:readN],
@@ -224,13 +229,12 @@ func (gui *grpcUploaderImpl) putObject(objectName string, reader io.Reader, opti
 			md5Hash.Write(hashBuf[:readN])
 		}
 		if err == io.EOF {
-			err = nil
 			resp, err := stream.CloseAndRecv()
 			if err != nil {
 				log.Warnw("put object failed, due to stream close", "err", err)
 				return nil, errors.ErrInternalError
 			}
-			if errMsg := resp.GetErrMessage(); errMsg != nil && errMsg.ErrCode != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+			if errMsg := resp.GetErrMessage(); errMsg != nil && errMsg.ErrCode != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 				log.Warnw("failed to grpc", "err", resp.ErrMessage)
 				return nil, fmt.Errorf(resp.ErrMessage.ErrMsg)
 			}
@@ -244,7 +248,7 @@ func (gui *grpcUploaderImpl) putObject(objectName string, reader io.Reader, opti
 
 // getAuthentication is used to call uploaderService's getAuthentication by grpc.
 func (gui *grpcUploaderImpl) getAuthentication(option *getAuthenticationOption) (*authenticationInfo, error) {
-	resp, err := gui.uploader.GetAuthentication(context.Background(), &stypesv1pb.UploaderServiceGetAuthenticationRequest{
+	resp, err := gui.uploader.GetAuthentication(context.Background(), &stypes.UploaderServiceGetAuthenticationRequest{
 		TraceId: option.requestContext.requestID,
 		Bucket:  option.requestContext.bucketName,
 		Object:  option.requestContext.objectName,
@@ -280,7 +284,7 @@ func (gui *grpcUploaderImpl) putObjectV2(objectName string, reader io.Reader, op
 			return nil, errors.ErrInternalError
 		}
 		if readN > 0 {
-			req := &stypesv1pb.UploaderServiceUploadPayloadV2Request{
+			req := &stypes.UploaderServiceUploadPayloadV2Request{
 				TraceId:        option.requestContext.requestID,
 				TxHash:         option.txHash,
 				PayloadData:    buf[:readN],
@@ -302,13 +306,12 @@ func (gui *grpcUploaderImpl) putObjectV2(objectName string, reader io.Reader, op
 				log.Warnw("put object failed, due to payload is empty")
 				return nil, errors.ErrObjectIsEmpty
 			}
-			err = nil
 			resp, err := stream.CloseAndRecv()
 			if err != nil {
 				log.Warnw("put object failed, due to stream close", "err", err)
 				return nil, errors.ErrInternalError
 			}
-			if errMsg := resp.GetErrMessage(); errMsg != nil && errMsg.ErrCode != stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+			if errMsg := resp.GetErrMessage(); errMsg != nil && errMsg.ErrCode != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 				log.Warnw("failed to grpc", "err", resp.ErrMessage)
 				return nil, fmt.Errorf(resp.ErrMessage.ErrMsg)
 			}

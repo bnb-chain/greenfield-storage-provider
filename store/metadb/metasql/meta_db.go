@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -146,7 +146,7 @@ func (mdb *MetaDB) GetIntegrityMeta(objectID uint64) (*metadb.IntegrityMeta, err
 		PieceIdx:       queryReturn.PieceIdx,
 		PieceCount:     queryReturn.PieceCount,
 		IsPrimary:      queryReturn.IsPrimary,
-		RedundancyType: ptypesv1pb.RedundancyType(queryReturn.RedundancyType),
+		RedundancyType: ptypes.RedundancyType(queryReturn.RedundancyType),
 		IntegrityHash:  integrityHash,
 	}
 	err = json.Unmarshal([]byte(queryReturn.PieceHash), &meta.PieceHash)

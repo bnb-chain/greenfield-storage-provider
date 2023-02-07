@@ -5,21 +5,21 @@ import (
 	"time"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/stretchr/testify/assert"
 
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobmemory"
 )
 
-func InitEnv(rType ptypesv1pb.RedundancyType) (*UploadPayloadJob, *ptypesv1pb.ObjectInfo) {
+func InitEnv(rType ptypes.RedundancyType) (*UploadPayloadJob, *ptypes.ObjectInfo) {
 	objectSize := 50 * 1024 * 1024
 	switch rType {
-	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		objectSize = 1 * 1024 * 1024
 	}
-	object := &ptypesv1pb.ObjectInfo{
+	object := &ptypes.ObjectInfo{
 		Size:           uint64(objectSize),
 		ObjectId:       1,
 		RedundancyType: rType,
@@ -29,27 +29,27 @@ func InitEnv(rType ptypesv1pb.RedundancyType) (*UploadPayloadJob, *ptypesv1pb.Ob
 }
 
 func TestInitUploadPayloadJob(t *testing.T) {
-	job, _ := InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
+	job, _ := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
 	assert.Equal(t, len(job.primaryJob.PopPendingJob()), 4)
 	assert.Equal(t, len(job.secondaryJob.PopPendingJob()), 6)
 
-	job, _ = InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE)
+	job, _ = InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE)
 	assert.Equal(t, len(job.primaryJob.PopPendingJob()), 1)
 	assert.Equal(t, len(job.secondaryJob.PopPendingJob()), 6)
 
-	job, _ = InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE)
+	job, _ = InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE)
 	assert.Equal(t, len(job.primaryJob.PopPendingJob()), 4)
 	assert.Equal(t, len(job.secondaryJob.PopPendingJob()), 6)
 }
 
 func TestDoneReplicatePieceJob(t *testing.T) {
-	job, object := InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE)
-	pieceJob := &stypesv1pb.PieceJob{
+	job, object := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE)
+	pieceJob := &stypes.PieceJob{
 		ObjectId:       object.GetObjectId(),
 		PayloadSize:    object.GetSize(),
 		RedundancyType: object.GetRedundancyType(),
 	}
-	pieceJob.StorageProviderSealInfo = &stypesv1pb.StorageProviderSealInfo{
+	pieceJob.StorageProviderSealInfo = &stypes.StorageProviderSealInfo{
 		StorageProviderId: "test-storage-provider",
 		PieceChecksum:     [][]byte{hash.GenerateChecksum([]byte(time.Now().String()))},
 		IntegrityHash:     hash.GenerateChecksum([]byte(time.Now().String())),
@@ -96,8 +96,8 @@ func TestDoneReplicatePieceJob(t *testing.T) {
 }
 
 func TestDoneInlinePieceJob(t *testing.T) {
-	job, object := InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE)
-	pieceJob := &stypesv1pb.PieceJob{
+	job, object := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE)
+	pieceJob := &stypes.PieceJob{
 		ObjectId:       object.GetObjectId(),
 		PayloadSize:    object.GetSize(),
 		RedundancyType: object.GetRedundancyType(),
@@ -105,7 +105,7 @@ func TestDoneInlinePieceJob(t *testing.T) {
 	intergrity := hash.GenerateChecksum([]byte(time.Now().String()))
 	pieceCheckSum := hash.GenerateChecksum([]byte(time.Now().String()))
 	signature := hash.GenerateChecksum([]byte(time.Now().String()))
-	pieceJob.StorageProviderSealInfo = &stypesv1pb.StorageProviderSealInfo{
+	pieceJob.StorageProviderSealInfo = &stypes.StorageProviderSealInfo{
 		StorageProviderId: "test-storage-provider",
 		PieceChecksum:     [][]byte{pieceCheckSum},
 		IntegrityHash:     intergrity,
@@ -120,13 +120,13 @@ func TestDoneInlinePieceJob(t *testing.T) {
 }
 
 func TestDoneECPieceJob(t *testing.T) {
-	job, object := InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
-	pieceJob := &stypesv1pb.PieceJob{
+	job, object := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
+	pieceJob := &stypes.PieceJob{
 		ObjectId:       object.GetObjectId(),
 		PayloadSize:    object.GetSize(),
 		RedundancyType: object.GetRedundancyType(),
 	}
-	pieceJob.StorageProviderSealInfo = &stypesv1pb.StorageProviderSealInfo{
+	pieceJob.StorageProviderSealInfo = &stypes.StorageProviderSealInfo{
 		StorageProviderId: "test-storage-provider",
 		PieceChecksum: [][]byte{hash.GenerateChecksum([]byte(time.Now().String())),
 			hash.GenerateChecksum([]byte(time.Now().String())),
@@ -156,14 +156,14 @@ func TestDoneECPieceJob(t *testing.T) {
 }
 
 func TestSegmentPieceError(t *testing.T) {
-	job, object := InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
-	pieceJob := &stypesv1pb.PieceJob{
+	job, object := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
+	pieceJob := &stypes.PieceJob{
 		ObjectId:       object.GetObjectId(),
 		PayloadSize:    object.GetSize(),
 		RedundancyType: object.GetRedundancyType(),
 	}
 	badCheckSum := hash.GenerateChecksum([]byte(time.Now().String()))[0:10]
-	pieceJob.StorageProviderSealInfo = &stypesv1pb.StorageProviderSealInfo{
+	pieceJob.StorageProviderSealInfo = &stypes.StorageProviderSealInfo{
 		StorageProviderId: "test-storage-provider",
 	}
 	pieceJob.StorageProviderSealInfo.PieceIdx = 0
@@ -176,15 +176,15 @@ func TestSegmentPieceError(t *testing.T) {
 }
 
 func TestECPieceError(t *testing.T) {
-	job, object := InitEnv(ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
-	pieceJob := &stypesv1pb.PieceJob{
+	job, object := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
+	pieceJob := &stypes.PieceJob{
 		ObjectId:       object.GetObjectId(),
 		PayloadSize:    object.GetSize(),
 		RedundancyType: object.GetRedundancyType(),
 	}
 	badCheckSum := hash.GenerateChecksum([]byte(time.Now().String()))[0:10]
 	checkSum := hash.GenerateChecksum([]byte(time.Now().String()))
-	pieceJob.StorageProviderSealInfo = &stypesv1pb.StorageProviderSealInfo{
+	pieceJob.StorageProviderSealInfo = &stypes.StorageProviderSealInfo{
 		StorageProviderId: "test-storage-provider",
 	}
 	pieceJob.StorageProviderSealInfo.PieceIdx = 0

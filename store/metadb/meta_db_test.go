@@ -7,14 +7,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 )
 
 func Test_IntegrityMeta_Json_Marshal_Unmarshal(t *testing.T) {
 	meta := &IntegrityMeta{
 		ObjectID:       1,
 		PieceIdx:       1,
-		RedundancyType: ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
+		RedundancyType: ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 	}
 	data, err := json.Marshal(meta)
 	assert.Equal(t, nil, err)

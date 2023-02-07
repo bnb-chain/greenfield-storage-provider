@@ -247,7 +247,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
 		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
 	}
-	if cfg.TestMode == false {
+	if !cfg.TestMode {
 		if cfg.NoSignRequest {
 			awsConfig.Credentials = credentials.AnonymousCredentials
 		} else if cfg.AccessKey != "" && cfg.SecretKey != "" {
@@ -264,11 +264,11 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	return sess, bucketName, nil
 }
 
-func (sc *SessionCache) clear() {
-	sc.Lock()
-	defer sc.Unlock()
-	sc.sessions = map[ObjectStorageConfig]*session.Session{}
-}
+//func (sc *SessionCache) clear() {
+//	sc.Lock()
+//	defer sc.Unlock()
+//	sc.sessions = map[ObjectStorageConfig]*session.Session{}
+//}
 
 func parseEndPoint(endPoint string) (string, string, error) {
 	endPoint = strings.Trim(endPoint, "/")
