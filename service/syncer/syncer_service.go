@@ -2,7 +2,6 @@ package syncer
 
 import (
 	"context"
-	"errors"
 	"io"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -67,7 +66,7 @@ func (s *Syncer) SyncPiece(stream stypesv1pb.SyncerService_SyncPieceServer) erro
 		}
 		count++
 		spID = req.GetSyncerInfo().GetStorageProviderId()
-		integrityMeta, value, err = s.hPieceData(req, count)
+		integrityMeta, value, err = s.handlePieceData(req, count)
 		if err != nil {
 			return err
 		}
@@ -96,7 +95,7 @@ func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypesv
 	return resp
 }
 
-func (s *Syncer) hPieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest, count uint32) (*metadb.IntegrityMeta, []byte, error) {
+func (s *Syncer) handlePieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest, count uint32) (*metadb.IntegrityMeta, []byte, error) {
 	redundancyType := req.GetSyncerInfo().GetRedundancyType()
 	objectID := req.GetSyncerInfo().GetObjectId()
 	integrityMeta := &metadb.IntegrityMeta{
@@ -123,61 +122,10 @@ func encodePieceKey(redundancyType ptypesv1pb.RedundancyType, objectID uint64, s
 	string, uint32, error) {
 	switch redundancyType {
 	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		return piecestore.EncodeSegmentPieceKey(objectID, segmentIndex), segmentPieceIndex, nil
+		return piecestore.EncodeSegmentPieceKey(objectID, segmentIndex), segmentIndex, nil
 	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		return piecestore.EncodeECPieceKey(objectID, segmentIndex, pieceIndex), pieceIndex, nil
 	default:
 		return "", 0, merrors.ErrRedundancyType
 	}
-}
-
-func (s *Syncer) handlePieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest) (*metadb.IntegrityMeta, string, []byte, error) {
-	if len(req.GetPieceData()) != 1 {
-		return nil, "", nil, errors.New("the length of piece data map is not equal to 1")
-	}
-
-	redundancyType := req.GetSyncerInfo().GetRedundancyType()
-	integrityMeta := &metadb.IntegrityMeta{
-		ObjectID:       req.GetSyncerInfo().GetObjectId(),
-		PieceCount:     req.GetSyncerInfo().GetPieceCount(),
-		IsPrimary:      false,
-		RedundancyType: redundancyType,
-	}
-
-	var (
-		key   string
-		value []byte
-	)
-	//for key, value = range req.GetPieceData() {
-	//	pieceIndex, err := parsePieceIndex(redundancyType, key)
-	//	if err != nil {
-	//		return nil, "", nil, err
-	//	}
-	//	integrityMeta.PieceIdx = pieceIndex
-	//
-	//	// put piece data into piece store
-	//	if err = s.store.PutPiece(key, value); err != nil {
-	//		log.Errorw("put piece failed", "error", err)
-	//		return nil, "", nil, err
-	//	}
-	//}
-	return integrityMeta, key, value, nil
-}
-
-func parsePieceIndex(redundancyType ptypesv1pb.RedundancyType, key string) (uint32, error) {
-	var (
-		err        error
-		pieceIndex uint32
-	)
-	switch redundancyType {
-	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		pieceIndex = segmentPieceIndex
-	default: // ec type
-		_, _, pieceIndex, err = piecestore.DecodeECPieceKey(key)
-	}
-	if err != nil {
-		log.Errorw("decode piece key failed", "error", err)
-		return 0, err
-	}
-	return pieceIndex, nil
 }

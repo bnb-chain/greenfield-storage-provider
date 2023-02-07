@@ -57,7 +57,7 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	}
 
 	// 2. dispatch the piece data to different secondary sp
-	secondaryPieceData, err := node.dSSP(pieceData, redundancyType, secondarySPs, targetIdx)
+	secondaryPieceData, err := node.dispatchSecondarySP(pieceData, redundancyType, secondarySPs, targetIdx)
 	if err != nil {
 		log.CtxErrorw(ctx, "dispatch piece data to secondary sp error")
 		node.reportErrToStoneHub(ctx, allocResp, err)
