@@ -11,6 +11,8 @@ if [ ! -d build  ];then
   mkdir -p build/data
 fi
 
+make buf-gen
+
 go build -ldflags "\
   -X 'main.Version=${Version}' \
   -X 'main.CommitID=${CommitID}' \
@@ -18,6 +20,15 @@ go build -ldflags "\
   -X 'main.BuildTime=${BuildTime}'" \
 -o ./build/storage_provider cmd/storage_provider/*.go
 
+if [ $? -ne 0 ]; then
+    echo "build failed Ooh!!!"
+else
+    echo "build succeed!"
+fi
+
 go build -o ./build/test-storage-provider test/e2e/services/case_driver.go
+if [ $? -ne 0 ]; then
+    echo "build test-storage-provider failed Ooh!!!"
+fi
 
 cp config/config.toml ./build/
