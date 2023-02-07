@@ -20,17 +20,6 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	var spID string
 	var value []byte
 	pieceHash := make([][]byte, 0)
-	//defer func() {
-	//	if err != nil && err != io.EOF {
-	//		log.Info("entry defer func")
-	//		err = stream.SendAndClose(&service.SyncerServiceSyncPieceResponse{
-	//			ErrMessage: &service.ErrMessage{
-	//				ErrCode: service.ErrCode_ERR_CODE_ERROR,
-	//				ErrMsg:  err.Error(),
-	//			},
-	//		})
-	//	}
-	//}()
 
 	for {
 		req, err := stream.Recv()

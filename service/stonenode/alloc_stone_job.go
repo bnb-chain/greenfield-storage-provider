@@ -2,6 +2,7 @@ package stonenode
 
 import (
 	"context"
+	"errors"
 
 	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -15,6 +16,9 @@ func (node *StoneNodeService) allocStoneJob(ctx context.Context) {
 	resp, err := node.stoneHub.AllocStoneJob(ctx)
 	ctx = log.Context(ctx, resp, resp.GetPieceJob())
 	if err != nil {
+		if errors.Is(err, merrors.ErrEmptyJob) {
+			return
+		}
 		log.CtxErrorw(ctx, "alloc stone from stone hub failed", "error", err)
 		return
 	}
