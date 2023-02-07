@@ -58,6 +58,10 @@ func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []s
 	for i := 0; i < targetIdxLength; i++ {
 		pds[i] = riPieceDataSlice
 	}
+	log.Infow("pds length", "length", len(pds))
+	for i, j := range pds {
+		log.Infow("print pds meta", "index", i, "inner array length", len(j))
+	}
 	return pds, nil
 }
 
