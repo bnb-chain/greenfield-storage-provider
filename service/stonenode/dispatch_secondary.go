@@ -58,7 +58,7 @@ func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []s
 	for i := 0; i < targetIdxLength; i++ {
 		pds[i] = riPieceDataSlice
 	}
-	return pieceDataBySegment, nil
+	return pds, nil
 }
 
 // dispatchECData dispatched ec data into different sp
