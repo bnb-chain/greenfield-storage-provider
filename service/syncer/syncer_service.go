@@ -73,6 +73,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 		}
 		checksum := hash.GenerateChecksum(value)
 		pieceHash = append(pieceHash, checksum)
+		log.Infow("uuuuuuu", "count", count, "GetPieceCount", req.GetSyncerInfo().GetPieceCount())
 	}
 }
 
