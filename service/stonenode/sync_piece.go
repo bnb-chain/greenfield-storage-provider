@@ -67,12 +67,13 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 				errMsg.ErrMsg = merrors.ErrIntegrityHash.Error()
 				return
 			}
-			log.Info("verify secondary integrity hash successfully")
+			log.Debug("verify secondary integrity hash successfully")
 
 			pieceJob.StorageProviderSealInfo = spInfo
-			log.CtxInfow(ctx, "sync piece data to secondary", "secondary_provider", secondarySPs[index])
+			log.CtxDebugw(ctx, "sync piece data to secondary", "secondary_provider", secondarySPs[index])
 		}(index, pieceData)
 	}
+	log.Info("secondary piece job done")
 	return nil
 }
 
@@ -87,7 +88,7 @@ func verifyIntegrityHash(pieceData [][]byte, spInfo *stypes.StorageProviderSealI
 		log.Error("wrong secondary integrity hash")
 		return false
 	}
-	log.Infow("verify integrity hash", "local_integrity_hash", integrityHash,
+	log.Debugw("verify integrity hash", "local_integrity_hash", integrityHash,
 		"remote_integrity_hash", spInfo.GetIntegrityHash())
 	return true
 }
