@@ -85,6 +85,7 @@ func (s *Syncer) setIntegrityMeta(db metadb.MetaDB, meta *metadb.IntegrityMeta) 
 
 func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.StorageProviderSealInfo {
 	pieceHash := integrityMeta.PieceHash
+	log.Info("generateSealInfo", "pieceHash length", len(pieceHash))
 	integrityHash := hash.GenerateIntegrityHash(pieceHash)
 	resp := &stypes.StorageProviderSealInfo{
 		StorageProviderId: spID,
