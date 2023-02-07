@@ -5,23 +5,23 @@ import (
 	"errors"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // ChallengePiece implement challenge service server interface and handle the grpc request.
-func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypesv1pb.ChallengeServiceChallengePieceRequest) (
-	resp *stypesv1pb.ChallengeServiceChallengePieceResponse, err error) {
+func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypes.ChallengeServiceChallengePieceRequest) (
+	resp *stypes.ChallengeServiceChallengePieceResponse, err error) {
 	ctx = log.Context(ctx, req)
-	resp = &stypesv1pb.ChallengeServiceChallengePieceResponse{
+	resp = &stypes.ChallengeServiceChallengePieceResponse{
 		TraceId:  req.TraceId,
 		ObjectId: req.ObjectId,
 	}
 	defer func() {
 		if err != nil {
-			resp.ErrMessage.ErrCode = stypesv1pb.ErrCode_ERR_CODE_ERROR
+			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 			resp.ErrMessage.ErrMsg = err.Error()
 			log.CtxErrorw(ctx, "challenge failed", "error", err)
 		} else {
@@ -45,13 +45,13 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypesv1pb.
 		err = errors.New("redundancy type mismatch")
 		return
 	}
-	if req.GetRedundancyType() == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED &&
+	if req.GetRedundancyType() == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED &&
 		req.GetEcIdx() != integrityMeta.PieceIdx {
 		err = errors.New("ec idx mismatch")
 		return
 	}
 	var pieceKey string
-	if req.GetRedundancyType() == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+	if req.GetRedundancyType() == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
 		pieceKey = piecestore.EncodeECPieceKey(req.GetObjectId(), req.GetSegmentIdx(), req.GetEcIdx())
 	} else {
 		pieceKey = piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())

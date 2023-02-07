@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 )
 
@@ -13,8 +13,8 @@ var _ jobdb.JobDBV2 = &MemJobDBV2{}
 // MemJobDBV2 is a memory db, maintains job, object and piece job table.
 type MemJobDBV2 struct {
 	JobCount               uint64
-	JobTable               map[uint64]ptypesv1pb.JobContext
-	ObjectTable            map[uint64]ptypesv1pb.ObjectInfo
+	JobTable               map[uint64]*ptypes.JobContext
+	ObjectTable            map[uint64]*ptypes.ObjectInfo
 	PrimaryPieceJobTable   map[uint64]map[uint32]jobdb.PieceJob
 	SecondaryPieceJobTable map[uint64]map[uint32]jobdb.PieceJob
 	mu                     sync.RWMutex
@@ -24,50 +24,50 @@ type MemJobDBV2 struct {
 func NewMemJobDBV2() *MemJobDBV2 {
 	return &MemJobDBV2{
 		JobCount:               0,
-		JobTable:               make(map[uint64]ptypesv1pb.JobContext),
-		ObjectTable:            make(map[uint64]ptypesv1pb.ObjectInfo),
+		JobTable:               make(map[uint64]*ptypes.JobContext),
+		ObjectTable:            make(map[uint64]*ptypes.ObjectInfo),
 		PrimaryPieceJobTable:   make(map[uint64]map[uint32]jobdb.PieceJob),
 		SecondaryPieceJobTable: make(map[uint64]map[uint32]jobdb.PieceJob),
 	}
 }
 
 // CreateUploadPayloadJobV2 create a job info for special object.
-func (db *MemJobDBV2) CreateUploadPayloadJobV2(info *ptypesv1pb.ObjectInfo) (uint64, error) {
+func (db *MemJobDBV2) CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, error) {
 	if info == nil {
 		return 0, errors.New("object info is nil")
 	}
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	db.JobTable[db.JobCount] = ptypesv1pb.JobContext{
+	db.JobTable[db.JobCount] = &ptypes.JobContext{
 		JobId:    db.JobCount,
-		JobState: ptypesv1pb.JobState_JOB_STATE_CREATE_OBJECT_DONE,
+		JobState: ptypes.JobState_JOB_STATE_CREATE_OBJECT_DONE,
 	}
 	info.JobId = db.JobCount
-	db.ObjectTable[info.GetObjectId()] = *info
+	db.ObjectTable[info.GetObjectId()] = info
 	db.JobCount++
 	return db.JobCount - 1, nil
 }
 
 // GetJobContextV2 returns the job info .
-func (db *MemJobDBV2) GetJobContextV2(jobId uint64) (*ptypesv1pb.JobContext, error) {
+func (db *MemJobDBV2) GetJobContextV2(jobId uint64) (*ptypes.JobContext, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	job, ok := db.JobTable[jobId]
 	if !ok {
 		return nil, errors.New("job is not exist")
 	}
-	return &job, nil
+	return job, nil
 }
 
 // GetObjectInfoV2 returns the object info by object id.
-func (db *MemJobDBV2) GetObjectInfoV2(objectID uint64) (*ptypesv1pb.ObjectInfo, error) {
+func (db *MemJobDBV2) GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	objectInfo, ok := db.ObjectTable[objectID]
 	if !ok {
 		return nil, errors.New("object is not exist")
 	}
-	return &objectInfo, nil
+	return objectInfo, nil
 }
 
 // SetUploadPayloadJobStateV2 set the job state.
@@ -78,11 +78,11 @@ func (db *MemJobDBV2) SetUploadPayloadJobStateV2(jobId uint64, state string, tim
 	if !ok {
 		return errors.New("job is not exist")
 	}
-	jobState, ok := ptypesv1pb.JobState_value[state]
+	jobState, ok := ptypes.JobState_value[state]
 	if !ok {
 		return errors.New("state is not correct job state")
 	}
-	job.JobState = (ptypesv1pb.JobState)(jobState)
+	job.JobState = (ptypes.JobState)(jobState)
 	job.ModifyTime = timestamp
 	db.JobTable[jobId] = job
 	return nil
@@ -96,11 +96,11 @@ func (db *MemJobDBV2) SetUploadPayloadJobJobErrorV2(jobId uint64, state string, 
 	if !ok {
 		return errors.New("job is not exist")
 	}
-	jobState, ok := ptypesv1pb.JobState_value[state]
+	jobState, ok := ptypes.JobState_value[state]
 	if !ok {
 		return errors.New("state is not correct job state")
 	}
-	job.JobState = (ptypesv1pb.JobState)(jobState)
+	job.JobState = (ptypes.JobState)(jobState)
 	job.ModifyTime = timestamp
 	job.JobErr = jobErr
 	db.JobTable[jobId] = job

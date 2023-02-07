@@ -28,6 +28,7 @@ func (dci *debugChainImpl) createBucket(bucketName string, option *createBucketO
 	var (
 		innerErr error
 		msg      string
+		fileInfo os.FileInfo
 	)
 	defer func() {
 		if innerErr != nil {
@@ -35,7 +36,7 @@ func (dci *debugChainImpl) createBucket(bucketName string, option *createBucketO
 		}
 	}()
 
-	if s, innerErr := os.Stat(dci.localDir); innerErr != nil || !s.IsDir() {
+	if fileInfo, innerErr = os.Stat(dci.localDir); innerErr != nil || !fileInfo.IsDir() {
 		msg = "failed to stat"
 		return errors.ErrInternalError
 	}

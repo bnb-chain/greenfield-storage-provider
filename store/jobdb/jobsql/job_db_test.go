@@ -7,7 +7,7 @@ package jobsql
 //
 //	"github.com/stretchr/testify/assert"
 //
-//	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+//	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 //	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 //)
 //
@@ -22,7 +22,7 @@ package jobsql
 //		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 //		_, err := jmi.CreateUploadPayloadJob(
 //			txHash,
-//			&ptypesv1pb.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject"})
+//			&ptypes.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject"})
 //		assert.Equal(t, nil, err)
 //	}
 //	// case2 SetObjectCreateHeight/SetObjectCreateHeightAndObjectID
@@ -123,7 +123,7 @@ package jobsql
 //	{
 //		jmi, _ := NewJobMetaImpl(DefaultJobSqlDBConfig)
 //		_, err := jmi.CreateUploadPayloadJobV2(
-//			&ptypesv1pb.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject", ObjectId: objectID})
+//			&ptypes.ObjectInfo{BucketName: "testBucket", ObjectName: "testObject", ObjectId: objectID})
 //		assert.Equal(t, nil, err)
 //	}
 //	// case2 GetObjectInfoV2

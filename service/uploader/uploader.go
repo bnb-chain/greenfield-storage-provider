@@ -14,7 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
@@ -106,7 +106,7 @@ func (uploader *Uploader) serve(errCh chan error) {
 	}
 
 	grpcServer := grpc.NewServer()
-	stypesv1pb.RegisterUploaderServiceServer(grpcServer, uploader)
+	stypes.RegisterUploaderServiceServer(grpcServer, uploader)
 	uploader.grpcServer = grpcServer
 	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {

@@ -18,8 +18,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/stone"
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -144,7 +144,7 @@ func (hub *StoneHub) serve() {
 		return
 	}
 	grpcServer := grpc.NewServer()
-	stypesv1pb.RegisterStoneHubServiceServer(grpcServer, hub)
+	stypes.RegisterStoneHubServiceServer(grpcServer, hub)
 	// register reflection service
 	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {
@@ -181,7 +181,7 @@ func (hub *StoneHub) eventLoop() {
 // processStoneJob according to the stone job types to process.
 func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 	switch job := stoneJob.(type) {
-	case *stypesv1pb.PieceJob:
+	case *stypes.PieceJob:
 		hub.jobQueue.Enqueue(job)
 		log.Infow("push secondary piece job to queue",
 			"object_id", job.GetObjectId(), "object_size", job.GetPayloadSize(),
@@ -213,7 +213,7 @@ func (hub *StoneHub) gcMemoryStone() {
 		if err != nil {
 			return true // skip err stone
 		}
-		if val.LastModifyTime() <= current || state == ptypesv1pb.JOB_STATE_ERROR {
+		if val.LastModifyTime() <= current || state == ptypes.JOB_STATE_ERROR {
 			log.Infow("gc memory stone", "object_id", key)
 			hub.stone.Delete(key)
 		}
@@ -231,7 +231,7 @@ func (hub *StoneHub) listenChain() {
 			if event == nil {
 				continue
 			}
-			object := event.(*ptypesv1pb.ObjectInfo)
+			object := event.(*ptypes.ObjectInfo)
 			st, ok := hub.stone.Load(object.GetObjectId())
 			if !ok {
 				log.Infow("receive seal event, stone has gone")

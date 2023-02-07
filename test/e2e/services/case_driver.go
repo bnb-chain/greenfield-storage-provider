@@ -29,6 +29,12 @@ func generateRandString(n int) string {
 	return string(b)
 }
 
+const (
+	getMethod  = "GET"
+	putMethod  = "PUT"
+	testDomain = "test_bucket.bfs.nodereal.com"
+)
+
 // case1 128bytes, Inline type, do not need to be segmented(< segment size, 16MB).
 func runCase1() {
 	log.Info("start run case1(128byte, Inline type)")
@@ -36,7 +42,7 @@ func runCase1() {
 	{
 		log.Infow("start get auth")
 		url := "http://" + gatewayAddress + "/greenfield/admin/v1/get-approval?action=createObject"
-		method := "GET"
+		method := getMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
@@ -67,14 +73,14 @@ func runCase1() {
 
 		log.Infow("start put object")
 		url := "http://" + gatewayAddress + "/case1?putobjectv2"
-		method := "PUT"
+		method := putMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(buf))
 		if err != nil {
 			log.Errorw("put object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "1")
 		res, err := client.Do(req)
@@ -96,14 +102,14 @@ func runCase1() {
 	{
 		log.Infow("start get object")
 		url := "http://" + gatewayAddress + "/case1"
-		method := "GET"
+		method := getMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
 			log.Errorw("get object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -123,7 +129,7 @@ func runCase2() {
 	{
 		log.Infow("start get auth")
 		url := "http://" + gatewayAddress + "/greenfield/admin/v1/get-approval?action=createObject"
-		method := "GET"
+		method := getMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
@@ -154,14 +160,14 @@ func runCase2() {
 
 		log.Infow("start put object")
 		url := "http://" + gatewayAddress + "/case2?putobjectv2"
-		method := "PUT"
+		method := putMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(buf))
 		if err != nil {
 			log.Errorw("put object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "67108864")
 		req.Header.Add(model.GnfdRedundancyTypeHeader, model.ReplicaRedundancyTypeHeaderValue)
@@ -184,14 +190,14 @@ func runCase2() {
 	{
 		log.Infow("start get object")
 		url := "http://" + gatewayAddress + "/case2"
-		method := "GET"
+		method := getMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
 			log.Errorw("get object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -212,7 +218,7 @@ func runCase3() {
 	{
 		log.Infow("start get auth")
 		url := "http://" + gatewayAddress + "/greenfield/admin/v1/get-approval?action=createObject"
-		method := "GET"
+		method := getMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
@@ -243,14 +249,14 @@ func runCase3() {
 
 		log.Infow("start put object")
 		url := "http://" + gatewayAddress + "/case3?putobjectv2"
-		method := "PUT"
+		method := putMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(buf))
 		if err != nil {
 			log.Errorw("put object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "209715200")
 		res, err := client.Do(req)
@@ -272,14 +278,14 @@ func runCase3() {
 	{
 		log.Infow("start get object")
 		url := "http://" + gatewayAddress + "/case3"
-		method := "GET"
+		method := getMethod
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
 			log.Errorw("get object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = "test_bucket.bfs.nodereal.com"
+		req.Host = testDomain
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
