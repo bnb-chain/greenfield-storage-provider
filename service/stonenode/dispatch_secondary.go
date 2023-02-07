@@ -2,7 +2,6 @@ package stonenode
 
 import (
 	"errors"
-	"fmt"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
@@ -48,72 +47,37 @@ func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []s
 		return nil, merrors.ErrSecondarySPNumber
 	}
 	segmentLength := len(pieceDataBySegment[0])
-	//riPieceDataSlice := make([][]byte, segmentLength)
-	//for i := 0; i < segmentLength; i++ {
-	//	riPieceDataSlice[i] = make([]byte, 0)
-	//	for j := 0; j < len(pieceDataBySegment); j++ {
-	//		riPieceDataSlice[i] = append(riPieceDataSlice[i], pieceDataBySegment[j][i][0])
-	//	}
-	//}
-	//pds := make([][][]byte, targetIdxLength)
-	//for i := 0; i < targetIdxLength; i++ {
-	//	pds[i] = riPieceDataSlice
-	//}
-	newData := make([][][]byte, segmentLength)
+	dataSlice := make([][][]byte, segmentLength)
 	for i := 0; i < segmentLength; i++ {
-		newData[i] = make([][]byte, 0)
+		dataSlice[i] = make([][]byte, 0)
 		for j := 0; j < len(pieceDataBySegment); j++ {
-			newData[i] = append(newData[i], pieceDataBySegment[j][i])
+			dataSlice[i] = append(dataSlice[i], pieceDataBySegment[j][i])
 		}
 	}
-	pds := make([][][]byte, len(targetIdx))
+	segmentPieceSlice := make([][][]byte, len(targetIdx))
 	for i := 0; i < len(targetIdx); i++ {
-		pds[i] = newData[0]
+		segmentPieceSlice[i] = segmentPieceSlice[0]
 	}
-
-	log.Infow("length", "pds length", len(pds), "newData length", len(newData))
-	//for i, j := range pds {
-	//	log.Infow("print pds meta", "index", i, "inner array length", len(j))
-	//}
-	return pds, nil
-}
-
-func dRID(data [][][]byte, targetIdx []uint32) [][][]byte {
-	segmentLength := len(data[0])
-	fmt.Println(segmentLength)
-	newData := make([][][]byte, segmentLength)
-
-	for i := 0; i < segmentLength; i++ {
-		newData[i] = make([][]byte, 0)
-		for j := 0; j < len(data); j++ {
-			newData[i] = append(newData[i], data[j][i])
-		}
-	}
-	pds := make([][][]byte, len(targetIdx))
-	for i := 0; i < len(targetIdx); i++ {
-		pds[i] = newData[0]
-	}
-
-	return pds
+	return segmentPieceSlice, nil
 }
 
 // dispatchECData dispatched ec data into different sp
 // one sp stores same ec column data: sp1 stores all ec1 data, sp2 stores all ec2 data, etc
 func dispatchECData(pieceDataBySegment [][][]byte, secondarySPs []string, targetIdx []uint32) ([][][]byte, error) {
 	segmentLength := len(pieceDataBySegment[0])
-	ecPieceDataSlice := make([][][]byte, segmentLength)
+	ecPieceSlice := make([][][]byte, segmentLength)
 	for i := 0; i < segmentLength; i++ {
 		if i > len(secondarySPs) {
 			return nil, merrors.ErrSecondarySPNumber
 		}
 		for _, idx := range targetIdx {
 			if int(idx) == i {
-				ecPieceDataSlice[i] = make([][]byte, 0)
+				ecPieceSlice[i] = make([][]byte, 0)
 				for j := 0; j < len(pieceDataBySegment); j++ {
-					ecPieceDataSlice[i] = append(ecPieceDataSlice[i], pieceDataBySegment[j][i])
+					ecPieceSlice[i] = append(ecPieceSlice[i], pieceDataBySegment[j][i])
 				}
 			}
 		}
 	}
-	return ecPieceDataSlice, nil
+	return ecPieceSlice, nil
 }

@@ -71,7 +71,6 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 			return err
 		}
 		pieceHash = append(pieceHash, hash.GenerateChecksum(value))
-		//log.Infow("uuuuuuu", "count", count, "GetPieceCount", req.GetSyncerInfo().GetPieceCount())
 	}
 }
 
@@ -123,7 +122,7 @@ func encodePieceKey(redundancyType ptypes.RedundancyType, objectID uint64, segme
 	string, uint32, error) {
 	switch redundancyType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		return piecestore.EncodeSegmentPieceKey(objectID, segmentIndex), segmentIndex, nil
+		return piecestore.EncodeSegmentPieceKey(objectID, segmentIndex), pieceIndex, nil
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		return piecestore.EncodeECPieceKey(objectID, segmentIndex, pieceIndex), pieceIndex, nil
 	default:

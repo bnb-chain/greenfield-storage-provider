@@ -61,8 +61,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 			}
 
 			spInfo := syncResp.GetSecondarySpInfo()
-			log.Infow("spInfo", "spID", spInfo.GetStorageProviderId(), "pieceIdx", spInfo.GetPieceIdx(),
-				"pieceChecksum length", len(spInfo.GetPieceChecksum()))
 			if ok := verifyIntegrityHash(pieceData, spInfo); !ok {
 				log.CtxErrorw(ctx, "wrong secondary integrity hash", "error", err)
 				errMsg.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
