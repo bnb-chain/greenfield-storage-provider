@@ -24,7 +24,7 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte,
 	if len(secondarySPs) == 0 {
 		return nil, merrors.ErrSecondarySPNumber
 	}
-	pieceDataBySecondary := make([][][]byte, 0)
+	var pieceDataBySecondary [][][]byte
 	var err error
 	switch redundancyType {
 	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:

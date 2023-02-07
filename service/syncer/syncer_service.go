@@ -13,8 +13,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-const segmentPieceIndex = 9999
-
 // SyncPiece syncs piece data to secondary storage provider
 func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	var count uint32

@@ -19,6 +19,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 		payloadSize    = resp.GetPieceJob().GetPayloadSize()
 		redundancyType = resp.GetPieceJob().GetRedundancyType()
 	)
+	log.Infow("doSyncToSecondarySP", "pieceDataBySecondary", len(pieceDataBySecondary))
 	// index在ec类型中代表第几个ec；在replica类型中代表第几sp，存储的二维数组是完全相同的
 	// pieceData的长度代表有几个segment，在stream要一个接一个的发送pieceData中的[]byte，可以用来计算syncer server收到的数目是否正确
 	for index, pieceData := range pieceDataBySecondary {
@@ -44,6 +45,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 				}
 			}()
 
+			log.Infow("hhuuu", "piecedata", len(pieceData))
 			syncResp, err := node.syncPiece(ctx, &stypes.SyncerInfo{
 				ObjectId:          objectID,
 				StorageProviderId: secondarySPs[index],
@@ -71,7 +73,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 
 			pieceJob.StorageProviderSealInfo = spInfo
 			log.CtxInfow(ctx, "sync piece data to secondary", "secondary_provider", secondarySPs[index])
-			return
 		}(index, pieceData)
 	}
 	return nil
@@ -101,6 +102,7 @@ func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *stypes.
 		log.Errorw("sync secondary piece job error", "err", err)
 		return nil, err
 	}
+	log.Infow("sync piece", "piece data", len(pieceData))
 
 	// send data one by one to avoid exceeding rpc max msg size
 	for _, value := range pieceData {

@@ -25,7 +25,6 @@ func (node *StoneNodeService) allocStoneJob(ctx context.Context) {
 		return
 	}
 	log.CtxInfow(ctx, "upload secondary piece job success")
-	return
 }
 
 // loadAndSyncPieces load segment data from primary and sync to secondary.
