@@ -7,15 +7,15 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/redundancy"
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // loadSegmentsData load segment data from primary storage provider.
 // returned map key is segmentKey, value is corresponding ec data from ec1 to ec6, or segment data
-func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *stypesv1pb.StoneHubServiceAllocStoneJobResponse) (
+func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *stypes.StoneHubServiceAllocStoneJobResponse) (
 	[][][]byte, error) {
 	type segment struct {
 		objectID       uint64
@@ -24,7 +24,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		pieceData      [][]byte
 		pieceErr       error
 		segmentIndex   int
-		redundancyType ptypesv1pb.RedundancyType
+		redundancyType ptypes.RedundancyType
 	}
 	var (
 		doneSegments   int64
@@ -110,10 +110,10 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 
 // 如果redundancyType为replica或inline类型，pieceData这个二维数组里面只有一个[]byte；ec类型pieceData里有六个[]byte
 // generatePieceData generates piece data from segment data
-func (node *StoneNodeService) generatePieceData(redundancyType ptypesv1pb.RedundancyType, segmentData []byte) (
+func (node *StoneNodeService) generatePieceData(redundancyType ptypes.RedundancyType, segmentData []byte) (
 	pieceData [][]byte, err error) {
 	switch redundancyType {
-	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		pieceData = append(pieceData, segmentData)
 	default: // ec type
 		pieceData, err = redundancy.EncodeRawSegment(segmentData)

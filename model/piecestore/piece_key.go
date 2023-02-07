@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -35,13 +35,13 @@ func DecodeSegmentPieceKey(pieceKey string) (uint64, uint32, error) {
 }
 
 // EncodePieceKey encodes piece store key
-func EncodePieceKey(rType ptypesv1pb.RedundancyType, objectId uint64, segmentIndex, pieceIndex uint32) (string, error) {
+func EncodePieceKey(rType ptypes.RedundancyType, objectId uint64, segmentIndex, pieceIndex uint32) (string, error) {
 	var pieceKey string
-	if rType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+	if rType == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
 		pieceKey = EncodeECPieceKey(objectId, segmentIndex, pieceIndex)
-	} else if rType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
+	} else if rType == ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
 		pieceKey = EncodeSegmentPieceKey(objectId, pieceIndex)
-	} else if rType == ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
+	} else if rType == ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
 		pieceKey = EncodeSegmentPieceKey(objectId, pieceIndex)
 	} else {
 		return "", merrors.ErrRedundancyType

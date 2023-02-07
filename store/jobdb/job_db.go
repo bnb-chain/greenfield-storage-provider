@@ -1,6 +1,8 @@
 package jobdb
 
-import ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+import (
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+)
 
 // PieceJob record the piece job context, interact with db.
 // For primary:
@@ -25,11 +27,11 @@ type PieceJob struct {
 
 // JobDB use txhash as primary key
 type JobDB interface {
-	CreateUploadPayloadJob(txHash []byte, info *ptypesv1pb.ObjectInfo) (uint64, error)
+	CreateUploadPayloadJob(txHash []byte, info *ptypes.ObjectInfo) (uint64, error)
 	SetObjectCreateHeightAndObjectID(txHash []byte, height uint64, objectID uint64) error
 
-	GetObjectInfo(txHash []byte) (*ptypesv1pb.ObjectInfo, error)
-	GetJobContext(jobId uint64) (*ptypesv1pb.JobContext, error)
+	GetObjectInfo(txHash []byte) (*ptypes.ObjectInfo, error)
+	GetJobContext(jobId uint64) (*ptypes.JobContext, error)
 
 	SetUploadPayloadJobState(jobId uint64, state string, timestamp int64) error
 	SetUploadPayloadJobJobError(jobID uint64, jobState string, jobErr string, timestamp int64) error
@@ -46,10 +48,10 @@ type JobDB interface {
 
 // JobDBV2 use objectID as primary key
 type JobDBV2 interface {
-	CreateUploadPayloadJobV2(info *ptypesv1pb.ObjectInfo) (uint64, error)
+	CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, error)
 
-	GetObjectInfoV2(objectID uint64) (*ptypesv1pb.ObjectInfo, error)
-	GetJobContextV2(jobId uint64) (*ptypesv1pb.JobContext, error)
+	GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error)
+	GetJobContextV2(jobId uint64) (*ptypes.JobContext, error)
 
 	SetUploadPayloadJobStateV2(jobId uint64, state string, timestamp int64) error
 	SetUploadPayloadJobJobErrorV2(jobID uint64, jobState string, jobErr string, timestamp int64) error

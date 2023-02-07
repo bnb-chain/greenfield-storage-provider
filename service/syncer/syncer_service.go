@@ -6,8 +6,8 @@ import (
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -16,7 +16,7 @@ import (
 const segmentPieceIndex = 9999
 
 // SyncPiece syncs piece data to secondary storage provider
-func (s *Syncer) SyncPiece(stream stypesv1pb.SyncerService_SyncPieceServer) error {
+func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	var count uint32
 	var integrityMeta *metadb.IntegrityMeta
 	var spID string
@@ -48,11 +48,11 @@ func (s *Syncer) SyncPiece(stream stypesv1pb.SyncerService_SyncPieceServer) erro
 			if err := s.setIntegrityMeta(s.metaDB, integrityMeta); err != nil {
 				return err
 			}
-			resp := &stypesv1pb.SyncerServiceSyncPieceResponse{
+			resp := &stypes.SyncerServiceSyncPieceResponse{
 				TraceId:         req.GetTraceId(),
 				SecondarySpInfo: sealInfo,
-				ErrMessage: &stypesv1pb.ErrMessage{
-					ErrCode: stypesv1pb.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
+				ErrMessage: &stypes.ErrMessage{
+					ErrCode: stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
 					ErrMsg:  "success",
 				},
 			}
@@ -82,10 +82,10 @@ func (s *Syncer) setIntegrityMeta(db metadb.MetaDB, meta *metadb.IntegrityMeta) 
 	return nil
 }
 
-func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypesv1pb.StorageProviderSealInfo {
+func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.StorageProviderSealInfo {
 	pieceHash := integrityMeta.PieceHash
 	integrityHash := hash.GenerateIntegrityHash(pieceHash)
-	resp := &stypesv1pb.StorageProviderSealInfo{
+	resp := &stypes.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          integrityMeta.PieceIdx,
 		PieceChecksum:     pieceHash,
@@ -95,7 +95,7 @@ func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypesv
 	return resp
 }
 
-func (s *Syncer) handlePieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest, count uint32) (*metadb.IntegrityMeta, []byte, error) {
+func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, count uint32) (*metadb.IntegrityMeta, []byte, error) {
 	redundancyType := req.GetSyncerInfo().GetRedundancyType()
 	objectID := req.GetSyncerInfo().GetObjectId()
 	integrityMeta := &metadb.IntegrityMeta{
@@ -118,12 +118,12 @@ func (s *Syncer) handlePieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest, 
 	return integrityMeta, value, nil
 }
 
-func encodePieceKey(redundancyType ptypesv1pb.RedundancyType, objectID uint64, segmentIndex, pieceIndex uint32) (
+func encodePieceKey(redundancyType ptypes.RedundancyType, objectID uint64, segmentIndex, pieceIndex uint32) (
 	string, uint32, error) {
 	switch redundancyType {
-	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		return piecestore.EncodeSegmentPieceKey(objectID, segmentIndex), segmentIndex, nil
-	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		return piecestore.EncodeECPieceKey(objectID, segmentIndex, pieceIndex), pieceIndex, nil
 	default:
 		return "", 0, merrors.ErrRedundancyType

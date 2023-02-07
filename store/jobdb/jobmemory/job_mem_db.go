@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 )
 
@@ -13,8 +13,8 @@ var _ jobdb.JobDB = &MemJobDB{}
 // MemJobDB is a memory db, maintains job, object and piece job table.
 type MemJobDB struct {
 	JobCount               uint64
-	JobTable               map[uint64]ptypesv1pb.JobContext
-	ObjectTable            map[string]ptypesv1pb.ObjectInfo
+	JobTable               map[uint64]*ptypes.JobContext
+	ObjectTable            map[string]*ptypes.ObjectInfo
 	PrimaryPieceJobTable   map[string]map[uint32]jobdb.PieceJob
 	SecondaryPieceJobTable map[string]map[uint32]jobdb.PieceJob
 	mu                     sync.RWMutex
@@ -24,26 +24,26 @@ type MemJobDB struct {
 func NewMemJobDB() *MemJobDB {
 	return &MemJobDB{
 		JobCount:               0,
-		JobTable:               make(map[uint64]ptypesv1pb.JobContext),
-		ObjectTable:            make(map[string]ptypesv1pb.ObjectInfo),
+		JobTable:               make(map[uint64]*ptypes.JobContext),
+		ObjectTable:            make(map[string]*ptypes.ObjectInfo),
 		PrimaryPieceJobTable:   make(map[string]map[uint32]jobdb.PieceJob),
 		SecondaryPieceJobTable: make(map[string]map[uint32]jobdb.PieceJob),
 	}
 }
 
 // CreateUploadPayloadJob create a job info for special object.
-func (db *MemJobDB) CreateUploadPayloadJob(txHash []byte, info *ptypesv1pb.ObjectInfo) (uint64, error) {
+func (db *MemJobDB) CreateUploadPayloadJob(txHash []byte, info *ptypes.ObjectInfo) (uint64, error) {
 	if info == nil {
 		return 0, errors.New("object info is nil")
 	}
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	db.JobTable[db.JobCount] = ptypesv1pb.JobContext{
+	db.JobTable[db.JobCount] = &ptypes.JobContext{
 		JobId:    db.JobCount,
-		JobState: ptypesv1pb.JobState_JOB_STATE_CREATE_OBJECT_DONE,
+		JobState: ptypes.JobState_JOB_STATE_CREATE_OBJECT_DONE,
 	}
 	info.JobId = db.JobCount
-	db.ObjectTable[string(txHash)] = *info
+	db.ObjectTable[string(txHash)] = info
 	db.JobCount++
 	return db.JobCount - 1, nil
 }
@@ -64,25 +64,25 @@ func (db *MemJobDB) SetObjectCreateHeightAndObjectID(txHash []byte, height uint6
 }
 
 // GetObjectInfo returns the object info by create object transaction hash.
-func (db *MemJobDB) GetObjectInfo(txHash []byte) (*ptypesv1pb.ObjectInfo, error) {
+func (db *MemJobDB) GetObjectInfo(txHash []byte) (*ptypes.ObjectInfo, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	objectInfo, ok := db.ObjectTable[string(txHash)]
 	if !ok {
 		return nil, errors.New("object is not exist")
 	}
-	return &objectInfo, nil
+	return objectInfo, nil
 }
 
 // GetJobContext returns the job info .
-func (db *MemJobDB) GetJobContext(jobId uint64) (*ptypesv1pb.JobContext, error) {
+func (db *MemJobDB) GetJobContext(jobId uint64) (*ptypes.JobContext, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	job, ok := db.JobTable[jobId]
 	if !ok {
 		return nil, errors.New("job is not exist")
 	}
-	return &job, nil
+	return job, nil
 }
 
 // SetUploadPayloadJobState set the job state.
@@ -93,11 +93,11 @@ func (db *MemJobDB) SetUploadPayloadJobState(jobId uint64, state string, timesta
 	if !ok {
 		return errors.New("job is not exist")
 	}
-	jobState, ok := ptypesv1pb.JobState_value[state]
+	jobState, ok := ptypes.JobState_value[state]
 	if !ok {
 		return errors.New("state is not correct job state")
 	}
-	job.JobState = (ptypesv1pb.JobState)(jobState)
+	job.JobState = (ptypes.JobState)(jobState)
 	job.ModifyTime = timestamp
 	db.JobTable[jobId] = job
 	return nil
@@ -111,11 +111,11 @@ func (db *MemJobDB) SetUploadPayloadJobJobError(jobId uint64, state string, jobE
 	if !ok {
 		return errors.New("job is not exist")
 	}
-	jobState, ok := ptypesv1pb.JobState_value[state]
+	jobState, ok := ptypes.JobState_value[state]
 	if !ok {
 		return errors.New("state is not correct job state")
 	}
-	job.JobState = (ptypesv1pb.JobState)(jobState)
+	job.JobState = (ptypes.JobState)(jobState)
 	job.ModifyTime = timestamp
 	job.JobErr = jobErr
 	db.JobTable[jobId] = job

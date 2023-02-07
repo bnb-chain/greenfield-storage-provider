@@ -3,7 +3,7 @@ package errors
 import (
 	"errors"
 
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 // piece store errors
@@ -68,9 +68,9 @@ var (
 	ErrReceivedPieceCount = errors.New("syncer service received piece count is wrong")
 )
 
-func MakeErrMsgResponse(err error) *stypesv1pb.ErrMessage {
-	return &stypesv1pb.ErrMessage{
-		ErrCode: stypesv1pb.ErrCode_ERR_CODE_ERROR,
+func MakeErrMsgResponse(err error) *stypes.ErrMessage {
+	return &stypes.ErrMessage{
+		ErrCode: stypes.ErrCode_ERR_CODE_ERROR,
 		ErrMsg:  err.Error(),
 	}
 }

@@ -5,8 +5,8 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -29,7 +29,7 @@ func (node *StoneNodeService) allocStoneJob(ctx context.Context) {
 }
 
 // loadAndSyncPieces load segment data from primary and sync to secondary.
-func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *stypesv1pb.StoneHubServiceAllocStoneJobResponse) error {
+func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *stypes.StoneHubServiceAllocStoneJobResponse) error {
 	// TBD:: check secondarySPs count by redundancyType.
 	// EC_TYPE need EC_M + EC_K + backup
 	// REPLICA_TYPE and INLINE_TYPE need segments count + backup
@@ -69,11 +69,11 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	return nil
 }
 
-func checkRedundancyType(redundancyType ptypesv1pb.RedundancyType) error {
+func checkRedundancyType(redundancyType ptypes.RedundancyType) error {
 	switch redundancyType {
-	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		return nil
-	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		return nil
 	default:
 		return merrors.ErrRedundancyType
@@ -81,15 +81,15 @@ func checkRedundancyType(redundancyType ptypesv1pb.RedundancyType) error {
 }
 
 // reportErrToStoneHub send error message to stone hub.
-func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *stypesv1pb.StoneHubServiceAllocStoneJobResponse,
+func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *stypes.StoneHubServiceAllocStoneJobResponse,
 	reportErr error) {
 	if reportErr == nil {
 		return
 	}
-	req := &stypesv1pb.StoneHubServiceDoneSecondaryPieceJobRequest{
+	req := &stypes.StoneHubServiceDoneSecondaryPieceJobRequest{
 		TraceId: resp.GetTraceId(),
-		ErrMessage: &stypesv1pb.ErrMessage{
-			ErrCode: stypesv1pb.ErrCode_ERR_CODE_ERROR,
+		ErrMessage: &stypes.ErrMessage{
+			ErrCode: stypes.ErrCode_ERR_CODE_ERROR,
 			ErrMsg:  reportErr.Error(),
 		},
 	}

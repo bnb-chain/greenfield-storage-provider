@@ -1,4 +1,4 @@
-package leveldb
+package metalevel
 
 import "encoding/binary"
 
