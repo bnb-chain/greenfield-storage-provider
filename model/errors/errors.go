@@ -52,7 +52,7 @@ var (
 var (
 	ErrStoneNodeStarted   = errors.New("stone node resource is running")
 	ErrStoneNodeStopped   = errors.New("stone node service has stopped")
-	ErrIntegrityHash      = errors.New("secondary integrity hash check error")
+	ErrIntegrityHash      = errors.New("secondary integrity hash verifies error")
 	ErrRedundancyType     = errors.New("unknown redundancy type")
 	ErrEmptyJob           = errors.New("alloc stone job is empty")
 	ErrSecondarySPNumber  = errors.New("secondary sp is not enough")

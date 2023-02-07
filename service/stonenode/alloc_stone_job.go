@@ -57,7 +57,7 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	}
 
 	// 2. dispatch the piece data to different secondary sp
-	secondaryPieceData, err := node.dispatchSecondarySP(pieceData, redundancyType, secondarySPs, targetIdx)
+	secondaryPieceData, err := node.dSSP(pieceData, redundancyType, secondarySPs, targetIdx)
 	if err != nil {
 		log.CtxErrorw(ctx, "dispatch piece data to secondary sp error")
 		node.reportErrToStoneHub(ctx, allocResp, err)
@@ -65,7 +65,7 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	}
 
 	// 3. send piece data to the secondary
-	node.doSyncToSecondarySP(ctx, allocResp, secondaryPieceData)
+	node.doSyncNew(ctx, allocResp, secondaryPieceData, secondarySPs)
 	return nil
 }
 
@@ -88,7 +88,6 @@ func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *sty
 	}
 	req := &stypesv1pb.StoneHubServiceDoneSecondaryPieceJobRequest{
 		TraceId: resp.GetTraceId(),
-		TxHash:  resp.GetTxHash(),
 		ErrMessage: &stypesv1pb.ErrMessage{
 			ErrCode: stypesv1pb.ErrCode_ERR_CODE_ERROR,
 			ErrMsg:  reportErr.Error(),

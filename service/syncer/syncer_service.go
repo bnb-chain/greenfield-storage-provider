@@ -20,10 +20,9 @@ const segmentPieceIndex = 9999
 func (s *Syncer) SyncPiece(stream stypesv1pb.SyncerService_SyncPieceServer) error {
 	var count uint32
 	var integrityMeta *metadb.IntegrityMeta
-	var key string
 	var spID string
 	var value []byte
-	pieceHash := make(map[string][]byte)
+	pieceHash := make([][]byte, 0)
 	//defer func() {
 	//	if err != nil && err != io.EOF {
 	//		log.Info("entry defer func")
@@ -44,7 +43,7 @@ func (s *Syncer) SyncPiece(stream stypesv1pb.SyncerService_SyncPieceServer) erro
 				return merrors.ErrReceivedPieceCount
 			}
 
-			//integrityMeta.PieceHash = pieceHash
+			integrityMeta.PieceHash = pieceHash
 			sealInfo := generateSealInfo(spID, integrityMeta)
 			integrityMeta.IntegrityHash = sealInfo.GetIntegrityHash()
 			if err := s.setIntegrityMeta(s.metaDB, integrityMeta); err != nil {
@@ -66,13 +65,13 @@ func (s *Syncer) SyncPiece(stream stypesv1pb.SyncerService_SyncPieceServer) erro
 			log.Errorw("stream recv failed", "error", err)
 			return err
 		}
+		count++
 		spID = req.GetSyncerInfo().GetStorageProviderId()
-		integrityMeta, key, value, err = s.handlePieceData(req)
+		integrityMeta, value, err = s.hPieceData(req, count)
 		if err != nil {
 			return err
 		}
-		pieceHash[key] = hash.GenerateChecksum(value)
-		count++
+		pieceHash = append(pieceHash, hash.GenerateChecksum(value))
 	}
 }
 
@@ -85,22 +84,51 @@ func (s *Syncer) setIntegrityMeta(db metadb.MetaDB, meta *metadb.IntegrityMeta) 
 }
 
 func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypesv1pb.StorageProviderSealInfo {
-	//keys := util.GenericSortedKeys(integrityMeta.PieceHash)
-	pieceChecksumList := make([][]byte, 0)
-	var integrityHash []byte
-	//for _, key := range keys {
-	//	value := integrityMeta.PieceHash[key]
-	//	pieceChecksumList = append(pieceChecksumList, value)
-	//}
-	integrityHash = hash.GenerateIntegrityHash(pieceChecksumList)
+	pieceHash := integrityMeta.PieceHash
+	integrityHash := hash.GenerateIntegrityHash(pieceHash)
 	resp := &stypesv1pb.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          integrityMeta.PieceIdx,
-		PieceChecksum:     pieceChecksumList,
+		PieceChecksum:     pieceHash,
 		IntegrityHash:     integrityHash,
 		Signature:         nil, // TODO(mock)
 	}
 	return resp
+}
+
+func (s *Syncer) hPieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest, count uint32) (*metadb.IntegrityMeta, []byte, error) {
+	redundancyType := req.GetSyncerInfo().GetRedundancyType()
+	objectID := req.GetSyncerInfo().GetObjectId()
+	integrityMeta := &metadb.IntegrityMeta{
+		ObjectID:       objectID,
+		PieceCount:     req.GetSyncerInfo().GetPieceCount(),
+		IsPrimary:      false,
+		RedundancyType: redundancyType,
+	}
+	key, pieceIndex, err := encodePieceKey(redundancyType, objectID, count, req.GetSyncerInfo().GetPieceIndex())
+	if err != nil {
+		return nil, nil, err
+	}
+	// put piece data into piece store
+	value := req.GetPieceData()
+	if err = s.store.PutPiece(key, value); err != nil {
+		log.Errorw("put piece failed", "error", err)
+		return nil, nil, err
+	}
+	integrityMeta.PieceIdx = pieceIndex
+	return integrityMeta, value, nil
+}
+
+func encodePieceKey(redundancyType ptypesv1pb.RedundancyType, objectID uint64, segmentIndex, pieceIndex uint32) (
+	string, uint32, error) {
+	switch redundancyType {
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+		return piecestore.EncodeSegmentPieceKey(objectID, segmentIndex), segmentPieceIndex, nil
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+		return piecestore.EncodeECPieceKey(objectID, segmentIndex, pieceIndex), pieceIndex, nil
+	default:
+		return "", 0, merrors.ErrRedundancyType
+	}
 }
 
 func (s *Syncer) handlePieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest) (*metadb.IntegrityMeta, string, []byte, error) {

@@ -1,6 +1,7 @@
 package stonenode
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -35,6 +36,67 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment map[string]
 		return nil, err
 	}
 	return pieceDataBySecondary, nil
+}
+
+// pieceDataBySegment is a three-dimensional slice, first dimensional is segment index, second is [][]byte data
+// dSSP convert pieceDataBySegment to ec dimensional slice, first dimensional is ec number such as ec1, contains [][]byte data
+func (node *StoneNodeService) dSSP(pieceDataBySegment [][][]byte, redundancyType ptypesv1pb.RedundancyType, secondarySPs []string,
+	targetIdx []uint32) ([][][]byte, error) {
+	if len(pieceDataBySegment) == 0 {
+		return nil, errors.New("invalid data length")
+	}
+	pieceDataBySecondary := make([][][]byte, 0)
+	var err error
+	switch redundancyType {
+	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+		pieceDataBySecondary, err = dRID(pieceDataBySegment, secondarySPs, targetIdx)
+	default: // ec type
+		pieceDataBySecondary, err = dECD(pieceDataBySegment, secondarySPs, targetIdx)
+	}
+	if err != nil {
+		log.Errorw("fill piece data by secondary error", "error", err)
+		return nil, err
+	}
+	return pieceDataBySecondary, nil
+}
+
+func dRID(pieceDataBySegment [][][]byte, secondarySPs []string, targetIdx []uint32) ([][][]byte, error) {
+	targetIdxLength := len(targetIdx)
+	if len(secondarySPs) < targetIdxLength {
+		return nil, merrors.ErrSecondarySPNumber
+	}
+	segmentLength := len(pieceDataBySegment[0])
+	riPieceDataSlice := make([][]byte, segmentLength)
+	for i := 0; i < segmentLength; i++ {
+		riPieceDataSlice[i] = make([]byte, 0)
+		for j := 0; j < len(pieceDataBySegment); j++ {
+			riPieceDataSlice[i] = append(riPieceDataSlice[i], pieceDataBySegment[j][i][0])
+		}
+	}
+	pds := make([][][]byte, targetIdxLength)
+	for i := 0; i < targetIdxLength; i++ {
+		pds[i] = riPieceDataSlice
+	}
+	return pieceDataBySegment, nil
+}
+
+func dECD(pieceDataBySegment [][][]byte, secondarySPs []string, targetIdx []uint32) ([][][]byte, error) {
+	segmentLength := len(pieceDataBySegment[0])
+	ecPieceDataSlice := make([][][]byte, segmentLength)
+	for i := 0; i < segmentLength; i++ {
+		if i > len(secondarySPs) {
+			return nil, merrors.ErrSecondarySPNumber
+		}
+		for _, idx := range targetIdx {
+			if int(idx) == i {
+				ecPieceDataSlice[i] = make([][]byte, 0)
+				for j := 0; j < len(pieceDataBySegment); j++ {
+					ecPieceDataSlice[i] = append(ecPieceDataSlice[i], pieceDataBySegment[j][i])
+				}
+			}
+		}
+	}
+	return ecPieceDataSlice, nil
 }
 
 // dispatchReplicaOrInlineData dispatches replica or inline data into different sp, each sp should store all segments data of an object

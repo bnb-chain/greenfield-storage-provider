@@ -64,6 +64,17 @@ func sortSlice[T constraints.Ordered](s []T) {
 	})
 }
 
+// MapValueToSlice convert values of a map to a slice
+func MapValueToSlice[K constraints.Ordered, V any](dataMap map[K]V) []V {
+	keys := GenericSortedKeys(dataMap)
+	valueSlice := make([]V, 0)
+	for _, key := range keys {
+		value := dataMap[key]
+		valueSlice = append(valueSlice, value)
+	}
+	return valueSlice
+}
+
 // JobStateReadable parser the job state to readable
 func JobStateReadable(state string) string {
 	return strings.ToLower(strings.TrimPrefix(state, "JOB_STATE_"))

@@ -16,13 +16,14 @@ import (
 // loadSegmentsData load segment data from primary storage provider.
 // returned map key is segmentKey, value is corresponding ec data from ec1 to ec6, or segment data
 func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *stypesv1pb.StoneHubServiceAllocStoneJobResponse) (
-	map[string][][]byte, error) {
+	[][][]byte, error) {
 	type segment struct {
 		objectID       uint64
 		pieceKey       string
 		segmentData    []byte
 		pieceData      [][]byte
 		pieceErr       error
+		segmentIndex   int
 		redundancyType ptypesv1pb.RedundancyType
 	}
 	var (
@@ -30,7 +31,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		loadSegmentErr error
 		segmentCh      = make(chan *segment)
 		interruptCh    = make(chan struct{})
-		pieces         = make(map[string][][]byte)
+		pieces         = make(map[int][][]byte)
 		objectID       = allocResp.GetPieceJob().GetObjectId()
 		payloadSize    = allocResp.GetPieceJob().GetPayloadSize()
 		redundancyType = allocResp.GetPieceJob().GetRedundancyType()
@@ -74,6 +75,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 				objectID:       objectID,
 				pieceKey:       piecestore.EncodeSegmentPieceKey(objectID, uint32(segmentIdx)),
 				redundancyType: redundancyType,
+				segmentIndex:   segmentIdx,
 			}
 			defer func() {
 				if seg.pieceErr != nil || atomic.AddInt64(&doneSegments, 1) == int64(segmentCount) {
@@ -99,12 +101,14 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 	var mu sync.Mutex
 	for seg := range segmentCh {
 		mu.Lock()
-		pieces[seg.pieceKey] = seg.pieceData
+		pieces[seg.segmentIndex] = seg.pieceData
 		mu.Unlock()
 	}
-	return pieces, loadSegmentErr
+	// redundancyType为replica或inline类型，假设有三个segment，返回的三维数组包含三个二维数组，每个二维数组只有一个[]byte
+	return util.MapValueToSlice(pieces), loadSegmentErr
 }
 
+// 如果redundancyType为replica或inline类型，pieceData这个二维数组里面只有一个[]byte；ec类型pieceData里有六个[]byte
 // generatePieceData generates piece data from segment data
 func (node *StoneNodeService) generatePieceData(redundancyType ptypesv1pb.RedundancyType, segmentData []byte) (
 	pieceData [][]byte, err error) {
