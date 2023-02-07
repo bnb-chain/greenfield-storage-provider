@@ -70,7 +70,8 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 		if err != nil {
 			return err
 		}
-		pieceHash = append(pieceHash, hash.GenerateChecksum(value))
+		checksum := hash.GenerateChecksum(value)
+		pieceHash = append(pieceHash, checksum)
 	}
 }
 
