@@ -2,6 +2,7 @@ package stonenode
 
 import (
 	"errors"
+	"fmt"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
@@ -47,22 +48,53 @@ func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []s
 		return nil, merrors.ErrSecondarySPNumber
 	}
 	segmentLength := len(pieceDataBySegment[0])
-	riPieceDataSlice := make([][]byte, segmentLength)
+	//riPieceDataSlice := make([][]byte, segmentLength)
+	//for i := 0; i < segmentLength; i++ {
+	//	riPieceDataSlice[i] = make([]byte, 0)
+	//	for j := 0; j < len(pieceDataBySegment); j++ {
+	//		riPieceDataSlice[i] = append(riPieceDataSlice[i], pieceDataBySegment[j][i][0])
+	//	}
+	//}
+	//pds := make([][][]byte, targetIdxLength)
+	//for i := 0; i < targetIdxLength; i++ {
+	//	pds[i] = riPieceDataSlice
+	//}
+	newData := make([][][]byte, segmentLength)
 	for i := 0; i < segmentLength; i++ {
-		riPieceDataSlice[i] = make([]byte, 0)
+		newData[i] = make([][]byte, 0)
 		for j := 0; j < len(pieceDataBySegment); j++ {
-			riPieceDataSlice[i] = append(riPieceDataSlice[i], pieceDataBySegment[j][i][0])
+			newData[i] = append(newData[i], pieceDataBySegment[j][i])
 		}
 	}
-	pds := make([][][]byte, targetIdxLength)
-	for i := 0; i < targetIdxLength; i++ {
-		pds[i] = riPieceDataSlice
+	pds := make([][][]byte, len(targetIdx))
+	for i := 0; i < len(targetIdx); i++ {
+		pds[i] = newData[0]
 	}
-	log.Infow("pds length", "length", len(pds))
-	for i, j := range pds {
-		log.Infow("print pds meta", "index", i, "inner array length", len(j))
-	}
+
+	log.Infow("length", "pds length", len(pds), "newData length", len(newData))
+	//for i, j := range pds {
+	//	log.Infow("print pds meta", "index", i, "inner array length", len(j))
+	//}
 	return pds, nil
+}
+
+func dRID(data [][][]byte, targetIdx []uint32) [][][]byte {
+	segmentLength := len(data[0])
+	fmt.Println(segmentLength)
+	newData := make([][][]byte, segmentLength)
+
+	for i := 0; i < segmentLength; i++ {
+		newData[i] = make([][]byte, 0)
+		for j := 0; j < len(data); j++ {
+			newData[i] = append(newData[i], data[j][i])
+		}
+	}
+	pds := make([][][]byte, len(targetIdx))
+	for i := 0; i < len(targetIdx); i++ {
+		pds[i] = newData[0]
+	}
+
+	return pds
 }
 
 // dispatchECData dispatched ec data into different sp
