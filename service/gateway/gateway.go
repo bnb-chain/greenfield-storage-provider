@@ -37,11 +37,11 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		config: cfg,
 		name:   model.GatewayService,
 	}
-	if g.uploadProcessor, err = newUploadProcessor(g.config.UploaderConfig); err != nil {
+	if g.uploadProcessor, err = newUploadProcessor(g.config.UploaderServiceAddress); err != nil {
 		log.Warnw("failed to create uploader", "err", err)
 		return nil, err
 	}
-	if g.downloadProcessor, err = newDownloadProcessor(g.config.DownloaderConfig); err != nil {
+	if g.downloadProcessor, err = newDownloadProcessor(g.config.DownloaderServiceAddress); err != nil {
 		log.Warnw("failed to create downloader", "err", err)
 		return nil, err
 	}
@@ -91,9 +91,6 @@ func (g *Gateway) Stop(ctx context.Context) error {
 	}
 	var errs []error
 	if err := g.httpServer.Shutdown(ctx); err != nil {
-		errs = append(errs, err)
-	}
-	if err := g.uploadProcessor.Close(); err != nil {
 		errs = append(errs, err)
 	}
 	if errs != nil {
