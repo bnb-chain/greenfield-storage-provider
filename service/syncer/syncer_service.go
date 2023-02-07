@@ -148,19 +148,19 @@ func (s *Syncer) handlePieceData(req *stypesv1pb.SyncerServiceSyncPieceRequest) 
 		key   string
 		value []byte
 	)
-	for key, value = range req.GetPieceData() {
-		pieceIndex, err := parsePieceIndex(redundancyType, key)
-		if err != nil {
-			return nil, "", nil, err
-		}
-		integrityMeta.PieceIdx = pieceIndex
-
-		// put piece data into piece store
-		if err = s.store.PutPiece(key, value); err != nil {
-			log.Errorw("put piece failed", "error", err)
-			return nil, "", nil, err
-		}
-	}
+	//for key, value = range req.GetPieceData() {
+	//	pieceIndex, err := parsePieceIndex(redundancyType, key)
+	//	if err != nil {
+	//		return nil, "", nil, err
+	//	}
+	//	integrityMeta.PieceIdx = pieceIndex
+	//
+	//	// put piece data into piece store
+	//	if err = s.store.PutPiece(key, value); err != nil {
+	//		log.Errorw("put piece failed", "error", err)
+	//		return nil, "", nil, err
+	//	}
+	//}
 	return integrityMeta, key, value, nil
 }
 
