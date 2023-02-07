@@ -63,7 +63,7 @@ func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []s
 	for i := 0; i < len(targetIdx); i++ {
 		segmentPieceSlice[i] = segmentPieceSlice[0]
 	}
-	log.Infow("segmentPieceSlice", "length", len(segmentPieceSlice))
+	log.Infow("segmentPieceSlice", "length", len(segmentPieceSlice), "content 0", segmentPieceSlice[0])
 	return segmentPieceSlice, nil
 }
 
