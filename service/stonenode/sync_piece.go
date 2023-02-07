@@ -23,6 +23,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 	// index在ec类型中代表第几个ec；在replica类型中代表第几sp，存储的二维数组是完全相同的
 	// pieceData的长度代表有几个segment，在stream要一个接一个的发送pieceData中的[]byte，可以用来计算syncer server收到的数目是否正确
 	for index, pieceData := range pieceDataBySecondary {
+		log.Infow("yyyyyy", "piecedata", len(pieceData), "index", index)
 		go func(index int, pieceData [][]byte) {
 			errMsg := &stypes.ErrMessage{}
 			pieceJob := &stypes.PieceJob{
