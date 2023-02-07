@@ -24,7 +24,6 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte,
 	if len(secondarySPs) == 0 {
 		return nil, merrors.ErrSecondarySPNumber
 	}
-	log.Infow("pieceDataBySegment", "content", pieceDataBySegment)
 	var pieceDataBySecondary [][][]byte
 	var err error
 	switch redundancyType {
@@ -64,7 +63,7 @@ func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []s
 	for i := 0; i < len(targetIdx); i++ {
 		segmentPieceSlice[i] = dataSlice[0]
 	}
-	log.Infow("segmentPieceSlice", "length", len(segmentPieceSlice), "content 0", segmentPieceSlice[0])
+	log.Infow("segmentPieceSlice", "length", len(segmentPieceSlice))
 	return segmentPieceSlice, nil
 }
 
