@@ -24,6 +24,7 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte,
 	if len(secondarySPs) == 0 {
 		return nil, merrors.ErrSecondarySPNumber
 	}
+	log.Infow("pieceDataBySegment", "content", pieceDataBySegment)
 	var pieceDataBySecondary [][][]byte
 	var err error
 	switch redundancyType {
