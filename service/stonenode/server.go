@@ -155,5 +155,4 @@ func (node *StoneNodeService) allocStone(ctx context.Context) {
 		return
 	}
 	log.CtxInfow(ctx, "upload secondary piece job success")
-	return
 }

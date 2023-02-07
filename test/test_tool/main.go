@@ -69,7 +69,7 @@ func getDir() string {
 var ctx *context.Context
 
 func main() {
-	if len(os.Args) == 2 && (string(os.Args[1]) == "-h" || string(os.Args[1]) == "--help") {
+	if len(os.Args) == 2 && (os.Args[1] == "-h" || os.Args[1] == "--help") {
 		showHelp()
 		os.Exit(0)
 	}
@@ -78,7 +78,7 @@ func main() {
 		conf *context.CliConf
 		err  error
 	)
-	if len(os.Args) == 3 && string(os.Args[1]) == "--config" {
+	if len(os.Args) == 3 && os.Args[1] == "--config" {
 		conf, err = context.LoadCliConf(os.Args[2])
 	} else {
 		conf = &context.CliConf{

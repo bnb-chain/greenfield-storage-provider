@@ -229,7 +229,6 @@ func (gui *grpcUploaderImpl) putObject(objectName string, reader io.Reader, opti
 			md5Hash.Write(hashBuf[:readN])
 		}
 		if err == io.EOF {
-			err = nil
 			resp, err := stream.CloseAndRecv()
 			if err != nil {
 				log.Warnw("put object failed, due to stream close", "err", err)
@@ -307,7 +306,6 @@ func (gui *grpcUploaderImpl) putObjectV2(objectName string, reader io.Reader, op
 				log.Warnw("put object failed, due to payload is empty")
 				return nil, errors.ErrObjectIsEmpty
 			}
-			err = nil
 			resp, err := stream.CloseAndRecv()
 			if err != nil {
 				log.Warnw("put object failed, due to stream close", "err", err)

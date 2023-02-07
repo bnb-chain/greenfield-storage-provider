@@ -99,7 +99,7 @@ func Test_loadSegmentsDataSuccess(t *testing.T) {
 			allocResp := mockAllocResp(tt.req1, tt.req2, tt.req3)
 			result, err := node.loadSegmentsData(context.TODO(), allocResp)
 			assert.Equal(t, nil, err)
-			for k, _ := range result {
+			for k := range result {
 				assert.Contains(t, k, tt.wantedResult1)
 			}
 			assert.Equal(t, tt.wantedResult2, len(result))

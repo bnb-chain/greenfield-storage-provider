@@ -80,7 +80,6 @@ func (challenge *Challenge) Start(ctx context.Context) error {
 			log.Errorw("challenge serve failed", "error", err)
 			return
 		}
-		return
 	}(errCh)
 
 	err := <-errCh

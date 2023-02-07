@@ -107,5 +107,4 @@ func createObjectToStoneHub(c *cli.Context) {
 		return
 	}
 	fmt.Println("create object success, tx_hash: ", hex.EncodeToString(txHash))
-	return
 }

@@ -59,5 +59,4 @@ func queryStone(c *cli.Context) {
 	} else {
 		fmt.Println("secondary piece jobs are completed.")
 	}
-	return
 }

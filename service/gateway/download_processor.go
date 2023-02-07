@@ -16,8 +16,8 @@ import (
 // getObjectOption is the getObject Option.
 type getObjectOption struct {
 	requestContext *requestContext
-	offset         uint64
-	length         uint64
+	// offset         uint64
+	// length         uint64
 }
 
 // downloaderClientInterface define interface to download object.
@@ -76,7 +76,6 @@ func (ddl *debugDownloaderImpl) getObject(objectName string, writer io.Writer, o
 				size += uint64(writeN)
 			}
 			if innerErr == io.EOF {
-				innerErr = nil
 				break
 			}
 		}

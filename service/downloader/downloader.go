@@ -60,7 +60,6 @@ func (downloader *Downloader) Start(ctx context.Context) error {
 			log.Errorw("syncer serve failed", "error", err)
 			return
 		}
-		return
 	}(errCh)
 
 	err := <-errCh

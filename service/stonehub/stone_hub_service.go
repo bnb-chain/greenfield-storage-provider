@@ -398,7 +398,7 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context, req *stypes.Ston
 
 // QueryStone return the stone info, debug interface
 func (hub *StoneHub) QueryStone(ctx context.Context, req *stypes.StoneHubServiceQueryStoneRequest) (*stypes.StoneHubServiceQueryStoneResponse, error) {
-	ctx = log.Context(ctx, req)
+	// ctx = log.Context(ctx, req)
 	rsp := &stypes.StoneHubServiceQueryStoneResponse{}
 
 	st := hub.GetStone(req.GetObjectId())

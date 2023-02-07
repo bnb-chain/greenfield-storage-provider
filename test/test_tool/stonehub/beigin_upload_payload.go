@@ -53,5 +53,4 @@ func beginStone(c *cli.Context) {
 		return
 	}
 	fmt.Println("begin upload payload data success")
-	return
 }

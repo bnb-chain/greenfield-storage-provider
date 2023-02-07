@@ -15,9 +15,11 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
+type contextKey string
+
 const (
 	// CtxStoneKey defines the key of UploadPayloadStone in context that transfer in fsm
-	CtxStoneKey string = "UploadPayloadStone"
+	CtxStoneKey contextKey = "UploadPayloadStone"
 )
 
 // StoneJob defines the interface of job that transfer to StoneHub

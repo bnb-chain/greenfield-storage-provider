@@ -50,7 +50,7 @@ func doneSecondaryPieceJob(c *cli.Context) {
 	var checksums [][]byte
 	for i := 0; i < 6; i++ {
 		hash := sha256.New()
-		hash.Write([]byte(time.Now().String() + string(i)))
+		hash.Write([]byte(time.Now().String() + fmt.Sprint(i)))
 		checksum := hash.Sum(nil)
 		checksums = append(checksums, checksum)
 	}

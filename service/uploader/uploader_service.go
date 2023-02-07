@@ -18,6 +18,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
+type contextKey string
+
 var (
 	CreateObjectTimeout = time.Second * 5
 )
@@ -113,16 +115,14 @@ func (uploader *Uploader) UploadPayload(stream stypes.UploaderService_UploadPayl
 	// fetch job meta, concurrently write payload's segments and report progresses.
 	go func() {
 		var jm *JobMeta
-		select {
-		case txHash, ok := <-txChan:
-			if !ok {
-				return
-			}
-			ctx := context.WithValue(ctx, "traceID", sr.traceID)
-			if jm, err = uploader.fetchJobMeta(ctx, txHash); err != nil {
-				errChan <- err
-				return
-			}
+		txHash, ok := <-txChan
+		if !ok {
+			return
+		}
+		ctx := context.WithValue(ctx, contextKey("traceID"), sr.traceID)
+		if jm, err = uploader.fetchJobMeta(ctx, txHash); err != nil {
+			errChan <- err
+			return
 		}
 		for piece := range pieceChan {
 			go func(segPiece *SegmentContext) {
@@ -137,7 +137,7 @@ func (uploader *Uploader) UploadPayload(stream stypes.UploaderService_UploadPayl
 					return
 				}
 				checksum := hash.GenerateChecksum(segPiece.PieceData)
-				ctx := context.WithValue(ctx, "traceID", sr.traceID)
+				ctx := context.WithValue(ctx, contextKey("traceID"), sr.traceID)
 				if err := uploader.reportJobProgress(ctx, jm, segPiece.Index, checksum); err != nil {
 					errChan <- err
 					return
@@ -190,9 +190,8 @@ func (uploader *Uploader) fetchJobMeta(ctx context.Context, txHash []byte) (*Job
 	if resp.GetPieceJob() == nil {
 		return nil, errors.New("stone dispatch piece job is nil")
 	}
-	if resp.GetPrimaryDone() {
-
-	}
+	// if resp.GetPrimaryDone() {
+	// }
 	jm := &JobMeta{
 		objectID:      resp.GetPieceJob().GetObjectId(),
 		pieceJob:      resp.GetPieceJob(),
@@ -212,10 +211,16 @@ func (uploader *Uploader) fetchJobMeta(ctx context.Context, txHash []byte) (*Job
 func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, uploadID uint32, checkSum []byte) error {
 	var (
 		req      *stypes.StoneHubServiceDonePrimaryPieceJobRequest
-		pieceJob stypes.PieceJob
+		pieceJob *stypes.PieceJob
 	)
 	traceID, _ := ctx.Value("traceID").(string)
-	pieceJob = *jm.pieceJob
+	// pieceJob = *jm.pieceJob
+	pieceJob = &stypes.PieceJob{
+		ObjectId:       jm.pieceJob.ObjectId,
+		PayloadSize:    jm.pieceJob.PayloadSize,
+		RedundancyType: jm.pieceJob.RedundancyType,
+	}
+	copy(pieceJob.TargetIdx, jm.pieceJob.TargetIdx)
 	pieceJob.StorageProviderSealInfo = &stypes.StorageProviderSealInfo{
 		StorageProviderId: uploader.config.StorageProvider,
 		PieceIdx:          uploadID,
@@ -223,7 +228,7 @@ func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, up
 	}
 	req = &stypes.StoneHubServiceDonePrimaryPieceJobRequest{
 		TraceId:  traceID,
-		PieceJob: &pieceJob,
+		PieceJob: pieceJob,
 	}
 	if _, err := uploader.stoneHub.DonePrimaryPieceJob(ctx, req); err != nil {
 		return err
@@ -284,15 +289,13 @@ func (uploader *Uploader) UploadPayloadV2(stream stypes.UploaderService_UploadPa
 	// fetch job meta, concurrently write payload's segments and report progresses.
 	go func() {
 		var jm *JobMeta
-		select {
-		case txHash, ok := <-txChan:
-			if !ok {
-				return
-			}
-			if jm, err = uploader.checkAndPrepareMeta(sr, txHash); err != nil {
-				errChan <- err
-				return
-			}
+		txHash, ok := <-txChan
+		if !ok {
+			return
+		}
+		if jm, err = uploader.checkAndPrepareMeta(sr, txHash); err != nil {
+			errChan <- err
+			return
 		}
 		for piece := range pieceChan {
 			go func(segPiece *SegmentContext) {
@@ -309,7 +312,7 @@ func (uploader *Uploader) UploadPayloadV2(stream stypes.UploaderService_UploadPa
 					return
 				}
 				checksum := hash.GenerateChecksum(segPiece.PieceData)
-				ctx := context.WithValue(ctx, "traceID", sr.traceID)
+				ctx := context.WithValue(ctx, contextKey("traceID"), sr.traceID)
 				if err := uploader.reportJobProgress(ctx, jm, segPiece.Index, checksum); err != nil {
 					errChan <- err
 					return
@@ -370,8 +373,8 @@ func (uploader *Uploader) checkAndPrepareMeta(sr *streamReader, txHash []byte) (
 	if resp.GetPieceJob() == nil {
 		return nil, errors.New("stone dispatch piece job is nil")
 	}
-	if resp.GetPrimaryDone() {
-	}
+	// if resp.GetPrimaryDone() {
+	// }
 	jm := &JobMeta{
 		objectID:      resp.GetPieceJob().GetObjectId(),
 		pieceJob:      resp.GetPieceJob(),

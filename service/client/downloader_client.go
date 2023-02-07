@@ -39,7 +39,7 @@ func (client *DownloaderClient) Close() error {
 
 func (client *DownloaderClient) DownloaderObject(ctx context.Context, req *stypes.DownloaderServiceDownloaderObjectRequest,
 	opts ...grpc.CallOption) (stypes.DownloaderService_DownloaderObjectClient, error) {
-	ctx = log.Context(context.Background(), req)
+	// ctx = log.Context(context.Background(), req)
 	return client.downloader.DownloaderObject(ctx, req, opts...)
 }
 

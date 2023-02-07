@@ -17,8 +17,8 @@ type Object struct {
 	// ObjectData ObjectPayloadReader
 }
 type ObjectInfo struct {
-	ID         uint64
-	objectName string
+	ID uint64
+	// objectName string
 	ObjectSize uint64
 	Redundancy RedundancyConfig
 }

@@ -109,5 +109,4 @@ func (s *Syncer) serve(errCh chan error) {
 		log.Errorw("syncer serve failed", "error", err)
 		return
 	}
-	return
 }

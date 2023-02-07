@@ -85,12 +85,12 @@ func (s *Syncer) setIntegrityMeta(db metadb.MetaDB, meta *metadb.IntegrityMeta) 
 func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.StorageProviderSealInfo {
 	//keys := util.GenericSortedKeys(integrityMeta.PieceHash)
 	pieceChecksumList := make([][]byte, 0)
-	var integrityHash []byte
+	// var integrityHash []byte
 	//for _, key := range keys {
 	//	value := integrityMeta.PieceHash[key]
 	//	pieceChecksumList = append(pieceChecksumList, value)
 	//}
-	integrityHash = hash.GenerateIntegrityHash(pieceChecksumList)
+	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
 	resp := &stypes.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          integrityMeta.PieceIdx,
