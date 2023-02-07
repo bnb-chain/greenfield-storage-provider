@@ -56,6 +56,7 @@ var (
 	ErrRedundancyType     = errors.New("unknown redundancy type")
 	ErrEmptyJob           = errors.New("alloc stone job is empty")
 	ErrSecondarySPNumber  = errors.New("secondary sp is not enough")
+	ErrInvalidPieceData   = errors.New("invalid piece data")
 	ErrInvalidSegmentData = errors.New("invalid segment data, length is not equal to 1")
 	ErrInvalidECData      = errors.New("invalid ec data, length is not equal to 6")
 	ErrEmptyTargetIdx     = errors.New("target index array is empty")

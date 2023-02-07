@@ -1,8 +1,6 @@
 package stonenode
 
 import (
-	"errors"
-
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -21,7 +19,10 @@ import (
 func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte, redundancyType ptypesv1pb.RedundancyType, secondarySPs []string,
 	targetIdx []uint32) ([][][]byte, error) {
 	if len(pieceDataBySegment) == 0 {
-		return nil, errors.New("invalid data length")
+		return nil, merrors.ErrInvalidPieceData
+	}
+	if len(secondarySPs) == 0 {
+		return nil, merrors.ErrSecondarySPNumber
 	}
 	pieceDataBySecondary := make([][][]byte, 0)
 	var err error
@@ -32,7 +33,7 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte,
 		pieceDataBySecondary, err = dispatchECData(pieceDataBySegment, secondarySPs, targetIdx)
 	}
 	if err != nil {
-		log.Errorw("fill piece data by secondary error", "error", err)
+		log.Errorw("dispatch piece data by secondary error", "error", err)
 		return nil, err
 	}
 	return pieceDataBySecondary, nil
@@ -42,11 +43,15 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte,
 // if an object uses replica type, it's split into 10 segments and there are 6 sp, each sp should store 10 segments data
 // if an object uses inline type, there is only one segment and there are 6 sp, each sp should store 1 segment data
 func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []string, targetIdx []uint32) ([][][]byte, error) {
-	targetIdxLength := len(targetIdx)
-	if len(secondarySPs) < targetIdxLength {
+	if len(secondarySPs) < len(targetIdx) {
 		return nil, merrors.ErrSecondarySPNumber
 	}
+
 	segmentLength := len(pieceDataBySegment[0])
+	if segmentLength != 1 {
+		return nil, merrors.ErrInvalidSegmentData
+	}
+
 	dataSlice := make([][][]byte, segmentLength)
 	for i := 0; i < segmentLength; i++ {
 		dataSlice[i] = make([][]byte, 0)
@@ -66,19 +71,24 @@ func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []s
 // one sp stores same ec column data: sp1 stores all ec1 data, sp2 stores all ec2 data, etc
 func dispatchECData(pieceDataBySegment [][][]byte, secondarySPs []string, targetIdx []uint32) ([][][]byte, error) {
 	segmentLength := len(pieceDataBySegment[0])
-	ecPieceSlice := make([][][]byte, segmentLength)
+	if segmentLength < 6 {
+		return nil, merrors.ErrInvalidECData
+	}
+
+	pieceSlice := make([][][]byte, segmentLength)
 	for i := 0; i < segmentLength; i++ {
 		if i > len(secondarySPs) {
 			return nil, merrors.ErrSecondarySPNumber
 		}
-		for _, idx := range targetIdx {
-			if int(idx) == i {
-				ecPieceSlice[i] = make([][]byte, 0)
-				for j := 0; j < len(pieceDataBySegment); j++ {
-					ecPieceSlice[i] = append(ecPieceSlice[i], pieceDataBySegment[j][i])
-				}
-			}
+		pieceSlice[i] = make([][]byte, 0)
+		for j := 0; j < len(pieceDataBySegment); j++ {
+			pieceSlice[i] = append(pieceSlice[i], pieceDataBySegment[j][i])
 		}
+	}
+
+	ecPieceSlice := make([][][]byte, len(targetIdx))
+	for index, value := range targetIdx {
+		ecPieceSlice[index] = pieceSlice[value]
 	}
 	return ecPieceSlice, nil
 }

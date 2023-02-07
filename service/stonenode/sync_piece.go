@@ -104,8 +104,6 @@ func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *stypes.
 
 	// send data one by one to avoid exceeding rpc max msg size
 	for _, value := range pieceData {
-		//innerSlice := make([][]byte, 0)
-		//innerSlice = append(innerSlice, value)
 		if err := stream.Send(&stypes.SyncerServiceSyncPieceRequest{
 			TraceId:    traceID,
 			SyncerInfo: syncerInfo,
