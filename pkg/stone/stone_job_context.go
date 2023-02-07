@@ -5,14 +5,14 @@ import (
 	"sync"
 	"time"
 
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 )
 
 // JobContextWrapper maintain job context, goroutine safe
 type JobContextWrapper struct {
-	jobCtx *ptypesv1pb.JobContext
+	jobCtx *ptypes.JobContext
 	jobErr error
 	jobDB  jobdb.JobDBV2
 	metaDB metadb.MetaDB
@@ -20,7 +20,7 @@ type JobContextWrapper struct {
 }
 
 // NewJobContextWrapper return the instance of JobContextWrapper
-func NewJobContextWrapper(jobCtx *ptypesv1pb.JobContext, jobDB jobdb.JobDBV2, metaDB metadb.MetaDB) *JobContextWrapper {
+func NewJobContextWrapper(jobCtx *ptypes.JobContext, jobDB jobdb.JobDBV2, metaDB metadb.MetaDB) *JobContextWrapper {
 	return &JobContextWrapper{
 		jobCtx: jobCtx,
 		jobDB:  jobDB,
@@ -32,7 +32,7 @@ func NewJobContextWrapper(jobCtx *ptypesv1pb.JobContext, jobDB jobdb.JobDBV2, me
 func (wrapper *JobContextWrapper) GetJobState() (string, error) {
 	wrapper.mu.RLock()
 	defer wrapper.mu.RUnlock()
-	state, ok := ptypesv1pb.JobState_name[int32(wrapper.jobCtx.GetJobState())]
+	state, ok := ptypes.JobState_name[int32(wrapper.jobCtx.GetJobState())]
 	if !ok {
 		return "", errors.New("job state error")
 	}
@@ -43,7 +43,7 @@ func (wrapper *JobContextWrapper) GetJobState() (string, error) {
 func (wrapper *JobContextWrapper) SetJobState(state string) error {
 	wrapper.mu.Lock()
 	defer wrapper.mu.Unlock()
-	wrapper.jobCtx.JobState = ptypesv1pb.JobState(ptypesv1pb.JobState_value[state])
+	wrapper.jobCtx.JobState = ptypes.JobState(ptypes.JobState_value[state])
 	return wrapper.jobDB.SetUploadPayloadJobStateV2(wrapper.jobCtx.JobId, state, time.Now().Unix())
 }
 
@@ -64,9 +64,9 @@ func (wrapper *JobContextWrapper) SetJobErr(err error) error {
 	} else {
 		wrapper.jobCtx.JobErr = wrapper.jobCtx.JobErr + err.Error()
 	}
-	wrapper.jobCtx.JobState = ptypesv1pb.JobState_JOB_STATE_ERROR
+	wrapper.jobCtx.JobState = ptypes.JobState_JOB_STATE_ERROR
 	return wrapper.jobDB.SetUploadPayloadJobJobErrorV2(wrapper.jobCtx.JobId,
-		ptypesv1pb.JOB_STATE_ERROR, wrapper.jobCtx.JobErr, time.Now().Unix())
+		ptypes.JOB_STATE_ERROR, wrapper.jobCtx.JobErr, time.Now().Unix())
 }
 
 // ModifyTime return the last modify timestamp
@@ -77,7 +77,7 @@ func (wrapper *JobContextWrapper) ModifyTime() int64 {
 }
 
 // JobContext return the copy of job context
-func (wrapper *JobContextWrapper) JobContext() *ptypesv1pb.JobContext {
+func (wrapper *JobContextWrapper) JobContext() *ptypes.JobContext {
 	wrapper.mu.RLock()
 	defer wrapper.mu.RUnlock()
 	return wrapper.jobCtx.SafeCopy()

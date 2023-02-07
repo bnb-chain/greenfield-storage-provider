@@ -5,8 +5,8 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypesv1pb "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
@@ -19,9 +19,9 @@ type PieceJob interface {
 	// PopPendingJob return the uncompleted piece jobs.
 	PopPendingJob() (pieceIdx []uint32)
 	// Done completed one piece job and store the state to DB.
-	Done(pieceJob *stypesv1pb.PieceJob) error
+	Done(pieceJob *stypes.PieceJob) error
 	// SealInfo return the storage provider info for seal.
-	SealInfo() ([]*ptypesv1pb.StorageProviderInfo, error)
+	SealInfo() ([]*ptypes.StorageProviderInfo, error)
 }
 
 var _ PieceJob = &PrimaryJob{}
@@ -85,7 +85,7 @@ func (job *PrimaryJob) PopPendingJob() (pieceIdx []uint32) {
 }
 
 // Done complete one segment piece job of the primary sp.
-func (job *PrimaryJob) Done(remoteJob *stypesv1pb.PieceJob) error {
+func (job *PrimaryJob) Done(remoteJob *stypes.PieceJob) error {
 	job.mu.Lock()
 	defer job.mu.Unlock()
 	var (
@@ -132,10 +132,10 @@ func (job *PrimaryJob) Done(remoteJob *stypesv1pb.PieceJob) error {
 }
 
 // SealInfo return seal info of the primary sp.
-func (job *PrimaryJob) SealInfo() ([]*ptypesv1pb.StorageProviderInfo, error) {
+func (job *PrimaryJob) SealInfo() ([]*ptypes.StorageProviderInfo, error) {
 	job.mu.RLock()
 	defer job.mu.RUnlock()
-	var sealInfo []*ptypesv1pb.StorageProviderInfo
+	var sealInfo []*ptypes.StorageProviderInfo
 	if job.complete != len(job.segmentPieceJobs) {
 		return sealInfo, merrors.ErrSpJobNotCompleted
 	}
@@ -143,7 +143,7 @@ func (job *PrimaryJob) SealInfo() ([]*ptypesv1pb.StorageProviderInfo, error) {
 	for _, pieceJob := range job.segmentPieceJobs {
 		checksumList = append(checksumList, pieceJob.Checksum[0])
 	}
-	sealInfo = append(sealInfo, &ptypesv1pb.StorageProviderInfo{
+	sealInfo = append(sealInfo, &ptypes.StorageProviderInfo{
 		SpId:          job.segmentPieceJobs[0].StorageProvider,
 		IntegrityHash: hash.GenerateIntegrityHash(checksumList),
 		PieceChecksum: checksumList,
@@ -214,7 +214,7 @@ func (job *SecondarySegmentPieceJob) PopPendingJob() (pieceIdx []uint32) {
 }
 
 // Done complete one copy piece job of the secondary sp.
-func (job *SecondarySegmentPieceJob) Done(remoteJob *stypesv1pb.PieceJob) error {
+func (job *SecondarySegmentPieceJob) Done(remoteJob *stypes.PieceJob) error {
 	job.mu.Lock()
 	defer job.mu.Unlock()
 	var (
@@ -279,15 +279,15 @@ func (job *SecondarySegmentPieceJob) Done(remoteJob *stypesv1pb.PieceJob) error 
 }
 
 // SealInfo return seal info of the secondary sp.
-func (job *SecondarySegmentPieceJob) SealInfo() ([]*ptypesv1pb.StorageProviderInfo, error) {
+func (job *SecondarySegmentPieceJob) SealInfo() ([]*ptypes.StorageProviderInfo, error) {
 	job.mu.RLock()
 	defer job.mu.RUnlock()
-	var sealInfo []*ptypesv1pb.StorageProviderInfo
+	var sealInfo []*ptypes.StorageProviderInfo
 	if job.complete != len(job.copyPieceJobs) {
 		return sealInfo, merrors.ErrSpJobNotCompleted
 	}
 	for _, pieceJob := range job.copyPieceJobs {
-		sealInfo = append(sealInfo, &ptypesv1pb.StorageProviderInfo{
+		sealInfo = append(sealInfo, &ptypes.StorageProviderInfo{
 			SpId:          pieceJob.StorageProvider,
 			Idx:           pieceJob.PieceId,
 			IntegrityHash: pieceJob.IntegrityHash,
@@ -359,7 +359,7 @@ func (job *SecondaryECPieceJob) PopPendingJob() (pieceIdx []uint32) {
 }
 
 // Done complete one ec piece job of the secondary sp.
-func (job *SecondaryECPieceJob) Done(remoteJob *stypesv1pb.PieceJob) error {
+func (job *SecondaryECPieceJob) Done(remoteJob *stypes.PieceJob) error {
 	job.mu.Lock()
 	defer job.mu.Unlock()
 	var (
@@ -424,15 +424,15 @@ func (job *SecondaryECPieceJob) Done(remoteJob *stypesv1pb.PieceJob) error {
 }
 
 // SealInfo return seal info of the secondary sp.
-func (job *SecondaryECPieceJob) SealInfo() ([]*ptypesv1pb.StorageProviderInfo, error) {
+func (job *SecondaryECPieceJob) SealInfo() ([]*ptypes.StorageProviderInfo, error) {
 	job.mu.RLock()
 	defer job.mu.RUnlock()
-	var sealInfo []*ptypesv1pb.StorageProviderInfo
+	var sealInfo []*ptypes.StorageProviderInfo
 	if job.complete != len(job.ecPieceJobs) {
 		return sealInfo, merrors.ErrSpJobNotCompleted
 	}
 	for _, pieceJob := range job.ecPieceJobs {
-		sealInfo = append(sealInfo, &ptypesv1pb.StorageProviderInfo{
+		sealInfo = append(sealInfo, &ptypes.StorageProviderInfo{
 			SpId:          pieceJob.StorageProvider,
 			Idx:           pieceJob.PieceId,
 			IntegrityHash: pieceJob.IntegrityHash,

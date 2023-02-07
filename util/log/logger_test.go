@@ -2,7 +2,6 @@ package log_test
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -19,12 +18,12 @@ func initTestLogger(lvl types.Level) {
 func printLogContent(t *testing.T) {
 	log.Stop()
 
-	files, _ := ioutil.ReadDir("./tmp")
+	files, _ := os.ReadDir("./tmp")
 	for _, f := range files {
 		fn := f.Name()
 		if strings.HasPrefix(fn, "test") {
 			t.Log(fn)
-			content, _ := ioutil.ReadFile("./tmp/" + fn)
+			content, _ := os.ReadFile("./tmp/" + fn)
 			t.Log(string(content))
 		}
 	}

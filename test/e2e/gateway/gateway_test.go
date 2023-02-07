@@ -52,19 +52,21 @@ func tearDown() {
 	// g.Stop(context.Background())
 }
 
+const tesDomain = "test.bfs.nodereal.com"
+
 func TestGateway(t *testing.T) {
 	setUp()
 	// create bucket
 	{
 		// succeed
 		req1, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/", nil)
-		req1.Host = "test.bfs.nodereal.com"
+		req1.Host = tesDomain
 		res1, _ := http.DefaultClient.Do(req1)
 		assert.Equal(t, 200, res1.StatusCode)
 
 		// failed due to has existed
 		req2, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/", nil)
-		req2.Host = "test.bfs.nodereal.com"
+		req2.Host = tesDomain
 		res2, _ := http.DefaultClient.Do(req2)
 		assert.Equal(t, 409, res2.StatusCode)
 	}
@@ -72,24 +74,24 @@ func TestGateway(t *testing.T) {
 	{
 		// failed due to bucket not found
 		req1, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/testobject", strings.NewReader(payload))
-		req1.Host = "testa.bfs.nodereal.com"
+		req1.Host = tesDomain
 		res1, _ := http.DefaultClient.Do(req1)
 		assert.Equal(t, 500, res1.StatusCode)
 
 		// failed due to tx not found
 		req2, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/testobject", strings.NewReader(payload))
-		req2.Host = "test.bfs.nodereal.com"
+		req2.Host = tesDomain
 		res2, _ := http.DefaultClient.Do(req2)
 		assert.Equal(t, 404, res2.StatusCode)
 
 		// succeed
 		req3, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/testobject?transaction", nil)
-		req3.Host = "test.bfs.nodereal.com"
+		req3.Host = tesDomain
 		res3, _ := http.DefaultClient.Do(req3)
 		assert.Equal(t, 200, res3.StatusCode)
 
 		req4, _ := http.NewRequest(http.MethodPut, "http://127.0.0.1:9099/testobject", strings.NewReader(payload))
-		req4.Host = "test.bfs.nodereal.com"
+		req4.Host = tesDomain
 		res4, _ := http.DefaultClient.Do(req4)
 		assert.Equal(t, 200, res4.StatusCode)
 		assert.Equal(t, md5str, res4.Header.Get("etag"))
@@ -98,12 +100,12 @@ func TestGateway(t *testing.T) {
 	{
 		// failed due to object not found
 		req1, _ := http.NewRequest(http.MethodGet, "http://127.0.0.1:9099/testobjecta", nil)
-		req1.Host = "test.bfs.nodereal.com"
+		req1.Host = tesDomain
 		res1, _ := http.DefaultClient.Do(req1)
 		assert.Equal(t, 404, res1.StatusCode)
 		// succeed
 		req2, _ := http.NewRequest(http.MethodGet, "http://127.0.0.1:9099/testobject", nil)
-		req2.Host = "test.bfs.nodereal.com"
+		req2.Host = tesDomain
 		res2, _ := http.DefaultClient.Do(req2)
 		assert.Equal(t, 200, res2.StatusCode)
 		// assert.Equal(t, res2.Header.Get("Content-Length"), 65*1024)
