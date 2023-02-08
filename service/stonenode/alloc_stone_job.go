@@ -11,7 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-// allocStoneJob sends rpc request to stone hub alloc stone job.
+// allocStoneJob sends rpc request to stone hub alloc stone job
 func (node *StoneNodeService) allocStoneJob(ctx context.Context) {
 	resp, err := node.stoneHub.AllocStoneJob(ctx)
 	ctx = log.Context(ctx, resp, resp.GetPieceJob())
@@ -23,7 +23,7 @@ func (node *StoneNodeService) allocStoneJob(ctx context.Context) {
 		return
 	}
 	// TBD:: stone node will support more types of stone job,
-	// currently only support upload secondary piece job.
+	// currently only support upload secondary piece job
 	if err := node.loadAndSyncPieces(ctx, resp); err != nil {
 		log.CtxErrorw(ctx, "upload secondary piece job failed", "error", err)
 		return
@@ -31,7 +31,7 @@ func (node *StoneNodeService) allocStoneJob(ctx context.Context) {
 	log.CtxInfow(ctx, "upload secondary piece job success")
 }
 
-// loadAndSyncPieces load segment data from primary and sync to secondary.
+// loadAndSyncPieces load segment data from primary and sync to secondary
 func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *stypes.StoneHubServiceAllocStoneJobResponse) error {
 	// TBD:: check secondarySPs count by redundancyType.
 	// EC_TYPE need EC_M + EC_K + backup
@@ -83,7 +83,7 @@ func checkRedundancyType(redundancyType ptypes.RedundancyType) error {
 	}
 }
 
-// reportErrToStoneHub send error message to stone hub.
+// reportErrToStoneHub send error message to stone hub
 func (node *StoneNodeService) reportErrToStoneHub(ctx context.Context, resp *stypes.StoneHubServiceAllocStoneJobResponse,
 	reportErr error) {
 	if reportErr == nil {

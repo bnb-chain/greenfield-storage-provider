@@ -13,8 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-// loadSegmentsData load segment data from primary storage provider.
-// returned map key is segmentKey, value is corresponding ec data from ec1 to ec6, or segment data
+// loadSegmentsData load segment data from primary storage provider
 func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *stypes.StoneHubServiceAllocStoneJobResponse) (
 	[][][]byte, error) {
 	type segment struct {
@@ -104,12 +103,12 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		pieces[seg.segmentIndex] = seg.pieceData
 		mu.Unlock()
 	}
-	// redundancyType为replica或inline类型，假设有三个segment，返回的三维数组包含三个二维数组，每个二维数组只有一个[]byte
 	return util.MapValueToSlice(pieces), loadSegmentErr
 }
 
-// 如果redundancyType为replica或inline类型，pieceData这个二维数组里面只有一个[]byte；ec类型pieceData里有六个[]byte
 // generatePieceData generates piece data from segment data
+// pieceData contains one []byte when redundancyType is replica or inline
+// pieceData contains six []byte when redundancyType is ec
 func (node *StoneNodeService) generatePieceData(redundancyType ptypes.RedundancyType, segmentData []byte) (
 	pieceData [][]byte, err error) {
 	switch redundancyType {
