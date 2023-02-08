@@ -28,10 +28,6 @@ jobs:
         with:
           input: 'proto'
 
-      - uses: bufbuild/buf-breaking-action@v1
-        with:
-          against: "https//github.com/bnb-chain/greenfield-storage-provider"
-
 #  proto-lint-success:
 #    needs: proto-lint
 #    if: ${{ success() }}
