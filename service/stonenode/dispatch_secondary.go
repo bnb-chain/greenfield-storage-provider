@@ -44,16 +44,16 @@ func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []s
 		return nil, merrors.ErrInvalidSegmentData
 	}
 
-	dataSlice := make([][][]byte, segmentLength)
+	tempSlice := make([][][]byte, segmentLength)
 	for i := 0; i < segmentLength; i++ {
-		dataSlice[i] = make([][]byte, 0)
+		tempSlice[i] = make([][]byte, 0)
 		for j := 0; j < len(pieceDataBySegment); j++ {
-			dataSlice[i] = append(dataSlice[i], pieceDataBySegment[j][i])
+			tempSlice[i] = append(tempSlice[i], pieceDataBySegment[j][i])
 		}
 	}
 	segmentPieceSlice := make([][][]byte, len(targetIdx))
 	for i := 0; i < len(targetIdx); i++ {
-		segmentPieceSlice[i] = dataSlice[0]
+		segmentPieceSlice[i] = tempSlice[0]
 	}
 	return segmentPieceSlice, nil
 }
@@ -69,17 +69,17 @@ func dispatchECData(pieceDataBySegment [][][]byte, secondarySPs []string, target
 		return nil, merrors.ErrSecondarySPNumber
 	}
 
-	pieceSlice := make([][][]byte, segmentLength)
+	tempSlice := make([][][]byte, segmentLength)
 	for i := 0; i < segmentLength; i++ {
-		pieceSlice[i] = make([][]byte, 0)
+		tempSlice[i] = make([][]byte, 0)
 		for j := 0; j < len(pieceDataBySegment); j++ {
-			pieceSlice[i] = append(pieceSlice[i], pieceDataBySegment[j][i])
+			tempSlice[i] = append(tempSlice[i], pieceDataBySegment[j][i])
 		}
 	}
 
 	ecPieceSlice := make([][][]byte, len(targetIdx))
 	for index, value := range targetIdx {
-		ecPieceSlice[index] = pieceSlice[value]
+		ecPieceSlice[index] = tempSlice[value]
 	}
 	return ecPieceSlice, nil
 }
