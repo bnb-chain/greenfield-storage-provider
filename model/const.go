@@ -36,7 +36,7 @@ const (
 // RPC config
 const (
 	// server and client max send or recv msg size
-	MaxCallMsgSize = 40 * 1024 * 1024
+	MaxCallMsgSize = 25 * 1024 * 1024
 )
 
 // Gateway
