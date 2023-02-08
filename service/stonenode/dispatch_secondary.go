@@ -20,7 +20,7 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte,
 	var err error
 	switch redundancyType {
 	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		pieceDataBySecondary, err = dispatchReplicaOrInlineData(pieceDataBySegment, secondarySPs, targetIdx)
+		pieceDataBySecondary, err = dispatchReplicaData(pieceDataBySegment, secondarySPs, targetIdx)
 	default: // ec type
 		pieceDataBySecondary, err = dispatchECData(pieceDataBySegment, secondarySPs, targetIdx)
 	}
@@ -31,10 +31,10 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte,
 	return pieceDataBySecondary, nil
 }
 
-// dispatchReplicaOrInlineData dispatches replica or inline data into different sp, each sp should store all segments data of an object
+// dispatchReplicaData dispatches replica or inline data into different sp, each sp should store all segments data of an object
 // if an object uses replica type, it's split into 10 segments and there are 6 sp, each sp should store 10 segments data
 // if an object uses inline type, there is only one segment and there are 6 sp, each sp should store 1 segment data
-func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []string, targetIdx []uint32) ([][][]byte, error) {
+func dispatchReplicaData(pieceDataBySegment [][][]byte, secondarySPs []string, targetIdx []uint32) ([][][]byte, error) {
 	if len(secondarySPs) < len(targetIdx) {
 		return nil, merrors.ErrSecondarySPNumber
 	}
@@ -52,7 +52,7 @@ func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []s
 	return segmentPieceSlice, nil
 }
 
-// dispatchECData dispatched ec data into different sp
+// dispatchECData dispatches ec data into different sp
 // one sp stores same ec column data: sp1 stores all ec1 data, sp2 stores all ec2 data, etc
 func dispatchECData(pieceDataBySegment [][][]byte, secondarySPs []string, targetIdx []uint32) ([][][]byte, error) {
 	segmentLength := len(pieceDataBySegment[0])

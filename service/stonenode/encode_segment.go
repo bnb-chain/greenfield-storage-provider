@@ -11,10 +11,11 @@ import (
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
 )
 
-// loadSegmentsData load segment data from primary storage provider
-func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *stypes.StoneHubServiceAllocStoneJobResponse) (
+// encodeSegmentsData load segment data from primary storage provider and encode
+func (node *StoneNodeService) encodeSegmentsData(ctx context.Context, allocResp *stypes.StoneHubServiceAllocStoneJobResponse) (
 	[][][]byte, error) {
 	type segment struct {
 		objectID       uint64
@@ -27,7 +28,7 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 	}
 	var (
 		doneSegments   int64
-		loadSegmentErr error
+		innerErr       error
 		segmentCh      = make(chan *segment)
 		interruptCh    = make(chan struct{})
 		pieces         = make(map[int][][]byte)
@@ -53,12 +54,12 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		return nil
 	}
 
-	spiltFunc := func(ctx context.Context, seg *segment) error {
+	encodeFunc := func(ctx context.Context, seg *segment) error {
 		select {
 		case <-interruptCh:
 			break
 		default:
-			pieceData, err := node.generatePieceData(redundancyType, seg.segmentData)
+			pieceData, err := node.encode(redundancyType, seg.segmentData)
 			if err != nil {
 				log.CtxErrorw(ctx, "ec encode failed", "error", err, "piece key", seg.pieceKey)
 				return err
@@ -82,10 +83,10 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 					close(segmentCh)
 				}
 			}()
-			if loadSegmentErr = loadFunc(ctx, seg); loadSegmentErr != nil {
+			if innerErr = loadFunc(ctx, seg); innerErr != nil {
 				return
 			}
-			if loadSegmentErr = spiltFunc(ctx, seg); loadSegmentErr != nil {
+			if innerErr = encodeFunc(ctx, seg); innerErr != nil {
 				return
 			}
 			select {
@@ -103,13 +104,13 @@ func (node *StoneNodeService) loadSegmentsData(ctx context.Context, allocResp *s
 		pieces[seg.segmentIndex] = seg.pieceData
 		mu.Unlock()
 	}
-	return util.MapValueToSlice(pieces), loadSegmentErr
+	return maps.ValueToSlice(pieces), innerErr
 }
 
-// generatePieceData generates piece data from segment data
+// encode segment data by redundancyType
 // pieceData contains one []byte when redundancyType is replica or inline
 // pieceData contains six []byte when redundancyType is ec
-func (node *StoneNodeService) generatePieceData(redundancyType ptypes.RedundancyType, segmentData []byte) (
+func (node *StoneNodeService) encode(redundancyType ptypes.RedundancyType, segmentData []byte) (
 	pieceData [][]byte, err error) {
 	switch redundancyType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:

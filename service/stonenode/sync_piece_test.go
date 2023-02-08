@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	spmock "github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
+	spmock "github.com/bnb-chain/greenfield-storage-provider/mock"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client/mock"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"

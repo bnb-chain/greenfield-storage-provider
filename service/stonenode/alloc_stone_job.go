@@ -6,8 +6,8 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -38,9 +38,9 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	// REPLICA_TYPE and INLINE_TYPE need segments count + backup
 	secondarySPs := mock.AllocUploadSecondarySP()
 
-	// check redundancyType and targetIdx is valid
+	// validate redundancyType and targetIdx
 	redundancyType := allocResp.GetPieceJob().GetRedundancyType()
-	if err := checkRedundancyType(redundancyType); err != nil {
+	if err := util.ValidateRedundancyType(redundancyType); err != nil {
 		log.CtxErrorw(ctx, "invalid redundancy type", "redundancy type", redundancyType)
 		node.reportErrToStoneHub(ctx, allocResp, err)
 		return err
@@ -52,8 +52,8 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 		return merrors.ErrEmptyTargetIdx
 	}
 
-	// 1. load all segments data from primary piece store and do ec or not
-	pieceData, err := node.loadSegmentsData(ctx, allocResp)
+	// 1. load all segments data from primary piece store and encode
+	pieceData, err := node.encodeSegmentsData(ctx, allocResp)
 	if err != nil {
 		node.reportErrToStoneHub(ctx, allocResp, err)
 		return err
@@ -70,17 +70,6 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	// 3. send piece data to the secondary
 	node.doSyncToSecondarySP(ctx, allocResp, secondaryPieceData, secondarySPs)
 	return nil
-}
-
-func checkRedundancyType(redundancyType ptypes.RedundancyType) error {
-	switch redundancyType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
-		return nil
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		return nil
-	default:
-		return merrors.ErrRedundancyType
-	}
 }
 
 // reportErrToStoneHub send error message to stone hub

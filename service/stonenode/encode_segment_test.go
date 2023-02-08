@@ -24,7 +24,7 @@ func TestInitClientFailed(t *testing.T) {
 	assert.Equal(t, merrors.ErrStoneNodeStarted, err)
 }
 
-func Test_loadSegmentsDataSuccess(t *testing.T) {
+func Test_encodeSegmentsDataSuccess(t *testing.T) {
 	cases := []struct {
 		name          string
 		req1          uint64
@@ -89,7 +89,7 @@ func Test_loadSegmentsDataSuccess(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			allocResp := mockAllocResp(tt.req1, tt.req2, tt.req3)
-			result, err := node.loadSegmentsData(context.TODO(), allocResp)
+			result, err := node.encodeSegmentsData(context.TODO(), allocResp)
 			assert.Equal(t, nil, err)
 			assert.Equal(t, tt.wantedResult1, len(result))
 		})
@@ -108,13 +108,13 @@ func Test_loadSegmentsDataPieceStoreError(t *testing.T) {
 			return nil, errors.New("piece store s3 network error")
 		}).AnyTimes()
 
-	result, err := node.loadSegmentsData(context.TODO(), mockAllocResp(20230109001, 20*1024*1024,
+	result, err := node.encodeSegmentsData(context.TODO(), mockAllocResp(20230109001, 20*1024*1024,
 		ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED))
 	assert.Equal(t, errors.New("piece store s3 network error"), err)
 	assert.Equal(t, 0, len(result))
 }
 
-func Test_generatePieceData(t *testing.T) {
+func Test_encodeSegmentData(t *testing.T) {
 	cases := []struct {
 		name         string
 		req1         ptypes.RedundancyType
@@ -148,7 +148,7 @@ func Test_generatePieceData(t *testing.T) {
 	node := setup(t)
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := node.generatePieceData(tt.req1, tt.req2)
+			result, err := node.encode(tt.req1, tt.req2)
 			assert.Equal(t, err, tt.wantedErr)
 			assert.Equal(t, len(result), tt.wantedResult)
 		})

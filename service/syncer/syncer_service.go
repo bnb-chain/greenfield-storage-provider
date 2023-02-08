@@ -32,7 +32,8 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 			integrityMeta.PieceHash = pieceHash
 			sealInfo := generateSealInfo(spID, integrityMeta)
 			integrityMeta.IntegrityHash = sealInfo.GetIntegrityHash()
-			if err := s.setIntegrityMeta(s.metaDB, integrityMeta); err != nil {
+			if err := s.metaDB.SetIntegrityMeta(integrityMeta); err != nil {
+				log.Errorw("set integrity meta error", "error", err)
 				return err
 			}
 			resp := &stypes.SyncerServiceSyncPieceResponse{
@@ -61,14 +62,6 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	}
 }
 
-func (s *Syncer) setIntegrityMeta(db metadb.MetaDB, meta *metadb.IntegrityMeta) error {
-	if err := db.SetIntegrityMeta(meta); err != nil {
-		log.Errorw("set integrity meta error", "error", err)
-		return err
-	}
-	return nil
-}
-
 func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.StorageProviderSealInfo {
 	pieceHash := integrityMeta.PieceHash
 	integrityHash := hash.GenerateIntegrityHash(pieceHash)
@@ -95,13 +88,14 @@ func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, coun
 	if err != nil {
 		return nil, nil, err
 	}
+	integrityMeta.PieceIdx = pieceIndex
+
 	// put piece data into piece store
 	value := req.GetPieceData()
 	if err = s.store.PutPiece(key, value); err != nil {
 		log.Errorw("put piece failed", "error", err)
 		return nil, nil, err
 	}
-	integrityMeta.PieceIdx = pieceIndex
 	return integrityMeta, value, nil
 }
 
