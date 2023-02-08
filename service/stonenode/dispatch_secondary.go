@@ -65,12 +65,12 @@ func dispatchECData(pieceDataBySegment [][][]byte, secondarySPs []string, target
 	if segmentLength < 6 {
 		return nil, merrors.ErrInvalidECData
 	}
+	if segmentLength > len(secondarySPs) {
+		return nil, merrors.ErrSecondarySPNumber
+	}
 
 	pieceSlice := make([][][]byte, segmentLength)
 	for i := 0; i < segmentLength; i++ {
-		if i > len(secondarySPs) {
-			return nil, merrors.ErrSecondarySPNumber
-		}
 		pieceSlice[i] = make([][]byte, 0)
 		for j := 0; j < len(pieceDataBySegment); j++ {
 			pieceSlice[i] = append(pieceSlice[i], pieceDataBySegment[j][i])
