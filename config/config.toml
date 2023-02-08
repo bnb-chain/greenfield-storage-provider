@@ -6,17 +6,8 @@ Service = [
 [GatewayCfg]
     Address = "127.0.0.1:9033"
     Domain = "bfs.nodereal.com"
-    [GatewayCfg.UploaderConfig]
-        Mode = "GrpcMode"
-        DebugDir = "./data/debug"
-        Address = "127.0.0.1:9133"
-    [GatewayCfg.ChainConfig]
-        Mode = "DebugMode"
-        DebugDir = "./data/debug"
-    [GatewayCfg.DownloaderConfig]
-        Mode = "GrpcMode"
-        DebugDir = "./data/debug"
-        Address = "127.0.0.1:9233"
+    UploaderServiceAddress = "127.0.0.1:9133"
+    DownloaderServiceAddress = "127.0.0.1:9233"
 
 [UploaderCfg]
     StorageProvider = "bnb-sp"
@@ -41,11 +32,6 @@ Service = [
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
-    [UploaderCfg.MetaSqlDBConfig]
-        User = "root"
-        Passwd = "test_pwd"
-        Address = "127.0.0.1:3306"
-        Database = "meta_db"
 
 [DownloaderCfg]
     Address = "127.0.0.1:9233"
@@ -74,11 +60,6 @@ Service = [
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
-    [StoneHubCfg.MetaSqlDBConfig]
-        User = "root"
-        Passwd = "test_pwd"
-        Address = "127.0.0.1:3306"
-        Database = "meta_db"
 
 [StoneNodeCfg]
     StorageProvider = "bnb-sp"
@@ -120,8 +101,3 @@ Service = [
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
-    [SyncerCfg.MetaSqlDBConfig]
-        User = "root"
-        Passwd = "test_pwd"
-        Address = "127.0.0.1:3306"
-        Database = "meta_db"

@@ -70,6 +70,9 @@ type chainClient struct {
 }
 
 func newChainClient(c *chainClientConfig) (*chainClient, error) {
+	if c == nil {
+		c = defaultChainClientConfig
+	}
 	switch {
 	case c.Mode == "DebugMode":
 		if c.DebugDir == "" {
