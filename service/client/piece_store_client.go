@@ -10,6 +10,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
+var _ PieceStoreAPI = &StoreClient{}
+
 // PieceStoreAPI provides an interface to enable mocking the
 // StoreClient's API operation. This makes unit test to test your code easier.
 //
