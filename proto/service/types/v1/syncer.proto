@@ -10,13 +10,14 @@ message SyncerInfo {
 //  bytes tx_hash = 2;
   string storage_provider_id = 3;
   uint32 piece_count = 4;
-  pkg.types.v1.RedundancyType redundancy_type = 5;
+  uint32 piece_index = 5;
+  pkg.types.v1.RedundancyType redundancy_type = 6;
 }
 
 message SyncerServiceSyncPieceRequest {
   string trace_id = 1;
   SyncerInfo syncer_info = 2;
-  map<string, bytes> piece_data = 3; // key is piece key, value is piece_data
+  bytes piece_data = 3;
 }
 
 message SyncerServiceSyncPieceResponse {

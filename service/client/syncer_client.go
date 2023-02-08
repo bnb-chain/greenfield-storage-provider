@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"io"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -12,7 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-var _ io.Closer = &SyncerClient{}
+var _ SyncerAPI = &SyncerClient{}
 
 // SyncerAPI provides an interface to enable mocking the
 // SyncerClient's API operation. This makes unit test to test your code easier.
