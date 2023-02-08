@@ -104,6 +104,7 @@ func (node *StoneNodeService) encodeSegmentsData(ctx context.Context, allocResp 
 		pieces[seg.segmentIndex] = seg.pieceData
 		mu.Unlock()
 	}
+	log.Infow("kkkk", "map length", len(pieces))
 	return maps.ValueToSlice(pieces), innerErr
 }
 
