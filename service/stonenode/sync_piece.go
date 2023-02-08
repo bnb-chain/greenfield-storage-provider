@@ -78,7 +78,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 	return nil
 }
 
-// verifyIntegrityHash check integrity is right
+// verifyIntegrityHash verify secondary integrity hash is equal to local's
 func verifyIntegrityHash(pieceData [][]byte, spInfo *stypes.StorageProviderSealInfo) bool {
 	pieceHash := make([][]byte, 0)
 	for _, value := range pieceData {
