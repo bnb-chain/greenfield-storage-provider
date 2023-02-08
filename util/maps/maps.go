@@ -28,9 +28,10 @@ func ValueToSlice[M ~map[K]V, K constraints.Ordered, V any](m M) []V {
 	keys := SortKeys(m)
 	valueSlice := make([]V, len(m))
 	log.Infow("jjj", "m length", len(m))
-	for _, key := range keys {
+	for index, key := range keys {
 		value := m[key]
-		valueSlice = append(valueSlice, value)
+		valueSlice[index] = value
+		//valueSlice = append(valueSlice, value)
 	}
 	log.Infow("iii", "valueSlice length", len(valueSlice))
 	return valueSlice
