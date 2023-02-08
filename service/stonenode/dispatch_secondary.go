@@ -44,16 +44,17 @@ func dispatchReplicaOrInlineData(pieceDataBySegment [][][]byte, secondarySPs []s
 		return nil, merrors.ErrInvalidSegmentData
 	}
 
-	tempSlice := make([][][]byte, segmentLength)
-	for i := 0; i < segmentLength; i++ {
-		tempSlice[i] = make([][]byte, 0)
-		for j := 0; j < len(pieceDataBySegment); j++ {
-			tempSlice[i] = append(tempSlice[i], pieceDataBySegment[j][i])
-		}
-	}
+	//tempSlice := make([][][]byte, segmentLength)
+	//for i := 0; i < segmentLength; i++ {
+	//	tempSlice[i] = make([][]byte, 0)
+	//	for j := 0; j < len(pieceDataBySegment); j++ {
+	//		tempSlice[i] = append(tempSlice[i], pieceDataBySegment[j][i])
+	//	}
+	//}
+	data := convertSlice(pieceDataBySegment, segmentLength)
 	segmentPieceSlice := make([][][]byte, len(targetIdx))
 	for i := 0; i < len(targetIdx); i++ {
-		segmentPieceSlice[i] = tempSlice[0]
+		segmentPieceSlice[i] = data[0]
 	}
 	return segmentPieceSlice, nil
 }
@@ -69,17 +70,29 @@ func dispatchECData(pieceDataBySegment [][][]byte, secondarySPs []string, target
 		return nil, merrors.ErrSecondarySPNumber
 	}
 
-	tempSlice := make([][][]byte, segmentLength)
-	for i := 0; i < segmentLength; i++ {
-		tempSlice[i] = make([][]byte, 0)
-		for j := 0; j < len(pieceDataBySegment); j++ {
-			tempSlice[i] = append(tempSlice[i], pieceDataBySegment[j][i])
-		}
-	}
-
+	//tempSlice := make([][][]byte, segmentLength)
+	//for i := 0; i < segmentLength; i++ {
+	//	tempSlice[i] = make([][]byte, 0)
+	//	for j := 0; j < len(pieceDataBySegment); j++ {
+	//		tempSlice[i] = append(tempSlice[i], pieceDataBySegment[j][i])
+	//	}
+	//}
+	data := convertSlice(pieceDataBySegment, segmentLength)
 	ecPieceSlice := make([][][]byte, len(targetIdx))
 	for index, value := range targetIdx {
-		ecPieceSlice[index] = tempSlice[value]
+		ecPieceSlice[index] = data[value]
 	}
 	return ecPieceSlice, nil
+}
+
+func convertSlice(data [][][]byte, length int) [][][]byte {
+	tempSlice := make([][][]byte, length)
+	for i := 0; i < length; i++ {
+		tempSlice[i] = make([][]byte, 0)
+		for j := 0; j < len(data); j++ {
+			tempSlice[i] = append(tempSlice[i], data[j][i])
+		}
+	}
+	log.Info("covert slice")
+	return tempSlice
 }
