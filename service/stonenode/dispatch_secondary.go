@@ -6,16 +6,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-// dispatchSecondarySP dispatch piece data to secondary storage provider.
-// returned map key is spID, value map key is ec piece key or segment key, value map's value is piece data
-
-// pieceDataBySegment key is segment key; if redundancyType is EC, value is [][]byte type,
-// a two-dimensional array which contains ec data from ec1 []byte data to ec6 []byte data
-// if redundancyType is replica or inline, value is [][]byte type, a two-dimensional array
-// which only contains one []byte data
-
-// pieceDataBySegment is a three-dimensional slice, first dimensional is segment index, second is [][]byte data
 // dispatchSecondarySP convert pieceDataBySegment to ec dimensional slice, first dimensional is ec number such as ec1, contains [][]byte data
+// pieceDataBySegment is a three-dimensional slice, first dimensional is segment index, second is [][]byte data
 func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte, redundancyType ptypesv1pb.RedundancyType, secondarySPs []string,
 	targetIdx []uint32) ([][][]byte, error) {
 	if len(pieceDataBySegment) == 0 {

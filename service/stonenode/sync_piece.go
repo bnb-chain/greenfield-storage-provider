@@ -11,7 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-// doSyncToSecondarySP send piece data to the secondary.
+// doSyncToSecondarySP send piece data to the secondary
 func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *stypes.StoneHubServiceAllocStoneJobResponse,
 	pieceDataBySecondary [][][]byte, secondarySPs []string) error {
 	var (
@@ -19,8 +19,10 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 		payloadSize    = resp.GetPieceJob().GetPayloadSize()
 		redundancyType = resp.GetPieceJob().GetRedundancyType()
 	)
-	// index在ec类型中代表第几个ec；在replica类型中代表第几sp，存储的二维数组是完全相同的
-	// pieceData的长度代表有几个segment，在stream要一个接一个的发送pieceData中的[]byte，可以用来计算syncer server收到的数目是否正确
+	// index represents which number ec in ec type, corresponding pieceData contains ec data
+	// index represents which number sp in replica or inline type, it stores same two-dimensional slice
+	// the length of pieceData represents the number of segments, SyncPiece is client stream interface, it sends
+	// []byte data one by one, so it can be used to compute syncer server receives correct piece data
 	for index, pieceData := range pieceDataBySecondary {
 		go func(index int, pieceData [][]byte) {
 			errMsg := &stypes.ErrMessage{}
@@ -47,7 +49,6 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 			syncResp, err := node.syncPiece(ctx, &stypes.SyncerInfo{
 				ObjectId:          objectID,
 				StorageProviderId: secondarySPs[index],
-				PayloadSize:       payloadSize,
 				PieceIndex:        uint32(index),
 				PieceCount:        uint32(len(pieceData)),
 				RedundancyType:    redundancyType,
