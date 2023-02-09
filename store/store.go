@@ -49,7 +49,7 @@ func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (jobdb.JobDBV2, er
 		sqlDBConfig.Passwd = os.Getenv(model.JobDBPassword)
 		jobDB, err = jobsql.NewJobMetaImpl(sqlDBConfig)
 	case model.MemoryDB:
-		jobDB = jobmemory.NewMemJobDBV2()
+		jobDB = jobmemory.NewMemJobDB()
 	default:
 		err = fmt.Errorf("job db not support %s type", dbType)
 	}
