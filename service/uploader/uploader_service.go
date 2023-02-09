@@ -236,20 +236,20 @@ func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, up
 	return nil
 }
 
-// GetAuthentication get auth info, currently PreSignature is mocked.
-func (uploader *Uploader) GetAuthentication(ctx context.Context, req *stypes.UploaderServiceGetAuthenticationRequest) (
-	resp *stypes.UploaderServiceGetAuthenticationResponse, err error) {
+// GetApproval get auth info, currently PreSignature is mocked.
+func (uploader *Uploader) GetApproval(ctx context.Context, req *stypes.UploaderServiceGetApprovalRequest) (
+	resp *stypes.UploaderServiceGetApprovalResponse, err error) {
 	ctx = log.Context(ctx, req)
 	defer func() {
 		if err != nil {
 			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
-			log.CtxErrorw(ctx, "failed to get authentication", "err", err)
+			log.CtxErrorw(ctx, "failed to get approval", "err", err)
 		} else {
-			log.CtxInfow(ctx, "succeed to get authentication")
+			log.CtxInfow(ctx, "succeed to get approval")
 		}
 	}()
 
-	resp = &stypes.UploaderServiceGetAuthenticationResponse{TraceId: req.TraceId}
+	resp = &stypes.UploaderServiceGetApprovalResponse{TraceId: req.TraceId}
 	meta := &spdb.UploadPayloadAskingMeta{
 		BucketName: req.Bucket,
 		ObjectName: req.Object,
@@ -259,7 +259,7 @@ func (uploader *Uploader) GetAuthentication(ctx context.Context, req *stypes.Upl
 		log.Errorw("failed to insert metaDB")
 		return
 	}
-	log.CtxInfow(ctx, "insert authentication info to metadb", "bucket", req.Bucket, "object", req.Object)
+	log.CtxInfow(ctx, "insert approval info to metadb", "bucket", req.Bucket, "object", req.Object)
 	// mock
 	resp.PreSignature = hash.GenerateChecksum([]byte(time.Now().String()))
 	return resp, nil

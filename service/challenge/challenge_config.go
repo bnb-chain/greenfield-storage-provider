@@ -29,7 +29,7 @@ func DefaultStorageProviderID() string {
 }
 
 var DefaultChallengeConfig = &ChallengeConfig{
-	Address:           "127.0.0.1:5423",
+	Address:           "127.0.0.1:9633",
 	StorageProvider:   DefaultStorageProviderID(),
 	MetaDBType:        model.LevelDB,
 	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,

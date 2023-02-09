@@ -36,7 +36,7 @@ const (
 // RPC config
 const (
 	// server and client max send or recv msg size
-	MaxCallMsgSize = 40 * 1024 * 1024
+	MaxCallMsgSize = 25 * 1024 * 1024
 )
 
 // Gateway
@@ -61,6 +61,8 @@ const (
 	GnfdPreSignatureHeader    = "X-Gnfd-Pre-Signature"
 	// GnfdRedundancyTypeHeader can be EC or Replica, EC is default
 	GnfdRedundancyTypeHeader = "X-Gnfd-Redundancy-Type"
+	GnfdAuthorizationHeader  = "Authorization"
+	GnfdDateHeader           = "X-Gnfd-Date"
 
 	// http header key
 	ContentTypeHeader   = "Content-Type"
@@ -70,6 +72,13 @@ const (
 	// header value
 	ContentTypeXMLHeaderValue        = "application/xml"
 	ReplicaRedundancyTypeHeaderValue = "Replica"
+
+	// signature const value
+	SignAlgorithm = "ECDSA-secp256k1"
+	SignedMsg     = "SignedMsg"
+	Signature     = "Signature"
+	SignTypeV1    = "authTypeV1"
+	SignTypeV2    = "authTypeV2"
 )
 
 // define backend store type name.

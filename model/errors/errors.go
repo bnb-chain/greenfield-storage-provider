@@ -24,6 +24,12 @@ var (
 	ErrObjectTxNotExist = errors.New("object tx not exist")
 	ErrObjectNotExist   = errors.New("object not exist")
 	ErrObjectIsEmpty    = errors.New("object payload is empty")
+
+	// signature error
+	ErrAuthorizationFormat = errors.New("authorization format error")
+	ErrRequestConsistent   = errors.New("request consistent check failed")
+	ErrSignatureConsistent = errors.New("signature consistent check failed")
+	ErrUnsupportedSignType = errors.New("unsupported signature type")
 )
 
 // stone hub service errors
@@ -52,13 +58,15 @@ var (
 var (
 	ErrStoneNodeStarted   = errors.New("stone node resource is running")
 	ErrStoneNodeStopped   = errors.New("stone node service has stopped")
-	ErrIntegrityHash      = errors.New("secondary integrity hash check error")
+	ErrIntegrityHash      = errors.New("secondary integrity hash verifies error")
 	ErrRedundancyType     = errors.New("unknown redundancy type")
 	ErrEmptyJob           = errors.New("alloc stone job is empty")
 	ErrSecondarySPNumber  = errors.New("secondary sp is not enough")
+	ErrInvalidPieceData   = errors.New("invalid piece data")
 	ErrInvalidSegmentData = errors.New("invalid segment data, length is not equal to 1")
 	ErrInvalidECData      = errors.New("invalid ec data, length is not equal to 6")
 	ErrEmptyTargetIdx     = errors.New("target index array is empty")
+	ErrSyncerNumber       = errors.New("syncer number is less than piece count")
 )
 
 // syncer service errors

@@ -2,7 +2,6 @@ package syncer
 
 import (
 	"context"
-	"errors"
 	"io"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -21,18 +20,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	var key string
 	var spID string
 	var value []byte
-	pieceHash := make(map[string][]byte)
-	//defer func() {
-	//	if err != nil && err != io.EOF {
-	//		log.Info("entry defer func")
-	//		err = stream.SendAndClose(&service.SyncerServiceSyncPieceResponse{
-	//			ErrMessage: &service.ErrMessage{
-	//				ErrCode: service.ErrCode_ERR_CODE_ERROR,
-	//				ErrMsg:  err.Error(),
-	//			},
-	//		})
-	//	}
-	//}()
+	pieceHash := make([][]byte, 0)
 
 	for {
 		req, err := stream.Recv()
@@ -42,10 +30,11 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 				return merrors.ErrReceivedPieceCount
 			}
 
-			//integrityMeta.PieceHash = pieceHash
+			integrityMeta.PieceHash = pieceHash
 			sealInfo := generateSealInfo(spID, integrityMeta)
 			integrityMeta.IntegrityHash = sealInfo.GetIntegrityHash()
-			if err := s.setIntegrityMeta(s.metaDB, integrityMeta); err != nil {
+			if err := s.metaDB.SetIntegrityMeta(integrityMeta); err != nil {
+				log.Errorw("set integrity meta error", "error", err)
 				return err
 			}
 			resp := &stypes.SyncerServiceSyncPieceResponse{
@@ -64,90 +53,62 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 			log.Errorw("stream recv failed", "error", err)
 			return err
 		}
+		count++
 		spID = req.GetSyncerInfo().GetStorageProviderId()
-		integrityMeta, key, value, err = s.handlePieceData(req)
+		integrityMeta, value, err = s.handlePieceData(req, count)
 		if err != nil {
 			return err
 		}
-		pieceHash[key] = hash.GenerateChecksum(value)
-		count++
+		pieceHash = append(pieceHash, hash.GenerateChecksum(value))
 	}
 }
 
-func (s *Syncer) setIntegrityMeta(db spdb.MetaDB, meta *spdb.IntegrityMeta) error {
-	if err := db.SetIntegrityMeta(meta); err != nil {
-		log.Errorw("set integrity meta error", "error", err)
-		return err
-	}
-	return nil
-}
 
 func generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) *stypes.StorageProviderSealInfo {
-	//keys := util.GenericSortedKeys(integrityMeta.PieceHash)
-	pieceChecksumList := make([][]byte, 0)
-	// var integrityHash []byte
-	//for _, key := range keys {
-	//	value := integrityMeta.PieceHash[key]
-	//	pieceChecksumList = append(pieceChecksumList, value)
-	//}
-	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
+	pieceHash := integrityMeta.PieceHash
+	integrityHash := hash.GenerateIntegrityHash(pieceHash)
 	resp := &stypes.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          integrityMeta.PieceIdx,
-		PieceChecksum:     pieceChecksumList,
+		PieceChecksum:     pieceHash,
 		IntegrityHash:     integrityHash,
 		Signature:         nil, // TODO(mock)
 	}
 	return resp
 }
 
-func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest) (*spdb.IntegrityMeta, string, []byte, error) {
-	if len(req.GetPieceData()) != 1 {
-		return nil, "", nil, errors.New("the length of piece data map is not equal to 1")
-	}
-
+func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, count uint32) (*spdb.IntegrityMeta, []byte, error) {
 	redundancyType := req.GetSyncerInfo().GetRedundancyType()
+	objectID := req.GetSyncerInfo().GetObjectId()
 	integrityMeta := &spdb.IntegrityMeta{
-		ObjectID:       req.GetSyncerInfo().GetObjectId(),
+		ObjectID:       objectID,
 		PieceCount:     req.GetSyncerInfo().GetPieceCount(),
 		IsPrimary:      false,
 		RedundancyType: redundancyType,
 	}
-
-	var (
-		key   string
-		value []byte
-	)
-	for key, value = range req.GetPieceData() {
-		pieceIndex, err := parsePieceIndex(redundancyType, key)
-		if err != nil {
-			return nil, "", nil, err
-		}
-		integrityMeta.PieceIdx = pieceIndex
-
-		// put piece data into piece store
-		if err = s.store.PutPiece(key, value); err != nil {
-			log.Errorw("put piece failed", "error", err)
-			return nil, "", nil, err
-		}
+	key, pieceIndex, err := encodePieceKey(redundancyType, objectID, count, req.GetSyncerInfo().GetPieceIndex())
+	if err != nil {
+		return nil, nil, err
 	}
-	return integrityMeta, key, value, nil
+	integrityMeta.PieceIdx = pieceIndex
+
+	// put piece data into piece store
+	value := req.GetPieceData()
+	if err = s.store.PutPiece(key, value); err != nil {
+		log.Errorw("put piece failed", "error", err)
+		return nil, nil, err
+	}
+	return integrityMeta, value, nil
 }
 
-func parsePieceIndex(redundancyType ptypes.RedundancyType, key string) (uint32, error) {
-	var (
-		err        error
-		pieceIndex uint32
-	)
+func encodePieceKey(redundancyType ptypes.RedundancyType, objectID uint64, segmentIndex, pieceIndex uint32) (
+	string, uint32, error) {
 	switch redundancyType {
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		_, pieceIndex, err = piecestore.DecodeSegmentPieceKey(key)
-	default: // ec type
-		_, _, pieceIndex, err = piecestore.DecodeECPieceKey(key)
+		return piecestore.EncodeSegmentPieceKey(objectID, segmentIndex), pieceIndex, nil
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+		return piecestore.EncodeECPieceKey(objectID, segmentIndex, pieceIndex), pieceIndex, nil
+	default:
+		return "", 0, merrors.ErrRedundancyType
 	}
-	if err != nil {
-		log.Errorw("decode piece key failed", "error", err)
-		return 0, err
-	}
-	return pieceIndex, nil
 }
