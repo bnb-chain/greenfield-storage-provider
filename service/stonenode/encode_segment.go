@@ -33,9 +33,8 @@ func (node *StoneNodeService) encodeSegmentsData(ctx context.Context, allocResp 
 		interruptCh    = make(chan struct{})
 		pieces         = make(map[int][][]byte)
 		objectID       = allocResp.GetPieceJob().GetObjectId()
-		payloadSize    = allocResp.GetPieceJob().GetPayloadSize()
 		redundancyType = allocResp.GetPieceJob().GetRedundancyType()
-		segmentCount   = util.ComputeSegmentCount(payloadSize)
+		segmentCount   = util.ComputeSegmentCount(allocResp.GetPieceJob().GetPayloadSize())
 	)
 
 	loadFunc := func(ctx context.Context, seg *segment) error {

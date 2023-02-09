@@ -9,10 +9,11 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/naoina/toml"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	"github.com/naoina/toml"
 )
 
 // TomlSettings - These settings ensure that TOML keys use the same names as Go struct fields.
