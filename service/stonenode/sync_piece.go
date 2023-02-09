@@ -23,6 +23,9 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 	// index represents which number sp in replica or inline type, it stores same two-dimensional slice
 	// the length of pieceData represents the number of segments, SyncPiece is client stream interface, it sends
 	// []byte data one by one, so it can be used to compute syncer server receives correct piece data
+	if len(pieceDataBySecondary) > len(node.syncer) {
+		return merrors.ErrSyncerNumber
+	}
 	for index, pieceData := range pieceDataBySecondary {
 		go func(index int, pieceData [][]byte) {
 			errMsg := &stypes.ErrMessage{}
@@ -96,9 +99,6 @@ func verifyIntegrityHash(pieceData [][]byte, spInfo *stypes.StorageProviderSealI
 // syncPiece send rpc request to secondary storage provider to sync the piece data
 func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *stypes.SyncerInfo,
 	pieceData [][]byte, index int, traceID string) (*stypes.SyncerServiceSyncPieceResponse, error) {
-	if index >= len(node.syncer) {
-		return nil, merrors.ErrSyncerNumber
-	}
 	log.Infow("syncPiece", "index", index, "syncer number", len(node.syncer))
 	stream, err := node.syncer[index].SyncPiece(ctx)
 	if err != nil {
