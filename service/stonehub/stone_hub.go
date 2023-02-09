@@ -263,7 +263,7 @@ func (hub *StoneHub) initDB() error {
 		err    error
 	)
 
-	if jobDB, err = store.NewJobDB(hub.config.JobDBType, hub.config.JobDB); err != nil {
+	if jobDB, err = store.NewJobDB(hub.config.JobDBType, hub.config.JobSqlDBConfig); err != nil {
 		log.Errorw("failed to init jobDB", "err", err)
 		return err
 	}
