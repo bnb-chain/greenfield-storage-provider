@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
@@ -99,7 +98,7 @@ func verifyIntegrityHash(pieceData [][]byte, spInfo *stypes.StorageProviderSealI
 func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *stypes.SyncerInfo,
 	pieceData [][]byte, index int, traceID string) (*stypes.SyncerServiceSyncPieceResponse, error) {
 	if index > len(node.syncer) {
-		return nil, fmt.Errorf("invalid syncer length")
+		return nil, merrors.ErrSyncerNumber
 	}
 	stream, err := node.syncer[index].SyncPiece(ctx)
 	if err != nil {
