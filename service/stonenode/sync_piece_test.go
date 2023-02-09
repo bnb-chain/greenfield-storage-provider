@@ -43,9 +43,44 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 
 	// syncer service stub
 	streamClient := makeStreamMock()
-	syncer := mock.NewMockSyncerAPI(ctrl)
-	node.syncer = syncer
-	syncer.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+	syncer1 := mock.NewMockSyncerAPI(ctrl)
+	node.syncer = append(node.syncer, syncer1)
+	syncer1.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, opts ...grpc.CallOption) (stypes.SyncerService_SyncPieceClient, error) {
+			return streamClient, nil
+		}).AnyTimes()
+
+	syncer2 := mock.NewMockSyncerAPI(ctrl)
+	node.syncer = append(node.syncer, syncer2)
+	syncer2.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, opts ...grpc.CallOption) (stypes.SyncerService_SyncPieceClient, error) {
+			return streamClient, nil
+		}).AnyTimes()
+
+	syncer3 := mock.NewMockSyncerAPI(ctrl)
+	node.syncer = append(node.syncer, syncer3)
+	syncer3.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, opts ...grpc.CallOption) (stypes.SyncerService_SyncPieceClient, error) {
+			return streamClient, nil
+		}).AnyTimes()
+
+	syncer4 := mock.NewMockSyncerAPI(ctrl)
+	node.syncer = append(node.syncer, syncer4)
+	syncer4.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, opts ...grpc.CallOption) (stypes.SyncerService_SyncPieceClient, error) {
+			return streamClient, nil
+		}).AnyTimes()
+
+	syncer5 := mock.NewMockSyncerAPI(ctrl)
+	node.syncer = append(node.syncer, syncer5)
+	syncer5.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, opts ...grpc.CallOption) (stypes.SyncerService_SyncPieceClient, error) {
+			return streamClient, nil
+		}).AnyTimes()
+
+	syncer6 := mock.NewMockSyncerAPI(ctrl)
+	node.syncer = append(node.syncer, syncer6)
+	syncer6.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, opts ...grpc.CallOption) (stypes.SyncerService_SyncPieceClient, error) {
 			return streamClient, nil
 		}).AnyTimes()
@@ -66,7 +101,7 @@ func TestSyncPieceSuccess(t *testing.T) {
 
 	streamClient := makeStreamMock()
 	syncer := mock.NewMockSyncerAPI(ctrl)
-	node.syncer = syncer
+	node.syncer = append(node.syncer, syncer)
 	syncer.EXPECT().SyncPiece(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, opts ...grpc.CallOption) (stypes.SyncerService_SyncPieceClient, error) {
 			return streamClient, nil
@@ -85,7 +120,7 @@ func TestSyncPieceSuccess(t *testing.T) {
 		[]byte("test5"),
 		[]byte("test6"),
 	}
-	resp, err := node.syncPiece(context.TODO(), sInfo, data, "test_traceID")
+	resp, err := node.syncPiece(context.TODO(), sInfo, data, 0, "test_traceID")
 	assert.Equal(t, err, nil)
 	assert.Equal(t, resp.GetTraceId(), "test_traceID")
 	assert.Equal(t, resp.GetSecondarySpInfo().GetPieceIdx(), uint32(1))

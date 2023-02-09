@@ -34,6 +34,7 @@ Service = [
         FileHandles = 1000
         ReadOnly = false
 
+
 [DownloaderCfg]
     Address = "127.0.0.1:9233"
     [DownloaderCfg.PieceStoreConfig]
@@ -62,11 +63,12 @@ Service = [
         FileHandles = 1000
         ReadOnly = false
 
+
 [StoneNodeCfg]
     StorageProvider = "bnb-sp"
     Address = "127.0.0.1:9433"
     StoneHubServiceAddress = "127.0.0.1:9333"
-    SyncerServiceAddress = "127.0.0.1:9533"
+    SyncerServiceAddress = ["127.0.0.1:9533", "127.0.0.1:9543", "127.0.0.1:9553", "127.0.0.1:9563", "127.0.0.1:9573", "127.0.0.1:9583"]
     StoneJobLimit = 64
     [StoneNodeCfg.PieceConfig]
         Shards = 0
