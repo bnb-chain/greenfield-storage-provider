@@ -18,7 +18,7 @@ type SyncerConfig struct {
 }
 
 var DefaultSyncerConfig = &SyncerConfig{
-	Address:           "127.0.0.1:5324",
+	Address:           "127.0.0.1:9533",
 	StorageProvider:   "bnb-sp",
 	MetaDBType:        model.LevelDB,
 	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,

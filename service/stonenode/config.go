@@ -12,9 +12,9 @@ type StoneNodeConfig struct {
 }
 
 var DefaultStoneNodeConfig = &StoneNodeConfig{
-	Address:                "127.0.0.1:5325",
-	StoneHubServiceAddress: "127.0.0.1:5323",
-	SyncerServiceAddress:   []string{"127.0.0.1:5324", "127.0.0.1:5424", "127.0.0.1:5524", "127.0.0.1:5624", "127.0.0.1:5724", "127.0.0.1:5824"},
+	Address:                "127.0.0.1:9433",
+	StoneHubServiceAddress: "127.0.0.1:9333",
+	SyncerServiceAddress:   []string{"127.0.0.1:9533", "127.0.0.1:9543", "127.0.0.1:9553", "127.0.0.1:9563", "127.0.0.1:9573", "127.0.0.1:9583"},
 	StorageProvider:        "bnb-sp",
 	PieceConfig:            storage.DefaultPieceStoreConfig,
 	StoneJobLimit:          64,
