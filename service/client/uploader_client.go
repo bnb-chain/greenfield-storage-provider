@@ -54,17 +54,17 @@ func (client *UploaderClient) UploadPayload(ctx context.Context, opts ...grpc.Ca
 	return client.uploader.UploadPayload(ctx, opts...)
 }
 
-// GetAuthentication invoke uploader service GetAuthentication interface.
-func (client *UploaderClient) GetAuthentication(ctx context.Context, in *stypes.UploaderServiceGetAuthenticationRequest,
-	opts ...grpc.CallOption) (*stypes.UploaderServiceGetAuthenticationResponse, error) {
-	resp, err := client.uploader.GetAuthentication(ctx, in, opts...)
+// GetApproval invoke uploader service GetApproval interface.
+func (client *UploaderClient) GetApproval(ctx context.Context, in *stypes.UploaderServiceGetApprovalRequest,
+	opts ...grpc.CallOption) (*stypes.UploaderServiceGetApprovalResponse, error) {
+	resp, err := client.uploader.GetApproval(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
-		log.CtxErrorw(ctx, "send get authentication rpc failed", "error", err)
+		log.CtxErrorw(ctx, "send get approval rpc failed", "error", err)
 		return nil, err
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-		log.CtxErrorw(ctx, "get authentication response code is not success", "error", resp.GetErrMessage().GetErrMsg())
+		log.CtxErrorw(ctx, "get approval response code is not success", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	return resp, nil
