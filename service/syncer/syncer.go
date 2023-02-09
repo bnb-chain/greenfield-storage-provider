@@ -20,7 +20,7 @@ import (
 // Syncer synchronizes ec data to piece store
 type Syncer struct {
 	config  *SyncerConfig
-	name    int
+	name    string
 	store   client.PieceStoreAPI
 	metaDB  metadb.MetaDB // storage provider meta db
 	running atomic.Bool
