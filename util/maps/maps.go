@@ -26,8 +26,8 @@ func sortSlice[T constraints.Ordered](s []T) {
 func ValueToSlice[M ~map[K]V, K constraints.Ordered, V any](m M) []V {
 	keys := SortKeys(m)
 	s := make([]V, len(m))
-	for index, key := range keys {
-		s[index] = m[key]
+	for i, k := range keys {
+		s[i] = m[k]
 	}
 	return s
 }
