@@ -24,6 +24,12 @@ var (
 	ErrObjectTxNotExist = errors.New("object tx not exist")
 	ErrObjectNotExist   = errors.New("object not exist")
 	ErrObjectIsEmpty    = errors.New("object payload is empty")
+
+	// signature error
+	ErrAuthorizationFormat = errors.New("authorization format error")
+	ErrRequestConsistent   = errors.New("request consistent check failed")
+	ErrSignatureConsistent = errors.New("signature consistent check failed")
+	ErrUnsupportedSignType = errors.New("unsupported signature type")
 )
 
 // stone hub service errors

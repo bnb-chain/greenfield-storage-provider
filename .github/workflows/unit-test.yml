@@ -18,6 +18,9 @@ jobs:
         go-version: [1.19.x]
         os: [ubuntu-20.04]
     runs-on: ${{ matrix.os }}
+    env:
+      GOPRIVATE: github.com/bnb-chain
+      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
     steps:
       - name: Install Go
         uses: actions/setup-go@v3
@@ -50,6 +53,9 @@ jobs:
             go@v1.28.0 go-grpc@v1.2.0
           bufArgs:
             generate
+
+      - name: Setup GitHub Token
+        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
 
       - name: Unit Test
         run: |
