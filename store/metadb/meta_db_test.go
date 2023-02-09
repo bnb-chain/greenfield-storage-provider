@@ -13,7 +13,7 @@ import (
 func Test_IntegrityMeta_Json_Marshal_Unmarshal(t *testing.T) {
 	meta := &IntegrityMeta{
 		ObjectID:       1,
-		PieceIdx:       1,
+		EcIdx:          1,
 		RedundancyType: ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE,
 	}
 	data, err := json.Marshal(meta)

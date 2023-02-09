@@ -356,11 +356,12 @@ func (uploader *Uploader) checkAndPrepareMeta(sr *streamReader, txHash []byte) (
 
 	meta, err := uploader.metaDB.GetUploadPayloadAskingMeta(objectInfo.BucketName, objectInfo.ObjectName)
 	if err != nil {
-		log.Errorw("failed to query metaDB", "bucket", objectInfo.BucketName, "object", objectInfo.ObjectName, "error", err)
+		log.Errorw("failed to query metaDB", "bucketName", objectInfo.BucketName,
+			"objectName", objectInfo.ObjectName, "error", err)
 		return nil, err
 	}
 	if time.Now().Unix() > meta.Timeout {
-		err = errors.New("auth info has timeout")
+		err = errors.New("approval info has timeout")
 		return nil, err
 	}
 	resp, err := uploader.stoneHub.BeginUploadPayloadV2(context.Background(), &stypes.StoneHubServiceBeginUploadPayloadV2Request{
