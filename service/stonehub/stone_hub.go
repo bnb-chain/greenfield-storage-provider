@@ -26,9 +26,9 @@ import (
 
 var (
 	// GCMemoryTimer define the period of GC memory stone.
-	GCMemoryTimer = 60 * 60
+	GCMemoryTimer = 10 * 60
 	// GCDBTimer define the period of GC DB.
-	GCDBTimer = 24 * 60 * 60
+	GCDBTimer = 60 * 60
 	// JobChannelSize define the size of receive stone job channel
 	JobChannelSize = 100
 	// GcChannelSize define the size of gc stone channel
@@ -46,15 +46,16 @@ var _ lifecycle.Service = &StoneHub{}
 
 // StoneHub manage all stones, the stone is an abstraction of job context and fsm.
 type StoneHub struct {
-	config   *StoneHubConfig
-	jobDB    spdb.JobDBV2        // store the stones(include job and fsm) context
-	metaDB   spdb.MetaDB         // store the storage provider meta
-	stone    sync.Map            // hold all the running stones, goroutine safe
-	jobQueue *lane.Queue         // hold the stones that wait to be requested by stone node service
-	jobCh    chan stone.StoneJob // stone receive channel
-	gcCh     chan uint64         // notify stone hub delete the stone channel
-	stopCh   chan struct{}
-	running  atomic.Bool
+	config    *StoneHubConfig
+	jobDB     spdb.JobDBV2        // store the stones(include job and fsm) context
+	metaDB    spdb.MetaDB         // store the storage provider meta
+	stone     sync.Map            // hold all the running stones, goroutine safe
+	jobQueue  *lane.Queue         // hold the stones that wait to be requested by stone node service
+	jobCh     chan stone.StoneJob // stone receive channel
+	gcCh      chan uint64         // notify stone hub delete the stone channel
+	stopCh    chan struct{}
+	running   atomic.Bool
+	gcRunning atomic.Bool
 
 	// TODO::temporary mock interface, need to wait for the final version.
 	insCli *mock.InscriptionChainMock
@@ -81,6 +82,9 @@ func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
 	if err := hub.initDB(); err != nil {
 		return nil, err
 	}
+	if err := hub.loadStone(); err != nil {
+		return nil, err
+	}
 	return hub, nil
 }
 
@@ -100,11 +104,6 @@ func (hub *StoneHub) Start(ctx context.Context) error {
 		hub.insCli.Start()
 		go hub.listenChain()
 	}
-
-	// TODO:: scan db load the unfinished stone
-	// if err := hub.LoadDB(); err != nil {
-	// 		return err
-	// }
 
 	// start background task and rpc service
 	go hub.eventLoop()
@@ -166,8 +165,7 @@ func (hub *StoneHub) eventLoop() {
 		case <-gcMemTicker.C:
 			go hub.gcMemoryStone()
 		case <-gcDBTicker.C:
-			// TODO::gc the abandoned task by scan db
-			// go hub.gcDBStone()
+			go hub.gcDBStone()
 			// TODO::retry the timeout stone
 			//case <-retryTicker.C:
 			//	hub.stoneRetry()
@@ -203,7 +201,7 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 	}
 }
 
-// gcMemoryStone scan the memory stone and garbage collect the abandoned stone.
+// gcMemoryStone iterate the memory stone and garbage collect the abandoned stone.
 func (hub *StoneHub) gcMemoryStone() {
 	current := time.Now().Add(time.Second * -1 * time.Duration(GCMemoryTimer)).Unix()
 	hub.stone.Range(func(key, value any) bool {
@@ -218,6 +216,35 @@ func (hub *StoneHub) gcMemoryStone() {
 		}
 		return true
 	})
+}
+
+// gcDBStone iterate the db stone and garbage collect the zombie stone.
+func (hub *StoneHub) gcDBStone() {
+	if hub.gcRunning.Swap(true) {
+		log.Errorw("gc stone db is running")
+	}
+	defer hub.gcRunning.Swap(false)
+	it := hub.jobDB.NewIterator(0)
+	defer it.Release()
+	for {
+		if !it.Next() {
+			break
+		}
+		if err := it.Error(); err != nil {
+			log.Warnw("iterate stone err", "error", err)
+			return
+		}
+		job := it.Value().(*ptypes.JobContext)
+		if job == nil {
+			continue
+		}
+		if job.GetJobState() == ptypes.JobState_JOB_STATE_SEAL_OBJECT_DONE {
+			hub.jobDB.DeleteJobV2(job.GetJobId())
+		}
+		if len(job.GetJobErr()) != 0 {
+			hub.jobDB.DeleteJobV2(job.GetJobId())
+		}
+	}
 }
 
 // listenInscription listen to the subscribe events of green field chain.
@@ -252,6 +279,49 @@ func (hub *StoneHub) listenChain() {
 			return
 		}
 	}
+}
+
+// LoadStone read all stone form db and add stone hub.
+func (hub *StoneHub) loadStone() error {
+	if hub.gcRunning.Swap(true) {
+		return errors.New("gc stone db is running")
+	}
+	defer hub.gcRunning.Swap(false)
+	it := hub.jobDB.NewIterator(0)
+	defer it.Release()
+	for {
+		if !it.Next() {
+			break
+		}
+		if err := it.Error(); err != nil {
+			log.Warnw("iterate stone err", "error", err)
+			return err
+		}
+		job := it.Value().(*ptypes.JobContext)
+		if job == nil {
+			continue
+		}
+		if len(job.GetJobErr()) != 0 {
+			continue
+		}
+		if job.GetJobState() == ptypes.JobState_JOB_STATE_SEAL_OBJECT_DONE {
+			continue
+		}
+		object, objErr := hub.jobDB.GetObjectInfoByJobV2(job.GetJobId())
+		if objErr != nil {
+			log.Errorw("load stone get object err", "job_id", job.GetJobId(), "error", objErr)
+			continue
+		}
+		st, stErr := stone.NewUploadPayloadStone(context.Background(), job, object,
+			hub.jobDB, hub.metaDB, hub.jobCh, hub.gcCh)
+		if stErr != nil {
+			log.Errorw("load stone err", "job_id", job.GetJobId(),
+				"object_id", object.GetObjectId(), "error", stErr)
+			continue
+		}
+		hub.SetStoneExclude(st)
+	}
+	return nil
 }
 
 // initDB init job, meta, etc. db instance

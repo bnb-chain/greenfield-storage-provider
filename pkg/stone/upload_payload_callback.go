@@ -27,12 +27,10 @@ import (
 
 // EnterStateUploadPrimaryInit is called when enter JOB_STATE_UPLOAD_PRIMARY_INIT
 func EnterStateUploadPrimaryInit(ctx context.Context, event *fsm.Event) {
-	// return
 }
 
 // EnterStateUploadPrimaryDoing is called when enter JOB_STATE_UPLOAD_PRIMARY_DOING
 func EnterStateUploadPrimaryDoing(ctx context.Context, event *fsm.Event) {
-	// return
 }
 
 // AfterUploadPrimaryPieceDone is called when primary piece job is done,
@@ -56,7 +54,6 @@ func AfterUploadPrimaryPieceDone(ctx context.Context, event *fsm.Event) {
 		return
 	}
 	err = stone.job.DonePrimarySPJob(pieceInfo)
-	// return
 }
 
 // EnterUploadPrimaryDone is called when upload primary storage provider is completed,
@@ -68,7 +65,6 @@ func EnterUploadPrimaryDone(ctx context.Context, event *fsm.Event) {
 		log.CtxErrorw(ctx, "update primary done job state error", "error", err)
 		return
 	}
-	// return
 }
 
 // EnterUploadSecondaryInit is called when enter JOB_STATE_UPLOAD_SECONDARY_INIT
@@ -79,12 +75,10 @@ func EnterUploadSecondaryInit(ctx context.Context, event *fsm.Event) {
 		return
 	}
 	stone.jobCh <- secondaryJob
-	// return
 }
 
 // EnterUploadSecondaryDoing is called when enter JOB_STATE_UPLOAD_SECONDARY_DOING
 func EnterUploadSecondaryDoing(ctx context.Context, event *fsm.Event) {
-	// return
 }
 
 // AfterUploadSecondaryPieceDone is called when secondary piece job is done,
@@ -110,7 +104,6 @@ func AfterUploadSecondaryPieceDone(ctx context.Context, event *fsm.Event) {
 	if interruptErr = stone.job.DoneSecondarySPJob(pieceInfo); interruptErr != nil {
 		return
 	}
-	// return
 }
 
 // EnterUploadSecondaryDone is called when upload secondary storage providers is completed,
@@ -122,7 +115,6 @@ func EnterUploadSecondaryDone(ctx context.Context, event *fsm.Event) {
 		log.CtxErrorw(ctx, "update primary done job state error", "error", err)
 		return
 	}
-	// return
 }
 
 // SealObjectJob defines the job to transfer StoneHub
@@ -177,12 +169,10 @@ func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 		SecondarySealInfo: secondarySealInfo,
 	}
 	stone.jobCh <- job
-	// return
 }
 
 // EnterSealObjectDoing is called when enter JOB_STATE_SEAL_OBJECT_DOING,
 func EnterSealObjectDoing(ctx context.Context, event *fsm.Event) {
-	// return
 }
 
 // EnterSealObjectDone is called when enter JOB_STATE_SEAL_OBJECT_DONE,
@@ -194,7 +184,6 @@ func EnterSealObjectDone(ctx context.Context, event *fsm.Event) {
 		log.CtxErrorw(ctx, "update seal object done job state error", "error", err)
 		return
 	}
-	// return
 }
 
 // AfterInterrupt is called when call InterruptStone,
@@ -203,11 +192,9 @@ func AfterInterrupt(ctx context.Context, event *fsm.Event) {
 	stone := ctx.Value(CtxStoneKey).(*UploadPayloadStone)
 	log.CtxErrorw(ctx, "interrupt stone fsm", "error", stone.jobCtx.JobErr())
 	stone.gcCh <- stone.StoneKey()
-	// return
 }
 
 // ShowStoneInfo is call before and after event,
 // TBO::use for debugging, inspect, statistics, etc.
 func ShowStoneInfo(ctx context.Context, event *fsm.Event) {
-	// return
 }
