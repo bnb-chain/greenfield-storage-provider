@@ -178,6 +178,8 @@ func (db *MemJobDB) SetSecondaryPieceJobDoneV2(objectID uint64, piece *spdb.Piec
 
 // DeleteJobV2 delete job by id, delete the related object and piece jobs.
 func (db *MemJobDB) DeleteJobV2(jobId uint64) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
 	delete(db.JobTable, jobId)
 	objectID, ok := db.JobToObject[jobId]
 	if !ok {
