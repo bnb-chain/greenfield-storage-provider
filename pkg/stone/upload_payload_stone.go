@@ -3,13 +3,12 @@ package stone
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/looplab/fsm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/job"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 
@@ -35,14 +34,14 @@ type UploadPayloadStone struct {
 	job    *job.UploadPayloadJob  // records the upload payload job information
 	jobCh  chan StoneJob          // the channel of transfer job to StoneHub
 	gcCh   chan uint64            // the channel of notify StoneHub to delete stone
-	jobDB  jobdb.JobDBV2
-	metaDB metadb.MetaDB
+	jobDB  spdb.JobDBV2
+	metaDB spdb.MetaDB
 }
 
 // NewUploadPayloadStone return the instance of UploadPayloadStone
 func NewUploadPayloadStone(ctx context.Context,
 	jobContext *ptypes.JobContext, object *ptypes.ObjectInfo,
-	jobDB jobdb.JobDBV2, metaDB metadb.MetaDB,
+	jobDB spdb.JobDBV2, metaDB spdb.MetaDB,
 	jobCh chan StoneJob, gcCh chan uint64) (*UploadPayloadStone, error) {
 	jobCtx := NewJobContextWrapper(jobContext, jobDB, metaDB)
 	objectCtx := job.NewObjectInfoContext(object, jobDB, metaDB)

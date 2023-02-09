@@ -24,7 +24,7 @@ func InitEnv(rType ptypes.RedundancyType) (*UploadPayloadJob, *ptypes.ObjectInfo
 		ObjectId:       1,
 		RedundancyType: rType,
 	}
-	job, _ := NewUploadPayloadJob(NewObjectInfoContext(object, jobmemory.NewMemJobDBV2(), nil))
+	job, _ := NewUploadPayloadJob(NewObjectInfoContext(object, jobmemory.NewMemJobDB(), nil))
 	return job, object
 }
 

@@ -6,21 +6,20 @@ import (
 	"time"
 
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 )
 
 // JobContextWrapper maintain job context, goroutine safe
 type JobContextWrapper struct {
 	jobCtx *ptypes.JobContext
 	jobErr error
-	jobDB  jobdb.JobDBV2
-	metaDB metadb.MetaDB
+	jobDB  spdb.JobDBV2
+	metaDB spdb.MetaDB
 	mu     sync.RWMutex
 }
 
 // NewJobContextWrapper return the instance of JobContextWrapper
-func NewJobContextWrapper(jobCtx *ptypes.JobContext, jobDB jobdb.JobDBV2, metaDB metadb.MetaDB) *JobContextWrapper {
+func NewJobContextWrapper(jobCtx *ptypes.JobContext, jobDB spdb.JobDBV2, metaDB spdb.MetaDB) *JobContextWrapper {
 	return &JobContextWrapper{
 		jobCtx: jobCtx,
 		jobDB:  jobDB,

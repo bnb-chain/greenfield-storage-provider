@@ -12,7 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -20,7 +20,7 @@ import (
 type Challenge struct {
 	config     *ChallengeConfig
 	name       string
-	metaDB     metadb.MetaDB // storage provider meta db
+	metaDB     spdb.MetaDB // storage provider meta db
 	pieceStore *client.StoreClient
 }
 
@@ -37,7 +37,7 @@ func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err err
 // initDB init related client resource.
 func (challenge *Challenge) initDB() error {
 	var (
-		metaDB metadb.MetaDB
+		metaDB spdb.MetaDB
 		err    error
 	)
 

@@ -20,8 +20,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/stone"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -48,8 +47,8 @@ var _ lifecycle.Service = &StoneHub{}
 // StoneHub manage all stones, the stone is an abstraction of job context and fsm.
 type StoneHub struct {
 	config   *StoneHubConfig
-	jobDB    jobdb.JobDBV2       // store the stones(include job and fsm) context
-	metaDB   metadb.MetaDB       // store the storage provider meta
+	jobDB    spdb.JobDBV2        // store the stones(include job and fsm) context
+	metaDB   spdb.MetaDB         // store the storage provider meta
 	stone    sync.Map            // hold all the running stones, goroutine safe
 	jobQueue *lane.Queue         // hold the stones that wait to be requested by stone node service
 	jobCh    chan stone.StoneJob // stone receive channel
@@ -258,8 +257,8 @@ func (hub *StoneHub) listenChain() {
 // initDB init job, meta, etc. db instance
 func (hub *StoneHub) initDB() error {
 	var (
-		jobDB  jobdb.JobDBV2
-		metaDB metadb.MetaDB
+		jobDB  spdb.JobDBV2
+		metaDB spdb.MetaDB
 		err    error
 	)
 

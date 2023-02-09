@@ -3,12 +3,12 @@ package stone
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/looplab/fsm"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -156,7 +156,7 @@ func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 	// write integrity meta to db
 	objectInfo := stone.GetObjectInfo()
 	primarySealInfo := primarySealInfos[0]
-	integrityInfo := &metadb.IntegrityMeta{
+	integrityInfo := &spdb.IntegrityMeta{
 		ObjectID:       objectInfo.GetObjectId(),
 		IsPrimary:      true,
 		RedundancyType: objectInfo.GetRedundancyType(),

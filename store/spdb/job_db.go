@@ -1,4 +1,4 @@
-package jobdb
+package spdb
 
 import (
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
@@ -50,8 +50,9 @@ type JobDB interface {
 type JobDBV2 interface {
 	CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, error)
 
-	GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error)
 	GetJobContextV2(jobId uint64) (*ptypes.JobContext, error)
+	GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error)
+	GetObjectInfoByJobV2(JobID uint64) (*ptypes.ObjectInfo, error)
 
 	SetUploadPayloadJobStateV2(jobId uint64, state string, timestamp int64) error
 	SetUploadPayloadJobJobErrorV2(jobID uint64, jobState string, jobErr string, timestamp int64) error
@@ -60,4 +61,9 @@ type JobDBV2 interface {
 	GetSecondaryJobV2(objectID uint64) ([]*PieceJob, error)
 	SetPrimaryPieceJobDoneV2(objectID uint64, piece *PieceJob) error
 	SetSecondaryPieceJobDoneV2(objectID uint64, piece *PieceJob) error
+
+	DeleteJobV2(jobId uint64) error
+
+	Iteratee
+	Batcher
 }

@@ -6,18 +6,17 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobmemory"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobsql"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metalevel"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 )
 
 // NewMetaDB return a meta-db instance
-func NewMetaDB(dbType string, levelDBConfig *config.LevelDBConfig, sqlDBConfig *config.SqlDBConfig) (metadb.MetaDB, error) {
+func NewMetaDB(dbType string, levelDBConfig *config.LevelDBConfig, sqlDBConfig *config.SqlDBConfig) (spdb.MetaDB, error) {
 	var (
-		metaDB metadb.MetaDB
+		metaDB spdb.MetaDB
 		err    error
 	)
 
@@ -36,9 +35,9 @@ func NewMetaDB(dbType string, levelDBConfig *config.LevelDBConfig, sqlDBConfig *
 }
 
 // NewJobDB return a job-db instance
-func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (jobdb.JobDBV2, error) {
+func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (spdb.JobDBV2, error) {
 	var (
-		jobDB jobdb.JobDBV2
+		jobDB spdb.JobDBV2
 		err   error
 	)
 

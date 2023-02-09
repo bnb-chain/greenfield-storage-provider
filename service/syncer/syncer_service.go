@@ -2,13 +2,14 @@ package syncer
 
 import (
 	"context"
+	"errors"
 	"io"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
@@ -16,7 +17,7 @@ import (
 // SyncPiece syncs piece data to secondary storage provider
 func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	var count uint32
-	var integrityMeta *metadb.IntegrityMeta
+	var integrityMeta *spdb.IntegrityMeta
 	var spID string
 	var value []byte
 	pieceHash := make([][]byte, 0)
@@ -62,9 +63,24 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	}
 }
 
-func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.StorageProviderSealInfo {
+func (s *Syncer) setIntegrityMeta(db spdb.MetaDB, meta *spdb.IntegrityMeta) error {
+	if err := db.SetIntegrityMeta(meta); err != nil {
+		log.Errorw("set integrity meta error", "error", err)
+		return err
+	}
+	return nil
+}
+
+func generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) *stypes.StorageProviderSealInfo {
+	//keys := util.GenericSortedKeys(integrityMeta.PieceHash)
 	pieceHash := integrityMeta.PieceHash
-	integrityHash := hash.GenerateIntegrityHash(pieceHash)
+	pieceChecksumList := make([][]byte, 0)
+	// var integrityHash []byte
+	//for _, key := range keys {
+	//	value := integrityMeta.PieceHash[key]
+	//	pieceChecksumList = append(pieceChecksumList, value)
+	//}
+	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
 	resp := &stypes.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          integrityMeta.EcIdx,
@@ -75,16 +91,19 @@ func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.
 	return resp
 }
 
-func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, count uint32) (*metadb.IntegrityMeta, []byte, error) {
+func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, count uint32) (*spdb.IntegrityMeta, []byte, error) {
+	if len(req.GetPieceData()) != 1 {
+		return nil, nil, errors.New("the length of piece data map is not equal to 1")
+	}
+
 	redundancyType := req.GetSyncerInfo().GetRedundancyType()
-	objectID := req.GetSyncerInfo().GetObjectId()
-	integrityMeta := &metadb.IntegrityMeta{
-		ObjectID:       objectID,
+	integrityMeta := &spdb.IntegrityMeta{
+		ObjectID:       req.GetSyncerInfo().GetObjectId(),
 		PieceCount:     req.GetSyncerInfo().GetPieceCount(),
 		IsPrimary:      false,
 		RedundancyType: redundancyType,
 	}
-	key, pieceIndex, err := encodePieceKey(redundancyType, objectID, count, req.GetSyncerInfo().GetPieceIndex())
+	key, pieceIndex, err := encodePieceKey(redundancyType, req.GetSyncerInfo().GetObjectId(), count, req.GetSyncerInfo().GetPieceIndex())
 	if err != nil {
 		return nil, nil, err
 	}
