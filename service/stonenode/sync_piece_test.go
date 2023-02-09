@@ -2,7 +2,6 @@ package stonenode
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -25,7 +24,7 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	}{
 		{
 			name: "1",
-			req1: dispatchECPiece(),
+			req1: list,
 		},
 	}
 
@@ -38,7 +37,7 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	stoneHub.EXPECT().DoneSecondaryPieceJob(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, in *stypes.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (
 			*stypes.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
-			return nil, errors.New("test")
+			return nil, nil
 		}).AnyTimes()
 
 	// syncer service stub
