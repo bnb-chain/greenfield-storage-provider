@@ -44,10 +44,13 @@ type objectInfo struct {
 	eTag string
 }
 
-type getAuthenticationOption struct {
+// getApprovalOption is the getApproval Option.
+type getApprovalOption struct {
 	requestContext *requestContext
 }
-type authenticationInfo struct {
+
+// approvalInfo is the return of getApproval
+type approvalInfo struct {
 	preSignature []byte
 }
 
@@ -142,9 +145,9 @@ func (up *uploadProcessor) putObject(objectName string, reader io.Reader, option
 	return &objectInfo{eTag: md5Value, size: size}, nil
 }
 
-// getAuthentication is used to call uploaderService's getAuthentication by grpc.
-func (up *uploadProcessor) getAuthentication(option *getAuthenticationOption) (*authenticationInfo, error) {
-	resp, err := up.uploader.GetAuthentication(context.Background(), &stypes.UploaderServiceGetAuthenticationRequest{
+// getApproval is used to call uploaderService's getApproval by grpc.
+func (up *uploadProcessor) getApproval(option *getApprovalOption) (*approvalInfo, error) {
+	resp, err := up.uploader.GetApproval(context.Background(), &stypes.UploaderServiceGetApprovalRequest{
 		TraceId: option.requestContext.requestID,
 		Bucket:  option.requestContext.bucketName,
 		Object:  option.requestContext.objectName,
@@ -154,7 +157,7 @@ func (up *uploadProcessor) getAuthentication(option *getAuthenticationOption) (*
 		log.Warnw("failed to rpc to uploader", "err", err)
 		return nil, errors.ErrInternalError
 	}
-	return &authenticationInfo{preSignature: resp.PreSignature}, nil
+	return &approvalInfo{preSignature: resp.PreSignature}, nil
 }
 
 // putObjectV2 copy from putObject.
