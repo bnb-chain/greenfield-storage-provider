@@ -28,17 +28,17 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		Path("/{object:.+}").
 		Queries(model.TransactionQuery, "").
 		HandlerFunc(g.putObjectTxHandler)
+	//bucketRouter.NewRoute().
+	//	Name("PutObject").
+	//	Methods(http.MethodPut).
+	//	Path("/{object:.+}").
+	//	Queries(model.PutObjectV2Query, "").
+	//	HandlerFunc(g.putObjectV2Handler)
 	bucketRouter.NewRoute().
 		Name("PutObject").
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
-		Queries(model.PutObjectV2Query, "").
 		HandlerFunc(g.putObjectV2Handler)
-	bucketRouter.NewRoute().
-		Name("PutObject").
-		Methods(http.MethodPut).
-		Path("/{object:.+}").
-		HandlerFunc(g.putObjectHandler)
 	bucketRouter.NewRoute().
 		Name("CreateBucket").
 		Methods(http.MethodPut).
@@ -50,22 +50,24 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		HandlerFunc(g.getObjectHandler)
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
+	// todo: delete it in future
+	_ = g.putObjectHandler
 	// admin router, path style.
 	/*
 		adminRouter := r.PathPrefix(AdminPath).Subrouter()
 		adminRouter.NewRoute().
-			Name("GetAuthentication").
+			Name("GetApproval").
 			Path(GetApprovalSubPath).
 			Methods(http.MethodGet).
 			Queries(ActionQuery, "{action}").
-			HandlerFunc(g.getAuthenticationHandler)
+			HandlerFunc(g.getApprovalHandler)
 		adminRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 	*/
 	r.Path(model.AdminPath+model.GetApprovalSubPath).
-		Name("GetAuthentication").
+		Name("GetApproval").
 		Methods(http.MethodGet).
 		Queries(model.ActionQuery, "{action}").
-		HandlerFunc(g.getAuthenticationHandler)
+		HandlerFunc(g.getApprovalHandler)
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }
