@@ -99,6 +99,7 @@ func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *stypes.
 	if index > len(node.syncer) {
 		return nil, merrors.ErrSyncerNumber
 	}
+	log.Infow("syncPiece", "index", index, "syncer number", len(node.syncer))
 	stream, err := node.syncer[index].SyncPiece(ctx)
 	if err != nil {
 		log.Errorw("sync secondary piece job error", "err", err)
