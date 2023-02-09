@@ -28,7 +28,7 @@ func setUp(t *testing.T, storageType, bucketURL string) (*piece.PieceStore, erro
 			MaxRetries:            5,
 			MinRetryDelay:         0,
 			TlsInsecureSkipVerify: false,
-			TestMode:              true,
+			TestMode:              false,
 		},
 	})
 }

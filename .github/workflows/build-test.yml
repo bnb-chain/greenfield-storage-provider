@@ -58,7 +58,7 @@ jobs:
 
     - name: Test Build
       run: |
-        bash build.sh
+        make build
 
 #  build-test-success:
 #    needs: build-test
