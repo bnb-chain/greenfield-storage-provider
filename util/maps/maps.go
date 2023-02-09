@@ -22,13 +22,12 @@ func sortSlice[T constraints.Ordered](s []T) {
 	})
 }
 
-// ValueToSlice convert values of a map to a slice
+// ValueToSlice convert values of a map to a slice in order
 func ValueToSlice[M ~map[K]V, K constraints.Ordered, V any](m M) []V {
 	keys := SortKeys(m)
-	valueSlice := make([]V, 0)
-	for _, key := range keys {
-		value := m[key]
-		valueSlice = append(valueSlice, value)
+	s := make([]V, len(m))
+	for i, k := range keys {
+		s[i] = m[k]
 	}
-	return valueSlice
+	return s
 }

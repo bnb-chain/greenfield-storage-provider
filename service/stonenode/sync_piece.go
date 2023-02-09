@@ -52,7 +52,7 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 				PieceIndex:        uint32(index),
 				PieceCount:        uint32(len(pieceData)),
 				RedundancyType:    redundancyType,
-			}, pieceData, resp.GetTraceId())
+			}, pieceData, index, resp.GetTraceId())
 			// TBD:: retry alloc secondary sp and rat again.
 			if err != nil {
 				log.CtxErrorw(ctx, "sync to secondary piece job failed", "error", err)
@@ -96,8 +96,11 @@ func verifyIntegrityHash(pieceData [][]byte, spInfo *stypes.StorageProviderSealI
 
 // syncPiece send rpc request to secondary storage provider to sync the piece data
 func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *stypes.SyncerInfo,
-	pieceData [][]byte, traceID string) (*stypes.SyncerServiceSyncPieceResponse, error) {
-	stream, err := node.syncer.SyncPiece(ctx)
+	pieceData [][]byte, index int, traceID string) (*stypes.SyncerServiceSyncPieceResponse, error) {
+	if index > len(node.syncer) {
+		return nil, merrors.ErrSyncerNumber
+	}
+	stream, err := node.syncer[index].SyncPiece(ctx)
 	if err != nil {
 		log.Errorw("sync secondary piece job error", "err", err)
 		return nil, err

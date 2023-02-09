@@ -8,6 +8,6 @@ type DownloaderConfig struct {
 }
 
 var DefaultDownloaderConfig = &DownloaderConfig{
-	Address:          "127.0.0.1:5523",
+	Address:          "127.0.0.1:9233",
 	PieceStoreConfig: storage.DefaultPieceStoreConfig,
 }

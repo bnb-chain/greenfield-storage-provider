@@ -31,7 +31,7 @@ func DefaultStorageProviderID() string {
 
 var DefaultStoneHubConfig = &StoneHubConfig{
 	StorageProvider:   DefaultStorageProviderID(),
-	Address:           "127.0.0.1:5323",
+	Address:           "127.0.0.1:9333",
 	JobDBType:         model.MemoryDB,
 	JobDB:             jobsql.DefaultJobSqlDBConfig,
 	MetaDBType:        model.LevelDB,
