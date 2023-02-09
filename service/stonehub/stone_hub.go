@@ -26,7 +26,7 @@ import (
 
 var (
 	// GCMemoryTimer define the period of GC memory stone.
-	GCMemoryTimer = 10 * 60
+	GCMemoryTimer = 60 * 60
 	// GCDBTimer define the period of GC DB.
 	GCDBTimer = 60 * 60
 	// JobChannelSize define the size of receive stone job channel
@@ -206,11 +206,7 @@ func (hub *StoneHub) gcMemoryStone() {
 	current := time.Now().Add(time.Second * -1 * time.Duration(GCMemoryTimer)).Unix()
 	hub.stone.Range(func(key, value any) bool {
 		val := value.(Stone)
-		state, err := val.GetStoneState()
-		if err != nil {
-			return true // skip err stone
-		}
-		if val.LastModifyTime() <= current || state == ptypes.JOB_STATE_ERROR {
+		if val.LastModifyTime() <= current {
 			log.Infow("gc memory stone", "object_id", key)
 			hub.stone.Delete(key)
 		}
@@ -273,7 +269,7 @@ func (hub *StoneHub) listenChain() {
 				log.Infow("receive seal event, seal done fsm error", "object_id", object.GetObjectId())
 				break
 			}
-			hub.stone.Delete(object.GetObjectId())
+			hub.DeleteStone(object.GetObjectId())
 			//TODO::delete secondary integrity hash in metadb
 		case <-hub.stopCh:
 			return
@@ -365,6 +361,11 @@ func (hub *StoneHub) GetStone(stoneKey uint64) Stone {
 		return nil
 	}
 	return st.(Stone)
+}
+
+// DeleteStone delete stone from memory.
+func (hub *StoneHub) DeleteStone(stoneKey uint64) {
+	hub.stone.Delete(stoneKey)
 }
 
 // SetStoneExclude set the stone, returns false if already exists

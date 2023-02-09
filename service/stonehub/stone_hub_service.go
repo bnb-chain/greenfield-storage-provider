@@ -183,6 +183,7 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context, req *stypes.StoneH
 	}
 	interruptErr = uploadStone.ActionEvent(ctx, stone.UploadPrimaryPieceDoneEvent, req.PieceJob)
 	if interruptErr != nil {
+		hub.DeleteStone(uploadStone.StoneKey())
 		return resp, nil
 	}
 	return resp, nil
@@ -262,6 +263,7 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context, req *stypes.Ston
 		return resp, nil
 	}
 	if interruptErr = uploadStone.ActionEvent(ctx, stone.UploadSecondaryPieceDoneEvent, req.PieceJob); interruptErr != nil {
+		hub.DeleteStone(uploadStone.StoneKey())
 		return resp, nil
 	}
 	return resp, nil
