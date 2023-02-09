@@ -42,10 +42,6 @@ func mockAllocResp(objectID uint64, payloadSize uint64, redundancyType ptypes.Re
 	}
 }
 
-func generateIntegrityHash() {
-
-}
-
 func dispatchECPiece() [][][]byte {
 	ecList1 := [][]byte{[]byte("1"), []byte("2"), []byte("3"), []byte("4"), []byte("5"), []byte("6")}
 	ecList2 := [][]byte{[]byte("a"), []byte("b"), []byte("c"), []byte("d"), []byte("e"), []byte("f")}
