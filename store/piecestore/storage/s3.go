@@ -26,7 +26,7 @@ import (
 	"github.com/viki-org/dnscache"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -147,7 +147,7 @@ func (s *s3Store) HeadBucket(ctx context.Context) error {
 		log.Errorw("ObjectStorage S3 HeadBucket error", "error", err)
 		if reqErr, ok := err.(awserr.RequestFailure); ok {
 			if reqErr.StatusCode() == http.StatusNotFound {
-				return errors.BucketNotExisted
+				return merrors.BucketNotExisted
 			}
 		}
 		return err
@@ -215,7 +215,7 @@ func (s *s3Store) ListObjects(ctx context.Context, prefix, marker, delimiter str
 }
 
 func (s *s3Store) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan Object, error) {
-	return nil, errors.NotSupportedMethod
+	return nil, merrors.NotSupportedMethod
 }
 
 // SessionCache holds session.Session according to model.ObjectStorage and it synchronizes access/modification

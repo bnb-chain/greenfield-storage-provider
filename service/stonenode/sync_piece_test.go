@@ -14,32 +14,31 @@ import (
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
-// TODO:need improved
 func Test_doSyncToSecondarySP(t *testing.T) {
+	list := make([][][]byte, 0)
+	ecList := [][]byte{[]byte("1"), []byte("2"), []byte("3"), []byte("4"), []byte("5"), []byte("6")}
+	list = append(list, ecList)
 	cases := []struct {
 		name string
-		req1 *stypes.StoneHubServiceAllocStoneJobResponse
-		req2 [][][]byte
+		req1 [][][]byte
 	}{
 		{
 			name: "1",
-			req1: nil,
-			req2: dispatchECPiece(),
+			req1: list,
 		},
 	}
 
 	node := setup(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	// stoneHub service stub
-	//stoneHub := mock.NewMockStoneHubAPI(ctrl)
-	//node.stoneHub = stoneHub
-	//stoneHub.EXPECT().DoneSecondaryPieceJob(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-	//	func(ctx context.Context, in *service.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (
-	//		*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
-	//		return nil, nil
-	//	})
+	stoneHub := mock.NewMockStoneHubAPI(ctrl)
+	node.stoneHub = stoneHub
+	stoneHub.EXPECT().DoneSecondaryPieceJob(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, in *stypes.StoneHubServiceDoneSecondaryPieceJobRequest, opts ...grpc.CallOption) (
+			*stypes.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
+			return nil, nil
+		}).AnyTimes()
 
 	// syncer service stub
 	streamClient := makeStreamMock()
@@ -88,7 +87,7 @@ func Test_doSyncToSecondarySP(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			allocResp := mockAllocResp(123456, 20*1024*1024, ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
-			err := node.doSyncToSecondarySP(context.TODO(), allocResp, tt.req2, spmock.AllocUploadSecondarySP())
+			err := node.doSyncToSecondarySP(context.TODO(), allocResp, tt.req1, spmock.AllocUploadSecondarySP())
 			assert.Equal(t, nil, err)
 		})
 	}
