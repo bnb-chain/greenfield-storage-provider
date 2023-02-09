@@ -3,7 +3,6 @@ package maps
 import (
 	"sort"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"golang.org/x/exp/constraints"
 )
 
@@ -23,16 +22,12 @@ func sortSlice[T constraints.Ordered](s []T) {
 	})
 }
 
-// ValueToSlice convert values of a map to a slice
+// ValueToSlice convert values of a map to a slice in order
 func ValueToSlice[M ~map[K]V, K constraints.Ordered, V any](m M) []V {
 	keys := SortKeys(m)
-	valueSlice := make([]V, len(m))
-	log.Infow("jjj", "m length", len(m))
+	s := make([]V, len(m))
 	for index, key := range keys {
-		value := m[key]
-		valueSlice[index] = value
-		//valueSlice = append(valueSlice, value)
+		s[index] = m[key]
 	}
-	log.Infow("iii", "valueSlice length", len(valueSlice))
-	return valueSlice
+	return s
 }
