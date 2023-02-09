@@ -67,7 +67,7 @@ func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.
 	integrityHash := hash.GenerateIntegrityHash(pieceHash)
 	resp := &stypes.StorageProviderSealInfo{
 		StorageProviderId: spID,
-		PieceIdx:          integrityMeta.PieceIdx,
+		PieceIdx:          integrityMeta.EcIdx,
 		PieceChecksum:     pieceHash,
 		IntegrityHash:     integrityHash,
 		Signature:         nil, // TODO(mock)
@@ -88,7 +88,7 @@ func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, coun
 	if err != nil {
 		return nil, nil, err
 	}
-	integrityMeta.PieceIdx = pieceIndex
+	integrityMeta.EcIdx = pieceIndex
 
 	// put piece data into piece store
 	value := req.GetPieceData()

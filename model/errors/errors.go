@@ -42,6 +42,7 @@ var (
 	ErrStorageProviderMissing      = errors.New("storage provider missing")
 	ErrUploadPayloadJobRunning     = errors.New("upload payload job is running")
 	ErrUploadPayloadJobNotExist    = errors.New("upload payload job not exist")
+	ErrUploadPayloadJobHasFinished = errors.New("upload payload job has been successfully completed")
 	ErrPieceJobMissing             = errors.New("piece job missing")
 	ErrSealInfoMissing             = errors.New("seal info missing")
 	ErrSpJobNotCompleted           = errors.New("job not completed")

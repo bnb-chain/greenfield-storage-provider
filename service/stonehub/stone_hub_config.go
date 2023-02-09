@@ -15,7 +15,7 @@ type StoneHubConfig struct {
 	StorageProvider   string
 	Address           string
 	JobDBType         string
-	JobDB             *config.SqlDBConfig
+	JobSqlDBConfig    *config.SqlDBConfig
 	MetaDBType        string
 	MetaLevelDBConfig *config.LevelDBConfig
 	MetaSqlDBConfig   *config.SqlDBConfig
@@ -33,7 +33,7 @@ var DefaultStoneHubConfig = &StoneHubConfig{
 	StorageProvider:   DefaultStorageProviderID(),
 	Address:           "127.0.0.1:5323",
 	JobDBType:         model.MemoryDB,
-	JobDB:             jobsql.DefaultJobSqlDBConfig,
+	JobSqlDBConfig:    jobsql.DefaultJobSqlDBConfig,
 	MetaDBType:        model.LevelDB,
 	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,
 	MetaSqlDBConfig:   metasql.DefaultMetaSqlDBConfig,
