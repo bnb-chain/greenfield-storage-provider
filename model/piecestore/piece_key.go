@@ -37,15 +37,17 @@ func DecodeSegmentPieceKey(pieceKey string) (uint64, uint32, error) {
 // EncodePieceKey encodes piece store key
 func EncodePieceKey(rType ptypes.RedundancyType, objectId uint64, segmentIndex, ecIndex uint32) (string, error) {
 	var pieceKey string
-	if rType == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+	switch rType {
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
 		pieceKey = EncodeECPieceKey(objectId, segmentIndex, ecIndex)
-	} else if rType == ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
-		pieceKey = EncodeSegmentPieceKey(objectId, ecIndex)
-	} else if rType == ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
-		pieceKey = EncodeSegmentPieceKey(objectId, ecIndex)
-	} else {
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE:
+		pieceKey = EncodeSegmentPieceKey(objectId, segmentIndex)
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+		pieceKey = EncodeSegmentPieceKey(objectId, segmentIndex)
+	default:
 		return "", merrors.ErrRedundancyType
 	}
+
 	return pieceKey, nil
 }
 

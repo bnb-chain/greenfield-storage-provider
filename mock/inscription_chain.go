@@ -3,6 +3,7 @@ package mock
 import (
 	"errors"
 	"sync"
+	"time"
 
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 )
@@ -38,6 +39,7 @@ func NewInscriptionChainMock() *InscriptionChainMock {
 		events:       make(map[string][]chan interface{}),
 		notifyCh:     make(chan *ChainEvent, 10),
 		stopCh:       make(chan struct{}),
+		objectID:     uint64(time.Now().Unix()),
 	}
 	return cli
 }
