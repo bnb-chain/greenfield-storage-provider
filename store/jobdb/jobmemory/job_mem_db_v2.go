@@ -8,10 +8,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 )
 
-var _ jobdb.JobDBV2 = &MemJobDBV2{}
+var _ jobdb.JobDBV2 = &MemJobDB{}
 
-// MemJobDBV2 is a memory db, maintains job, object and piece job table.
-type MemJobDBV2 struct {
+// MemJobDB is a memory db, maintains job, object and piece job table.
+type MemJobDB struct {
 	JobCount               uint64
 	JobTable               map[uint64]*ptypes.JobContext
 	ObjectTable            map[uint64]*ptypes.ObjectInfo
@@ -20,9 +20,9 @@ type MemJobDBV2 struct {
 	mu                     sync.RWMutex
 }
 
-// NewMemJobDBV2 return a MemJobDBV2 instance.
-func NewMemJobDBV2() *MemJobDBV2 {
-	return &MemJobDBV2{
+// NewMemJobDB return a MemJobDBV2 instance.
+func NewMemJobDB() *MemJobDB {
+	return &MemJobDB{
 		JobCount:               0,
 		JobTable:               make(map[uint64]*ptypes.JobContext),
 		ObjectTable:            make(map[uint64]*ptypes.ObjectInfo),
@@ -32,7 +32,7 @@ func NewMemJobDBV2() *MemJobDBV2 {
 }
 
 // CreateUploadPayloadJobV2 create a job info for special object.
-func (db *MemJobDBV2) CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, error) {
+func (db *MemJobDB) CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, error) {
 	if info == nil {
 		return 0, errors.New("object info is nil")
 	}
@@ -49,7 +49,7 @@ func (db *MemJobDBV2) CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64,
 }
 
 // GetJobContextV2 returns the job info .
-func (db *MemJobDBV2) GetJobContextV2(jobId uint64) (*ptypes.JobContext, error) {
+func (db *MemJobDB) GetJobContextV2(jobId uint64) (*ptypes.JobContext, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	job, ok := db.JobTable[jobId]
@@ -60,7 +60,7 @@ func (db *MemJobDBV2) GetJobContextV2(jobId uint64) (*ptypes.JobContext, error) 
 }
 
 // GetObjectInfoV2 returns the object info by object id.
-func (db *MemJobDBV2) GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error) {
+func (db *MemJobDB) GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	objectInfo, ok := db.ObjectTable[objectID]
@@ -71,7 +71,7 @@ func (db *MemJobDBV2) GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, erro
 }
 
 // SetUploadPayloadJobStateV2 set the job state.
-func (db *MemJobDBV2) SetUploadPayloadJobStateV2(jobId uint64, state string, timestamp int64) error {
+func (db *MemJobDB) SetUploadPayloadJobStateV2(jobId uint64, state string, timestamp int64) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	job, ok := db.JobTable[jobId]
@@ -89,7 +89,7 @@ func (db *MemJobDBV2) SetUploadPayloadJobStateV2(jobId uint64, state string, tim
 }
 
 // SetUploadPayloadJobJobErrorV2 set the job error state and error message.
-func (db *MemJobDBV2) SetUploadPayloadJobJobErrorV2(jobId uint64, state string, jobErr string, timestamp int64) error {
+func (db *MemJobDB) SetUploadPayloadJobJobErrorV2(jobId uint64, state string, jobErr string, timestamp int64) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	job, ok := db.JobTable[jobId]
@@ -108,7 +108,7 @@ func (db *MemJobDBV2) SetUploadPayloadJobJobErrorV2(jobId uint64, state string, 
 }
 
 // GetPrimaryJobV2 returns the primary piece jobs by by object id.
-func (db *MemJobDBV2) GetPrimaryJobV2(objectID uint64) ([]*jobdb.PieceJob, error) {
+func (db *MemJobDB) GetPrimaryJobV2(objectID uint64) ([]*jobdb.PieceJob, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	if _, ok := db.PrimaryPieceJobTable[objectID]; !ok {
@@ -122,7 +122,7 @@ func (db *MemJobDBV2) GetPrimaryJobV2(objectID uint64) ([]*jobdb.PieceJob, error
 }
 
 // GetSecondaryJobV2 returns the secondary piece jobs by object id.
-func (db *MemJobDBV2) GetSecondaryJobV2(objectID uint64) ([]*jobdb.PieceJob, error) {
+func (db *MemJobDB) GetSecondaryJobV2(objectID uint64) ([]*jobdb.PieceJob, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	if _, ok := db.SecondaryPieceJobTable[objectID]; !ok {
@@ -136,7 +136,7 @@ func (db *MemJobDBV2) GetSecondaryJobV2(objectID uint64) ([]*jobdb.PieceJob, err
 }
 
 // SetPrimaryPieceJobDoneV2 set one primary piece job is completed.
-func (db *MemJobDBV2) SetPrimaryPieceJobDoneV2(objectID uint64, piece *jobdb.PieceJob) error {
+func (db *MemJobDB) SetPrimaryPieceJobDoneV2(objectID uint64, piece *jobdb.PieceJob) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	if _, ok := db.PrimaryPieceJobTable[objectID]; !ok {
@@ -147,7 +147,7 @@ func (db *MemJobDBV2) SetPrimaryPieceJobDoneV2(objectID uint64, piece *jobdb.Pie
 }
 
 // SetSecondaryPieceJobDoneV2 set one secondary piece job is completed.
-func (db *MemJobDBV2) SetSecondaryPieceJobDoneV2(objectID uint64, piece *jobdb.PieceJob) error {
+func (db *MemJobDB) SetSecondaryPieceJobDoneV2(objectID uint64, piece *jobdb.PieceJob) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	if _, ok := db.SecondaryPieceJobTable[objectID]; !ok {
