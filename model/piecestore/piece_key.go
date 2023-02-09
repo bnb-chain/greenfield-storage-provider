@@ -35,28 +35,30 @@ func DecodeSegmentPieceKey(pieceKey string) (uint64, uint32, error) {
 }
 
 // EncodePieceKey encodes piece store key
-func EncodePieceKey(rType ptypes.RedundancyType, objectId uint64, segmentIndex, pieceIndex uint32) (string, error) {
+func EncodePieceKey(rType ptypes.RedundancyType, objectId uint64, segmentIndex, ecIndex uint32) (string, error) {
 	var pieceKey string
-	if rType == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
-		pieceKey = EncodeECPieceKey(objectId, segmentIndex, pieceIndex)
-	} else if rType == ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
-		pieceKey = EncodeSegmentPieceKey(objectId, pieceIndex)
-	} else if rType == ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
-		pieceKey = EncodeSegmentPieceKey(objectId, pieceIndex)
-	} else {
+	switch rType {
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+		pieceKey = EncodeECPieceKey(objectId, segmentIndex, ecIndex)
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE:
+		pieceKey = EncodeSegmentPieceKey(objectId, segmentIndex)
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+		pieceKey = EncodeSegmentPieceKey(objectId, segmentIndex)
+	default:
 		return "", merrors.ErrRedundancyType
 	}
+
 	return pieceKey, nil
 }
 
 // EncodeECPieceKey encodes ec piece store key
-func EncodeECPieceKey(objectID uint64, segmentIndex, pieceIndex uint32) string {
-	return fmt.Sprintf("%d_s%d_p%d", objectID, segmentIndex, pieceIndex)
+func EncodeECPieceKey(objectID uint64, segmentIndex, ecIndex uint32) string {
+	return fmt.Sprintf("%d_s%d_p%d", objectID, segmentIndex, ecIndex)
 }
 
 // EncodeECPieceKeyBySegmentKey encodes ec piece store key
-func EncodeECPieceKeyBySegmentKey(segmentKey string, pieceIndex uint32) string {
-	return fmt.Sprintf("%s_p%d", segmentKey, pieceIndex)
+func EncodeECPieceKeyBySegmentKey(segmentKey string, ecIndex uint32) string {
+	return fmt.Sprintf("%s_p%d", segmentKey, ecIndex)
 }
 
 // DecodeECPieceKey decodes ec piece store key

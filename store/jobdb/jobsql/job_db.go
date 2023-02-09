@@ -424,21 +424,17 @@ func (jmi *JobMetaImpl) GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, er
 }
 
 // GetJobContextV2 query DBJobV2 by jobID, and convert to types.JobContext.
-func (jmi *JobMetaImpl) GetJobContextV2(jobId uint64) (*ptypes.JobContext, error) {
+func (jmi *JobMetaImpl) GetJobContextV2(jobID uint64) (*ptypes.JobContext, error) {
 	var (
-		result         *gorm.DB
-		queryCondition *DBJobV2
-		queryReturn    DBJobV2
+		result      *gorm.DB
+		queryReturn DBJobV2
 	)
 
-	// If the primary key is a number, the query will be written as follows:
-	queryCondition = &DBJobV2{
-		JobID: jobId,
-	}
-	result = jmi.db.Model(queryCondition).First(&queryReturn)
+	result = jmi.db.First(&queryReturn, "job_id = ?", jobID)
 	if result.Error != nil {
 		return nil, fmt.Errorf("select job record's failed, %s", result.Error)
 	}
+	// log.Infow("get job context", "id", jobID, "context", queryReturn)
 	return &ptypes.JobContext{
 		JobId:      queryReturn.JobID,
 		JobType:    ptypes.JobType(queryReturn.JobType),

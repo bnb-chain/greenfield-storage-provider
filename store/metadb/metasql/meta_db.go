@@ -4,8 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"reflect"
-	"strings"
 
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
@@ -61,78 +59,41 @@ func InitDB(config *config.SqlDBConfig) (*gorm.DB, error) {
 // SetIntegrityMeta put(overwrite) integrity hash info to db
 func (mdb *MetaDB) SetIntegrityMeta(meta *metadb.IntegrityMeta) error {
 	var (
-		result *gorm.DB
+		result                    *gorm.DB
+		insertIntegrityMetaRecord *DBIntegrityMeta
 	)
 
-	queryReturn, err := mdb.GetIntegrityMeta(meta.ObjectID)
+	// log.Infow("set integrity", "meta", *meta)
+	pieceHash, err := json.Marshal(meta.PieceHash)
 	if err != nil {
-		// insert record
-		pieceHash, err := json.Marshal(meta.PieceHash)
-		if err != nil {
-			return err
-		}
-		insertIntegrityMetaRecord := &DBIntegrityMeta{
-			ObjectID:       meta.ObjectID,
-			PieceIdx:       meta.PieceIdx,
-			PieceCount:     meta.PieceCount,
-			IsPrimary:      meta.IsPrimary,
-			RedundancyType: uint32(meta.RedundancyType),
-			IntegrityHash:  hex.EncodeToString(meta.IntegrityHash),
-			PieceHash:      string(pieceHash),
-		}
-		result = mdb.db.Create(insertIntegrityMetaRecord)
-		// todo: polish why
-		if result.Error != nil && strings.Contains(result.Error.Error(), "Duplicate") {
-			return nil
-		}
-		if result.Error != nil || result.RowsAffected != 1 {
-			return fmt.Errorf("insert integrity meta record failed, %s", result.Error)
-		}
-	} else {
-		// update record
-		queryCondition := &DBIntegrityMeta{
-			ObjectID: meta.ObjectID,
-		}
-		pieceHash, err := json.Marshal(meta.PieceHash)
-		if err != nil {
-			return err
-		}
-		updateFields := &DBIntegrityMeta{
-			ObjectID:       meta.ObjectID,
-			PieceIdx:       meta.PieceIdx,
-			PieceCount:     meta.PieceCount,
-			IsPrimary:      meta.IsPrimary,
-			RedundancyType: uint32(meta.RedundancyType),
-			IntegrityHash:  hex.EncodeToString(meta.IntegrityHash),
-			PieceHash:      string(pieceHash),
-		}
-		// todo: polish why
-		if reflect.DeepEqual(queryReturn, meta) {
-			return nil
-		}
-		result = mdb.db.Model(queryCondition).Updates(updateFields)
-		if result.Error != nil && strings.Contains(result.Error.Error(), "Duplicate") {
-			return nil
-		}
-		if result.Error != nil {
-			return fmt.Errorf("update integrity meta record failed, %s", result.Error)
-		}
+		return err
+	}
+	insertIntegrityMetaRecord = &DBIntegrityMeta{
+		ObjectID:       meta.ObjectID,
+		EcIdx:          meta.EcIdx,
+		PieceCount:     meta.PieceCount,
+		IsPrimary:      meta.IsPrimary,
+		RedundancyType: uint32(meta.RedundancyType),
+		IntegrityHash:  hex.EncodeToString(meta.IntegrityHash),
+		PieceHash:      string(pieceHash),
+	}
+	result = mdb.db.Create(insertIntegrityMetaRecord)
+	if result.Error != nil || result.RowsAffected != 1 {
+		return fmt.Errorf("insert integrity meta record failed, %s, %v", result.Error, *meta)
 	}
 	return nil
 }
 
 // GetIntegrityMeta return the integrity hash info
-func (mdb *MetaDB) GetIntegrityMeta(objectID uint64) (*metadb.IntegrityMeta, error) {
+func (mdb *MetaDB) GetIntegrityMeta(queryCondition *metadb.IntegrityMeta) (*metadb.IntegrityMeta, error) {
 	var (
-		result         *gorm.DB
-		queryCondition *DBIntegrityMeta
-		queryReturn    DBIntegrityMeta
+		result      *gorm.DB
+		queryReturn DBIntegrityMeta
 	)
-	// If the primary key is a number, the query will be written as follows:
-	queryCondition = &DBIntegrityMeta{
-		ObjectID: objectID,
-	}
-	result = mdb.db.Model(queryCondition).First(&queryReturn)
+	result = mdb.db.Model(&DBIntegrityMeta{}).
+		Where("object_id = ? and is_primary = ? and redundancy_type = ? and ec_idx = ?",
+			queryCondition.ObjectID, queryCondition.IsPrimary, queryCondition.RedundancyType, queryCondition.EcIdx).
+		First(&queryReturn)
 	if result.Error != nil {
 		return nil, fmt.Errorf("select integrity meta record failed, %s", result.Error)
 	}
@@ -143,7 +104,7 @@ func (mdb *MetaDB) GetIntegrityMeta(objectID uint64) (*metadb.IntegrityMeta, err
 
 	meta := &metadb.IntegrityMeta{
 		ObjectID:       queryReturn.ObjectID,
-		PieceIdx:       queryReturn.PieceIdx,
+		EcIdx:          queryReturn.EcIdx,
 		PieceCount:     queryReturn.PieceCount,
 		IsPrimary:      queryReturn.IsPrimary,
 		RedundancyType: ptypes.RedundancyType(queryReturn.RedundancyType),
