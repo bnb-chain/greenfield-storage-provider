@@ -7,7 +7,7 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -29,7 +29,7 @@ var _ PieceJob = &PrimaryJob{}
 // PrimaryJob maintains primary segment piece job info.
 type PrimaryJob struct {
 	objectCtx        *ObjectInfoContext
-	segmentPieceJobs []*jobdb.PieceJob
+	segmentPieceJobs []*spdb.PieceJob
 	complete         int
 	mu               sync.RWMutex
 }
@@ -41,7 +41,7 @@ func NewPrimaryJob(objectCtx *ObjectInfoContext) (*PrimaryJob, error) {
 	}
 	segmentCount := util.ComputeSegmentCount(objectCtx.GetObjectSize())
 	for idx := 0; idx < int(segmentCount); idx++ {
-		job.segmentPieceJobs = append(job.segmentPieceJobs, &jobdb.PieceJob{
+		job.segmentPieceJobs = append(job.segmentPieceJobs, &spdb.PieceJob{
 			PieceId:       uint32(idx),
 			Checksum:      make([][]byte, 1),
 			IntegrityHash: make([]byte, hash.LengthHash),
@@ -157,7 +157,7 @@ var _ PieceJob = &SecondarySegmentPieceJob{}
 // use for INLINE redundancy type and REPLICA redundancy type.
 type SecondarySegmentPieceJob struct {
 	objectCtx     *ObjectInfoContext
-	copyPieceJobs []*jobdb.PieceJob
+	copyPieceJobs []*spdb.PieceJob
 	complete      int
 	mu            sync.RWMutex
 }
@@ -170,7 +170,7 @@ func NewSecondarySegmentPieceJob(objectCtx *ObjectInfoContext) (*SecondarySegmen
 	// TODO:: the number of copy is configurable
 	copyCount := model.EC_M + model.EC_K
 	for idx := 0; idx < copyCount; idx++ {
-		job.copyPieceJobs = append(job.copyPieceJobs, &jobdb.PieceJob{
+		job.copyPieceJobs = append(job.copyPieceJobs, &spdb.PieceJob{
 			PieceId:       uint32(idx),
 			Checksum:      make([][]byte, 1),
 			IntegrityHash: make([]byte, hash.LengthHash),
@@ -303,7 +303,7 @@ var _ PieceJob = &SecondaryECPieceJob{}
 // SecondaryECPieceJob maintains secondary ec piece job info.
 type SecondaryECPieceJob struct {
 	objectCtx   *ObjectInfoContext
-	ecPieceJobs []*jobdb.PieceJob
+	ecPieceJobs []*spdb.PieceJob
 	complete    int
 	mu          sync.RWMutex
 }
@@ -315,7 +315,7 @@ func NewSecondaryECPieceJob(objectCtx *ObjectInfoContext) (*SecondaryECPieceJob,
 	}
 	pieceJobCount := model.EC_M + model.EC_K
 	for idx := 0; idx < pieceJobCount; idx++ {
-		job.ecPieceJobs = append(job.ecPieceJobs, &jobdb.PieceJob{
+		job.ecPieceJobs = append(job.ecPieceJobs, &spdb.PieceJob{
 			PieceId:       uint32(idx),
 			Checksum:      make([][]byte, 1),
 			IntegrityHash: make([]byte, hash.LengthHash),

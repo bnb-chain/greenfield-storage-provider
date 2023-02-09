@@ -9,7 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
@@ -17,7 +17,7 @@ import (
 // SyncPiece syncs piece data to secondary storage provider
 func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	var count uint32
-	var integrityMeta *metadb.IntegrityMeta
+	var integrityMeta *spdb.IntegrityMeta
 	var key string
 	var spID string
 	var value []byte
@@ -74,7 +74,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	}
 }
 
-func (s *Syncer) setIntegrityMeta(db metadb.MetaDB, meta *metadb.IntegrityMeta) error {
+func (s *Syncer) setIntegrityMeta(db spdb.MetaDB, meta *spdb.IntegrityMeta) error {
 	if err := db.SetIntegrityMeta(meta); err != nil {
 		log.Errorw("set integrity meta error", "error", err)
 		return err
@@ -82,7 +82,7 @@ func (s *Syncer) setIntegrityMeta(db metadb.MetaDB, meta *metadb.IntegrityMeta) 
 	return nil
 }
 
-func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.StorageProviderSealInfo {
+func generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) *stypes.StorageProviderSealInfo {
 	//keys := util.GenericSortedKeys(integrityMeta.PieceHash)
 	pieceChecksumList := make([][]byte, 0)
 	// var integrityHash []byte
@@ -101,13 +101,13 @@ func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.
 	return resp
 }
 
-func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest) (*metadb.IntegrityMeta, string, []byte, error) {
+func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest) (*spdb.IntegrityMeta, string, []byte, error) {
 	if len(req.GetPieceData()) != 1 {
 		return nil, "", nil, errors.New("the length of piece data map is not equal to 1")
 	}
 
 	redundancyType := req.GetSyncerInfo().GetRedundancyType()
-	integrityMeta := &metadb.IntegrityMeta{
+	integrityMeta := &spdb.IntegrityMeta{
 		ObjectID:       req.GetSyncerInfo().GetObjectId(),
 		PieceCount:     req.GetSyncerInfo().GetPieceCount(),
 		IsPrimary:      false,

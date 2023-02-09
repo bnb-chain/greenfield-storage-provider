@@ -13,7 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
@@ -250,7 +250,7 @@ func (uploader *Uploader) GetAuthentication(ctx context.Context, req *stypes.Upl
 	}()
 
 	resp = &stypes.UploaderServiceGetAuthenticationResponse{TraceId: req.TraceId}
-	meta := &metadb.UploadPayloadAskingMeta{
+	meta := &spdb.UploadPayloadAskingMeta{
 		BucketName: req.Bucket,
 		ObjectName: req.Object,
 		Timeout:    time.Now().Add(1 * time.Hour).Unix(),

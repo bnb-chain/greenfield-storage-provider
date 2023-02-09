@@ -4,20 +4,19 @@ import (
 	"sync"
 
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 )
 
 // ObjectInfoContext maintains the object info, goroutine safe.
 type ObjectInfoContext struct {
 	object *ptypes.ObjectInfo
-	jobDB  jobdb.JobDBV2
-	metaDB metadb.MetaDB
+	jobDB  spdb.JobDBV2
+	metaDB spdb.MetaDB
 	mu     sync.RWMutex
 }
 
 // NewObjectInfoContext return the instance of ObjectInfoContext.
-func NewObjectInfoContext(object *ptypes.ObjectInfo, jobDB jobdb.JobDBV2, metaDB metadb.MetaDB) *ObjectInfoContext {
+func NewObjectInfoContext(object *ptypes.ObjectInfo, jobDB spdb.JobDBV2, metaDB spdb.MetaDB) *ObjectInfoContext {
 	return &ObjectInfoContext{
 		object: object,
 		jobDB:  jobDB,
@@ -61,30 +60,30 @@ func (ctx *ObjectInfoContext) TxHash() []byte {
 }
 
 // GetPrimaryJob load the primary piece job from db and return.
-func (ctx *ObjectInfoContext) getPrimaryPieceJob() ([]*jobdb.PieceJob, error) {
+func (ctx *ObjectInfoContext) getPrimaryPieceJob() ([]*spdb.PieceJob, error) {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
 	return ctx.jobDB.GetPrimaryJobV2(ctx.object.GetObjectId())
 }
 
 // GetSecondaryJob load the secondary piece job from db and return.
-func (ctx *ObjectInfoContext) getSecondaryJob() ([]*jobdb.PieceJob, error) {
+func (ctx *ObjectInfoContext) getSecondaryJob() ([]*spdb.PieceJob, error) {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
 	return ctx.jobDB.GetSecondaryJobV2(ctx.object.GetObjectId())
 }
 
 // SetPrimaryPieceJobDone set the primary piece jod completed and update DB.
-func (ctx *ObjectInfoContext) SetPrimaryPieceJobDone(job *jobdb.PieceJob) error {
+func (ctx *ObjectInfoContext) SetPrimaryPieceJobDone(job *spdb.PieceJob) error {
 	return ctx.jobDB.SetPrimaryPieceJobDoneV2(ctx.object.GetObjectId(), job)
 }
 
 // SetSecondaryPieceJobDone set the secondary piece jod completed and update DB.
-func (ctx *ObjectInfoContext) SetSecondaryPieceJobDone(job *jobdb.PieceJob) error {
+func (ctx *ObjectInfoContext) SetSecondaryPieceJobDone(job *spdb.PieceJob) error {
 	return ctx.jobDB.SetSecondaryPieceJobDoneV2(ctx.object.GetObjectId(), job)
 }
 
 // SetSetIntegrityHash set integrity hash info to meta db.
-func (ctx *ObjectInfoContext) SetSetIntegrityHash(meta *metadb.IntegrityMeta) error {
+func (ctx *ObjectInfoContext) SetSetIntegrityHash(meta *spdb.IntegrityMeta) error {
 	return ctx.metaDB.SetIntegrityMeta(meta)
 }

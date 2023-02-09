@@ -7,7 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -32,7 +32,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypes.Chal
 		err = errors.New("storage provider id mismatch")
 		return
 	}
-	var integrityMeta *metadb.IntegrityMeta
+	var integrityMeta *spdb.IntegrityMeta
 	integrityMeta, err = challenge.metaDB.GetIntegrityMeta(req.ObjectId)
 	if err != nil {
 		return
