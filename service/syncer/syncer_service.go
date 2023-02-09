@@ -17,7 +17,6 @@ import (
 func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	var count uint32
 	var integrityMeta *spdb.IntegrityMeta
-	var key string
 	var spID string
 	var value []byte
 	pieceHash := make([][]byte, 0)
@@ -62,7 +61,6 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 		pieceHash = append(pieceHash, hash.GenerateChecksum(value))
 	}
 }
-
 
 func generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) *stypes.StorageProviderSealInfo {
 	pieceHash := integrityMeta.PieceHash
