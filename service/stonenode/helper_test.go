@@ -2,6 +2,7 @@ package stonenode
 
 import (
 	"context"
+	"encoding/base64"
 	"testing"
 
 	"google.golang.org/grpc"
@@ -39,6 +40,10 @@ func mockAllocResp(objectID uint64, payloadSize uint64, redundancyType ptypes.Re
 			ErrMsg:  "Success",
 		},
 	}
+}
+
+func generateIntegrityHash() {
+
 }
 
 func dispatchECPiece() [][][]byte {
@@ -87,13 +92,14 @@ func (m *StreamMock) Send(resp *stypes.SyncerServiceSyncPieceRequest) error {
 }
 
 func (m *StreamMock) CloseAndRecv() (*stypes.SyncerServiceSyncPieceResponse, error) {
+	integrityHash, _ := base64.URLEncoding.DecodeString("pgPGdR4c9_KYz6wQxl-SifyzHXlHhx5XfNa89LzdNCI=")
 	return &stypes.SyncerServiceSyncPieceResponse{
 		TraceId: "test_traceID",
 		SecondarySpInfo: &stypes.StorageProviderSealInfo{
 			StorageProviderId: "sp1",
 			PieceIdx:          1,
 			PieceChecksum:     [][]byte{[]byte("1"), []byte("2"), []byte("3"), []byte("4"), []byte("5"), []byte("6")},
-			IntegrityHash:     []byte("a"),
+			IntegrityHash:     integrityHash,
 			Signature:         nil,
 		},
 		ErrMessage: &stypes.ErrMessage{
