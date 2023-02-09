@@ -2,7 +2,6 @@ package stone
 
 import (
 	"context"
-	"errors"
 
 	"github.com/looplab/fsm"
 
@@ -13,6 +12,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 )
 
 type contextKey string
@@ -52,7 +53,8 @@ func NewUploadPayloadStone(ctx context.Context,
 
 	state, err := repairState(jobCtx, uploadJob)
 	if err != nil {
-		log.Error("repair upload payload state error", "error", err)
+		// todo: if job has finished(ErrUploadPayloadJobHasFinished), need set response done and not return err
+		log.CtxWarnw(ctx, "repair upload payload state error", "error", err)
 		return nil, err
 	}
 	stone := &UploadPayloadStone{
@@ -78,7 +80,7 @@ func repairState(jobCtx *JobContextWrapper, job *job.UploadPayloadJob) (string, 
 		return state, err
 	}
 	if state == ptypes.JOB_STATE_SEAL_OBJECT_DONE {
-		return state, errors.New("upload payload job has been successfully completed")
+		return state, merrors.ErrUploadPayloadJobHasFinished
 	}
 	state = ptypes.JOB_STATE_CREATE_OBJECT_DONE
 	if job.PrimarySPCompleted() {

@@ -14,6 +14,11 @@ import (
 // ChallengePiece implement challenge service server interface and handle the grpc request.
 func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypes.ChallengeServiceChallengePieceRequest) (
 	resp *stypes.ChallengeServiceChallengePieceResponse, err error) {
+	var (
+		integrityMeta  *metadb.IntegrityMeta
+		queryCondition *metadb.IntegrityMeta
+	)
+
 	ctx = log.Context(ctx, req)
 	resp = &stypes.ChallengeServiceChallengePieceResponse{
 		TraceId:  req.TraceId,
@@ -32,24 +37,17 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypes.Chal
 		err = errors.New("storage provider id mismatch")
 		return
 	}
-	var integrityMeta *metadb.IntegrityMeta
-	integrityMeta, err = challenge.metaDB.GetIntegrityMeta(req.ObjectId)
+	queryCondition = &metadb.IntegrityMeta{
+		ObjectID:       req.ObjectId,
+		IsPrimary:      req.ChallengePrimaryPiece,
+		RedundancyType: req.RedundancyType,
+		EcIdx:          req.EcIdx,
+	}
+	integrityMeta, err = challenge.metaDB.GetIntegrityMeta(queryCondition)
 	if err != nil {
 		return
 	}
-	if req.GetChallengePrimaryPiece() && !integrityMeta.IsPrimary {
-		err = errors.New("storage provider type mismatch")
-		return
-	}
-	if req.GetRedundancyType() != integrityMeta.RedundancyType {
-		err = errors.New("redundancy type mismatch")
-		return
-	}
-	if req.GetRedundancyType() == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED &&
-		req.GetEcIdx() != integrityMeta.PieceIdx {
-		err = errors.New("ec idx mismatch")
-		return
-	}
+
 	var pieceKey string
 	if req.GetRedundancyType() == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
 		pieceKey = piecestore.EncodeECPieceKey(req.GetObjectId(), req.GetSegmentIdx(), req.GetEcIdx())

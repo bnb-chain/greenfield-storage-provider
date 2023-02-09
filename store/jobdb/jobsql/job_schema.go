@@ -125,16 +125,7 @@ func (DBPieceJobV2) TableName() string {
 	return "piece_job_v2"
 }
 
-// DBOption is mysql config options
-/*
-type DBOption struct {
-	User     string
-	Passwd   string
-	Address  string
-	Database string
-}
-*/
-
+// InitDB is used to connect mysql and create table if not existed
 func InitDB(config *config.SqlDBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.User,
