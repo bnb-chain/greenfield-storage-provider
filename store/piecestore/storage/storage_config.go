@@ -11,7 +11,7 @@ var DefaultPieceStoreConfig = &PieceStoreConfig{
 	Shards: 0,
 	Store: &ObjectStorageConfig{
 		Storage:               "s3",
-		BucketURL:             "https://s3.ap-northeast-1.amazonaws.com/tf-nodereal-dev-bsc-storage",
+		BucketURL:             "https://s3.ap-northeast-1.amazonaws.com/example",
 		AccessKey:             "",
 		SecretKey:             "",
 		SessionToken:          "",

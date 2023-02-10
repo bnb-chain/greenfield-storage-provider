@@ -2,14 +2,14 @@ package stonenode
 
 import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypesv1pb "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // dispatchSecondarySP convert pieceDataBySegment to ec dimensional slice, first dimensional is ec number such as ec1, contains [][]byte data
 // pieceDataBySegment is a three-dimensional slice, first dimensional is segment index, second is [][]byte data
-func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte, redundancyType ptypesv1pb.RedundancyType, secondarySPs []string,
-	targetIdx []uint32) ([][][]byte, error) {
+func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte, redundancyType ptypes.RedundancyType,
+	secondarySPs []string, targetIdx []uint32) ([][][]byte, error) {
 	if len(pieceDataBySegment) == 0 {
 		return nil, merrors.ErrInvalidPieceData
 	}
@@ -19,7 +19,7 @@ func (node *StoneNodeService) dispatchSecondarySP(pieceDataBySegment [][][]byte,
 	var pieceDataBySecondary [][][]byte
 	var err error
 	switch redundancyType {
-	case ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypesv1pb.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		pieceDataBySecondary, err = dispatchReplicaData(pieceDataBySegment, secondarySPs, targetIdx)
 	default: // ec type
 		pieceDataBySecondary, err = dispatchECData(pieceDataBySegment, secondarySPs, targetIdx)
