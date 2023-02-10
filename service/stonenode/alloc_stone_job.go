@@ -69,6 +69,7 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 
 	if len(secondaryPieceData) > len(node.syncer) {
 		log.Errorw("syncer number is not enough")
+		node.reportErrToStoneHub(ctx, allocResp, merrors.ErrSyncerNumber)
 		return merrors.ErrSyncerNumber
 	}
 
