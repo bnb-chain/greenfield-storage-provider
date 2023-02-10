@@ -96,7 +96,6 @@ func verifyIntegrityHash(pieceData [][]byte, spInfo *stypes.StorageProviderSealI
 // syncPiece send rpc request to secondary storage provider to sync the piece data
 func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *stypes.SyncerInfo,
 	pieceData [][]byte, index int, traceID string) (*stypes.SyncerServiceSyncPieceResponse, error) {
-	log.Infow("syncPiece", "index", index, "syncer number", len(node.syncer))
 	stream, err := node.syncer[index].SyncPiece(ctx)
 	if err != nil {
 		log.Errorw("sync secondary piece job error", "err", err)
