@@ -12,6 +12,8 @@ ARG GH_TOKEN=""
 RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
 RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://github.com"
 
+RUN apk add build-base libc-dev
+
 RUN cd /greenfield-storage-provider \
     && make install-tools \
     && make buf-gen \
