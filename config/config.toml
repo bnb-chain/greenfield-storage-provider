@@ -8,22 +8,6 @@ Service = [
     UploaderServiceAddress = "127.0.0.1:9133"
     DownloaderServiceAddress = "127.0.0.1:9233"
 
-
-[DownloaderCfg]
-Address = "127.0.0.1:9233"
-[DownloaderCfg.PieceStoreConfig]
-Shards = 0
-[DownloaderCfg.PieceStoreConfig.Store]
-Storage = "file"
-BucketURL = "./data/primary_payload_data"
-MaxRetries = 5
-TestMode = true
-#AccessKey = "ACCESSKEY"
-#SecretKey = "SECRETKEY"
-#SessionToken = "SESSIONTOKEN"
-#NoSignRequest = false
-#TlsInsecureSkipVerify = false
-
 [UploaderCfg]
     StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9133"
@@ -36,29 +20,12 @@ TestMode = true
             BucketURL = "./data/primary_payload_data"
             MaxRetries = 5
             TestMode = true
-            #AccessKey = "ACCESSKEY"
-            #SecretKey = "SECRETKEY"
-            #SessionToken = "SESSIONTOKEN"
-            #NoSignRequest = false
-            #TlsInsecureSkipVerify = false
     [UploaderCfg.MetaLevelDBConfig]
         Path = "./data/meta"
         NameSpace = "bnb-sp"
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
-
-[StoneHubCfg]
-StorageProvider = "bnb-sp"
-Address = "127.0.0.1:9333"
-JobDBType = "memory"
-MetaDBType = "leveldb"
-[StoneHubCfg.MetaDB]
-    Path = "./data/meta"
-    NameSpace = "bnb-sp"
-    Cache = 4096
-    FileHandles = 1000
-    ReadOnly = false
 
 [DownloaderCfg]
     Address = "127.0.0.1:9233"
@@ -69,12 +36,6 @@ MetaDBType = "leveldb"
             BucketURL = "./data/primary_payload_data"
             MaxRetries = 5
             TestMode = true
-            #AccessKey = "ACCESSKEY"
-            #SecretKey = "SECRETKEY"
-            #SessionToken = "SESSIONTOKEN"
-            #NoSignRequest = false
-            #TlsInsecureSkipVerify = false
-
 
 [StoneHubCfg]
     StorageProvider = "gnfd-test-sp"
