@@ -4,7 +4,7 @@ RUN apk add --no-cache make git bash protoc
 
 ADD . /greenfield-storage-provider
 
-ENV CGO_ENABLED=0
+ENV CGO_ENABLED=1
 ENV GO111MODULE=on
 
 # For Private REPO
