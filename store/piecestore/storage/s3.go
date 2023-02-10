@@ -233,15 +233,16 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		return sess, "", nil
 	}
 
-	bucketName, region, err := parseEndPoint(cfg.BucketURL)
+	endpoint, bucketName, region, err := parseEndPoint(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("s3 parseEndPoint error", "error", err)
 		return nil, "", err
 	}
+	log.Debugw("s3 storage info", "endPoint", endpoint, "bucketName", bucketName, "region", region)
 
 	awsConfig := &aws.Config{
 		Region:           aws.String(region),
-		Endpoint:         aws.String(cfg.BucketURL),
+		Endpoint:         aws.String(endpoint),
 		DisableSSL:       aws.Bool(disableSSL),
 		HTTPClient:       getHTTPClient(cfg.TlsInsecureSkipVerify),
 		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
@@ -270,12 +271,12 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 //	sc.sessions = map[ObjectStorageConfig]*session.Session{}
 //}
 
-func parseEndPoint(endPoint string) (string, string, error) {
+func parseEndPoint(endPoint string) (string, string, string, error) {
 	endPoint = strings.Trim(endPoint, "/")
 	uri, err := url.ParseRequestURI(endPoint)
 	if err != nil {
 		log.Errorw("ParseRequestURI error", "endPoint", endPoint, "error", err)
-		return "", "", err
+		return "", "", "", err
 	}
 
 	var (
@@ -309,7 +310,7 @@ func parseEndPoint(endPoint string) (string, string, error) {
 		disableSSL = true
 	}
 
-	return bucketName, region, nil
+	return endPoint, bucketName, region, nil
 }
 
 func parseRegion(endpoint string) string {
