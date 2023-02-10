@@ -248,11 +248,18 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
 		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
 	}
-	if !cfg.TestMode {
+	// if TestMode is true, you can communicate with private bucket or public bucket，
+	// in this TestMode, if you want to visit private bucket, you should provide accessKey, secretKey.
+	// if TestMode is false, you can use service account or ec2 to visit you s3 straightly
+	if cfg.TestMode {
+		accessKey := os.Getenv(model.AWSAccessKey)
+		secretKey := os.Getenv(model.AWSSecretKey)
+		sessionToken := os.Getenv(model.AWSSessionToken)
+		log.Infow("aws env", "accessKey", accessKey, "secretKey", secretKey, "sessionToken", sessionToken)
 		if cfg.NoSignRequest {
 			awsConfig.Credentials = credentials.AnonymousCredentials
-		} else if cfg.AccessKey != "" && cfg.SecretKey != "" {
-			awsConfig.Credentials = credentials.NewStaticCredentials(cfg.AccessKey, cfg.SecretKey, cfg.SessionToken)
+		} else if accessKey != "" && secretKey != "" {
+			awsConfig.Credentials = credentials.NewStaticCredentials(accessKey, secretKey, sessionToken)
 		}
 	}
 

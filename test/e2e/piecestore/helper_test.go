@@ -11,7 +11,7 @@ const (
 	s3       = "s3"
 	file     = "file"
 	memory   = "memory"
-	s3Bucket = "https://s3.us-east-1.amazonaws.com/test"
+	s3Bucket = "https://s3.us-east-1.amazonaws.com/tf-nodereal-prod-nodereal-storage-s3"
 	//virtualPath = "https://test.s3.us-east-1.amazonaws.com"
 )
 
@@ -22,14 +22,11 @@ func setUp(t *testing.T, storageType, bucketURL string) (*piece.PieceStore, erro
 		Store: &storage.ObjectStorageConfig{
 			Storage:               storageType,
 			BucketURL:             bucketURL,
-			AccessKey:             "",
-			SecretKey:             "",
-			SessionToken:          "",
 			NoSignRequest:         false,
 			MaxRetries:            5,
 			MinRetryDelay:         0,
 			TlsInsecureSkipVerify: false,
-			TestMode:              false,
+			TestMode:              true,
 		},
 	})
 }
