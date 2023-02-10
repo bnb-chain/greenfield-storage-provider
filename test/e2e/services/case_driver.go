@@ -138,7 +138,6 @@ func runCase1() {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
-
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -208,7 +207,6 @@ func runCase2() {
 			log.Errorw("put object failed, due to sign signature", "error", err)
 			return
 		}
-
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -242,7 +240,6 @@ func runCase2() {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
-
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -312,7 +309,6 @@ func runCase3() {
 			log.Errorw("put object failed, due to sign signature", "error", err)
 			return
 		}
-
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -346,7 +342,6 @@ func runCase3() {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
-
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
