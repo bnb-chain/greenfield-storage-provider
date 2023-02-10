@@ -38,12 +38,10 @@ RUN apk add --no-cache $PACKAGES \
 
 RUN echo "[ ! -z \"\$TERM\" -a -r /etc/motd ] && cat /etc/motd" >> /etc/bash/bashrc
 
-RUN chmod +x docker-entrypoint.sh
-
 WORKDIR ${WORKDIR}
 
 COPY --from=builder /greenfield-storage-provider/build/* ${WORKDIR}/
 RUN chown -R ${USER_UID}:${USER_GID} ${WORKDIR}
 USER ${USER_UID}:${USER_GID}
 
-ENTRYPOINT ["/sbin/tini", "--", "./docker-entrypoint.sh"]
+ENTRYPOINT ["/app/gnfd-sp", "-config", "config.toml"]
