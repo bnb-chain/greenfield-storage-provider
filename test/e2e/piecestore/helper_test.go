@@ -22,14 +22,11 @@ func setUp(t *testing.T, storageType, bucketURL string) (*piece.PieceStore, erro
 		Store: &storage.ObjectStorageConfig{
 			Storage:               storageType,
 			BucketURL:             bucketURL,
-			AccessKey:             "",
-			SecretKey:             "",
-			SessionToken:          "",
 			NoSignRequest:         false,
 			MaxRetries:            5,
 			MinRetryDelay:         0,
 			TlsInsecureSkipVerify: false,
-			TestMode:              false,
+			TestMode:              true,
 		},
 	})
 }

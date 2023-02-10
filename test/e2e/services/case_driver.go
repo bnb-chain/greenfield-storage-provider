@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-sdk-go/pkg/signer"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 var (
@@ -213,6 +213,7 @@ func runCase2() {
 		}
 		defer res.Body.Close()
 		_, err = io.ReadAll(res.Body)
+
 		if err != nil {
 			log.Errorw("put object failed, due to read response body", "error", err)
 			return
@@ -226,6 +227,7 @@ func runCase2() {
 		log.Infow("start get object")
 		url := "http://" + gatewayAddress + "/case2"
 		method := getMethod
+
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
@@ -313,6 +315,7 @@ func runCase3() {
 		}
 		defer res.Body.Close()
 		_, err = io.ReadAll(res.Body)
+
 		if err != nil {
 			log.Errorw("put object failed, due to read response body", "error", err)
 			return
@@ -326,6 +329,7 @@ func runCase3() {
 		log.Infow("start get object")
 		url := "http://" + gatewayAddress + "/case3"
 		method := getMethod
+
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
 		if err != nil {
