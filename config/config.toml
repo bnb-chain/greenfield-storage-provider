@@ -25,7 +25,7 @@ TestMode = true
 #TlsInsecureSkipVerify = false
 
 [UploaderCfg]
-    StorageProvider = "bnb-sp"
+    StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9133"
     StoneHubServiceAddress = "127.0.0.1:9333"
     MetaDBType = "leveldb"
@@ -77,7 +77,7 @@ MetaDBType = "leveldb"
 
 
 [StoneHubCfg]
-    StorageProvider = "bnb-sp"
+    StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9333"
     JobDBType = "memory"
     MetaDBType = "leveldb"
@@ -90,7 +90,7 @@ MetaDBType = "leveldb"
 
 
 [StoneNodeCfg]
-    StorageProvider = "bnb-sp"
+    StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9433"
     StoneHubServiceAddress = "127.0.0.1:9333"
     SyncerServiceAddress = ["127.0.0.1:9593", "127.0.0.1:9543", "127.0.0.1:9553", "127.0.0.1:9563", "127.0.0.1:9573", "127.0.0.1:9583"]
@@ -104,7 +104,7 @@ MetaDBType = "leveldb"
             TestMode = true
 
 [SyncerCfg]
-    StorageProvider = "bnb-sp"
+    StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9533"
     MetaDBType = "leveldb"
     [SyncerCfg.PieceConfig.Store]
