@@ -44,6 +44,4 @@ COPY --from=builder /greenfield-storage-provider/build/* ${WORKDIR}/
 RUN chown -R ${USER_UID}:${USER_GID} ${WORKDIR}
 USER ${USER_UID}:${USER_GID}
 
-EXPOSE 9033
-
-ENTRYPOINT ["/app/storage_provider"]
+ENTRYPOINT ["/app/gnfd-sp"]

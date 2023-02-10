@@ -58,6 +58,7 @@ jobs:
 
     - name: Test Build
       run: |
+        make install-tools
         make build
 
 #  build-test-success:
