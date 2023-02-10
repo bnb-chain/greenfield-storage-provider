@@ -9,7 +9,7 @@ Service = [
     DownloaderServiceAddress = "127.0.0.1:9233"
 
 [UploaderCfg]
-    StorageProvider = "bnb-sp"
+    StorageProvider = "gnfd-sp"
     Address = "127.0.0.1:9133"
     StoneHubServiceAddress = "127.0.0.1:9333"
     MetaDBType = "leveldb"
@@ -22,7 +22,7 @@ Service = [
             TestMode = true
     [UploaderCfg.MetaLevelDBConfig]
         Path = "./data/meta"
-        NameSpace = "bnb-sp"
+        NameSpace = "gnfd-sp"
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
@@ -38,20 +38,20 @@ Service = [
             TestMode = true
 
 [StoneHubCfg]
-    StorageProvider = "bnb-sp"
+    StorageProvider = "gnfd-sp"
     Address = "127.0.0.1:9333"
     JobDBType = "memory"
     MetaDBType = "leveldb"
     [StoneHubCfg.MetaLevelDBConfig]
         Path = "./data/meta"
-        NameSpace = "bnb-sp"
+        NameSpace = "gnfd-sp"
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
 
 
 [StoneNodeCfg]
-    StorageProvider = "bnb-sp"
+    StorageProvider = "gnfd-sp"
     Address = "127.0.0.1:9433"
     StoneHubServiceAddress = "127.0.0.1:9333"
     SyncerServiceAddress = ["127.0.0.1:9593", "127.0.0.1:9543", "127.0.0.1:9553", "127.0.0.1:9563", "127.0.0.1:9573", "127.0.0.1:9583"]
@@ -65,7 +65,7 @@ Service = [
             TestMode = true
 
 [SyncerCfg]
-    StorageProvider = "bnb-sp"
+    StorageProvider = "gnfd-sp"
     Address = "127.0.0.1:9533"
     MetaDBType = "leveldb"
     [SyncerCfg.PieceConfig.Store]
@@ -75,7 +75,7 @@ Service = [
         TestMode = true
     [SyncerCfg.MetaLevelDBConfig]
         Path = "./data/meta"
-        NameSpace = "bnb-sp"
+        NameSpace = "gnfd-sp"
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
