@@ -21,13 +21,13 @@ func NewMetaDB(dbType string, levelDBConfig *config.LevelDBConfig, sqlDBConfig *
 		metaDB metadb.MetaDB
 		err    error
 	)
-	// load meta db config from env vars
-	sqlDBConfig.User = os.Getenv(model.MetaDBUser)
-	sqlDBConfig.Passwd = os.Getenv(model.MetaDBPassword)
-	log.Infow("metaDB config", "MetaDBUser", os.Getenv(model.MetaDBUser), "MetaDBPassword", os.Getenv(model.MetaDBPassword))
 
 	switch dbType {
 	case model.MySqlDB:
+		// load meta db config from env vars
+		sqlDBConfig.User = os.Getenv(model.MetaDBUser)
+		sqlDBConfig.Passwd = os.Getenv(model.MetaDBPassword)
+		log.Infow("metaDB config", "MetaDBUser", os.Getenv(model.MetaDBUser), "MetaDBPassword", os.Getenv(model.MetaDBPassword))
 		metaDB, err = metasql.NewMetaDB(sqlDBConfig)
 	case model.LevelDB:
 		metaDB, err = metalevel.NewMetaDB(levelDBConfig)
@@ -43,13 +43,13 @@ func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (jobdb.JobDBV2, er
 		jobDB jobdb.JobDBV2
 		err   error
 	)
-	// load job db config from env vars
-	sqlDBConfig.User = os.Getenv(model.JobDBUser)
-	sqlDBConfig.Passwd = os.Getenv(model.JobDBPassword)
-	log.Infow("jobDB config", "JobDBUser", os.Getenv(model.JobDBUser), "JobDBPassword", os.Getenv(model.JobDBPassword))
 
 	switch dbType {
 	case model.MySqlDB:
+		// load job db config from env vars
+		sqlDBConfig.User = os.Getenv(model.JobDBUser)
+		sqlDBConfig.Passwd = os.Getenv(model.JobDBPassword)
+		log.Infow("jobDB config", "JobDBUser", os.Getenv(model.JobDBUser), "JobDBPassword", os.Getenv(model.JobDBPassword))
 		jobDB, err = jobsql.NewJobMetaImpl(sqlDBConfig)
 	case model.MemoryDB:
 		jobDB = jobmemory.NewMemJobDBV2()
