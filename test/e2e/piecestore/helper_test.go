@@ -11,7 +11,7 @@ const (
 	s3       = "s3"
 	file     = "file"
 	memory   = "memory"
-	s3Bucket = "https://s3.us-east-1.amazonaws.com/tf-nodereal-prod-nodereal-storage-s3"
+	s3Bucket = "https://s3.us-east-1.amazonaws.com/test"
 	//virtualPath = "https://test.s3.us-east-1.amazonaws.com"
 )
 

@@ -229,16 +229,16 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	sc.Lock()
 	defer sc.Unlock()
 
-	if sess, ok := sc.sessions[cfg]; ok {
-		return sess, "", nil
-	}
-
 	endpoint, bucketName, region, err := parseEndPoint(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("s3 parseEndPoint error", "error", err)
 		return nil, "", err
 	}
 	log.Debugw("s3 storage info", "endPoint", endpoint, "bucketName", bucketName, "region", region)
+
+	if sess, ok := sc.sessions[cfg]; ok {
+		return sess, bucketName, nil
+	}
 
 	awsConfig := &aws.Config{
 		Region:           aws.String(region),
@@ -255,7 +255,6 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		accessKey := os.Getenv(model.AWSAccessKey)
 		secretKey := os.Getenv(model.AWSSecretKey)
 		sessionToken := os.Getenv(model.AWSSessionToken)
-		log.Infow("aws env", "accessKey", accessKey, "secretKey", secretKey, "sessionToken", sessionToken)
 		if cfg.NoSignRequest {
 			awsConfig.Credentials = credentials.AnonymousCredentials
 		} else if accessKey != "" && secretKey != "" {
