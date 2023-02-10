@@ -26,7 +26,7 @@ ARG USER=sp
 ARG USER_UID=1000
 ARG USER_GID=1000
 
-ENV PACKAGES libstdc++ ca-certificates bash curl
+ENV PACKAGES libstdc++ ca-certificates bash curl tini
 ENV WORKDIR=/app
 
 RUN apk add --no-cache $PACKAGES \
