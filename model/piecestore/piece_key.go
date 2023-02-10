@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -23,40 +23,42 @@ func EncodeSegmentPieceKey(objectID uint64, segmentIndex uint32) string {
 func DecodeSegmentPieceKey(pieceKey string) (uint64, uint32, error) {
 	keys := strings.Split(pieceKey, "_")
 	if valid := CheckSegmentPieceKey(keys); !valid {
-		log.Errorw("Invalid segment piece key", "piece key", pieceKey)
-		return 0, 0, fmt.Errorf("Invalid segment piece key")
+		log.Errorw("segment piece key is wrong", "segment piece key", pieceKey)
+		return 0, 0, fmt.Errorf("invalid segment piece key")
 	}
 
 	objectID, _ := strconv.ParseUint(keys[0], 10, 64)
 	s := numberRegex.FindString(keys[1])
-	segmentIndex, _ := (strconv.ParseUint(s, 10, 32))
+	segmentIndex, _ := strconv.ParseUint(s, 10, 32)
 
 	return objectID, uint32(segmentIndex), nil
 }
 
 // EncodePieceKey encodes piece store key
-func EncodePieceKey(rType types.RedundancyType, objectId uint64, segmentIndex, pieceIndex uint32) (string, error) {
+func EncodePieceKey(rType ptypes.RedundancyType, objectId uint64, segmentIndex, ecIndex uint32) (string, error) {
 	var pieceKey string
-	if rType == types.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
-		pieceKey = EncodeECPieceKey(objectId, segmentIndex, pieceIndex)
-	} else if rType == types.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE {
-		pieceKey = EncodeSegmentPieceKey(objectId, pieceIndex)
-	} else if rType == types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE {
-		pieceKey = EncodeSegmentPieceKey(objectId, pieceIndex)
-	} else {
+	switch rType {
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+		pieceKey = EncodeECPieceKey(objectId, segmentIndex, ecIndex)
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE:
+		pieceKey = EncodeSegmentPieceKey(objectId, segmentIndex)
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+		pieceKey = EncodeSegmentPieceKey(objectId, segmentIndex)
+	default:
 		return "", merrors.ErrRedundancyType
 	}
+
 	return pieceKey, nil
 }
 
 // EncodeECPieceKey encodes ec piece store key
-func EncodeECPieceKey(objectID uint64, segmentIndex, pieceIndex uint32) string {
-	return fmt.Sprintf("%d_s%d_p%d", objectID, segmentIndex, pieceIndex)
+func EncodeECPieceKey(objectID uint64, segmentIndex, ecIndex uint32) string {
+	return fmt.Sprintf("%d_s%d_p%d", objectID, segmentIndex, ecIndex)
 }
 
 // EncodeECPieceKeyBySegmentKey encodes ec piece store key
-func EncodeECPieceKeyBySegmentKey(segmentKey string, pieceIndex uint32) string {
-	return fmt.Sprintf("%s_p%d", segmentKey, pieceIndex)
+func EncodeECPieceKeyBySegmentKey(segmentKey string, ecIndex uint32) string {
+	return fmt.Sprintf("%s_p%d", segmentKey, ecIndex)
 }
 
 // DecodeECPieceKey decodes ec piece store key
@@ -64,8 +66,8 @@ func EncodeECPieceKeyBySegmentKey(segmentKey string, pieceIndex uint32) string {
 func DecodeECPieceKey(pieceKey string) (uint64, uint32, uint32, error) {
 	keys := strings.Split(pieceKey, "_")
 	if valid := CheckECPieceKey(keys); !valid {
-		log.Errorw("Invalid EC piece key", "piece key", pieceKey)
-		return 0, 0, 0, fmt.Errorf("Invalid EC piece key")
+		log.Errorw("ec piece key is wrong", "ec piece key", pieceKey)
+		return 0, 0, 0, fmt.Errorf("invalid EC piece key")
 	}
 
 	objectID, _ := strconv.ParseUint(keys[0], 10, 64)
@@ -86,7 +88,7 @@ var (
 // CheckSegmentPieceKey checks ec piece key is correct
 func CheckSegmentPieceKey(keys []string) bool {
 	if len(keys) != 2 {
-		log.Errorw("Invalid segment piece key", "piece key", keys)
+		log.Errorw("invalid segment piece key", "segment piece key", keys)
 		return false
 	}
 
@@ -99,7 +101,7 @@ func CheckSegmentPieceKey(keys []string) bool {
 // CheckECPieceKey checks EC piece key is correct
 func CheckECPieceKey(keys []string) bool {
 	if len(keys) != 3 {
-		log.Errorw("Invalid EC piece key", "piece key", keys)
+		log.Errorw("invalid EC piece key", "ec piece key", keys)
 		return false
 	}
 

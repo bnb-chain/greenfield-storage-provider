@@ -36,7 +36,7 @@ const (
 // RPC config
 const (
 	// server and client max send or recv msg size
-	MaxCallMsgSize = 40 * 1024 * 1024
+	MaxCallMsgSize = 25 * 1024 * 1024
 )
 
 // Gateway
@@ -50,17 +50,19 @@ const (
 	PutObjectV2Query = "putobjectv2"
 	ActionQuery      = "action"
 
-	// bfs header key
-	BFSRequestIDHeader       = "X-Bfs-Request-ID"
-	BFSContentLengthHeader   = "X-Bfs-Content-Length"
-	BFSContentTypeHeader     = "X-Bfs-Content-Type"
-	BFSChecksumHeader        = "X-Bfs-Checksum"
-	BFSIsPrivateHeader       = "X-Bfs-Is-Private"
-	BFSTransactionHashHeader = "X-Bfs-Txn-Hash"
-	BFSResourceHeader        = "X-Bfs-Resource"
-	BFSPreSignatureHeader    = "X-Bfs-Pre-Signature"
-	// BFSRedundancyTypeHeader can be EC or Replica, EC is default
-	BFSRedundancyTypeHeader = "X-Bfs-Redundancy-Type"
+	// Greenfield header key
+	GnfdRequestIDHeader       = "X-Gnfd-Request-ID"
+	GnfdContentLengthHeader   = "X-Gnfd-Content-Length"
+	GnfdContentTypeHeader     = "X-Gnfd-Content-Type"
+	GnfdChecksumHeader        = "X-Gnfd-Checksum"
+	GnfdIsPrivateHeader       = "X-Gnfd-Is-Private"
+	GnfdTransactionHashHeader = "X-Gnfd-Txn-Hash"
+	GnfdResourceHeader        = "X-Gnfd-Resource"
+	GnfdPreSignatureHeader    = "X-Gnfd-Pre-Signature"
+	// GnfdRedundancyTypeHeader can be EC or Replica, EC is default
+	GnfdRedundancyTypeHeader = "X-Gnfd-Redundancy-Type"
+	GnfdAuthorizationHeader  = "Authorization"
+	GnfdDateHeader           = "X-Gnfd-Date"
 
 	// http header key
 	ContentTypeHeader   = "Content-Type"
@@ -70,6 +72,13 @@ const (
 	// header value
 	ContentTypeXMLHeaderValue        = "application/xml"
 	ReplicaRedundancyTypeHeaderValue = "Replica"
+
+	// signature const value
+	SignAlgorithm = "ECDSA-secp256k1"
+	SignedMsg     = "SignedMsg"
+	Signature     = "Signature"
+	SignTypeV1    = "authTypeV1"
+	SignTypeV2    = "authTypeV2"
 )
 
 // define backend store type name.

@@ -11,24 +11,27 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	pbService "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
+
+type contextKey string
 
 var (
 	CreateObjectTimeout = time.Second * 5
 )
 
 // CreateObject handle grpc CreateObject request, send create object tx to chain
-func (uploader *Uploader) CreateObject(ctx context.Context, req *pbService.UploaderServiceCreateObjectRequest) (resp *pbService.UploaderServiceCreateObjectResponse, err error) {
+func (uploader *Uploader) CreateObject(ctx context.Context, req *stypes.UploaderServiceCreateObjectRequest) (
+	resp *stypes.UploaderServiceCreateObjectResponse, err error) {
 	ctx = log.Context(ctx, req, req.GetObjectInfo())
-	resp = &pbService.UploaderServiceCreateObjectResponse{TraceId: req.GetTraceId()}
-	defer func(r *pbService.UploaderServiceCreateObjectResponse, err error) {
+	resp = &stypes.UploaderServiceCreateObjectResponse{TraceId: req.GetTraceId()}
+	defer func(r *stypes.UploaderServiceCreateObjectResponse, err error) {
 		if err != nil {
-			r.ErrMessage.ErrCode = pbService.ErrCode_ERR_CODE_ERROR
+			r.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 			r.ErrMessage.ErrMsg = err.Error()
 			log.CtxErrorw(ctx, "create object failed", "error", err)
 		}
@@ -41,7 +44,7 @@ func (uploader *Uploader) CreateObject(ctx context.Context, req *pbService.Uploa
 	// 3.1 subscribe inscription chain create object event
 	createObjectCh := uploader.eventWaiter.SubscribeEvent(mock.CreateObject)
 	// 3.2 register the object info to stone hub
-	if _, err = uploader.stoneHub.CreateObject(ctx, &pbService.StoneHubServiceCreateObjectRequest{
+	if _, err = uploader.stoneHub.CreateObject(ctx, &stypes.StoneHubServiceCreateObjectRequest{
 		TraceId:    req.TraceId,
 		TxHash:     txHash,
 		ObjectInfo: req.ObjectInfo,
@@ -50,14 +53,14 @@ func (uploader *Uploader) CreateObject(ctx context.Context, req *pbService.Uploa
 	}
 	// 3.3 wait create object tx to inscription chain
 	createObjectTimer := time.After(CreateObjectTimeout)
-	var objectInfo *types.ObjectInfo
+	var objectInfo *ptypes.ObjectInfo
 	for {
 		if objectInfo != nil {
 			break
 		}
 		select {
 		case event := <-createObjectCh:
-			object := event.(*types.ObjectInfo)
+			object := event.(*ptypes.ObjectInfo)
 			if bytes.Equal(object.TxHash, txHash) {
 				objectInfo = object
 			}
@@ -71,7 +74,7 @@ func (uploader *Uploader) CreateObject(ctx context.Context, req *pbService.Uploa
 		return
 	}
 	// 4. update object height and object id to stone hub
-	if _, err = uploader.stoneHub.SetObjectCreateInfo(ctx, &pbService.StoneHubServiceSetObjectCreateInfoRequest{
+	if _, err = uploader.stoneHub.SetObjectCreateInfo(ctx, &stypes.StoneHubServiceSetObjectCreateInfoRequest{
 		TraceId:  req.TraceId,
 		TxHash:   txHash,
 		TxHeight: objectInfo.Height,
@@ -89,20 +92,20 @@ func (uploader *Uploader) CreateObject(ctx context.Context, req *pbService.Uploa
 //
 //	2.1 fetch upload job meta from stone hub;
 //	2.2 upload segment to piece store, and report job progress.
-func (uploader *Uploader) UploadPayload(stream pbService.UploaderService_UploadPayloadServer) (err error) {
+func (uploader *Uploader) UploadPayload(stream stypes.UploaderService_UploadPayloadServer) (err error) {
 	var (
 		txChan    = make(chan []byte)
 		pieceChan = make(chan *SegmentContext, 500)
 		wg        sync.WaitGroup
-		resp      pbService.UploaderServiceUploadPayloadResponse
+		resp      stypes.UploaderServiceUploadPayloadResponse
 		waitDone  = make(chan bool)
 		errChan   = make(chan error)
 		ctx       = context.Background()
 		sr        *streamReader
 	)
-	defer func(resp *pbService.UploaderServiceUploadPayloadResponse, err error) {
+	defer func(resp *stypes.UploaderServiceUploadPayloadResponse, err error) {
 		if err != nil {
-			resp.ErrMessage.ErrCode = pbService.ErrCode_ERR_CODE_ERROR
+			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 			resp.ErrMessage.ErrMsg = err.Error()
 		}
 		err = stream.SendAndClose(resp)
@@ -112,16 +115,14 @@ func (uploader *Uploader) UploadPayload(stream pbService.UploaderService_UploadP
 	// fetch job meta, concurrently write payload's segments and report progresses.
 	go func() {
 		var jm *JobMeta
-		select {
-		case txHash, ok := <-txChan:
-			if !ok {
-				return
-			}
-			ctx := context.WithValue(ctx, "traceID", sr.traceID)
-			if jm, err = uploader.fetchJobMeta(ctx, txHash); err != nil {
-				errChan <- err
-				return
-			}
+		txHash, ok := <-txChan
+		if !ok {
+			return
+		}
+		ctx := context.WithValue(ctx, contextKey("traceID"), sr.traceID)
+		if jm, err = uploader.fetchJobMeta(ctx, txHash); err != nil {
+			errChan <- err
+			return
 		}
 		for piece := range pieceChan {
 			go func(segPiece *SegmentContext) {
@@ -136,7 +137,7 @@ func (uploader *Uploader) UploadPayload(stream pbService.UploaderService_UploadP
 					return
 				}
 				checksum := hash.GenerateChecksum(segPiece.PieceData)
-				ctx := context.WithValue(ctx, "traceID", sr.traceID)
+				ctx := context.WithValue(ctx, contextKey("traceID"), sr.traceID)
 				if err := uploader.reportJobProgress(ctx, jm, segPiece.Index, checksum); err != nil {
 					errChan <- err
 					return
@@ -172,14 +173,14 @@ type JobMeta struct {
 	objectID      uint64
 	toUploadedIDs map[uint32]bool
 	txHash        []byte
-	pieceJob      *pbService.PieceJob
+	pieceJob      *stypes.PieceJob
 	done          bool
 }
 
 // fetchJobMeta fetch job meta from stone hub.
 func (uploader *Uploader) fetchJobMeta(ctx context.Context, txHash []byte) (*JobMeta, error) {
 	traceID, _ := ctx.Value("traceID").(string)
-	resp, err := uploader.stoneHub.BeginUploadPayload(ctx, &pbService.StoneHubServiceBeginUploadPayloadRequest{
+	resp, err := uploader.stoneHub.BeginUploadPayload(ctx, &stypes.StoneHubServiceBeginUploadPayloadRequest{
 		TraceId: traceID,
 		TxHash:  txHash,
 	})
@@ -189,9 +190,8 @@ func (uploader *Uploader) fetchJobMeta(ctx context.Context, txHash []byte) (*Job
 	if resp.GetPieceJob() == nil {
 		return nil, errors.New("stone dispatch piece job is nil")
 	}
-	if resp.GetPrimaryDone() {
-
-	}
+	// if resp.GetPrimaryDone() {
+	// }
 	jm := &JobMeta{
 		objectID:      resp.GetPieceJob().GetObjectId(),
 		pieceJob:      resp.GetPieceJob(),
@@ -210,20 +210,25 @@ func (uploader *Uploader) fetchJobMeta(ctx context.Context, txHash []byte) (*Job
 // reportJobProgress report done piece index to stone hub.
 func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, uploadID uint32, checkSum []byte) error {
 	var (
-		req      *pbService.StoneHubServiceDonePrimaryPieceJobRequest
-		pieceJob pbService.PieceJob
+		req      *stypes.StoneHubServiceDonePrimaryPieceJobRequest
+		pieceJob *stypes.PieceJob
 	)
 	traceID, _ := ctx.Value("traceID").(string)
-	pieceJob = *jm.pieceJob
-	pieceJob.StorageProviderSealInfo = &pbService.StorageProviderSealInfo{
+	// pieceJob = *jm.pieceJob
+	pieceJob = &stypes.PieceJob{
+		ObjectId:       jm.pieceJob.ObjectId,
+		PayloadSize:    jm.pieceJob.PayloadSize,
+		RedundancyType: jm.pieceJob.RedundancyType,
+	}
+	copy(pieceJob.TargetIdx, jm.pieceJob.TargetIdx)
+	pieceJob.StorageProviderSealInfo = &stypes.StorageProviderSealInfo{
 		StorageProviderId: uploader.config.StorageProvider,
 		PieceIdx:          uploadID,
 		PieceChecksum:     [][]byte{checkSum},
 	}
-	req = &pbService.StoneHubServiceDonePrimaryPieceJobRequest{
+	req = &stypes.StoneHubServiceDonePrimaryPieceJobRequest{
 		TraceId:  traceID,
-		TxHash:   jm.txHash,
-		PieceJob: &pieceJob,
+		PieceJob: pieceJob,
 	}
 	if _, err := uploader.stoneHub.DonePrimaryPieceJob(ctx, req); err != nil {
 		return err
@@ -231,19 +236,20 @@ func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, up
 	return nil
 }
 
-// GetAuthentication get auth info, currently PreSignature is mocked.
-func (uploader *Uploader) GetAuthentication(ctx context.Context, req *pbService.UploaderServiceGetAuthenticationRequest) (resp *pbService.UploaderServiceGetAuthenticationResponse, err error) {
+// GetApproval get auth info, currently PreSignature is mocked.
+func (uploader *Uploader) GetApproval(ctx context.Context, req *stypes.UploaderServiceGetApprovalRequest) (
+	resp *stypes.UploaderServiceGetApprovalResponse, err error) {
 	ctx = log.Context(ctx, req)
 	defer func() {
 		if err != nil {
 			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
-			log.CtxErrorw(ctx, "failed to get authentication", "err", err)
+			log.CtxErrorw(ctx, "failed to get approval", "err", err)
 		} else {
-			log.CtxInfow(ctx, "succeed to get authentication")
+			log.CtxInfow(ctx, "succeed to get approval")
 		}
 	}()
 
-	resp = &pbService.UploaderServiceGetAuthenticationResponse{TraceId: req.TraceId}
+	resp = &stypes.UploaderServiceGetApprovalResponse{TraceId: req.TraceId}
 	meta := &metadb.UploadPayloadAskingMeta{
 		BucketName: req.Bucket,
 		ObjectName: req.Object,
@@ -253,27 +259,27 @@ func (uploader *Uploader) GetAuthentication(ctx context.Context, req *pbService.
 		log.Errorw("failed to insert metaDB")
 		return
 	}
-	log.CtxInfow(ctx, "insert authentication info to metadb", "bucket", req.Bucket, "object", req.Object)
+	log.CtxInfow(ctx, "insert approval info to metadb", "bucket", req.Bucket, "object", req.Object)
 	// mock
 	resp.PreSignature = hash.GenerateChecksum([]byte(time.Now().String()))
 	return resp, nil
 }
 
 // UploadPayloadV2 merge CreateObject, SetObjectCreateInfo and BeginUploadPayload, special for heavy client use.
-func (uploader *Uploader) UploadPayloadV2(stream pbService.UploaderService_UploadPayloadV2Server) (err error) {
+func (uploader *Uploader) UploadPayloadV2(stream stypes.UploaderService_UploadPayloadV2Server) (err error) {
 	var (
 		txChan    = make(chan []byte)
 		pieceChan = make(chan *SegmentContext, 500)
 		wg        sync.WaitGroup
-		resp      pbService.UploaderServiceUploadPayloadV2Response
+		resp      stypes.UploaderServiceUploadPayloadV2Response
 		waitDone  = make(chan bool)
 		errChan   = make(chan error)
 		ctx       = context.Background()
 		sr        *streamReader
 	)
-	defer func(resp *pbService.UploaderServiceUploadPayloadV2Response, err error) {
+	defer func(resp *stypes.UploaderServiceUploadPayloadV2Response, err error) {
 		if err != nil {
-			resp.ErrMessage.ErrCode = pbService.ErrCode_ERR_CODE_ERROR
+			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 			resp.ErrMessage.ErrMsg = err.Error()
 		}
 		err = stream.SendAndClose(resp)
@@ -283,15 +289,13 @@ func (uploader *Uploader) UploadPayloadV2(stream pbService.UploaderService_Uploa
 	// fetch job meta, concurrently write payload's segments and report progresses.
 	go func() {
 		var jm *JobMeta
-		select {
-		case txHash, ok := <-txChan:
-			if !ok {
-				return
-			}
-			if jm, err = uploader.checkAndPrepareMeta(sr, txHash); err != nil {
-				errChan <- err
-				return
-			}
+		txHash, ok := <-txChan
+		if !ok {
+			return
+		}
+		if jm, err = uploader.checkAndPrepareMeta(sr, txHash); err != nil {
+			errChan <- err
+			return
 		}
 		for piece := range pieceChan {
 			go func(segPiece *SegmentContext) {
@@ -308,7 +312,7 @@ func (uploader *Uploader) UploadPayloadV2(stream pbService.UploaderService_Uploa
 					return
 				}
 				checksum := hash.GenerateChecksum(segPiece.PieceData)
-				ctx := context.WithValue(ctx, "traceID", sr.traceID)
+				ctx := context.WithValue(ctx, contextKey("traceID"), sr.traceID)
 				if err := uploader.reportJobProgress(ctx, jm, segPiece.Index, checksum); err != nil {
 					errChan <- err
 					return
@@ -341,25 +345,26 @@ func (uploader *Uploader) UploadPayloadV2(stream pbService.UploaderService_Uploa
 
 // checkAndPrepareMeta check auth by metaDB, and then get meta from stoneHub.
 func (uploader *Uploader) checkAndPrepareMeta(sr *streamReader, txHash []byte) (*JobMeta, error) {
-	objectInfo := &types.ObjectInfo{
+	objectInfo := &ptypes.ObjectInfo{
 		BucketName:     sr.bucket,
 		ObjectName:     sr.object,
 		Size:           sr.size,
-		PrimarySp:      &types.StorageProviderInfo{SpId: uploader.config.StorageProvider},
+		PrimarySp:      &ptypes.StorageProviderInfo{SpId: uploader.config.StorageProvider},
 		RedundancyType: sr.redundancyType,
 	}
 	uploader.eventWaiter.CreateObjectByName(txHash, objectInfo)
 
 	meta, err := uploader.metaDB.GetUploadPayloadAskingMeta(objectInfo.BucketName, objectInfo.ObjectName)
 	if err != nil {
-		log.Errorw("failed to query metaDB", "bucket", objectInfo.BucketName, "object", objectInfo.ObjectName, "error", err)
+		log.Errorw("failed to query metaDB", "bucketName", objectInfo.BucketName,
+			"objectName", objectInfo.ObjectName, "error", err)
 		return nil, err
 	}
 	if time.Now().Unix() > meta.Timeout {
-		err = errors.New("auth info has timeout")
+		err = errors.New("approval info has timeout")
 		return nil, err
 	}
-	resp, err := uploader.stoneHub.BeginUploadPayloadV2(context.Background(), &pbService.StoneHubServiceBeginUploadPayloadV2Request{
+	resp, err := uploader.stoneHub.BeginUploadPayloadV2(context.Background(), &stypes.StoneHubServiceBeginUploadPayloadV2Request{
 		TraceId:    sr.traceID,
 		ObjectInfo: objectInfo,
 	})
@@ -369,8 +374,8 @@ func (uploader *Uploader) checkAndPrepareMeta(sr *streamReader, txHash []byte) (
 	if resp.GetPieceJob() == nil {
 		return nil, errors.New("stone dispatch piece job is nil")
 	}
-	if resp.GetPrimaryDone() {
-	}
+	// if resp.GetPrimaryDone() {
+	// }
 	jm := &JobMeta{
 		objectID:      resp.GetPieceJob().GetObjectId(),
 		pieceJob:      resp.GetPieceJob(),

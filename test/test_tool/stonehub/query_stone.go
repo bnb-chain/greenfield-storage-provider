@@ -2,13 +2,12 @@ package stonehub
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"time"
 
 	"github.com/urfave/cli"
 
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	cliCtx "github.com/bnb-chain/greenfield-storage-provider/test/test_tool/context"
 )
 
@@ -30,14 +29,7 @@ func queryStone(c *cli.Context) {
 		fmt.Println("please cd StoneHubService namespace, try again")
 		return
 	}
-	txHash, err := hex.DecodeString(c.String("t"))
-	if err != nil {
-		fmt.Println("tx hash param decode error: ", err)
-		return
-	}
-	req := &service.StoneHubServiceQueryStoneRequest{
-		TxHash: txHash,
-	}
+	req := &stypes.StoneHubServiceQueryStoneRequest{}
 	client, err := GetStoneHubClient()
 	if err != nil {
 		return
@@ -67,5 +59,4 @@ func queryStone(c *cli.Context) {
 	} else {
 		fmt.Println("secondary piece jobs are completed.")
 	}
-	return
 }

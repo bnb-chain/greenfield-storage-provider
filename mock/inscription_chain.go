@@ -3,8 +3,9 @@ package mock
 import (
 	"errors"
 	"sync"
+	"time"
 
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 )
 
 var (
@@ -20,8 +21,8 @@ type ChainEvent struct {
 
 // InscriptionChainMock mock the inscription chain
 type InscriptionChainMock struct {
-	objectByHash map[string]*types.ObjectInfo
-	objectByName map[string]*types.ObjectInfo
+	objectByHash map[string]*ptypes.ObjectInfo
+	objectByName map[string]*ptypes.ObjectInfo
 	events       map[string][]chan interface{}
 	notifyCh     chan *ChainEvent
 	stopCh       chan struct{}
@@ -33,11 +34,12 @@ type InscriptionChainMock struct {
 // NewInscriptionChainMock return the InscriptionChainMock instance
 func NewInscriptionChainMock() *InscriptionChainMock {
 	cli := &InscriptionChainMock{
-		objectByHash: make(map[string]*types.ObjectInfo),
-		objectByName: make(map[string]*types.ObjectInfo),
+		objectByHash: make(map[string]*ptypes.ObjectInfo),
+		objectByName: make(map[string]*ptypes.ObjectInfo),
 		events:       make(map[string][]chan interface{}),
 		notifyCh:     make(chan *ChainEvent, 10),
 		stopCh:       make(chan struct{}),
+		objectID:     uint64(time.Now().Unix()),
 	}
 	return cli
 }
@@ -87,7 +89,7 @@ func (cli *InscriptionChainMock) eventLoop() {
 }
 
 // QueryObjectByTx return the object info by create object tx hash.
-func (cli *InscriptionChainMock) QueryObjectByTx(txHash []byte) (*types.ObjectInfo, error) {
+func (cli *InscriptionChainMock) QueryObjectByTx(txHash []byte) (*ptypes.ObjectInfo, error) {
 	cli.mu.Lock()
 	defer cli.mu.Unlock()
 	obj, ok := cli.objectByHash[string(txHash)]
@@ -98,7 +100,7 @@ func (cli *InscriptionChainMock) QueryObjectByTx(txHash []byte) (*types.ObjectIn
 }
 
 // QueryObjectByName return the object info by create object bucketName/objectName.
-func (cli *InscriptionChainMock) QueryObjectByName(name string) (*types.ObjectInfo, error) {
+func (cli *InscriptionChainMock) QueryObjectByName(name string) (*ptypes.ObjectInfo, error) {
 	cli.mu.Lock()
 	defer cli.mu.Unlock()
 	obj, ok := cli.objectByName[name]
@@ -109,7 +111,7 @@ func (cli *InscriptionChainMock) QueryObjectByName(name string) (*types.ObjectIn
 }
 
 // CreateObjectByTxHash create the object info on the mock inscription chain.
-func (cli *InscriptionChainMock) CreateObjectByTxHash(txHash []byte, object *types.ObjectInfo) {
+func (cli *InscriptionChainMock) CreateObjectByTxHash(txHash []byte, object *ptypes.ObjectInfo) {
 	cli.mu.Lock()
 	defer cli.mu.Unlock()
 	cli.objectID++
@@ -127,7 +129,7 @@ func (cli *InscriptionChainMock) CreateObjectByTxHash(txHash []byte, object *typ
 }
 
 // CreateObjectByName create the object info on the mock inscription chain.
-func (cli *InscriptionChainMock) CreateObjectByName(txHash []byte, object *types.ObjectInfo) {
+func (cli *InscriptionChainMock) CreateObjectByName(txHash []byte, object *ptypes.ObjectInfo) {
 	cli.mu.Lock()
 	defer cli.mu.Unlock()
 	cli.objectID++
@@ -140,7 +142,7 @@ func (cli *InscriptionChainMock) CreateObjectByName(txHash []byte, object *types
 }
 
 // SealObjectByTxHash seal the object on the mock inscription chain.
-func (cli *InscriptionChainMock) SealObjectByTxHash(txHash []byte, object *types.ObjectInfo) {
+func (cli *InscriptionChainMock) SealObjectByTxHash(txHash []byte, object *ptypes.ObjectInfo) {
 	cli.mu.Lock()
 	defer cli.mu.Unlock()
 	object.TxHash = txHash

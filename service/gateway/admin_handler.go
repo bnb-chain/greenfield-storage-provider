@@ -8,8 +8,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-// getAuthenticationHandler
-func (g *Gateway) getAuthenticationHandler(w http.ResponseWriter, r *http.Request) {
+// getApprovalnHandler
+func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
@@ -23,9 +23,9 @@ func (g *Gateway) getAuthenticationHandler(w http.ResponseWriter, r *http.Reques
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "getAuthentication", statusCode, generateRequestDetail(requestContext))
+			log.Debugf("action(%v) statusCode(%v) %v", "getApproval", statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "getAuthentication", statusCode, generateRequestDetail(requestContext))
+			log.Warnf("action(%v) statusCode(%v) %v", "getApproval", statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
@@ -35,19 +35,20 @@ func (g *Gateway) getAuthenticationHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := requestContext.verifySign(); err != nil {
+	if err = requestContext.verifySignature(); err != nil {
 		errorDescription = SignatureDoesNotMatch
+		log.Infow("failed to verify signature", "error", err)
 		return
 	}
 
-	option := &getAuthenticationOption{
+	option := &getApprovalOption{
 		requestContext: requestContext,
 	}
-	info, err := g.uploadProcessor.getAuthentication(option)
+	info, err := g.uploadProcessor.getApproval(option)
 	if err != nil {
 		errorDescription = InternalError
 		return
 	}
-	w.Header().Set(model.BFSRequestIDHeader, requestContext.requestID)
-	w.Header().Set(model.BFSPreSignatureHeader, hex.EncodeToString(info.preSignature))
+	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
+	w.Header().Set(model.GnfdPreSignatureHeader, hex.EncodeToString(info.preSignature))
 }

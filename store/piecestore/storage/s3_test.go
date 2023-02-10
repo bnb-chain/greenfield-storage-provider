@@ -288,12 +288,12 @@ func TestS3_ListAll(t *testing.T) {
 
 type mockS3ClientError struct {
 	s3iface.S3API
-	createBucketResp s3.CreateBucketOutput
-	headObjectResp   s3.HeadObjectOutput
-	getObjectResp    s3.GetObjectOutput
-	putObjectResp    s3.PutObjectOutput
-	deleteObjectResp s3.DeleteObjectOutput
-	listObjectsResp  s3.ListObjectsOutput
+	// createBucketResp s3.CreateBucketOutput
+	// headObjectResp s3.HeadObjectOutput
+	// getObjectResp    s3.GetObjectOutput
+	// putObjectResp    s3.PutObjectOutput
+	// deleteObjectResp s3.DeleteObjectOutput
+	// listObjectsResp  s3.ListObjectsOutput
 }
 
 func (m mockS3ClientError) CreateBucketWithContext(aws.Context, *s3.CreateBucketInput, ...request.Option) (

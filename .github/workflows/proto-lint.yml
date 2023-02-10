@@ -1,0 +1,61 @@
+name: Protobuf Lint
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'proto/**'
+
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'proto/**'
+
+jobs:
+  proto-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: bufbuild/buf-setup-action@v1.11.0
+
+      - uses: bufbuild/buf-lint-action@v1
+        with:
+          input: 'proto'
+
+#  proto-lint-success:
+#    needs: proto-lint
+#    if: ${{ success() }}
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Notify Slack on success
+#        uses: rtCamp/action-slack-notify@v2.2.0
+#        env:
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#          SLACK_CHANNEL: greenfield_storage_ci
+#          SLACK_USERNAME: SP Protobuf Lint
+#          SLACK_ICON_EMOJI: ':heavy_check_mark:'
+#          SLACK_COLOR: good
+#          SLACK_MESSAGE: Greenfield SP protobuf lint passed
+#          SLACK_FOOTER: ''
+
+#  proto-lint-failure:
+#    needs: proto-lint
+#    if: ${{ failure() }}
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Notify Slack on failure
+#        uses: rtCamp/action-slack-notify@v2.2.0
+#        env:
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#          SLACK_CHANNEL: greenfield_storage_ci
+#          SLACK_USERNAME: SP Protobuf Lint
+#          SLACK_ICON_EMOJI: ':x:'
+#          SLACK_COLOR: danger
+#          SLACK_MESSAGE: Greenfield SP protobuf lint failed
+#          SLACK_FOOTER: ''

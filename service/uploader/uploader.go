@@ -7,20 +7,16 @@ import (
 	"net"
 	"sync/atomic"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-)
-
-const (
-	ServiceNameUploader string = "UploaderService"
 )
 
 // Uploader respond to putObjectTx/putObject impl.
@@ -45,7 +41,7 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 	)
 	u = &Uploader{
 		config: cfg,
-		name:   ServiceNameUploader,
+		name:   model.UploaderService,
 	}
 	stoneHub, err := client.NewStoneHubClient(cfg.StoneHubServiceAddress)
 	if err != nil {
@@ -60,24 +56,32 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 	u.eventWaiter = mock.GetInscriptionChainMockSingleton()
 	u.signer = mock.NewSignerServerMock(u.eventWaiter)
 	u.eventWaiter.Start()
-	if err := u.initDB(cfg.MetaDBConfig); err != nil {
+	if err := u.initDB(); err != nil {
 		return nil, err
 	}
 	return u, err
 }
 
-func (uploader *Uploader) initDB(config *leveldb.MetaLevelDBConfig) (err error) {
-	uploader.metaDB, err = leveldb.NewMetaDB(config)
+// initDB init a meta-db instance
+func (uploader *Uploader) initDB() error {
+	var (
+		metaDB metadb.MetaDB
+		err    error
+	)
+
+	metaDB, err = store.NewMetaDB(uploader.config.MetaDBType,
+		uploader.config.MetaLevelDBConfig, uploader.config.MetaSqlDBConfig)
 	if err != nil {
 		log.Errorw("failed to init metaDB", "err", err)
 		return err
 	}
+	uploader.metaDB = metaDB
 	return nil
 }
 
 // Name implement the lifecycle interface
 func (uploader *Uploader) Name() string {
-	return model.UploaderService
+	return uploader.name
 }
 
 // Start implement the lifecycle interface
@@ -102,7 +106,7 @@ func (uploader *Uploader) serve(errCh chan error) {
 	}
 
 	grpcServer := grpc.NewServer()
-	service.RegisterUploaderServiceServer(grpcServer, uploader)
+	stypes.RegisterUploaderServiceServer(grpcServer, uploader)
 	uploader.grpcServer = grpcServer
 	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {

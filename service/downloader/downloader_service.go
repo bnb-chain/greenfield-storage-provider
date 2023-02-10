@@ -7,22 +7,23 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-var _ service.DownloaderServiceServer = &Downloader{}
+var _ stypes.DownloaderServiceServer = &Downloader{}
 
 // DownloaderSegment download the segment data and return to client.
-func (downloader *Downloader) DownloaderSegment(ctx context.Context, req *service.DownloaderServiceDownloaderSegmentRequest) (resp *service.DownloaderServiceDownloaderSegmentResponse, err error) {
+func (downloader *Downloader) DownloaderSegment(ctx context.Context, req *stypes.DownloaderServiceDownloaderSegmentRequest) (
+	resp *stypes.DownloaderServiceDownloaderSegmentResponse, err error) {
 	ctx = log.Context(ctx, req)
-	resp = &service.DownloaderServiceDownloaderSegmentResponse{
+	resp = &stypes.DownloaderServiceDownloaderSegmentResponse{
 		TraceId: req.TraceId,
 	}
 	defer func() {
 		if err != nil {
-			resp.ErrMessage.ErrCode = service.ErrCode_ERR_CODE_ERROR
+			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 			resp.ErrMessage.ErrMsg = err.Error()
 			log.CtxErrorw(ctx, "download segment failed", "error", err, "object", req.ObjectId, "segment idx", req.SegmentIdx)
 		}
@@ -38,15 +39,16 @@ func (downloader *Downloader) DownloaderSegment(ctx context.Context, req *servic
 }
 
 // DownloaderObject download the object data and return to client.
-func (downloader *Downloader) DownloaderObject(req *service.DownloaderServiceDownloaderObjectRequest, stream service.DownloaderService_DownloaderObjectServer) (err error) {
+func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDownloaderObjectRequest,
+	stream stypes.DownloaderService_DownloaderObjectServer) (err error) {
 	var (
-		objectInfo *types.ObjectInfo
+		objectInfo *ptypes.ObjectInfo
 		size       int
 		offset     uint64
 		length     uint64
 	)
 	ctx := log.Context(context.Background(), req)
-	resp := &service.DownloaderServiceDownloaderObjectResponse{
+	resp := &stypes.DownloaderServiceDownloaderObjectResponse{
 		TraceId: req.TraceId,
 	}
 	defer func() {

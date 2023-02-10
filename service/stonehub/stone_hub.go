@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"github.com/oleiade/lane"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -17,13 +18,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/stone"
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobmemory"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobsql"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/leveldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -50,7 +48,7 @@ var _ lifecycle.Service = &StoneHub{}
 // StoneHub manage all stones, the stone is an abstraction of job context and fsm.
 type StoneHub struct {
 	config   *StoneHubConfig
-	jobDB    jobdb.JobDB         // store the stones(include job and fsm) context
+	jobDB    jobdb.JobDBV2       // store the stones(include job and fsm) context
 	metaDB   metadb.MetaDB       // store the storage provider meta
 	stone    sync.Map            // hold all the running stones, goroutine safe
 	jobQueue *lane.Queue         // hold the stones that wait to be requested by stone node service
@@ -146,7 +144,7 @@ func (hub *StoneHub) serve() {
 		return
 	}
 	grpcServer := grpc.NewServer()
-	service.RegisterStoneHubServiceServer(grpcServer, hub)
+	stypes.RegisterStoneHubServiceServer(grpcServer, hub)
 	// register reflection service
 	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {
@@ -183,7 +181,7 @@ func (hub *StoneHub) eventLoop() {
 // processStoneJob according to the stone job types to process.
 func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 	switch job := stoneJob.(type) {
-	case *service.PieceJob:
+	case *stypes.PieceJob:
 		hub.jobQueue.Enqueue(job)
 		log.Infow("push secondary piece job to queue",
 			"object_id", job.GetObjectId(), "object_size", job.GetPayloadSize(),
@@ -215,10 +213,9 @@ func (hub *StoneHub) gcMemoryStone() {
 		if err != nil {
 			return true // skip err stone
 		}
-		if val.LastModifyTime() <= current || state == types.JOB_STATE_ERROR {
-			stoneKey := key.(string)
-			log.Infow("gc memory stone", "key", stoneKey)
-			hub.stone.Delete(stoneKey)
+		if val.LastModifyTime() <= current || state == ptypes.JOB_STATE_ERROR {
+			log.Infow("gc memory stone", "object_id", key)
+			hub.stone.Delete(key)
 		}
 		return true
 	})
@@ -234,7 +231,7 @@ func (hub *StoneHub) listenChain() {
 			if event == nil {
 				continue
 			}
-			object := event.(*types.ObjectInfo)
+			object := event.(*ptypes.ObjectInfo)
 			st, ok := hub.stone.Load(object.GetObjectId())
 			if !ok {
 				log.Infow("receive seal event, stone has gone")
@@ -260,43 +257,23 @@ func (hub *StoneHub) listenChain() {
 
 // initDB init job, meta, etc. db instance
 func (hub *StoneHub) initDB() error {
-	initMemoryDB := func() {
-		hub.jobDB = jobmemory.NewMemJobDB()
-	}
-	initSqlDB := func() (err error) {
-		if hub.config.JobDB == nil {
-			hub.config.JobDB = DefaultStoneHubConfig.JobDB
-		}
-		hub.jobDB, err = jobsql.NewJobMetaImpl(hub.config.JobDB)
-		return
-	}
-	initLevelDB := func() (err error) {
-		if hub.config.MetaDB == nil {
-			hub.config.MetaDB = DefaultStoneHubConfig.MetaDB
-		}
-		hub.metaDB, err = leveldb.NewMetaDB(hub.config.MetaDB)
-		return
-	}
+	var (
+		jobDB  jobdb.JobDBV2
+		metaDB metadb.MetaDB
+		err    error
+	)
 
-	switch hub.config.JobDBType {
-	case model.MySqlDB:
-		if err := initSqlDB(); err != nil {
-			return err
-		}
-	case model.MemoryDB:
-		initMemoryDB()
-	default:
-		return fmt.Errorf("job db not support %s type", hub.config.JobDBType)
+	if jobDB, err = store.NewJobDB(hub.config.JobDBType, hub.config.JobSqlDBConfig); err != nil {
+		log.Errorw("failed to init jobDB", "err", err)
+		return err
 	}
-
-	switch hub.config.MetaDBType {
-	case model.LevelDB:
-		if err := initLevelDB(); err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("meta db not support %s type", hub.config.MetaDBType)
+	if metaDB, err = store.NewMetaDB(hub.config.MetaDBType,
+		hub.config.MetaLevelDBConfig, hub.config.MetaSqlDBConfig); err != nil {
+		log.Errorw("failed to init metaDB", "err", err)
+		return err
 	}
+	hub.jobDB = jobDB
+	hub.metaDB = metaDB
 	return nil
 }
 

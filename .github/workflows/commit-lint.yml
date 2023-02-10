@@ -1,0 +1,81 @@
+name: Lint Commit Messages
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  commit-lint:
+    strategy:
+      matrix:
+        node-version: [14.x]
+        os: [ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            **/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install Deps
+        run: |
+          npm install -g commitlint-plugin-function-rules @commitlint/cli
+          npm install --save-dev commitlint-plugin-function-rules @commitlint/cli
+
+      - uses: wagoid/commitlint-github-action@v5
+        id: commitlint
+        env:
+          NODE_PATH: ${{ github.workspace }}/node_modules
+        with:
+          configFile: /github/workspace/.github/commitlint.config.js
+
+#  commit-lint-success:
+#    needs: commit-lint
+#    if: ${{ success() }}
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Notify Slack on success
+#        uses: rtCamp/action-slack-notify@v2.2.0
+#        env:
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#          SLACK_CHANNEL: greenfield_storage_ci
+#          SLACK_USERNAME: SP Git Lint
+#          SLACK_ICON_EMOJI: ':heavy_check_mark:'
+#          SLACK_COLOR: good
+#          SLACK_MESSAGE: Greenfield SP git commit lint passed
+#          SLACK_FOOTER: ''
+
+#  commit-lint-failure:
+#    needs: commit-lint
+#    if: ${{ failure() }}
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Notify Slack on failure
+#        uses: rtCamp/action-slack-notify@v2.2.0
+#        env:
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#          SLACK_CHANNEL: greenfield_storage_ci
+#          SLACK_USERNAME: SP Git Lint
+#          SLACK_ICON_EMOJI: ':x:'
+#          SLACK_COLOR: danger
+#          SLACK_MESSAGE: Greenfield SP git commit lint failed
+#          SLACK_FOOTER: ''

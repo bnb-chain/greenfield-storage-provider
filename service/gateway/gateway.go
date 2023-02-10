@@ -13,10 +13,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-const (
-	ServiceNameGateway string = "GatewayService"
-)
-
 // Gateway is the primary entry point of SP.
 type Gateway struct {
 	config  *GatewayConfig
@@ -39,13 +35,13 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 
 	g = &Gateway{
 		config: cfg,
-		name:   ServiceNameGateway,
+		name:   model.GatewayService,
 	}
-	if g.uploadProcessor, err = newUploadProcessor(g.config.UploaderConfig); err != nil {
+	if g.uploadProcessor, err = newUploadProcessor(g.config.UploaderServiceAddress); err != nil {
 		log.Warnw("failed to create uploader", "err", err)
 		return nil, err
 	}
-	if g.downloadProcessor, err = newDownloadProcessor(g.config.DownloaderConfig); err != nil {
+	if g.downloadProcessor, err = newDownloadProcessor(g.config.DownloaderServiceAddress); err != nil {
 		log.Warnw("failed to create downloader", "err", err)
 		return nil, err
 	}
@@ -60,7 +56,7 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 
 // Name implement the lifecycle interface
 func (g *Gateway) Name() string {
-	return model.GatewayService
+	return g.name
 }
 
 // Start implement the lifecycle interface
@@ -95,9 +91,6 @@ func (g *Gateway) Stop(ctx context.Context) error {
 	}
 	var errs []error
 	if err := g.httpServer.Shutdown(ctx); err != nil {
-		errs = append(errs, err)
-	}
-	if err := g.uploadProcessor.Close(); err != nil {
 		errs = append(errs, err)
 	}
 	if errs != nil {

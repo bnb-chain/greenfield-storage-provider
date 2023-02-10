@@ -1,19 +1,25 @@
-# GreenField-storage-provider
+# Greenfield-storage-provider
 
-GreenField-Storage-Provideris storage service infrastructures provided by either organizations or individuals. They use GreenField-Storage-Chain as the ledger and the golden data source of meta. Each SP can and will respond to users’ requests to write (upload) and read (download) data, and be the gatekeeper for user rights and authentications.
+Greenfield-Storage-Providers storage service infrastructures provided by either organizations or individuals. They use GreenField-Storage-Chain as the ledger and the golden data source of meta. Each SP can and will respond to users’ requests to write (upload) and read (download) data, and be the gatekeeper for user rights and authentications.
 
 # Service
+## Install-Tools
+```shell
+make install-tools
+```
 ## Build
 ```shell
 bash build.sh
 ```
-## Deploy
+## Quick Deploy
 ```shell
 cd build
-# Print Version
-./storage_provider -v
-# Run Services
-./storage_provider -config ./config.toml
-# Run Cases
-./test-storage-provider
+# print version
+./gnfd-sp --version
+# setup secondary sps in the test-env directory(syncer)
+./setup-test-env
+# run primary sp(gateway/uploader/downloader/stonehub/stonenode/syncer)
+./gnfd-sp -config ./config.toml
+# run cases, request to primary sp
+./test-gnfd-sp
 ```

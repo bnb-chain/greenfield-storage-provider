@@ -10,6 +10,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
+var _ PieceStoreAPI = &StoreClient{}
+
 // PieceStoreAPI provides an interface to enable mocking the
 // StoreClient's API operation. This makes unit test to test your code easier.
 //
@@ -37,9 +39,6 @@ func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, lim
 		log.Errorw("stone node service invoke PieceStore Get failed", "error", err)
 		return nil, err
 	}
-	//b := make([]byte, 0)
-	//a := bytes.NewReader(b)
-	//io.Copy(rc, a)
 	data, err := io.ReadAll(rc)
 	if err != nil {
 		log.Errorw("stone node service invoke io.ReadAll failed", "error", err)

@@ -7,8 +7,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/stone"
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -20,15 +20,14 @@ import (
  * aim to complete uploading secondary storage provider.
  */
 
-var _ service.StoneHubServiceServer = &StoneHub{}
+var _ stypes.StoneHubServiceServer = &StoneHub{}
 var _ Stone = &stone.UploadPayloadStone{}
 
 // CreateObject create job and object info, store the DB table, if already exists will return error
-func (hub *StoneHub) CreateObject(ctx context.Context,
-	req *service.StoneHubServiceCreateObjectRequest) (
-	*service.StoneHubServiceCreateObjectResponse, error) {
+func (hub *StoneHub) CreateObject(ctx context.Context, req *stypes.StoneHubServiceCreateObjectRequest) (
+	*stypes.StoneHubServiceCreateObjectResponse, error) {
 	ctx = log.Context(ctx, req)
-	rsp := &service.StoneHubServiceCreateObjectResponse{
+	rsp := &stypes.StoneHubServiceCreateObjectResponse{
 		TraceId: req.TraceId,
 	}
 	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrInterfaceAbandoned)
@@ -61,11 +60,10 @@ func (hub *StoneHub) CreateObject(ctx context.Context,
 }
 
 // SetObjectCreateInfo set CreateObjectTX the height and object resource id on the inscription chain
-func (hub *StoneHub) SetObjectCreateInfo(ctx context.Context,
-	req *service.StoneHubServiceSetObjectCreateInfoRequest) (
-	*service.StoneHubServiceSetObjectCreateInfoResponse, error) {
+func (hub *StoneHub) SetObjectCreateInfo(ctx context.Context, req *stypes.StoneHubServiceSetObjectCreateInfoRequest) (
+	*stypes.StoneHubServiceSetObjectCreateInfoResponse, error) {
 	ctx = log.Context(ctx, req)
-	rsp := &service.StoneHubServiceSetObjectCreateInfoResponse{TraceId: req.TraceId}
+	rsp := &stypes.StoneHubServiceSetObjectCreateInfoResponse{TraceId: req.TraceId}
 	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrInterfaceAbandoned)
 	log.CtxErrorw(ctx, "set object create info interface is abandoned")
 	return rsp, nil
@@ -95,11 +93,10 @@ func (hub *StoneHub) SetObjectCreateInfo(ctx context.Context,
 
 // BeginUploadPayload create upload payload stone and start the fsm to upload
 // if the job context or object info is nil in local, will query from inscription chain
-func (hub *StoneHub) BeginUploadPayload(ctx context.Context,
-	req *service.StoneHubServiceBeginUploadPayloadRequest) (
-	*service.StoneHubServiceBeginUploadPayloadResponse, error) {
+func (hub *StoneHub) BeginUploadPayload(ctx context.Context, req *stypes.StoneHubServiceBeginUploadPayloadRequest) (
+	*stypes.StoneHubServiceBeginUploadPayloadResponse, error) {
 	ctx = log.Context(ctx, req)
-	rsp := &service.StoneHubServiceBeginUploadPayloadResponse{TraceId: req.TraceId}
+	rsp := &stypes.StoneHubServiceBeginUploadPayloadResponse{TraceId: req.TraceId}
 	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrInterfaceAbandoned)
 	log.CtxErrorw(ctx, "set object create info interface is abandoned")
 	return rsp, nil
@@ -189,11 +186,10 @@ func (hub *StoneHub) BeginUploadPayload(ctx context.Context,
 }
 
 // BeginUploadPayloadV2 merge CreateObject, SetObjectCreateInfo and BeginUploadPayload, special for heavy client use.
-func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context,
-	req *service.StoneHubServiceBeginUploadPayloadV2Request) (
-	resp *service.StoneHubServiceBeginUploadPayloadV2Response, err error) {
+func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *stypes.StoneHubServiceBeginUploadPayloadV2Request) (
+	resp *stypes.StoneHubServiceBeginUploadPayloadV2Response, err error) {
 	ctx = log.Context(ctx, req, req.GetObjectInfo())
-	resp = &service.StoneHubServiceBeginUploadPayloadV2Response{
+	resp = &stypes.StoneHubServiceBeginUploadPayloadV2Response{
 		TraceId: req.TraceId,
 	}
 	defer func() {
@@ -229,20 +225,19 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context,
 
 	// TODO:: inline type check and change move to gate
 	if req.GetObjectInfo().GetSize() <= model.InlineSize {
-		req.GetObjectInfo().RedundancyType = types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
+		req.GetObjectInfo().RedundancyType = ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
 	}
 
 	var (
-		jobCtx      *types.JobContext
+		jobCtx      *ptypes.JobContext
 		uploadStone *stone.UploadPayloadStone
 	)
 	// create upload stone
-	if req.ObjectInfo.JobId, err = hub.jobDB.CreateUploadPayloadJob(
-		req.GetObjectInfo().GetTxHash(), req.GetObjectInfo()); err != nil {
+	if req.ObjectInfo.JobId, err = hub.jobDB.CreateUploadPayloadJobV2(req.GetObjectInfo()); err != nil {
 		return
 	}
 	// TODO::CreateUploadPayloadJob return jobContext
-	if jobCtx, err = hub.jobDB.GetJobContext(req.GetObjectInfo().GetJobId()); err != nil {
+	if jobCtx, err = hub.jobDB.GetJobContextV2(req.GetObjectInfo().GetJobId()); err != nil {
 		return
 	}
 	if uploadStone, err = stone.NewUploadPayloadStone(ctx, jobCtx, req.GetObjectInfo(),
@@ -262,11 +257,10 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context,
 }
 
 // DonePrimaryPieceJob set the primary piece job completed state
-func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context,
-	req *service.StoneHubServiceDonePrimaryPieceJobRequest) (
-	*service.StoneHubServiceDonePrimaryPieceJobResponse, error) {
+func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context, req *stypes.StoneHubServiceDonePrimaryPieceJobRequest) (
+	*stypes.StoneHubServiceDonePrimaryPieceJobResponse, error) {
 	ctx = log.Context(ctx, req, req.GetPieceJob())
-	resp := &service.StoneHubServiceDonePrimaryPieceJobResponse{TraceId: req.TraceId, TxHash: req.TxHash}
+	resp := &stypes.StoneHubServiceDonePrimaryPieceJobResponse{TraceId: req.TraceId}
 	var (
 		uploadStone  *stone.UploadPayloadStone
 		job          Stone
@@ -298,7 +292,7 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context,
 		return resp, nil
 	}
 	if req.GetErrMessage() != nil && req.GetErrMessage().GetErrCode() ==
-		service.ErrCode_ERR_CODE_ERROR {
+		stypes.ErrCode_ERR_CODE_ERROR {
 		interruptErr = errors.New(resp.GetErrMessage().GetErrMsg())
 		return resp, nil
 	}
@@ -324,18 +318,17 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context,
 }
 
 // AllocStoneJob pop the secondary piece job
-func (hub *StoneHub) AllocStoneJob(ctx context.Context,
-	req *service.StoneHubServiceAllocStoneJobRequest) (
-	*service.StoneHubServiceAllocStoneJobResponse, error) {
+func (hub *StoneHub) AllocStoneJob(ctx context.Context, req *stypes.StoneHubServiceAllocStoneJobRequest) (
+	*stypes.StoneHubServiceAllocStoneJobResponse, error) {
 	ctx = log.Context(ctx, req)
-	resp := &service.StoneHubServiceAllocStoneJobResponse{TraceId: req.TraceId}
+	resp := &stypes.StoneHubServiceAllocStoneJobResponse{TraceId: req.TraceId}
 	stoneJob := hub.ConsumeJob()
 	if stoneJob == nil {
 		log.CtxDebugw(ctx, "no stone job to dispatch")
 		return resp, nil
 	}
 	switch job := stoneJob.(type) {
-	case *service.PieceJob:
+	case *stypes.PieceJob:
 		resp.PieceJob = job
 	default:
 		resp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrStoneJobTypeUnrecognized)
@@ -345,11 +338,10 @@ func (hub *StoneHub) AllocStoneJob(ctx context.Context,
 }
 
 // DoneSecondaryPieceJob set the secondary piece job completed state
-func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
-	req *service.StoneHubServiceDoneSecondaryPieceJobRequest) (
-	*service.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
+func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context, req *stypes.StoneHubServiceDoneSecondaryPieceJobRequest) (
+	*stypes.StoneHubServiceDoneSecondaryPieceJobResponse, error) {
 	ctx = log.Context(ctx, req, req.GetPieceJob())
-	resp := &service.StoneHubServiceDoneSecondaryPieceJobResponse{TraceId: req.TraceId}
+	resp := &stypes.StoneHubServiceDoneSecondaryPieceJobResponse{TraceId: req.TraceId}
 	var (
 		uploadStone  *stone.UploadPayloadStone
 		job          Stone
@@ -369,7 +361,7 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
 		log.CtxInfow(ctx, "done secondary piece job completed", "piece_idx", pieceIdx, "error", err)
 	}()
 	if req.GetErrMessage() != nil && req.GetErrMessage().GetErrCode() ==
-		service.ErrCode_ERR_CODE_ERROR {
+		stypes.ErrCode_ERR_CODE_ERROR {
 		interruptErr = errors.New(resp.GetErrMessage().GetErrMsg())
 		return resp, nil
 	}
@@ -405,15 +397,15 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context,
 }
 
 // QueryStone return the stone info, debug interface
-func (hub *StoneHub) QueryStone(ctx context.Context, req *service.StoneHubServiceQueryStoneRequest) (*service.StoneHubServiceQueryStoneResponse, error) {
-	ctx = log.Context(ctx, req)
-	rsp := &service.StoneHubServiceQueryStoneResponse{}
+func (hub *StoneHub) QueryStone(ctx context.Context, req *stypes.StoneHubServiceQueryStoneRequest) (*stypes.StoneHubServiceQueryStoneResponse, error) {
+	// ctx = log.Context(ctx, req)
+	rsp := &stypes.StoneHubServiceQueryStoneResponse{}
 
 	st := hub.GetStone(req.GetObjectId())
 	uploadStone := st.(*stone.UploadPayloadStone)
 	rsp.JobInfo = uploadStone.GetJobContext()
 	rsp.PendingPrimaryJob = uploadStone.PopPendingPrimarySPJob()
 	rsp.PendingSecondaryJob = uploadStone.PopPendingSecondarySPJob()
-	rsp.ObjectInfo, _ = hub.jobDB.GetObjectInfo(uploadStone.GetObjectInfo().GetTxHash())
+	rsp.ObjectInfo, _ = hub.jobDB.GetObjectInfoV2(uploadStone.GetObjectInfo().GetObjectId())
 	return rsp, nil
 }

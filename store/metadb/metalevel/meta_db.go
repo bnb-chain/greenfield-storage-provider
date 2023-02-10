@@ -1,9 +1,10 @@
-package leveldb
+package metalevel
 
 import (
 	"encoding/json"
 	"sync"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/filter"
@@ -37,7 +38,7 @@ var (
 )
 
 // NewMetaDB call NewCustomMetaDB return Database instance.
-func NewMetaDB(config *MetaLevelDBConfig) (*Database, error) {
+func NewMetaDB(config *config.LevelDBConfig) (*Database, error) {
 	var err error
 	once.Do(func() {
 		metaDB, err = newCustomMetaDB(config.Path, config.NameSpace, config.Cache, config.FileHandles, config.ReadOnly)
@@ -102,21 +103,23 @@ func (db *Database) SetIntegrityMeta(meta *metadb.IntegrityMeta) error {
 	if err != nil {
 		return err
 	}
-	return db.db.Put(IntegrityMetaKey(db.Namespace, meta.ObjectID), data, nil)
+	return db.db.Put(IntegrityMetaKey(db.Namespace,
+		meta.ObjectID, meta.IsPrimary, meta.RedundancyType, meta.EcIdx), data, nil)
 }
 
 // GetIntegrityMeta return the integrity hash info
-func (db *Database) GetIntegrityMeta(objectID uint64) (*metadb.IntegrityMeta, error) {
-	data, err := db.db.Get(IntegrityMetaKey(db.Namespace, objectID), nil)
+func (db *Database) GetIntegrityMeta(queryCondition *metadb.IntegrityMeta) (*metadb.IntegrityMeta, error) {
+	data, err := db.db.Get(IntegrityMetaKey(db.Namespace,
+		queryCondition.ObjectID, queryCondition.IsPrimary, queryCondition.RedundancyType, queryCondition.EcIdx), nil)
 	if err != nil {
 		return nil, err
 	}
 	if len(data) == 0 {
 		return nil, errors.New("integrity info not exits")
 	}
-	var meta metadb.IntegrityMeta
-	err = json.Unmarshal(data, &meta)
-	return &meta, err
+	var metaReturn metadb.IntegrityMeta
+	err = json.Unmarshal(data, &metaReturn)
+	return &metaReturn, err
 }
 
 // SetUploadPayloadAskingMeta put payload asking info to db.
@@ -132,8 +135,8 @@ func (db *Database) SetUploadPayloadAskingMeta(meta *metadb.UploadPayloadAskingM
 }
 
 // GetUploadPayloadAskingMeta return the payload asking info.
-func (db *Database) GetUploadPayloadAskingMeta(bucket, object string) (*metadb.UploadPayloadAskingMeta, error) {
-	data, err := db.db.Get(UploadPayloadAsingKey(db.Namespace, bucket, object), nil)
+func (db *Database) GetUploadPayloadAskingMeta(bucketName, objectName string) (*metadb.UploadPayloadAskingMeta, error) {
+	data, err := db.db.Get(UploadPayloadAsingKey(db.Namespace, bucketName, objectName), nil)
 	if err != nil {
 		return nil, err
 	}

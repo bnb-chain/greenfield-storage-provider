@@ -3,21 +3,21 @@ package job
 import (
 	"sync"
 
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 )
 
 // ObjectInfoContext maintains the object info, goroutine safe.
 type ObjectInfoContext struct {
-	object *types.ObjectInfo
-	jobDB  jobdb.JobDB
+	object *ptypes.ObjectInfo
+	jobDB  jobdb.JobDBV2
 	metaDB metadb.MetaDB
 	mu     sync.RWMutex
 }
 
 // NewObjectInfoContext return the instance of ObjectInfoContext.
-func NewObjectInfoContext(object *types.ObjectInfo, jobDB jobdb.JobDB, metaDB metadb.MetaDB) *ObjectInfoContext {
+func NewObjectInfoContext(object *ptypes.ObjectInfo, jobDB jobdb.JobDBV2, metaDB metadb.MetaDB) *ObjectInfoContext {
 	return &ObjectInfoContext{
 		object: object,
 		jobDB:  jobDB,
@@ -26,7 +26,7 @@ func NewObjectInfoContext(object *types.ObjectInfo, jobDB jobdb.JobDB, metaDB me
 }
 
 // GetObjectInfo return the object info.
-func (ctx *ObjectInfoContext) GetObjectInfo() *types.ObjectInfo {
+func (ctx *ObjectInfoContext) GetObjectInfo() *ptypes.ObjectInfo {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
 	return ctx.object.SafeCopy()
@@ -47,7 +47,7 @@ func (ctx *ObjectInfoContext) GetObjectSize() uint64 {
 }
 
 // GetObjectRedundancyType return the object redundancy type.
-func (ctx *ObjectInfoContext) GetObjectRedundancyType() types.RedundancyType {
+func (ctx *ObjectInfoContext) GetObjectRedundancyType() ptypes.RedundancyType {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
 	return ctx.object.GetRedundancyType()
@@ -64,24 +64,24 @@ func (ctx *ObjectInfoContext) TxHash() []byte {
 func (ctx *ObjectInfoContext) getPrimaryPieceJob() ([]*jobdb.PieceJob, error) {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
-	return ctx.jobDB.GetPrimaryJob(ctx.object.TxHash)
+	return ctx.jobDB.GetPrimaryJobV2(ctx.object.GetObjectId())
 }
 
 // GetSecondaryJob load the secondary piece job from db and return.
 func (ctx *ObjectInfoContext) getSecondaryJob() ([]*jobdb.PieceJob, error) {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
-	return ctx.jobDB.GetSecondaryJob(ctx.object.TxHash)
+	return ctx.jobDB.GetSecondaryJobV2(ctx.object.GetObjectId())
 }
 
 // SetPrimaryPieceJobDone set the primary piece jod completed and update DB.
 func (ctx *ObjectInfoContext) SetPrimaryPieceJobDone(job *jobdb.PieceJob) error {
-	return ctx.jobDB.SetPrimaryPieceJobDone(ctx.object.GetTxHash(), job)
+	return ctx.jobDB.SetPrimaryPieceJobDoneV2(ctx.object.GetObjectId(), job)
 }
 
 // SetSecondaryPieceJobDone set the secondary piece jod completed and update DB.
 func (ctx *ObjectInfoContext) SetSecondaryPieceJobDone(job *jobdb.PieceJob) error {
-	return ctx.jobDB.SetSecondaryPieceJobDone(ctx.object.GetTxHash(), job)
+	return ctx.jobDB.SetSecondaryPieceJobDoneV2(ctx.object.GetObjectId(), job)
 }
 
 // SetSetIntegrityHash set integrity hash info to meta db.

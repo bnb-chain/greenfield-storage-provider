@@ -26,7 +26,7 @@ import (
 	"github.com/viki-org/dnscache"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -147,7 +147,7 @@ func (s *s3Store) HeadBucket(ctx context.Context) error {
 		log.Errorw("ObjectStorage S3 HeadBucket error", "error", err)
 		if reqErr, ok := err.(awserr.RequestFailure); ok {
 			if reqErr.StatusCode() == http.StatusNotFound {
-				return errors.BucketNotExisted
+				return merrors.BucketNotExisted
 			}
 		}
 		return err
@@ -215,7 +215,7 @@ func (s *s3Store) ListObjects(ctx context.Context, prefix, marker, delimiter str
 }
 
 func (s *s3Store) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan Object, error) {
-	return nil, errors.NotSupportedMethod
+	return nil, merrors.NotSupportedMethod
 }
 
 // SessionCache holds session.Session according to model.ObjectStorage and it synchronizes access/modification
@@ -233,21 +233,22 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		return sess, "", nil
 	}
 
-	bucketName, region, err := parseEndPoint(cfg.BucketURL)
+	endpoint, bucketName, region, err := parseEndPoint(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("s3 parseEndPoint error", "error", err)
 		return nil, "", err
 	}
+	log.Debugw("s3 storage info", "endPoint", endpoint, "bucketName", bucketName, "region", region)
 
 	awsConfig := &aws.Config{
 		Region:           aws.String(region),
-		Endpoint:         aws.String(cfg.BucketURL),
+		Endpoint:         aws.String(endpoint),
 		DisableSSL:       aws.Bool(disableSSL),
 		HTTPClient:       getHTTPClient(cfg.TlsInsecureSkipVerify),
 		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
 		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
 	}
-	if cfg.TestMode == false {
+	if !cfg.TestMode {
 		if cfg.NoSignRequest {
 			awsConfig.Credentials = credentials.AnonymousCredentials
 		} else if cfg.AccessKey != "" && cfg.SecretKey != "" {
@@ -264,18 +265,18 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	return sess, bucketName, nil
 }
 
-func (sc *SessionCache) clear() {
-	sc.Lock()
-	defer sc.Unlock()
-	sc.sessions = map[ObjectStorageConfig]*session.Session{}
-}
+//func (sc *SessionCache) clear() {
+//	sc.Lock()
+//	defer sc.Unlock()
+//	sc.sessions = map[ObjectStorageConfig]*session.Session{}
+//}
 
-func parseEndPoint(endPoint string) (string, string, error) {
+func parseEndPoint(endPoint string) (string, string, string, error) {
 	endPoint = strings.Trim(endPoint, "/")
 	uri, err := url.ParseRequestURI(endPoint)
 	if err != nil {
 		log.Errorw("ParseRequestURI error", "endPoint", endPoint, "error", err)
-		return "", "", err
+		return "", "", "", err
 	}
 
 	var (
@@ -309,7 +310,7 @@ func parseEndPoint(endPoint string) (string, string, error) {
 		disableSSL = true
 	}
 
-	return bucketName, region, nil
+	return endPoint, bucketName, region, nil
 }
 
 func parseRegion(endpoint string) string {

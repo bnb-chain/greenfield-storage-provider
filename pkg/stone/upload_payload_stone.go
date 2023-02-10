@@ -2,22 +2,25 @@ package stone
 
 import (
 	"context"
-	"errors"
 
 	"github.com/looplab/fsm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/job"
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 )
+
+type contextKey string
 
 const (
 	// CtxStoneKey defines the key of UploadPayloadStone in context that transfer in fsm
-	CtxStoneKey string = "UploadPayloadStone"
+	CtxStoneKey contextKey = "UploadPayloadStone"
 )
 
 // StoneJob defines the interface of job that transfer to StoneHub
@@ -32,14 +35,14 @@ type UploadPayloadStone struct {
 	job    *job.UploadPayloadJob  // records the upload payload job information
 	jobCh  chan StoneJob          // the channel of transfer job to StoneHub
 	gcCh   chan uint64            // the channel of notify StoneHub to delete stone
-	jobDB  jobdb.JobDB
+	jobDB  jobdb.JobDBV2
 	metaDB metadb.MetaDB
 }
 
 // NewUploadPayloadStone return the instance of UploadPayloadStone
 func NewUploadPayloadStone(ctx context.Context,
-	jobContext *types.JobContext, object *types.ObjectInfo,
-	jobDB jobdb.JobDB, metaDB metadb.MetaDB,
+	jobContext *ptypes.JobContext, object *ptypes.ObjectInfo,
+	jobDB jobdb.JobDBV2, metaDB metadb.MetaDB,
 	jobCh chan StoneJob, gcCh chan uint64) (*UploadPayloadStone, error) {
 	jobCtx := NewJobContextWrapper(jobContext, jobDB, metaDB)
 	objectCtx := job.NewObjectInfoContext(object, jobDB, metaDB)
@@ -50,7 +53,8 @@ func NewUploadPayloadStone(ctx context.Context,
 
 	state, err := repairState(jobCtx, uploadJob)
 	if err != nil {
-		log.Error("repair upload payload state error", "error", err)
+		// todo: if job has finished(ErrUploadPayloadJobHasFinished), need set response done and not return err
+		log.CtxWarnw(ctx, "repair upload payload state error", "error", err)
 		return nil, err
 	}
 	stone := &UploadPayloadStone{
@@ -75,15 +79,15 @@ func repairState(jobCtx *JobContextWrapper, job *job.UploadPayloadJob) (string, 
 	if err != nil {
 		return state, err
 	}
-	if state == types.JOB_STATE_SEAL_OBJECT_DONE {
-		return state, errors.New("upload payload job has been successfully completed")
+	if state == ptypes.JOB_STATE_SEAL_OBJECT_DONE {
+		return state, merrors.ErrUploadPayloadJobHasFinished
 	}
-	state = types.JOB_STATE_CREATE_OBJECT_DONE
+	state = ptypes.JOB_STATE_CREATE_OBJECT_DONE
 	if job.PrimarySPCompleted() {
-		state = types.JOB_STATE_UPLOAD_PRIMARY_DONE
+		state = ptypes.JOB_STATE_UPLOAD_PRIMARY_DONE
 	}
 	if job.SecondarySPCompleted() {
-		state = types.JOB_STATE_UPLOAD_SECONDARY_DONE
+		state = ptypes.JOB_STATE_UPLOAD_SECONDARY_DONE
 	}
 	if err := jobCtx.SetJobErr(nil); err != nil {
 		return state, err
@@ -111,29 +115,29 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 	for {
 		current = stone.jobFsm.Current()
 		switch current {
-		case types.JOB_STATE_CREATE_OBJECT_DONE:
+		case ptypes.JOB_STATE_CREATE_OBJECT_DONE:
 			event = UploadPayloadInitEvent
-		case types.JOB_STATE_UPLOAD_PRIMARY_INIT:
+		case ptypes.JOB_STATE_UPLOAD_PRIMARY_INIT:
 			event = UploadPrimaryDoingEvent
-		case types.JOB_STATE_UPLOAD_PRIMARY_DOING:
+		case ptypes.JOB_STATE_UPLOAD_PRIMARY_DOING:
 			if stone.job.PrimarySPCompleted() {
 				event = UploadPrimaryDoneEvent
 			} else {
 				return nil
 			}
-		case types.JOB_STATE_UPLOAD_PRIMARY_DONE:
+		case ptypes.JOB_STATE_UPLOAD_PRIMARY_DONE:
 			event = UploadSecondaryInitEvent
-		case types.JOB_STATE_UPLOAD_SECONDARY_INIT:
+		case ptypes.JOB_STATE_UPLOAD_SECONDARY_INIT:
 			event = UploadSecondaryDoingEvent
-		case types.JOB_STATE_UPLOAD_SECONDARY_DOING:
+		case ptypes.JOB_STATE_UPLOAD_SECONDARY_DOING:
 			if stone.job.SecondarySPCompleted() {
 				event = UploadSecondaryDoneEvent
 			} else {
 				return nil
 			}
-		case types.JOB_STATE_UPLOAD_SECONDARY_DONE:
+		case ptypes.JOB_STATE_UPLOAD_SECONDARY_DONE:
 			event = SealObjectInitEvent
-		case types.JOB_STATE_SEAL_OBJECT_INIT:
+		case ptypes.JOB_STATE_SEAL_OBJECT_INIT:
 			event = SealObjectDoingEvent
 		default:
 			return nil
@@ -148,7 +152,7 @@ func (stone *UploadPayloadStone) selfActionEvent(ctx context.Context, args ...in
 
 // ActionEvent receive the event and propelled fsm execution
 func (stone *UploadPayloadStone) ActionEvent(ctx context.Context, event string, args ...interface{}) error {
-	if stone.jobCtx.JobErr() != nil || stone.jobFsm.Current() == types.JOB_STATE_ERROR {
+	if stone.jobCtx.JobErr() != nil || stone.jobFsm.Current() == ptypes.JOB_STATE_ERROR {
 		// log error
 		return stone.jobCtx.JobErr()
 	}
@@ -169,7 +173,7 @@ func (stone *UploadPayloadStone) ActionEvent(ctx context.Context, event string, 
 
 // InterruptStone interrupt the fsm and stop the stone
 func (stone *UploadPayloadStone) InterruptStone(ctx context.Context, err error) error {
-	if stone.jobCtx.JobErr() != nil || stone.jobFsm.Current() == types.JOB_STATE_ERROR {
+	if stone.jobCtx.JobErr() != nil || stone.jobFsm.Current() == ptypes.JOB_STATE_ERROR {
 		log.CtxWarnw(ctx, "interrupt stone fsm params error")
 		return stone.jobCtx.JobErr()
 	}
@@ -185,12 +189,12 @@ func (stone *UploadPayloadStone) PrimarySPJobDone() bool {
 }
 
 // PopPendingPrimarySPJob return the uncompleted upload primary storage provider job
-func (stone *UploadPayloadStone) PopPendingPrimarySPJob() *service.PieceJob {
+func (stone *UploadPayloadStone) PopPendingPrimarySPJob() *stypes.PieceJob {
 	return stone.job.PopPendingPrimarySPJob()
 }
 
 // PopPendingSecondarySPJob return the uncompleted upload secondary storage provider job
-func (stone *UploadPayloadStone) PopPendingSecondarySPJob() *service.PieceJob {
+func (stone *UploadPayloadStone) PopPendingSecondarySPJob() *stypes.PieceJob {
 	return stone.job.PopPendingSecondarySPJob()
 }
 
@@ -210,11 +214,11 @@ func (stone *UploadPayloadStone) GetStoneState() (string, error) {
 }
 
 // GetJobContext return the job context
-func (stone *UploadPayloadStone) GetJobContext() *types.JobContext {
+func (stone *UploadPayloadStone) GetJobContext() *ptypes.JobContext {
 	return stone.jobCtx.JobContext()
 }
 
 // GetObjectInfo return the object info
-func (stone *UploadPayloadStone) GetObjectInfo() *types.ObjectInfo {
+func (stone *UploadPayloadStone) GetObjectInfo() *ptypes.ObjectInfo {
 	return stone.objCtx.GetObjectInfo()
 }

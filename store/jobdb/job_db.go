@@ -1,6 +1,8 @@
 package jobdb
 
-import types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+import (
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+)
 
 // PieceJob record the piece job context, interact with db.
 // For primary:
@@ -23,12 +25,13 @@ type PieceJob struct {
 	Done            bool
 }
 
+// JobDB use txhash as primary key
 type JobDB interface {
-	CreateUploadPayloadJob(txHash []byte, info *types.ObjectInfo) (uint64, error)
+	CreateUploadPayloadJob(txHash []byte, info *ptypes.ObjectInfo) (uint64, error)
 	SetObjectCreateHeightAndObjectID(txHash []byte, height uint64, objectID uint64) error
 
-	GetObjectInfo(txHash []byte) (*types.ObjectInfo, error)
-	GetJobContext(jobId uint64) (*types.JobContext, error)
+	GetObjectInfo(txHash []byte) (*ptypes.ObjectInfo, error)
+	GetJobContext(jobId uint64) (*ptypes.JobContext, error)
 
 	SetUploadPayloadJobState(jobId uint64, state string, timestamp int64) error
 	SetUploadPayloadJobJobError(jobID uint64, jobState string, jobErr string, timestamp int64) error
@@ -37,4 +40,24 @@ type JobDB interface {
 	GetSecondaryJob(txHash []byte) ([]*PieceJob, error)
 	SetPrimaryPieceJobDone(txHash []byte, piece *PieceJob) error
 	SetSecondaryPieceJobDone(txHash []byte, piece *PieceJob) error
+}
+
+/* Compare to JobDB, JobDBV2 change index from CreateObjectTxHash to ObjectID.
+ * Adapt for changing light client to heavy client, ObjectID as index is necessary for SP.
+ */
+
+// JobDBV2 use objectID as primary key
+type JobDBV2 interface {
+	CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, error)
+
+	GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error)
+	GetJobContextV2(jobId uint64) (*ptypes.JobContext, error)
+
+	SetUploadPayloadJobStateV2(jobId uint64, state string, timestamp int64) error
+	SetUploadPayloadJobJobErrorV2(jobID uint64, jobState string, jobErr string, timestamp int64) error
+
+	GetPrimaryJobV2(objectID uint64) ([]*PieceJob, error)
+	GetSecondaryJobV2(objectID uint64) ([]*PieceJob, error)
+	SetPrimaryPieceJobDoneV2(objectID uint64, piece *PieceJob) error
+	SetSecondaryPieceJobDoneV2(objectID uint64, piece *PieceJob) error
 }

@@ -3,7 +3,7 @@ package stone
 import (
 	"github.com/looplab/fsm"
 
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 )
 
 /*
@@ -38,51 +38,51 @@ var (
 
 // UploadPayloadFsmEvent define FSM event transitions
 var UploadPayloadFsmEvent = fsm.Events{
-	{Name: UploadPayloadInitEvent, Src: []string{types.JOB_STATE_CREATE_OBJECT_DONE}, Dst: types.JOB_STATE_UPLOAD_PRIMARY_INIT},
-	{Name: UploadPrimaryDoingEvent, Src: []string{types.JOB_STATE_UPLOAD_PRIMARY_INIT}, Dst: types.JOB_STATE_UPLOAD_PRIMARY_DOING},
-	{Name: UploadPrimaryPieceDoneEvent, Src: []string{types.JOB_STATE_UPLOAD_PRIMARY_DOING}, Dst: types.JOB_STATE_UPLOAD_PRIMARY_DOING},
-	{Name: UploadPrimaryDoneEvent, Src: []string{types.JOB_STATE_UPLOAD_PRIMARY_DOING}, Dst: types.JOB_STATE_UPLOAD_PRIMARY_DONE},
-	{Name: UploadSecondaryInitEvent, Src: []string{types.JOB_STATE_UPLOAD_PRIMARY_DONE}, Dst: types.JOB_STATE_UPLOAD_SECONDARY_INIT},
-	{Name: UploadSecondaryDoingEvent, Src: []string{types.JOB_STATE_UPLOAD_SECONDARY_INIT}, Dst: types.JOB_STATE_UPLOAD_SECONDARY_DOING},
-	{Name: UploadSecondaryPieceDoneEvent, Src: []string{types.JOB_STATE_UPLOAD_SECONDARY_DOING}, Dst: types.JOB_STATE_UPLOAD_SECONDARY_DOING},
-	{Name: UploadSecondaryDoneEvent, Src: []string{types.JOB_STATE_UPLOAD_SECONDARY_DOING}, Dst: types.JOB_STATE_UPLOAD_SECONDARY_DONE},
-	{Name: SealObjectInitEvent, Src: []string{types.JOB_STATE_UPLOAD_SECONDARY_DONE}, Dst: types.JOB_STATE_SEAL_OBJECT_INIT},
-	{Name: SealObjectDoingEvent, Src: []string{types.JOB_STATE_SEAL_OBJECT_INIT}, Dst: types.JOB_STATE_SEAL_OBJECT_TX_DOING},
-	{Name: SealObjectDoneEvent, Src: []string{types.JOB_STATE_SEAL_OBJECT_TX_DOING}, Dst: types.JOB_STATE_SEAL_OBJECT_DONE},
+	{Name: UploadPayloadInitEvent, Src: []string{ptypes.JOB_STATE_CREATE_OBJECT_DONE}, Dst: ptypes.JOB_STATE_UPLOAD_PRIMARY_INIT},
+	{Name: UploadPrimaryDoingEvent, Src: []string{ptypes.JOB_STATE_UPLOAD_PRIMARY_INIT}, Dst: ptypes.JOB_STATE_UPLOAD_PRIMARY_DOING},
+	{Name: UploadPrimaryPieceDoneEvent, Src: []string{ptypes.JOB_STATE_UPLOAD_PRIMARY_DOING}, Dst: ptypes.JOB_STATE_UPLOAD_PRIMARY_DOING},
+	{Name: UploadPrimaryDoneEvent, Src: []string{ptypes.JOB_STATE_UPLOAD_PRIMARY_DOING}, Dst: ptypes.JOB_STATE_UPLOAD_PRIMARY_DONE},
+	{Name: UploadSecondaryInitEvent, Src: []string{ptypes.JOB_STATE_UPLOAD_PRIMARY_DONE}, Dst: ptypes.JOB_STATE_UPLOAD_SECONDARY_INIT},
+	{Name: UploadSecondaryDoingEvent, Src: []string{ptypes.JOB_STATE_UPLOAD_SECONDARY_INIT}, Dst: ptypes.JOB_STATE_UPLOAD_SECONDARY_DOING},
+	{Name: UploadSecondaryPieceDoneEvent, Src: []string{ptypes.JOB_STATE_UPLOAD_SECONDARY_DOING}, Dst: ptypes.JOB_STATE_UPLOAD_SECONDARY_DOING},
+	{Name: UploadSecondaryDoneEvent, Src: []string{ptypes.JOB_STATE_UPLOAD_SECONDARY_DOING}, Dst: ptypes.JOB_STATE_UPLOAD_SECONDARY_DONE},
+	{Name: SealObjectInitEvent, Src: []string{ptypes.JOB_STATE_UPLOAD_SECONDARY_DONE}, Dst: ptypes.JOB_STATE_SEAL_OBJECT_INIT},
+	{Name: SealObjectDoingEvent, Src: []string{ptypes.JOB_STATE_SEAL_OBJECT_INIT}, Dst: ptypes.JOB_STATE_SEAL_OBJECT_TX_DOING},
+	{Name: SealObjectDoneEvent, Src: []string{ptypes.JOB_STATE_SEAL_OBJECT_TX_DOING}, Dst: ptypes.JOB_STATE_SEAL_OBJECT_DONE},
 	{Name: InterruptEvent, Src: []string{
-		types.JOB_STATE_CREATE_OBJECT_DONE,
-		types.JOB_STATE_UPLOAD_PRIMARY_INIT,
-		types.JOB_STATE_UPLOAD_PRIMARY_DOING,
-		types.JOB_STATE_UPLOAD_PRIMARY_DONE,
-		types.JOB_STATE_UPLOAD_SECONDARY_INIT,
-		types.JOB_STATE_UPLOAD_SECONDARY_DOING,
-		types.JOB_STATE_UPLOAD_SECONDARY_DONE,
-		types.JOB_STATE_SEAL_OBJECT_INIT,
-		types.JOB_STATE_SEAL_OBJECT_TX_DOING,
-		types.JOB_STATE_SEAL_OBJECT_DONE},
-		Dst: types.JOB_STATE_ERROR},
+		ptypes.JOB_STATE_CREATE_OBJECT_DONE,
+		ptypes.JOB_STATE_UPLOAD_PRIMARY_INIT,
+		ptypes.JOB_STATE_UPLOAD_PRIMARY_DOING,
+		ptypes.JOB_STATE_UPLOAD_PRIMARY_DONE,
+		ptypes.JOB_STATE_UPLOAD_SECONDARY_INIT,
+		ptypes.JOB_STATE_UPLOAD_SECONDARY_DOING,
+		ptypes.JOB_STATE_UPLOAD_SECONDARY_DONE,
+		ptypes.JOB_STATE_SEAL_OBJECT_INIT,
+		ptypes.JOB_STATE_SEAL_OBJECT_TX_DOING,
+		ptypes.JOB_STATE_SEAL_OBJECT_DONE},
+		Dst: ptypes.JOB_STATE_ERROR},
 }
 
 // define FSM action, the Action associated with callback
 var (
-	ActionBeforeEvent                        string = "before_"
-	ActionLeaveState                         string = "leave_"
-	ActionEnterState                         string = "enter_"
-	ActionAfterEvent                         string = "after_"
-	ActionEnterStateUploadPrimaryInit        string = ActionEnterState + types.JOB_STATE_UPLOAD_PRIMARY_INIT
-	ActionEnterStateUploadPrimaryDoing       string = ActionEnterState + types.JOB_STATE_UPLOAD_PRIMARY_DOING
-	ActionAfterEventUploadPrimaryPieceDone   string = ActionAfterEvent + UploadPrimaryPieceDoneEvent
-	ActionEnterUploadPrimaryDone             string = ActionEnterState + types.JOB_STATE_UPLOAD_PRIMARY_DONE
-	ActionEnterUploadSecondaryInit           string = ActionEnterState + types.JOB_STATE_UPLOAD_SECONDARY_INIT
-	ActionEnterUploadSecondaryDoing          string = ActionEnterState + types.JOB_STATE_UPLOAD_SECONDARY_DOING
-	ActionAfterEventUploadSecondaryPieceDone string = ActionAfterEvent + UploadSecondaryPieceDoneEvent
-	ActionEnterUploadSecondaryDone           string = ActionEnterState + UploadSecondaryDoneEvent
-	ActionEnterSealObjectInit                string = ActionEnterState + types.JOB_STATE_SEAL_OBJECT_INIT
-	ActionEnterSealObjectDoing               string = ActionEnterState + types.JOB_STATE_SEAL_OBJECT_TX_DOING
-	ActionEnterSealObjectDone                string = ActionEnterState + types.JOB_STATE_SEAL_OBJECT_DONE
-	ActionAfterEventInterrupt                string = ActionAfterEvent + InterruptEvent
-	ActionBeforeEventAll                     string = ActionBeforeEvent + "event"
-	ActionAfterEventAll                      string = ActionAfterEvent + "event"
+	ActionBeforeEvent                        = "before_"
+	ActionLeaveState                         = "leave_"
+	ActionEnterState                         = "enter_"
+	ActionAfterEvent                         = "after_"
+	ActionEnterStateUploadPrimaryInit        = ActionEnterState + ptypes.JOB_STATE_UPLOAD_PRIMARY_INIT
+	ActionEnterStateUploadPrimaryDoing       = ActionEnterState + ptypes.JOB_STATE_UPLOAD_PRIMARY_DOING
+	ActionAfterEventUploadPrimaryPieceDone   = ActionAfterEvent + UploadPrimaryPieceDoneEvent
+	ActionEnterUploadPrimaryDone             = ActionEnterState + ptypes.JOB_STATE_UPLOAD_PRIMARY_DONE
+	ActionEnterUploadSecondaryInit           = ActionEnterState + ptypes.JOB_STATE_UPLOAD_SECONDARY_INIT
+	ActionEnterUploadSecondaryDoing          = ActionEnterState + ptypes.JOB_STATE_UPLOAD_SECONDARY_DOING
+	ActionAfterEventUploadSecondaryPieceDone = ActionAfterEvent + UploadSecondaryPieceDoneEvent
+	ActionEnterUploadSecondaryDone           = ActionEnterState + UploadSecondaryDoneEvent
+	ActionEnterSealObjectInit                = ActionEnterState + ptypes.JOB_STATE_SEAL_OBJECT_INIT
+	ActionEnterSealObjectDoing               = ActionEnterState + ptypes.JOB_STATE_SEAL_OBJECT_TX_DOING
+	ActionEnterSealObjectDone                = ActionEnterState + ptypes.JOB_STATE_SEAL_OBJECT_DONE
+	ActionAfterEventInterrupt                = ActionAfterEvent + InterruptEvent
+	ActionBeforeEventAll                     = ActionBeforeEvent + "event"
+	ActionAfterEventAll                      = ActionAfterEvent + "event"
 )
 
 // UploadPayLoadFsmCallBack map the action that event occurs or state changes trigger and the callback

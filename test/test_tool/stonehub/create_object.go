@@ -9,8 +9,8 @@ import (
 
 	"github.com/urfave/cli"
 
-	types "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	cliCtx "github.com/bnb-chain/greenfield-storage-provider/test/test_tool/context"
 )
 
@@ -73,7 +73,7 @@ func createObjectToStoneHub(c *cli.Context) {
 	hash.Write([]byte(time.Now().String()))
 	txHash := hash.Sum(nil)
 
-	object := &types.ObjectInfo{
+	object := &ptypes.ObjectInfo{
 		Owner:      c.String("w"),
 		BucketName: c.String("b"),
 		ObjectName: c.String("o"),
@@ -81,12 +81,12 @@ func createObjectToStoneHub(c *cli.Context) {
 		ObjectId:   c.Uint64("i"),
 		Height:     c.Uint64("c"),
 		TxHash:     txHash,
-		PrimarySp: &types.StorageProviderInfo{
+		PrimarySp: &ptypes.StorageProviderInfo{
 			SpId: c.String("sp"),
 		},
 	}
 
-	req := &service.StoneHubServiceCreateObjectRequest{
+	req := &stypes.StoneHubServiceCreateObjectRequest{
 		TxHash:     txHash,
 		ObjectInfo: object,
 	}
@@ -107,5 +107,4 @@ func createObjectToStoneHub(c *cli.Context) {
 		return
 	}
 	fmt.Println("create object success, tx_hash: ", hex.EncodeToString(txHash))
-	return
 }

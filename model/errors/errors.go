@@ -3,7 +3,7 @@ package errors
 import (
 	"errors"
 
-	service "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 // piece store errors
@@ -24,6 +24,12 @@ var (
 	ErrObjectTxNotExist = errors.New("object tx not exist")
 	ErrObjectNotExist   = errors.New("object not exist")
 	ErrObjectIsEmpty    = errors.New("object payload is empty")
+
+	// signature error
+	ErrAuthorizationFormat = errors.New("authorization format error")
+	ErrRequestConsistent   = errors.New("request consistent check failed")
+	ErrSignatureConsistent = errors.New("signature consistent check failed")
+	ErrUnsupportedSignType = errors.New("unsupported signature type")
 )
 
 // stone hub service errors
@@ -36,6 +42,7 @@ var (
 	ErrStorageProviderMissing      = errors.New("storage provider missing")
 	ErrUploadPayloadJobRunning     = errors.New("upload payload job is running")
 	ErrUploadPayloadJobNotExist    = errors.New("upload payload job not exist")
+	ErrUploadPayloadJobHasFinished = errors.New("upload payload job has been successfully completed")
 	ErrPieceJobMissing             = errors.New("piece job missing")
 	ErrSealInfoMissing             = errors.New("seal info missing")
 	ErrSpJobNotCompleted           = errors.New("job not completed")
@@ -52,23 +59,27 @@ var (
 var (
 	ErrStoneNodeStarted   = errors.New("stone node resource is running")
 	ErrStoneNodeStopped   = errors.New("stone node service has stopped")
-	ErrIntegrityHash      = errors.New("secondary integrity hash check error")
+	ErrIntegrityHash      = errors.New("secondary integrity hash verifies error")
 	ErrRedundancyType     = errors.New("unknown redundancy type")
-	ErrEmptyJob           = errors.New("job is empty")
+	ErrEmptyJob           = errors.New("alloc stone job is empty")
 	ErrSecondarySPNumber  = errors.New("secondary sp is not enough")
+	ErrInvalidPieceData   = errors.New("invalid piece data")
 	ErrInvalidSegmentData = errors.New("invalid segment data, length is not equal to 1")
 	ErrInvalidECData      = errors.New("invalid ec data, length is not equal to 6")
 	ErrEmptyTargetIdx     = errors.New("target index array is empty")
+	ErrSyncerNumber       = errors.New("syncer number is not enough")
 )
 
 // syncer service errors
 var (
+	ErrSyncerStarted      = errors.New("syncer service is running")
+	ErrSyncerStopped      = errors.New("syncer service has already stopped")
 	ErrReceivedPieceCount = errors.New("syncer service received piece count is wrong")
 )
 
-func MakeErrMsgResponse(err error) *service.ErrMessage {
-	return &service.ErrMessage{
-		ErrCode: service.ErrCode_ERR_CODE_ERROR,
+func MakeErrMsgResponse(err error) *stypes.ErrMessage {
+	return &stypes.ErrMessage{
+		ErrCode: stypes.ErrCode_ERR_CODE_ERROR,
 		ErrMsg:  err.Error(),
 	}
 }

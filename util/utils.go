@@ -5,15 +5,15 @@ import (
 	"math/rand"
 	"os"
 	"reflect"
-	"sort"
 	"strconv"
 	"strings"
 	"unicode"
 
 	"github.com/naoina/toml"
-	"golang.org/x/exp/constraints"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 )
 
 // TomlSettings - These settings ensure that TOML keys use the same names as Go struct fields.
@@ -48,22 +48,6 @@ func ComputeSegmentCount(size uint64) uint32 {
 	return segmentCount
 }
 
-// SortedKeys sort keys of a map
-func GenericSortedKeys[K constraints.Ordered, V any](dataMap map[K]V) []K {
-	keys := make([]K, 0, len(dataMap))
-	for k := range dataMap {
-		keys = append(keys, k)
-	}
-	sortSlice(keys)
-	return keys
-}
-
-func sortSlice[T constraints.Ordered](s []T) {
-	sort.Slice(s, func(i, j int) bool {
-		return s[i] < s[j]
-	})
-}
-
 // JobStateReadable parser the job state to readable
 func JobStateReadable(state string) string {
 	return strings.ToLower(strings.TrimPrefix(state, "JOB_STATE_"))
@@ -72,4 +56,16 @@ func JobStateReadable(state string) string {
 // SpReadable parser the storage provider to readable
 func SpReadable(provider string) string {
 	return provider[:8]
+}
+
+// ValidateRedundancyType validate redundancy type
+func ValidateRedundancyType(redundancyType ptypes.RedundancyType) error {
+	switch redundancyType {
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
+		return nil
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
+		return nil
+	default:
+		return merrors.ErrRedundancyType
+	}
 }
