@@ -2,13 +2,11 @@ Service = [
     "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer",
 ]
 
-
 [GatewayCfg]
     Address = "127.0.0.1:9033"
     Domain = "gnfd.nodereal.com"
     UploaderServiceAddress = "127.0.0.1:9133"
     DownloaderServiceAddress = "127.0.0.1:9233"
-
 
 [UploaderCfg]
     StorageProvider = "bnb-sp"
@@ -22,18 +20,12 @@ Service = [
             BucketURL = "./data/primary_payload_data"
             MaxRetries = 5
             TestMode = true
-            #AccessKey = "ACCESSKEY"
-            #SecretKey = "SECRETKEY"
-            #SessionToken = "SESSIONTOKEN"
-            #NoSignRequest = false
-            #TlsInsecureSkipVerify = false
     [UploaderCfg.MetaLevelDBConfig]
         Path = "./data/meta"
         NameSpace = "bnb-sp"
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
-
 
 [DownloaderCfg]
     Address = "127.0.0.1:9233"
@@ -44,12 +36,6 @@ Service = [
             BucketURL = "./data/primary_payload_data"
             MaxRetries = 5
             TestMode = true
-            #AccessKey = "ACCESSKEY"
-            #SecretKey = "SECRETKEY"
-            #SessionToken = "SESSIONTOKEN"
-            #NoSignRequest = false
-            #TlsInsecureSkipVerify = false
-
 
 [StoneHubCfg]
     StorageProvider = "bnb-sp"
@@ -104,12 +90,6 @@ MetaDBType = "leveldb"
             BucketURL = "./data/primary_payload_data"
             MaxRetries = 5
             TestMode = true
-            #AccessKey = "ACCESSKEY"
-            #SecretKey = "SECRETKEY"
-            #SessionToken = "SESSIONTOKEN"
-            #NoSignRequest = false
-            #TlsInsecureSkipVerify = false
-
 
 [SyncerCfg]
     StorageProvider = "bnb-sp"
@@ -120,11 +100,6 @@ MetaDBType = "leveldb"
         BucketURL = "./data/secondary_payload_data"
         MaxRetries = 5
         TestMode = true
-        #AccessKey = "ACCESSKEY"
-        #SecretKey = "SECRETKEY"
-        #SessionToken = "SESSIONTOKEN"
-        #NoSignRequest = false
-        #TlsInsecureSkipVerify = false
     [SyncerCfg.MetaLevelDBConfig]
         Path = "./data/meta"
         NameSpace = "bnb-sp"
