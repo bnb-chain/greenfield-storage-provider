@@ -1,5 +1,6 @@
 # Changelog
 
+
 ## v0.0.1
 
 IMPROVEMENT
@@ -42,4 +43,3 @@ This release includes features, mainly:
 * [\#2](https://github.com/bnb-chain/greenfield-storage-provider/pull/2) add piecestore module
 * [\#18](https://github:com/bnb-chain/greenfield-storage-provider/pull/18) feat: add job meta orm
 * [\#60](https://github:com/bnb-chain/greenfield-storage-provider/pull/60) test: add run cases
-
