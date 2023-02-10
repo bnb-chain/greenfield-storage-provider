@@ -18,7 +18,7 @@ go build -ldflags "\
   -X 'main.CommitID=${CommitID}' \
   -X 'main.BranchName=${BranchName}' \
   -X 'main.BuildTime=${BuildTime}'" \
--o ./build/storage_provider cmd/storage_provider/*.go
+-o ./build/gnfd-sp cmd/storage_provider/*.go
 
 if [ $? -ne 0 ]; then
     echo "build failed Ooh!!!"
@@ -26,9 +26,14 @@ else
     echo "build succeed!"
 fi
 
-go build -o ./build/test-storage-provider test/e2e/services/case_driver.go
+go build -o ./build/test-gnfd-sp test/e2e/services/case_driver.go
 if [ $? -ne 0 ]; then
     echo "build test-storage-provider failed Ooh!!!"
+fi
+
+go build -o ./build/setup-test-env test/e2e/onebox/setup_onebox.go
+if [ $? -ne 0 ]; then
+    echo "build setup-test-env failed Ooh!!!"
 fi
 
 cp config/config.toml ./build/

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	StorageProviderLogo = `Green Field Storage Provider
+	StorageProviderLogo = `Greenfield Storage Provider
          __                                                       _     __         
    _____/ /_____  _________ _____ ____     ____  _________ _   __(_)___/ /__  _____
   / ___/ __/ __ \/ ___/ __  / __  / _ \   / __ \/ ___/ __ \ | / / / __  / _ \/ ___/
