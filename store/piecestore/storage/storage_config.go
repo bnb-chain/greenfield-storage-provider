@@ -12,9 +12,6 @@ var DefaultPieceStoreConfig = &PieceStoreConfig{
 	Store: &ObjectStorageConfig{
 		Storage:               "s3",
 		BucketURL:             "https://s3.ap-northeast-1.amazonaws.com/example",
-		AccessKey:             "",
-		SecretKey:             "",
-		SessionToken:          "",
 		NoSignRequest:         false,
 		MaxRetries:            5,
 		MinRetryDelay:         0,
@@ -26,12 +23,9 @@ var DefaultPieceStoreConfig = &PieceStoreConfig{
 type ObjectStorageConfig struct {
 	Storage               string // backend storage type (e.g. s3, file, memory)
 	BucketURL             string // the bucket URL of object storage to store data
-	AccessKey             string // access key for object storage
-	SecretKey             string // secret key for object storage
-	SessionToken          string // temporary credential used to access backend storage
 	NoSignRequest         bool   // whether access public bucket
 	MaxRetries            int    // the number of max retries that will be performed
 	MinRetryDelay         int64  // the minimum retry delay after which retry will be performed
 	TlsInsecureSkipVerify bool   // whether skip the certificate verification of HTTPS requests
-	TestMode              bool   // if test mode is true, don't need s3 credentials
+	TestMode              bool   // if test mode is true, should provide s3 credentials
 }

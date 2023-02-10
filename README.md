@@ -16,7 +16,7 @@ bash build.sh
 cd build
 # print version
 ./gnfd-sp --version
-# setup secondary sps in the test-env directory(syncer)
+# setup secondary sps in the test-env directory(syncer), notice: only run once at first
 ./setup-test-env
 # run primary sp(gateway/uploader/downloader/stonehub/stonenode/syncer)
 ./gnfd-sp -config ./config.toml
