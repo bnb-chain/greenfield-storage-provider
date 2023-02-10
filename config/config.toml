@@ -54,7 +54,7 @@ Service = [
     StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9433"
     StoneHubServiceAddress = "127.0.0.1:9333"
-    SyncerServiceAddress = ["127.0.0.1:9593", "127.0.0.1:9543", "127.0.0.1:9553", "127.0.0.1:9563", "127.0.0.1:9573", "127.0.0.1:9583"]
+    SyncerServiceAddress = ["127.0.0.1:9543", "127.0.0.1:9553", "127.0.0.1:9563", "127.0.0.1:9573", "127.0.0.1:9583", "127.0.0.1:9593"]
     StoneJobLimit = 64
     [StoneNodeCfg.PieceConfig]
         Shards = 0

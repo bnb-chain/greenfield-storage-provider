@@ -87,3 +87,19 @@ const (
 	MySqlDB  string = "mysql"
 	LevelDB  string = "leveldb"
 )
+
+// environment constants
+const (
+	// AWS environment constants
+	AWSAccessKey    = "AWS_ACCESS_KEY"
+	AWSSecretKey    = "AWS_SECRET_KEY"
+	AWSSessionToken = "AWS_SESSION_TOKEN"
+
+	// MetaDB environment constants
+	MetaDBUser     = "META_DB_USER"
+	MetaDBPassword = "META_DB_PASSWORD"
+
+	// JobDB environment constants
+	JobDBUser     = "JOB_DB_USER"
+	JobDBPassword = "JOB_DB_PASSWORD"
+)

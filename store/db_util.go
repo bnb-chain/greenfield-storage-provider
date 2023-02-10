@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
@@ -22,6 +23,9 @@ func NewMetaDB(dbType string, levelDBConfig *config.LevelDBConfig, sqlDBConfig *
 
 	switch dbType {
 	case model.MySqlDB:
+		// load meta db config from env vars
+		sqlDBConfig.User = os.Getenv(model.MetaDBUser)
+		sqlDBConfig.Passwd = os.Getenv(model.MetaDBPassword)
 		metaDB, err = metasql.NewMetaDB(sqlDBConfig)
 	case model.LevelDB:
 		metaDB, err = metalevel.NewMetaDB(levelDBConfig)
@@ -40,6 +44,9 @@ func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (jobdb.JobDBV2, er
 
 	switch dbType {
 	case model.MySqlDB:
+		// load job db config from env vars
+		sqlDBConfig.User = os.Getenv(model.JobDBUser)
+		sqlDBConfig.Passwd = os.Getenv(model.JobDBPassword)
 		jobDB, err = jobsql.NewJobMetaImpl(sqlDBConfig)
 	case model.MemoryDB:
 		jobDB = jobmemory.NewMemJobDBV2()

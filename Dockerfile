@@ -4,13 +4,15 @@ RUN apk add --no-cache make git bash protoc
 
 ADD . /greenfield-storage-provider
 
-ENV CGO_ENABLED=0
+ENV CGO_ENABLED=1
 ENV GO111MODULE=on
 
 # For Private REPO
 ARG GH_TOKEN=""
 RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
 RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://github.com"
+
+RUN apk add build-base libc-dev
 
 RUN cd /greenfield-storage-provider \
     && make install-tools \
@@ -42,6 +44,6 @@ COPY --from=builder /greenfield-storage-provider/build/* ${WORKDIR}/
 RUN chown -R ${USER_UID}:${USER_GID} ${WORKDIR}
 USER ${USER_UID}:${USER_GID}
 
-EXPOSE 9033 9133 9233 9333 9433 9533
+EXPOSE 9033
 
 ENTRYPOINT ["/app/storage_provider"]
