@@ -12,7 +12,7 @@ ARG GH_TOKEN=""
 RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
 RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://github.com"
 
-RUN apk add build-base libc-dev
+RUN apk add --no-cache build-base libc-dev
 
 RUN cd /greenfield-storage-provider \
     && make install-tools \
@@ -26,7 +26,7 @@ ARG USER=sp
 ARG USER_UID=1000
 ARG USER_GID=1000
 
-ENV PACKAGES ca-certificates bash curl
+ENV PACKAGES libstdc++ ca-certificates bash curl tini
 ENV WORKDIR=/app
 
 RUN apk add --no-cache $PACKAGES \
@@ -44,4 +44,4 @@ COPY --from=builder /greenfield-storage-provider/build/* ${WORKDIR}/
 RUN chown -R ${USER_UID}:${USER_GID} ${WORKDIR}
 USER ${USER_UID}:${USER_GID}
 
-ENTRYPOINT ["/app/gnfd-sp"]
+ENTRYPOINT ["/app/gnfd-sp", "-config", "config.toml"]
