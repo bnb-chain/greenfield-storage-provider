@@ -1,5 +1,5 @@
 const validateTypeNums = (parsedCommit) => {
-    const mergePrefix = "Merge pull request"
+    const mergePrefix = "Merge"
     if (parsedCommit.raw.startsWith(mergePrefix)) {
         console.log('this is a merge commit:' + parsedCommit.raw)
         return [true,'']
