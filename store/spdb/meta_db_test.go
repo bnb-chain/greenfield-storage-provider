@@ -1,4 +1,4 @@
-package metadb
+package spdb
 
 import (
 	"encoding/json"

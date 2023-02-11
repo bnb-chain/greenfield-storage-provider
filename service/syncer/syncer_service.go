@@ -63,24 +63,9 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	}
 }
 
-func (s *Syncer) setIntegrityMeta(db spdb.MetaDB, meta *spdb.IntegrityMeta) error {
-	if err := db.SetIntegrityMeta(meta); err != nil {
-		log.Errorw("set integrity meta error", "error", err)
-		return err
-	}
-	return nil
-}
-
 func generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) *stypes.StorageProviderSealInfo {
-	//keys := util.GenericSortedKeys(integrityMeta.PieceHash)
 	pieceHash := integrityMeta.PieceHash
-	pieceChecksumList := make([][]byte, 0)
-	// var integrityHash []byte
-	//for _, key := range keys {
-	//	value := integrityMeta.PieceHash[key]
-	//	pieceChecksumList = append(pieceChecksumList, value)
-	//}
-	integrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
+	integrityHash := hash.GenerateIntegrityHash(pieceHash)
 	resp := &stypes.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          integrityMeta.EcIdx,

@@ -198,7 +198,7 @@ func (db *MemJobDB) NewIterator(start interface{}) spdb.Iterator {
 	defer db.mu.RUnlock()
 	minObjectID := start.(uint64)
 	var keys []uint64
-	for objectId, _ := range db.JobTable {
+	for objectId := range db.JobTable {
 		if objectId >= minObjectID {
 			keys = append(keys, objectId)
 		}
