@@ -22,6 +22,7 @@ Build
 * [\#85](https://github.com/bnb-chain/greenfield-storage-provider/pull/85) chore: add pull request template
 * [\#105](https://github.com/bnb-chain/greenfield-storage-provider/pull/105) fix: add release action
 
+
 ## v0.0.1-alpha
 This release includes features, mainly:
 1. Implement the upload and download of payload data and the challenge handler api of piece data;
