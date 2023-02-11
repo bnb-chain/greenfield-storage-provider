@@ -24,6 +24,7 @@ Build
 
 
 ## v0.0.1-alpha
+
 This release includes features, mainly:
 1. Implement the upload and download of payload data and the challenge handler api of piece data;
 2. Implement the main architecture of greenfield storage provider:  
