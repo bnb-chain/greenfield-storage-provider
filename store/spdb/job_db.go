@@ -25,23 +25,6 @@ type PieceJob struct {
 	Done            bool
 }
 
-// JobDB use txhash as primary key
-type JobDB interface {
-	CreateUploadPayloadJob(txHash []byte, info *ptypes.ObjectInfo) (uint64, error)
-	SetObjectCreateHeightAndObjectID(txHash []byte, height uint64, objectID uint64) error
-
-	GetObjectInfo(txHash []byte) (*ptypes.ObjectInfo, error)
-	GetJobContext(jobId uint64) (*ptypes.JobContext, error)
-
-	SetUploadPayloadJobState(jobId uint64, state string, timestamp int64) error
-	SetUploadPayloadJobJobError(jobID uint64, jobState string, jobErr string, timestamp int64) error
-
-	GetPrimaryJob(txHash []byte) ([]*PieceJob, error)
-	GetSecondaryJob(txHash []byte) ([]*PieceJob, error)
-	SetPrimaryPieceJobDone(txHash []byte, piece *PieceJob) error
-	SetSecondaryPieceJobDone(txHash []byte, piece *PieceJob) error
-}
-
 /* Compare to JobDB, JobDBV2 change index from CreateObjectTxHash to ObjectID.
  * Adapt for changing light client to heavy client, ObjectID as index is necessary for SP.
  */
@@ -50,11 +33,11 @@ type JobDB interface {
 type JobDBV2 interface {
 	CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, error)
 
-	GetJobContextV2(jobId uint64) (*ptypes.JobContext, error)
+	GetJobContextV2(jobID uint64) (*ptypes.JobContext, error)
 	GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error)
 	GetObjectInfoByJobV2(JobID uint64) (*ptypes.ObjectInfo, error)
 
-	SetUploadPayloadJobStateV2(jobId uint64, state string, timestamp int64) error
+	SetUploadPayloadJobStateV2(jobID uint64, state string, timestamp int64) error
 	SetUploadPayloadJobJobErrorV2(jobID uint64, jobState string, jobErr string, timestamp int64) error
 
 	GetPrimaryJobV2(objectID uint64) ([]*PieceJob, error)
@@ -62,7 +45,7 @@ type JobDBV2 interface {
 	SetPrimaryPieceJobDoneV2(objectID uint64, piece *PieceJob) error
 	SetSecondaryPieceJobDoneV2(objectID uint64, piece *PieceJob) error
 
-	DeleteJobV2(jobId uint64) error
+	DeleteJobV2(jobID uint64) error
 
 	Iteratee
 	Batcher

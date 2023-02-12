@@ -2,7 +2,6 @@ package syncer
 
 import (
 	"context"
-	"errors"
 	"io"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -77,18 +76,15 @@ func generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) *stypes.St
 }
 
 func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, count uint32) (*spdb.IntegrityMeta, []byte, error) {
-	if len(req.GetPieceData()) != 1 {
-		return nil, nil, errors.New("the length of piece data map is not equal to 1")
-	}
-
 	redundancyType := req.GetSyncerInfo().GetRedundancyType()
+	objectID := req.GetSyncerInfo().GetObjectId()
 	integrityMeta := &spdb.IntegrityMeta{
-		ObjectID:       req.GetSyncerInfo().GetObjectId(),
+		ObjectID:       objectID,
 		PieceCount:     req.GetSyncerInfo().GetPieceCount(),
 		IsPrimary:      false,
 		RedundancyType: redundancyType,
 	}
-	key, pieceIndex, err := encodePieceKey(redundancyType, req.GetSyncerInfo().GetObjectId(), count, req.GetSyncerInfo().GetPieceIndex())
+	key, pieceIndex, err := encodePieceKey(redundancyType, objectID, count, req.GetSyncerInfo().GetPieceIndex())
 	if err != nil {
 		return nil, nil, err
 	}
