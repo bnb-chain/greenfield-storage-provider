@@ -10,9 +10,11 @@ package spdb
 // iterator until exhaustion. An iterator is not safe for concurrent use, but it
 // is safe to use multiple iterators concurrently.
 type Iterator interface {
-	// Next moves the iterator to the next key/value pair. It returns whether the
-	// iterator is exhausted.
-	Next() bool
+	// IsValid return true if current element is valid.
+	IsValid() bool
+
+	// Next move to next
+	Next()
 
 	// Error returns any accumulated error. Exhausting all the key/value pairs
 	// is not considered to be an error.
@@ -20,7 +22,7 @@ type Iterator interface {
 
 	// Key returns the key of the current key/value pair, or nil if done. The caller
 	// should not modify the contents of the returned slice, and its contents may
-	// change on the nesxt call to Next.
+	// change on the next call to Next.
 	Key() interface{}
 
 	// Value returns the value of the current key/value pair, or nil if done. The

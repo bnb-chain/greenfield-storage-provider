@@ -219,27 +219,29 @@ func (hub *StoneHub) gcDBStone() {
 	if hub.gcRunning.Swap(true) {
 		log.Errorw("gc stone db is running")
 	}
+	log.Infow("begin gc stones")
 	defer hub.gcRunning.Swap(false)
-	it := hub.jobDB.NewIterator(0)
+	it := hub.jobDB.NewIterator(uint64(0))
 	defer it.Release()
 	for {
-		if !it.Next() {
+		if !it.IsValid() {
+			if err := it.Error(); err != nil {
+				log.Warnw("failed to gc, due to iterate stone", "error", err)
+				return
+			}
+			log.Infow("succeed to gc stones")
 			break
 		}
-		if err := it.Error(); err != nil {
-			log.Warnw("iterate stone err", "error", err)
-			return
-		}
 		job := it.Value().(*ptypes.JobContext)
-		if job == nil {
-			continue
-		}
 		if job.GetJobState() == ptypes.JobState_JOB_STATE_SEAL_OBJECT_DONE {
-			hub.jobDB.DeleteJobV2(job.GetJobId())
+			err := hub.jobDB.DeleteJobV2(job.GetJobId())
+			log.Infow("gc sealed job", "job", job, "error", err)
 		}
 		if len(job.GetJobErr()) != 0 {
-			hub.jobDB.DeleteJobV2(job.GetJobId())
+			err := hub.jobDB.DeleteJobV2(job.GetJobId())
+			log.Infow("gc failed job", "job", job, "error", err)
 		}
+		it.Next()
 	}
 }
 
@@ -282,30 +284,33 @@ func (hub *StoneHub) loadStone() error {
 	if hub.gcRunning.Swap(true) {
 		return errors.New("gc stone db is running")
 	}
+	log.Infow("begin load stones")
 	defer hub.gcRunning.Swap(false)
-	it := hub.jobDB.NewIterator(0)
+	it := hub.jobDB.NewIterator(uint64(0))
 	defer it.Release()
 	for {
-		if !it.Next() {
+		if !it.IsValid() {
+			if err := it.Error(); err != nil {
+				log.Warnw("failed to load, due to iterate stone", "error", err)
+				return err
+			}
+			log.Infow("succeed to load stones")
 			break
 		}
-		if err := it.Error(); err != nil {
-			log.Warnw("iterate stone err", "error", err)
-			return err
-		}
 		job := it.Value().(*ptypes.JobContext)
-		if job == nil {
-			continue
-		}
 		if len(job.GetJobErr()) != 0 {
+			it.Next()
 			continue
 		}
 		if job.GetJobState() == ptypes.JobState_JOB_STATE_SEAL_OBJECT_DONE {
+			it.Next()
 			continue
 		}
+		log.Infow("load unsealed job", "job", job)
 		object, objErr := hub.jobDB.GetObjectInfoByJobV2(job.GetJobId())
 		if objErr != nil {
 			log.Errorw("load stone get object err", "job_id", job.GetJobId(), "error", objErr)
+			it.Next()
 			continue
 		}
 		st, stErr := stone.NewUploadPayloadStone(context.Background(), job, object,
@@ -313,9 +318,11 @@ func (hub *StoneHub) loadStone() error {
 		if stErr != nil {
 			log.Errorw("load stone err", "job_id", job.GetJobId(),
 				"object_id", object.GetObjectId(), "error", stErr)
+			it.Next()
 			continue
 		}
 		hub.SetStoneExclude(st)
+		it.Next()
 	}
 	return nil
 }

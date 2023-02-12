@@ -35,7 +35,7 @@ type JobDBV2 interface {
 
 	GetJobContextV2(jobID uint64) (*ptypes.JobContext, error)
 	GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error)
-	GetObjectInfoByJobV2(JobID uint64) (*ptypes.ObjectInfo, error)
+	GetObjectInfoByJobV2(jobID uint64) (*ptypes.ObjectInfo, error)
 
 	SetUploadPayloadJobStateV2(jobID uint64, state string, timestamp int64) error
 	SetUploadPayloadJobJobErrorV2(jobID uint64, jobState string, jobErr string, timestamp int64) error

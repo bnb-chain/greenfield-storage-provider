@@ -53,10 +53,10 @@ func (db *MemJobDB) CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, e
 }
 
 // GetJobContextV2 returns the job info .
-func (db *MemJobDB) GetJobContextV2(jobId uint64) (*ptypes.JobContext, error) {
+func (db *MemJobDB) GetJobContextV2(jobID uint64) (*ptypes.JobContext, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
-	job, ok := db.JobTable[jobId]
+	job, ok := db.JobTable[jobID]
 	if !ok {
 		return nil, errors.New("job is not exist")
 	}
@@ -64,10 +64,10 @@ func (db *MemJobDB) GetJobContextV2(jobId uint64) (*ptypes.JobContext, error) {
 }
 
 // GetObjectInfoByJobV2 returns the object info by job id.
-func (db *MemJobDB) GetObjectInfoByJobV2(JobID uint64) (*ptypes.ObjectInfo, error) {
+func (db *MemJobDB) GetObjectInfoByJobV2(jobID uint64) (*ptypes.ObjectInfo, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
-	objectID, ok := db.JobToObject[JobID]
+	objectID, ok := db.JobToObject[jobID]
 	if !ok {
 		return nil, errors.New("job is not exist")
 	}
@@ -90,10 +90,10 @@ func (db *MemJobDB) GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error)
 }
 
 // SetUploadPayloadJobStateV2 set the job state.
-func (db *MemJobDB) SetUploadPayloadJobStateV2(jobId uint64, state string, timestamp int64) error {
+func (db *MemJobDB) SetUploadPayloadJobStateV2(jobID uint64, state string, timestamp int64) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	job, ok := db.JobTable[jobId]
+	job, ok := db.JobTable[jobID]
 	if !ok {
 		return errors.New("job is not exist")
 	}
@@ -103,15 +103,15 @@ func (db *MemJobDB) SetUploadPayloadJobStateV2(jobId uint64, state string, times
 	}
 	job.JobState = (ptypes.JobState)(jobState)
 	job.ModifyTime = timestamp
-	db.JobTable[jobId] = job
+	db.JobTable[jobID] = job
 	return nil
 }
 
 // SetUploadPayloadJobJobErrorV2 set the job error state and error message.
-func (db *MemJobDB) SetUploadPayloadJobJobErrorV2(jobId uint64, state string, jobErr string, timestamp int64) error {
+func (db *MemJobDB) SetUploadPayloadJobJobErrorV2(jobID uint64, state string, jobErr string, timestamp int64) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	job, ok := db.JobTable[jobId]
+	job, ok := db.JobTable[jobID]
 	if !ok {
 		return errors.New("job is not exist")
 	}
@@ -122,7 +122,7 @@ func (db *MemJobDB) SetUploadPayloadJobJobErrorV2(jobId uint64, state string, jo
 	job.JobState = (ptypes.JobState)(jobState)
 	job.ModifyTime = timestamp
 	job.JobErr = jobErr
-	db.JobTable[jobId] = job
+	db.JobTable[jobID] = job
 	return nil
 }
 
@@ -177,11 +177,11 @@ func (db *MemJobDB) SetSecondaryPieceJobDoneV2(objectID uint64, piece *spdb.Piec
 }
 
 // DeleteJobV2 delete job by id, delete the related object and piece jobs.
-func (db *MemJobDB) DeleteJobV2(jobId uint64) error {
+func (db *MemJobDB) DeleteJobV2(jobID uint64) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	delete(db.JobTable, jobId)
-	objectID, ok := db.JobToObject[jobId]
+	delete(db.JobTable, jobID)
+	objectID, ok := db.JobToObject[jobID]
 	if !ok {
 		return nil
 	}
@@ -240,19 +240,22 @@ type iterator struct {
 	values []*ptypes.JobContext
 }
 
-// Next moves the iterator to the next key/value pair. It returns whether the
-// iterator is exhausted.
-func (it *iterator) Next() bool {
+// IsValid return true if current element is valid.
+func (it *iterator) IsValid() bool {
 	if !it.inited {
 		it.inited = true
 		return len(it.keys) > 0
 	}
+	return len(it.keys) > 0
+}
+
+// Next move to next
+func (it *iterator) Next() {
 	// Iterator already initialize, advance it
 	if len(it.keys) > 0 {
 		it.keys = it.keys[1:]
 		it.values = it.values[1:]
 	}
-	return len(it.keys) > 0
 }
 
 // Error returns any accumulated error. Exhausting all the key/value pairs
