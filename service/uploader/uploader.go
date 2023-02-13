@@ -15,7 +15,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -30,7 +30,7 @@ type Uploader struct {
 	signer      *mock.SignerServerMock
 	eventWaiter *mock.InscriptionChainMock
 	store       *client.StoreClient
-	metaDB      metadb.MetaDB // store auth info
+	metaDB      spdb.MetaDB // store auth info
 }
 
 // NewUploaderService return the uploader instance
@@ -65,7 +65,7 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 // initDB init a meta-db instance
 func (uploader *Uploader) initDB() error {
 	var (
-		metaDB metadb.MetaDB
+		metaDB spdb.MetaDB
 		err    error
 	)
 

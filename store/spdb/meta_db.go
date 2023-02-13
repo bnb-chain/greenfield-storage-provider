@@ -1,4 +1,4 @@
-package metadb
+package spdb
 
 import (
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
