@@ -5,6 +5,7 @@ import (
 	"net"
 	"sync/atomic"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -12,8 +13,8 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -22,7 +23,7 @@ type Syncer struct {
 	config  *SyncerConfig
 	name    string
 	store   client.PieceStoreAPI
-	metaDB  metadb.MetaDB // storage provider meta db
+	metaDB  spdb.MetaDB // storage provider meta db
 	running atomic.Bool
 }
 
@@ -56,7 +57,7 @@ func (s *Syncer) initClient() error {
 // initDB init a meta-db instance
 func (s *Syncer) initDB() error {
 	var (
-		metaDB metadb.MetaDB
+		metaDB spdb.MetaDB
 		err    error
 	)
 

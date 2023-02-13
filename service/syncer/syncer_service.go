@@ -8,7 +8,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
@@ -16,7 +16,7 @@ import (
 // SyncPiece syncs piece data to secondary storage provider
 func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	var count uint32
-	var integrityMeta *metadb.IntegrityMeta
+	var integrityMeta *spdb.IntegrityMeta
 	var spID string
 	var value []byte
 	pieceHash := make([][]byte, 0)
@@ -62,7 +62,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	}
 }
 
-func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.StorageProviderSealInfo {
+func generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) *stypes.StorageProviderSealInfo {
 	pieceHash := integrityMeta.PieceHash
 	integrityHash := hash.GenerateIntegrityHash(pieceHash)
 	resp := &stypes.StorageProviderSealInfo{
@@ -75,10 +75,10 @@ func generateSealInfo(spID string, integrityMeta *metadb.IntegrityMeta) *stypes.
 	return resp
 }
 
-func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, count uint32) (*metadb.IntegrityMeta, []byte, error) {
+func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, count uint32) (*spdb.IntegrityMeta, []byte, error) {
 	redundancyType := req.GetSyncerInfo().GetRedundancyType()
 	objectID := req.GetSyncerInfo().GetObjectId()
-	integrityMeta := &metadb.IntegrityMeta{
+	integrityMeta := &spdb.IntegrityMeta{
 		ObjectID:       objectID,
 		PieceCount:     req.GetSyncerInfo().GetPieceCount(),
 		IsPrimary:      false,

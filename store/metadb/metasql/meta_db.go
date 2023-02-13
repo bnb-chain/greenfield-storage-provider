@@ -7,7 +7,7 @@ import (
 
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -57,7 +57,7 @@ func InitDB(config *config.SqlDBConfig) (*gorm.DB, error) {
 }
 
 // SetIntegrityMeta put(overwrite) integrity hash info to db
-func (mdb *MetaDB) SetIntegrityMeta(meta *metadb.IntegrityMeta) error {
+func (mdb *MetaDB) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 	var (
 		result                    *gorm.DB
 		insertIntegrityMetaRecord *DBIntegrityMeta
@@ -85,7 +85,7 @@ func (mdb *MetaDB) SetIntegrityMeta(meta *metadb.IntegrityMeta) error {
 }
 
 // GetIntegrityMeta return the integrity hash info
-func (mdb *MetaDB) GetIntegrityMeta(queryCondition *metadb.IntegrityMeta) (*metadb.IntegrityMeta, error) {
+func (mdb *MetaDB) GetIntegrityMeta(queryCondition *spdb.IntegrityMeta) (*spdb.IntegrityMeta, error) {
 	var (
 		result      *gorm.DB
 		queryReturn DBIntegrityMeta
@@ -102,7 +102,7 @@ func (mdb *MetaDB) GetIntegrityMeta(queryCondition *metadb.IntegrityMeta) (*meta
 		return nil, err
 	}
 
-	meta := &metadb.IntegrityMeta{
+	meta := &spdb.IntegrityMeta{
 		ObjectID:       queryReturn.ObjectID,
 		EcIdx:          queryReturn.EcIdx,
 		PieceCount:     queryReturn.PieceCount,
@@ -119,7 +119,7 @@ func (mdb *MetaDB) GetIntegrityMeta(queryCondition *metadb.IntegrityMeta) (*meta
 }
 
 // SetUploadPayloadAskingMeta put(overwrite) payload asking info to db
-func (mdb *MetaDB) SetUploadPayloadAskingMeta(meta *metadb.UploadPayloadAskingMeta) error {
+func (mdb *MetaDB) SetUploadPayloadAskingMeta(meta *spdb.UploadPayloadAskingMeta) error {
 	var (
 		result *gorm.DB
 	)
@@ -152,7 +152,7 @@ func (mdb *MetaDB) SetUploadPayloadAskingMeta(meta *metadb.UploadPayloadAskingMe
 }
 
 // GetUploadPayloadAskingMeta return the payload asking info
-func (mdb *MetaDB) GetUploadPayloadAskingMeta(bucket, object string) (*metadb.UploadPayloadAskingMeta, error) {
+func (mdb *MetaDB) GetUploadPayloadAskingMeta(bucket, object string) (*spdb.UploadPayloadAskingMeta, error) {
 	var (
 		result      *gorm.DB
 		queryReturn DBUploadPayloadAskingMeta
@@ -162,7 +162,7 @@ func (mdb *MetaDB) GetUploadPayloadAskingMeta(bucket, object string) (*metadb.Up
 	if result.Error != nil {
 		return nil, fmt.Errorf("select payload asking record's failed, %s", result.Error)
 	}
-	return &metadb.UploadPayloadAskingMeta{
+	return &spdb.UploadPayloadAskingMeta{
 		BucketName: queryReturn.BucketName,
 		ObjectName: queryReturn.ObjectName,
 		Timeout:    queryReturn.Timeout,

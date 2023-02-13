@@ -33,30 +33,6 @@ func (hub *StoneHub) CreateObject(ctx context.Context, req *stypes.StoneHubServi
 	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrInterfaceAbandoned)
 	log.CtxErrorw(ctx, "create object interface is abandoned")
 	return rsp, nil
-	//if len(req.TxHash) != hash.LengthHash {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrTxHash)
-	//	log.CtxErrorw(ctx, "hash format error")
-	//	return rsp, nil
-	//}
-	//req.ObjectInfo.TxHash = req.TxHash
-	//if req.ObjectInfo.Size == 0 {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrObjectSize)
-	//	log.CtxErrorw(ctx, "object size error")
-	//	return rsp, nil
-	//}
-	//if req.ObjectInfo.Size <= model.InlineSize {
-	//	log.CtxWarnw(ctx, "create object adjust to inline type", "object size", req.ObjectInfo.Size)
-	//	req.ObjectInfo.RedundancyType = types.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
-	//}
-	//_, err := hub.jobDB.CreateUploadPayloadJob(req.TxHash, req.ObjectInfo)
-	//if err != nil {
-	//	// maybe query retrieve service
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
-	//	log.CtxErrorw(ctx, "create object error", "error", err)
-	//	return rsp, nil
-	//}
-	//log.CtxInfow(ctx, "create object success")
-	//return rsp, nil
 }
 
 // SetObjectCreateInfo set CreateObjectTX the height and object resource id on the inscription chain
@@ -67,28 +43,6 @@ func (hub *StoneHub) SetObjectCreateInfo(ctx context.Context, req *stypes.StoneH
 	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrInterfaceAbandoned)
 	log.CtxErrorw(ctx, "set object create info interface is abandoned")
 	return rsp, nil
-	//if len(req.TxHash) != hash.LengthHash {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrTxHash)
-	//	log.CtxErrorw(ctx, "hash format error")
-	//	return rsp, nil
-	//}
-	//if req.ObjectId == 0 {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrObjectID)
-	//	log.CtxErrorw(ctx, "object id error", "ObjectId", req.ObjectId)
-	//	return rsp, nil
-	//}
-	//if req.TxHeight == 0 {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrObjectCreateHeight)
-	//	log.CtxErrorw(ctx, "create object height error", "Height", req.TxHeight)
-	//	return rsp, nil
-	//}
-	//if err := hub.jobDB.SetObjectCreateHeightAndObjectID(req.TxHash, req.TxHeight, req.ObjectId); err != nil {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
-	//	log.CtxErrorw(ctx, "set object height and object id error", "error", err)
-	//	return rsp, nil
-	//}
-	//log.CtxInfow(ctx, "set object create height and object id success")
-	//return rsp, nil
 }
 
 // BeginUploadPayload create upload payload stone and start the fsm to upload
@@ -100,89 +54,6 @@ func (hub *StoneHub) BeginUploadPayload(ctx context.Context, req *stypes.StoneHu
 	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrInterfaceAbandoned)
 	log.CtxErrorw(ctx, "set object create info interface is abandoned")
 	return rsp, nil
-	//if len(req.TxHash) != hash.LengthHash {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrTxHash)
-	//	log.CtxErrorw(ctx, "hash format error")
-	//	return rsp, nil
-	//}
-	//// check the stone whether already running
-	//if hub.HasStone(string(req.TxHash)) {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrUploadPayloadJobRunning)
-	//	log.CtxErrorw(ctx, "upload payload stone is running")
-	//	return rsp, nil
-	//}
-	//// load the stone context from db
-	//object, err := hub.jobDB.GetObjectInfo(req.TxHash)
-	//if err != nil {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
-	//	log.CtxErrorw(ctx, "get object info error", "error", err)
-	//	return rsp, nil
-	//}
-	//jobCtx, err := hub.jobDB.GetJobContext(object.JobId)
-	//if err != nil {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
-	//	log.CtxErrorw(ctx, "get job info error", "error", err)
-	//	return rsp, nil
-	//}
-	//// the stone context is nil, query from inscription-chain
-	//if jobCtx == nil {
-	//	log.CtxWarnw(ctx, "query object info from inscription chain")
-	//	objectInfo, err := hub.insCli.QueryObjectByTx(req.TxHash)
-	//	if err != nil {
-	//		rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
-	//		log.CtxErrorw(ctx, "query inscription chain error", "error", err)
-	//		return rsp, nil
-	//	}
-	//	if objectInfo == nil {
-	//		rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrObjectInfoOnInscription)
-	//		log.CtxErrorw(ctx, "object is not on inscription chain")
-	//		return rsp, nil
-	//	}
-	//	// the temporary solution determine whether the seal object is successful
-	//	// TBD :: inscription client will return the object info type to determine
-	//	if len(objectInfo.SecondarySps) > 0 {
-	//		rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrUploadPayloadJobDone)
-	//		log.CtxWarnw(ctx, "payload has uploaded")
-	//		return rsp, nil
-	//	}
-	//	_, err = hub.jobDB.CreateUploadPayloadJob(req.TxHash, objectInfo)
-	//	if err != nil {
-	//		rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
-	//		log.CtxErrorw(ctx, "create upload payload job error", "error", err)
-	//		return rsp, nil
-	//	}
-	//	object, err = hub.jobDB.GetObjectInfo(req.TxHash)
-	//	if err != nil {
-	//		rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
-	//		log.CtxErrorw(ctx, "get object info error", "error", err)
-	//		return rsp, nil
-	//	}
-	//	jobCtx, err = hub.jobDB.GetJobContext(object.JobId)
-	//	if err != nil {
-	//		rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
-	//		log.CtxErrorw(ctx, "get job info error", "error", err)
-	//		return rsp, nil
-	//	}
-	//}
-	//// the stone context is ready
-	//uploadStone, err := stone.NewUploadPayloadStone(ctx, jobCtx, object, hub.jobDB, hub.metaDB, hub.jobCh, hub.stoneGC)
-	//if err != nil {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(err)
-	//	log.CtxErrorw(ctx, "create upload payload stone error", "error", err)
-	//	return rsp, nil
-	//}
-	//if uploadStone.PrimarySPJobDone() {
-	//	log.CtxInfow(ctx, "upload primary storage provider has completed")
-	//	rsp.PrimaryDone = true
-	//}
-	//if !hub.SetStoneExclude(uploadStone) {
-	//	rsp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrUploadPayloadJobRunning)
-	//	log.CtxErrorw(ctx, "add upload payload stone error", "error", err)
-	//	return rsp, nil
-	//}
-	//rsp.PieceJob = uploadStone.PopPendingPrimarySPJob()
-	//log.CtxInfow(ctx, "begin upload payload success")
-	//return rsp, nil
 }
 
 // BeginUploadPayloadV2 merge CreateObject, SetObjectCreateInfo and BeginUploadPayload, special for heavy client use.
@@ -233,11 +104,11 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *stypes.Stone
 		uploadStone *stone.UploadPayloadStone
 	)
 	// create upload stone
-	if req.ObjectInfo.JobId, err = hub.jobDB.CreateUploadPayloadJobV2(req.GetObjectInfo()); err != nil {
+	if req.ObjectInfo.JobId, err = hub.jobDB.CreateUploadPayloadJob(req.GetObjectInfo()); err != nil {
 		return
 	}
 	// TODO::CreateUploadPayloadJob return jobContext
-	if jobCtx, err = hub.jobDB.GetJobContextV2(req.GetObjectInfo().GetJobId()); err != nil {
+	if jobCtx, err = hub.jobDB.GetJobContext(req.GetObjectInfo().GetJobId()); err != nil {
 		return
 	}
 	if uploadStone, err = stone.NewUploadPayloadStone(ctx, jobCtx, req.GetObjectInfo(),
@@ -312,6 +183,7 @@ func (hub *StoneHub) DonePrimaryPieceJob(ctx context.Context, req *stypes.StoneH
 	}
 	interruptErr = uploadStone.ActionEvent(ctx, stone.UploadPrimaryPieceDoneEvent, req.PieceJob)
 	if interruptErr != nil {
+		hub.DeleteStone(uploadStone.StoneKey())
 		return resp, nil
 	}
 	return resp, nil
@@ -391,6 +263,7 @@ func (hub *StoneHub) DoneSecondaryPieceJob(ctx context.Context, req *stypes.Ston
 		return resp, nil
 	}
 	if interruptErr = uploadStone.ActionEvent(ctx, stone.UploadSecondaryPieceDoneEvent, req.PieceJob); interruptErr != nil {
+		hub.DeleteStone(uploadStone.StoneKey())
 		return resp, nil
 	}
 	return resp, nil
@@ -406,6 +279,6 @@ func (hub *StoneHub) QueryStone(ctx context.Context, req *stypes.StoneHubService
 	rsp.JobInfo = uploadStone.GetJobContext()
 	rsp.PendingPrimaryJob = uploadStone.PopPendingPrimarySPJob()
 	rsp.PendingSecondaryJob = uploadStone.PopPendingSecondarySPJob()
-	rsp.ObjectInfo, _ = hub.jobDB.GetObjectInfoV2(uploadStone.GetObjectInfo().GetObjectId())
+	rsp.ObjectInfo, _ = hub.jobDB.GetObjectInfo(uploadStone.GetObjectInfo().GetObjectId())
 	return rsp, nil
 }

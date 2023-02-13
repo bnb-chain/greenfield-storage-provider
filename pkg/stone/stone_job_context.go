@@ -6,21 +6,20 @@ import (
 	"time"
 
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 )
 
 // JobContextWrapper maintain job context, goroutine safe
 type JobContextWrapper struct {
 	jobCtx *ptypes.JobContext
 	jobErr error
-	jobDB  jobdb.JobDBV2
-	metaDB metadb.MetaDB
+	jobDB  spdb.JobDB
+	metaDB spdb.MetaDB
 	mu     sync.RWMutex
 }
 
 // NewJobContextWrapper return the instance of JobContextWrapper
-func NewJobContextWrapper(jobCtx *ptypes.JobContext, jobDB jobdb.JobDBV2, metaDB metadb.MetaDB) *JobContextWrapper {
+func NewJobContextWrapper(jobCtx *ptypes.JobContext, jobDB spdb.JobDB, metaDB spdb.MetaDB) *JobContextWrapper {
 	return &JobContextWrapper{
 		jobCtx: jobCtx,
 		jobDB:  jobDB,
@@ -44,7 +43,7 @@ func (wrapper *JobContextWrapper) SetJobState(state string) error {
 	wrapper.mu.Lock()
 	defer wrapper.mu.Unlock()
 	wrapper.jobCtx.JobState = ptypes.JobState(ptypes.JobState_value[state])
-	return wrapper.jobDB.SetUploadPayloadJobStateV2(wrapper.jobCtx.JobId, state, time.Now().Unix())
+	return wrapper.jobDB.SetUploadPayloadJobState(wrapper.jobCtx.JobId, state, time.Now().Unix())
 }
 
 // JobErr return job error
@@ -65,7 +64,7 @@ func (wrapper *JobContextWrapper) SetJobErr(err error) error {
 		wrapper.jobCtx.JobErr = wrapper.jobCtx.JobErr + err.Error()
 	}
 	wrapper.jobCtx.JobState = ptypes.JobState_JOB_STATE_ERROR
-	return wrapper.jobDB.SetUploadPayloadJobJobErrorV2(wrapper.jobCtx.JobId,
+	return wrapper.jobDB.SetUploadPayloadJobJobError(wrapper.jobCtx.JobId,
 		ptypes.JOB_STATE_ERROR, wrapper.jobCtx.JobErr, time.Now().Unix())
 }
 
