@@ -11,8 +11,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-// DBJobV2 table schema
-type DBJobV2 struct {
+// DBJob table schema
+type DBJob struct {
 	JobID      uint64 `gorm:"primary_key;autoIncrement"`
 	JobType    uint32
 	JobState   uint32
@@ -22,12 +22,12 @@ type DBJobV2 struct {
 }
 
 // TableName is used to set Job Schema's table name in database
-func (DBJobV2) TableName() string {
-	return "job_v2"
+func (DBJob) TableName() string {
+	return "job"
 }
 
-// DBObjectV2 table schema
-type DBObjectV2 struct {
+// DBObject table schema
+type DBObject struct {
 	ObjectID       uint64 `gorm:"primary_key"`
 	JobID          uint64 `gorm:"index:job_to_object"` // Job.JobID
 	CreateHash     string
@@ -45,12 +45,12 @@ type DBObjectV2 struct {
 }
 
 // TableName is used to set Object Schema's table name in database
-func (DBObjectV2) TableName() string {
-	return "object_v2"
+func (DBObject) TableName() string {
+	return "object"
 }
 
-// DBPieceJobV2 table schema
-type DBPieceJobV2 struct {
+// DBPieceJob table schema
+type DBPieceJob struct {
 	ObjectID        uint64 `gorm:"index:idx_piece_group"`
 	PieceType       uint32 `gorm:"index:idx_piece_group"`
 	PieceIdx        uint32
@@ -62,8 +62,8 @@ type DBPieceJobV2 struct {
 }
 
 // TableName is used to set PieceJob Schema's table name in database
-func (DBPieceJobV2) TableName() string {
-	return "piece_job_v2"
+func (DBPieceJob) TableName() string {
+	return "piece_job"
 }
 
 // InitDB is used to connect mysql and create table if not existed
@@ -80,16 +80,16 @@ func InitDB(config *config.SqlDBConfig) (*gorm.DB, error) {
 	}
 
 	// create if not exist
-	if err := db.AutoMigrate(&DBJobV2{}); err != nil {
-		log.Warnw("failed to create job table v2", "err", err)
+	if err := db.AutoMigrate(&DBJob{}); err != nil {
+		log.Warnw("failed to create job table", "err", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&DBObjectV2{}); err != nil {
-		log.Warnw("failed to create object table v2", "err", err)
+	if err := db.AutoMigrate(&DBObject{}); err != nil {
+		log.Warnw("failed to create object table", "err", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&DBPieceJobV2{}); err != nil {
-		log.Warnw("failed to create piece job table v2", "err", err)
+	if err := db.AutoMigrate(&DBPieceJob{}); err != nil {
+		log.Warnw("failed to create piece job table", "err", err)
 		return nil, err
 	}
 

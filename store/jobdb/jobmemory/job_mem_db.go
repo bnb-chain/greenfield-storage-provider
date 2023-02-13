@@ -9,7 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 )
 
-var _ spdb.JobDBV2 = &MemJobDB{}
+var _ spdb.JobDB = &MemJobDB{}
 
 // MemJobDB is a memory db, maintains job, object and piece job table.
 type MemJobDB struct {
@@ -22,7 +22,7 @@ type MemJobDB struct {
 	mu                     sync.RWMutex
 }
 
-// NewMemJobDB return a MemJobDBV2 instance.
+// NewMemJobDB return a MemJobDB instance.
 func NewMemJobDB() *MemJobDB {
 	return &MemJobDB{
 		JobCount:               0,
@@ -34,8 +34,8 @@ func NewMemJobDB() *MemJobDB {
 	}
 }
 
-// CreateUploadPayloadJobV2 create a job info for special object.
-func (db *MemJobDB) CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, error) {
+// CreateUploadPayloadJob create a job info for special object.
+func (db *MemJobDB) CreateUploadPayloadJob(info *ptypes.ObjectInfo) (uint64, error) {
 	if info == nil {
 		return 0, errors.New("object info is nil")
 	}
@@ -52,8 +52,8 @@ func (db *MemJobDB) CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, e
 	return db.JobCount - 1, nil
 }
 
-// GetJobContextV2 returns the job info .
-func (db *MemJobDB) GetJobContextV2(jobID uint64) (*ptypes.JobContext, error) {
+// GetJobContext returns the job info .
+func (db *MemJobDB) GetJobContext(jobID uint64) (*ptypes.JobContext, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	job, ok := db.JobTable[jobID]
@@ -63,8 +63,8 @@ func (db *MemJobDB) GetJobContextV2(jobID uint64) (*ptypes.JobContext, error) {
 	return job, nil
 }
 
-// GetObjectInfoByJobV2 returns the object info by job id.
-func (db *MemJobDB) GetObjectInfoByJobV2(jobID uint64) (*ptypes.ObjectInfo, error) {
+// GetObjectInfoByJob returns the object info by job id.
+func (db *MemJobDB) GetObjectInfoByJob(jobID uint64) (*ptypes.ObjectInfo, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	objectID, ok := db.JobToObject[jobID]
@@ -78,8 +78,8 @@ func (db *MemJobDB) GetObjectInfoByJobV2(jobID uint64) (*ptypes.ObjectInfo, erro
 	return objectInfo, nil
 }
 
-// GetObjectInfoV2 returns the object info by object id.
-func (db *MemJobDB) GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error) {
+// GetObjectInfo returns the object info by object id.
+func (db *MemJobDB) GetObjectInfo(objectID uint64) (*ptypes.ObjectInfo, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	objectInfo, ok := db.ObjectTable[objectID]
@@ -89,8 +89,8 @@ func (db *MemJobDB) GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error)
 	return objectInfo, nil
 }
 
-// SetUploadPayloadJobStateV2 set the job state.
-func (db *MemJobDB) SetUploadPayloadJobStateV2(jobID uint64, state string, timestamp int64) error {
+// SetUploadPayloadJobState set the job state.
+func (db *MemJobDB) SetUploadPayloadJobState(jobID uint64, state string, timestamp int64) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	job, ok := db.JobTable[jobID]
@@ -107,8 +107,8 @@ func (db *MemJobDB) SetUploadPayloadJobStateV2(jobID uint64, state string, times
 	return nil
 }
 
-// SetUploadPayloadJobJobErrorV2 set the job error state and error message.
-func (db *MemJobDB) SetUploadPayloadJobJobErrorV2(jobID uint64, state string, jobErr string, timestamp int64) error {
+// SetUploadPayloadJobJobError set the job error state and error message.
+func (db *MemJobDB) SetUploadPayloadJobJobError(jobID uint64, state string, jobErr string, timestamp int64) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	job, ok := db.JobTable[jobID]
@@ -126,8 +126,8 @@ func (db *MemJobDB) SetUploadPayloadJobJobErrorV2(jobID uint64, state string, jo
 	return nil
 }
 
-// GetPrimaryJobV2 returns the primary piece jobs by object id.
-func (db *MemJobDB) GetPrimaryJobV2(objectID uint64) ([]*spdb.PieceJob, error) {
+// GetPrimaryJob returns the primary piece jobs by object id.
+func (db *MemJobDB) GetPrimaryJob(objectID uint64) ([]*spdb.PieceJob, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	if _, ok := db.PrimaryPieceJobTable[objectID]; !ok {
@@ -140,8 +140,8 @@ func (db *MemJobDB) GetPrimaryJobV2(objectID uint64) ([]*spdb.PieceJob, error) {
 	return pieces, nil
 }
 
-// GetSecondaryJobV2 returns the secondary piece jobs by object id.
-func (db *MemJobDB) GetSecondaryJobV2(objectID uint64) ([]*spdb.PieceJob, error) {
+// GetSecondaryJob returns the secondary piece jobs by object id.
+func (db *MemJobDB) GetSecondaryJob(objectID uint64) ([]*spdb.PieceJob, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 	if _, ok := db.SecondaryPieceJobTable[objectID]; !ok {
@@ -154,8 +154,8 @@ func (db *MemJobDB) GetSecondaryJobV2(objectID uint64) ([]*spdb.PieceJob, error)
 	return pieces, nil
 }
 
-// SetPrimaryPieceJobDoneV2 set one primary piece job is completed.
-func (db *MemJobDB) SetPrimaryPieceJobDoneV2(objectID uint64, piece *spdb.PieceJob) error {
+// SetPrimaryPieceJobDone set one primary piece job is completed.
+func (db *MemJobDB) SetPrimaryPieceJobDone(objectID uint64, piece *spdb.PieceJob) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	if _, ok := db.PrimaryPieceJobTable[objectID]; !ok {
@@ -165,8 +165,8 @@ func (db *MemJobDB) SetPrimaryPieceJobDoneV2(objectID uint64, piece *spdb.PieceJ
 	return nil
 }
 
-// SetSecondaryPieceJobDoneV2 set one secondary piece job is completed.
-func (db *MemJobDB) SetSecondaryPieceJobDoneV2(objectID uint64, piece *spdb.PieceJob) error {
+// SetSecondaryPieceJobDone set one secondary piece job is completed.
+func (db *MemJobDB) SetSecondaryPieceJobDone(objectID uint64, piece *spdb.PieceJob) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	if _, ok := db.SecondaryPieceJobTable[objectID]; !ok {
@@ -176,8 +176,8 @@ func (db *MemJobDB) SetSecondaryPieceJobDoneV2(objectID uint64, piece *spdb.Piec
 	return nil
 }
 
-// DeleteJobV2 delete job by id, delete the related object and piece jobs.
-func (db *MemJobDB) DeleteJobV2(jobID uint64) error {
+// DeleteJob delete job by id, delete the related object and piece jobs.
+func (db *MemJobDB) DeleteJob(jobID uint64) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	delete(db.JobTable, jobID)
@@ -319,7 +319,7 @@ func (b *batch) ValueSize() int {
 // Write flushes any accumulated data to disk.
 func (b *batch) Write() error {
 	for _, jobID := range b.keys {
-		b.db.DeleteJobV2(jobID)
+		b.db.DeleteJob(jobID)
 	}
 	return nil
 }

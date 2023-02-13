@@ -104,11 +104,11 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *stypes.Stone
 		uploadStone *stone.UploadPayloadStone
 	)
 	// create upload stone
-	if req.ObjectInfo.JobId, err = hub.jobDB.CreateUploadPayloadJobV2(req.GetObjectInfo()); err != nil {
+	if req.ObjectInfo.JobId, err = hub.jobDB.CreateUploadPayloadJob(req.GetObjectInfo()); err != nil {
 		return
 	}
 	// TODO::CreateUploadPayloadJob return jobContext
-	if jobCtx, err = hub.jobDB.GetJobContextV2(req.GetObjectInfo().GetJobId()); err != nil {
+	if jobCtx, err = hub.jobDB.GetJobContext(req.GetObjectInfo().GetJobId()); err != nil {
 		return
 	}
 	if uploadStone, err = stone.NewUploadPayloadStone(ctx, jobCtx, req.GetObjectInfo(),
@@ -279,6 +279,6 @@ func (hub *StoneHub) QueryStone(ctx context.Context, req *stypes.StoneHubService
 	rsp.JobInfo = uploadStone.GetJobContext()
 	rsp.PendingPrimaryJob = uploadStone.PopPendingPrimarySPJob()
 	rsp.PendingSecondaryJob = uploadStone.PopPendingSecondarySPJob()
-	rsp.ObjectInfo, _ = hub.jobDB.GetObjectInfoV2(uploadStone.GetObjectInfo().GetObjectId())
+	rsp.ObjectInfo, _ = hub.jobDB.GetObjectInfo(uploadStone.GetObjectInfo().GetObjectId())
 	return rsp, nil
 }

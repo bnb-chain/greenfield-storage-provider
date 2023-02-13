@@ -35,9 +35,9 @@ func NewMetaDB(dbType string, levelDBConfig *config.LevelDBConfig, sqlDBConfig *
 }
 
 // NewJobDB return a job-db instance
-func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (spdb.JobDBV2, error) {
+func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (spdb.JobDB, error) {
 	var (
-		jobDB spdb.JobDBV2
+		jobDB spdb.JobDB
 		err   error
 	)
 

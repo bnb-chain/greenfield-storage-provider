@@ -34,14 +34,14 @@ type UploadPayloadStone struct {
 	job    *job.UploadPayloadJob  // records the upload payload job information
 	jobCh  chan StoneJob          // the channel of transfer job to StoneHub
 	gcCh   chan uint64            // the channel of notify StoneHub to delete stone
-	jobDB  spdb.JobDBV2
+	jobDB  spdb.JobDB
 	metaDB spdb.MetaDB
 }
 
 // NewUploadPayloadStone return the instance of UploadPayloadStone
 func NewUploadPayloadStone(ctx context.Context,
 	jobContext *ptypes.JobContext, object *ptypes.ObjectInfo,
-	jobDB spdb.JobDBV2, metaDB spdb.MetaDB,
+	jobDB spdb.JobDB, metaDB spdb.MetaDB,
 	jobCh chan StoneJob, gcCh chan uint64) (*UploadPayloadStone, error) {
 	jobCtx := NewJobContextWrapper(jobContext, jobDB, metaDB)
 	objectCtx := job.NewObjectInfoContext(object, jobDB, metaDB)

@@ -25,27 +25,23 @@ type PieceJob struct {
 	Done            bool
 }
 
-/* Compare to JobDB, JobDBV2 change index from CreateObjectTxHash to ObjectID.
- * Adapt for changing light client to heavy client, ObjectID as index is necessary for SP.
- */
+// JobDB use objectID as primary key,adapt for changing light client to heavy client
+type JobDB interface {
+	CreateUploadPayloadJob(info *ptypes.ObjectInfo) (uint64, error)
 
-// JobDBV2 use objectID as primary key
-type JobDBV2 interface {
-	CreateUploadPayloadJobV2(info *ptypes.ObjectInfo) (uint64, error)
+	GetJobContext(jobID uint64) (*ptypes.JobContext, error)
+	GetObjectInfo(objectID uint64) (*ptypes.ObjectInfo, error)
+	GetObjectInfoByJob(jobID uint64) (*ptypes.ObjectInfo, error)
 
-	GetJobContextV2(jobID uint64) (*ptypes.JobContext, error)
-	GetObjectInfoV2(objectID uint64) (*ptypes.ObjectInfo, error)
-	GetObjectInfoByJobV2(jobID uint64) (*ptypes.ObjectInfo, error)
+	SetUploadPayloadJobState(jobID uint64, state string, timestamp int64) error
+	SetUploadPayloadJobJobError(jobID uint64, jobState string, jobErr string, timestamp int64) error
 
-	SetUploadPayloadJobStateV2(jobID uint64, state string, timestamp int64) error
-	SetUploadPayloadJobJobErrorV2(jobID uint64, jobState string, jobErr string, timestamp int64) error
+	GetPrimaryJob(objectID uint64) ([]*PieceJob, error)
+	GetSecondaryJob(objectID uint64) ([]*PieceJob, error)
+	SetPrimaryPieceJobDone(objectID uint64, piece *PieceJob) error
+	SetSecondaryPieceJobDone(objectID uint64, piece *PieceJob) error
 
-	GetPrimaryJobV2(objectID uint64) ([]*PieceJob, error)
-	GetSecondaryJobV2(objectID uint64) ([]*PieceJob, error)
-	SetPrimaryPieceJobDoneV2(objectID uint64, piece *PieceJob) error
-	SetSecondaryPieceJobDoneV2(objectID uint64, piece *PieceJob) error
-
-	DeleteJobV2(jobID uint64) error
+	DeleteJob(jobID uint64) error
 
 	Iteratee
 	Batcher

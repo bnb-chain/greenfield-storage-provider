@@ -47,7 +47,7 @@ var _ lifecycle.Service = &StoneHub{}
 // StoneHub manage all stones, the stone is an abstraction of job context and fsm.
 type StoneHub struct {
 	config    *StoneHubConfig
-	jobDB     spdb.JobDBV2        // store the stones(include job and fsm) context
+	jobDB     spdb.JobDB          // store the stones(include job and fsm) context
 	metaDB    spdb.MetaDB         // store the storage provider meta
 	stone     sync.Map            // hold all the running stones, goroutine safe
 	jobQueue  *lane.Queue         // hold the stones that wait to be requested by stone node service
@@ -234,11 +234,11 @@ func (hub *StoneHub) gcDBStone() {
 		}
 		job := it.Value().(*ptypes.JobContext)
 		if job.GetJobState() == ptypes.JobState_JOB_STATE_SEAL_OBJECT_DONE {
-			err := hub.jobDB.DeleteJobV2(job.GetJobId())
+			err := hub.jobDB.DeleteJob(job.GetJobId())
 			log.Infow("gc sealed job", "job", job, "error", err)
 		}
 		if len(job.GetJobErr()) != 0 {
-			err := hub.jobDB.DeleteJobV2(job.GetJobId())
+			err := hub.jobDB.DeleteJob(job.GetJobId())
 			log.Infow("gc failed job", "job", job, "error", err)
 		}
 		it.Next()
@@ -307,7 +307,7 @@ func (hub *StoneHub) loadStone() error {
 			continue
 		}
 		log.Infow("load unsealed job", "job", job)
-		object, objErr := hub.jobDB.GetObjectInfoByJobV2(job.GetJobId())
+		object, objErr := hub.jobDB.GetObjectInfoByJob(job.GetJobId())
 		if objErr != nil {
 			log.Errorw("load stone get object err", "job_id", job.GetJobId(), "error", objErr)
 			it.Next()
@@ -330,7 +330,7 @@ func (hub *StoneHub) loadStone() error {
 // initDB init job, meta, etc. db instance
 func (hub *StoneHub) initDB() error {
 	var (
-		jobDB  spdb.JobDBV2
+		jobDB  spdb.JobDB
 		metaDB spdb.MetaDB
 		err    error
 	)
