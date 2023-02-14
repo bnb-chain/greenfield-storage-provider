@@ -77,6 +77,14 @@ var (
 	ErrReceivedPieceCount = errors.New("syncer service received piece count is wrong")
 )
 
+// signer service error
+var (
+	ErrSignMsg           = errors.New("sign message with private key failed")
+	ErrGetAccount        = errors.New("get account info failed")
+	ErrSealObjectTx      = errors.New("generate sealObject tx failed")
+	ErrSealObjectOnChain = errors.New("send sealObject msg failed")
+)
+
 func MakeErrMsgResponse(err error) *stypes.ErrMessage {
 	return &stypes.ErrMessage{
 		ErrCode: stypes.ErrCode_ERR_CODE_ERROR,

@@ -1,0 +1,24 @@
+syntax = "proto3";
+package service.types.v1;
+import "pkg/types/v1/object.proto";
+import "service/types/v1/uploader.proto";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/types/v1";
+
+message SignRequest {
+  bytes msg = 1;
+}
+
+message SignResponse {
+  bytes signature = 1;
+  ErrMessage err_message = 2;
+}
+
+message SealObjectResponse {
+  bytes txHash = 1;
+  ErrMessage err_message = 2;
+}
+
+service SignerService {
+  rpc Sign(SignRequest) returns (SignResponse) {};
+  rpc SealObject(pkg.types.v1.ObjectInfo) returns (SealObjectResponse) {};
+}

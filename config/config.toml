@@ -79,3 +79,12 @@ Service = [
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
+
+[SingerCfg]
+    Address = "127.0.0.1:9633"
+    [SingerCfg.GreenfieldChainConfig]
+        GRPCAddrs = []
+        ChainId = 9000
+        GasLimit = 210000
+        ChainIdString = "greenfield_9000-1741"
+        PrivateKey = ""

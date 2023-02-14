@@ -9,6 +9,7 @@ const (
 	StoneHubService   = "StoneHub"
 	StoneNodeService  = "StoneNode"
 	SyncerService     = "Syncer"
+	SignerService     = "Signer"
 )
 
 // define payload data redundancy size.
