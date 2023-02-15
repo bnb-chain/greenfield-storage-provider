@@ -15,12 +15,14 @@ require (
 	github.com/bnb-chain/greenfield v0.0.5
 	github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
+	github.com/cloudflare/cfssl v1.6.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.4
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/evmos/ethermint v0.6.1-0.20220919141022-34226aa7b1fa
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/json-iterator/go v1.1.12
 	github.com/klauspost/reedsolomon v1.11.3
 	github.com/looplab/fsm v1.0.0
@@ -93,7 +95,6 @@ require (
 	github.com/google/btree v1.0.1 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/gtank/merlin v0.1.1 // indirect

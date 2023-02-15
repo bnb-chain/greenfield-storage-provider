@@ -19,9 +19,14 @@ var DefaultGreenfieldChainConfig = &GreenfieldChainConfig{
 
 type SignerConfig struct {
 	Address               string
+	APIKey                string
+	WhitelistCIDR         []string
 	GreenfieldChainConfig *GreenfieldChainConfig
 }
 
 var DefaultSignerChainConfig = &SignerConfig{
+	WhitelistCIDR: []string{
+		"127.0.0.1/32",
+	},
 	GreenfieldChainConfig: DefaultGreenfieldChainConfig,
 }

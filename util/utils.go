@@ -1,8 +1,10 @@
 package util
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
+	"net"
 	"os"
 	"reflect"
 	"strconv"
@@ -10,6 +12,7 @@ import (
 	"unicode"
 
 	"github.com/naoina/toml"
+	"google.golang.org/grpc/peer"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -68,4 +71,19 @@ func ValidateRedundancyType(redundancyType ptypes.RedundancyType) error {
 	default:
 		return merrors.ErrRedundancyType
 	}
+}
+
+// GetIPFromGRPCContext returns a IP from grpc client
+func GetIPFromGRPCContext(ctx context.Context) net.IP {
+	pr, ok := peer.FromContext(ctx)
+	if !ok {
+		return nil
+	}
+
+	addr := strings.Split(pr.Addr.String(), ":")
+	if len(addr) < 1 {
+		return nil
+	}
+
+	return net.ParseIP(addr[0])
 }

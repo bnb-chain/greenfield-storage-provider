@@ -4,23 +4,36 @@ import (
 	"context"
 	"net"
 
+	"github.com/cloudflare/cfssl/whitelist"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 // SignerServer signer service
 type SignerServer struct {
 	config          *SignerConfig
+	whitelist       *whitelist.BasicNet
 	greenfieldChain *GreenfieldChain
 }
 
 // NewSignerServer return SignerServer instance
 func NewSignerServer(config *SignerConfig) (*SignerServer, error) {
+	whitelist := whitelist.NewBasicNet()
+	for _, cidr := range config.WhitelistCIDR {
+		_, subnet, err := net.ParseCIDR(cidr)
+		if err != nil {
+			return nil, err
+		}
+		whitelist.Add(subnet)
+	}
 	return &SignerServer{
 		greenfieldChain: NewGreenfieldChain(config.GreenfieldChainConfig),
+		whitelist:       whitelist,
 	}, nil
 }
 
@@ -54,7 +67,12 @@ func (signer *SignerServer) serve() {
 		log.Errorw("failed to listen", "address", signer.config.Address, "error", err)
 		return
 	}
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			signer.IPWhitelistInterceptor(),
+			signer.AuthInterceptor(),
+		)),
+	)
 	stypes.RegisterSignerServiceServer(grpcServer, signer)
 	// register reflection service
 	reflection.Register(grpcServer)
