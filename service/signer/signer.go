@@ -22,6 +22,8 @@ type SignerServer struct {
 	config    *SignerConfig
 	whitelist *whitelist.BasicNet
 	client    *GreenfieldChainClient
+
+	server *grpc.Server
 }
 
 // NewSignerServer return SignerServer instance
@@ -40,6 +42,7 @@ func NewSignerServer(config *SignerConfig) (*SignerServer, error) {
 		return nil, err
 	}
 	return &SignerServer{
+		config:    config,
 		client:    client,
 		whitelist: whitelist,
 	}, nil
@@ -52,10 +55,6 @@ func (signer *SignerServer) Name() string {
 
 // Start a service, this method should be used in non-block form
 func (signer *SignerServer) Start(ctx context.Context) error {
-	// start background task
-	signer.client.wg.Add(1)
-	go signer.client.updateClientLoop()
-
 	// start rpc service
 	go signer.serve()
 	return nil
@@ -63,8 +62,8 @@ func (signer *SignerServer) Start(ctx context.Context) error {
 
 // Stop a service, this method should be used in non-block form
 func (signer *SignerServer) Stop(ctx context.Context) error {
-	close(signer.client.stopCh)
-	signer.client.wg.Wait()
+	// stop rpc service
+	signer.server.Stop()
 	return nil
 }
 
@@ -75,16 +74,17 @@ func (signer *SignerServer) serve() {
 		log.Errorw("failed to listen", "address", signer.config.Address, "error", err)
 		return
 	}
-	grpcServer := grpc.NewServer(
+	signer.server = grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			signer.IPWhitelistInterceptor(),
 			signer.AuthInterceptor(),
 		)),
 	)
-	stypes.RegisterSignerServiceServer(grpcServer, signer)
+	signer.server.Stop()
+	stypes.RegisterSignerServiceServer(signer.server, signer)
 	// register reflection service
-	reflection.Register(grpcServer)
-	if err := grpcServer.Serve(lis); err != nil {
+	reflection.Register(signer.server)
+	if err := signer.server.Serve(lis); err != nil {
 		log.Errorf("grpc serve error : %v", err)
 		return
 	}

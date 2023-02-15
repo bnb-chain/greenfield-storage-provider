@@ -82,8 +82,6 @@ var (
 	ErrIPBlocked         = errors.New("ip blocked")
 	ErrAPIKey            = errors.New("invalid api key")
 	ErrSignMsg           = errors.New("sign message with private key failed")
-	ErrGetAccount        = errors.New("get account info failed")
-	ErrSealObjectTx      = errors.New("generate sealObject tx failed")
 	ErrSealObjectOnChain = errors.New("send sealObject msg failed")
 )
 

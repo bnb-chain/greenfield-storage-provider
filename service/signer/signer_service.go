@@ -8,6 +8,7 @@ import (
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"google.golang.org/grpc"
 )
@@ -15,7 +16,7 @@ import (
 /* signer_service.go implement SignerServiceServer grpc interface.
  *
  * SignBucketApproval, SignObjectApproval implement the signature request for approval.
- * SignIntegrityHash implement the SP signature request of the integrity hash.
+ * SignIntegrityHash implement the SP signature request of the integrity hash and signature.
  * SealObjectOnChain implement the primary SP to submit a SealObject transaction request.
  */
 
@@ -32,7 +33,7 @@ func (signer *SignerServer) SignBucketApproval(ctx context.Context, req *stypes.
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
 		}, nil
 	}
-	sig, err := signer.client.Sign(SignApproval, msg)
+	sig, err := signer.client.Sign(SignApproval, crypto.Keccak256(msg))
 	if err != nil {
 		return &stypes.SignBucketApprovalResponse{
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
@@ -51,7 +52,7 @@ func (signer *SignerServer) SignObjectApproval(ctx context.Context, req *stypes.
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
 		}, nil
 	}
-	sig, err := signer.client.Sign(SignApproval, msg)
+	sig, err := signer.client.Sign(SignApproval, crypto.Keccak256(msg))
 	if err != nil {
 		return &stypes.SignObjectApprovalResponse{
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
@@ -66,7 +67,7 @@ func (signer *SignerServer) SignObjectApproval(ctx context.Context, req *stypes.
 func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.SignIntegrityHashRequest) (*stypes.SignIntegrityHashResponse, error) {
 	integrityHash := hash.GenerateIntegrityHash(req.Data)
 
-	sig, err := signer.client.Sign(SignOperator, integrityHash)
+	sig, err := signer.client.Sign(SignApproval, crypto.Keccak256(integrityHash))
 	if err != nil {
 		return &stypes.SignIntegrityHashResponse{
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),

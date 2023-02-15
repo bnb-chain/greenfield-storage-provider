@@ -3,119 +3,146 @@ package signer
 import (
 	"context"
 	"encoding/hex"
-	"time"
+	"sync"
 
-	"github.com/avast/retry-go/v4"
+	"github.com/bnb-chain/greenfield-go-sdk/client/chain"
+	"github.com/bnb-chain/greenfield-go-sdk/keys"
+	ctypes "github.com/bnb-chain/greenfield-go-sdk/types"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	ethHd "github.com/evmos/ethermint/crypto/hd"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	"github.com/tendermint/tendermint/rpc/client/http"
-	libclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+
+	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 )
 
-var (
-	RtyAttNum     = uint(5)
-	RtyAttem      = retry.Attempts(RtyAttNum)
-	RtyDelay      = retry.Delay(time.Millisecond * 500)
-	RtyErr        = retry.LastErrorOnly(true)
-	RetryInterval = 1 * time.Second
+type SignType string
 
-	FallBehindThreshold          = uint64(5)
-	SleepIntervalForUpdateClient = 10 * time.Second
-	DataSeedDenyServiceThreshold = 60
-	RPCTimeout                   = 3 * time.Second
+const (
+	SignOperator SignType = "operator"
+	SignFunding  SignType = "funding"
+	SignSeal     SignType = "seal"
+	SignApproval SignType = "approval"
 )
 
-type GreenfieldClient struct {
-	rpcClient     rpcclient.Client
-	txClient      tx.ServiceClient
-	authClient    authtypes.QueryClient
-	storageClient storagetypes.QueryClient
-	Provider      string
-	Height        uint64
-	UpdatedAt     time.Time
-	cdc           *codec.ProtoCodec
+// GreenfieldChainClient the greenfield chain client
+type GreenfieldChainClient struct {
+	mu sync.Mutex
+
+	config            *GreenfieldChainConfig
+	greenfieldClients map[SignType]*chain.GreenfieldClient
 }
 
-func (c *GreenfieldClient) GetAccount(address string) (authtypes.AccountI, error) {
-	authRes, err := c.authClient.Account(context.Background(), &authtypes.QueryAccountRequest{Address: address})
+// NewGreenfieldChainClient return the GreenfieldChainClient instance
+func NewGreenfieldChainClient(config *GreenfieldChainConfig) (*GreenfieldChainClient, error) {
+	// init clients
+	operatorKM, err := keys.NewPrivateKeyManager(config.OperatorPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	var account authtypes.AccountI
-	if err := c.cdc.InterfaceRegistry().UnpackAny(authRes.Account, &account); err != nil {
+	operatorClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainIdString, operatorKM)
+	fundingKM, err := keys.NewPrivateKeyManager(config.FundingPrivateKey)
+	if err != nil {
 		return nil, err
 	}
-	return account, nil
+	fundingClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainIdString, fundingKM)
+	sealKM, err := keys.NewPrivateKeyManager(config.SealPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	sealClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainIdString, sealKM)
+	approvalKM, err := keys.NewPrivateKeyManager(config.ApprovalPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	approvalClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainIdString, approvalKM)
+	greenfieldClients := map[SignType]*chain.GreenfieldClient{
+		SignOperator: &operatorClient,
+		SignFunding:  &fundingClient,
+		SignSeal:     &sealClient,
+		SignApproval: &approvalClient,
+	}
+
+	cli := &GreenfieldChainClient{
+		config:            config,
+		greenfieldClients: greenfieldClients,
+	}
+	return cli, nil
 }
 
-func newRpcClient(addr string) *http.HTTP {
-	httpClient, err := libclient.DefaultHTTPClient(addr)
+// Sign returns a msg signature signed by private key.
+func (client *GreenfieldChainClient) Sign(scope SignType, msg []byte) ([]byte, error) {
+	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	rpcClient, err := http.NewWithClient(addr, "/websocket", httpClient)
-	if err != nil {
-		panic(err)
-	}
-	return rpcClient
+	return km.GetPrivKey().Sign(msg)
 }
 
-func grpcConn(addr string) *grpc.ClientConn {
-	conn, err := grpc.Dial(
-		addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+// SealObject seal the object on the greenfield chain.
+func (client *GreenfieldChainClient) SealObject(ctx context.Context, scope SignType, object *ptypes.ObjectInfo) ([]byte, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+
+	var (
+		secondarySPAccs       = make([]types.AccAddress, 0, len(object.SecondarySps))
+		secondarySPSignatures = make([][]byte, 0, len(object.SecondarySps))
 	)
+
+	for _, sp := range object.SecondarySps {
+		secondarySPAccs = append(secondarySPAccs, types.AccAddress(sp.SpId))
+		secondarySPSignatures = append(secondarySPSignatures, sp.Signature)
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
-		panic(err)
+		log.CtxErrorw(ctx, "failed to get private key", "err", err)
+		return nil, merrors.ErrSignMsg
 	}
-	return conn
-}
 
-func initGreenfieldClients(rpcAddrs, grpcAddrs []string) []*GreenfieldClient {
-	greenfieldClients := make([]*GreenfieldClient, 0)
-
-	for i := 0; i < len(grpcAddrs); i++ {
-		conn := grpcConn(grpcAddrs[i])
-		greenfieldClients = append(greenfieldClients, &GreenfieldClient{
-			rpcClient:     newRpcClient(rpcAddrs[i]),
-			txClient:      tx.NewServiceClient(conn),
-			authClient:    authtypes.NewQueryClient(conn),
-			storageClient: storagetypes.NewQueryClient(conn),
-			Provider:      grpcAddrs[i],
-			UpdatedAt:     time.Now(),
-			cdc:           cdc(),
-		})
+	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
+		object.BucketName, object.ObjectName, secondarySPAccs, secondarySPSignatures)
+	mode := tx.BroadcastMode_BROADCAST_MODE_BLOCK
+	txOpt := &ctypes.TxOption{
+		Mode:     &mode,
+		GasLimit: client.config.GasLimit,
 	}
-	return greenfieldClients
+
+	resp, err := client.greenfieldClients[scope].BroadcastTx(
+		[]types.Msg{msgSealObject}, txOpt)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err)
+		return nil, merrors.ErrSealObjectOnChain
+	}
+
+	if resp.TxResponse.Code != 0 {
+		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
+		return nil, merrors.ErrSealObjectOnChain
+	}
+	object.TxHash, err = hex.DecodeString(resp.TxResponse.TxHash)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err)
+		return nil, merrors.ErrSealObjectOnChain
+	}
+
+	return object.TxHash, nil
 }
 
-func cdc() *codec.ProtoCodec {
-	interfaceRegistry := types.NewInterfaceRegistry()
-	interfaceRegistry.RegisterInterface("AccountI", (*authtypes.AccountI)(nil))
-	interfaceRegistry.RegisterImplementations(
-		(*authtypes.AccountI)(nil),
-		&authtypes.BaseAccount{},
-	)
-	interfaceRegistry.RegisterInterface("cosmos.crypto.PubKey", (*cryptotypes.PubKey)(nil))
-	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &ethsecp256k1.PubKey{})
-	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &storagetypes.MsgSealObject{})
-	return codec.NewProtoCodec(interfaceRegistry)
-}
-
-func HexToEthSecp256k1PrivKey(hexString string) (*ethsecp256k1.PrivKey, error) {
+func hexToEthSecp256k1PrivKey(hexString string) (*ethsecp256k1.PrivKey, error) {
 	bz, err := hex.DecodeString(hexString)
 	if err != nil {
 		return nil, err
 	}
 	return ethHd.EthSecp256k1.Generate()(bz).(*ethsecp256k1.PrivKey), nil
+}
+
+func getPrivKey(priv string) (*ethsecp256k1.PrivKey, error) {
+	privKey, err := hexToEthSecp256k1PrivKey(priv)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return privKey, nil
 }
