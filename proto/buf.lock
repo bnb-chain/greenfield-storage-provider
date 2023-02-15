@@ -5,3 +5,19 @@ deps:
     owner: cosmos
     repository: cosmos-proto
     commit: 1935555c206d4afb9e94615dfd0fad31
+  - remote: buf.build
+    owner: cosmos
+    repository: cosmos-sdk
+    commit: 339b0d0f9c1b460b9c4c0b06f05eb674
+  - remote: buf.build
+    owner: cosmos
+    repository: gogo-proto
+    commit: 34d970b699f84aa382f3c29773a60836
+  - remote: buf.build
+    owner: googleapis
+    repository: googleapis
+    commit: c0b37eaf6f1f43ecacbc85e4e4d1a440
+  - remote: buf.build
+    owner: j75689
+    repository: greenfield
+    commit: 74bf814a2c6240e7ade114b6720a6e47

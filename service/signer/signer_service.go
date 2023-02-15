@@ -7,27 +7,82 @@ import (
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"google.golang.org/grpc"
 )
+
+/* signer_service.go implement SignerServiceServer grpc interface.
+ *
+ * SignBucketApproval, SignObjectApproval implement the signature request for approval.
+ * SignIntegrityHash implement the SP signature request of the integrity hash.
+ * SealObjectOnChain implement the primary SP to submit a SealObject transaction request.
+ */
+
+var _ stypes.SignerServiceServer = &SignerServer{}
 
 const (
 	APITokenMD = "API-KEY"
 )
 
-func (signer *SignerServer) Sign(ctx context.Context, req *stypes.SignRequest) (*stypes.SignResponse, error) {
-	sig, err := signer.greenfieldChain.Sign(req.Msg)
+func (signer *SignerServer) SignBucketApproval(ctx context.Context, req *stypes.SignBucketApprovalRequest) (*stypes.SignBucketApprovalResponse, error) {
+	msg, err := req.CreateBucketMsg.Marshal()
+	if err != nil {
+		return &stypes.SignBucketApprovalResponse{
+			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
+		}, nil
+	}
+	sig, err := signer.client.Sign(SignApproval, msg)
+	if err != nil {
+		return &stypes.SignBucketApprovalResponse{
+			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
+		}, nil
+	}
 
-	return &stypes.SignResponse{
-		Signature:  sig,
-		ErrMessage: merrors.MakeErrMsgResponse(err),
+	return &stypes.SignBucketApprovalResponse{
+		Signature: sig,
 	}, nil
 }
 
-func (signer *SignerServer) SealObject(ctx context.Context, object *ptypes.ObjectInfo) (*stypes.SealObjectResponse, error) {
-	txHash, err := signer.greenfieldChain.SealObject(ctx, object)
+func (signer *SignerServer) SignObjectApproval(ctx context.Context, req *stypes.SignObjectApprovalRequest) (*stypes.SignObjectApprovalResponse, error) {
+	msg, err := req.CreateObjectMsg.Marshal()
+	if err != nil {
+		return &stypes.SignObjectApprovalResponse{
+			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
+		}, nil
+	}
+	sig, err := signer.client.Sign(SignApproval, msg)
+	if err != nil {
+		return &stypes.SignObjectApprovalResponse{
+			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
+		}, nil
+	}
 
-	return &stypes.SealObjectResponse{
+	return &stypes.SignObjectApprovalResponse{
+		Signature: sig,
+	}, nil
+}
+
+func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.SignIntegrityHashRequest) (*stypes.SignIntegrityHashResponse, error) {
+	integrityHash := hash.GenerateIntegrityHash(req.Data)
+
+	sig, err := signer.client.Sign(SignOperator, integrityHash)
+	if err != nil {
+		return &stypes.SignIntegrityHashResponse{
+			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
+		}, nil
+	}
+
+	return &stypes.SignIntegrityHashResponse{
+		Signature:     sig,
+		IntegrityHash: integrityHash,
+	}, nil
+}
+
+func (signer *SignerServer) SealObjectOnChain(ctx context.Context, object *ptypes.ObjectInfo) (*stypes.SealObjectOnChainResponse, error) {
+	txHash, err := signer.client.SealObject(ctx, SignSeal, object)
+
+	return &stypes.SealObjectOnChainResponse{
 		TxHash:     txHash,
 		ErrMessage: merrors.MakeErrMsgResponse(err),
 	}, nil

@@ -10,15 +10,18 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
+var _ lifecycle.Service = &SignerServer{}
+
 // SignerServer signer service
 type SignerServer struct {
-	config          *SignerConfig
-	whitelist       *whitelist.BasicNet
-	greenfieldChain *GreenfieldChain
+	config    *SignerConfig
+	whitelist *whitelist.BasicNet
+	client    *GreenfieldChainClient
 }
 
 // NewSignerServer return SignerServer instance
@@ -31,9 +34,14 @@ func NewSignerServer(config *SignerConfig) (*SignerServer, error) {
 		}
 		whitelist.Add(subnet)
 	}
+
+	client, err := NewGreenfieldChainClient(config.GreenfieldChainConfig)
+	if err != nil {
+		return nil, err
+	}
 	return &SignerServer{
-		greenfieldChain: NewGreenfieldChain(config.GreenfieldChainConfig),
-		whitelist:       whitelist,
+		client:    client,
+		whitelist: whitelist,
 	}, nil
 }
 
@@ -45,8 +53,8 @@ func (signer *SignerServer) Name() string {
 // Start a service, this method should be used in non-block form
 func (signer *SignerServer) Start(ctx context.Context) error {
 	// start background task
-	signer.greenfieldChain.wg.Add(1)
-	go signer.greenfieldChain.updateClientLoop()
+	signer.client.wg.Add(1)
+	go signer.client.updateClientLoop()
 
 	// start rpc service
 	go signer.serve()
@@ -55,8 +63,8 @@ func (signer *SignerServer) Start(ctx context.Context) error {
 
 // Stop a service, this method should be used in non-block form
 func (signer *SignerServer) Stop(ctx context.Context) error {
-	close(signer.greenfieldChain.stopCh)
-	signer.greenfieldChain.wg.Wait()
+	close(signer.client.stopCh)
+	signer.client.wg.Wait()
 	return nil
 }
 

@@ -21,52 +21,89 @@ import (
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 )
 
-// GreenfieldChain the greenfield chain
-type GreenfieldChain struct {
+type SignType string
+
+const (
+	SignOperator SignType = "operator"
+	SignFunding  SignType = "funding"
+	SignSeal     SignType = "seal"
+	SignApproval SignType = "approval"
+)
+
+// GreenfieldChainClient the greenfield chain client
+type GreenfieldChainClient struct {
 	mu sync.Mutex
 
 	greenfieldClients   []*GreenfieldClient
 	greenfieldClientIdx int
 	config              *GreenfieldChainConfig
-	privateKey          *ethsecp256k1.PrivKey
+	privKeys            map[SignType]*ethsecp256k1.PrivKey
 
 	wg     sync.WaitGroup
 	stopCh chan struct{}
 }
 
-// NewGreenfieldChain return the GreenfieldChain instance
-func NewGreenfieldChain(config *GreenfieldChainConfig) *GreenfieldChain {
-	privKey, err := HexToEthSecp256k1PrivKey(config.PrivateKey)
+func getPrivKey(priv string) (*ethsecp256k1.PrivKey, error) {
+	privKey, err := HexToEthSecp256k1PrivKey(priv)
 	if err != nil {
 		log.Panic(err)
 	}
-	cli := &GreenfieldChain{
+
+	return privKey, nil
+}
+
+// NewGreenfieldChainClient return the GreenfieldChainClient instance
+func NewGreenfieldChainClient(config *GreenfieldChainConfig) (*GreenfieldChainClient, error) {
+	operatorPrivKey, err := getPrivKey(config.OperatorPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	fundingPrivKey, err := getPrivKey(config.FundingPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	sealPrivKey, err := getPrivKey(config.SealPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	approvalPrivKey, err := getPrivKey(config.ApprovalPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	privKeys := map[SignType]*ethsecp256k1.PrivKey{
+		SignOperator: operatorPrivKey,
+		SignFunding:  fundingPrivKey,
+		SignSeal:     sealPrivKey,
+		SignApproval: approvalPrivKey,
+	}
+
+	cli := &GreenfieldChainClient{
 		config:              config,
-		privateKey:          privKey,
+		privKeys:            privKeys,
 		greenfieldClientIdx: 0,
 		greenfieldClients:   initGreenfieldClients(config.RPCAddrs, config.GRPCAddrs),
 
 		wg:     sync.WaitGroup{},
 		stopCh: make(chan struct{}),
 	}
-	return cli
+	return cli, nil
 }
 
-func (cli *GreenfieldChain) Sign(msg []byte) ([]byte, error) {
-	return cli.privateKey.Sign(msg)
+func (client *GreenfieldChainClient) Sign(scope SignType, msg []byte) ([]byte, error) {
+	return client.privKeys[scope].Sign(msg)
 }
 
 // SealObject seal the object on the greenfield chain.
-func (cli *GreenfieldChain) SealObject(ctx context.Context, object *ptypes.ObjectInfo) ([]byte, error) {
-	cli.mu.Lock()
-	defer cli.mu.Unlock()
+func (client *GreenfieldChainClient) SealObject(ctx context.Context, scope SignType, object *ptypes.ObjectInfo) ([]byte, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
 
 	encodingConfig := app.MakeEncodingConfig()
 	txConfig := encodingConfig.TxConfig
 	txBuilder := txConfig.NewTxBuilder()
-	addr := cli.privateKey.PubKey().Address().String()
+	addr := client.privKeys[scope].PubKey().Address().String()
 
-	acct, err := cli.greenfieldClients[cli.greenfieldClientIdx].GetAccount(addr)
+	acct, err := client.greenfieldClients[client.greenfieldClientIdx].GetAccount(addr)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get account: "+addr, "err", err)
 		return nil, merrors.ErrGetAccount
@@ -82,7 +119,7 @@ func (cli *GreenfieldChain) SealObject(ctx context.Context, object *ptypes.Objec
 		secondarySpSignatures = append(secondarySpSignatures, sp.Signature)
 	}
 
-	msgSealObject := storagetypes.NewMsgSealObject(types.AccAddress(cli.privateKey.PubKey().Address().Bytes()),
+	msgSealObject := storagetypes.NewMsgSealObject(types.AccAddress(client.privKeys[scope].PubKey().Address().Bytes()),
 		object.BucketName, object.ObjectName, secondarySPAccs, secondarySpSignatures)
 
 	err = txBuilder.SetMsgs(msgSealObject)
@@ -90,10 +127,10 @@ func (cli *GreenfieldChain) SealObject(ctx context.Context, object *ptypes.Objec
 		log.CtxErrorw(ctx, "failed to build tx", "err", err)
 		return nil, merrors.ErrSealObjectTx
 	}
-	txBuilder.SetGasLimit(cli.config.GasLimit)
+	txBuilder.SetGasLimit(client.config.GasLimit)
 
 	sig := signing.SignatureV2{
-		PubKey: cli.privateKey.PubKey(),
+		PubKey: client.privKeys[scope].PubKey(),
 		Data: &signing.SingleSignatureData{
 			SignMode: signing.SignMode_SIGN_MODE_EIP_712,
 		},
@@ -109,7 +146,7 @@ func (cli *GreenfieldChain) SealObject(ctx context.Context, object *ptypes.Objec
 	sig = signing.SignatureV2{}
 
 	signerData := xauthsigning.SignerData{
-		ChainID:       cli.config.ChainIdString,
+		ChainID:       client.config.ChainIdString,
 		AccountNumber: acct.GetAccountNumber(),
 		Sequence:      acct.GetSequence(),
 	}
@@ -117,7 +154,7 @@ func (cli *GreenfieldChain) SealObject(ctx context.Context, object *ptypes.Objec
 	sig, err = clitx.SignWithPrivKey(signing.SignMode_SIGN_MODE_EIP_712,
 		signerData,
 		txBuilder,
-		cli.privateKey,
+		client.privKeys[scope],
 		txConfig,
 		acct.GetSequence(),
 	)
@@ -138,7 +175,7 @@ func (cli *GreenfieldChain) SealObject(ctx context.Context, object *ptypes.Objec
 		return nil, merrors.ErrSealObjectTx
 	}
 
-	resp, err := cli.greenfieldClients[cli.greenfieldClientIdx].txClient.BroadcastTx(
+	resp, err := client.greenfieldClients[client.greenfieldClientIdx].txClient.BroadcastTx(
 		ctx,
 		&tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_BLOCK,
@@ -162,7 +199,7 @@ func (cli *GreenfieldChain) SealObject(ctx context.Context, object *ptypes.Objec
 	return object.TxHash, nil
 }
 
-func (cli *GreenfieldChain) getLatestBlockHeight(ctx context.Context, client rpcclient.Client) (uint64, error) {
+func (c *GreenfieldChainClient) getLatestBlockHeight(ctx context.Context, client rpcclient.Client) (uint64, error) {
 	status, err := client.Status(ctx)
 	if err != nil {
 		return 0, err
@@ -170,12 +207,12 @@ func (cli *GreenfieldChain) getLatestBlockHeight(ctx context.Context, client rpc
 	return uint64(status.SyncInfo.LatestBlockHeight), nil
 }
 
-func (cli *GreenfieldChain) getLatestBlockHeightWithRetry(client rpcclient.Client) (latestHeight uint64, err error) {
+func (c *GreenfieldChainClient) getLatestBlockHeightWithRetry(client rpcclient.Client) (latestHeight uint64, err error) {
 	return latestHeight, retry.Do(func() error {
 		latestHeightQueryCtx, cancelLatestHeightQueryCtx := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelLatestHeightQueryCtx()
 		var err error
-		latestHeight, err = cli.getLatestBlockHeight(latestHeightQueryCtx, client)
+		latestHeight, err = c.getLatestBlockHeight(latestHeightQueryCtx, client)
 		return err
 	}, RtyAttem,
 		RtyDelay,
@@ -185,23 +222,23 @@ func (cli *GreenfieldChain) getLatestBlockHeightWithRetry(client rpcclient.Clien
 		}))
 }
 
-func (cli *GreenfieldChain) updateClientLoop() {
+func (client *GreenfieldChainClient) updateClientLoop() {
 	ticker := time.NewTicker(SleepIntervalForUpdateClient)
 
 	defer func() {
 		ticker.Stop()
-		cli.wg.Done()
+		client.wg.Done()
 	}()
 	for {
 		select {
-		case <-cli.stopCh:
+		case <-client.stopCh:
 			log.Info("stop to monitor greenfield data-seeds healthy")
 			return
 		case <-ticker.C:
 			log.Infof("start to monitor greenfield data-seeds healthy")
-			for _, greenfieldClient := range cli.greenfieldClients {
+			for _, greenfieldClient := range client.greenfieldClients {
 
-				height, err := cli.getLatestBlockHeightWithRetry(greenfieldClient.rpcClient)
+				height, err := client.getLatestBlockHeightWithRetry(greenfieldClient.rpcClient)
 				if err != nil {
 					log.Errorf("get latest block height error, err=%s", err.Error())
 					continue
@@ -211,17 +248,17 @@ func (cli *GreenfieldChain) updateClientLoop() {
 			}
 			highestHeight := uint64(0)
 			highestIdx := 0
-			for idx := 0; idx < len(cli.greenfieldClients); idx++ {
-				if cli.greenfieldClients[idx].Height > highestHeight {
-					highestHeight = cli.greenfieldClients[idx].Height
+			for idx := 0; idx < len(client.greenfieldClients); idx++ {
+				if client.greenfieldClients[idx].Height > highestHeight {
+					highestHeight = client.greenfieldClients[idx].Height
 					highestIdx = idx
 				}
 			}
 			// current GreenfieldClient block sync is fall behind, switch to the GreenfieldClient with the highest block height
-			if cli.greenfieldClients[cli.greenfieldClientIdx].Height+FallBehindThreshold < highestHeight {
-				cli.mu.Lock()
-				cli.greenfieldClientIdx = highestIdx
-				cli.mu.Unlock()
+			if client.greenfieldClients[client.greenfieldClientIdx].Height+FallBehindThreshold < highestHeight {
+				client.mu.Lock()
+				client.greenfieldClientIdx = highestIdx
+				client.mu.Unlock()
 			}
 		}
 	}
