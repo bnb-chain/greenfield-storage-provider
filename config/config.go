@@ -2,6 +2,7 @@ package config
 
 import (
 	"bufio"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"os"
 
 	"github.com/naoina/toml"
@@ -27,6 +28,7 @@ type StorageProviderConfig struct {
 	StoneNodeCfg  *stonenode.StoneNodeConfig
 	SyncerCfg     *syncer.SyncerConfig
 	SignerCfg     *signer.SignerConfig
+	MetadataCfg   *metadata.MetadataConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
@@ -38,6 +40,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	StoneNodeCfg:  stonenode.DefaultStoneNodeConfig,
 	SyncerCfg:     syncer.DefaultSyncerConfig,
 	SignerCfg:     signer.DefaultSignerChainConfig,
+	MetadataCfg:   metadata.DefaultMetadataConfig,
 }
 
 // LoadConfig loads the config file

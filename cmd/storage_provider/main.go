@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"os"
 	"syscall"
 
@@ -90,6 +91,11 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.SignerCfg = config.DefaultStorageProviderConfig.SignerCfg
 		}
 		server, err = signer.NewSignerServer(cfg.SignerCfg)
+	case model.MetadataService:
+		if cfg.MetadataCfg == nil {
+			cfg.MetadataCfg = config.DefaultStorageProviderConfig.MetadataCfg
+		}
+		server, err = metadata.NewMetadataService(cfg.MetadataCfg, context.Background())
 		if err != nil {
 			return nil, err
 		}
