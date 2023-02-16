@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	stypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"google.golang.org/grpc"
 )
 
@@ -82,8 +83,7 @@ func TestGreenfieldChainClient_Sign(t *testing.T) {
 				return
 			}
 
-			// TODO: verify failed, need to confirm
-			err = stypes.VerifySignature(km.GetAddr(), tt.args.msg, sig)
+			err = stypes.VerifySignature(km.GetAddr(), crypto.Keccak256(tt.args.msg), sig)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("storage VerifySignature() error = %v, wantErr %v", err, tt.wantErr)
 				return
