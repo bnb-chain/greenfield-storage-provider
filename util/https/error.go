@@ -1,6 +1,22 @@
-package router
+package https
 
 import "fmt"
+
+type SubError struct {
+	Domain  string `json:"domain"`
+	Reason  string `json:"reason"`
+	Message string `json:"message"`
+}
+
+type Error struct {
+	Code    int        `json:"code"`
+	Message string     `json:"message"`
+	Errors  []SubError `json:"errors,omitempty"`
+}
+
+func (e *Error) Error() string {
+	return fmt.Sprintf("code:%d message:%s errors:%+v", e.Code, e.Message, e.Errors)
+}
 
 func NewError(code int, message string) *Error {
 	return &Error{
