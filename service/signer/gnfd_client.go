@@ -39,6 +39,7 @@ type GreenfieldChainClient struct {
 // NewGreenfieldChainClient return the GreenfieldChainClient instance
 func NewGreenfieldChainClient(config *GreenfieldChainConfig) (*GreenfieldChainClient, error) {
 	// init clients
+	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(config.OperatorPrivateKey)
 	if err != nil {
 		return nil, err
