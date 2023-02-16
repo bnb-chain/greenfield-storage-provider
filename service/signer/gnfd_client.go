@@ -65,11 +65,10 @@ func NewGreenfieldChainClient(config *GreenfieldChainConfig) (*GreenfieldChainCl
 		SignApproval: &approvalClient,
 	}
 
-	cli := &GreenfieldChainClient{
+	return &GreenfieldChainClient{
 		config:            config,
 		greenfieldClients: greenfieldClients,
-	}
-	return cli, nil
+	}, nil
 }
 
 // Sign returns a msg signature signed by private key.
