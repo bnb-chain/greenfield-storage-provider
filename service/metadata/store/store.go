@@ -15,6 +15,7 @@ type Store struct {
 
 type IStore interface {
 	GetUserBuckets(ctx context.Context) (ret []*model.Bucket, err error)
+	ListObjectsByBucketName(ctx context.Context, bucketName string) (ret []*model.Object, err error)
 }
 
 func (s *Store) getCTXUserDB(ctx context.Context) *gorm.DB {

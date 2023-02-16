@@ -15,12 +15,12 @@ const (
 )
 
 const (
-	CodeOk = 20000
+	CodeOk = 200
 
-	ErrorCodeBadRequest = 401
+	ErrorCodeBadRequest = 400
 	ErrorCodeNotFound   = 404
 
-	ErrorCodeInternalError = 501
+	ErrorCodeInternalError = 500
 )
 
 type Router struct {
@@ -68,6 +68,12 @@ type Response struct {
 	Data  interface{} `json:"data,omitempty"`
 }
 
+//
+//type Context struct {
+//	C context.Context
+//	*gin.Context
+//}
+
 func toGinHandler(h IHandler) gin.HandlerFunc {
 	methodName := h.MethodName()
 	f := h.Handler()
@@ -111,5 +117,6 @@ func (r *Router) InitHandlers(router *gin.RouterGroup) {
 	accounts := NewRouterGroup(router.Group("/accounts"))
 	user := accounts.Group("/:account_id")
 	user.GET("/buckets", Handler(r.GetUserBuckets))
+	user.GET("/buckets/:bucket_name/objects", NewBucketNameWrapper(r.ListObjectsByBucket))
 
 }
