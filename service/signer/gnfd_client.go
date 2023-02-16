@@ -12,11 +12,9 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	ethHd "github.com/evmos/ethermint/crypto/hd"
 
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 )
 
 type SignType string
@@ -129,21 +127,4 @@ func (client *GreenfieldChainClient) SealObject(ctx context.Context, scope SignT
 	}
 
 	return object.TxHash, nil
-}
-
-func hexToEthSecp256k1PrivKey(hexString string) (*ethsecp256k1.PrivKey, error) {
-	bz, err := hex.DecodeString(hexString)
-	if err != nil {
-		return nil, err
-	}
-	return ethHd.EthSecp256k1.Generate()(bz).(*ethsecp256k1.PrivKey), nil
-}
-
-func getPrivKey(priv string) (*ethsecp256k1.PrivKey, error) {
-	privKey, err := hexToEthSecp256k1PrivKey(priv)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	return privKey, nil
 }
