@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	stypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"google.golang.org/grpc"
 )
 
@@ -50,7 +49,7 @@ func TestGreenfieldChainClient_Sign(t *testing.T) {
 					ChainId:            9000,
 					GasLimit:           210000,
 					GRPCAddr:           "localhost:9090",
-					ChainIdString:      "greenfield_9000-1741",
+					ChainIdString:      "greenfield_9000-121",
 					OperatorPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
 					FundingPrivateKey:  "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
 					ApprovalPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
@@ -59,7 +58,7 @@ func TestGreenfieldChainClient_Sign(t *testing.T) {
 			},
 			args: args{
 				scope: SignApproval,
-				msg:   crypto.Keccak256([]byte("hello world")),
+				msg:   []byte("hello world"),
 			},
 			wantErr: false,
 		},
@@ -72,17 +71,18 @@ func TestGreenfieldChainClient_Sign(t *testing.T) {
 				return
 			}
 
+			km, err := client.greenfieldClients[tt.args.scope].GetKeyManager()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetKeyManager() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
 			sig, err := client.Sign(tt.args.scope, tt.args.msg)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GreenfieldChainClient.Sign() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			km, err := client.greenfieldClients[tt.args.scope].GetKeyManager()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetKeyManager() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
 			// TODO: verify failed, need to confirm
 			err = stypes.VerifySignature(km.GetAddr(), tt.args.msg, sig)
 			if (err != nil) != tt.wantErr {

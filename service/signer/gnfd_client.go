@@ -8,11 +8,11 @@ import (
 	"github.com/bnb-chain/greenfield-go-sdk/client/chain"
 	"github.com/bnb-chain/greenfield-go-sdk/keys"
 	ctypes "github.com/bnb-chain/greenfield-go-sdk/types"
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
