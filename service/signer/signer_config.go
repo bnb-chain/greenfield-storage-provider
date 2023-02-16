@@ -2,10 +2,6 @@ package signer
 
 import "os"
 
-type SecretKey struct {
-	Driver string
-}
-
 type GreenfieldChainConfig struct {
 	GRPCAddr           string
 	ChainID            string

@@ -1,5 +1,5 @@
 Service = [
-    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer",
+    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer",
 ]
 
 [GatewayCfg]
@@ -80,11 +80,11 @@ Service = [
         FileHandles = 1000
         ReadOnly = false
 
-[SingerCfg]
+[SignerCfg]
     Address = "127.0.0.1:9633"
     WhitelistCIDR = ["127.0.0.1/32","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"]
     APIKey = ""
-    [SingerCfg.GreenfieldChainConfig]
+    [SignerCfg.GreenfieldChainConfig]
         GRPCAddr = "localhost:9090"
         ChainID = "greenfield_9000-121"
         GasLimit = 210000
