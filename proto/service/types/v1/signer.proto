@@ -34,8 +34,12 @@ message SignIntegrityHashResponse {
   ErrMessage err_message = 3;
 }
 
+message SealObjectOnChainRequest {
+  pkg.types.v1.ObjectInfo object_info = 1;
+}
+
 message SealObjectOnChainResponse {
-  bytes txHash = 1;
+  bytes tx_hash = 1;
   ErrMessage err_message = 2;
 }
 
@@ -43,5 +47,5 @@ service SignerService {
   rpc SignBucketApproval(SignBucketApprovalRequest) returns (SignBucketApprovalResponse) {};
   rpc SignObjectApproval(SignObjectApprovalRequest) returns (SignObjectApprovalResponse) {};
   rpc SignIntegrityHash(SignIntegrityHashRequest) returns (SignIntegrityHashResponse) {};
-  rpc SealObjectOnChain(pkg.types.v1.ObjectInfo) returns (SealObjectOnChainResponse) {};
+  rpc SealObjectOnChain(SealObjectOnChainRequest) returns (SealObjectOnChainResponse) {};
 }

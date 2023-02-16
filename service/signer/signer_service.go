@@ -4,7 +4,6 @@ import (
 	"context"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
@@ -79,8 +78,8 @@ func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.S
 	}, nil
 }
 
-func (signer *SignerServer) SealObjectOnChain(ctx context.Context, object *ptypes.ObjectInfo) (*stypes.SealObjectOnChainResponse, error) {
-	txHash, err := signer.client.SealObject(ctx, SignSeal, object)
+func (signer *SignerServer) SealObjectOnChain(ctx context.Context, req *stypes.SealObjectOnChainRequest) (*stypes.SealObjectOnChainResponse, error) {
+	txHash, err := signer.client.SealObject(ctx, SignSeal, req.ObjectInfo)
 
 	return &stypes.SealObjectOnChainResponse{
 		TxHash:     txHash,
