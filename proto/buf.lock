@@ -2,6 +2,10 @@
 version: v1
 deps:
   - remote: buf.build
+    owner: bnb-chain
+    repository: greenfield
+    commit: 0d5c0d2d6c4e46aebbe8794080aa07d2
+  - remote: buf.build
     owner: cosmos
     repository: cosmos-proto
     commit: 1935555c206d4afb9e94615dfd0fad31
@@ -17,7 +21,3 @@ deps:
     owner: googleapis
     repository: googleapis
     commit: c0b37eaf6f1f43ecacbc85e4e4d1a440
-  - remote: buf.build
-    owner: j75689
-    repository: greenfield
-    commit: 74bf814a2c6240e7ade114b6720a6e47

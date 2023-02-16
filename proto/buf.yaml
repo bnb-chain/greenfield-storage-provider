@@ -2,8 +2,7 @@ version: v1
 name: buf.build/bnb-chain/greenfield-storage-provider
 deps:
   - buf.build/cosmos/cosmos-proto
-  # TODO: update to official repo
-  - buf.build/j75689/greenfield
+  - buf.build/bnb-chain/greenfield
 breaking:
   use:
     - FILE
