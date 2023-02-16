@@ -82,9 +82,14 @@ Service = [
 
 [SingerCfg]
     Address = "127.0.0.1:9633"
+    WhitelistCIDR = ["127.0.0.1/32","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"]
+    APIKey = ""
     [SingerCfg.GreenfieldChainConfig]
-        GRPCAddrs = []
-        ChainId = 9000
+        GRPCAddr = "localhost:9090"
+        ChainID = "greenfield_9000-121"
         GasLimit = 210000
-        ChainIdString = "greenfield_9000-1741"
-        PrivateKey = ""
+        OperatorPrivateKey = ""
+        FundingPrivateKey  = ""
+        SealPrivateKey     = ""
+        ApprovalPrivateKey = ""
+        

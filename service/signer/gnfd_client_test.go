@@ -46,10 +46,9 @@ func TestGreenfieldChainClient_Sign(t *testing.T) {
 			name: "Test TestGreenfieldChainClient_Sign Case 1",
 			fields: fields{
 				config: &GreenfieldChainConfig{
-					ChainId:            9000,
+					ChainID:            "greenfield_9000-121",
 					GasLimit:           210000,
 					GRPCAddr:           "localhost:9090",
-					ChainIdString:      "greenfield_9000-121",
 					OperatorPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
 					FundingPrivateKey:  "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
 					ApprovalPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",

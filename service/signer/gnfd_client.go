@@ -42,22 +42,22 @@ func NewGreenfieldChainClient(config *GreenfieldChainConfig) (*GreenfieldChainCl
 	if err != nil {
 		return nil, err
 	}
-	operatorClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainIdString, operatorKM)
+	operatorClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainID, operatorKM)
 	fundingKM, err := keys.NewPrivateKeyManager(config.FundingPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	fundingClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainIdString, fundingKM)
+	fundingClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainID, fundingKM)
 	sealKM, err := keys.NewPrivateKeyManager(config.SealPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	sealClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainIdString, sealKM)
+	sealClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainID, sealKM)
 	approvalKM, err := keys.NewPrivateKeyManager(config.ApprovalPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	approvalClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainIdString, approvalKM)
+	approvalClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainID, approvalKM)
 	greenfieldClients := map[SignType]*chain.GreenfieldClient{
 		SignOperator: &operatorClient,
 		SignFunding:  &fundingClient,

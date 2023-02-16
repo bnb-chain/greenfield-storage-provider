@@ -28,6 +28,8 @@ type SignerServer struct {
 
 // NewSignerServer return SignerServer instance
 func NewSignerServer(config *SignerConfig) (*SignerServer, error) {
+	overrideConfigFromEnv(config)
+
 	whitelist := whitelist.NewBasicNet()
 	for _, cidr := range config.WhitelistCIDR {
 		_, subnet, err := net.ParseCIDR(cidr)
