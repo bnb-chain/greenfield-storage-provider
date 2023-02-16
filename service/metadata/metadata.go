@@ -2,8 +2,10 @@ package metadata
 
 import (
 	"context"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/router"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/store"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,10 +23,21 @@ func (metadata *Metadata) Name() string {
 }
 
 // Start implement the lifecycle interface
+// to delete api/v1
 func (metadata *Metadata) Start(ctx context.Context) error {
-	v1 := metadata.engine.Group("/api/v1")
+	v1 := metadata.engine.Group("")
 	metadata.router.InitHandlers(v1)
+
+	go metadata.Run()
+	log.Debug("metadata service succeed to start")
 	return nil
+}
+
+func (metadata *Metadata) Run() {
+	if err := metadata.engine.Run("127.0.0.1:9733"); err != nil {
+		log.Errorw("failed to listen", "err", err)
+		return
+	}
 }
 
 // Stop implement the lifecycle interface
@@ -35,6 +48,7 @@ func (metadata *Metadata) Stop(ctx context.Context) error {
 func NewMetadataService(cfg *MetadataConfig, ctx context.Context) (metadata *Metadata, err error) {
 	store, _ := store.NewStore(cfg.DBConfig)
 	metadata = &Metadata{
+		name:   model.MetadataService,
 		ctx:    ctx,
 		store:  store,
 		engine: gin.Default(),
