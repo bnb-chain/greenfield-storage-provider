@@ -7,16 +7,17 @@ import (
 	"sync"
 
 	"cosmossdk.io/errors"
-	"github.com/bnb-chain/greenfield-go-sdk/client/chain"
-	"github.com/bnb-chain/greenfield-go-sdk/keys"
-	ctypes "github.com/bnb-chain/greenfield-go-sdk/types"
+	"github.com/bnb-chain/greenfield/sdk/client"
+	"github.com/bnb-chain/greenfield/sdk/keys"
+	ctypes "github.com/bnb-chain/greenfield/sdk/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
@@ -45,7 +46,7 @@ type GreenfieldChainSignClient struct {
 	mu sync.Mutex
 
 	gasLimit          uint64
-	greenfieldClients map[SignType]*chain.GreenfieldClient
+	greenfieldClients map[SignType]*client.GreenfieldClient
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
@@ -63,27 +64,31 @@ func NewGreenfieldChainSignClient(
 	if err != nil {
 		return nil, err
 	}
-	operatorClient := chain.NewGreenfieldClientWithKeyManager(gRPCAddr, chainID, operatorKM)
+	operatorClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(operatorKM),
+		client.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
 	fundingKM, err := keys.NewPrivateKeyManager(fundingPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	fundingClient := chain.NewGreenfieldClientWithKeyManager(gRPCAddr, chainID, fundingKM)
+	fundingClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(fundingKM),
+		client.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
 	sealKM, err := keys.NewPrivateKeyManager(sealPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	sealClient := chain.NewGreenfieldClientWithKeyManager(gRPCAddr, chainID, sealKM)
+	sealClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(sealKM),
+		client.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
 	approvalKM, err := keys.NewPrivateKeyManager(approvalPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	approvalClient := chain.NewGreenfieldClientWithKeyManager(gRPCAddr, chainID, approvalKM)
-	greenfieldClients := map[SignType]*chain.GreenfieldClient{
-		SignOperator: &operatorClient,
-		SignFunding:  &fundingClient,
-		SignSeal:     &sealClient,
-		SignApproval: &approvalClient,
+	approvalClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(approvalKM),
+		client.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+	greenfieldClients := map[SignType]*client.GreenfieldClient{
+		SignOperator: operatorClient,
+		SignFunding:  fundingClient,
+		SignSeal:     sealClient,
+		SignApproval: approvalClient,
 	}
 
 	return &GreenfieldChainSignClient{
@@ -156,12 +161,12 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	defer client.mu.Unlock()
 
 	var (
-		secondarySPAccs       = make([]types.AccAddress, 0, len(object.SecondarySps))
+		secondarySPAccs       = make([]sdk.AccAddress, 0, len(object.SecondarySps))
 		secondarySPSignatures = make([][]byte, 0, len(object.SecondarySps))
 	)
 
 	for _, sp := range object.SecondarySps {
-		secondarySPAccs = append(secondarySPAccs, types.AccAddress(sp.SpId))
+		secondarySPAccs = append(secondarySPAccs, sdk.AccAddress(sp.SpId))
 		secondarySPSignatures = append(secondarySPSignatures, sp.Signature)
 	}
 	km, err := client.greenfieldClients[scope].GetKeyManager()
@@ -179,7 +184,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	}
 
 	resp, err := client.greenfieldClients[scope].BroadcastTx(
-		[]types.Msg{msgSealObject}, txOpt)
+		[]sdk.Msg{msgSealObject}, txOpt)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err)
 		return nil, merrors.ErrSealObjectOnChain

@@ -12,10 +12,10 @@ replace (
 )
 
 require (
+	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.0.5
-	github.com/bnb-chain/greenfield-go-sdk v0.0.3
 	github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
@@ -45,7 +45,6 @@ require (
 )
 
 require (
-	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/math v1.0.0-beta.3 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

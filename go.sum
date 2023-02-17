@@ -207,8 +207,6 @@ github.com/bnb-chain/gnfd-tendermint v0.0.1 h1:KWFuxWv8m6t1vUi3ADyVcEG0qVnEzQt1t
 github.com/bnb-chain/gnfd-tendermint v0.0.1/go.mod h1:/v9z9F6cq0+f7EGG92lYSLBcPYQDILoK91X8YM28hWo=
 github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d h1:1WdPI/6AncX/0JBytHkixtzGItoknwv4pbjkqWeDPNo=
 github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d/go.mod h1:zWg5zWuPtfO7ZWP4/3YpCrAOXpWAC80SHV6G+yDhSqA=
-github.com/bnb-chain/greenfield-go-sdk v0.0.3 h1:9NLShPEDJ36VHPapcuGJktloOyRPJeCutuj4xry4XKg=
-github.com/bnb-chain/greenfield-go-sdk v0.0.3/go.mod h1:0O3Ktrh869xzFuxts9Xsdt0TL6O5bMFuJIrXkDRBc1Q=
 github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419 h1:pMl5XQIBAL51WqkWWYUHITv6epA4y2ZmOjiDr9avbCk=
 github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419/go.mod h1:+b9Ow9h0I6rmPxg54KlqUmrjUgGub7qu0RsUYUQzpYs=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
