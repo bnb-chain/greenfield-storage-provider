@@ -45,7 +45,7 @@ func (greenfield *Greenfield) AuthUploadObjectWithAccount(ctx context.Context, b
 
 // AuthDownloadObjectWithAccount verify the greenfield chain information for download object.
 func (greenfield *Greenfield) AuthDownloadObjectWithAccount(ctx context.Context, bucket, object, account, sp string) (
-	accountExist bool, bucketExist bool, objectServiceStatue bool, paymentEnough bool, ownerBucket bool, readQuota int32, err error) {
+	accountExist bool, bucketExist bool, objectServiceStatue bool, paymentEnough bool, ownerBucket bool, bucketID uint64, readQuota int32, err error) {
 	accountExist, err = greenfield.HasAccount(ctx, account)
 	if err != nil || !accountExist {
 		return
@@ -78,6 +78,7 @@ func (greenfield *Greenfield) AuthDownloadObjectWithAccount(ctx context.Context,
 		ownerBucket = false
 	}
 
+	bucketID = bucketInfo.Id.Uint64()
 	readQuota = int32(bucketInfo.GetReadQuota())
 	return
 }
