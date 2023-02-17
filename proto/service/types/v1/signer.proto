@@ -15,6 +15,14 @@ message SignBucketApprovalResponse {
   ErrMessage err_message = 2;
 }
 
+message VerifyBucketApprovalRequest {
+  bnbchain.greenfield.storage.MsgCreateBucket create_bucket_msg = 1;
+}
+
+message VerifyBucketApprovalResponse {
+  bool result = 1;
+}
+
 message SignObjectApprovalRequest {
   bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 1;
 }
@@ -22,6 +30,14 @@ message SignObjectApprovalRequest {
 message SignObjectApprovalResponse {
   bytes signature = 1;
   ErrMessage err_message = 2;
+}
+
+message VerifyObjectApprovalRequest {
+  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 1;
+}
+
+message VerifyObjectApprovalResponse {
+  bool result = 1;
 }
 
 message SignIntegrityHashRequest {
@@ -45,7 +61,9 @@ message SealObjectOnChainResponse {
 
 service SignerService {
   rpc SignBucketApproval(SignBucketApprovalRequest) returns (SignBucketApprovalResponse) {};
+  rpc VerifyBucketApproval(VerifyBucketApprovalRequest) returns (VerifyBucketApprovalResponse) {};
   rpc SignObjectApproval(SignObjectApprovalRequest) returns (SignObjectApprovalResponse) {};
+  rpc VerifyObjectApproval(VerifyObjectApprovalRequest) returns (VerifyObjectApprovalResponse) {};
   rpc SignIntegrityHash(SignIntegrityHashRequest) returns (SignIntegrityHashResponse) {};
   rpc SealObjectOnChain(SealObjectOnChainRequest) returns (SealObjectOnChainResponse) {};
 }

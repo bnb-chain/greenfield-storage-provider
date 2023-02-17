@@ -15,6 +15,7 @@ import (
 /* signer_service.go implement SignerServiceServer grpc interface.
  *
  * SignBucketApproval, SignObjectApproval implement the signature request for approval.
+ * VerifyBucketApproval, VerifyObjectApproval implement the signature verification for approval.
  * SignIntegrityHash implement the SP signature request of the integrity hash and signature.
  * SealObjectOnChain implement the primary SP to submit a SealObject transaction request.
  */
@@ -25,13 +26,9 @@ const (
 	APITokenMD = "API-KEY"
 )
 
+// SignBucketApproval implements v1.SignerServiceServer
 func (signer *SignerServer) SignBucketApproval(ctx context.Context, req *stypes.SignBucketApprovalRequest) (*stypes.SignBucketApprovalResponse, error) {
-	msg, err := req.CreateBucketMsg.Marshal()
-	if err != nil {
-		return &stypes.SignBucketApprovalResponse{
-			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
-		}, nil
-	}
+	msg := req.CreateBucketMsg.GetApprovalBytes()
 	sig, err := signer.client.Sign(client.SignApproval, msg)
 	if err != nil {
 		return &stypes.SignBucketApprovalResponse{
@@ -44,13 +41,9 @@ func (signer *SignerServer) SignBucketApproval(ctx context.Context, req *stypes.
 	}, nil
 }
 
+// SignObjectApproval implements v1.SignerServiceServer
 func (signer *SignerServer) SignObjectApproval(ctx context.Context, req *stypes.SignObjectApprovalRequest) (*stypes.SignObjectApprovalResponse, error) {
-	msg, err := req.CreateObjectMsg.Marshal()
-	if err != nil {
-		return &stypes.SignObjectApprovalResponse{
-			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
-		}, nil
-	}
+	msg := req.CreateObjectMsg.GetApprovalBytes()
 	sig, err := signer.client.Sign(client.SignApproval, msg)
 	if err != nil {
 		return &stypes.SignObjectApprovalResponse{
@@ -63,6 +56,29 @@ func (signer *SignerServer) SignObjectApproval(ctx context.Context, req *stypes.
 	}, nil
 }
 
+// VerifyBucketApproval implements v1.SignerServiceServer
+func (signer *SignerServer) VerifyBucketApproval(ctx context.Context, req *stypes.VerifyBucketApprovalRequest) (*stypes.VerifyBucketApprovalResponse, error) {
+	sig := req.CreateBucketMsg.GetPrimarySpApprovalSignature()
+	msg := req.CreateBucketMsg.GetApprovalBytes()
+
+	return &stypes.VerifyBucketApprovalResponse{
+		Result: signer.client.VerifySignature(client.SignApproval,
+			msg, sig),
+	}, nil
+}
+
+// VerifyObjectApproval implements v1.SignerServiceServer
+func (signer *SignerServer) VerifyObjectApproval(ctx context.Context, req *stypes.VerifyObjectApprovalRequest) (*stypes.VerifyObjectApprovalResponse, error) {
+	sig := req.CreateObjectMsg.GetPrimarySpApprovalSignature()
+	msg := req.CreateObjectMsg.GetApprovalBytes()
+
+	return &stypes.VerifyObjectApprovalResponse{
+		Result: signer.client.VerifySignature(client.SignApproval,
+			msg, sig),
+	}, nil
+}
+
+// SignIntegrityHash implements v1.SignerServiceServer
 func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.SignIntegrityHashRequest) (*stypes.SignIntegrityHashResponse, error) {
 	integrityHash := hash.GenerateIntegrityHash(req.Data)
 
@@ -79,6 +95,7 @@ func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.S
 	}, nil
 }
 
+// SealObjectOnChain implements v1.SignerServiceServer
 func (signer *SignerServer) SealObjectOnChain(ctx context.Context, req *stypes.SealObjectOnChainRequest) (*stypes.SealObjectOnChainResponse, error) {
 	txHash, err := signer.client.SealObject(ctx, client.SignSeal, req.ObjectInfo)
 

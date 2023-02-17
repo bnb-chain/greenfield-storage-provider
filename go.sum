@@ -205,8 +205,8 @@ github.com/bnb-chain/gnfd-cosmos-sdk v0.0.6 h1:ehfOdvTsNklTKeBsUprJHdQuJ1XhvqAwe
 github.com/bnb-chain/gnfd-cosmos-sdk v0.0.6/go.mod h1:NlIOmju3uhTOJ2YAzLPidpmh7sAgJ+J9dkUlSysHmjw=
 github.com/bnb-chain/gnfd-tendermint v0.0.1 h1:KWFuxWv8m6t1vUi3ADyVcEG0qVnEzQt1tjA6dk/b7+Q=
 github.com/bnb-chain/gnfd-tendermint v0.0.1/go.mod h1:/v9z9F6cq0+f7EGG92lYSLBcPYQDILoK91X8YM28hWo=
-github.com/bnb-chain/greenfield v0.0.5 h1:rBjR22e5+eSNPqrTDgNDoEY5mkasIklYfwTHXW263TY=
-github.com/bnb-chain/greenfield v0.0.5/go.mod h1:ZXioeBnuVYqAYQ1TmAFX4XjXXW2iqX+VjKGj3+XbLLE=
+github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d h1:1WdPI/6AncX/0JBytHkixtzGItoknwv4pbjkqWeDPNo=
+github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d/go.mod h1:zWg5zWuPtfO7ZWP4/3YpCrAOXpWAC80SHV6G+yDhSqA=
 github.com/bnb-chain/greenfield-go-sdk v0.0.3 h1:9NLShPEDJ36VHPapcuGJktloOyRPJeCutuj4xry4XKg=
 github.com/bnb-chain/greenfield-go-sdk v0.0.3/go.mod h1:0O3Ktrh869xzFuxts9Xsdt0TL6O5bMFuJIrXkDRBc1Q=
 github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419 h1:pMl5XQIBAL51WqkWWYUHITv6epA4y2ZmOjiDr9avbCk=
@@ -314,8 +314,8 @@ github.com/cosmos/cosmos-proto v1.0.0-beta.1/go.mod h1:8k2GNZghi5sDRFw/scPL8gMSo
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
-github.com/cosmos/gogoproto v1.4.3 h1:RP3yyVREh9snv/lsOvmsAPQt8f44LgL281X0IOIhhcI=
-github.com/cosmos/gogoproto v1.4.3/go.mod h1:0hLIG5TR7IvV1fme1HCFKjfzW9X2x0Mo+RooWXCnOWU=
+github.com/cosmos/gogoproto v1.4.4 h1:nVAsgLlAf5jeN0fV7hRlkZvf768zU+dy4pG+hxc2P34=
+github.com/cosmos/gogoproto v1.4.4/go.mod h1:/yl6/nLwsZcZ2JY3OrqjRqvqCG9InUMcXRfRjQiF9DU=
 github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4Y=
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
 github.com/cosmos/iavl v0.19.4 h1:t82sN+Y0WeqxDLJRSpNd8YFX5URIrT+p8n6oJbJ2Dok=
@@ -2240,8 +2240,8 @@ google.golang.org/grpc v1.36.0/go.mod h1:qjiiYl8FncCW8feJPdyg3v6XW24KsRHe+dy9BAG
 google.golang.org/grpc v1.36.1/go.mod h1:qjiiYl8FncCW8feJPdyg3v6XW24KsRHe+dy9BAGRRjU=
 google.golang.org/grpc v1.37.0/go.mod h1:NREThFqKR1f3iQ6oBuvc5LadQuXVGo9rkm5ZGrQdJfM=
 google.golang.org/grpc v1.40.0/go.mod h1:ogyxbiOoUXAkP+4+xa6PZSE9DZgIHtSpzjDTB9KAK34=
-google.golang.org/grpc v1.52.0 h1:kd48UiU7EHsV4rnLyOJRuP/Il/UHE7gdDAQ+SZI7nZk=
-google.golang.org/grpc v1.52.0/go.mod h1:pu6fVzoFb+NBYNAvQL08ic+lvB2IojljRYuun5vorUY=
+google.golang.org/grpc v1.52.3 h1:pf7sOysg4LdgBqduXveGKrcEwbStiK2rtfghdzlUYDQ=
+google.golang.org/grpc v1.52.3/go.mod h1:pu6fVzoFb+NBYNAvQL08ic+lvB2IojljRYuun5vorUY=
 google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.0/go.mod h1:6Kw0yEErY5E/yWrBtf03jp27GLLJujG4z/JK95pnjjw=
 google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0/go.mod h1:6Kw0yEErY5E/yWrBtf03jp27GLLJujG4z/JK95pnjjw=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
