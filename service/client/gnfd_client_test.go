@@ -1,4 +1,4 @@
-package signer
+package client
 
 import (
 	"net"
@@ -16,7 +16,7 @@ func MockGrpcServer() error {
 	return server.Serve(l)
 }
 
-func TestGreenfieldChainClient_Sign(t *testing.T) {
+func TestGreenfieldChainSignClient_Sign(t *testing.T) {
 	stop := make(chan error, 1)
 	go func() {
 		if err := MockGrpcServer(); err != nil {
@@ -29,7 +29,13 @@ func TestGreenfieldChainClient_Sign(t *testing.T) {
 	default:
 	}
 	type fields struct {
-		config *GreenfieldChainConfig
+		GRPCAddr           string
+		ChainID            string
+		GasLimit           uint64
+		OperatorPrivateKey string
+		FundingPrivateKey  string
+		SealPrivateKey     string
+		ApprovalPrivateKey string
 	}
 	type args struct {
 		scope SignType
@@ -42,17 +48,15 @@ func TestGreenfieldChainClient_Sign(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Test TestGreenfieldChainClient_Sign Case 1",
+			name: "Test TestGreenfieldChainSignClient_Sign Case 1",
 			fields: fields{
-				config: &GreenfieldChainConfig{
-					ChainID:            "greenfield_9000-121",
-					GasLimit:           210000,
-					GRPCAddr:           "localhost:9090",
-					OperatorPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
-					FundingPrivateKey:  "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
-					ApprovalPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
-					SealPrivateKey:     "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
-				},
+				ChainID:            "greenfield_9000-121",
+				GasLimit:           210000,
+				GRPCAddr:           "localhost:9090",
+				OperatorPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
+				FundingPrivateKey:  "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
+				ApprovalPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
+				SealPrivateKey:     "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
 			},
 			args: args{
 				scope: SignApproval,

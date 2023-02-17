@@ -1,4 +1,4 @@
-package signer
+package client
 
 import (
 	"context"
@@ -26,38 +26,45 @@ const (
 	SignApproval SignType = "approval"
 )
 
-// GreenfieldChainClient the greenfield chain client
-type GreenfieldChainClient struct {
+// GreenfieldChainSignClient the greenfield chain client
+type GreenfieldChainSignClient struct {
 	mu sync.Mutex
 
-	config            *GreenfieldChainConfig
+	gasLimit          uint64
 	greenfieldClients map[SignType]*chain.GreenfieldClient
 }
 
-// NewGreenfieldChainClient return the GreenfieldChainClient instance
-func NewGreenfieldChainClient(config *GreenfieldChainConfig) (*GreenfieldChainClient, error) {
+// NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
+func NewGreenfieldChainSignClient(
+	gRPCAddr string,
+	chainID string,
+	gasLimit uint64,
+	operatorPrivateKey string,
+	fundingPrivateKey string,
+	sealPrivateKey string,
+	approvalPrivateKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
-	operatorKM, err := keys.NewPrivateKeyManager(config.OperatorPrivateKey)
+	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	operatorClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainID, operatorKM)
-	fundingKM, err := keys.NewPrivateKeyManager(config.FundingPrivateKey)
+	operatorClient := chain.NewGreenfieldClientWithKeyManager(gRPCAddr, chainID, operatorKM)
+	fundingKM, err := keys.NewPrivateKeyManager(fundingPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	fundingClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainID, fundingKM)
-	sealKM, err := keys.NewPrivateKeyManager(config.SealPrivateKey)
+	fundingClient := chain.NewGreenfieldClientWithKeyManager(gRPCAddr, chainID, fundingKM)
+	sealKM, err := keys.NewPrivateKeyManager(sealPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	sealClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainID, sealKM)
-	approvalKM, err := keys.NewPrivateKeyManager(config.ApprovalPrivateKey)
+	sealClient := chain.NewGreenfieldClientWithKeyManager(gRPCAddr, chainID, sealKM)
+	approvalKM, err := keys.NewPrivateKeyManager(approvalPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	approvalClient := chain.NewGreenfieldClientWithKeyManager(config.GRPCAddr, config.ChainID, approvalKM)
+	approvalClient := chain.NewGreenfieldClientWithKeyManager(gRPCAddr, chainID, approvalKM)
 	greenfieldClients := map[SignType]*chain.GreenfieldClient{
 		SignOperator: &operatorClient,
 		SignFunding:  &fundingClient,
@@ -65,14 +72,14 @@ func NewGreenfieldChainClient(config *GreenfieldChainConfig) (*GreenfieldChainCl
 		SignApproval: &approvalClient,
 	}
 
-	return &GreenfieldChainClient{
-		config:            config,
+	return &GreenfieldChainSignClient{
+		gasLimit:          gasLimit,
 		greenfieldClients: greenfieldClients,
 	}, nil
 }
 
 // Sign returns a msg signature signed by private key.
-func (client *GreenfieldChainClient) Sign(scope SignType, msg []byte) ([]byte, error) {
+func (client *GreenfieldChainSignClient) Sign(scope SignType, msg []byte) ([]byte, error) {
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		return nil, err
@@ -81,7 +88,7 @@ func (client *GreenfieldChainClient) Sign(scope SignType, msg []byte) ([]byte, e
 }
 
 // SealObject seal the object on the greenfield chain.
-func (client *GreenfieldChainClient) SealObject(ctx context.Context, scope SignType, object *ptypes.ObjectInfo) ([]byte, error) {
+func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope SignType, object *ptypes.ObjectInfo) ([]byte, error) {
 	client.mu.Lock()
 	defer client.mu.Unlock()
 
@@ -105,7 +112,7 @@ func (client *GreenfieldChainClient) SealObject(ctx context.Context, scope SignT
 	mode := tx.BroadcastMode_BROADCAST_MODE_BLOCK
 	txOpt := &ctypes.TxOption{
 		Mode:     &mode,
-		GasLimit: client.config.GasLimit,
+		GasLimit: client.gasLimit,
 	}
 
 	resp, err := client.greenfieldClients[scope].BroadcastTx(

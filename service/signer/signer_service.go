@@ -4,6 +4,7 @@ import (
 	"context"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
@@ -31,7 +32,7 @@ func (signer *SignerServer) SignBucketApproval(ctx context.Context, req *stypes.
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
 		}, nil
 	}
-	sig, err := signer.client.Sign(SignApproval, msg)
+	sig, err := signer.client.Sign(client.SignApproval, msg)
 	if err != nil {
 		return &stypes.SignBucketApprovalResponse{
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
@@ -50,7 +51,7 @@ func (signer *SignerServer) SignObjectApproval(ctx context.Context, req *stypes.
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
 		}, nil
 	}
-	sig, err := signer.client.Sign(SignApproval, msg)
+	sig, err := signer.client.Sign(client.SignApproval, msg)
 	if err != nil {
 		return &stypes.SignObjectApprovalResponse{
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
@@ -65,7 +66,7 @@ func (signer *SignerServer) SignObjectApproval(ctx context.Context, req *stypes.
 func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.SignIntegrityHashRequest) (*stypes.SignIntegrityHashResponse, error) {
 	integrityHash := hash.GenerateIntegrityHash(req.Data)
 
-	sig, err := signer.client.Sign(SignApproval, integrityHash)
+	sig, err := signer.client.Sign(client.SignApproval, integrityHash)
 	if err != nil {
 		return &stypes.SignIntegrityHashResponse{
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
@@ -79,7 +80,7 @@ func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.S
 }
 
 func (signer *SignerServer) SealObjectOnChain(ctx context.Context, req *stypes.SealObjectOnChainRequest) (*stypes.SealObjectOnChainResponse, error) {
-	txHash, err := signer.client.SealObject(ctx, SignSeal, req.ObjectInfo)
+	txHash, err := signer.client.SealObject(ctx, client.SignSeal, req.ObjectInfo)
 
 	return &stypes.SealObjectOnChainResponse{
 		TxHash:     txHash,

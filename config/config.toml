@@ -88,8 +88,8 @@ Service = [
         GRPCAddr = "localhost:9090"
         ChainID = "greenfield_9000-121"
         GasLimit = 210000
-        OperatorPrivateKey = ""
-        FundingPrivateKey  = ""
-        SealPrivateKey     = ""
-        ApprovalPrivateKey = ""
+        OperatorPrivateKey = "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f"
+        FundingPrivateKey  = "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f"
+        SealPrivateKey     = "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f"
+        ApprovalPrivateKey = "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f"
         

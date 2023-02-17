@@ -11,6 +11,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
@@ -21,7 +22,7 @@ var _ lifecycle.Service = &SignerServer{}
 type SignerServer struct {
 	config    *SignerConfig
 	whitelist *whitelist.BasicNet
-	client    *GreenfieldChainClient
+	client    *client.GreenfieldChainSignClient
 
 	server *grpc.Server
 }
@@ -39,7 +40,14 @@ func NewSignerServer(config *SignerConfig) (*SignerServer, error) {
 		whitelist.Add(subnet)
 	}
 
-	client, err := NewGreenfieldChainClient(config.GreenfieldChainConfig)
+	client, err := client.NewGreenfieldChainSignClient(
+		config.GreenfieldChainConfig.GRPCAddr,
+		config.GreenfieldChainConfig.ChainID,
+		config.GreenfieldChainConfig.GasLimit,
+		config.GreenfieldChainConfig.OperatorPrivateKey,
+		config.GreenfieldChainConfig.FundingPrivateKey,
+		config.GreenfieldChainConfig.SealPrivateKey,
+		config.GreenfieldChainConfig.ApprovalPrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +90,7 @@ func (signer *SignerServer) serve() {
 			signer.AuthInterceptor(),
 		)),
 	)
-	signer.server.Stop()
+
 	stypes.RegisterSignerServiceServer(signer.server, signer)
 	// register reflection service
 	reflection.Register(signer.server)
