@@ -1,9 +1,10 @@
 package spdb
 
 type BucketReadQuota struct {
-	BucketID         uint64 // primary index
-	BucketName       string
-	ReadQuotaReserve int32
+	BucketID      uint64 // primary index
+	BucketName    string
+	CostReadQuota int32 // cleared at the beginning of the month
+	ModifyTime    int64
 }
 
 type BucketReadRecord struct {
