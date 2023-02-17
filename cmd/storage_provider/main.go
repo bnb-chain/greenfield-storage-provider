@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"os"
 	"syscall"
 
@@ -22,7 +23,7 @@ import (
 
 var (
 	version    = flag.Bool("version", false, "print version")
-	configFile = flag.String("config", "../../config/config.toml", "config file path")
+	configFile = flag.String("config", "./config/config.toml", "config file path")
 )
 
 // initService init service instance by name and config.
@@ -81,6 +82,11 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.ChallengeCfg = config.DefaultStorageProviderConfig.ChallengeCfg
 		}
 		server, err = challenge.NewChallengeService(cfg.ChallengeCfg)
+		if err != nil {
+			return nil, err
+		}
+	case model.BlockSyncerService:
+		server, err = blocksyncer.NewBlockSyncerService()
 		if err != nil {
 			return nil, err
 		}
