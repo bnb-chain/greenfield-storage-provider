@@ -27,6 +27,9 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
+      - name: Install gogofaster
+        run: go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -50,7 +53,7 @@ jobs:
         with:
           bufVersion: v1.11.0
           protocPlugins:
-            go@v1.28.0 go-grpc@v1.2.0 gogofaster@latest
+            go@v1.28.0 go-grpc@v1.2.0
           bufArgs:
             generate
 
