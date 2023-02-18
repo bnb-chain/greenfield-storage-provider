@@ -47,7 +47,6 @@ const (
 
 	// query key
 	TransactionQuery = "transaction"
-	PutObjectV2Query = "putobjectv2"
 	ActionQuery      = "action"
 
 	// Greenfield header key
