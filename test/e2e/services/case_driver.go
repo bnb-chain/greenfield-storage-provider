@@ -17,25 +17,26 @@ import (
 )
 
 var (
-	configFile     = flag.String("config", "./config.toml", "config file path")
-	letters        = []byte("0123456789")
+	// configFile is gateway config, case_driver parse gateway related config for connecting sp
+	configFile = flag.String("config", "./config.toml", "gateway config file path")
+
+	// gateway real ip, the domain name can be configured when there is a real gateway domain name
 	gatewayAddress string
+
+	// testBucketName is a testcase bucket name
+	testBucketName = "sp_test_bucket"
+
+	// hostHeader is virtual hosted style, include bucket_name and gateway domain_name
+	hostHeader string
 )
 
 func generateRandString(n int) string {
-	rand.Seed(time.Now().Unix())
 	b := make([]byte, n)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = []byte("0123456789")[rand.Intn(len([]byte("0123456789")))]
 	}
 	return string(b)
 }
-
-const (
-	getMethod  = "GET"
-	putMethod  = "PUT"
-	testDomain = "test_bucket.gnfd.nodereal.com"
-)
 
 func mockSignRequest(request *http.Request) error {
 	privKey, _, _ := testdata.KeyEthSecp256k1TestPubAddr()
@@ -52,23 +53,24 @@ func mockSignRequest(request *http.Request) error {
 
 // case1 128bytes, Inline type, do not need to be segmented(< segment size, 16MB).
 func runCase1() {
+	objectName := "case1_object_name"
 	log.Info("start run case1(128byte, Inline type)")
 	// get approval
 	{
 		log.Infow("start get approval")
-		url := "http://" + gatewayAddress + "/greenfield/admin/v1/get-approval?action=createObject"
-		method := getMethod
-		client := &http.Client{}
-		req, err := http.NewRequest(method, url, strings.NewReader(""))
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+model.AdminPath+model.GetApprovalSubPath+"?action=createObject",
+			strings.NewReader(""))
 		if err != nil {
 			log.Errorw("get approval failed, due to new request", "error", err)
 			return
 		}
-		req.Header.Add(model.GnfdResourceHeader, "test_bucket/case1")
+		req.Header.Add(model.GnfdResourceHeader, testBucketName+"/"+objectName)
 		if err = mockSignRequest(req); err != nil {
 			log.Errorw("get approval failed, due to sign signature", "error", err)
 			return
 		}
+		client := &http.Client{}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get approval failed, due to send request", "error", err)
@@ -91,21 +93,21 @@ func runCase1() {
 		log.Infow("finish prepare data for put object")
 
 		log.Infow("start put object")
-		url := "http://" + gatewayAddress + "/case1"
-		method := putMethod
-		client := &http.Client{}
-		req, err := http.NewRequest(method, url, strings.NewReader(buf))
+		req, err := http.NewRequest(http.MethodPut,
+			"http://"+gatewayAddress+"/"+objectName,
+			strings.NewReader(buf))
 		if err != nil {
 			log.Errorw("put object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = testDomain
+		req.Host = hostHeader
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "64")
 		if err = mockSignRequest(req); err != nil {
 			log.Errorw("put object failed, due to sign signature", "error", err)
 			return
 		}
+		client := &http.Client{}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -124,19 +126,19 @@ func runCase1() {
 	// get object
 	{
 		log.Infow("start get object")
-		url := "http://" + gatewayAddress + "/case1"
-		method := getMethod
-		client := &http.Client{}
-		req, err := http.NewRequest(method, url, strings.NewReader(""))
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+"/"+objectName,
+			strings.NewReader(""))
 		if err != nil {
 			log.Errorw("get object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = testDomain
+		req.Host = hostHeader
 		if err = mockSignRequest(req); err != nil {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
+		client := &http.Client{}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -151,23 +153,24 @@ func runCase1() {
 
 // case2 64MB, Replica type, should be segmented.
 func runCase2() {
+	objectName := "case2_object_name"
 	log.Info("start run case2(64MB, Replica type)")
 	// get approval
 	{
 		log.Infow("start get approval")
-		url := "http://" + gatewayAddress + "/greenfield/admin/v1/get-approval?action=createObject"
-		method := getMethod
-		client := &http.Client{}
-		req, err := http.NewRequest(method, url, strings.NewReader(""))
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+model.AdminPath+model.GetApprovalSubPath+"?action=createObject",
+			strings.NewReader(""))
 		if err != nil {
 			log.Errorw("get approval failed, due to new request", "error", err)
 			return
 		}
-		req.Header.Add(model.GnfdResourceHeader, "test_bucket/case2")
+		req.Header.Add(model.GnfdResourceHeader, testBucketName+"/"+objectName)
 		if err = mockSignRequest(req); err != nil {
 			log.Errorw("get approval failed, due to sign signature", "error", err)
 			return
 		}
+		client := &http.Client{}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get approval failed, due to send request", "error", err)
@@ -190,15 +193,14 @@ func runCase2() {
 		log.Infow("finish prepare data for put object")
 
 		log.Infow("start put object")
-		url := "http://" + gatewayAddress + "/case2"
-		method := putMethod
-		client := &http.Client{}
-		req, err := http.NewRequest(method, url, strings.NewReader(buf))
+		req, err := http.NewRequest(http.MethodPut,
+			"http://"+gatewayAddress+"/"+objectName,
+			strings.NewReader(buf))
 		if err != nil {
 			log.Errorw("put object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = testDomain
+		req.Host = hostHeader
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "67108864")
 		req.Header.Add(model.GnfdRedundancyTypeHeader, model.ReplicaRedundancyTypeHeaderValue)
@@ -206,6 +208,7 @@ func runCase2() {
 			log.Errorw("put object failed, due to sign signature", "error", err)
 			return
 		}
+		client := &http.Client{}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -225,20 +228,19 @@ func runCase2() {
 	// get object
 	{
 		log.Infow("start get object")
-		url := "http://" + gatewayAddress + "/case2"
-		method := getMethod
-
-		client := &http.Client{}
-		req, err := http.NewRequest(method, url, strings.NewReader(""))
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+"/"+objectName,
+			strings.NewReader(""))
 		if err != nil {
 			log.Errorw("get object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = testDomain
+		req.Host = hostHeader
 		if err = mockSignRequest(req); err != nil {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
+		client := &http.Client{}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -254,23 +256,24 @@ func runCase2() {
 
 // case3 200MB, EC type, should be segmented.
 func runCase3() {
+	objectName := "case3_object_name"
 	log.Info("start run case3(200MB, EC type)")
 	// get approval
 	{
 		log.Infow("start get approval")
-		url := "http://" + gatewayAddress + "/greenfield/admin/v1/get-approval?action=createObject"
-		method := getMethod
-		client := &http.Client{}
-		req, err := http.NewRequest(method, url, strings.NewReader(""))
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+model.AdminPath+model.GetApprovalSubPath+"?action=createObject",
+			strings.NewReader(""))
 		if err != nil {
 			log.Errorw("get approval failed, due to new request", "error", err)
 			return
 		}
-		req.Header.Add(model.GnfdResourceHeader, "test_bucket/case3")
+		req.Header.Add(model.GnfdResourceHeader, testBucketName+"/"+objectName)
 		if err = mockSignRequest(req); err != nil {
 			log.Errorw("get approval failed, due to sign signature", "error", err)
 			return
 		}
+		client := &http.Client{}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get approval failed, due to send request", "error", err)
@@ -293,21 +296,19 @@ func runCase3() {
 		log.Infow("finish prepare data for put object")
 
 		log.Infow("start put object")
-		url := "http://" + gatewayAddress + "/case3"
-		method := putMethod
-		client := &http.Client{}
-		req, err := http.NewRequest(method, url, strings.NewReader(buf))
+		req, err := http.NewRequest(http.MethodPut, "http://"+gatewayAddress+"/"+objectName, strings.NewReader(buf))
 		if err != nil {
 			log.Errorw("put object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = testDomain
+		req.Host = hostHeader
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "209715200")
 		if err = mockSignRequest(req); err != nil {
 			log.Errorw("put object failed, due to sign signature", "error", err)
 			return
 		}
+		client := &http.Client{}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("put object failed, due to send request", "error", err)
@@ -327,20 +328,17 @@ func runCase3() {
 	// get object
 	{
 		log.Infow("start get object")
-		url := "http://" + gatewayAddress + "/case3"
-		method := getMethod
-
-		client := &http.Client{}
-		req, err := http.NewRequest(method, url, strings.NewReader(""))
+		req, err := http.NewRequest(http.MethodGet, "http://"+gatewayAddress+"/"+objectName, strings.NewReader(""))
 		if err != nil {
 			log.Errorw("get object failed, due to new request", "error", err)
 			return
 		}
-		req.Host = testDomain
+		req.Host = hostHeader
 		if err = mockSignRequest(req); err != nil {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
+		client := &http.Client{}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Errorw("get object failed, due to send request", "error", err)
@@ -360,6 +358,7 @@ func main() {
 	rand.Seed(time.Now().Unix())
 	cfg := config.LoadConfig(*configFile)
 	gatewayAddress = cfg.GatewayCfg.Address
+	hostHeader = testBucketName + "." + cfg.GatewayCfg.Domain
 
 	runCase1()
 	runCase2()
