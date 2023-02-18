@@ -79,7 +79,7 @@ func (job *UploadPayloadJob) PopPendingPrimarySPJob() *stypes.PieceJob {
 	obj := job.objectCtx.GetObjectInfo()
 	pieceJob := &stypes.PieceJob{
 		ObjectId:       obj.ObjectId,
-		PayloadSize:    obj.Size,
+		PayloadSize:    obj.Size_,
 		TargetIdx:      pieces,
 		RedundancyType: obj.RedundancyType,
 	}
@@ -95,7 +95,7 @@ func (job *UploadPayloadJob) PopPendingSecondarySPJob() *stypes.PieceJob {
 	obj := job.objectCtx.GetObjectInfo()
 	pieceJob := &stypes.PieceJob{
 		ObjectId:       obj.ObjectId,
-		PayloadSize:    obj.Size,
+		PayloadSize:    obj.Size_,
 		TargetIdx:      pieces,
 		RedundancyType: obj.RedundancyType,
 	}
