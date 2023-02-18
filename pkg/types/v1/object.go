@@ -8,7 +8,7 @@ func (x *ObjectInfo) SafeCopy() *ObjectInfo {
 		Owner:          x.GetOwner(),
 		BucketName:     x.GetBucketName(),
 		ObjectName:     x.GetObjectName(),
-		Size:           x.GetSize(),
+		Size_:          x.GetSize_(),
 		Checksum:       x.GetChecksum(),
 		IsPrivate:      x.GetIsPrivate(),
 		ContentType:    x.GetContentType(),

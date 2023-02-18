@@ -42,7 +42,7 @@ func (ctx *ObjectInfoContext) GetObjectID() uint64 {
 func (ctx *ObjectInfoContext) GetObjectSize() uint64 {
 	ctx.mu.RLock()
 	defer ctx.mu.RUnlock()
-	return ctx.object.GetSize()
+	return ctx.object.GetSize_()
 }
 
 // GetObjectRedundancyType return the object redundancy type.

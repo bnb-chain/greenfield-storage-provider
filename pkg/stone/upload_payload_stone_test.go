@@ -28,7 +28,7 @@ func InitENV() (*UploadPayloadStone, error) {
 		Owner:          "test_owner",
 		BucketName:     "test_bucket",
 		ObjectName:     "test_object",
-		Size:           50 * 1024 * 1024,
+		Size_:          50 * 1024 * 1024,
 		TxHash:         txHash,
 		Height:         height,
 		ObjectId:       objectID,
