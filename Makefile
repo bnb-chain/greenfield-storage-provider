@@ -18,7 +18,7 @@ generate:
 	go generate ./...
 
 install-tools:
-	go install github.com/cosmos/gogoproto/protoc-gen-gogofast@v1.4.4
+	go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
 
 buf-gen:
 	buf generate
