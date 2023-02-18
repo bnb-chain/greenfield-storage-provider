@@ -50,7 +50,7 @@ jobs:
         with:
           bufVersion: v1.11.0
           protocPlugins:
-            go@v1.28.0 go-grpc@v1.2.0
+            go@v1.28.0 go-grpc@v1.2.0 gogofaster@latest
           bufArgs:
             generate
 
