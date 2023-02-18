@@ -348,7 +348,7 @@ func (uploader *Uploader) checkAndPrepareMeta(sr *streamReader, txHash []byte) (
 	objectInfo := &ptypes.ObjectInfo{
 		BucketName:     sr.bucket,
 		ObjectName:     sr.object,
-		Size:           sr.size,
+		Size_:          sr.size,
 		PrimarySp:      &ptypes.StorageProviderInfo{SpId: uploader.config.StorageProvider},
 		RedundancyType: sr.redundancyType,
 	}

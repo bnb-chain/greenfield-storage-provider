@@ -1,10 +1,17 @@
 version: v1
 plugins:
-  - plugin: go
-    out: ./
-    opt: paths=source_relative
-  - plugin: go-grpc
+#  - plugin: go
+#    out: ./
+#    opt: paths=source_relative
+#  - plugin: go-grpc
+#    out: ./
+#    opt:
+#      - paths=source_relative
+#      - require_unimplemented_servers=false
+  - name: gogofaster
     out: ./
     opt:
+      - Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types
+      - Mgoogle/protobuf/duration.proto=github.com/golang/protobuf/ptypes/duration
+      - plugins=grpc
       - paths=source_relative
-      - require_unimplemented_servers=false
