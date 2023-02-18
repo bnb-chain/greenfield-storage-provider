@@ -76,7 +76,7 @@ func (up *uploadProcessor) putObjectTx(objectName string, option *putObjectTxOpt
 		ObjectInfo: &ptypes.ObjectInfo{
 			BucketName:     option.requestContext.bucketName,
 			ObjectName:     objectName,
-			Size:           option.objectSize,
+			Size_:          option.objectSize,
 			ContentType:    option.contentType,
 			Checksum:       option.checksum,
 			IsPrivate:      option.isPrivate,

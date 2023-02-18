@@ -11,27 +11,43 @@ require (
 	github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419
+	github.com/btcsuite/btcd v0.22.1
+	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.4
+	github.com/creachadair/atomicfile v0.2.8
+	github.com/creachadair/tomledit v0.0.24
 	github.com/ethereum/go-ethereum v1.10.19
+	github.com/fortytw2/leaktest v1.3.0
+	github.com/go-kit/kit v0.12.0
+	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
+	github.com/google/go-cmp v0.5.9
+	github.com/google/orderedcode v0.0.1
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.12
 	github.com/klauspost/reedsolomon v1.11.3
+	github.com/libp2p/go-buffer-pool v0.1.0
 	github.com/looplab/fsm v1.0.0
 	github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20230110094441-db37f07504ce
 	github.com/oleiade/lane v1.0.1
 	github.com/pkg/sftp v1.13.5
+	github.com/prometheus/client_golang v1.12.2
+	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.1
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+	github.com/tendermint/tendermint v0.34.22
+	github.com/tendermint/tm-db v0.6.7
 	github.com/urfave/cli v1.22.10
 	github.com/viki-org/dnscache v0.0.0-20130720023526-c70c1f23c5d8
 	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.24.0
+	golang.org/x/crypto v0.1.0
 	golang.org/x/exp v0.0.0-20230111222715-75897c7a292a
+	golang.org/x/net v0.3.0
 	google.golang.org/grpc v1.51.0
-	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
 	gorm.io/driver/mysql v1.4.4
 	gorm.io/gorm v1.24.2
 )
@@ -42,7 +58,6 @@ require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/btcsuite/btcd v0.22.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -60,11 +75,9 @@ require (
 	github.com/evmos/ethermint v0.6.1-0.20220919141022-34226aa7b1fa // indirect
 	github.com/ferranbt/fastssz v0.0.0-20210905181407-59cf6761a7d5 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
-	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -84,7 +97,6 @@ require (
 	github.com/klauspost/compress v1.15.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.1.1 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
@@ -99,7 +111,6 @@ require (
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.12.2 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.34.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
@@ -113,22 +124,19 @@ require (
 	github.com/spf13/cobra v1.6.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.13.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/supranational/blst v0.3.8-0.20220526154634-513d2456b344 // indirect
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/tendermint/tendermint v0.34.22 // indirect
-	github.com/tendermint/tm-db v0.6.7 // indirect
 	github.com/thomaso-mirodin/intmath v0.0.0-20160323211736-5dc6d854e46e // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	golang.org/x/crypto v0.1.0 // indirect
-	golang.org/x/net v0.3.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20221207170731-23e4bf6bdc37 // indirect
+	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

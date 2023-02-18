@@ -67,10 +67,10 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 	// if length == 0, download all object data
 	offset, length = req.GetOffset(), req.GetLength()
 	if req.GetLength() == 0 {
-		offset, length = 0, objectInfo.Size
+		offset, length = 0, objectInfo.Size_
 	}
 	var segmentInfo segments
-	segmentInfo, err = DownloadPieceInfo(objectInfo.ObjectId, objectInfo.Size, offset, offset+length-1)
+	segmentInfo, err = DownloadPieceInfo(objectInfo.ObjectId, objectInfo.Size_, offset, offset+length-1)
 	if err != nil {
 		return
 	}
