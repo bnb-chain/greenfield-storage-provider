@@ -74,6 +74,8 @@ const (
 	ContentTypeHeader   = "Content-Type"
 	ETagHeader          = "ETag"
 	ContentLengthHeader = "Content-Length"
+	RangeHeader         = "Range"
+	ContentRangeHeader  = "Content-Range"
 
 	// header value
 	ContentTypeXMLHeaderValue        = "application/xml"

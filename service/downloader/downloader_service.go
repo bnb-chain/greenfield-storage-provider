@@ -42,10 +42,11 @@ func (downloader *Downloader) DownloaderSegment(ctx context.Context, req *stypes
 func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDownloaderObjectRequest,
 	stream stypes.DownloaderService_DownloaderObjectServer) (err error) {
 	var (
-		objectInfo *ptypes.ObjectInfo
-		size       int
-		offset     uint64
-		length     uint64
+		objectInfo   *ptypes.ObjectInfo
+		size         int
+		offset       uint64
+		length       uint64
+		isValidRange bool
 	)
 	ctx := log.Context(context.Background(), req)
 	resp := &stypes.DownloaderServiceDownloaderObjectResponse{
@@ -56,7 +57,7 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
 			err = stream.Send(resp)
 		}
-		// log.CtxInfow(ctx, "download object completed", "error", err, "objectSize", objectInfo.Size, "sendSize", size)
+		resp.IsValidRange = isValidRange
 		log.CtxInfow(ctx, "download object completed", "error", err, "sendSize", size)
 	}()
 
@@ -64,11 +65,24 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 	if err != nil {
 		return
 	}
+	// TODO: It will be optimized here after connecting with the chain
 	// if length == 0, download all object data
-	offset, length = req.GetOffset(), req.GetLength()
-	if req.GetLength() == 0 {
+	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.Size) &&
+		req.RangeEnd < int64(objectInfo.Size) {
+		isValidRange = true
+		offset = uint64(req.RangeStart)
+		if req.RangeEnd > 0 && req.RangeEnd >= req.RangeStart {
+			length = uint64(req.RangeEnd-req.RangeStart) + 1
+		} else {
+			length = objectInfo.Size - uint64(req.RangeStart)
+		}
+	} else {
 		offset, length = 0, objectInfo.Size
 	}
+	//offset, length = req.GetOffset(), req.GetLength()
+	//if req.GetLength() == 0 {
+	//	offset, length = 0, objectInfo.Size
+	//}
 	var segmentInfo segments
 	segmentInfo, err = DownloadPieceInfo(objectInfo.ObjectId, objectInfo.Size, offset, offset+length-1)
 	if err != nil {
@@ -79,6 +93,7 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 		if err != nil {
 			return
 		}
+		resp.IsValidRange = isValidRange
 		if err = stream.Send(resp); err != nil {
 			return
 		}

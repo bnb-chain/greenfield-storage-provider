@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // errorDescription describe error info.
@@ -60,4 +61,12 @@ func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *reque
 		return err
 	}
 	return nil
+}
+
+func generateContentRangeHeader(w http.ResponseWriter, start int64, end int64) {
+	if end < 0 {
+		w.Header().Set(model.ContentLengthHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-")
+	} else {
+		w.Header().Set(model.ContentLengthHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-"+util.Uint64ToHeader(uint64(end)))
+	}
 }

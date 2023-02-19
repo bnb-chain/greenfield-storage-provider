@@ -19,12 +19,12 @@ func (g *Gateway) createBucketHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	defer func() {
-		statusCode := 200
+		statusCode := http.StatusOK
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
-		if statusCode == 200 {
+		if statusCode == http.StatusOK {
 			log.Infof("action(%v) statusCode(%v) %v", "createBucket", statusCode, requestContext.generateRequestDetail())
 		} else {
 			log.Warnf("action(%v) statusCode(%v) %v", "createBucket", statusCode, requestContext.generateRequestDetail())

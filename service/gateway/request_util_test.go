@@ -66,3 +66,18 @@ func Test_verifySignatureV2(t *testing.T) {
 	}
 	assert.Equal(t, nil, rc.verifySignature())
 }
+
+func Test_parseRangeHeader(t *testing.T) {
+	isRange, start, end := parseRange("bytes=1")
+	assert.Equal(t, false, isRange)
+
+	isRange, start, end = parseRange("bytes=1-")
+	assert.Equal(t, true, isRange)
+	assert.Equal(t, 1, int(start))
+	assert.Equal(t, -1, int(end))
+
+	isRange, start, end = parseRange("bytes=1-100")
+	assert.Equal(t, true, isRange)
+	assert.Equal(t, 1, int(start))
+	assert.Equal(t, 100, int(end))
+}

@@ -187,3 +187,36 @@ func (requestContext *requestContext) verifyAuth(client *retrieverClient) error 
 	// check account/bucket by retriever
 	return nil
 }
+
+func parseRange(rangeStr string) (bool, int64, int64) {
+	if rangeStr == "" {
+		return false, -1, -1
+	}
+	rangeStr = strings.ToLower(rangeStr)
+	rangeStr = strings.ReplaceAll(rangeStr, " ", "")
+	if !strings.HasPrefix(rangeStr, "bytes=") {
+		return false, -1, -1
+	}
+	rangeStr = rangeStr[len("bytes="):]
+	if strings.HasSuffix(rangeStr, "-") {
+		rangeStr = rangeStr[:len(rangeStr)-1]
+		rangeStart, err := util.HeaderToUint64(rangeStr)
+		if err != nil {
+			return false, -1, -1
+		}
+		return true, int64(rangeStart), -1
+	}
+	pair := strings.Split(rangeStr, "-")
+	if len(pair) == 2 {
+		rangeStart, err := util.HeaderToUint64(pair[0])
+		if err != nil {
+			return false, -1, -1
+		}
+		rangeEnd, err := util.HeaderToUint64(pair[1])
+		if err != nil {
+			return false, -1, -1
+		}
+		return true, int64(rangeStart), int64(rangeEnd)
+	}
+	return false, -1, -1
+}

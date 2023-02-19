@@ -18,19 +18,25 @@ import (
 func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
-		readN, writeN    int
-		size             int
 		errorDescription *errorDescription
 		requestContext   *requestContext
+
+		isRange    bool
+		rangeStart int64
+		rangeEnd   int64
+
+		readN, writeN int
+		size          int
+		statusCode    int
 	)
+	statusCode = http.StatusOK
 
 	defer func() {
-		statusCode := 200
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
-		if statusCode == 200 {
+		if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
 			log.Infof("action(%v) statusCode(%v) %v", "getObject", statusCode, requestContext.generateRequestDetail())
 		} else {
 			log.Warnf("action(%v) statusCode(%v) %v", "getObject", statusCode, requestContext.generateRequestDetail())
@@ -57,10 +63,15 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	isRange, rangeStart, rangeEnd = parseRange(requestContext.request.Header.Get(model.RangeHeader))
+
 	req := &stypes.DownloaderServiceDownloaderObjectRequest{
 		TraceId:    requestContext.requestID,
 		BucketName: requestContext.bucketName,
 		ObjectName: requestContext.objectName,
+		IsRange:    isRange,
+		RangeStart: rangeStart,
+		RangeEnd:   rangeEnd,
 	}
 	ctx := log.Context(context.Background(), req)
 	stream, err := g.downloader.DownloaderObject(ctx, req)
@@ -70,7 +81,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for {
-		res, err := stream.Recv()
+		resp, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
@@ -79,16 +90,21 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			errorDescription = InternalError
 			return
 		}
-		if res.ErrMessage != nil && res.ErrMessage.ErrCode != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+		if resp.ErrMessage != nil && resp.ErrMessage.ErrCode != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 			log.Warnw("failed to read stream", "error", err)
 			errorDescription = InternalError
 			return
 		}
-		if readN = len(res.Data); readN == 0 {
-			log.Warnw("download return empty data", "response", res)
+		if readN = len(resp.Data); readN == 0 {
+			log.Warnw("download return empty data", "response", resp)
 			continue
 		}
-		if writeN, err = w.Write(res.Data); err != nil {
+		if resp.IsValidRange {
+			statusCode = http.StatusPartialContent
+			w.WriteHeader(statusCode)
+			generateContentRangeHeader(w, rangeStart, rangeEnd)
+		}
+		if writeN, err = w.Write(resp.Data); err != nil {
 			log.Warnw("failed to read stream", "error", err)
 			errorDescription = InternalError
 			return
@@ -119,12 +135,12 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	defer func() {
-		statusCode := 200
+		statusCode := http.StatusOK
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
-		if statusCode == 200 {
+		if statusCode == http.StatusOK {
 			log.Infof("action(%v) statusCode(%v) %v", "putObject", statusCode, requestContext.generateRequestDetail())
 		} else {
 			log.Warnf("action(%v) statusCode(%v) %v", "putObject", statusCode, requestContext.generateRequestDetail())

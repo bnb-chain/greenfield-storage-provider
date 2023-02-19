@@ -172,6 +172,33 @@ func runCase1() {
 		buf.ReadFrom(res.Body)
 		log.Infow("finish get object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
 	}
+	// get range object
+	{
+		log.Infow("start get range object")
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+"/"+objectName,
+			strings.NewReader(""))
+		if err != nil {
+			log.Errorw("get object failed, due to new request", "error", err)
+			return
+		}
+		req.Host = hostHeader
+		req.Header.Add(model.RangeHeader, "bytes=1-")
+
+		if err = generateRequestSignature(req); err != nil {
+			log.Errorw("get object failed, due to sign signature", "error", err)
+			return
+		}
+		client := &http.Client{}
+		res, err := client.Do(req)
+		if err != nil {
+			log.Errorw("get object failed, due to send request", "error", err)
+			return
+		}
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(res.Body)
+		log.Infow("finish get range object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
+	}
 	// wait update meta
 	time.Sleep(5 * time.Second)
 	// challenge piece
@@ -321,6 +348,33 @@ func runCase2() {
 		log.Infow("finish get object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
 
 	}
+	// get range object
+	{
+		log.Infow("start get range object")
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+"/"+objectName,
+			strings.NewReader(""))
+		if err != nil {
+			log.Errorw("get object failed, due to new request", "error", err)
+			return
+		}
+		req.Host = hostHeader
+		req.Header.Add(model.RangeHeader, "bytes=17825792-35651583") // 17MB, and in two segment
+
+		if err = generateRequestSignature(req); err != nil {
+			log.Errorw("get object failed, due to sign signature", "error", err)
+			return
+		}
+		client := &http.Client{}
+		res, err := client.Do(req)
+		if err != nil {
+			log.Errorw("get object failed, due to send request", "error", err)
+			return
+		}
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(res.Body)
+		log.Infow("finish get range object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
+	}
 	// wait update meta
 	time.Sleep(5 * time.Second)
 	// challenge piece
@@ -463,6 +517,33 @@ func runCase3() {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(res.Body)
 		log.Infow("finish get object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
+	}
+	// get range object
+	{
+		log.Infow("start get range object")
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+"/"+objectName,
+			strings.NewReader(""))
+		if err != nil {
+			log.Errorw("get object failed, due to new request", "error", err)
+			return
+		}
+		req.Host = hostHeader
+		req.Header.Add(model.RangeHeader, "bytes=35651584-") // 266MB
+
+		if err = generateRequestSignature(req); err != nil {
+			log.Errorw("get object failed, due to sign signature", "error", err)
+			return
+		}
+		client := &http.Client{}
+		res, err := client.Do(req)
+		if err != nil {
+			log.Errorw("get object failed, due to send request", "error", err)
+			return
+		}
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(res.Body)
+		log.Infow("finish get range object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
 	}
 	// wait update meta
 	time.Sleep(5 * time.Second)

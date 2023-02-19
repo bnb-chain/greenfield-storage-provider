@@ -14,7 +14,7 @@ import (
 func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	s, _ := io.ReadAll(r.Body)
 	log.Warnw("not found handler", "header", r.Header, "host", r.Host, "url", r.URL)
-	w.WriteHeader(404)
+	w.WriteHeader(http.StatusNotFound)
 	w.Write(s)
 }
 
