@@ -12,6 +12,7 @@ const (
 	SignerService      = "Signer"
 	MetadataService    = "Metadata"
 	BlockSyncerService = "BlockSyncer"
+	P2PService         = "P2PService"
 )
 
 // define payload data redundancy size.

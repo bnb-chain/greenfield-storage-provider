@@ -16,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
@@ -101,6 +102,11 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.MetadataCfg = config.DefaultStorageProviderConfig.MetadataCfg
 		}
 		server, err = metadata.NewMetadataService(cfg.MetadataCfg, context.Background())
+	case model.P2PService:
+		if cfg.P2PCfg == nil {
+			cfg.P2PCfg = p2p.DefaultP2PServiceConfig
+		}
+		server, err = p2p.NewP2PService(cfg.P2PCfg)
 		if err != nil {
 			return nil, err
 		}
