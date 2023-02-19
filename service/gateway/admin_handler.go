@@ -8,7 +8,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-// getApprovalnHandler
+// getApprovalHandler
 func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
@@ -25,7 +25,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		if statusCode == 200 {
 			log.Debugf("action(%v) statusCode(%v) %v", "getApproval", statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "getApproval", statusCode, requestContext.generateRequestDetail())
+			log.Errorw("action(%v) statusCode(%v) %v", "getApproval", statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
@@ -37,7 +37,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err = requestContext.verifySignature(); err != nil {
 		errorDescription = SignatureDoesNotMatch
-		log.Infow("failed to verify signature", "error", err)
+		log.Errorw("failed to verify signature", "error", err)
 		return
 	}
 

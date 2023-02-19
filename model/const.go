@@ -30,7 +30,6 @@ const (
 const (
 	BufPoolSize  = 32 << 10
 	ChecksumAlgo = "Crc32c"
-	OctetStream  = "application/octet-stream"
 )
 
 // RPC config
@@ -39,10 +38,21 @@ const (
 	MaxCallMsgSize = 25 * 1024 * 1024
 )
 
+// http header constants
+const (
+	// http header key
+	OctetStream               = "application/octet-stream"
+	ContentTypeHeader         = "Content-Type"
+	ETagHeader                = "ETag"
+	ContentLengthHeader       = "Content-Length"
+	ContentTypeXMLHeaderValue = "application/xml"
+)
+
 // Gateway
 const (
 	// path
 	AdminPath          = "/greenfield/admin/v1/"
+	SyncerPath         = "/greenfield/syncer/v1/sync-piece"
 	GetApprovalSubPath = "get-approval"
 
 	// query key
@@ -64,13 +74,20 @@ const (
 	GnfdAuthorizationHeader  = "Authorization"
 	GnfdDateHeader           = "X-Gnfd-Date"
 
-	// http header key
-	ContentTypeHeader   = "Content-Type"
-	ETagHeader          = "ETag"
-	ContentLengthHeader = "Content-Length"
+	// StoneNode to gateway request header
+	GnfdTraceIDHeader           = "X-Gnfd-Trace-ID"
+	GnfdObjectIDHeader          = "X-Gnfd-Object-ID"
+	GnfdSPIDHeader              = "X-Gnfd-SP-ID"
+	GnfdPieceCountHeader        = "X-Gnfd-Piece-Count"
+	GnfdPieceIndexHeader        = "X-Gnfd-Piece-Index"
+	GnfdApprovalSignatureHeader = "X-Gnfd-Approval-Signature"
+
+	// gateway to StoneNode response header
+	GnfdPieceChecksumHeader = "X-Gnfd-Piece-Checksum"
+	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
+	GnfdSealSignatureHeader = "X-Gnfd-Seal-Signature"
 
 	// header value
-	ContentTypeXMLHeaderValue        = "application/xml"
 	ReplicaRedundancyTypeHeaderValue = "Replica"
 
 	// signature const value

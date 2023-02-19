@@ -218,7 +218,7 @@ func (s *s3Store) ListAllObjects(ctx context.Context, prefix, marker string) (<-
 	return nil, merrors.NotSupportedMethod
 }
 
-// SessionCache holds session.Session according to model.ObjectStorage and it synchronizes access/modification
+// SessionCache holds session.Session according to ObjectStorageConfig and it synchronizes access/modification
 type SessionCache struct {
 	sync.Mutex
 	sessions map[ObjectStorageConfig]*session.Session
@@ -250,7 +250,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	}
 	// if TestMode is true, you can communicate with private bucket or public bucket，
 	// in this TestMode, if you want to visit private bucket, you should provide accessKey, secretKey.
-	// if TestMode is false, you can use service account or ec2 to visit you s3 straightly
+	// if TestMode is false, you can use service account or ec2 to visit your s3 straightly
 	if cfg.TestMode {
 		accessKey := os.Getenv(model.AWSAccessKey)
 		secretKey := os.Getenv(model.AWSSecretKey)

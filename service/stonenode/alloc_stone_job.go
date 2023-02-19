@@ -36,7 +36,6 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	// TBD:: check secondarySPs count by redundancyType.
 	// EC_TYPE need EC_M + EC_K + backup
 	// REPLICA_TYPE and INLINE_TYPE need segments count + backup
-	secondarySPs := mock.AllocUploadSecondarySP()
 
 	// validate redundancyType and targetIdx
 	redundancyType := allocResp.GetPieceJob().GetRedundancyType()
@@ -60,6 +59,7 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	}
 
 	// 2. dispatch the piece data to different secondary sp
+	secondarySPs := mock.AllocUploadSecondarySP()
 	secondaryPieceData, err := node.dispatchSecondarySP(pieceData, redundancyType, secondarySPs, targetIdx)
 	if err != nil {
 		log.CtxErrorw(ctx, "dispatch piece data to secondary sp error")
@@ -67,14 +67,16 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 		return err
 	}
 
-	if len(secondaryPieceData) > len(node.syncer) {
-		log.Errorw("syncer number is not enough")
-		node.reportErrToStoneHub(ctx, allocResp, merrors.ErrSyncerNumber)
-		return merrors.ErrSyncerNumber
+	secondaryGatewayList := node.cfg.GatewayAddress
+	if len(secondaryPieceData) > len(secondarySPs) || len(secondaryGatewayList) != len(secondarySPs) {
+		log.Errorw("secondary sp is not enough")
+		node.reportErrToStoneHub(ctx, allocResp, merrors.ErrSecondarySPNumber)
+		return merrors.ErrSecondarySPNumber
 	}
+	log.Infow("secondary gateway address list", "list", secondaryGatewayList)
 
 	// 3. send piece data to the secondary
-	node.doSyncToSecondarySP(ctx, allocResp, secondaryPieceData, secondarySPs)
+	node.doSyncToSecondarySP(ctx, allocResp, secondaryPieceData, secondaryGatewayList, secondarySPs)
 	return nil
 }
 

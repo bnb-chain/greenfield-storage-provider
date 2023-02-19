@@ -5,7 +5,8 @@ type GatewayConfig struct {
 	Domain                   string
 	UploaderServiceAddress   string
 	DownloaderServiceAddress string
-	ChainConfig              *chainClientConfig
+	SyncerServiceAddress     string
+	ChainConfig              *ChainClientConfig
 }
 
 var DefaultGatewayConfig = &GatewayConfig{
@@ -13,5 +14,6 @@ var DefaultGatewayConfig = &GatewayConfig{
 	Domain:                   "bfs.nodereal.com",
 	UploaderServiceAddress:   "127.0.0.1:9133",
 	DownloaderServiceAddress: "127.0.0.1:9233",
-	ChainConfig:              defaultChainClientConfig,
+	SyncerServiceAddress:     "127.0.0.1:9533",
+	ChainConfig:              DefaultChainClientConfig,
 }

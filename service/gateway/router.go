@@ -18,8 +18,8 @@ func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(s)
 }
 
-// registerhandler is used to register mux handlers.
-func (g *Gateway) registerhandler(r *mux.Router) {
+// registerHandler is used to register mux handlers.
+func (g *Gateway) registerHandler(r *mux.Router) {
 	// bucket router, virtual-hosted style
 	bucketRouter := r.Host("{bucket:.+}." + g.config.Domain).Subrouter()
 	bucketRouter.NewRoute().
@@ -68,6 +68,8 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		Methods(http.MethodGet).
 		Queries(model.ActionQuery, "{action}").
 		HandlerFunc(g.getApprovalHandler)
+	// sync piece to syncer
+	r.Path(model.SyncerPath).Name("SyncPiece").Methods(http.MethodPut).HandlerFunc(g.syncPieceHandler)
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }

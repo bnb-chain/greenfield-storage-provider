@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync/atomic"
 
+	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -22,6 +23,7 @@ type Gateway struct {
 	httpServer        *http.Server
 	uploadProcessor   *uploadProcessor
 	downloadProcessor *downloadProcessor
+	syncer            client.SyncerAPI
 	chain             *chainClient
 	retriever         *retrieverClient
 }
@@ -43,6 +45,10 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 	}
 	if g.downloadProcessor, err = newDownloadProcessor(g.config.DownloaderServiceAddress); err != nil {
 		log.Warnw("failed to create downloader", "err", err)
+		return nil, err
+	}
+	if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {
+		log.Errorw("stone node inits syncer client failed", "error", err)
 		return nil, err
 	}
 	if g.chain, err = newChainClient(g.config.ChainConfig); err != nil {
@@ -72,7 +78,7 @@ func (g *Gateway) Start(ctx context.Context) error {
 // Serve starts http service.
 func (g *Gateway) Serve() {
 	router := mux.NewRouter().SkipClean(true)
-	g.registerhandler(router)
+	g.registerHandler(router)
 	server := &http.Server{
 		Addr:    g.config.Address,
 		Handler: router,

@@ -37,8 +37,8 @@ const (
 )
 
 func initConfig() {
-	cfg.Service = []string{model.SyncerService}
-	cfg.GatewayCfg = gateway.DefaultGatewayConfig
+	cfg.Service = []string{model.SyncerService, model.GatewayService}
+	//cfg.GatewayCfg = gateway.DefaultGatewayConfig
 	cfg.UploaderCfg = uploader.DefaultUploaderConfig
 	cfg.StoneHubCfg = stonehub.DefaultStoneHubConfig
 	cfg.ChallengeCfg = challenge.DefaultChallengeConfig
@@ -52,6 +52,42 @@ func initConfig() {
 	if cfg.SyncerCfg.PieceConfig == nil {
 		cfg.SyncerCfg.PieceConfig = storage.DefaultPieceStoreConfig
 	}
+	if cfg.GatewayCfg.ChainConfig == nil {
+		cfg.GatewayCfg.ChainConfig = gateway.DefaultChainClientConfig
+	}
+}
+
+func main() {
+	log.Info("begin setup one-box, deploy secondary syncers")
+
+	cfg = config.LoadConfig(*configFile)
+	syncerAddrList := cfg.StoneNodeCfg.SyncerAddress
+	gatewayAddrList := cfg.StoneNodeCfg.GatewayAddress
+	if len(syncerAddrList) != len(gatewayAddrList) {
+		log.Errorw("syncer number is not equal to secondary gateway number")
+		os.Exit(1)
+	}
+	initConfig()
+
+	// clear
+	// todo: polish not clear data
+	os.RemoveAll(oneboxDir)
+	pkillCMD := fmt.Sprintf("kill -9 $(pgrep -f %s)", destBinary)
+	runShell(pkillCMD)
+	if processNum, err := getProcessNum(); err != nil || processNum != 0 {
+		log.Errorw("failed to pkill", "error", err)
+		os.Exit(1)
+		return
+	}
+
+	// setup
+	if err := os.Mkdir(oneboxDir, 0777); err != nil {
+		log.Errorw("failed to mkdir one-box directory", "error", err)
+		os.Exit(1)
+		return
+	}
+	multiSPService(syncerAddrList, gatewayAddrList)
+	log.Info("succeed to setup one-box")
 }
 
 func runShell(cmdStr string) (string, error) {
@@ -71,7 +107,7 @@ func runShell(cmdStr string) (string, error) {
 }
 
 func getProcessNum() (int, error) {
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 	getProcessNumCMD := fmt.Sprintf("ps axu|grep %s | grep -v \"grep\" |wc -l", destBinary)
 	processNumStr, err := runShell(getProcessNumCMD)
 	if err != nil {
@@ -87,35 +123,11 @@ func getProcessNum() (int, error) {
 	return processNum, nil
 }
 
-func main() {
-	log.Info("begin setup onebox, deploy secondary syncers")
-
-	cfg = config.LoadConfig(*configFile)
-	addrList := cfg.StoneNodeCfg.SyncerServiceAddress
-	initConfig()
-
-	// clear
-	// todo: polish not clear data
-	os.RemoveAll(oneboxDir)
-	pkillCMD := fmt.Sprintf("kill -9 $(pgrep -f %s)", destBinary)
-	runShell(pkillCMD)
-	if processNum, err := getProcessNum(); err != nil || processNum != 0 {
-		log.Errorw("failed to pkill", "error", err)
-		os.Exit(1)
-		return
-	}
-
-	// setup
-	if err := os.Mkdir(oneboxDir, 0777); err != nil {
-		log.Errorw("failed to mkdir onebox directory", "error", err)
-		os.Exit(1)
-		return
-	}
-
-	for index, addr := range addrList {
+func multiSPService(syncerAddrList, gatewayAddrList []string) {
+	for index, addr := range syncerAddrList {
 		spDir := oneboxDir + "/sp" + strconv.Itoa(index)
 		if err := os.Mkdir(spDir, 0777); err != nil {
-			log.Errorw("failed to mkdir onebox sp directory", "error", err)
+			log.Errorw("failed to mkdir one-box sp directory", "error", err)
 			os.Exit(1)
 			return
 		}
@@ -135,6 +147,10 @@ func main() {
 		cfg.SyncerCfg.StorageProvider = spDir
 		cfg.SyncerCfg.MetaLevelDBConfig.Path = spDir + "/leveldb"
 		cfg.SyncerCfg.PieceConfig.Store.BucketURL = spDir + "/piece_store"
+		cfg.GatewayCfg.Address = gatewayAddrList[index]
+		cfg.GatewayCfg.SyncerServiceAddress = addr
+		cfg.GatewayCfg.UploaderServiceAddress = "1"
+		cfg.GatewayCfg.DownloaderServiceAddress = "2"
 		if err = util.TomlSettings.NewEncoder(f).Encode(cfg); err != nil {
 			log.Errorw("failed to encode config", "error", err)
 			os.Exit(1)
@@ -156,11 +172,10 @@ func main() {
 	}
 
 	// check
-	if processNum, err := getProcessNum(); err != nil || processNum != len(addrList) {
-		log.Errorw("failed to setup onebox, syncer maybe down and please check log in ./onebox/sp*/log.txt",
-			"expect", len(addrList), "actual", processNum)
+	if processNum, err := getProcessNum(); err != nil || processNum != len(syncerAddrList) {
+		log.Errorw("failed to setup one-box, syncer maybe down and please check log in ./onebox/sp*/log.txt",
+			"expect", len(syncerAddrList), "actual", processNum)
 		os.Exit(1)
 		return
 	}
-	log.Info("succeed to setup onebox")
 }
