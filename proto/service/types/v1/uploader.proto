@@ -13,31 +13,8 @@ message ErrMessage {
   string err_msg = 2;
 }
 
-message UploaderServiceCreateObjectRequest {
-  string trace_id = 1;
-  pkg.types.v1.ObjectInfo object_info = 2;
-}
-
-message UploaderServiceCreateObjectResponse {
-  string trace_id = 1;
-  bytes tx_hash = 2;
-  uint64 job_id = 3; // optional
-  ErrMessage err_message = 4;
-}
 
 message UploaderServiceUploadPayloadRequest {
-  string trace_id = 1;
-  bytes tx_hash = 2;
-  uint64 job_id = 3;
-  bytes payload_data = 4;
-}
-
-message UploaderServiceUploadPayloadResponse {
-  string trace_id = 1;
-  ErrMessage err_message = 2;
-}
-
-message UploaderServiceUploadPayloadV2Request {
   string trace_id = 1;
   bytes tx_hash = 2;
   string bucket_name = 3;  // Temporary field
@@ -48,7 +25,7 @@ message UploaderServiceUploadPayloadV2Request {
   bytes payload_data = 8;
 }
 
-message UploaderServiceUploadPayloadV2Response {
+message UploaderServiceUploadPayloadResponse {
   string trace_id = 1;
   uint64 object_id = 2;  // Temporary field for challenge
   ErrMessage err_message = 3;
@@ -68,8 +45,6 @@ message UploaderServiceGetApprovalResponse {
 }
 
 service UploaderService {
-  rpc CreateObject(UploaderServiceCreateObjectRequest) returns (UploaderServiceCreateObjectResponse) {};
-  rpc UploadPayload(stream UploaderServiceUploadPayloadRequest) returns (UploaderServiceUploadPayloadResponse) {};
   rpc GetApproval(UploaderServiceGetApprovalRequest) returns (UploaderServiceGetApprovalResponse) {};
-  rpc UploadPayloadV2(stream UploaderServiceUploadPayloadV2Request) returns (UploaderServiceUploadPayloadV2Response) {};
+  rpc UploadPayload(stream UploaderServiceUploadPayloadRequest) returns (UploaderServiceUploadPayloadResponse) {};
 }

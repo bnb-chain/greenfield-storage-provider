@@ -20,12 +20,14 @@ type Gateway struct {
 	name    string
 	running atomic.Bool
 
-	httpServer        *http.Server
-	uploadProcessor   *uploadProcessor
-	downloadProcessor *downloadProcessor
-	chain             *chainClient
-	retriever         *retrieverClient
-	challenge         *client.ChallengeClient
+	httpServer *http.Server
+	uploader   *client.UploaderClient
+	downloader *client.DownloaderClient
+	challenge  *client.ChallengeClient
+
+	// mock
+	chain     *chainClient
+	retriever *retrieverClient
 }
 
 // NewGatewayService return the gateway instance
@@ -39,20 +41,20 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		config: cfg,
 		name:   model.GatewayService,
 	}
-	if g.uploadProcessor, err = newUploadProcessor(g.config.UploaderServiceAddress); err != nil {
-		log.Warnw("failed to create uploader", "err", err)
+	if g.uploader, err = client.NewUploaderClient(g.config.UploaderServiceAddress); err != nil {
+		log.Warnw("failed to uploader client", "err", err)
 		return nil, err
 	}
-	if g.downloadProcessor, err = newDownloadProcessor(g.config.DownloaderServiceAddress); err != nil {
-		log.Warnw("failed to create downloader", "err", err)
-		return nil, err
-	}
-	if g.chain, err = newChainClient(g.config.ChainConfig); err != nil {
-		log.Warnw("failed to create chain client", "err", err)
+	if g.downloader, err = client.NewDownloaderClient(g.config.DownloaderServiceAddress); err != nil {
+		log.Warnw("failed to downloader client", "err", err)
 		return nil, err
 	}
 	if g.challenge, err = client.NewChallengeClient(g.config.ChallengeServiceAddress); err != nil {
 		log.Warnw("failed to challenge client", "err", err)
+		return nil, err
+	}
+	if g.chain, err = newChainClient(g.config.ChainConfig); err != nil {
+		log.Warnw("failed to create chain client", "err", err)
 		return nil, err
 	}
 	g.retriever = newRetrieverClient()

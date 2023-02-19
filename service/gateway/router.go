@@ -26,13 +26,7 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		Name("PutObject").
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
-		Queries(model.TransactionQuery, "").
-		HandlerFunc(g.putObjectTxHandler)
-	bucketRouter.NewRoute().
-		Name("PutObject").
-		Methods(http.MethodPut).
-		Path("/{object:.+}").
-		HandlerFunc(g.putObjectV2Handler)
+		HandlerFunc(g.putObjectHandler)
 	bucketRouter.NewRoute().
 		Name("CreateBucket").
 		Methods(http.MethodPut).
@@ -44,8 +38,6 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		HandlerFunc(g.getObjectHandler)
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
-	// todo: delete it in future
-	_ = g.putObjectHandler
 	// admin router, path style.
 	/*
 		adminRouter := r.PathPrefix(AdminPath).Subrouter()

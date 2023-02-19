@@ -27,10 +27,10 @@ func CheckIntegrityHash(integrityHash []byte, checksumList [][]byte, index int, 
 	if len(checksumList) <= index {
 		return fmt.Errorf("checksum list is not correct")
 	}
-	if bytes.Compare(checksumList[index], GenerateChecksum(pieceData)) != 0 {
+	if !bytes.Equal(checksumList[index], GenerateChecksum(pieceData)) {
 		return fmt.Errorf("piece data checksum is not correct")
 	}
-	if bytes.Compare(integrityHash, GenerateIntegrityHash(checksumList)) != 0 {
+	if !bytes.Equal(integrityHash, GenerateIntegrityHash(checksumList)) {
 		return fmt.Errorf("piece data integrity checksum is not correct")
 	}
 	return nil

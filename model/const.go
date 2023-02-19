@@ -53,8 +53,6 @@ const (
 
 	// Greenfield header key
 	GnfdRequestIDHeader       = "X-Gnfd-Request-ID"
-	GnfdContentLengthHeader   = "X-Gnfd-Content-Length"
-	GnfdContentTypeHeader     = "X-Gnfd-Content-Type"
 	GnfdChecksumHeader        = "X-Gnfd-Checksum"
 	GnfdIsPrivateHeader       = "X-Gnfd-Is-Private"
 	GnfdTransactionHashHeader = "X-Gnfd-Txn-Hash"

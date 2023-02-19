@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -20,7 +21,7 @@ type DownloaderClient struct {
 func NewDownloaderClient(address string) (*DownloaderClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(20*1024*1024)))
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)))
 	if err != nil {
 		log.Errorw("invoke downloader service dail failed", "error", err)
 		return nil, err

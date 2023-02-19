@@ -57,21 +57,28 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
 		log.Infow("failed to verify signature", "error", err)
+		errorDescription = SignatureDoesNotMatch
 		return
 	}
 
-	option := &getApprovalOption{
-		requestContext: requestContext,
+	req := &stypes.UploaderServiceGetApprovalRequest{
+		TraceId: requestContext.requestID,
+		Bucket:  requestContext.bucketName,
+		Object:  requestContext.objectName,
+		Action:  requestContext.actionName,
 	}
-	info, err := g.uploadProcessor.getApproval(option)
+
+	ctx := log.Context(context.Background(), req)
+	resp, err := g.uploader.GetApproval(ctx, req)
 	if err != nil {
+		log.Warnf("failed to get approval", "error", err)
 		errorDescription = InternalError
 		return
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
-	w.Header().Set(model.GnfdPreSignatureHeader, hex.EncodeToString(info.preSignature))
+	w.Header().Set(model.GnfdPreSignatureHeader, hex.EncodeToString(resp.PreSignature))
+
 }
 
 // challengeHandler handle challenge request

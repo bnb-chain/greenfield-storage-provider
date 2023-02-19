@@ -93,7 +93,6 @@ func signaturePrefix(version, algorithm string) string {
 
 // verifySign used to verify request signature, return nil if check succeed
 func (requestContext *requestContext) verifySignature() error {
-	// log.Infow("debug signature info", "msg", signer.GetCanonicalRequest(requestContext.request))
 	requestSignature := requestContext.request.Header.Get(model.GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
@@ -178,17 +177,13 @@ func (requestContext *requestContext) verifySignatureV2(requestSignature string)
 		}
 	}
 	_ = signature
-	// todo: parse metamask signature and check timeout
-	/*
-		// check signature consistent
-		signedRequestHash := crypto.Keccak256([]byte(MetaMaskStr))
-		_, pk, err := signer.RecoverAddr(signedRequestHash, signature)
-		if err != nil {
-			return errors.ErrSignatureConsistent
-		}
-		if !secp256k1.VerifySignature(pk.Bytes(), signedRequestHash, signature[:len(signature)-1]) {
-			return errors.ErrSignatureConsistent
-		}
-	*/
+	// TODO: parse metamask signature and check timeout
+	// impl
+	return nil
+}
+
+// TODO: impl
+func (requestContext *requestContext) verifyAuth(client *retrieverClient) error {
+	// check account/bucket by retriever
 	return nil
 }
