@@ -11,7 +11,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
+	"github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
