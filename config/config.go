@@ -4,6 +4,12 @@ import (
 	"bufio"
 	"os"
 
+<<<<<<< HEAD
+=======
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
+	"github.com/naoina/toml"
+
+>>>>>>> 913b794 (feat: impl psp service)
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
@@ -28,6 +34,7 @@ type StorageProviderConfig struct {
 	SyncerCfg     *syncer.SyncerConfig
 	SignerCfg     *signer.SignerConfig
 	MetadataCfg   *metadata.MetadataConfig
+	P2PCfg        *p2p.P2PServiceConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
@@ -40,6 +47,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	SyncerCfg:     syncer.DefaultSyncerConfig,
 	SignerCfg:     signer.DefaultSignerChainConfig,
 	MetadataCfg:   metadata.DefaultMetadataConfig,
+	P2PCfg:        p2p.DefaultP2PServiceConfig,
 }
 
 // LoadConfig loads the config file
