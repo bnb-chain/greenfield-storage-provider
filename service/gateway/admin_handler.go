@@ -9,6 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -103,32 +104,28 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 
 	requestContext = newRequestContext(r)
 	if err = requestContext.verifySignature(); err != nil {
-		log.Infow("failed to verify signature", "error", err)
+		log.Warnw("failed to verify signature", "error", err)
 		errorDescription = SignatureDoesNotMatch
 		return
 	}
 
-	if objectID, err = headerToUint64(requestContext.request.Header.Get(model.GnfdObjectIDHeader)); err != nil {
-		log.Warnf("invalid object id", "object_id", requestContext.request.Header.Get(model.GnfdObjectIDHeader))
+	if objectID, err = util.HeaderToUint64(requestContext.request.Header.Get(model.GnfdObjectIDHeader)); err != nil {
+		log.Warnw("invalid object id", "object_id", requestContext.request.Header.Get(model.GnfdObjectIDHeader))
 		errorDescription = InvalidHeader
 		return
 	}
-	if challengePrimary, err = headerToBool(requestContext.request.Header.Get(model.GnfdIsChallengePrimaryHeader)); err != nil {
-		log.Warnf("invalid challenge primary", "challenge_primary", requestContext.request.Header.Get(model.GnfdIsChallengePrimaryHeader))
+	if challengePrimary, err = util.HeaderToBool(requestContext.request.Header.Get(model.GnfdIsChallengePrimaryHeader)); err != nil {
+		log.Warnw("invalid challenge primary", "challenge_primary", requestContext.request.Header.Get(model.GnfdIsChallengePrimaryHeader))
 		errorDescription = InvalidHeader
 		return
 	}
-	if segmentIdx, err = headerToUint32(requestContext.request.Header.Get(model.GnfdPieceIndexHeader)); err != nil {
-		log.Warnf("invalid segment idx", "segment_idx", requestContext.request.Header.Get(model.GnfdPieceIndexHeader))
+	if segmentIdx, err = util.HeaderToUint32(requestContext.request.Header.Get(model.GnfdPieceIndexHeader)); err != nil {
+		log.Warnw("invalid segment idx", "segment_idx", requestContext.request.Header.Get(model.GnfdPieceIndexHeader))
 		errorDescription = InvalidHeader
 		return
 	}
-	if ecIdx, err = headerToUint32(requestContext.request.Header.Get(model.GnfdECIndexHeader)); err != nil {
-		log.Warnf("invalid ec idx", "ec_idx", requestContext.request.Header.Get(model.GnfdECIndexHeader))
-		errorDescription = InvalidHeader
-		return
-	}
-	redundancyType = headerToRedundancyType(requestContext.request.Header.Get(model.GnfdRedundancyTypeHeader))
+	ecIdx, _ = util.HeaderToUint32(requestContext.request.Header.Get(model.GnfdECIndexHeader))
+	redundancyType = util.HeaderToRedundancyType(requestContext.request.Header.Get(model.GnfdRedundancyTypeHeader))
 	spAddress = requestContext.request.Header.Get(model.GnfdStorageProviderHeader)
 
 	req := &stypes.ChallengeServiceChallengePieceRequest{
@@ -147,13 +144,9 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = InternalError
 		return
 	}
-	pieceHashList := make([]string, len(resp.PieceHash))
-	for _, h := range resp.PieceHash {
-		pieceHashList = append(pieceHashList, hex.EncodeToString(h))
-	}
 	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
-	w.Header().Set(model.GnfdObjectIDHeader, uint64ToHeader(objectID))
+	w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
 	w.Header().Set(model.GnfdIntegrityHashHeader, hex.EncodeToString(resp.IntegrityHash))
-	w.Header().Set(model.GnfdPieceHashHeader, stringSliceToHeader(pieceHashList))
+	w.Header().Set(model.GnfdPieceHashHeader, util.EncodePieceHash(resp.PieceHash))
 	w.Write(resp.PieceData)
 }

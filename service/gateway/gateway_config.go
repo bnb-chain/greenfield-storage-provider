@@ -1,6 +1,7 @@
 package gateway
 
 type GatewayConfig struct {
+	StorageProvider          string
 	Address                  string
 	Domain                   string
 	UploaderServiceAddress   string
@@ -10,6 +11,7 @@ type GatewayConfig struct {
 }
 
 var DefaultGatewayConfig = &GatewayConfig{
+	StorageProvider:          "bnb-sp",
 	Address:                  "127.0.0.1:9033",
 	Domain:                   "gnfd.nodereal.com",
 	UploaderServiceAddress:   "127.0.0.1:9133",

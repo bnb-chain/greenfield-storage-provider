@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"flag"
 	"io"
 	"math/rand"
@@ -12,6 +13,8 @@ import (
 	"github.com/bnb-chain/greenfield-sdk-go/pkg/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
@@ -19,6 +22,9 @@ import (
 var (
 	// configFile is gateway config, case_driver parse gateway related config for connecting sp
 	configFile = flag.String("config", "./config.toml", "gateway config file path")
+
+	// spAddress from config
+	spAddress string
 
 	// gateway real ip, the domain name can be configured when there is a real gateway domain name
 	gatewayAddress string
@@ -38,7 +44,7 @@ func generateRandString(n int) string {
 	return string(b)
 }
 
-func mockSignRequest(request *http.Request) error {
+func generateRequestSignature(request *http.Request) error {
 	privKey, _, _ := testdata.KeyEthSecp256k1TestPubAddr()
 	err := signer.SignRequest(request, privKey, signer.AuthInfo{
 		SignType:        model.SignTypeV1,
@@ -51,8 +57,21 @@ func mockSignRequest(request *http.Request) error {
 	return nil
 }
 
+func checkIntegrityHash(integrityHash string, pieceHashList string, index int, payload []byte) error {
+	h, err := hex.DecodeString(integrityHash)
+	if err != nil {
+		return err
+	}
+	hashList, err := util.DecodePieceHash(pieceHashList)
+	if err != nil {
+		return err
+	}
+	return hash.CheckIntegrityHash(h, hashList, index, payload)
+}
+
 // case1 128bytes, Inline type, do not need to be segmented(< segment size, 16MB).
 func runCase1() {
+	var objectID uint64
 	objectName := "case1_object_name"
 	log.Info("start run case1(128byte, Inline type)")
 	// get approval
@@ -66,7 +85,7 @@ func runCase1() {
 			return
 		}
 		req.Header.Add(model.GnfdResourceHeader, testBucketName+"/"+objectName)
-		if err = mockSignRequest(req); err != nil {
+		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("get approval failed, due to sign signature", "error", err)
 			return
 		}
@@ -103,7 +122,7 @@ func runCase1() {
 		req.Host = hostHeader
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "64")
-		if err = mockSignRequest(req); err != nil {
+		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("put object failed, due to sign signature", "error", err)
 			return
 		}
@@ -122,6 +141,11 @@ func runCase1() {
 		log.Infow("finish put object",
 			"etag", res.Header.Get(model.ETagHeader),
 			"statusCode", res.StatusCode)
+		objectID, err = util.HeaderToUint64(res.Header.Get(model.GnfdObjectIDHeader))
+		if err != nil {
+			log.Errorw("put object failed, due to has no object id", "error", err)
+			return
+		}
 	}
 	// get object
 	{
@@ -134,7 +158,7 @@ func runCase1() {
 			return
 		}
 		req.Host = hostHeader
-		if err = mockSignRequest(req); err != nil {
+		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
@@ -148,11 +172,52 @@ func runCase1() {
 		buf.ReadFrom(res.Body)
 		log.Infow("finish get object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
 	}
+	// wait update meta
+	time.Sleep(5 * time.Second)
+	// challenge piece
+	{
+		log.Infow("start challenge piece")
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+model.AdminPath+model.ChallengeSubPath,
+			strings.NewReader(""))
+		if err != nil {
+			log.Errorw("challenge failed, due to new request", "error", err)
+			return
+		}
+		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
+		req.Header.Add(model.GnfdIsChallengePrimaryHeader, "true")
+		req.Header.Add(model.GnfdPieceIndexHeader, "0")
+		req.Header.Add(model.GnfdRedundancyTypeHeader, model.InlineRedundancyTypeHeaderValue)
+		req.Header.Add(model.GnfdStorageProviderHeader, spAddress)
+		if err = generateRequestSignature(req); err != nil {
+			log.Errorw("challenge failed, due to sign signature", "error", err)
+			return
+		}
+		client := &http.Client{}
+		res, err := client.Do(req)
+		if err != nil {
+			log.Errorw("challenge failed, due to send request", "error", err)
+			return
+		}
+		defer res.Body.Close()
+		buf, err := io.ReadAll(res.Body)
+		if err != nil {
+			log.Errorw("challenge failed, due to read response body", "error", err)
+			return
+		}
+		err = checkIntegrityHash(res.Header.Get(model.GnfdIntegrityHashHeader), res.Header.Get(model.GnfdPieceHashHeader), 0, buf)
+		if err != nil {
+			log.Errorw("challenge failed, due to checkIntegrityHash", "error", err)
+			return
+		}
+		log.Infow("finish challenge", "statusCode", res.StatusCode)
+	}
 	log.Info("end run case1")
 }
 
 // case2 64MB, Replica type, should be segmented.
 func runCase2() {
+	var objectID uint64
 	objectName := "case2_object_name"
 	log.Info("start run case2(64MB, Replica type)")
 	// get approval
@@ -166,7 +231,7 @@ func runCase2() {
 			return
 		}
 		req.Header.Add(model.GnfdResourceHeader, testBucketName+"/"+objectName)
-		if err = mockSignRequest(req); err != nil {
+		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("get approval failed, due to sign signature", "error", err)
 			return
 		}
@@ -204,7 +269,7 @@ func runCase2() {
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "67108864")
 		req.Header.Add(model.GnfdRedundancyTypeHeader, model.ReplicaRedundancyTypeHeaderValue)
-		if err = mockSignRequest(req); err != nil {
+		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("put object failed, due to sign signature", "error", err)
 			return
 		}
@@ -224,6 +289,11 @@ func runCase2() {
 		log.Infow("finish put object",
 			"etag", res.Header.Get(model.ETagHeader),
 			"statusCode", res.StatusCode)
+		objectID, err = util.HeaderToUint64(res.Header.Get(model.GnfdObjectIDHeader))
+		if err != nil {
+			log.Errorw("put object failed, due to has no object id", "error", err)
+			return
+		}
 	}
 	// get object
 	{
@@ -236,7 +306,7 @@ func runCase2() {
 			return
 		}
 		req.Host = hostHeader
-		if err = mockSignRequest(req); err != nil {
+		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
@@ -251,11 +321,52 @@ func runCase2() {
 		log.Infow("finish get object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
 
 	}
+	// wait update meta
+	time.Sleep(5 * time.Second)
+	// challenge piece
+	{
+		log.Infow("start challenge piece")
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+model.AdminPath+model.ChallengeSubPath,
+			strings.NewReader(""))
+		if err != nil {
+			log.Errorw("challenge failed, due to new request", "error", err)
+			return
+		}
+		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
+		req.Header.Add(model.GnfdIsChallengePrimaryHeader, "true")
+		req.Header.Add(model.GnfdPieceIndexHeader, "1")
+		req.Header.Add(model.GnfdRedundancyTypeHeader, model.ReplicaRedundancyTypeHeaderValue)
+		req.Header.Add(model.GnfdStorageProviderHeader, spAddress)
+		if err = generateRequestSignature(req); err != nil {
+			log.Errorw("challenge failed, due to sign signature", "error", err)
+			return
+		}
+		client := &http.Client{}
+		res, err := client.Do(req)
+		if err != nil {
+			log.Errorw("challenge failed, due to send request", "error", err)
+			return
+		}
+		defer res.Body.Close()
+		buf, err := io.ReadAll(res.Body)
+		if err != nil {
+			log.Errorw("challenge failed, due to read response body", "error", err)
+			return
+		}
+		err = checkIntegrityHash(res.Header.Get(model.GnfdIntegrityHashHeader), res.Header.Get(model.GnfdPieceHashHeader), 1, buf)
+		if err != nil {
+			log.Errorw("challenge failed, due to checkIntegrityHash", "error", err)
+			return
+		}
+		log.Infow("finish challenge", "statusCode", res.StatusCode)
+	}
 	log.Info("end run case2")
 }
 
 // case3 200MB, EC type, should be segmented.
 func runCase3() {
+	var objectID uint64
 	objectName := "case3_object_name"
 	log.Info("start run case3(200MB, EC type)")
 	// get approval
@@ -269,7 +380,7 @@ func runCase3() {
 			return
 		}
 		req.Header.Add(model.GnfdResourceHeader, testBucketName+"/"+objectName)
-		if err = mockSignRequest(req); err != nil {
+		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("get approval failed, due to sign signature", "error", err)
 			return
 		}
@@ -304,7 +415,7 @@ func runCase3() {
 		req.Host = hostHeader
 		req.Header.Add(model.GnfdTransactionHashHeader, generateRandString(64))
 		req.Header.Add(model.ContentLengthHeader, "209715200")
-		if err = mockSignRequest(req); err != nil {
+		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("put object failed, due to sign signature", "error", err)
 			return
 		}
@@ -324,6 +435,11 @@ func runCase3() {
 		log.Infow("finish put object",
 			"etag", res.Header.Get(model.ETagHeader),
 			"statusCode", res.StatusCode)
+		objectID, err = util.HeaderToUint64(res.Header.Get(model.GnfdObjectIDHeader))
+		if err != nil {
+			log.Errorw("put object failed, due to has no object id", "error", err)
+			return
+		}
 	}
 	// get object
 	{
@@ -334,7 +450,7 @@ func runCase3() {
 			return
 		}
 		req.Host = hostHeader
-		if err = mockSignRequest(req); err != nil {
+		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("get object failed, due to sign signature", "error", err)
 			return
 		}
@@ -347,7 +463,45 @@ func runCase3() {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(res.Body)
 		log.Infow("finish get object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
-
+	}
+	// wait update meta
+	time.Sleep(5 * time.Second)
+	// challenge piece
+	{
+		log.Infow("start challenge piece")
+		req, err := http.NewRequest(http.MethodGet,
+			"http://"+gatewayAddress+model.AdminPath+model.ChallengeSubPath,
+			strings.NewReader(""))
+		if err != nil {
+			log.Errorw("challenge failed, due to new request", "error", err)
+			return
+		}
+		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
+		req.Header.Add(model.GnfdIsChallengePrimaryHeader, "true")
+		req.Header.Add(model.GnfdPieceIndexHeader, "10")
+		req.Header.Add(model.GnfdStorageProviderHeader, spAddress)
+		if err = generateRequestSignature(req); err != nil {
+			log.Errorw("challenge failed, due to sign signature", "error", err)
+			return
+		}
+		client := &http.Client{}
+		res, err := client.Do(req)
+		if err != nil {
+			log.Errorw("challenge failed, due to send request", "error", err)
+			return
+		}
+		defer res.Body.Close()
+		buf, err := io.ReadAll(res.Body)
+		if err != nil {
+			log.Errorw("challenge failed, due to read response body", "error", err)
+			return
+		}
+		err = checkIntegrityHash(res.Header.Get(model.GnfdIntegrityHashHeader), res.Header.Get(model.GnfdPieceHashHeader), 10, buf)
+		if err != nil {
+			log.Errorw("challenge failed, due to checkIntegrityHash", "error", err)
+			return
+		}
+		log.Infow("finish challenge", "statusCode", res.StatusCode)
 	}
 	log.Info("end run case3")
 }
@@ -359,6 +513,7 @@ func main() {
 	cfg := config.LoadConfig(*configFile)
 	gatewayAddress = cfg.GatewayCfg.Address
 	hostHeader = testBucketName + "." + cfg.GatewayCfg.Domain
+	spAddress = cfg.GatewayCfg.StorageProvider
 
 	runCase1()
 	runCase2()

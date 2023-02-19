@@ -10,7 +10,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -40,8 +43,9 @@ type putObjectOption struct {
 
 // objectInfo is the return of putObject.
 type objectInfo struct {
-	size uint64
-	eTag string
+	size     uint64
+	eTag     string
+	objectID uint64
 }
 
 // getApprovalOption is the getApproval Option.
@@ -80,7 +84,7 @@ func (up *uploadProcessor) putObjectTx(objectName string, option *putObjectTxOpt
 			ContentType:    option.contentType,
 			Checksum:       option.checksum,
 			IsPrivate:      option.isPrivate,
-			RedundancyType: headerToRedundancyType(option.redundancyType),
+			RedundancyType: util.HeaderToRedundancyType(option.redundancyType),
 		},
 	})
 	if err != nil {
@@ -169,6 +173,7 @@ func (up *uploadProcessor) putObjectV2(objectName string, reader io.Reader, opti
 		hashBuf  = make([]byte, 65536)
 		md5Hash  = md5.New()
 		md5Value string
+		objectID uint64
 	)
 
 	stream, err := up.uploader.UploadPayloadV2(context.Background())
@@ -190,7 +195,7 @@ func (up *uploadProcessor) putObjectV2(objectName string, reader io.Reader, opti
 				BucketName:     option.requestContext.bucketName,
 				ObjectName:     objectName,
 				ObjectSize:     option.size,
-				RedundancyType: headerToRedundancyType(option.redundancyType),
+				RedundancyType: util.HeaderToRedundancyType(option.redundancyType),
 			}
 			if err := stream.Send(req); err != nil {
 				log.Warnw("put object failed, due to stream send", "err", err)
@@ -214,10 +219,11 @@ func (up *uploadProcessor) putObjectV2(objectName string, reader io.Reader, opti
 				log.Warnw("failed to grpc", "err", resp.ErrMessage)
 				return nil, fmt.Errorf(resp.ErrMessage.ErrMsg)
 			}
+			objectID = resp.GetObjectId()
 			break
 		}
 	}
 	md5Value = hex.EncodeToString(md5Hash.Sum(nil))
 	log.Info("gateway total size:", size)
-	return &objectInfo{eTag: md5Value, size: size}, nil
+	return &objectInfo{eTag: md5Value, size: size, objectID: objectID}, nil
 }

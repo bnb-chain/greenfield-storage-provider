@@ -80,6 +80,7 @@ const (
 	// header value
 	ContentTypeXMLHeaderValue        = "application/xml"
 	ReplicaRedundancyTypeHeaderValue = "Replica"
+	InlineRedundancyTypeHeaderValue  = "Inline"
 
 	// signature const value
 	SignAlgorithm = "ECDSA-secp256k1"

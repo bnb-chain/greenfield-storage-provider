@@ -21,15 +21,18 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypes.Chal
 
 	ctx = log.Context(ctx, req)
 	resp = &stypes.ChallengeServiceChallengePieceResponse{}
-	defer func() {
+	defer func(resp *stypes.ChallengeServiceChallengePieceResponse, err error) {
 		if err != nil {
-			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
-			resp.ErrMessage.ErrMsg = err.Error()
+			resp.ErrMessage = &stypes.ErrMessage{
+				ErrCode: stypes.ErrCode_ERR_CODE_ERROR,
+				ErrMsg:  err.Error(),
+			}
 			log.CtxErrorw(ctx, "challenge failed", "error", err)
 		} else {
 			log.CtxInfow(ctx, "challenge success")
 		}
-	}()
+	}(resp, err)
+
 	if req.GetStorageProviderId() != challenge.config.StorageProvider {
 		err = errors.New("storage provider id mismatch")
 		return
@@ -40,19 +43,21 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypes.Chal
 		RedundancyType: req.RedundancyType,
 		EcIdx:          req.EcIdx,
 	}
-	integrityMeta, err = challenge.metaDB.GetIntegrityMeta(queryCondition)
-	if err != nil {
+	if integrityMeta, err = challenge.metaDB.GetIntegrityMeta(queryCondition); err != nil {
 		return
 	}
 
 	var pieceKey string
-	if req.GetRedundancyType() == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
-		pieceKey = piecestore.EncodeECPieceKey(req.GetObjectId(), req.GetSegmentIdx(), req.GetEcIdx())
-	} else {
+	if req.ChallengePrimaryPiece {
 		pieceKey = piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())
+	} else {
+		if req.GetRedundancyType() == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+			pieceKey = piecestore.EncodeECPieceKey(req.GetObjectId(), req.GetSegmentIdx(), req.GetEcIdx())
+		} else {
+			pieceKey = piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())
+		}
 	}
-	resp.PieceData, err = challenge.pieceStore.GetPiece(ctx, pieceKey, 0, -1)
-	if err != nil {
+	if resp.PieceData, err = challenge.pieceStore.GetPiece(ctx, pieceKey, 0, -1); err != nil {
 		return
 	}
 	resp.IntegrityHash = integrityMeta.IntegrityHash

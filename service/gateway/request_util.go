@@ -4,14 +4,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-sdk-go/pkg/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
@@ -193,37 +191,4 @@ func (requestContext *requestContext) verifySignatureV2(requestSignature string)
 		}
 	*/
 	return nil
-}
-
-// headerToRedundancyType can be EC or Replica, if != EC, default is Replica
-func headerToRedundancyType(header string) ptypes.RedundancyType {
-	if header == model.ReplicaRedundancyTypeHeaderValue {
-		return ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
-	}
-	return ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
-}
-
-func headerToUint64(header string) (uint64, error) {
-	ui64, err := strconv.ParseUint(header, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	return ui64, nil
-}
-
-func headerToUint32(header string) (uint32, error) {
-	ui64, err := headerToUint64(header)
-	if err != nil {
-		return 0, err
-	}
-	// TODO: check overflow
-	return uint32(ui64), nil
-}
-
-func headerToBool(header string) (bool, error) {
-	b, err := strconv.ParseBool(header)
-	if err != nil {
-		return false, err
-	}
-	return b, nil
 }

@@ -19,7 +19,9 @@ type ChallengeClient struct {
 
 // NewChallengeClient return a ChallengeClient.
 func NewChallengeClient(address string) (*ChallengeClient, error) {
-	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.DialContext(context.Background(), address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(20*1024*1024)))
 	if err != nil {
 		log.Errorw("invoke challenge service grpc.DialContext failed", "error", err)
 		return nil, err

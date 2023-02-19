@@ -7,6 +7,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
@@ -283,4 +284,5 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
 	w.Header().Set(model.ETagHeader, info.eTag)
+	w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToHeader(info.objectID))
 }

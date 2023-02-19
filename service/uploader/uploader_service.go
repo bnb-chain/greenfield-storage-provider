@@ -214,7 +214,6 @@ func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, up
 		pieceJob *stypes.PieceJob
 	)
 	traceID, _ := ctx.Value("traceID").(string)
-	// pieceJob = *jm.pieceJob
 	pieceJob = &stypes.PieceJob{
 		ObjectId:       jm.pieceJob.ObjectId,
 		PayloadSize:    jm.pieceJob.PayloadSize,
@@ -276,11 +275,15 @@ func (uploader *Uploader) UploadPayloadV2(stream stypes.UploaderService_UploadPa
 		errChan   = make(chan error)
 		ctx       = context.Background()
 		sr        *streamReader
+		jm        *JobMeta
 	)
 	defer func(resp *stypes.UploaderServiceUploadPayloadV2Response, err error) {
 		if err != nil {
 			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 			resp.ErrMessage.ErrMsg = err.Error()
+		}
+		if jm != nil {
+			resp.ObjectId = jm.objectID
 		}
 		err = stream.SendAndClose(resp)
 		log.Infow("upload object payload v2", "response", resp, "error", err)
@@ -288,7 +291,6 @@ func (uploader *Uploader) UploadPayloadV2(stream stypes.UploaderService_UploadPa
 
 	// fetch job meta, concurrently write payload's segments and report progresses.
 	go func() {
-		var jm *JobMeta
 		txHash, ok := <-txChan
 		if !ok {
 			return
