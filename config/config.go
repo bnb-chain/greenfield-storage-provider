@@ -11,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
@@ -31,6 +32,7 @@ type StorageProviderConfig struct {
 	SignerCfg      *signer.SignerConfig
 	MetadataCfg    *metadata.MetadataConfig
 	BlockSyncerCfg *tomlconfig.TomlConfig
+	P2PCfg         *p2p.P2PServiceConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
@@ -44,6 +46,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	SignerCfg:      signer.DefaultSignerChainConfig,
 	MetadataCfg:    metadata.DefaultMetadataConfig,
 	BlockSyncerCfg: &tomlconfig.TomlConfig{},
+	P2PCfg:         p2p.DefaultP2PServiceConfig,
 }
 
 // LoadConfig loads the config file

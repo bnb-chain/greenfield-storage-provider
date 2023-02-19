@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package service.types.v1;
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/types/v1";
+
+message P2PServiceAskSecondaryApprovalRequest {
+
+}
+
+message P2PServiceAskSecondaryApprovalResponse {
+
+}
+
+service P2PService {
+  rpc AskSecondaryApproval(P2PServiceAskSecondaryApprovalRequest) returns (P2PServiceAskSecondaryApprovalResponse) {};
+}
