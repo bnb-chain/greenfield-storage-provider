@@ -3,6 +3,7 @@ package gateway
 import (
 	"encoding/xml"
 	"net/http"
+	"strconv"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
@@ -17,6 +18,7 @@ type errorDescription struct {
 // refer: https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
 var (
 	// 4xx
+	InvalidHeader         = &errorDescription{errorCode: "InvalidHeader", errorMessage: "The headers maybe is invalid.", statusCode: http.StatusBadRequest}
 	InvalidBucketName     = &errorDescription{errorCode: "InvalidBucketName", errorMessage: "The specified bucket is not valid.", statusCode: http.StatusBadRequest}
 	InvalidKey            = &errorDescription{errorCode: "InvalidKey", errorMessage: "Object key is Illegal", statusCode: http.StatusBadRequest}
 	InvalidTxHash         = &errorDescription{errorCode: "InvalidTxHash", errorMessage: "transaction hash is Illegal", statusCode: http.StatusBadRequest}
@@ -59,4 +61,20 @@ func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *reque
 		return err
 	}
 	return nil
+}
+
+func stringSliceToHeader(stringSlice []string) string {
+	result := ""
+	for index, s := range stringSlice {
+		if index == 0 {
+			result = s
+		} else {
+			result = result + "," + s
+		}
+	}
+	return result
+}
+
+func uint64ToHeader(u uint64) string {
+	return strconv.FormatUint(u, 10)
 }

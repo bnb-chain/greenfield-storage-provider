@@ -45,10 +45,10 @@ const (
 	// path
 	AdminPath          = "/greenfield/admin/v1/"
 	GetApprovalSubPath = "get-approval"
+	ChallengeSubPath   = "challenge"
 
 	// query key
 	TransactionQuery = "transaction"
-	PutObjectV2Query = "putobjectv2"
 	ActionQuery      = "action"
 
 	// Greenfield header key
@@ -61,9 +61,16 @@ const (
 	GnfdResourceHeader        = "X-Gnfd-Resource"
 	GnfdPreSignatureHeader    = "X-Gnfd-Pre-Signature"
 	// GnfdRedundancyTypeHeader can be EC or Replica, EC is default
-	GnfdRedundancyTypeHeader = "X-Gnfd-Redundancy-Type"
-	GnfdAuthorizationHeader  = "Authorization"
-	GnfdDateHeader           = "X-Gnfd-Date"
+	GnfdRedundancyTypeHeader     = "X-Gnfd-Redundancy-Type"
+	GnfdAuthorizationHeader      = "Authorization"
+	GnfdDateHeader               = "X-Gnfd-Date"
+	GnfdObjectIDHeader           = "X-Gnfd-Object-ID"
+	GnfdPieceIndexHeader         = "X-Gnfd-Piece-Idx"
+	GnfdECIndexHeader            = "X-Gnfd-EC-Idx"
+	GnfdStorageProviderHeader    = "X-Gnfd-Storage-Provider-ID"
+	GnfdIsChallengePrimaryHeader = "X-Gnfd-Is-Challenge-Primary"
+	GnfdIntegrityHashHeader      = "X-Gnfd-Integrity-Hash"
+	GnfdPieceHashHeader          = "X-Gnfd-Piece-Hash"
 
 	// http header key
 	ContentTypeHeader   = "Content-Type"

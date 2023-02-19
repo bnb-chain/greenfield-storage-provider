@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,7 +26,8 @@ type requestContext struct {
 	request    *http.Request
 	startTime  time.Time
 
-	// admin fields
+	// vars is mux vars
+	vars       map[string]string
 	actionName string
 }
 
@@ -35,25 +37,12 @@ func newRequestContext(r *http.Request) *requestContext {
 	// todo: sdk signature need ignore it, here will be deleted
 	// https://github.com/minio/minio-go/blob/7aa4b0e0d1a9fdb4a99f50df715c21ec21d91753/pkg/signer/request-signature-v4.go#L60
 	r.Header.Del("Accept-Encoding")
-	// admin router
-	if mux.CurrentRoute(r).GetName() == "GetApproval" {
-		var (
-			bucket string
-			object string
-		)
-		bucket = r.Header.Get(model.GnfdResourceHeader)
-		fields := strings.Split(bucket, "/")
-		if len(fields) >= 2 {
-			bucket = fields[0]
-			object = strings.Join(fields[1:], "/")
-		}
+
+	if isAdminRouter(mux.CurrentRoute(r).GetName()) {
 		return &requestContext{
-			requestID:  util.GenerateRequestID(),
-			bucketName: bucket,
-			objectName: object,
-			actionName: vars["action"],
-			request:    r,
-			startTime:  time.Now(),
+			requestID: util.GenerateRequestID(),
+			request:   r,
+			startTime: time.Now(),
 		}
 	}
 
@@ -64,6 +53,7 @@ func newRequestContext(r *http.Request) *requestContext {
 		objectName: vars["object"],
 		request:    r,
 		startTime:  time.Now(),
+		vars:       vars,
 	}
 }
 
@@ -205,10 +195,35 @@ func (requestContext *requestContext) verifySignatureV2(requestSignature string)
 	return nil
 }
 
-// redundancyType can be EC or Replica, if != EC, default is Replica
-func redundancyTypeToEnum(redundancyType string) ptypes.RedundancyType {
-	if redundancyType == model.ReplicaRedundancyTypeHeaderValue {
+// headerToRedundancyType can be EC or Replica, if != EC, default is Replica
+func headerToRedundancyType(header string) ptypes.RedundancyType {
+	if header == model.ReplicaRedundancyTypeHeaderValue {
 		return ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
 	}
 	return ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
+}
+
+func headerToUint64(header string) (uint64, error) {
+	ui64, err := strconv.ParseUint(header, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return ui64, nil
+}
+
+func headerToUint32(header string) (uint32, error) {
+	ui64, err := headerToUint64(header)
+	if err != nil {
+		return 0, err
+	}
+	// TODO: check overflow
+	return uint32(ui64), nil
+}
+
+func headerToBool(header string) (bool, error) {
+	b, err := strconv.ParseBool(header)
+	if err != nil {
+		return false, err
+	}
+	return b, nil
 }

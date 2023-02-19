@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync/atomic"
 
+	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -24,6 +25,7 @@ type Gateway struct {
 	downloadProcessor *downloadProcessor
 	chain             *chainClient
 	retriever         *retrieverClient
+	challenge         *client.ChallengeClient
 }
 
 // NewGatewayService return the gateway instance
@@ -47,6 +49,10 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 	}
 	if g.chain, err = newChainClient(g.config.ChainConfig); err != nil {
 		log.Warnw("failed to create chain client", "err", err)
+		return nil, err
+	}
+	if g.challenge, err = client.NewChallengeClient(g.config.ChallengeServiceAddress); err != nil {
+		log.Warnw("failed to challenge client", "err", err)
 		return nil, err
 	}
 	g.retriever = newRetrieverClient()

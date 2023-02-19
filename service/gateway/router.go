@@ -28,12 +28,6 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		Path("/{object:.+}").
 		Queries(model.TransactionQuery, "").
 		HandlerFunc(g.putObjectTxHandler)
-	//bucketRouter.NewRoute().
-	//	Name("PutObject").
-	//	Methods(http.MethodPut).
-	//	Path("/{object:.+}").
-	//	Queries(model.PutObjectV2Query, "").
-	//	HandlerFunc(g.putObjectV2Handler)
 	bucketRouter.NewRoute().
 		Name("PutObject").
 		Methods(http.MethodPut).
@@ -64,10 +58,15 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		adminRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 	*/
 	r.Path(model.AdminPath+model.GetApprovalSubPath).
-		Name("GetApproval").
+		Name(approvalRouterName).
 		Methods(http.MethodGet).
 		Queries(model.ActionQuery, "{action}").
 		HandlerFunc(g.getApprovalHandler)
+
+	r.Path(model.AdminPath + model.ChallengeSubPath).
+		Name(challengeRouterName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.challengeHandler)
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }

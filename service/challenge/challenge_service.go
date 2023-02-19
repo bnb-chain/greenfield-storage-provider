@@ -20,10 +20,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypes.Chal
 	)
 
 	ctx = log.Context(ctx, req)
-	resp = &stypes.ChallengeServiceChallengePieceResponse{
-		TraceId:  req.TraceId,
-		ObjectId: req.ObjectId,
-	}
+	resp = &stypes.ChallengeServiceChallengePieceResponse{}
 	defer func() {
 		if err != nil {
 			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR

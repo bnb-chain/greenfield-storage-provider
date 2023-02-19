@@ -80,7 +80,7 @@ func (up *uploadProcessor) putObjectTx(objectName string, option *putObjectTxOpt
 			ContentType:    option.contentType,
 			Checksum:       option.checksum,
 			IsPrivate:      option.isPrivate,
-			RedundancyType: redundancyTypeToEnum(option.redundancyType),
+			RedundancyType: headerToRedundancyType(option.redundancyType),
 		},
 	})
 	if err != nil {
@@ -190,7 +190,7 @@ func (up *uploadProcessor) putObjectV2(objectName string, reader io.Reader, opti
 				BucketName:     option.requestContext.bucketName,
 				ObjectName:     objectName,
 				ObjectSize:     option.size,
-				RedundancyType: redundancyTypeToEnum(option.redundancyType),
+				RedundancyType: headerToRedundancyType(option.redundancyType),
 			}
 			if err := stream.Send(req); err != nil {
 				log.Warnw("put object failed, due to stream send", "err", err)
