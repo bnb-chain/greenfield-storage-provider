@@ -1,5 +1,5 @@
 Service = [
-    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer",
+    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer",
 ]
 
 [GatewayCfg]
@@ -79,3 +79,17 @@ Service = [
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
+
+[SignerCfg]
+    Address = "127.0.0.1:9633"
+    WhitelistCIDR = ["127.0.0.1/32","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"]
+    APIKey = ""
+    [SignerCfg.GreenfieldChainConfig]
+        GRPCAddr = "localhost:9090"
+        ChainID = "greenfield_9000-121"
+        GasLimit = 210000
+        OperatorPrivateKey = "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f"
+        FundingPrivateKey  = "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f"
+        SealPrivateKey     = "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f"
+        ApprovalPrivateKey = "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f"
+        
