@@ -43,17 +43,21 @@ func (client *DownloaderClient) DownloaderObject(ctx context.Context, req *stype
 	return client.downloader.DownloaderObject(ctx, req, opts...)
 }
 
-func (client *DownloaderClient) DownloaderSegment(ctx context.Context, in *stypes.DownloaderServiceDownloaderSegmentRequest,
-	opts ...grpc.CallOption) (*stypes.DownloaderServiceDownloaderSegmentResponse, error) {
-	resp, err := client.downloader.DownloaderSegment(ctx, in, opts...)
+func (client *DownloaderClient) DownloaderSegment(ctx context.Context, traceId string,
+	objectId uint64, segmentIdx uint32, opts ...grpc.CallOption) ([]byte, error) {
+	resp, err := client.downloader.DownloaderSegment(ctx, &stypes.DownloaderServiceDownloaderSegmentRequest{
+		TraceId:    traceId,
+		ObjectId:   objectId,
+		SegmentIdx: segmentIdx,
+	}, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "downloader segment failed", "error", err)
-		return nil, err
+		return []byte{}, err
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
 		log.CtxErrorw(ctx, "downloader segment response code is not success", "error", resp.GetErrMessage().GetErrMsg())
-		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
+		return []byte{}, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
-	return resp, nil
+	return resp.GetData(), nil
 }

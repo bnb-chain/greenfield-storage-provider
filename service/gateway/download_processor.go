@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )

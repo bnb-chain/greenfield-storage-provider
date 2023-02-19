@@ -9,8 +9,8 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
