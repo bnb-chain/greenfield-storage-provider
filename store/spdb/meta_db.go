@@ -2,6 +2,7 @@ package spdb
 
 import (
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	"gorm.io/gorm"
 )
 
 // IntegrityMeta defines the integrity hash info
@@ -37,4 +38,20 @@ type MetaDB interface {
 	GetUploadPayloadAskingMeta(bucketName, objectName string) (*UploadPayloadAskingMeta, error)
 	// Close the low level db
 	Close() error
+}
+
+// Provider stands for storage providers, which are updated by monitoring onchain events.
+type Provider struct {
+	gorm.Model
+	NodeId string
+}
+
+type P2PNodeDB interface {
+	Get(nodeId string) (Provider, error)
+	Create(provider *Provider) error
+	Delete(nodeId string) error
+	FetchAll() ([]Provider, error)
+}
+
+type SpInfoDB interface {
 }

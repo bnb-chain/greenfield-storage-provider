@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
@@ -25,6 +26,7 @@ type StorageProviderConfig struct {
 	StoneHubCfg   *stonehub.StoneHubConfig
 	StoneNodeCfg  *stonenode.StoneNodeConfig
 	SyncerCfg     *syncer.SyncerConfig
+	P2PCfg        *p2p.P2PServiceConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
@@ -35,6 +37,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	StoneHubCfg:   stonehub.DefaultStoneHubConfig,
 	StoneNodeCfg:  stonenode.DefaultStoneNodeConfig,
 	SyncerCfg:     syncer.DefaultSyncerConfig,
+	P2PCfg:        p2p.DefaultP2PServiceConfig,
 }
 
 // LoadConfig loads the config file

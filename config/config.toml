@@ -79,3 +79,8 @@ Service = [
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
+
+[P2PCfg]
+    GrpcAddress = "127.0.0.1:9733"
+    P2PListenAddresss = "127.0.0.1:21303"
+    P2PExternalAddresss = "127.0.0.1:21313"

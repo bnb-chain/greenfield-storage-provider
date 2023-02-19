@@ -13,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
@@ -81,6 +82,14 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.ChallengeCfg = config.DefaultStorageProviderConfig.ChallengeCfg
 		}
 		server, err = challenge.NewChallengeService(cfg.ChallengeCfg)
+		if err != nil {
+			return nil, err
+		}
+	case model.P2PService:
+		if cfg.P2PCfg == nil {
+			cfg.P2PCfg = p2p.DefaultP2PServiceConfig
+		}
+		server, err = p2p.NewP2PService(cfg.P2PCfg)
 		if err != nil {
 			return nil, err
 		}
