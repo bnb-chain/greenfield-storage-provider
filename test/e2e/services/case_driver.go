@@ -23,9 +23,6 @@ var (
 	// configFile is gateway config, case_driver parse gateway related config for connecting sp
 	configFile = flag.String("config", "./config.toml", "gateway config file path")
 
-	// spAddress from config
-	spAddress string
-
 	// gateway real ip, the domain name can be configured when there is a real gateway domain name
 	gatewayAddress string
 
@@ -589,7 +586,6 @@ func main() {
 	cfg := config.LoadConfig(*configFile)
 	gatewayAddress = cfg.GatewayCfg.Address
 	hostHeader = testBucketName + "." + cfg.GatewayCfg.Domain
-	spAddress = cfg.GatewayCfg.StorageProvider
 
 	runCase1()
 	runCase2()

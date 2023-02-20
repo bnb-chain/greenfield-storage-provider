@@ -67,15 +67,14 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 	}
 	// TODO: It will be optimized here after connecting with the chain
 	// if length == 0, download all object data
-	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.Size) &&
-		req.RangeEnd < int64(objectInfo.Size) {
+	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.Size) && req.RangeEnd >= 0 && req.RangeEnd < int64(objectInfo.Size) {
 		isValidRange = true
 		offset = uint64(req.RangeStart)
-		if req.RangeEnd > 0 && req.RangeEnd >= req.RangeStart {
-			length = uint64(req.RangeEnd-req.RangeStart) + 1
-		} else {
-			length = objectInfo.Size - uint64(req.RangeStart)
-		}
+		length = uint64(req.RangeEnd-req.RangeStart) + 1
+	} else if req.RangeStart > 0 && req.RangeStart < int64(objectInfo.Size) && req.RangeEnd < 0 {
+		isValidRange = true
+		offset = uint64(req.RangeStart)
+		length = objectInfo.Size - uint64(req.RangeStart)
 	} else {
 		offset, length = 0, objectInfo.Size
 	}

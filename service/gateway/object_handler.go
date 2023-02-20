@@ -65,6 +65,11 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	isRange, rangeStart, rangeEnd = parseRange(requestContext.request.Header.Get(model.RangeHeader))
 
+	if rangeStart > 0 && rangeEnd > 0 && rangeStart > rangeEnd {
+		errorDescription = InvalidRange
+		return
+	}
+
 	req := &stypes.DownloaderServiceDownloaderObjectRequest{
 		TraceId:    requestContext.requestID,
 		BucketName: requestContext.bucketName,
