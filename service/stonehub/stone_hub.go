@@ -9,12 +9,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"github.com/oleiade/lane"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/stone"
@@ -33,6 +33,8 @@ var (
 	JobChannelSize = 100
 	// GcChannelSize define the size of gc stone channel
 	GcChannelSize = 100
+	// WaitSealTimeoutHeight define timeout height of seal object
+	WaitSealTimeoutHeight = 10
 )
 
 // Stone defines the interface that managed by stone hub.
@@ -57,10 +59,7 @@ type StoneHub struct {
 	running   atomic.Bool
 	gcRunning atomic.Bool
 
-	// TODO::temporary mock interface, need to wait for the final version.
-	insCli *mock.InscriptionChainMock
-	signer *mock.SignerServerMock
-	events *mock.InscriptionChainMock
+	chain *gnfd.Greenfield
 }
 
 // NewStoneHubService return the StoneHub instance
@@ -72,17 +71,16 @@ func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
 		gcCh:     make(chan uint64, GcChannelSize),
 		stopCh:   make(chan struct{}),
 	}
-	// TODO:: replace the mock green field chain related resource by official version
-	{
-		hub.insCli = mock.NewInscriptionChainMock()
-		hub.signer = mock.NewSignerServerMock(hub.insCli)
-		hub.events = hub.insCli
-	}
-	// init job and meta db
-	if err := hub.initDB(); err != nil {
+	chain, err := gnfd.NewGreenfield(hubCfg.ChainConfig)
+	if err != nil {
 		return nil, err
 	}
-	if err := hub.loadStone(); err != nil {
+	hub.chain = chain
+	// init job and meta db
+	if err = hub.initDB(); err != nil {
+		return nil, err
+	}
+	if err = hub.loadStone(); err != nil {
 		return nil, err
 	}
 	return hub, nil
@@ -99,12 +97,6 @@ func (hub *StoneHub) Start(ctx context.Context) error {
 		return errors.New("stone hub has already started")
 	}
 
-	// TODO:: use green field chain client replace the mock client
-	{
-		hub.insCli.Start()
-		go hub.listenChain()
-	}
-
 	// start background task and rpc service
 	go hub.eventLoop()
 	go hub.serve()
@@ -119,10 +111,6 @@ func (hub *StoneHub) Stop(ctx context.Context) error {
 
 	close(hub.stopCh)
 	close(hub.gcCh)
-	// TODO:: use green field chain client replace the mock client
-	{
-		hub.insCli.Stop()
-	}
 
 	var errs []error
 	if err := hub.metaDB.Close(); err != nil {
@@ -195,7 +183,24 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 			break
 		}
 		object := st.(*stone.UploadPayloadStone).GetObjectInfo()
-		hub.signer.BroadcastSealObjectMessage(object)
+
+		// TODO:: send request to signer
+		go func(stoneJob *stone.UploadPayloadStone) {
+			ctx := log.Context(context.Background(), object)
+			defer hub.DeleteStone(stoneJob.StoneKey())
+			_, err := hub.chain.ListenObjectSeal(context.Background(), object.BucketName, object.ObjectName, WaitSealTimeoutHeight)
+			if err != nil {
+				stoneJob.InterruptStone(ctx, err)
+				log.CtxWarnw(ctx, "interrupt stone error", "error", err)
+				return
+			}
+			err = stoneJob.ActionEvent(ctx, stone.SealObjectDoneEvent)
+			if err != nil {
+				log.CtxWarnw(ctx, "receive seal event, seal done fsm error", "error", err)
+				return
+			}
+			log.CtxInfow(ctx, "seal object success")
+		}(stoneJob.(*stone.UploadPayloadStone))
 	default:
 		log.Infow("unrecognized stone job type")
 	}
@@ -242,40 +247,6 @@ func (hub *StoneHub) gcDBStone() {
 			log.Infow("gc failed job", "job", job, "error", err)
 		}
 		it.Next()
-	}
-}
-
-// listenInscription listen to the subscribe events of green field chain.
-// TODO::temporarily use the mock green field chain.
-func (hub *StoneHub) listenChain() {
-	ch := hub.events.SubscribeEvent(mock.SealObject)
-	for {
-		select {
-		case event := <-ch:
-			if event == nil {
-				continue
-			}
-			object := event.(*ptypes.ObjectInfo)
-			st, ok := hub.stone.Load(object.GetObjectId())
-			if !ok {
-				log.Infow("receive seal event, stone has gone")
-				break
-			}
-			uploadStone, ok := st.(*stone.UploadPayloadStone)
-			if !ok {
-				log.Infow("receive seal event, stone typecast to UploadPayloadStone error", "object_id", object.GetObjectId())
-				break
-			}
-			err := uploadStone.ActionEvent(context.Background(), stone.SealObjectDoneEvent)
-			if err != nil {
-				log.Infow("receive seal event, seal done fsm error", "object_id", object.GetObjectId())
-				break
-			}
-			hub.DeleteStone(object.GetObjectId())
-			//TODO::delete secondary integrity hash in metadb
-		case <-hub.stopCh:
-			return
-		}
 	}
 }
 

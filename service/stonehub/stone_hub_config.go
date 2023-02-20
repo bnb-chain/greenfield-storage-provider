@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobsql"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metalevel"
@@ -14,6 +15,7 @@ import (
 type StoneHubConfig struct {
 	StorageProvider   string
 	Address           string
+	ChainConfig       *gnfd.GreenfieldChainConfig
 	JobDBType         string
 	JobSqlDBConfig    *config.SqlDBConfig
 	MetaDBType        string
@@ -32,6 +34,7 @@ func DefaultStorageProviderID() string {
 var DefaultStoneHubConfig = &StoneHubConfig{
 	StorageProvider:   DefaultStorageProviderID(),
 	Address:           "127.0.0.1:9333",
+	ChainConfig:       gnfd.DefaultGreenfieldChainConfig,
 	JobDBType:         model.MemoryDB,
 	JobSqlDBConfig:    jobsql.DefaultJobSqlDBConfig,
 	MetaDBType:        model.LevelDB,
