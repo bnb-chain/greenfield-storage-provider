@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/util/https"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"github.com/gin-gonic/gin"
@@ -11,7 +12,7 @@ func NewBucketNameWrapper(f func(ctx *gin.Context, bucketName string) (resp inte
 		bucketName := c.Param("bucket_name")
 		if bucketName == "" {
 			return nil, &https.Error{
-				Code:    https.ErrorCodeInternalError,
+				Code:    errors.ErrorCodeInternalError,
 				Message: "bucket name cannot be empty",
 			}
 		}
@@ -24,7 +25,10 @@ func (r *Router) ListObjectsByBucket(ctx *gin.Context, bucketName string) (resp 
 	buckets, err := r.store.ListObjectsByBucketName(ctx, bucketName)
 	if err != nil {
 		log.Infof("err:%+v", err)
-		return nil, https.NewInternalError("fail to list objects by bucket name", err)
+		return nil, &https.Error{
+			Code:    errors.ErrorCodeInternalError,
+			Message: "bucket name cannot be empty",
+		}
 	}
 
 	return buckets, nil
