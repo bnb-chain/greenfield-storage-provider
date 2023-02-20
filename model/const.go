@@ -97,6 +97,9 @@ const (
 
 // environment constants
 const (
+	// Piece Store constants
+	BucketURL = "BUCKET_URL"
+
 	// AWS environment constants
 	AWSAccessKey    = "AWS_ACCESS_KEY"
 	AWSSecretKey    = "AWS_SECRET_KEY"

@@ -61,7 +61,7 @@ Service = [
     StoneJobLimit = 64
     [StoneNodeCfg.PieceConfig]
         Shards = 0
-        [StoneNodeCfg.PieceConfig.Store]
+        [StoneNodeCfg.PieceStoreConfig.Store]
             Storage = "file"
             BucketURL = "./data/primary_payload_data"
             MaxRetries = 5
@@ -71,7 +71,7 @@ Service = [
     StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9533"
     MetaDBType = "leveldb"
-    [SyncerCfg.PieceConfig.Store]
+    [SyncerCfg.PieceStoreConfig.Store]
         Storage = "file"
         BucketURL = "./data/secondary_payload_data"
         MaxRetries = 5

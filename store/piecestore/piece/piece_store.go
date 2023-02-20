@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -16,6 +17,7 @@ import (
 
 // NewPieceStore returns an instance of PieceStore
 func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
+	overrideConfigFromEnv(pieceConfig)
 	cfg := checkConfig(pieceConfig)
 	blob, err := createStorage(cfg)
 	if err != nil {
@@ -51,6 +53,12 @@ func checkConfig(cfg *storage.PieceStoreConfig) *storage.PieceStoreConfig {
 		cfg.Store.BucketURL += "/"
 	}
 	return cfg
+}
+
+func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) {
+	if val, ok := os.LookupEnv(model.BucketURL); ok {
+		cfg.Store.BucketURL = val
+	}
 }
 
 func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error) {
