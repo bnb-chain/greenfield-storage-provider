@@ -44,6 +44,7 @@ type P2PNode struct {
 // NewDefault constructs a node service for use in go
 // process that host their own process-local node.
 func NewDefault(ctx context.Context, cfg *NodeConfig) (service.Service, error) {
+	cfg.EnsureRoot()
 	nodeKey, err := types.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
 		return nil, fmt.Errorf("failed to load or gen node key %s: %w", cfg.NodeKeyFile(), err)
@@ -59,7 +60,7 @@ func makeNode(ctx context.Context, cfg *NodeConfig, dbProvider DBProvider,
 		return nil, err
 	}
 	// Setup Transport and Switch.
-	p2pMetrics := p2p.PrometheusMetrics("gnfd-sp", "p2p", "main")
+	p2pMetrics := p2p.PrometheusMetrics("sp", "p2p", "main")
 
 	peerManager, closer, err := createPeerManager(cfg, dbProvider, nodeKey.ID, p2pMetrics)
 	if err != nil {
