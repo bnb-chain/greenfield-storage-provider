@@ -6,14 +6,18 @@ import (
 	"time"
 
 	dbconf "github.com/bnb-chain/greenfield-storage-provider/store/config"
+	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
 const (
+	// defaultDirPerm is the default permissions used when creating directories.
+	defaultDirPerm     = 0700
+	defaultConfigDir   = "config"
 	DefaultP2PDir      = ".gnfd-sp-p2p"
 	defaultNodeKeyName = "node_key.json"
 )
 
-var defaultNodeKeyPath = filepath.Join(DefaultP2PDir, defaultNodeKeyName)
+var defaultNodeKeyPath = filepath.Join("", defaultNodeKeyName)
 
 var defaultMoniker = getDefaultMoniker()
 
@@ -62,6 +66,17 @@ func (cfg BaseConfig) NodeKeyFile() string {
 // DBDir returns the full path to the database directory
 func (cfg BaseConfig) DBDir() string {
 	return rootify(cfg.DBPath, cfg.RootDir)
+}
+
+// EnsureRoot creates the root, config, and data directories if they don't exist,
+// and panics if it fails.
+func (cfg BaseConfig) EnsureRoot() {
+	if err := tmos.EnsureDir(cfg.RootDir, defaultDirPerm); err != nil {
+		panic(err.Error())
+	}
+	if err := tmos.EnsureDir(filepath.Join(cfg.RootDir, defaultConfigDir), defaultDirPerm); err != nil {
+		panic(err.Error())
+	}
 }
 
 // P2PConfig defines the configuration options for the Tendermint peer-to-peer networking layer
@@ -155,8 +170,8 @@ func DefaultBaseConfig() BaseConfig {
 // DefaultP2PConfig returns a default configuration for the peer-to-peer layer
 func DefaultP2PConfig() *P2PConfig {
 	return &P2PConfig{
-		ListenAddress:                 "tcp://0.0.0.0:26656",
-		ExternalAddress:               "",
+		ListenAddress:                 "tcp://127.0.0.1:26656",
+		ExternalAddress:               "tcp://127.0.0.1:26676",
 		UPNP:                          false,
 		MaxConnections:                64,
 		MaxOutgoingConnections:        12,
