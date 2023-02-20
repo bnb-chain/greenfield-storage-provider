@@ -7,6 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/crypto"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/crypto/secp256k1"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/jsontypes"
+	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
 //------------------------------------------------------------------------------
@@ -67,20 +68,18 @@ func (nk NodeKey) SaveAs(filePath string) error {
 // LoadOrGenNodeKey attempts to load the NodeKey from the given filePath. If
 // the file does not exist, it generates and saves a new NodeKey.
 func LoadOrGenNodeKey(filePath string) (NodeKey, error) {
-	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
+	if tmos.FileExists(filePath) {
 		nodeKey, err := LoadNodeKey(filePath)
 		if err != nil {
 			return NodeKey{}, err
 		}
 		return nodeKey, nil
 	}
-
 	nodeKey := GenNodeKey()
 
 	if err := nodeKey.SaveAs(filePath); err != nil {
 		return NodeKey{}, err
 	}
-
 	return nodeKey, nil
 }
 
