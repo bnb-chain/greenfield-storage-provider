@@ -15,12 +15,10 @@ message ChallengeServiceChallengePieceRequest {
 }
 
 message ChallengeServiceChallengePieceResponse {
-    string trace_id = 1;
-    uint64 object_id = 2;
-    bytes piece_data = 3;
-    bytes integrity_hash = 4;
-    repeated bytes piece_hash = 5;
-    ErrMessage err_message = 6;
+    bytes piece_data = 1;
+    bytes integrity_hash = 2;
+    repeated bytes piece_hash = 3;
+    ErrMessage err_message = 4;
 }
 
 service ChallengeService {

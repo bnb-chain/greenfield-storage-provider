@@ -2,7 +2,6 @@ package challenge
 
 import (
 	"context"
-	"errors"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
@@ -15,47 +14,39 @@ import (
 func (challenge *Challenge) ChallengePiece(ctx context.Context, req *stypes.ChallengeServiceChallengePieceRequest) (
 	resp *stypes.ChallengeServiceChallengePieceResponse, err error) {
 	var (
-		integrityMeta  *spdb.IntegrityMeta
-		queryCondition *spdb.IntegrityMeta
+		integrityMeta *spdb.IntegrityMeta
 	)
 
 	ctx = log.Context(ctx, req)
-	resp = &stypes.ChallengeServiceChallengePieceResponse{
-		TraceId:  req.TraceId,
-		ObjectId: req.ObjectId,
-	}
-	defer func() {
+	resp = &stypes.ChallengeServiceChallengePieceResponse{}
+	defer func(resp *stypes.ChallengeServiceChallengePieceResponse, err error) {
 		if err != nil {
-			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
-			resp.ErrMessage.ErrMsg = err.Error()
+			resp.ErrMessage = &stypes.ErrMessage{
+				ErrCode: stypes.ErrCode_ERR_CODE_ERROR,
+				ErrMsg:  err.Error(),
+			}
 			log.CtxErrorw(ctx, "challenge failed", "error", err)
 		} else {
 			log.CtxInfow(ctx, "challenge success")
 		}
-	}()
-	if req.GetStorageProviderId() != challenge.config.StorageProvider {
-		err = errors.New("storage provider id mismatch")
-		return
-	}
-	queryCondition = &spdb.IntegrityMeta{
-		ObjectID:       req.ObjectId,
-		IsPrimary:      req.ChallengePrimaryPiece,
-		RedundancyType: req.RedundancyType,
-		EcIdx:          req.EcIdx,
-	}
-	integrityMeta, err = challenge.metaDB.GetIntegrityMeta(queryCondition)
-	if err != nil {
+	}(resp, err)
+
+	if integrityMeta, err = challenge.metaDB.GetIntegrityMeta(req.GetObjectId()); err != nil {
 		return
 	}
 
 	var pieceKey string
-	if req.GetRedundancyType() == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
-		pieceKey = piecestore.EncodeECPieceKey(req.GetObjectId(), req.GetSegmentIdx(), req.GetEcIdx())
-	} else {
+	if integrityMeta.IsPrimary {
 		pieceKey = piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())
+	} else {
+		if integrityMeta.RedundancyType == ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED {
+			// TODO: check integrityMeta.EcIdx == req.EcIdx
+			pieceKey = piecestore.EncodeECPieceKey(req.GetObjectId(), req.GetSegmentIdx(), integrityMeta.EcIdx)
+		} else {
+			pieceKey = piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())
+		}
 	}
-	resp.PieceData, err = challenge.pieceStore.GetPiece(ctx, pieceKey, 0, -1)
-	if err != nil {
+	if resp.PieceData, err = challenge.pieceStore.GetPiece(ctx, pieceKey, 0, -1); err != nil {
 		return
 	}
 	resp.IntegrityHash = integrityMeta.IntegrityHash

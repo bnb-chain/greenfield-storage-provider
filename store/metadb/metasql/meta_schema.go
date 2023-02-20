@@ -3,9 +3,9 @@ package metasql
 // DBIntegrityMeta table schema
 type DBIntegrityMeta struct {
 	ObjectID       uint64 `gorm:"index:idx_integrity_meta"`
-	IsPrimary      bool   `gorm:"index:idx_integrity_meta"`
-	RedundancyType uint32 `gorm:"index:idx_integrity_meta"`
-	EcIdx          uint32 `gorm:"index:idx_integrity_meta"`
+	IsPrimary      bool
+	RedundancyType uint32
+	EcIdx          uint32
 
 	PieceCount    uint32
 	IntegrityHash string // hex encode string

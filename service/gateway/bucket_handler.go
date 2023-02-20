@@ -19,13 +19,13 @@ func (g *Gateway) createBucketHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	defer func() {
-		statusCode := 200
+		statusCode := http.StatusOK
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
-		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "createBucket", statusCode, requestContext.generateRequestDetail())
+		if statusCode == http.StatusOK {
+			log.Infof("action(%v) statusCode(%v) %v", "createBucket", statusCode, requestContext.generateRequestDetail())
 		} else {
 			log.Warnf("action(%v) statusCode(%v) %v", "createBucket", statusCode, requestContext.generateRequestDetail())
 		}
@@ -37,8 +37,8 @@ func (g *Gateway) createBucketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
 		log.Infow("failed to verify signature", "error", err)
+		errorDescription = SignatureDoesNotMatch
 		return
 	}
 

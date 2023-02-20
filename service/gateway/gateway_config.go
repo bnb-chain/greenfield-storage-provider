@@ -1,17 +1,21 @@
 package gateway
 
 type GatewayConfig struct {
+	StorageProvider          string
 	Address                  string
 	Domain                   string
 	UploaderServiceAddress   string
 	DownloaderServiceAddress string
+	ChallengeServiceAddress  string
 	ChainConfig              *chainClientConfig
 }
 
 var DefaultGatewayConfig = &GatewayConfig{
+	StorageProvider:          "bnb-sp",
 	Address:                  "127.0.0.1:9033",
-	Domain:                   "bfs.nodereal.com",
+	Domain:                   "gnfd.nodereal.com",
 	UploaderServiceAddress:   "127.0.0.1:9133",
 	DownloaderServiceAddress: "127.0.0.1:9233",
+	ChallengeServiceAddress:  "127.0.0.1:9633",
 	ChainConfig:              defaultChainClientConfig,
 }

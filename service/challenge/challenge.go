@@ -49,7 +49,7 @@ func (challenge *Challenge) initDB() error {
 	}
 	challenge.metaDB = metaDB
 
-	challenge.pieceStore, err = client.NewStoreClient(challenge.config.PieceConfig)
+	challenge.pieceStore, err = client.NewStoreClient(challenge.config.PieceStoreConfig)
 	if err != nil {
 		log.Errorw("challenge starts piece store client failed", "error", err)
 		return err

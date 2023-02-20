@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // errorDescription describe error info.
@@ -17,10 +18,12 @@ type errorDescription struct {
 // refer: https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
 var (
 	// 4xx
+	InvalidHeader         = &errorDescription{errorCode: "InvalidHeader", errorMessage: "The headers maybe is invalid.", statusCode: http.StatusBadRequest}
 	InvalidBucketName     = &errorDescription{errorCode: "InvalidBucketName", errorMessage: "The specified bucket is not valid.", statusCode: http.StatusBadRequest}
 	InvalidKey            = &errorDescription{errorCode: "InvalidKey", errorMessage: "Object key is Illegal", statusCode: http.StatusBadRequest}
 	InvalidTxHash         = &errorDescription{errorCode: "InvalidTxHash", errorMessage: "transaction hash is Illegal", statusCode: http.StatusBadRequest}
 	InvalidPayload        = &errorDescription{errorCode: "InvalidPaload", errorMessage: "payload is empty", statusCode: http.StatusBadRequest}
+	InvalidRange          = &errorDescription{errorCode: "InvalidRange", errorMessage: "range is invalid", statusCode: http.StatusBadRequest}
 	UnauthorizedAccess    = &errorDescription{errorCode: "UnauthorizedAccess", errorMessage: "UnauthorizedAccess", statusCode: http.StatusUnauthorized}
 	AccessDenied          = &errorDescription{errorCode: "AccessDenied", errorMessage: "Access Denied", statusCode: http.StatusForbidden}
 	SignatureDoesNotMatch = &errorDescription{errorCode: "SignatureDoesNotMatch", errorMessage: "SignatureDoesNotMatch", statusCode: http.StatusForbidden}
@@ -59,4 +62,12 @@ func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *reque
 		return err
 	}
 	return nil
+}
+
+func generateContentRangeHeader(w http.ResponseWriter, start int64, end int64) {
+	if end < 0 {
+		w.Header().Set(model.ContentLengthHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-")
+	} else {
+		w.Header().Set(model.ContentLengthHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-"+util.Uint64ToHeader(uint64(end)))
+	}
 }
