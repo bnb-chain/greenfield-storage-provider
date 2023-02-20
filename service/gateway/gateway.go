@@ -8,6 +8,9 @@ import (
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
+	dclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
+	uclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
+
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -21,8 +24,8 @@ type Gateway struct {
 	running atomic.Bool
 
 	httpServer *http.Server
-	uploader   *client.UploaderClient
-	downloader *client.DownloaderClient
+	uploader   *uclient.UploaderClient
+	downloader *dclient.DownloaderClient
 	challenge  *client.ChallengeClient
 
 	// mock
@@ -41,11 +44,11 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		config: cfg,
 		name:   model.GatewayService,
 	}
-	if g.uploader, err = client.NewUploaderClient(g.config.UploaderServiceAddress); err != nil {
+	if g.uploader, err = uclient.NewUploaderClient(g.config.UploaderServiceAddress); err != nil {
 		log.Warnw("failed to uploader client", "err", err)
 		return nil, err
 	}
-	if g.downloader, err = client.NewDownloaderClient(g.config.DownloaderServiceAddress); err != nil {
+	if g.downloader, err = dclient.NewDownloaderClient(g.config.DownloaderServiceAddress); err != nil {
 		log.Warnw("failed to downloader client", "err", err)
 		return nil, err
 	}

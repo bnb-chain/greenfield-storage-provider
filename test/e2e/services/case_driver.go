@@ -212,10 +212,8 @@ func runCase1() {
 			return
 		}
 		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
-		req.Header.Add(model.GnfdIsChallengePrimaryHeader, "true")
 		req.Header.Add(model.GnfdPieceIndexHeader, "0")
-		req.Header.Add(model.GnfdRedundancyTypeHeader, model.InlineRedundancyTypeHeaderValue)
-		req.Header.Add(model.GnfdStorageProviderHeader, spAddress)
+		req.Header.Add(model.GnfdRedundancyIndexHeader, "0")
 		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("challenge failed, due to sign signature", "error", err)
 			return
@@ -388,10 +386,8 @@ func runCase2() {
 			return
 		}
 		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
-		req.Header.Add(model.GnfdIsChallengePrimaryHeader, "true")
 		req.Header.Add(model.GnfdPieceIndexHeader, "1")
-		req.Header.Add(model.GnfdRedundancyTypeHeader, model.ReplicaRedundancyTypeHeaderValue)
-		req.Header.Add(model.GnfdStorageProviderHeader, spAddress)
+		req.Header.Add(model.GnfdRedundancyIndexHeader, "0")
 		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("challenge failed, due to sign signature", "error", err)
 			return
@@ -558,9 +554,8 @@ func runCase3() {
 			return
 		}
 		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
-		req.Header.Add(model.GnfdIsChallengePrimaryHeader, "true")
 		req.Header.Add(model.GnfdPieceIndexHeader, "10")
-		req.Header.Add(model.GnfdStorageProviderHeader, spAddress)
+		req.Header.Add(model.GnfdRedundancyIndexHeader, "0")
 		if err = generateRequestSignature(req); err != nil {
 			log.Errorw("challenge failed, due to sign signature", "error", err)
 			return

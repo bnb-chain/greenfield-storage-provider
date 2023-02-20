@@ -80,14 +80,13 @@ func (mdb *MetaDB) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 }
 
 // GetIntegrityMeta return the integrity hash info
-func (mdb *MetaDB) GetIntegrityMeta(queryCondition *spdb.IntegrityMeta) (*spdb.IntegrityMeta, error) {
+func (mdb *MetaDB) GetIntegrityMeta(objectID uint64) (*spdb.IntegrityMeta, error) {
 	var (
 		result      *gorm.DB
 		queryReturn DBIntegrityMeta
 	)
 	result = mdb.db.Model(&DBIntegrityMeta{}).
-		Where("object_id = ? and is_primary = ? and redundancy_type = ? and ec_idx = ?",
-			queryCondition.ObjectID, util.BoolToInt(queryCondition.IsPrimary), queryCondition.RedundancyType, queryCondition.EcIdx).
+		Where("object_id = ?", objectID).
 		First(&queryReturn)
 	if result.Error != nil {
 		return nil, fmt.Errorf("select integrity meta record failed, %s", result.Error)
@@ -110,7 +109,6 @@ func (mdb *MetaDB) GetIntegrityMeta(queryCondition *spdb.IntegrityMeta) (*spdb.I
 		return nil, err
 	}
 	return meta, nil
-
 }
 
 // SetUploadPayloadAskingMeta put(overwrite) payload asking info to db

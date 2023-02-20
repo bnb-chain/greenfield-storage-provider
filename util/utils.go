@@ -108,6 +108,14 @@ func HeaderToUint64(header string) (uint64, error) {
 	return ui64, nil
 }
 
+func HeaderToInt64(header string) (int64, error) {
+	ui64, err := strconv.ParseInt(header, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return ui64, nil
+}
+
 func HeaderToUint32(header string) (uint32, error) {
 	ui64, err := HeaderToUint64(header)
 	if err != nil {

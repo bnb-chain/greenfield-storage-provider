@@ -121,19 +121,24 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription = InvalidHeader
 		return
 	}
-	if challengePrimary, err = util.HeaderToBool(requestContext.request.Header.Get(model.GnfdIsChallengePrimaryHeader)); err != nil {
-		log.Warnw("invalid challenge primary", "challenge_primary", requestContext.request.Header.Get(model.GnfdIsChallengePrimaryHeader))
+
+	redundancyIndex, err := util.HeaderToInt64(requestContext.request.Header.Get(model.GnfdRedundancyIndexHeader))
+	if err != nil {
+		log.Warnw("invalid redundancy index", "redundancy_index", requestContext.request.Header.Get(model.GnfdRedundancyIndexHeader))
 		errorDescription = InvalidHeader
 		return
+	}
+	if redundancyIndex < 0 {
+		challengePrimary = true
+	} else {
+		ecIdx = uint32(redundancyIndex)
 	}
 	if segmentIdx, err = util.HeaderToUint32(requestContext.request.Header.Get(model.GnfdPieceIndexHeader)); err != nil {
 		log.Warnw("invalid segment idx", "segment_idx", requestContext.request.Header.Get(model.GnfdPieceIndexHeader))
 		errorDescription = InvalidHeader
 		return
 	}
-	ecIdx, _ = util.HeaderToUint32(requestContext.request.Header.Get(model.GnfdECIndexHeader))
-	redundancyType = util.HeaderToRedundancyType(requestContext.request.Header.Get(model.GnfdRedundancyTypeHeader))
-	spAddress = requestContext.request.Header.Get(model.GnfdStorageProviderHeader)
+	spAddress = g.config.StorageProvider
 
 	req := &stypes.ChallengeServiceChallengePieceRequest{
 		TraceId:               requestContext.requestID,
