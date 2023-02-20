@@ -11,8 +11,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/pex"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/p2p/node/reactor"
-	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
+	storeconf "github.com/bnb-chain/greenfield-storage-provider/store/config"
+	"github.com/bnb-chain/greenfield-storage-provider/store/netdb"
 	tmlog "github.com/tendermint/tendermint/libs/log"
+)
+
+const (
+	P2PNodeDBPath = "/p2p"
+	P2PNodeDBName = "node"
 )
 
 type P2PNode struct {
@@ -86,9 +92,10 @@ func makeNode(ctx context.Context, cfg *NodeConfig, dbProvider DBProvider,
 	providerUpdater := reactor.NewProviderUpdater(logger)
 	node.providerUpdater = providerUpdater
 
-	// TODO::implement the p2p node db
-	var db spdb.P2PNodeDB
-
+	db, err := netdb.NewNetDB(&storeconf.LevelDBConfig{Path: cfg.DBDir() + P2PNodeDBPath, NameSpace: P2PNodeDBName})
+	if err != nil {
+		return nil, err
+	}
 	providerQuerier := reactor.NewProviderQuerier(cfg.P2P.PersistentPeers, db)
 	node.spReactor = reactor.NewSpReactor(logger, peerManager, router.OpenChannel, peerManager.Subscribe, providerQuerier, providerUpdater)
 	node.BaseService = *service.NewBaseService(logger, "node", node)
