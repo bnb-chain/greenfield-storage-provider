@@ -4,22 +4,13 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-)
 
-const (
-	// minCache is the minimum amount of memory in megabytes to allocate to leveldb
-	// read and write caching, split half and half.
-	minCache = 16
-
-	// minHandles is the minimum number of files handles to allocate to the open
-	// database files.
-	minHandles = 16
+	"github.com/bnb-chain/greenfield-storage-provider/store/config"
+	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 )
 
 var _ spdb.MetaDB = &Database{}
@@ -53,11 +44,11 @@ func newCustomMetaDB(path string, namespace string, cache int, handles int, read
 			Filter: filter.NewBloomFilter(10),
 		}
 		// Ensure we have some minimal caching and file guarantees
-		if cache < minCache {
-			cache = minCache
+		if cache < config.MinCache {
+			cache = config.MinCache
 		}
-		if handles < minHandles {
-			handles = minHandles
+		if handles < config.MinHandles {
+			handles = config.MinHandles
 		}
 		// Set default options
 		options.OpenFilesCacheCapacity = handles
