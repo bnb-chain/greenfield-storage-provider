@@ -68,6 +68,7 @@ const (
 	ContentTypeHeader   = "Content-Type"
 	ETagHeader          = "ETag"
 	ContentLengthHeader = "Content-Length"
+	GnfdAddress         = "gnfd-address"
 
 	// header value
 	ContentTypeXMLHeaderValue        = "application/xml"

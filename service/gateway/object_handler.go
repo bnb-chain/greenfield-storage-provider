@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"context"
 	"encoding/hex"
 	"net/http"
 	"strconv"
@@ -43,15 +44,6 @@ func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if requestContext.objectName == "" {
 		errorDescription = InvalidKey
-		return
-	}
-	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
-		log.Infow("failed to verify signature", "error", err)
-		return
-	}
-	if err = requestContext.verifyAuth(g.retriever); err != nil {
-		errorDescription = UnauthorizedAccess
 		return
 	}
 
@@ -117,15 +109,6 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
-		log.Infow("failed to verify signature", "error", err)
-		return
-	}
-	if err = requestContext.verifyAuth(g.retriever); err != nil {
-		errorDescription = UnauthorizedAccess
-		return
-	}
 	txHash, err := hex.DecodeString(requestContext.request.Header.Get(model.GnfdTransactionHashHeader))
 	if err != nil && len(txHash) != hash.LengthHash {
 		errorDescription = InvalidTxHash
@@ -170,6 +153,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == 200 {
+			//TODO:: update read quota
 			log.Debugf("action(%v) statusCode(%v) %v", "getObject", statusCode, requestContext.generateRequestDetail())
 		} else {
 			log.Warnf("action(%v) statusCode(%v) %v", "getObject", statusCode, requestContext.generateRequestDetail())
@@ -186,15 +170,23 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
-		log.Infow("failed to verify signature", "error", err)
+	_, bktExist, objSerStatus, tokenEnough, spBkt, bucketId, readQuota, ownObj, err := g.chain.AuthDownloadObjectWithAccount(
+		context.Background(),
+		requestContext.bucketName,
+		requestContext.objectName,
+		r.Header.Get(model.GnfdAddress),
+		g.config.SpId,
+	)
+	if err != nil {
+		errorDescription = InternalError
 		return
 	}
-	if err = requestContext.verifyAuth(g.retriever); err != nil {
-		errorDescription = UnauthorizedAccess
+	if !bktExist || !objSerStatus || !tokenEnough || !spBkt || !ownObj {
+		errorDescription = AccessDenied
 		return
 	}
+	//TODO:: query read quota enough
+	_, _ = bucketId, readQuota
 
 	option := &getObjectOption{
 		requestContext: requestContext,
@@ -242,16 +234,6 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
-		log.Infow("failed to verify signature", "error", err)
-		return
-	}
-	if err = requestContext.verifyAuth(g.retriever); err != nil {
-		errorDescription = UnauthorizedAccess
-		return
-	}
-
 	txHash, err := hex.DecodeString(requestContext.request.Header.Get(model.GnfdTransactionHashHeader))
 	if err != nil && len(txHash) != hash.LengthHash {
 		errorDescription = InvalidTxHash
@@ -265,6 +247,22 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		txHash:         txHash,
 		size:           uint64(sizeInt),
 		redundancyType: requestContext.request.Header.Get(model.GnfdRedundancyTypeHeader),
+	}
+
+	_, bktExist, objInitStatue, tokenEnough, spBkt, ownObj, err := g.chain.AuthUploadObjectWithAccount(
+		context.Background(),
+		requestContext.bucketName,
+		requestContext.objectName,
+		r.Header.Get(model.GnfdAddress),
+		g.config.SpId,
+	)
+	if err != nil {
+		errorDescription = InternalError
+		return
+	}
+	if !bktExist || !objInitStatue || !tokenEnough || !spBkt || !ownObj {
+		errorDescription = AccessDenied
+		return
 	}
 
 	info, err := g.uploadProcessor.putObjectV2(requestContext.objectName, r.Body, option)

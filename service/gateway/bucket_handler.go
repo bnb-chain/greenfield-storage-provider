@@ -3,7 +3,6 @@ package gateway
 import (
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -42,16 +41,16 @@ func (g *Gateway) createBucketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	option := &createBucketOption{
-		requestContext: requestContext,
-	}
-	err = g.chain.createBucket(requestContext.bucketName, option)
-	if err != nil {
-		if err == errors.ErrDuplicateBucket {
-			errorDescription = BucketAlreadyExists
-			return
-		}
-		// else common.ErrInternalError
-		errorDescription = InternalError
-	}
+	//option := &createBucketOption{
+	//	requestContext: requestContext,
+	//}
+	//err = g.chain.createBucket(requestContext.bucketName, option)
+	//if err != nil {
+	//	if err == errors.ErrDuplicateBucket {
+	//		errorDescription = BucketAlreadyExists
+	//		return
+	//	}
+	//	// else common.ErrInternalError
+	//	errorDescription = InternalError
+	//}
 }

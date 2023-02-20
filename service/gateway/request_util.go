@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
@@ -203,6 +204,52 @@ func (requestContext *requestContext) verifySignatureV2(requestSignature string)
 		}
 	*/
 	return nil
+}
+
+// verifySignV1 used to verify request type v1 signature, return nil if check succeed
+func (requestContext *requestContext) verifySignatureV3(requestSignature string) (sdk.AccAddress, error) {
+	var (
+		signedMsg string
+		signature []byte
+		err       error
+	)
+	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
+	signatureItems := strings.Split(requestSignature, ",")
+	if len(signatureItems) < 2 {
+		return sdk.AccAddress{}, errors.ErrAuthorizationFormat
+	}
+	for _, item := range signatureItems {
+		pair := strings.Split(item, "=")
+		if len(pair) != 2 {
+			return sdk.AccAddress{}, errors.ErrAuthorizationFormat
+		}
+		switch pair[0] {
+		case model.SignedMsg:
+			signedMsg = pair[1]
+		case model.Signature:
+			if signature, err = hex.DecodeString(pair[1]); err != nil {
+				return sdk.AccAddress{}, err
+			}
+		default:
+			return sdk.AccAddress{}, errors.ErrAuthorizationFormat
+		}
+	}
+
+	// check request integrity
+	if hex.EncodeToString(signer.GetMsgToSign(requestContext.request)) != signedMsg {
+		return sdk.AccAddress{}, errors.ErrRequestConsistent
+	}
+
+	// check signature consistent
+	signedRequestHash := crypto.Keccak256([]byte(signedMsg))
+	address, pk, err := signer.RecoverAddr(signedRequestHash, signature)
+	if err != nil {
+		return sdk.AccAddress{}, errors.ErrSignatureConsistent
+	}
+	if !secp256k1.VerifySignature(pk.Bytes(), signedRequestHash, signature[:len(signature)-1]) {
+		return sdk.AccAddress{}, errors.ErrSignatureConsistent
+	}
+	return address, nil
 }
 
 // redundancyType can be EC or Replica, if != EC, default is Replica

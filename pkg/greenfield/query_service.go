@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	merror "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -93,5 +94,6 @@ func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, obje
 			return
 		}
 	}
+	err = merror.ErrSealTimeout
 	return
 }

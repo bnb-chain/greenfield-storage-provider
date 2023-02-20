@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync/atomic"
 
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -16,14 +17,12 @@ import (
 // Gateway is the primary entry point of SP.
 type Gateway struct {
 	config  *GatewayConfig
-	name    string
 	running atomic.Bool
 
 	httpServer        *http.Server
 	uploadProcessor   *uploadProcessor
 	downloadProcessor *downloadProcessor
-	chain             *chainClient
-	retriever         *retrieverClient
+	chain             *gnfd.Greenfield
 }
 
 // NewGatewayService return the gateway instance
@@ -35,7 +34,6 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 
 	g = &Gateway{
 		config: cfg,
-		name:   model.GatewayService,
 	}
 	if g.uploadProcessor, err = newUploadProcessor(g.config.UploaderServiceAddress); err != nil {
 		log.Warnw("failed to create uploader", "err", err)
@@ -45,18 +43,17 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		log.Warnw("failed to create downloader", "err", err)
 		return nil, err
 	}
-	if g.chain, err = newChainClient(g.config.ChainConfig); err != nil {
+	if g.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Warnw("failed to create chain client", "err", err)
 		return nil, err
 	}
-	g.retriever = newRetrieverClient()
 	log.Debugw("gateway succeed to init")
 	return g, nil
 }
 
 // Name implement the lifecycle interface
 func (g *Gateway) Name() string {
-	return g.name
+	return model.GatewayService
 }
 
 // Start implement the lifecycle interface

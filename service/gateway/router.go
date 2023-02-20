@@ -27,7 +27,7 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
 		Queries(model.TransactionQuery, "").
-		HandlerFunc(g.putObjectTxHandler)
+		HandlerFunc(g.VerifySignature(g.putObjectTxHandler))
 	//bucketRouter.NewRoute().
 	//	Name("PutObject").
 	//	Methods(http.MethodPut).
@@ -38,16 +38,16 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		Name("PutObject").
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
-		HandlerFunc(g.putObjectV2Handler)
+		HandlerFunc(g.VerifySignature(g.putObjectV2Handler))
 	bucketRouter.NewRoute().
 		Name("CreateBucket").
 		Methods(http.MethodPut).
-		HandlerFunc(g.createBucketHandler)
+		HandlerFunc(g.VerifySignature(g.createBucketHandler))
 	bucketRouter.NewRoute().
 		Name("GetObject").
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
-		HandlerFunc(g.getObjectHandler)
+		HandlerFunc(g.VerifySignature(g.getObjectHandler))
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	// todo: delete it in future
@@ -67,7 +67,7 @@ func (g *Gateway) registerhandler(r *mux.Router) {
 		Name("GetApproval").
 		Methods(http.MethodGet).
 		Queries(model.ActionQuery, "{action}").
-		HandlerFunc(g.getApprovalHandler)
+		HandlerFunc(g.VerifySignature(g.getApprovalHandler))
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }

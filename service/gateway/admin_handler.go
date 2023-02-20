@@ -35,12 +35,6 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
-		log.Infow("failed to verify signature", "error", err)
-		return
-	}
-
 	option := &getApprovalOption{
 		requestContext: requestContext,
 	}
