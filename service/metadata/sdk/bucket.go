@@ -8,7 +8,6 @@ import (
 )
 
 func (c *Client) GetUserBuckets(ctx context.Context, userID uuid.UUID) (ret []model.Bucket, err error) {
-	//url := fmt.Sprintf("http://%s/accounts/%s/buckets", c.option.Address, userID)
 	url := fmt.Sprintf("http://%s/accounts/%s/buckets", "localhost:9733", userID)
 	err = c.get(ctx, url, &ret, withCustomMetricsHandlerName("GetUserBuckets"))
 	if err != nil {

@@ -1,6 +1,9 @@
 package https
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+)
 
 type SubError struct {
 	Domain  string `json:"domain"`
@@ -27,21 +30,21 @@ func NewError(code int, message string) *Error {
 
 func NewBadRequestError(format string, a ...any) *Error {
 	return &Error{
-		Code:    ErrorCodeBadRequest,
+		Code:    errors.ErrorCodeBadRequest,
 		Message: fmt.Sprintf(format, a...),
 	}
 }
 
 func NewInternalError(format string, a ...any) *Error {
 	return &Error{
-		Code:    ErrorCodeInternalError,
+		Code:    errors.ErrorCodeInternalError,
 		Message: fmt.Sprintf(format, a...),
 	}
 }
 
 func NewNotFoundError(format string, a ...any) *Error {
 	return &Error{
-		Code:    ErrorCodeNotFound,
+		Code:    errors.ErrorCodeNotFound,
 		Message: fmt.Sprintf(format, a...),
 	}
 }

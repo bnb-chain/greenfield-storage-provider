@@ -22,5 +22,4 @@ func (s *Store) GetUserBuckets(ctx context.Context) (ret []*model.Bucket, err er
 	}
 	ret = append(ret, &bucket1)
 	return ret, nil
-	//return ret, s.getCTXUserDB(ctx).Find(&ret).Error
 }

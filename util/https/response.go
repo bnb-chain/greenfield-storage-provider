@@ -2,11 +2,6 @@ package https
 
 const (
 	CodeOk = 20000
-
-	ErrorCodeBadRequest = 40001
-	ErrorCodeNotFound   = 40004
-
-	ErrorCodeInternalError = 50001
 )
 
 const (

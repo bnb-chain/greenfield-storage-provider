@@ -1,5 +1,5 @@
 package https
 
 const (
-	HTTPHeaderFrom = "X-UDA-HTTP-FROM"
+	HTTPHeaderFrom = "X-SP-METADATA-HTTP-FROM"
 )

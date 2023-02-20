@@ -57,17 +57,3 @@ func NewMetadataService(cfg *MetadataConfig, ctx context.Context) (metadata *Met
 	//err = metadata.initDB()
 	return
 }
-
-//func (metadata *Metadata) Init() {
-//	v1 := metadata.engine.Group("/api/v1")
-//	metadata.router.InitHandlers(v1)
-//}
-
-//func (s *Server) Run() error {
-//	//s.startLoop(s.ctx)
-//	return s.engine.Run("127.0.0.1:8081")
-//}
-
-//func (s *Server) startLoop(ctx context.Context) {
-//	go wait.UntilWithContext(ctx, s.emitStatistics, time.Hour)
-//}

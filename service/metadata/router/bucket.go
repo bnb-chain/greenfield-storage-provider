@@ -14,15 +14,6 @@ func extractUserID(ctx *gin.Context) (uuid.UUID, error) {
 }
 
 func (r *Router) GetUserBuckets(ctx *gin.Context) (resp interface{}, herr *https.Error) {
-	//userUUID, err := extractUserID(ctx)
-
-	//if err != nil {
-	//	return nil, &Error{
-	//		Code:    ErrorCodeBadRequest,
-	//		Message: "account_id is invalid uuid",
-	//	}
-	//}
-
 	buckets, err := r.store.GetUserBuckets(ctx)
 	if err != nil {
 		log.Infof("err:%+v", err)
