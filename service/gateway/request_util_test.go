@@ -41,7 +41,8 @@ func Test_verifySignatureV1(t *testing.T) {
 	rc := &requestContext{
 		request: req,
 	}
-	assert.Equal(t, nil, rc.verifySignature())
+	_, err = rc.verifySignature()
+	assert.Equal(t, nil, err)
 }
 
 func Test_verifySignatureV2(t *testing.T) {
@@ -68,7 +69,8 @@ func Test_verifySignatureV2(t *testing.T) {
 	rc := &requestContext{
 		request: req,
 	}
-	assert.Equal(t, nil, rc.verifySignature())
+	_, err = rc.verifySignature()
+	assert.Equal(t, nil, err)
 }
 
 func Test_parseRangeHeader(t *testing.T) {

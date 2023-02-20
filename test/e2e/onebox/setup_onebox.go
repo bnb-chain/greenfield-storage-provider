@@ -13,7 +13,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
-	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
@@ -51,9 +50,6 @@ func initConfig() {
 	}
 	if cfg.SyncerCfg.PieceStoreConfig == nil {
 		cfg.SyncerCfg.PieceStoreConfig = storage.DefaultPieceStoreConfig
-	}
-	if cfg.GatewayCfg.ChainConfig == nil {
-		cfg.GatewayCfg.ChainConfig = gateway.DefaultChainClientConfig
 	}
 }
 

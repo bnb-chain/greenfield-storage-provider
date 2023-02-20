@@ -11,6 +11,7 @@ import (
 	dclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
 	uclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
 
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -27,11 +28,9 @@ type Gateway struct {
 	uploader   *uclient.UploaderClient
 	downloader *dclient.DownloaderClient
 	challenge  *client.ChallengeClient
-	syncer     client.SyncerAPI
 
-	// mock
-	chain     *chainClient
-	retriever *retrieverClient
+	syncer client.SyncerAPI
+	chain  *gnfd.Greenfield
 }
 
 // NewGatewayService return the gateway instance
@@ -45,15 +44,15 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		config: cfg,
 		name:   model.GatewayService,
 	}
-	if g.uploader, err = uclient.NewUploaderClient(g.config.UploaderServiceAddress); err != nil {
+	if g.uploader, err = uclient.NewUploaderClient(cfg.UploaderServiceAddress); err != nil {
 		log.Warnw("failed to uploader client", "err", err)
 		return nil, err
 	}
-	if g.downloader, err = dclient.NewDownloaderClient(g.config.DownloaderServiceAddress); err != nil {
+	if g.downloader, err = dclient.NewDownloaderClient(cfg.DownloaderServiceAddress); err != nil {
 		log.Warnw("failed to downloader client", "err", err)
 		return nil, err
 	}
-	if g.challenge, err = client.NewChallengeClient(g.config.ChallengeServiceAddress); err != nil {
+	if g.challenge, err = client.NewChallengeClient(cfg.ChallengeServiceAddress); err != nil {
 		log.Warnw("failed to challenge client", "err", err)
 		return nil, err
 	}
@@ -61,11 +60,10 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		log.Errorw("gateway inits syncer client failed", "error", err)
 		return nil, err
 	}
-	if g.chain, err = newChainClient(g.config.ChainConfig); err != nil {
+	if g.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Warnw("failed to create chain client", "err", err)
 		return nil, err
 	}
-	g.retriever = newRetrieverClient()
 	log.Debugw("gateway succeed to init")
 	return g, nil
 }

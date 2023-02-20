@@ -8,7 +8,8 @@ import (
 
 // AuthUploadObjectWithAccount verify the greenfield chain information for upload object.
 func (greenfield *Greenfield) AuthUploadObjectWithAccount(ctx context.Context, bucket, object, account, sp string) (
-	accountExist bool, bucketExist bool, objectInitStatue bool, paymentEnough bool, ownerBucket bool, err error) {
+	accountExist bool, bucketExist bool, objectInitStatue bool, paymentEnough bool,
+	spBucket bool, ownerObject bool, err error) {
 	accountExist, err = greenfield.HasAccount(ctx, account)
 	if err != nil || !accountExist {
 		return
@@ -31,21 +32,27 @@ func (greenfield *Greenfield) AuthUploadObjectWithAccount(ctx context.Context, b
 		objectInitStatue = false
 		return
 	}
+	if objectInfo.GetOwner() != account {
+		ownerObject = false
+		return
+	}
 
 	// TODO:: check payment address whether in arrears status
 	paymentEnough = true
 
 	if bucketInfo.GetPrimarySpAddress() == sp {
-		ownerBucket = true
+		spBucket = true
 	} else {
-		ownerBucket = false
+		spBucket = false
 	}
 	return
 }
 
 // AuthDownloadObjectWithAccount verify the greenfield chain information for download object.
 func (greenfield *Greenfield) AuthDownloadObjectWithAccount(ctx context.Context, bucket, object, account, sp string) (
-	accountExist bool, bucketExist bool, objectServiceStatue bool, paymentEnough bool, ownerBucket bool, bucketID uint64, readQuota int32, err error) {
+	accountExist bool, bucketExist bool, objectServiceStatue bool, paymentEnough bool,
+	spBucket bool, bucketID uint64, readQuota int32, ownerObject bool, err error) {
+
 	accountExist, err = greenfield.HasAccount(ctx, account)
 	if err != nil || !accountExist {
 		return
@@ -68,14 +75,18 @@ func (greenfield *Greenfield) AuthDownloadObjectWithAccount(ctx context.Context,
 		objectServiceStatue = false
 		return
 	}
+	if objectInfo.GetOwner() != account {
+		ownerObject = false
+		return
+	}
 
 	// TODO:: check payment address whether in arrears status
 	paymentEnough = true
 
 	if bucketInfo.GetPrimarySpAddress() == sp {
-		ownerBucket = true
+		spBucket = true
 	} else {
-		ownerBucket = false
+		spBucket = false
 	}
 
 	bucketID = bucketInfo.Id.Uint64()

@@ -10,6 +10,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
+const (
+	putObjectRouterName = "PutObject"
+	getObjectRouterName = "GetObject"
+	approvalRouterName  = "GetApproval"
+	challengeRouterName = "Challenge"
+)
+
 // notFoundHandler log not found request info.
 func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	s, _ := io.ReadAll(r.Body)
@@ -23,16 +30,12 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 	// bucket router, virtual-hosted style
 	bucketRouter := r.Host("{bucket:.+}." + g.config.Domain).Subrouter()
 	bucketRouter.NewRoute().
-		Name("PutObject").
+		Name(putObjectRouterName).
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
 		HandlerFunc(g.putObjectHandler)
 	bucketRouter.NewRoute().
-		Name("CreateBucket").
-		Methods(http.MethodPut).
-		HandlerFunc(g.createBucketHandler)
-	bucketRouter.NewRoute().
-		Name("GetObject").
+		Name(getObjectRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
 		HandlerFunc(g.getObjectHandler)

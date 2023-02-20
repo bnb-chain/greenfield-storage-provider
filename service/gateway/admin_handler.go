@@ -11,11 +11,7 @@ import (
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-)
-
-const (
-	approvalRouterName  = "GetApproval"
-	challengeRouterName = "Challenge"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func isAdminRouter(routerName string) bool {
@@ -28,6 +24,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		err              error
 		errorDescription *errorDescription
 		requestContext   *requestContext
+		addr             sdk.AccAddress
 	)
 
 	defer func() {
@@ -56,9 +53,14 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = requestContext.verifySignature(); err != nil {
+	if _, err = requestContext.verifySignature(); err != nil {
 		log.Infow("failed to verify signature", "error", err)
 		errorDescription = SignatureDoesNotMatch
+		return
+	}
+	if err = g.checkAuthorization(requestContext, addr); err != nil {
+		log.Warnw("failed to check authorization", "error", err)
+		errorDescription = UnauthorizedAccess
 		return
 	}
 
@@ -87,6 +89,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		err              error
 		errorDescription *errorDescription
 		requestContext   *requestContext
+		addr             sdk.AccAddress
 
 		objectID         uint64
 		challengePrimary bool
@@ -110,9 +113,14 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	requestContext = newRequestContext(r)
-	if err = requestContext.verifySignature(); err != nil {
+	if _, err = requestContext.verifySignature(); err != nil {
 		log.Warnw("failed to verify signature", "error", err)
 		errorDescription = SignatureDoesNotMatch
+		return
+	}
+	if err = g.checkAuthorization(requestContext, addr); err != nil {
+		log.Warnw("failed to check authorization", "error", err)
+		errorDescription = UnauthorizedAccess
 		return
 	}
 

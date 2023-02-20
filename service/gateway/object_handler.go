@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getObjectHandler handle get object request
@@ -20,6 +21,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err              error
 		errorDescription *errorDescription
 		requestContext   *requestContext
+		addr             sdk.AccAddress
 
 		isRange    bool
 		rangeStart int64
@@ -53,12 +55,13 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = requestContext.verifySignature(); err != nil {
+	if _, err = requestContext.verifySignature(); err != nil {
 		log.Infow("failed to verify signature", "error", err)
 		errorDescription = SignatureDoesNotMatch
 		return
 	}
-	if err = requestContext.verifyAuth(g.retriever); err != nil {
+	if err = g.checkAuthorization(requestContext, addr); err != nil {
+		log.Warnw("failed to check authorization", "error", err)
 		errorDescription = UnauthorizedAccess
 		return
 	}
@@ -129,6 +132,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err              error
 		errorDescription *errorDescription
 		requestContext   *requestContext
+		addr             sdk.AccAddress
 
 		buf      = make([]byte, 65536)
 		readN    int
@@ -162,12 +166,13 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = requestContext.verifySignature(); err != nil {
+	if addr, err = requestContext.verifySignature(); err != nil {
 		log.Warnw("failed to verify signature", "error", err)
 		errorDescription = SignatureDoesNotMatch
 		return
 	}
-	if err = requestContext.verifyAuth(g.retriever); err != nil {
+	if err = g.checkAuthorization(requestContext, addr); err != nil {
+		log.Warnw("failed to check authorization", "error", err)
 		errorDescription = UnauthorizedAccess
 		return
 	}
