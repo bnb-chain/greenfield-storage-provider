@@ -14,7 +14,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
@@ -26,7 +25,8 @@ type requestContext struct {
 	request    *http.Request
 	startTime  time.Time
 
-	// admin fields
+	// vars is mux vars
+	vars       map[string]string
 	actionName string
 }
 
@@ -36,25 +36,12 @@ func newRequestContext(r *http.Request) *requestContext {
 	// todo: sdk signature need ignore it, here will be deleted
 	// https://github.com/minio/minio-go/blob/7aa4b0e0d1a9fdb4a99f50df715c21ec21d91753/pkg/signer/request-signature-v4.go#L60
 	r.Header.Del("Accept-Encoding")
-	// admin router
-	if mux.CurrentRoute(r).GetName() == "GetApproval" {
-		var (
-			bucket string
-			object string
-		)
-		bucket = r.Header.Get(model.GnfdResourceHeader)
-		fields := strings.Split(bucket, "/")
-		if len(fields) >= 2 {
-			bucket = fields[0]
-			object = strings.Join(fields[1:], "/")
-		}
+
+	if isAdminRouter(mux.CurrentRoute(r).GetName()) {
 		return &requestContext{
-			requestID:  util.GenerateRequestID(),
-			bucketName: bucket,
-			objectName: object,
-			actionName: vars["action"],
-			request:    r,
-			startTime:  time.Now(),
+			requestID: util.GenerateRequestID(),
+			request:   r,
+			startTime: time.Now(),
 		}
 	}
 
@@ -65,6 +52,7 @@ func newRequestContext(r *http.Request) *requestContext {
 		objectName: vars["object"],
 		request:    r,
 		startTime:  time.Now(),
+		vars:       vars,
 	}
 }
 
@@ -106,7 +94,6 @@ func signaturePrefix(version, algorithm string) string {
 
 // verifySign used to verify request signature, return nil if check succeed
 func (requestContext *requestContext) verifySignature() error {
-	// log.Infow("debug signature info", "msg", signer.GetCanonicalRequest(requestContext.request))
 	requestSignature := requestContext.request.Header.Get(model.GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
@@ -191,25 +178,46 @@ func (requestContext *requestContext) verifySignatureV2(requestSignature string)
 		}
 	}
 	_ = signature
-	// todo: parse metamask signature and check timeout
-	/*
-		// check signature consistent
-		signedRequestHash := crypto.Keccak256([]byte(MetaMaskStr))
-		_, pk, err := signer.RecoverAddr(signedRequestHash, signature)
-		if err != nil {
-			return errors.ErrSignatureConsistent
-		}
-		if !secp256k1.VerifySignature(pk.Bytes(), signedRequestHash, signature[:len(signature)-1]) {
-			return errors.ErrSignatureConsistent
-		}
-	*/
+	// TODO: parse metamask signature and check timeout
+	// impl
 	return nil
 }
 
-// redundancyType can be EC or Replica, if != EC, default is Replica
-func redundancyTypeToEnum(redundancyType string) ptypes.RedundancyType {
-	if redundancyType == model.ReplicaRedundancyTypeHeaderValue {
-		return ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
+// TODO: impl
+func (requestContext *requestContext) verifyAuth(client *retrieverClient) error {
+	// check account/bucket by retriever
+	return nil
+}
+
+func parseRange(rangeStr string) (bool, int64, int64) {
+	if rangeStr == "" {
+		return false, -1, -1
 	}
-	return ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
+	rangeStr = strings.ToLower(rangeStr)
+	rangeStr = strings.ReplaceAll(rangeStr, " ", "")
+	if !strings.HasPrefix(rangeStr, "bytes=") {
+		return false, -1, -1
+	}
+	rangeStr = rangeStr[len("bytes="):]
+	if strings.HasSuffix(rangeStr, "-") {
+		rangeStr = rangeStr[:len(rangeStr)-1]
+		rangeStart, err := util.HeaderToUint64(rangeStr)
+		if err != nil {
+			return false, -1, -1
+		}
+		return true, int64(rangeStart), -1
+	}
+	pair := strings.Split(rangeStr, "-")
+	if len(pair) == 2 {
+		rangeStart, err := util.HeaderToUint64(pair[0])
+		if err != nil {
+			return false, -1, -1
+		}
+		rangeEnd, err := util.HeaderToUint64(pair[1])
+		if err != nil {
+			return false, -1, -1
+		}
+		return true, int64(rangeStart), int64(rangeEnd)
+	}
+	return false, -1, -1
 }

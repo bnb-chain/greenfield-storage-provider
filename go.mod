@@ -3,23 +3,29 @@ module github.com/bnb-chain/greenfield-storage-provider
 go 1.19
 
 replace (
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.5
+	// TODO: point to develop branch, will be changed to v0.0.6 after greenfield-sdk-go v0.0.6 released
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.6
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.1
 )
 
 require (
+	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.0.5
 	github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
+	github.com/cloudflare/cfssl v1.6.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.4
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/json-iterator/go v1.1.12
-	github.com/klauspost/reedsolomon v1.11.3
+	github.com/klauspost/reedsolomon v1.11.6
 	github.com/looplab/fsm v1.0.0
 	github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416
 	github.com/oleiade/lane v1.0.1
@@ -31,14 +37,13 @@ require (
 	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20230111222715-75897c7a292a
-	google.golang.org/grpc v1.51.0
+	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
 	gorm.io/driver/mysql v1.4.4
 	gorm.io/gorm v1.24.2
 )
 
 require (
-	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/math v1.0.0-beta.3 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -49,12 +54,14 @@ require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/btcsuite/btcd v0.22.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
+	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 // indirect
+	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/confio/ics23/go v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/gogoproto v1.4.3 // indirect
+	github.com/cosmos/gogoproto v1.4.4 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.4 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
@@ -82,7 +89,6 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/gtank/merlin v0.1.1 // indirect
@@ -124,6 +130,8 @@ require (
 	github.com/prysmaticlabs/eth2-types v0.0.0-20210303084904-c9735a06829d // indirect
 	github.com/prysmaticlabs/prysm v0.0.0-20220124113610-e26cde5e091b // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
+	github.com/regen-network/cosmos-proto v0.3.1 // indirect
+	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
@@ -141,6 +149,7 @@ require (
 	github.com/tendermint/tendermint v0.34.22 // indirect
 	github.com/tendermint/tm-db v0.6.7 // indirect
 	github.com/thomaso-mirodin/intmath v0.0.0-20160323211736-5dc6d854e46e // indirect
+	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/wealdtech/go-bytesutil v1.1.1 // indirect
 	github.com/wealdtech/go-eth2-types/v2 v2.5.2 // indirect

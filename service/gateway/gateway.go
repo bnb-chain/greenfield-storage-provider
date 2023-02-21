@@ -8,6 +8,9 @@ import (
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
+	dclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
+	uclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
+
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -20,12 +23,15 @@ type Gateway struct {
 	name    string
 	running atomic.Bool
 
-	httpServer        *http.Server
-	uploadProcessor   *uploadProcessor
-	downloadProcessor *downloadProcessor
-	syncer            client.SyncerAPI
-	chain             *chainClient
-	retriever         *retrieverClient
+	httpServer *http.Server
+	uploader   *uclient.UploaderClient
+	downloader *dclient.DownloaderClient
+	challenge  *client.ChallengeClient
+	syncer     client.SyncerAPI
+
+	// mock
+	chain     *chainClient
+	retriever *retrieverClient
 }
 
 // NewGatewayService return the gateway instance
@@ -39,12 +45,16 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		config: cfg,
 		name:   model.GatewayService,
 	}
-	if g.uploadProcessor, err = newUploadProcessor(g.config.UploaderServiceAddress); err != nil {
-		log.Warnw("failed to create uploader", "err", err)
+	if g.uploader, err = uclient.NewUploaderClient(g.config.UploaderServiceAddress); err != nil {
+		log.Warnw("failed to uploader client", "err", err)
 		return nil, err
 	}
-	if g.downloadProcessor, err = newDownloadProcessor(g.config.DownloaderServiceAddress); err != nil {
-		log.Warnw("failed to create downloader", "err", err)
+	if g.downloader, err = dclient.NewDownloaderClient(g.config.DownloaderServiceAddress); err != nil {
+		log.Warnw("failed to downloader client", "err", err)
+		return nil, err
+	}
+	if g.challenge, err = client.NewChallengeClient(g.config.ChallengeServiceAddress); err != nil {
+		log.Warnw("failed to challenge client", "err", err)
 		return nil, err
 	}
 	if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {

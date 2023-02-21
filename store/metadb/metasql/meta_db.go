@@ -2,12 +2,12 @@ package metasql
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -63,11 +63,6 @@ func (mdb *MetaDB) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 		insertIntegrityMetaRecord *DBIntegrityMeta
 	)
 
-	// log.Infow("set integrity", "meta", *meta)
-	pieceHash, err := json.Marshal(meta.PieceHash)
-	if err != nil {
-		return err
-	}
 	insertIntegrityMetaRecord = &DBIntegrityMeta{
 		ObjectID:       meta.ObjectID,
 		EcIdx:          meta.EcIdx,
@@ -75,7 +70,7 @@ func (mdb *MetaDB) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 		IsPrimary:      meta.IsPrimary,
 		RedundancyType: uint32(meta.RedundancyType),
 		IntegrityHash:  hex.EncodeToString(meta.IntegrityHash),
-		PieceHash:      string(pieceHash),
+		PieceHash:      util.EncodePieceHash(meta.PieceHash),
 	}
 	result = mdb.db.Create(insertIntegrityMetaRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -85,14 +80,13 @@ func (mdb *MetaDB) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 }
 
 // GetIntegrityMeta return the integrity hash info
-func (mdb *MetaDB) GetIntegrityMeta(queryCondition *spdb.IntegrityMeta) (*spdb.IntegrityMeta, error) {
+func (mdb *MetaDB) GetIntegrityMeta(objectID uint64) (*spdb.IntegrityMeta, error) {
 	var (
 		result      *gorm.DB
 		queryReturn DBIntegrityMeta
 	)
 	result = mdb.db.Model(&DBIntegrityMeta{}).
-		Where("object_id = ? and is_primary = ? and redundancy_type = ? and ec_idx = ?",
-			queryCondition.ObjectID, queryCondition.IsPrimary, queryCondition.RedundancyType, queryCondition.EcIdx).
+		Where("object_id = ?", objectID).
 		First(&queryReturn)
 	if result.Error != nil {
 		return nil, fmt.Errorf("select integrity meta record failed, %s", result.Error)
@@ -110,12 +104,11 @@ func (mdb *MetaDB) GetIntegrityMeta(queryCondition *spdb.IntegrityMeta) (*spdb.I
 		RedundancyType: ptypes.RedundancyType(queryReturn.RedundancyType),
 		IntegrityHash:  integrityHash,
 	}
-	err = json.Unmarshal([]byte(queryReturn.PieceHash), &meta.PieceHash)
+	meta.PieceHash, err = util.DecodePieceHash(queryReturn.PieceHash)
 	if err != nil {
 		return nil, err
 	}
 	return meta, nil
-
 }
 
 // SetUploadPayloadAskingMeta put(overwrite) payload asking info to db

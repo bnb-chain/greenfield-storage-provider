@@ -148,6 +148,7 @@ func (job *PrimaryJob) SealInfo() ([]*ptypes.StorageProviderInfo, error) {
 		IntegrityHash: hash.GenerateIntegrityHash(checksumList),
 		PieceChecksum: checksumList,
 	})
+
 	return sealInfo, nil
 }
 

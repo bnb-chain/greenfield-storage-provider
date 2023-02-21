@@ -9,6 +9,7 @@ const (
 	StoneHubService   = "StoneHub"
 	StoneNodeService  = "StoneNode"
 	SyncerService     = "Syncer"
+	SignerService     = "Signer"
 )
 
 // define payload data redundancy size.
@@ -54,41 +55,42 @@ const (
 	AdminPath          = "/greenfield/admin/v1/"
 	SyncerPath         = "/greenfield/syncer/v1/sync-piece"
 	GetApprovalSubPath = "get-approval"
+	ChallengeSubPath   = "challenge"
 
 	// query key
 	TransactionQuery = "transaction"
-	PutObjectV2Query = "putobjectv2"
 	ActionQuery      = "action"
 
 	// Greenfield header key
 	GnfdRequestIDHeader       = "X-Gnfd-Request-ID"
-	GnfdContentLengthHeader   = "X-Gnfd-Content-Length"
-	GnfdContentTypeHeader     = "X-Gnfd-Content-Type"
 	GnfdChecksumHeader        = "X-Gnfd-Checksum"
 	GnfdIsPrivateHeader       = "X-Gnfd-Is-Private"
 	GnfdTransactionHashHeader = "X-Gnfd-Txn-Hash"
 	GnfdResourceHeader        = "X-Gnfd-Resource"
 	GnfdPreSignatureHeader    = "X-Gnfd-Pre-Signature"
 	// GnfdRedundancyTypeHeader can be EC or Replica, EC is default
-	GnfdRedundancyTypeHeader = "X-Gnfd-Redundancy-Type"
-	GnfdAuthorizationHeader  = "Authorization"
-	GnfdDateHeader           = "X-Gnfd-Date"
+	GnfdRedundancyTypeHeader  = "X-Gnfd-Redundancy-Type"
+	GnfdAuthorizationHeader   = "Authorization"
+	GnfdDateHeader            = "X-Gnfd-Date"
+	GnfdObjectIDHeader        = "X-Gnfd-Object-ID"
+	GnfdPieceIndexHeader      = "X-Gnfd-Piece-Index"
+	GnfdRedundancyIndexHeader = "X-Gnfd-Redundancy-Index"
+	GnfdIntegrityHashHeader   = "X-Gnfd-Integrity-Hash"
+	GnfdPieceHashHeader       = "X-Gnfd-Piece-Hash"
 
 	// StoneNode to gateway request header
 	GnfdTraceIDHeader           = "X-Gnfd-Trace-ID"
-	GnfdObjectIDHeader          = "X-Gnfd-Object-ID"
 	GnfdSPIDHeader              = "X-Gnfd-SP-ID"
 	GnfdPieceCountHeader        = "X-Gnfd-Piece-Count"
-	GnfdPieceIndexHeader        = "X-Gnfd-Piece-Index"
 	GnfdApprovalSignatureHeader = "X-Gnfd-Approval-Signature"
 
 	// gateway to StoneNode response header
 	GnfdPieceChecksumHeader = "X-Gnfd-Piece-Checksum"
-	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
 	GnfdSealSignatureHeader = "X-Gnfd-Seal-Signature"
 
 	// header value
 	ReplicaRedundancyTypeHeaderValue = "Replica"
+	InlineRedundancyTypeHeaderValue  = "Inline"
 
 	// signature const value
 	SignAlgorithm = "ECDSA-secp256k1"

@@ -102,15 +102,13 @@ func (db *Database) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 	if err != nil {
 		return err
 	}
-	return db.db.Put(IntegrityMetaKey(db.Namespace,
-		meta.ObjectID, meta.IsPrimary, meta.RedundancyType, meta.EcIdx), data, nil)
+	return db.db.Put(IntegrityMetaKey(db.Namespace, meta.ObjectID), data, nil)
 }
 
 // GetIntegrityMeta return the integrity hash info
 
-func (db *Database) GetIntegrityMeta(queryCondition *spdb.IntegrityMeta) (*spdb.IntegrityMeta, error) {
-	data, err := db.db.Get(IntegrityMetaKey(db.Namespace,
-		queryCondition.ObjectID, queryCondition.IsPrimary, queryCondition.RedundancyType, queryCondition.EcIdx), nil)
+func (db *Database) GetIntegrityMeta(objectID uint64) (*spdb.IntegrityMeta, error) {
+	data, err := db.db.Get(IntegrityMetaKey(db.Namespace, objectID), nil)
 	if err != nil {
 		return nil, err
 	}

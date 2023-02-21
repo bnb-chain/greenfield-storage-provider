@@ -13,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
@@ -81,6 +82,14 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.ChallengeCfg = config.DefaultStorageProviderConfig.ChallengeCfg
 		}
 		server, err = challenge.NewChallengeService(cfg.ChallengeCfg)
+		if err != nil {
+			return nil, err
+		}
+	case model.SignerService:
+		if cfg.SignerCfg == nil {
+			cfg.SignerCfg = config.DefaultStorageProviderConfig.SignerCfg
+		}
+		server, err = signer.NewSignerServer(cfg.SignerCfg)
 		if err != nil {
 			return nil, err
 		}
