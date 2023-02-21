@@ -5,7 +5,6 @@ go 1.19
 replace (
 	// TODO: point to develop branch, will be changed to v0.0.6 after greenfield-sdk-go v0.0.6 released
 	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d
-
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.6
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.1

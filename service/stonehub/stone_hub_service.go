@@ -201,6 +201,9 @@ func (hub *StoneHub) AllocStoneJob(ctx context.Context, req *stypes.StoneHubServ
 	}
 	switch job := stoneJob.(type) {
 	case *stypes.PieceJob:
+		objectInfo, _ := hub.jobDB.GetObjectInfo(job.GetObjectId())
+		resp.BucketName = objectInfo.BucketName
+		resp.ObjectName = objectInfo.ObjectName
 		resp.PieceJob = job
 	default:
 		resp.ErrMessage = merrors.MakeErrMsgResponse(merrors.ErrStoneJobTypeUnrecognized)

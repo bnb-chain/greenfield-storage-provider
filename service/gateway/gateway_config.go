@@ -7,7 +7,8 @@ type GatewayConfig struct {
 	UploaderServiceAddress   string
 	DownloaderServiceAddress string
 	ChallengeServiceAddress  string
-	ChainConfig              *chainClientConfig
+	SyncerServiceAddress     string
+	ChainConfig              *ChainClientConfig
 }
 
 var DefaultGatewayConfig = &GatewayConfig{
@@ -16,6 +17,7 @@ var DefaultGatewayConfig = &GatewayConfig{
 	Domain:                   "gnfd.nodereal.com",
 	UploaderServiceAddress:   "127.0.0.1:9133",
 	DownloaderServiceAddress: "127.0.0.1:9233",
+	SyncerServiceAddress:     "127.0.0.1:9533",
 	ChallengeServiceAddress:  "127.0.0.1:9633",
-	ChainConfig:              defaultChainClientConfig,
+	ChainConfig:              DefaultChainClientConfig,
 }

@@ -11,12 +11,13 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-sdk-go/pkg/signer"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 var (
