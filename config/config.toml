@@ -88,7 +88,7 @@ Service = [
         ReadOnly = false
 
 [SignerCfg]
-    Address = "127.0.0.1:9733"
+    Address = "127.0.0.1:9633"
     WhitelistCIDR = ["127.0.0.1/32","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"]
     APIKey = ""
     [SignerCfg.GreenfieldChainConfig]

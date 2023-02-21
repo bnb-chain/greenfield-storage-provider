@@ -8,11 +8,11 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -57,7 +57,7 @@ func sendRequest(pieceData [][]byte, httpEndpoint string, syncerInfo *stypes.Syn
 
 func addReqHeader(req *http.Request, syncerInfo *stypes.SyncerInfo, traceID string) *http.Request {
 	req.Header.Add(model.ContentTypeHeader, model.OctetStream)
-	req.Header.Add(model.GnfdTraceIDHeader, traceID)
+	req.Header.Add(model.GnfdRequestIDHeader, traceID)
 	req.Header.Add(model.GnfdObjectIDHeader, strconv.FormatUint(syncerInfo.GetObjectId(), 10))
 	req.Header.Add(model.GnfdSPIDHeader, syncerInfo.GetStorageProviderId())
 	req.Header.Add(model.GnfdPieceCountHeader, strconv.FormatUint(uint64(syncerInfo.GetPieceCount()), 10))
@@ -98,12 +98,12 @@ func generateSealInfo(resp *http.Response) (*stypes.StorageProviderSealInfo, err
 		log.Error("resp header piece index is empty")
 		return nil, merrors.ErrEmptyRespHeader
 	}
-	idx, err := strconv.ParseUint(pieceIndex, 10, 32)
+	idx, err := util.HeaderToUint32(pieceIndex)
 	if err != nil {
 		log.Errorw("parse piece index failed", "error", err)
 		return nil, merrors.ErrRespHeader
 	}
-	spSealInfo.PieceIdx = uint32(idx)
+	spSealInfo.PieceIdx = idx
 
 	// get piece checksum
 	pieceChecksum := resp.Header.Get(model.GnfdPieceChecksumHeader)
@@ -111,7 +111,7 @@ func generateSealInfo(resp *http.Response) (*stypes.StorageProviderSealInfo, err
 		log.Error("resp header piece checksum is empty")
 		return nil, merrors.ErrEmptyRespHeader
 	}
-	checksum, err := handlePieceChecksumHeader(pieceChecksum)
+	checksum, err := util.DecodePieceHash(pieceChecksum)
 	if err != nil {
 		return nil, err
 	}
@@ -143,20 +143,6 @@ func generateSealInfo(resp *http.Response) (*stypes.StorageProviderSealInfo, err
 	}
 	spSealInfo.Signature = sig
 	return spSealInfo, nil
-}
-
-func handlePieceChecksumHeader(pieceChecksum string) ([][]byte, error) {
-	list := strings.Split(pieceChecksum, ",")
-	checksum := make([][]byte, len(list))
-	for i, val := range list {
-		data, err := hex.DecodeString(val)
-		if err != nil {
-			log.Errorw("decode piece checksum failed", "error", err)
-			return nil, merrors.ErrRespHeader
-		}
-		checksum[i] = data
-	}
-	return checksum, nil
 }
 
 //

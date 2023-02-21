@@ -8,12 +8,11 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -40,16 +39,16 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	reqContext = newRequestContext(r)
+	log.Infow("sync piece handler receive data", "request", reqContext.generateRequestDetail())
 	syncerInfo, err := getReqHeader(r.Header)
 	if err != nil {
 		log.Errorw("get request header failed", "error", err)
 		return
 	}
 	// get trace id
-	traceID := r.Header.Get(model.GnfdTraceIDHeader)
+	traceID := r.Header.Get(model.GnfdRequestIDHeader)
 	if traceID == "" {
-		log.Errorw("traceID header is empty")
-		return
+		traceID = reqContext.requestID
 	}
 	pieceData, err := parseBody(r.Body)
 	if err != nil {
@@ -62,7 +61,7 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription = InternalError
 	}
 	addRespHeader(resp, w)
-	log.Info("sync piece handler reply response to stone node")
+	log.Infow("sync piece handler reply response to stone node", "response header", w.Header())
 }
 
 func parseBody(body io.ReadCloser) ([][]byte, error) {
@@ -88,7 +87,7 @@ func getReqHeader(header http.Header) (*stypes.SyncerInfo, error) {
 		log.Error("req header object id is empty")
 		return nil, merrors.ErrEmptyReqHeader
 	}
-	id, err := strconv.ParseUint(objectID, 10, 64)
+	id, err := util.HeaderToUint64(objectID)
 	if err != nil {
 		log.Errorw("parse object id failed", "error", err)
 		return nil, merrors.ErrReqHeader
@@ -109,12 +108,12 @@ func getReqHeader(header http.Header) (*stypes.SyncerInfo, error) {
 		log.Error("req header piece count is empty")
 		return nil, merrors.ErrEmptyReqHeader
 	}
-	pCount, err := strconv.ParseUint(pieceCount, 10, 32)
+	pCount, err := util.HeaderToUint32(pieceCount)
 	if err != nil {
 		log.Errorw("parse piece count failed", "error", err)
 		return nil, merrors.ErrReqHeader
 	}
-	syncerInfo.PieceCount = uint32(pCount)
+	syncerInfo.PieceCount = pCount
 
 	// get piece index
 	pieceIndex := header.Get(model.GnfdPieceIndexHeader)
@@ -122,12 +121,12 @@ func getReqHeader(header http.Header) (*stypes.SyncerInfo, error) {
 		log.Error("req header piece index is empty")
 		return nil, merrors.ErrEmptyReqHeader
 	}
-	pIdx, err := strconv.ParseUint(pieceIndex, 10, 32)
+	pIdx, err := util.HeaderToUint32(pieceIndex)
 	if err != nil {
 		log.Errorw("parse piece index failed", "error", err)
 		return nil, merrors.ErrReqHeader
 	}
-	syncerInfo.PieceIndex = uint32(pIdx)
+	syncerInfo.PieceIndex = pIdx
 
 	// get redundancy type
 	redundancyType := header.Get(model.GnfdRedundancyTypeHeader)
@@ -135,7 +134,7 @@ func getReqHeader(header http.Header) (*stypes.SyncerInfo, error) {
 		log.Error("req header redundancy type is empty")
 		return nil, merrors.ErrEmptyReqHeader
 	}
-	rType, err := transferRedundancyType(redundancyType)
+	rType, err := util.TransferRedundancyType(redundancyType)
 	if err != nil {
 		log.Errorw("transfer redundancy type failed", "error", err)
 		return nil, err
@@ -145,11 +144,11 @@ func getReqHeader(header http.Header) (*stypes.SyncerInfo, error) {
 }
 
 func addRespHeader(resp *stypes.SyncerServiceSyncPieceResponse, w http.ResponseWriter) {
-	w.Header().Set(model.GnfdTraceIDHeader, resp.GetTraceId())
+	w.Header().Set(model.GnfdRequestIDHeader, resp.GetTraceId())
 	w.Header().Set(model.GnfdSPIDHeader, resp.GetSecondarySpInfo().GetStorageProviderId())
 	w.Header().Set(model.GnfdPieceIndexHeader, strconv.Itoa(int(resp.GetSecondarySpInfo().GetPieceIdx())))
 
-	checksum := handlePieceChecksum(resp.GetSecondarySpInfo().GetPieceChecksum())
+	checksum := util.EncodePieceHash(resp.GetSecondarySpInfo().GetPieceChecksum())
 	w.Header().Set(model.GnfdPieceChecksumHeader, checksum)
 
 	integrityHash := hex.EncodeToString(resp.GetSecondarySpInfo().GetIntegrityHash())
@@ -157,25 +156,4 @@ func addRespHeader(resp *stypes.SyncerServiceSyncPieceResponse, w http.ResponseW
 
 	sig := hex.EncodeToString([]byte("test_signature"))
 	w.Header().Set(model.GnfdSealSignatureHeader, sig)
-}
-
-func handlePieceChecksum(pieceChecksum [][]byte) string {
-	list := make([]string, len(pieceChecksum))
-	for index, val := range pieceChecksum {
-		list[index] = hex.EncodeToString(val)
-	}
-	return strings.Join(list, ",")
-}
-
-func transferRedundancyType(redundancyType string) (ptypes.RedundancyType, error) {
-	switch redundancyType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED.String():
-		return ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED, nil
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE.String():
-		return ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, nil
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE.String():
-		return ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE, nil
-	default:
-		return -1, merrors.ErrRedundancyType
-	}
 }

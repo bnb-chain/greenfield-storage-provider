@@ -81,7 +81,6 @@ const (
 	GnfdPieceHashHeader       = "X-Gnfd-Piece-Hash"
 
 	// StoneNode to gateway request header
-	GnfdTraceIDHeader           = "X-Gnfd-Trace-ID"
 	GnfdSPIDHeader              = "X-Gnfd-SP-ID"
 	GnfdPieceCountHeader        = "X-Gnfd-Piece-Count"
 	GnfdApprovalSignatureHeader = "X-Gnfd-Approval-Signature"

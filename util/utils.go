@@ -156,18 +156,18 @@ func Uint64ToHeader(u uint64) string {
 }
 
 // EncodePieceHash is used to serialize
-func EncodePieceHash(PieceHash [][]byte) string {
-	PieceStringList := make([]string, len(PieceHash))
-	for index, h := range PieceHash {
+func EncodePieceHash(pieceHash [][]byte) string {
+	PieceStringList := make([]string, len(pieceHash))
+	for index, h := range pieceHash {
 		PieceStringList[index] = hex.EncodeToString(h)
 	}
 	return StringSliceToHeader(PieceStringList)
 }
 
 // DecodePieceHash is used to deserialize
-func DecodePieceHash(PieceHash string) ([][]byte, error) {
+func DecodePieceHash(pieceHash string) ([][]byte, error) {
 	var err error
-	pieceStringList := HeaderToStringSlice(PieceHash)
+	pieceStringList := HeaderToStringSlice(pieceHash)
 	hashList := make([][]byte, len(pieceStringList))
 	for idx := range pieceStringList {
 		if hashList[idx], err = hex.DecodeString(pieceStringList[idx]); err != nil {
@@ -175,4 +175,17 @@ func DecodePieceHash(PieceHash string) ([][]byte, error) {
 		}
 	}
 	return hashList, nil
+}
+
+func TransferRedundancyType(redundancyType string) (ptypes.RedundancyType, error) {
+	switch redundancyType {
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED.String():
+		return ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED, nil
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE.String():
+		return ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, nil
+	case ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE.String():
+		return ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE, nil
+	default:
+		return -1, merrors.ErrRedundancyType
+	}
 }
