@@ -2,8 +2,6 @@ Service = [
     "BlockSyncer", "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge",
 ]
 
- #"Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer",
-
 [GatewayCfg]
     StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9033"
