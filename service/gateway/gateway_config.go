@@ -17,7 +17,7 @@ var DefaultGatewayConfig = &GatewayConfig{
 	Domain:                   "gnfd.nodereal.com",
 	UploaderServiceAddress:   "127.0.0.1:9133",
 	DownloaderServiceAddress: "127.0.0.1:9233",
-	ChallengeServiceAddress:  "127.0.0.1:9633",
 	SyncerServiceAddress:     "127.0.0.1:9533",
+	ChallengeServiceAddress:  "127.0.0.1:9633",
 	ChainConfig:              DefaultChainClientConfig,
 }

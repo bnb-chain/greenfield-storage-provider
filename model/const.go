@@ -47,6 +47,8 @@ const (
 	ETagHeader                = "ETag"
 	ContentLengthHeader       = "Content-Length"
 	ContentTypeXMLHeaderValue = "application/xml"
+	RangeHeader               = "Range"
+	ContentRangeHeader        = "Content-Range"
 )
 
 // Gateway

@@ -17,7 +17,6 @@ func setup(t *testing.T) *StoneNodeService {
 		cfg: &StoneNodeConfig{
 			Address:                "test1",
 			StoneHubServiceAddress: "test2",
-			SyncerServiceAddress:   []string{"test3"},
 			StorageProvider:        "test",
 			StoneJobLimit:          0,
 		},

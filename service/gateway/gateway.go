@@ -58,7 +58,7 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		return nil, err
 	}
 	if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {
-		log.Errorw("stone node inits syncer client failed", "error", err)
+		log.Errorw("gateway inits syncer client failed", "error", err)
 		return nil, err
 	}
 	if g.chain, err = newChainClient(g.config.ChainConfig); err != nil {
