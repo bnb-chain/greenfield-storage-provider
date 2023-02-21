@@ -4,23 +4,19 @@ import (
 	"bufio"
 	"os"
 
-<<<<<<< HEAD
-=======
-	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/naoina/toml"
 
->>>>>>> 913b794 (feat: impl psp service)
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/naoina/toml"
 )
 
 type StorageProviderConfig struct {
