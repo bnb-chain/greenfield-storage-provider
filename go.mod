@@ -51,6 +51,7 @@ require (
 	github.com/oleiade/lane v1.0.1
 	github.com/pkg/sftp v1.13.5
 	github.com/prometheus/client_golang v1.12.2
+	github.com/rs/zerolog v1.27.0
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
@@ -172,7 +173,6 @@ require (
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rs/cors v1.8.2 // indirect
-	github.com/rs/zerolog v1.27.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
