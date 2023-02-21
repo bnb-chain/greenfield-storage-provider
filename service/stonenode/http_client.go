@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	storagetypespb "github.com/bnb-chain/greenfield/x/storage/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
@@ -161,6 +159,7 @@ func handlePieceChecksumHeader(pieceChecksum string) ([][]byte, error) {
 	return checksum, nil
 }
 
-func getApprovalSigNature() {
-	storagetypespb.NewMsgCreateObject(nil, "", "", 0, false, nil, "", nil, nil)
-}
+//
+//func getApprovalSigNature() {
+//	storagetypespb.NewMsgCreateObject(nil, "", "", 0, false, nil, "", nil, nil)
+//}
