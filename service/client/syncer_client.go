@@ -32,7 +32,7 @@ func NewSyncerClient(address string) (*SyncerClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize), grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
 	if err != nil {
-		log.Errorw("invoke syncer service grpc.DialContext failed", "error", err)
+		log.Errorw("invoke syncer service failed", "error", err)
 		return nil, err
 	}
 	client := &SyncerClient{
