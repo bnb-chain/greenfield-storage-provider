@@ -49,8 +49,8 @@ func initConfig() {
 	if cfg.SyncerCfg.MetaLevelDBConfig == nil {
 		cfg.SyncerCfg.MetaLevelDBConfig = metalevel.DefaultMetaLevelDBConfig
 	}
-	if cfg.SyncerCfg.PieceConfig == nil {
-		cfg.SyncerCfg.PieceConfig = storage.DefaultPieceStoreConfig
+	if cfg.SyncerCfg.PieceStoreConfig == nil {
+		cfg.SyncerCfg.PieceStoreConfig = storage.DefaultPieceStoreConfig
 	}
 }
 
@@ -134,7 +134,7 @@ func main() {
 		cfg.SyncerCfg.Address = addr
 		cfg.SyncerCfg.StorageProvider = spDir
 		cfg.SyncerCfg.MetaLevelDBConfig.Path = spDir + "/leveldb"
-		cfg.SyncerCfg.PieceConfig.Store.BucketURL = spDir + "/piece_store"
+		cfg.SyncerCfg.PieceStoreConfig.Store.BucketURL = spDir + "/piece_store"
 		if err = util.TomlSettings.NewEncoder(f).Encode(cfg); err != nil {
 			log.Errorw("failed to encode config", "error", err)
 			os.Exit(1)

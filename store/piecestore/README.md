@@ -45,30 +45,25 @@ Amazon S3 can refer this [link](https://docs.aws.amazon.com/IAM/latest/UserGuide
 
 The number of sharding in object storage that supports multi-bucket storage.
 
-### Config example
+## Config Note
 
-- Path-style and AccessKey, SecretKey
+For safety, access key, secret key nad session token should be configured in environment:
 
-```json
-{
-  "EndPoint": "https://s3.us-east-1.amazonaws.com/exmaple_bucket%d",
-  "AccessKey": "AccessKey",
-  "SecretKey": "SecretKey",
-  "Shards": 5
-}
+```shell
+export AWS_ACCESS_KEY="ACCESSKEY"
+export AWS_SECRET_KEY="SECRETKEY"
+export AWS_SESSION_TOKEN="SESSIONTOKEN"
 ```
 
-- Virtual-hosted-style and temporary access credentials
+BucketURL can be configured in either environment or config.toml.
 
-```json
-{
-  "EndPoint": "https://example_bucket.s3.us-east-1.amazonaws.com",
-  "AccessKey": "AccessKey",
-  "SecretKey": "SecretKey",
-  "SessionToken": "SessionToken"
-}
+```shell
+export BUCKET_URL="BUCKETURL"
 ```
 
-If `Shards` is not set in config.json, the shard is 0, PieceStore won't shard.
+If BucketURL is configured in environment, all services will use the same bucket ro write and read data.
+
+If `Shards` is not set in config.toml, the shard is 0, PieceStore won't shard.
 
 > More storage providers will be supported
+

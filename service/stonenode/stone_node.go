@@ -48,7 +48,7 @@ func (node *StoneNodeService) initClient() error {
 	if node.running.Load() {
 		return merrors.ErrStoneNodeStarted
 	}
-	store, err := client.NewStoreClient(node.cfg.PieceConfig)
+	store, err := client.NewStoreClient(node.cfg.PieceStoreConfig)
 	if err != nil {
 		log.Errorw("stone node inits piece store client failed", "error", err)
 		return err

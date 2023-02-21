@@ -14,7 +14,7 @@ type SyncerConfig struct {
 	MetaDBType        string
 	MetaLevelDBConfig *config.LevelDBConfig
 	MetaSqlDBConfig   *config.SqlDBConfig
-	PieceConfig       *storage.PieceStoreConfig
+	PieceStoreConfig  *storage.PieceStoreConfig
 }
 
 var DefaultSyncerConfig = &SyncerConfig{
@@ -23,5 +23,5 @@ var DefaultSyncerConfig = &SyncerConfig{
 	MetaDBType:        model.LevelDB,
 	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,
 	MetaSqlDBConfig:   metasql.DefaultMetaSqlDBConfig,
-	PieceConfig:       storage.DefaultPieceStoreConfig,
+	PieceStoreConfig:  storage.DefaultPieceStoreConfig,
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metalevel"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
 	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // NewMetaDB return a meta-db instance
@@ -23,8 +24,11 @@ func NewMetaDB(dbType string, levelDBConfig *config.LevelDBConfig, sqlDBConfig *
 	switch dbType {
 	case model.MySqlDB:
 		// load meta db config from env vars
-		sqlDBConfig.User = os.Getenv(model.MetaDBUser)
-		sqlDBConfig.Passwd = os.Getenv(model.MetaDBPassword)
+		sqlDBConfig.User, sqlDBConfig.Passwd, err = getDBConfigFromEnv(model.MetaDBUser, model.MetaDBPassword)
+		if err != nil {
+			log.Error("load meta db config from env failed")
+			return nil, err
+		}
 		metaDB, err = metasql.NewMetaDB(sqlDBConfig)
 	case model.LevelDB:
 		metaDB, err = metalevel.NewMetaDB(levelDBConfig)
@@ -44,8 +48,11 @@ func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (spdb.JobDB, error
 	switch dbType {
 	case model.MySqlDB:
 		// load job db config from env vars
-		sqlDBConfig.User = os.Getenv(model.JobDBUser)
-		sqlDBConfig.Passwd = os.Getenv(model.JobDBPassword)
+		sqlDBConfig.User, sqlDBConfig.Passwd, err = getDBConfigFromEnv(model.JobDBUser, model.JobDBPassword)
+		if err != nil {
+			log.Error("load job db config from env failed")
+			return nil, err
+		}
 		jobDB, err = jobsql.NewJobMetaImpl(sqlDBConfig)
 	case model.MemoryDB:
 		jobDB = jobmemory.NewMemJobDB()
@@ -53,4 +60,16 @@ func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (spdb.JobDB, error
 		err = fmt.Errorf("job db not support %s type", dbType)
 	}
 	return jobDB, err
+}
+
+func getDBConfigFromEnv(user, passwd string) (string, string, error) {
+	userVal, ok := os.LookupEnv(user)
+	if !ok {
+		return "", "", fmt.Errorf("db %s config is not set in environment", user)
+	}
+	passwdVal, ok := os.LookupEnv(passwd)
+	if !ok {
+		return "", "", fmt.Errorf("db %s config is not set in environment", passwd)
+	}
+	return userVal, passwdVal, nil
 }
