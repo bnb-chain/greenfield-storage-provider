@@ -8,6 +8,7 @@ type GatewayConfig struct {
 	Domain                   string
 	UploaderServiceAddress   string
 	DownloaderServiceAddress string
+	SignerServiceAddress     string
 	ChallengeServiceAddress  string
 	SyncerServiceAddress     string
 	ChainConfig              *gnfd.GreenfieldChainConfig
@@ -19,7 +20,7 @@ var DefaultGatewayConfig = &GatewayConfig{
 	Domain:                   "gnfd.nodereal.com",
 	UploaderServiceAddress:   "127.0.0.1:9133",
 	DownloaderServiceAddress: "127.0.0.1:9233",
-	SyncerServiceAddress:     "127.0.0.1:9533",
-	ChallengeServiceAddress:  "127.0.0.1:9633",
+	SignerServiceAddress:     "127.0.0.1:9633",
+	ChallengeServiceAddress:  "127.0.0.1:9733",
 	ChainConfig:              gnfd.DefaultGreenfieldChainConfig,
 }

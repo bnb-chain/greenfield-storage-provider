@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/hex"
 	"net/http"
-	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	btypes "github.com/bnb-chain/greenfield/x/bridge/types"
+	types "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -41,18 +42,6 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	requestContext = newRequestContext(r)
-	requestContext.actionName = requestContext.vars["action"]
-	requestContext.bucketName = r.Header.Get(model.GnfdResourceHeader)
-	fields := strings.Split(requestContext.bucketName, "/")
-	if len(fields) >= 2 {
-		requestContext.bucketName = fields[0]
-		requestContext.objectName = strings.Join(fields[1:], "/")
-	}
-	if requestContext.bucketName == "" {
-		errorDescription = InvalidBucketName
-		return
-	}
-
 	if _, err = requestContext.verifySignature(); err != nil {
 		log.Infow("failed to verify signature", "error", err)
 		errorDescription = SignatureDoesNotMatch
@@ -64,23 +53,42 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req := &stypes.UploaderServiceGetApprovalRequest{
-		TraceId: requestContext.requestID,
-		Bucket:  requestContext.bucketName,
-		Object:  requestContext.objectName,
-		Action:  requestContext.actionName,
-	}
+	actionName := requestContext.vars["action"]
+	// TODO: deserialize it
+	_ = r.Header.Get(model.GnfdApprovalMsgHeader)
 
-	ctx := log.Context(context.Background(), req)
-	resp, err := g.uploader.GetApproval(ctx, req)
-	if err != nil {
-		log.Warnf("failed to get approval", "error", err)
-		errorDescription = InternalError
+	switch actionName {
+	case createBucketApprovalAction:
+		var approvalSignature []byte
+		msg := &types.MsgCreateBucket{}
+		ctx := log.Context(context.Background(), msg)
+		approvalSignature, err = g.signer.SignBucketApproval(ctx, msg)
+		if err != nil {
+			log.Warnw("failed to sign approval", "error", err)
+			errorDescription = InternalError
+			return
+		}
+		msg.PrimarySpApprovalSignature = approvalSignature
+		bz := btypes.ModuleCdc.MustMarshalJSON(msg)
+		w.Header().Set(model.GnfdApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
+	case createObjectApprovalAction:
+		var approvalSignature []byte
+		msg := &types.MsgCreateObject{}
+		ctx := log.Context(context.Background(), msg)
+		approvalSignature, err = g.signer.SignObjectApproval(ctx, msg)
+		if err != nil {
+			log.Warnw("failed to sign approval", "error", err)
+			errorDescription = InternalError
+			return
+		}
+		msg.PrimarySpApprovalSignature = approvalSignature
+		bz := btypes.ModuleCdc.MustMarshalJSON(msg)
+		w.Header().Set(model.GnfdApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
+	default:
+		log.Warnw("not implement approval", "action", actionName)
+		errorDescription = NotImplementedError
 		return
 	}
-	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
-	w.Header().Set(model.GnfdPreSignatureHeader, hex.EncodeToString(resp.PreSignature))
-
 }
 
 // challengeHandler handle challenge request

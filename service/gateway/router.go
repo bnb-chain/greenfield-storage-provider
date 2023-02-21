@@ -17,6 +17,11 @@ const (
 	challengeRouterName = "Challenge"
 )
 
+const (
+	createBucketApprovalAction = "CreateBucket"
+	createObjectApprovalAction = "CreateObject"
+)
+
 // notFoundHandler log not found request info.
 func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	s, _ := io.ReadAll(r.Body)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	dclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
+	sclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	uclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
 
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
@@ -31,6 +32,7 @@ type Gateway struct {
 
 	syncer client.SyncerAPI
 	chain  *gnfd.Greenfield
+	signer *sclient.SignerClient
 }
 
 // NewGatewayService return the gateway instance
@@ -62,6 +64,10 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 	}
 	if g.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Warnw("failed to create chain client", "err", err)
+		return nil, err
+	}
+	if g.signer, err = sclient.NewSignerClient(cfg.SignerServiceAddress); err != nil {
+		log.Warnw("failed to signer client", "err", err)
 		return nil, err
 	}
 	log.Debugw("gateway succeed to init")

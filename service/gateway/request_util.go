@@ -28,10 +28,7 @@ type requestContext struct {
 	objectName string
 	request    *http.Request
 	startTime  time.Time
-
-	// vars is mux vars
 	vars       map[string]string
-	actionName string
 }
 
 // newRequestContext return a request context.

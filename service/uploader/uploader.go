@@ -8,14 +8,12 @@ import (
 	"sync/atomic"
 
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
-	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -28,7 +26,6 @@ type Uploader struct {
 	grpcServer *grpc.Server
 	stoneHub   *client.StoneHubClient
 	store      *client.StoreClient
-	metaDB     spdb.MetaDB
 	chain      *gnfd.Greenfield
 }
 
@@ -49,10 +46,6 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 	}
 	if u.store, err = client.NewStoreClient(cfg.PieceStoreConfig); err != nil {
 		log.Warnw("failed to piece store client", "err", err)
-		return nil, err
-	}
-	if u.metaDB, err = store.NewMetaDB(cfg.MetaDBType, cfg.MetaLevelDBConfig, cfg.MetaSqlDBConfig); err != nil {
-		log.Errorw("failed to init metaDB", "err", err)
 		return nil, err
 	}
 	if u.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {

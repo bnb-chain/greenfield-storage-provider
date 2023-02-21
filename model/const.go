@@ -81,6 +81,7 @@ const (
 	GnfdRedundancyIndexHeader = "X-Gnfd-Redundancy-Index"
 	GnfdIntegrityHashHeader   = "X-Gnfd-Integrity-Hash"
 	GnfdPieceHashHeader       = "X-Gnfd-Piece-Hash"
+	GnfdApprovalMsgHeader     = "X-Gnfd-Approval-Msg"
 
 	// StoneNode to gateway request header
 	GnfdSPIDHeader              = "X-Gnfd-SP-ID"

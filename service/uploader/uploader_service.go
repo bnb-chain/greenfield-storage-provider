@@ -4,14 +4,12 @@ import (
 	"context"
 	"errors"
 	"sync"
-	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
@@ -53,36 +51,6 @@ func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, up
 		return err
 	}
 	return nil
-}
-
-// TODO: will be deleted
-// GetApproval get auth info, currently PreSignature is mocked.
-func (uploader *Uploader) GetApproval(ctx context.Context, req *stypes.UploaderServiceGetApprovalRequest) (
-	resp *stypes.UploaderServiceGetApprovalResponse, err error) {
-	ctx = log.Context(ctx, req)
-	defer func() {
-		if err != nil {
-			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
-			log.CtxErrorw(ctx, "failed to get approval", "err", err)
-		} else {
-			log.CtxInfow(ctx, "succeed to get approval")
-		}
-	}()
-
-	resp = &stypes.UploaderServiceGetApprovalResponse{TraceId: req.TraceId}
-	meta := &spdb.UploadPayloadAskingMeta{
-		BucketName: req.Bucket,
-		ObjectName: req.Object,
-		Timeout:    time.Now().Add(1 * time.Hour).Unix(),
-	}
-	if err = uploader.metaDB.SetUploadPayloadAskingMeta(meta); err != nil {
-		log.Errorw("failed to insert metaDB")
-		return
-	}
-	log.CtxInfow(ctx, "insert approval info to metadb", "bucket", req.Bucket, "object", req.Object)
-	// mock
-	resp.PreSignature = hash.GenerateChecksum([]byte(time.Now().String()))
-	return resp, nil
 }
 
 // UploadPayload merge CreateObject, SetObjectCreateInfo and BeginUploadPayload, special for heavy client use.
@@ -167,7 +135,7 @@ func (uploader *Uploader) UploadPayload(stream stypes.UploaderService_UploadPayl
 	}
 }
 
-// checkAndPrepareMeta check auth by metaDB, and then get meta from stoneHub.
+// checkAndPrepareMeta get meta from chain and stone hub.
 func (uploader *Uploader) checkAndPrepareMeta(sr *streamReader, txHash []byte) (*JobMeta, error) {
 	objectInfo := &ptypes.ObjectInfo{
 		BucketName:     sr.bucket,
@@ -184,17 +152,6 @@ func (uploader *Uploader) checkAndPrepareMeta(sr *streamReader, txHash []byte) (
 	}
 	objectInfo.ObjectId = chainObjectInfo.Id.Uint64()
 
-	// TODO: can be optimized by new approval
-	meta, err := uploader.metaDB.GetUploadPayloadAskingMeta(objectInfo.BucketName, objectInfo.ObjectName)
-	if err != nil {
-		log.Errorw("failed to query metaDB", "bucketName", objectInfo.BucketName,
-			"objectName", objectInfo.ObjectName, "error", err)
-		return nil, err
-	}
-	if time.Now().Unix() > meta.Timeout {
-		err = errors.New("approval info has timeout")
-		return nil, err
-	}
 	resp, err := uploader.stoneHub.BeginUploadPayloadV2(context.Background(), &stypes.StoneHubServiceBeginUploadPayloadV2Request{
 		TraceId:    sr.traceID,
 		ObjectInfo: objectInfo,
