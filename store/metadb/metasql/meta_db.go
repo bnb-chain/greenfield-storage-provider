@@ -71,6 +71,7 @@ func (mdb *MetaDB) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 		RedundancyType: uint32(meta.RedundancyType),
 		IntegrityHash:  hex.EncodeToString(meta.IntegrityHash),
 		PieceHash:      util.EncodePieceHash(meta.PieceHash),
+		Signature:      hex.EncodeToString(meta.Signature),
 	}
 	result = mdb.db.Create(insertIntegrityMetaRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -95,6 +96,10 @@ func (mdb *MetaDB) GetIntegrityMeta(objectID uint64) (*spdb.IntegrityMeta, error
 	if err != nil {
 		return nil, err
 	}
+	signature, err := hex.DecodeString(queryReturn.Signature)
+	if err != nil {
+		return nil, err
+	}
 
 	meta := &spdb.IntegrityMeta{
 		ObjectID:       queryReturn.ObjectID,
@@ -103,6 +108,7 @@ func (mdb *MetaDB) GetIntegrityMeta(objectID uint64) (*spdb.IntegrityMeta, error
 		IsPrimary:      queryReturn.IsPrimary,
 		RedundancyType: ptypes.RedundancyType(queryReturn.RedundancyType),
 		IntegrityHash:  integrityHash,
+		Signature:      signature,
 	}
 	meta.PieceHash, err = util.DecodePieceHash(queryReturn.PieceHash)
 	if err != nil {

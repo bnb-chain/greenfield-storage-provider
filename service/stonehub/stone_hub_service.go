@@ -112,7 +112,7 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *stypes.Stone
 		return
 	}
 	if uploadStone, err = stone.NewUploadPayloadStone(ctx, jobCtx, req.GetObjectInfo(),
-		hub.jobDB, hub.metaDB, hub.jobCh, hub.gcCh); err != nil {
+		hub.jobDB, hub.metaDB, hub.signer, hub.jobCh, hub.gcCh); err != nil {
 		return
 	}
 	if uploadStone.PrimarySPJobDone() {

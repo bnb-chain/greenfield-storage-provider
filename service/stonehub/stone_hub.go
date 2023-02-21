@@ -10,6 +10,7 @@ import (
 	"time"
 
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	sclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"github.com/oleiade/lane"
 	"google.golang.org/grpc"
@@ -59,24 +60,28 @@ type StoneHub struct {
 	running   atomic.Bool
 	gcRunning atomic.Bool
 
-	chain *gnfd.Greenfield
+	chain  *gnfd.Greenfield
+	signer *sclient.SignerClient
 }
 
 // NewStoneHubService return the StoneHub instance
-func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
+func NewStoneHubService(cfg *StoneHubConfig) (*StoneHub, error) {
+	var err error
 	hub := &StoneHub{
-		config:   hubCfg,
+		config:   cfg,
 		jobQueue: lane.NewQueue(),
 		jobCh:    make(chan stone.StoneJob, JobChannelSize),
 		gcCh:     make(chan uint64, GcChannelSize),
 		stopCh:   make(chan struct{}),
 	}
-	chain, err := gnfd.NewGreenfield(hubCfg.ChainConfig)
-	if err != nil {
+	if hub.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
+		log.Warnw("failed to create chain client", "err", err)
 		return nil, err
 	}
-	hub.chain = chain
-	// init job and meta db
+	if hub.signer, err = sclient.NewSignerClient(cfg.SignerServiceAddress); err != nil {
+		log.Warnw("failed to signer client", "err", err)
+		return nil, err
+	}
 	if err = hub.initDB(); err != nil {
 		return nil, err
 	}
@@ -182,9 +187,13 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 			log.Warnw("stone typecast to UploadPayloadStone error", "object_id", objectID)
 			break
 		}
-		object := st.(*stone.UploadPayloadStone).GetObjectInfo()
 
-		// TODO:: send request to signer
+		object := st.(*stone.UploadPayloadStone).GetObjectInfo()
+		if _, err := hub.signer.SealObjectOnChain(context.Background(), object); err != nil {
+			log.Warnw("failed to send seal object", "object_id", objectID, "error", err)
+			break
+		}
+
 		go func(stoneJob *stone.UploadPayloadStone) {
 			ctx := log.Context(context.Background(), object)
 			defer hub.DeleteStone(stoneJob.StoneKey())
@@ -285,7 +294,7 @@ func (hub *StoneHub) loadStone() error {
 			continue
 		}
 		st, stErr := stone.NewUploadPayloadStone(context.Background(), job, object,
-			hub.jobDB, hub.metaDB, hub.jobCh, hub.gcCh)
+			hub.jobDB, hub.metaDB, hub.signer, hub.jobCh, hub.gcCh)
 		if stErr != nil {
 			log.Errorw("load stone err", "job_id", job.GetJobId(),
 				"object_id", object.GetObjectId(), "error", stErr)

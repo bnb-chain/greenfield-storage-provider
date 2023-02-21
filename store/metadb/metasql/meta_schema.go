@@ -9,7 +9,8 @@ type DBIntegrityMeta struct {
 
 	PieceCount    uint32
 	IntegrityHash string // hex encode string
-	PieceHash     string // string(json encode)
+	PieceHash     string
+	Signature     string // hex encode string
 }
 
 // TableName is used to set Job Schema's table name in database

@@ -141,19 +141,29 @@ func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 	}()
 	primarySealInfos, err = stone.job.PrimarySPSealInfo()
 	if err != nil {
+		log.Warnw("failed to get primary seal info", "error", err)
 		return
 	}
 	// TODO:: signer primary integrity hash
+	primarySealInfo := primarySealInfos[0]
+	if stone.signer != nil {
+		primarySealInfo.IntegrityHash, primarySealInfo.Signature, err = stone.signer.SignIntegrityHash(
+			context.Background(), primarySealInfos[0].PieceChecksum)
+		if err != nil {
+			log.Warnw("failed to sign integrity hash", "error", err)
+			return
+		}
+	}
 
 	// write integrity meta to db
 	objectInfo := stone.GetObjectInfo()
-	primarySealInfo := primarySealInfos[0]
 	integrityInfo := &spdb.IntegrityMeta{
 		ObjectID:       objectInfo.GetObjectId(),
 		IsPrimary:      true,
 		RedundancyType: objectInfo.GetRedundancyType(),
-		IntegrityHash:  primarySealInfo.GetIntegrityHash(),
+		IntegrityHash:  primarySealInfo.IntegrityHash,
 		PieceHash:      primarySealInfo.GetPieceChecksum(),
+		Signature:      primarySealInfo.Signature,
 	}
 	integrityInfo.PieceCount = uint32(len(integrityInfo.PieceHash))
 	if err = stone.metaDB.SetIntegrityMeta(integrityInfo); err != nil {

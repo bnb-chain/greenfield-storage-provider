@@ -15,6 +15,7 @@ type IntegrityMeta struct {
 	PieceCount    uint32   `json:"PieceCount"`
 	IntegrityHash []byte   `json:"IntegrityHash"`
 	PieceHash     [][]byte `json:"PieceHash"`
+	Signature     []byte   `json:"Signature"`
 }
 
 // UploadPayloadAskingMeta defines the payload asking info

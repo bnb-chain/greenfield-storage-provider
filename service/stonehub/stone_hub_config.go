@@ -13,14 +13,15 @@ import (
 )
 
 type StoneHubConfig struct {
-	StorageProvider   string
-	Address           string
-	ChainConfig       *gnfd.GreenfieldChainConfig
-	JobDBType         string
-	JobSqlDBConfig    *config.SqlDBConfig
-	MetaDBType        string
-	MetaLevelDBConfig *config.LevelDBConfig
-	MetaSqlDBConfig   *config.SqlDBConfig
+	StorageProvider      string
+	Address              string
+	SignerServiceAddress string
+	ChainConfig          *gnfd.GreenfieldChainConfig
+	JobDBType            string
+	JobSqlDBConfig       *config.SqlDBConfig
+	MetaDBType           string
+	MetaLevelDBConfig    *config.LevelDBConfig
+	MetaSqlDBConfig      *config.SqlDBConfig
 }
 
 var DefaultStorageProvider = "bnb-sp"
@@ -32,12 +33,13 @@ func DefaultStorageProviderID() string {
 }
 
 var DefaultStoneHubConfig = &StoneHubConfig{
-	StorageProvider:   DefaultStorageProviderID(),
-	Address:           "127.0.0.1:9333",
-	ChainConfig:       gnfd.DefaultGreenfieldChainConfig,
-	JobDBType:         model.MemoryDB,
-	JobSqlDBConfig:    jobsql.DefaultJobSqlDBConfig,
-	MetaDBType:        model.LevelDB,
-	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,
-	MetaSqlDBConfig:   metasql.DefaultMetaSqlDBConfig,
+	StorageProvider:      DefaultStorageProviderID(),
+	Address:              "127.0.0.1:9333",
+	SignerServiceAddress: "127.0.0.1:9633",
+	ChainConfig:          gnfd.DefaultGreenfieldChainConfig,
+	JobDBType:            model.MemoryDB,
+	JobSqlDBConfig:       jobsql.DefaultJobSqlDBConfig,
+	MetaDBType:           model.LevelDB,
+	MetaLevelDBConfig:    metalevel.DefaultMetaLevelDBConfig,
+	MetaSqlDBConfig:      metasql.DefaultMetaSqlDBConfig,
 }
