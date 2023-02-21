@@ -17,24 +17,21 @@ import (
 
 // NewPieceStore returns an instance of PieceStore
 func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
-	if err := overrideConfigFromEnv(pieceConfig); err != nil {
-		log.Errorw("load piece store from env failed")
-		return nil, err
-	}
-	cfg := checkConfig(pieceConfig)
-	blob, err := createStorage(cfg)
+	checkConfig(pieceConfig)
+	blob, err := createStorage(pieceConfig)
 	if err != nil {
 		log.Errorw("create storage error", "error", err)
 		return nil, err
 	}
-	log.Debugf("pieceStore is running", "Storage", cfg.Store.Storage, "BucketURL",
-		cfg.Store.BucketURL)
+	log.Debugf("pieceStore is running", "Storage", pieceConfig.Store.Storage,
+		"shards", pieceConfig.Shards)
 
 	return &PieceStore{blob}, nil
 }
 
 // checkConfig checks config if right
-func checkConfig(cfg *storage.PieceStoreConfig) *storage.PieceStoreConfig {
+func checkConfig(cfg *storage.PieceStoreConfig) {
+	overrideConfigFromEnv(cfg)
 	if cfg.Shards > 256 {
 		log.Panicf("too many shards: %d", cfg.Shards)
 	}
@@ -55,16 +52,12 @@ func checkConfig(cfg *storage.PieceStoreConfig) *storage.PieceStoreConfig {
 		cfg.Store.BucketURL = p
 		cfg.Store.BucketURL += "/"
 	}
-	return cfg
 }
 
-func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) error {
+func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) {
 	if val, ok := os.LookupEnv(model.BucketURL); ok {
 		cfg.Store.BucketURL = val
-	} else {
-		return fmt.Errorf("piece store config %s is not setted in environment", model.BucketURL)
 	}
-	return nil
 }
 
 func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error) {
