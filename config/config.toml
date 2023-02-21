@@ -61,9 +61,9 @@ Service = [
     GatewayAddress = ["127.0.0.1:9034", "127.0.0.1:9035", "127.0.0.1:9036", "127.0.0.1:9037", "127.0.0.1:9038", "127.0.0.1:9039"]
     StoneHubServiceAddress = "127.0.0.1:9333"
     StoneJobLimit = 64
-    [StoneNodeCfg.PieceConfig]
+    [StoneNodeCfg.PieceStoreConfig]
         Shards = 0
-        [StoneNodeCfg.PieceConfig.Store]
+        [StoneNodeCfg.PieceStoreConfig.Store]
             Storage = "file"
             BucketURL = "./data/primary_payload_data"
             NoSignRequest = false
@@ -74,7 +74,7 @@ Service = [
     StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9533"
     MetaDBType = "leveldb"
-    [SyncerCfg.PieceConfig.Store]
+    [SyncerCfg.PieceStoreConfig.Store]
         Storage = "file"
         BucketURL = "./data/secondary_payload_data"
         NoSignRequest = false
@@ -102,7 +102,7 @@ Service = [
 
 [ChallengeCfg]
     StorageProvider = "gnfd-test-sp"
-    Address = "127.0.0.1:9633"
+    Address = "127.0.0.1:9733"
     MetaDBType = "leveldb"
     [ChallengeCfg.PieceStoreConfig]
         Shards = 0

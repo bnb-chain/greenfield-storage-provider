@@ -49,8 +49,8 @@ func initConfig() {
 	if cfg.SyncerCfg.MetaLevelDBConfig == nil {
 		cfg.SyncerCfg.MetaLevelDBConfig = metalevel.DefaultMetaLevelDBConfig
 	}
-	if cfg.SyncerCfg.PieceConfig == nil {
-		cfg.SyncerCfg.PieceConfig = storage.DefaultPieceStoreConfig
+	if cfg.SyncerCfg.PieceStoreConfig == nil {
+		cfg.SyncerCfg.PieceStoreConfig = storage.DefaultPieceStoreConfig
 	}
 	if cfg.GatewayCfg.ChainConfig == nil {
 		cfg.GatewayCfg.ChainConfig = gateway.DefaultChainClientConfig
@@ -147,7 +147,7 @@ func multiSPService(syncerAddrList, gatewayAddrList []string) {
 		cfg.SyncerCfg.Address = addr
 		cfg.SyncerCfg.StorageProvider = spDir
 		cfg.SyncerCfg.MetaLevelDBConfig.Path = spDir + "/leveldb"
-		cfg.SyncerCfg.PieceConfig.Store.BucketURL = spDir + "/piece_store"
+		cfg.SyncerCfg.PieceStoreConfig.Store.BucketURL = spDir + "/piece_store"
 		cfg.GatewayCfg.Address = gatewayAddrList[index]
 		cfg.GatewayCfg.SyncerServiceAddress = addr
 		cfg.GatewayCfg.UploaderServiceAddress = "1"
