@@ -62,6 +62,7 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription = InternalError
 	}
 	addRespHeader(resp, w)
+	log.Info("sync piece handler reply response to stone node")
 }
 
 func parseBody(body io.ReadCloser) ([][]byte, error) {
