@@ -2,6 +2,7 @@ package uploader
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metalevel"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
@@ -16,6 +17,7 @@ type UploaderConfig struct {
 	MetaDBType             string
 	MetaLevelDBConfig      *config.LevelDBConfig
 	MetaSqlDBConfig        *config.SqlDBConfig
+	ChainConfig            *gnfd.GreenfieldChainConfig
 }
 
 var DefaultUploaderConfig = &UploaderConfig{
@@ -26,4 +28,5 @@ var DefaultUploaderConfig = &UploaderConfig{
 	MetaDBType:             model.LevelDB,
 	MetaLevelDBConfig:      metalevel.DefaultMetaLevelDBConfig,
 	MetaSqlDBConfig:        metasql.DefaultMetaSqlDBConfig,
+	ChainConfig:            gnfd.DefaultGreenfieldChainConfig,
 }

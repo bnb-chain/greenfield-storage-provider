@@ -101,7 +101,7 @@ func (greenfield *Greenfield) updateClient() {
 		case <-ticker.C:
 			var (
 				maxHeight       int64
-				maxHeightCLient = greenfield.getCurrentClient()
+				maxHeightClient = greenfield.getCurrentClient()
 			)
 			for _, client := range greenfield.backUpClients {
 				chainInfo, err := client.tendermintClient.TmClient.Status(context.Background())
@@ -116,14 +116,14 @@ func (greenfield *Greenfield) updateClient() {
 				currentHeight := chainInfo.SyncInfo.LatestBlockHeight
 				if currentHeight > maxHeight {
 					maxHeight = currentHeight
-					maxHeightCLient = client
+					maxHeightClient = client
 				}
 				client.currentHeight = currentHeight
 				client.updatedAt = time.Now()
 				log.Debugw("chain info", "node_addr", client.Provider, "current_height", currentHeight)
 			}
-			if maxHeightCLient != greenfield.getCurrentClient() {
-				greenfield.setCurrentClient(maxHeightCLient)
+			if maxHeightClient != greenfield.getCurrentClient() {
+				greenfield.setCurrentClient(maxHeightClient)
 			}
 		case <-greenfield.stopCh:
 			return

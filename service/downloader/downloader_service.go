@@ -25,9 +25,9 @@ func (downloader *Downloader) DownloaderSegment(ctx context.Context, req *stypes
 		if err != nil {
 			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 			resp.ErrMessage.ErrMsg = err.Error()
-			log.CtxErrorw(ctx, "download segment failed", "error", err, "object", req.ObjectId, "segment idx", req.SegmentIdx)
+			log.CtxErrorw(ctx, "failed to download segment", "error", err, "object", req.ObjectId, "segment idx", req.SegmentIdx)
 		}
-		log.CtxInfow(ctx, "download segment success", "object", req.ObjectId, "segment idx", req.SegmentIdx)
+		log.CtxInfow(ctx, "succeed to download segment", "object", req.ObjectId, "segment idx", req.SegmentIdx)
 	}()
 	if req.GetObjectId() == 0 {
 		err = merrors.ErrObjectIdZero
@@ -61,10 +61,14 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 		log.CtxInfow(ctx, "download object completed", "error", err, "sendSize", size)
 	}()
 
-	objectInfo, err = downloader.mockChain.QueryObjectByName(req.BucketName + "/" + req.ObjectName)
+	chainObjectInfo, err := downloader.chain.QueryObjectInfo(ctx, req.BucketName, req.ObjectName)
 	if err != nil {
+		log.Warnf("failed to query chain", "err", err)
 		return
 	}
+	objectInfo.ObjectId = chainObjectInfo.Id.Uint64()
+	objectInfo.Size = chainObjectInfo.PayloadSize
+
 	// TODO: It will be optimized here after connecting with the chain
 	// if length == 0, download all object data
 	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.Size) && req.RangeEnd >= 0 && req.RangeEnd < int64(objectInfo.Size) {

@@ -18,10 +18,6 @@ import (
 
 type contextKey string
 
-var (
-	CreateObjectTimeout = time.Second * 5
-)
-
 // JobMeta is Job Context, got from stone hub.
 type JobMeta struct {
 	objectID      uint64
@@ -59,6 +55,7 @@ func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, up
 	return nil
 }
 
+// TODO: will be deleted
 // GetApproval get auth info, currently PreSignature is mocked.
 func (uploader *Uploader) GetApproval(ctx context.Context, req *stypes.UploaderServiceGetApprovalRequest) (
 	resp *stypes.UploaderServiceGetApprovalResponse, err error) {
@@ -101,10 +98,11 @@ func (uploader *Uploader) UploadPayload(stream stypes.UploaderService_UploadPayl
 		sr        *streamReader
 		jm        *JobMeta
 	)
+
 	defer func(resp *stypes.UploaderServiceUploadPayloadResponse, err error) {
 		if err != nil {
 			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
-			log.CtxErrorw(ctx, "failed to get upload", "err", err)
+			log.CtxErrorw(ctx, "failed to upload payload", "err", err)
 		}
 		if jm != nil {
 			resp.ObjectId = jm.objectID
@@ -178,8 +176,15 @@ func (uploader *Uploader) checkAndPrepareMeta(sr *streamReader, txHash []byte) (
 		PrimarySp:      &ptypes.StorageProviderInfo{SpId: uploader.config.StorageProvider},
 		RedundancyType: sr.redundancyType,
 	}
-	uploader.eventWaiter.CreateObjectByName(txHash, objectInfo)
+	chainObjectInfo, err := uploader.chain.QueryObjectInfo(context.Background(), objectInfo.BucketName, objectInfo.ObjectName)
+	if err != nil {
+		log.Errorw("failed to query chain",
+			"bucketName", objectInfo.BucketName, "objectName", objectInfo.ObjectName, "error", err)
+		return nil, err
+	}
+	objectInfo.ObjectId = chainObjectInfo.Id.Uint64()
 
+	// TODO: can be optimized by new approval
 	meta, err := uploader.metaDB.GetUploadPayloadAskingMeta(objectInfo.BucketName, objectInfo.ObjectName)
 	if err != nil {
 		log.Errorw("failed to query metaDB", "bucketName", objectInfo.BucketName,

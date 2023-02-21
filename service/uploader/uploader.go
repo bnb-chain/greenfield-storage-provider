@@ -7,11 +7,11 @@ import (
 	"net"
 	"sync/atomic"
 
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
@@ -19,18 +19,17 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-// Uploader respond to putObjectTx/putObject impl.
+// Uploader respond to putObject impl
 type Uploader struct {
 	config  *UploaderConfig
 	name    string
 	running atomic.Bool
 
-	grpcServer  *grpc.Server
-	stoneHub    *client.StoneHubClient
-	signer      *mock.SignerServerMock
-	eventWaiter *mock.InscriptionChainMock
-	store       *client.StoreClient
-	metaDB      spdb.MetaDB // store auth info
+	grpcServer *grpc.Server
+	stoneHub   *client.StoneHubClient
+	store      *client.StoreClient
+	metaDB     spdb.MetaDB
+	chain      *gnfd.Greenfield
 }
 
 // NewUploaderService return the uploader instance
@@ -39,44 +38,28 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 		err error
 		u   *Uploader
 	)
+
 	u = &Uploader{
 		config: cfg,
 		name:   model.UploaderService,
 	}
-	stoneHub, err := client.NewStoneHubClient(cfg.StoneHubServiceAddress)
-	if err != nil {
+	if u.stoneHub, err = client.NewStoneHubClient(cfg.StoneHubServiceAddress); err != nil {
+		log.Warnw("failed to stone hub client", "err", err)
 		return nil, err
 	}
-	store, err := client.NewStoreClient(cfg.PieceStoreConfig)
-	if err != nil {
+	if u.store, err = client.NewStoreClient(cfg.PieceStoreConfig); err != nil {
+		log.Warnw("failed to piece store client", "err", err)
 		return nil, err
 	}
-	u.stoneHub = stoneHub
-	u.store = store
-	u.eventWaiter = mock.GetInscriptionChainMockSingleton()
-	u.signer = mock.NewSignerServerMock(u.eventWaiter)
-	u.eventWaiter.Start()
-	if err := u.initDB(); err != nil {
+	if u.metaDB, err = store.NewMetaDB(cfg.MetaDBType, cfg.MetaLevelDBConfig, cfg.MetaSqlDBConfig); err != nil {
+		log.Errorw("failed to init metaDB", "err", err)
+		return nil, err
+	}
+	if u.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
+		log.Warnw("failed to create chain client", "err", err)
 		return nil, err
 	}
 	return u, err
-}
-
-// initDB init a meta-db instance
-func (uploader *Uploader) initDB() error {
-	var (
-		metaDB spdb.MetaDB
-		err    error
-	)
-
-	metaDB, err = store.NewMetaDB(uploader.config.MetaDBType,
-		uploader.config.MetaLevelDBConfig, uploader.config.MetaSqlDBConfig)
-	if err != nil {
-		log.Errorw("failed to init metaDB", "err", err)
-		return err
-	}
-	uploader.metaDB = metaDB
-	return nil
 }
 
 // Name implement the lifecycle interface
@@ -90,7 +73,6 @@ func (uploader *Uploader) Start(ctx context.Context) error {
 		return errors.New("uploader has started")
 	}
 	errCh := make(chan error)
-	uploader.eventWaiter.Start()
 	go uploader.serve(errCh)
 	err := <-errCh
 	return err
@@ -121,7 +103,6 @@ func (uploader *Uploader) Stop(ctx context.Context) error {
 		return errors.New("uploader has stopped")
 	}
 	uploader.grpcServer.GracefulStop()
-	uploader.eventWaiter.Stop()
 	var errs []error
 	if err := uploader.stoneHub.Close(); err != nil {
 		errs = append(errs, err)
