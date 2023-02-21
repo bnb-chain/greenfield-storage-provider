@@ -4,9 +4,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"os"
 	"syscall"
+
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"

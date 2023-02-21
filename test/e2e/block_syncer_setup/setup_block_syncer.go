@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
@@ -16,8 +19,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-	"os"
-	"os/exec"
 )
 
 var (

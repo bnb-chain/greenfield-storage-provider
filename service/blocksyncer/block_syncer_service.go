@@ -1,12 +1,13 @@
 package blocksyncer
 
 import (
+	"time"
+
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
 	"github.com/forbole/juno/v4/types/utils"
-	"time"
 )
 
 // enqueueMissingBlocks enqueues jobs (block heights) for missed blocks starting

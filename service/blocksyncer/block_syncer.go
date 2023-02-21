@@ -3,6 +3,8 @@ package blocksyncer
 import (
 	"context"
 	"errors"
+	"sync/atomic"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/forbole/juno/v4/cmd"
@@ -14,7 +16,6 @@ import (
 	parserconfig "github.com/forbole/juno/v4/parser/config"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
-	"sync/atomic"
 )
 
 // Syncer synchronizes ec data to piece store
