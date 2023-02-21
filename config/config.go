@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"os"
 
+	"github.com/forbole/juno/v4/types/config"
+
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
@@ -18,26 +20,28 @@ import (
 )
 
 type StorageProviderConfig struct {
-	Service       []string
-	GatewayCfg    *gateway.GatewayConfig
-	UploaderCfg   *uploader.UploaderConfig
-	DownloaderCfg *downloader.DownloaderConfig
-	ChallengeCfg  *challenge.ChallengeConfig
-	StoneHubCfg   *stonehub.StoneHubConfig
-	StoneNodeCfg  *stonenode.StoneNodeConfig
-	SyncerCfg     *syncer.SyncerConfig
-	SignerCfg     *signer.SignerConfig
+	Service        []string
+	GatewayCfg     *gateway.GatewayConfig
+	UploaderCfg    *uploader.UploaderConfig
+	DownloaderCfg  *downloader.DownloaderConfig
+	ChallengeCfg   *challenge.ChallengeConfig
+	StoneHubCfg    *stonehub.StoneHubConfig
+	StoneNodeCfg   *stonenode.StoneNodeConfig
+	SyncerCfg      *syncer.SyncerConfig
+	SignerCfg      *signer.SignerConfig
+	BlockSyncerCfg *config.Config
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
-	GatewayCfg:    gateway.DefaultGatewayConfig,
-	UploaderCfg:   uploader.DefaultUploaderConfig,
-	DownloaderCfg: downloader.DefaultDownloaderConfig,
-	ChallengeCfg:  challenge.DefaultChallengeConfig,
-	StoneHubCfg:   stonehub.DefaultStoneHubConfig,
-	StoneNodeCfg:  stonenode.DefaultStoneNodeConfig,
-	SyncerCfg:     syncer.DefaultSyncerConfig,
-	SignerCfg:     signer.DefaultSignerChainConfig,
+	GatewayCfg:     gateway.DefaultGatewayConfig,
+	UploaderCfg:    uploader.DefaultUploaderConfig,
+	DownloaderCfg:  downloader.DefaultDownloaderConfig,
+	ChallengeCfg:   challenge.DefaultChallengeConfig,
+	StoneHubCfg:    stonehub.DefaultStoneHubConfig,
+	StoneNodeCfg:   stonenode.DefaultStoneNodeConfig,
+	SyncerCfg:      syncer.DefaultSyncerConfig,
+	SignerCfg:      signer.DefaultSignerChainConfig,
+	BlockSyncerCfg: &config.Config{},
 }
 
 // LoadConfig loads the config file

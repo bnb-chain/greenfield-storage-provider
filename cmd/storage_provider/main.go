@@ -25,7 +25,7 @@ import (
 
 var (
 	version    = flag.Bool("version", false, "print version")
-	configFile = flag.String("config", "../../config/config.toml", "config file path")
+	configFile = flag.String("config", "./config/config.toml", "config file path")
 )
 
 // initService init service instance by name and config.
@@ -96,7 +96,7 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			return nil, err
 		}
 	case model.BlockSyncerService:
-		server, err = blocksyncer.NewBlockSyncerService()
+		server, err = blocksyncer.NewBlockSyncerService(cfg.BlockSyncerCfg)
 		if err != nil {
 			return nil, err
 		}

@@ -5,22 +5,25 @@ import (
 	"errors"
 	"sync/atomic"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/forbole/juno/v4/cmd"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
-	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/messages"
 	"github.com/forbole/juno/v4/modules/registrar"
-	"github.com/forbole/juno/v4/parser"
-	parserconfig "github.com/forbole/juno/v4/parser/config"
-	"github.com/forbole/juno/v4/types"
+
 	"github.com/forbole/juno/v4/types/config"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/forbole/juno/v4/modules"
+	"github.com/forbole/juno/v4/parser"
+	"github.com/forbole/juno/v4/types"
 )
 
 // Syncer synchronizes ec data to piece store
 type BlockSyncer struct {
-	config    parserconfig.Config
+	config    *config.Config
 	name      string
 	parserCtx *parser.Context
 	// store   client.PieceStoreAPI
@@ -29,10 +32,10 @@ type BlockSyncer struct {
 }
 
 // NewSyncerService creates a syncer service to upload piece to piece store
-func NewBlockSyncerService() (*BlockSyncer, error) {
+func NewBlockSyncerService(cfg *config.Config) (*BlockSyncer, error) {
 	s := &BlockSyncer{
-		// config: config,
-		name: model.BlockSyncerService,
+		config: cfg,
+		name:   model.BlockSyncerService,
 	}
 	if err := s.initClient(); err != nil {
 		return nil, err
@@ -55,16 +58,16 @@ func (s *BlockSyncer) initClient() error {
 		)
 	cmdCfg := junoConfig.GetParseConfig()
 
-	if readErr := parsecmdtypes.ReadConfigPreRunE(cmdCfg)(nil, nil); readErr != nil {
-		return readErr
-	}
+	//if readErr := parsecmdtypes.ReadConfigPreRunE(cmdCfg)(nil, nil); readErr != nil {
+	//	return readErr
+	//}
 	var ctx *parser.Context
 	ctx, err := parsecmdtypes.GetParserContext(config.Cfg, cmdCfg)
 	if err != nil {
 		panic(err)
 	}
 	s.parserCtx = ctx
-	s.config = config.Cfg.Parser
+	//s.config = config.Cfg.Parser
 	return nil
 }
 
@@ -111,7 +114,7 @@ func (s *BlockSyncer) Stop(ctx context.Context) error {
 func (s *BlockSyncer) serve() {
 	exportQueue := types.NewQueue(25)
 	// Create workers
-	workers := make([]parser.Worker, s.config.Workers)
+	workers := make([]parser.Worker, s.config.Parser.Workers)
 	for i := range workers {
 		workers[i] = parser.NewWorker(s.parserCtx, exportQueue, i)
 	}
@@ -128,23 +131,23 @@ func (s *BlockSyncer) serve() {
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	// off of the export queue.
 	for i, w := range workers {
-		s.parserCtx.Logger.Debug("starting worker...", "number", i+1)
+		log.Debug("starting worker...", "number", i+1)
 		go w.Start()
 	}
 
 	// Listen for and trap any OS signal to gracefully shutdown and exit
 	//trapSignal(s.parserCtx, waitGroup)
 
-	if s.config.ParseGenesis {
+	if s.config.Parser.ParseGenesis {
 		// Add the genesis to the queue if requested
 		exportQueue <- 0
 	}
 
-	if s.config.ParseOldBlocks {
+	if s.config.Parser.ParseOldBlocks {
 		go enqueueMissingBlocks(exportQueue, s.parserCtx)
 	}
 
-	if s.config.ParseNewBlocks {
+	if s.config.Parser.ParseNewBlocks {
 		go enqueueNewBlocks(exportQueue, s.parserCtx)
 	}
 
