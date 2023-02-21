@@ -62,14 +62,14 @@ func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (spdb.JobDB, error
 	return jobDB, err
 }
 
-func getDBConfigFromEnv(envVarOne, envVarTwo string) (string, string, error) {
-	valOne, ok := os.LookupEnv(envVarOne)
+func getDBConfigFromEnv(user, passwd string) (string, string, error) {
+	userVal, ok := os.LookupEnv(user)
 	if !ok {
-		return "", "", fmt.Errorf("db %s config is not setted in environment", envVarOne)
+		return "", "", fmt.Errorf("db %s config is not setted in environment", user)
 	}
-	valTwo, ok := os.LookupEnv(envVarTwo)
+	passwdVal, ok := os.LookupEnv(passwd)
 	if !ok {
-		return "", "", fmt.Errorf("db %s config is not setted in environment", envVarTwo)
+		return "", "", fmt.Errorf("db %s config is not setted in environment", passwd)
 	}
-	return valOne, valTwo, nil
+	return userVal, passwdVal, nil
 }
