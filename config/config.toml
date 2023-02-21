@@ -59,7 +59,7 @@ Service = [
     StoneHubServiceAddress = "127.0.0.1:9333"
     SyncerServiceAddress = ["127.0.0.1:9543", "127.0.0.1:9553", "127.0.0.1:9563", "127.0.0.1:9573", "127.0.0.1:9583", "127.0.0.1:9593"]
     StoneJobLimit = 64
-    [StoneNodeCfg.PieceConfig]
+    [StoneNodeCfg.PieceStoreConfig]
         Shards = 0
         [StoneNodeCfg.PieceStoreConfig.Store]
             Storage = "file"
@@ -98,7 +98,7 @@ Service = [
 
 [ChallengeCfg]
     StorageProvider = "gnfd-test-sp"
-    Address = "127.0.0.1:9633"
+    Address = "127.0.0.1:9733"
     MetaDBType = "leveldb"
     [ChallengeCfg.PieceStoreConfig]
         Shards = 0

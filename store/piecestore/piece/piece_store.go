@@ -17,7 +17,10 @@ import (
 
 // NewPieceStore returns an instance of PieceStore
 func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
-	overrideConfigFromEnv(pieceConfig)
+	if err := overrideConfigFromEnv(pieceConfig); err != nil {
+		log.Errorw("load piece store from env failed")
+		return nil, err
+	}
 	cfg := checkConfig(pieceConfig)
 	blob, err := createStorage(cfg)
 	if err != nil {
@@ -55,10 +58,13 @@ func checkConfig(cfg *storage.PieceStoreConfig) *storage.PieceStoreConfig {
 	return cfg
 }
 
-func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) {
+func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) error {
 	if val, ok := os.LookupEnv(model.BucketURL); ok {
 		cfg.Store.BucketURL = val
+	} else {
+		return fmt.Errorf("piece store config %s is not setted in environment", model.BucketURL)
 	}
+	return nil
 }
 
 func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error) {
