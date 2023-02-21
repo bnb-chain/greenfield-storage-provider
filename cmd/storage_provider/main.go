@@ -24,7 +24,7 @@ import (
 
 var (
 	version    = flag.Bool("version", false, "print version")
-	configFile = flag.String("config", "./config/config.toml", "config file path")
+	configFile = flag.String("config", "../../config/config.toml", "config file path")
 )
 
 // initService init service instance by name and config.

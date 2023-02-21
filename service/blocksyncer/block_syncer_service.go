@@ -6,10 +6,6 @@ import (
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
 	"github.com/forbole/juno/v4/types/utils"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 	"time"
 )
 
@@ -94,21 +90,4 @@ func mustGetLatestHeight(ctx *parser.Context) int64 {
 	}
 
 	return 0
-}
-
-// trapSignal will listen for any OS signal and invoke Done on the main
-// WaitGroup allowing the main process to gracefully exit.
-func trapSignal(ctx *parser.Context, waitGroup *sync.WaitGroup) {
-	var sigCh = make(chan os.Signal, 1)
-
-	signal.Notify(sigCh, syscall.SIGTERM)
-	signal.Notify(sigCh, syscall.SIGINT)
-
-	go func() {
-		sig := <-sigCh
-		ctx.Logger.Info("caught signal; shutting down...", "signal", sig.String())
-		defer ctx.Node.Stop()
-		defer ctx.Database.Close()
-		defer waitGroup.Done()
-	}()
 }
