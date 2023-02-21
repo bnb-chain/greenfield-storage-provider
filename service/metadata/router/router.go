@@ -23,5 +23,5 @@ func (r *Router) InitHandlers(router *gin.RouterGroup) {
 	accounts := https.NewRouterGroup(router.Group("/accounts"))
 	user := accounts.Group("/:account_id")
 	user.GET("/buckets", https.Handler(r.GetUserBuckets))
-	user.GET("/buckets/:bucket_name/objects", NewBucketNameWrapper(r.ListObjectsByBucket))
+	user.GET("/buckets/:bucket_name/objects", NewBucketNameWrapper(r.ListObjectsByBucketName))
 }

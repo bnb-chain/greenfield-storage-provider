@@ -21,7 +21,7 @@ func NewBucketNameWrapper(f func(ctx *gin.Context, bucketName string) (resp inte
 	}
 }
 
-func (r *Router) ListObjectsByBucket(ctx *gin.Context, bucketName string) (resp interface{}, herr *https.Error) {
+func (r *Router) ListObjectsByBucketName(ctx *gin.Context, bucketName string) (resp interface{}, herr *https.Error) {
 	buckets, err := r.store.ListObjectsByBucketName(ctx, bucketName)
 	if err != nil {
 		log.Infof("err:%+v", err)

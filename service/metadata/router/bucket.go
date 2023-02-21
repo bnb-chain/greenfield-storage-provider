@@ -17,7 +17,7 @@ func (r *Router) GetUserBuckets(ctx *gin.Context) (resp interface{}, herr *https
 	buckets, err := r.store.GetUserBuckets(ctx)
 	if err != nil {
 		log.Infof("err:%+v", err)
-		return nil, https.NewInternalError("fail to get user buckets", err.Error())
+		return nil, https.NewInternalError("fail to get user buckets, the error is: %s", err.Error())
 	}
 
 	return buckets, nil
