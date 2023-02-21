@@ -57,11 +57,12 @@ func initConfig() {
 	}
 }
 
+// SyncerAddress = ["127.0.0.1:9543", "127.0.0.1:9553", "127.0.0.1:9563", "127.0.0.1:9573", "127.0.0.1:9583", "127.0.0.1:9593"]
 func main() {
 	log.Info("begin setup one-box, deploy secondary syncers")
 
 	cfg = config.LoadConfig(*configFile)
-	syncerAddrList := cfg.StoneNodeCfg.SyncerAddress
+	syncerAddrList := []string{"127.0.0.1:9543", "127.0.0.1:9553", "127.0.0.1:9563", "127.0.0.1:9573", "127.0.0.1:9583", "127.0.0.1:9593"}
 	gatewayAddrList := cfg.StoneNodeCfg.GatewayAddress
 	if len(syncerAddrList) != len(gatewayAddrList) {
 		log.Errorw("syncer number is not equal to secondary gateway number")

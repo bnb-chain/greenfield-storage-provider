@@ -149,7 +149,6 @@ func addRespHeader(resp *stypes.SyncerServiceSyncPieceResponse, w http.ResponseW
 	w.Header().Set(model.GnfdPieceIndexHeader, strconv.Itoa(int(resp.GetSecondarySpInfo().GetPieceIdx())))
 
 	checksum := handlePieceChecksum(resp.GetSecondarySpInfo().GetPieceChecksum())
-	log.Infow("gateway piece checksum", "cc", checksum)
 	w.Header().Set(model.GnfdPieceChecksumHeader, checksum)
 
 	integrityHash := hex.EncodeToString(resp.GetSecondarySpInfo().GetIntegrityHash())

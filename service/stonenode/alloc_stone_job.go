@@ -68,12 +68,12 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	}
 
 	secondaryGatewayList := node.cfg.GatewayAddress
-	if len(secondaryPieceData) > len(secondarySPs) || len(secondaryGatewayList) != len(secondarySPs) {
+	if len(secondaryPieceData) > len(secondarySPs) {
 		log.Errorw("secondary sp is not enough")
 		node.reportErrToStoneHub(ctx, allocResp, merrors.ErrSecondarySPNumber)
 		return merrors.ErrSecondarySPNumber
 	}
-	log.Infow("secondary gateway address list", "list", secondaryGatewayList)
+	log.Debugw("secondary gateway address list", "list", secondaryGatewayList)
 
 	// 3. send piece data to the secondary
 	node.doSyncToSecondarySP(ctx, allocResp, secondaryPieceData, secondaryGatewayList, secondarySPs)

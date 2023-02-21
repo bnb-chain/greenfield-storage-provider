@@ -32,11 +32,7 @@ func sendRequest(pieceData [][]byte, httpEndpoint string, syncerInfo *stypes.Syn
 		return nil, err
 	}
 
-	log.Infow("send request info", "length", len(pieceData), "objectID", syncerInfo.GetObjectId(),
-		"spID", syncerInfo.GetStorageProviderId(), "index", syncerInfo.GetPieceIndex(), "count", syncerInfo.GetPieceCount(),
-		"redundancyType", syncerInfo.GetRedundancyType().String())
 	req = addReqHeader(req, syncerInfo, traceID)
-	log.Infow("request header", "header", req.Header)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -80,7 +76,6 @@ func parseBody(body io.ReadCloser) error {
 		log.Errorw("copy request body failed", "error", err)
 		return err
 	}
-	log.Error("error response body")
 	// parse error message in response body
 	//if err := xml.Unmarshal(buf.Bytes(), nil); err != nil {
 	//	log.Errorw("unmarshal xml response body failed", "error", err)
