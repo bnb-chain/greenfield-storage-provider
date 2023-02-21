@@ -2,9 +2,10 @@ package mock
 
 import (
 	"context"
+	reflect "reflect"
+
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
 	"github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
 // MockIStore is a mock of IStore interface.

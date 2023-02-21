@@ -1,16 +1,17 @@
 package router
 
 import (
+	"net/http"
+	"net/url"
+	"reflect"
+	"testing"
+
 	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/store"
 	"github.com/bnb-chain/greenfield-storage-provider/util/https"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"net/http"
-	"net/url"
-	"reflect"
-	"testing"
 )
 
 func TestRouter_ListObjectsByBucketName(t *testing.T) {

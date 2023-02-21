@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/util/https"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util/https"
 )
 
 type Client struct {
@@ -49,14 +50,6 @@ func withCustomMetricsHandlerName(handler string) httpOption {
 func (c *Client) do(ctx context.Context, method string, url string, data interface{}, options ...httpOption) (err error) {
 	opt := &httpCallOption{}
 	opt.ApplyOptions(options...)
-
-	defer func(t0 time.Time) {
-		handler := opt.metricsHandlerName
-		if handler == "" {
-			handler = url
-		}
-
-	}(time.Now())
 
 	req, err := http.NewRequestWithContext(ctx, method, url, opt.body)
 	if err != nil {

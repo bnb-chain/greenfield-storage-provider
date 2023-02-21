@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	_ "github.com/go-sql-driver/mysql"

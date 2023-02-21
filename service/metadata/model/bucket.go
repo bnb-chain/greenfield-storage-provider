@@ -1,6 +1,6 @@
 package model
 
-import github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+import github_com_cosmos_cosmos_sdk_types "cosmossdk.io/math"
 
 type Bucket struct {
 	// owner is the account address of bucket creator, it is also the bucket owner.

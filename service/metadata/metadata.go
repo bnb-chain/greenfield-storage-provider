@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"context"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/router"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/store"

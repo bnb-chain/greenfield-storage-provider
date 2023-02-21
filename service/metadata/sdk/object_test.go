@@ -4,18 +4,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/bnb-chain/greenfield-storage-provider/mock"
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
-	"github.com/bnb-chain/greenfield-storage-provider/util/https"
-	"github.com/gofrs/uuid"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/mock"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
+	"github.com/bnb-chain/greenfield-storage-provider/util/https"
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
-
 	"github.com/stretchr/testify/require"
 )
 

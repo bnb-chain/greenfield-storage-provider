@@ -2,6 +2,7 @@ package https
 
 import (
 	"fmt"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 )
 

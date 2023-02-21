@@ -1,9 +1,10 @@
 package mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	"net/http"
 	"reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockIHTTPClient is a mock of IHTTPClient interface.

@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
 	"github.com/gofrs/uuid"
 )
