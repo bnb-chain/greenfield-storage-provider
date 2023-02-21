@@ -18,10 +18,6 @@ type IStore interface {
 	ListObjectsByBucketName(ctx context.Context, bucketName string) (ret []*model.Object, err error)
 }
 
-func (s *Store) getCTXUserDB(ctx context.Context) *gorm.DB {
-	return s.userDB.WithContext(ctx)
-}
-
 func NewStore(cfg DBConfig) (*Store, error) {
 	userDB, err := newGORM(cfg)
 	if err != nil {
