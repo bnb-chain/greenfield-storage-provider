@@ -2,14 +2,15 @@ package model
 
 // define storage provider support service name.
 const (
-	GatewayService    = "Gateway"
-	UploaderService   = "Uploader"
-	DownloaderService = "Downloader"
-	ChallengeService  = "Challenge"
-	StoneHubService   = "StoneHub"
-	StoneNodeService  = "StoneNode"
-	SyncerService     = "Syncer"
-	SignerService     = "Signer"
+	GatewayService     = "Gateway"
+	UploaderService    = "Uploader"
+	DownloaderService  = "Downloader"
+	ChallengeService   = "Challenge"
+	StoneHubService    = "StoneHub"
+	StoneNodeService   = "StoneNode"
+	SyncerService      = "Syncer"
+	SignerService      = "Signer"
+	BlockSyncerService = "BlockSyncer"
 )
 
 // define payload data redundancy size.

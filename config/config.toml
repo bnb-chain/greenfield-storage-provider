@@ -1,6 +1,8 @@
 Service = [
-    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge",
+    "BlockSyncer", "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge",
 ]
+
+ #"Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer",
 
 [GatewayCfg]
     StorageProvider = "gnfd-test-sp"
