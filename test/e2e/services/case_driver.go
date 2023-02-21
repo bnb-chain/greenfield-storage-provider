@@ -34,7 +34,6 @@ var (
 	hostHeader string
 
 	metadataAddress string
-	accountAddress  string
 )
 
 func generateRandString(n int) string {
