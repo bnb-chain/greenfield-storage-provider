@@ -154,6 +154,6 @@ func addRespHeader(resp *stypes.SyncerServiceSyncPieceResponse, w http.ResponseW
 	integrityHash := hex.EncodeToString(resp.GetSecondarySpInfo().GetIntegrityHash())
 	w.Header().Set(model.GnfdIntegrityHashHeader, integrityHash)
 
-	sig := hex.EncodeToString([]byte("test_signature"))
-	w.Header().Set(model.GnfdSealSignatureHeader, sig)
+	integrityHashSignature := hex.EncodeToString(resp.GetSecondarySpInfo().GetSignature())
+	w.Header().Set(model.GnfdIntegrityHashSignatureHeader, integrityHashSignature)
 }

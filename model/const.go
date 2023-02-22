@@ -90,8 +90,8 @@ const (
 	GnfdApprovalSignatureHeader = "X-Gnfd-Approval-Signature"
 
 	// gateway to StoneNode response header
-	GnfdPieceChecksumHeader = "X-Gnfd-Piece-Checksum"
-	GnfdSealSignatureHeader = "X-Gnfd-Seal-Signature"
+	GnfdPieceChecksumHeader          = "X-Gnfd-Piece-Checksum"
+	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 
 	// header value
 	ReplicaRedundancyTypeHeaderValue = "Replica"

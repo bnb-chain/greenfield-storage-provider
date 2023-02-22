@@ -144,11 +144,10 @@ func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 		log.Warnw("failed to get primary seal info", "error", err)
 		return
 	}
-	// TODO:: signer primary integrity hash
 	primarySealInfo := primarySealInfos[0]
 	if stone.signer != nil {
 		primarySealInfo.IntegrityHash, primarySealInfo.Signature, err = stone.signer.SignIntegrityHash(
-			context.Background(), primarySealInfos[0].PieceChecksum)
+			context.Background(), primarySealInfo.PieceChecksum)
 		if err != nil {
 			log.Warnw("failed to sign integrity hash", "error", err)
 			return

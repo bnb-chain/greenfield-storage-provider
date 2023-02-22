@@ -29,10 +29,14 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 				log.Errorw("syncer service received piece count is wrong")
 				return merrors.ErrReceivedPieceCount
 			}
-
 			integrityMeta.PieceHash = pieceHash
-			sealInfo := generateSealInfo(spID, integrityMeta)
+			sealInfo, err := s.generateSealInfo(spID, integrityMeta)
+			if err != nil {
+				log.Errorw("syncer generate seal info failed", "error", err)
+				return err
+			}
 			integrityMeta.IntegrityHash = sealInfo.GetIntegrityHash()
+			integrityMeta.Signature = sealInfo.GetSignature()
 			if err := s.metaDB.SetIntegrityMeta(integrityMeta); err != nil {
 				log.Errorw("set integrity meta error", "error", err)
 				return err
@@ -64,17 +68,19 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	}
 }
 
-func generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) *stypes.StorageProviderSealInfo {
-	pieceHash := integrityMeta.PieceHash
-	integrityHash := hash.GenerateIntegrityHash(pieceHash)
+func (s *Syncer) generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) (*stypes.StorageProviderSealInfo, error) {
+	var err error
 	resp := &stypes.StorageProviderSealInfo{
 		StorageProviderId: spID,
 		PieceIdx:          integrityMeta.EcIdx,
-		PieceChecksum:     pieceHash,
-		IntegrityHash:     integrityHash,
-		Signature:         nil, // TODO(mock)
+		PieceChecksum:     integrityMeta.PieceHash,
 	}
-	return resp
+	resp.IntegrityHash, resp.Signature, err = s.signer.SignIntegrityHash(context.Background(), resp.PieceChecksum)
+	if err != nil {
+		log.Warnw("failed to sign integrity hash", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
 func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, count uint32) (*spdb.IntegrityMeta, []byte, error) {
