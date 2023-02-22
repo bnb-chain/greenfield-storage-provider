@@ -3,15 +3,15 @@ module github.com/bnb-chain/greenfield-storage-provider
 go 1.19
 
 replace (
-	// TODO: point to develop branch, will be changed to v0.0.6 after greenfield-sdk-go v0.0.6 released
+	// TODO: point to develop branch, will be changed to v0.0.6 after greenfield v0.0.6 released
 	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230220084048-b09d0197ee41
+	// TODO: point to develop branch, will be changed to v0.0.7 after greenfield-sdk-go v0.0.7 released
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.2-0.20230216105555-b94a14479b11
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.1
 )
 
 require (
-	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.0.5
@@ -45,6 +45,7 @@ require (
 )
 
 require (
+	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/math v1.0.0-beta.3 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

@@ -15,8 +15,6 @@ RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://
 RUN apk add --no-cache build-base libc-dev
 
 RUN cd /greenfield-storage-provider \
-    && make install-tools \
-    && make buf-gen \
     && make build
 
 # Pull greenfield into a second stage deploy alpine container
