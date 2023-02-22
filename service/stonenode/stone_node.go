@@ -20,7 +20,6 @@ const (
 type StoneNodeService struct {
 	cfg        *StoneNodeConfig
 	name       string
-	syncer     []client.SyncerAPI
 	stoneHub   client.StoneHubAPI
 	store      client.PieceStoreAPI
 	stoneLimit int64
@@ -48,7 +47,7 @@ func (node *StoneNodeService) initClient() error {
 	if node.running.Load() {
 		return merrors.ErrStoneNodeStarted
 	}
-	store, err := client.NewStoreClient(node.cfg.PieceConfig)
+	store, err := client.NewStoreClient(node.cfg.PieceStoreConfig)
 	if err != nil {
 		log.Errorw("stone node inits piece store client failed", "error", err)
 		return err
@@ -57,14 +56,6 @@ func (node *StoneNodeService) initClient() error {
 	if err != nil {
 		log.Errorw("stone node inits stone hub client failed", "error", err)
 		return err
-	}
-	for _, value := range node.cfg.SyncerServiceAddress {
-		syncer, err := client.NewSyncerClient(value)
-		if err != nil {
-			log.Errorw("stone node inits syncer client failed", "error", err)
-			return err
-		}
-		node.syncer = append(node.syncer, syncer)
 	}
 	node.store = store
 	node.stoneHub = stoneHub
@@ -125,11 +116,6 @@ func (node *StoneNodeService) Stop(ctx context.Context) error {
 	var errs []error
 	if err := node.stoneHub.Close(); err != nil {
 		errs = append(errs, err)
-	}
-	for _, syncer := range node.syncer {
-		if err := syncer.Close(); err != nil {
-			errs = append(errs, err)
-		}
 	}
 	if errs != nil {
 		return fmt.Errorf("%v", errs)

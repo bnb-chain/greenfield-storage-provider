@@ -30,6 +30,8 @@ var (
 	ErrRequestConsistent   = errors.New("request consistent check failed")
 	ErrSignatureConsistent = errors.New("signature consistent check failed")
 	ErrUnsupportedSignType = errors.New("unsupported signature type")
+	ErrEmptyReqHeader      = errors.New("request header is empty")
+	ErrReqHeader           = errors.New("request header is wrong")
 )
 
 // stone hub service errors
@@ -67,7 +69,9 @@ var (
 	ErrInvalidSegmentData = errors.New("invalid segment data, length is not equal to 1")
 	ErrInvalidECData      = errors.New("invalid ec data, length is not equal to 6")
 	ErrEmptyTargetIdx     = errors.New("target index array is empty")
-	ErrSyncerNumber       = errors.New("syncer number is not enough")
+	ErrGatewayNumber      = errors.New("gateway number is not enough")
+	ErrEmptyRespHeader    = errors.New("http response header is empty")
+	ErrRespHeader         = errors.New("http response header is wrong")
 )
 
 // syncer service errors

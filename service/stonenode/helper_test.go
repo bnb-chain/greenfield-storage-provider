@@ -1,11 +1,7 @@
 package stonenode
 
 import (
-	"context"
-	"encoding/base64"
 	"testing"
-
-	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
@@ -17,7 +13,6 @@ func setup(t *testing.T) *StoneNodeService {
 		cfg: &StoneNodeConfig{
 			Address:                "test1",
 			StoneHubServiceAddress: "test2",
-			SyncerServiceAddress:   []string{"test3"},
 			StorageProvider:        "test",
 			StoneJobLimit:          0,
 		},
@@ -67,40 +62,4 @@ func dispatchInlinePieceSlice() [][][]byte {
 	inlineSlice := make([][][]byte, 0)
 	inlineSlice = append(inlineSlice, inlineList)
 	return inlineSlice
-}
-
-func makeStreamMock() *StreamMock {
-	return &StreamMock{
-		ctx:          context.Background(),
-		recvToServer: make(chan *stypes.SyncerServiceSyncPieceRequest, 10),
-	}
-}
-
-type StreamMock struct {
-	grpc.ClientStream
-	ctx          context.Context
-	recvToServer chan *stypes.SyncerServiceSyncPieceRequest
-}
-
-func (m *StreamMock) Send(resp *stypes.SyncerServiceSyncPieceRequest) error {
-	m.recvToServer <- resp
-	return nil
-}
-
-func (m *StreamMock) CloseAndRecv() (*stypes.SyncerServiceSyncPieceResponse, error) {
-	integrityHash, _ := base64.URLEncoding.DecodeString("pgPGdR4c9_KYz6wQxl-SifyzHXlHhx5XfNa89LzdNCI=")
-	return &stypes.SyncerServiceSyncPieceResponse{
-		TraceId: "test_traceID",
-		SecondarySpInfo: &stypes.StorageProviderSealInfo{
-			StorageProviderId: "sp1",
-			PieceIdx:          1,
-			PieceChecksum:     [][]byte{[]byte("1"), []byte("2"), []byte("3"), []byte("4"), []byte("5"), []byte("6")},
-			IntegrityHash:     integrityHash,
-			Signature:         nil,
-		},
-		ErrMessage: &stypes.ErrMessage{
-			ErrCode: stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
-			ErrMsg:  "Success",
-		},
-	}, nil
 }

@@ -6,19 +6,18 @@ import (
 	"fmt"
 )
 
-// GenerateChecksum generates the checksum of piece data
+// GenerateChecksum generates the checksum of one piece data
 func GenerateChecksum(pieceData []byte) []byte {
 	hash := sha256.New()
 	hash.Write(pieceData)
 	return hash.Sum(nil)
 }
 
-// GenerateIntegrityHash generate integrity hash of ec data
+// GenerateIntegrityHash generates integrity hash of all piece data checksum
 func GenerateIntegrityHash(checksumList [][]byte) []byte {
 	hash := sha256.New()
-	for _, j := range checksumList {
-		hash.Write(j)
-	}
+	checksumBytesTotal := bytes.Join(checksumList, []byte(""))
+	hash.Write(checksumBytesTotal)
 	return hash.Sum(nil)
 }
 

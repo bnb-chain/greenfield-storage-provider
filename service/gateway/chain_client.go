@@ -51,14 +51,14 @@ func (dci *debugChainImpl) createBucket(bucketName string, option *createBucketO
 	return nil
 }
 
-// chainClientConfig is the configuration information when creating chainClient.
+// ChainClientConfig is the configuration information when creating chainClient.
 // currently Mode only support "DebugMode".
-type chainClientConfig struct {
+type ChainClientConfig struct {
 	Mode     string
 	DebugDir string
 }
 
-var defaultChainClientConfig = &chainClientConfig{
+var DefaultChainClientConfig = &ChainClientConfig{
 	Mode:     "DebugMode",
 	DebugDir: "./debug",
 }
@@ -69,9 +69,9 @@ type chainClient struct {
 	impl chainClientInterface
 }
 
-func newChainClient(c *chainClientConfig) (*chainClient, error) {
+func newChainClient(c *ChainClientConfig) (*chainClient, error) {
 	if c == nil {
-		c = defaultChainClientConfig
+		c = DefaultChainClientConfig
 	}
 	switch {
 	case c.Mode == "DebugMode":

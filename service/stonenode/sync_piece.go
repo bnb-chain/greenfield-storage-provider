@@ -3,7 +3,6 @@ package stonenode
 import (
 	"bytes"
 	"context"
-	"errors"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
@@ -13,7 +12,7 @@ import (
 
 // doSyncToSecondarySP send piece data to the secondary
 func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *stypes.StoneHubServiceAllocStoneJobResponse,
-	pieceDataBySecondary [][][]byte, secondarySPs []string) error {
+	pieceDataBySecondary [][][]byte, urlList []string, secondarySPs []string) error {
 	var (
 		objectID       = resp.GetPieceJob().GetObjectId()
 		payloadSize    = resp.GetPieceJob().GetPayloadSize()
@@ -46,22 +45,20 @@ func (node *StoneNodeService) doSyncToSecondarySP(ctx context.Context, resp *sty
 				}
 			}()
 
-			syncResp, err := node.syncPiece(ctx, &stypes.SyncerInfo{
+			spInfo, err := sendRequest(pieceData, urlList[index], &stypes.SyncerInfo{
 				ObjectId:          objectID,
 				StorageProviderId: secondarySPs[index],
 				PieceIndex:        uint32(index),
 				PieceCount:        uint32(len(pieceData)),
 				RedundancyType:    redundancyType,
-			}, pieceData, index, resp.GetTraceId())
-			// TBD:: retry alloc secondary sp and rat again.
+			}, resp.GetTraceId())
 			if err != nil {
-				log.CtxErrorw(ctx, "sync to secondary piece job failed", "error", err)
+				log.CtxErrorw(ctx, "send request to gateway failed", "error", err)
 				errMsg.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 				errMsg.ErrMsg = err.Error()
 				return
 			}
 
-			spInfo := syncResp.GetSecondarySpInfo()
 			if ok := verifyIntegrityHash(pieceData, spInfo); !ok {
 				errMsg.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 				errMsg.ErrMsg = merrors.ErrIntegrityHash.Error()
@@ -91,37 +88,4 @@ func verifyIntegrityHash(pieceData [][]byte, spInfo *stypes.StorageProviderSealI
 	log.Debugw("verify integrity hash", "local_integrity_hash", integrityHash,
 		"remote_integrity_hash", spInfo.GetIntegrityHash())
 	return true
-}
-
-// syncPiece send rpc request to secondary storage provider to sync the piece data
-func (node *StoneNodeService) syncPiece(ctx context.Context, syncerInfo *stypes.SyncerInfo,
-	pieceData [][]byte, index int, traceID string) (*stypes.SyncerServiceSyncPieceResponse, error) {
-	stream, err := node.syncer[index].SyncPiece(ctx)
-	if err != nil {
-		log.Errorw("sync secondary piece job error", "err", err)
-		return nil, err
-	}
-
-	// send data one by one to avoid exceeding rpc max msg size
-	for _, value := range pieceData {
-		if err := stream.Send(&stypes.SyncerServiceSyncPieceRequest{
-			TraceId:    traceID,
-			SyncerInfo: syncerInfo,
-			PieceData:  value,
-		}); err != nil {
-			log.Errorw("client send request error", "error", err)
-			return nil, err
-		}
-	}
-
-	resp, err := stream.CloseAndRecv()
-	if err != nil {
-		log.Errorw("client close error", "error", err, "traceID", resp.GetTraceId())
-		return nil, err
-	}
-	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-		log.Errorw("sync piece sends to stone node response code is not success", "error", err, "traceID", resp.GetTraceId())
-		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
-	}
-	return resp, nil
 }

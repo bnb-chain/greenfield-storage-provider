@@ -36,15 +36,16 @@ func NewStoreClient(pieceConfig *storage.PieceStoreConfig) (*StoreClient, error)
 func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, limit int64) ([]byte, error) {
 	rc, err := client.ps.Get(ctx, key, offset, limit)
 	if err != nil {
-		log.Errorw("stone node service invoke PieceStore Get failed", "error", err)
+		log.Errorw("get piece data from piece store failed", "error", err)
 		return nil, err
 	}
-	data, err := io.ReadAll(rc)
+	buf := &bytes.Buffer{}
+	_, err = io.Copy(buf, rc)
 	if err != nil {
-		log.Errorw("stone node service invoke io.ReadAll failed", "error", err)
+		log.Errorw("copy data failed", "error", err)
 		return nil, err
 	}
-	return data, nil
+	return buf.Bytes(), nil
 }
 
 func (client *StoreClient) PutPiece(key string, value []byte) error {
