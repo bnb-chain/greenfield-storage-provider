@@ -13,8 +13,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/protoio"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/service"
 	tmp2p "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"

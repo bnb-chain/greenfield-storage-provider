@@ -21,7 +21,7 @@ type P2PServiceRpcClient struct {
 func NewP2PServiceRpcClient(address string) (*P2PServiceRpcClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Errorw("invoke stoneHub service dail failed", "error", err)
+		log.Errorw("invoke p2p service dail failed", "error", err)
 		return nil, err
 	}
 	client := &P2PServiceRpcClient{

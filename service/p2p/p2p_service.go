@@ -152,19 +152,10 @@ func (r *P2PReactor) handleMessage(ctx context.Context, envelope *libs.Envelope)
 			)
 		}
 	}()
-	log.Debugw("received message", "peer", envelope.From)
+	log.Infow("received message", "peer", envelope.From)
 
 	switch envelope.ChannelID {
 	case spChannelID:
-		if inWhitelist := r.peersQuerier.Check(envelope.From); !inWhitelist {
-			log.Debugw("not found in persist peers or local db", "nodeId", envelope.From)
-			r.p2pChannel.SendError(ctx, libs.PeerError{
-				NodeID: envelope.From,
-				Err:    errors.New("not allowed to connect to"),
-				Fatal:  false,
-			})
-			return
-		}
 		err = r.handleSpMessage(ctx, envelope)
 	default:
 		err = fmt.Errorf("unknown channel ID (%d) for envelope (%T)", envelope.ChannelID, envelope.Message)
@@ -197,11 +188,12 @@ func (r *P2PReactor) broadcastRequest(ctx context.Context) {
 			if len(envelope.To) == 0 {
 				envelope.Broadcast = true
 			}
+			envelope.ChannelID = spChannelID
 			if err := r.p2pChannel.Send(ctx, *envelope); err != nil {
 				log.Errorw("error to broadcast requests", "error:", err)
 				return
 			}
-			log.Debugw("success to broadcast requests", "envelope", envelope)
+			log.Infow("success to broadcast requests", "envelope", envelope)
 		}
 	}
 }

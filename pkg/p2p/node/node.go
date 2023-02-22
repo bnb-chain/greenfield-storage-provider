@@ -100,7 +100,7 @@ func makeNode(ctx context.Context, cfg *NodeConfig, dbProvider DBProvider, newRe
 	if err != nil {
 		return nil, nil, err
 	}
-	providerQuerier := provider.NewProviderQuerier(cfg.P2P.PersistentPeers, db)
+	providerQuerier := provider.NewProviderQuerier(cfg.P2P.PersistentPeers, logger, db)
 	node.customerReactor = newReactor(peerManager, router.OpenChannel, peerManager.Subscribe, providerQuerier)
 	node.BaseService = *service.NewBaseService(logger, "node", node)
 

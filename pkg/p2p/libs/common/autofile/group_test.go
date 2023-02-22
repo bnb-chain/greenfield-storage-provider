@@ -9,10 +9,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/rand"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/rand"
 )
 
 func createTestGroupWithHeadSizeLimit(ctx context.Context, t *testing.T, logger log.Logger, headSizeLimit int64) *Group {
