@@ -58,7 +58,7 @@ func (signer *SignerServer) SignObjectApproval(ctx context.Context, req *stypes.
 
 // VerifyBucketApproval implements v1.SignerServiceServer
 func (signer *SignerServer) VerifyBucketApproval(ctx context.Context, req *stypes.VerifyBucketApprovalRequest) (*stypes.VerifyBucketApprovalResponse, error) {
-	sig := req.CreateBucketMsg.GetPrimarySpApprovalSignature()
+	sig := req.CreateBucketMsg.GetPrimarySpApproval().GetSig()
 	msg := req.CreateBucketMsg.GetApprovalBytes()
 
 	return &stypes.VerifyBucketApprovalResponse{
@@ -69,7 +69,7 @@ func (signer *SignerServer) VerifyBucketApproval(ctx context.Context, req *stype
 
 // VerifyObjectApproval implements v1.SignerServiceServer
 func (signer *SignerServer) VerifyObjectApproval(ctx context.Context, req *stypes.VerifyObjectApprovalRequest) (*stypes.VerifyObjectApprovalResponse, error) {
-	sig := req.CreateObjectMsg.GetPrimarySpApprovalSignature()
+	sig := req.CreateObjectMsg.GetPrimarySpApproval().GetSig()
 	msg := req.CreateObjectMsg.GetApprovalBytes()
 
 	return &stypes.VerifyObjectApprovalResponse{
