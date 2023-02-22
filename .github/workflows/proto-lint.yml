@@ -3,14 +3,14 @@ name: Protobuf Lint
 on:
   push:
     branches:
-      - main
+      - master
       - develop
     paths:
       - 'proto/**'
 
   pull_request:
     branches:
-      - main
+      - master
       - develop
     paths:
       - 'proto/**'
