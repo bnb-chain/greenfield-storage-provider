@@ -4,9 +4,10 @@ import (
 	"context"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
+	"github.com/bnb-chain/greenfield-storage-provider/store/config"
+	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	_ "github.com/go-sql-driver/mysql"
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +20,7 @@ type IStore interface {
 	ListObjectsByBucketName(ctx context.Context, bucketName string) (ret []*model.Object, err error)
 }
 
-func NewStore(cfg DBConfig) (*Store, error) {
+func NewStore(cfg *config.SqlDBConfig) (*Store, error) {
 	userDB, err := newGORM(cfg)
 	if err != nil {
 		log.Errorf("fail to new gorm cfg:%v err:%v", cfg, err)
@@ -31,11 +32,9 @@ func NewStore(cfg DBConfig) (*Store, error) {
 	}, nil
 }
 
-func newGORM(cfg DBConfig) (*gorm.DB, error) {
-	opts := []gorm.Option{}
-	opts = append(opts, &optionLogger{cfg.EnableLog})
+func newGORM(cfg *config.SqlDBConfig) (*gorm.DB, error) {
+	db, err := metasql.InitDB(cfg)
 
-	db, err := gorm.Open(mysql.Open(cfg.ConnectionString.ToString()), opts...)
 	if err != nil {
 		log.Infof("fail to open database err:%v", err)
 		return nil, err

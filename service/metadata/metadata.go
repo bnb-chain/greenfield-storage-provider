@@ -47,7 +47,7 @@ func (metadata *Metadata) Stop(ctx context.Context) error {
 }
 
 func NewMetadataService(cfg *MetadataConfig, ctx context.Context) (metadata *Metadata, err error) {
-	store, _ := store.NewStore(cfg.DBConfig)
+	store, _ := store.NewStore(cfg.MetaSqlDBConfig)
 	metadata = &Metadata{
 		name:   model.MetadataService,
 		ctx:    ctx,

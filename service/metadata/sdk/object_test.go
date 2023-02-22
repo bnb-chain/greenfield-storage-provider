@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
+	"github.com/bnb-chain/greenfield-storage-provider/test/test_tool/metadata/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/util/https"
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
