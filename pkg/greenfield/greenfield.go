@@ -8,6 +8,8 @@ import (
 
 	"github.com/bnb-chain/greenfield-go-sdk/client/chain"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -46,9 +48,11 @@ func NewGreenfield(cfg *GreenfieldChainConfig) (*Greenfield, error) {
 	var clients []*GreenfieldClient
 	for _, config := range cfg.NodeAddr {
 		client := &GreenfieldClient{
-			Provider:             config.GreenfieldAddr,
-			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddr, config.TendermintAddr, cfg.ChainID),
+			Provider: config.GreenfieldAddr,
+			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddr, config.TendermintAddr, cfg.ChainID,
+				chain.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials()))),
 		}
+		client.gnfdCompositeClient, _ = client.gnfdCompositeClients.GetClient()
 		clients = append(clients, client)
 	}
 	greenfield := &Greenfield{
@@ -66,13 +70,6 @@ func NewGreenfield(cfg *GreenfieldChainConfig) (*Greenfield, error) {
 func (greenfield *Greenfield) Close() error {
 	close(greenfield.stopCh)
 	return nil
-}
-
-// GetGreenfieldClient return one greenfield client.
-func (greenfield *Greenfield) GetGreenfieldClient() *GreenfieldClient {
-	greenfield.mutex.RLock()
-	defer greenfield.mutex.RUnlock()
-	return greenfield.client
 }
 
 // getCurrentClient return current use client.

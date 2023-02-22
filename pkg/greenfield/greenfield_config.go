@@ -11,10 +11,10 @@ type GreenfieldChainConfig struct {
 }
 
 var DefaultGreenfieldChainConfig = &GreenfieldChainConfig{
-	ChainID: "greenfield_9000-121",
+	ChainID: "greenfield_9000-1741",
 	NodeAddr: []*NodeConfig{&NodeConfig{
-		GreenfieldAddr: []string{"127.0.0.1:9090"},
-		TendermintAddr: []string{"127.0.0.1:9091"},
+		GreenfieldAddr: []string{"localhost:9090"},
+		TendermintAddr: []string{"http://0.0.0.0:26750"},
 	},
 	},
 }

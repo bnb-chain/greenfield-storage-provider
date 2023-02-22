@@ -138,7 +138,7 @@ func (requestContext *requestContext) verifySignatureV1(requestSignature string)
 
 	// check request integrity
 	if hex.EncodeToString(commonhttp.GetMsgToSign(requestContext.request)) != signedMsg {
-		return errors.ErrRequestConsistent
+		return sdk.AccAddress{}, errors.ErrRequestConsistent
 	}
 
 	// check signature consistent
@@ -219,13 +219,13 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 // TODO: can be optimized by retirver
 // checkAuthorization check addr authorization
 func (g *Gateway) checkAuthorization(requestContext *requestContext, addr sdk.AccAddress) error {
-	exist, err := g.chain.HasAccount(context.Background(), hex.EncodeToString(addr))
+	exist, err := g.chain.HasAccount(context.Background(), addr.String())
 	if err != nil {
-		log.Infow("check account on chain failed", "error", err)
+		log.Warnw("failed to check account on chain", "error", err, "address", addr.String())
 		return err
 	}
 	if !exist {
-		log.Infow("account is not exist", "error", err)
+		log.Warnw("account is not exist", "error", err, "address", addr.String())
 		return fmt.Errorf("account is not exist")
 	}
 
@@ -235,10 +235,12 @@ func (g *Gateway) checkAuthorization(requestContext *requestContext, addr sdk.Ac
 			context.Background(),
 			requestContext.bucketName,
 			requestContext.objectName,
-			hex.EncodeToString(addr),
+			addr.String(),
 			g.config.StorageProvider)
 		if err != nil {
-			log.Warnf("failed to auth upload", "err", err)
+			log.Warnw("failed to auth upload", "err", err,
+				"bucket_name", requestContext.bucketName, "object_name", requestContext.objectName,
+				"address", addr.String())
 			return err
 		}
 		if !bktExist || !objInitStatue || !tokenEnough || !spBkt || !ownObj {
@@ -250,13 +252,18 @@ func (g *Gateway) checkAuthorization(requestContext *requestContext, addr sdk.Ac
 			context.Background(),
 			requestContext.bucketName,
 			requestContext.objectName,
-			hex.EncodeToString(addr),
+			addr.String(),
 			g.config.StorageProvider)
 		if err != nil {
-			log.Warnf("failed to auth download", "err", err)
+			log.Warnw("failed to auth download", "err", err,
+				"bucket_name", requestContext.bucketName, "object_name", requestContext.objectName,
+				"address", addr.String())
 			return err
 		}
 		if !bktExist || !objStatus || !tokenEnough || !spBkt || !ownObj {
+			log.Warnw("failed to auth download", "err", err,
+				"bucket_name", requestContext.bucketName, "object_name", requestContext.objectName,
+				"address", addr.String())
 			return fmt.Errorf("account has no permission")
 		}
 		// TODO: query read quota enough

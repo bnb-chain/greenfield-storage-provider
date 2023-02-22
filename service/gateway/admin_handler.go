@@ -26,10 +26,11 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription *errorDescription
 		requestContext   *requestContext
 		addr             sdk.AccAddress
+		statusCode       = http.StatusOK
 	)
 
+	requestContext = newRequestContext(r)
 	defer func() {
-		statusCode := http.StatusOK
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
@@ -37,14 +38,13 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		if statusCode == http.StatusOK {
 			log.Infof("action(%v) statusCode(%v) %v", "getApproval", statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Errorw("action(%v) statusCode(%v) %v", "getApproval", statusCode, requestContext.generateRequestDetail())
+			log.Warnf("action(%v) statusCode(%v) %v", "getApproval", statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
-	requestContext = newRequestContext(r)
-	if _, err = requestContext.verifySignature(); err != nil {
+	if addr, err = requestContext.verifySignature(); err != nil {
 		log.Infow("failed to verify signature", "error", err)
-		errorDescription = SignatureDoesNotMatch
+		errorDescription = SignatureNotMatch
 		return
 	}
 	if err = g.checkAuthorization(requestContext, addr); err != nil {
@@ -117,10 +117,11 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		ecIdx            uint32
 		redundancyType   ptypes.RedundancyType
 		spAddress        string
+		statusCode       = http.StatusOK
 	)
 
+	requestContext = newRequestContext(r)
 	defer func() {
-		statusCode := http.StatusOK
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
@@ -132,10 +133,9 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	requestContext = newRequestContext(r)
-	if _, err = requestContext.verifySignature(); err != nil {
+	if addr, err = requestContext.verifySignature(); err != nil {
 		log.Warnw("failed to verify signature", "error", err)
-		errorDescription = SignatureDoesNotMatch
+		errorDescription = SignatureNotMatch
 		return
 	}
 	if err = g.checkAuthorization(requestContext, addr); err != nil {

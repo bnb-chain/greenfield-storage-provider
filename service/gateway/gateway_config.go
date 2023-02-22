@@ -20,6 +20,7 @@ var DefaultGatewayConfig = &GatewayConfig{
 	Domain:                   "gnfd.nodereal.com",
 	UploaderServiceAddress:   "127.0.0.1:9133",
 	DownloaderServiceAddress: "127.0.0.1:9233",
+	SyncerServiceAddress:     "127.0.0.1:9533",
 	SignerServiceAddress:     "127.0.0.1:9633",
 	ChallengeServiceAddress:  "127.0.0.1:9733",
 	ChainConfig:              gnfd.DefaultGreenfieldChainConfig,

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -19,7 +18,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-	dbConf "github.com/forbole/juno/v4/database/config"
 )
 
 var (
@@ -50,9 +48,9 @@ func initConfig() {
 	//iff cfg.SyncerCfg.PieceConfig == nil {
 	//	cfg.SyncerCfg.PieceConfig = storage.DefaultPieceStoreConfig
 	//}
-	avgBlockTime := time.Second
-	cfg.BlockSyncerCfg.Parser.AvgBlockTime = &avgBlockTime
-	cfg.BlockSyncerCfg.Database.Secrets = &dbConf.Params{}
+	// avgBlockTime := time.Second
+	// cfg.BlockSyncerCfg.Parser.AvgBlockTime = &avgBlockTime
+	// cfg.BlockSyncerCfg.Database.Secrets = &dbConf.Params{}
 }
 
 func runShell(cmdStr string) (string, error) {

@@ -1,5 +1,5 @@
 Service = [
-    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge", "Metadata", "BlockSyncer",
+    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge",
 ]
 
 [GatewayCfg]
@@ -9,14 +9,19 @@ Service = [
     UploaderServiceAddress = "127.0.0.1:9133"
     DownloaderServiceAddress = "127.0.0.1:9233"
     SyncerServiceAddress = "127.0.0.1:9533"
+    SignerServiceAddress = "127.0.0.1:9633"
     ChallengeServiceAddress = "127.0.0.1:9733"
+    [GatewayCfg.ChainConfig]
+        ChainID = "greenfield_9000-1741"
+        [[GatewayCfg.ChainConfig.NodeAddr]]
+            GreenfieldAddr = ["localhost:9090"]
+            TendermintAddr = ["http://0.0.0.0:26750"]
 
 
 [UploaderCfg]
     StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9133"
     StoneHubServiceAddress = "127.0.0.1:9333"
-    MetaDBType = "leveldb"
     [UploaderCfg.PieceStoreConfig]
         Shards = 0
         [UploaderCfg.PieceStoreConfig.Store]
@@ -25,12 +30,11 @@ Service = [
             NoSignRequest = false
             MaxRetries = 5
             TestMode = true
-    [UploaderCfg.MetaLevelDBConfig]
-        Path = "./data/meta"
-        NameSpace = "bnb-sp"
-        Cache = 4096
-        FileHandles = 1000
-        ReadOnly = false
+    [UploaderCfg.ChainConfig]
+        ChainID = "greenfield_9000-1741"
+        [[UploaderCfg.ChainConfig.NodeAddr]]
+            GreenfieldAddr = ["localhost:9090"]
+            TendermintAddr = ["http://0.0.0.0:26750"]
 
 [DownloaderCfg]
     Address = "127.0.0.1:9233"
@@ -42,10 +46,16 @@ Service = [
             NoSignRequest = false
             MaxRetries = 5
             TestMode = true
+    [DownloaderCfg.ChainConfig]
+        ChainID = "greenfield_9000-1741"
+        [[DownloaderCfg.ChainConfig.NodeAddr]]
+            GreenfieldAddr = ["localhost:9090"]
+            TendermintAddr = ["http://0.0.0.0:26750"]
 
 [StoneHubCfg]
     StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9333"
+    SignerServiceAddress = "127.0.0.1:9633"
     JobDBType = "memory"
     MetaDBType = "leveldb"
     [StoneHubCfg.MetaLevelDBConfig]
@@ -54,6 +64,11 @@ Service = [
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
+    [StoneHubCfg.ChainConfig]
+        ChainID = "greenfield_9000-1741"
+        [[StoneHubCfg.ChainConfig.NodeAddr]]
+            GreenfieldAddr = ["localhost:9090"]
+            TendermintAddr = ["http://0.0.0.0:26750"]
 
 [StoneNodeCfg]
     StorageProvider = "gnfd-test-sp"
@@ -73,6 +88,7 @@ Service = [
 [SyncerCfg]
     StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9533"
+    SignerServiceAddress = "127.0.0.1:9633"
     MetaDBType = "leveldb"
     [SyncerCfg.PieceStoreConfig.Store]
         Storage = "file"
@@ -117,45 +133,3 @@ Service = [
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
-
-[BlockSyncerCfg]
-[BlockSyncerCfg.Chain]
-Bech32Prefix = "cosmos"
-Modules = [ "block", "validator", "account", "tx" ]
-
-[BlockSyncerCfg.Node]
-Type = "remote"
-[BlockSyncerCfg.Node.RPC]
-ClientName = "juno"
-Address = "http://localhost:26750"
-MaxConnections = 20
-[BlockSyncerCfg.Node.GRPC]
-Insecure = true
-Address = "http://localhost:9090"
-
-[BlockSyncerCfg.Parser]
-FastSync = false
-ParseNewBlocks = true
-ParseGenesis = true
-ParseOldBlocks = true
-StartHeight = 1
-Workers = 1
-
-[BlockSyncerCfg.Database]
-Type = "mysql"
-PartitionSize = 10_000
-MaxIdleConnections = 1
-MaxOpenConnections = 1
-
-[BlockSyncerCfg.Logging]
-Level = "debug"
-
-[MetadataCfg]
-    Address = "127.0.0.1:9833"
-    MetaDBType = "sqldb"
-    [MetadataCfg.MetaSqlDBConfig]
-        User = "root"
-        Passwd = "test_pwd"
-        Address = "127.0.0.1:3306"
-        Database = "meta_db"
-

@@ -17,7 +17,6 @@ import (
 func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	var count uint32
 	var integrityMeta *spdb.IntegrityMeta
-	var spID string
 	var traceID string
 	var value []byte
 	pieceHash := make([][]byte, 0)
@@ -30,7 +29,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 				return merrors.ErrReceivedPieceCount
 			}
 			integrityMeta.PieceHash = pieceHash
-			sealInfo, err := s.generateSealInfo(spID, integrityMeta)
+			sealInfo, err := s.generateSealInfo(s.config.StorageProvider, integrityMeta)
 			if err != nil {
 				log.Errorw("syncer generate seal info failed", "error", err)
 				return err
@@ -58,7 +57,6 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 			return err
 		}
 		count++
-		spID = req.GetSyncerInfo().GetStorageProviderId()
 		integrityMeta, value, err = s.handlePieceData(req, count)
 		if err != nil {
 			return err

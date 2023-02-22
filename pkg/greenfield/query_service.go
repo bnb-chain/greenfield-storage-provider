@@ -6,6 +6,7 @@ import (
 	"time"
 
 	merror "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -14,8 +15,9 @@ import (
 
 // GetCurrentHeight the block height sub one as the stable height.
 func (greenfield *Greenfield) GetCurrentHeight(ctx context.Context) (int64, error) {
-	status, err := greenfield.GetGreenfieldClient().GnfdCompositeClient().RpcClient.TmClient.Status(ctx)
+	status, err := greenfield.getCurrentClient().GnfdCompositeClient().RpcClient.TmClient.Status(ctx)
 	if err != nil {
+		log.Warnw("failed to query status", "error", err)
 		return 0, err
 	}
 	height := status.SyncInfo.LatestBlockHeight
@@ -27,9 +29,10 @@ func (greenfield *Greenfield) GetCurrentHeight(ctx context.Context) (int64, erro
 
 // HasAccount returns an indication of the existence of address.
 func (greenfield *Greenfield) HasAccount(ctx context.Context, address string) (bool, error) {
-	client := greenfield.GetGreenfieldClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdCompositeClient()
 	resp, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: address})
 	if err != nil {
+		log.Warnw("failed to query account", "error", err, "address", address)
 		return false, err
 	}
 	return resp.GetAccount() != nil, nil
@@ -37,7 +40,7 @@ func (greenfield *Greenfield) HasAccount(ctx context.Context, address string) (b
 
 // QuerySPInfo returns the list of storage provider info.
 func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.StorageProvider, error) {
-	client := greenfield.GetGreenfieldClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdCompositeClient()
 	var spInfos []*sptypes.StorageProvider
 	resp, err := client.StorageProviders(ctx, &sptypes.QueryStorageProvidersRequest{
 		Pagination: &query.PageRequest{
@@ -46,6 +49,7 @@ func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.Stora
 		},
 	})
 	if err != nil {
+		log.Warnw("failed to query sp list", "error", err)
 		return spInfos, err
 	}
 	for i := 0; i < len(resp.GetSps()); i++ {
@@ -56,9 +60,10 @@ func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.Stora
 
 // QueryBucketInfo return the bucket info by name.
 func (greenfield *Greenfield) QueryBucketInfo(ctx context.Context, bucket string) (*storagetypes.BucketInfo, error) {
-	client := greenfield.GetGreenfieldClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdCompositeClient()
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if err != nil {
+		log.Warnw("failed to query bucket", "error", err, "bucket_name", bucket)
 		return nil, err
 	}
 	return resp.GetBucketInfo(), nil
@@ -66,12 +71,13 @@ func (greenfield *Greenfield) QueryBucketInfo(ctx context.Context, bucket string
 
 // QueryObjectInfo return the object info by name.
 func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.ObjectInfo, error) {
-	client := greenfield.GetGreenfieldClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdCompositeClient()
 	resp, err := client.HeadObject(ctx, &storagetypes.QueryHeadObjectRequest{
 		BucketName: bucket,
 		ObjectName: object,
 	})
 	if err != nil {
+		log.Warnw("failed to query object", "error", err, "bucket_name", bucket, "object_name", object)
 		return nil, err
 	}
 	return resp.GetObjectInfo(), nil
@@ -93,6 +99,7 @@ func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, obje
 			return
 		}
 	}
+	log.Warnw("listen seal object timeout", "error", err, "bucket_name", bucket, "object_name", object)
 	err = merror.ErrSealTimeout
 	return
 }

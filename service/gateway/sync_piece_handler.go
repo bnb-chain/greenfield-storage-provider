@@ -21,16 +21,17 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		err            error
 		errDescription *errorDescription
 		reqContext     *requestContext
+		statusCode     = http.StatusOK
 	)
 
+	reqContext = newRequestContext(r)
 	defer func() {
-		statusCode := 200
 		if errDescription != nil {
 			statusCode = errDescription.statusCode
 			_ = errDescription.errorResponse(w, reqContext)
 		}
-		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "syncPiece", statusCode,
+		if statusCode == http.StatusOK {
+			log.Infof("action(%v) statusCode(%v) %v", "syncPiece", statusCode,
 				reqContext.generateRequestDetail())
 		} else {
 			log.Errorf("action(%v) statusCode(%v) %v", "syncPiece", statusCode,
@@ -38,7 +39,6 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	reqContext = newRequestContext(r)
 	log.Infow("sync piece handler receive data", "request", reqContext.generateRequestDetail())
 	syncerInfo, err := getReqHeader(r.Header)
 	if err != nil {

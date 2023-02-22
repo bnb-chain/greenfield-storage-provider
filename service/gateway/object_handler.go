@@ -29,10 +29,10 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 		readN, writeN int
 		size          int
-		statusCode    int
+		statusCode    = http.StatusOK
 	)
-	statusCode = http.StatusOK
 
+	requestContext = newRequestContext(r)
 	defer func() {
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
@@ -45,7 +45,6 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	requestContext = newRequestContext(r)
 	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
@@ -55,9 +54,9 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err = requestContext.verifySignature(); err != nil {
+	if addr, err = requestContext.verifySignature(); err != nil {
 		log.Infow("failed to verify signature", "error", err)
-		errorDescription = SignatureDoesNotMatch
+		errorDescription = SignatureNotMatch
 		return
 	}
 	if err = g.checkAuthorization(requestContext, addr); err != nil {
@@ -134,17 +133,18 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		requestContext   *requestContext
 		addr             sdk.AccAddress
 
-		buf      = make([]byte, 65536)
-		readN    int
-		size     uint64
-		hashBuf  = make([]byte, 65536)
-		md5Hash  = md5.New()
-		md5Value string
-		objectID uint64
+		buf        = make([]byte, 65536)
+		readN      int
+		size       uint64
+		hashBuf    = make([]byte, 65536)
+		md5Hash    = md5.New()
+		md5Value   string
+		objectID   uint64
+		statusCode = http.StatusOK
 	)
 
+	requestContext = newRequestContext(r)
 	defer func() {
-		statusCode := http.StatusOK
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
@@ -156,7 +156,6 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	requestContext = newRequestContext(r)
 	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
@@ -168,7 +167,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	if addr, err = requestContext.verifySignature(); err != nil {
 		log.Warnw("failed to verify signature", "error", err)
-		errorDescription = SignatureDoesNotMatch
+		errorDescription = SignatureNotMatch
 		return
 	}
 	if err = g.checkAuthorization(requestContext, addr); err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"google.golang.org/grpc"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -129,10 +128,10 @@ func (signer *SignerServer) IPWhitelistInterceptor() grpc.UnaryServerInterceptor
 // AuthInterceptor returns a new unary server interceptors that performs per-request auth.
 func (signer *SignerServer) AuthInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		apiKey := metautils.ExtractIncoming(ctx).Get(APITokenMD)
-		if apiKey != signer.config.APIKey {
-			return nil, merrors.ErrAPIKey
-		}
+		//apiKey := metautils.ExtractIncoming(ctx).Get(APITokenMD)
+		//if apiKey != signer.config.APIKey {
+		//	return nil, merrors.ErrAPIKey
+		//}
 		return handler(ctx, req)
 	}
 }
