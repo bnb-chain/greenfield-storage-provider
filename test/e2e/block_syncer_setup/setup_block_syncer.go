@@ -17,7 +17,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metalevel"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	dbConf "github.com/forbole/juno/v4/database/config"
@@ -48,9 +47,9 @@ func initConfig() {
 	if cfg.SyncerCfg.MetaLevelDBConfig == nil {
 		cfg.SyncerCfg.MetaLevelDBConfig = metalevel.DefaultMetaLevelDBConfig
 	}
-	if cfg.SyncerCfg.PieceConfig == nil {
-		cfg.SyncerCfg.PieceConfig = storage.DefaultPieceStoreConfig
-	}
+	//iff cfg.SyncerCfg.PieceConfig == nil {
+	//	cfg.SyncerCfg.PieceConfig = storage.DefaultPieceStoreConfig
+	//}
 	avgBlockTime := time.Second
 	cfg.BlockSyncerCfg.Parser.AvgBlockTime = &avgBlockTime
 	cfg.BlockSyncerCfg.Database.Secrets = &dbConf.Params{}
