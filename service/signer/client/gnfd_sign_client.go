@@ -93,6 +93,15 @@ func NewGreenfieldChainSignClient(
 	}, nil
 }
 
+// GetAddr returns the public address of the private key.
+func (client *GreenfieldChainSignClient) GetAddr(scope SignType) (sdk.AccAddress, error) {
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		return nil, err
+	}
+	return km.GetAddr(), nil
+}
+
 // Sign returns a msg signature signed by private key.
 func (client *GreenfieldChainSignClient) Sign(scope SignType, msg []byte) ([]byte, error) {
 	km, err := client.greenfieldClients[scope].GetKeyManager()
@@ -103,6 +112,7 @@ func (client *GreenfieldChainSignClient) Sign(scope SignType, msg []byte) ([]byt
 	return km.GetPrivKey().Sign(msg)
 }
 
+// VerifySignature verifies the signature.
 func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, sig []byte) bool {
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
@@ -123,7 +133,11 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	)
 
 	for _, sp := range object.SecondarySps {
-		secondarySPAccs = append(secondarySPAccs, sdk.AccAddress(sp.SpId))
+		opAddr, err := sdk.AccAddressFromHexUnsafe(sp.SpId) // should be 0x...
+		if err != nil {
+			return nil, err
+		}
+		secondarySPAccs = append(secondarySPAccs, opAddr)
 		secondarySPSignatures = append(secondarySPSignatures, sp.Signature)
 	}
 	km, err := client.greenfieldClients[scope].GetKeyManager()
