@@ -27,6 +27,7 @@ type Gateway struct {
 	uploader   *uclient.UploaderClient
 	downloader *dclient.DownloaderClient
 	challenge  *client.ChallengeClient
+	syncer     client.SyncerAPI
 
 	// mock
 	chain     *chainClient
@@ -56,6 +57,10 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		log.Warnw("failed to challenge client", "err", err)
 		return nil, err
 	}
+	if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {
+		log.Errorw("gateway inits syncer client failed", "error", err)
+		return nil, err
+	}
 	if g.chain, err = newChainClient(g.config.ChainConfig); err != nil {
 		log.Warnw("failed to create chain client", "err", err)
 		return nil, err
@@ -83,7 +88,7 @@ func (g *Gateway) Start(ctx context.Context) error {
 // Serve starts http service.
 func (g *Gateway) Serve() {
 	router := mux.NewRouter().SkipClean(true)
-	g.registerhandler(router)
+	g.registerHandler(router)
 	server := &http.Server{
 		Addr:    g.config.Address,
 		Handler: router,

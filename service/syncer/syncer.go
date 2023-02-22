@@ -45,7 +45,7 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 
 // initClient
 func (s *Syncer) initClient() error {
-	store, err := client.NewStoreClient(s.config.PieceConfig)
+	store, err := client.NewStoreClient(s.config.PieceStoreConfig)
 	if err != nil {
 		log.Errorw("syncer starts piece store client failed", "error", err)
 		return err
