@@ -1,21 +1,17 @@
 package client
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"sync"
 
-	"cosmossdk.io/errors"
 	"github.com/bnb-chain/greenfield/sdk/client"
 	"github.com/bnb-chain/greenfield/sdk/keys"
 	ctypes "github.com/bnb-chain/greenfield/sdk/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -97,6 +93,15 @@ func NewGreenfieldChainSignClient(
 	}, nil
 }
 
+// GetAddr returns the public address of the private key.
+func (client *GreenfieldChainSignClient) GetAddr(scope SignType) (sdk.AccAddress, error) {
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		return nil, err
+	}
+	return km.GetAddr(), nil
+}
+
 // Sign returns a msg signature signed by private key.
 func (client *GreenfieldChainSignClient) Sign(scope SignType, msg []byte) ([]byte, error) {
 	km, err := client.greenfieldClients[scope].GetKeyManager()
@@ -107,52 +112,14 @@ func (client *GreenfieldChainSignClient) Sign(scope SignType, msg []byte) ([]byt
 	return km.GetPrivKey().Sign(msg)
 }
 
+// VerifySignature verifies the signature.
 func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, sig []byte) bool {
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		return false
 	}
-	sigHash := crypto.Keccak256(msg)
-	return VerifySignature(km.GetAddr(), sigHash, sig) == nil
-	//return storagetypes.VerifySignature(km.GetAddr(), crypto.Keccak256(msg), sig) == nil
-}
 
-// TODO: bump to the latest version of greenfield, waiting for the fixed version
-func VerifySignature(sigAccAddress sdk.AccAddress, sigHash []byte, sig []byte) error {
-	if len(sig) != crypto.SignatureLength {
-		return errors.Wrapf(sdkerrors.ErrorInvalidSigner, "signature length (actual: %d) doesn't match typical [R||S||V] signature 65 bytes", len(sig))
-	}
-	if sig[crypto.RecoveryIDOffset] == 27 || sig[crypto.RecoveryIDOffset] == 28 {
-		sig[crypto.RecoveryIDOffset] -= 27
-	}
-	pubKeyBytes, err := secp256k1.RecoverPubkey(sigHash, sig)
-	if err != nil {
-		return errors.Wrap(err, "failed to recover delegated fee payer from sig")
-	}
-
-	ecPubKey, err := crypto.UnmarshalPubkey(pubKeyBytes)
-	if err != nil {
-		return errors.Wrap(err, "failed to unmarshal recovered fee payer pubkey")
-	}
-
-	pubKeyAddr := crypto.PubkeyToAddress(*ecPubKey)
-	if !bytes.Equal(pubKeyAddr.Bytes(), sigAccAddress.Bytes()) {
-		return errors.Wrapf(sdkerrors.ErrInvalidPubKey, "feePayer pubkey %s is different from transaction pubkey %s", pubKeyAddr, sigAccAddress)
-	}
-
-	recoveredSignerAcc := sdk.AccAddress(pubKeyAddr.Bytes())
-
-	if !recoveredSignerAcc.Equals(sigAccAddress) {
-		return errors.Wrapf(sdkerrors.ErrorInvalidSigner, "failed to verify delegated fee payer %s signature", recoveredSignerAcc)
-	}
-
-	// VerifySignature of ethsecp256k1 accepts 64 byte signature [R||S]
-	// WARNING! Under NO CIRCUMSTANCES try to use pubKey.VerifySignature there
-	if !secp256k1.VerifySignature(pubKeyBytes, sigHash, sig[:len(sig)-1]) {
-		return errors.Wrap(sdkerrors.ErrorInvalidSigner, "unable to verify signer signature of EIP712 typed data")
-	}
-
-	return nil
+	return storagetypes.VerifySignature(km.GetAddr(), crypto.Keccak256(msg), sig) == nil
 }
 
 // SealObject seal the object on the greenfield chain.
@@ -166,7 +133,11 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	)
 
 	for _, sp := range object.SecondarySps {
-		secondarySPAccs = append(secondarySPAccs, sdk.AccAddress(sp.SpId))
+		opAddr, err := sdk.AccAddressFromHexUnsafe(sp.SpId) // should be 0x...
+		if err != nil {
+			return nil, err
+		}
+		secondarySPAccs = append(secondarySPAccs, opAddr)
 		secondarySPSignatures = append(secondarySPSignatures, sp.Signature)
 	}
 	km, err := client.greenfieldClients[scope].GetKeyManager()

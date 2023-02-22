@@ -18,6 +18,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	var count uint32
 	var integrityMeta *spdb.IntegrityMeta
 	var spID string
+	var traceID string
 	var value []byte
 	pieceHash := make([][]byte, 0)
 
@@ -37,7 +38,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 				return err
 			}
 			resp := &stypes.SyncerServiceSyncPieceResponse{
-				TraceId:         req.GetTraceId(),
+				TraceId:         traceID,
 				SecondarySpInfo: sealInfo,
 				ErrMessage: &stypes.ErrMessage{
 					ErrCode: stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
@@ -58,6 +59,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 		if err != nil {
 			return err
 		}
+		traceID = req.GetTraceId()
 		pieceHash = append(pieceHash, hash.GenerateChecksum(value))
 	}
 }

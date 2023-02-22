@@ -8,6 +8,7 @@ Service = [
     Domain = "gnfd.nodereal.com"
     UploaderServiceAddress = "127.0.0.1:9133"
     DownloaderServiceAddress = "127.0.0.1:9233"
+    SyncerServiceAddress = "127.0.0.1:9533"
     ChallengeServiceAddress = "127.0.0.1:9633"
 
 
@@ -21,6 +22,7 @@ Service = [
         [UploaderCfg.PieceStoreConfig.Store]
             Storage = "file"
             BucketURL = "./data/primary_payload_data"
+            NoSignRequest = false
             MaxRetries = 5
             TestMode = true
     [UploaderCfg.MetaLevelDBConfig]
@@ -37,6 +39,7 @@ Service = [
         [DownloaderCfg.PieceStoreConfig.Store]
             Storage = "file"
             BucketURL = "./data/primary_payload_data"
+            NoSignRequest = false
             MaxRetries = 5
             TestMode = true
 
@@ -52,18 +55,18 @@ Service = [
         FileHandles = 1000
         ReadOnly = false
 
-
 [StoneNodeCfg]
     StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9433"
+    GatewayAddress = ["127.0.0.1:9034", "127.0.0.1:9035", "127.0.0.1:9036", "127.0.0.1:9037", "127.0.0.1:9038", "127.0.0.1:9039"]
     StoneHubServiceAddress = "127.0.0.1:9333"
-    SyncerServiceAddress = ["127.0.0.1:9543", "127.0.0.1:9553", "127.0.0.1:9563", "127.0.0.1:9573", "127.0.0.1:9583", "127.0.0.1:9593"]
     StoneJobLimit = 64
-    [StoneNodeCfg.PieceConfig]
+    [StoneNodeCfg.PieceStoreConfig]
         Shards = 0
-        [StoneNodeCfg.PieceConfig.Store]
+        [StoneNodeCfg.PieceStoreConfig.Store]
             Storage = "file"
             BucketURL = "./data/primary_payload_data"
+            NoSignRequest = false
             MaxRetries = 5
             TestMode = true
 
@@ -71,9 +74,10 @@ Service = [
     StorageProvider = "gnfd-test-sp"
     Address = "127.0.0.1:9533"
     MetaDBType = "leveldb"
-    [SyncerCfg.PieceConfig.Store]
+    [SyncerCfg.PieceStoreConfig.Store]
         Storage = "file"
         BucketURL = "./data/secondary_payload_data"
+        NoSignRequest = false
         MaxRetries = 5
         TestMode = true
     [SyncerCfg.MetaLevelDBConfig]
@@ -98,7 +102,7 @@ Service = [
 
 [ChallengeCfg]
     StorageProvider = "gnfd-test-sp"
-    Address = "127.0.0.1:9633"
+    Address = "127.0.0.1:9733"
     MetaDBType = "leveldb"
     [ChallengeCfg.PieceStoreConfig]
         Shards = 0
