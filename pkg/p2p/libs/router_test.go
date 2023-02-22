@@ -1,4 +1,4 @@
-package p2p_test
+package libs_test
 
 import (
 	"context"
@@ -11,18 +11,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	"github.com/fortytw2/leaktest"
 	"github.com/gogo/protobuf/proto"
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
+	p2p "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/crypto"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/mocks"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/p2ptest"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"
 )
 

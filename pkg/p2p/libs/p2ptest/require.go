@@ -1,4 +1,4 @@
-package p2ptest
+package libstest
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
+	p2p "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"
 )
 
