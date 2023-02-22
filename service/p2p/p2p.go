@@ -26,7 +26,7 @@ import (
 var (
 	SegmentsTimeoutHeight = 3
 	UpdateSpInfoPeriod    = 2
-	RouterLength          = 10240
+	RouterMaxSize         = 10240
 )
 
 var _ lifecycle.Service = &P2PService{}
@@ -39,9 +39,9 @@ type P2PService struct {
 	preactor *P2PReactor
 	spInfoDB *spdb.MetaDB
 
-	routerLen int
-	router    map[string]chan *libs.Envelope
-	mux       sync.Mutex
+	routerSize int
+	router     map[string]chan *libs.Envelope
+	mux        sync.Mutex
 }
 
 // NewP2PService return an P2PService instance.
@@ -55,12 +55,11 @@ func NewP2PService(config *P2PServiceConfig) (*P2PService, error) {
 		return nil, err
 	}
 	return &P2PService{
-		config:    config,
-		pnode:     pnode.(*node.P2PNode),
-		preactor:  preactor.(*P2PReactor),
-		pnodeId:   pnode.(*node.P2PNode).GetNodeId(),
-		routerLen: RouterLength,
-		router:    make(map[string]chan *libs.Envelope),
+		config:   config,
+		pnode:    pnode.(*node.P2PNode),
+		preactor: preactor.(*P2PReactor),
+		pnodeId:  pnode.(*node.P2PNode).GetNodeId(),
+		router:   make(map[string]chan *libs.Envelope),
 	}, nil
 }
 
@@ -143,11 +142,27 @@ func (service *P2PService) notifyByRouter(routerKey string, envelope *libs.Envel
 func (service *P2PService) addRouter(routerKey string) error {
 	service.mux.Lock()
 	defer service.mux.Unlock()
+	if service.routerSize >= RouterMaxSize {
+		return errors.New("p2p overload protection is activated")
+	}
+	service.routerSize++
 	if _, ok := service.router[routerKey]; !ok {
 		return errors.New("has already")
 	}
 	service.router[routerKey] = make(chan *libs.Envelope)
 	return nil
+}
+
+func (service *P2PService) deleteRouter(routerKey string) {
+	service.mux.Lock()
+	defer service.mux.Unlock()
+
+	if _, ok := service.router[routerKey]; !ok {
+		return
+	}
+	service.routerSize--
+	delete(service.router, routerKey)
+	return
 }
 
 func (service *P2PService) getRouterCh(routerKey string) (chan *libs.Envelope, error) {
