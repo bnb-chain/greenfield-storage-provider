@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/service"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/service"
 )
 
 const (

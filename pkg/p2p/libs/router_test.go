@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	"github.com/fortytw2/leaktest"
 	"github.com/gogo/protobuf/proto"
 	gogotypes "github.com/gogo/protobuf/types"
@@ -21,7 +20,9 @@ import (
 
 	p2p "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/crypto"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/mocks"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/p2ptest"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"
 )
 

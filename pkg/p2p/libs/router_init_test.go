@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"
 )
 

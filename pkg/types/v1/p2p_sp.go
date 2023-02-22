@@ -19,7 +19,6 @@ func (m *SPMessage) Wrap(pb proto.Message) error {
 	default:
 		return fmt.Errorf("unknown message: %T", msg)
 	}
-
 	return nil
 }
 
@@ -55,6 +54,4 @@ func (m *SPMessage) Validate() error {
 	default:
 		return fmt.Errorf("unknown message type: %T", msg)
 	}
-
-	return nil
 }

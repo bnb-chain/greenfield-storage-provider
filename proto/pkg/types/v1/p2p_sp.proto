@@ -19,12 +19,10 @@ message AskApprovalRequest {
 }
 
 message AckApproval {
-  string NodeId = 1;
-  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 2;
+  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 1;
 }
 
 message RefuseApproval {
-  string NodeId = 1;
-  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 2;
+  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 1;
   string reason = 3;
 }

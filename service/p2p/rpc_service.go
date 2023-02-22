@@ -23,10 +23,11 @@ func (service *P2PService) AskSecondaryApproval(
 	err error) {
 	ctx = log.Context(ctx)
 	var (
-		bucket   = req.GetCreateObjectMsg().GetBucketName()
-		object   = req.GetCreateObjectMsg().GetObjectName()
-		syncCh   = make(chan struct{})
-		ackCount int32
+		bucket    = req.GetCreateObjectMsg().GetBucketName()
+		object    = req.GetCreateObjectMsg().GetObjectName()
+		routerKey = hash.HexStringHash(bucket, object)
+		syncCh    = make(chan struct{})
+		ackCount  int32
 	)
 	resp = &stypes.P2PServiceAskSecondaryApprovalResponse{}
 	defer func() {
@@ -41,10 +42,8 @@ func (service *P2PService) AskSecondaryApproval(
 			return
 		}
 		log.CtxInfow(ctx, "success to ask approval", "bucket", bucket, "object", object)
-		return
 	}()
 
-	routerKey := hash.HexStringHash(bucket, object)
 	err = service.addRouter(routerKey)
 	if err != nil {
 		return
@@ -57,6 +56,7 @@ func (service *P2PService) AskSecondaryApproval(
 
 	go func() {
 		defer func() {
+			service.deleteRouter(routerKey)
 			syncCh <- struct{}{}
 		}()
 
@@ -79,7 +79,6 @@ func (service *P2PService) AskSecondaryApproval(
 				return
 			}
 		}
-		return
 	}()
 	service.publishInfo(&libs.Envelope{
 		Message: &ptypes.AskApprovalRequest{
