@@ -79,7 +79,6 @@ func (service *P2PService) AskSecondaryApproval(
 				return
 			}
 		}
-		return
 	}()
 	service.publishInfo(&libs.Envelope{
 		Message: &ptypes.AskApprovalRequest{

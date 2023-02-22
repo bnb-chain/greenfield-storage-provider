@@ -81,6 +81,11 @@ func (service *P2PService) Stop(ctx context.Context) error {
 	return nil
 }
 
+// GetReactor return the preactor for test
+func (service *P2PService) GetReactor() *P2PReactor {
+	return service.preactor
+}
+
 // handler the p2p request from peers.
 func (service *P2PService) eventloop(ctx context.Context) {
 	ticker := time.NewTicker(time.Duration(UpdateSpInfoPeriod) * time.Second)
