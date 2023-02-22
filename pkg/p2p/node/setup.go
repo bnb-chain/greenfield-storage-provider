@@ -7,7 +7,7 @@ import (
 	tmlog "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	"github.com/tendermint/tendermint/version"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
+	p2p "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/conn"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/pex"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"

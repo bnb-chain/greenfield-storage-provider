@@ -2,14 +2,20 @@ syntax = "proto3";
 
 package service.types.v1;
 
+import "service/types/v1/uploader.proto";
+import "greenfield/storage/tx.proto";
+
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/types/v1";
 
 message P2PServiceAskSecondaryApprovalRequest {
-
+  int32 min_approval_count = 1;
+  int32 max_approval_count = 2;
+  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 3;
 }
 
 message P2PServiceAskSecondaryApprovalResponse {
-
+  repeated bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 1;
+  ErrMessage err_message = 2;
 }
 
 service P2PService {

@@ -8,13 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
+	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
+	p2p "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/crypto/ed25519"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/p2ptest"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"
 	p2pproto "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 )
