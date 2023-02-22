@@ -3,6 +3,7 @@ package hash
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 )
 
@@ -33,4 +34,14 @@ func CheckIntegrityHash(integrityHash []byte, checksumList [][]byte, index int, 
 		return fmt.Errorf("piece data integrity checksum is not correct")
 	}
 	return nil
+}
+
+// HexStringHash compute the inputs hash and return the hex string.
+func HexStringHash(items ...string) string {
+	hash := sha256.New()
+	for _, item := range items {
+		hash.Write([]byte(item))
+	}
+	hashByte := hash.Sum(nil)
+	return hex.EncodeToString(hashByte)
 }

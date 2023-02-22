@@ -1,4 +1,4 @@
-package p2p
+package libs
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/conn"
