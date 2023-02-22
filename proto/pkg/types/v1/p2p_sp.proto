@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package pkg.types.v1;
+
+import "greenfield/storage/tx.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1";
+
+message SPMessage {
+  oneof inner {
+    AskApprovalRequest ask_approval_request = 1;
+    AckApproval ack_approval = 2;
+    RefuseApproval refuse_approval = 3;
+  }
+}
+
+message AskApprovalRequest {
+  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 1;
+}
+
+message AckApproval {
+  string NodeId = 1;
+  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 2;
+}
+
+message RefuseApproval {
+  string NodeId = 1;
+  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 2;
+  string reason = 3;
+}

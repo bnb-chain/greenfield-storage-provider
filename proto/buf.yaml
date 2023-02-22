@@ -1,7 +1,7 @@
 version: v1
 deps:
   - buf.build/cosmos/cosmos-proto
-  - buf.build/gogo/protobuf
+  - buf.build/bnb-chain/greenfield
 breaking:
   use:
     - FILE

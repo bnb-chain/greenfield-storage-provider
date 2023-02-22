@@ -1,5 +1,5 @@
 Service = [
-    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer",
+    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "P2PService",
 ]
 
 [GatewayCfg]
@@ -83,4 +83,4 @@ Service = [
 [P2PCfg]
     GrpcAddress = "127.0.0.1:9733"
     P2PListenAddresss = "127.0.0.1:21303"
-    P2PExternalAddresss = "127.0.0.1:21313"
+    NodeKeyPath = "node_key.json"

@@ -1,4 +1,4 @@
-package p2ptest
+package libstest
 
 import (
 	gogotypes "github.com/gogo/protobuf/types"

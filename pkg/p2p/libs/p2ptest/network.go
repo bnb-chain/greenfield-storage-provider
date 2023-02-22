@@ -1,4 +1,4 @@
-package p2ptest
+package libstest
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
+	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
+	p2p "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/crypto"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/crypto/ed25519"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"
@@ -348,10 +348,10 @@ func (n *Node) MakePeerUpdatesNoRequireEmpty(ctx context.Context, t *testing.T) 
 
 func MakeChannelDesc(chID p2p.ChannelID) *p2p.ChannelDescriptor {
 	return &p2p.ChannelDescriptor{
-		ID:                chID,
-		MessageType:       &Message{},
-		Priority:          5,
-		SendQueueCapacity: 10,
+		ID:                  chID,
+		MessageType:         &Message{},
+		Priority:            5,
+		SendQueueCapacity:   10,
 		RecvMessageCapacity: 10,
 	}
 }

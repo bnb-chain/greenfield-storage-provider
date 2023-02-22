@@ -1,4 +1,4 @@
-package p2p_test
+package libs_test
 
 import (
 	"context"
@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	"github.com/fortytw2/leaktest"
 	"github.com/stretchr/testify/require"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
+	p2p "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/conn"
 )
 
