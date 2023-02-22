@@ -14,12 +14,11 @@ import (
 
 // GetCurrentHeight the block height sub one as the stable height.
 func (greenfield *Greenfield) GetCurrentHeight(ctx context.Context) (int64, error) {
-	client := greenfield.GetGreenfieldClient().Tendermint()
-	resp, err := client.TmClient.Status(ctx)
+	status, err := greenfield.GetGreenfieldClient().GnfdCompositeClient().RpcClient.TmClient.Status(ctx)
 	if err != nil {
 		return 0, err
 	}
-	height := resp.SyncInfo.LatestBlockHeight
+	height := status.SyncInfo.LatestBlockHeight
 	if height > 0 {
 		height = height - 1
 	}
@@ -28,7 +27,7 @@ func (greenfield *Greenfield) GetCurrentHeight(ctx context.Context) (int64, erro
 
 // HasAccount returns an indication of the existence of address.
 func (greenfield *Greenfield) HasAccount(ctx context.Context, address string) (bool, error) {
-	client := greenfield.GetGreenfieldClient().Greenfield()
+	client := greenfield.GetGreenfieldClient().GnfdCompositeClient()
 	resp, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: address})
 	if err != nil {
 		return false, err
@@ -38,7 +37,7 @@ func (greenfield *Greenfield) HasAccount(ctx context.Context, address string) (b
 
 // QuerySPInfo returns the list of storage provider info.
 func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.StorageProvider, error) {
-	client := greenfield.GetGreenfieldClient().Greenfield()
+	client := greenfield.GetGreenfieldClient().GnfdCompositeClient()
 	var spInfos []*sptypes.StorageProvider
 	resp, err := client.StorageProviders(ctx, &sptypes.QueryStorageProvidersRequest{
 		Pagination: &query.PageRequest{
@@ -57,8 +56,8 @@ func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.Stora
 
 // QueryBucketInfo return the bucket info by name.
 func (greenfield *Greenfield) QueryBucketInfo(ctx context.Context, bucket string) (*storagetypes.BucketInfo, error) {
-	client := greenfield.GetGreenfieldClient().Greenfield()
-	resp, err := client.Bucket(ctx, &storagetypes.QueryBucketRequest{BucketName: bucket})
+	client := greenfield.GetGreenfieldClient().GnfdCompositeClient()
+	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +66,8 @@ func (greenfield *Greenfield) QueryBucketInfo(ctx context.Context, bucket string
 
 // QueryObjectInfo return the object info by name.
 func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.ObjectInfo, error) {
-	client := greenfield.GetGreenfieldClient().Greenfield()
-	resp, err := client.Object(ctx, &storagetypes.QueryObjectRequest{
+	client := greenfield.GetGreenfieldClient().GnfdCompositeClient()
+	resp, err := client.HeadObject(ctx, &storagetypes.QueryHeadObjectRequest{
 		BucketName: bucket,
 		ObjectName: object,
 	})

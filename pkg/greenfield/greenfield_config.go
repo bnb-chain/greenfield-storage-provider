@@ -1,8 +1,8 @@
 package greenfield
 
 type NodeConfig struct {
-	GreenfieldAddr string
-	TendermintAddr string
+	GreenfieldAddr []string
+	TendermintAddr []string
 }
 
 type GreenfieldChainConfig struct {
@@ -13,8 +13,8 @@ type GreenfieldChainConfig struct {
 var DefaultGreenfieldChainConfig = &GreenfieldChainConfig{
 	ChainID: "greenfield_9000-121",
 	NodeAddr: []*NodeConfig{&NodeConfig{
-		GreenfieldAddr: "127.0.0.1:9090",
-		TendermintAddr: "127.0.0.1:9091",
+		GreenfieldAddr: []string{"127.0.0.1:9090"},
+		TendermintAddr: []string{"127.0.0.1:9091"},
 	},
 	},
 }

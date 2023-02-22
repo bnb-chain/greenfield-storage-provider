@@ -54,36 +54,48 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	actionName := requestContext.vars["action"]
-	// TODO: deserialize it
-	_ = r.Header.Get(model.GnfdApprovalMsgHeader)
+	approvalMsg, err := hex.DecodeString(r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+	if err != nil {
+		log.Warnw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+		errorDescription = InvalidHeader
+	}
 
 	switch actionName {
 	case createBucketApprovalAction:
-		var approvalSignature []byte
-		msg := &types.MsgCreateBucket{}
-		ctx := log.Context(context.Background(), msg)
-		approvalSignature, err = g.signer.SignBucketApproval(ctx, msg)
+		var (
+			msg               = types.MsgCreateBucket{}
+			approvalSignature []byte
+		)
+
+		btypes.ModuleCdc.MustUnmarshalJSON(approvalMsg, &msg)
+		// TODO: to config it
+		msg.PrimarySpApproval.ExpiredHeight = 10
+		approvalSignature, err = g.signer.SignBucketApproval(context.Background(), &msg)
 		if err != nil {
-			log.Warnw("failed to sign approval", "error", err)
+			log.Warnw("failed to sign create bucket approval", "error", err)
 			errorDescription = InternalError
 			return
 		}
-		msg.PrimarySpApprovalSignature = approvalSignature
-		bz := btypes.ModuleCdc.MustMarshalJSON(msg)
-		w.Header().Set(model.GnfdApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
+		msg.PrimarySpApproval.Sig = approvalSignature
+		bz := btypes.ModuleCdc.MustMarshalJSON(&msg)
+		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
 	case createObjectApprovalAction:
-		var approvalSignature []byte
-		msg := &types.MsgCreateObject{}
-		ctx := log.Context(context.Background(), msg)
-		approvalSignature, err = g.signer.SignObjectApproval(ctx, msg)
+		var (
+			msg               = types.MsgCreateObject{}
+			approvalSignature []byte
+		)
+		btypes.ModuleCdc.MustUnmarshalJSON(approvalMsg, &msg)
+		// TODO: to config it
+		msg.PrimarySpApproval.ExpiredHeight = 10
+		approvalSignature, err = g.signer.SignObjectApproval(context.Background(), &msg)
 		if err != nil {
-			log.Warnw("failed to sign approval", "error", err)
+			log.Warnw("failed to sign create object approval", "error", err)
 			errorDescription = InternalError
 			return
 		}
-		msg.PrimarySpApprovalSignature = approvalSignature
-		bz := btypes.ModuleCdc.MustMarshalJSON(msg)
-		w.Header().Set(model.GnfdApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
+		msg.PrimarySpApproval.Sig = approvalSignature
+		bz := btypes.ModuleCdc.MustMarshalJSON(&msg)
+		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
 	default:
 		log.Warnw("not implement approval", "action", actionName)
 		errorDescription = NotImplementedError

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"google.golang.org/grpc"
 
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
@@ -21,7 +22,7 @@ func setup(t *testing.T) *Gateway {
 			DownloaderServiceAddress: "test5",
 			ChallengeServiceAddress:  "test6",
 			SyncerServiceAddress:     "test7",
-			ChainConfig:              DefaultChainClientConfig,
+			ChainConfig:              greenfield.DefaultGreenfieldChainConfig,
 		},
 		name: model.GatewayService,
 	}

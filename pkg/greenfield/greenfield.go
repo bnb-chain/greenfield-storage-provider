@@ -17,19 +17,16 @@ const (
 
 // GreenfieldClient the greenfield chain client, only use to query.
 type GreenfieldClient struct {
-	greenfieldClient chain.GreenfieldClient
-	tendermintClient chain.TendermintClient
-	currentHeight    int64
-	updatedAt        time.Time
-	Provider         string
+	// TODO: polish it by new sdk version
+	gnfdCompositeClients *chain.GnfdCompositeClients
+	gnfdCompositeClient  *chain.GnfdCompositeClient
+	currentHeight        int64
+	updatedAt            time.Time
+	Provider             []string
 }
 
-func (client *GreenfieldClient) Greenfield() chain.GreenfieldClient {
-	return client.greenfieldClient
-}
-
-func (client *GreenfieldClient) Tendermint() chain.TendermintClient {
-	return client.tendermintClient
+func (client *GreenfieldClient) GnfdCompositeClient() *chain.GnfdCompositeClient {
+	return client.gnfdCompositeClient
 }
 
 // Greenfield the greenfield chain service.
@@ -49,9 +46,8 @@ func NewGreenfield(cfg *GreenfieldChainConfig) (*Greenfield, error) {
 	var clients []*GreenfieldClient
 	for _, config := range cfg.NodeAddr {
 		client := &GreenfieldClient{
-			Provider:         config.GreenfieldAddr,
-			greenfieldClient: chain.NewGreenfieldClient(config.GreenfieldAddr, cfg.ChainID),
-			tendermintClient: chain.NewTendermintClient(config.TendermintAddr),
+			Provider:             config.GreenfieldAddr,
+			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddr, config.TendermintAddr, cfg.ChainID),
 		}
 		clients = append(clients, client)
 	}
@@ -104,19 +100,21 @@ func (greenfield *Greenfield) updateClient() {
 				maxHeightClient = greenfield.getCurrentClient()
 			)
 			for _, client := range greenfield.backUpClients {
-				chainInfo, err := client.tendermintClient.TmClient.Status(context.Background())
+				gnfdCompositeClient, err := client.gnfdCompositeClients.GetClient()
 				if err != nil {
-					log.Errorw("get chain info error", "node_addr", client.Provider, "error", err)
+					log.Errorw("get composite client failed ", "node_addr", client.Provider, "error", err)
 					continue
 				}
-				if chainInfo == nil {
-					log.Errorw("get chain info nil", "node_addr", client.Provider)
+				status, err := gnfdCompositeClient.RpcClient.TmClient.Status(context.Background())
+				if err != nil {
+					log.Errorw("get status failed", "node_addr", client.Provider, "error", err)
 					continue
 				}
-				currentHeight := chainInfo.SyncInfo.LatestBlockHeight
+				currentHeight := status.SyncInfo.LatestBlockHeight
 				if currentHeight > maxHeight {
 					maxHeight = currentHeight
 					maxHeightClient = client
+					client.gnfdCompositeClient = gnfdCompositeClient
 				}
 				client.currentHeight = currentHeight
 				client.updatedAt = time.Now()

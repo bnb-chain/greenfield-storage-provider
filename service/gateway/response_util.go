@@ -67,8 +67,8 @@ func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *reque
 
 func generateContentRangeHeader(w http.ResponseWriter, start int64, end int64) {
 	if end < 0 {
-		w.Header().Set(model.ContentLengthHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-")
+		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-")
 	} else {
-		w.Header().Set(model.ContentLengthHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-"+util.Uint64ToHeader(uint64(end)))
+		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-"+util.Uint64ToHeader(uint64(end)))
 	}
 }
