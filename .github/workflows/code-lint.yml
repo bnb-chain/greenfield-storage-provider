@@ -33,6 +33,9 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
+      - name: Install gogofaster
+        run: go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+        
       - uses: bufbuild/buf-setup-action@v1.14.0
         with:
           version: 1.14.0

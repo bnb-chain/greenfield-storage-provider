@@ -1,4 +1,4 @@
-package libstest
+package p2ptest
 
 import (
 	"context"

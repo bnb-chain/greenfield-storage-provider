@@ -4,6 +4,7 @@ import (
 	p2p "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/crypto"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/crypto/ed25519"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/p2ptest"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"
 )
 

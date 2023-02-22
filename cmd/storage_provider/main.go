@@ -102,6 +102,9 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.MetadataCfg = config.DefaultStorageProviderConfig.MetadataCfg
 		}
 		server, err = metadata.NewMetadataService(cfg.MetadataCfg, context.Background())
+		if err != nil {
+			return nil, err
+		}
 	case model.P2PService:
 		if cfg.P2PCfg == nil {
 			cfg.P2PCfg = p2p.DefaultP2PServiceConfig
