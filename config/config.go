@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/forbole/juno/v4/types/config"
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 
 	"github.com/naoina/toml"
 
@@ -29,7 +29,7 @@ type StorageProviderConfig struct {
 	StoneNodeCfg   *stonenode.StoneNodeConfig
 	SyncerCfg      *syncer.SyncerConfig
 	SignerCfg      *signer.SignerConfig
-	BlockSyncerCfg *config.Config
+	BlockSyncerCfg *tomlconfig.TomlConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
@@ -41,7 +41,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	StoneNodeCfg:   stonenode.DefaultStoneNodeConfig,
 	SyncerCfg:      syncer.DefaultSyncerConfig,
 	SignerCfg:      signer.DefaultSignerChainConfig,
-	BlockSyncerCfg: &config.Config{},
+	BlockSyncerCfg: &tomlconfig.TomlConfig{},
 }
 
 // LoadConfig loads the config file

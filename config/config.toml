@@ -117,29 +117,29 @@ Service = [
 
 [BlockSyncerCfg]
     [BlockSyncerCfg.Chain]
-    bech32_prefix = "cosmos"
+    Bech32Prefix = "cosmos"
     [BlockSyncerCfg.Node]
-    type = "remote"
-    [BlockSyncerCfg.Node.Details.Rpc]
-    client_name = "juno"
-    address = "http://localhost:26750"
-    max_connections = 20
-    [BlockSyncerCfg.Node.Details.Grpc]
-    insecure = true
-    address = "http://localhost:9090"
-    [BlockSyncerCfg.Parsing]
-    fast_sync = true
-    parse_new_blocks = true
-    parse_genesis = true
-    parse_old_blocks = true
-    start_height = 1
-    workers = 1
+    Type = "remote"
+    [BlockSyncerCfg.Node.RPC]
+    ClientName = "juno"
+    Address = "http://localhost:26750"
+    MaxConnections = 20
+    [BlockSyncerCfg.Node.GRPC]
+    Insecure = true
+    Address = "http://localhost:9090"
+    [BlockSyncerCfg.Parser]
+    FastSync = true
+    ParseNewBlocks = true
+    ParseGenesis = true
+    ParseOldBlocks = true
+    StartHeight = 1
+    Workers = 1
     [BlockSyncerCfg.Database]
-    type = "mysql"
-    dsn = "root:1q2w3e4r*@tcp(localhost:3306)/greenfiled?parseTime=true&multiStatements=true&loc=Local"
-    partition_size = 10_000
-    max_idle_connections = 1
-    max_open_connections = 1
+    Type = "mysql"
+    DSN = "root:1q2w3e4r*@tcp(localhost:3306)/greenfiled?parseTime=true&multiStatements=true&loc=Local"
+    PartitionSize = 10_000
+    MaxIdleConnections = 1
+    MaxOpenConnections = 1
     [BlockSyncerCfg.Logging]
-    level = "debug"
+    Level = "debug"
 

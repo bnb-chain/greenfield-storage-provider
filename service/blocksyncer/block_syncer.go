@@ -5,6 +5,8 @@ import (
 	"errors"
 	"sync/atomic"
 
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
+
 	"github.com/forbole/juno/v4/cmd"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
 	"github.com/forbole/juno/v4/modules/messages"
@@ -23,7 +25,7 @@ import (
 
 // Syncer synchronizes ec data to piece store
 type BlockSyncer struct {
-	config    *config.Config
+	config    *tomlconfig.TomlConfig
 	name      string
 	parserCtx *parser.Context
 	// store   client.PieceStoreAPI
@@ -32,7 +34,8 @@ type BlockSyncer struct {
 }
 
 // NewSyncerService creates a syncer service to upload piece to piece store
-func NewBlockSyncerService(cfg *config.Config) (*BlockSyncer, error) {
+func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
+	log.Info(cfg.Database.Type)
 	s := &BlockSyncer{
 		config: cfg,
 		name:   model.BlockSyncerService,
@@ -54,13 +57,16 @@ func (s *BlockSyncer) initClient() error {
 		WithParseConfig(parsecmdtypes.NewConfig().
 			WithRegistrar(registrar.NewDefaultRegistrar(
 				messages.CosmosMessageAddressesParser,
-			)),
+			)).WithFileType("toml"),
 		)
 	cmdCfg := junoConfig.GetParseConfig()
-
-	//if readErr := parsecmdtypes.ReadConfigPreRunE(cmdCfg)(nil, nil); readErr != nil {
-	//	return readErr
-	//}
+	cmdCfg.WithTomlConfig(s.config)
+	if readErr := parsecmdtypes.ReadConfigPreRunE(cmdCfg)(nil, nil); readErr != nil {
+		log.Info("readErr: %v", readErr)
+		return readErr
+	}
+	log.Info(s.config.Node)
+	log.Info(config.Cfg.Node)
 	var ctx *parser.Context
 	ctx, err := parsecmdtypes.GetParserContext(config.Cfg, cmdCfg)
 	if err != nil {

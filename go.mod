@@ -7,7 +7,7 @@ replace (
 	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.5
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230221015109-c3718c2abbb7
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230222071122-bc1a0979cdbc
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.1
 )

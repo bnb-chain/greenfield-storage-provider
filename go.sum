@@ -214,8 +214,8 @@ github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d h1:1WdPI/6Anc
 github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d/go.mod h1:zWg5zWuPtfO7ZWP4/3YpCrAOXpWAC80SHV6G+yDhSqA=
 github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419 h1:pMl5XQIBAL51WqkWWYUHITv6epA4y2ZmOjiDr9avbCk=
 github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419/go.mod h1:+b9Ow9h0I6rmPxg54KlqUmrjUgGub7qu0RsUYUQzpYs=
-github.com/bnb-chain/juno/v4 v4.0.0-20230221015109-c3718c2abbb7 h1:dXELVUfZ7bq5WvDO3HSqzcxPVFAiRuIt2Gf8bwNrdes=
-github.com/bnb-chain/juno/v4 v4.0.0-20230221015109-c3718c2abbb7/go.mod h1:lTmL0xXs020/74fQFNu6ZpBGqjW4ug0VFtS6Oesjjk4=
+github.com/bnb-chain/juno/v4 v4.0.0-20230222071122-bc1a0979cdbc h1:t/qEfCXGdNhu28D1po2NjdNtv1u+Bw+yPwHwCFvH2wE=
+github.com/bnb-chain/juno/v4 v4.0.0-20230222071122-bc1a0979cdbc/go.mod h1:lTmL0xXs020/74fQFNu6ZpBGqjW4ug0VFtS6Oesjjk4=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=
