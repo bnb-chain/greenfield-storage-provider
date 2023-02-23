@@ -2,7 +2,6 @@ package provider
 
 import (
 	"strings"
-	"sync"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"
@@ -14,7 +13,6 @@ type ProviderQuerier interface {
 }
 
 type providerQuerier struct {
-	mtx     sync.Mutex
 	db      dao.P2PNodeDB
 	logger  log.Logger
 	dbCache map[types.NodeID]struct{}

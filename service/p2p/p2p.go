@@ -17,7 +17,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/node"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
@@ -37,7 +36,6 @@ type P2PService struct {
 	pnodeId  types.NodeID
 	pnode    *node.P2PNode
 	preactor *P2PReactor
-	spInfoDB *spdb.MetaDB
 
 	routerSize int
 	router     map[string]chan *libs.Envelope
@@ -103,9 +101,7 @@ func (service *P2PService) eventloop(ctx context.Context) {
 				})
 			case *ptypes.AckApproval:
 				routerKey := hash.HexStringHash(msg.GetCreateObjectMsg().GetBucketName(), msg.GetCreateObjectMsg().GetObjectName())
-				service.mux.Lock()
-				service.router[routerKey] <- envelope
-				service.mux.Unlock()
+				service.notifyByRouter(routerKey, envelope)
 			case *ptypes.RefuseApproval:
 				log.Errorw("secondary sp refuse approval", "info", envelope)
 			}
@@ -167,7 +163,6 @@ func (service *P2PService) deleteRouter(routerKey string) {
 	}
 	service.routerSize--
 	delete(service.router, routerKey)
-	return
 }
 
 func (service *P2PService) getRouterCh(routerKey string) (chan *libs.Envelope, error) {

@@ -70,7 +70,7 @@ func TestApplyFixes(t *testing.T) {
 				t.Fatalf("Formatting document: %v", err)
 			}
 			if err := CheckValid(before.Bytes()); err != nil {
-				//t.Fatalf("Validating output: %v", err)
+				t.Fatalf("Validating output: %v", err)
 			}
 			want := before.String()
 
