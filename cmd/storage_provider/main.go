@@ -104,9 +104,9 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-  case model.BlockSyncerService:
+	case model.BlockSyncerService:
 		server, err = blocksyncer.NewBlockSyncerService(cfg.BlockSyncerCfg)
-    if err != nil {
+		if err != nil {
 			return nil, err
 		}
 	default:
