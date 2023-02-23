@@ -8,6 +8,7 @@ import (
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"google.golang.org/grpc"
 )
@@ -58,7 +59,7 @@ func (signer *SignerServer) SignObjectApproval(ctx context.Context, req *stypes.
 
 // VerifyBucketApproval implements v1.SignerServiceServer
 func (signer *SignerServer) VerifyBucketApproval(ctx context.Context, req *stypes.VerifyBucketApprovalRequest) (*stypes.VerifyBucketApprovalResponse, error) {
-	sig := req.CreateBucketMsg.GetPrimarySpApprovalSignature()
+	sig := req.CreateBucketMsg.GetPrimarySpApproval().GetSig()
 	msg := req.CreateBucketMsg.GetApprovalBytes()
 
 	return &stypes.VerifyBucketApprovalResponse{
@@ -69,7 +70,7 @@ func (signer *SignerServer) VerifyBucketApproval(ctx context.Context, req *stype
 
 // VerifyObjectApproval implements v1.SignerServiceServer
 func (signer *SignerServer) VerifyObjectApproval(ctx context.Context, req *stypes.VerifyObjectApprovalRequest) (*stypes.VerifyObjectApprovalResponse, error) {
-	sig := req.CreateObjectMsg.GetPrimarySpApprovalSignature()
+	sig := req.CreateObjectMsg.GetPrimarySpApproval().GetSig()
 	msg := req.CreateObjectMsg.GetApprovalBytes()
 
 	return &stypes.VerifyObjectApprovalResponse{
@@ -81,8 +82,15 @@ func (signer *SignerServer) VerifyObjectApproval(ctx context.Context, req *stype
 // SignIntegrityHash implements v1.SignerServiceServer
 func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.SignIntegrityHashRequest) (*stypes.SignIntegrityHashResponse, error) {
 	integrityHash := hash.GenerateIntegrityHash(req.Data)
+	opAddr, err := signer.client.GetAddr(client.SignOperator)
+	if err != nil {
+		return &stypes.SignIntegrityHashResponse{
+			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),
+		}, nil
+	}
 
-	sig, err := signer.client.Sign(client.SignApproval, integrityHash)
+	msg := storagetypes.NewSecondarySpSignDoc(opAddr, integrityHash).GetSignBytes()
+	sig, err := signer.client.Sign(client.SignApproval, msg)
 	if err != nil {
 		return &stypes.SignIntegrityHashResponse{
 			ErrMessage: merrors.MakeErrMsgResponse(merrors.ErrSignMsg),

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"flag"
+	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
@@ -32,6 +33,8 @@ var (
 
 	// hostHeader is virtual hosted style, include bucket_name and gateway domain_name
 	hostHeader string
+
+	metadataAddress string
 )
 
 func generateRandString(n int) string {
@@ -580,6 +583,71 @@ func runCase3() {
 	log.Info("end run case3")
 }
 
+// case4
+func runCase4() {
+	log.Info("start run case4(GetUserBuckets)")
+	//get user buckets
+	{
+		log.Infow("start get user buckets")
+		account := "46765cbc-d30c-4f4a-a814-b68181fcab12"
+		url := fmt.Sprintf("http://%s/accounts/%s/buckets", metadataAddress, account)
+		method := "GET"
+		client := &http.Client{}
+		req, err := http.NewRequest(method, url, strings.NewReader(""))
+		if err != nil {
+			log.Errorw("get user buckets failed, due to new request", "error", err)
+			return
+		}
+		res, err := client.Do(req)
+		if err != nil {
+			log.Errorw("get user buckets failed, due to send request", "error", err)
+			return
+		}
+		defer res.Body.Close()
+		_, err = io.ReadAll(res.Body)
+		if err != nil {
+			log.Errorw("get user buckets failed, due to read response body", "error", err)
+			return
+		}
+
+		log.Infow("finish get user buckets", "statusCode", res.StatusCode)
+	}
+	log.Info("end run case4")
+}
+
+// case5
+func runCase5() {
+	log.Info("start run case5(ListObjectsByBucketName)")
+	// list objects by bucket name
+	{
+		log.Infow("start get user objects")
+		account := "46765cbc-d30c-4f4a-a814-b68181fcab12"
+		bucketName := "hello world"
+		url := fmt.Sprintf("http://%s/accounts/%s/buckets/%s/objects", metadataAddress, account, bucketName)
+		method := "GET"
+		client := &http.Client{}
+		req, err := http.NewRequest(method, url, strings.NewReader(""))
+		if err != nil {
+			log.Errorw("get user objects failed, due to new request", "error", err)
+			return
+		}
+		res, err := client.Do(req)
+		if err != nil {
+			log.Errorw("get user objects failed, due to send request", "error", err)
+			return
+		}
+		defer res.Body.Close()
+		_, err = io.ReadAll(res.Body)
+		if err != nil {
+			log.Errorw("get user objects failed, due to read response body", "error", err)
+			return
+		}
+
+		log.Infow("finish get user objects", "statusCode", res.StatusCode)
+	}
+	log.Info("end run case5")
+}
+
 func main() {
 	log.Info("start run cases")
 
@@ -587,10 +655,13 @@ func main() {
 	cfg := config.LoadConfig(*configFile)
 	gatewayAddress = cfg.GatewayCfg.Address
 	hostHeader = testBucketName + "." + cfg.GatewayCfg.Domain
+	metadataAddress = cfg.MetadataCfg.Address
 
 	runCase1()
 	runCase2()
 	runCase3()
+	runCase4()
+	runCase5()
 
 	log.Info("end run cases")
 }

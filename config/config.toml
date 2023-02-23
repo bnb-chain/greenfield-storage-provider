@@ -1,5 +1,5 @@
 Service = [
-    "BlockSyncer", "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge",
+    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge", "Metadata", "BlockSyncer",
 ]
 
 [GatewayCfg]
@@ -149,4 +149,13 @@ MaxOpenConnections = 1
 
 [BlockSyncerCfg.Logging]
 Level = "debug"
+
+[MetadataCfg]
+    Address = "127.0.0.1:9733"
+    MetaDBType = "sqldb"
+    [MetadataCfg.MetaSqlDBConfig]
+        User = "root"
+        Passwd = "test_pwd"
+        Address = "127.0.0.1:3306"
+        Database = "meta_db"
 

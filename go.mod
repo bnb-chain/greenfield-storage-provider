@@ -4,16 +4,19 @@ go 1.19
 
 replace (
 	// TODO: point to develop branch, will be changed to v0.0.6 after greenfield-sdk-go v0.0.6 released
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.6
 	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230223090130-98858670d635
+	// TODO: point to develop branch, will be changed to v0.0.6 after greenfield v0.0.6 released
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230220084048-b09d0197ee41
+	// TODO: point to develop branch, will be changed to v0.0.7 after greenfield-sdk-go v0.0.7 released
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.2-0.20230216105555-b94a14479b11
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.1
 )
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
+	cosmossdk.io/math v1.0.0-beta.6
 	github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.0.5
@@ -24,6 +27,9 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.7
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
+	github.com/gin-gonic/gin v1.8.2
+	github.com/go-sql-driver/mysql v1.6.0
+	github.com/gofrs/uuid v4.3.0+incompatible
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -47,6 +53,7 @@ require (
 )
 
 require (
+	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/math v1.0.0-beta.3 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -91,6 +98,11 @@ require (
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
+	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/go-playground/locales v0.14.0 // indirect
+	github.com/go-playground/universal-translator v0.18.0 // indirect
+	github.com/go-playground/validator/v10 v10.11.1 // indirect
+	github.com/goccy/go-json v0.9.11 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.3 // indirect
@@ -122,6 +134,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.1.1 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/lib/pq v1.10.6 // indirect
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
@@ -138,7 +151,7 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/naoina/go-stringutil v0.1.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -172,6 +185,7 @@ require (
 	github.com/tendermint/tm-db v0.6.7 // indirect
 	github.com/thomaso-mirodin/intmath v0.0.0-20160323211736-5dc6d854e46e // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
+	github.com/ugorji/go/codec v1.2.7 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/wealdtech/go-bytesutil v1.1.1 // indirect
 	github.com/wealdtech/go-eth2-types/v2 v2.5.2 // indirect
