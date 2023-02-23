@@ -11,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/service"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/node/provider"
 	sp "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	signer "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -46,6 +47,7 @@ type P2PReactor struct {
 	peerEvents   libs.PeerEventSubscriber
 	peersManager *libs.PeerManager
 	peersQuerier provider.ProviderQuerier
+	signer       *signer.SignerClient
 }
 
 // NewP2PReactor returns a reference to a new reactor.
@@ -93,6 +95,11 @@ func (r *P2PReactor) SubscribeRequest() <-chan *libs.Envelope {
 // PublishRequest supports broadcastRequest to peers.
 func (r *P2PReactor) PublishRequest(envelope *libs.Envelope) {
 	r.inCh <- envelope
+}
+
+// setSigner set signer client use to sign the approval.
+func (r *P2PReactor) setSigner(signer *signer.SignerClient) {
+	r.signer = signer
 }
 
 // updatePeers initiates a blocking process where we listen for and handle
@@ -168,7 +175,7 @@ func (r *P2PReactor) handleMessage(ctx context.Context, envelope *libs.Envelope)
 func (r *P2PReactor) handleSpMessage(ctx context.Context, envelope *libs.Envelope) error {
 	switch envelope.Message.(type) {
 	case *sp.AskApprovalRequest:
-		r.outCh <- envelope
+		r.signObjectApproval(ctx, envelope)
 	case *sp.AckApproval:
 		r.outCh <- envelope
 	case *sp.RefuseApproval:
@@ -177,6 +184,48 @@ func (r *P2PReactor) handleSpMessage(ctx context.Context, envelope *libs.Envelop
 		return fmt.Errorf("unknown mesaege type channel ID (%d) for envelope (%T)", envelope.ChannelID, envelope.Message)
 	}
 	return nil
+}
+
+// signObjectApproval send object approval to singer
+func (r *P2PReactor) signObjectApproval(ctx context.Context, envelope *libs.Envelope) {
+	msg := envelope.Message.(*sp.AskApprovalRequest).GetCreateObjectMsg()
+	if r.signer == nil {
+		refuseEnvelope := &libs.Envelope{
+			To:        envelope.From,
+			Broadcast: false,
+			Message: &sp.RefuseApproval{
+				CreateObjectMsg: msg,
+				Reason:          "signer service is preparing",
+			},
+		}
+		log.CtxErrorw(ctx, "refuse to sign approval")
+		r.inCh <- refuseEnvelope
+		return
+	}
+	signature, err := r.signer.SignObjectApproval(ctx, msg)
+	if err != nil {
+		refuseEnvelope := &libs.Envelope{
+			To:        envelope.From,
+			Broadcast: false,
+			Message: &sp.RefuseApproval{
+				CreateObjectMsg: msg,
+				Reason:          err.Error(),
+			},
+		}
+		log.CtxErrorw(ctx, "fail to sign approval", "error", err)
+		r.inCh <- refuseEnvelope
+		return
+	}
+	msg.ExpectChecksums = make([][]byte, 0)
+	msg.ExpectChecksums = append(msg.ExpectChecksums, signature)
+	signedApproval := &libs.Envelope{
+		To:        envelope.From,
+		Broadcast: false,
+		Message: &sp.AckApproval{
+			CreateObjectMsg: msg,
+		},
+	}
+	r.inCh <- signedApproval
 }
 
 // broadcastRequest broadcasts request to peers.
