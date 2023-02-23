@@ -14,6 +14,7 @@ var (
 type P2PServiceConfig struct {
 	GrpcAddress      string
 	P2PListenAddress string
+	SigerAddress     string
 	Whitelist        string
 	NodeKeyPath      string
 }
@@ -34,5 +35,6 @@ func (config P2PServiceConfig) makeP2pConfig() (*node.NodeConfig, error) {
 var DefaultP2PServiceConfig = &P2PServiceConfig{
 	GrpcAddress:      model.DefaultP2PServiceAddress,
 	P2PListenAddress: model.DefaultP2PListenAddress,
+	SigerAddress:     model.DefaultSignerAddress,
 	NodeKeyPath:      DefaultNodeKeyPath,
 }

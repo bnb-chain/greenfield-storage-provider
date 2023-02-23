@@ -46,7 +46,7 @@ type MakeReactor func(peerManager *p2p.PeerManager, chCreator p2p.ChannelCreator
 // process that host their own process-local node.
 func NewDefault(ctx context.Context, cfg *NodeConfig, newReactor MakeReactor) (service.Service, service.Service, error) {
 	cfg.EnsureRoot()
-	nodeKey, err := types.LoadNodeKey(cfg.NodeKeyFile())
+	nodeKey, err := types.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to load or gen node key %s: %w", cfg.NodeKeyFile(), err)
 	}
@@ -82,13 +82,11 @@ func makeNode(ctx context.Context, cfg *NodeConfig, dbProvider DBProvider, newRe
 	}
 
 	node := &P2PNode{
-		config: cfg,
-		logger: logger,
-
+		config:      cfg,
+		logger:      logger,
 		nodeKey:     nodeKey,
 		peerManager: peerManager,
 		router:      router,
-
 		shutdownOps: closer,
 	}
 
@@ -136,9 +134,9 @@ func (n *P2PNode) OnStart(ctx context.Context) error {
 func (n *P2PNode) OnStop() {
 	n.logger.Info("Stopping Node")
 
-	n.customerReactor.Wait()
-	n.pexReactor.Wait()
-	n.router.Wait()
+	//n.customerReactor.Wait()
+	//n.pexReactor.Wait()
+	//n.router.Wait()
 	n.isListening = false
 
 	if err := n.shutdownOps(); err != nil {

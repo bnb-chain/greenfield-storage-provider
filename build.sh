@@ -23,15 +23,26 @@ go build -ldflags "\
 if [ $? -ne 0 ]; then
     echo "build failed Ooh!!!"
 else
-    echo "build succeed!"
+    echo "build gnfd-sp succeed!"
+fi
+
+go build -o ./build/gnfd-sp-cli cmd/gnfd_sp_cli/*.go
+if [ $? -ne 0 ]; then
+    echo "build test-storage-provider failed Ooh!!!"
+else
+    echo "build gnfd-sp-cli succeed!"
 fi
 
 go build -o ./build/test-gnfd-sp test/e2e/services/case_driver.go
 if [ $? -ne 0 ]; then
-    echo "build test-storage-provider failed Ooh!!!"
+    echo "build test-gnfd-sp failed Ooh!!!"
+else
+    echo "build test-gnfd-sp succeed!"
 fi
 
 go build -o ./build/setup-test-env test/e2e/onebox/setup_onebox.go
 if [ $? -ne 0 ]; then
     echo "build setup-test-env failed Ooh!!!"
+else
+    echo "build setup-test-env succeed!"
 fi
