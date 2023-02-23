@@ -3,14 +3,15 @@ package signer
 import (
 	"context"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
+	"google.golang.org/grpc"
+
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
-	"google.golang.org/grpc"
 )
 
 /* signer_service.go implement SignerServiceServer grpc interface.

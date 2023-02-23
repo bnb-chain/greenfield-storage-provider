@@ -11,7 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-sdk-go/pkg/signer"
+	"github.com/bnb-chain/greenfield-go-sdk/client/sp"
+	"github.com/bnb-chain/greenfield-go-sdk/keys"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/bnb-chain/greenfield-storage-provider/config"
@@ -47,12 +48,17 @@ func generateRandString(n int) string {
 
 func generateRequestSignature(request *http.Request) error {
 	privKey, _, _ := testdata.KeyEthSecp256k1TestPubAddr()
-	err := signer.SignRequest(request, privKey, signer.AuthInfo{
-		SignType:        model.SignTypeV1,
-		MetaMaskSignStr: "",
-	})
+	keyManager, err := keys.NewPrivateKeyManager(hex.EncodeToString(privKey.Bytes()))
 	if err != nil {
-		log.Errorw("mock signature failed, due to ", "error", err)
+		log.Errorw("failed to new private key manager")
+	}
+	client, err := sp.NewSpClientWithKeyManager("gnfd.nodereal.com", &sp.Option{}, keyManager)
+	if err != nil {
+		log.Errorw("failed to new SP client with key manager")
+	}
+	err = client.SignRequest(request, sp.NewAuthInfo(false, ""))
+	if err != nil {
+		log.Errorw("failed to mock signature", "error", err)
 		return err
 	}
 	return nil

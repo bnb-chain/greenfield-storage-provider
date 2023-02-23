@@ -7,7 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-sdk-go/pkg/signer"
+	commonhttp "github.com/bnb-chain/greenfield-common/http"
+	signer "github.com/bnb-chain/greenfield-go-sdk/keys/signer"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
@@ -136,7 +137,7 @@ func (requestContext *requestContext) verifySignatureV1(requestSignature string)
 	}
 
 	// check request integrity
-	if hex.EncodeToString(signer.GetMsgToSign(requestContext.request)) != signedMsg {
+	if hex.EncodeToString(commonhttp.GetMsgToSign(requestContext.request)) != signedMsg {
 		return errors.ErrRequestConsistent
 	}
 
