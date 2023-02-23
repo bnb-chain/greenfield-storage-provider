@@ -1,5 +1,5 @@
 Service = [
-    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge", "Metadata",
+    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge", "Metadata", "BlockSyncer",
 ]
 
 [GatewayCfg]
@@ -118,6 +118,38 @@ Service = [
         FileHandles = 1000
         ReadOnly = false
 
+[BlockSyncerCfg]
+[BlockSyncerCfg.Chain]
+Bech32Prefix = "cosmos"
+Modules = [ "block", "validator", "account", "tx" ]
+
+[BlockSyncerCfg.Node]
+Type = "remote"
+[BlockSyncerCfg.Node.RPC]
+ClientName = "juno"
+Address = "http://localhost:26750"
+MaxConnections = 20
+[BlockSyncerCfg.Node.GRPC]
+Insecure = true
+Address = "http://localhost:9090"
+
+[BlockSyncerCfg.Parser]
+FastSync = false
+ParseNewBlocks = true
+ParseGenesis = true
+ParseOldBlocks = true
+StartHeight = 1
+Workers = 1
+
+[BlockSyncerCfg.Database]
+Type = "mysql"
+PartitionSize = 10_000
+MaxIdleConnections = 1
+MaxOpenConnections = 1
+
+[BlockSyncerCfg.Logging]
+Level = "debug"
+
 [MetadataCfg]
     Address = "127.0.0.1:9733"
     MetaDBType = "sqldb"
@@ -126,3 +158,4 @@ Service = [
         Passwd = "test_pwd"
         Address = "127.0.0.1:3306"
         Database = "meta_db"
+

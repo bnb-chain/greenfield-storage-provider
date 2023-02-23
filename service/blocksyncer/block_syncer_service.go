@@ -1,0 +1,97 @@
+package blocksyncer
+
+import (
+	"context"
+	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+
+	"github.com/forbole/juno/v4/modules"
+	"github.com/forbole/juno/v4/parser"
+	"github.com/forbole/juno/v4/types"
+	"github.com/forbole/juno/v4/types/config"
+	"github.com/forbole/juno/v4/types/utils"
+)
+
+// enqueueMissingBlocks enqueues jobs (block heights) for missed blocks starting
+// at the startHeight up until the latest known height.
+func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context) {
+	// Get the config
+	cfg := config.Cfg.Parser
+
+	// Get the latest height
+	latestBlockHeight := mustGetLatestHeight(ctx)
+
+	lastDbBlockHeight, err := ctx.Database.GetLastBlockHeight(context.Background())
+	if err != nil {
+		log.Error("failed to get last block height from database", "error", err)
+	}
+
+	// Get the start height, default to the config's height
+	startHeight := cfg.StartHeight
+
+	// Set startHeight to the latest height in database
+	// if is not set inside config.yaml file
+	if startHeight == 0 {
+		startHeight = utils.MaxInt64(1, lastDbBlockHeight)
+	}
+
+	if cfg.FastSync {
+		log.Info("fast sync is enabled, ignoring all previous blocks", "latest_block_height", latestBlockHeight)
+		for _, module := range ctx.Modules {
+			if mod, ok := module.(modules.FastSyncModule); ok {
+				err := mod.DownloadState(latestBlockHeight)
+				if err != nil {
+					log.Error("error while performing fast sync",
+						"err", err,
+						"last_block_height", latestBlockHeight,
+						"module", module.Name(),
+					)
+				}
+			}
+		}
+	} else {
+		log.Info("syncing missing blocks...", "latest_block_height", latestBlockHeight)
+		for _, i := range ctx.Database.GetMissingHeights(context.Background(), startHeight, latestBlockHeight) {
+			log.Debug("enqueueing missing block", "height", i)
+			exportQueue <- i
+		}
+	}
+}
+
+// enqueueNewBlocks enqueues new block heights onto the provided queue.
+func enqueueNewBlocks(exportQueue types.HeightQueue, ctx *parser.Context) {
+	currHeight := mustGetLatestHeight(ctx)
+
+	// Enqueue upcoming heights
+	for {
+		latestBlockHeight := mustGetLatestHeight(ctx)
+
+		// Enqueue all heights from the current height up to the latest height
+		for ; currHeight <= latestBlockHeight; currHeight++ {
+			log.Debug("enqueueing new block", "height", currHeight)
+			exportQueue <- currHeight
+		}
+		time.Sleep(config.GetAvgBlockTime())
+	}
+}
+
+// mustGetLatestHeight tries getting the latest height from the RPC client.
+// If after 50 tries no latest height can be found, it returns 0.
+func mustGetLatestHeight(ctx *parser.Context) int64 {
+	for retryCount := 0; retryCount < 50; retryCount++ {
+		latestBlockHeight, err := ctx.Node.LatestHeight()
+		if err == nil {
+			return latestBlockHeight
+		}
+
+		log.Error("failed to get last block from RPCConfig client",
+			"err", err,
+			"retry interval", config.GetAvgBlockTime(),
+			"retry count", retryCount)
+
+		time.Sleep(config.GetAvgBlockTime())
+	}
+
+	return 0
+}

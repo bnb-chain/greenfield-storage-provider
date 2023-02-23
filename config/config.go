@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"os"
 
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
+	"github.com/naoina/toml"
+
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
@@ -14,32 +17,33 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/naoina/toml"
 )
 
 type StorageProviderConfig struct {
-	Service       []string
-	GatewayCfg    *gateway.GatewayConfig
-	UploaderCfg   *uploader.UploaderConfig
-	DownloaderCfg *downloader.DownloaderConfig
-	ChallengeCfg  *challenge.ChallengeConfig
-	StoneHubCfg   *stonehub.StoneHubConfig
-	StoneNodeCfg  *stonenode.StoneNodeConfig
-	SyncerCfg     *syncer.SyncerConfig
-	SignerCfg     *signer.SignerConfig
-	MetadataCfg   *metadata.MetadataConfig
+	Service        []string
+	GatewayCfg     *gateway.GatewayConfig
+	UploaderCfg    *uploader.UploaderConfig
+	DownloaderCfg  *downloader.DownloaderConfig
+	ChallengeCfg   *challenge.ChallengeConfig
+	StoneHubCfg    *stonehub.StoneHubConfig
+	StoneNodeCfg   *stonenode.StoneNodeConfig
+	SyncerCfg      *syncer.SyncerConfig
+	SignerCfg      *signer.SignerConfig
+	MetadataCfg    *metadata.MetadataConfig
+	BlockSyncerCfg *tomlconfig.TomlConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
-	GatewayCfg:    gateway.DefaultGatewayConfig,
-	UploaderCfg:   uploader.DefaultUploaderConfig,
-	DownloaderCfg: downloader.DefaultDownloaderConfig,
-	ChallengeCfg:  challenge.DefaultChallengeConfig,
-	StoneHubCfg:   stonehub.DefaultStoneHubConfig,
-	StoneNodeCfg:  stonenode.DefaultStoneNodeConfig,
-	SyncerCfg:     syncer.DefaultSyncerConfig,
-	SignerCfg:     signer.DefaultSignerChainConfig,
-	MetadataCfg:   metadata.DefaultMetadataConfig,
+	GatewayCfg:     gateway.DefaultGatewayConfig,
+	UploaderCfg:    uploader.DefaultUploaderConfig,
+	DownloaderCfg:  downloader.DefaultDownloaderConfig,
+	ChallengeCfg:   challenge.DefaultChallengeConfig,
+	StoneHubCfg:    stonehub.DefaultStoneHubConfig,
+	StoneNodeCfg:   stonenode.DefaultStoneNodeConfig,
+	SyncerCfg:      syncer.DefaultSyncerConfig,
+	SignerCfg:      signer.DefaultSignerChainConfig,
+	MetadataCfg:    metadata.DefaultMetadataConfig,
+	BlockSyncerCfg: &tomlconfig.TomlConfig{},
 }
 
 // LoadConfig loads the config file

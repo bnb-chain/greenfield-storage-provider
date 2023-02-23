@@ -7,6 +7,8 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
+
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
@@ -99,6 +101,11 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.MetadataCfg = config.DefaultStorageProviderConfig.MetadataCfg
 		}
 		server, err = metadata.NewMetadataService(cfg.MetadataCfg, context.Background())
+		if err != nil {
+			return nil, err
+		}
+	case model.BlockSyncerService:
+		server, err = blocksyncer.NewBlockSyncerService(cfg.BlockSyncerCfg)
 		if err != nil {
 			return nil, err
 		}
