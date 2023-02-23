@@ -9,7 +9,7 @@ Service = [
     UploaderServiceAddress = "127.0.0.1:9133"
     DownloaderServiceAddress = "127.0.0.1:9233"
     SyncerServiceAddress = "127.0.0.1:9533"
-    ChallengeServiceAddress = "127.0.0.1:9633"
+    ChallengeServiceAddress = "127.0.0.1:9733"
 
 
 [UploaderCfg]
@@ -119,7 +119,7 @@ Service = [
         ReadOnly = false
 
 [MetadataCfg]
-    Address = "127.0.0.1:9733"
+    Address = "127.0.0.1:9833"
     MetaDBType = "sqldb"
     [MetadataCfg.MetaSqlDBConfig]
         User = "root"
