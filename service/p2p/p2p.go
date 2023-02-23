@@ -95,7 +95,7 @@ func (service *P2PService) eventloop(ctx context.Context) {
 			case *ptypes.AskApprovalRequest:
 				_ = util.ComputeSegmentCount(msg.GetCreateObjectMsg().GetPayloadSize()) * uint32(SegmentsTimeoutHeight)
 				// TODO:: 1. fill timeout height to CreateObjectMsg and send signer to sign
-				// TODO:: 2. add secondary refuse approval Strategy
+				// TODO:: 2. add secondary refuse approval strategy
 				service.preactor.PublishRequest(&libs.Envelope{
 					To:      envelope.From,
 					Message: msg,
