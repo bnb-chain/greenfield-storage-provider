@@ -35,5 +35,3 @@ go build -o ./build/setup-test-env test/e2e/onebox/setup_onebox.go
 if [ $? -ne 0 ]; then
     echo "build setup-test-env failed Ooh!!!"
 fi
-
-cp config/config.toml ./build/
