@@ -41,6 +41,8 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
 	}
 	if (config.StoneJobLimit) <= 0 {
 		node.stoneLimit = DefaultStoneJobLimit
+	} else {
+		node.stoneLimit = config.StoneJobLimit
 	}
 	if err := node.initClient(); err != nil {
 		return nil, err

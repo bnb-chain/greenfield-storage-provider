@@ -48,8 +48,6 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.StoneHubService,
 		model.StoneNodeService,
 		model.SignerService,
-		model.MetadataService,
-		model.BlockSyncerService,
 		model.P2PService,
 	},
 	GatewayCfg:     gateway.DefaultGatewayConfig,

@@ -25,14 +25,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	if len(*dumpPath) != 0 {
-		if err := config.SaveConfig(*dumpPath, config.DefaultStorageProviderConfig); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		os.Exit(0)
-	}
-
 	cfg := config.LoadConfig(*configFile)
 	slc := lifecycle.NewServiceLifecycle()
 	for _, serviceName := range cfg.Service {

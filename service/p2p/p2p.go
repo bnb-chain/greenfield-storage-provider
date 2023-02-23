@@ -16,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/node"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
+	signer "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
@@ -52,13 +53,22 @@ func NewP2PService(config *P2PServiceConfig) (*P2PService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &P2PService{
+
+	server := &P2PService{
 		config:   config,
 		pnode:    pnode.(*node.P2PNode),
 		preactor: preactor.(*P2PReactor),
 		pnodeId:  pnode.(*node.P2PNode).GetNodeId(),
 		router:   make(map[string]chan *libs.Envelope),
-	}, nil
+	}
+
+	signer, err := signer.NewSignerClient(config.SigerAddress)
+	if err != nil {
+		return nil, err
+	}
+	server.preactor.setSigner(signer)
+
+	return server, nil
 }
 
 // Name implement the lifecycle interface

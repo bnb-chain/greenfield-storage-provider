@@ -62,7 +62,7 @@ func NewP2PReactor(peerManager *libs.PeerManager, chCreator libs.ChannelCreator,
 		outCh:        make(chan *libs.Envelope, outBoundSize),
 	}
 
-	r.BaseService = *service.NewBaseService(tmlog.NewNopLogger(), "SecondSp", r)
+	r.BaseService = *service.NewBaseService(tmlog.NewNopLogger(), "sp_p2p", r)
 	return r
 }
 
@@ -85,7 +85,13 @@ func (r *P2PReactor) OnStart(ctx context.Context) error {
 
 // OnStop stops the reactor by signaling to all spawned goroutines to exit and
 // blocking until they all exit.
-func (r *P2PReactor) OnStop() {}
+func (r *P2PReactor) OnStop() {
+	close(r.inCh)
+	close(r.outCh)
+	if r.signer != nil {
+		r.signer.Close()
+	}
+}
 
 // SubscribeRequest supports subscribers to consume envelope.
 func (r *P2PReactor) SubscribeRequest() <-chan *libs.Envelope {
