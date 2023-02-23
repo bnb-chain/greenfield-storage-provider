@@ -1,5 +1,5 @@
 Service = [
-    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge",
+    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge", "Metadata",
 ]
 
 [GatewayCfg]
@@ -117,3 +117,12 @@ Service = [
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
+
+[MetadataCfg]
+    Address = "127.0.0.1:9733"
+    MetaDBType = "sqldb"
+    [MetadataCfg.MetaSqlDBConfig]
+        User = "root"
+        Passwd = "test_pwd"
+        Address = "127.0.0.1:3306"
+        Database = "meta_db"

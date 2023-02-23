@@ -4,17 +4,17 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/naoina/toml"
-
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/naoina/toml"
 )
 
 type StorageProviderConfig struct {
@@ -27,6 +27,7 @@ type StorageProviderConfig struct {
 	StoneNodeCfg  *stonenode.StoneNodeConfig
 	SyncerCfg     *syncer.SyncerConfig
 	SignerCfg     *signer.SignerConfig
+	MetadataCfg   *metadata.MetadataConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
@@ -38,6 +39,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	StoneNodeCfg:  stonenode.DefaultStoneNodeConfig,
 	SyncerCfg:     syncer.DefaultSyncerConfig,
 	SignerCfg:     signer.DefaultSignerChainConfig,
+	MetadataCfg:   metadata.DefaultMetadataConfig,
 }
 
 // LoadConfig loads the config file
