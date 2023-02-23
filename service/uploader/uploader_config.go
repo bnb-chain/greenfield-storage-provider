@@ -19,11 +19,15 @@ type UploaderConfig struct {
 }
 
 var DefaultUploaderConfig = &UploaderConfig{
-	StorageProvider:        "bnb-sp",
-	Address:                "127.0.0.1:5311",
-	StoneHubServiceAddress: "127.0.0.1:5323",
+	StorageProvider:        model.StorageProvider,
+	Address:                model.DefaultUploaderAddress,
+	StoneHubServiceAddress: model.DefaultStoneHubAddress,
 	PieceStoreConfig:       storage.DefaultPieceStoreConfig,
 	MetaDBType:             model.LevelDB,
 	MetaLevelDBConfig:      metalevel.DefaultMetaLevelDBConfig,
 	MetaSqlDBConfig:        metasql.DefaultMetaSqlDBConfig,
+}
+
+func overrideConfigFromEnv(config *UploaderConfig) {
+	config.StorageProvider = model.StorageProvider
 }

@@ -389,14 +389,8 @@ type awsSecretKey struct {
 
 func getAWSSecretKeyFromEnv() *awsSecretKey {
 	key := &awsSecretKey{}
-	if val, ok := os.LookupEnv(model.AWSAccessKey); ok {
-		key.accessKey = val
-	}
-	if val, ok := os.LookupEnv(model.AWSSecretKey); ok {
-		key.secretKey = val
-	}
-	if val, ok := os.LookupEnv(model.AWSSessionToken); ok {
-		key.sessionToken = val
-	}
+	key.accessKey = model.AWSAccessKey
+	key.secretKey = model.AWSSecretKey
+	key.sessionToken = model.AWSSessionToken
 	return key
 }

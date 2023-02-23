@@ -26,6 +26,7 @@ type Challenge struct {
 
 // NewChallengeService return a Challenge instance.
 func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err error) {
+	overrideConfigFromEnv(config)
 	challenge = &Challenge{
 		config: config,
 		name:   model.ChallengeService,

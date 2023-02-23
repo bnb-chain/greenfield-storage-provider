@@ -3,7 +3,9 @@ package config
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/naoina/toml"
 
@@ -34,6 +36,18 @@ type StorageProviderConfig struct {
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
+	Service: []string{
+		model.GatewayService,
+		model.UploaderService,
+		model.DownloaderService,
+		model.ChallengeService,
+		model.SyncerService,
+		model.StoneHubService,
+		model.StoneNodeService,
+		model.SignerService,
+		model.MetadataService,
+		model.P2PService,
+	},
 	GatewayCfg:    gateway.DefaultGatewayConfig,
 	UploaderCfg:   uploader.DefaultUploaderConfig,
 	DownloaderCfg: downloader.DefaultDownloaderConfig,
@@ -61,4 +75,20 @@ func LoadConfig(file string) *StorageProviderConfig {
 		panic(err)
 	}
 	return &cfg
+}
+
+// SaveConfig write the config to disk
+func SaveConfig(file string, cfg *StorageProviderConfig) error {
+	path := filepath.Join(file, "config.toml")
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	encode := util.TomlSettings.NewEncoder(f)
+	if err = encode.Encode(cfg); err != nil {
+		return err
+	}
+	return nil
 }

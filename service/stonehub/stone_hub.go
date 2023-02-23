@@ -65,6 +65,7 @@ type StoneHub struct {
 
 // NewStoneHubService return the StoneHub instance
 func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
+	overrideConfigFromEnv(hubCfg)
 	hub := &StoneHub{
 		config:   hubCfg,
 		jobQueue: lane.NewQueue(),

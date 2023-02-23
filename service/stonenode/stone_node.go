@@ -9,11 +9,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
+	p2p "github.com/bnb-chain/greenfield-storage-provider/service/p2p/client"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 const (
-	allocStonePeriod = time.Second * 1
+	allocStonePeriod     = time.Second * 1
+	DefaultStoneJobLimit = 64
 )
 
 // StoneNodeService manages stone execution units
@@ -21,6 +23,7 @@ type StoneNodeService struct {
 	cfg        *StoneNodeConfig
 	name       string
 	stoneHub   client.StoneHubAPI
+	p2pService *p2p.P2PServiceRpcClient
 	store      client.PieceStoreAPI
 	stoneLimit int64
 
@@ -30,11 +33,14 @@ type StoneNodeService struct {
 
 // NewStoneNodeService returns StoneNodeService instance
 func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
+	overrideConfigFromEnv(config)
 	node := &StoneNodeService{
-		cfg:        config,
-		name:       model.StoneNodeService,
-		stopCh:     make(chan struct{}),
-		stoneLimit: config.StoneJobLimit,
+		cfg:    config,
+		name:   model.StoneNodeService,
+		stopCh: make(chan struct{}),
+	}
+	if (config.StoneJobLimit) <= 0 {
+		node.stoneLimit = DefaultStoneJobLimit
 	}
 	if err := node.initClient(); err != nil {
 		return nil, err
@@ -49,16 +55,22 @@ func (node *StoneNodeService) initClient() error {
 	}
 	store, err := client.NewStoreClient(node.cfg.PieceStoreConfig)
 	if err != nil {
-		log.Errorw("stone node inits piece store client failed", "error", err)
+		log.Errorw("fail to init piece store client", "error", err)
 		return err
 	}
 	stoneHub, err := client.NewStoneHubClient(node.cfg.StoneHubServiceAddress)
 	if err != nil {
-		log.Errorw("stone node inits stone hub client failed", "error", err)
+		log.Errorw("fail to init init stone hub client", "error", err)
+		return err
+	}
+	p2pService, err := p2p.NewP2PServiceRpcClient(node.cfg.P2PServiceAddress)
+	if err != nil {
+		log.Errorw("fail to init p2p node client", "error", err)
 		return err
 	}
 	node.store = store
 	node.stoneHub = stoneHub
+	node.p2pService = p2pService
 	return nil
 }
 

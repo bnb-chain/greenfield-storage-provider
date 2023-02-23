@@ -164,6 +164,7 @@ func (r *P2PReactor) handleMessage(ctx context.Context, envelope *libs.Envelope)
 }
 
 // handleSspMessage handles envelopes sent from peers on the channel.
+// TODO::add peer join and leave messages, use the sp operator address sign the messages
 func (r *P2PReactor) handleSpMessage(ctx context.Context, envelope *libs.Envelope) error {
 	switch envelope.Message.(type) {
 	case *sp.AskApprovalRequest:

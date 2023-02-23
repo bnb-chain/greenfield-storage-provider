@@ -5,10 +5,17 @@ import (
 	"errors"
 
 	"github.com/bnb-chain/greenfield-storage-provider/mock"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	gtypes "github.com/bnb-chain/greenfield/x/storage/types"
+)
+
+var (
+	MinSecondaryApprovalNumber = int32(model.EC_M + model.EC_K)
+	MaxSecondaryApprovalNumber = MinSecondaryApprovalNumber * 3 / 2
 )
 
 // allocStoneJob sends rpc request to stone hub alloc stone job
@@ -56,6 +63,14 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	if err != nil {
 		node.reportErrToStoneHub(ctx, allocResp, err)
 		return err
+	}
+
+	approvals, err := node.p2pService.AskSecondaryApproval(ctx, &gtypes.MsgCreateObject{}, MinSecondaryApprovalNumber, MaxSecondaryApprovalNumber)
+	if err != nil {
+		log.CtxErrorw(ctx, "fail to ask secondary approval", "error", err)
+	}
+	for idx, approval := range approvals {
+		log.CtxInfow(ctx, "approval index", idx, "approval", approval)
 	}
 
 	// 2. dispatch the piece data to different secondary sp

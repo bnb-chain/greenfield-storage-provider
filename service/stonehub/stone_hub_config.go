@@ -1,9 +1,6 @@
 package stonehub
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobsql"
@@ -21,20 +18,16 @@ type StoneHubConfig struct {
 	MetaSqlDBConfig   *config.SqlDBConfig
 }
 
-var DefaultStorageProvider = "bnb-sp"
-
-func DefaultStorageProviderID() string {
-	hash := sha256.New()
-	hash.Write([]byte(DefaultStorageProvider))
-	return hex.EncodeToString(hash.Sum(nil))
-}
-
 var DefaultStoneHubConfig = &StoneHubConfig{
-	StorageProvider:   DefaultStorageProviderID(),
-	Address:           "127.0.0.1:9333",
+	StorageProvider:   model.StorageProvider,
+	Address:           model.DefaultStoneHubAddress,
 	JobDBType:         model.MemoryDB,
 	JobSqlDBConfig:    jobsql.DefaultJobSqlDBConfig,
 	MetaDBType:        model.LevelDB,
 	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,
 	MetaSqlDBConfig:   metasql.DefaultMetaSqlDBConfig,
+}
+
+func overrideConfigFromEnv(config *StoneHubConfig) {
+	config.StorageProvider = model.StorageProvider
 }

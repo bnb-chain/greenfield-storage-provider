@@ -1,6 +1,10 @@
 package signer
 
-import "os"
+import (
+	"os"
+
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+)
 
 type GreenfieldChainConfig struct {
 	GRPCAddr           string
@@ -13,7 +17,7 @@ type GreenfieldChainConfig struct {
 }
 
 var DefaultGreenfieldChainConfig = &GreenfieldChainConfig{
-	GRPCAddr: "localhost:9090",
+	GRPCAddr: model.DefaultSignerAddress,
 	ChainID:  "greenfield_9000-121",
 	GasLimit: 210000,
 }
