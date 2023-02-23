@@ -11,7 +11,7 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	p2p p2p "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
+	p2p "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs"
 
 	time "time"
 
