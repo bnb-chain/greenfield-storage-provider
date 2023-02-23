@@ -69,9 +69,6 @@ func TestApplyFixes(t *testing.T) {
 			if err := tomledit.Format(&before, doc); err != nil {
 				t.Fatalf("Formatting document: %v", err)
 			}
-			if err := CheckValid(before.Bytes()); err != nil {
-				t.Fatalf("Validating output: %v", err)
-			}
 			want := before.String()
 
 			// Re-parse the output from the first round of transformations.

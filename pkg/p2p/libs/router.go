@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/crypto"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/service"
 	tmstrings "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/common/strings"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/libs/types"

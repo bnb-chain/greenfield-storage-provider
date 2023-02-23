@@ -70,6 +70,7 @@ func (service *P2PService) Name() string {
 func (service *P2PService) Start(ctx context.Context) error {
 	go service.pnode.Start(ctx)
 	go service.eventloop(ctx)
+	go service.serve()
 	return nil
 }
 
