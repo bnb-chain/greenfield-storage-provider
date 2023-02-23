@@ -15,7 +15,6 @@ import (
 var (
 	version    = flag.Bool("version", false, "print version")
 	configFile = flag.String("config", "./", "config file path")
-	dumpPath   = flag.String("dump.config", "", "dump config file path")
 )
 
 func main() {
