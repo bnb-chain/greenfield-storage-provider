@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
+
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	"github.com/naoina/toml"
 
@@ -43,7 +45,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	SyncerCfg:      syncer.DefaultSyncerConfig,
 	SignerCfg:      signer.DefaultSignerChainConfig,
 	MetadataCfg:    metadata.DefaultMetadataConfig,
-	BlockSyncerCfg: &tomlconfig.TomlConfig{},
+	BlockSyncerCfg: blocksyncer.DefaultBlockSyncerConfig,
 }
 
 // LoadConfig loads the config file
