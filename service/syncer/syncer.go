@@ -29,6 +29,7 @@ type Syncer struct {
 
 // NewSyncerService creates a syncer service to upload piece to piece store
 func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
+	overrideConfigFromEnv(config)
 	s := &Syncer{
 		config: config,
 		name:   model.SyncerService,

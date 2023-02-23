@@ -41,6 +41,7 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		g   *Gateway
 	)
 
+	overrideConfigFromEnv(cfg)
 	g = &Gateway{
 		config: cfg,
 		name:   model.GatewayService,

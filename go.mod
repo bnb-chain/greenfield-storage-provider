@@ -16,7 +16,6 @@ replace (
 
 require (
 	cosmossdk.io/math v1.0.0-beta.6
-	github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.0.5
 	github.com/bnb-chain/greenfield-common v0.0.3-0.20230223083211-e5b5e220939c
@@ -60,7 +59,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/tendermint/tendermint v0.35.9
 	github.com/tendermint/tm-db v0.6.7
-	github.com/urfave/cli v1.22.10
 	github.com/viki-org/dnscache v0.0.0-20130720023526-c70c1f23c5d8
 	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.24.0
