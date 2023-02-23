@@ -111,15 +111,13 @@ const (
 	LevelDB  string = "leveldb"
 )
 
-// environment constants
-const (
-	// Piece Store constants
-	BucketURL = "BUCKET_URL"
-
+// environment variable
+var (
 	// AWS environment constants
 	AWSAccessKey    = "AWS_ACCESS_KEY"
 	AWSSecretKey    = "AWS_SECRET_KEY"
 	AWSSessionToken = "AWS_SESSION_TOKEN"
+	BucketURL       = "BUCKET_URL"
 
 	// MetaDB environment constants
 	MetaDBUser     = "META_DB_USER"
@@ -128,4 +126,25 @@ const (
 	// JobDB environment constants
 	JobDBUser     = "JOB_DB_USER"
 	JobDBPassword = "JOB_DB_PASSWORD"
+
+	// Singer API environment constants
+	SignerApiKey = "SIGNER_API_KEY"
+
+	// StorageProvider address environment constants
+	StorageProvider = "STORAGE_OPERATOR_PUB_KEY"
+)
+
+// default service listen address
+const (
+	DefaultGateAddress        = "localhost:9033"
+	DefaultUploaderAddress    = "localhost:9133"
+	DefaultDownloaderAddress  = "localhost:9233"
+	DefaultChallengeAddress   = "localhost:9333"
+	DefaultStoneHubAddress    = "localhost:9433"
+	DefaultStoneNodeAddress   = "localhost:9533"
+	DefaultSyncerAddress      = "localhost:9633"
+	DefaultSignerAddress      = "localhost:9733"
+	DefaultMetaServiceAddress = "localhost:9833"
+	DefaultP2PServiceAddress  = "localhost:9933"  // rpc protocol
+	DefaultP2PListenAddress   = "localhost:21303" // p2p protocol
 )

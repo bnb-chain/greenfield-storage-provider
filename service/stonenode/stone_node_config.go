@@ -1,21 +1,40 @@
 package stonenode
 
-import "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+import (
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+)
 
 type StoneNodeConfig struct {
+	StorageProvider        string
 	Address                string
 	GatewayAddress         []string
 	StoneHubServiceAddress string
-	StorageProvider        string
-	PieceStoreConfig       *storage.PieceStoreConfig
-	StoneJobLimit          int64
+	P2PServiceAddress      string
+
+	PieceStoreConfig *storage.PieceStoreConfig
+	StoneJobLimit    int64
 }
 
 var DefaultStoneNodeConfig = &StoneNodeConfig{
-	Address:                "127.0.0.1:9433",
-	GatewayAddress:         []string{"127.0.0.1:9034", "127.0.0.1:9035", "127.0.0.1:9036", "127.0.0.1:9037", "127.0.0.1:9038", "127.0.0.1:9039"},
-	StoneHubServiceAddress: "127.0.0.1:9333",
-	StorageProvider:        "bnb-sp",
+	StorageProvider:        model.StorageProvider,
+	Address:                model.DefaultStoneNodeAddress,
+	StoneHubServiceAddress: model.DefaultStoneHubAddress,
+	P2PServiceAddress:      model.DefaultP2PServiceAddress,
 	PieceStoreConfig:       storage.DefaultPieceStoreConfig,
-	StoneJobLimit:          64,
+	GatewayAddress:         DefaultSecondaryGateway,
+	StoneJobLimit:          DefaultStoneJobLimit,
+}
+
+var DefaultSecondaryGateway = []string{
+	"localhost:9034",
+	"localhost:9035",
+	"localhost:9036",
+	"localhost:9037",
+	"localhost:9038",
+	"localhost:9039",
+}
+
+func overrideConfigFromEnv(config *StoneNodeConfig) {
+	config.StorageProvider = model.StorageProvider
 }

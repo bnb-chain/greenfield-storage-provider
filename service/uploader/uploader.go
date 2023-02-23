@@ -35,6 +35,7 @@ type Uploader struct {
 
 // NewUploaderService return the uploader instance
 func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
+	overrideConfigFromEnv(cfg)
 	var (
 		err error
 		u   *Uploader

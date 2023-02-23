@@ -3,10 +3,13 @@ package config
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	"github.com/naoina/toml"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
@@ -31,11 +34,24 @@ type StorageProviderConfig struct {
 	SyncerCfg      *syncer.SyncerConfig
 	SignerCfg      *signer.SignerConfig
 	MetadataCfg    *metadata.MetadataConfig
-	BlockSyncerCfg *tomlconfig.TomlConfig
 	P2PCfg         *p2p.P2PServiceConfig
+	BlockSyncerCfg *tomlconfig.TomlConfig
 }
 
 var DefaultStorageProviderConfig = &StorageProviderConfig{
+	Service: []string{
+		model.GatewayService,
+		model.UploaderService,
+		model.DownloaderService,
+		model.ChallengeService,
+		model.SyncerService,
+		model.StoneHubService,
+		model.StoneNodeService,
+		model.SignerService,
+		model.MetadataService,
+		model.BlockSyncerService,
+		model.P2PService,
+	},
 	GatewayCfg:     gateway.DefaultGatewayConfig,
 	UploaderCfg:    uploader.DefaultUploaderConfig,
 	DownloaderCfg:  downloader.DefaultDownloaderConfig,
@@ -45,8 +61,8 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	SyncerCfg:      syncer.DefaultSyncerConfig,
 	SignerCfg:      signer.DefaultSignerChainConfig,
 	MetadataCfg:    metadata.DefaultMetadataConfig,
-	BlockSyncerCfg: &tomlconfig.TomlConfig{},
 	P2PCfg:         p2p.DefaultP2PServiceConfig,
+	BlockSyncerCfg: blocksyncer.DefaultBlockSyncerConfig,
 }
 
 // LoadConfig loads the config file
@@ -64,4 +80,20 @@ func LoadConfig(file string) *StorageProviderConfig {
 		panic(err)
 	}
 	return &cfg
+}
+
+// SaveConfig write the config to disk
+func SaveConfig(file string, cfg *StorageProviderConfig) error {
+	path := filepath.Join(file, "config.toml")
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	encode := util.TomlSettings.NewEncoder(f)
+	if err = encode.Encode(cfg); err != nil {
+		return err
+	}
+	return nil
 }

@@ -3,7 +3,12 @@ package p2p
 import (
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/node"
+)
+
+var (
+	DefaultNodeKeyPath = "node_key.json"
 )
 
 type P2PServiceConfig struct {
@@ -27,7 +32,7 @@ func (config P2PServiceConfig) makeP2pConfig() (*node.NodeConfig, error) {
 }
 
 var DefaultP2PServiceConfig = &P2PServiceConfig{
-	GrpcAddress:      "127.0.0.1:9733",
-	P2PListenAddress: "127.0.0.1:21303",
-	NodeKeyPath:      "node_key.json",
+	GrpcAddress:      model.DefaultP2PServiceAddress,
+	P2PListenAddress: model.DefaultP2PListenAddress,
+	NodeKeyPath:      DefaultNodeKeyPath,
 }

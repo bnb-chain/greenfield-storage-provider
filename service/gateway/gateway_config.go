@@ -1,5 +1,7 @@
 package gateway
 
+import "github.com/bnb-chain/greenfield-storage-provider/model"
+
 type GatewayConfig struct {
 	StorageProvider          string
 	Address                  string
@@ -12,12 +14,16 @@ type GatewayConfig struct {
 }
 
 var DefaultGatewayConfig = &GatewayConfig{
-	StorageProvider:          "bnb-sp",
-	Address:                  "127.0.0.1:9033",
+	StorageProvider:          model.StorageProvider,
+	Address:                  model.DefaultGateAddress,
 	Domain:                   "gnfd.nodereal.com",
-	UploaderServiceAddress:   "127.0.0.1:9133",
-	DownloaderServiceAddress: "127.0.0.1:9233",
-	SyncerServiceAddress:     "127.0.0.1:9533",
-	ChallengeServiceAddress:  "127.0.0.1:9633",
+	UploaderServiceAddress:   model.DefaultUploaderAddress,
+	DownloaderServiceAddress: model.DefaultDownloaderAddress,
+	SyncerServiceAddress:     model.DefaultSyncerAddress,
+	ChallengeServiceAddress:  model.DefaultChallengeAddress,
 	ChainConfig:              DefaultChainClientConfig,
+}
+
+func overrideConfigFromEnv(config *GatewayConfig) {
+	config.StorageProvider = model.StorageProvider
 }

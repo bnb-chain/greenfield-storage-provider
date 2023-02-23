@@ -5,22 +5,19 @@ import (
 	"errors"
 	"sync/atomic"
 
-	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
-
 	"github.com/forbole/juno/v4/cmd"
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
+	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/messages"
 	"github.com/forbole/juno/v4/modules/registrar"
-
+	"github.com/forbole/juno/v4/parser"
+	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
-
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/forbole/juno/v4/modules"
-	"github.com/forbole/juno/v4/parser"
-	"github.com/forbole/juno/v4/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // Syncer synchronizes ec data to piece store

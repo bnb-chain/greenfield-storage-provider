@@ -29,10 +29,14 @@ func DefaultStorageProviderID() string {
 }
 
 var DefaultChallengeConfig = &ChallengeConfig{
-	Address:           "127.0.0.1:9633",
-	StorageProvider:   DefaultStorageProviderID(),
+	Address:           model.DefaultChallengeAddress,
+	StorageProvider:   model.StorageProvider,
 	MetaDBType:        model.LevelDB,
 	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,
 	MetaSqlDBConfig:   metasql.DefaultMetaSqlDBConfig,
 	PieceStoreConfig:  storage.DefaultPieceStoreConfig,
+}
+
+func overrideConfigFromEnv(config *ChallengeConfig) {
+	config.StorageProvider = model.StorageProvider
 }

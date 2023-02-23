@@ -18,10 +18,14 @@ type SyncerConfig struct {
 }
 
 var DefaultSyncerConfig = &SyncerConfig{
-	Address:           "127.0.0.1:9533",
-	StorageProvider:   "bnb-sp",
+	Address:           model.DefaultSyncerAddress,
+	StorageProvider:   model.StorageProvider,
 	MetaDBType:        model.LevelDB,
 	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,
 	MetaSqlDBConfig:   metasql.DefaultMetaSqlDBConfig,
 	PieceStoreConfig:  storage.DefaultPieceStoreConfig,
+}
+
+func overrideConfigFromEnv(config *SyncerConfig) {
+	config.StorageProvider = model.StorageProvider
 }
