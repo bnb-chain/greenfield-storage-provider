@@ -12,15 +12,15 @@ replace (
 )
 
 require (
-	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.6
 	github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.0.5
-	github.com/bnb-chain/greenfield-common/go v0.0.0-20230222034925-1fa3ff1449c3
+	github.com/bnb-chain/greenfield-common v0.0.3-0.20230223083211-e5b5e220939c
 	github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230222033526-17e6b63b80bc
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
+	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.4
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/gin-gonic/gin v1.8.2
@@ -43,13 +43,13 @@ require (
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20230111222715-75897c7a292a
 	google.golang.org/grpc v1.52.3
+	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
 	gorm.io/driver/mysql v1.4.4
 	gorm.io/gorm v1.24.2
 )
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/math v1.0.0-beta.3 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -57,6 +57,7 @@ require (
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
+	github.com/bnb-chain/greenfield-common/go v0.0.0-20230220095438-937c5b838b69 // indirect
 	github.com/btcsuite/btcd v0.22.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 // indirect
