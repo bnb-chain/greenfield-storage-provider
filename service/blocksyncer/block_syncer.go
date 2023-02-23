@@ -79,18 +79,16 @@ func (s *BlockSyncer) initClient() error {
 
 // initDB init a meta-db instance
 func (s *BlockSyncer) initDB() error {
-	//var (
-	//	metaDB spdb.MetaDB
-	//	err    error
-	//)
-	//
-	//metaDB, err = store.NewMetaDB(s.config.MetaDBType,
-	//	s.config.MetaLevelDBConfig, s.config.MetaSqlDBConfig)
-	//if err != nil {
-	//	log.Errorw("failed to init metaDB", "err", err)
-	//	return err
-	//}
-	//s.metaDB = metaDB
+	// Prepare tables
+	var err error
+	for _, module := range s.parserCtx.Modules {
+		if module, ok := module.(modules.PrepareTablesModule); ok {
+			err = module.PrepareTables()
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -104,7 +102,7 @@ func (s *BlockSyncer) Start(ctx context.Context) error {
 	if s.running.Swap(true) {
 		return errors.New("stone hub has already started")
 	}
-	s.serve()
+	go s.serve()
 	return nil
 }
 

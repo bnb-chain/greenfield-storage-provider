@@ -214,8 +214,8 @@ github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d h1:1WdPI/6Anc
 github.com/bnb-chain/greenfield v0.0.0-20230217070311-2a863e19f57d/go.mod h1:zWg5zWuPtfO7ZWP4/3YpCrAOXpWAC80SHV6G+yDhSqA=
 github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419 h1:pMl5XQIBAL51WqkWWYUHITv6epA4y2ZmOjiDr9avbCk=
 github.com/bnb-chain/greenfield-sdk-go v0.0.0-20230208161205-03ff5beb1419/go.mod h1:+b9Ow9h0I6rmPxg54KlqUmrjUgGub7qu0RsUYUQzpYs=
-github.com/bnb-chain/juno/v4 v4.0.0-20230222071122-bc1a0979cdbc h1:t/qEfCXGdNhu28D1po2NjdNtv1u+Bw+yPwHwCFvH2wE=
-github.com/bnb-chain/juno/v4 v4.0.0-20230222071122-bc1a0979cdbc/go.mod h1:lTmL0xXs020/74fQFNu6ZpBGqjW4ug0VFtS6Oesjjk4=
+github.com/bnb-chain/juno/v4 v4.0.0-20230223090130-98858670d635 h1:jyOjg0KlLtKWN+ah1XXeRQMVDK4NzVx8jktz/b/sK+Y=
+github.com/bnb-chain/juno/v4 v4.0.0-20230223090130-98858670d635/go.mod h1:efbLhjNy+0vP53LS5s8Dd4FaUTZiKcap9nSNfKiN7wU=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=
@@ -512,8 +512,8 @@ github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LB
 github.com/go-sql-driver/mysql v1.7.0 h1:ueSltNNllEqE3qcWBTD0iQd3IpL/6U+mJxLkazJ7YPc=
 github.com/go-sql-driver/mysql v1.7.0/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
 github.com/go-stack/stack v1.6.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
-github.com/go-stack/stack v1.8.0 h1:5SgMzNM5HxrEjV0ww2lTmX6E2Izsfxas4+YHWRs3Lsk=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
+github.com/go-stack/stack v1.8.1 h1:ntEHSVwIt7PNXNpgPmVfMrNhLtgjlmnZha2kOpuRiDw=
 github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0/go.mod h1:fyg7847qk6SyHyPtNmDHnmrv/HOrqktSC+C9fM+CJOE=
 github.com/go-yaml/yaml v2.1.0+incompatible/go.mod h1:w2MrLa16VYP0jy6N7M5kHaCkaLENm+P+Tv+MfurjSw0=
 github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 h1:ZpnhV/YsD2/4cESfV5+Hoeu/iUR3ruzNvZ+yQfO03a0=
