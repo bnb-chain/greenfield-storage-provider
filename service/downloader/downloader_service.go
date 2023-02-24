@@ -66,8 +66,10 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 		log.Warnf("failed to query chain", "err", err)
 		return
 	}
-	objectInfo.ObjectId = chainObjectInfo.Id.Uint64()
-	objectInfo.Size = chainObjectInfo.PayloadSize
+	objectInfo = &ptypes.ObjectInfo{
+		ObjectId: chainObjectInfo.Id.Uint64(),
+		Size:     chainObjectInfo.PayloadSize,
+	}
 
 	// TODO: It will be optimized here after connecting with the chain
 	// if length == 0, download all object data

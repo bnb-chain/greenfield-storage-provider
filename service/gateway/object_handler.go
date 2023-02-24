@@ -123,6 +123,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		size = size + writeN
 	}
+	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
 }
 
 // putObjectHandler handle put object request

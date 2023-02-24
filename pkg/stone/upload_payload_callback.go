@@ -172,6 +172,14 @@ func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 	if err != nil {
 		return
 	}
+
+	primarySealInfo.IntegrityHash, primarySealInfo.Signature, err = stone.signer.SignIntegrityHash(
+		context.Background(), primarySealInfo.PieceChecksum)
+	if err != nil {
+		log.Warnw("failed sign primary integrity hash", "error", err)
+		return
+	}
+
 	job := &SealObjectJob{
 		ObjectInfo:        stone.GetObjectInfo(),
 		PrimarySealInfo:   primarySealInfo,

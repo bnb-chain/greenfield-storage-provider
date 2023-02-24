@@ -47,28 +47,20 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	// admin router, path style.
-	/*
-		adminRouter := r.PathPrefix(AdminPath).Subrouter()
-		adminRouter.NewRoute().
-			Name("GetApproval").
-			Path(GetApprovalSubPath).
-			Methods(http.MethodGet).
-			Queries(ActionQuery, "{action}").
-			HandlerFunc(g.getApprovalHandler)
-		adminRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
-	*/
 	r.Path(model.AdminPath+model.GetApprovalSubPath).
 		Name(approvalRouterName).
 		Methods(http.MethodGet).
 		Queries(model.ActionQuery, "{action}").
 		HandlerFunc(g.getApprovalHandler)
-	// sync piece to syncer
-	r.Path(model.SyncerPath).Name("SyncPiece").Methods(http.MethodPut).HandlerFunc(g.syncPieceHandler)
-
 	r.Path(model.AdminPath + model.ChallengeSubPath).
 		Name(challengeRouterName).
 		Methods(http.MethodGet).
 		HandlerFunc(g.challengeHandler)
+	// sync piece to syncer
+	r.Path(model.SyncerPath).
+		Name("SyncPiece").
+		Methods(http.MethodPut).
+		HandlerFunc(g.syncPieceHandler)
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }

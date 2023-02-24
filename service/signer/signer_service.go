@@ -106,11 +106,18 @@ func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.S
 // SealObjectOnChain implements v1.SignerServiceServer
 func (signer *SignerServer) SealObjectOnChain(ctx context.Context, req *stypes.SealObjectOnChainRequest) (*stypes.SealObjectOnChainResponse, error) {
 	txHash, err := signer.client.SealObject(ctx, client.SignSeal, req.ObjectInfo)
+	if err != nil {
+		return &stypes.SealObjectOnChainResponse{
+			TxHash:     txHash,
+			ErrMessage: merrors.MakeErrMsgResponse(err),
+		}, nil
+	}
 
 	return &stypes.SealObjectOnChainResponse{
 		TxHash:     txHash,
-		ErrMessage: merrors.MakeErrMsgResponse(err),
+		ErrMessage: nil,
 	}, nil
+
 }
 
 // IPWhitelistInterceptor returns a new unary server interceptors that performs per-request ip whitelist.

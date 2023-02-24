@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -188,28 +189,39 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 			break
 		}
 
+		// TODO: polish it
 		object := st.(*stone.UploadPayloadStone).GetObjectInfo()
+		object.SecondarySps = make(map[string]*ptypes.StorageProviderInfo)
+		for _, secondarySp := range job.SecondarySealInfo {
+			object.SecondarySps[strconv.Itoa(int(secondarySp.Idx))] = &ptypes.StorageProviderInfo{
+				IntegrityHash: secondarySp.IntegrityHash,
+				Signature:     secondarySp.Signature,
+				SpId:          secondarySp.SpId,
+			}
+			log.Infow("debugBB", "index", secondarySp.Idx)
+			log.Infow("debug", "operator_address", secondarySp.SpId, "signature", secondarySp.Signature)
+		}
 		if _, err := hub.signer.SealObjectOnChain(context.Background(), object); err != nil {
-			log.Warnw("failed to send seal object", "object_id", objectID, "error", err)
+			log.Warnw("failed to send seal object", "object_id", objectID, "error", err, "object_info", object)
 			break
 		}
 
-		go func(stoneJob *stone.UploadPayloadStone) {
+		go func(st *stone.UploadPayloadStone) {
 			ctx := log.Context(context.Background(), object)
-			defer hub.DeleteStone(stoneJob.StoneKey())
+			defer hub.DeleteStone(st.StoneKey())
 			_, err := hub.chain.ListenObjectSeal(context.Background(), object.BucketName, object.ObjectName, WaitSealTimeoutHeight)
 			if err != nil {
-				stoneJob.InterruptStone(ctx, err)
+				st.InterruptStone(ctx, err)
 				log.CtxWarnw(ctx, "interrupt stone error", "error", err)
 				return
 			}
-			err = stoneJob.ActionEvent(ctx, stone.SealObjectDoneEvent)
+			err = st.ActionEvent(ctx, stone.SealObjectDoneEvent)
 			if err != nil {
 				log.CtxWarnw(ctx, "receive seal event, seal done fsm error", "error", err)
 				return
 			}
 			log.CtxInfow(ctx, "seal object success")
-		}(stoneJob.(*stone.UploadPayloadStone))
+		}(st.(*stone.UploadPayloadStone))
 	default:
 		log.Infow("unrecognized stone job type")
 	}

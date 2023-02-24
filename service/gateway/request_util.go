@@ -10,7 +10,6 @@ import (
 
 	commonhttp "github.com/bnb-chain/greenfield-common/http"
 	signer "github.com/bnb-chain/greenfield-go-sdk/keys/signer"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 
@@ -43,6 +42,7 @@ func newRequestContext(r *http.Request) *requestContext {
 			requestID: util.GenerateRequestID(),
 			request:   r,
 			startTime: time.Now(),
+			vars:      vars,
 		}
 	}
 
@@ -107,7 +107,7 @@ func (requestContext *requestContext) verifySignature() (sdk.AccAddress, error) 
 	return sdk.AccAddress{}, errors.ErrUnsupportedSignType
 }
 
-// verifySignV1 used to verify request type v1 signature, return nil if check succeed
+// verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed
 func (requestContext *requestContext) verifySignatureV1(requestSignature string) (sdk.AccAddress, error) {
 	var (
 		signedMsg string
@@ -137,23 +137,26 @@ func (requestContext *requestContext) verifySignatureV1(requestSignature string)
 	}
 
 	// check request integrity
-	if hex.EncodeToString(commonhttp.GetMsgToSign(requestContext.request)) != signedMsg {
+	realMsgToSign := commonhttp.GetMsgToSign(requestContext.request)
+	if hex.EncodeToString(realMsgToSign) != signedMsg {
+		log.Warnw("failed to check signed msg")
 		return sdk.AccAddress{}, errors.ErrRequestConsistent
 	}
 
 	// check signature consistent
-	signedRequestHash := crypto.Keccak256([]byte(signedMsg))
-	addr, pk, err := signer.RecoverAddr(signedRequestHash, signature)
+	addr, pk, err := signer.RecoverAddr(realMsgToSign, signature)
 	if err != nil {
+		log.Warnw("failed to recover address")
 		return sdk.AccAddress{}, errors.ErrSignatureConsistent
 	}
-	if !secp256k1.VerifySignature(pk.Bytes(), signedRequestHash, signature[:len(signature)-1]) {
+	if !secp256k1.VerifySignature(pk.Bytes(), realMsgToSign, signature[:len(signature)-1]) {
+		log.Warnw("failed to verify signature")
 		return sdk.AccAddress{}, errors.ErrSignatureConsistent
 	}
 	return addr, nil
 }
 
-// verifySignV2 used to verify request type v2 signature, return nil if check succeed
+// verifySignatureV2 used to verify request type v2 signature, return (address, nil) if check succeed
 func (requestContext *requestContext) verifySignatureV2(requestSignature string) (sdk.AccAddress, error) {
 	var (
 		signature []byte
@@ -244,6 +247,9 @@ func (g *Gateway) checkAuthorization(requestContext *requestContext, addr sdk.Ac
 			return err
 		}
 		if !bktExist || !objInitStatue || !tokenEnough || !spBkt || !ownObj {
+			log.Warnw("failed to auth upload", "err", err,
+				"bucket_name", requestContext.bucketName, "object_name", requestContext.objectName,
+				"address", addr.String())
 			return fmt.Errorf("account has no permission")
 		}
 

@@ -66,6 +66,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 	}
 }
 
+// generateSealInfo generate seal info, notice spID is operator address
 func (s *Syncer) generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) (*stypes.StorageProviderSealInfo, error) {
 	var err error
 	resp := &stypes.StorageProviderSealInfo{
@@ -78,6 +79,7 @@ func (s *Syncer) generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta
 		log.Warnw("failed to sign integrity hash", "error", err)
 		return nil, err
 	}
+	log.Infow("debugAAA", "operator_address", spID, "signature", resp.Signature)
 	return resp, nil
 }
 

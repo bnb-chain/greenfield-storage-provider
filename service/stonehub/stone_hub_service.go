@@ -82,13 +82,17 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *stypes.Stone
 		err = merrors.ErrObjectIdZero
 		return
 	}
-	if req.GetObjectInfo().GetHeight() == 0 {
-		err = merrors.ErrObjectHeightZero
-		return
-	}
-	if req.GetObjectInfo().GetPrimarySp().GetSpId() != hub.config.StorageProvider {
-		err = merrors.ErrPrimarySPMismatch
-	}
+
+	// TODO: need check real block height and operator addresss
+	/*
+		if req.GetObjectInfo().GetHeight() == 0 {
+			err = merrors.ErrObjectHeightZero
+			return
+		}
+		if req.GetObjectInfo().GetPrimarySp().GetSpId() != hub.config.StorageProvider {
+			err = merrors.ErrPrimarySPMismatch
+		}
+	*/
 	if hub.HasStone(req.GetObjectInfo().GetObjectId()) {
 		err = merrors.ErrUploadPayloadJobRunning
 		return

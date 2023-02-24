@@ -27,11 +27,10 @@ func Test_verifySignatureV1(t *testing.T) {
 	req.Header.Set(model.ContentTypeHeader, "application/x-www-form-urlencoded")
 	req.Host = "testBucket.gnfd.nodereal.com"
 	req.Header.Set(model.GnfdDateHeader, "11:10")
-	// mock pk
-	privKey, _, _ := testdata.KeyEthSecp256k1TestPubAddr()
+	// mock
+	privKey, _, addrInput := testdata.KeyEthSecp256k1TestPubAddr()
 	keyManager, err := keys.NewPrivateKeyManager(hex.EncodeToString(privKey.Bytes()))
 	require.NoError(t, err)
-
 	// sign
 	client, err := sp.NewSpClientWithKeyManager("example.com", &sp.Option{}, keyManager)
 	require.NoError(t, err)
@@ -41,8 +40,9 @@ func Test_verifySignatureV1(t *testing.T) {
 	rc := &requestContext{
 		request: req,
 	}
-	_, err = rc.verifySignature()
+	addrOutput, err := rc.verifySignature()
 	assert.Equal(t, nil, err)
+	assert.Equal(t, addrInput.String(), addrOutput.String())
 }
 
 func Test_verifySignatureV2(t *testing.T) {

@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 	"encoding/hex"
+	"math"
 	"net/http"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -10,8 +11,7 @@ import (
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-	btypes "github.com/bnb-chain/greenfield/x/bridge/types"
-	types "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -58,6 +58,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Warnw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 		errorDescription = InvalidHeader
+		return
 	}
 
 	switch actionName {
@@ -66,10 +67,14 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			msg               = types.MsgCreateBucket{}
 			approvalSignature []byte
 		)
+		if types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg) != nil {
+			log.Warnw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+			errorDescription = InvalidHeader
+			return
+		}
 
-		btypes.ModuleCdc.MustUnmarshalJSON(approvalMsg, &msg)
 		// TODO: to config it
-		msg.PrimarySpApproval.ExpiredHeight = 10
+		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: math.MaxUint64}
 		approvalSignature, err = g.signer.SignBucketApproval(context.Background(), &msg)
 		if err != nil {
 			log.Warnw("failed to sign create bucket approval", "error", err)
@@ -77,16 +82,20 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		msg.PrimarySpApproval.Sig = approvalSignature
-		bz := btypes.ModuleCdc.MustMarshalJSON(&msg)
+		bz := types.ModuleCdc.MustMarshalJSON(&msg)
 		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
 	case createObjectApprovalAction:
 		var (
 			msg               = types.MsgCreateObject{}
 			approvalSignature []byte
 		)
-		btypes.ModuleCdc.MustUnmarshalJSON(approvalMsg, &msg)
+		if types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg) != nil {
+			log.Warnw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+			errorDescription = InvalidHeader
+			return
+		}
 		// TODO: to config it
-		msg.PrimarySpApproval.ExpiredHeight = 10
+		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: math.MaxUint64}
 		approvalSignature, err = g.signer.SignObjectApproval(context.Background(), &msg)
 		if err != nil {
 			log.Warnw("failed to sign create object approval", "error", err)
@@ -94,13 +103,14 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		msg.PrimarySpApproval.Sig = approvalSignature
-		bz := btypes.ModuleCdc.MustMarshalJSON(&msg)
+		bz := types.ModuleCdc.MustMarshalJSON(&msg)
 		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
 	default:
 		log.Warnw("not implement approval", "action", actionName)
 		errorDescription = NotImplementedError
 		return
 	}
+	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
 }
 
 // challengeHandler handle challenge request
