@@ -16,6 +16,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
+var _ ObjectStorage = &diskFileStore{}
+
 const (
 	dirSuffix = "/"
 	windowsOS = "windows"

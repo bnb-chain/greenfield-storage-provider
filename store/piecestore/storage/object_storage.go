@@ -24,6 +24,7 @@ type StorageFn func(cfg *ObjectStorageConfig) (ObjectStorage, error)
 
 var storageMap = map[string]StorageFn{
 	"s3":     newS3Store,
+	"minio":  newMinioStore,
 	"file":   newDiskFileStore,
 	"memory": newMemoryStore,
 }
@@ -60,4 +61,24 @@ var bufPool = sync.Pool{
 		buf := make([]byte, model.BufPoolSize)
 		return &buf
 	},
+}
+
+type objectStorageSecretKey struct {
+	accessKey    string
+	secretKey    string
+	sessionToken string
+}
+
+func getSecretKeyFromEnv(accessKey, secretKey, sessionToken string) *objectStorageSecretKey {
+	key := &objectStorageSecretKey{}
+	if val, ok := os.LookupEnv(accessKey); ok {
+		key.accessKey = val
+	}
+	if val, ok := os.LookupEnv(secretKey); ok {
+		key.secretKey = val
+	}
+	if val, ok := os.LookupEnv(sessionToken); ok {
+		key.sessionToken = val
+	}
+	return key
 }

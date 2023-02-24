@@ -15,6 +15,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
+var _ ObjectStorage = &memoryStore{}
+
 type memoryStore struct {
 	name    string
 	objects map[string]*memoryObject

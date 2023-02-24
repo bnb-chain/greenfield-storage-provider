@@ -120,6 +120,12 @@ const (
 	AWSSecretKey    = "AWS_SECRET_KEY"
 	AWSSessionToken = "AWS_SESSION_TOKEN"
 
+	// Minio environment constants
+	MinioRegion       = "MINIO_REGION"
+	MinioAccessKey    = "MINIO_ACCESS_KEY"
+	MinioSecretKey    = "MINIO_SECRET_KEY"
+	MinioSessionToken = "MINIO_SESSION_TOKEN"
+
 	// MetaDB environment constants
 	MetaDBUser     = "META_DB_USER"
 	MetaDBPassword = "META_DB_PASSWORD"
