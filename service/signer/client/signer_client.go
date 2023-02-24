@@ -47,7 +47,6 @@ func (client *SignerClient) SignBucketApproval(ctx context.Context, msg *types.M
 		log.CtxErrorw(ctx, "sign bucket approval failed", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
-	log.CtxInfow(ctx, "succeed to get approval", "bucket", msg)
 	return resp.Signature, nil
 }
 
@@ -70,7 +69,6 @@ func (client *SignerClient) SignObjectApproval(ctx context.Context, msg *types.M
 		log.CtxErrorw(ctx, "sign object approval failed", "error", resp.GetErrMessage().GetErrMsg())
 		return nil, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
-	log.CtxInfow(ctx, "succeed to get approval", "object", msg)
 	return resp.Signature, nil
 }
 
@@ -99,11 +97,11 @@ func (client *SignerClient) SignIntegrityHash(ctx context.Context, checksum [][]
 func (client *SignerClient) SealObjectOnChain(ctx context.Context, object *ptypes.ObjectInfo, opts ...grpc.CallOption) ([]byte, error) {
 	resp, err := client.signer.SealObjectOnChain(ctx, &stypes.SealObjectOnChainRequest{ObjectInfo: object}, opts...)
 	if err != nil {
-		log.CtxErrorw(ctx, "seal object on chain failed", "error", err, "object_info", object)
+		log.CtxErrorw(ctx, "failed to seal object on chain", "error", err, "object_info", object)
 		return []byte{}, err
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-		log.CtxErrorw(ctx, "seal object on chain failed", "error", resp.GetErrMessage().GetErrMsg(), "object_info", object)
+		log.CtxErrorw(ctx, "failed to seal object on chain", "error", resp.GetErrMessage().GetErrMsg(), "object_info", object)
 		return []byte{}, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	return resp.GetTxHash(), nil

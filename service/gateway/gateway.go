@@ -67,7 +67,7 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		return nil, err
 	}
 	if g.signer, err = sclient.NewSignerClient(cfg.SignerServiceAddress); err != nil {
-		log.Warnw("failed to signer client", "err", err)
+		log.Warnw("failed to create signer client", "err", err)
 		return nil, err
 	}
 	log.Debugw("gateway succeed to init")

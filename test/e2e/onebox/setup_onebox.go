@@ -13,9 +13,11 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
@@ -118,6 +120,9 @@ func initConfig() {
 	cfg.SyncerCfg = syncer.DefaultSyncerConfig
 	cfg.SignerCfg = signer.DefaultSignerChainConfig
 	cfg.ChallengeCfg = challenge.DefaultChallengeConfig
+	cfg.MetadataCfg = metadata.DefaultMetadataConfig
+	cfg.BlockSyncerCfg = blocksyncer.DefaultBlockSyncerConfig
+
 }
 
 func main() {

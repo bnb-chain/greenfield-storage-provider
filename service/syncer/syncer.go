@@ -48,11 +48,11 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 func (s *Syncer) initClient() error {
 	var err error
 	if s.store, err = client.NewStoreClient(s.config.PieceStoreConfig); err != nil {
-		log.Errorw("syncer starts piece store client failed", "error", err)
+		log.Errorw("failed to new piece store client", "error", err)
 		return err
 	}
 	if s.signer, err = sclient.NewSignerClient(s.config.SignerServiceAddress); err != nil {
-		log.Warnw("syncer starts signer client failed", "err", err)
+		log.Warnw("failed to new signer client", "err", err)
 		return err
 	}
 	return nil

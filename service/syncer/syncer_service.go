@@ -31,7 +31,7 @@ func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
 			integrityMeta.PieceHash = pieceHash
 			sealInfo, err := s.generateSealInfo(s.config.StorageProvider, integrityMeta)
 			if err != nil {
-				log.Errorw("syncer generate seal info failed", "error", err)
+				log.Errorw("failed to generate seal info", "error", err)
 				return err
 			}
 			integrityMeta.IntegrityHash = sealInfo.GetIntegrityHash()
@@ -79,7 +79,6 @@ func (s *Syncer) generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta
 		log.Warnw("failed to sign integrity hash", "error", err)
 		return nil, err
 	}
-	log.Infow("debugAAA", "operator_address", spID, "signature", resp.Signature)
 	return resp, nil
 }
 

@@ -9,17 +9,7 @@ make install-tools
 ```
 ## Build
 ```shell
-bash build.sh
-```
-## Quick Deploy
-```shell
-cd build
-# print version
+bash build.sh &&
+cd build &&
 ./gnfd-sp --version
-# setup secondary sps in the test-env directory(syncer), notice: only run once at first
-./setup-test-env
-# run primary sp(gateway/uploader/downloader/stonehub/stonenode/syncer)
-./gnfd-sp -config ./config.toml
-# run cases, request to primary sp
-./test-gnfd-sp
 ```

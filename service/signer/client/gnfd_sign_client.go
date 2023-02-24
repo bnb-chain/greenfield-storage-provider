@@ -134,19 +134,16 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		indexArray            []int
 	)
 
-	// TODO: polish it
-	for indexStr, _ := range object.SecondarySps {
+	// TODO: polish it by use new proto
+	for indexStr := range object.SecondarySps {
 		indexInt, err := strconv.Atoi(indexStr)
 		if err != nil {
 			return nil, err
 		}
 		indexArray = append(indexArray, indexInt)
-		log.Infow("debugCC", "index", indexStr)
-
 	}
 	sort.Ints(indexArray)
 	for index := range indexArray {
-		log.Infow("debugAA", "index", index)
 		sp := object.SecondarySps[strconv.Itoa(index)]
 		opAddr, err := sdk.AccAddressFromHexUnsafe(sp.SpId) // should be 0x...
 		if err != nil {

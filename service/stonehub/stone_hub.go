@@ -80,7 +80,7 @@ func NewStoneHubService(cfg *StoneHubConfig) (*StoneHub, error) {
 		return nil, err
 	}
 	if hub.signer, err = sclient.NewSignerClient(cfg.SignerServiceAddress); err != nil {
-		log.Warnw("failed to signer client", "err", err)
+		log.Warnw("failed to create signer client", "err", err)
 		return nil, err
 	}
 	if err = hub.initDB(); err != nil {
@@ -189,7 +189,7 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 			break
 		}
 
-		// TODO: polish it
+		// TODO: polish it by using new proto in the future
 		object := st.(*stone.UploadPayloadStone).GetObjectInfo()
 		object.SecondarySps = make(map[string]*ptypes.StorageProviderInfo)
 		for _, secondarySp := range job.SecondarySealInfo {
@@ -198,8 +198,6 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 				Signature:     secondarySp.Signature,
 				SpId:          secondarySp.SpId,
 			}
-			log.Infow("debugBB", "index", secondarySp.Idx)
-			log.Infow("debug", "operator_address", secondarySp.SpId, "signature", secondarySp.Signature)
 		}
 		if _, err := hub.signer.SealObjectOnChain(context.Background(), object); err != nil {
 			log.Warnw("failed to send seal object", "object_id", objectID, "error", err, "object_info", object)
