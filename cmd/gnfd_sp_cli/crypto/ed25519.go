@@ -26,7 +26,7 @@ func CreateP2PAddress(c *cli.Context) {
 	number := c.Int("n")
 	for i := 0; i < number; i++ {
 		nodeKey := ed25519.GenPrivKey()
-		fmt.Println(fmt.Sprintf("%d, private_key: %s, puclic_key: %s", i,
-			hex.EncodeToString(nodeKey), hex.EncodeToString(nodeKey.PubKey().Bytes())))
+		fmt.Printf("%d, private_key: %s, puclic_key: %s\n", i,
+			hex.EncodeToString(nodeKey), hex.EncodeToString(nodeKey.PubKey().Bytes()))
 	}
 }
