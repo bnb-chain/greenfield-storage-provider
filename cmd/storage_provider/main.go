@@ -7,11 +7,10 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
-
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"

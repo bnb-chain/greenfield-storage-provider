@@ -73,14 +73,16 @@ const (
 	GnfdResourceHeader        = "X-Gnfd-Resource"
 	GnfdPreSignatureHeader    = "X-Gnfd-Pre-Signature"
 	// GnfdRedundancyTypeHeader can be EC or Replica, EC is default
-	GnfdRedundancyTypeHeader  = "X-Gnfd-Redundancy-Type"
-	GnfdAuthorizationHeader   = "Authorization"
-	GnfdDateHeader            = "X-Gnfd-Date"
-	GnfdObjectIDHeader        = "X-Gnfd-Object-ID"
-	GnfdPieceIndexHeader      = "X-Gnfd-Piece-Index"
-	GnfdRedundancyIndexHeader = "X-Gnfd-Redundancy-Index"
-	GnfdIntegrityHashHeader   = "X-Gnfd-Integrity-Hash"
-	GnfdPieceHashHeader       = "X-Gnfd-Piece-Hash"
+	GnfdRedundancyTypeHeader      = "X-Gnfd-Redundancy-Type"
+	GnfdAuthorizationHeader       = "Authorization"
+	GnfdDateHeader                = "X-Gnfd-Date"
+	GnfdObjectIDHeader            = "X-Gnfd-Object-ID"
+	GnfdPieceIndexHeader          = "X-Gnfd-Piece-Index"
+	GnfdRedundancyIndexHeader     = "X-Gnfd-Redundancy-Index"
+	GnfdIntegrityHashHeader       = "X-Gnfd-Integrity-Hash"
+	GnfdPieceHashHeader           = "X-Gnfd-Piece-Hash"
+	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
+	GnfdSignedApprovalMsgHeader   = "X-Gnfd-Signed-Msg"
 
 	// StoneNode to gateway request header
 	GnfdSPIDHeader              = "X-Gnfd-SP-ID"
@@ -88,8 +90,8 @@ const (
 	GnfdApprovalSignatureHeader = "X-Gnfd-Approval-Signature"
 
 	// gateway to StoneNode response header
-	GnfdPieceChecksumHeader = "X-Gnfd-Piece-Checksum"
-	GnfdSealSignatureHeader = "X-Gnfd-Seal-Signature"
+	GnfdPieceChecksumHeader          = "X-Gnfd-Piece-Checksum"
+	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 
 	// header value
 	ReplicaRedundancyTypeHeaderValue = "Replica"

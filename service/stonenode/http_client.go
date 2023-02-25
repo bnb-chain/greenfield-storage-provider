@@ -131,7 +131,7 @@ func generateSealInfo(resp *http.Response) (*stypes.StorageProviderSealInfo, err
 	spSealInfo.IntegrityHash = iHash
 
 	// get signature
-	signature := resp.Header.Get(model.GnfdSealSignatureHeader)
+	signature := resp.Header.Get(model.GnfdIntegrityHashSignatureHeader)
 	if signature == "" {
 		log.Error("resp header seal signature is empty")
 		return nil, merrors.ErrEmptyRespHeader

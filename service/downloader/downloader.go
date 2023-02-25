@@ -4,10 +4,10 @@ import (
 	"context"
 	"net"
 
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
@@ -19,21 +19,25 @@ type Downloader struct {
 	cfg        *DownloaderConfig
 	name       string
 	pieceStore *client.StoreClient
-	mockChain  *mock.InscriptionChainMock
+	chain      *gnfd.Greenfield
 }
 
 // NewDownloaderService return a downloader instance.
 func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
+	var err error
 	downloader := &Downloader{
 		cfg:  cfg,
 		name: model.DownloaderService,
 	}
-	pieceStore, err := client.NewStoreClient(cfg.PieceStoreConfig)
-	if err != nil {
+	if downloader.pieceStore, err = client.NewStoreClient(cfg.PieceStoreConfig); err != nil {
+		log.Errorw("failed to create piece store client", "err", err)
 		return nil, err
 	}
-	downloader.pieceStore = pieceStore
-	downloader.mockChain = mock.GetInscriptionChainMockSingleton()
+	if downloader.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
+		log.Errorw("failed to create chain client", "err", err)
+		return nil, err
+	}
+
 	return downloader, nil
 }
 

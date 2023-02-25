@@ -97,11 +97,11 @@ func (client *SignerClient) SignIntegrityHash(ctx context.Context, checksum [][]
 func (client *SignerClient) SealObjectOnChain(ctx context.Context, object *ptypes.ObjectInfo, opts ...grpc.CallOption) ([]byte, error) {
 	resp, err := client.signer.SealObjectOnChain(ctx, &stypes.SealObjectOnChainRequest{ObjectInfo: object}, opts...)
 	if err != nil {
-		log.CtxErrorw(ctx, "seal object on chain failed", "error", err)
+		log.CtxErrorw(ctx, "failed to seal object on chain", "error", err, "object_info", object)
 		return []byte{}, err
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-		log.CtxErrorw(ctx, "seal object on chain  failed", "error", resp.GetErrMessage().GetErrMsg())
+		log.CtxErrorw(ctx, "failed to seal object on chain", "error", resp.GetErrMessage().GetErrMsg(), "object_info", object)
 		return []byte{}, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	return resp.GetTxHash(), nil

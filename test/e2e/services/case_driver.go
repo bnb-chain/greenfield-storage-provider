@@ -661,7 +661,6 @@ func main() {
 	cfg := config.LoadConfig(*configFile)
 	gatewayAddress = cfg.GatewayCfg.Address
 	hostHeader = testBucketName + "." + cfg.GatewayCfg.Domain
-	metadataAddress = cfg.MetadataCfg.Address
 
 	runCase1()
 	runCase2()

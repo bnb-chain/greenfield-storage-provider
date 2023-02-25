@@ -4,9 +4,7 @@ import (
 	"bufio"
 	"os"
 
-	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
-	"github.com/naoina/toml"
-
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
@@ -17,6 +15,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
+	"github.com/naoina/toml"
 )
 
 type StorageProviderConfig struct {
@@ -43,7 +43,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	SyncerCfg:      syncer.DefaultSyncerConfig,
 	SignerCfg:      signer.DefaultSignerChainConfig,
 	MetadataCfg:    metadata.DefaultMetadataConfig,
-	BlockSyncerCfg: &tomlconfig.TomlConfig{},
+	BlockSyncerCfg: blocksyncer.DefaultBlockSyncerConfig,
 }
 
 // LoadConfig loads the config file

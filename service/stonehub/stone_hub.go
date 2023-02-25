@@ -5,16 +5,18 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	sclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"github.com/oleiade/lane"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/bnb-chain/greenfield-storage-provider/mock"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/stone"
@@ -33,6 +35,8 @@ var (
 	JobChannelSize = 100
 	// GcChannelSize define the size of gc stone channel
 	GcChannelSize = 100
+	// WaitSealTimeoutHeight define timeout height of seal object
+	WaitSealTimeoutHeight = 10
 )
 
 // Stone defines the interface that managed by stone hub.
@@ -57,32 +61,32 @@ type StoneHub struct {
 	running   atomic.Bool
 	gcRunning atomic.Bool
 
-	// TODO::temporary mock interface, need to wait for the final version.
-	insCli *mock.InscriptionChainMock
-	signer *mock.SignerServerMock
-	events *mock.InscriptionChainMock
+	chain  *gnfd.Greenfield
+	signer *sclient.SignerClient
 }
 
 // NewStoneHubService return the StoneHub instance
-func NewStoneHubService(hubCfg *StoneHubConfig) (*StoneHub, error) {
+func NewStoneHubService(cfg *StoneHubConfig) (*StoneHub, error) {
+	var err error
 	hub := &StoneHub{
-		config:   hubCfg,
+		config:   cfg,
 		jobQueue: lane.NewQueue(),
 		jobCh:    make(chan stone.StoneJob, JobChannelSize),
 		gcCh:     make(chan uint64, GcChannelSize),
 		stopCh:   make(chan struct{}),
 	}
-	// TODO:: replace the mock green field chain related resource by official version
-	{
-		hub.insCli = mock.NewInscriptionChainMock()
-		hub.signer = mock.NewSignerServerMock(hub.insCli)
-		hub.events = hub.insCli
-	}
-	// init job and meta db
-	if err := hub.initDB(); err != nil {
+	if hub.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
+		log.Errorw("failed to create chain client", "err", err)
 		return nil, err
 	}
-	if err := hub.loadStone(); err != nil {
+	if hub.signer, err = sclient.NewSignerClient(cfg.SignerServiceAddress); err != nil {
+		log.Errorw("failed to create signer client", "err", err)
+		return nil, err
+	}
+	if err = hub.initDB(); err != nil {
+		return nil, err
+	}
+	if err = hub.loadStone(); err != nil {
 		return nil, err
 	}
 	return hub, nil
@@ -99,12 +103,6 @@ func (hub *StoneHub) Start(ctx context.Context) error {
 		return errors.New("stone hub has already started")
 	}
 
-	// TODO:: use green field chain client replace the mock client
-	{
-		hub.insCli.Start()
-		go hub.listenChain()
-	}
-
 	// start background task and rpc service
 	go hub.eventLoop()
 	go hub.serve()
@@ -119,10 +117,6 @@ func (hub *StoneHub) Stop(ctx context.Context) error {
 
 	close(hub.stopCh)
 	close(hub.gcCh)
-	// TODO:: use green field chain client replace the mock client
-	{
-		hub.insCli.Stop()
-	}
 
 	var errs []error
 	if err := hub.metaDB.Close(); err != nil {
@@ -187,15 +181,45 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 		objectID := job.ObjectInfo.GetObjectId()
 		st, ok := hub.stone.Load(objectID)
 		if !ok {
-			log.Warnw("stone has gone", "object_id", objectID)
+			log.Errorw("stone has gone", "object_id", objectID)
 			break
 		}
 		if _, ok := st.(*stone.UploadPayloadStone); !ok {
-			log.Warnw("stone typecast to UploadPayloadStone error", "object_id", objectID)
+			log.Errorw("stone typecast to UploadPayloadStone error", "object_id", objectID)
 			break
 		}
+
+		// TODO: polish it by using new proto in the future
 		object := st.(*stone.UploadPayloadStone).GetObjectInfo()
-		hub.signer.BroadcastSealObjectMessage(object)
+		object.SecondarySps = make(map[string]*ptypes.StorageProviderInfo)
+		for _, secondarySp := range job.SecondarySealInfo {
+			object.SecondarySps[strconv.Itoa(int(secondarySp.Idx))] = &ptypes.StorageProviderInfo{
+				IntegrityHash: secondarySp.IntegrityHash,
+				Signature:     secondarySp.Signature,
+				SpId:          secondarySp.SpId,
+			}
+		}
+		if _, err := hub.signer.SealObjectOnChain(context.Background(), object); err != nil {
+			log.Errorw("failed to send seal object", "object_id", objectID, "error", err, "object_info", object)
+			break
+		}
+
+		go func(st *stone.UploadPayloadStone) {
+			ctx := log.Context(context.Background(), object)
+			defer hub.DeleteStone(st.StoneKey())
+			_, err := hub.chain.ListenObjectSeal(context.Background(), object.BucketName, object.ObjectName, WaitSealTimeoutHeight)
+			if err != nil {
+				st.InterruptStone(ctx, err)
+				log.CtxErrorw(ctx, "interrupt stone error", "error", err)
+				return
+			}
+			err = st.ActionEvent(ctx, stone.SealObjectDoneEvent)
+			if err != nil {
+				log.CtxErrorw(ctx, "receive seal event, seal done fsm error", "error", err)
+				return
+			}
+			log.CtxInfow(ctx, "seal object success")
+		}(st.(*stone.UploadPayloadStone))
 	default:
 		log.Infow("unrecognized stone job type")
 	}
@@ -245,40 +269,6 @@ func (hub *StoneHub) gcDBStone() {
 	}
 }
 
-// listenInscription listen to the subscribe events of green field chain.
-// TODO::temporarily use the mock green field chain.
-func (hub *StoneHub) listenChain() {
-	ch := hub.events.SubscribeEvent(mock.SealObject)
-	for {
-		select {
-		case event := <-ch:
-			if event == nil {
-				continue
-			}
-			object := event.(*ptypes.ObjectInfo)
-			st, ok := hub.stone.Load(object.GetObjectId())
-			if !ok {
-				log.Infow("receive seal event, stone has gone")
-				break
-			}
-			uploadStone, ok := st.(*stone.UploadPayloadStone)
-			if !ok {
-				log.Infow("receive seal event, stone typecast to UploadPayloadStone error", "object_id", object.GetObjectId())
-				break
-			}
-			err := uploadStone.ActionEvent(context.Background(), stone.SealObjectDoneEvent)
-			if err != nil {
-				log.Infow("receive seal event, seal done fsm error", "object_id", object.GetObjectId())
-				break
-			}
-			hub.DeleteStone(object.GetObjectId())
-			//TODO::delete secondary integrity hash in metadb
-		case <-hub.stopCh:
-			return
-		}
-	}
-}
-
 // LoadStone read all stone form db and add stone hub.
 func (hub *StoneHub) loadStone() error {
 	if hub.gcRunning.Swap(true) {
@@ -314,7 +304,7 @@ func (hub *StoneHub) loadStone() error {
 			continue
 		}
 		st, stErr := stone.NewUploadPayloadStone(context.Background(), job, object,
-			hub.jobDB, hub.metaDB, hub.jobCh, hub.gcCh)
+			hub.jobDB, hub.metaDB, hub.signer, hub.jobCh, hub.gcCh)
 		if stErr != nil {
 			log.Errorw("load stone err", "job_id", job.GetJobId(),
 				"object_id", object.GetObjectId(), "error", stErr)

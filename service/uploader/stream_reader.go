@@ -106,7 +106,7 @@ func (sr *streamReader) splitSegment(segmentSize uint32, ch chan *SegmentContext
 		pieceData := make([]byte, segmentSize)
 		readN, err = sr.Read(pieceData)
 		if err != nil && err != io.EOF {
-			log.Warnw("failed to stream read", "err", err)
+			log.Errorw("failed to stream read", "err", err)
 			close(ch)
 			return err
 		}

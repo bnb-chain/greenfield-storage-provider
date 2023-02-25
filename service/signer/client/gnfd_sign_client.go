@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"encoding/hex"
+	"sort"
+	"strconv"
 	"sync"
 
 	"github.com/bnb-chain/greenfield/sdk/client"
@@ -108,7 +110,6 @@ func (client *GreenfieldChainSignClient) Sign(scope SignType, msg []byte) ([]byt
 	if err != nil {
 		return nil, err
 	}
-
 	return km.GetPrivKey().Sign(msg)
 }
 
@@ -130,16 +131,29 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	var (
 		secondarySPAccs       = make([]sdk.AccAddress, 0, len(object.SecondarySps))
 		secondarySPSignatures = make([][]byte, 0, len(object.SecondarySps))
+		indexArray            []int
 	)
 
-	for _, sp := range object.SecondarySps {
+	// TODO: polish it by use new proto
+	for indexStr := range object.SecondarySps {
+		indexInt, err := strconv.Atoi(indexStr)
+		if err != nil {
+			return nil, err
+		}
+		indexArray = append(indexArray, indexInt)
+	}
+	sort.Ints(indexArray)
+	for index := range indexArray {
+		sp := object.SecondarySps[strconv.Itoa(index)]
 		opAddr, err := sdk.AccAddressFromHexUnsafe(sp.SpId) // should be 0x...
 		if err != nil {
+			log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", sp.SpId)
 			return nil, err
 		}
 		secondarySPAccs = append(secondarySPAccs, opAddr)
 		secondarySPSignatures = append(secondarySPSignatures, sp.Signature)
 	}
+
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "err", err)
@@ -157,17 +171,17 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	resp, err := client.greenfieldClients[scope].BroadcastTx(
 		[]sdk.Msg{msgSealObject}, txOpt)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err)
+		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "seal_info", msgSealObject.String())
 		return nil, merrors.ErrSealObjectOnChain
 	}
 
 	if resp.TxResponse.Code != 0 {
-		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
+		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "seal_info", msgSealObject.String())
 		return nil, merrors.ErrSealObjectOnChain
 	}
 	object.TxHash, err = hex.DecodeString(resp.TxResponse.TxHash)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err)
+		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "seal_info", msgSealObject.String())
 		return nil, merrors.ErrSealObjectOnChain
 	}
 

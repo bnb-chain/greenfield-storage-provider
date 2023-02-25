@@ -4,7 +4,6 @@ import (
 	"context"
 
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"google.golang.org/grpc"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -107,11 +106,18 @@ func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.S
 // SealObjectOnChain implements v1.SignerServiceServer
 func (signer *SignerServer) SealObjectOnChain(ctx context.Context, req *stypes.SealObjectOnChainRequest) (*stypes.SealObjectOnChainResponse, error) {
 	txHash, err := signer.client.SealObject(ctx, client.SignSeal, req.ObjectInfo)
+	if err != nil {
+		return &stypes.SealObjectOnChainResponse{
+			TxHash:     txHash,
+			ErrMessage: merrors.MakeErrMsgResponse(err),
+		}, nil
+	}
 
 	return &stypes.SealObjectOnChainResponse{
 		TxHash:     txHash,
-		ErrMessage: merrors.MakeErrMsgResponse(err),
+		ErrMessage: nil,
 	}, nil
+
 }
 
 // IPWhitelistInterceptor returns a new unary server interceptors that performs per-request ip whitelist.
@@ -129,10 +135,11 @@ func (signer *SignerServer) IPWhitelistInterceptor() grpc.UnaryServerInterceptor
 // AuthInterceptor returns a new unary server interceptors that performs per-request auth.
 func (signer *SignerServer) AuthInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		apiKey := metautils.ExtractIncoming(ctx).Get(APITokenMD)
-		if apiKey != signer.config.APIKey {
-			return nil, merrors.ErrAPIKey
-		}
+		// TODO: add it in future
+		// apiKey := metautils.ExtractIncoming(ctx).Get(APITokenMD)
+		// if apiKey != signer.config.APIKey {
+		// 	return nil, merrors.ErrAPIKey
+		// }
 		return handler(ctx, req)
 	}
 }

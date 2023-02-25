@@ -55,6 +55,7 @@ var (
 	ErrIndexOutOfBounds            = errors.New("array index out of bounds")
 	ErrStoneJobTypeUnrecognized    = errors.New("unrecognized stone job type")
 	ErrInterfaceAbandoned          = errors.New("interface is abandoned")
+	ErrSealTimeout                 = errors.New("seal object timeout")
 )
 
 // stone node service errors

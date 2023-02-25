@@ -23,22 +23,20 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		reqContext     *requestContext
 	)
 
+	reqContext = newRequestContext(r)
 	defer func() {
-		statusCode := 200
 		if errDescription != nil {
-			statusCode = errDescription.statusCode
 			_ = errDescription.errorResponse(w, reqContext)
 		}
-		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "syncPiece", statusCode,
+		if errDescription != nil && errDescription.statusCode == http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", syncPieceRouterName, errDescription.statusCode,
 				reqContext.generateRequestDetail())
 		} else {
-			log.Errorf("action(%v) statusCode(%v) %v", "syncPiece", statusCode,
+			log.Infof("action(%v) statusCode(200) %v", syncPieceRouterName,
 				reqContext.generateRequestDetail())
 		}
 	}()
 
-	reqContext = newRequestContext(r)
 	log.Infow("sync piece handler receive data", "request", reqContext.generateRequestDetail())
 	syncerInfo, err := getReqHeader(r.Header)
 	if err != nil {
@@ -154,6 +152,6 @@ func addRespHeader(resp *stypes.SyncerServiceSyncPieceResponse, w http.ResponseW
 	integrityHash := hex.EncodeToString(resp.GetSecondarySpInfo().GetIntegrityHash())
 	w.Header().Set(model.GnfdIntegrityHashHeader, integrityHash)
 
-	sig := hex.EncodeToString([]byte("test_signature"))
-	w.Header().Set(model.GnfdSealSignatureHeader, sig)
+	integrityHashSignature := hex.EncodeToString(resp.GetSecondarySpInfo().GetSignature())
+	w.Header().Set(model.GnfdIntegrityHashSignatureHeader, integrityHashSignature)
 }

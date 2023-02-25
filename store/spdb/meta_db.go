@@ -15,15 +15,7 @@ type IntegrityMeta struct {
 	PieceCount    uint32   `json:"PieceCount"`
 	IntegrityHash []byte   `json:"IntegrityHash"`
 	PieceHash     [][]byte `json:"PieceHash"`
-}
-
-// UploadPayloadAskingMeta defines the payload asking info
-type UploadPayloadAskingMeta struct {
-	// BucketName + ObjectName = primary key
-	BucketName string `json:"BucketName"`
-	ObjectName string `json:"ObjectName"`
-
-	Timeout int64 `json:"Timeout"`
+	Signature     []byte   `json:"Signature"`
 }
 
 type MetaDB interface {
@@ -31,10 +23,6 @@ type MetaDB interface {
 	SetIntegrityMeta(meta *IntegrityMeta) error
 	// GetIntegrityMeta return the integrity hash info.
 	GetIntegrityMeta(objectID uint64) (*IntegrityMeta, error)
-	// SetUploadPayloadAskingMeta put payload asking info to db.
-	SetUploadPayloadAskingMeta(meta *UploadPayloadAskingMeta) error
-	// GetUploadPayloadAskingMeta return the payload asking info.
-	GetUploadPayloadAskingMeta(bucketName, objectName string) (*UploadPayloadAskingMeta, error)
 	// Close the low level db
 	Close() error
 }
