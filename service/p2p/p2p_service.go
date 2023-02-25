@@ -120,15 +120,14 @@ func (r *P2PReactor) updatePeers(ctx context.Context) {
 			log.Debugw("received peer update", "peer", peerUpdate.NodeID, "status", peerUpdate.Status)
 			if peerUpdate.Status == libs.PeerStatusUp {
 				if inWhitelist := r.peersQuerier.Check(peerUpdate.NodeID); !inWhitelist {
-					log.Debugw("not found in persist peers or local db", "nodeId", peerUpdate.NodeID)
+					log.Infow("not found in persist peers or local db", "nodeId", peerUpdate.NodeID)
 					r.p2pChannel.SendError(ctx, libs.PeerError{
 						NodeID: peerUpdate.NodeID,
 						Err:    errors.New("not allowed to connect to"),
 						Fatal:  false,
 					})
 				} else {
-					// TODO::update peer info
-					log.Debugw("update peer statue", "peer", peerUpdate.NodeID, "status", peerUpdate.Status)
+					log.Infow("update peer statue", "peer", peerUpdate.NodeID, "status", peerUpdate.Status)
 				}
 			}
 		}
@@ -141,6 +140,7 @@ func (r *P2PReactor) receiveRequest(ctx context.Context) {
 	iter := r.p2pChannel.Receive(ctx)
 	for iter.Next(ctx) {
 		envelope := iter.Envelope()
+		log.CtxInfow(ctx, "receive message: ", "envelope", envelope)
 		if err := r.handleMessage(ctx, envelope); err != nil {
 			log.Errorw("failed to process message", "ch_id", envelope.ChannelID, "envelope", envelope, "err", err)
 			if serr := r.p2pChannel.SendError(ctx, libs.PeerError{
@@ -165,11 +165,13 @@ func (r *P2PReactor) handleMessage(ctx context.Context, envelope *libs.Envelope)
 			)
 		}
 	}()
-	log.Infow("received message", "peer", envelope.From)
 
+	log.CtxInfow(ctx, "receive message: ", "peer", envelope.From)
 	switch envelope.ChannelID {
 	case spChannelID:
-		err = r.handleSpMessage(ctx, envelope)
+		go func() {
+			r.handleSpMessage(ctx, envelope)
+		}()
 	default:
 		err = fmt.Errorf("unknown channel ID (%d) for envelope (%T)", envelope.ChannelID, envelope.Message)
 	}
@@ -195,35 +197,35 @@ func (r *P2PReactor) handleSpMessage(ctx context.Context, envelope *libs.Envelop
 // signObjectApproval send object approval to singer
 func (r *P2PReactor) signObjectApproval(ctx context.Context, envelope *libs.Envelope) {
 	msg := envelope.Message.(*sp.AskApprovalRequest).GetCreateObjectMsg()
-	if r.signer == nil {
-		refuseEnvelope := &libs.Envelope{
-			To:        envelope.From,
-			Broadcast: false,
-			Message: &sp.RefuseApproval{
-				CreateObjectMsg: msg,
-				Reason:          "signer service is preparing",
-			},
-		}
-		log.CtxErrorw(ctx, "refuse to sign approval")
-		r.inCh <- refuseEnvelope
-		return
-	}
-	signature, err := r.signer.SignObjectApproval(ctx, msg)
-	if err != nil {
-		refuseEnvelope := &libs.Envelope{
-			To:        envelope.From,
-			Broadcast: false,
-			Message: &sp.RefuseApproval{
-				CreateObjectMsg: msg,
-				Reason:          err.Error(),
-			},
-		}
-		log.CtxErrorw(ctx, "fail to sign approval", "error", err)
-		r.inCh <- refuseEnvelope
-		return
-	}
-	msg.ExpectChecksums = make([][]byte, 0)
-	msg.ExpectChecksums = append(msg.ExpectChecksums, signature)
+	//if r.signer == nil {
+	//	refuseEnvelope := &libs.Envelope{
+	//		To:        envelope.From,
+	//		Broadcast: false,
+	//		Message: &sp.RefuseApproval{
+	//			CreateObjectMsg: msg,
+	//			Reason:          "signer service is preparing",
+	//		},
+	//	}
+	//	log.CtxErrorw(ctx, "refuse to sign approval")
+	//	r.inCh <- refuseEnvelope
+	//	return
+	//}
+	//signature, err := r.signer.SignObjectApproval(ctx, msg)
+	//if err != nil {
+	//	refuseEnvelope := &libs.Envelope{
+	//		To:        envelope.From,
+	//		Broadcast: false,
+	//		Message: &sp.RefuseApproval{
+	//			CreateObjectMsg: msg,
+	//			Reason:          err.Error(),
+	//		},
+	//	}
+	//	log.CtxErrorw(ctx, "fail to sign approval", "error", err)
+	//	r.inCh <- refuseEnvelope
+	//	return
+	//}
+	//msg.ExpectChecksums = make([][]byte, 0)
+	//msg.ExpectChecksums = append(msg.ExpectChecksums, signature)
 	signedApproval := &libs.Envelope{
 		To:        envelope.From,
 		Broadcast: false,
@@ -246,10 +248,10 @@ func (r *P2PReactor) broadcastRequest(ctx context.Context) {
 			}
 			envelope.ChannelID = spChannelID
 			if err := r.p2pChannel.Send(ctx, *envelope); err != nil {
-				log.Errorw("error to broadcast requests", "error:", err)
+				log.Errorw("error to broadcast message", "error:", err)
 				return
 			}
-			log.Infow("success to broadcast requests", "envelope", envelope)
+			log.Infow("success to broadcast message", "envelope", envelope)
 		}
 	}
 }

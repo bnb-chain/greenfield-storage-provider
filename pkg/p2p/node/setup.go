@@ -89,7 +89,7 @@ func createPeerManager(cfg *NodeConfig, dbProvider DBProvider, nodeID types.Node
 		MaxOutgoingConnections:   maxOutgoingConns,
 		MaxConnectedUpgrade:      maxUpgradeConns,
 		DisconnectCooldownPeriod: 2 * time.Second,
-		MaxPeers:                 maxUpgradeConns + 4*maxConns,
+		MaxPeers:                 0,
 		MinRetryTime:             250 * time.Millisecond,
 		MaxRetryTime:             30 * time.Minute,
 		MaxRetryTimePersistent:   5 * time.Minute,

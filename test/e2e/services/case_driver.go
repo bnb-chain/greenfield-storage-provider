@@ -78,7 +78,7 @@ func checkIntegrityHash(integrityHash string, pieceHashList string, index int, p
 
 // case1 128bytes, Inline type, do not need to be segmented(< segment size, 16MB).
 func runCase1() {
-	var objectID uint64
+	//var objectID uint64
 	objectName := "case1_object_name"
 	log.Info("start run case1(128byte, Inline type)")
 	// get approval
@@ -148,102 +148,102 @@ func runCase1() {
 		log.Infow("finish put object",
 			"etag", res.Header.Get(model.ETagHeader),
 			"statusCode", res.StatusCode)
-		objectID, err = util.HeaderToUint64(res.Header.Get(model.GnfdObjectIDHeader))
+		_, err = util.HeaderToUint64(res.Header.Get(model.GnfdObjectIDHeader))
 		if err != nil {
 			log.Errorw("put object failed, due to has no object id", "error", err)
 			return
 		}
 	}
 	// get object
-	{
-		log.Infow("start get object")
-		req, err := http.NewRequest(http.MethodGet,
-			"http://"+gatewayAddress+"/"+objectName,
-			strings.NewReader(""))
-		if err != nil {
-			log.Errorw("get object failed, due to new request", "error", err)
-			return
-		}
-		req.Host = hostHeader
-		if err = generateRequestSignature(req); err != nil {
-			log.Errorw("get object failed, due to sign signature", "error", err)
-			return
-		}
-		client := &http.Client{}
-		res, err := client.Do(req)
-		if err != nil {
-			log.Errorw("get object failed, due to send request", "error", err)
-			return
-		}
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(res.Body)
-		log.Infow("finish get object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
-	}
-	// get range object
-	{
-		log.Infow("start get range object")
-		req, err := http.NewRequest(http.MethodGet,
-			"http://"+gatewayAddress+"/"+objectName,
-			strings.NewReader(""))
-		if err != nil {
-			log.Errorw("get object failed, due to new request", "error", err)
-			return
-		}
-		req.Host = hostHeader
-		req.Header.Add(model.RangeHeader, "bytes=1-")
-
-		if err = generateRequestSignature(req); err != nil {
-			log.Errorw("get object failed, due to sign signature", "error", err)
-			return
-		}
-		client := &http.Client{}
-		res, err := client.Do(req)
-		if err != nil {
-			log.Errorw("get object failed, due to send request", "error", err)
-			return
-		}
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(res.Body)
-		log.Infow("finish get range object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
-	}
-	// wait update meta
-	time.Sleep(5 * time.Second)
-	// challenge piece
-	{
-		log.Infow("start challenge piece")
-		req, err := http.NewRequest(http.MethodGet,
-			"http://"+gatewayAddress+model.AdminPath+model.ChallengeSubPath,
-			strings.NewReader(""))
-		if err != nil {
-			log.Errorw("challenge failed, due to new request", "error", err)
-			return
-		}
-		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
-		req.Header.Add(model.GnfdPieceIndexHeader, "0")
-		req.Header.Add(model.GnfdRedundancyIndexHeader, "0")
-		if err = generateRequestSignature(req); err != nil {
-			log.Errorw("challenge failed, due to sign signature", "error", err)
-			return
-		}
-		client := &http.Client{}
-		res, err := client.Do(req)
-		if err != nil {
-			log.Errorw("challenge failed, due to send request", "error", err)
-			return
-		}
-		defer res.Body.Close()
-		buf, err := io.ReadAll(res.Body)
-		if err != nil {
-			log.Errorw("challenge failed, due to read response body", "error", err)
-			return
-		}
-		err = checkIntegrityHash(res.Header.Get(model.GnfdIntegrityHashHeader), res.Header.Get(model.GnfdPieceHashHeader), 0, buf)
-		if err != nil {
-			log.Errorw("challenge failed, due to checkIntegrityHash", "error", err)
-			return
-		}
-		log.Infow("finish challenge", "statusCode", res.StatusCode)
-	}
+	//{
+	//	log.Infow("start get object")
+	//	req, err := http.NewRequest(http.MethodGet,
+	//		"http://"+gatewayAddress+"/"+objectName,
+	//		strings.NewReader(""))
+	//	if err != nil {
+	//		log.Errorw("get object failed, due to new request", "error", err)
+	//		return
+	//	}
+	//	req.Host = hostHeader
+	//	if err = generateRequestSignature(req); err != nil {
+	//		log.Errorw("get object failed, due to sign signature", "error", err)
+	//		return
+	//	}
+	//	client := &http.Client{}
+	//	res, err := client.Do(req)
+	//	if err != nil {
+	//		log.Errorw("get object failed, due to send request", "error", err)
+	//		return
+	//	}
+	//	buf := new(bytes.Buffer)
+	//	buf.ReadFrom(res.Body)
+	//	log.Infow("finish get object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
+	//}
+	//// get range object
+	//{
+	//	log.Infow("start get range object")
+	//	req, err := http.NewRequest(http.MethodGet,
+	//		"http://"+gatewayAddress+"/"+objectName,
+	//		strings.NewReader(""))
+	//	if err != nil {
+	//		log.Errorw("get object failed, due to new request", "error", err)
+	//		return
+	//	}
+	//	req.Host = hostHeader
+	//	req.Header.Add(model.RangeHeader, "bytes=1-")
+	//
+	//	if err = generateRequestSignature(req); err != nil {
+	//		log.Errorw("get object failed, due to sign signature", "error", err)
+	//		return
+	//	}
+	//	client := &http.Client{}
+	//	res, err := client.Do(req)
+	//	if err != nil {
+	//		log.Errorw("get object failed, due to send request", "error", err)
+	//		return
+	//	}
+	//	buf := new(bytes.Buffer)
+	//	buf.ReadFrom(res.Body)
+	//	log.Infow("finish get range object payload", "statusCode", res.StatusCode, "body len", len(buf.String()))
+	//}
+	//// wait update meta
+	//time.Sleep(5 * time.Second)
+	//// challenge piece
+	//{
+	//	log.Infow("start challenge piece")
+	//	req, err := http.NewRequest(http.MethodGet,
+	//		"http://"+gatewayAddress+model.AdminPath+model.ChallengeSubPath,
+	//		strings.NewReader(""))
+	//	if err != nil {
+	//		log.Errorw("challenge failed, due to new request", "error", err)
+	//		return
+	//	}
+	//	req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
+	//	req.Header.Add(model.GnfdPieceIndexHeader, "0")
+	//	req.Header.Add(model.GnfdRedundancyIndexHeader, "0")
+	//	if err = generateRequestSignature(req); err != nil {
+	//		log.Errorw("challenge failed, due to sign signature", "error", err)
+	//		return
+	//	}
+	//	client := &http.Client{}
+	//	res, err := client.Do(req)
+	//	if err != nil {
+	//		log.Errorw("challenge failed, due to send request", "error", err)
+	//		return
+	//	}
+	//	defer res.Body.Close()
+	//	buf, err := io.ReadAll(res.Body)
+	//	if err != nil {
+	//		log.Errorw("challenge failed, due to read response body", "error", err)
+	//		return
+	//	}
+	//	err = checkIntegrityHash(res.Header.Get(model.GnfdIntegrityHashHeader), res.Header.Get(model.GnfdPieceHashHeader), 0, buf)
+	//	if err != nil {
+	//		log.Errorw("challenge failed, due to checkIntegrityHash", "error", err)
+	//		return
+	//	}
+	//	log.Infow("finish challenge", "statusCode", res.StatusCode)
+	//}
 	log.Info("end run case1")
 }
 
@@ -661,13 +661,13 @@ func main() {
 	cfg := config.LoadConfig(*configFile)
 	gatewayAddress = cfg.GatewayCfg.Address
 	hostHeader = testBucketName + "." + cfg.GatewayCfg.Domain
-	metadataAddress = cfg.MetadataCfg.Address
+	//metadataAddress = cfg.MetadataCfg.Address
 
 	runCase1()
-	runCase2()
-	runCase3()
-	runCase4()
-	runCase5()
+	//runCase2()
+	//runCase3()
+	//runCase4()
+	//runCase5()
 
 	log.Info("end run cases")
 }

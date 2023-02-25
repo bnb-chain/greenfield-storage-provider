@@ -29,6 +29,7 @@ func (config P2PServiceConfig) makeP2pConfig() (*node.NodeConfig, error) {
 	nodeCfg.NodeKey = config.NodeKeyPath
 	nodeCfg.P2P.ListenAddress = config.P2PListenAddress
 	nodeCfg.P2P.PersistentPeers = config.Whitelist
+	nodeCfg.P2P.BootstrapPeers = config.Whitelist
 	return &nodeCfg, nil
 }
 

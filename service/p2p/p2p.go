@@ -103,18 +103,23 @@ func (service *P2PService) eventloop(ctx context.Context) {
 		case envelope := <-service.preactor.SubscribeRequest():
 			switch msg := envelope.Message.(type) {
 			case *ptypes.AskApprovalRequest:
+				log.CtxInfow(ctx, "receive the ask approval request", "envelope", envelope)
 				_ = util.ComputeSegmentCount(msg.GetCreateObjectMsg().GetPayloadSize()) * uint32(SegmentsTimeoutHeight)
 				// TODO:: 1. fill timeout height to CreateObjectMsg and send signer to sign
 				// TODO:: 2. add secondary refuse approval strategy
 				service.preactor.PublishRequest(&libs.Envelope{
-					To:      envelope.From,
-					Message: msg,
+					To:        envelope.From,
+					Broadcast: false,
+					Message:   msg,
 				})
 			case *ptypes.AckApproval:
+				log.CtxInfow(ctx, "receive the ack approval", "envelope", envelope)
 				routerKey := hash.HexStringHash(msg.GetCreateObjectMsg().GetBucketName(), msg.GetCreateObjectMsg().GetObjectName())
-				service.notifyByRouter(routerKey, envelope)
+				if err := service.notifyByRouter(routerKey, envelope); err != nil {
+					log.CtxErrorw(ctx, "fail to ask approval", "error", err)
+				}
 			case *ptypes.RefuseApproval:
-				log.Errorw("secondary sp refuse approval", "info", envelope)
+				log.Errorw("secondary sp refuse the approval", "envelope", envelope)
 			}
 		case <-ticker.C:
 			//TODO:: query sp info from chain and update db
@@ -142,13 +147,19 @@ func (service *P2PService) serve() {
 }
 
 func (service *P2PService) publishInfo(envelope *libs.Envelope) {
-	service.preactor.PublishRequest(envelope)
+	go func() {
+		service.preactor.PublishRequest(envelope)
+	}()
 }
 
-func (service *P2PService) notifyByRouter(routerKey string, envelope *libs.Envelope) {
+func (service *P2PService) notifyByRouter(routerKey string, envelope *libs.Envelope) error {
 	service.mux.Lock()
 	defer service.mux.Unlock()
+	if _, ok := service.router[routerKey]; !ok {
+		return errors.New("the approval has finished")
+	}
 	service.router[routerKey] <- envelope
+	return nil
 }
 
 func (service *P2PService) addRouter(routerKey string) error {
@@ -158,10 +169,10 @@ func (service *P2PService) addRouter(routerKey string) error {
 		return errors.New("p2p overload protection is activated")
 	}
 	service.routerSize++
-	if _, ok := service.router[routerKey]; !ok {
-		return errors.New("has already")
+	if _, ok := service.router[routerKey]; ok {
+		return errors.New("the same approval is asking")
 	}
-	service.router[routerKey] = make(chan *libs.Envelope)
+	service.router[routerKey] = make(chan *libs.Envelope, 10)
 	return nil
 }
 
@@ -173,10 +184,11 @@ func (service *P2PService) deleteRouter(routerKey string) {
 		return
 	}
 	service.routerSize--
+	close(service.router[routerKey])
 	delete(service.router, routerKey)
 }
 
-func (service *P2PService) getRouterCh(routerKey string) (chan *libs.Envelope, error) {
+func (service *P2PService) getRouterCh(routerKey string) (<-chan *libs.Envelope, error) {
 	service.mux.Lock()
 	defer service.mux.Unlock()
 	if _, ok := service.router[routerKey]; !ok {

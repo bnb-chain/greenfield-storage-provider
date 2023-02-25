@@ -20,6 +20,7 @@ var commands = map[string]cli.Command{}
 
 var confCommands = []cli.Command{
 	conf.DumpConfigCommand,
+	conf.AskCommand,
 }
 
 var addrCommands = []cli.Command{
