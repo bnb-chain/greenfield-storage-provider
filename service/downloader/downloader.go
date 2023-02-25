@@ -30,11 +30,11 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 		name: model.DownloaderService,
 	}
 	if downloader.pieceStore, err = client.NewStoreClient(cfg.PieceStoreConfig); err != nil {
-		log.Warnw("failed to piece store client", "err", err)
+		log.Errorw("failed to create piece store client", "err", err)
 		return nil, err
 	}
 	if downloader.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
-		log.Warnw("failed to create chain client", "err", err)
+		log.Errorw("failed to create chain client", "err", err)
 		return nil, err
 	}
 

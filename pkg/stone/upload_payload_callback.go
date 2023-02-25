@@ -141,7 +141,7 @@ func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 	}()
 	primarySealInfos, err = stone.job.PrimarySPSealInfo()
 	if err != nil {
-		log.Warnw("failed to get primary seal info", "error", err)
+		log.Errorw("failed to get primary seal info", "error", err)
 		return
 	}
 	primarySealInfo := primarySealInfos[0]
@@ -149,7 +149,7 @@ func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 		primarySealInfo.IntegrityHash, primarySealInfo.Signature, err = stone.signer.SignIntegrityHash(
 			context.Background(), primarySealInfo.PieceChecksum)
 		if err != nil {
-			log.Warnw("failed to sign integrity hash", "error", err)
+			log.Errorw("failed to sign integrity hash", "error", err)
 			return
 		}
 	}
@@ -176,7 +176,7 @@ func EnterSealObjectInit(ctx context.Context, event *fsm.Event) {
 	primarySealInfo.IntegrityHash, primarySealInfo.Signature, err = stone.signer.SignIntegrityHash(
 		context.Background(), primarySealInfo.PieceChecksum)
 	if err != nil {
-		log.Warnw("failed to sign primary integrity hash", "error", err)
+		log.Errorw("failed to sign primary integrity hash", "error", err)
 		return
 	}
 

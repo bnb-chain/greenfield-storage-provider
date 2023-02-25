@@ -130,7 +130,7 @@ func (uploader *Uploader) UploadPayload(stream stypes.UploaderService_UploadPayl
 		log.Info("succeed to upload")
 		return
 	case err = <-errChan:
-		log.Warnw("failed to upload", "err", err)
+		log.Errorw("failed to upload", "err", err)
 		return
 	}
 }

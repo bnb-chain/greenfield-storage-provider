@@ -218,8 +218,8 @@ func multiSPService(syncerAddrList, gatewayAddrList []string) {
 		cfg.GatewayCfg.ChainConfig.ChainID = chanID
 		cfg.GatewayCfg.ChainConfig.NodeAddr = []*greenfield.NodeConfig{
 			&greenfield.NodeConfig{
-				GreenfieldAddr: []string{greenfieldAddr},
-				TendermintAddr: []string{tendermintAddr},
+				GreenfieldAddrs: []string{greenfieldAddr},
+				TendermintAddrs: []string{tendermintAddr},
 			},
 		}
 

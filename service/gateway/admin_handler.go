@@ -15,10 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func isAdminRouter(routerName string) bool {
-	return routerName == approvalRouterName || routerName == challengeRouterName
-}
-
 // getApprovalHandler handle create bucket or create object approval
 func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -26,29 +22,27 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		errorDescription *errorDescription
 		requestContext   *requestContext
 		addr             sdk.AccAddress
-		statusCode       = http.StatusOK
 	)
 
 	requestContext = newRequestContext(r)
 	defer func() {
 		if errorDescription != nil {
-			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
-		if statusCode == http.StatusOK {
-			log.Infof("action(%v) statusCode(%v) %v", "getApproval", statusCode, requestContext.generateRequestDetail())
+		if errorDescription != nil && errorDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", approvalRouterName, errorDescription.statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "getApproval", statusCode, requestContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", approvalRouterName, requestContext.generateRequestDetail())
 		}
 	}()
 
 	if addr, err = requestContext.verifySignature(); err != nil {
-		log.Infow("failed to verify signature", "error", err)
+		log.Errorw("failed to verify signature", "error", err)
 		errorDescription = SignatureNotMatch
 		return
 	}
 	if err = g.checkAuthorization(requestContext, addr); err != nil {
-		log.Warnw("failed to check authorization", "error", err)
+		log.Errorw("failed to check authorization", "error", err)
 		errorDescription = UnauthorizedAccess
 		return
 	}
@@ -56,7 +50,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	actionName := requestContext.vars["action"]
 	approvalMsg, err := hex.DecodeString(r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 	if err != nil {
-		log.Warnw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+		log.Errorw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 		errorDescription = InvalidHeader
 		return
 	}
@@ -68,7 +62,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			approvalSignature []byte
 		)
 		if types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg) != nil {
-			log.Warnw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+			log.Errorw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 			errorDescription = InvalidHeader
 			return
 		}
@@ -77,7 +71,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: math.MaxUint64}
 		approvalSignature, err = g.signer.SignBucketApproval(context.Background(), &msg)
 		if err != nil {
-			log.Warnw("failed to sign create bucket approval", "error", err)
+			log.Errorw("failed to sign create bucket approval", "error", err)
 			errorDescription = InternalError
 			return
 		}
@@ -90,7 +84,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			approvalSignature []byte
 		)
 		if types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg) != nil {
-			log.Warnw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+			log.Errorw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 			errorDescription = InvalidHeader
 			return
 		}
@@ -98,7 +92,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: math.MaxUint64}
 		approvalSignature, err = g.signer.SignObjectApproval(context.Background(), &msg)
 		if err != nil {
-			log.Warnw("failed to sign create object approval", "error", err)
+			log.Errorw("failed to sign create object approval", "error", err)
 			errorDescription = InternalError
 			return
 		}
@@ -106,7 +100,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		bz := types.ModuleCdc.MustMarshalJSON(&msg)
 		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
 	default:
-		log.Warnw("not implement approval", "action", actionName)
+		log.Errorw("not implement approval", "action", actionName)
 		errorDescription = NotImplementedError
 		return
 	}
@@ -127,42 +121,40 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		ecIdx            uint32
 		redundancyType   ptypes.RedundancyType
 		spAddress        string
-		statusCode       = http.StatusOK
 	)
 
 	requestContext = newRequestContext(r)
 	defer func() {
 		if errorDescription != nil {
-			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
-		if statusCode == http.StatusOK {
-			log.Infof("action(%v) statusCode(%v) %v", "challenge", statusCode, requestContext.generateRequestDetail())
+		if errorDescription != nil && errorDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", challengeRouterName, errorDescription.statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "challenge", statusCode, requestContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", challengeRouterName, requestContext.generateRequestDetail())
 		}
 	}()
 
 	if addr, err = requestContext.verifySignature(); err != nil {
-		log.Warnw("failed to verify signature", "error", err)
+		log.Errorw("failed to verify signature", "error", err)
 		errorDescription = SignatureNotMatch
 		return
 	}
 	if err = g.checkAuthorization(requestContext, addr); err != nil {
-		log.Warnw("failed to check authorization", "error", err)
+		log.Errorw("failed to check authorization", "error", err)
 		errorDescription = UnauthorizedAccess
 		return
 	}
 
 	if objectID, err = util.HeaderToUint64(requestContext.request.Header.Get(model.GnfdObjectIDHeader)); err != nil {
-		log.Warnw("invalid object id", "object_id", requestContext.request.Header.Get(model.GnfdObjectIDHeader))
+		log.Errorw("invalid object id", "object_id", requestContext.request.Header.Get(model.GnfdObjectIDHeader))
 		errorDescription = InvalidHeader
 		return
 	}
 
 	redundancyIndex, err := util.HeaderToInt64(requestContext.request.Header.Get(model.GnfdRedundancyIndexHeader))
 	if err != nil {
-		log.Warnw("invalid redundancy index", "redundancy_index", requestContext.request.Header.Get(model.GnfdRedundancyIndexHeader))
+		log.Errorw("invalid redundancy index", "redundancy_index", requestContext.request.Header.Get(model.GnfdRedundancyIndexHeader))
 		errorDescription = InvalidHeader
 		return
 	}
@@ -172,7 +164,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		ecIdx = uint32(redundancyIndex)
 	}
 	if segmentIdx, err = util.HeaderToUint32(requestContext.request.Header.Get(model.GnfdPieceIndexHeader)); err != nil {
-		log.Warnw("invalid segment idx", "segment_idx", requestContext.request.Header.Get(model.GnfdPieceIndexHeader))
+		log.Errorw("invalid segment idx", "segment_idx", requestContext.request.Header.Get(model.GnfdPieceIndexHeader))
 		errorDescription = InvalidHeader
 		return
 	}
@@ -190,7 +182,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := log.Context(context.Background(), req)
 	resp, err := g.challenge.ChallengePiece(ctx, req)
 	if err != nil {
-		log.Warnf("failed to challenge", "error", err)
+		log.Errorf("failed to challenge", "error", err)
 		errorDescription = InternalError
 		return
 	}

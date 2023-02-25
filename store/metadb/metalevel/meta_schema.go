@@ -8,8 +8,6 @@ import (
 var (
 	// IntegrityMetaPrefix + objectID + isPrimary + redundancyType + ecIdx-> PrimaryIntegrityMetaKey
 	IntegrityMetaPrefix = []byte("IntegrityMeta")
-	// PayloadAskingPrefix + bucketName + objectName -> UploadPayloadMetaKey
-	PayloadAskingPrefix = "PayloadAskingInfo"
 )
 
 // IntegrityMetaKey return the integrity meta key.
@@ -17,9 +15,4 @@ func IntegrityMetaKey(prefix string, objectID uint64) []byte {
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, objectID)
 	return append(append([]byte(prefix), IntegrityMetaPrefix...), buf...)
-}
-
-// UploadPayloadAsingKey return the payload asking info.
-func UploadPayloadAsingKey(prefix, bucketName, objectName string) []byte {
-	return []byte(prefix + PayloadAskingPrefix + bucketName + objectName)
 }

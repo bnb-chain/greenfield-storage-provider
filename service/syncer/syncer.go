@@ -52,7 +52,7 @@ func (s *Syncer) initClient() error {
 		return err
 	}
 	if s.signer, err = sclient.NewSignerClient(s.config.SignerServiceAddress); err != nil {
-		log.Warnw("failed to new signer client", "err", err)
+		log.Errorw("failed to new signer client", "err", err)
 		return err
 	}
 	return nil

@@ -41,15 +41,15 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 		name:   model.UploaderService,
 	}
 	if u.stoneHub, err = client.NewStoneHubClient(cfg.StoneHubServiceAddress); err != nil {
-		log.Warnw("failed to stone hub client", "err", err)
+		log.Errorw("failed to stone hub client", "err", err)
 		return nil, err
 	}
 	if u.store, err = client.NewStoreClient(cfg.PieceStoreConfig); err != nil {
-		log.Warnw("failed to piece store client", "err", err)
+		log.Errorw("failed to piece store client", "err", err)
 		return nil, err
 	}
 	if u.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
-		log.Warnw("failed to create chain client", "err", err)
+		log.Errorw("failed to create chain client", "err", err)
 		return nil, err
 	}
 	return u, err

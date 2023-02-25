@@ -75,21 +75,21 @@ func InitDB(config *config.SqlDBConfig) (*gorm.DB, error) {
 		config.Database)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Warnw("gorm open db failed", "err", err)
+		log.Errorw("gorm open db failed", "err", err)
 		return nil, err
 	}
 
 	// create if not exist
 	if err := db.AutoMigrate(&DBJob{}); err != nil {
-		log.Warnw("failed to create job table", "err", err)
+		log.Errorw("failed to create job table", "err", err)
 		return nil, err
 	}
 	if err := db.AutoMigrate(&DBObject{}); err != nil {
-		log.Warnw("failed to create object table", "err", err)
+		log.Errorw("failed to create object table", "err", err)
 		return nil, err
 	}
 	if err := db.AutoMigrate(&DBPieceJob{}); err != nil {
-		log.Warnw("failed to create piece job table", "err", err)
+		log.Errorw("failed to create piece job table", "err", err)
 		return nil, err
 	}
 

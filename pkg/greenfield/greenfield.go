@@ -48,8 +48,8 @@ func NewGreenfield(cfg *GreenfieldChainConfig) (*Greenfield, error) {
 	var clients []*GreenfieldClient
 	for _, config := range cfg.NodeAddr {
 		client := &GreenfieldClient{
-			Provider: config.GreenfieldAddr,
-			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddr, config.TendermintAddr, cfg.ChainID,
+			Provider: config.GreenfieldAddrs,
+			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddrs, config.TendermintAddrs, cfg.ChainID,
 				chain.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials()))),
 		}
 		client.gnfdCompositeClient, _ = client.gnfdCompositeClients.GetClient()

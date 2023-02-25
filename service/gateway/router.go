@@ -15,6 +15,7 @@ const (
 	getObjectRouterName = "GetObject"
 	approvalRouterName  = "GetApproval"
 	challengeRouterName = "Challenge"
+	syncPieceRouterName = "SyncPiece"
 )
 
 const (
@@ -24,8 +25,11 @@ const (
 
 // notFoundHandler log not found request info.
 func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	s, _ := io.ReadAll(r.Body)
-	log.Warnw("not found handler", "header", r.Header, "host", r.Host, "url", r.URL)
+	log.Errorw("not found handler", "header", r.Header, "host", r.Host, "url", r.URL)
+	s, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Errorw("failed to read the unknown request", "error", err)
+	}
 	w.WriteHeader(http.StatusNotFound)
 	w.Write(s)
 }
@@ -58,7 +62,7 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		HandlerFunc(g.challengeHandler)
 	// sync piece to syncer
 	r.Path(model.SyncerPath).
-		Name("SyncPiece").
+		Name(syncPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.syncPieceHandler)
 

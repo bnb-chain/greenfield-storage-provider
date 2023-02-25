@@ -17,16 +17,3 @@ type DBIntegrityMeta struct {
 func (DBIntegrityMeta) TableName() string {
 	return "integrity_meta"
 }
-
-// DBUploadPayloadAskingMeta table schema
-type DBUploadPayloadAskingMeta struct {
-	BucketName string `gorm:"index:idx_upload_payload_asking_meta"`
-	ObjectName string `gorm:"index:idx_upload_payload_asking_meta"`
-
-	Timeout int64
-}
-
-// TableName is used to set Job Schema's table name in database
-func (DBUploadPayloadAskingMeta) TableName() string {
-	return "upload_payload_asking_meta"
-}

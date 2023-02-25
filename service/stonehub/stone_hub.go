@@ -76,11 +76,11 @@ func NewStoneHubService(cfg *StoneHubConfig) (*StoneHub, error) {
 		stopCh:   make(chan struct{}),
 	}
 	if hub.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
-		log.Warnw("failed to create chain client", "err", err)
+		log.Errorw("failed to create chain client", "err", err)
 		return nil, err
 	}
 	if hub.signer, err = sclient.NewSignerClient(cfg.SignerServiceAddress); err != nil {
-		log.Warnw("failed to create signer client", "err", err)
+		log.Errorw("failed to create signer client", "err", err)
 		return nil, err
 	}
 	if err = hub.initDB(); err != nil {
@@ -181,11 +181,11 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 		objectID := job.ObjectInfo.GetObjectId()
 		st, ok := hub.stone.Load(objectID)
 		if !ok {
-			log.Warnw("stone has gone", "object_id", objectID)
+			log.Errorw("stone has gone", "object_id", objectID)
 			break
 		}
 		if _, ok := st.(*stone.UploadPayloadStone); !ok {
-			log.Warnw("stone typecast to UploadPayloadStone error", "object_id", objectID)
+			log.Errorw("stone typecast to UploadPayloadStone error", "object_id", objectID)
 			break
 		}
 
@@ -200,7 +200,7 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 			}
 		}
 		if _, err := hub.signer.SealObjectOnChain(context.Background(), object); err != nil {
-			log.Warnw("failed to send seal object", "object_id", objectID, "error", err, "object_info", object)
+			log.Errorw("failed to send seal object", "object_id", objectID, "error", err, "object_info", object)
 			break
 		}
 
@@ -210,12 +210,12 @@ func (hub *StoneHub) processStoneJob(stoneJob stone.StoneJob) {
 			_, err := hub.chain.ListenObjectSeal(context.Background(), object.BucketName, object.ObjectName, WaitSealTimeoutHeight)
 			if err != nil {
 				st.InterruptStone(ctx, err)
-				log.CtxWarnw(ctx, "interrupt stone error", "error", err)
+				log.CtxErrorw(ctx, "interrupt stone error", "error", err)
 				return
 			}
 			err = st.ActionEvent(ctx, stone.SealObjectDoneEvent)
 			if err != nil {
-				log.CtxWarnw(ctx, "receive seal event, seal done fsm error", "error", err)
+				log.CtxErrorw(ctx, "receive seal event, seal done fsm error", "error", err)
 				return
 			}
 			log.CtxInfow(ctx, "seal object success")

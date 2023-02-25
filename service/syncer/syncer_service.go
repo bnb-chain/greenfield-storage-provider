@@ -76,7 +76,7 @@ func (s *Syncer) generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta
 	}
 	resp.IntegrityHash, resp.Signature, err = s.signer.SignIntegrityHash(context.Background(), resp.PieceChecksum)
 	if err != nil {
-		log.Warnw("failed to sign integrity hash", "error", err)
+		log.Errorw("failed to sign integrity hash", "error", err)
 		return nil, err
 	}
 	return resp, nil

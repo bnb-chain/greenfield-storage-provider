@@ -63,7 +63,7 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 
 	chainObjectInfo, err := downloader.chain.QueryObjectInfo(ctx, req.BucketName, req.ObjectName)
 	if err != nil {
-		log.Warnf("failed to query chain", "err", err)
+		log.Errorf("failed to query chain", "err", err)
 		return
 	}
 	objectInfo = &ptypes.ObjectInfo{

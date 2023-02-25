@@ -47,15 +47,15 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		name:   model.GatewayService,
 	}
 	if g.uploader, err = uclient.NewUploaderClient(cfg.UploaderServiceAddress); err != nil {
-		log.Warnw("failed to uploader client", "err", err)
+		log.Errorw("failed to uploader client", "err", err)
 		return nil, err
 	}
 	if g.downloader, err = dclient.NewDownloaderClient(cfg.DownloaderServiceAddress); err != nil {
-		log.Warnw("failed to downloader client", "err", err)
+		log.Errorw("failed to downloader client", "err", err)
 		return nil, err
 	}
 	if g.challenge, err = client.NewChallengeClient(cfg.ChallengeServiceAddress); err != nil {
-		log.Warnw("failed to challenge client", "err", err)
+		log.Errorw("failed to challenge client", "err", err)
 		return nil, err
 	}
 	if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {
@@ -63,11 +63,11 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		return nil, err
 	}
 	if g.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
-		log.Warnw("failed to create chain client", "err", err)
+		log.Errorw("failed to create chain client", "err", err)
 		return nil, err
 	}
 	if g.signer, err = sclient.NewSignerClient(cfg.SignerServiceAddress); err != nil {
-		log.Warnw("failed to create signer client", "err", err)
+		log.Errorw("failed to create signer client", "err", err)
 		return nil, err
 	}
 	log.Debugw("gateway succeed to init")

@@ -40,17 +40,13 @@ func InitDB(config *config.SqlDBConfig) (*gorm.DB, error) {
 		config.Database)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Warnw("gorm open db failed", "err", err)
+		log.Errorw("gorm open db failed", "err", err)
 		return nil, err
 	}
 
 	// create if not exist
 	if err := db.AutoMigrate(&DBIntegrityMeta{}); err != nil {
-		log.Warnw("failed to create integrity meta table", "err", err)
-		return nil, err
-	}
-	if err := db.AutoMigrate(&DBUploadPayloadAskingMeta{}); err != nil {
-		log.Warnw("failed to create upload payload asking meta table", "err", err)
+		log.Errorw("failed to create integrity meta table", "err", err)
 		return nil, err
 	}
 	return db, nil
@@ -115,55 +111,4 @@ func (mdb *MetaDB) GetIntegrityMeta(objectID uint64) (*spdb.IntegrityMeta, error
 		return nil, err
 	}
 	return meta, nil
-}
-
-// SetUploadPayloadAskingMeta put(overwrite) payload asking info to db
-func (mdb *MetaDB) SetUploadPayloadAskingMeta(meta *spdb.UploadPayloadAskingMeta) error {
-	var (
-		result *gorm.DB
-	)
-
-	queryReturn, err := mdb.GetUploadPayloadAskingMeta(meta.BucketName, meta.ObjectName)
-	if err != nil {
-		// insert record
-		insertPayloadAskingMetaRecord := &DBUploadPayloadAskingMeta{
-			BucketName: meta.BucketName,
-			ObjectName: meta.ObjectName,
-			Timeout:    meta.Timeout,
-		}
-		result = mdb.db.Create(insertPayloadAskingMetaRecord)
-		if result.Error != nil || result.RowsAffected != 1 {
-			return fmt.Errorf("insert payload asking meta record failed, %s", result.Error)
-		}
-	} else {
-		if queryReturn.Timeout == meta.Timeout {
-			return nil
-		}
-		// update record
-		result = mdb.db.Model(&DBUploadPayloadAskingMeta{}).
-			Where("bucket_name = ? and object_name = ?", meta.BucketName, meta.ObjectName).
-			Update("timeout", meta.Timeout)
-		if result.Error != nil || result.RowsAffected != 1 {
-			return fmt.Errorf("update payload asking meta record failed, %s", result.Error)
-		}
-	}
-	return nil
-}
-
-// GetUploadPayloadAskingMeta return the payload asking info
-func (mdb *MetaDB) GetUploadPayloadAskingMeta(bucket, object string) (*spdb.UploadPayloadAskingMeta, error) {
-	var (
-		result      *gorm.DB
-		queryReturn DBUploadPayloadAskingMeta
-	)
-	// If the primary key is a string, the query will be written as follows:
-	result = mdb.db.First(&queryReturn, "bucket_name = ? and object_name = ?", bucket, object)
-	if result.Error != nil {
-		return nil, fmt.Errorf("select payload asking record's failed, %s", result.Error)
-	}
-	return &spdb.UploadPayloadAskingMeta{
-		BucketName: queryReturn.BucketName,
-		ObjectName: queryReturn.ObjectName,
-		Timeout:    queryReturn.Timeout,
-	}, nil
 }

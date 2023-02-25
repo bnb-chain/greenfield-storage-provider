@@ -14,8 +14,8 @@ Service = [
     [GatewayCfg.ChainConfig]
         ChainID = "greenfield_9000-1741"
         [[GatewayCfg.ChainConfig.NodeAddr]]
-            GreenfieldAddr = ["localhost:9090"]
-            TendermintAddr = ["http://0.0.0.0:26750"]
+            GreenfieldAddrs = ["localhost:9090"]
+            TendermintAddrs = ["http://0.0.0.0:26750"]
 
 
 [UploaderCfg]
@@ -33,8 +33,8 @@ Service = [
     [UploaderCfg.ChainConfig]
         ChainID = "greenfield_9000-1741"
         [[UploaderCfg.ChainConfig.NodeAddr]]
-            GreenfieldAddr = ["localhost:9090"]
-            TendermintAddr = ["http://0.0.0.0:26750"]
+            GreenfieldAddrs = ["localhost:9090"]
+            TendermintAddrs = ["http://0.0.0.0:26750"]
 
 [DownloaderCfg]
     Address = "127.0.0.1:9233"
@@ -49,8 +49,8 @@ Service = [
     [DownloaderCfg.ChainConfig]
         ChainID = "greenfield_9000-1741"
         [[DownloaderCfg.ChainConfig.NodeAddr]]
-            GreenfieldAddr = ["localhost:9090"]
-            TendermintAddr = ["http://0.0.0.0:26750"]
+            GreenfieldAddrs = ["localhost:9090"]
+            TendermintAddrs = ["http://0.0.0.0:26750"]
 
 [StoneHubCfg]
     StorageProvider = "gnfd-test-sp"
@@ -67,8 +67,8 @@ Service = [
     [StoneHubCfg.ChainConfig]
         ChainID = "greenfield_9000-1741"
         [[StoneHubCfg.ChainConfig.NodeAddr]]
-            GreenfieldAddr = ["localhost:9090"]
-            TendermintAddr = ["http://0.0.0.0:26750"]
+            GreenfieldAddrs = ["localhost:9090"]
+            TendermintAddrs = ["http://0.0.0.0:26750"]
 
 [StoneNodeCfg]
     StorageProvider = "gnfd-test-sp"

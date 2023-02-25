@@ -17,7 +17,7 @@ import (
 func (greenfield *Greenfield) GetCurrentHeight(ctx context.Context) (int64, error) {
 	status, err := greenfield.getCurrentClient().GnfdCompositeClient().RpcClient.TmClient.Status(ctx)
 	if err != nil {
-		log.Warnw("failed to query status", "error", err)
+		log.Errorw("failed to query status", "error", err)
 		return 0, err
 	}
 	height := status.SyncInfo.LatestBlockHeight
@@ -32,7 +32,7 @@ func (greenfield *Greenfield) HasAccount(ctx context.Context, address string) (b
 	client := greenfield.getCurrentClient().GnfdCompositeClient()
 	resp, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: address})
 	if err != nil {
-		log.Warnw("failed to query account", "error", err, "address", address)
+		log.Errorw("failed to query account", "error", err, "address", address)
 		return false, err
 	}
 	return resp.GetAccount() != nil, nil
@@ -49,7 +49,7 @@ func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.Stora
 		},
 	})
 	if err != nil {
-		log.Warnw("failed to query sp list", "error", err)
+		log.Errorw("failed to query sp list", "error", err)
 		return spInfos, err
 	}
 	for i := 0; i < len(resp.GetSps()); i++ {
@@ -63,7 +63,7 @@ func (greenfield *Greenfield) QueryBucketInfo(ctx context.Context, bucket string
 	client := greenfield.getCurrentClient().GnfdCompositeClient()
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if err != nil {
-		log.Warnw("failed to query bucket", "error", err, "bucket_name", bucket)
+		log.Errorw("failed to query bucket", "error", err, "bucket_name", bucket)
 		return nil, err
 	}
 	return resp.GetBucketInfo(), nil
@@ -77,7 +77,7 @@ func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, objec
 		ObjectName: object,
 	})
 	if err != nil {
-		log.Warnw("failed to query object", "error", err, "bucket_name", bucket, "object_name", object)
+		log.Errorw("failed to query object", "error", err, "bucket_name", bucket, "object_name", object)
 		return nil, err
 	}
 	return resp.GetObjectInfo(), nil
@@ -99,7 +99,7 @@ func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, obje
 			return
 		}
 	}
-	log.Warnw("listen seal object timeout", "error", err, "bucket_name", bucket, "object_name", object)
+	log.Errorw("listen seal object timeout", "error", err, "bucket_name", bucket, "object_name", object)
 	err = merror.ErrSealTimeout
 	return
 }

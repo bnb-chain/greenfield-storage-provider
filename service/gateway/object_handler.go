@@ -39,12 +39,13 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
 		if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
-			log.Infof("action(%v) statusCode(%v) %v", "getObject", statusCode, requestContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(%v) %v", getObjectRouterName, statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "getObject", statusCode, requestContext.generateRequestDetail())
+			log.Errorf("action(%v) statusCode(%v) %v", getObjectRouterName, statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
+	// TODO: polish it by using common lib
 	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
@@ -55,12 +56,12 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if addr, err = requestContext.verifySignature(); err != nil {
-		log.Infow("failed to verify signature", "error", err)
+		log.Errorw("failed to verify signature", "error", err)
 		errorDescription = SignatureNotMatch
 		return
 	}
 	if err = g.checkAuthorization(requestContext, addr); err != nil {
-		log.Warnw("failed to check authorization", "error", err)
+		log.Errorw("failed to check authorization", "error", err)
 		errorDescription = UnauthorizedAccess
 		return
 	}
@@ -83,7 +84,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := log.Context(context.Background(), req)
 	stream, err := g.downloader.DownloaderObject(ctx, req)
 	if err != nil {
-		log.Warnf("failed to get object", "error", err)
+		log.Errorf("failed to get object", "error", err)
 		errorDescription = InternalError
 		return
 	}
@@ -93,17 +94,17 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if err != nil {
-			log.Warnw("failed to read stream", "error", err)
+			log.Errorw("failed to read stream", "error", err)
 			errorDescription = InternalError
 			return
 		}
 		if resp.ErrMessage != nil && resp.ErrMessage.ErrCode != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-			log.Warnw("failed to read stream", "error", err)
+			log.Errorw("failed to read stream", "error", err)
 			errorDescription = InternalError
 			return
 		}
 		if readN = len(resp.Data); readN == 0 {
-			log.Warnw("download return empty data", "response", resp)
+			log.Errorw("download return empty data", "response", resp)
 			continue
 		}
 		if resp.IsValidRange {
@@ -112,12 +113,12 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			generateContentRangeHeader(w, rangeStart, rangeEnd)
 		}
 		if writeN, err = w.Write(resp.Data); err != nil {
-			log.Warnw("failed to read stream", "error", err)
+			log.Errorw("failed to read stream", "error", err)
 			errorDescription = InternalError
 			return
 		}
 		if readN != writeN {
-			log.Warnw("failed to read stream", "error", err)
+			log.Errorw("failed to read stream", "error", err)
 			errorDescription = InternalError
 			return
 		}
@@ -134,29 +135,28 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		requestContext   *requestContext
 		addr             sdk.AccAddress
 
-		buf        = make([]byte, 65536)
-		readN      int
-		size       uint64
-		hashBuf    = make([]byte, 65536)
-		md5Hash    = md5.New()
-		md5Value   string
-		objectID   uint64
-		statusCode = http.StatusOK
+		buf      = make([]byte, 65536)
+		readN    int
+		size     uint64
+		hashBuf  = make([]byte, 65536)
+		md5Hash  = md5.New()
+		md5Value string
+		objectID uint64
 	)
 
 	requestContext = newRequestContext(r)
 	defer func() {
 		if errorDescription != nil {
-			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
-		if statusCode == http.StatusOK {
-			log.Infof("action(%v) statusCode(%v) %v", "putObject", statusCode, requestContext.generateRequestDetail())
+		if errorDescription != nil && errorDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", putObjectRouterName, errorDescription.statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "putObject", statusCode, requestContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", putObjectRouterName, requestContext.generateRequestDetail())
 		}
 	}()
 
+	// TODO: polish it by using common lib
 	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
@@ -167,18 +167,19 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if addr, err = requestContext.verifySignature(); err != nil {
-		log.Warnw("failed to verify signature", "error", err)
+		log.Errorw("failed to verify signature", "error", err)
 		errorDescription = SignatureNotMatch
 		return
 	}
 	if err = g.checkAuthorization(requestContext, addr); err != nil {
-		log.Warnw("failed to check authorization", "error", err)
+		log.Errorw("failed to check authorization", "error", err)
 		errorDescription = UnauthorizedAccess
 		return
 	}
 
 	txHash, err := hex.DecodeString(requestContext.request.Header.Get(model.GnfdTransactionHashHeader))
 	if err != nil && len(txHash) != hash.LengthHash {
+		log.Errorw("failed to parse tx_hash", "tx_hash", requestContext.request.Header.Get(model.GnfdTransactionHashHeader))
 		errorDescription = InvalidTxHash
 		return
 	}
@@ -186,14 +187,14 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	stream, err := g.uploader.UploadPayload(context.Background())
 	if err != nil {
-		log.Warnf("failed to put object", "error", err)
+		log.Errorf("failed to put object", "error", err)
 		errorDescription = InternalError
 		return
 	}
 	for {
 		readN, err = r.Body.Read(buf)
 		if err != nil && err != io.EOF {
-			log.Warnw("put object failed, due to reader", "err", err)
+			log.Errorw("put object failed, due to reader error", "error", err)
 			errorDescription = InternalError
 			return
 		}
@@ -208,7 +209,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 				RedundancyType: util.HeaderToRedundancyType(requestContext.request.Header.Get(model.GnfdRedundancyTypeHeader)),
 			}
 			if err := stream.Send(req); err != nil {
-				log.Warnw("put object failed, due to stream send", "err", err)
+				log.Errorw("put object failed, due to stream send error", "error", err)
 				errorDescription = InternalError
 				return
 			}
@@ -218,18 +219,18 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if err == io.EOF {
 			if size == 0 {
-				log.Warnw("put object failed, due to payload is empty")
+				log.Errorw("put object failed, due to payload is empty")
 				errorDescription = InvalidPayload
 				return
 			}
 			resp, err := stream.CloseAndRecv()
 			if err != nil {
-				log.Warnw("put object failed, due to stream close", "err", err)
+				log.Errorw("put object failed, due to stream close", "error", err)
 				errorDescription = InternalError
 				return
 			}
 			if errMsg := resp.GetErrMessage(); errMsg != nil && errMsg.ErrCode != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-				log.Warnw("failed to grpc", "err", resp.ErrMessage)
+				log.Errorw("failed to receive grpc response error", "error", resp.ErrMessage)
 				errorDescription = InternalError
 				return
 			}
