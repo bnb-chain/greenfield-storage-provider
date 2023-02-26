@@ -304,7 +304,7 @@ func (hub *StoneHub) loadStone() error {
 			continue
 		}
 		st, stErr := stone.NewUploadPayloadStone(context.Background(), job, object,
-			hub.jobDB, hub.metaDB, hub.signer, hub.jobCh, hub.gcCh)
+			hub.jobDB, hub.metaDB, hub.jobCh, hub.gcCh)
 		if stErr != nil {
 			log.Errorw("load stone err", "job_id", job.GetJobId(),
 				"object_id", object.GetObjectId(), "error", stErr)
