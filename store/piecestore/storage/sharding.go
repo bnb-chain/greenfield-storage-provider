@@ -13,14 +13,16 @@ type sharded struct {
 	DefaultObjectStorage
 }
 
-func NewSharded(cfg *PieceStoreConfig) (ObjectStorage, error) {
+func NewSharded(cfg PieceStoreConfig) (ObjectStorage, error) {
 	stores := make([]ObjectStorage, cfg.Shards)
 	var err error
+	original := cfg
 	for i := range stores {
-		ep := fmt.Sprintf(cfg.Store.BucketURL, i)
+		ep := fmt.Sprintf(original.Store.BucketURL, i)
 		if strings.HasSuffix(ep, "%!(EXTRA int=0)") {
 			return nil, fmt.Errorf("can not generate different endpoint using %s", cfg.Store.BucketURL)
 		}
+		cfg.Store.BucketURL = ep
 		stores[i], err = NewObjectStorage(cfg.Store)
 		if err != nil {
 			return nil, err

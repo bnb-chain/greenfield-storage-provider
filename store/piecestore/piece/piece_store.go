@@ -18,7 +18,7 @@ import (
 // NewPieceStore returns an instance of PieceStore
 func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 	checkConfig(pieceConfig)
-	blob, err := createStorage(pieceConfig)
+	blob, err := createStorage(*pieceConfig)
 	if err != nil {
 		log.Errorw("create storage error", "error", err)
 		return nil, err
@@ -60,7 +60,7 @@ func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) {
 	}
 }
 
-func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error) {
+func createStorage(cfg storage.PieceStoreConfig) (storage.ObjectStorage, error) {
 	var (
 		object storage.ObjectStorage
 		err    error

@@ -1,4 +1,4 @@
-package e2e
+package piecestore_e2e
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 func TestDiskFileStore(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setUp(t, file, "")
+	handler, err := setUp(t, file, "./data/ttt%d")
 	assert.Equal(t, err, nil)
 
 	// 2. put piece
@@ -26,13 +26,13 @@ func TestDiskFileStore(t *testing.T) {
 	// 3. get piece
 	log.Info("Get piece")
 	rc, err := handler.Get(context.Background(), "hello.txt", 0, -1)
-	assert.Equal(t, err, nil)
+	assert.Equal(t, nil, err)
 	data, err := io.ReadAll(rc)
-	assert.Equal(t, err, nil)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, string(data), "Hello, World!\n")
 
 	// 4. delete piece
 	log.Info("Delete piece")
 	err = handler.Delete(context.Background(), "hello.txt")
-	assert.Equal(t, err, nil)
+	assert.Equal(t, nil, err)
 }

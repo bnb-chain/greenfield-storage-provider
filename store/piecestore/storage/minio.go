@@ -29,8 +29,8 @@ type minioStore struct {
 	s3Store
 }
 
-func newMinioStore(cfg *ObjectStorageConfig) (ObjectStorage, error) {
-	minioSession, bucket, err := minioSessionCache.newMinioSession(*cfg)
+func newMinioStore(cfg ObjectStorageConfig) (ObjectStorage, error) {
+	minioSession, bucket, err := minioSessionCache.newMinioSession(cfg)
 	if err != nil {
 		log.Errorw("failed to new minio session", "error", err)
 		return nil, err
@@ -62,7 +62,7 @@ func (sc *SessionCache) newMinioSession(cfg ObjectStorageConfig) (*session.Sessi
 		Endpoint:         aws.String(endpoint),
 		DisableSSL:       aws.Bool(!disableSSL),
 		S3ForcePathStyle: aws.Bool(true),
-		HTTPClient:       getHTTPClient(cfg.TlsInsecureSkipVerify),
+		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
 	}
 	key := getSecretKeyFromEnv(model.MinioAccessKey, model.MinioSecretKey, model.MinioSessionToken)
 	if key.accessKey != "" && key.secretKey != "" {
@@ -93,15 +93,16 @@ func parseMinioBucketURL(bucketURL string) (string, string, bool, error) {
 
 	// 2. check if minio uses https
 	ssl := strings.ToLower(uri.Scheme) == "https"
+
+	// 3. get bucket name
 	if len(uri.Path) < 2 {
 		return "", "", false, fmt.Errorf("no bucket name provided in %s", bucketURL)
 	}
-
-	// 3. get bucket name
 	bucketName := uri.Path[1:]
 	if strings.Contains(bucketName, "/") && strings.HasPrefix(bucketName, "minio/") {
 		bucketName = bucketName[len("minio/"):]
 	}
 	bucketName = strings.Split(bucketName, "/")[0]
+
 	return uri.Host, bucketName, ssl, nil
 }

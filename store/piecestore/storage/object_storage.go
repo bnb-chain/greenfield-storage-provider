@@ -12,7 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-func NewObjectStorage(cfg *ObjectStorageConfig) (ObjectStorage, error) {
+func NewObjectStorage(cfg ObjectStorageConfig) (ObjectStorage, error) {
 	if fn, ok := storageMap[strings.ToLower(cfg.Storage)]; ok {
 		log.Debugf("creating %s storage at endpoint %s", cfg.Storage, cfg.BucketURL)
 		return fn(cfg)
@@ -20,7 +20,7 @@ func NewObjectStorage(cfg *ObjectStorageConfig) (ObjectStorage, error) {
 	return nil, fmt.Errorf("Invalid object storage: %s", cfg.Storage)
 }
 
-type StorageFn func(cfg *ObjectStorageConfig) (ObjectStorage, error)
+type StorageFn func(cfg ObjectStorageConfig) (ObjectStorage, error)
 
 var storageMap = map[string]StorageFn{
 	"s3":     newS3Store,

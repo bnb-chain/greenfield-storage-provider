@@ -6,14 +6,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestS3Store(t *testing.T) {
+func TestMinioStore(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setUp(t, s3, s3Bucket)
+	handler, err := setUp(t, minio, s3Bucket)
 	assert.Equal(t, err, nil)
 
 	// 2. put piece

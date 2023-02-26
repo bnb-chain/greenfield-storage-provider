@@ -46,8 +46,8 @@ type s3Store struct {
 	api        s3iface.S3API
 }
 
-func newS3Store(cfg *ObjectStorageConfig) (ObjectStorage, error) {
-	awsSession, bucket, err := s3SessionCache.newS3Session(*cfg)
+func newS3Store(cfg ObjectStorageConfig) (ObjectStorage, error) {
+	awsSession, bucket, err := s3SessionCache.newS3Session(cfg)
 	if err != nil {
 		log.Errorw("failed to new s3 session error", "error", err)
 		return nil, err
@@ -245,7 +245,7 @@ func (sc *SessionCache) newS3Session(cfg ObjectStorageConfig) (*session.Session,
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
 		DisableSSL:       aws.Bool(disableSSL),
-		HTTPClient:       getHTTPClient(cfg.TlsInsecureSkipVerify),
+		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
 		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
 		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
 	}
@@ -254,7 +254,8 @@ func (sc *SessionCache) newS3Session(cfg ObjectStorageConfig) (*session.Session,
 	// if TestMode is false, you can use service account or ec2 to visit your s3 straightly
 	if cfg.TestMode {
 		key := getSecretKeyFromEnv(model.AWSAccessKey, model.AWSSecretKey, model.AWSSessionToken)
-		if cfg.NoSignRequest {
+		if key.accessKey == "NoSignRequest" {
+			// access public bucket
 			awsConfig.Credentials = credentials.AnonymousCredentials
 		} else if key.accessKey != "" && key.secretKey != "" {
 			awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
@@ -263,18 +264,18 @@ func (sc *SessionCache) newS3Session(cfg ObjectStorageConfig) (*session.Session,
 
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {
-		return nil, "", fmt.Errorf("Failed to create aws session: %s", err)
+		return nil, "", fmt.Errorf("failed to create aws session: %s", err)
 	}
 
 	sc.sessions[cfg] = sess
 	return sess, bucketName, nil
 }
 
-//func (sc *SessionCache) clear() {
+// func (sc *SessionCache) clear() {
 //	sc.Lock()
 //	defer sc.Unlock()
 //	sc.sessions = map[ObjectStorageConfig]*session.Session{}
-//}
+// }
 
 func parseEndpoint(endpoint string) (string, string, string, error) {
 	endpoint = strings.Trim(endpoint, "/")

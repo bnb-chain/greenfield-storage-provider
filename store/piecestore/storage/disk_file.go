@@ -28,7 +28,7 @@ type diskFileStore struct {
 	DefaultObjectStorage
 }
 
-func newDiskFileStore(cfg *ObjectStorageConfig) (ObjectStorage, error) {
+func newDiskFileStore(cfg ObjectStorageConfig) (ObjectStorage, error) {
 	// For Windows, the path looks like /C:/a/b/c/
 	endPoint := cfg.BucketURL
 	if runtime.GOOS == windowsOS && strings.HasPrefix(endPoint, "/") {
@@ -100,13 +100,14 @@ func (d *diskFileStore) PutObject(ctx context.Context, key string, reader io.Rea
 	}
 
 	tmp := filepath.Join(filepath.Dir(p), "."+filepath.Base(p)+".tmp"+strconv.Itoa(rand.Int()))
-	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_SYNC, 0644)
 	if err != nil && os.IsNotExist(err) {
 		if err = os.MkdirAll(filepath.Dir(p), os.FileMode(0755)); err != nil {
 			log.Errorw("ObjectStorage file Put Method, os.MkdirAll error", "error", err)
 			return err
 		}
 		f, err = os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+
 	}
 	if err != nil {
 		log.Errorw("ObjectStorage file Put Method, os.OpenFile error", "error", err)
