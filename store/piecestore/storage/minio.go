@@ -93,15 +93,16 @@ func parseMinioBucketURL(bucketURL string) (string, string, bool, error) {
 
 	// 2. check if minio uses https
 	ssl := strings.ToLower(uri.Scheme) == "https"
+
+	// 3. get bucket name
 	if len(uri.Path) < 2 {
 		return "", "", false, fmt.Errorf("no bucket name provided in %s", bucketURL)
 	}
-
-	// 3. get bucket name
 	bucketName := uri.Path[1:]
 	if strings.Contains(bucketName, "/") && strings.HasPrefix(bucketName, "minio/") {
 		bucketName = bucketName[len("minio/"):]
 	}
 	bucketName = strings.Split(bucketName, "/")[0]
+
 	return uri.Host, bucketName, ssl, nil
 }
