@@ -106,7 +106,6 @@ func (db *Database) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 }
 
 // GetIntegrityMeta return the integrity hash info
-
 func (db *Database) GetIntegrityMeta(objectID uint64) (*spdb.IntegrityMeta, error) {
 	data, err := db.db.Get(IntegrityMetaKey(db.Namespace, objectID), nil)
 	if err != nil {

@@ -89,6 +89,9 @@ func NewStoneHubService(cfg *StoneHubConfig) (*StoneHub, error) {
 	if err = hub.loadStone(); err != nil {
 		return nil, err
 	}
+	if err := hub.loadStone(); err != nil {
+		return nil, err
+	}
 	return hub, nil
 }
 
