@@ -23,6 +23,7 @@ import (
 type Syncer struct {
 	config  *SyncerConfig
 	name    string
+
 	running atomic.Bool
 	store   client.PieceStoreAPI
 	metaDB  spdb.MetaDB // storage provider meta db

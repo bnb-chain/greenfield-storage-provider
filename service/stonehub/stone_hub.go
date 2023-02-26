@@ -89,6 +89,9 @@ func NewStoneHubService(cfg *StoneHubConfig) (*StoneHub, error) {
 	if err = hub.loadStone(); err != nil {
 		return nil, err
 	}
+	if err := hub.loadStone(); err != nil {
+		return nil, err
+	}
 	return hub, nil
 }
 
@@ -305,6 +308,54 @@ func (hub *StoneHub) loadStone() error {
 		}
 		st, stErr := stone.NewUploadPayloadStone(context.Background(), job, object,
 			hub.jobDB, hub.metaDB, hub.signer, hub.jobCh, hub.gcCh)
+		if stErr != nil {
+			log.Errorw("load stone err", "job_id", job.GetJobId(),
+				"object_id", object.GetObjectId(), "error", stErr)
+			it.Next()
+			continue
+		}
+		hub.SetStoneExclude(st)
+		it.Next()
+	}
+	return nil
+}
+
+// LoadStone read all stone form db and add stone hub.
+func (hub *StoneHub) loadStone() error {
+	if hub.gcRunning.Swap(true) {
+		return errors.New("gc stone db is running")
+	}
+	log.Infow("begin load stones")
+	defer hub.gcRunning.Swap(false)
+	it := hub.jobDB.NewIterator(uint64(0))
+	defer it.Release()
+	for {
+		if !it.IsValid() {
+			if err := it.Error(); err != nil {
+				log.Warnw("failed to load, due to iterate stone", "error", err)
+				return err
+			}
+			log.Infow("succeed to load stones")
+			break
+		}
+		job := it.Value().(*ptypes.JobContext)
+		if len(job.GetJobErr()) != 0 {
+			it.Next()
+			continue
+		}
+		if job.GetJobState() == ptypes.JobState_JOB_STATE_SEAL_OBJECT_DONE {
+			it.Next()
+			continue
+		}
+		log.Infow("load unsealed job", "job", job)
+		object, objErr := hub.jobDB.GetObjectInfoByJob(job.GetJobId())
+		if objErr != nil {
+			log.Errorw("load stone get object err", "job_id", job.GetJobId(), "error", objErr)
+			it.Next()
+			continue
+		}
+		st, stErr := stone.NewUploadPayloadStone(context.Background(), job, object,
+			hub.jobDB, hub.metaDB, hub.jobCh, hub.gcCh)
 		if stErr != nil {
 			log.Errorw("load stone err", "job_id", job.GetJobId(),
 				"object_id", object.GetObjectId(), "error", stErr)
