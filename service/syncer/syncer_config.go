@@ -9,19 +9,21 @@ import (
 )
 
 type SyncerConfig struct {
-	Address           string
-	StorageProvider   string
-	MetaDBType        string
-	MetaLevelDBConfig *config.LevelDBConfig
-	MetaSqlDBConfig   *config.SqlDBConfig
-	PieceConfig       *storage.PieceStoreConfig
+	Address              string
+	SignerServiceAddress string
+	StorageProvider      string
+	MetaDBType           string
+	MetaLevelDBConfig    *config.LevelDBConfig
+	MetaSqlDBConfig      *config.SqlDBConfig
+	PieceStoreConfig     *storage.PieceStoreConfig
 }
 
 var DefaultSyncerConfig = &SyncerConfig{
-	Address:           "127.0.0.1:9533",
-	StorageProvider:   "bnb-sp",
-	MetaDBType:        model.LevelDB,
-	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,
-	MetaSqlDBConfig:   metasql.DefaultMetaSqlDBConfig,
-	PieceConfig:       storage.DefaultPieceStoreConfig,
+	Address:              "127.0.0.1:9533",
+	SignerServiceAddress: "127.0.0.1:9633",
+	StorageProvider:      "bnb-sp",
+	MetaDBType:           model.LevelDB,
+	MetaLevelDBConfig:    metalevel.DefaultMetaLevelDBConfig,
+	MetaSqlDBConfig:      metasql.DefaultMetaSqlDBConfig,
+	PieceStoreConfig:     storage.DefaultPieceStoreConfig,
 }

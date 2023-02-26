@@ -60,8 +60,6 @@ message PieceJob {
   StorageProviderSealInfo storage_provider_seal_info = 8;
 }
 
-
-
 message StoneHubServiceBeginUploadPayloadV2Request {
   string trace_id = 1;
 //  bytes tx_hash = 2;
@@ -95,8 +93,10 @@ message StoneHubServiceAllocStoneJobRequest {
 message StoneHubServiceAllocStoneJobResponse {
   string trace_id = 1;
 //  bytes tx_hash = 2;
-  PieceJob piece_job = 3;
-  ErrMessage err_message = 4;
+  string bucket_name = 3;
+  string object_name = 4;
+  PieceJob piece_job = 5;
+  ErrMessage err_message = 6;
 }
 
 message StoneHubServiceDoneSecondaryPieceJobRequest {

@@ -10,9 +10,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
@@ -81,6 +84,27 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.ChallengeCfg = config.DefaultStorageProviderConfig.ChallengeCfg
 		}
 		server, err = challenge.NewChallengeService(cfg.ChallengeCfg)
+		if err != nil {
+			return nil, err
+		}
+	case model.SignerService:
+		if cfg.SignerCfg == nil {
+			cfg.SignerCfg = config.DefaultStorageProviderConfig.SignerCfg
+		}
+		server, err = signer.NewSignerServer(cfg.SignerCfg)
+		if err != nil {
+			return nil, err
+		}
+	case model.MetadataService:
+		if cfg.MetadataCfg == nil {
+			cfg.MetadataCfg = config.DefaultStorageProviderConfig.MetadataCfg
+		}
+		server, err = metadata.NewMetadataService(cfg.MetadataCfg, context.Background())
+		if err != nil {
+			return nil, err
+		}
+	case model.BlockSyncerService:
+		server, err = blocksyncer.NewBlockSyncerService(cfg.BlockSyncerCfg)
 		if err != nil {
 			return nil, err
 		}

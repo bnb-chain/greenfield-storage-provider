@@ -6,7 +6,7 @@ import (
 
 // IntegrityMeta defines the integrity hash info
 type IntegrityMeta struct {
-	// ObjectID + IsPrimary + RedundancyType + EcIdx = primary key
+	// ObjectID = primary key
 	ObjectID       uint64                `json:"ObjectID"`
 	IsPrimary      bool                  `json:"IsPrimary"`
 	RedundancyType ptypes.RedundancyType `json:"RedundancyType"`
@@ -15,26 +15,14 @@ type IntegrityMeta struct {
 	PieceCount    uint32   `json:"PieceCount"`
 	IntegrityHash []byte   `json:"IntegrityHash"`
 	PieceHash     [][]byte `json:"PieceHash"`
-}
-
-// UploadPayloadAskingMeta defines the payload asking info
-type UploadPayloadAskingMeta struct {
-	// BucketName + ObjectName = primary key
-	BucketName string `json:"BucketName"`
-	ObjectName string `json:"ObjectName"`
-
-	Timeout int64 `json:"Timeout"`
+	Signature     []byte   `json:"Signature"`
 }
 
 type MetaDB interface {
 	// SetIntegrityMeta put integrity hash info to db.
 	SetIntegrityMeta(meta *IntegrityMeta) error
 	// GetIntegrityMeta return the integrity hash info.
-	GetIntegrityMeta(queryCondition *IntegrityMeta) (*IntegrityMeta, error)
-	// SetUploadPayloadAskingMeta put payload asking info to db.
-	SetUploadPayloadAskingMeta(meta *UploadPayloadAskingMeta) error
-	// GetUploadPayloadAskingMeta return the payload asking info.
-	GetUploadPayloadAskingMeta(bucketName, objectName string) (*UploadPayloadAskingMeta, error)
+	GetIntegrityMeta(objectID uint64) (*IntegrityMeta, error)
 	// Close the low level db
 	Close() error
 }

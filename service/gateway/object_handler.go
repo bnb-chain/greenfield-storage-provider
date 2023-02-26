@@ -1,182 +1,51 @@
 package gateway
 
 import (
+	"context"
+	"crypto/md5"
 	"encoding/hex"
+	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// putObjectTxHandler handle put object tx request, include steps:
-// 1.check request params validation;
-// 2.check request signature;
-// 3.check account acl;
-// 4.put object tx by uploaderClient.
-func (g *Gateway) putObjectTxHandler(w http.ResponseWriter, r *http.Request) {
-	var (
-		err              error
-		errorDescription *errorDescription
-		requestContext   *requestContext
-	)
-
-	defer func() {
-		statusCode := 200
-		if errorDescription != nil {
-			statusCode = errorDescription.statusCode
-			_ = errorDescription.errorResponse(w, requestContext)
-		}
-		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, requestContext.generateRequestDetail())
-		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "putObjectTx", statusCode, requestContext.generateRequestDetail())
-		}
-	}()
-
-	requestContext = newRequestContext(r)
-	if requestContext.bucketName == "" {
-		errorDescription = InvalidBucketName
-		return
-	}
-	if requestContext.objectName == "" {
-		errorDescription = InvalidKey
-		return
-	}
-	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
-		log.Infow("failed to verify signature", "error", err)
-		return
-	}
-	if err = requestContext.verifyAuth(g.retriever); err != nil {
-		errorDescription = UnauthorizedAccess
-		return
-	}
-
-	// todo: check more params
-	sizeStr := requestContext.request.Header.Get(model.GnfdContentLengthHeader)
-	sizeInt, _ := strconv.Atoi(sizeStr)
-	isPrivate, _ := strconv.ParseBool(requestContext.request.Header.Get(model.GnfdIsPrivateHeader))
-	option := &putObjectTxOption{
-		requestContext: requestContext,
-		objectSize:     uint64(sizeInt),
-		contentType:    requestContext.request.Header.Get(model.GnfdContentTypeHeader),
-		checksum:       []byte(requestContext.request.Header.Get(model.GnfdChecksumHeader)),
-		isPrivate:      isPrivate,
-		redundancyType: requestContext.request.Header.Get(model.GnfdRedundancyTypeHeader),
-	}
-	info, err := g.uploadProcessor.putObjectTx(requestContext.objectName, option)
-	if err != nil {
-		if err == errors.ErrDuplicateObject {
-			errorDescription = ObjectAlreadyExists
-			return
-		}
-		// else common.ErrInternalError
-		errorDescription = InternalError
-		return
-	}
-	// succeed ack
-	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
-	w.Header().Set(model.GnfdTransactionHashHeader, hex.EncodeToString(info.txHash))
-}
-
-// putObjectHandler handle put object request, include steps:
-// 1.check request params validation;
-// 2.check request signature;
-// 3.check account acl;
-// 4.put object data by uploaderClient.
-func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
-	var (
-		err              error
-		errorDescription *errorDescription
-		requestContext   *requestContext
-	)
-
-	defer func() {
-		statusCode := 200
-		if errorDescription != nil {
-			statusCode = errorDescription.statusCode
-			_ = errorDescription.errorResponse(w, requestContext)
-		}
-		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "putObject", statusCode, requestContext.generateRequestDetail())
-		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "putObject", statusCode, requestContext.generateRequestDetail())
-		}
-	}()
-
-	requestContext = newRequestContext(r)
-	if requestContext.bucketName == "" {
-		errorDescription = InvalidBucketName
-		return
-	}
-	if requestContext.objectName == "" {
-		errorDescription = InvalidKey
-		return
-	}
-
-	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
-		log.Infow("failed to verify signature", "error", err)
-		return
-	}
-	if err = requestContext.verifyAuth(g.retriever); err != nil {
-		errorDescription = UnauthorizedAccess
-		return
-	}
-	txHash, err := hex.DecodeString(requestContext.request.Header.Get(model.GnfdTransactionHashHeader))
-	if err != nil && len(txHash) != hash.LengthHash {
-		errorDescription = InvalidTxHash
-		return
-	}
-
-	option := &putObjectOption{
-		requestContext: requestContext,
-		txHash:         txHash,
-	}
-
-	info, err := g.uploadProcessor.putObject(requestContext.objectName, r.Body, option)
-	if err != nil {
-		if err == errors.ErrObjectTxNotExist {
-			errorDescription = ObjectTxNotFound
-			return
-		}
-		// else common.ErrInternalError
-		errorDescription = InternalError
-		return
-	}
-	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
-	w.Header().Set(model.ETagHeader, info.eTag)
-}
-
-// getObjectHandler handle get object request, include steps:
-// 1.check request params validation;
-// 2.check request signature;
-// 3.check account acl;
-// 4.get object data by downloaderClient.
+// getObjectHandler handle get object request
 func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
 		requestContext   *requestContext
+		addr             sdk.AccAddress
+
+		isRange    bool
+		rangeStart int64
+		rangeEnd   int64
+
+		readN, writeN int
+		size          int
+		statusCode    = http.StatusOK
 	)
 
+	requestContext = newRequestContext(r)
 	defer func() {
-		statusCode := 200
 		if errorDescription != nil {
 			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
-		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "getObject", statusCode, requestContext.generateRequestDetail())
+		if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
+			log.Infof("action(%v) statusCode(%v) %v", getObjectRouterName, statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "getObject", statusCode, requestContext.generateRequestDetail())
+			log.Errorf("action(%v) statusCode(%v) %v", getObjectRouterName, statusCode, requestContext.generateRequestDetail())
 		}
 	}()
 
-	requestContext = newRequestContext(r)
+	// TODO: polish it by using common lib
 	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
@@ -186,53 +55,108 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
-		log.Infow("failed to verify signature", "error", err)
+	if addr, err = requestContext.verifySignature(); err != nil {
+		log.Errorw("failed to verify signature", "error", err)
+		errorDescription = SignatureNotMatch
 		return
 	}
-	if err = requestContext.verifyAuth(g.retriever); err != nil {
+	if err = g.checkAuthorization(requestContext, addr); err != nil {
+		log.Errorw("failed to check authorization", "error", err)
 		errorDescription = UnauthorizedAccess
 		return
 	}
 
-	option := &getObjectOption{
-		requestContext: requestContext,
+	isRange, rangeStart, rangeEnd = parseRange(requestContext.request.Header.Get(model.RangeHeader))
+
+	if rangeStart > 0 && rangeEnd > 0 && rangeStart > rangeEnd {
+		errorDescription = InvalidRange
+		return
 	}
-	err = g.downloadProcessor.getObject(requestContext.objectName, w, option)
+
+	req := &stypes.DownloaderServiceDownloaderObjectRequest{
+		TraceId:    requestContext.requestID,
+		BucketName: requestContext.bucketName,
+		ObjectName: requestContext.objectName,
+		IsRange:    isRange,
+		RangeStart: rangeStart,
+		RangeEnd:   rangeEnd,
+	}
+	ctx := log.Context(context.Background(), req)
+	stream, err := g.downloader.DownloaderObject(ctx, req)
 	if err != nil {
-		if err == errors.ErrObjectNotExist {
-			errorDescription = NoSuchKey
-			return
-		}
-		// else common.ErrInternalError
+		log.Errorf("failed to get object", "error", err)
 		errorDescription = InternalError
 		return
 	}
+	for {
+		resp, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Errorw("failed to read stream", "error", err)
+			errorDescription = InternalError
+			return
+		}
+		if resp.ErrMessage != nil && resp.ErrMessage.ErrCode != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+			log.Errorw("failed to read stream", "error", err)
+			errorDescription = InternalError
+			return
+		}
+		if readN = len(resp.Data); readN == 0 {
+			log.Errorw("download return empty data", "response", resp)
+			continue
+		}
+		if resp.IsValidRange {
+			statusCode = http.StatusPartialContent
+			w.WriteHeader(statusCode)
+			generateContentRangeHeader(w, rangeStart, rangeEnd)
+		}
+		if writeN, err = w.Write(resp.Data); err != nil {
+			log.Errorw("failed to read stream", "error", err)
+			errorDescription = InternalError
+			return
+		}
+		if readN != writeN {
+			log.Errorw("failed to read stream", "error", err)
+			errorDescription = InternalError
+			return
+		}
+		size = size + writeN
+	}
+	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
 }
 
-// putObjectV2Handler handle put object request v2.
-func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
+// putObjectHandler handle put object request
+func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
 		errorDescription *errorDescription
 		requestContext   *requestContext
+		addr             sdk.AccAddress
+
+		buf      = make([]byte, 65536)
+		readN    int
+		size     uint64
+		hashBuf  = make([]byte, 65536)
+		md5Hash  = md5.New()
+		md5Value string
+		objectID uint64
 	)
 
+	requestContext = newRequestContext(r)
 	defer func() {
-		statusCode := 200
 		if errorDescription != nil {
-			statusCode = errorDescription.statusCode
 			_ = errorDescription.errorResponse(w, requestContext)
 		}
-		if statusCode == 200 {
-			log.Debugf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, requestContext.generateRequestDetail())
+		if errorDescription != nil && errorDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", putObjectRouterName, errorDescription.statusCode, requestContext.generateRequestDetail())
 		} else {
-			log.Warnf("action(%v) statusCode(%v) %v", "putObjectV2", statusCode, requestContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", putObjectRouterName, requestContext.generateRequestDetail())
 		}
 	}()
 
-	requestContext = newRequestContext(r)
+	// TODO: polish it by using common lib
 	if requestContext.bucketName == "" {
 		errorDescription = InvalidBucketName
 		return
@@ -242,45 +166,80 @@ func (g *Gateway) putObjectV2Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = requestContext.verifySignature(); err != nil {
-		errorDescription = SignatureDoesNotMatch
-		log.Infow("failed to verify signature", "error", err)
+	if addr, err = requestContext.verifySignature(); err != nil {
+		log.Errorw("failed to verify signature", "error", err)
+		errorDescription = SignatureNotMatch
 		return
 	}
-	if err = requestContext.verifyAuth(g.retriever); err != nil {
+	if err = g.checkAuthorization(requestContext, addr); err != nil {
+		log.Errorw("failed to check authorization", "error", err)
 		errorDescription = UnauthorizedAccess
 		return
 	}
 
 	txHash, err := hex.DecodeString(requestContext.request.Header.Get(model.GnfdTransactionHashHeader))
 	if err != nil && len(txHash) != hash.LengthHash {
+		log.Errorw("failed to parse tx_hash", "tx_hash", requestContext.request.Header.Get(model.GnfdTransactionHashHeader))
 		errorDescription = InvalidTxHash
 		return
 	}
+	objectSize, _ := util.HeaderToUint64(requestContext.request.Header.Get(model.ContentLengthHeader))
 
-	sizeStr := requestContext.request.Header.Get(model.ContentLengthHeader)
-	sizeInt, _ := strconv.Atoi(sizeStr)
-	option := &putObjectOption{
-		requestContext: requestContext,
-		txHash:         txHash,
-		size:           uint64(sizeInt),
-		redundancyType: requestContext.request.Header.Get(model.GnfdRedundancyTypeHeader),
-	}
-
-	info, err := g.uploadProcessor.putObjectV2(requestContext.objectName, r.Body, option)
+	stream, err := g.uploader.UploadPayload(context.Background())
 	if err != nil {
-		if err == errors.ErrObjectTxNotExist {
-			errorDescription = ObjectTxNotFound
-			return
-		}
-		if err == errors.ErrObjectIsEmpty {
-			errorDescription = InvalidPayload
-			return
-		}
-		// else common.ErrInternalError
+		log.Errorf("failed to put object", "error", err)
 		errorDescription = InternalError
 		return
 	}
+	for {
+		readN, err = r.Body.Read(buf)
+		if err != nil && err != io.EOF {
+			log.Errorw("put object failed, due to reader error", "error", err)
+			errorDescription = InternalError
+			return
+		}
+		if readN > 0 {
+			req := &stypes.UploaderServiceUploadPayloadRequest{
+				TraceId:        requestContext.requestID,
+				TxHash:         txHash,
+				PayloadData:    buf[:readN],
+				BucketName:     requestContext.bucketName,
+				ObjectName:     requestContext.objectName,
+				ObjectSize:     objectSize,
+				RedundancyType: util.HeaderToRedundancyType(requestContext.request.Header.Get(model.GnfdRedundancyTypeHeader)),
+			}
+			if err := stream.Send(req); err != nil {
+				log.Errorw("put object failed, due to stream send error", "error", err)
+				errorDescription = InternalError
+				return
+			}
+			size += uint64(readN)
+			copy(hashBuf, buf[:readN])
+			md5Hash.Write(hashBuf[:readN])
+		}
+		if err == io.EOF {
+			if size == 0 {
+				log.Errorw("put object failed, due to payload is empty")
+				errorDescription = InvalidPayload
+				return
+			}
+			resp, err := stream.CloseAndRecv()
+			if err != nil {
+				log.Errorw("put object failed, due to stream close", "error", err)
+				errorDescription = InternalError
+				return
+			}
+			if errMsg := resp.GetErrMessage(); errMsg != nil && errMsg.ErrCode != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
+				log.Errorw("failed to receive grpc response error", "error", resp.ErrMessage)
+				errorDescription = InternalError
+				return
+			}
+			objectID = resp.GetObjectId()
+			break
+		}
+	}
+	md5Value = hex.EncodeToString(md5Hash.Sum(nil))
 	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
-	w.Header().Set(model.ETagHeader, info.eTag)
+	w.Header().Set(model.ETagHeader, md5Value)
+	w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
 }

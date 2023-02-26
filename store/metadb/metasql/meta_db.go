@@ -2,12 +2,12 @@ package metasql
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -40,17 +40,13 @@ func InitDB(config *config.SqlDBConfig) (*gorm.DB, error) {
 		config.Database)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Warnw("gorm open db failed", "err", err)
+		log.Errorw("gorm open db failed", "err", err)
 		return nil, err
 	}
 
 	// create if not exist
 	if err := db.AutoMigrate(&DBIntegrityMeta{}); err != nil {
-		log.Warnw("failed to create integrity meta table", "err", err)
-		return nil, err
-	}
-	if err := db.AutoMigrate(&DBUploadPayloadAskingMeta{}); err != nil {
-		log.Warnw("failed to create upload payload asking meta table", "err", err)
+		log.Errorw("failed to create integrity meta table", "err", err)
 		return nil, err
 	}
 	return db, nil
@@ -63,11 +59,6 @@ func (mdb *MetaDB) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 		insertIntegrityMetaRecord *DBIntegrityMeta
 	)
 
-	// log.Infow("set integrity", "meta", *meta)
-	pieceHash, err := json.Marshal(meta.PieceHash)
-	if err != nil {
-		return err
-	}
 	insertIntegrityMetaRecord = &DBIntegrityMeta{
 		ObjectID:       meta.ObjectID,
 		EcIdx:          meta.EcIdx,
@@ -75,7 +66,8 @@ func (mdb *MetaDB) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 		IsPrimary:      meta.IsPrimary,
 		RedundancyType: uint32(meta.RedundancyType),
 		IntegrityHash:  hex.EncodeToString(meta.IntegrityHash),
-		PieceHash:      string(pieceHash),
+		PieceHash:      util.EncodePieceHash(meta.PieceHash),
+		Signature:      hex.EncodeToString(meta.Signature),
 	}
 	result = mdb.db.Create(insertIntegrityMetaRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -85,19 +77,22 @@ func (mdb *MetaDB) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 }
 
 // GetIntegrityMeta return the integrity hash info
-func (mdb *MetaDB) GetIntegrityMeta(queryCondition *spdb.IntegrityMeta) (*spdb.IntegrityMeta, error) {
+func (mdb *MetaDB) GetIntegrityMeta(objectID uint64) (*spdb.IntegrityMeta, error) {
 	var (
 		result      *gorm.DB
 		queryReturn DBIntegrityMeta
 	)
 	result = mdb.db.Model(&DBIntegrityMeta{}).
-		Where("object_id = ? and is_primary = ? and redundancy_type = ? and ec_idx = ?",
-			queryCondition.ObjectID, queryCondition.IsPrimary, queryCondition.RedundancyType, queryCondition.EcIdx).
+		Where("object_id = ?", objectID).
 		First(&queryReturn)
 	if result.Error != nil {
 		return nil, fmt.Errorf("select integrity meta record failed, %s", result.Error)
 	}
 	integrityHash, err := hex.DecodeString(queryReturn.IntegrityHash)
+	if err != nil {
+		return nil, err
+	}
+	signature, err := hex.DecodeString(queryReturn.Signature)
 	if err != nil {
 		return nil, err
 	}
@@ -109,62 +104,11 @@ func (mdb *MetaDB) GetIntegrityMeta(queryCondition *spdb.IntegrityMeta) (*spdb.I
 		IsPrimary:      queryReturn.IsPrimary,
 		RedundancyType: ptypes.RedundancyType(queryReturn.RedundancyType),
 		IntegrityHash:  integrityHash,
+		Signature:      signature,
 	}
-	err = json.Unmarshal([]byte(queryReturn.PieceHash), &meta.PieceHash)
+	meta.PieceHash, err = util.DecodePieceHash(queryReturn.PieceHash)
 	if err != nil {
 		return nil, err
 	}
 	return meta, nil
-
-}
-
-// SetUploadPayloadAskingMeta put(overwrite) payload asking info to db
-func (mdb *MetaDB) SetUploadPayloadAskingMeta(meta *spdb.UploadPayloadAskingMeta) error {
-	var (
-		result *gorm.DB
-	)
-
-	queryReturn, err := mdb.GetUploadPayloadAskingMeta(meta.BucketName, meta.ObjectName)
-	if err != nil {
-		// insert record
-		insertPayloadAskingMetaRecord := &DBUploadPayloadAskingMeta{
-			BucketName: meta.BucketName,
-			ObjectName: meta.ObjectName,
-			Timeout:    meta.Timeout,
-		}
-		result = mdb.db.Create(insertPayloadAskingMetaRecord)
-		if result.Error != nil || result.RowsAffected != 1 {
-			return fmt.Errorf("insert payload asking meta record failed, %s", result.Error)
-		}
-	} else {
-		if queryReturn.Timeout == meta.Timeout {
-			return nil
-		}
-		// update record
-		result = mdb.db.Model(&DBUploadPayloadAskingMeta{}).
-			Where("bucket_name = ? and object_name = ?", meta.BucketName, meta.ObjectName).
-			Update("timeout", meta.Timeout)
-		if result.Error != nil || result.RowsAffected != 1 {
-			return fmt.Errorf("update payload asking meta record failed, %s", result.Error)
-		}
-	}
-	return nil
-}
-
-// GetUploadPayloadAskingMeta return the payload asking info
-func (mdb *MetaDB) GetUploadPayloadAskingMeta(bucket, object string) (*spdb.UploadPayloadAskingMeta, error) {
-	var (
-		result      *gorm.DB
-		queryReturn DBUploadPayloadAskingMeta
-	)
-	// If the primary key is a string, the query will be written as follows:
-	result = mdb.db.First(&queryReturn, "bucket_name = ? and object_name = ?", bucket, object)
-	if result.Error != nil {
-		return nil, fmt.Errorf("select payload asking record's failed, %s", result.Error)
-	}
-	return &spdb.UploadPayloadAskingMeta{
-		BucketName: queryReturn.BucketName,
-		ObjectName: queryReturn.ObjectName,
-		Timeout:    queryReturn.Timeout,
-	}, nil
 }

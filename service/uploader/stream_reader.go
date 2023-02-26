@@ -29,12 +29,16 @@ func (sr *streamReader) initSteamReaderOnce(req *stypes.UploaderServiceUploadPay
 	if sr.txHash == nil {
 		sr.txHash = req.TxHash
 		sr.traceID = req.TraceId
+		sr.bucket = req.BucketName
+		sr.object = req.ObjectName
+		sr.size = req.ObjectSize
+		sr.redundancyType = req.RedundancyType
 		return nil
 	}
 	return fmt.Errorf("stream content has inited")
 }
 
-// newStreamReader is used to stream read UploaderService_UploadPayloadServer.
+// newStreamReader is used to stream read UploaderService_UploadPayloadV2Server.
 func newStreamReader(stream stypes.UploaderService_UploadPayloadServer, ch chan []byte) *streamReader {
 	var sr = &streamReader{}
 	sr.pr, sr.pw = io.Pipe()
@@ -56,50 +60,6 @@ func newStreamReader(stream stypes.UploaderService_UploadPayloadServer, ch chan 
 				return
 			}
 			if err = sr.initSteamReaderOnce(req); err == nil {
-				ch <- req.TxHash
-			}
-			sr.pw.Write(req.PayloadData)
-		}
-	}()
-	return sr
-}
-
-// initSteamReaderOnceV2 init stream reader content, is not thread safely.
-func (sr *streamReader) initSteamReaderOnceV2(req *stypes.UploaderServiceUploadPayloadV2Request) error {
-	if sr.txHash == nil {
-		sr.txHash = req.TxHash
-		sr.traceID = req.TraceId
-		sr.bucket = req.BucketName
-		sr.object = req.ObjectName
-		sr.size = req.ObjectSize
-		sr.redundancyType = req.RedundancyType
-		return nil
-	}
-	return fmt.Errorf("stream content has inited")
-}
-
-// newStreamReaderV2 is used to stream read UploaderService_UploadPayloadV2Server.
-func newStreamReaderV2(stream stypes.UploaderService_UploadPayloadV2Server, ch chan []byte) *streamReader {
-	var sr = &streamReader{}
-	sr.pr, sr.pw = io.Pipe()
-	go func() {
-		for {
-			req, err := stream.Recv()
-			if err == io.EOF {
-				if err = sr.initSteamReaderOnceV2(req); err == nil {
-					ch <- req.TxHash
-				}
-				sr.pw.Close()
-				return
-			}
-			if err != nil {
-				if sr.txHash == nil {
-					close(ch)
-				}
-				sr.pw.CloseWithError(err)
-				return
-			}
-			if err = sr.initSteamReaderOnceV2(req); err == nil {
 				ch <- req.TxHash
 			}
 			sr.pw.Write(req.PayloadData)
@@ -146,7 +106,7 @@ func (sr *streamReader) splitSegment(segmentSize uint32, ch chan *SegmentContext
 		pieceData := make([]byte, segmentSize)
 		readN, err = sr.Read(pieceData)
 		if err != nil && err != io.EOF {
-			log.Warnw("failed to stream read", "err", err)
+			log.Errorw("failed to stream read", "err", err)
 			close(ch)
 			return err
 		}

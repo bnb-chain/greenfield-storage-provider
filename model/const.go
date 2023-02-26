@@ -2,13 +2,16 @@ package model
 
 // define storage provider support service name.
 const (
-	GatewayService    = "Gateway"
-	UploaderService   = "Uploader"
-	DownloaderService = "Downloader"
-	ChallengeService  = "Challenge"
-	StoneHubService   = "StoneHub"
-	StoneNodeService  = "StoneNode"
-	SyncerService     = "Syncer"
+	GatewayService     = "Gateway"
+	UploaderService    = "Uploader"
+	DownloaderService  = "Downloader"
+	ChallengeService   = "Challenge"
+	StoneHubService    = "StoneHub"
+	StoneNodeService   = "StoneNode"
+	SyncerService      = "Syncer"
+	SignerService      = "Signer"
+	MetadataService    = "Metadata"
+	BlockSyncerService = "BlockSyncer"
 )
 
 // define payload data redundancy size.
@@ -30,7 +33,6 @@ const (
 const (
 	BufPoolSize  = 32 << 10
 	ChecksumAlgo = "Crc32c"
-	OctetStream  = "application/octet-stream"
 )
 
 // RPC config
@@ -39,39 +41,61 @@ const (
 	MaxCallMsgSize = 25 * 1024 * 1024
 )
 
+// http header constants
+const (
+	// http header key
+	OctetStream               = "application/octet-stream"
+	ContentTypeHeader         = "Content-Type"
+	ETagHeader                = "ETag"
+	ContentLengthHeader       = "Content-Length"
+	ContentTypeXMLHeaderValue = "application/xml"
+	RangeHeader               = "Range"
+	ContentRangeHeader        = "Content-Range"
+)
+
 // Gateway
 const (
 	// path
 	AdminPath          = "/greenfield/admin/v1/"
+	SyncerPath         = "/greenfield/syncer/v1/sync-piece"
 	GetApprovalSubPath = "get-approval"
+	ChallengeSubPath   = "challenge"
 
 	// query key
 	TransactionQuery = "transaction"
-	PutObjectV2Query = "putobjectv2"
 	ActionQuery      = "action"
 
 	// Greenfield header key
 	GnfdRequestIDHeader       = "X-Gnfd-Request-ID"
-	GnfdContentLengthHeader   = "X-Gnfd-Content-Length"
-	GnfdContentTypeHeader     = "X-Gnfd-Content-Type"
 	GnfdChecksumHeader        = "X-Gnfd-Checksum"
 	GnfdIsPrivateHeader       = "X-Gnfd-Is-Private"
 	GnfdTransactionHashHeader = "X-Gnfd-Txn-Hash"
 	GnfdResourceHeader        = "X-Gnfd-Resource"
 	GnfdPreSignatureHeader    = "X-Gnfd-Pre-Signature"
 	// GnfdRedundancyTypeHeader can be EC or Replica, EC is default
-	GnfdRedundancyTypeHeader = "X-Gnfd-Redundancy-Type"
-	GnfdAuthorizationHeader  = "Authorization"
-	GnfdDateHeader           = "X-Gnfd-Date"
+	GnfdRedundancyTypeHeader      = "X-Gnfd-Redundancy-Type"
+	GnfdAuthorizationHeader       = "Authorization"
+	GnfdDateHeader                = "X-Gnfd-Date"
+	GnfdObjectIDHeader            = "X-Gnfd-Object-ID"
+	GnfdPieceIndexHeader          = "X-Gnfd-Piece-Index"
+	GnfdRedundancyIndexHeader     = "X-Gnfd-Redundancy-Index"
+	GnfdIntegrityHashHeader       = "X-Gnfd-Integrity-Hash"
+	GnfdPieceHashHeader           = "X-Gnfd-Piece-Hash"
+	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
+	GnfdSignedApprovalMsgHeader   = "X-Gnfd-Signed-Msg"
 
-	// http header key
-	ContentTypeHeader   = "Content-Type"
-	ETagHeader          = "ETag"
-	ContentLengthHeader = "Content-Length"
+	// StoneNode to gateway request header
+	GnfdSPIDHeader              = "X-Gnfd-SP-ID"
+	GnfdPieceCountHeader        = "X-Gnfd-Piece-Count"
+	GnfdApprovalSignatureHeader = "X-Gnfd-Approval-Signature"
+
+	// gateway to StoneNode response header
+	GnfdPieceChecksumHeader          = "X-Gnfd-Piece-Checksum"
+	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 
 	// header value
-	ContentTypeXMLHeaderValue        = "application/xml"
 	ReplicaRedundancyTypeHeaderValue = "Replica"
+	InlineRedundancyTypeHeaderValue  = "Inline"
 
 	// signature const value
 	SignAlgorithm = "ECDSA-secp256k1"
@@ -90,6 +114,9 @@ const (
 
 // environment constants
 const (
+	// Piece Store constants
+	BucketURL = "BUCKET_URL"
+
 	// AWS environment constants
 	AWSAccessKey    = "AWS_ACCESS_KEY"
 	AWSSecretKey    = "AWS_SECRET_KEY"

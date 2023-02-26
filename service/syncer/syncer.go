@@ -5,6 +5,7 @@ import (
 	"net"
 	"sync/atomic"
 
+	sclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -22,9 +23,10 @@ import (
 type Syncer struct {
 	config  *SyncerConfig
 	name    string
+	running atomic.Bool
 	store   client.PieceStoreAPI
 	metaDB  spdb.MetaDB // storage provider meta db
-	running atomic.Bool
+	signer  *sclient.SignerClient
 }
 
 // NewSyncerService creates a syncer service to upload piece to piece store
@@ -36,7 +38,6 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	if err := s.initClient(); err != nil {
 		return nil, err
 	}
-	// init meta db
 	if err := s.initDB(); err != nil {
 		return nil, err
 	}
@@ -45,12 +46,15 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 
 // initClient
 func (s *Syncer) initClient() error {
-	store, err := client.NewStoreClient(s.config.PieceConfig)
-	if err != nil {
-		log.Errorw("syncer starts piece store client failed", "error", err)
+	var err error
+	if s.store, err = client.NewStoreClient(s.config.PieceStoreConfig); err != nil {
+		log.Errorw("failed to new piece store client", "error", err)
 		return err
 	}
-	s.store = store
+	if s.signer, err = sclient.NewSignerClient(s.config.SignerServiceAddress); err != nil {
+		log.Errorw("failed to new signer client", "err", err)
+		return err
+	}
 	return nil
 }
 

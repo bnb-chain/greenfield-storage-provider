@@ -3,14 +3,14 @@ name: Protobuf Lint
 on:
   push:
     branches:
-      - main
+      - master
       - develop
     paths:
       - 'proto/**'
 
   pull_request:
     branches:
-      - main
+      - master
       - develop
     paths:
       - 'proto/**'
@@ -22,7 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: bufbuild/buf-setup-action@v1.11.0
+      - uses: bufbuild/buf-setup-action@v1.14.0
+        with:
+          version: 1.14.0
+          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
+          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
 
       - uses: bufbuild/buf-lint-action@v1
         with:

@@ -3,13 +3,17 @@ name: Unit Test
 on:
   push:
     branches:
-      - main
+      - master
       - develop
 
   pull_request:
     branches:
-      - main
+      - master
       - develop
+
+env:
+  CGO_CFLAGS: "-O -D__BLST_PORTABLE__"
+  CGO_CFLAGS_ALLOW: "-O -D__BLST_PORTABLE__"
 
 jobs:
   unit-test:
@@ -46,13 +50,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - uses: ory/build-buf-action@v0
+      - uses: bufbuild/buf-setup-action@v1.14.0
         with:
-          bufVersion: v1.11.0
-          protocPlugins:
-            go@v1.28.0 go-grpc@v1.2.0
-          bufArgs:
-            generate
+          version: 1.14.0
+          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
+          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
+      
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+
+      - run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+          buf generate
 
       - name: Setup GitHub Token
         run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/

@@ -102,15 +102,13 @@ func (db *Database) SetIntegrityMeta(meta *spdb.IntegrityMeta) error {
 	if err != nil {
 		return err
 	}
-	return db.db.Put(IntegrityMetaKey(db.Namespace,
-		meta.ObjectID, meta.IsPrimary, meta.RedundancyType, meta.EcIdx), data, nil)
+	return db.db.Put(IntegrityMetaKey(db.Namespace, meta.ObjectID), data, nil)
 }
 
 // GetIntegrityMeta return the integrity hash info
 
-func (db *Database) GetIntegrityMeta(queryCondition *spdb.IntegrityMeta) (*spdb.IntegrityMeta, error) {
-	data, err := db.db.Get(IntegrityMetaKey(db.Namespace,
-		queryCondition.ObjectID, queryCondition.IsPrimary, queryCondition.RedundancyType, queryCondition.EcIdx), nil)
+func (db *Database) GetIntegrityMeta(objectID uint64) (*spdb.IntegrityMeta, error) {
+	data, err := db.db.Get(IntegrityMetaKey(db.Namespace, objectID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -120,30 +118,4 @@ func (db *Database) GetIntegrityMeta(queryCondition *spdb.IntegrityMeta) (*spdb.
 	var metaReturn spdb.IntegrityMeta
 	err = json.Unmarshal(data, &metaReturn)
 	return &metaReturn, err
-}
-
-// SetUploadPayloadAskingMeta put payload asking info to db.
-func (db *Database) SetUploadPayloadAskingMeta(meta *spdb.UploadPayloadAskingMeta) error {
-	if meta == nil {
-		return errors.New("upload payload meta is nil")
-	}
-	data, err := json.Marshal(meta)
-	if err != nil {
-		return err
-	}
-	return db.db.Put(UploadPayloadAsingKey(db.Namespace, meta.BucketName, meta.ObjectName), data, nil)
-}
-
-// GetUploadPayloadAskingMeta return the payload asking info.
-func (db *Database) GetUploadPayloadAskingMeta(bucketName, objectName string) (*spdb.UploadPayloadAskingMeta, error) {
-	data, err := db.db.Get(UploadPayloadAsingKey(db.Namespace, bucketName, objectName), nil)
-	if err != nil {
-		return nil, err
-	}
-	if len(data) == 0 {
-		return nil, errors.New("upload payload meta not exits")
-	}
-	var meta spdb.UploadPayloadAskingMeta
-	err = json.Unmarshal(data, &meta)
-	return &meta, err
 }

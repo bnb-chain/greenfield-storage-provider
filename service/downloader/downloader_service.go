@@ -25,9 +25,9 @@ func (downloader *Downloader) DownloaderSegment(ctx context.Context, req *stypes
 		if err != nil {
 			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
 			resp.ErrMessage.ErrMsg = err.Error()
-			log.CtxErrorw(ctx, "download segment failed", "error", err, "object", req.ObjectId, "segment idx", req.SegmentIdx)
+			log.CtxErrorw(ctx, "failed to download segment", "error", err, "object", req.ObjectId, "segment idx", req.SegmentIdx)
 		}
-		log.CtxInfow(ctx, "download segment success", "object", req.ObjectId, "segment idx", req.SegmentIdx)
+		log.CtxInfow(ctx, "succeed to download segment", "object", req.ObjectId, "segment idx", req.SegmentIdx)
 	}()
 	if req.GetObjectId() == 0 {
 		err = merrors.ErrObjectIdZero
@@ -42,10 +42,11 @@ func (downloader *Downloader) DownloaderSegment(ctx context.Context, req *stypes
 func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDownloaderObjectRequest,
 	stream stypes.DownloaderService_DownloaderObjectServer) (err error) {
 	var (
-		objectInfo *ptypes.ObjectInfo
-		size       int
-		offset     uint64
-		length     uint64
+		objectInfo   *ptypes.ObjectInfo
+		size         int
+		offset       uint64
+		length       uint64
+		isValidRange bool
 	)
 	ctx := log.Context(context.Background(), req)
 	resp := &stypes.DownloaderServiceDownloaderObjectResponse{
@@ -56,19 +57,37 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
 			err = stream.Send(resp)
 		}
-		// log.CtxInfow(ctx, "download object completed", "error", err, "objectSize", objectInfo.Size, "sendSize", size)
+		resp.IsValidRange = isValidRange
 		log.CtxInfow(ctx, "download object completed", "error", err, "sendSize", size)
 	}()
 
-	objectInfo, err = downloader.mockChain.QueryObjectByName(req.BucketName + "/" + req.ObjectName)
+	chainObjectInfo, err := downloader.chain.QueryObjectInfo(ctx, req.BucketName, req.ObjectName)
 	if err != nil {
+		log.Errorf("failed to query chain", "err", err)
 		return
 	}
+	objectInfo = &ptypes.ObjectInfo{
+		ObjectId: chainObjectInfo.Id.Uint64(),
+		Size:     chainObjectInfo.PayloadSize,
+	}
+
+	// TODO: It will be optimized here after connecting with the chain
 	// if length == 0, download all object data
-	offset, length = req.GetOffset(), req.GetLength()
-	if req.GetLength() == 0 {
+	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.Size) && req.RangeEnd >= 0 && req.RangeEnd < int64(objectInfo.Size) {
+		isValidRange = true
+		offset = uint64(req.RangeStart)
+		length = uint64(req.RangeEnd-req.RangeStart) + 1
+	} else if req.RangeStart > 0 && req.RangeStart < int64(objectInfo.Size) && req.RangeEnd < 0 {
+		isValidRange = true
+		offset = uint64(req.RangeStart)
+		length = objectInfo.Size - uint64(req.RangeStart)
+	} else {
 		offset, length = 0, objectInfo.Size
 	}
+	//offset, length = req.GetOffset(), req.GetLength()
+	//if req.GetLength() == 0 {
+	//	offset, length = 0, objectInfo.Size
+	//}
 	var segmentInfo segments
 	segmentInfo, err = DownloadPieceInfo(objectInfo.ObjectId, objectInfo.Size, offset, offset+length-1)
 	if err != nil {
@@ -79,6 +98,7 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 		if err != nil {
 			return
 		}
+		resp.IsValidRange = isValidRange
 		if err = stream.Send(resp); err != nil {
 			return
 		}

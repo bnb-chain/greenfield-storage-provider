@@ -94,7 +94,7 @@ func (job *PrimaryJob) Done(remoteJob *stypes.PieceJob) error {
 	)
 	// 1. check job completed
 	if job.complete == len(job.segmentPieceJobs) {
-		log.Warnw("all primary piece jobs completed", "object_id", objectID, "piece_idx", pieceIdx)
+		log.Errorw("all primary piece jobs completed", "object_id", objectID, "piece_idx", pieceIdx)
 		return nil
 	}
 	// 2. get local piece job
@@ -104,7 +104,7 @@ func (job *PrimaryJob) Done(remoteJob *stypes.PieceJob) error {
 	localJob := job.segmentPieceJobs[pieceIdx]
 	// 3. check piece job completed
 	if localJob.Done {
-		log.Warnw("piece job completed", "object_id", objectID, "piece_idx", pieceIdx)
+		log.Errorw("piece job completed", "object_id", objectID, "piece_idx", pieceIdx)
 		return nil
 	}
 	// 4. check piece job info
@@ -148,6 +148,7 @@ func (job *PrimaryJob) SealInfo() ([]*ptypes.StorageProviderInfo, error) {
 		IntegrityHash: hash.GenerateIntegrityHash(checksumList),
 		PieceChecksum: checksumList,
 	})
+
 	return sealInfo, nil
 }
 

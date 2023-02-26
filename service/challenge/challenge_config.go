@@ -17,7 +17,7 @@ type ChallengeConfig struct {
 	MetaDBType        string
 	MetaLevelDBConfig *config.LevelDBConfig
 	MetaSqlDBConfig   *config.SqlDBConfig
-	PieceConfig       *storage.PieceStoreConfig
+	PieceStoreConfig  *storage.PieceStoreConfig
 }
 
 var DefaultStorageProvider = "bnb-sp"
@@ -29,10 +29,10 @@ func DefaultStorageProviderID() string {
 }
 
 var DefaultChallengeConfig = &ChallengeConfig{
-	Address:           "127.0.0.1:9633",
+	Address:           "127.0.0.1:9733",
 	StorageProvider:   DefaultStorageProviderID(),
 	MetaDBType:        model.LevelDB,
 	MetaLevelDBConfig: metalevel.DefaultMetaLevelDBConfig,
 	MetaSqlDBConfig:   metasql.DefaultMetaSqlDBConfig,
-	PieceConfig:       storage.DefaultPieceStoreConfig,
+	PieceStoreConfig:  storage.DefaultPieceStoreConfig,
 }

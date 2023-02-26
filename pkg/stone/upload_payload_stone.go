@@ -3,16 +3,16 @@ package stone
 import (
 	"context"
 
+	sclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 	"github.com/looplab/fsm"
 
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/job"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 )
 
 type contextKey string
@@ -36,12 +36,13 @@ type UploadPayloadStone struct {
 	gcCh   chan uint64            // the channel of notify StoneHub to delete stone
 	jobDB  spdb.JobDB
 	metaDB spdb.MetaDB
+	signer *sclient.SignerClient
 }
 
 // NewUploadPayloadStone return the instance of UploadPayloadStone
 func NewUploadPayloadStone(ctx context.Context,
 	jobContext *ptypes.JobContext, object *ptypes.ObjectInfo,
-	jobDB spdb.JobDB, metaDB spdb.MetaDB,
+	jobDB spdb.JobDB, metaDB spdb.MetaDB, signer *sclient.SignerClient,
 	jobCh chan StoneJob, gcCh chan uint64) (*UploadPayloadStone, error) {
 	jobCtx := NewJobContextWrapper(jobContext, jobDB, metaDB)
 	objectCtx := job.NewObjectInfoContext(object, jobDB, metaDB)
@@ -65,6 +66,7 @@ func NewUploadPayloadStone(ctx context.Context,
 		gcCh:   gcCh,
 		jobDB:  jobDB,
 		metaDB: metaDB,
+		signer: signer,
 	}
 	if err := stone.selfActionEvent(ctx); err != nil {
 		return nil, err

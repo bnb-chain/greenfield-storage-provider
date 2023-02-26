@@ -15,8 +15,6 @@ RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://
 RUN apk add --no-cache build-base libc-dev
 
 RUN cd /greenfield-storage-provider \
-    && make install-tools \
-    && make buf-gen \
     && make build
 
 # Pull greenfield into a second stage deploy alpine container
@@ -26,7 +24,7 @@ ARG USER=sp
 ARG USER_UID=1000
 ARG USER_GID=1000
 
-ENV PACKAGES libstdc++ ca-certificates bash curl tini
+ENV PACKAGES libstdc++ ca-certificates bash curl
 ENV WORKDIR=/app
 
 RUN apk add --no-cache $PACKAGES \
