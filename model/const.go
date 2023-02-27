@@ -16,10 +16,11 @@ const (
 
 // define payload data redundancy size.
 const (
-	InlineSize  = 1 * 1024 * 1024
-	SegmentSize = 16 * 1024 * 1024
-	EC_M        = 4
-	EC_K        = 2
+	InlineSize    = 1 * 1024 * 1024
+	SegmentSize   = 16 * 1024 * 1024
+	EC_M          = 4
+	EC_K          = 2
+	LruCacheLimit = 8192 // the maximum number of cached items in service token balance queue
 )
 
 type PieceType int32
