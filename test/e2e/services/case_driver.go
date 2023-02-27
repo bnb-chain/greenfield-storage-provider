@@ -34,8 +34,6 @@ var (
 
 	// hostHeader is virtual hosted style, include bucket_name and gateway domain_name
 	hostHeader string
-
-	metadataAddress string
 )
 
 func generateRandString(n int) string {
@@ -596,7 +594,7 @@ func runCase4() {
 	{
 		log.Infow("start get user buckets")
 		account := "46765cbc-d30c-4f4a-a814-b68181fcab12"
-		url := fmt.Sprintf("http://%s/accounts/%s/buckets", metadataAddress, account)
+		url := fmt.Sprintf("http://%s/accounts/%s/buckets", gatewayAddress, account)
 		method := "GET"
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))
@@ -629,7 +627,7 @@ func runCase5() {
 		log.Infow("start get user objects")
 		account := "46765cbc-d30c-4f4a-a814-b68181fcab12"
 		bucketName := "hello world"
-		url := fmt.Sprintf("http://%s/accounts/%s/buckets/%s/objects", metadataAddress, account, bucketName)
+		url := fmt.Sprintf("http://%s/accounts/%s/buckets/%s/objects", gatewayAddress, account, bucketName)
 		method := "GET"
 		client := &http.Client{}
 		req, err := http.NewRequest(method, url, strings.NewReader(""))

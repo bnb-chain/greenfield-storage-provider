@@ -14,7 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/service"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
@@ -99,7 +99,7 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if cfg.MetadataCfg == nil {
 			cfg.MetadataCfg = config.DefaultStorageProviderConfig.MetadataCfg
 		}
-		server, err = metadata.NewMetadataService(cfg.MetadataCfg, context.Background())
+		server, err = service.NewMetadataService(cfg.MetadataCfg, context.Background())
 		if err != nil {
 			return nil, err
 		}

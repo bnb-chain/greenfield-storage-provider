@@ -17,15 +17,19 @@ type Object struct {
 	// create_at define the block number when the object created
 	CreateAt int64 `json:"createAt"`
 	// object_status define the upload status of the object.
-	ObjectStatus string `json:"objectStatus"`
+	ObjectStatus int `json:"objectStatus"`
 	// redundancy_type define the type of the redundancy which can be multi-replication or EC.
-	RedundancyType string `json:"redundancyType"`
+	RedundancyType int `json:"redundancyType"`
 	// source_type define the source of the object.
-	SourceType string `json:"sourceType"`
+	SourceType int `json:"sourceType"`
 	// checksums define the root hash of the pieces which stored in a SP.
-	Checksums []byte `json:"checksums"`
+	//Checksums []byte `json:"checksums"`
 	// secondary_sp_addresses define the addresses of secondary_sps
 	SecondarySpAddresses []string `json:"secondarySpAddresses"`
 	// lockedBalance
 	LockedBalance string `json:"lockedBalance"`
+}
+
+func (a *Object) TableName() string {
+	return "object"
 }

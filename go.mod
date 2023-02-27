@@ -25,6 +25,7 @@ require (
 	github.com/cloudflare/cfssl v1.6.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.7
+	github.com/cosmos/gogoproto v1.4.4
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.8.2
@@ -74,7 +75,6 @@ require (
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/gogoproto v1.4.4 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.4 // indirect
 	github.com/cosmos/ibc-go/v6 v6.1.0 // indirect

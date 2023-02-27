@@ -16,7 +16,7 @@ type Store struct {
 }
 
 type IStore interface {
-	GetUserBuckets(ctx context.Context) (ret []*model.Bucket, err error)
+	GetUserBuckets(ctx context.Context, accountID string) (ret []*model.Bucket, err error)
 	ListObjectsByBucketName(ctx context.Context, bucketName string) (ret []*model.Object, err error)
 }
 
