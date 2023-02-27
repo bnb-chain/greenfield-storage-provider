@@ -38,29 +38,29 @@ message Bucket {
 enum RedundancyType {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  REDUNDANCY_REPLICA_TYPE = 0;
-  REDUNDANCY_EC_TYPE = 1;
-  REDUNDANCY_INLINE_TYPE = 2;
+  REDUNDANCY_TYPE_REPLICA_UNSPECIFIED = 0;
+  REDUNDANCY_TYPE_EC = 1;
+  REDUNDANCY_TYPE_INLINE = 2;
 }
 
 enum ObjectStatus {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  OBJECT_STATUS_INIT = 0;
+  OBJECT_STATUS_INIT_UNSPECIFIED = 0;
   OBJECT_STATUS_IN_SERVICE = 1;
 }
 
 enum SourceType {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  SOURCE_TYPE_ORIGIN = 0;
+  SOURCE_TYPE_ORIGIN_UNSPECIFIED = 0;
   SOURCE_TYPE_BSC_CROSS_CHAIN = 1;
 }
 
 enum ReadQuota {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  READ_QUOTA_FREE = 0;
+  READ_QUOTA_FREE_UNSPECIFIED = 0;
   READ_QUOTA_1G = 1;
   READ_QUOTA_10G = 2;
 }
@@ -96,7 +96,7 @@ message Object {
   // secondary_sp_addresses define the addresses of secondary_sps
   repeated string secondary_sp_addresses = 13 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // lockedBalance
-  string lockedBalance = 14 [
+  string locked_balance = 14 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"
   ];
@@ -115,9 +115,13 @@ message OutFlowInUSD {
   ];
 }
 
-message MetadataServiceBucketNameRequest {
-  string bucketName = 1;
-  string accountID = 2;
+message MetadataServiceGetUserBucketsRequest {
+  string account_id = 2;
+}
+
+message MetadataServiceListObjectsByBucketNameRequest {
+  string bucket_name = 1;
+  string account_id = 2;
 }
 
 message MetadataServiceGetUserBucketsResponse {
@@ -131,6 +135,6 @@ message MetadataServiceListObjectsByBucketNameResponse {
 }
 
 service MetadataService {
-  rpc GetUserBuckets(MetadataServiceBucketNameRequest) returns (MetadataServiceGetUserBucketsResponse) {};
-  rpc ListObjectsByBucketName(MetadataServiceBucketNameRequest) returns (MetadataServiceListObjectsByBucketNameResponse) {};
+  rpc GetUserBuckets(MetadataServiceGetUserBucketsRequest) returns (MetadataServiceGetUserBucketsResponse) {};
+  rpc ListObjectsByBucketName(MetadataServiceListObjectsByBucketNameRequest) returns (MetadataServiceListObjectsByBucketNameResponse) {};
 }

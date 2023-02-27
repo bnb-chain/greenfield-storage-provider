@@ -30,7 +30,7 @@ func NewMetadataClient(address string) (*MetadataClient, error) {
 	return client, nil
 }
 
-func (client *MetadataClient) GetUserBuckets(ctx context.Context, in *stypes.MetadataServiceBucketNameRequest, opts ...grpc.CallOption) (*stypes.MetadataServiceGetUserBucketsResponse, error) {
+func (client *MetadataClient) GetUserBuckets(ctx context.Context, in *stypes.MetadataServiceGetUserBucketsRequest, opts ...grpc.CallOption) (*stypes.MetadataServiceGetUserBucketsResponse, error) {
 	resp, err := client.metadata.GetUserBuckets(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -44,7 +44,7 @@ func (client *MetadataClient) GetUserBuckets(ctx context.Context, in *stypes.Met
 	return resp, nil
 }
 
-func (client *MetadataClient) ListObjectsByBucketName(ctx context.Context, in *stypes.MetadataServiceBucketNameRequest, opts ...grpc.CallOption) (*stypes.MetadataServiceListObjectsByBucketNameResponse, error) {
+func (client *MetadataClient) ListObjectsByBucketName(ctx context.Context, in *stypes.MetadataServiceListObjectsByBucketNameRequest, opts ...grpc.CallOption) (*stypes.MetadataServiceListObjectsByBucketNameResponse, error) {
 	resp, err := client.metadata.ListObjectsByBucketName(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {

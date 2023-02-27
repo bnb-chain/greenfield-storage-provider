@@ -9,7 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *stypes.MetadataServiceBucketNameRequest) (resp *stypes.MetadataServiceGetUserBucketsResponse, err error) {
+func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *stypes.MetadataServiceGetUserBucketsRequest) (resp *stypes.MetadataServiceGetUserBucketsResponse, err error) {
 	ctx = log.Context(ctx, req)
 	defer func() {
 		if err != nil {
@@ -21,7 +21,7 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *stypes.Metada
 	}()
 	//buckets, err := metadata.store.GetUserBuckets(ctx, req.AccountID)
 	var buckets []*model.Bucket
-	bucket1 := model.Bucket{
+	bucket1 := &model.Bucket{
 		Owner:            "46765cbc-d30c-4f4a-a814-b68181fcab12",
 		BucketName:       "BBC News",
 		IsPublic:         true,
@@ -31,9 +31,21 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *stypes.Metada
 		PaymentAddress:   "0x000000006b4BD0274e8f943201A922295D13fc28",
 		PrimarySpAddress: "0x000000006b4BD0274e8f943201A922295D13fc28",
 		ReadQuota:        2,
-		PaymentPriceTime: 0,
+		PaymentPriceTime: 1677143663461,
 	}
-	buckets = append(buckets, &bucket1)
+	bucket2 := &model.Bucket{
+		Owner:            "46765cbc-d30c-4f4a-a814-b68181fcab12",
+		BucketName:       "bnb-chain",
+		IsPublic:         true,
+		Id:               "2",
+		SourceType:       1,
+		CreateAt:         1676530547,
+		PaymentAddress:   "0xF9A8db17431DD8563747D6FC770297E438Aa12eB",
+		PrimarySpAddress: "0xF9A8db17431DD8563747D6FC770297E438Aa12eB",
+		ReadQuota:        5,
+		PaymentPriceTime: 1677143663461,
+	}
+	buckets = append(buckets, bucket1, bucket2)
 	res := make([]*stypes.Bucket, 0)
 
 	for _, bucket := range buckets {

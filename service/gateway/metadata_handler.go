@@ -14,9 +14,8 @@ import (
 func (g *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	req := &stypes.MetadataServiceBucketNameRequest{
-		BucketName: vars["bucket_name"],
-		AccountID:  vars["account_id"],
+	req := &stypes.MetadataServiceGetUserBucketsRequest{
+		AccountId: vars["account_id"],
 	}
 
 	ctx := log.Context(context.Background(), req)
@@ -38,9 +37,9 @@ func (g *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) 
 func (g *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	req := &stypes.MetadataServiceBucketNameRequest{
+	req := &stypes.MetadataServiceListObjectsByBucketNameRequest{
 		BucketName: vars["bucket_name"],
-		AccountID:  vars["account_id"],
+		AccountId:  vars["account_id"],
 	}
 
 	ctx := log.Context(context.Background(), req)
