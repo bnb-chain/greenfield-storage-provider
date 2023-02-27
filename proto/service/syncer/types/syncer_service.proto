@@ -12,8 +12,10 @@ message SyncObjectRequest {
   bnbchain.greenfield.storage.ObjectInfo object_info = 1;
   // replicate_idx defines the index of replicate.
   uint32 replicate_idx = 2;
-  // replicate_data defines the object data that replicate to sp of.
-  repeated bytes replicate_data = 3;
+  // segment_size defines the spilt size of replicate data.
+  uint32 segment_size = 3;
+  // replicate_data defines the object data that replicate to sp.
+  bytes replicate_data = 4;
 }
 
 // SyncObjectResponse is response type for the SyncObject RPC method.
