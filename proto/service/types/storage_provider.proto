@@ -1,9 +1,9 @@
 syntax = "proto3";
-package service.temp.types.v1;
+package service.types;
 
 import "greenfield/storage/types.proto";
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/temp/types.v1";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/types";
 
 enum JobType {
   JOB_TYPE_UNSPECIFIED = 0;

@@ -6,6 +6,11 @@ import (
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
+// common error
+var (
+	ErrCacheMiss = errors.New("cache missing")
+)
+
 // piece store errors
 var (
 	NotSupportedMethod          = errors.New("not supported method")
