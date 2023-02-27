@@ -27,7 +27,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var (
@@ -147,7 +147,7 @@ func (s *s3Store) HeadBucket(ctx context.Context) error {
 		log.Errorw("ObjectStorage S3 HeadBucket error", "error", err)
 		if reqErr, ok := err.(awserr.RequestFailure); ok {
 			if reqErr.StatusCode() == http.StatusNotFound {
-				return merrors.BucketNotExisted
+				return merrors.ErrNotExistBucket
 			}
 		}
 		return err
@@ -215,7 +215,7 @@ func (s *s3Store) ListObjects(ctx context.Context, prefix, marker, delimiter str
 }
 
 func (s *s3Store) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan Object, error) {
-	return nil, merrors.NotSupportedMethod
+	return nil, merrors.ErrUnsupportedMethod
 }
 
 // SessionCache holds session.Session according to ObjectStorageConfig and it synchronizes access/modification
@@ -269,11 +269,11 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	return sess, bucketName, nil
 }
 
-//func (sc *SessionCache) clear() {
+// func (sc *SessionCache) clear() {
 //	sc.Lock()
 //	defer sc.Unlock()
 //	sc.sessions = map[ObjectStorageConfig]*session.Session{}
-//}
+// }
 
 func parseEndPoint(endPoint string) (string, string, string, error) {
 	endPoint = strings.Trim(endPoint, "/")

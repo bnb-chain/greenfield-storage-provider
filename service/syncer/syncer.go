@@ -3,115 +3,91 @@ package syncer
 import (
 	"context"
 	"net"
-	"sync/atomic"
 
-	sclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
-	"github.com/bnb-chain/greenfield-storage-provider/store"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-
-	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
+	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
-// Syncer synchronizes ec data to piece store
+var _ lifecycle.Service = &Syncer{}
+
+// Syncer implements the gRPC of SyncerService,
+// responsible for receive replicate object payload data
 type Syncer struct {
-	config  *SyncerConfig
-	name    string
-	running atomic.Bool
-	store   client.PieceStoreAPI
-	metaDB  spdb.MetaDB // storage provider meta db
-	signer  *sclient.SignerClient
+	config     *SyncerConfig
+	cache      *lru.Cache
+	signer     *signerclient.SignerClient
+	pieceStore *psclient.StoreClient
+	spDB       sqldb.SPDB
+	grpcServer *grpc.Server
 }
 
-// NewSyncerService creates a syncer service to upload piece to piece store
+// NewSyncerService return a Syncer instance and init the resource
 func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
+	cache, _ := lru.New(model.LruCacheLimit)
+	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
+	if err != nil {
+		return nil, err
+	}
+	signer, err := signerclient.NewSignerClient(config.SignerGRPCAddress)
+	if err != nil {
+		return nil, err
+	}
+	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
+	if err != nil {
+		return nil, err
+	}
 	s := &Syncer{
-		config: config,
-		name:   model.SyncerService,
-	}
-	if err := s.initClient(); err != nil {
-		return nil, err
-	}
-	if err := s.initDB(); err != nil {
-		return nil, err
+		config:     config,
+		cache:      cache,
+		pieceStore: pieceStore,
+		spDB:       spDB,
+		signer:     signer,
 	}
 	return s, nil
 }
 
-// initClient
-func (s *Syncer) initClient() error {
-	var err error
-	if s.store, err = client.NewStoreClient(s.config.PieceStoreConfig); err != nil {
-		log.Errorw("failed to new piece store client", "error", err)
-		return err
-	}
-	if s.signer, err = sclient.NewSignerClient(s.config.SignerServiceAddress); err != nil {
-		log.Errorw("failed to new signer client", "err", err)
-		return err
-	}
-	return nil
+// Name return the syncer service name, for the lifecycle management
+func (syncer *Syncer) Name() string {
+	return model.SyncerService
 }
 
-// initDB init a meta-db instance
-func (s *Syncer) initDB() error {
-	var (
-		metaDB spdb.MetaDB
-		err    error
-	)
-
-	metaDB, err = store.NewMetaDB(s.config.MetaDBType,
-		s.config.MetaLevelDBConfig, s.config.MetaSqlDBConfig)
-	if err != nil {
-		log.Errorw("failed to init metaDB", "err", err)
-		return err
-	}
-	s.metaDB = metaDB
-	return nil
-}
-
-// Name describes the name of SyncerService
-func (s *Syncer) Name() string {
-	return s.name
-}
-
-// Start running SyncerService
-func (s *Syncer) Start(ctx context.Context) error {
-	if s.running.Swap(true) {
-		return merrors.ErrSyncerStarted
-	}
+// Start the syncer background goroutine
+func (syncer *Syncer) Start(ctx context.Context) error {
 	errCh := make(chan error)
-	go s.serve(errCh)
+	go syncer.serve(errCh)
 	err := <-errCh
 	return err
 }
 
-// Stop running SyncerService
-func (s *Syncer) Stop(ctx context.Context) error {
-	if !s.running.Swap(false) {
-		return merrors.ErrSyncerStopped
-	}
+// Stop the syncer gRPC service and recycle the resources
+func (syncer *Syncer) Stop(ctx context.Context) error {
+	syncer.grpcServer.GracefulStop()
 	return nil
 }
 
-// serve start syncer rpc service
-func (s *Syncer) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", s.config.Address)
+func (syncer *Syncer) serve(errCh chan error) {
+	lis, err := net.Listen("tcp", syncer.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
-		log.Errorw("syncer listen failed", "error", err)
+		log.Errorw("failed to listen", "err", err)
 		return
 	}
-	grpcServer := grpc.NewServer(grpc.MaxSendMsgSize(model.MaxCallMsgSize), grpc.MaxRecvMsgSize(model.MaxCallMsgSize))
-	stypes.RegisterSyncerServiceServer(grpcServer, s)
+
+	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize))
+	types.RegisterSyncerServiceServer(grpcServer, syncer)
+	syncer.grpcServer = grpcServer
 	reflection.Register(grpcServer)
-	if err = grpcServer.Serve(lis); err != nil {
-		log.Errorw("syncer serve failed", "error", err)
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Errorw("failed to start grpc server", "err", err)
 		return
 	}
 }

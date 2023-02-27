@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
@@ -52,13 +52,13 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		HandlerFunc(g.getObjectHandler)
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
-	// admin router, path style.
-	r.Path(model.AdminPath+model.GetApprovalSubPath).
+	// admin router, path style
+	r.Path(model.GetApprovalPath).
 		Name(approvalRouterName).
 		Methods(http.MethodGet).
 		Queries(model.ActionQuery, "{action}").
 		HandlerFunc(g.getApprovalHandler)
-	r.Path(model.AdminPath + model.ChallengeSubPath).
+	r.Path(model.ChallengePath).
 		Name(challengeRouterName).
 		Methods(http.MethodGet).
 		HandlerFunc(g.challengeHandler)

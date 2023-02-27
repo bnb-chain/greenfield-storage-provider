@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
@@ -144,7 +144,7 @@ func (d *diskFileStore) DeleteObject(ctx context.Context, key string) error {
 func (d *diskFileStore) HeadBucket(ctx context.Context) error {
 	if _, err := os.Stat(d.root); err != nil {
 		if os.IsNotExist(err) {
-			return errors.BucketNotExisted
+			return errors.ErrNotExistBucket
 		}
 		return err
 	}

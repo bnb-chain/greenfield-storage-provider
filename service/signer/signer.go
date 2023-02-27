@@ -11,9 +11,9 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
 )
 
 var _ lifecycle.Service = &SignerServer{}
@@ -41,7 +41,7 @@ func NewSignerServer(config *SignerConfig) (*SignerServer, error) {
 	}
 
 	client, err := client.NewGreenfieldChainSignClient(
-		config.GreenfieldChainConfig.GRPCAddr,
+		config.GreenfieldChainConfig.GRPCAddress,
 		config.GreenfieldChainConfig.ChainID,
 		config.GreenfieldChainConfig.GasLimit,
 		config.GreenfieldChainConfig.OperatorPrivateKey,
@@ -79,9 +79,9 @@ func (signer *SignerServer) Stop(ctx context.Context) error {
 
 // Serve starts grpc signer service.
 func (signer *SignerServer) serve() {
-	lis, err := net.Listen("tcp", signer.config.Address)
+	lis, err := net.Listen("tcp", signer.config.GRPCAddress)
 	if err != nil {
-		log.Errorw("failed to listen", "address", signer.config.Address, "error", err)
+		log.Errorw("failed to listen", "address", signer.config.GRPCAddress, "error", err)
 		return
 	}
 	signer.server = grpc.NewServer(
@@ -91,7 +91,7 @@ func (signer *SignerServer) serve() {
 		)),
 	)
 
-	stypes.RegisterSignerServiceServer(signer.server, signer)
+	types.RegisterSignerServiceServer(signer.server, signer)
 	// register reflection service
 	reflection.Register(signer.server)
 	if err := signer.server.Serve(lis); err != nil {
