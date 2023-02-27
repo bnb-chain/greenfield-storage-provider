@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.0.2
+
+This release includes following features:
+1. Implement the connection with the greenfield chain, and the upload and download of payload, including basic permission verification.
+2. Implement the signer service for storage providers to sign the on-chain transactions.
+3. Implement the communication of HTTP between SPs instead of gRPC.
+* [\#131](https://github.com/bnb-chain/greenfield-storage-provider/pull/131) feat: add chain client to sp
+* [\#119](https://github.com/bnb-chain/greenfield-storage-provider/pull/119) feat: implement signer service
+* [\#128](https://github.com/bnb-chain/greenfield-storage-provider/pull/128) feat: stone node sends piece data to gateway
+* [\#127](https://github.com/bnb-chain/greenfield-storage-provider/pull/127) feat: implement gateway challenge workflow
+* [\#133](https://github.com/bnb-chain/greenfield-storage-provider/pull/133) fix: upgrade greenfield version to fix the signing bug
+* [\#130](https://github.com/bnb-chain/greenfield-storage-provider/pull/130) fix: use env var to get bucket url
+
+
 
 ## v0.0.1
 
