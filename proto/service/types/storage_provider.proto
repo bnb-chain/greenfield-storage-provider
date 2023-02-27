@@ -1,0 +1,73 @@
+syntax = "proto3";
+package service.temp.types.v1;
+
+import "greenfield/storage/types.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/temp/types.v1";
+
+enum JobType {
+  JOB_TYPE_UNSPECIFIED = 0;
+  JOB_TYPE_UPLOAD_OBJECT = 1;
+  JOB_TYPE_DELETE_OBJECT = 2;
+}
+
+enum JobState {
+  JOB_STATE_INIT_UNSPECIFIED = 0;
+
+  JOB_STATE_UPLOAD_OBJECT_DOING = 1;
+  JOB_STATE_UPLOAD_OBJECT_DONE = 2;
+  JOB_STATE_UPLOAD_OBJECT_ERROR = 3;
+
+  JOB_STATE_ALLOC_SECONDARY_DOING = 4;
+  JOB_STATE_ALLOC_SECONDARY_DONE = 5;
+  JOB_STATE_ALLOC_SECONDARY_ERROR = 6;
+
+  JOB_STATE_REPLICATE_OBJECT_DOING = 7;
+  JOB_STATE_REPLICATE_OBJECT_DONE = 8;
+  JOB_STATE_REPLICATE_OBJECT_ERROR = 9;
+
+  JOB_STATE_SIGN_OBJECT_DOING = 10;
+  JOB_STATE_SIGN_OBJECT_DONE = 11;
+  JOB_STATE_SIGN_OBJECT_ERROR = 12;
+
+  JOB_STATE_SEAL_OBJECT_TX_DOING = 13;
+  JOB_STATE_SEAL_OBJECT_DONE = 14;
+  JOB_STATE_SEAL_OBJECT_ERROR = 15;
+}
+
+// JobContext defines the job information.
+message JobContext {
+  // job_id defines the unique id of a job.
+  uint64 job_id = 1;
+  // job_type defines the type of a job.
+  JobType job_type = 2;
+  // job_state defines the state of a job.
+  JobState job_state = 3;
+  // job_error_code defines the error code when a job abnormal termination.
+  uint32 job_error_code = 4;
+  // create_time defines the job create time, used to jobs garbage collection.
+  int64 create_time = 5;
+  // modify_time defines the job last modified time, used to judge timeout
+  int64 modify_time = 6;
+}
+
+// SegmentInfo defines the information of the segment.
+message SegmentInfo {
+  // object_info defines the information of the object.
+  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  // check_sum defines the hash of the segments.
+  repeated bytes check_sum = 2;
+  // integrity_hash defines the hash of check_sum.
+  bytes integrity_hash = 3;
+  // signature defines the storage provider sign to the integrity hash.
+  bytes signature = 4;
+  // completed defines the status of replicate segment, completed or not.
+  int32 completed = 5;
+}
+
+// ReplicateSegmentInfo defines the information of the segments that
+// need to replicate to other storage providers.
+message ReplicateSegmentInfo {
+  // segment_infos defines all the replicate segments info.
+  repeated SegmentInfo segment_infos = 2;
+}
