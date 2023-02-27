@@ -28,6 +28,9 @@ type requestContext struct {
 	request    *http.Request
 	startTime  time.Time
 	vars       map[string]string
+
+	// for auth v2 test
+	skipAuth bool
 }
 
 // newRequestContext return a request context.
@@ -173,6 +176,7 @@ func (requestContext *requestContext) verifySignatureV2(requestSignature string)
 	}
 	_ = signature
 	// TODO: parse metamask signature and check timeout
+	requestContext.skipAuth = true
 	// return nil, errors.ErrUnsupportedSignType
 	return sdk.AccAddress{}, nil
 }
@@ -213,6 +217,9 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 // TODO: can be optimized by retirver
 // checkAuthorization check addr authorization
 func (g *Gateway) checkAuthorization(requestContext *requestContext, addr sdk.AccAddress) error {
+	if requestContext.skipAuth {
+		return nil
+	}
 	exist, err := g.chain.HasAccount(context.Background(), addr.String())
 	if err != nil {
 		log.Errorw("failed to check account on chain", "error", err, "address", addr.String())
