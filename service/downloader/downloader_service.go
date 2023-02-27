@@ -68,28 +68,28 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 	}
 	objectInfo = &ptypes.ObjectInfo{
 		ObjectId: chainObjectInfo.Id.Uint64(),
-		Size:     chainObjectInfo.PayloadSize,
+		Size_:    chainObjectInfo.PayloadSize,
 	}
 
 	// TODO: It will be optimized here after connecting with the chain
 	// if length == 0, download all object data
-	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.Size) && req.RangeEnd >= 0 && req.RangeEnd < int64(objectInfo.Size) {
+	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.Size_) && req.RangeEnd >= 0 && req.RangeEnd < int64(objectInfo.Size_) {
 		isValidRange = true
 		offset = uint64(req.RangeStart)
 		length = uint64(req.RangeEnd-req.RangeStart) + 1
-	} else if req.RangeStart > 0 && req.RangeStart < int64(objectInfo.Size) && req.RangeEnd < 0 {
+	} else if req.RangeStart > 0 && req.RangeStart < int64(objectInfo.Size_) && req.RangeEnd < 0 {
 		isValidRange = true
 		offset = uint64(req.RangeStart)
-		length = objectInfo.Size - uint64(req.RangeStart)
+		length = objectInfo.Size_ - uint64(req.RangeStart)
 	} else {
-		offset, length = 0, objectInfo.Size
+		offset, length = 0, objectInfo.Size_
 	}
 	//offset, length = req.GetOffset(), req.GetLength()
 	//if req.GetLength() == 0 {
 	//	offset, length = 0, objectInfo.Size
 	//}
 	var segmentInfo segments
-	segmentInfo, err = DownloadPieceInfo(objectInfo.ObjectId, objectInfo.Size, offset, offset+length-1)
+	segmentInfo, err = DownloadPieceInfo(objectInfo.ObjectId, objectInfo.Size_, offset, offset+length-1)
 	if err != nil {
 		return
 	}
