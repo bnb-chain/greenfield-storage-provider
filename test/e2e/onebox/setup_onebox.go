@@ -19,7 +19,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
@@ -115,7 +114,6 @@ func initConfig() {
 	cfg.GatewayCfg = gateway.DefaultGatewayConfig
 	cfg.UploaderCfg = uploader.DefaultUploaderConfig
 	cfg.DownloaderCfg = downloader.DefaultDownloaderConfig
-	cfg.StoneHubCfg = stonehub.DefaultStoneHubConfig
 	cfg.StoneNodeCfg = stonenode.DefaultStoneNodeConfig
 	cfg.SyncerCfg = syncer.DefaultSyncerConfig
 	cfg.SignerCfg = signer.DefaultSignerChainConfig

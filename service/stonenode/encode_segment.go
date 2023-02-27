@@ -5,8 +5,10 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/bnb-chain/greenfield-common/redundancy"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/redundancy"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -115,7 +117,7 @@ func (node *StoneNodeService) encode(redundancyType ptypes.RedundancyType, segme
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		pieceData = append(pieceData, segmentData)
 	default: // ec type
-		pieceData, err = redundancy.EncodeRawSegment(segmentData)
+		pieceData, err = redundancy.EncodeRawSegment(segmentData, model.EC_M, model.EC_K)
 		if err != nil {
 			return nil, err
 		}

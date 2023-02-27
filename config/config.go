@@ -10,7 +10,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
@@ -25,7 +24,6 @@ type StorageProviderConfig struct {
 	UploaderCfg    *uploader.UploaderConfig
 	DownloaderCfg  *downloader.DownloaderConfig
 	ChallengeCfg   *challenge.ChallengeConfig
-	StoneHubCfg    *stonehub.StoneHubConfig
 	StoneNodeCfg   *stonenode.StoneNodeConfig
 	SyncerCfg      *syncer.SyncerConfig
 	SignerCfg      *signer.SignerConfig
@@ -38,7 +36,6 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	UploaderCfg:    uploader.DefaultUploaderConfig,
 	DownloaderCfg:  downloader.DefaultDownloaderConfig,
 	ChallengeCfg:   challenge.DefaultChallengeConfig,
-	StoneHubCfg:    stonehub.DefaultStoneHubConfig,
 	StoneNodeCfg:   stonenode.DefaultStoneNodeConfig,
 	SyncerCfg:      syncer.DefaultSyncerConfig,
 	SignerCfg:      signer.DefaultSignerChainConfig,
