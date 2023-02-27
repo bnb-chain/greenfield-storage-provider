@@ -16,7 +16,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
@@ -52,14 +51,6 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			cfg.DownloaderCfg = config.DefaultStorageProviderConfig.DownloaderCfg
 		}
 		server, err = downloader.NewDownloaderService(cfg.DownloaderCfg)
-		if err != nil {
-			return nil, err
-		}
-	case model.StoneHubService:
-		if cfg.StoneHubCfg == nil {
-			cfg.StoneHubCfg = config.DefaultStorageProviderConfig.StoneHubCfg
-		}
-		server, err = stonehub.NewStoneHubService(cfg.StoneHubCfg)
 		if err != nil {
 			return nil, err
 		}
