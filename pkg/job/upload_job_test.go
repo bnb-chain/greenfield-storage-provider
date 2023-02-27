@@ -20,7 +20,7 @@ func InitEnv(rType ptypes.RedundancyType) (*UploadPayloadJob, *ptypes.ObjectInfo
 		objectSize = 1 * 1024 * 1024
 	}
 	object := &ptypes.ObjectInfo{
-		Size:           uint64(objectSize),
+		Size_:          uint64(objectSize),
 		ObjectId:       1,
 		RedundancyType: rType,
 	}
@@ -46,7 +46,7 @@ func TestDoneReplicatePieceJob(t *testing.T) {
 	job, object := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE)
 	pieceJob := &stypes.PieceJob{
 		ObjectId:       object.GetObjectId(),
-		PayloadSize:    object.GetSize(),
+		PayloadSize:    object.GetSize_(),
 		RedundancyType: object.GetRedundancyType(),
 	}
 	pieceJob.StorageProviderSealInfo = &stypes.StorageProviderSealInfo{
@@ -99,7 +99,7 @@ func TestDoneInlinePieceJob(t *testing.T) {
 	job, object := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE)
 	pieceJob := &stypes.PieceJob{
 		ObjectId:       object.GetObjectId(),
-		PayloadSize:    object.GetSize(),
+		PayloadSize:    object.GetSize_(),
 		RedundancyType: object.GetRedundancyType(),
 	}
 	intergrity := hash.GenerateChecksum([]byte(time.Now().String()))
@@ -123,7 +123,7 @@ func TestDoneECPieceJob(t *testing.T) {
 	job, object := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
 	pieceJob := &stypes.PieceJob{
 		ObjectId:       object.GetObjectId(),
-		PayloadSize:    object.GetSize(),
+		PayloadSize:    object.GetSize_(),
 		RedundancyType: object.GetRedundancyType(),
 	}
 	pieceJob.StorageProviderSealInfo = &stypes.StorageProviderSealInfo{
@@ -159,7 +159,7 @@ func TestSegmentPieceError(t *testing.T) {
 	job, object := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
 	pieceJob := &stypes.PieceJob{
 		ObjectId:       object.GetObjectId(),
-		PayloadSize:    object.GetSize(),
+		PayloadSize:    object.GetSize_(),
 		RedundancyType: object.GetRedundancyType(),
 	}
 	badCheckSum := hash.GenerateChecksum([]byte(time.Now().String()))[0:10]
@@ -179,7 +179,7 @@ func TestECPieceError(t *testing.T) {
 	job, object := InitEnv(ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED)
 	pieceJob := &stypes.PieceJob{
 		ObjectId:       object.GetObjectId(),
-		PayloadSize:    object.GetSize(),
+		PayloadSize:    object.GetSize_(),
 		RedundancyType: object.GetRedundancyType(),
 	}
 	badCheckSum := hash.GenerateChecksum([]byte(time.Now().String()))[0:10]

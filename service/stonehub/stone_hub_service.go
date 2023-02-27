@@ -74,7 +74,7 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *stypes.Stone
 		err = merrors.ErrObjectInfoNil
 		return
 	}
-	if req.GetObjectInfo().GetSize() == 0 {
+	if req.GetObjectInfo().GetSize_() == 0 {
 		err = merrors.ErrObjectSizeZero
 		return
 	}
@@ -99,7 +99,7 @@ func (hub *StoneHub) BeginUploadPayloadV2(ctx context.Context, req *stypes.Stone
 	}
 
 	// TODO:: inline type check and change move to gate
-	if req.GetObjectInfo().GetSize() <= model.InlineSize {
+	if req.GetObjectInfo().GetSize_() <= model.InlineSize {
 		req.GetObjectInfo().RedundancyType = ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
 	}
 
