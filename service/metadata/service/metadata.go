@@ -9,6 +9,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/store"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"google.golang.org/grpc"
@@ -21,7 +22,7 @@ type Metadata struct {
 	name    string
 	running atomic.Bool
 
-	//store      store.IStore
+	store      store.IStore
 	grpcServer *grpc.Server
 }
 
@@ -72,12 +73,12 @@ func (metadata *Metadata) Stop(ctx context.Context) error {
 }
 
 func NewMetadataService(cfg *metadata.MetadataConfig, ctx context.Context) (metadata *Metadata, err error) {
-	//metaStore, _ := store.NewStore(cfg.MetaSqlDBConfig)
+	metadataStore, _ := store.NewStore(cfg.MetaSqlDBConfig)
 	metadata = &Metadata{
 		config: cfg,
 		name:   model.MetadataService,
 		ctx:    ctx,
-		//store:  metaStore,
+		store:  metadataStore,
 	}
 	return
 }
