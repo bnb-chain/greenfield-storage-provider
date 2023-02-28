@@ -16,35 +16,39 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
-      - uses: actions/checkout@v3
+#      - uses: actions/checkout@v3
+#
+#      - uses: bufbuild/buf-setup-action@v1.14.0
+#        with:
+#          version: 1.14.0
+#          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
+#          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
 
-      - uses: bufbuild/buf-setup-action@v1.14.0
-        with:
-          version: 1.14.0
-          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
-          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-
-      - run: |
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-          buf generate
-      - name: Build image
-        run: |
-          docker build . \
-          --build-arg "GH_TOKEN=${{ secrets.GH_SECRET }}" \
-          --label "org.opencontainers.image.source=${IMAGE_SOURCE}" \
-          --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
-          --label "org.opencontainers.image.version=dev-1" \
-          --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
-          -f ./Dockerfile -t "${IMAGE_NAME}"
-      - name: Log into registry
-        run: echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+#      - name: Install Protoc
+#        uses: arduino/setup-protoc@v1
+#
+#      - run: |
+#          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+#          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+#          buf generate
+#      - name: Build image
+#        run: |
+#          docker build . \
+#          --build-arg "GH_TOKEN=${{ secrets.GH_SECRET }}" \
+#          --label "org.opencontainers.image.source=${IMAGE_SOURCE}" \
+#          --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
+#          --label "org.opencontainers.image.version=dev-1" \
+#          --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
+#          -f ./Dockerfile -t "${IMAGE_NAME}"
+#      - name: Log into registry
+#        run: echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Get Current Date
-        run: echo $TAG_NAME - $RELEASE_NAME
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Test with environment variables
+        run: echo $TAG_NAME
         env:
           TAG_NAME: dev-env-${{ steps.date.outputs.date }}
 
