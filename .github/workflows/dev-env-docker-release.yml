@@ -53,5 +53,5 @@ jobs:
         run: |
           docker tag $IMAGE_NAME $IMAGE_NAME:dev-env-latest
           docker tag $IMAGE_NAME $IMAGE_NAME:$TAG_NAME
-#          docker push $IMAGE_NAME:dev-env-latest
-#          docker push $IMAGE_NAME:$TAG_NAME
+          docker push $IMAGE_NAME:dev-env-latest
+          docker push $IMAGE_NAME:$TAG_NAME
