@@ -132,7 +132,9 @@ const (
 	JobDBPassword = "JOB_DB_PASSWORD"
 )
 
+// service gGRPC address
 const (
-	SyncerGrpcAddress = "localhost:9533"
-	SingerGrpcAddress = "localhost:9633"
+	StoneNodeGrpcAddress = "localhost:9433"
+	SyncerGrpcAddress    = "localhost:9533"
+	SingerGrpcAddress    = "localhost:9633"
 )

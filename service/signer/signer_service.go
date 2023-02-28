@@ -105,7 +105,7 @@ func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *stypes.S
 
 // SealObjectOnChain implements v1.SignerServiceServer
 func (signer *SignerServer) SealObjectOnChain(ctx context.Context, req *stypes.SealObjectOnChainRequest) (*stypes.SealObjectOnChainResponse, error) {
-	txHash, err := signer.client.SealObject(ctx, client.SignSeal, req.ObjectInfo)
+	txHash, err := signer.client.SealObject(ctx, client.SignSeal, req.SealObject)
 	if err != nil {
 		return &stypes.SealObjectOnChainResponse{
 			TxHash:     txHash,

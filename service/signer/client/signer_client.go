@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 type SignerClient struct {
@@ -94,14 +94,15 @@ func (client *SignerClient) SignIntegrityHash(ctx context.Context, checksum [][]
 	return resp.GetIntegrityHash(), resp.GetSignature(), nil
 }
 
-func (client *SignerClient) SealObjectOnChain(ctx context.Context, object *ptypes.ObjectInfo, opts ...grpc.CallOption) ([]byte, error) {
-	resp, err := client.signer.SealObjectOnChain(ctx, &stypes.SealObjectOnChainRequest{ObjectInfo: object}, opts...)
+func (client *SignerClient) SealObjectOnChain(ctx context.Context, sealObject *storagetypes.MsgSealObject, opts ...grpc.CallOption) ([]byte, error) {
+	resp, err := client.signer.SealObjectOnChain(ctx, &stypes.SealObjectOnChainRequest{SealObject: sealObject}, opts...)
+
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to seal object on chain", "error", err, "object_info", object)
+		log.CtxErrorw(ctx, "failed to seal object on chain", "error", err, "object_info", sealObject.String())
 		return []byte{}, err
 	}
 	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-		log.CtxErrorw(ctx, "failed to seal object on chain", "error", resp.GetErrMessage().GetErrMsg(), "object_info", object)
+		log.CtxErrorw(ctx, "failed to seal object on chain", "error", resp.GetErrMessage().GetErrMsg(), "object_info", sealObject.String())
 		return []byte{}, errors.New(resp.GetErrMessage().GetErrMsg())
 	}
 	return resp.GetTxHash(), nil

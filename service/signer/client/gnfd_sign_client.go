@@ -3,8 +3,6 @@ package client
 import (
 	"context"
 	"encoding/hex"
-	"sort"
-	"strconv"
 	"sync"
 
 	"github.com/bnb-chain/greenfield/sdk/client"
@@ -18,7 +16,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -124,35 +121,35 @@ func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, si
 }
 
 // SealObject seal the object on the greenfield chain.
-func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope SignType, object *ptypes.ObjectInfo) ([]byte, error) {
+func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope SignType, sealObject *storagetypes.MsgSealObject) ([]byte, error) {
 	client.mu.Lock()
 	defer client.mu.Unlock()
 
-	var (
-		secondarySPAccs       = make([]sdk.AccAddress, 0, len(object.SecondarySps))
-		secondarySPSignatures = make([][]byte, 0, len(object.SecondarySps))
-		indexArray            []int
-	)
-
-	// TODO: polish it by use new proto
-	for indexStr := range object.SecondarySps {
-		indexInt, err := strconv.Atoi(indexStr)
-		if err != nil {
-			return nil, err
-		}
-		indexArray = append(indexArray, indexInt)
-	}
-	sort.Ints(indexArray)
-	for index := range indexArray {
-		sp := object.SecondarySps[strconv.Itoa(index)]
-		opAddr, err := sdk.AccAddressFromHexUnsafe(sp.SpId) // should be 0x...
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", sp.SpId)
-			return nil, err
-		}
-		secondarySPAccs = append(secondarySPAccs, opAddr)
-		secondarySPSignatures = append(secondarySPSignatures, sp.Signature)
-	}
+	//var (
+	//	secondarySPAccs       = make([]sdk.AccAddress, 0, len(object.SecondarySps))
+	//	secondarySPSignatures = make([][]byte, 0, len(object.SecondarySps))
+	//	indexArray            []int
+	//)
+	//
+	//// TODO: polish it by use new proto
+	//for indexStr := range object.SecondarySps {
+	//	indexInt, err := strconv.Atoi(indexStr)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	indexArray = append(indexArray, indexInt)
+	//}
+	//sort.Ints(indexArray)
+	//for index := range indexArray {
+	//	sp := object.SecondarySps[strconv.Itoa(index)]
+	//	opAddr, err := sdk.AccAddressFromHexUnsafe(sp.SpId) // should be 0x...
+	//	if err != nil {
+	//		log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", sp.SpId)
+	//		return nil, err
+	//	}
+	//	secondarySPAccs = append(secondarySPAccs, opAddr)
+	//	secondarySPSignatures = append(secondarySPSignatures, sp.Signature)
+	//}
 
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
@@ -160,8 +157,18 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		return nil, merrors.ErrSignMsg
 	}
 
+	var secondarySPAccs []sdk.AccAddress
+	for _, sp := range sealObject.SecondarySpAddresses {
+		opAddr, err := sdk.AccAddressFromHexUnsafe(sp) // should be 0x...
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", opAddr)
+			return nil, err
+		}
+		secondarySPAccs = append(secondarySPAccs, opAddr)
+	}
+
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
-		object.BucketName, object.ObjectName, secondarySPAccs, secondarySPSignatures)
+		sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
 	mode := tx.BroadcastMode_BROADCAST_MODE_BLOCK
 	txOpt := &ctypes.TxOption{
 		Mode:     &mode,
@@ -179,11 +186,11 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "seal_info", msgSealObject.String())
 		return nil, merrors.ErrSealObjectOnChain
 	}
-	object.TxHash, err = hex.DecodeString(resp.TxResponse.TxHash)
+	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "seal_info", msgSealObject.String())
 		return nil, merrors.ErrSealObjectOnChain
 	}
 
-	return object.TxHash, nil
+	return txHash, nil
 }

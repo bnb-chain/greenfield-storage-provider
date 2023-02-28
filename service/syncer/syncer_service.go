@@ -4,12 +4,13 @@ import (
 	"context"
 	"io"
 
+	"github.com/bnb-chain/greenfield-common/go/hash"
+
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
-	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 

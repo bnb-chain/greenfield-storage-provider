@@ -44,8 +44,17 @@ func GenerateRequestID() string {
 }
 
 // ComputeSegmentCount return the segments counter by payload size.
-func ComputeSegmentCount(size uint64) uint32 {
-	segmentCount := uint32(size / model.SegmentSize)
+//func ComputeSegmentCount(size uint64) uint32 {
+//	segmentCount := uint32(size / model.SegmentSize)
+//	if (size % model.SegmentSize) > 0 {
+//		segmentCount++
+//	}
+//	return segmentCount
+//}
+
+// ComputeSegmentCount return the segments counter by payload size.
+func ComputeSegmentCount(size uint64, spiltSize uint64) uint32 {
+	segmentCount := uint32(size / spiltSize)
 	if (size % model.SegmentSize) > 0 {
 		segmentCount++
 	}

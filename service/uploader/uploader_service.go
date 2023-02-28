@@ -9,7 +9,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -65,21 +64,21 @@ func (uploader *Uploader) UploadObject(
 
 	// read payload from gRPC stream and write pipeline
 	go func() {
-		init := true
+		//init := true
 		for {
 			req, err := stream.Recv()
 			if err != nil || err != io.EOF {
 				errCh <- err
 				return
 			}
-			if init {
-				init = false
-				objectInfo = req.GetObjectInfo()
-				segments := util.ComputeSegmentCount(objectInfo.GetPayloadSize())
-				segmentInfo.ObjectInfo = objectInfo
-				segmentInfo.CheckSum = make([][]byte, segments)
-				uploader.cache.Add(objectInfo.Id, segmentInfo)
-			}
+			//if init {
+			//	init = false
+			//	objectInfo = req.GetObjectInfo()
+			//	segments := util.ComputeSegmentCount(objectInfo.GetPayloadSize())
+			//	segmentInfo.ObjectInfo = objectInfo
+			//	segmentInfo.CheckSum = make([][]byte, segments)
+			//	uploader.cache.Add(objectInfo.Id, segmentInfo)
+			//}
 			writeStream.Write(req.GetPayload())
 			if err == io.EOF {
 				return
