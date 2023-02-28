@@ -47,12 +47,9 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
-      - name: Test with environment variables
-        run: echo $TAG_NAME
+      - name: Push image
         env:
           TAG_NAME: dev-env-${{ steps.date.outputs.date }}
-
-      - name: Push image
         run: |
           docker tag $IMAGE_NAME $IMAGE_NAME:dev-env-latest
           docker tag $IMAGE_NAME $IMAGE_NAME:$TAG_NAME
