@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func StringToUin64(str string) (uint64, error) {
+func StringToUint64(str string) (uint64, error) {
 	ui64, err := strconv.ParseUint(str, 10, 64)
 	if err != nil {
 		return 0, err
@@ -14,21 +14,30 @@ func StringToUin64(str string) (uint64, error) {
 	return ui64, nil
 }
 
-func StringToIn64(str string) (int64, error) {
-	ui64, err := strconv.ParseInt(str, 10, 64)
+func StringToInt64(str string) (int64, error) {
+	i64, err := strconv.ParseInt(str, 10, 64)
 	if err != nil {
 		return 0, err
 	}
-	return ui64, nil
+	return i64, nil
 }
 
 func StringToUint32(str string) (uint32, error) {
-	ui64, err := StringToUin64(str)
+	ui64, err := StringToUint64(str)
 	if err != nil {
 		return 0, err
 	}
 	// TODO: check overflow
 	return uint32(ui64), nil
+}
+
+func StringToInt32(str string) (int32, error) {
+	i64, err := StringToInt64(str)
+	if err != nil {
+		return 0, err
+	}
+	// TODO: check overflow
+	return int32(i64), nil
 }
 
 func StringToBool(str string) (bool, error) {
@@ -46,14 +55,14 @@ func BoolToInt(b bool) int {
 	return 0
 }
 
-func SliceToString(slice []string) string {
+func JoinWithComma(slice []string) string {
 	if len(slice) == 1 {
 		return slice[0]
 	}
 	return strings.Join(slice, ",")
 }
 
-func StringToStringSlice(str string) []string {
+func SplitByComma(str string) []string {
 	return strings.Split(str, ",")
 }
 
@@ -61,22 +70,26 @@ func Uint64ToString(u uint64) string {
 	return strconv.FormatUint(u, 10)
 }
 
+func Uint32ToString(u uint32) string {
+	return Uint64ToString(uint64(u))
+}
+
 // BytesSliceToString is used to serialize
 func BytesSliceToString(bytes [][]byte) string {
-	PieceStringList := make([]string, len(bytes))
+	stringList := make([]string, len(bytes))
 	for index, h := range bytes {
-		PieceStringList[index] = hex.EncodeToString(h)
+		stringList[index] = hex.EncodeToString(h)
 	}
-	return SliceToString(PieceStringList)
+	return JoinWithComma(stringList)
 }
 
 // StringToBytesSlice is used to deserialize
 func StringToBytesSlice(str string) ([][]byte, error) {
 	var err error
-	pieceStringList := StringToStringSlice(str)
-	hashList := make([][]byte, len(pieceStringList))
-	for idx := range pieceStringList {
-		if hashList[idx], err = hex.DecodeString(pieceStringList[idx]); err != nil {
+	stringList := SplitByComma(str)
+	hashList := make([][]byte, len(stringList))
+	for idx := range stringList {
+		if hashList[idx], err = hex.DecodeString(stringList[idx]); err != nil {
 			return hashList, err
 		}
 	}

@@ -24,7 +24,7 @@ const (
 
 // define storage provider service gGRPC default address
 const (
-	// UploaderGrpcAddress default HTTP address of uploader
+	// GatewayHttpAddress default Http address of gateway
 	GatewayHttpAddress = "localhost:9033"
 	// UploaderGrpcAddress default gGRPC address of uploader
 	UploaderGrpcAddress = "localhost:9133"
@@ -76,62 +76,57 @@ const (
 
 // http header constants
 const (
-	// http header key
-	OctetStream               = "application/octet-stream"
+	// ContentTypeHeader and below are standard http protocols
 	ContentTypeHeader         = "Content-Type"
 	ETagHeader                = "ETag"
-	ContentLengthHeader       = "Content-Length"
 	ContentTypeXMLHeaderValue = "application/xml"
 	RangeHeader               = "Range"
 	ContentRangeHeader        = "Content-Range"
+	OctetStream               = "application/octet-stream"
 
-	// path
-	AdminPath          = "/greenfield/admin/v1/"
-	SyncerPath         = "/greenfield/syncer/v1/sync-piece"
-	GetApprovalSubPath = "get-approval"
-	ChallengeSubPath   = "challenge"
-
-	// query key
-	TransactionQuery = "transaction"
-	ActionQuery      = "action"
-
-	// Greenfield header key
-	GnfdRequestIDHeader       = "X-Gnfd-Request-ID"
-	GnfdChecksumHeader        = "X-Gnfd-Checksum"
-	GnfdIsPrivateHeader       = "X-Gnfd-Is-Private"
-	GnfdTransactionHashHeader = "X-Gnfd-Txn-Hash"
-	GnfdResourceHeader        = "X-Gnfd-Resource"
-	GnfdPreSignatureHeader    = "X-Gnfd-Pre-Signature"
-
-	// GnfdRedundancyTypeHeader can be EC or Replica, EC is default
-	GnfdRedundancyTypeHeader      = "X-Gnfd-Redundancy-Type"
-	GnfdAuthorizationHeader       = "Authorization"
-	GnfdDateHeader                = "X-Gnfd-Date"
-	GnfdObjectIDHeader            = "X-Gnfd-Object-ID"
-	GnfdPieceIndexHeader          = "X-Gnfd-Piece-Index"
-	GnfdRedundancyIndexHeader     = "X-Gnfd-Redundancy-Index"
-	GnfdIntegrityHashHeader       = "X-Gnfd-Integrity-Hash"
-	GnfdPieceHashHeader           = "X-Gnfd-Piece-Hash"
-	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
-	GnfdSignedApprovalMsgHeader   = "X-Gnfd-Signed-Msg"
-
-	// StoneNode to gateway request header
-	GnfdSPIDHeader              = "X-Gnfd-SP-ID"
-	GnfdPieceCountHeader        = "X-Gnfd-Piece-Count"
-	GnfdApprovalSignatureHeader = "X-Gnfd-Approval-Signature"
-
-	// gateway to StoneNode response header
-	GnfdPieceChecksumHeader          = "X-Gnfd-Piece-Checksum"
-	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
-
-	// header value
-	ReplicaRedundancyTypeHeaderValue = "Replica"
-	InlineRedundancyTypeHeaderValue  = "Inline"
-
-	// signature const value
+	// SignAlgorithm and below are the signature-related constants
 	SignAlgorithm = "ECDSA-secp256k1"
 	SignedMsg     = "SignedMsg"
 	Signature     = "Signature"
 	SignTypeV1    = "authTypeV1"
 	SignTypeV2    = "authTypeV2"
+
+	// AdminPath defines get-approval and challenge path style prefix
+	AdminPath = "/greenfield/admin/v1/"
+	// GetApprovalSubPath defines get-approval path style suffix
+	GetApprovalSubPath = "get-approval"
+	// ActionQuery defines get-approval's type, currently include create bucket and create object
+	ActionQuery = "action"
+	// ChallengeSubPath defines challenge path style suffix
+	ChallengeSubPath = "challenge"
+	// SyncerPath defines sync-object path style
+	SyncerPath = "/greenfield/syncer/v1/sync-piece"
+	// GnfdRequestIDHeader defines trace-id, trace request in sp
+	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
+	// GnfdTransactionHashHeader defines blockchain tx-hash
+	GnfdTransactionHashHeader = "X-Gnfd-Txn-Hash"
+	// GnfdAuthorizationHeader defines authorization, verify signature and check authorization
+	GnfdAuthorizationHeader = "Authorization"
+	// GnfdObjectIDHeader defines object id
+	GnfdObjectIDHeader = "X-Gnfd-Object-ID"
+	// GnfdPieceIndexHeader defines piece idx, which is used by challenge
+	GnfdPieceIndexHeader = "X-Gnfd-Piece-Index"
+	// GnfdRedundancyIndexHeader defines redundancy idx, which is used by challenge
+	GnfdRedundancyIndexHeader = "X-Gnfd-Redundancy-Index"
+	// GnfdIntegrityHashHeader defines integrity hash, which is used by challenge and syncer
+	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
+	// GnfdPieceHashHeader defines piece hash list, which is used by challenge
+	GnfdPieceHashHeader = "X-Gnfd-Piece-Hash"
+	// GnfdUnsignedApprovalMsgHeader defines unsigned msg, which is used by get-approval
+	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
+	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval
+	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
+	// GnfdObjectInfoHeader define object info, which is used by syncer
+	GnfdObjectInfoHeader = "X-Gnfd-Object-Info"
+	// GnfdReplicateIdxHeader defines replicate idx, which is used by syncer
+	GnfdReplicateIdxHeader = "X-Gnfd-Replicate-Idx"
+	// GnfdSegmentSizeHeader defines segment size, which is used by syncer
+	GnfdSegmentSizeHeader = "X-Gnfd-Segment-Size"
+	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by syncer
+	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 )
