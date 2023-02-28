@@ -134,6 +134,7 @@ const (
 
 // service gGRPC address
 const (
+	UploaderGrpcAddress  = "localhost:9133"
 	StoneNodeGrpcAddress = "localhost:9433"
 	SyncerGrpcAddress    = "localhost:9533"
 	SingerGrpcAddress    = "localhost:9633"

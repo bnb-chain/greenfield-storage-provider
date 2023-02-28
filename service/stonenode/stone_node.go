@@ -78,6 +78,8 @@ func (node *StoneNode) Start(ctx context.Context) error {
 // Stop the stone node gRPC service and recycle the resources
 func (node *StoneNode) Stop(ctx context.Context) error {
 	node.grpcServer.GracefulStop()
+	node.signer.Close()
+	node.chain.Close()
 	return nil
 }
 

@@ -19,14 +19,12 @@ var _ types.SyncerServiceServer = &Syncer{}
 // SyncObject an object payload to storage provider.
 func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (err error) {
 	var (
-		resp      types.SyncObjectResponse
-		pstream   = payloadstream.NewAsyncPayloadStream()
-		traceInfo = &servicetypes.SegmentInfo{}
-
+		resp          types.SyncObjectResponse
+		pstream       = payloadstream.NewAsyncPayloadStream()
+		traceInfo     = &servicetypes.SegmentInfo{}
 		checksum      [][]byte
 		integrityMeta = &store.IntegrityMeta{}
-
-		errCh = make(chan error, 10)
+		errCh         = make(chan error, 10)
 	)
 
 	defer func(resp *types.SyncObjectResponse, err error) {
@@ -109,7 +107,6 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 				if err := syncer.pieceStore.PutSegment(entry.Key(), entry.Data()); err != nil {
 					errCh <- err
 				}
-				syncer.cache.Add(entry.ID(), traceInfo)
 			}()
 		case err = <-errCh:
 			return

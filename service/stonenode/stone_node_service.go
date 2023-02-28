@@ -171,7 +171,7 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 	}
 }
 
-// QueryReplicatingObject query a replicating object payload information by object id.
+// QueryReplicatingObject query a replicating object payload information by object id
 func (node *StoneNode) QueryReplicatingObject(
 	ctx context.Context,
 	req *types.QueryReplicatingObjectRequest) (
