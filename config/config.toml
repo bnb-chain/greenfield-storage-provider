@@ -137,7 +137,3 @@ Service = [
 
 [MetadataCfg]
     Address = "127.0.0.1:9833"
-    MetaDBType = "mysql"
-    [MetadataCfg.MetaSqlDBConfig]
-        Address = "127.0.0.1:3306"
-        Database = "meta_db"

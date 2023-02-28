@@ -23,11 +23,11 @@ type IStore interface {
 }
 
 const (
-	MetadataServiceDsn = "Metadata_Service_DSN"
+	MetadataServiceDsn = "METADATA_SERVICE_DSN"
 )
 
 func NewStore(cfg *config.SqlDBConfig) (*Store, error) {
-	userDB, err := newGORM(cfg)
+	userDB, err := newGORM()
 	if err != nil {
 		log.Errorf("fail to new gorm cfg:%v err:%v", cfg, err)
 		return nil, err
@@ -38,8 +38,8 @@ func NewStore(cfg *config.SqlDBConfig) (*Store, error) {
 	}, nil
 }
 
-func newGORM(cfg *config.SqlDBConfig) (*gorm.DB, error) {
-	db, err := InitMetaServiceDB(cfg)
+func newGORM() (*gorm.DB, error) {
+	db, err := InitMetaServiceDB()
 
 	if err != nil {
 		log.Infof("fail to open database err:%v", err)
@@ -57,14 +57,8 @@ func getDBConfigFromEnv(dsn string) (string, error) {
 	return dsnVal, nil
 }
 
-func InitMetaServiceDB(cfg *config.SqlDBConfig) (*gorm.DB, error) {
+func InitMetaServiceDB() (*gorm.DB, error) {
 	var dsnForDB string
-	dsnForDB = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		cfg.User,
-		cfg.Passwd,
-		cfg.Address,
-		cfg.Database)
-
 	dsn, errOfEnv := getDBConfigFromEnv(MetadataServiceDsn)
 	if errOfEnv != nil {
 		log.Warn("load metadata service db config from ENV failed, try to use config from file")
