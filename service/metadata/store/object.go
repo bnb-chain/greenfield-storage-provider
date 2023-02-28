@@ -7,7 +7,9 @@ import (
 )
 
 func (s *Store) ListObjectsByBucketName(ctx context.Context, bucketName string) (ret []*model.Object, err error) {
-	object1 := model.Object{
+	//err = s.userDB.WithContext(ctx).Table((&model.Object{}).TableName()).Select("*").Where("bucket_name = ?", bucketName).Find(&ret).Error
+	//return
+	object1 := &model.Object{
 		Owner:                "46765cbc-d30c-4f4a-a814-b68181fcab12",
 		BucketName:           bucketName,
 		ObjectName:           "test-object",
@@ -16,13 +18,12 @@ func (s *Store) ListObjectsByBucketName(ctx context.Context, bucketName string) 
 		IsPublic:             false,
 		ContentType:          "video",
 		CreateAt:             0,
-		ObjectStatus:         "OBJECT_STATUS_INIT",
-		RedundancyType:       "REDUNDANCY_REPLICA_TYPE",
-		SourceType:           "SOURCE_TYPE_ORIGIN",
-		Checksums:            nil,
+		ObjectStatus:         1,
+		RedundancyType:       1,
+		SourceType:           1,
 		SecondarySpAddresses: nil,
 		LockedBalance:        "1000",
 	}
-	ret = append(ret, &object1)
+	ret = append(ret, object1)
 	return ret, nil
 }

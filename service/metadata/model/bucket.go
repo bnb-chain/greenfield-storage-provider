@@ -1,7 +1,5 @@
 package model
 
-import github_com_cosmos_cosmos_sdk_types "cosmossdk.io/math"
-
 type Bucket struct {
 	// owner is the account address of bucket creator, it is also the bucket owner.
 	Owner string `json:"owner"`
@@ -11,7 +9,7 @@ type Bucket struct {
 	IsPublic bool `json:"isPublic"`
 	// id is the unique identification for bucket.
 	Id         string `json:"id"`
-	SourceType string `json:"sourceType"`
+	SourceType int    `json:"sourceType"`
 	// create_at define the block number when the bucket created.
 	CreateAt int64 `json:"createAt"`
 	// payment_address is the address of the payment account
@@ -20,14 +18,18 @@ type Bucket struct {
 	// leave this SP, unless you explicitly shift them to another SP.
 	PrimarySpAddress string `json:"primarySpAddress"`
 	// read_quota defines the traffic quota for read
-	ReadQuota        string         `json:"readQuota"`
-	PaymentPriceTime int64          `json:"paymentPriceTime"`
-	PaymentOutFlows  []OutFlowInUSD `json:"paymentOutFlows"`
+	ReadQuota        int   `json:"readQuota"`
+	PaymentPriceTime int64 `json:"paymentPriceTime"`
+	//PaymentOutFlows  []OutFlowInUSD `json:"paymentOutFlows"`
 }
 
-type OutFlowInUSD struct {
-	// SP(service provider) stream account address
-	SpAddress string `json:"sp_address,omitempty"`
-	// flow rate in USD
-	Rate github_com_cosmos_cosmos_sdk_types.Int `json:"rate"`
+//type OutFlowInUSD struct {
+//	// SP(service provider) stream account address
+//	SpAddress string `json:"sp_address,omitempty"`
+//	// flow rate in USD
+//	Rate github_com_cosmos_cosmos_sdk_types.Int `json:"rate"`
+//}
+
+func (a *Bucket) TableName() string {
+	return "bucket"
 }

@@ -12,6 +12,7 @@ type GatewayConfig struct {
 	ChallengeServiceAddress  string
 	SyncerServiceAddress     string
 	ChainConfig              *gnfd.GreenfieldChainConfig
+	MetadataServiceAddress   string
 }
 
 var DefaultGatewayConfig = &GatewayConfig{
@@ -23,5 +24,6 @@ var DefaultGatewayConfig = &GatewayConfig{
 	SyncerServiceAddress:     "127.0.0.1:9533",
 	SignerServiceAddress:     "127.0.0.1:9633",
 	ChallengeServiceAddress:  "127.0.0.1:9733",
+	MetadataServiceAddress:   "127.0.0.1:9833",
 	ChainConfig:              gnfd.DefaultGreenfieldChainConfig,
 }

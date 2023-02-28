@@ -13,7 +13,7 @@ type MetadataConfig struct {
 }
 
 var DefaultMetadataConfig = &MetadataConfig{
-	Address:         "127.0.0.1:9733",
+	Address:         "127.0.0.1:9833",
 	MetaDBType:      model.MySqlDB,
 	MetaSqlDBConfig: metasql.DefaultMetaSqlDBConfig,
 }
