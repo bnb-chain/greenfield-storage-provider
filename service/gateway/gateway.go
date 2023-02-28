@@ -30,9 +30,10 @@ type Gateway struct {
 	downloader *dclient.DownloaderClient
 	challenge  *client.ChallengeClient
 
-	syncer client.SyncerAPI
-	chain  *gnfd.Greenfield
-	signer *sclient.SignerClient
+	syncer   client.SyncerAPI
+	chain    *gnfd.Greenfield
+	signer   *sclient.SignerClient
+	metadata *client.MetadataClient
 }
 
 // NewGatewayService return the gateway instance
@@ -68,6 +69,10 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 	}
 	if g.signer, err = sclient.NewSignerClient(cfg.SignerServiceAddress); err != nil {
 		log.Errorw("failed to create signer client", "err", err)
+		return nil, err
+	}
+	if g.metadata, err = client.NewMetadataClient(g.config.MetadataServiceAddress); err != nil {
+		log.Warnw("failed to create metadata client", "err", err)
 		return nil, err
 	}
 	log.Debugw("gateway succeed to init")

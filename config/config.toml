@@ -1,5 +1,5 @@
 Service = [
-    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge",
+    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge","Metadata",
 ]
 
 [GatewayCfg]
@@ -11,6 +11,7 @@ Service = [
     SyncerServiceAddress = "127.0.0.1:9533"
     SignerServiceAddress = "127.0.0.1:9633"
     ChallengeServiceAddress = "127.0.0.1:9733"
+    MetadataServiceAddress = "127.0.0.1:9833"
     [GatewayCfg.ChainConfig]
         ChainID = "greenfield_9000-1741"
         [[GatewayCfg.ChainConfig.NodeAddr]]
@@ -133,3 +134,10 @@ Service = [
         Cache = 4096
         FileHandles = 1000
         ReadOnly = false
+
+[MetadataCfg]
+    Address = "127.0.0.1:9833"
+    MetaDBType = "mysql"
+    [MetadataCfg.MetaSqlDBConfig]
+        Address = "127.0.0.1:3306"
+        Database = "meta_db"

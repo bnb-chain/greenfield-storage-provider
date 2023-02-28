@@ -44,13 +44,14 @@ const (
 // http header constants
 const (
 	// http header key
-	OctetStream               = "application/octet-stream"
-	ContentTypeHeader         = "Content-Type"
-	ETagHeader                = "ETag"
-	ContentLengthHeader       = "Content-Length"
-	ContentTypeXMLHeaderValue = "application/xml"
-	RangeHeader               = "Range"
-	ContentRangeHeader        = "Content-Range"
+	OctetStream                = "application/octet-stream"
+	ContentTypeHeader          = "Content-Type"
+	ETagHeader                 = "ETag"
+	ContentLengthHeader        = "Content-Length"
+	ContentTypeXMLHeaderValue  = "application/xml"
+	ContentTypeJSONHeaderValue = "application/json"
+	RangeHeader                = "Range"
+	ContentRangeHeader         = "Content-Range"
 )
 
 // Gateway

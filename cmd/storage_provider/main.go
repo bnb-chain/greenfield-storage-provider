@@ -14,7 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	metadata "github.com/bnb-chain/greenfield-storage-provider/service/metadata/service"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"

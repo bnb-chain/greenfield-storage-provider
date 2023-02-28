@@ -11,11 +11,13 @@ import (
 )
 
 const (
-	putObjectRouterName = "PutObject"
-	getObjectRouterName = "GetObject"
-	approvalRouterName  = "GetApproval"
-	challengeRouterName = "Challenge"
-	syncPieceRouterName = "SyncPiece"
+	putObjectRouterName           = "PutObject"
+	getObjectRouterName           = "GetObject"
+	approvalRouterName            = "GetApproval"
+	challengeRouterName           = "Challenge"
+	syncPieceRouterName           = "SyncPiece"
+	getUserBucketsRouterName      = "GetUserBuckets"
+	listObjectsByBucketRouterName = "ListObjectsByBucketName"
 )
 
 const (
@@ -65,6 +67,15 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Name(syncPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.syncPieceHandler)
+	//metadata router
+	r.Name(getUserBucketsRouterName).
+		Methods(http.MethodGet).
+		Path("/accounts/{account_id:.+}/buckets").
+		HandlerFunc(g.getUserBucketsHandler)
+	r.Name(listObjectsByBucketRouterName).
+		Methods(http.MethodGet).
+		Path("/accounts/{account_id:.+}/buckets/{bucket_name:.+}/objects").
+		HandlerFunc(g.listObjectsByBucketNameHandler)
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }
