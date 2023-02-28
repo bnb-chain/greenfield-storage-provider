@@ -131,3 +131,8 @@ const (
 	JobDBUser     = "JOB_DB_USER"
 	JobDBPassword = "JOB_DB_PASSWORD"
 )
+
+const (
+	SyncerGrpcAddress = "localhost:9533"
+	SingerGrpcAddress = "localhost:9633"
+)

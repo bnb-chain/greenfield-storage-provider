@@ -30,7 +30,7 @@ type Gateway struct {
 	downloader *dclient.DownloaderClient
 	challenge  *client.ChallengeClient
 
-	syncer client.SyncerAPI
+	//syncer client.SyncerAPI
 	chain  *gnfd.Greenfield
 	signer *sclient.SignerClient
 }
@@ -58,10 +58,10 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		log.Errorw("failed to challenge client", "err", err)
 		return nil, err
 	}
-	if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {
-		log.Errorw("gateway inits syncer client failed", "error", err)
-		return nil, err
-	}
+	//if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {
+	//	log.Errorw("gateway inits syncer client failed", "error", err)
+	//	return nil, err
+	//}
 	if g.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Errorw("failed to create chain client", "err", err)
 		return nil, err

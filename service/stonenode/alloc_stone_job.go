@@ -76,7 +76,7 @@ func (node *StoneNodeService) loadAndSyncPieces(ctx context.Context, allocResp *
 	log.Debugw("secondary gateway address list", "list", secondaryGatewayList)
 
 	// 3. send piece data to the secondary
-	node.doSyncToSecondarySP(ctx, allocResp, secondaryPieceData, secondaryGatewayList, secondarySPs)
+	//node.doSyncToSecondarySP(ctx, allocResp, secondaryPieceData, secondaryGatewayList, secondarySPs)
 	return nil
 }
 
