@@ -130,4 +130,8 @@ const (
 	// JobDB environment constants
 	JobDBUser     = "JOB_DB_USER"
 	JobDBPassword = "JOB_DB_PASSWORD"
+
+	// MetadataDB environment constants
+	BlockerSyncerDBUser     = "BLOCK_SYNCER_DB_USER"
+	BlockerSyncerDBPassword = "BLOCK_SYNCER_DB_PASSWORD"
 )

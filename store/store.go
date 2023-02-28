@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobmemory"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobsql"
@@ -36,6 +37,24 @@ func NewMetaDB(dbType string, levelDBConfig *config.LevelDBConfig, sqlDBConfig *
 		err = fmt.Errorf("meta db not support %s type", dbType)
 	}
 	return metaDB, err
+}
+
+// NewBSDB return a bs-db instance
+func NewBSDB(sqlDBConfig *config.SqlDBConfig) (*bsdb.Store, error) {
+	var (
+		bsDB *bsdb.Store
+		err  error
+	)
+
+	// load bs db config from env vars
+	sqlDBConfig.User, sqlDBConfig.Passwd, err = getDBConfigFromEnv(model.BlockerSyncerDBUser, model.BlockerSyncerDBPassword)
+	if err != nil {
+		log.Error("load meta db config from env failed")
+		return nil, err
+	}
+	bsDB, err = bsdb.NewStore(sqlDBConfig)
+
+	return bsDB, err
 }
 
 // NewJobDB return a job-db instance

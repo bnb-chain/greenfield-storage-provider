@@ -1,9 +1,8 @@
-package store
+package bsdb
 
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
@@ -22,12 +21,8 @@ type IStore interface {
 	ListObjectsByBucketName(ctx context.Context, bucketName string) (ret []*model.Object, err error)
 }
 
-const (
-	MetadataServiceDsn = "METADATA_SERVICE_DSN"
-)
-
 func NewStore(cfg *config.SqlDBConfig) (*Store, error) {
-	userDB, err := newGORM()
+	userDB, err := newGORM(cfg)
 	if err != nil {
 		log.Errorf("fail to new gorm cfg:%v err:%v", cfg, err)
 		return nil, err
@@ -38,9 +33,8 @@ func NewStore(cfg *config.SqlDBConfig) (*Store, error) {
 	}, nil
 }
 
-func newGORM() (*gorm.DB, error) {
-	db, err := InitMetaServiceDB()
-
+func newGORM(cfg *config.SqlDBConfig) (*gorm.DB, error) {
+	db, err := InitMetadataServiceDB(cfg)
 	if err != nil {
 		log.Infof("fail to open database err:%v", err)
 		return nil, err
@@ -49,25 +43,14 @@ func newGORM() (*gorm.DB, error) {
 	return db, nil
 }
 
-func getDBConfigFromEnv(dsn string) (string, error) {
-	dsnVal, ok := os.LookupEnv(dsn)
-	if !ok {
-		return "", fmt.Errorf("dsn %s config is not set in environment", dsnVal)
-	}
-	return dsnVal, nil
-}
+func InitMetadataServiceDB(cfg *config.SqlDBConfig) (*gorm.DB, error) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		cfg.User,
+		cfg.Passwd,
+		cfg.Address,
+		cfg.Database)
 
-func InitMetaServiceDB() (*gorm.DB, error) {
-	var dsnForDB string
-	dsn, errOfEnv := getDBConfigFromEnv(MetadataServiceDsn)
-	if errOfEnv != nil {
-		log.Warn("load metadata service db config from ENV failed, try to use config from file")
-	} else {
-		log.Infof("Using DB config from ENV")
-		dsnForDB = dsn
-	}
-
-	db, err := gorm.Open(mysql.Open(dsnForDB), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Errorw("gorm open db failed", "err", err)
 		return nil, err

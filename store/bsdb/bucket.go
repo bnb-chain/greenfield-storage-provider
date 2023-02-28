@@ -1,4 +1,4 @@
-package store
+package bsdb
 
 import (
 	"context"
