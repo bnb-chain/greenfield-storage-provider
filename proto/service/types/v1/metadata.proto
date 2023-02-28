@@ -1,5 +1,6 @@
 syntax = "proto3";
 package service.types.v1;
+
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "service/types/v1/uploader.proto";
@@ -116,7 +117,7 @@ message OutFlowInUSD {
 }
 
 message MetadataServiceGetUserBucketsRequest {
-  string account_id = 2;
+  string account_id = 1;
 }
 
 message MetadataServiceListObjectsByBucketNameRequest {

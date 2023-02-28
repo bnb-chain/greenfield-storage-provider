@@ -7,7 +7,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
@@ -28,7 +27,7 @@ const (
 )
 
 func NewStore(cfg *config.SqlDBConfig) (*Store, error) {
-	userDB, err := newGORM()
+	userDB, err := newGORM(cfg)
 	if err != nil {
 		log.Errorf("fail to new gorm cfg:%v err:%v", cfg, err)
 		return nil, err
@@ -39,8 +38,8 @@ func NewStore(cfg *config.SqlDBConfig) (*Store, error) {
 	}, nil
 }
 
-func newGORM() (*gorm.DB, error) {
-	db, err := InitMetaServiceDB()
+func newGORM(cfg *config.SqlDBConfig) (*gorm.DB, error) {
+	db, err := InitMetaServiceDB(cfg)
 
 	if err != nil {
 		log.Infof("fail to open database err:%v", err)
@@ -58,8 +57,14 @@ func getDBConfigFromEnv(dsn string) (string, error) {
 	return dsnVal, nil
 }
 
-func InitMetaServiceDB() (*gorm.DB, error) {
+func InitMetaServiceDB(cfg *config.SqlDBConfig) (*gorm.DB, error) {
 	var dsnForDB string
+	dsnForDB = fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		cfg.User,
+		cfg.Passwd,
+		cfg.Address,
+		cfg.Database)
+
 	dsn, errOfEnv := getDBConfigFromEnv(MetadataServiceDsn)
 	if errOfEnv != nil {
 		log.Warn("load metadata service db config from ENV failed, try to use config from file")
@@ -67,16 +72,12 @@ func InitMetaServiceDB() (*gorm.DB, error) {
 		log.Infof("Using DB config from ENV")
 		dsnForDB = dsn
 	}
+
 	db, err := gorm.Open(mysql.Open(dsnForDB), &gorm.Config{})
 	if err != nil {
 		log.Errorw("gorm open db failed", "err", err)
 		return nil, err
 	}
 
-	// create if not exist
-	if err := db.AutoMigrate(&metasql.DBIntegrityMeta{}); err != nil {
-		log.Errorw("failed to create integrity meta table", "err", err)
-		return nil, err
-	}
 	return db, nil
 }

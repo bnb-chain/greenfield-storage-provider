@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"github.com/gorilla/mux"
@@ -21,15 +22,15 @@ func (g *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) 
 	ctx := log.Context(context.Background(), req)
 	resp, err := g.metadata.GetUserBuckets(ctx, req)
 	if err != nil {
-		log.Warnf("failed to get user buckets", "error", err)
+		log.Errorf("failed to get user buckets", "error", err)
 		return
 	}
 	ret, err := json.Marshal(resp)
 	if err != nil {
-		log.Warnf("failed to get user buckets", "error", err)
+		log.Errorf("failed to get user buckets", "error", err)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
 	w.Write(ret)
 }
 
@@ -45,14 +46,14 @@ func (g *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.
 	ctx := log.Context(context.Background(), req)
 	resp, err := g.metadata.ListObjectsByBucketName(ctx, req)
 	if err != nil {
-		log.Warnf("failed to list objects by bucket name", "error", err)
+		log.Errorf("failed to list objects by bucket name", "error", err)
 		return
 	}
 	ret, err := json.Marshal(resp)
 	if err != nil {
-		log.Warnf("failed to list objects by bucket name", "error", err)
+		log.Errorf("failed to list objects by bucket name", "error", err)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
 	w.Write(ret)
 }

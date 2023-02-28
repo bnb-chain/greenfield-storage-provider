@@ -11,11 +11,13 @@ import (
 )
 
 const (
-	putObjectRouterName = "PutObject"
-	getObjectRouterName = "GetObject"
-	approvalRouterName  = "GetApproval"
-	challengeRouterName = "Challenge"
-	syncPieceRouterName = "SyncPiece"
+	putObjectRouterName      = "PutObject"
+	getObjectRouterName      = "GetObject"
+	approvalRouterName       = "GetApproval"
+	challengeRouterName      = "Challenge"
+	syncPieceRouterName      = "SyncPiece"
+	getUserBucketsRouterName = "GetUserBuckets"
+	listObjectsByBucketName  = "ListObjectsByBucketName"
 )
 
 const (
@@ -66,11 +68,11 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodPut).
 		HandlerFunc(g.syncPieceHandler)
 	//metadata router
-	r.Name("GetUserBuckets").
+	r.Name(getUserBucketsRouterName).
 		Methods(http.MethodGet).
 		Path("/accounts/{account_id:.+}/buckets").
 		HandlerFunc(g.getUserBucketsHandler)
-	r.Name("GetUserBuckets").
+	r.Name(listObjectsByBucketName).
 		Methods(http.MethodGet).
 		Path("/accounts/{account_id:.+}/buckets/{bucket_name:.+}/objects").
 		HandlerFunc(g.listObjectsByBucketNameHandler)

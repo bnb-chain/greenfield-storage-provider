@@ -35,7 +35,7 @@ func (metadata *Metadata) Name() string {
 // to delete api/v1
 func (metadata *Metadata) Start(ctx context.Context) error {
 	if metadata.running.Swap(true) {
-		return errors.New("uploader has started")
+		return errors.New("metadata has started")
 	}
 	errCh := make(chan error)
 	go metadata.serve(errCh)

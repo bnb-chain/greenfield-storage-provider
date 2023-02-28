@@ -15,7 +15,6 @@ replace (
 )
 
 require (
-	cosmossdk.io/math v1.0.0-beta.6
 	github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.0.5
@@ -30,7 +29,6 @@ require (
 	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-sql-driver/mysql v1.7.0
-	github.com/gofrs/uuid v4.3.0+incompatible
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -55,6 +53,7 @@ require (
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
+	cosmossdk.io/math v1.0.0-beta.6 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect

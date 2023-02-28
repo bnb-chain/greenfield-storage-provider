@@ -137,3 +137,9 @@ Service = [
 
 [MetadataCfg]
     Address = "127.0.0.1:9833"
+    MetaDBType = "sqldb"
+    [MetadataCfg.MetaSqlDBConfig]
+        User = "root"
+        Passwd = "root1234"
+        Address = "127.0.0.1:3306"
+        Database = "meta_db"
