@@ -20,14 +20,22 @@ import (
 
 var _ types.StoneNodeServiceServer = &StoneNode{}
 
-// ReplicateObject replicate an object payload to other storage providers and seal object.
+// ReplicateObject call AsyncReplicateObject non-blocking upstream services
 func (node *StoneNode) ReplicateObject(
 	ctx context.Context,
 	req *types.ReplicateObjectRequest) (
 	resp *types.ReplicateObjectResponse, err error) {
-
-	ctx = log.Context(ctx, req)
 	resp = &types.ReplicateObjectResponse{}
+	node.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING,
+		req.GetObjectInfo().Id.Uint64())
+	go node.AsyncReplicateObject(context.Background(), req)
+	return
+}
+
+// AsyncReplicateObject replicate an object payload to other storage providers and seal object.
+func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
+	req *types.ReplicateObjectRequest) (err error) {
+	ctx = log.Context(ctx, req)
 	processInfo := &servicetypes.ReplicateSegmentInfo{}
 	sealMsg := &storagetypes.MsgSealObject{}
 	objectInfo := req.GetObjectInfo()
@@ -57,7 +65,6 @@ func (node *StoneNode) ReplicateObject(
 		return
 	}()
 
-	node.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING, objectInfo.Id.Uint64())
 	params, err := node.spDb.GetAllParam()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query sp param", "error", err)
