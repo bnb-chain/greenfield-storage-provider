@@ -15,7 +15,7 @@ type SyncerConfig struct {
 }
 
 var DefaultSyncerConfig = &SyncerConfig{
-	SpOperatorAddress: "bnb-sp",
+	SpOperatorAddress: model.SpOperatorAddress,
 	GrpcAddress:       model.SyncerGrpcAddress,
 	SignerGrpcAddress: model.SignerGrpcAddress,
 	SpDBConfig:        store.DefaultSqlDBConfig,

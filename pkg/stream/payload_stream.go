@@ -148,14 +148,14 @@ func (stream *PayloadStream) readStream() {
 		if err == io.EOF && n == 0 {
 			entry.err = err
 			stream.entryCh <- entry
-			log.Infow("payload stream on closed", "object_id", stream.objectId)
+			log.Debugw("payload stream on closed", "object_id", stream.objectId)
 			return
 		}
 		entry.segmentData = data
 		stream.entryCh <- entry
 		count++
 		readSize = readSize + uint32(n)
-		log.Infow("payload stream has read", "read_total_size", readSize, "object_id", stream.objectId, "segment_count:", count-1)
+		log.Debugw("payload stream has read", "read_total_size", readSize, "object_id", stream.objectId, "segment_count:", count-1)
 	}
 }
 

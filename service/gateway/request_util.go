@@ -94,7 +94,7 @@ func (requestContext *requestContext) verifySignature() (sdk.AccAddress, error) 
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
 		return requestContext.verifySignatureV2(requestSignature[len(v2SignaturePrefix):])
 	}
-	return nil, errors.ErrUnsupportedSignType
+	return nil, errors.ErrUnsupportSignType
 }
 
 // verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed
@@ -173,7 +173,7 @@ func (requestContext *requestContext) verifySignatureV2(requestSignature string)
 	}
 	_ = signature
 	// TODO: parse metamask signature and check timeout
-	// return nil, errors.ErrUnsupportedSignType
+	// return nil, errors.ErrUnsupportSignType
 	return sdk.AccAddress{}, nil
 }
 

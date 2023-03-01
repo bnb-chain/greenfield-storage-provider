@@ -4,18 +4,27 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobsql"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
 	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+)
+
+var (
+	// MetaDB environment constants
+	MetaDBUser     = "META_DB_USER"
+	MetaDBPassword = "META_DB_PASSWORD"
+
+	// JobDB environment constants
+	JobDBUser     = "JOB_DB_USER"
+	JobDBPassword = "JOB_DB_PASSWORD"
 )
 
 // NewMetaDB return a meta-db instance
 func NewMetaDB(dbType string, levelDBConfig *config.LevelDBConfig, sqlDBConfig *config.SqlDBConfig) (spdb.MetaDB, error) {
 	var err error
-	sqlDBConfig.User, sqlDBConfig.Passwd, err = getDBConfigFromEnv(model.MetaDBUser, model.MetaDBPassword)
+	sqlDBConfig.User, sqlDBConfig.Passwd, err = getDBConfigFromEnv(MetaDBUser, MetaDBPassword)
 	if err != nil {
 		log.Error("load meta db config from env failed")
 		return nil, err
@@ -27,7 +36,7 @@ func NewMetaDB(dbType string, levelDBConfig *config.LevelDBConfig, sqlDBConfig *
 // NewJobDB return a job-db instance
 func NewJobDB(dbType string, sqlDBConfig *config.SqlDBConfig) (spdb.JobDB, error) {
 	var err error
-	sqlDBConfig.User, sqlDBConfig.Passwd, err = getDBConfigFromEnv(model.JobDBUser, model.JobDBPassword)
+	sqlDBConfig.User, sqlDBConfig.Passwd, err = getDBConfigFromEnv(JobDBUser, JobDBPassword)
 	if err != nil {
 		log.Error("load job db config from env failed")
 		return nil, err

@@ -3,18 +3,28 @@ package service.challenge.types;
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/challenge/types";
 
+// ChallengePieceRequest is request type for the ChallengePiece RPC method.
 message ChallengePieceRequest {
+  // object_id defines the challenge object id
   uint64 object_id = 1;
+  // replicate_idx defines the challenge replicate idx
   int32 replicate_idx = 2;
+  // segment_idx defines the challenge segment idx
   uint32 segment_idx = 5;
 }
 
+// ChallengePieceResponse is response type for the ChallengePiece RPC method.
 message ChallengePieceResponse {
+  // piece_data defines the challenge segment data
   bytes piece_data = 1;
+  // integrity_hash defines the integrity hash of the challenge replicate payload
   bytes integrity_hash = 2;
+  // piece_hash defines the checksum of the challenge segment
   repeated bytes piece_hash = 3;
 }
 
+// ChallengeService defines the gRPC service of challenge segment.
 service ChallengeService {
+  // ChallengePiece challenge the segment of the object.
   rpc ChallengePiece(ChallengePieceRequest) returns (ChallengePieceResponse) {};
 }

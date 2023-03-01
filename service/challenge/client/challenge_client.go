@@ -6,18 +6,18 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 )
 
-// ChallengeClient is a challenge gRPC client wrapper.
+// ChallengeClient is a challenge gRPC service client wrapper
 type ChallengeClient struct {
 	address   string
 	challenge types.ChallengeServiceClient
 	conn      *grpc.ClientConn
 }
 
-// NewStoneNodeClient return a ChallengeClient instance.
+// NewStoneNodeClient return a ChallengeClient instance
 func NewStoneNodeClient(address string) (*ChallengeClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -33,11 +33,12 @@ func NewStoneNodeClient(address string) (*ChallengeClient, error) {
 	return client, nil
 }
 
-// Close the gPRC connection
+// Close the challenge gPRC connection
 func (client *ChallengeClient) Close() error {
 	return client.conn.Close()
 }
 
+// ChallengePiece send challenge piece request
 func (client *ChallengeClient) ChallengePiece(ctx context.Context,
 	objectId uint64, replicateIdx int32, segmentIdx uint32,
 	opts ...grpc.CallOption) ([]byte, [][]byte, []byte, error) {

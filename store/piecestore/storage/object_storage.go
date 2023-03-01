@@ -35,11 +35,11 @@ func (s DefaultObjectStorage) CreateBucket(ctx context.Context) error {
 }
 
 func (s DefaultObjectStorage) ListObjects(ctx context.Context, prefix, marker, delimiter string, limit int64) ([]Object, error) {
-	return nil, errors.NotSupportedMethod
+	return nil, errors.ErrUnsupportMethod
 }
 
 func (s DefaultObjectStorage) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan Object, error) {
-	return nil, errors.NotSupportedMethod
+	return nil, errors.ErrUnsupportMethod
 }
 
 type file struct {

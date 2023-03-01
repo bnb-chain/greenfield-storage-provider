@@ -49,7 +49,7 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 		_, err = node.signer.SealObjectOnChain(ctx, sealMsg)
 		if err != nil {
 			node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR, objectInfo.Id.Uint64())
-			log.CtxErrorw(ctx, "failed to seal object by singer", "error", err)
+			log.CtxErrorw(ctx, "failed to sign object by signer", "error", err)
 			return
 		}
 		node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_TX_DOING, objectInfo.Id.Uint64())
@@ -57,17 +57,17 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 			objectInfo.GetObjectName(), 10)
 		if err != nil {
 			node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR, objectInfo.Id.Uint64())
-			log.CtxErrorw(ctx, "failed to seal object to chain", "error", err)
+			log.CtxErrorw(ctx, "failed to seal object on chain", "error", err)
 			return
 		}
 		node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE, objectInfo.Id.Uint64())
-		log.CtxInfow(ctx, "seal object to chain", "success", success)
+		log.CtxInfow(ctx, "seal object on chain", "success", success)
 		return
 	}()
 
 	params, err := node.spDB.GetAllParam()
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to query sp param", "error", err)
+		log.CtxErrorw(ctx, "failed to query sp params", "error", err)
 		return
 	}
 	segments := piecestore.ComputeSegmentCount(objectInfo.GetPayloadSize(),
@@ -83,7 +83,7 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 	spList, err := node.spDB.FetchAllWithoutSp(node.config.SpOperatorAddress,
 		sptypes.STATUS_IN_SERVICE)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get storage providers", "error", err)
+		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
 		return
 	}
 
@@ -137,7 +137,7 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 				// integrityHash and signature are http response
 				var integrityHash []byte
 				var signature []byte
-				log.CtxDebugw(ctx, "receive the sp response", "replicate_idx", rIdx, "integrity_hash", integrityHash, "signature", signature)
+				log.CtxDebugw(ctx, "receive the sp response", "replica_idx", rIdx, "integrity_hash", integrityHash, "signature", signature)
 				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), integrityHash).GetSignBytes()
 				approvalAddr, err := sdk.AccAddressFromHexUnsafe(sp.GetApprovalAddress())
 				if err != nil {
@@ -149,9 +149,9 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 					log.CtxErrorw(ctx, "failed to verify sp signature", "sp", sp.GetApprovalAddress(), "error", err)
 					continue
 				}
-				log.CtxInfow(ctx, "success to sync payload to sp", "sp", sp.GetOperator(), "replicate_idx", rIdx)
+				log.CtxInfow(ctx, "success to sync payload to sp", "sp", sp.GetOperator(), "replica_idx", rIdx)
 				if atomic.AddInt64(&done, 1) == int64(replicates) {
-					log.CtxInfow(ctx, "finish to syncer all replicates")
+					log.CtxInfow(ctx, "finish to sync all replicas")
 					errCh <- nil
 					return
 				}
@@ -171,7 +171,7 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 	}
 }
 
-// QueryReplicatingObject query a replicating object payload information by object id
+// QueryReplicatingObject query a replicating object information by object id
 func (node *StoneNode) QueryReplicatingObject(
 	ctx context.Context,
 	req *types.QueryReplicatingObjectRequest) (
