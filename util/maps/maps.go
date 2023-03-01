@@ -16,6 +16,7 @@ func SortKeys[M ~map[K]V, K constraints.Ordered, V any](m M) []K {
 	return keys
 }
 
+// sortSlice return the sort items slice by key
 func sortSlice[T constraints.Ordered](s []T) {
 	sort.Slice(s, func(i, j int) bool {
 		return s[i] < s[j]

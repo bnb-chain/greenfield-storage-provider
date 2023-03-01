@@ -14,10 +14,10 @@ var (
 
 // piece store errors
 var (
-	// ErrUnSupportedMethod defines unsupported method error
-	ErrUnSupportedMethod = errors.New("unsupported method")
-	// ErrUnSupportedDelimiter defines invalid key with delimiter error
-	ErrUnSupportedDelimiter = errors.New("unsupported delimiter")
+	// ErrUnsupportMethod defines unsupported method error
+	ErrUnsupportMethod = errors.New("unsupported method")
+	// ErrUnsupportDelimiter defines invalid key with delimiter error
+	ErrUnsupportDelimiter = errors.New("unsupported delimiter")
 	// ErrInvalidObjectKey defines invalid object key error
 	ErrInvalidObjectKey = errors.New("invalid object key")
 	// ErrNotExitObject defines not exist object in memory error
@@ -39,15 +39,14 @@ var (
 	// ErrPayloadZero defines payload size is zero error
 	ErrPayloadZero = errors.New("object payload is zero")
 
-	// signature error
 	// ErrAuthorizationFormat defines the invalid authorization format error
 	ErrAuthorizationFormat = errors.New("authorization format error")
 	// ErrRequestConsistent defines the invalid request checksum error
 	ErrRequestConsistent = errors.New("failed to check request consistent")
 	// ErrSignatureConsistent defines the invalid signature error
 	ErrSignatureConsistent = errors.New("failed to check signature consistent")
-	// ErrUnsupportedSignType defines the unsupported signature type error
-	ErrUnsupportedSignType = errors.New("unsupported signature type")
+	// ErrUnsupportSignType defines the unsupported signature type error
+	ErrUnsupportSignType = errors.New("unsupported signature type")
 	// ErrEmptyReqHeader defines the empty header error
 	ErrEmptyReqHeader = errors.New("request header is empty")
 	// ErrInvalidHeader defines the invalid header error

@@ -111,7 +111,7 @@ func (m *memoryStore) HeadObject(ctx context.Context, key string) (Object, error
 
 func (m *memoryStore) ListObjects(ctx context.Context, prefix, marker, delimiter string, limit int64) ([]Object, error) {
 	if delimiter != "" {
-		return nil, errors.ErrUnSupportedDelimiter
+		return nil, errors.ErrUnsupportDelimiter
 	}
 	m.Lock()
 	defer m.Unlock()

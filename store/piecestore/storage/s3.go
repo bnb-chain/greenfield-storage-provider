@@ -215,7 +215,7 @@ func (s *s3Store) ListObjects(ctx context.Context, prefix, marker, delimiter str
 }
 
 func (s *s3Store) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan Object, error) {
-	return nil, merrors.ErrUnSupportedMethod
+	return nil, merrors.ErrUnsupportMethod
 }
 
 // SessionCache holds session.Session according to ObjectStorageConfig and it synchronizes access/modification

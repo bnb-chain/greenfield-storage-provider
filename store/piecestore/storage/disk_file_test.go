@@ -289,13 +289,13 @@ func TestDiskFile_HeadDirSuccess(t *testing.T) {
 func TestDiskFile_List(t *testing.T) {
 	store := setupDiskFileTest(t)
 	_, err := store.ListObjects(context.TODO(), emptyString, emptyString, emptyString, 0)
-	assert.Equal(t, merrors.ErrUnSupportedMethod, err)
+	assert.Equal(t, merrors.ErrUnsupportMethod, err)
 }
 
 func TestDiskFile_ListAll(t *testing.T) {
 	store := setupDiskFileTest(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
-	assert.Equal(t, merrors.ErrUnSupportedMethod, err)
+	assert.Equal(t, merrors.ErrUnsupportMethod, err)
 }
 
 func TestPath(t *testing.T) {

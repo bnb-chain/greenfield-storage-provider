@@ -230,7 +230,7 @@ func TestMemory_ListError(t *testing.T) {
 		{
 			name:      "memory_list_error_test1",
 			delimiter: mockKey,
-			wantedErr: errors.ErrUnSupportedDelimiter,
+			wantedErr: errors.ErrUnsupportDelimiter,
 		},
 	}
 	for _, tt := range cases {
@@ -246,5 +246,5 @@ func TestMemory_ListError(t *testing.T) {
 func TestMemory_ListAll(t *testing.T) {
 	store := setupMemoryTest(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
-	assert.Equal(t, errors.ErrUnSupportedMethod, err)
+	assert.Equal(t, errors.ErrUnsupportMethod, err)
 }
