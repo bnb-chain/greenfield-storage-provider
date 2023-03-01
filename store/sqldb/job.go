@@ -37,8 +37,8 @@ func (s *SQLStore) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servic
 		ObjectStatus:         int32(objectInfo.GetObjectStatus()),
 		RedundancyType:       int32(objectInfo.GetRedundancyType()),
 		SourceType:           int32(objectInfo.GetSourceType()),
-		Checksum:             util.EncodePieceHash(objectInfo.GetChecksums()),
-		SecondarySPAddresses: util.StringSliceToHeader(objectInfo.GetSecondarySpAddresses()),
+		Checksum:             util.BytesSliceToString(objectInfo.GetChecksums()),
+		SecondarySPAddresses: util.SliceToString(objectInfo.GetSecondarySpAddresses()),
 	}
 	result = s.db.Create(insertObjectRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -122,7 +122,7 @@ func (s *SQLStore) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, err
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query object table: %s", result.Error)
 	}
-	checksums, err := util.DecodePieceHash(queryReturn.Checksum)
+	checksums, err := util.StringToBytesSlice(queryReturn.Checksum)
 	if err != nil {
 		return nil, err
 	}
@@ -163,8 +163,8 @@ func (s *SQLStore) SetObjectInfo(objectID uint64, objectInfo *storagetypes.Objec
 		ObjectStatus:         int32(objectInfo.GetObjectStatus()),
 		RedundancyType:       int32(objectInfo.GetRedundancyType()),
 		SourceType:           int32(objectInfo.GetSourceType()),
-		Checksum:             util.EncodePieceHash(objectInfo.GetChecksums()),
-		SecondarySPAddresses: util.StringSliceToHeader(objectInfo.GetSecondarySpAddresses()),
+		Checksum:             util.BytesSliceToString(objectInfo.GetChecksums()),
+		SecondarySPAddresses: util.SliceToString(objectInfo.GetSecondarySpAddresses()),
 	}
 	// if queryReturn is not nil, update object table with objectInfo
 	if queryReturn != nil {

@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+)
+
+const (
+	// SPDB environment constants
+	SPDBUser     = "SP_DB_USER"
+	SPDBPassword = "SP_DB_PASSWORD"
 )
 
 var _ SPDB = &SQLStore{}
@@ -22,7 +27,7 @@ type SQLStore struct {
 // NewSQLStore return a database instance
 func NewSQLStore(config *config.SQLDBConfig) (*SQLStore, error) {
 	var err error
-	config.User, config.Passwd, err = getDBConfigFromEnv(model.JobDBUser, model.JobDBPassword)
+	config.User, config.Passwd, err = getDBConfigFromEnv(SPDBUser, SPDBPassword)
 	if err != nil {
 		return nil, err
 	}

@@ -8,11 +8,10 @@ type SQLDBConfig struct {
 	Database string
 }
 
-// LevelDBConfig is leveldb config
-type LevelDBConfig struct {
-	Path        string
-	NameSpace   string
-	Cache       int
-	FileHandles int
-	ReadOnly    bool
+// DefaultSQLDBConfig is default conf, Modify it according to the actual configuration.
+var DefaultSQLDBConfig = &SQLDBConfig{
+	User:     "root",
+	Passwd:   "test_pwd",
+	Address:  "local:3306",
+	Database: "storage_provider_db",
 }

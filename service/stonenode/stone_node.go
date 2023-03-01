@@ -8,6 +8,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
@@ -19,7 +20,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
@@ -32,7 +32,7 @@ type StoneNode struct {
 	config     *StoneNodeConfig
 	cache      *lru.Cache
 	signer     *signerclient.SignerClient
-	spDB       store.SPDB
+	spDB       sqldb.SPDB
 	chain      *greenfield.Greenfield
 	pieceStore *psclient.StoreClient
 	grpcServer *grpc.Server
@@ -53,7 +53,7 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	//TODO:: new sp db
+	// TODO:: new sp db
 	node := &StoneNode{
 		config:     config,
 		cache:      cache,
@@ -111,7 +111,7 @@ func (node *StoneNode) EncodeReplicateSegments(
 	replicates int,
 	rType storagetypes.RedundancyType) (
 	data [][][]byte, err error) {
-	params, err := node.spDB.GetAllParam()
+	params, err := node.spDB.GetStorageParams()
 	if err != nil {
 		return
 	}

@@ -26,7 +26,7 @@ func (node *StoneNode) ReplicateObject(
 	req *types.ReplicateObjectRequest) (
 	resp *types.ReplicateObjectResponse, err error) {
 	resp = &types.ReplicateObjectResponse{}
-	node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING,
+	node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING,
 		req.GetObjectInfo().Id.Uint64())
 	go node.AsyncReplicateObject(context.Background(), req)
 	return
@@ -41,31 +41,31 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 	objectInfo := req.GetObjectInfo()
 	defer func() {
 		if err != nil {
-			node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR, objectInfo.Id.Uint64())
+			node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR, objectInfo.Id.Uint64())
 			log.CtxErrorw(ctx, "failed to replicate payload data to sp", "error", err)
 			return
 		}
-		node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING, objectInfo.Id.Uint64())
+		node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING, objectInfo.Id.Uint64())
 		_, err = node.signer.SealObjectOnChain(ctx, sealMsg)
 		if err != nil {
-			node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR, objectInfo.Id.Uint64())
+			node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR, objectInfo.Id.Uint64())
 			log.CtxErrorw(ctx, "failed to sign object by signer", "error", err)
 			return
 		}
-		node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_TX_DOING, objectInfo.Id.Uint64())
+		node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_TX_DOING, objectInfo.Id.Uint64())
 		success, err := node.chain.ListenObjectSeal(ctx, objectInfo.GetBucketName(),
 			objectInfo.GetObjectName(), 10)
 		if err != nil {
-			node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR, objectInfo.Id.Uint64())
+			node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR, objectInfo.Id.Uint64())
 			log.CtxErrorw(ctx, "failed to seal object on chain", "error", err)
 			return
 		}
-		node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE, objectInfo.Id.Uint64())
+		node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE, objectInfo.Id.Uint64())
 		log.CtxInfow(ctx, "seal object on chain", "success", success)
 		return
 	}()
 
-	params, err := node.spDB.GetAllParam()
+	params, err := node.spDB.GetStorageParams()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query sp params", "error", err)
 		return
@@ -80,8 +80,7 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 		log.CtxErrorw(ctx, "failed to encode payload", "error", err)
 		return
 	}
-	spList, err := node.spDB.FetchAllWithoutSp(node.config.SpOperatorAddress,
-		sptypes.STATUS_IN_SERVICE)
+	spList, err := node.spDB.FetchAllSPWithoutOwnSP(sptypes.STATUS_IN_SERVICE)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
 		return
@@ -122,18 +121,18 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 				for idx := 0; idx < len(replicateData[0]); idx++ {
 					data[idx] = replicateData[idx][rIdx]
 				}
-				//// http request params
-				//sp.GetEndpoint()
-				//syncReq := &syncertypes.SyncObjectRequest{
+				// // http request params
+				// sp.GetEndpoint()
+				// syncReq := &syncertypes.SyncObjectRequest{
 				//	ObjectInfo:    req.GetObjectInfo(),
 				//	ReplicateIdx:  uint32(rIdx),
 				//	SegmentSize:   uint64(len(replicateData[0][0])),
 				//	ReplicateData: data,
-				//}
-				//// http request return err
-				//if err != nil {
+				// }
+				// // http request return err
+				// if err != nil {
 				//	continue
-				//}
+				// }
 				// integrityHash and signature are http response
 				var integrityHash []byte
 				var signature []byte
@@ -177,8 +176,8 @@ func (node *StoneNode) QueryReplicatingObject(
 	req *types.QueryReplicatingObjectRequest) (
 	resp *types.QueryReplicatingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
-	objectId := req.GetObjectId()
-	val, ok := node.cache.Get(objectId)
+	objectID := req.GetObjectId()
+	val, ok := node.cache.Get(objectID)
 	if !ok {
 		err = merrors.ErrCacheMiss
 		return

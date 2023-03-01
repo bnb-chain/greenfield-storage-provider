@@ -97,4 +97,5 @@ type SPDB interface {
 	ObjectIntegrity
 	Traffic
 	SPInfo
+	StorageParam
 }

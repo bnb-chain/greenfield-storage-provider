@@ -5,8 +5,8 @@ import (
 	"net"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store"
 	pscli "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -18,7 +18,7 @@ import (
 // responsible for handling challenge piece request.
 type Challenge struct {
 	config     *ChallengeConfig
-	spDB       store.SPDB
+	spDB       sqldb.SPDB
 	pieceStore *pscli.StoreClient
 }
 
