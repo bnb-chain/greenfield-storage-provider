@@ -57,6 +57,14 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to create object table", "err", err)
 		return nil, err
 	}
+	if err := db.AutoMigrate(&SPInfoTable{}); err != nil {
+		log.Errorw("failed to create sp info table", "err", err)
+		return nil, err
+	}
+	if err := db.AutoMigrate(&StorageParamsTable{}); err != nil {
+		log.Errorw("failed to storage params table", "err", err)
+		return nil, err
+	}
 	if err := db.AutoMigrate(&IntegrityMetaTable{}); err != nil {
 		log.Errorw("failed to create integrity meta table", "err", err)
 		return nil, err
