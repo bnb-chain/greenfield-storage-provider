@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"os"
 
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
+	"github.com/naoina/toml"
+
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -14,8 +17,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
-	"github.com/naoina/toml"
 )
 
 type StorageProviderConfig struct {

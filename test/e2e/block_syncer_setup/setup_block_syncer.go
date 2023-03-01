@@ -41,15 +41,15 @@ func initConfig() {
 	cfg.StoneHubCfg = stonehub.DefaultStoneHubConfig
 	cfg.ChallengeCfg = challenge.DefaultChallengeConfig
 	cfg.StoneNodeCfg = stonenode.DefaultStoneNodeConfig
-	if cfg.SyncerCfg.MetaSqlDBConfig == nil {
-		cfg.SyncerCfg.MetaSqlDBConfig = metasql.DefaultMetaSqlDBConfig
+	if cfg.SyncerCfg.MetaSQLDBConfig == nil {
+		cfg.SyncerCfg.MetaSQLDBConfig = metasql.DefaultMetaSQLDBConfig
 	}
 	if cfg.SyncerCfg.MetaLevelDBConfig == nil {
 		cfg.SyncerCfg.MetaLevelDBConfig = metalevel.DefaultMetaLevelDBConfig
 	}
-	//iff cfg.SyncerCfg.PieceConfig == nil {
+	// iff cfg.SyncerCfg.PieceConfig == nil {
 	//	cfg.SyncerCfg.PieceConfig = storage.DefaultPieceStoreConfig
-	//}
+	// }
 	avgBlockTime := time.Second
 	cfg.BlockSyncerCfg.Parser.AvgBlockTime = &avgBlockTime
 	cfg.BlockSyncerCfg.Database.Secrets = &dbConf.Params{}

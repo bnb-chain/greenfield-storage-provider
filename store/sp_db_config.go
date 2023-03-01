@@ -1,15 +1,15 @@
 package store
 
-// SqlDBConfig is sql-db config
-type SqlDBConfig struct {
+// SQLDBConfig is sql-db config
+type SQLDBConfig struct {
 	User     string
 	Passwd   string
 	Address  string
 	Database string
 }
 
-// DefaultSqlDBConfig is default conf, Modify it according to the actual configuration.
-var DefaultSqlDBConfig = &SqlDBConfig{
+// DefaultSQLDBConfig is default conf, Modify it according to the actual configuration.
+var DefaultSQLDBConfig = &SQLDBConfig{
 	User:     "root",
 	Passwd:   "test_pwd",
 	Address:  "local:3306",

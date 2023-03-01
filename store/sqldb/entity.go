@@ -1,0 +1,72 @@
+package sqldb
+
+import "time"
+
+// IntegrityMeta
+type IntegrityMeta struct {
+	ObjectID      uint64
+	Checksum      [][]byte
+	IntegrityHash []byte
+	Signature     []byte
+}
+
+type SPAddressType int32
+
+const (
+	OperatorAddressType SPAddressType = iota + 1
+	FundingAddressType
+	SealAddressType
+	ApprovalAddressType
+)
+
+// BucketQuota is a quota config from chain
+type BucketQuota struct {
+	ReadQuotaSize int64
+}
+
+// BucketTraffic is record traffic by year and month
+type BucketTraffic struct {
+	BucketID      uint64
+	YearMonth     string // YearMonth is traffic's YearMonth, format "2023-02"
+	BucketName    string
+	ReadCostSize  int64
+	ReadQuotaSize int64
+	ModifyTime    int64
+}
+
+// TrafficTimeRange is used by query, return records in [StartTime, EndTime)
+type TrafficTimeRange struct {
+	StartTime int64
+	EndTime   int64
+	LimitNum  int // is unlimited if LimitNum <= 0
+}
+
+// ReadRecord is a read request
+type ReadRecord struct {
+	BucketID    uint64
+	ObjectID    uint64
+	UserAddress string
+	BucketName  string
+	ObjectName  string
+	ReadSize    int64
+	ReadTime    int64
+}
+
+func GetCurrentYearMonth() string {
+	return Time2YearMonth(time.Now())
+}
+
+// GetNowTimeUnix return a second timestamp
+func GetNowTimeUnix() int64 {
+	return time.Now().Unix()
+}
+
+// TimeUnix2Time convent a second timestamp to time.Time
+func TimeUnix2Time(timeUnix int64) time.Time {
+	return time.Unix(timeUnix, 0)
+}
+
+// Time2YearMonth convent time.Time to YYYY-MM string
+func Time2YearMonth(t time.Time) string {
+	return t.Format("2006-01-02 15:04:05")[0:6]
+}

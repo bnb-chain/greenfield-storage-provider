@@ -216,6 +216,8 @@ github.com/bnb-chain/greenfield-common v0.0.3-0.20230223083211-e5b5e220939c h1:T
 github.com/bnb-chain/greenfield-common v0.0.3-0.20230223083211-e5b5e220939c/go.mod h1:1Jh4CRNrgMhzI5l6gRtrcl+J7hMnqAb3vlLAirkrW2k=
 github.com/bnb-chain/greenfield-common/go v0.0.0-20230220095438-937c5b838b69 h1:zf0RTWOAFtPa9bS7ie1QSw5uQIIGVPJMmtMzg0Uhnfk=
 github.com/bnb-chain/greenfield-common/go v0.0.0-20230220095438-937c5b838b69/go.mod h1:c8DMlVkqGbVh6tV5l45R8YbS2VxeAe4PLo91r5yvq/4=
+github.com/bnb-chain/greenfield-common/go v0.0.0-20230227091017-b60c7936a1c6 h1:YFJz8O8p36qbNqXfzQ16Fh08U/N70qbRGNFNw7hNZT4=
+github.com/bnb-chain/greenfield-common/go v0.0.0-20230227091017-b60c7936a1c6/go.mod h1:Nzpqn+BK8P1Ub3Tgn300bHmWMUk9R6cBwvmasVY25J8=
 github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230222033526-17e6b63b80bc h1:H5EmDqoxmgLEaLzeFwYAcp97u5cIrJm9ulHRBbmhoOc=
 github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230222033526-17e6b63b80bc/go.mod h1:rlkE/xNOQXt4ANJxz55V8SmhZHaP/LOOQlvAzIeVX68=
 github.com/bnb-chain/juno/v4 v4.0.0-20230223090130-98858670d635 h1:jyOjg0KlLtKWN+ah1XXeRQMVDK4NzVx8jktz/b/sK+Y=

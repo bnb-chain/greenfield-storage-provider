@@ -117,7 +117,7 @@ func (node *StoneNodeService) encode(redundancyType ptypes.RedundancyType, segme
 	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
 		pieceData = append(pieceData, segmentData)
 	default: // ec type
-		pieceData, err = redundancy.EncodeRawSegment(segmentData, model.EC_M, model.EC_K)
+		pieceData, err = redundancy.EncodeRawSegment(segmentData, model.ECM, model.ECK)
 		if err != nil {
 			return nil, err
 		}
