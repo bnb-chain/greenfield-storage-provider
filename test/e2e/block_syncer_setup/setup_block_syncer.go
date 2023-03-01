@@ -41,8 +41,8 @@ func initConfig() {
 	cfg.StoneHubCfg = stonehub.DefaultStoneHubConfig
 	cfg.ChallengeCfg = challenge.DefaultChallengeConfig
 	cfg.StoneNodeCfg = stonenode.DefaultStoneNodeConfig
-	if cfg.SyncerCfg.MetaSQLDBConfig == nil {
-		cfg.SyncerCfg.MetaSQLDBConfig = metasql.DefaultMetaSQLDBConfig
+	if cfg.SyncerCfg.MetaSqlDBConfig == nil {
+		cfg.SyncerCfg.MetaSqlDBConfig = metasql.DefaultMetaSqlDBConfig
 	}
 	if cfg.SyncerCfg.MetaLevelDBConfig == nil {
 		cfg.SyncerCfg.MetaLevelDBConfig = metalevel.DefaultMetaLevelDBConfig
