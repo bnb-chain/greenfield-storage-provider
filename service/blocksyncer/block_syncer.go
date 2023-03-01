@@ -17,7 +17,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
@@ -109,7 +108,7 @@ func (s *BlockSyncer) Start(ctx context.Context) error {
 // Stop running SyncerService
 func (s *BlockSyncer) Stop(ctx context.Context) error {
 	if !s.running.Swap(false) {
-		return merrors.ErrSyncerStopped
+		return nil
 	}
 	return nil
 }

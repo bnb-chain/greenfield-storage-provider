@@ -89,7 +89,7 @@ package gateway
 //	id, err := util.StringToUin64(objectID)
 //	if err != nil {
 //		log.Errorw("parse object id failed", "error", err)
-//		return nil, merrors.ErrReqHeader
+//		return nil, merrors.ErrInvalidHeader
 //	}
 //	syncerInfo.ObjectId = id
 //
@@ -110,7 +110,7 @@ package gateway
 //	pCount, err := util.StringToUint32(pieceCount)
 //	if err != nil {
 //		log.Errorw("parse piece count failed", "error", err)
-//		return nil, merrors.ErrReqHeader
+//		return nil, merrors.ErrInvalidHeader
 //	}
 //	syncerInfo.PieceCount = pCount
 //
@@ -123,7 +123,7 @@ package gateway
 //	pIdx, err := util.StringToUint32(pieceIndex)
 //	if err != nil {
 //		log.Errorw("parse piece index failed", "error", err)
-//		return nil, merrors.ErrReqHeader
+//		return nil, merrors.ErrInvalidHeader
 //	}
 //	syncerInfo.PieceIndex = pIdx
 //
