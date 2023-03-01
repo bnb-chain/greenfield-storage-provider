@@ -13,8 +13,8 @@ import (
 
 const (
 	// SPDB environment constants
-	SPDBUser     = "SP_DB_USER"
-	SPDBPassword = "SP_DB_PASSWORD"
+	SPDBUser   = "SP_DB_USER"
+	SPDBPasswd = "SP_DB_PASSWORD"
 )
 
 var _ SPDB = &SQLStore{}
@@ -27,7 +27,7 @@ type SQLStore struct {
 // NewSQLStore return a database instance
 func NewSQLStore(config *config.SQLDBConfig) (*SQLStore, error) {
 	var err error
-	config.User, config.Passwd, err = getDBConfigFromEnv(SPDBUser, SPDBPassword)
+	config.User, config.Passwd, err = getDBConfigFromEnv(SPDBUser, SPDBPasswd)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func NewSQLStore(config *config.SQLDBConfig) (*SQLStore, error) {
 
 // InitDB init a db instance
 func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&praseTime=True&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.User, config.Passwd, config.Address, config.Database)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
