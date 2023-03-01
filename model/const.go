@@ -1,43 +1,74 @@
 package model
 
-// define storage provider support service name.
+// define storage provider include service
 const (
-	GatewayService     = "Gateway"
-	UploaderService    = "Uploader"
-	DownloaderService  = "Downloader"
-	ChallengeService   = "Challenge"
-	StoneHubService    = "StoneHub"
-	StoneNodeService   = "StoneNode"
-	SyncerService      = "Syncer"
-	SignerService      = "Signer"
-	MetadataService    = "Metadata"
+	// GatewayService defines the name of gateway service
+	GatewayService = "Gateway"
+	// UploaderService defines the name of uploader service
+	UploaderService = "Uploader"
+	// DownloaderService defines the name of downloader service
+	DownloaderService = "Downloader"
+	// ChallengeService defines the name of challenge service
+	ChallengeService = "Challenge"
+	// StoneNodeService defines the name of stone node service
+	StoneNodeService = "StoneNode"
+	// SyncerService defines the name of syncer service
+	SyncerService = "Syncer"
+	// SignerService defines the name of signer service
+	SignerService = "Signer"
+	// MetadataService defines the name of metadata service
+	MetadataService = "Metadata"
+	// BlockSyncerService defines the name of block sync service
 	BlockSyncerService = "BlockSyncer"
 )
 
-// define payload data redundancy size.
+// define storage provider service gGRPC default address
 const (
-	InlineSize  = 1 * 1024 * 1024
-	SegmentSize = 16 * 1024 * 1024
-	ECM         = 4
-	ECK         = 2
+	// UploaderGrpcAddress default gGRPC address of uploader
+	UploaderGrpcAddress = "localhost:9133"
+	// DownloaderGrpcAddress default gGRPC address of downloader
+	DownloaderGrpcAddress = "localhost:9233"
+	// ChallengeGrpcAddress default gGRPC address of challenge
+	ChallengeGrpcAddress = "localhost:9333"
+	// StoneNodeGrpcAddress default gGRPC address of stone node
+	StoneNodeGrpcAddress = "localhost:9433"
+	// SyncerGrpcAddress default gGRPC address of syncer
+	SyncerGrpcAddress = "localhost:9533"
+	// SignerGrpcAddress default gGRPC address of signer
+	SignerGrpcAddress = "localhost:9633"
 )
 
-type PieceType int32
-
+// environment constants
 const (
-	SegmentPieceType PieceType = 0
-	ECPieceType      PieceType = 1
+	// BucketURL defines env variable name for bucket url
+	BucketURL = "BUCKET_URL"
+	// AWSAccessKey defines env variable name for aws assess key
+	AWSAccessKey = "AWS_ACCESS_KEY"
+	// AWSSecretKey defines env variable name for aws secret key
+	AWSSecretKey = "AWS_SECRET_KEY"
+	// AWSSessionToken defines env variable name for aws session token
+	AWSSessionToken = "AWS_SESSION_TOKEN"
+	// SpOperatorAddress defines env variable name for sp operator address
+	SpOperatorAddress = "SP_OPERATOR_ADDRESS"
+)
+
+// define cache size
+const (
+	// LruCacheLimit define maximum number of cached items in service trace queue
+	LruCacheLimit = 8192
 )
 
 // define piece store constants.
 const (
-	BufPoolSize  = 32 << 10
+	// BufPoolSize define buffer pool size
+	BufPoolSize = 32 << 10
+	// ChecksumAlgo define validation Algorithm Name
 	ChecksumAlgo = "Crc32c"
 )
 
 // RPC config
 const (
-	// server and client max send or recv msg size
+	// MaxCallMsgSize defines gPRCt max send or recv msg size
 	MaxCallMsgSize = 25 * 1024 * 1024
 )
 
@@ -51,10 +82,7 @@ const (
 	ContentTypeXMLHeaderValue = "application/xml"
 	RangeHeader               = "Range"
 	ContentRangeHeader        = "Content-Range"
-)
 
-// Gateway
-const (
 	// path
 	AdminPath          = "/greenfield/admin/v1/"
 	SyncerPath         = "/greenfield/syncer/v1/sync-piece"
@@ -72,6 +100,7 @@ const (
 	GnfdTransactionHashHeader = "X-Gnfd-Txn-Hash"
 	GnfdResourceHeader        = "X-Gnfd-Resource"
 	GnfdPreSignatureHeader    = "X-Gnfd-Pre-Signature"
+
 	// GnfdRedundancyTypeHeader can be EC or Replica, EC is default
 	GnfdRedundancyTypeHeader      = "X-Gnfd-Redundancy-Type"
 	GnfdAuthorizationHeader       = "Authorization"
@@ -103,30 +132,4 @@ const (
 	Signature     = "Signature"
 	SignTypeV1    = "authTypeV1"
 	SignTypeV2    = "authTypeV2"
-)
-
-// define backend store type name.
-const (
-	MemoryDB string = "memory"
-	MySqlDB  string = "mysql"
-	LevelDB  string = "leveldb"
-)
-
-// environment constants
-const (
-	// Piece Store constants
-	BucketURL = "BUCKET_URL"
-
-	// AWS environment constants
-	AWSAccessKey    = "AWS_ACCESS_KEY"
-	AWSSecretKey    = "AWS_SECRET_KEY"
-	AWSSessionToken = "AWS_SESSION_TOKEN"
-
-	// MetaDB environment constants
-	MetaDBUser     = "META_DB_USER"
-	MetaDBPassword = "META_DB_PASSWORD"
-
-	// JobDB environment constants
-	JobDBUser     = "JOB_DB_USER"
-	JobDBPassword = "JOB_DB_PASSWORD"
 )

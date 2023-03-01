@@ -10,8 +10,8 @@ type PieceStoreConfig struct {
 var DefaultPieceStoreConfig = &PieceStoreConfig{
 	Shards: 0,
 	Store: &ObjectStorageConfig{
-		Storage:               "s3",
-		BucketURL:             "https://s3.ap-northeast-1.amazonaws.com/example",
+		Storage:               "file",
+		BucketURL:             "./data",
 		NoSignRequest:         false,
 		MaxRetries:            5,
 		MinRetryDelay:         0,

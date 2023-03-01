@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-go-sdk/client/chain"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -27,11 +27,12 @@ type GreenfieldClient struct {
 	Provider             []string
 }
 
+// GnfdCompositeClient return the greenfield chain client
 func (client *GreenfieldClient) GnfdCompositeClient() *chain.GnfdCompositeClient {
 	return client.gnfdCompositeClient
 }
 
-// Greenfield the greenfield chain service.
+// Greenfield encapsulation of greenfiled chain go sdk, support for more query request
 type Greenfield struct {
 	config        *GreenfieldChainConfig
 	client        *GreenfieldClient
@@ -79,14 +80,14 @@ func (greenfield *Greenfield) getCurrentClient() *GreenfieldClient {
 	return greenfield.client
 }
 
-// setCurrentClient set current use client.
+// setCurrentClient set client to current client for using.
 func (greenfield *Greenfield) setCurrentClient(client *GreenfieldClient) {
 	greenfield.mutex.Lock()
 	defer greenfield.mutex.Unlock()
 	greenfield.client = client
 }
 
-// updateClient select block height is the largest from all clients and update to current client.
+// updateClient select the client that block height is the largest and set to current client.
 func (greenfield *Greenfield) updateClient() {
 	ticker := time.NewTicker(UpdateClientInternal * time.Second)
 	for {

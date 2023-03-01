@@ -6,7 +6,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/router"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/store"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/gin-gonic/gin"
 )
 

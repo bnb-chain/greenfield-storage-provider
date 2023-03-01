@@ -2,28 +2,22 @@ package syncer
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metalevel"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
+	"github.com/bnb-chain/greenfield-storage-provider/store"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
 type SyncerConfig struct {
-	Address              string
-	SignerServiceAddress string
-	StorageProvider      string
-	MetaDBType           string
-	MetaLevelDBConfig    *config.LevelDBConfig
-	MetaSqlDBConfig      *config.SqlDBConfig
-	PieceStoreConfig     *storage.PieceStoreConfig
+	SpOperatorAddress string
+	GrpcAddress       string
+	SignerGrpcAddress string
+	SpDBConfig        *store.SqlDBConfig
+	PieceStoreConfig  *storage.PieceStoreConfig
 }
 
 var DefaultSyncerConfig = &SyncerConfig{
-	Address:              "127.0.0.1:9533",
-	SignerServiceAddress: "127.0.0.1:9633",
-	StorageProvider:      "bnb-sp",
-	MetaDBType:           model.LevelDB,
-	MetaLevelDBConfig:    metalevel.DefaultMetaLevelDBConfig,
-	MetaSqlDBConfig:      metasql.DefaultMetaSqlDBConfig,
-	PieceStoreConfig:     storage.DefaultPieceStoreConfig,
+	SpOperatorAddress: model.SpOperatorAddress,
+	GrpcAddress:       model.SyncerGrpcAddress,
+	SignerGrpcAddress: model.SignerGrpcAddress,
+	SpDBConfig:        store.DefaultSqlDBConfig,
+	PieceStoreConfig:  storage.DefaultPieceStoreConfig,
 }

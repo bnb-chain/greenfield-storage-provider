@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -19,12 +20,11 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 var (
 	version    = flag.Bool("version", false, "print version")
-	configFile = flag.String("config", "../../config/config.toml", "config file path")
+	configFile = flag.String("config", "./config.toml", "config file path")
 )
 
 // initService init service instance by name and config.
@@ -119,10 +119,10 @@ func main() {
 		// 1. init service instance.
 		service, err := initService(serviceName, cfg)
 		if err != nil {
-			log.Errorw("init service failed", "service_name", serviceName, "error", err)
+			log.Errorw("failed to init service", "service", serviceName, "error", err)
 			os.Exit(1)
 		}
-		log.Debugw("init service success", "service_name", serviceName)
+		log.Debugw("success to init service ", "service", serviceName)
 		// 2. register service to lifecycle.
 		slc.RegisterServices(service)
 	}

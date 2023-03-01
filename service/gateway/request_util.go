@@ -8,15 +8,15 @@ import (
 	"strings"
 	"time"
 
-	commonhttp "github.com/bnb-chain/greenfield-common/http"
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	signer "github.com/bnb-chain/greenfield-go-sdk/keys/signer"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -94,7 +94,7 @@ func (requestContext *requestContext) verifySignature() (sdk.AccAddress, error) 
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
 		return requestContext.verifySignatureV2(requestSignature[len(v2SignaturePrefix):])
 	}
-	return nil, errors.ErrUnsupportedSignType
+	return nil, errors.ErrUnsupportSignType
 }
 
 // verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed
@@ -173,7 +173,7 @@ func (requestContext *requestContext) verifySignatureV2(requestSignature string)
 	}
 	_ = signature
 	// TODO: parse metamask signature and check timeout
-	// return nil, errors.ErrUnsupportedSignType
+	// return nil, errors.ErrUnsupportSignType
 	return sdk.AccAddress{}, nil
 }
 
@@ -189,7 +189,7 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 	rangeStr = rangeStr[len("bytes="):]
 	if strings.HasSuffix(rangeStr, "-") {
 		rangeStr = rangeStr[:len(rangeStr)-1]
-		rangeStart, err := util.HeaderToUint64(rangeStr)
+		rangeStart, err := util.StringToUin64(rangeStr)
 		if err != nil {
 			return false, -1, -1
 		}
@@ -197,11 +197,11 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 	}
 	pair := strings.Split(rangeStr, "-")
 	if len(pair) == 2 {
-		rangeStart, err := util.HeaderToUint64(pair[0])
+		rangeStart, err := util.StringToUin64(pair[0])
 		if err != nil {
 			return false, -1, -1
 		}
-		rangeEnd, err := util.HeaderToUint64(pair[1])
+		rangeEnd, err := util.StringToUin64(pair[1])
 		if err != nil {
 			return false, -1, -1
 		}

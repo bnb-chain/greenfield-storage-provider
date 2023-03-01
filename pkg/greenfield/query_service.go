@@ -6,7 +6,7 @@ import (
 	"time"
 
 	merror "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -32,7 +32,7 @@ func (greenfield *Greenfield) HasAccount(ctx context.Context, address string) (b
 	client := greenfield.getCurrentClient().GnfdCompositeClient()
 	resp, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: address})
 	if err != nil {
-		log.Errorw("failed to query account", "error", err, "address", address)
+		log.Errorw("failed to query account", "address", address, "error", err)
 		return false, err
 	}
 	return resp.GetAccount() != nil, nil
@@ -49,7 +49,7 @@ func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.Stora
 		},
 	})
 	if err != nil {
-		log.Errorw("failed to query sp list", "error", err)
+		log.Errorw("failed to query storage provider list", "error", err)
 		return spInfos, err
 	}
 	for i := 0; i < len(resp.GetSps()); i++ {
@@ -63,7 +63,7 @@ func (greenfield *Greenfield) QueryBucketInfo(ctx context.Context, bucket string
 	client := greenfield.getCurrentClient().GnfdCompositeClient()
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if err != nil {
-		log.Errorw("failed to query bucket", "error", err, "bucket_name", bucket)
+		log.Errorw("failed to query bucket", "bucket_name", bucket, "error", err)
 		return nil, err
 	}
 	return resp.GetBucketInfo(), nil
@@ -77,7 +77,7 @@ func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, objec
 		ObjectName: object,
 	})
 	if err != nil {
-		log.Errorw("failed to query object", "error", err, "bucket_name", bucket, "object_name", object)
+		log.Errorw("failed to query object", "bucket_name", bucket, "object_name", object, "error", err)
 		return nil, err
 	}
 	return resp.GetObjectInfo(), nil
@@ -99,7 +99,7 @@ func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, obje
 			return
 		}
 	}
-	log.Errorw("listen seal object timeout", "error", err, "bucket_name", bucket, "object_name", object)
+	log.Errorw("seal object timeout", "bucket_name", bucket, "object_name", object)
 	err = merror.ErrSealTimeout
 	return
 }

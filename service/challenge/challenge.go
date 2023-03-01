@@ -2,79 +2,59 @@ package challenge
 
 import (
 	"context"
-	"fmt"
 	"net"
 
+	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
+	pscli "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-// Challenge manage the integrity hash check
+// Challenge implements the gRPC of ChallengeService,
+// responsible for handling challenge piece request.
 type Challenge struct {
 	config     *ChallengeConfig
-	name       string
-	metaDB     spdb.MetaDB // storage provider meta db
-	pieceStore *client.StoreClient
+	spDB       store.SPDB
+	pieceStore *pscli.StoreClient
 }
 
-// NewChallengeService return a Challenge instance.
+// NewChallengeService returns an instance of Challenge that implementation of
+// the lifecycle.Service and ChallengeService interface
 func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err error) {
+	pieceStore, err := pscli.NewStoreClient(config.PieceStoreConfig)
+	if err != nil {
+		return nil, err
+	}
+	// TODO:: new sp db
 	challenge = &Challenge{
-		config: config,
-		name:   model.ChallengeService,
+		config:     config,
+		pieceStore: pieceStore,
 	}
-	err = challenge.initDB()
-	return
+	return challenge, nil
 }
 
-// initDB init related client resource.
-func (challenge *Challenge) initDB() error {
-	var (
-		metaDB spdb.MetaDB
-		err    error
-	)
-
-	metaDB, err = store.NewMetaDB(challenge.config.MetaDBType,
-		challenge.config.MetaLevelDBConfig, challenge.config.MetaSqlDBConfig)
-	if err != nil {
-		log.Errorw("failed to init metaDB", "err", err)
-		return err
-	}
-	challenge.metaDB = metaDB
-
-	challenge.pieceStore, err = client.NewStoreClient(challenge.config.PieceStoreConfig)
-	if err != nil {
-		log.Errorw("challenge starts piece store client failed", "error", err)
-		return err
-	}
-	return nil
-}
-
-// Name describes the name of Challenge
+// Name return the challenge service name, for the lifecycle management
 func (challenge *Challenge) Name() string {
-	return challenge.name
+	return model.ChallengeService
 }
 
-// Start implement the lifecycle interface
+// Start the challenge gRPC service
 func (challenge *Challenge) Start(ctx context.Context) error {
 	errCh := make(chan error)
 
 	go func(errCh chan error) {
-		lis, err := net.Listen("tcp", challenge.config.Address)
+		lis, err := net.Listen("tcp", challenge.config.GrpcAddress)
 		errCh <- err
 		if err != nil {
 			log.Errorw("challenge listen failed", "error", err)
 			return
 		}
 		grpcServer := grpc.NewServer()
-		stypes.RegisterChallengeServiceServer(grpcServer, challenge)
+		types.RegisterChallengeServiceServer(grpcServer, challenge)
 		reflection.Register(grpcServer)
 		if err = grpcServer.Serve(lis); err != nil {
 			log.Errorw("challenge serve failed", "error", err)
@@ -86,14 +66,7 @@ func (challenge *Challenge) Start(ctx context.Context) error {
 	return err
 }
 
-// Stop implement the lifecycle interface
+// Stop the challenge gRPC service and recycle the resources
 func (challenge *Challenge) Stop(ctx context.Context) error {
-	var errs []error
-	if err := challenge.metaDB.Close(); err != nil {
-		errs = append(errs, err)
-	}
-	if errs != nil {
-		return fmt.Errorf("%v", errs)
-	}
 	return nil
 }

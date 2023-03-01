@@ -1,11 +1,12 @@
 package errors
 
 const (
-	RPCErrCode    = 10000
-	ErrTxHashCode = 10002
-
+	// RPCErrCode defines storage provider rpc error code
+	RPCErrCode = 10000
+	// ErrorCodeBadRequest defines bad request error code
 	ErrorCodeBadRequest = 40001
-	ErrorCodeNotFound   = 40004
-
+	// ErrorCodeNotFound defines not found error code
+	ErrorCodeNotFound = 40004
+	// ErrorCodeInternalError defines internal error code
 	ErrorCodeInternalError = 50001
 )

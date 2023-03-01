@@ -6,7 +6,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
