@@ -9,11 +9,11 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var _ types.UploaderServiceServer = &Uploader{}
@@ -25,31 +25,31 @@ func (uploader *Uploader) UploadObject(
 		resp          types.UploadObjectResponse
 		pstream       = payloadstream.NewAsyncPayloadStream()
 		traceInfo     = &servicetypes.SegmentInfo{}
-		checksum      [][]byte
+		checkSum      [][]byte
 		integrityMeta = &store.IntegrityMeta{}
 		errCh         = make(chan error, 10)
 	)
 	defer func(resp *types.UploadObjectResponse, err error) {
 		if err != nil {
 			log.Errorw("failed to replicate payload", "err", err)
-			uploader.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
+			uploader.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
 				traceInfo.GetObjectInfo().Id.Uint64())
 			return
 		}
-		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checksum)
+		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checkSum)
 		if err != nil {
 			log.Errorw("failed to sign integrity hash", "err", err)
-			uploader.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
+			uploader.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
 				traceInfo.GetObjectInfo().Id.Uint64())
 			return
 		}
-		integrityMeta.Checksum = checksum
+		integrityMeta.Checksum = checkSum
 		integrityMeta.IntegrityHash = integrityHash
 		integrityMeta.Signature = signature
-		err = uploader.spDb.SetObjectIntegrity(integrityMeta)
+		err = uploader.spDB.SetObjectIntegrity(integrityMeta)
 		if err != nil {
 			log.Errorw("failed to write integrity hash to db", "error", err)
-			uploader.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
+			uploader.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
 				traceInfo.GetObjectInfo().Id.Uint64())
 			return
 		}
@@ -58,12 +58,12 @@ func (uploader *Uploader) UploadObject(
 		uploader.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
 		err = stream.SendAndClose(resp)
 		pstream.Close()
-		uploader.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE,
+		uploader.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE,
 			traceInfo.GetObjectInfo().Id.Uint64())
 		log.Infow("finish to upload payload", "error", err)
 	}(&resp, err)
 
-	params, err := uploader.spDb.GetAllParam()
+	params, err := uploader.spDB.GetAllParam()
 	if err != nil {
 		return
 	}
@@ -92,7 +92,7 @@ func (uploader *Uploader) UploadObject(
 				integrityMeta.ObjectId = req.GetObjectInfo().Id.Uint64()
 				traceInfo.ObjectInfo = req.GetObjectInfo()
 				uploader.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
-				uploader.spDb.CreateUploadJob(req.GetObjectInfo())
+				uploader.spDB.CreateUploadJob(req.GetObjectInfo())
 				init = false
 			}
 			pstream.StreamWrite(req.GetPayload())
@@ -101,7 +101,7 @@ func (uploader *Uploader) UploadObject(
 
 	// read payload from stream, the payload is spilt to segment size
 	for {
-		uploader.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING,
+		uploader.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING,
 			traceInfo.GetObjectInfo().Id.Uint64())
 		select {
 		case entry := <-pstream.AsyncStreamRead():
@@ -114,8 +114,8 @@ func (uploader *Uploader) UploadObject(
 				errCh <- entry.Error()
 				return
 			}
-			checksum = append(checksum, hash.GenerateChecksum(entry.Data()))
-			traceInfo.CheckSum = checksum
+			checkSum = append(checkSum, hash.GenerateChecksum(entry.Data()))
+			traceInfo.CheckSum = checkSum
 			traceInfo.Completed++
 			uploader.cache.Add(entry.ID(), traceInfo)
 			go func() {

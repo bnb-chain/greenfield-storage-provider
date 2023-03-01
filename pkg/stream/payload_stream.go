@@ -14,7 +14,7 @@ const StreamResultSize = 10
 
 type SegmentEntry struct {
 	objectId       uint64
-	replicateIdx   uint32
+	replicaIdx     uint32
 	segmentIdx     uint32
 	redundancyType storagetypes.RedundancyType
 	segmentData    []byte
@@ -29,7 +29,7 @@ func (entry SegmentEntry) Key() string {
 	if entry.redundancyType == storagetypes.REDUNDANCY_EC_TYPE {
 		return piecestore.EncodeSegmentPieceKey(entry.objectId, entry.segmentIdx)
 	}
-	return piecestore.EncodeECPieceKey(entry.objectId, entry.replicateIdx, entry.segmentIdx)
+	return piecestore.EncodeECPieceKey(entry.objectId, entry.replicaIdx, entry.segmentIdx)
 }
 
 func (entry SegmentEntry) Data() []byte {
@@ -41,10 +41,10 @@ func (entry SegmentEntry) Error() error {
 }
 
 // PayloadStream implement a one-way data flow, writes bytes of any size
-// read the fixed data size with paylaod meta data
+// read the fixed data size with with paylaod meta data
 type PayloadStream struct {
 	objectId       uint64
-	replicateIdx   uint32
+	replicaIdx     uint32
 	segmentIdx     uint32
 	segmentSize    uint64
 	redundancyType storagetypes.RedundancyType
@@ -52,8 +52,8 @@ type PayloadStream struct {
 	init           atomic.Bool
 	close          atomic.Bool
 
-	pread  *io.PipeReader
-	pwrite *io.PipeWriter
+	pRead  *io.PipeReader
+	pWrite *io.PipeWriter
 }
 
 // NewAsyncPayloadStream return an instance of PayloadStream, and start async read stream
@@ -61,11 +61,11 @@ func NewAsyncPayloadStream() *PayloadStream {
 	stream := &PayloadStream{
 		entryCh: make(chan *SegmentEntry, StreamResultSize),
 	}
-	stream.pread, stream.pwrite = io.Pipe()
+	stream.pRead, stream.pWrite = io.Pipe()
 	return stream
 }
 
-// InitAsyncPayloadStream only be call once, init the payload meta data
+// InitAsyncPayloadStream only be called once, init the payload meta data
 // must be called before write or read stream
 func (stream *PayloadStream) InitAsyncPayloadStream(oId uint64, rIdx uint32, segSize uint64,
 	redundancyType storagetypes.RedundancyType) error {
@@ -74,7 +74,7 @@ func (stream *PayloadStream) InitAsyncPayloadStream(oId uint64, rIdx uint32, seg
 	}
 	stream.init.Store(true)
 	stream.objectId = oId
-	stream.replicateIdx = rIdx
+	stream.replicaIdx = rIdx
 	stream.segmentSize = segSize
 	stream.redundancyType = redundancyType
 	go stream.readStream()
@@ -89,7 +89,7 @@ func (stream *PayloadStream) StreamWrite(data []byte) (n int, err error) {
 	if stream.close.Load() {
 		return 0, errors.New("payload stream has been closed")
 	}
-	return stream.pwrite.Write(data)
+	return stream.pWrite.Write(data)
 }
 
 // StreamClose close write stream without error
@@ -98,19 +98,19 @@ func (stream *PayloadStream) StreamClose() error {
 		return nil
 	}
 	stream.close.Store(true)
-	return stream.pwrite.Close()
+	return stream.pWrite.Close()
 }
 
 // StreamCloseWithError close write stream with error
 func (stream *PayloadStream) StreamCloseWithError(err error) error {
 	if !stream.init.Load() {
-		return errors.New("payload stream uninitialized")
+		return errors.New("payload stream is uninitialized")
 	}
 	if stream.close.Load() {
 		return nil
 	}
 	stream.close.Store(true)
-	return stream.pwrite.CloseWithError(err)
+	return stream.pWrite.CloseWithError(err)
 }
 
 // AsyncStreamRead return a channel that receive the payload and it's metadata
@@ -125,12 +125,14 @@ func (stream *PayloadStream) Close() {
 }
 
 func (stream *PayloadStream) readStream() {
-	var count uint32
-	var readSize int
+	var (
+		count    uint32
+		readSize uint32
+	)
 	for {
 		entry := &SegmentEntry{
 			objectId:       stream.objectId,
-			replicateIdx:   stream.replicateIdx,
+			replicaIdx:     stream.replicaIdx,
 			segmentIdx:     count,
 			redundancyType: stream.redundancyType,
 		}
@@ -152,7 +154,7 @@ func (stream *PayloadStream) readStream() {
 		entry.segmentData = data
 		stream.entryCh <- entry
 		count++
-		readSize = readSize + n
+		readSize = readSize + uint32(n)
 		log.Infow("payload stream has read", "read_total_size", readSize, "object_id", stream.objectId, "segment_count:", count-1)
 	}
 }
@@ -167,7 +169,7 @@ func (stream *PayloadStream) readN(b []byte) (int, error) {
 
 	totalSize = len(b)
 	for {
-		size, err = stream.pread.Read(b[curSize:])
+		size, err = stream.pRead.Read(b[curSize:])
 		curSize = curSize + size
 		if err != nil || curSize == totalSize {
 			break

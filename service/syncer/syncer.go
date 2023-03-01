@@ -11,10 +11,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	signercli "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
+	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
-	pscli "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
 var _ lifecycle.Service = &Syncer{}
@@ -24,20 +24,20 @@ var _ lifecycle.Service = &Syncer{}
 type Syncer struct {
 	config     *SyncerConfig
 	cache      *lru.Cache
-	signer     *signercli.SignerClient
-	pieceStore *pscli.StoreClient
-	spdb       store.SPDB
+	signer     *signerclient.SignerClient
+	pieceStore *psclient.StoreClient
+	spDB       store.SPDB
 	grpcServer *grpc.Server
 }
 
 // NewSyncerService return a syncer instance and init the resource
 func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	cache, _ := lru.New(model.LruCacheLimit)
-	pieceStore, err := pscli.NewStoreClient(config.PieceStoreConfig)
+	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
 	if err != nil {
 		return nil, err
 	}
-	signer, err := signercli.NewSignerClient(config.SignerGrpcAddress)
+	signer, err := signerclient.NewSignerClient(config.SignerGrpcAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (syncer *Syncer) serve(errCh chan error) {
 	lis, err := net.Listen("tcp", syncer.config.GrpcAddress)
 	errCh <- err
 	if err != nil {
-		log.Errorw("fail to listen", "err", err)
+		log.Errorw("failed to listen", "err", err)
 		return
 	}
 

@@ -12,7 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
 )
 
-// UploaderClient is a grpc client wrapper.
+// SyncerClient is a grpc client wrapper.
 type SyncerClient struct {
 	address string
 	syncer  types.SyncerServiceClient

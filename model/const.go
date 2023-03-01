@@ -20,7 +20,7 @@ const (
 	ChallengeGrpcAddress  = "localhost:9333"
 	StoneNodeGrpcAddress  = "localhost:9433"
 	SyncerGrpcAddress     = "localhost:9533"
-	SingerGrpcAddress     = "localhost:9633"
+	SignerGrpcAddress     = "localhost:9633"
 )
 
 // environment constants

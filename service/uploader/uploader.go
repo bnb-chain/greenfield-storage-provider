@@ -10,12 +10,12 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
-	signercli "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
-	stoneCli "github.com/bnb-chain/greenfield-storage-provider/service/stonenode/client"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
+	stoneclient "github.com/bnb-chain/greenfield-storage-provider/service/stonenode/client"
 	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
-	pscli "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
 var _ lifecycle.Service = &Uploader{}
@@ -25,10 +25,10 @@ var _ lifecycle.Service = &Uploader{}
 type Uploader struct {
 	config     *UploaderConfig
 	cache      *lru.Cache
-	spDb       store.SPDB
-	pieceStore *pscli.StoreClient
-	signer     *signercli.SignerClient
-	stone      *stoneCli.StoneNodeClient
+	spDB       store.SPDB
+	pieceStore *psclient.StoreClient
+	signer     *signerclient.SignerClient
+	stone      *stoneclient.StoneNodeClient
 	grpcServer *grpc.Server
 }
 
@@ -36,12 +36,12 @@ type Uploader struct {
 // the lifecycle.Service and UploaderService interface
 func NewUploaderService(config *UploaderConfig) (*Uploader, error) {
 	cache, _ := lru.New(model.LruCacheLimit)
-	signer, err := signercli.NewSignerClient(config.SignerGrpcAddress)
+	signer, err := signerclient.NewSignerClient(config.SignerGrpcAddress)
 	if err != nil {
 		return nil, err
 	}
-	stone, err := stoneCli.NewStoneNodeClient(config.StoneNodeGrpcAddress)
-	pieceStore, err := pscli.NewStoreClient(config.PieceStoreConfig)
+	stone, err := stoneclient.NewStoneNodeClient(config.StoneNodeGrpcAddress)
+	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
 	if err != nil {
 		return nil, err
 	}

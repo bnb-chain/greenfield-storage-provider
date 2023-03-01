@@ -19,7 +19,7 @@ type StoneNodeConfig struct {
 var DefaultStoneNodeConfig = &StoneNodeConfig{
 	SpOperatorAddress: "bnb-sp",
 	GrpcAddress:       model.StoneNodeGrpcAddress,
-	SignerGrpcAddress: model.SingerGrpcAddress,
+	SignerGrpcAddress: model.SignerGrpcAddress,
 	SpDBConfig:        store.DefaultSqlDBConfig,
 	PieceStoreConfig:  storage.DefaultPieceStoreConfig,
 	ChainConfig:       greenfield.DefaultGreenfieldChainConfig,

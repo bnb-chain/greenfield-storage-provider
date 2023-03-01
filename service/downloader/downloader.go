@@ -10,15 +10,15 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	pscli "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // Downloader manage the payload data download
 type Downloader struct {
 	cfg        *DownloaderConfig
-	spDb       store.SPDB
+	spDB       store.SPDB
 	chain      *gnfd.Greenfield
 	pieceStore *pscli.StoreClient
 }

@@ -7,11 +7,11 @@ import (
 	"github.com/bnb-chain/greenfield-common/go/hash"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var _ types.SyncerServiceServer = &Syncer{}
@@ -40,7 +40,7 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 		integrityMeta.Checksum = checksum
 		integrityMeta.IntegrityHash = resp.IntegrityHash
 		integrityMeta.Signature = resp.Signature
-		err = syncer.spdb.SetObjectIntegrity(integrityMeta)
+		err = syncer.spDB.SetObjectIntegrity(integrityMeta)
 		if err != nil {
 			log.Errorw("fail to write integrity hash to db", "error", err)
 			return

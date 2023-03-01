@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 )
 
 // ChallengePiece implement challenge service server interface and handle the grpc request.
@@ -16,7 +16,7 @@ func (challenge *Challenge) ChallengePiece(
 	ctx = log.Context(ctx, req)
 	resp = &types.ChallengePieceResponse{}
 
-	integrity, err := challenge.spDb.GetObjectIntegrity(req.GetObjectId())
+	integrity, err := challenge.spDB.GetObjectIntegrity(req.GetObjectId())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get integrity hash from db", "error", err)
 		return

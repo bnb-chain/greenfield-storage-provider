@@ -11,9 +11,9 @@ import (
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -26,7 +26,7 @@ func (node *StoneNode) ReplicateObject(
 	req *types.ReplicateObjectRequest) (
 	resp *types.ReplicateObjectResponse, err error) {
 	resp = &types.ReplicateObjectResponse{}
-	node.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING,
+	node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING,
 		req.GetObjectInfo().Id.Uint64())
 	go node.AsyncReplicateObject(context.Background(), req)
 	return
@@ -41,31 +41,31 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 	objectInfo := req.GetObjectInfo()
 	defer func() {
 		if err != nil {
-			node.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR, objectInfo.Id.Uint64())
+			node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR, objectInfo.Id.Uint64())
 			log.CtxErrorw(ctx, "failed to replicate payload data to sp", "error", err)
 			return
 		}
-		node.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING, objectInfo.Id.Uint64())
+		node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING, objectInfo.Id.Uint64())
 		_, err = node.signer.SealObjectOnChain(ctx, sealMsg)
 		if err != nil {
-			node.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR, objectInfo.Id.Uint64())
+			node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR, objectInfo.Id.Uint64())
 			log.CtxErrorw(ctx, "failed to seal object by singer", "error", err)
 			return
 		}
-		node.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_TX_DOING, objectInfo.Id.Uint64())
+		node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_TX_DOING, objectInfo.Id.Uint64())
 		success, err := node.chain.ListenObjectSeal(ctx, objectInfo.GetBucketName(),
 			objectInfo.GetObjectName(), 10)
 		if err != nil {
-			node.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR, objectInfo.Id.Uint64())
+			node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR, objectInfo.Id.Uint64())
 			log.CtxErrorw(ctx, "failed to seal object to chain", "error", err)
 			return
 		}
-		node.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE, objectInfo.Id.Uint64())
+		node.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE, objectInfo.Id.Uint64())
 		log.CtxInfow(ctx, "seal object to chain", "success", success)
 		return
 	}()
 
-	params, err := node.spDb.GetAllParam()
+	params, err := node.spDB.GetAllParam()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query sp param", "error", err)
 		return
@@ -80,7 +80,7 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 		log.CtxErrorw(ctx, "failed to encode payload", "error", err)
 		return
 	}
-	spList, err := node.spDb.FetchAllWithoutSp(node.config.SpOperatorAddress,
+	spList, err := node.spDB.FetchAllWithoutSp(node.config.SpOperatorAddress,
 		sptypes.STATUS_IN_SERVICE)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get storage providers", "error", err)

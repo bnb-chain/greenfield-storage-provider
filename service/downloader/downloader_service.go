@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -93,7 +93,7 @@ func (downloader *Downloader) DownloadPieceInfo(objectID, objectSize, start, end
 	if objectSize == 0 || start > objectSize || end < start {
 		return pieceInfo, fmt.Errorf("param error, object size: %d, start: %d, end: %d", objectSize, start, end)
 	}
-	param, err := downloader.spDb.GetAllParam()
+	param, err := downloader.spDB.GetAllParam()
 	if err != nil {
 		return pieceInfo, err
 	}

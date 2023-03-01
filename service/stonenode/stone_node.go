@@ -16,11 +16,11 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
-	signercli "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
-	pscli "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
 var _ lifecycle.Service = &StoneNode{}
@@ -29,21 +29,21 @@ var _ lifecycle.Service = &StoneNode{}
 type StoneNode struct {
 	config     *StoneNodeConfig
 	cache      *lru.Cache
-	signer     *signercli.SignerClient
-	spDb       store.SPDB
+	signer     *signerclient.SignerClient
+	spDB       store.SPDB
 	chain      *greenfield.Greenfield
-	pieceStore *pscli.StoreClient
+	pieceStore *psclient.StoreClient
 	grpcServer *grpc.Server
 }
 
 // NewStoneNodeService return an instance of StoneNode and init resource
 func NewStoneNodeService(config *StoneNodeConfig) (*StoneNode, error) {
 	cache, _ := lru.New(model.LruCacheLimit)
-	pieceStore, err := pscli.NewStoreClient(config.PieceStoreConfig)
+	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
 	if err != nil {
 		return nil, err
 	}
-	signer, err := signercli.NewSignerClient(config.SignerGrpcAddress)
+	signer, err := signerclient.NewSignerClient(config.SignerGrpcAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (node *StoneNode) EncodeReplicateSegments(
 	replicates int,
 	rType storagetypes.RedundancyType) (
 	data [][][]byte, err error) {
-	params, err := node.spDb.GetAllParam()
+	params, err := node.spDB.GetAllParam()
 	if err != nil {
 		return
 	}

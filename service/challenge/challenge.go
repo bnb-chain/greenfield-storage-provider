@@ -17,7 +17,7 @@ import (
 // Challenge manage the integrity hash check
 type Challenge struct {
 	config     *ChallengeConfig
-	spDb       store.SPDB
+	spDB       store.SPDB
 	pieceStore *pscli.StoreClient
 }
 
