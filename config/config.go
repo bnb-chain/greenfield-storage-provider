@@ -45,7 +45,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	Service: []string{
 		model.GatewayService,
 		model.UploaderService,
-		model.DownloaderGrpcAddress,
+		model.DownloaderService,
 		model.ChallengeService,
 		model.StoneNodeService,
 		model.SyncerService,
