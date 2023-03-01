@@ -13,16 +13,16 @@ message SyncObjectRequest {
   // replicate_idx defines the index of replicate.
   uint32 replicate_idx = 2;
   // segment_size defines the spilt size of replicate data.
-  uint32 segment_size = 3;
-  // replicate_data defines the object data that replicate to sp.
+  uint64 segment_size = 3;
+  // replicate_data defines the data that replicate to storage provider.
   bytes replicate_data = 4;
 }
 
 // SyncObjectResponse is response type for the SyncObject RPC method.
 message SyncObjectResponse {
-  // integrity_hash defines the integrity hash of the replicate data.
+  // integrity_hash defines the integrity hash of the replicate payload.
   bytes integrity_hash = 1;
-  // signature defines the result of storage provider sign the replicate data.
+  // signature defines the result of storage provider sign the replicate payload.
   bytes signature = 2;
 }
 
@@ -34,13 +34,13 @@ message QuerySyncingObjectRequest {
 
 // QueryUploadingResponse is response type for the QuerySyncingObject RPC method.
 message QuerySyncingObjectResponse {
-  // replicate_segment_info defines the information of syncing object.
-  service.types.ReplicateSegmentInfo replicate_segment_info = 1;
+  // segment_info defines the information of syncing object.
+  service.types.SegmentInfo segment_info = 1;
 }
 
-// SyncerService defines the gRPC service of syncing the copy of object .
+// SyncerService defines the gRPC service of syncing the replicate object .
 service SyncerService {
-  // SyncObject an object payload with object info.
+  // SyncObject an object payload to storage provider.
   rpc SyncObject(stream SyncObjectRequest) returns (SyncObjectResponse) {};
   // QuerySyncingObject a syncing object info by object id.
   rpc QuerySyncingObject(QuerySyncingObjectRequest) returns (QuerySyncingObjectResponse) {};

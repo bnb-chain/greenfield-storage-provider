@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-go-sdk/client/chain"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

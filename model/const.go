@@ -1,12 +1,11 @@
 package model
 
-// define storage provider support service name.
+// define storage provider include service
 const (
 	GatewayService     = "Gateway"
 	UploaderService    = "Uploader"
 	DownloaderService  = "Downloader"
 	ChallengeService   = "Challenge"
-	StoneHubService    = "StoneHub"
 	StoneNodeService   = "StoneNode"
 	SyncerService      = "Syncer"
 	SignerService      = "Signer"
@@ -14,20 +13,39 @@ const (
 	BlockSyncerService = "BlockSyncer"
 )
 
-// define payload data redundancy size.
+// define storage provider service gGRPC default address
 const (
-	InlineSize    = 1 * 1024 * 1024
-	SegmentSize   = 16 * 1024 * 1024
-	EC_M          = 4
-	EC_K          = 2
-	LruCacheLimit = 8192 // the maximum number of cached items in service token balance queue
+	UploaderGrpcAddress   = "localhost:9133"
+	DownloaderGrpcAddress = "localhost:9233"
+	ChallengeGrpcAddress  = "localhost:9333"
+	StoneNodeGrpcAddress  = "localhost:9433"
+	SyncerGrpcAddress     = "localhost:9533"
+	SignerGrpcAddress     = "localhost:9633"
 )
 
-type PieceType int32
-
+// environment constants
 const (
-	SegmentPieceType PieceType = 0
-	ECPieceType      PieceType = 1
+	// Piece Store constants
+	BucketURL = "BUCKET_URL"
+
+	// AWS environment constants
+	AWSAccessKey    = "AWS_ACCESS_KEY"
+	AWSSecretKey    = "AWS_SECRET_KEY"
+	AWSSessionToken = "AWS_SESSION_TOKEN"
+
+	// MetaDB environment constants
+	MetaDBUser     = "META_DB_USER"
+	MetaDBPassword = "META_DB_PASSWORD"
+
+	// JobDB environment constants
+	JobDBUser     = "JOB_DB_USER"
+	JobDBPassword = "JOB_DB_PASSWORD"
+)
+
+// define cache size
+const (
+	// the maximum number of cached items in service trace queue
+	LruCacheLimit = 8192
 )
 
 // define piece store constants.
@@ -52,10 +70,7 @@ const (
 	ContentTypeXMLHeaderValue = "application/xml"
 	RangeHeader               = "Range"
 	ContentRangeHeader        = "Content-Range"
-)
 
-// Gateway
-const (
 	// path
 	AdminPath          = "/greenfield/admin/v1/"
 	SyncerPath         = "/greenfield/syncer/v1/sync-piece"
@@ -73,6 +88,7 @@ const (
 	GnfdTransactionHashHeader = "X-Gnfd-Txn-Hash"
 	GnfdResourceHeader        = "X-Gnfd-Resource"
 	GnfdPreSignatureHeader    = "X-Gnfd-Pre-Signature"
+
 	// GnfdRedundancyTypeHeader can be EC or Replica, EC is default
 	GnfdRedundancyTypeHeader      = "X-Gnfd-Redundancy-Type"
 	GnfdAuthorizationHeader       = "Authorization"
@@ -104,30 +120,4 @@ const (
 	Signature     = "Signature"
 	SignTypeV1    = "authTypeV1"
 	SignTypeV2    = "authTypeV2"
-)
-
-// define backend store type name.
-const (
-	MemoryDB string = "memory"
-	MySqlDB  string = "mysql"
-	LevelDB  string = "leveldb"
-)
-
-// environment constants
-const (
-	// Piece Store constants
-	BucketURL = "BUCKET_URL"
-
-	// AWS environment constants
-	AWSAccessKey    = "AWS_ACCESS_KEY"
-	AWSSecretKey    = "AWS_SECRET_KEY"
-	AWSSessionToken = "AWS_SESSION_TOKEN"
-
-	// MetaDB environment constants
-	MetaDBUser     = "META_DB_USER"
-	MetaDBPassword = "META_DB_PASSWORD"
-
-	// JobDB environment constants
-	JobDBUser     = "JOB_DB_USER"
-	JobDBPassword = "JOB_DB_PASSWORD"
 )

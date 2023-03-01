@@ -62,7 +62,7 @@ message SegmentInfo {
   // signature defines the storage provider sign to the integrity hash.
   bytes signature = 4;
   // completed defines the status of replicate segment, completed or not.
-  int32 completed = 5;
+  uint32 completed = 5;
 }
 
 // ReplicateSegmentInfo defines the information of the segments that

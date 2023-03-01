@@ -1,0 +1,27 @@
+syntax = "proto3";
+package service.downloader.types;
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/downloader/types";
+
+message DownloaderObjectRequest {
+  string bucket_name = 1;
+  string object_name = 2;
+  uint64 offset = 3;
+  uint64 length = 4; // if length == 0, download all object data
+
+  bool is_range = 5;
+  // [range_start, range_end], range_start >= object_size is invalid, download all object data
+  int64 range_start = 6;
+  // range_end >= object_size is invalid, download all object data
+  // range_end < 0, download [range_start, object_end]
+  int64 range_end = 7;
+}
+
+message DownloaderObjectResponse {
+  bool is_valid_range = 1;
+  bytes data = 2;
+}
+
+service DownloaderService {
+  rpc DownloaderObject(DownloaderObjectRequest) returns (stream DownloaderObjectResponse) {};
+}

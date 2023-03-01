@@ -1,0 +1,65 @@
+syntax = "proto3";
+package service.singer.types;
+
+import "greenfield/storage/tx.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/singer/types";
+
+message SignBucketApprovalRequest {
+  bnbchain.greenfield.storage.MsgCreateBucket create_bucket_msg = 1;
+}
+
+message SignBucketApprovalResponse {
+  bytes signature = 1;
+}
+
+message VerifyBucketApprovalRequest {
+  bnbchain.greenfield.storage.MsgCreateBucket create_bucket_msg = 1;
+}
+
+message VerifyBucketApprovalResponse {
+  bool result = 1;
+}
+
+message SignObjectApprovalRequest {
+  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 1;
+}
+
+message SignObjectApprovalResponse {
+  bytes signature = 1;
+}
+
+message VerifyObjectApprovalRequest {
+  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 1;
+}
+
+message VerifyObjectApprovalResponse {
+  bool result = 1;
+}
+
+message SignIntegrityHashRequest {
+  repeated bytes data = 1;
+}
+
+message SignIntegrityHashResponse {
+  bytes integrity_hash = 1;
+  bytes signature = 2;
+}
+
+message SealObjectOnChainRequest {
+//  pkg.types.v1.ObjectInfo object_info = 1;
+  bnbchain.greenfield.storage.MsgSealObject seal_object= 1;
+}
+
+message SealObjectOnChainResponse {
+  bytes tx_hash = 1;
+}
+
+service SignerService {
+  rpc SignBucketApproval(SignBucketApprovalRequest) returns (SignBucketApprovalResponse) {};
+  rpc VerifyBucketApproval(VerifyBucketApprovalRequest) returns (VerifyBucketApprovalResponse) {};
+  rpc SignObjectApproval(SignObjectApprovalRequest) returns (SignObjectApprovalResponse) {};
+  rpc VerifyObjectApproval(VerifyObjectApprovalRequest) returns (VerifyObjectApprovalResponse) {};
+  rpc SignIntegrityHash(SignIntegrityHashRequest) returns (SignIntegrityHashResponse) {};
+  rpc SealObjectOnChain(SealObjectOnChainRequest) returns (SealObjectOnChainResponse) {};
+}
