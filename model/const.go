@@ -2,61 +2,73 @@ package model
 
 // define storage provider include service
 const (
-	GatewayService     = "Gateway"
-	UploaderService    = "Uploader"
-	DownloaderService  = "Downloader"
-	ChallengeService   = "Challenge"
-	StoneNodeService   = "StoneNode"
-	SyncerService      = "Syncer"
-	SignerService      = "Signer"
-	MetadataService    = "Metadata"
+	// GatewayService defines the name of gateway service
+	GatewayService = "Gateway"
+	// UploaderService defines the name of uploader service
+	UploaderService = "Uploader"
+	// DownloaderService defines the name of downloader service
+	DownloaderService = "Downloader"
+	// ChallengeService defines the name of challenge service
+	ChallengeService = "Challenge"
+	// StoneNodeService defines the name of stone node service
+	StoneNodeService = "StoneNode"
+	// SyncerService defines the name of syncer service
+	SyncerService = "Syncer"
+	// SignerService defines the name of signer service
+	SignerService = "Signer"
+	// MetadataService defines the name of metadata service
+	MetadataService = "Metadata"
+	// BlockSyncerService defines the name of block sync service
 	BlockSyncerService = "BlockSyncer"
 )
 
 // define storage provider service gGRPC default address
 const (
-	UploaderGrpcAddress   = "localhost:9133"
+	// UploaderGrpcAddress default gGRPC address of uploader
+	UploaderGrpcAddress = "localhost:9133"
+	// DownloaderGrpcAddress default gGRPC address of downloader
 	DownloaderGrpcAddress = "localhost:9233"
-	ChallengeGrpcAddress  = "localhost:9333"
-	StoneNodeGrpcAddress  = "localhost:9433"
-	SyncerGrpcAddress     = "localhost:9533"
-	SignerGrpcAddress     = "localhost:9633"
+	// ChallengeGrpcAddress default gGRPC address of challenge
+	ChallengeGrpcAddress = "localhost:9333"
+	// StoneNodeGrpcAddress default gGRPC address of stone node
+	StoneNodeGrpcAddress = "localhost:9433"
+	// SyncerGrpcAddress default gGRPC address of syncer
+	SyncerGrpcAddress = "localhost:9533"
+	// SignerGrpcAddress default gGRPC address of signer
+	SignerGrpcAddress = "localhost:9633"
 )
 
 // environment constants
 const (
-	// Piece Store constants
+	// BucketURL defines env variable name for bucket url
 	BucketURL = "BUCKET_URL"
-
-	// AWS environment constants
-	AWSAccessKey    = "AWS_ACCESS_KEY"
-	AWSSecretKey    = "AWS_SECRET_KEY"
+	// AWSAccessKey defines env variable name for aws assess key
+	AWSAccessKey = "AWS_ACCESS_KEY"
+	// AWSSecretKey defines env variable name for aws secret key
+	AWSSecretKey = "AWS_SECRET_KEY"
+	// AWSSessionToken defines env variable name for aws session token
 	AWSSessionToken = "AWS_SESSION_TOKEN"
-
-	// MetaDB environment constants
-	MetaDBUser     = "META_DB_USER"
-	MetaDBPassword = "META_DB_PASSWORD"
-
-	// JobDB environment constants
-	JobDBUser     = "JOB_DB_USER"
-	JobDBPassword = "JOB_DB_PASSWORD"
+	// SpOperatorAddress defines env variable name for sp operator address
+	SpOperatorAddress = "SP_OPERATOR_ADDRESS"
 )
 
 // define cache size
 const (
-	// the maximum number of cached items in service trace queue
+	// LruCacheLimit define maximum number of cached items in service trace queue
 	LruCacheLimit = 8192
 )
 
 // define piece store constants.
 const (
-	BufPoolSize  = 32 << 10
+	// BufPoolSize define buffer pool size
+	BufPoolSize = 32 << 10
+	// ChecksumAlgo define validation Algorithm Name
 	ChecksumAlgo = "Crc32c"
 )
 
 // RPC config
 const (
-	// server and client max send or recv msg size
+	// MaxCallMsgSize defines gPRCt max send or recv msg size
 	MaxCallMsgSize = 25 * 1024 * 1024
 )
 

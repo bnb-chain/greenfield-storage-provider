@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
+	"github.com/naoina/toml"
+
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
@@ -14,10 +17,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
-	"github.com/naoina/toml"
 )
 
+// StorageProviderConfig defines the configuration of storage provider
 type StorageProviderConfig struct {
 	Service        []string
 	GatewayCfg     *gateway.GatewayConfig
@@ -31,21 +33,29 @@ type StorageProviderConfig struct {
 	BlockSyncerCfg *tomlconfig.TomlConfig
 }
 
+// DefaultStorageProviderConfig defines the default configuration of storage provider services
 var DefaultStorageProviderConfig = &StorageProviderConfig{
-	GatewayCfg:     gateway.DefaultGatewayConfig,
-	UploaderCfg:    uploader.DefaultUploaderConfig,
-	DownloaderCfg:  downloader.DefaultDownloaderConfig,
-	ChallengeCfg:   challenge.DefaultChallengeConfig,
-	StoneNodeCfg:   stonenode.DefaultStoneNodeConfig,
-	SyncerCfg:      syncer.DefaultSyncerConfig,
-	SignerCfg:      signer.DefaultSignerChainConfig,
-	MetadataCfg:    metadata.DefaultMetadataConfig,
-	BlockSyncerCfg: blocksyncer.DefaultBlockSyncerConfig,
+	GatewayCfg:    gateway.DefaultGatewayConfig,
+	UploaderCfg:   uploader.DefaultUploaderConfig,
+	DownloaderCfg: downloader.DefaultDownloaderConfig,
+	ChallengeCfg:  challenge.DefaultChallengeConfig,
+	StoneNodeCfg:  stonenode.DefaultStoneNodeConfig,
+	SyncerCfg:     syncer.DefaultSyncerConfig,
+	SignerCfg:     signer.DefaultSignerChainConfig,
+	Service: []string{
+		model.GatewayService,
+		model.UploaderService,
+		model.DownloaderGrpcAddress,
+		model.ChallengeService,
+		model.StoneNodeService,
+		model.SyncerService,
+		model.SignerService,
+	},
 }
 
-// LoadConfig loads the config file
-func LoadConfig(file string) *StorageProviderConfig {
-	f, err := os.Open(file)
+// LoadConfig loads the config file from path
+func LoadConfig(path string) *StorageProviderConfig {
+	f, err := os.Open(path)
 	if err != nil {
 		panic(err)
 	}

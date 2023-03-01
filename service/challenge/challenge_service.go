@@ -8,7 +8,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 )
 
-// ChallengePiece implement challenge service server interface and handle the grpc request.
+// ChallengePiece handles the piece challenge request
+// return the replica's integrity hash, piece hash and piece data
 func (challenge *Challenge) ChallengePiece(
 	ctx context.Context,
 	req *types.ChallengePieceRequest) (

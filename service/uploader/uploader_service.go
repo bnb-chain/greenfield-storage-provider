@@ -62,12 +62,12 @@ func (uploader *Uploader) UploadObject(
 			traceInfo.GetObjectInfo().Id.Uint64())
 		log.Infow("finish to upload payload", "error", err)
 	}(&resp, err)
-
 	params, err := uploader.spDB.GetAllParam()
 	if err != nil {
 		return
 	}
 	segmentSize := params.GetMaxSegmentSize()
+
 	// read payload from gRPC stream
 	go func() {
 		init := true

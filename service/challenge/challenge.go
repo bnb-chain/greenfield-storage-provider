@@ -14,14 +14,16 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-// Challenge manage the integrity hash check
+// Challenge implements the gRPC of ChallengeService,
+// responsible for handling challenge piece request.
 type Challenge struct {
 	config     *ChallengeConfig
 	spDB       store.SPDB
 	pieceStore *pscli.StoreClient
 }
 
-// NewChallengeService return a Challenge instance.
+// NewChallengeService returns an instance of Challenge that implementation of
+// the lifecycle.Service and ChallengeService interface
 func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err error) {
 	pieceStore, err := pscli.NewStoreClient(config.PieceStoreConfig)
 	if err != nil {
@@ -35,12 +37,12 @@ func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err err
 	return challenge, nil
 }
 
-// Name describes the name of Challenge
+// Name return the challenge service name, for the lifecycle management
 func (challenge *Challenge) Name() string {
 	return model.ChallengeService
 }
 
-// Start implement the lifecycle interface
+// Start the challenge gRPC service
 func (challenge *Challenge) Start(ctx context.Context) error {
 	errCh := make(chan error)
 
@@ -64,7 +66,7 @@ func (challenge *Challenge) Start(ctx context.Context) error {
 	return err
 }
 
-// Stop implement the lifecycle interface
+// Stop the challenge gRPC service and recycle the resources
 func (challenge *Challenge) Stop(ctx context.Context) error {
 	return nil
 }

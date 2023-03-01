@@ -47,7 +47,6 @@ message SignIntegrityHashResponse {
 }
 
 message SealObjectOnChainRequest {
-//  pkg.types.v1.ObjectInfo object_info = 1;
   bnbchain.greenfield.storage.MsgSealObject seal_object= 1;
 }
 

@@ -103,7 +103,7 @@ func (s *ServiceLifecycle) StopServices(ctx context.Context) {
 
 	<-gCtx.Done()
 	if errors.Is(gCtx.Err(), context.Canceled) {
-		log.Infow("services stop working", "service config timeout", s.timeout)
+		log.Infow("services stop working", "stop service timeout", s.timeout)
 	} else if errors.Is(gCtx.Err(), context.DeadlineExceeded) {
 		log.Error("timeout while stopping service, killing instance manually")
 	}

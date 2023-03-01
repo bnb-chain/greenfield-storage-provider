@@ -12,7 +12,7 @@ import (
 
 var _ types.DownloaderServiceServer = &Downloader{}
 
-// DownloaderObject download the object data and return to client.
+// DownloaderObject download the payload of the object.
 func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectRequest,
 	stream types.DownloaderService_DownloaderObjectServer) (err error) {
 	var (

@@ -25,7 +25,9 @@ import (
 
 var _ lifecycle.Service = &StoneNode{}
 
-// StoneNode as min execution unit, execute storage provider's background tasks
+// StoneNode as background min execution unit, execute storage provider's background tasks
+// implements the gRPC of StoneNodeService,
+// TODO :: StoneNode support more task tpyes, such as gc etc.
 type StoneNode struct {
 	config     *StoneNodeConfig
 	cache      *lru.Cache
@@ -101,7 +103,7 @@ func (node *StoneNode) serve(errCh chan error) {
 	}
 }
 
-// EncodeReplicateSegments load segment data and encode by redundancy type
+// EncodeReplicateSegments load segment data and encode according to redundancy type
 func (node *StoneNode) EncodeReplicateSegments(
 	ctx context.Context,
 	objectId uint64,

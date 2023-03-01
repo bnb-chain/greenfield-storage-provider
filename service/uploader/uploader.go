@@ -21,7 +21,7 @@ import (
 var _ lifecycle.Service = &Uploader{}
 
 // Uploader implements the gRPC of UploaderService,
-// responsible for upload object payload data.
+// responsible for uploading object payload data.
 type Uploader struct {
 	config     *UploaderConfig
 	cache      *lru.Cache

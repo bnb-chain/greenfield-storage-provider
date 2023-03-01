@@ -44,10 +44,12 @@ const (
 )
 
 type SpInfo interface {
+	SetSelfSpInfo(*sptypes.StorageProvider) error
+	GetSelfSpInfo() (*sptypes.StorageProvider, error)
 	UpdateAllSp([]*sptypes.StorageProvider) error
 	FetchAllSp(...sptypes.Status) ([]*sptypes.StorageProvider, error)
 	FetchAllWithoutSp(string, ...sptypes.Status) ([]*sptypes.StorageProvider, error)
-	GetSpByAddress(addrType string) (*sptypes.StorageProvider, error)
+	GetSpByAddress(addr string, addrType string) (*sptypes.StorageProvider, error)
 	GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error)
 }
 

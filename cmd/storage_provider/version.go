@@ -7,15 +7,16 @@ import (
 
 const (
 	StorageProviderLogo = `Greenfield Storage Provider
-         __                                                       _     __         
-   _____/ /_____  _________ _____ ____     ____  _________ _   __(_)___/ /__  _____
-  / ___/ __/ __ \/ ___/ __  / __  / _ \   / __ \/ ___/ __ \ | / / / __  / _ \/ ___/
- (__  ) /_/ /_/ / /  / /_/ / /_/ /  __/  / /_/ / /  / /_/ / |/ / / /_/ /  __/ /
-/____/\__/\____/_/   \__,_/\__, /\___/  / .___/_/   \____/|___/_/\__,_/\___/_/
-                          /____/       /_/
-`
+    __                                                       _     __
+    _____/ /_____  _________ _____ ____     ____  _________ _   __(_)___/ /__  _____
+    / ___/ __/ __ \/ ___/ __  / __  / _ \   / __ \/ ___/ __ \ | / / / __  / _ \/ ___/
+    (__  ) /_/ /_/ / /  / /_/ / /_/ /  __/  / /_/ / /  / /_/ / |/ / / /_/ /  __/ /
+    /____/\__/\____/_/   \__,_/\__, /\___/  / .___/_/   \____/|___/_/\__,_/\___/_/
+    /____/       /_/
+    `
 )
 
+// DumpLogo output greenfield storage provider logo
 func DumpLogo() string {
 	return StorageProviderLogo
 }
@@ -27,6 +28,7 @@ var (
 	BuildTime  string
 )
 
+// DumpVersion output the storage provider version information
 func DumpVersion() string {
 	return fmt.Sprintf("Version : %s\n"+
 		"Branch  : %s\n"+
