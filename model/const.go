@@ -134,8 +134,10 @@ const (
 
 // service gGRPC address
 const (
-	UploaderGrpcAddress  = "localhost:9133"
-	StoneNodeGrpcAddress = "localhost:9433"
-	SyncerGrpcAddress    = "localhost:9533"
-	SingerGrpcAddress    = "localhost:9633"
+	UploaderGrpcAddress   = "localhost:9133"
+	DowmloaderGrpcAddress = "localhost:9233"
+	ChallengeGrpcAddress  = "localhost:9333"
+	StoneNodeGrpcAddress  = "localhost:9433"
+	SyncerGrpcAddress     = "localhost:9533"
+	SingerGrpcAddress     = "localhost:9633"
 )

@@ -1,0 +1,20 @@
+syntax = "proto3";
+package service.challenge.types;
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/challenge/types";
+
+message ChallengePieceRequest {
+  uint64 object_id = 1;
+  int32 replicate_idx = 2;
+  uint32 segment_idx = 5;
+}
+
+message ChallengePieceResponse {
+  bytes piece_data = 1;
+  bytes integrity_hash = 2;
+  repeated bytes piece_hash = 3;
+}
+
+service ChallengeService {
+  rpc ChallengePiece(ChallengePieceRequest) returns (ChallengePieceResponse) {};
+}

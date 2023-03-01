@@ -1,10 +1,9 @@
 syntax = "proto3";
-package service.types.v1;
-import "pkg/types/v1/object.proto";
-import "service/types/v1/uploader.proto";
+package service.singer.types;
+
 import "greenfield/storage/tx.proto";
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/types/v1";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/singer/types";
 
 message SignBucketApprovalRequest {
   bnbchain.greenfield.storage.MsgCreateBucket create_bucket_msg = 1;
@@ -12,7 +11,6 @@ message SignBucketApprovalRequest {
 
 message SignBucketApprovalResponse {
   bytes signature = 1;
-  ErrMessage err_message = 2;
 }
 
 message VerifyBucketApprovalRequest {
@@ -29,7 +27,6 @@ message SignObjectApprovalRequest {
 
 message SignObjectApprovalResponse {
   bytes signature = 1;
-  ErrMessage err_message = 2;
 }
 
 message VerifyObjectApprovalRequest {
@@ -47,7 +44,6 @@ message SignIntegrityHashRequest {
 message SignIntegrityHashResponse {
   bytes integrity_hash = 1;
   bytes signature = 2;
-  ErrMessage err_message = 3;
 }
 
 message SealObjectOnChainRequest {
@@ -57,7 +53,6 @@ message SealObjectOnChainRequest {
 
 message SealObjectOnChainResponse {
   bytes tx_hash = 1;
-  ErrMessage err_message = 2;
 }
 
 service SignerService {

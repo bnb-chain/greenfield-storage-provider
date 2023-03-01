@@ -12,7 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -91,7 +91,7 @@ func (signer *SignerServer) serve() {
 		)),
 	)
 
-	stypes.RegisterSignerServiceServer(signer.server, signer)
+	types.RegisterSignerServiceServer(signer.server, signer)
 	// register reflection service
 	reflection.Register(signer.server)
 	if err := signer.server.Serve(lis); err != nil {

@@ -2,8 +2,6 @@ package errors
 
 import (
 	"errors"
-
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 )
 
 // common error
@@ -60,7 +58,6 @@ var (
 	ErrIndexOutOfBounds            = errors.New("array index out of bounds")
 	ErrStoneJobTypeUnrecognized    = errors.New("unrecognized stone job type")
 	ErrInterfaceAbandoned          = errors.New("interface is abandoned")
-	ErrSealTimeout                 = errors.New("seal object timeout")
 )
 
 // stone node service errors
@@ -78,6 +75,7 @@ var (
 	ErrGatewayNumber      = errors.New("gateway number is not enough")
 	ErrEmptyRespHeader    = errors.New("http response header is empty")
 	ErrRespHeader         = errors.New("http response header is wrong")
+	ErrSealTimeout        = errors.New("seal object timeout")
 )
 
 // syncer service errors
@@ -94,10 +92,3 @@ var (
 	ErrSignMsg           = errors.New("sign message with private key failed")
 	ErrSealObjectOnChain = errors.New("send sealObject msg failed")
 )
-
-func MakeErrMsgResponse(err error) *stypes.ErrMessage {
-	return &stypes.ErrMessage{
-		ErrCode: stypes.ErrCode_ERR_CODE_ERROR,
-		ErrMsg:  err.Error(),
-	}
-}

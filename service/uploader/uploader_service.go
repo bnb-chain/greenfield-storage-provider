@@ -32,11 +32,15 @@ func (uploader *Uploader) UploadObject(
 	defer func(resp *types.UploadObjectResponse, err error) {
 		if err != nil {
 			log.Errorw("failed to replicate payload", "err", err)
+			uploader.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
+				traceInfo.GetObjectInfo().Id.Uint64())
 			return
 		}
 		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checksum)
 		if err != nil {
 			log.Errorw("failed to sign integrity hash", "err", err)
+			uploader.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
+				traceInfo.GetObjectInfo().Id.Uint64())
 			return
 		}
 		integrityMeta.Checksum = checksum
@@ -45,6 +49,8 @@ func (uploader *Uploader) UploadObject(
 		err = uploader.spDb.SetObjectIntegrity(integrityMeta)
 		if err != nil {
 			log.Errorw("failed to write integrity hash to db", "error", err)
+			uploader.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
+				traceInfo.GetObjectInfo().Id.Uint64())
 			return
 		}
 		traceInfo.IntegrityHash = integrityHash
@@ -52,6 +58,8 @@ func (uploader *Uploader) UploadObject(
 		uploader.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
 		err = stream.SendAndClose(resp)
 		pstream.Close()
+		uploader.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE,
+			traceInfo.GetObjectInfo().Id.Uint64())
 		log.Infow("finish to upload payload", "error", err)
 	}(&resp, err)
 
@@ -84,6 +92,7 @@ func (uploader *Uploader) UploadObject(
 				integrityMeta.ObjectId = req.GetObjectInfo().Id.Uint64()
 				traceInfo.ObjectInfo = req.GetObjectInfo()
 				uploader.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
+				uploader.spDb.CreateUploadJob(req.GetObjectInfo())
 				init = false
 			}
 			pstream.StreamWrite(req.GetPayload())
@@ -92,6 +101,8 @@ func (uploader *Uploader) UploadObject(
 
 	// read payload from stream, the payload is spilt to segment size
 	for {
+		uploader.spDb.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING,
+			traceInfo.GetObjectInfo().Id.Uint64())
 		select {
 		case entry := <-pstream.AsyncStreamRead():
 			log.Debugw("read segment from stream", "segment_key", entry.Key(), "error", entry.Error())

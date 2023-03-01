@@ -2,19 +2,18 @@ package client
 
 import (
 	"context"
-	"errors"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 type DownloaderClient struct {
 	address    string
-	downloader stypes.DownloaderServiceClient
+	downloader types.DownloaderServiceClient
 	conn       *grpc.ClientConn
 }
 
@@ -29,7 +28,7 @@ func NewDownloaderClient(address string) (*DownloaderClient, error) {
 	client := &DownloaderClient{
 		address:    address,
 		conn:       conn,
-		downloader: stypes.NewDownloaderServiceClient(conn),
+		downloader: types.NewDownloaderServiceClient(conn),
 	}
 	return client, nil
 }
@@ -38,27 +37,8 @@ func (client *DownloaderClient) Close() error {
 	return client.conn.Close()
 }
 
-func (client *DownloaderClient) DownloaderObject(ctx context.Context, req *stypes.DownloaderServiceDownloaderObjectRequest,
-	opts ...grpc.CallOption) (stypes.DownloaderService_DownloaderObjectClient, error) {
+func (client *DownloaderClient) DownloaderObject(ctx context.Context, req *types.DownloaderObjectRequest,
+	opts ...grpc.CallOption) (types.DownloaderService_DownloaderObjectClient, error) {
 	// ctx = log.Context(context.Background(), req)
 	return client.downloader.DownloaderObject(ctx, req, opts...)
-}
-
-func (client *DownloaderClient) DownloaderSegment(ctx context.Context, traceId string,
-	objectId uint64, segmentIdx uint32, opts ...grpc.CallOption) ([]byte, error) {
-	resp, err := client.downloader.DownloaderSegment(ctx, &stypes.DownloaderServiceDownloaderSegmentRequest{
-		TraceId:    traceId,
-		ObjectId:   objectId,
-		SegmentIdx: segmentIdx,
-	}, opts...)
-	ctx = log.Context(ctx, resp)
-	if err != nil {
-		log.CtxErrorw(ctx, "downloader segment failed", "error", err)
-		return []byte{}, err
-	}
-	if resp.GetErrMessage() != nil && resp.GetErrMessage().GetErrCode() != stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED {
-		log.CtxErrorw(ctx, "downloader segment response code is not success", "error", resp.GetErrMessage().GetErrMsg())
-		return []byte{}, errors.New(resp.GetErrMessage().GetErrMsg())
-	}
-	return resp.GetData(), nil
 }

@@ -5,42 +5,17 @@ import (
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
-var _ stypes.DownloaderServiceServer = &Downloader{}
-
-// DownloaderSegment download the segment data and return to client.
-func (downloader *Downloader) DownloaderSegment(ctx context.Context, req *stypes.DownloaderServiceDownloaderSegmentRequest) (
-	resp *stypes.DownloaderServiceDownloaderSegmentResponse, err error) {
-	ctx = log.Context(ctx, req)
-	resp = &stypes.DownloaderServiceDownloaderSegmentResponse{
-		TraceId: req.TraceId,
-	}
-	defer func() {
-		if err != nil {
-			resp.ErrMessage.ErrCode = stypes.ErrCode_ERR_CODE_ERROR
-			resp.ErrMessage.ErrMsg = err.Error()
-			log.CtxErrorw(ctx, "failed to download segment", "error", err, "object", req.ObjectId, "segment idx", req.SegmentIdx)
-		}
-		log.CtxInfow(ctx, "succeed to download segment", "object", req.ObjectId, "segment idx", req.SegmentIdx)
-	}()
-	if req.GetObjectId() == 0 {
-		err = merrors.ErrObjectIdZero
-		return
-	}
-	pieceKey := piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())
-	resp.Data, err = downloader.pieceStore.GetPiece(ctx, pieceKey, 0, -1)
-	return resp, nil
-}
+var _ types.DownloaderServiceServer = &Downloader{}
 
 // DownloaderObject download the object data and return to client.
-func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDownloaderObjectRequest,
-	stream stypes.DownloaderService_DownloaderObjectServer) (err error) {
+func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectRequest,
+	stream types.DownloaderService_DownloaderObjectServer) (err error) {
 	var (
 		objectInfo   *ptypes.ObjectInfo
 		size         int
@@ -49,16 +24,13 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 		isValidRange bool
 	)
 	ctx := log.Context(context.Background(), req)
-	resp := &stypes.DownloaderServiceDownloaderObjectResponse{
-		TraceId: req.TraceId,
-	}
+	resp := &types.DownloaderObjectResponse{}
 	defer func() {
 		if err != nil {
-			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
-			err = stream.Send(resp)
+			return
 		}
 		resp.IsValidRange = isValidRange
-		log.CtxInfow(ctx, "download object completed", "error", err, "sendSize", size)
+		log.CtxInfow(ctx, "finish to download object", "error", err, "sendSize", size)
 	}()
 
 	chainObjectInfo, err := downloader.chain.QueryObjectInfo(ctx, req.BucketName, req.ObjectName)
@@ -94,7 +66,7 @@ func (downloader *Downloader) DownloaderObject(req *stypes.DownloaderServiceDown
 		return
 	}
 	for _, segment := range segmentInfo {
-		resp.Data, err = downloader.pieceStore.GetPiece(ctx, segment.pieceKey, int64(segment.offset), int64(segment.offset)+int64(segment.length))
+		resp.Data, err = downloader.pieceStore.GetSegment(ctx, segment.pieceKey, int64(segment.offset), int64(segment.offset)+int64(segment.length))
 		if err != nil {
 			return
 		}

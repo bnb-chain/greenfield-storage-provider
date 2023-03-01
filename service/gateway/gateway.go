@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	dclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
 	sclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	uclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
@@ -28,7 +27,7 @@ type Gateway struct {
 	httpServer *http.Server
 	uploader   *uclient.UploaderClient
 	downloader *dclient.DownloaderClient
-	challenge  *client.ChallengeClient
+	//challenge  *client.ChallengeClient
 
 	//syncer client.SyncerAPI
 	chain  *gnfd.Greenfield
@@ -54,10 +53,10 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		log.Errorw("failed to downloader client", "err", err)
 		return nil, err
 	}
-	if g.challenge, err = client.NewChallengeClient(cfg.ChallengeServiceAddress); err != nil {
-		log.Errorw("failed to challenge client", "err", err)
-		return nil, err
-	}
+	//if g.challenge, err = client.NewChallengeClient(cfg.ChallengeServiceAddress); err != nil {
+	//	log.Errorw("failed to challenge client", "err", err)
+	//	return nil, err
+	//}
 	//if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {
 	//	log.Errorw("gateway inits syncer client failed", "error", err)
 	//	return nil, err
