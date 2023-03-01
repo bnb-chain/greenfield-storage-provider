@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var _ types.DownloaderServiceServer = &Downloader{}
@@ -17,7 +16,7 @@ var _ types.DownloaderServiceServer = &Downloader{}
 func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectRequest,
 	stream types.DownloaderService_DownloaderObjectServer) (err error) {
 	var (
-		objectInfo   *ptypes.ObjectInfo
+		objectInfo   *storagetypes.ObjectInfo
 		size         int
 		offset       uint64
 		length       uint64
@@ -38,30 +37,31 @@ func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectReques
 		log.Errorf("failed to query chain", "err", err)
 		return
 	}
-	objectInfo = &ptypes.ObjectInfo{
-		ObjectId: chainObjectInfo.Id.Uint64(),
-		Size_:    chainObjectInfo.PayloadSize,
+	objectInfo = &storagetypes.ObjectInfo{
+		Id:          chainObjectInfo.Id,
+		PayloadSize: chainObjectInfo.PayloadSize,
 	}
 
 	// TODO: It will be optimized here after connecting with the chain
 	// if length == 0, download all object data
-	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.Size_) && req.RangeEnd >= 0 && req.RangeEnd < int64(objectInfo.Size_) {
+	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.GetPayloadSize()) &&
+		req.RangeEnd >= 0 && req.RangeEnd < int64(objectInfo.GetPayloadSize()) {
 		isValidRange = true
 		offset = uint64(req.RangeStart)
 		length = uint64(req.RangeEnd-req.RangeStart) + 1
-	} else if req.RangeStart > 0 && req.RangeStart < int64(objectInfo.Size_) && req.RangeEnd < 0 {
+	} else if req.RangeStart > 0 && req.RangeStart < int64(objectInfo.GetPayloadSize()) && req.RangeEnd < 0 {
 		isValidRange = true
 		offset = uint64(req.RangeStart)
-		length = objectInfo.Size_ - uint64(req.RangeStart)
+		length = objectInfo.GetPayloadSize() - uint64(req.RangeStart)
 	} else {
-		offset, length = 0, objectInfo.Size_
+		offset, length = 0, objectInfo.GetPayloadSize()
 	}
 	//offset, length = req.GetOffset(), req.GetLength()
 	//if req.GetLength() == 0 {
 	//	offset, length = 0, objectInfo.Size
 	//}
 	var segmentInfo segments
-	segmentInfo, err = DownloadPieceInfo(objectInfo.ObjectId, objectInfo.Size_, offset, offset+length-1)
+	segmentInfo, err = downloader.DownloadPieceInfo(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), offset, offset+length-1)
 	if err != nil {
 		return
 	}
@@ -89,18 +89,23 @@ type segments []*segment
 
 // DownloadPieceInfo compute the piece store info for download.
 // download interval [start, end]
-func DownloadPieceInfo(objectID, objectSize, start, end uint64) (pieceInfo segments, err error) {
+func (downloader *Downloader) DownloadPieceInfo(objectID, objectSize, start, end uint64) (pieceInfo segments, err error) {
 	if objectSize == 0 || start > objectSize || end < start {
 		return pieceInfo, fmt.Errorf("param error, object size: %d, start: %d, end: %d", objectSize, start, end)
 	}
-	segmentCount := int(objectSize / model.SegmentSize)
-	if objectSize%model.SegmentSize != 0 {
+	param, err := downloader.spDb.GetAllParam()
+	if err != nil {
+		return pieceInfo, err
+	}
+	segmentSize := param.GetMaxSegmentSize()
+	segmentCount := int(objectSize / segmentSize)
+	if objectSize%segmentSize != 0 {
 		segmentCount++
 	}
 	for idx := 0; idx < segmentCount; idx++ {
 		finish := false
-		currentStart := uint64(idx) * model.SegmentSize
-		currentEnd := uint64(idx+1)*model.SegmentSize - 1
+		currentStart := uint64(idx) * segmentSize
+		currentEnd := uint64(idx+1)*segmentSize - 1
 		if currentEnd >= end {
 			currentEnd = end
 			finish = true

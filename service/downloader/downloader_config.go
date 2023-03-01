@@ -13,7 +13,7 @@ type DownloaderConfig struct {
 }
 
 var DefaultDownloaderConfig = &DownloaderConfig{
-	GrpcAddress:      model.DowmloaderGrpcAddress,
+	GrpcAddress:      model.DownloaderGrpcAddress,
 	ChainConfig:      gnfd.DefaultGreenfieldChainConfig,
 	PieceStoreConfig: storage.DefaultPieceStoreConfig,
 }

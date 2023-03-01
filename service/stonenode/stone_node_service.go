@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -70,7 +70,7 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 		log.CtxErrorw(ctx, "failed to query sp param", "error", err)
 		return
 	}
-	segments := util.ComputeSegmentCount(objectInfo.GetPayloadSize(),
+	segments := piecestore.ComputeSegmentCount(objectInfo.GetPayloadSize(),
 		params.GetMaxSegmentSize())
 	replicates := params.GetRedundantDataChunkNum() +
 		params.GetRedundantDataChunkNum()

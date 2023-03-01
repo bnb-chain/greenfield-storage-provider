@@ -14,10 +14,6 @@ import (
 
 	"github.com/naoina/toml"
 	"google.golang.org/grpc/peer"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 )
 
 // TomlSettings - These settings ensure that TOML keys use the same names as Go struct fields.
@@ -43,46 +39,6 @@ func GenerateRequestID() string {
 	return strconv.FormatUint(rand.Uint64(), 10)
 }
 
-// ComputeSegmentCount return the segments counter by payload size.
-//func ComputeSegmentCount(size uint64) uint32 {
-//	segmentCount := uint32(size / model.SegmentSize)
-//	if (size % model.SegmentSize) > 0 {
-//		segmentCount++
-//	}
-//	return segmentCount
-//}
-
-// ComputeSegmentCount return the segments counter by payload size.
-func ComputeSegmentCount(size uint64, spiltSize uint64) uint32 {
-	segmentCount := uint32(size / spiltSize)
-	if (size % model.SegmentSize) > 0 {
-		segmentCount++
-	}
-	return segmentCount
-}
-
-// JobStateReadable parser the job state to readable
-func JobStateReadable(state string) string {
-	return strings.ToLower(strings.TrimPrefix(state, "JOB_STATE_"))
-}
-
-// SpReadable parser the storage provider to readable
-func SpReadable(provider string) string {
-	return provider[:8]
-}
-
-// ValidateRedundancyType validate redundancy type
-func ValidateRedundancyType(redundancyType ptypes.RedundancyType) error {
-	switch redundancyType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
-		return nil
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		return nil
-	default:
-		return merrors.ErrRedundancyType
-	}
-}
-
 // GetIPFromGRPCContext returns a IP from grpc client
 func GetIPFromGRPCContext(ctx context.Context) net.IP {
 	pr, ok := peer.FromContext(ctx)
@@ -96,17 +52,6 @@ func GetIPFromGRPCContext(ctx context.Context) net.IP {
 	}
 
 	return net.ParseIP(addr[0])
-}
-
-// HeaderToRedundancyType can be EC or Replica or Inline, default is EC
-func HeaderToRedundancyType(header string) ptypes.RedundancyType {
-	if header == model.ReplicaRedundancyTypeHeaderValue {
-		return ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE
-	}
-	if header == model.InlineRedundancyTypeHeaderValue {
-		return ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE
-	}
-	return ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED
 }
 
 func HeaderToUint64(header string) (uint64, error) {
@@ -184,17 +129,4 @@ func DecodePieceHash(pieceHash string) ([][]byte, error) {
 		}
 	}
 	return hashList, nil
-}
-
-func TransferRedundancyType(redundancyType string) (ptypes.RedundancyType, error) {
-	switch redundancyType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED.String():
-		return ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED, nil
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE.String():
-		return ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, nil
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE.String():
-		return ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE, nil
-	default:
-		return -1, merrors.ErrRedundancyType
-	}
 }

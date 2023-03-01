@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
@@ -34,31 +32,9 @@ func DecodeSegmentPieceKey(pieceKey string) (uint64, uint32, error) {
 	return objectID, uint32(segmentIndex), nil
 }
 
-// EncodePieceKey encodes piece store key
-func EncodePieceKey(rType ptypes.RedundancyType, objectId uint64, segmentIndex, ecIndex uint32) (string, error) {
-	var pieceKey string
-	switch rType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
-		pieceKey = EncodeECPieceKey(objectId, segmentIndex, ecIndex)
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE:
-		pieceKey = EncodeSegmentPieceKey(objectId, segmentIndex)
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		pieceKey = EncodeSegmentPieceKey(objectId, segmentIndex)
-	default:
-		return "", merrors.ErrRedundancyType
-	}
-
-	return pieceKey, nil
-}
-
 // EncodeECPieceKey encodes ec piece store key
 func EncodeECPieceKey(objectID uint64, segmentIndex, ecIndex uint32) string {
 	return fmt.Sprintf("%d_s%d_p%d", objectID, segmentIndex, ecIndex)
-}
-
-// EncodeECPieceKeyBySegmentKey encodes ec piece store key
-func EncodeECPieceKeyBySegmentKey(segmentKey string, ecIndex uint32) string {
-	return fmt.Sprintf("%s_p%d", segmentKey, ecIndex)
 }
 
 // DecodeECPieceKey decodes ec piece store key
@@ -109,4 +85,13 @@ func CheckECPieceKey(keys []string) bool {
 		return true
 	}
 	return false
+}
+
+// ComputeSegmentCount return the segments count by payload size.
+func ComputeSegmentCount(size uint64, spiltSize uint64) uint32 {
+	segmentCount := uint32(size / spiltSize)
+	if (size % spiltSize) > 0 {
+		segmentCount++
+	}
+	return segmentCount
 }
