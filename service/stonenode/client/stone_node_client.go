@@ -8,18 +8,18 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types"
 )
 
-// StoneNodeClient is a grpc client wrapper.
+// StoneNodeClient is an stone node gRPC service client wrapper
 type StoneNodeClient struct {
 	address string
 	node    types.StoneNodeServiceClient
 	conn    *grpc.ClientConn
 }
 
-// NewStoneNodeClient return a toneNodeClient instance.
+// NewStoneNodeClient return a StoneNodeClient instance
 func NewStoneNodeClient(address string) (*StoneNodeClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -35,18 +35,18 @@ func NewStoneNodeClient(address string) (*StoneNodeClient, error) {
 	return client, nil
 }
 
-// Close the gPRC connection
+// Close the stone node gPRC connection
 func (client *StoneNodeClient) Close() error {
 	return client.conn.Close()
 }
 
-// ReplicateObject async replicate an object payload to other sp and seal object.
+// ReplicateObject async replicate an object payload to other storage provider and seal object
 func (client *StoneNodeClient) ReplicateObject(ctx context.Context, object *storagetypes.ObjectInfo, opts ...grpc.CallOption) error {
 	_, err := client.node.ReplicateObject(ctx, &types.ReplicateObjectRequest{ObjectInfo: object}, opts...)
 	return err
 }
 
-// QueryReplicatingObject query a replicating object payload information by object id.
+// QueryReplicatingObject query a replicating object payload information by object id
 func (client *StoneNodeClient) QueryReplicatingObject(ctx context.Context, objectId uint64) (*servicetype.ReplicateSegmentInfo, error) {
 	resp, err := client.node.QueryReplicatingObject(ctx, &types.QueryReplicatingObjectRequest{ObjectId: objectId})
 	if err != nil {

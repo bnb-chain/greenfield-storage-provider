@@ -6,18 +6,18 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-// UploaderClient is a grpc client wrapper.
+// UploaderClient is an uploader gRPC service client wrapper
 type UploaderClient struct {
 	uploader types.UploaderServiceClient
 	conn     *grpc.ClientConn
 }
 
-// NewUploaderClient return an uploader gPRC client instance.
+// NewUploaderClient return an UploaderClient instance
 func NewUploaderClient(address string) (*UploaderClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -31,12 +31,12 @@ func NewUploaderClient(address string) (*UploaderClient, error) {
 	return client, nil
 }
 
-// Close the uploader gPRC client instance.
+// Close the uploader gPRC client connection
 func (client *UploaderClient) Close() error {
 	return client.conn.Close()
 }
 
-// QueryUploadingObject query an uploading object info with object id.
+// QueryUploadingObject query an uploading object info with object id
 func (client *UploaderClient) QueryUploadingObject(
 	ctx context.Context,
 	objectId uint64,

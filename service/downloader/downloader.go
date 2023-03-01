@@ -15,7 +15,8 @@ import (
 	pscli "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
-// Downloader manage the payload data download
+// Downloader implements the gRPC of DownloaderService,
+// responsible for downloading object payload data
 type Downloader struct {
 	cfg        *DownloaderConfig
 	spDB       store.SPDB
@@ -23,7 +24,8 @@ type Downloader struct {
 	pieceStore *pscli.StoreClient
 }
 
-// NewDownloaderService return a downloader instance.
+// NewDownloaderService returns an instance of Downloader that implementation of
+// the lifecycle.Service and DownloaderService interface
 func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 	pieceStore, err := pscli.NewStoreClient(cfg.PieceStoreConfig)
 	if err != nil {
@@ -44,12 +46,12 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 	return downloader, nil
 }
 
-// Name implement the lifecycle interface
+// Name return the downloader service name, for the lifecycle management
 func (downloader *Downloader) Name() string {
 	return model.DownloaderService
 }
 
-// Start implement the lifecycle interface
+// Start the downloader gRPC service
 func (downloader *Downloader) Start(ctx context.Context) error {
 	errCh := make(chan error)
 
@@ -73,7 +75,7 @@ func (downloader *Downloader) Start(ctx context.Context) error {
 	return err
 }
 
-// Stop implement the lifecycle interface
+// Stop the downloader gRPC service and recycle the resources
 func (downloader *Downloader) Stop(ctx context.Context) error {
 	return nil
 }

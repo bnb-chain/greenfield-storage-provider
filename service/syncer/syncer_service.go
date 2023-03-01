@@ -42,7 +42,7 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 		integrityMeta.Signature = resp.Signature
 		err = syncer.spDB.SetObjectIntegrity(integrityMeta)
 		if err != nil {
-			log.Errorw("fail to write integrity hash to db", "error", err)
+			log.Errorw("failed to write integrity hash to db", "error", err)
 			return
 		}
 		traceInfo.IntegrityHash = resp.IntegrityHash

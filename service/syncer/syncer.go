@@ -20,7 +20,7 @@ import (
 var _ lifecycle.Service = &Syncer{}
 
 // Syncer implements the gRPC of SyncerService,
-// responsible for receive replicate object payload data.
+// responsible for receive replicate object payload data
 type Syncer struct {
 	config     *SyncerConfig
 	cache      *lru.Cache
@@ -30,7 +30,7 @@ type Syncer struct {
 	grpcServer *grpc.Server
 }
 
-// NewSyncerService return a syncer instance and init the resource
+// NewSyncerService return a Syncer instance and init the resource
 func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	cache, _ := lru.New(model.LruCacheLimit)
 	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
@@ -70,7 +70,6 @@ func (syncer *Syncer) Stop(ctx context.Context) error {
 	return nil
 }
 
-// serve the syncer gRPC service
 func (syncer *Syncer) serve(errCh chan error) {
 	lis, err := net.Listen("tcp", syncer.config.GrpcAddress)
 	errCh <- err

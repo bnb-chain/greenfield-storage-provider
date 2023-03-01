@@ -48,6 +48,8 @@ const (
 	AWSSecretKey = "AWS_SECRET_KEY"
 	// AWSSessionToken defines env variable name for aws session token
 	AWSSessionToken = "AWS_SESSION_TOKEN"
+	// SpOperatorAddress defines env variable name for sp operator address
+	SpOperatorAddress = "SP_OPERATOR_ADDRESS"
 )
 
 // define cache size

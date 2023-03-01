@@ -12,14 +12,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
 )
 
-// SyncerClient is a grpc client wrapper.
+// SyncerClient is a syncer gRPC service client wrapper
 type SyncerClient struct {
 	address string
 	syncer  types.SyncerServiceClient
 	conn    *grpc.ClientConn
 }
 
-// NewSyncerClient return a SyncerClient instance.
+// NewSyncerClient return a SyncerClient instance
 func NewSyncerClient(address string) (*SyncerClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -37,14 +37,19 @@ func NewSyncerClient(address string) (*SyncerClient, error) {
 	return client, nil
 }
 
-// SyncObject an object payload with object info.
+// Close the syncer gPRC connection
+func (client *SyncerClient) Close() error {
+	return client.conn.Close()
+}
+
+// SyncObject an object payload with object info
 func (client *SyncerClient) SyncObject(
 	ctx context.Context,
 	opts ...grpc.CallOption) (types.SyncerService_SyncObjectClient, error) {
 	return client.syncer.SyncObject(ctx, opts...)
 }
 
-// QuerySyncingObject a syncing object info by object id.
+// QuerySyncingObject a syncing object info by object id
 func (client *SyncerClient) QuerySyncingObject(
 	ctx context.Context, objectId uint64) (*servicetypes.SegmentInfo, error) {
 	req := &types.QuerySyncingObjectRequest{
