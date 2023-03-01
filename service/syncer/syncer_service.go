@@ -4,116 +4,129 @@ import (
 	"context"
 	"io"
 
+	"github.com/bnb-chain/greenfield-common/go/hash"
+
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
+	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
+	"github.com/bnb-chain/greenfield-storage-provider/store"
 )
 
-// SyncPiece syncs piece data to secondary storage provider
-func (s *Syncer) SyncPiece(stream stypes.SyncerService_SyncPieceServer) error {
-	var count uint32
-	var integrityMeta *spdb.IntegrityMeta
-	var traceID string
-	var value []byte
-	pieceHash := make([][]byte, 0)
+var _ types.SyncerServiceServer = &Syncer{}
 
-	for {
-		req, err := stream.Recv()
-		if err == io.EOF {
-			if count != integrityMeta.PieceCount {
-				log.Errorw("syncer service received piece count is wrong")
-				return merrors.ErrReceivedPieceCount
+// SyncObject an object payload to storage provider.
+func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (err error) {
+	var (
+		resp          types.SyncObjectResponse
+		pstream       = payloadstream.NewAsyncPayloadStream()
+		traceInfo     = &servicetypes.SegmentInfo{}
+		checksum      [][]byte
+		integrityMeta = &store.IntegrityMeta{}
+		errCh         = make(chan error, 10)
+	)
+
+	defer func(resp *types.SyncObjectResponse, err error) {
+		if err != nil {
+			log.Errorw("failed to replicate payload", "err", err)
+			return
+		}
+		resp.IntegrityHash, resp.Signature, err = syncer.signer.SignIntegrityHash(context.Background(), checksum)
+		if err != nil {
+			log.Errorw("failed to sign integrity hash", "err", err)
+			return
+		}
+		integrityMeta.Checksum = checksum
+		integrityMeta.IntegrityHash = resp.IntegrityHash
+		integrityMeta.Signature = resp.Signature
+		err = syncer.spDB.SetObjectIntegrity(integrityMeta)
+		if err != nil {
+			log.Errorw("fail to write integrity hash to db", "error", err)
+			return
+		}
+		traceInfo.IntegrityHash = resp.IntegrityHash
+		traceInfo.Signature = resp.Signature
+		syncer.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
+		err = stream.SendAndClose(resp)
+		pstream.Close()
+		log.Infow("replicate payload", "response", resp, "error", err)
+	}(&resp, err)
+
+	//TODO:: add flow control, syncing one object request cost 4 parallel goroutine at least
+
+	// read payload from gRPC
+	go func() {
+		init := true
+		for {
+			req, err := stream.Recv()
+			if err == io.EOF {
+				pstream.StreamClose()
+				return
 			}
-			integrityMeta.PieceHash = pieceHash
-			sealInfo, err := s.generateSealInfo(s.config.StorageProvider, integrityMeta)
 			if err != nil {
-				log.Errorw("failed to generate seal info", "error", err)
-				return err
+				log.Debugw("receive payload exception", "error", err)
+				pstream.StreamCloseWithError(err)
+				errCh <- err
+				return
 			}
-			integrityMeta.IntegrityHash = sealInfo.GetIntegrityHash()
-			integrityMeta.Signature = sealInfo.GetSignature()
-			if err := s.metaDB.SetIntegrityMeta(integrityMeta); err != nil {
-				log.Errorw("set integrity meta error", "error", err)
-				return err
+			if init {
+				pstream.InitAsyncPayloadStream(
+					req.GetObjectInfo().Id.Uint64(),
+					req.GetReplicateIdx(),
+					req.GetSegmentSize(),
+					req.GetObjectInfo().GetRedundancyType())
+				integrityMeta.ObjectId = req.GetObjectInfo().Id.Uint64()
+				traceInfo.ObjectInfo = req.GetObjectInfo()
+				syncer.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
+				init = false
 			}
-			resp := &stypes.SyncerServiceSyncPieceResponse{
-				TraceId:         traceID,
-				SecondarySpInfo: sealInfo,
-				ErrMessage: &stypes.ErrMessage{
-					ErrCode: stypes.ErrCode_ERR_CODE_SUCCESS_UNSPECIFIED,
-					ErrMsg:  "success",
-				},
+
+			pstream.StreamWrite(req.GetReplicateData())
+		}
+	}()
+
+	// read payload from stream, the payload is spilt to segment size
+	for {
+		select {
+		case entry := <-pstream.AsyncStreamRead():
+			log.Debugw("read segment from stream", "segment_key", entry.Key(), "error", entry.Error())
+			if entry.Error() == io.EOF {
+				errCh <- nil
+				return
 			}
-			ctx := log.Context(context.Background(), resp)
-			log.CtxInfow(ctx, "receive piece data success", "integrity_hash", sealInfo.GetIntegrityHash())
-			return stream.SendAndClose(resp)
+			if entry.Error() != nil {
+				errCh <- entry.Error()
+				return
+			}
+			checksum = append(checksum, hash.GenerateChecksum(entry.Data()))
+			traceInfo.CheckSum = checksum
+			traceInfo.Completed++
+			syncer.cache.Add(entry.ID(), traceInfo)
+			go func() {
+				if err := syncer.pieceStore.PutSegment(entry.Key(), entry.Data()); err != nil {
+					errCh <- err
+				}
+			}()
+		case err = <-errCh:
+			return
 		}
-		if err != nil {
-			log.Errorw("stream recv failed", "error", err)
-			return err
-		}
-		count++
-		integrityMeta, value, err = s.handlePieceData(req, count)
-		if err != nil {
-			return err
-		}
-		traceID = req.GetTraceId()
-		pieceHash = append(pieceHash, hash.GenerateChecksum(value))
 	}
 }
 
-// generateSealInfo generate seal info, notice spID is operator address
-func (s *Syncer) generateSealInfo(spID string, integrityMeta *spdb.IntegrityMeta) (*stypes.StorageProviderSealInfo, error) {
-	var err error
-	resp := &stypes.StorageProviderSealInfo{
-		StorageProviderId: spID,
-		PieceIdx:          integrityMeta.EcIdx,
-		PieceChecksum:     integrityMeta.PieceHash,
+// QuerySyncingObject query a syncing object info by object id.
+func (syncer *Syncer) QuerySyncingObject(
+	ctx context.Context,
+	req *types.QuerySyncingObjectRequest) (
+	resp *types.QuerySyncingObjectResponse, err error) {
+	ctx = log.Context(ctx, req)
+	objectId := req.GetObjectId()
+	cached, ok := syncer.cache.Get(objectId)
+	if !ok {
+		err = merrors.ErrCacheMiss
+		return
 	}
-	resp.IntegrityHash, resp.Signature, err = s.signer.SignIntegrityHash(context.Background(), resp.PieceChecksum)
-	if err != nil {
-		log.Errorw("failed to sign integrity hash", "error", err)
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (s *Syncer) handlePieceData(req *stypes.SyncerServiceSyncPieceRequest, count uint32) (*spdb.IntegrityMeta, []byte, error) {
-	redundancyType := req.GetSyncerInfo().GetRedundancyType()
-	objectID := req.GetSyncerInfo().GetObjectId()
-	integrityMeta := &spdb.IntegrityMeta{
-		ObjectID:       objectID,
-		PieceCount:     req.GetSyncerInfo().GetPieceCount(),
-		IsPrimary:      false,
-		RedundancyType: redundancyType,
-	}
-	key, pieceIndex, err := encodePieceKey(redundancyType, objectID, count, req.GetSyncerInfo().GetPieceIndex())
-	if err != nil {
-		return nil, nil, err
-	}
-	integrityMeta.EcIdx = pieceIndex
-
-	// put piece data into piece store
-	value := req.GetPieceData()
-	if err = s.store.PutPiece(key, value); err != nil {
-		log.Errorw("put piece failed", "error", err)
-		return nil, nil, err
-	}
-	return integrityMeta, value, nil
-}
-
-func encodePieceKey(redundancyType ptypes.RedundancyType, objectID uint64, segmentIndex, pieceIndex uint32) (
-	string, uint32, error) {
-	switch redundancyType {
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_REPLICA_TYPE, ptypes.RedundancyType_REDUNDANCY_TYPE_INLINE_TYPE:
-		return piecestore.EncodeSegmentPieceKey(objectID, segmentIndex), pieceIndex, nil
-	case ptypes.RedundancyType_REDUNDANCY_TYPE_EC_TYPE_UNSPECIFIED:
-		return piecestore.EncodeECPieceKey(objectID, segmentIndex, pieceIndex), pieceIndex, nil
-	default:
-		return "", 0, merrors.ErrRedundancyType
-	}
+	resp = &types.QuerySyncingObjectResponse{}
+	resp.SegmentInfo = cached.(*servicetypes.SegmentInfo)
+	return
 }

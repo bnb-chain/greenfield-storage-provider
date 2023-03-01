@@ -2,123 +2,163 @@ package stonenode
 
 import (
 	"context"
-	"fmt"
+	"net"
+	"sync"
 	"sync/atomic"
-	"time"
+
+	"github.com/bnb-chain/greenfield-common/go/redundancy"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	lru "github.com/hashicorp/golang-lru"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types"
+	"github.com/bnb-chain/greenfield-storage-provider/store"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
-const (
-	allocStonePeriod = time.Second * 1
-)
+var _ lifecycle.Service = &StoneNode{}
 
-// StoneNodeService manages stone execution units
-type StoneNodeService struct {
-	cfg        *StoneNodeConfig
-	name       string
-	stoneHub   client.StoneHubAPI
-	store      client.PieceStoreAPI
-	stoneLimit int64
-
-	running atomic.Bool
-	stopCh  chan struct{}
+// StoneNode as min execution unit, execute storage provider's background tasks
+type StoneNode struct {
+	config     *StoneNodeConfig
+	cache      *lru.Cache
+	signer     *signerclient.SignerClient
+	spDB       store.SPDB
+	chain      *greenfield.Greenfield
+	pieceStore *psclient.StoreClient
+	grpcServer *grpc.Server
 }
 
-// NewStoneNodeService returns StoneNodeService instance
-func NewStoneNodeService(config *StoneNodeConfig) (*StoneNodeService, error) {
-	node := &StoneNodeService{
-		cfg:        config,
-		name:       model.StoneNodeService,
-		stopCh:     make(chan struct{}),
-		stoneLimit: config.StoneJobLimit,
-	}
-	if err := node.initClient(); err != nil {
+// NewStoneNodeService return an instance of StoneNode and init resource
+func NewStoneNodeService(config *StoneNodeConfig) (*StoneNode, error) {
+	cache, _ := lru.New(model.LruCacheLimit)
+	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
+	if err != nil {
 		return nil, err
+	}
+	signer, err := signerclient.NewSignerClient(config.SignerGrpcAddress)
+	if err != nil {
+		return nil, err
+	}
+	chain, err := greenfield.NewGreenfield(config.ChainConfig)
+	if err != nil {
+		return nil, err
+	}
+	//TODO:: new sp db
+	node := &StoneNode{
+		config:     config,
+		cache:      cache,
+		signer:     signer,
+		chain:      chain,
+		pieceStore: pieceStore,
 	}
 	return node, nil
 }
 
-// initClient inits store client and rpc client
-func (node *StoneNodeService) initClient() error {
-	if node.running.Load() {
-		return merrors.ErrStoneNodeStarted
-	}
-	store, err := client.NewStoreClient(node.cfg.PieceStoreConfig)
-	if err != nil {
-		log.Errorw("stone node inits piece store client failed", "error", err)
-		return err
-	}
-	stoneHub, err := client.NewStoneHubClient(node.cfg.StoneHubServiceAddress)
-	if err != nil {
-		log.Errorw("stone node inits stone hub client failed", "error", err)
-		return err
-	}
-	node.store = store
-	node.stoneHub = stoneHub
+// Name return the stone node service name, for the lifecycle management
+func (node *StoneNode) Name() string {
+	return model.StoneNodeService
+}
+
+// Start the stone node gRPC service and background tasks
+func (node *StoneNode) Start(ctx context.Context) error {
+	errCh := make(chan error)
+	go node.serve(errCh)
+	err := <-errCh
+	return err
+}
+
+// Stop the stone node gRPC service and recycle the resources
+func (node *StoneNode) Stop(ctx context.Context) error {
+	node.grpcServer.GracefulStop()
+	node.signer.Close()
+	node.chain.Close()
 	return nil
 }
 
-// Name returns the name of StoneNodeService, implement lifecycle interface
-func (node *StoneNodeService) Name() string {
-	return node.name
+func (node *StoneNode) serve(errCh chan error) {
+	lis, err := net.Listen("tcp", node.config.GrpcAddress)
+	errCh <- err
+	if err != nil {
+		log.Errorw("fail to listen", "err", err)
+		return
+	}
+
+	grpcServer := grpc.NewServer()
+	types.RegisterStoneNodeServiceServer(grpcServer, node)
+	node.grpcServer = grpcServer
+	reflection.Register(grpcServer)
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Errorw("failed to start grpc server", "err", err)
+		return
+	}
 }
 
-// Start running StoneNodeService, implement lifecycle interface
-func (node *StoneNodeService) Start(startCtx context.Context) error {
-	if node.running.Swap(true) {
-		return merrors.ErrStoneNodeStarted
+// EncodeReplicateSegments load segment data and encode by redundancy type
+func (node *StoneNode) EncodeReplicateSegments(
+	ctx context.Context,
+	objectId uint64,
+	segments uint32,
+	replicates int,
+	rType storagetypes.RedundancyType) (
+	data [][][]byte, err error) {
+	params, err := node.spDB.GetAllParam()
+	if err != nil {
+		return
 	}
-	go func() {
-		var stoneJobCounter int64 // atomic
-		allocTicker := time.NewTicker(allocStonePeriod)
-		ctx, cancel := context.WithCancel(startCtx)
-		for {
-			select {
-			case <-allocTicker.C:
-				go func() {
-					if !node.running.Load() {
-						log.Errorw("stone node service stopped, can not alloc stone")
-						return
-					}
-					if node.stoneLimit <= 0 {
-						log.Errorw("stone node stone limit is zero, forbid pull stone job")
-						return
-					}
-					atomic.AddInt64(&stoneJobCounter, 1)
-					defer atomic.AddInt64(&stoneJobCounter, -1)
-					if atomic.LoadInt64(&stoneJobCounter) > node.stoneLimit {
-						log.Errorw("stone job running number exceeded, skip current alloc stone")
-						return
-					}
-					// TBD::exceed stoneLimit or alloc empty stone,
-					// stone node need one backoff strategy.
-					node.allocStoneJob(ctx)
-				}()
-			case <-node.stopCh:
-				cancel()
+	for i := 0; i < replicates; i++ {
+		data = append(data, make([][]byte, int(segments)))
+	}
+
+	var mux sync.Mutex
+	var done int64
+	errCh := make(chan error, 10)
+	for segIdx := 0; segIdx < int(segments); segIdx++ {
+		go func(segIdx int) {
+			key := piecestore.EncodeSegmentPieceKey(objectId, uint32(segIdx))
+			segmentData, err := node.pieceStore.GetSegment(ctx, key, 0, 0)
+			if err != nil {
+				errCh <- err
 				return
 			}
-		}
-	}()
-	return nil
-}
+			if rType == storagetypes.REDUNDANCY_EC_TYPE {
+				enodeData, err := redundancy.EncodeRawSegment(segmentData,
+					int(params.GetRedundantDataChunkNum()),
+					int(params.GetRedundantParityChunkNum()))
+				if err != nil {
+					errCh <- err
+					return
+				}
+				mux.Lock()
+				defer mux.Unlock()
+				for idx, ec := range enodeData {
+					data[idx][segIdx] = ec
+				}
+			} else {
+				mux.Lock()
+				defer mux.Unlock()
+				for idx := 0; idx < replicates; idx++ {
+					data[idx][segIdx] = segmentData
+				}
+			}
+			if atomic.AddInt64(&done, 1) == int64(replicates) {
+				errCh <- nil
+				return
+			}
+		}(segIdx)
+	}
 
-// Stop running StoneNodeService, implement lifecycle interface
-func (node *StoneNodeService) Stop(ctx context.Context) error {
-	if !node.running.Swap(false) {
-		return merrors.ErrStoneNodeStopped
+	for {
+		select {
+		case err = <-errCh:
+			return
+		}
 	}
-	close(node.stopCh)
-	var errs []error
-	if err := node.stoneHub.Close(); err != nil {
-		errs = append(errs, err)
-	}
-	if errs != nil {
-		return fmt.Errorf("%v", errs)
-	}
-	return nil
 }

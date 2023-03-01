@@ -45,9 +45,15 @@ const (
 
 type SpInfo interface {
 	UpdateAllSp([]*sptypes.StorageProvider) error
-	FetchAllSp() ([]*sptypes.StorageProvider, error)
+	FetchAllSp(...sptypes.Status) ([]*sptypes.StorageProvider, error)
+	FetchAllWithoutSp(string, ...sptypes.Status) ([]*sptypes.StorageProvider, error)
 	GetSpByAddress(addrType string) (*sptypes.StorageProvider, error)
 	GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error)
+}
+
+type SpParam interface {
+	GetAllParam() (*storagetypes.Params, error)
+	SetAllParam(*storagetypes.Params) error
 }
 
 // BucketQuota is a quota config from chain
@@ -132,4 +138,5 @@ type SPDB interface {
 	ObjectIntegrity
 	Traffic
 	SpInfo
+	SpParam
 }

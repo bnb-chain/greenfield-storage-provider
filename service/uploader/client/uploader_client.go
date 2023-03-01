@@ -8,7 +8,7 @@ import (
 
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // UploaderClient is a grpc client wrapper.

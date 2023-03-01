@@ -1,18 +1,19 @@
 package downloader
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
 type DownloaderConfig struct {
-	Address          string
-	PieceStoreConfig *storage.PieceStoreConfig
+	GrpcAddress      string
 	ChainConfig      *gnfd.GreenfieldChainConfig
+	PieceStoreConfig *storage.PieceStoreConfig
 }
 
 var DefaultDownloaderConfig = &DownloaderConfig{
-	Address:          "127.0.0.1:9233",
-	PieceStoreConfig: storage.DefaultPieceStoreConfig,
+	GrpcAddress:      model.DownloaderGrpcAddress,
 	ChainConfig:      gnfd.DefaultGreenfieldChainConfig,
+	PieceStoreConfig: storage.DefaultPieceStoreConfig,
 }

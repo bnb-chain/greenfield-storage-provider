@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
 	dclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
 	sclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	uclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
@@ -16,7 +15,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // Gateway is the primary entry point of SP.
@@ -28,9 +27,9 @@ type Gateway struct {
 	httpServer *http.Server
 	uploader   *uclient.UploaderClient
 	downloader *dclient.DownloaderClient
-	challenge  *client.ChallengeClient
+	//challenge  *client.ChallengeClient
 
-	syncer client.SyncerAPI
+	//syncer client.SyncerAPI
 	chain  *gnfd.Greenfield
 	signer *sclient.SignerClient
 }
@@ -54,14 +53,14 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 		log.Errorw("failed to downloader client", "err", err)
 		return nil, err
 	}
-	if g.challenge, err = client.NewChallengeClient(cfg.ChallengeServiceAddress); err != nil {
-		log.Errorw("failed to challenge client", "err", err)
-		return nil, err
-	}
-	if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {
-		log.Errorw("gateway inits syncer client failed", "error", err)
-		return nil, err
-	}
+	//if g.challenge, err = client.NewChallengeClient(cfg.ChallengeServiceAddress); err != nil {
+	//	log.Errorw("failed to challenge client", "err", err)
+	//	return nil, err
+	//}
+	//if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {
+	//	log.Errorw("gateway inits syncer client failed", "error", err)
+	//	return nil, err
+	//}
 	if g.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Errorw("failed to create chain client", "err", err)
 		return nil, err
