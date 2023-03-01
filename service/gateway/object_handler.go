@@ -8,7 +8,7 @@ package gateway
 //
 //	"github.com/bnb-chain/greenfield-storage-provider/model"
 //	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-//	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+//	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 //	sdk "github.com/cosmos/cosmos-sdk/types"
 //)
 //
@@ -180,7 +180,7 @@ package gateway
 //	//	errorDescription = InvalidTxHash
 //	//	return
 //	//}
-//	//objectSize, _ := util.HeaderToUint64(requestContext.request.Header.Get(model.ContentLengthHeader))
+//	//objectSize, _ := util.StringToUin64(requestContext.request.Header.Get(model.ContentLengthHeader))
 //	//
 //	//stream, err := g.uploader.UploadPayload(context.Background())
 //	//if err != nil {
@@ -238,5 +238,5 @@ package gateway
 //	//md5Value = hex.EncodeToString(md5Hash.Sum(nil))
 //	//w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
 //	//w.Header().Set(model.ETagHeader, md5Value)
-//	//w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
+//	//w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToString(objectID))
 //}

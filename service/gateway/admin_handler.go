@@ -10,7 +10,7 @@ package gateway
 //	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
 //	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 //	"github.com/bnb-chain/greenfield-storage-provider/util"
-//	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+//	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 //	"github.com/bnb-chain/greenfield/x/storage/types"
 //	sdk "github.com/cosmos/cosmos-sdk/types"
 //)
@@ -146,7 +146,7 @@ package gateway
 //		return
 //	}
 //
-//	if objectID, err = util.HeaderToUint64(requestContext.request.Header.Get(model.GnfdObjectIDHeader)); err != nil {
+//	if objectID, err = util.StringToUin64(requestContext.request.Header.Get(model.GnfdObjectIDHeader)); err != nil {
 //		log.Errorw("invalid object id", "object_id", requestContext.request.Header.Get(model.GnfdObjectIDHeader))
 //		errorDescription = InvalidHeader
 //		return
@@ -163,7 +163,7 @@ package gateway
 //	} else {
 //		ecIdx = uint32(redundancyIndex)
 //	}
-//	if segmentIdx, err = util.HeaderToUint32(requestContext.request.Header.Get(model.GnfdPieceIndexHeader)); err != nil {
+//	if segmentIdx, err = util.StringToUint32(requestContext.request.Header.Get(model.GnfdPieceIndexHeader)); err != nil {
 //		log.Errorw("invalid segment idx", "segment_idx", requestContext.request.Header.Get(model.GnfdPieceIndexHeader))
 //		errorDescription = InvalidHeader
 //		return
@@ -187,8 +187,8 @@ package gateway
 //		return
 //	}
 //	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
-//	w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
+//	w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToString(objectID))
 //	w.Header().Set(model.GnfdIntegrityHashHeader, hex.EncodeToString(resp.IntegrityHash))
-//	w.Header().Set(model.GnfdPieceHashHeader, util.EncodePieceHash(resp.PieceHash))
+//	w.Header().Set(model.GnfdPieceHashHeader, util.BytesSliceToString(resp.PieceHash))
 //	w.Write(resp.PieceData)
 //}

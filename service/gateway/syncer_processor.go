@@ -6,7 +6,7 @@ package gateway
 //	"fmt"
 //
 //	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-//	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+//	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 //)
 //
 //// syncPiece send rpc request to secondary storage provider to sync the piece data

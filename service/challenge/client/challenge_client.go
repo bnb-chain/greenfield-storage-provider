@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // ChallengeClient is a challenge gRPC client wrapper.

@@ -12,7 +12,7 @@ import (
 //	"time"
 //
 //	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-//	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+//	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 //	"gorm.io/gorm"
 //
 //	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"

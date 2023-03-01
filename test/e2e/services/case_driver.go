@@ -20,7 +20,7 @@ package main
 //	"github.com/bnb-chain/greenfield-storage-provider/model"
 //	"github.com/bnb-chain/greenfield-storage-provider/util"
 //	"github.com/bnb-chain/greenfield-common/go/hash"
-//	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+//	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 //)
 //
 //var (
@@ -70,7 +70,7 @@ package main
 //	if err != nil {
 //		return err
 //	}
-//	hashList, err := util.DecodePieceHash(pieceHashList)
+//	hashList, err := util.StringToBytesSlice(pieceHashList)
 //	if err != nil {
 //		return err
 //	}
@@ -149,7 +149,7 @@ package main
 //		log.Infow("finish put object",
 //			"etag", res.Header.Get(model.ETagHeader),
 //			"statusCode", res.StatusCode)
-//		objectID, err = util.HeaderToUint64(res.Header.Get(model.GnfdObjectIDHeader))
+//		objectID, err = util.StringToUin64(res.Header.Get(model.GnfdObjectIDHeader))
 //		if err != nil {
 //			log.Errorw("put object failed, due to has no object id", "error", err)
 //			return
@@ -219,7 +219,7 @@ package main
 //			log.Errorw("challenge failed, due to new request", "error", err)
 //			return
 //		}
-//		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
+//		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToString(objectID))
 //		req.Header.Add(model.GnfdPieceIndexHeader, "0")
 //		req.Header.Add(model.GnfdRedundancyIndexHeader, "0")
 //		if err = generateRequestSignature(req); err != nil {
@@ -322,7 +322,7 @@ package main
 //		log.Infow("finish put object",
 //			"etag", res.Header.Get(model.ETagHeader),
 //			"statusCode", res.StatusCode)
-//		objectID, err = util.HeaderToUint64(res.Header.Get(model.GnfdObjectIDHeader))
+//		objectID, err = util.StringToUin64(res.Header.Get(model.GnfdObjectIDHeader))
 //		if err != nil {
 //			log.Errorw("put object failed, due to has no object id", "error", err)
 //			return
@@ -393,7 +393,7 @@ package main
 //			log.Errorw("challenge failed, due to new request", "error", err)
 //			return
 //		}
-//		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
+//		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToString(objectID))
 //		req.Header.Add(model.GnfdPieceIndexHeader, "1")
 //		req.Header.Add(model.GnfdRedundancyIndexHeader, "0")
 //		if err = generateRequestSignature(req); err != nil {
@@ -493,7 +493,7 @@ package main
 //		log.Infow("finish put object",
 //			"etag", res.Header.Get(model.ETagHeader),
 //			"statusCode", res.StatusCode)
-//		objectID, err = util.HeaderToUint64(res.Header.Get(model.GnfdObjectIDHeader))
+//		objectID, err = util.StringToUin64(res.Header.Get(model.GnfdObjectIDHeader))
 //		if err != nil {
 //			log.Errorw("put object failed, due to has no object id", "error", err)
 //			return
@@ -561,7 +561,7 @@ package main
 //			log.Errorw("challenge failed, due to new request", "error", err)
 //			return
 //		}
-//		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
+//		req.Header.Add(model.GnfdObjectIDHeader, util.Uint64ToString(objectID))
 //		req.Header.Add(model.GnfdPieceIndexHeader, "10")
 //		req.Header.Add(model.GnfdRedundancyIndexHeader, "0")
 //		if err = generateRequestSignature(req); err != nil {

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // StoneNodeClient is a grpc client wrapper.

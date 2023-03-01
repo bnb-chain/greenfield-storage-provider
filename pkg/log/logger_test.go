@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/metadata"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log/internal/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log/internal/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func initTestLogger(lvl types.Level) {

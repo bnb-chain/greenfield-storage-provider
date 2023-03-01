@@ -9,7 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/jobdb/jobsql"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
 	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // NewMetaDB return a meta-db instance

@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 

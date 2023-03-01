@@ -10,11 +10,11 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	signercli "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
 	pscli "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 var _ lifecycle.Service = &Syncer{}

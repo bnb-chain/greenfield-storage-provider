@@ -14,7 +14,7 @@ package gateway
 //	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 //	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
 //	"github.com/bnb-chain/greenfield-storage-provider/util"
-//	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+//	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 //)
 //
 //func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,7 @@ package gateway
 //		log.Error("req header object id is empty")
 //		return nil, merrors.ErrEmptyReqHeader
 //	}
-//	id, err := util.HeaderToUint64(objectID)
+//	id, err := util.StringToUin64(objectID)
 //	if err != nil {
 //		log.Errorw("parse object id failed", "error", err)
 //		return nil, merrors.ErrReqHeader
@@ -107,7 +107,7 @@ package gateway
 //		log.Error("req header piece count is empty")
 //		return nil, merrors.ErrEmptyReqHeader
 //	}
-//	pCount, err := util.HeaderToUint32(pieceCount)
+//	pCount, err := util.StringToUint32(pieceCount)
 //	if err != nil {
 //		log.Errorw("parse piece count failed", "error", err)
 //		return nil, merrors.ErrReqHeader
@@ -120,7 +120,7 @@ package gateway
 //		log.Error("req header piece index is empty")
 //		return nil, merrors.ErrEmptyReqHeader
 //	}
-//	pIdx, err := util.HeaderToUint32(pieceIndex)
+//	pIdx, err := util.StringToUint32(pieceIndex)
 //	if err != nil {
 //		log.Errorw("parse piece index failed", "error", err)
 //		return nil, merrors.ErrReqHeader
@@ -147,7 +147,7 @@ package gateway
 //	w.Header().Set(model.GnfdSPIDHeader, resp.GetSecondarySpInfo().GetStorageProviderId())
 //	w.Header().Set(model.GnfdPieceIndexHeader, strconv.Itoa(int(resp.GetSecondarySpInfo().GetPieceIdx())))
 //
-//	checksum := util.EncodePieceHash(resp.GetSecondarySpInfo().GetPieceChecksum())
+//	checksum := util.BytesSliceToString(resp.GetSecondarySpInfo().GetPieceChecksum())
 //	w.Header().Set(model.GnfdPieceChecksumHeader, checksum)
 //
 //	integrityHash := hex.EncodeToString(resp.GetSecondarySpInfo().GetIntegrityHash())

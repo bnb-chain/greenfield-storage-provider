@@ -19,7 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var (

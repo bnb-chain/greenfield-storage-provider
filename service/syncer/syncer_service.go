@@ -11,7 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var _ types.SyncerServiceServer = &Syncer{}

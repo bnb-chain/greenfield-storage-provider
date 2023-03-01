@@ -15,7 +15,7 @@ import (
 	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store"
 	pscli "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var _ lifecycle.Service = &Uploader{}

@@ -6,8 +6,8 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // import (
@@ -19,7 +19,7 @@ import (
 //	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 //	"github.com/bnb-chain/greenfield-storage-provider/store/spdb"
 //	"github.com/bnb-chain/greenfield-storage-provider/util"
-//	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+//	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 //	"gorm.io/driver/mysql"
 //	"gorm.io/gorm"
 //
@@ -79,7 +79,7 @@ func InitDB(config *config.SqlDBConfig) (*gorm.DB, error) {
 //		IsPrimary:      meta.IsPrimary,
 //		RedundancyType: uint32(meta.RedundancyType),
 //		IntegrityHash:  hex.EncodeToString(meta.IntegrityHash),
-//		PieceHash:      util.EncodePieceHash(meta.PieceHash),
+//		PieceHash:      util.BytesSliceToString(meta.PieceHash),
 //		Signature:      hex.EncodeToString(meta.Signature),
 //	}
 //	result = mdb.db.Create(insertIntegrityMetaRecord)
@@ -119,7 +119,7 @@ func InitDB(config *config.SqlDBConfig) (*gorm.DB, error) {
 //		IntegrityHash:  integrityHash,
 //		Signature:      signature,
 //	}
-//	meta.PieceHash, err = util.DecodePieceHash(queryReturn.PieceHash)
+//	meta.PieceHash, err = util.StringToBytesSlice(queryReturn.PieceHash)
 //	if err != nil {
 //		return nil, err
 //	}

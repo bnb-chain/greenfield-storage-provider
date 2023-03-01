@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 )
 
 // UploaderClient is a grpc client wrapper.

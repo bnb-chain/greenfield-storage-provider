@@ -14,8 +14,8 @@ import (
 	"github.com/bytedance/gopkg/cloud/metainfo"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log/internal/zap"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log/internal/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log/internal/zap"
 )
 
 type (
@@ -330,17 +330,18 @@ func CtxPanicw(ctx context.Context, msg string, kvs ...interface{}) {
 
 func Context(ctx context.Context, opts ...interface{}) context.Context {
 	for _, req := range opts {
-		//if reflect.ValueOf(req).MethodByName("GetTraceId").IsValid() {
-		//	valList := reflect.ValueOf(req).MethodByName("GetTraceId").Call([]reflect.Value{})
-		//	if len(valList) > 0 && !valList[0].IsZero() {
-		//		traceID := valList[0].String()
-		//		ctx = metainfo.WithValue(ctx, "trace_id", traceID)
-		//	}
-		//}
 		if reflect.ValueOf(req).MethodByName("GetObjectId").IsValid() {
 			valList := reflect.ValueOf(req).MethodByName("GetObjectId").Call([]reflect.Value{})
 			if len(valList) > 0 && !valList[0].IsZero() {
 				objectID := valList[0].Uint()
+				ctx = metainfo.WithValue(ctx, "object_id", strconv.FormatUint(objectID, 10))
+			}
+		}
+		if reflect.ValueOf(req).MethodByName("GetObjectInfo").IsValid() {
+			valList := reflect.ValueOf(req).MethodByName("GetObjectInfo").Call([]reflect.Value{})
+			if len(valList) > 0 && !valList[0].IsZero() {
+				rValue := reflect.ValueOf(valList[0])
+				objectID := rValue.FieldByName("Id").Uint()
 				ctx = metainfo.WithValue(ctx, "object_id", strconv.FormatUint(objectID, 10))
 			}
 		}

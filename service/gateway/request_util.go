@@ -15,8 +15,8 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -189,7 +189,7 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 	rangeStr = rangeStr[len("bytes="):]
 	if strings.HasSuffix(rangeStr, "-") {
 		rangeStr = rangeStr[:len(rangeStr)-1]
-		rangeStart, err := util.HeaderToUint64(rangeStr)
+		rangeStart, err := util.StringToUin64(rangeStr)
 		if err != nil {
 			return false, -1, -1
 		}
@@ -197,11 +197,11 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 	}
 	pair := strings.Split(rangeStr, "-")
 	if len(pair) == 2 {
-		rangeStart, err := util.HeaderToUint64(pair[0])
+		rangeStart, err := util.StringToUin64(pair[0])
 		if err != nil {
 			return false, -1, -1
 		}
-		rangeEnd, err := util.HeaderToUint64(pair[1])
+		rangeEnd, err := util.StringToUin64(pair[1])
 		if err != nil {
 			return false, -1, -1
 		}
