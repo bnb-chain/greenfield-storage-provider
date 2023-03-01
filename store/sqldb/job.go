@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -9,6 +10,7 @@ import (
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"gorm.io/gorm"
 )
 
 // CreateUploadJob create JobTable record and ObjectTable record; use JobID field for association
@@ -147,7 +149,7 @@ func (s *SQLStore) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, err
 func (s *SQLStore) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error {
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
-	if result.Error != nil {
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to query object table: %s", result.Error)
 	}
 
