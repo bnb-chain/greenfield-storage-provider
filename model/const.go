@@ -24,6 +24,8 @@ const (
 
 // define storage provider service gGRPC default address
 const (
+	// UploaderGrpcAddress default HTTP address of uploader
+	GatewayHttpAddress = "localhost:9033"
 	// UploaderGrpcAddress default gGRPC address of uploader
 	UploaderGrpcAddress = "localhost:9133"
 	// DownloaderGrpcAddress default gGRPC address of downloader
