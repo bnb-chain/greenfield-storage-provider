@@ -7,7 +7,7 @@ import (
 )
 
 type GreenfieldChainConfig struct {
-	GRPCAddr           string
+	GRPCAddress        string
 	ChainID            string
 	GasLimit           uint64
 	OperatorPrivateKey string
@@ -17,20 +17,20 @@ type GreenfieldChainConfig struct {
 }
 
 var DefaultGreenfieldChainConfig = &GreenfieldChainConfig{
-	GRPCAddr: "localhost:9090",
-	ChainID:  "greenfield_9000-121",
-	GasLimit: 210000,
+	GRPCAddress: "localhost:9090",
+	ChainID:     "greenfield_9000-121",
+	GasLimit:    210000,
 }
 
 type SignerConfig struct {
-	Address               string
+	GRPCAddress           string
 	APIKey                string
 	WhitelistCIDR         []string
 	GreenfieldChainConfig *GreenfieldChainConfig
 }
 
 var DefaultSignerChainConfig = &SignerConfig{
-	Address: model.SignerGRPCAddress,
+	GRPCAddress: model.SignerGRPCAddress,
 	WhitelistCIDR: []string{
 		"127.0.0.1/32",
 	},

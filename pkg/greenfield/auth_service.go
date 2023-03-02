@@ -3,8 +3,9 @@ package greenfield
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // AuthUploadObjectWithAccount verify the greenfield chain information for upload object.

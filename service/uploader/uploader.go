@@ -14,7 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	stoneclient "github.com/bnb-chain/greenfield-storage-provider/service/stonenode/client"
-	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
@@ -48,7 +48,7 @@ func NewUploaderService(config *UploaderConfig) (*Uploader, error) {
 	if err != nil {
 		return nil, err
 	}
-	spDB, err := sqldb.NewSQLStore(config.SPDBConfig)
+	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
 	if err != nil {
 		return nil, err
 	}

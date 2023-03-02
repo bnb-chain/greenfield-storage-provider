@@ -41,7 +41,7 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	if err != nil {
 		return nil, err
 	}
-	spDB, err := sqldb.NewSQLStore(config.SpDBConfig)
+	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
 	if err != nil {
 		return nil, err
 	}

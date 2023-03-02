@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.0.5
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230227091017-b60c7936a1c6
-	github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230222033526-17e6b63b80bc
+	github.com/bnb-chain/greenfield-go-sdk v0.0.5
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
 	github.com/cosmos/cosmos-sdk v0.46.7
@@ -124,7 +124,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.3 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/klauspost/reedsolomon v1.11.7 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect

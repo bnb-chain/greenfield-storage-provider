@@ -41,7 +41,7 @@ func NewSignerServer(config *SignerConfig) (*SignerServer, error) {
 	}
 
 	client, err := client.NewGreenfieldChainSignClient(
-		config.GreenfieldChainConfig.GRPCAddr,
+		config.GreenfieldChainConfig.GRPCAddress,
 		config.GreenfieldChainConfig.ChainID,
 		config.GreenfieldChainConfig.GasLimit,
 		config.GreenfieldChainConfig.OperatorPrivateKey,
@@ -79,9 +79,9 @@ func (signer *SignerServer) Stop(ctx context.Context) error {
 
 // Serve starts grpc signer service.
 func (signer *SignerServer) serve() {
-	lis, err := net.Listen("tcp", signer.config.Address)
+	lis, err := net.Listen("tcp", signer.config.GRPCAddress)
 	if err != nil {
-		log.Errorw("failed to listen", "address", signer.config.Address, "error", err)
+		log.Errorw("failed to listen", "address", signer.config.GRPCAddress, "error", err)
 		return
 	}
 	signer.server = grpc.NewServer(

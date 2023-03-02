@@ -214,6 +214,8 @@ github.com/bnb-chain/greenfield-common/go v0.0.0-20230227091017-b60c7936a1c6 h1:
 github.com/bnb-chain/greenfield-common/go v0.0.0-20230227091017-b60c7936a1c6/go.mod h1:Nzpqn+BK8P1Ub3Tgn300bHmWMUk9R6cBwvmasVY25J8=
 github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230222033526-17e6b63b80bc h1:H5EmDqoxmgLEaLzeFwYAcp97u5cIrJm9ulHRBbmhoOc=
 github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230222033526-17e6b63b80bc/go.mod h1:rlkE/xNOQXt4ANJxz55V8SmhZHaP/LOOQlvAzIeVX68=
+github.com/bnb-chain/greenfield-go-sdk v0.0.5 h1:DpAyBi3o6n8dEtGkh31Yl+yeH6Gv2lE+qbuEsliz6xE=
+github.com/bnb-chain/greenfield-go-sdk v0.0.5/go.mod h1:JxsUzwHwvGMQbqRdswr+r5anLyPLb2VcyB8SqncydlU=
 github.com/bnb-chain/juno/v4 v4.0.0-20230223090130-98858670d635 h1:jyOjg0KlLtKWN+ah1XXeRQMVDK4NzVx8jktz/b/sK+Y=
 github.com/bnb-chain/juno/v4 v4.0.0-20230223090130-98858670d635/go.mod h1:efbLhjNy+0vP53LS5s8Dd4FaUTZiKcap9nSNfKiN7wU=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
@@ -908,6 +910,8 @@ github.com/klauspost/cpuid/v2 v2.0.4/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa02
 github.com/klauspost/cpuid/v2 v2.0.9/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=
 github.com/klauspost/cpuid/v2 v2.2.3 h1:sxCkb+qR91z4vsqw4vGGZlDgPz3G7gjaLyK3V8y70BU=
 github.com/klauspost/cpuid/v2 v2.2.3/go.mod h1:RVVoqg1df56z8g3pUjL/3lE5UfnlrJX8tyFgg4nqhuY=
+github.com/klauspost/cpuid/v2 v2.2.4 h1:acbojRNwl3o09bUq+yDCtZFc1aiwaAAxtcn8YkZXnvk=
+github.com/klauspost/cpuid/v2 v2.2.4/go.mod h1:RVVoqg1df56z8g3pUjL/3lE5UfnlrJX8tyFgg4nqhuY=
 github.com/klauspost/crc32 v0.0.0-20161016154125-cb6bfca970f6/go.mod h1:+ZoRqAPRLkC4NPOvfYeR5KNOrY6TD+/sAC3HXPZgDYg=
 github.com/klauspost/pgzip v1.0.2-0.20170402124221-0bf5dcad4ada/go.mod h1:Ch1tH69qFZu15pkjo5kYi6mth2Zzwzt50oCQKQE9RUs=
 github.com/klauspost/reedsolomon v1.9.3/go.mod h1:CwCi+NUr9pqSVktrkN+Ondf06rkhYZ/pcNv7fu+8Un4=

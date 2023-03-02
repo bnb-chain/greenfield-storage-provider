@@ -12,7 +12,7 @@ import (
 )
 
 // UpdateAllSp update(maybe overwrite) all sp info in db
-func (s *SQLDB) UpdateAllSp(spList []*sptypes.StorageProvider) error {
+func (s *SpDBImpl) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 	for _, value := range spList {
 		queryReturn := &SpInfoTable{}
 		// 1. check record whether exists
@@ -40,7 +40,7 @@ func (s *SQLDB) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 }
 
 // insertNewRecordInSpInfoTable insert a new record in sp info table
-func (s *SQLDB) insertNewRecordInSpInfoTable(sp *sptypes.StorageProvider) error {
+func (s *SpDBImpl) insertNewRecordInSpInfoTable(sp *sptypes.StorageProvider) error {
 	insertRecord := &SpInfoTable{
 		OperatorAddress: sp.GetOperatorAddress(),
 		IsOwn:           false,
@@ -64,7 +64,7 @@ func (s *SQLDB) insertNewRecordInSpInfoTable(sp *sptypes.StorageProvider) error 
 }
 
 // FetchAllSp get all sp info
-func (s *SQLDB) FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvider, error) {
+func (s *SpDBImpl) FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvider, error) {
 	queryReturn := []SpInfoTable{}
 	if len(status) == 0 {
 		result := s.db.Where("is_own = false").Find(&queryReturn)
@@ -104,7 +104,7 @@ func (s *SQLDB) FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvider
 }
 
 // FetchAllSpWithoutOwnSp get all spp info without own sp info, own sp is identified by is_own field in db
-func (s *SQLDB) FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.StorageProvider, error) {
+func (s *SpDBImpl) FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.StorageProvider, error) {
 	ownSp, err := s.GetOwnSpInfo()
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func (s *SQLDB) FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.Sto
 }
 
 // GetSpByAddress query sp info in db by address and address type
-func (s *SQLDB) GetSpByAddress(address string, addressType SpAddressType) (*sptypes.StorageProvider, error) {
+func (s *SpDBImpl) GetSpByAddress(address string, addressType SpAddressType) (*sptypes.StorageProvider, error) {
 	condition, err := getAddressCondition(addressType)
 	if err != nil {
 		return nil, err
@@ -196,7 +196,7 @@ func getAddressCondition(addressType SpAddressType) (string, error) {
 }
 
 // // GetSpByEndpoint query sp info by endpoint
-func (s *SQLDB) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error) {
+func (s *SpDBImpl) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error) {
 	queryReturn := &SpInfoTable{}
 	result := s.db.First(queryReturn, "endpoint = ? and is_own = false", endpoint)
 	if result.Error != nil {
@@ -221,7 +221,7 @@ func (s *SQLDB) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, erro
 }
 
 // GetOwnSpInfo query own sp info in db
-func (s *SQLDB) GetOwnSpInfo() (*sptypes.StorageProvider, error) {
+func (s *SpDBImpl) GetOwnSpInfo() (*sptypes.StorageProvider, error) {
 	queryReturn := &SpInfoTable{}
 	result := s.db.First(queryReturn, "is_own = true")
 	if result.Error != nil {
@@ -246,7 +246,7 @@ func (s *SQLDB) GetOwnSpInfo() (*sptypes.StorageProvider, error) {
 }
 
 // SetOwnSpInfo set(maybe overwrite) own sp info to db
-func (s *SQLDB) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
+func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 	_, err := s.GetOwnSpInfo()
 	isNotFound := strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error())
 	if err != nil && !isNotFound {
@@ -286,7 +286,7 @@ func (s *SQLDB) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 }
 
 // GetStorageParams query storage params in db
-func (s *SQLDB) GetStorageParams() (*storagetypes.Params, error) {
+func (s *SpDBImpl) GetStorageParams() (*storagetypes.Params, error) {
 	queryReturn := &StorageParamsTable{}
 	result := s.db.Last(queryReturn)
 	if result.Error != nil {
@@ -301,7 +301,7 @@ func (s *SQLDB) GetStorageParams() (*storagetypes.Params, error) {
 }
 
 // SetStorageParams set(maybe overwrite) storage params to db
-func (s *SQLDB) SetStorageParams(params *storagetypes.Params) error {
+func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
 	queryReturn := &StorageParamsTable{}
 	result := s.db.Last(queryReturn)
 	isNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)

@@ -7,16 +7,16 @@ import (
 	"net/http"
 	"sync/atomic"
 
+	"github.com/gorilla/mux"
+
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
 	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	syncerclient "github.com/bnb-chain/greenfield-storage-provider/service/syncer/client"
 	uploaderclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
-	"github.com/gorilla/mux"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // Gateway is the primary entry point of SP

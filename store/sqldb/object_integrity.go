@@ -8,10 +8,10 @@ import (
 )
 
 // GetObjectIntegrity return the integrity hash info
-func (s *SQLDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
+func (s *SpDBImpl) GetObjectIntegrity(ObjectID uint64) (*IntegrityMeta, error) {
 	queryReturn := &IntegrityMetaTable{}
 	result := s.db.Model(&IntegrityMetaTable{}).
-		Where("object_id = ?", objectID).
+		Where("object_id = ?", ObjectID).
 		First(queryReturn)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query integrity meta record: %s", result.Error)
@@ -38,7 +38,7 @@ func (s *SQLDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 }
 
 // SetObjectIntegrity put(overwrite) integrity hash info to db
-func (s *SQLDB) SetObjectIntegrity(meta *IntegrityMeta) error {
+func (s *SpDBImpl) SetObjectIntegrity(meta *IntegrityMeta) error {
 	insertIntegrityMetaRecord := &IntegrityMetaTable{
 		ObjectID:      meta.ObjectID,
 		PieceHashList: util.BytesSliceToString(meta.Checksum),

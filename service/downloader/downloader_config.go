@@ -9,14 +9,14 @@ import (
 
 type DownloaderConfig struct {
 	GRPCAddress      string
-	SPDBConfig       *config.SQLDBConfig
+	SpDBConfig       *config.SQLDBConfig
 	PieceStoreConfig *storage.PieceStoreConfig
 	ChainConfig      *gnfd.GreenfieldChainConfig
 }
 
 var DefaultDownloaderConfig = &DownloaderConfig{
 	GRPCAddress:      model.DownloaderGRPCAddress,
-	SPDBConfig:       config.DefaultSQLDBConfig,
+	SpDBConfig:       config.DefaultSQLDBConfig,
 	ChainConfig:      gnfd.DefaultGreenfieldChainConfig,
 	PieceStoreConfig: storage.DefaultPieceStoreConfig,
 }

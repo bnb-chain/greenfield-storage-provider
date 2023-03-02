@@ -12,7 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
-	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
@@ -138,8 +138,8 @@ func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObject
 // QueryUploadingObject query an uploading object with object id from cache
 func (uploader *Uploader) QueryUploadingObject(ctx context.Context, req *types.QueryUploadingObjectRequest) (
 	resp *types.QueryUploadingObjectResponse, err error) {
-	objectId := req.GetObjectId()
-	val, ok := uploader.cache.Get(objectId)
+	objectID := req.GetObjectId()
+	val, ok := uploader.cache.Get(objectID)
 	if !ok {
 		err = merrors.ErrCacheMiss
 		return

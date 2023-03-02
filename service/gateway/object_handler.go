@@ -7,12 +7,13 @@ import (
 	"io"
 	"net/http"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getObjectHandler handle get object request

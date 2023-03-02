@@ -2,8 +2,6 @@ package sqldb
 
 import (
 	"time"
-
-	msqldb "github.com/bnb-chain/greenfield-storage-provider/model/sqldb"
 )
 
 // BucketTrafficTable table schema
@@ -19,7 +17,7 @@ type BucketTrafficTable struct {
 
 // TableName is used to set BucketTraffic Schema's table name in database
 func (BucketTrafficTable) TableName() string {
-	return msqldb.BucketTrafficTableName
+	return BucketTrafficTableName
 }
 
 // ReadRecordTable table schema
@@ -38,5 +36,5 @@ type ReadRecordTable struct {
 
 // TableName is used to set ReadRecord Schema's table name in database
 func (ReadRecordTable) TableName() string {
-	return msqldb.ReadRecordTableName
+	return ReadRecordTableName
 }

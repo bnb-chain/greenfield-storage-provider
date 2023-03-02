@@ -12,21 +12,21 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
 
-var _ SPDB = &SQLDB{}
+var _ SPDB = &SpDBImpl{}
 
-// SQLDB storage provider database, implements SPDB interface
-type SQLDB struct {
+// SpDBImpl storage provider database, implements SPDB interface
+type SpDBImpl struct {
 	db *gorm.DB
 }
 
-// NewSQLStore return a database instance
-func NewSQLStore(config *config.SQLDBConfig) (*SQLDB, error) {
+// NewSpDB return a database instance
+func NewSpDB(config *config.SQLDBConfig) (*SpDBImpl, error) {
 	loadDBConfigFromEnv(config)
 	db, err := InitDB(config)
 	if err != nil {
 		return nil, err
 	}
-	return &SQLDB{db: db}, err
+	return &SpDBImpl{db: db}, err
 }
 
 // InitDB init a db instance

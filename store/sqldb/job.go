@@ -14,7 +14,7 @@ import (
 )
 
 // CreateUploadJob create JobTable record and ObjectTable record; use JobID field for association
-func (s *SQLDB) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicetypes.JobContext, error) {
+func (s *SpDBImpl) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicetypes.JobContext, error) {
 	insertJobRecord := &JobTable{
 		JobType:      int32(servicetypes.JobType_JOB_TYPE_UPLOAD_OBJECT),
 		JobState:     int32(servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED),
@@ -58,9 +58,9 @@ func (s *SQLDB) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicety
 }
 
 // UpdateJobState update JobTable record's state
-func (s *SQLDB) UpdateJobState(objectID uint64, state servicetypes.JobState) error {
+func (s *SpDBImpl) UpdateJobState(ObjectID uint64, state servicetypes.JobState) error {
 	queryObjectReturn := &ObjectTable{}
-	result := s.db.First(queryObjectReturn, "object_id = ?", objectID)
+	result := s.db.First(queryObjectReturn, "object_id = ?", ObjectID)
 	if result.Error != nil {
 		return fmt.Errorf("failed to query object table: %s", result.Error)
 	}
@@ -78,10 +78,10 @@ func (s *SQLDB) UpdateJobState(objectID uint64, state servicetypes.JobState) err
 	return nil
 }
 
-// GetJobByID query JobTable by jobID and convert to service/types.JobContext
-func (s *SQLDB) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
+// GetJobByID query JobTable by JobID and convert to service/types.JobContext
+func (s *SpDBImpl) GetJobByID(JobID uint64) (*servicetypes.JobContext, error) {
 	queryReturn := &JobTable{}
-	result := s.db.First(queryReturn, "job_id = ?", jobID)
+	result := s.db.First(queryReturn, "job_id = ?", JobID)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query job table: %s", result.Error)
 	}
@@ -95,10 +95,10 @@ func (s *SQLDB) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
 	}, nil
 }
 
-// GetJobByObjectID query JobTable by jpbID and convert to service/types.JobContext
-func (s *SQLDB) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error) {
+// GetJobByObjectID query JobTable by JobID and convert to service/types.JobContext
+func (s *SpDBImpl) GetJobByObjectID(ObjectID uint64) (*servicetypes.JobContext, error) {
 	queryReturn := &ObjectTable{}
-	result := s.db.First(queryReturn, "object_id = ?", objectID)
+	result := s.db.First(queryReturn, "object_id = ?", ObjectID)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query object table: %s", result.Error)
 	}
@@ -117,10 +117,10 @@ func (s *SQLDB) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, err
 	}, nil
 }
 
-// GetObjectInfo query ObjectTable by objectID and convert to storage/types.ObjectInfo.
-func (s *SQLDB) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error) {
+// GetObjectInfo query ObjectTable by ObjectID and convert to storage/types.ObjectInfo.
+func (s *SpDBImpl) GetObjectInfo(ObjectID uint64) (*storagetypes.ObjectInfo, error) {
 	queryReturn := &ObjectTable{}
-	result := s.db.First(queryReturn, "object_id = ?", objectID)
+	result := s.db.First(queryReturn, "object_id = ?", ObjectID)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query object table: %s", result.Error)
 	}
@@ -146,16 +146,16 @@ func (s *SQLDB) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error)
 }
 
 // SetObjectInfo set ObjectTable's record by objectID
-func (s *SQLDB) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error {
+func (s *SpDBImpl) SetObjectInfo(ObjectID uint64, objectInfo *storagetypes.ObjectInfo) error {
 	queryReturn := &ObjectTable{}
-	result := s.db.First(queryReturn, "object_id = ?", objectID)
+	result := s.db.First(queryReturn, "object_id = ?", ObjectID)
 	isNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
 	if result.Error != nil && !isNotFound {
 		return fmt.Errorf("failed to query object table: %s", result.Error)
 	}
 
 	updateFields := &ObjectTable{
-		ObjectID:             objectID,
+		ObjectID:             ObjectID,
 		Owner:                objectInfo.GetOwner(),
 		BucketName:           objectInfo.GetBucketName(),
 		ObjectName:           objectInfo.GetObjectName(),
@@ -188,7 +188,7 @@ func (s *SQLDB) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectIn
 		}
 	} else {
 		// if record exists, update record
-		queryCondition := &ObjectTable{ObjectID: objectID}
+		queryCondition := &ObjectTable{ObjectID: ObjectID}
 		updateFields.JobID = queryReturn.JobID
 		result = s.db.Model(queryCondition).Updates(updateFields)
 		if result.Error != nil || result.RowsAffected != 1 {

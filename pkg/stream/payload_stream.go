@@ -14,7 +14,7 @@ import (
 const StreamResultSize = 10
 
 type SegmentEntry struct {
-	objectId       uint64
+	objectID       uint64
 	replicaIdx     uint32
 	segmentIdx     uint32
 	redundancyType storagetypes.RedundancyType
@@ -23,14 +23,14 @@ type SegmentEntry struct {
 }
 
 func (entry SegmentEntry) ID() uint64 {
-	return entry.objectId
+	return entry.objectID
 }
 
 func (entry SegmentEntry) Key() string {
 	if entry.redundancyType == storagetypes.REDUNDANCY_EC_TYPE {
-		return piecestore.EncodeECPieceKey(entry.objectId, entry.replicaIdx, entry.segmentIdx)
+		return piecestore.EncodeECPieceKey(entry.objectID, entry.replicaIdx, entry.segmentIdx)
 	}
-	return piecestore.EncodeSegmentPieceKey(entry.objectId, entry.segmentIdx)
+	return piecestore.EncodeSegmentPieceKey(entry.objectID, entry.segmentIdx)
 }
 
 func (entry SegmentEntry) Data() []byte {
@@ -44,7 +44,7 @@ func (entry SegmentEntry) Error() error {
 // PayloadStream implement a one-way data flow, writes bytes of any size
 // read the fixed data size with payload metadata
 type PayloadStream struct {
-	objectId       uint64
+	objectID       uint64
 	replicaIdx     uint32
 	segmentIdx     uint32
 	segmentSize    uint64
@@ -66,15 +66,15 @@ func NewAsyncPayloadStream() *PayloadStream {
 	return stream
 }
 
-// InitAsyncPayloadStream only be called once, init the payload meta data
+// InitAsyncPayloadStream only be called once, init the payload metadata
 // must be called before write or read stream
-func (stream *PayloadStream) InitAsyncPayloadStream(oId uint64, rIdx uint32, segSize uint64,
+func (stream *PayloadStream) InitAsyncPayloadStream(oID uint64, rIdx uint32, segSize uint64,
 	redundancyType storagetypes.RedundancyType) error {
 	if stream.init.Load() {
 		return nil
 	}
 	stream.init.Store(true)
-	stream.objectId = oId
+	stream.objectID = oID
 	stream.replicaIdx = rIdx
 	stream.segmentSize = segSize
 	stream.redundancyType = redundancyType
@@ -132,7 +132,7 @@ func (stream *PayloadStream) readStream() {
 	)
 	for {
 		entry := &SegmentEntry{
-			objectId:       stream.objectId,
+			objectID:       stream.objectID,
 			replicaIdx:     stream.replicaIdx,
 			segmentIdx:     count,
 			redundancyType: stream.redundancyType,
@@ -149,14 +149,15 @@ func (stream *PayloadStream) readStream() {
 		if err == io.EOF && n == 0 {
 			entry.err = err
 			stream.entryCh <- entry
-			log.Debugw("payload stream on closed", "object_id", stream.objectId)
+			log.Debugw("payload stream on closed", "object_id", stream.objectID)
 			return
 		}
 		entry.segmentData = data
 		stream.entryCh <- entry
 		count++
 		readSize = readSize + uint32(n)
-		log.Debugw("payload stream has read", "read_total_size", readSize, "object_id", stream.objectId, "segment_count:", count-1)
+		log.Debugw("payload stream has read", "read_total_size", readSize, "object_id", stream.objectID,
+			"segment_count:", count-1)
 	}
 }
 

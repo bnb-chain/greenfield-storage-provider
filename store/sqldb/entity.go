@@ -55,20 +55,20 @@ type ReadRecord struct {
 
 // GetCurrentYearMonth get current year and month
 func GetCurrentYearMonth() string {
-	return Time2YearMonth(time.Now())
+	return TimeToYearMonth(time.Now())
 }
 
-// GetNowTimeUnix return a second timestamp
-func GetNowTimeUnix() int64 {
+// GetCurrentUnixTime return a second timestamp
+func GetCurrentUnixTime() int64 {
 	return time.Now().Unix()
 }
 
-// TimeUnix2Time convert a second timestamp to time.Time
-func TimeUnix2Time(timeUnix int64) time.Time {
+// TimeUnixToTime convert a second timestamp to time.Time
+func TimeUnixToTime(timeUnix int64) time.Time {
 	return time.Unix(timeUnix, 0)
 }
 
-// Time2YearMonth convent time.Time to YYYY-MM string
-func Time2YearMonth(t time.Time) string {
+// TimeToYearMonth convent time.Time to YYYY-MM string
+func TimeToYearMonth(t time.Time) string {
 	return t.Format("2006-01-02 15:04:05")[0:6]
 }

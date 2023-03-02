@@ -11,6 +11,7 @@ import (
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	signer "github.com/bnb-chain/greenfield-go-sdk/keys/signer"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // requestContext is a request context.

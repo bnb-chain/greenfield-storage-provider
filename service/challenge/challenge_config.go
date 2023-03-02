@@ -8,12 +8,12 @@ import (
 
 type ChallengeConfig struct {
 	GRPCAddress      string
-	SPDBConfig       *config.SQLDBConfig
+	SpDBConfig       *config.SQLDBConfig
 	PieceStoreConfig *storage.PieceStoreConfig
 }
 
 var DefaultChallengeConfig = &ChallengeConfig{
 	GRPCAddress:      model.ChallengeGRPCAddress,
-	SPDBConfig:       config.DefaultSQLDBConfig,
+	SpDBConfig:       config.DefaultSQLDBConfig,
 	PieceStoreConfig: storage.DefaultPieceStoreConfig,
 }
