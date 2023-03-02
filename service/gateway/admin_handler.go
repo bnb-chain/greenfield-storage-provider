@@ -10,7 +10,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/x/storage/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -71,8 +70,8 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			errDescription = InvalidHeader
 			return
 		}
-		if err = storagetypes.CheckValidBucketName(msg.GetBucketName()); err != nil {
-			log.Errorw("failed to check bucket name", "bucket_name", msg.GetBucketName(), "error", err)
+		if err = msg.ValidateBasic(); err != nil {
+			log.Errorw("failed to check bucket msg", "bucket_msg", msg, "error", err)
 			errDescription = InvalidBucketName
 			return
 		}
@@ -97,14 +96,9 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			errDescription = InvalidHeader
 			return
 		}
-		if err = storagetypes.CheckValidBucketName(msg.GetBucketName()); err != nil {
-			log.Errorw("failed to check bucket name", "bucket_name", msg.GetBucketName(), "error", err)
+		if err = msg.ValidateBasic(); err != nil {
+			log.Errorw("failed to check object_info", "object_info", msg, "error", err)
 			errDescription = InvalidBucketName
-			return
-		}
-		if err = storagetypes.CheckValidObjectName(msg.GetObjectName()); err != nil {
-			log.Errorw("failed to check object name", "object_name", msg.GetObjectName(), "error", err)
-			errDescription = InvalidKey
 			return
 		}
 		// TODO: to config it

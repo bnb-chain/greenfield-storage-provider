@@ -91,14 +91,12 @@ const (
 	SignTypeV1    = "authTypeV1"
 	SignTypeV2    = "authTypeV2"
 
-	// AdminPath defines get-approval and challenge path style prefix
-	AdminPath = "/greenfield/admin/v1/"
-	// GetApprovalSubPath defines get-approval path style suffix
-	GetApprovalSubPath = "get-approval"
+	// GetApprovalPath defines get-approval path style suffix
+	GetApprovalPath = "/greenfield/admin/v1/get-approval"
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
 	ActionQuery = "action"
-	// ChallengeSubPath defines challenge path style suffix
-	ChallengeSubPath = "challenge"
+	// ChallengePath defines challenge path style suffix
+	ChallengePath = "/greenfield/admin/v1/challenge"
 	// SyncerPath defines sync-object path style
 	SyncerPath = "/greenfield/syncer/v1/sync-piece"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
