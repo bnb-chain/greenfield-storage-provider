@@ -37,9 +37,13 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 		log.Errorw("failed to create chain client", "err", err)
 		return nil, err
 	}
-	// TODO::new sp db
+	spDB, err := sqldb.NewSQLStore(cfg.SPDBConfig)
+	if err != nil {
+		return nil, err
+	}
 	downloader := &Downloader{
 		cfg:        cfg,
+		spDB:       spDB,
 		chain:      chain,
 		pieceStore: pieceStore,
 	}

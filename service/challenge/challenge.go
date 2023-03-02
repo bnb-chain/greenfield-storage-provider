@@ -30,8 +30,13 @@ func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err err
 		return nil, err
 	}
 	// TODO:: new sp db
+	spDB, err := sqldb.NewSQLStore(config.SPDBConfig)
+	if err != nil {
+		return nil, err
+	}
 	challenge = &Challenge{
 		config:     config,
+		spDB:       spDB,
 		pieceStore: pieceStore,
 	}
 	return challenge, nil

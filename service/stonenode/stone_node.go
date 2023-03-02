@@ -53,11 +53,15 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO:: new sp db
+	spDB, err := sqldb.NewSQLStore(config.SpDBConfig)
+	if err != nil {
+		return nil, err
+	}
 	node := &StoneNode{
 		config:     config,
 		cache:      cache,
 		signer:     signer,
+		spDB:       spDB,
 		chain:      chain,
 		pieceStore: pieceStore,
 	}

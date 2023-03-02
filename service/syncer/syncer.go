@@ -41,11 +41,15 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO::new sp db
+	spDB, err := sqldb.NewSQLStore(config.SPDBConfig)
+	if err != nil {
+		return nil, err
+	}
 	s := &Syncer{
 		config:     config,
 		cache:      cache,
 		pieceStore: pieceStore,
+		spDB:       spDB,
 		signer:     signer,
 	}
 	return s, nil

@@ -45,10 +45,14 @@ func NewUploaderService(config *UploaderConfig) (*Uploader, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO:: new sp db
+	spDB, err := sqldb.NewSQLStore(config.SPDBConfig)
+	if err != nil {
+		return nil, err
+	}
 	uploader := &Uploader{
 		config:     config,
 		cache:      cache,
+		spDB:       spDB,
 		stone:      stone,
 		pieceStore: pieceStore,
 		signer:     signer,
