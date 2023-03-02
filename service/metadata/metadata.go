@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/router"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/store"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/gin-gonic/gin"
 )
 
@@ -47,7 +47,7 @@ func (metadata *Metadata) Stop(ctx context.Context) error {
 }
 
 func NewMetadataService(cfg *MetadataConfig, ctx context.Context) (metadata *Metadata, err error) {
-	store, _ := store.NewStore(cfg.MetaSqlDBConfig)
+	store, _ := store.NewStore(cfg.SPDBConfig)
 	metadata = &Metadata{
 		name:   model.MetadataService,
 		ctx:    ctx,
@@ -55,6 +55,6 @@ func NewMetadataService(cfg *MetadataConfig, ctx context.Context) (metadata *Met
 		engine: gin.Default(),
 		router: router.NewRouter(store),
 	}
-	//err = metadata.initDB()
+	// err = metadata.initDB()
 	return
 }

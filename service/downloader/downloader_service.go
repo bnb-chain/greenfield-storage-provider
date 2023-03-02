@@ -56,10 +56,10 @@ func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectReques
 	} else {
 		offset, length = 0, objectInfo.GetPayloadSize()
 	}
-	//offset, length = req.GetOffset(), req.GetLength()
-	//if req.GetLength() == 0 {
+	// offset, length = req.GetOffset(), req.GetLength()
+	// if req.GetLength() == 0 {
 	//	offset, length = 0, objectInfo.Size
-	//}
+	// }
 	var segmentInfo segments
 	segmentInfo, err = downloader.DownloadPieceInfo(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), offset, offset+length-1)
 	if err != nil {
@@ -93,11 +93,11 @@ func (downloader *Downloader) DownloadPieceInfo(objectID, objectSize, start, end
 	if objectSize == 0 || start > objectSize || end < start {
 		return pieceInfo, fmt.Errorf("param error, object size: %d, start: %d, end: %d", objectSize, start, end)
 	}
-	param, err := downloader.spDB.GetAllParam()
+	params, err := downloader.spDB.GetStorageParams()
 	if err != nil {
 		return pieceInfo, err
 	}
-	segmentSize := param.GetMaxSegmentSize()
+	segmentSize := params.GetMaxSegmentSize()
 	segmentCount := int(objectSize / segmentSize)
 	if objectSize%segmentSize != 0 {
 		segmentCount++

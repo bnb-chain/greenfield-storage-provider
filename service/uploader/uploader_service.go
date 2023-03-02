@@ -13,7 +13,7 @@ import (
 	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
 var _ types.UploaderServiceServer = &Uploader{}
@@ -26,21 +26,21 @@ func (uploader *Uploader) UploadObject(
 		pstream       = payloadstream.NewAsyncPayloadStream()
 		traceInfo     = &servicetypes.SegmentInfo{}
 		checkSum      [][]byte
-		integrityMeta = &store.IntegrityMeta{}
+		integrityMeta = &sqldb.IntegrityMeta{}
 		errCh         = make(chan error, 10)
 	)
 	defer func(resp *types.UploadObjectResponse, err error) {
 		if err != nil {
 			log.Errorw("failed to replicate payload", "err", err)
-			uploader.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
-				traceInfo.GetObjectInfo().Id.Uint64())
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
 		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checkSum)
 		if err != nil {
 			log.Errorw("failed to sign integrity hash", "err", err)
-			uploader.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
-				traceInfo.GetObjectInfo().Id.Uint64())
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
 		integrityMeta.Checksum = checkSum
@@ -49,8 +49,8 @@ func (uploader *Uploader) UploadObject(
 		err = uploader.spDB.SetObjectIntegrity(integrityMeta)
 		if err != nil {
 			log.Errorw("failed to write integrity hash to db", "error", err)
-			uploader.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
-				traceInfo.GetObjectInfo().Id.Uint64())
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
 		traceInfo.IntegrityHash = integrityHash
@@ -58,11 +58,11 @@ func (uploader *Uploader) UploadObject(
 		uploader.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
 		err = stream.SendAndClose(resp)
 		pstream.Close()
-		uploader.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE,
-			traceInfo.GetObjectInfo().Id.Uint64())
+		uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+			servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
 		log.Infow("finish to upload payload", "error", err)
 	}(&resp, err)
-	params, err := uploader.spDB.GetAllParam()
+	params, err := uploader.spDB.GetStorageParams()
 	if err != nil {
 		return
 	}
@@ -89,7 +89,7 @@ func (uploader *Uploader) UploadObject(
 					math.MaxUint32,
 					segmentSize,
 					storagetypes.REDUNDANCY_REPLICA_TYPE)
-				integrityMeta.ObjectId = req.GetObjectInfo().Id.Uint64()
+				integrityMeta.ObjectID = req.GetObjectInfo().Id.Uint64()
 				traceInfo.ObjectInfo = req.GetObjectInfo()
 				uploader.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
 				uploader.spDB.CreateUploadJob(req.GetObjectInfo())
@@ -101,8 +101,8 @@ func (uploader *Uploader) UploadObject(
 
 	// read payload from stream, the payload is spilt to segment size
 	for {
-		uploader.spDB.UpdateJobStatue(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING,
-			traceInfo.GetObjectInfo().Id.Uint64())
+		uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+			servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING)
 		select {
 		case entry := <-pstream.AsyncStreamRead():
 			log.Debugw("read segment from stream", "segment_key", entry.Key(), "error", entry.Error())
@@ -115,7 +115,7 @@ func (uploader *Uploader) UploadObject(
 				return
 			}
 			checkSum = append(checkSum, hash.GenerateChecksum(entry.Data()))
-			traceInfo.CheckSum = checkSum
+			traceInfo.Checksum = checkSum
 			traceInfo.Completed++
 			uploader.cache.Add(entry.ID(), traceInfo)
 			go func() {

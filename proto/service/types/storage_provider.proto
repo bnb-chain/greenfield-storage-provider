@@ -56,7 +56,7 @@ message SegmentInfo {
   // object_info defines the information of the object.
   bnbchain.greenfield.storage.ObjectInfo object_info = 1;
   // check_sum defines the hash of the segments.
-  repeated bytes check_sum = 2;
+  repeated bytes checksum = 2;
   // integrity_hash defines the hash of check_sum.
   bytes integrity_hash = 3;
   // signature defines the storage provider sign to the integrity hash.
