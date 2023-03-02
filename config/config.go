@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	"github.com/naoina/toml"
 
@@ -35,13 +36,15 @@ type StorageProviderConfig struct {
 
 // DefaultStorageProviderConfig defines the default configuration of storage provider services
 var DefaultStorageProviderConfig = &StorageProviderConfig{
-	GatewayCfg:    gateway.DefaultGatewayConfig,
-	UploaderCfg:   uploader.DefaultUploaderConfig,
-	DownloaderCfg: downloader.DefaultDownloaderConfig,
-	ChallengeCfg:  challenge.DefaultChallengeConfig,
-	StoneNodeCfg:  stonenode.DefaultStoneNodeConfig,
-	SyncerCfg:     syncer.DefaultSyncerConfig,
-	SignerCfg:     signer.DefaultSignerChainConfig,
+	GatewayCfg:     gateway.DefaultGatewayConfig,
+	UploaderCfg:    uploader.DefaultUploaderConfig,
+	DownloaderCfg:  downloader.DefaultDownloaderConfig,
+	ChallengeCfg:   challenge.DefaultChallengeConfig,
+	StoneNodeCfg:   stonenode.DefaultStoneNodeConfig,
+	SyncerCfg:      syncer.DefaultSyncerConfig,
+	SignerCfg:      signer.DefaultSignerChainConfig,
+	MetadataCfg:    metadata.DefaultMetadataConfig,
+	BlockSyncerCfg: blocksyncer.DefaultBlockSyncerConfig,
 	Service: []string{
 		model.GatewayService,
 		model.UploaderService,
@@ -68,4 +71,19 @@ func LoadConfig(path string) *StorageProviderConfig {
 		panic(err)
 	}
 	return &cfg
+}
+
+// SaveConfig write the config to disk
+func SaveConfig(file string, cfg *StorageProviderConfig) error {
+	f, err := os.Create(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	encode := util.TomlSettings.NewEncoder(f)
+	if err = encode.Encode(cfg); err != nil {
+		return err
+	}
+	return nil
 }
