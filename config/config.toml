@@ -1,5 +1,5 @@
 Service = [
-    "Gateway", "Uploader", "Downloader", "StoneHub", "StoneNode", "Syncer", "Signer","Challenge","Metadata",
+    "BlockSyncer",
 ]
 
 [GatewayCfg]
@@ -141,3 +141,36 @@ Service = [
     [MetadataCfg.MetaSqlDBConfig]
         Address = "127.0.0.1:3306"
         Database = "meta_db"
+
+[BlockSyncerCfg]
+    [BlockSyncerCfg.Chain]
+    Bech32Prefix = "cosmos"
+    Modules = [ "block", "bucket", "object", ]
+
+[BlockSyncerCfg.Node]
+    Type = "remote"
+    [BlockSyncerCfg.Node.RPC]
+        ClientName = "juno"
+        Address = "http://localhost:26750"
+        MaxConnections = 20
+    [BlockSyncerCfg.Node.GRPC]
+        Insecure = true
+        Address = "http://localhost:9090"
+
+    [BlockSyncerCfg.Parser]
+        FastSync = false
+        ParseGenesis = true
+        ParseOldBlocks = true
+        ParseNewBlocks = true
+        StartHeight = 1
+        Workers = 1
+        WorkerType = "blocksyncer"
+
+    [BlockSyncerCfg.Database]
+        Type = "mysql"
+        PartitionSize = 10_000
+        MaxIdleConnections = 1
+        MaxOpenConnections = 1
+
+    [BlockSyncerCfg.Logging]
+        Level = "debug"

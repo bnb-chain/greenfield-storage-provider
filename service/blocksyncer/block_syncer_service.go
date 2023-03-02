@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
@@ -22,9 +21,9 @@ func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context) {
 	// Get the latest height
 	latestBlockHeight := mustGetLatestHeight(ctx)
 
-	lastDbBlockHeight, err := ctx.Database.GetLastBlockHeight(context.Background())
+	lastDbBlockHeight, err := ctx.Database.GetLastBlockHeight(context.TODO())
 	if err != nil {
-		log.Error("failed to get last block height from database", "error", err)
+		log.Errorw("failed to get last block height from database", "error", err)
 	}
 
 	// Get the start height, default to the config's height
@@ -33,14 +32,14 @@ func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context) {
 	// Set startHeight to the latest height in database
 	// if is not set inside config.yaml file
 	if startHeight == 0 {
-		startHeight = utils.MaxInt64(1, lastDbBlockHeight)
+		startHeight = utils.MaxUint64(0, lastDbBlockHeight)
 	}
 
 	if cfg.FastSync {
-		log.Info("fast sync is enabled, ignoring all previous blocks", "latest_block_height", latestBlockHeight)
+		log.Infow("fast sync is enabled, ignoring all previous blocks", "latest_block_height", latestBlockHeight)
 		for _, module := range ctx.Modules {
 			if mod, ok := module.(modules.FastSyncModule); ok {
-				err := mod.DownloadState(latestBlockHeight)
+				err := mod.DownloadState(int64(latestBlockHeight))
 				if err != nil {
 					log.Error("error while performing fast sync",
 						"err", err,
@@ -51,9 +50,9 @@ func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context) {
 			}
 		}
 	} else {
-		log.Info("syncing missing blocks...", "latest_block_height", latestBlockHeight)
-		for _, i := range ctx.Database.GetMissingHeights(context.Background(), startHeight, latestBlockHeight) {
-			log.Debug("enqueueing missing block", "height", i)
+		log.Infow("syncing missing blocks...", "latest_block_height", latestBlockHeight)
+		for _, i := range ctx.Database.GetMissingHeights(context.TODO(), startHeight, latestBlockHeight) {
+			log.Debugw("enqueueing missing block", "height", i)
 			exportQueue <- i
 		}
 	}
@@ -69,7 +68,7 @@ func enqueueNewBlocks(exportQueue types.HeightQueue, ctx *parser.Context) {
 
 		// Enqueue all heights from the current height up to the latest height
 		for ; currHeight <= latestBlockHeight; currHeight++ {
-			log.Debug("enqueueing new block", "height", currHeight)
+			log.Debugw("enqueueing new block", "height", currHeight)
 			exportQueue <- currHeight
 		}
 		time.Sleep(config.GetAvgBlockTime())
@@ -78,14 +77,14 @@ func enqueueNewBlocks(exportQueue types.HeightQueue, ctx *parser.Context) {
 
 // mustGetLatestHeight tries getting the latest height from the RPC client.
 // If after 50 tries no latest height can be found, it returns 0.
-func mustGetLatestHeight(ctx *parser.Context) int64 {
+func mustGetLatestHeight(ctx *parser.Context) uint64 {
 	for retryCount := 0; retryCount < 50; retryCount++ {
 		latestBlockHeight, err := ctx.Node.LatestHeight()
 		if err == nil {
-			return latestBlockHeight
+			return uint64(latestBlockHeight)
 		}
 
-		log.Error("failed to get last block from RPCConfig client",
+		log.Errorw("failed to get last block from RPCConfig client",
 			"err", err,
 			"retry interval", config.GetAvgBlockTime(),
 			"retry count", retryCount)
