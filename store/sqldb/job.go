@@ -148,8 +148,10 @@ func (s *SQLStore) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, err
 // SetObjectInfo set ObjectTable's record by objectID
 func (s *SQLStore) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error {
 	queryReturn := &ObjectTable{}
+	// result := s.db.Where("object_id = ?", objectID).Find(queryReturn)
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
-	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	isNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
+	if result.Error != nil && !isNotFound {
 		return fmt.Errorf("failed to query object table: %s", result.Error)
 	}
 
@@ -168,16 +170,8 @@ func (s *SQLStore) SetObjectInfo(objectID uint64, objectInfo *storagetypes.Objec
 		Checksum:             util.BytesSliceToString(objectInfo.GetChecksums()),
 		SecondarySPAddresses: util.SliceToString(objectInfo.GetSecondarySpAddresses()),
 	}
-	// if queryReturn is not nil, update object table with objectInfo
-	if queryReturn != nil {
-		queryCondition := &ObjectTable{ObjectID: objectID}
-		updateFields.JobID = queryReturn.JobID
-		result = s.db.Model(queryCondition).Updates(updateFields)
-		if result.Error != nil || result.RowsAffected != 1 {
-			return fmt.Errorf("failed to update object table: %s", result.Error)
-		}
-	} else {
-		// write new data to object table
+	if isNotFound {
+		// if record is not found, insert a new record
 		insertJobRecord := &JobTable{
 			JobType:      int32(servicetypes.JobType_JOB_TYPE_UPLOAD_OBJECT),
 			JobState:     int32(servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED),
@@ -193,6 +187,15 @@ func (s *SQLStore) SetObjectInfo(objectID uint64, objectInfo *storagetypes.Objec
 		if result.Error != nil || result.RowsAffected != 1 {
 			return fmt.Errorf("failed to insert object table: %s", result.Error)
 		}
+	} else {
+		// if record exists, update record
+		queryCondition := &ObjectTable{ObjectID: objectID}
+		updateFields.JobID = queryReturn.JobID
+		result = s.db.Model(queryCondition).Updates(updateFields)
+		if result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to update object table: %s", result.Error)
+		}
+
 	}
 	return nil
 }
