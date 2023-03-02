@@ -6,9 +6,10 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
 	"gopkg.in/urfave/cli.v1"
 
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -22,19 +23,12 @@ var (
 var app *cli.App
 
 var (
-	configFlag = cli.StringFlag{
-		Name:  "config",
-		Usage: "File path for storage provider configuration",
-	}
-	versionFlag = cli.BoolFlag{
-		Name:  "version",
-		Usage: "Show the storage provider version information",
-	}
-
 	// flags that configure the storage provider
 	spFlags = []cli.Flag{
-		configFlag,
-		versionFlag,
+		utils.VersionFlag,
+		utils.ConfigFileFlag,
+		utils.DBUserFlag,
+		utils.DBUserFlag,
 	}
 )
 
@@ -48,7 +42,7 @@ func init() {
 	app.Commands = []cli.Command{
 		// config category commands
 		conf.ConfigDumpCmd,
-		conf.ListEnvCmd,
+		conf.ConfigUploadCmd,
 	}
 }
 
@@ -60,15 +54,15 @@ func main() {
 }
 
 func storageProvider(ctx *cli.Context) error {
-	if ctx.GlobalIsSet(versionFlag.Name) {
+	if ctx.GlobalIsSet(utils.VersionFlag.Name) {
 		fmt.Print(DumpLogo() + DumpVersion())
 		return nil
 	}
-	if !ctx.GlobalIsSet(configFlag.Name) {
+	if !ctx.GlobalIsSet(utils.ConfigFileFlag.Name) {
 		return fmt.Errorf("invalid params")
 	}
 
-	cfg := config.LoadConfig(configFlag.Value)
+	cfg := config.LoadConfig(ctx.GlobalString(utils.ConfigFileFlag.Name))
 	slc := lifecycle.NewServiceLifecycle()
 	for _, serviceName := range cfg.Service {
 		// 1. init service instance.
