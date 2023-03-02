@@ -40,7 +40,7 @@ func (s *SQLDB) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicety
 		RedundancyType:       int32(objectInfo.GetRedundancyType()),
 		SourceType:           int32(objectInfo.GetSourceType()),
 		Checksum:             util.BytesSliceToString(objectInfo.GetChecksums()),
-		SecondarySPAddresses: util.SliceToString(objectInfo.GetSecondarySpAddresses()),
+		SecondarySPAddresses: util.JoinWithComma(objectInfo.GetSecondarySpAddresses()),
 	}
 	result = s.db.Create(insertObjectRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -168,7 +168,7 @@ func (s *SQLDB) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectIn
 		RedundancyType:       int32(objectInfo.GetRedundancyType()),
 		SourceType:           int32(objectInfo.GetSourceType()),
 		Checksum:             util.BytesSliceToString(objectInfo.GetChecksums()),
-		SecondarySPAddresses: util.SliceToString(objectInfo.GetSecondarySpAddresses()),
+		SecondarySPAddresses: util.JoinWithComma(objectInfo.GetSecondarySpAddresses()),
 	}
 	if isNotFound {
 		// if record is not found, insert a new record
