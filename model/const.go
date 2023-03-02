@@ -50,8 +50,22 @@ const (
 	AWSSecretKey = "AWS_SECRET_KEY"
 	// AWSSessionToken defines env variable name for aws session token
 	AWSSessionToken = "AWS_SESSION_TOKEN"
+
+	// SpDBUser defines env variable name for sp db user name
+	SpDBUser = "SP_DB_USER"
+	// SpDBPasswd defines env variable name for sp db user passwd
+	SpDBPasswd = "SP_DB_PASSWORD"
+
 	// SpOperatorAddress defines env variable name for sp operator address
-	SpOperatorAddress = "SP_OPERATOR_ADDRESS"
+	SpOperatorAddress = "SP_OPERATOR_PUB_KEY"
+	// SpOperatorPrivKey defines env variable name for sp operator priv key
+	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
+	// SpFundingPrivKey defines env variable name for sp funding priv key
+	SpFundingPrivKey = "SIGNER_FUNDING_PRIV_KEY"
+	// SpApprovalPrivKey defines env variable name for sp approval priv key
+	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
+	// SpSealPrivKey defines env variable name for sp seal priv key
+	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
 )
 
 // define cache size

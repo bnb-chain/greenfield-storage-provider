@@ -6,6 +6,7 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
 	"gopkg.in/urfave/cli.v1"
 
 	"github.com/bnb-chain/greenfield-storage-provider/config"
@@ -44,7 +45,11 @@ func init() {
 	app.Action = storageProvider
 	app.HideVersion = true
 	app.Flags = append(app.Flags, spFlags...)
-	app.Commands = []cli.Command{}
+	app.Commands = []cli.Command{
+		// config category commands
+		conf.ConfigDumpCmd,
+		conf.ListEnvCmd,
+	}
 }
 
 func main() {
