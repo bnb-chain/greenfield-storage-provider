@@ -17,8 +17,8 @@ type ChallengeClient struct {
 	conn      *grpc.ClientConn
 }
 
-// NewStoneNodeClient return a ChallengeClient instance
-func NewStoneNodeClient(address string) (*ChallengeClient, error) {
+// NewChallengeClient return a ChallengeClient instance
+func NewChallengeClient(address string) (*ChallengeClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

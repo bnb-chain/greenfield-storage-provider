@@ -48,3 +48,8 @@ func (client *UploaderClient) QueryUploadingObject(
 	}
 	return resp.GetSegmentInfo(), nil
 }
+
+// UploadObject return grpc stream client, and be used to upload object payload.
+func (client *UploaderClient) UploadObject(ctx context.Context, opts ...grpc.CallOption) (types.UploaderService_UploadObjectClient, error) {
+	return client.uploader.UploadObject(ctx, opts...)
+}

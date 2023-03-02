@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
 )
 
 type SignerClient struct {
@@ -22,7 +22,7 @@ func NewSignerClient(address string) (*SignerClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Errorw("invoke stoneHub service dail failed", "error", err)
+		log.Errorw("failed to dail signer", "error", err)
 		return nil, err
 	}
 	client := &SignerClient{

@@ -32,8 +32,9 @@ var (
 	BucketAlreadyExists = &errorDescription{errorCode: "CreateBucketFailed", errorMessage: "Duplicate bucket name.", statusCode: http.StatusConflict}
 	ObjectAlreadyExists = &errorDescription{errorCode: "PutObjectFailed", errorMessage: "Duplicate object name.", statusCode: http.StatusConflict}
 	// 5xx
-	InternalError       = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
-	NotImplementedError = &errorDescription{errorCode: "NotImplementedError", errorMessage: "Not Implemented Error", statusCode: http.StatusNotImplemented}
+	InternalError          = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
+	NotImplementedError    = &errorDescription{errorCode: "NotImplementedError", errorMessage: "Not Implemented Error", statusCode: http.StatusNotImplemented}
+	NotExistComponentError = &errorDescription{errorCode: "NotExistComponentError", errorMessage: "Not Exist Component Error", statusCode: http.StatusNotImplemented}
 )
 
 // errorResponse is used to error response xml.

@@ -7,31 +7,33 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	dclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
-	sclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
-	uclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
-
-	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
+	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
+	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
+	syncerclient "github.com/bnb-chain/greenfield-storage-provider/service/syncer/client"
+	uploaderclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-// Gateway is the primary entry point of SP.
+// Gateway is the primary entry point of SP
 type Gateway struct {
-	config  *GatewayConfig
-	name    string
-	running atomic.Bool
-
+	config     *GatewayConfig
+	running    atomic.Bool
 	httpServer *http.Server
-	uploader   *uclient.UploaderClient
-	downloader *dclient.DownloaderClient
-	//challenge  *client.ChallengeClient
 
-	//syncer client.SyncerAPI
-	chain  *gnfd.Greenfield
-	signer *sclient.SignerClient
+	// chain is the required component, used to check authorization
+	chain *chainclient.Greenfield
+
+	// the below components are optional according to the config
+	uploader   *uploaderclient.UploaderClient
+	downloader *downloaderclient.DownloaderClient
+	challenge  *challengeclient.ChallengeClient
+	syncer     *syncerclient.SyncerClient
+	signer     *signerclient.SignerClient
 }
 
 // NewGatewayService return the gateway instance
@@ -43,39 +45,52 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 
 	g = &Gateway{
 		config: cfg,
-		name:   model.GatewayService,
 	}
-	if g.uploader, err = uclient.NewUploaderClient(cfg.UploaderServiceAddress); err != nil {
-		log.Errorw("failed to uploader client", "err", err)
+	if g.chain, err = chainclient.NewGreenfield(cfg.ChainConfig); err != nil {
+		log.Errorw("failed to create chain client", "error", err)
 		return nil, err
 	}
-	if g.downloader, err = dclient.NewDownloaderClient(cfg.DownloaderServiceAddress); err != nil {
-		log.Errorw("failed to downloader client", "err", err)
-		return nil, err
+
+	if cfg.UploaderServiceAddress != "" {
+		if g.uploader, err = uploaderclient.NewUploaderClient(cfg.UploaderServiceAddress); err != nil {
+			log.Errorw("failed to create uploader client", "error", err)
+			return nil, err
+		}
 	}
-	//if g.challenge, err = client.NewChallengeClient(cfg.ChallengeServiceAddress); err != nil {
-	//	log.Errorw("failed to challenge client", "err", err)
-	//	return nil, err
-	//}
-	//if g.syncer, err = client.NewSyncerClient(g.config.SyncerServiceAddress); err != nil {
-	//	log.Errorw("gateway inits syncer client failed", "error", err)
-	//	return nil, err
-	//}
-	if g.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
-		log.Errorw("failed to create chain client", "err", err)
-		return nil, err
+
+	if cfg.DownloaderServiceAddress != "" {
+		if g.downloader, err = downloaderclient.NewDownloaderClient(cfg.DownloaderServiceAddress); err != nil {
+			log.Errorw("failed to create downloader client", "error", err)
+			return nil, err
+		}
 	}
-	if g.signer, err = sclient.NewSignerClient(cfg.SignerServiceAddress); err != nil {
-		log.Errorw("failed to create signer client", "err", err)
-		return nil, err
+	if cfg.ChallengeServiceAddress != "" {
+		if g.challenge, err = challengeclient.NewChallengeClient(cfg.ChallengeServiceAddress); err != nil {
+			log.Errorw("failed to create challenge client", "error", err)
+			return nil, err
+		}
 	}
-	log.Debugw("gateway succeed to init")
+
+	if cfg.SyncerServiceAddress != "" {
+		if g.syncer, err = syncerclient.NewSyncerClient(cfg.SyncerServiceAddress); err != nil {
+			log.Errorw("failed to create syncer client", "error", err)
+			return nil, err
+		}
+	}
+
+	if cfg.SignerServiceAddress != "" {
+		if g.signer, err = signerclient.NewSignerClient(cfg.SignerServiceAddress); err != nil {
+			log.Errorw("failed to create signer client", "error", err)
+			return nil, err
+		}
+	}
+
 	return g, nil
 }
 
 // Name implement the lifecycle interface
 func (g *Gateway) Name() string {
-	return g.name
+	return model.GatewayService
 }
 
 // Start implement the lifecycle interface
@@ -84,7 +99,6 @@ func (g *Gateway) Start(ctx context.Context) error {
 		return errors.New("gateway has started")
 	}
 	go g.Serve()
-	log.Debug("gateway succeed to start")
 	return nil
 }
 
@@ -115,6 +129,5 @@ func (g *Gateway) Stop(ctx context.Context) error {
 	if errs != nil {
 		return fmt.Errorf("%v", errs)
 	}
-	log.Debug("gateway succeed to stop")
 	return nil
 }
