@@ -63,7 +63,7 @@ func ParseLevel(lvl string) (Level, error) {
 var logger Logger
 
 func init() {
-	logger = zap.NewLogger(InfoLevel, &writerWrapper{Writer: os.Stderr}).AddCallerSkip(1)
+	logger = zap.NewLogger(DebugLevel, &writerWrapper{Writer: os.Stderr}).AddCallerSkip(1)
 }
 
 // NOTE: this func isn't thread safe
