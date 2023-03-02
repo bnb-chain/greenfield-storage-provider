@@ -8,7 +8,7 @@ import (
 )
 
 // GetObjectIntegrity return the integrity hash info
-func (s *SQLStore) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
+func (s *SQLDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 	queryReturn := &IntegrityMetaTable{}
 	result := s.db.Model(&IntegrityMetaTable{}).
 		Where("object_id = ?", objectID).
@@ -38,7 +38,7 @@ func (s *SQLStore) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 }
 
 // SetObjectIntegrity put(overwrite) integrity hash info to db
-func (s *SQLStore) SetObjectIntegrity(meta *IntegrityMeta) error {
+func (s *SQLDB) SetObjectIntegrity(meta *IntegrityMeta) error {
 	insertIntegrityMetaRecord := &IntegrityMetaTable{
 		ObjectID:      meta.ObjectID,
 		Checksum:      util.BytesSliceToString(meta.Checksum),

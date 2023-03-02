@@ -14,7 +14,7 @@ import (
 )
 
 // CreateUploadJob create JobTable record and ObjectTable record; use JobID field for association
-func (s *SQLStore) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicetypes.JobContext, error) {
+func (s *SQLDB) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicetypes.JobContext, error) {
 	insertJobRecord := &JobTable{
 		JobType:      int32(servicetypes.JobType_JOB_TYPE_UPLOAD_OBJECT),
 		JobState:     int32(servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED),
@@ -58,7 +58,7 @@ func (s *SQLStore) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servic
 }
 
 // UpdateJobState update JobTable record's state
-func (s *SQLStore) UpdateJobState(state servicetypes.JobState, objectID uint64) error {
+func (s *SQLDB) UpdateJobState(objectID uint64, state servicetypes.JobState) error {
 	queryObjectReturn := &ObjectTable{}
 	result := s.db.First(queryObjectReturn, "object_id = ?", objectID)
 	if result.Error != nil {
@@ -79,7 +79,7 @@ func (s *SQLStore) UpdateJobState(state servicetypes.JobState, objectID uint64) 
 }
 
 // GetJobByID query JobTable by jobID and convert to service/types.JobContext
-func (s *SQLStore) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
+func (s *SQLDB) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
 	queryReturn := &JobTable{}
 	result := s.db.First(queryReturn, "job_id = ?", jobID)
 	if result.Error != nil {
@@ -96,7 +96,7 @@ func (s *SQLStore) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
 }
 
 // GetJobByObjectID query JobTable by jpbID and convert to service/types.JobContext
-func (s *SQLStore) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error) {
+func (s *SQLDB) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error) {
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
@@ -118,7 +118,7 @@ func (s *SQLStore) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, 
 }
 
 // GetObjectInfo query ObjectTable by objectID and convert to storage/types.ObjectInfo.
-func (s *SQLStore) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error) {
+func (s *SQLDB) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error) {
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
@@ -146,7 +146,7 @@ func (s *SQLStore) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, err
 }
 
 // SetObjectInfo set ObjectTable's record by objectID
-func (s *SQLStore) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error {
+func (s *SQLDB) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error {
 	queryReturn := &ObjectTable{}
 	// result := s.db.Where("object_id = ?", objectID).Find(queryReturn)
 	result := s.db.First(queryReturn, "object_id = ?", objectID)

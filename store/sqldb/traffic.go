@@ -8,7 +8,7 @@ import (
 )
 
 // CheckQuotaAndAddReadRecord check current quota, and add read record
-func (s *SQLStore) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
+func (s *SQLDB) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
 	yearMonth := Time2YearMonth(TimeUnix2Time(record.ReadTime))
 	bucketTraffic, err := s.GetBucketTraffic(record.BucketID, yearMonth)
 	if err != nil {
@@ -83,7 +83,7 @@ func (s *SQLStore) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 }
 
 // GetBucketTraffic return bucket traffic info
-func (s *SQLStore) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
+func (s *SQLDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
 	var (
 		result      *gorm.DB
 		queryReturn BucketTrafficTable
@@ -108,7 +108,7 @@ func (s *SQLStore) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketT
 }
 
 // GetReadRecord return record list by time range
-func (s *SQLStore) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SQLDB) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	var (
 		result       *gorm.DB
 		records      []*ReadRecord
@@ -140,7 +140,7 @@ func (s *SQLStore) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, er
 }
 
 // GetBucketReadRecord return bucket record list by time range
-func (s *SQLStore) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SQLDB) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	var (
 		result       *gorm.DB
 		records      []*ReadRecord
@@ -174,7 +174,7 @@ func (s *SQLStore) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRa
 }
 
 // GetObjectReadRecord return object record list by time range
-func (s *SQLStore) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SQLDB) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	var (
 		result       *gorm.DB
 		records      []*ReadRecord
@@ -208,7 +208,7 @@ func (s *SQLStore) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRa
 }
 
 // GetUserReadRecord return user record list by time range
-func (s *SQLStore) GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SQLDB) GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	var (
 		result       *gorm.DB
 		records      []*ReadRecord

@@ -12,7 +12,7 @@ type Job interface {
 	// CreateUploadJob create upload job and return job context
 	CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicetypes.JobContext, error)
 	// UpdateJobState update the state of a job by object id
-	UpdateJobState(state servicetypes.JobState, objectID uint64) error
+	UpdateJobState(objectID uint64, state servicetypes.JobState) error
 	// GetJobByID get job context by job id and return job context
 	GetJobByID(jobID uint64) (*servicetypes.JobContext, error)
 	// GetJobByObjectID get job context by object id

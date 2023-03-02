@@ -11,7 +11,7 @@ type StoneNodeConfig struct {
 	SpOperatorAddress string
 	GrpcAddress       string
 	SignerGrpcAddress string
-	SpDBConfig        *config.SQLDBConfig
+	SPDBConfig        *config.SQLDBConfig
 	PieceStoreConfig  *storage.PieceStoreConfig
 	ChainConfig       *greenfield.GreenfieldChainConfig
 }
@@ -20,7 +20,7 @@ var DefaultStoneNodeConfig = &StoneNodeConfig{
 	SpOperatorAddress: model.SpOperatorAddress,
 	GrpcAddress:       model.StoneNodeGrpcAddress,
 	SignerGrpcAddress: model.SignerGrpcAddress,
-	SpDBConfig:        config.DefaultSQLDBConfig,
+	SPDBConfig:        config.DefaultSQLDBConfig,
 	PieceStoreConfig:  storage.DefaultPieceStoreConfig,
 	ChainConfig:       greenfield.DefaultGreenfieldChainConfig,
 }

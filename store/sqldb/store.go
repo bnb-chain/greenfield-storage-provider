@@ -17,25 +17,21 @@ const (
 	SPDBPasswd = "SP_DB_PASSWORD"
 )
 
-var _ SPDB = &SQLStore{}
+var _ SPDB = &SQLDB{}
 
-// SQLStore storage provider database, implements SPDB interface
-type SQLStore struct {
+// SQLDB storage provider database, implements SPDB interface
+type SQLDB struct {
 	db *gorm.DB
 }
 
 // NewSQLStore return a database instance
-func NewSQLStore(config *config.SQLDBConfig) (*SQLStore, error) {
-	var err error
-	config.User, config.Passwd, err = getDBConfigFromEnv(SPDBUser, SPDBPasswd)
-	if err != nil {
-		return nil, err
-	}
+func NewSQLStore(config *config.SQLDBConfig) (*SQLDB, error) {
+	loadDBConfigFromEnv(config)
 	db, err := InitDB(config)
 	if err != nil {
 		return nil, err
 	}
-	return &SQLStore{db: db}, err
+	return &SQLDB{db: db}, err
 }
 
 // InitDB init a db instance
@@ -50,44 +46,41 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 
 	// create if not exist
 	if err := db.AutoMigrate(&JobTable{}); err != nil {
-		log.Errorw("failed to create job table", "err", err)
+		log.Errorw("failed to create job table", "error", err)
 		return nil, err
 	}
 	if err := db.AutoMigrate(&ObjectTable{}); err != nil {
-		log.Errorw("failed to create object table", "err", err)
+		log.Errorw("failed to create object table", "error", err)
 		return nil, err
 	}
 	if err := db.AutoMigrate(&SPInfoTable{}); err != nil {
-		log.Errorw("failed to create sp info table", "err", err)
+		log.Errorw("failed to create sp info table", "error", err)
 		return nil, err
 	}
 	if err := db.AutoMigrate(&StorageParamsTable{}); err != nil {
-		log.Errorw("failed to storage params table", "err", err)
+		log.Errorw("failed to storage params table", "error", err)
 		return nil, err
 	}
 	if err := db.AutoMigrate(&IntegrityMetaTable{}); err != nil {
-		log.Errorw("failed to create integrity meta table", "err", err)
+		log.Errorw("failed to create integrity meta table", "error", err)
 		return nil, err
 	}
 	if err := db.AutoMigrate(&BucketTrafficTable{}); err != nil {
-		log.Warnw("failed to create bucket traffic table", "err", err)
+		log.Warnw("failed to create bucket traffic table", "error", err)
 		return nil, err
 	}
 	if err := db.AutoMigrate(&ReadRecordTable{}); err != nil {
-		log.Warnw("failed to create read record table", "err", err)
+		log.Warnw("failed to create read record table", "error", err)
 		return nil, err
 	}
 	return db, nil
 }
 
-func getDBConfigFromEnv(user, passwd string) (string, string, error) {
-	userVal, ok := os.LookupEnv(user)
-	if !ok {
-		return "", "", fmt.Errorf("db %s config is not set in environment", user)
+func loadDBConfigFromEnv(config *config.SQLDBConfig) {
+	if val, ok := os.LookupEnv(SPDBUser); ok {
+		config.User = val
 	}
-	passwdVal, ok := os.LookupEnv(passwd)
-	if !ok {
-		return "", "", fmt.Errorf("db %s config is not set in environment", passwd)
+	if val, ok := os.LookupEnv(SPDBPasswd); ok {
+		config.Passwd = val
 	}
-	return userVal, passwdVal, nil
 }
