@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -37,33 +38,33 @@ func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 func (g *Gateway) registerHandler(r *mux.Router) {
 	// bucket router, virtual-hosted style
 	bucketRouter := r.Host("{bucket:.+}." + g.config.Domain).Subrouter()
-	//bucketRouter.NewRoute().
-	//	Name(putObjectRouterName).
-	//	Methods(http.MethodPut).
-	//	Path("/{object:.+}").
-	//	HandlerFunc(g.putObjectHandler)
-	//bucketRouter.NewRoute().
-	//	Name(getObjectRouterName).
-	//	Methods(http.MethodGet).
-	//	Path("/{object:.+}").
-	//	HandlerFunc(g.getObjectHandler)
+	bucketRouter.NewRoute().
+		Name(putObjectRouterName).
+		Methods(http.MethodPut).
+		Path("/{object:.+}").
+		HandlerFunc(g.putObjectHandler)
+	bucketRouter.NewRoute().
+		Name(getObjectRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}").
+		HandlerFunc(g.getObjectHandler)
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	// admin router, path style.
-	//r.Path(model.AdminPath+model.GetApprovalSubPath).
-	//	Name(approvalRouterName).
-	//	Methods(http.MethodGet).
-	//	Queries(model.ActionQuery, "{action}").
-	//	HandlerFunc(g.getApprovalHandler)
-	//r.Path(model.AdminPath + model.ChallengeSubPath).
-	//	Name(challengeRouterName).
-	//	Methods(http.MethodGet).
-	//	HandlerFunc(g.challengeHandler)
+	r.Path(model.GetApprovalPath).
+		Name(approvalRouterName).
+		Methods(http.MethodGet).
+		Queries(model.ActionQuery, "{action}").
+		HandlerFunc(g.getApprovalHandler)
+	r.Path(model.ChallengePath).
+		Name(challengeRouterName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.challengeHandler)
 	// sync piece to syncer
-	//r.Path(model.SyncerPath).
-	//	Name(syncPieceRouterName).
-	//	Methods(http.MethodPut).
-	//	HandlerFunc(g.syncPieceHandler)
+	r.Path(model.SyncerPath).
+		Name(syncPieceRouterName).
+		Methods(http.MethodPut).
+		HandlerFunc(g.syncPieceHandler)
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }
