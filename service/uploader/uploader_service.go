@@ -32,15 +32,15 @@ func (uploader *Uploader) UploadObject(
 	defer func(resp *types.UploadObjectResponse, err error) {
 		if err != nil {
 			log.Errorw("failed to replicate payload", "err", err)
-			uploader.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
-				traceInfo.GetObjectInfo().Id.Uint64())
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
 		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checkSum)
 		if err != nil {
 			log.Errorw("failed to sign integrity hash", "err", err)
-			uploader.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
-				traceInfo.GetObjectInfo().Id.Uint64())
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
 		integrityMeta.Checksum = checkSum
@@ -49,8 +49,8 @@ func (uploader *Uploader) UploadObject(
 		err = uploader.spDB.SetObjectIntegrity(integrityMeta)
 		if err != nil {
 			log.Errorw("failed to write integrity hash to db", "error", err)
-			uploader.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR,
-				traceInfo.GetObjectInfo().Id.Uint64())
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
 		traceInfo.IntegrityHash = integrityHash
@@ -58,8 +58,8 @@ func (uploader *Uploader) UploadObject(
 		uploader.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
 		err = stream.SendAndClose(resp)
 		pstream.Close()
-		uploader.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE,
-			traceInfo.GetObjectInfo().Id.Uint64())
+		uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+			servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
 		log.Infow("finish to upload payload", "error", err)
 	}(&resp, err)
 	params, err := uploader.spDB.GetStorageParams()
@@ -101,8 +101,8 @@ func (uploader *Uploader) UploadObject(
 
 	// read payload from stream, the payload is spilt to segment size
 	for {
-		uploader.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING,
-			traceInfo.GetObjectInfo().Id.Uint64())
+		uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+			servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING)
 		select {
 		case entry := <-pstream.AsyncStreamRead():
 			log.Debugw("read segment from stream", "segment_key", entry.Key(), "error", entry.Error())

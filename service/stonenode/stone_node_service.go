@@ -26,8 +26,7 @@ func (node *StoneNode) ReplicateObject(
 	req *types.ReplicateObjectRequest) (
 	resp *types.ReplicateObjectResponse, err error) {
 	resp = &types.ReplicateObjectResponse{}
-	node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING,
-		req.GetObjectInfo().Id.Uint64())
+	node.spDB.UpdateJobState(req.GetObjectInfo().Id.Uint64(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
 	go node.AsyncReplicateObject(context.Background(), req)
 	return
 }
@@ -41,26 +40,26 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 	objectInfo := req.GetObjectInfo()
 	defer func() {
 		if err != nil {
-			node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR, objectInfo.Id.Uint64())
+			node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
 			log.CtxErrorw(ctx, "failed to replicate payload data to sp", "error", err)
 			return
 		}
-		node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING, objectInfo.Id.Uint64())
+		node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING)
 		_, err = node.signer.SealObjectOnChain(ctx, sealMsg)
 		if err != nil {
-			node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR, objectInfo.Id.Uint64())
+			node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR)
 			log.CtxErrorw(ctx, "failed to sign object by signer", "error", err)
 			return
 		}
-		node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_TX_DOING, objectInfo.Id.Uint64())
+		node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_TX_DOING)
 		success, err := node.chain.ListenObjectSeal(ctx, objectInfo.GetBucketName(),
 			objectInfo.GetObjectName(), 10)
 		if err != nil {
-			node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR, objectInfo.Id.Uint64())
+			node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
 			log.CtxErrorw(ctx, "failed to seal object on chain", "error", err)
 			return
 		}
-		node.spDB.UpdateJobState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE, objectInfo.Id.Uint64())
+		node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
 		log.CtxInfow(ctx, "seal object on chain", "success", success)
 		return
 	}()

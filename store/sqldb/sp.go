@@ -3,6 +3,7 @@ package sqldb
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"cosmossdk.io/math"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
@@ -21,7 +22,7 @@ func (s *SQLDB) UpdateAllSP(spList []*sptypes.StorageProvider) error {
 			return fmt.Errorf("failed to query record in sp info table: %s", result.Error)
 		}
 		// 2. if there is no record, insert new record; otherwise delete old record, then insert new record
-		if queryReturn != nil && sameError {
+		if sameError {
 			if err := s.insertNewRecordInSPInfoTable(value); err != nil {
 				return err
 			}
@@ -65,14 +66,14 @@ func (s *SQLDB) insertNewRecordInSPInfoTable(sp *sptypes.StorageProvider) error 
 func (s *SQLDB) FetchAllSP(status ...sptypes.Status) ([]*sptypes.StorageProvider, error) {
 	queryReturn := []SPInfoTable{}
 	if len(status) == 0 {
-		result := s.db.Where("operator_address = ? and is_own = false").Find(&queryReturn)
+		result := s.db.Where("is_own = false").Find(&queryReturn)
 		if result.Error != nil {
 			return nil, fmt.Errorf("failed to query sp info table: %s", result.Error)
 		}
 	} else {
 		for _, val := range status {
 			temp := []SPInfoTable{}
-			result := s.db.Where("operator_address = ? and is_own = false and status = ?", int32(val)).Find(&temp)
+			result := s.db.Where("is_own = false and status = ?", int32(val)).Find(&temp)
 			if result.Error != nil {
 				return nil, fmt.Errorf("failed to query sp info table: %s", result.Error)
 			}
@@ -179,13 +180,13 @@ func getAddressCondition(addressType SPAddressType) (string, error) {
 	var condition string
 	switch addressType {
 	case OperatorAddressType:
-		condition = "operator_address = ?"
+		condition = "operator_address = ? and is_own = false"
 	case FundingAddressType:
-		condition = "funding_address = ?"
+		condition = "funding_address = ? and is_own = false"
 	case SealAddressType:
-		condition = "seal_address = ?"
+		condition = "seal_address = ? and is_own = false"
 	case ApprovalAddressType:
-		condition = "approval_address = ?"
+		condition = "approval_address = ? and is_own = false"
 	default:
 		return "", fmt.Errorf("unknown address type")
 	}
@@ -195,7 +196,7 @@ func getAddressCondition(addressType SPAddressType) (string, error) {
 // // GetSPByEndpoint implement SPInfo interface
 func (s *SQLDB) GetSPByEndpoint(endpoint string) (*sptypes.StorageProvider, error) {
 	queryReturn := &SPInfoTable{}
-	result := s.db.First(queryReturn, "endpoint = ?", endpoint)
+	result := s.db.First(queryReturn, "endpoint = ? and is_own = false", endpoint)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query sp info table: %s", result.Error)
 	}
@@ -245,7 +246,7 @@ func (s *SQLDB) GetOwnSPInfo() (*sptypes.StorageProvider, error) {
 // SetOwnSPInfo implements SPInfo interface
 func (s *SQLDB) SetOwnSPInfo(sp *sptypes.StorageProvider) error {
 	_, err := s.GetOwnSPInfo()
-	isNotFound := errors.Is(err, gorm.ErrRecordNotFound)
+	isNotFound := strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error())
 	if err != nil && !isNotFound {
 		return err
 	}

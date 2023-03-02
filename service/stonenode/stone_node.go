@@ -53,7 +53,7 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	spDB, err := sqldb.NewSQLStore(config.SpDBConfig)
+	spDB, err := sqldb.NewSQLStore(config.SPDBConfig)
 	if err != nil {
 		return nil, err
 	}
