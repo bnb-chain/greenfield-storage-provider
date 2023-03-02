@@ -16,6 +16,8 @@ import (
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
+	gatewayclient "github.com/bnb-chain/greenfield-storage-provider/service/gateway/client"
 )
 
 var _ types.StoneNodeServiceServer = &StoneNode{}
@@ -122,21 +124,16 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 				for idx := 0; idx < len(replicateData[0]); idx++ {
 					data[idx] = replicateData[idx][rIdx]
 				}
-				//// http request params
-				//sp.GetEndpoint()
-				//syncReq := &syncertypes.SyncObjectRequest{
-				//	ObjectInfo:    req.GetObjectInfo(),
-				//	ReplicateIdx:  uint32(rIdx),
-				//	SegmentSize:   uint64(len(replicateData[0][0])),
-				//	ReplicateData: data,
-				//}
-				//// http request return err
-				//if err != nil {
-				//	continue
-				//}
-				// integrityHash and signature are http response
-				var integrityHash []byte
-				var signature []byte
+				gatewayClient, err := gatewayclient.NewGatewayClient(sp.GetEndpoint())
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to create gateway client", "sp_endpoint", sp.GetEndpoint(), "error", err)
+					continue
+				}
+				integrityHash, signature, err := gatewayClient.SyncPieceData(req.GetObjectInfo(), uint32(rIdx), uint32(len(replicateData[0][0])), data)
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to sync piece data", "error", err)
+					continue
+				}
 				log.CtxDebugw(ctx, "receive the sp response", "replica_idx", rIdx, "integrity_hash", integrityHash, "signature", signature)
 				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), integrityHash).GetSignBytes()
 				approvalAddr, err := sdk.AccAddressFromHexUnsafe(sp.GetApprovalAddress())
