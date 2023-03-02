@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -14,7 +15,6 @@ import (
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	stoneclient "github.com/bnb-chain/greenfield-storage-provider/service/stonenode/client"
 	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
@@ -25,7 +25,7 @@ var _ lifecycle.Service = &Uploader{}
 type Uploader struct {
 	config     *UploaderConfig
 	cache      *lru.Cache
-	spDB       store.SPDB
+	spDB       sqldb.SPDB
 	pieceStore *psclient.StoreClient
 	signer     *signerclient.SignerClient
 	stone      *stoneclient.StoneNodeClient
@@ -45,10 +45,14 @@ func NewUploaderService(config *UploaderConfig) (*Uploader, error) {
 	if err != nil {
 		return nil, err
 	}
-	//TODO:: new sp db
+	spDB, err := sqldb.NewSQLStore(config.SPDBConfig)
+	if err != nil {
+		return nil, err
+	}
 	uploader := &Uploader{
 		config:     config,
 		cache:      cache,
+		spDB:       spDB,
 		stone:      stone,
 		pieceStore: pieceStore,
 		signer:     signer,

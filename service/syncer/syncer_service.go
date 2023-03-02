@@ -11,7 +11,7 @@ import (
 	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
 var _ types.SyncerServiceServer = &Syncer{}
@@ -23,7 +23,7 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 		pstream       = payloadstream.NewAsyncPayloadStream()
 		traceInfo     = &servicetypes.SegmentInfo{}
 		checksum      [][]byte
-		integrityMeta = &store.IntegrityMeta{}
+		integrityMeta = &sqldb.IntegrityMeta{}
 		errCh         = make(chan error, 10)
 	)
 
@@ -53,7 +53,7 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 		log.Infow("replicate payload", "response", resp, "error", err)
 	}(&resp, err)
 
-	//TODO:: add flow control, syncing one object request cost 4 parallel goroutine at least
+	// TODO:: add flow control, syncing one object request cost 4 parallel goroutine at least
 
 	// read payload from gRPC
 	go func() {
@@ -76,7 +76,7 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 					req.GetReplicateIdx(),
 					req.GetSegmentSize(),
 					req.GetObjectInfo().GetRedundancyType())
-				integrityMeta.ObjectId = req.GetObjectInfo().Id.Uint64()
+				integrityMeta.ObjectID = req.GetObjectInfo().Id.Uint64()
 				traceInfo.ObjectInfo = req.GetObjectInfo()
 				syncer.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
 				init = false
@@ -100,7 +100,7 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 				return
 			}
 			checksum = append(checksum, hash.GenerateChecksum(entry.Data()))
-			traceInfo.CheckSum = checksum
+			traceInfo.Checksum = checksum
 			traceInfo.Completed++
 			syncer.cache.Add(entry.ID(), traceInfo)
 			go func() {

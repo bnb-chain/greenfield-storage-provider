@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -19,7 +19,7 @@ import (
 // responsible for downloading object payload data
 type Downloader struct {
 	cfg        *DownloaderConfig
-	spDB       store.SPDB
+	spDB       sqldb.SPDB
 	chain      *gnfd.Greenfield
 	pieceStore *pscli.StoreClient
 }
@@ -37,9 +37,13 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 		log.Errorw("failed to create chain client", "err", err)
 		return nil, err
 	}
-	//TODO::new sp db
+	spDB, err := sqldb.NewSQLStore(cfg.SPDBConfig)
+	if err != nil {
+		return nil, err
+	}
 	downloader := &Downloader{
 		cfg:        cfg,
+		spDB:       spDB,
 		chain:      chain,
 		pieceStore: pieceStore,
 	}

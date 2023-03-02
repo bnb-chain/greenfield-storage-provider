@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -13,7 +14,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
@@ -26,7 +26,7 @@ type Syncer struct {
 	cache      *lru.Cache
 	signer     *signerclient.SignerClient
 	pieceStore *psclient.StoreClient
-	spDB       store.SPDB
+	spDB       sqldb.SPDB
 	grpcServer *grpc.Server
 }
 
@@ -41,11 +41,15 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO::new sp db
+	spDB, err := sqldb.NewSQLStore(config.SPDBConfig)
+	if err != nil {
+		return nil, err
+	}
 	s := &Syncer{
 		config:     config,
 		cache:      cache,
 		pieceStore: pieceStore,
+		spDB:       spDB,
 		signer:     signer,
 	}
 	return s, nil
