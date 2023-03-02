@@ -48,7 +48,7 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to create object table", "error", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&SPInfoTable{}); err != nil {
+	if err := db.AutoMigrate(&SpInfoTable{}); err != nil {
 		log.Errorw("failed to create sp info table", "error", err)
 		return nil, err
 	}
@@ -73,10 +73,10 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 
 // loadDBConfigFromEnv load db user and password from env vars
 func loadDBConfigFromEnv(config *config.SQLDBConfig) {
-	if val, ok := os.LookupEnv(model.SPDBUser); ok {
+	if val, ok := os.LookupEnv(model.SpDBUser); ok {
 		config.User = val
 	}
-	if val, ok := os.LookupEnv(model.SPDBPasswd); ok {
+	if val, ok := os.LookupEnv(model.SpDBPasswd); ok {
 		config.Passwd = val
 	}
 }

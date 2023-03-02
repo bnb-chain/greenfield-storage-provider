@@ -8,7 +8,7 @@ import (
 )
 
 type StoneNodeConfig struct {
-	SPOperatorAddress string
+	SpOperatorAddress string
 	GRPCAddress       string
 	SignerGrpcAddress string
 	SPDBConfig        *config.SQLDBConfig
@@ -17,7 +17,7 @@ type StoneNodeConfig struct {
 }
 
 var DefaultStoneNodeConfig = &StoneNodeConfig{
-	SPOperatorAddress: model.SPOperatorAddress,
+	SpOperatorAddress: model.SpOperatorAddress,
 	GRPCAddress:       model.StoneNodeGRPCAddress,
 	SignerGrpcAddress: model.SignerGRPCAddress,
 	SPDBConfig:        config.DefaultSQLDBConfig,

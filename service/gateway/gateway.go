@@ -107,7 +107,7 @@ func (g *Gateway) Serve() {
 	router := mux.NewRouter().SkipClean(true)
 	g.registerHandler(router)
 	server := &http.Server{
-		Addr:    g.config.Address,
+		Addr:    g.config.HTTPAddress,
 		Handler: router,
 	}
 	g.httpServer = server

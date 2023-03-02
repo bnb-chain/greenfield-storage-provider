@@ -39,8 +39,8 @@ func (s *SQLDB) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicety
 		ObjectStatus:         int32(objectInfo.GetObjectStatus()),
 		RedundancyType:       int32(objectInfo.GetRedundancyType()),
 		SourceType:           int32(objectInfo.GetSourceType()),
-		Checksum:             util.BytesSliceToString(objectInfo.GetChecksums()),
-		SecondarySPAddresses: util.JoinWithComma(objectInfo.GetSecondarySpAddresses()),
+		SpIntegrityHash:      util.BytesSliceToString(objectInfo.GetChecksums()),
+		SecondarySpAddresses: util.JoinWithComma(objectInfo.GetSecondarySpAddresses()),
 	}
 	result = s.db.Create(insertObjectRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -124,7 +124,7 @@ func (s *SQLDB) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query object table: %s", result.Error)
 	}
-	checksums, err := util.StringToBytesSlice(queryReturn.Checksum)
+	checksums, err := util.StringToBytesSlice(queryReturn.SpIntegrityHash)
 	if err != nil {
 		return nil, err
 	}
@@ -141,14 +141,13 @@ func (s *SQLDB) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error)
 		RedundancyType:       storagetypes.RedundancyType(queryReturn.RedundancyType),
 		SourceType:           storagetypes.SourceType(queryReturn.SourceType),
 		Checksums:            checksums,
-		SecondarySpAddresses: strings.Split(queryReturn.SecondarySPAddresses, ","),
+		SecondarySpAddresses: strings.Split(queryReturn.SecondarySpAddresses, ","),
 	}, nil
 }
 
 // SetObjectInfo set ObjectTable's record by objectID
 func (s *SQLDB) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error {
 	queryReturn := &ObjectTable{}
-	// result := s.db.Where("object_id = ?", objectID).Find(queryReturn)
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	isNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
 	if result.Error != nil && !isNotFound {
@@ -167,8 +166,8 @@ func (s *SQLDB) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectIn
 		ObjectStatus:         int32(objectInfo.GetObjectStatus()),
 		RedundancyType:       int32(objectInfo.GetRedundancyType()),
 		SourceType:           int32(objectInfo.GetSourceType()),
-		Checksum:             util.BytesSliceToString(objectInfo.GetChecksums()),
-		SecondarySPAddresses: util.JoinWithComma(objectInfo.GetSecondarySpAddresses()),
+		SpIntegrityHash:      util.BytesSliceToString(objectInfo.GetChecksums()),
+		SecondarySpAddresses: util.JoinWithComma(objectInfo.GetSecondarySpAddresses()),
 	}
 	if isNotFound {
 		// if record is not found, insert a new record

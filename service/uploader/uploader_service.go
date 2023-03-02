@@ -19,13 +19,12 @@ import (
 var _ types.UploaderServiceServer = &Uploader{}
 
 // UploadObject upload an object payload data with object info.
-func (uploader *Uploader) UploadObject(
-	stream types.UploaderService_UploadObjectServer) (err error) {
+func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObjectServer) (err error) {
 	var (
 		resp          types.UploadObjectResponse
 		pstream       = payloadstream.NewAsyncPayloadStream()
 		traceInfo     = &servicetypes.SegmentInfo{}
-		checkSum      [][]byte
+		checksum      [][]byte
 		integrityMeta = &sqldb.IntegrityMeta{}
 		errCh         = make(chan error, 10)
 	)
@@ -36,14 +35,14 @@ func (uploader *Uploader) UploadObject(
 				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
-		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checkSum)
+		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checksum)
 		if err != nil {
 			log.Errorw("failed to sign integrity hash", "err", err)
 			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
 				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
-		integrityMeta.Checksum = checkSum
+		integrityMeta.Checksum = checksum
 		integrityMeta.IntegrityHash = integrityHash
 		integrityMeta.Signature = signature
 		err = uploader.spDB.SetObjectIntegrity(integrityMeta)
@@ -114,8 +113,8 @@ func (uploader *Uploader) UploadObject(
 				errCh <- entry.Error()
 				return
 			}
-			checkSum = append(checkSum, hash.GenerateChecksum(entry.Data()))
-			traceInfo.Checksum = checkSum
+			checksum = append(checksum, hash.GenerateChecksum(entry.Data()))
+			traceInfo.Checksum = checksum
 			traceInfo.Completed++
 			uploader.cache.Add(entry.ID(), traceInfo)
 			go func() {
@@ -130,11 +129,8 @@ func (uploader *Uploader) UploadObject(
 }
 
 // QueryUploadingObject query an uploading object with object id from cache
-func (uploader *Uploader) QueryUploadingObject(
-	ctx context.Context,
-	req *types.QueryUploadingObjectRequest) (
+func (uploader *Uploader) QueryUploadingObject(ctx context.Context, req *types.QueryUploadingObjectRequest) (
 	resp *types.QueryUploadingObjectResponse, err error) {
-	ctx = log.Context(ctx, req)
 	objectId := req.GetObjectId()
 	val, ok := uploader.cache.Get(objectId)
 	if !ok {

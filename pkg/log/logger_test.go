@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log/internal/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log/internal/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func initTestLogger(lvl types.Level) {
@@ -44,7 +44,7 @@ func TestLog(t *testing.T) {
 	log.Error("error")
 
 	mlog.Info("info")
-	//log.Panic("panic")
+	// log.Panic("panic")
 
 	printLogContent(t)
 }
@@ -56,7 +56,7 @@ func TestLogf(t *testing.T) {
 	log.Infof("msg: %v", "info")
 	log.Warnf("msg: %v", "warn")
 	log.Errorf("msg: %v", "error")
-	//log.Panic("panic")
+	// log.Panic("panic")
 
 	printLogContent(t)
 }
@@ -68,7 +68,7 @@ func TestLogw(t *testing.T) {
 	log.Infow("msg: %v", "info", 2)
 	log.Warnw("msg: %v", "warn", 3)
 	log.Errorw("msg: %v", "error", 4)
-	//log.Panicw("panic", "panic", 4)
+	// log.Panicw("panic", "panic", 4)
 
 	printLogContent(t)
 }
@@ -81,7 +81,7 @@ func TestCtxLog(t *testing.T) {
 	log.CtxInfo(ctx, "info")
 	log.CtxWarn(ctx, "warn")
 	log.CtxError(ctx, "error")
-	//log.CtxPanic("panic")
+	// log.CtxPanic("panic")
 
 	printLogContent(t)
 }
@@ -93,7 +93,7 @@ func TestCtxLogf(t *testing.T) {
 	log.CtxInfof(testContext(), "msg: %v", "info")
 	log.CtxWarnf(testContext(), "msg: %v", "warn")
 	log.CtxErrorf(testContext(), "msg: %v", "error")
-	//log.Panic("panic")
+	// log.Panic("panic")
 
 	printLogContent(t)
 }
@@ -105,7 +105,7 @@ func TestCtxLogw(t *testing.T) {
 	log.CtxInfow(testContext(), "msg", "info", 1, 2, 3, 4)
 	log.CtxWarnw(testContext(), "msg", "warn", 3)
 	log.CtxErrorw(testContext(), "msg", "error", 4)
-	//log.Panicw("panic", "panic", 4)
+	// log.Panicw("panic", "panic", 4)
 
 	printLogContent(t)
 }

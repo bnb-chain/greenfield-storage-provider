@@ -51,23 +51,23 @@ const (
 	// AWSSessionToken defines env variable name for aws session token
 	AWSSessionToken = "AWS_SESSION_TOKEN"
 
-	// SPDBUser defines env variable name for sp db user name
-	SPDBUser = "SP_DB_USER"
-	// SPDBPasswd defines env variable name for sp db user passwd
-	SPDBPasswd = "SP_DB_PASSWORD"
+	// SpDBUser defines env variable name for sp db user name
+	SpDBUser = "SP_DB_USER"
+	// SpDBPasswd defines env variable name for sp db user passwd
+	SpDBPasswd = "SP_DB_PASSWORD"
 
-	// SPOperatorAddress defines env variable name for sp operator address
-	SPOperatorAddress = "SP_OPERATOR_PUB_KEY"
-	// SPSignerAPIKey defines env variable for signer api key
-	SPSignerAPIKey = "SIGNER_API_KEY"
-	// SPOperatorPrivKey defines env variable name for sp operator priv key
-	SPOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
-	// SPFundingPrivKey defines env variable name for sp funding priv key
-	SPFundingPrivKey = "SIGNER_FUNDING_PRIV_KEY"
-	// SPApprovalPrivKey defines env variable name for sp approval priv key
-	SPApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
-	// SPSealPrivKey defines env variable name for sp seal priv key
-	SPSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
+	// SpOperatorAddress defines env variable name for sp operator address
+	SpOperatorAddress = "SP_OPERATOR_PUB_KEY"
+	// SpSignerAPIKey defines env variable for signer api key
+	SpSignerAPIKey = "SIGNER_API_KEY"
+	// SpOperatorPrivKey defines env variable name for sp operator priv key
+	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
+	// SpFundingPrivKey defines env variable name for sp funding priv key
+	SpFundingPrivKey = "SIGNER_FUNDING_PRIV_KEY"
+	// SpApprovalPrivKey defines env variable name for sp approval priv key
+	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
+	// SpSealPrivKey defines env variable name for sp seal priv key
+	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
 )
 
 // define cache size

@@ -41,6 +41,9 @@ func NewUploaderService(config *UploaderConfig) (*Uploader, error) {
 		return nil, err
 	}
 	stone, err := stoneclient.NewStoneNodeClient(config.StoneNodeGrpcAddress)
+	if err != nil {
+		return nil, err
+	}
 	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
 	if err != nil {
 		return nil, err

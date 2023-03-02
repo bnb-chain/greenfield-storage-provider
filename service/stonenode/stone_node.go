@@ -135,7 +135,7 @@ func (node *StoneNode) EncodeReplicateSegments(
 				return
 			}
 			if rType == storagetypes.REDUNDANCY_EC_TYPE {
-				enodeData, err := redundancy.EncodeRawSegment(segmentData,
+				encodeData, err := redundancy.EncodeRawSegment(segmentData,
 					int(params.GetRedundantDataChunkNum()),
 					int(params.GetRedundantParityChunkNum()))
 				if err != nil {
@@ -144,7 +144,7 @@ func (node *StoneNode) EncodeReplicateSegments(
 				}
 				mux.Lock()
 				defer mux.Unlock()
-				for idx, ec := range enodeData {
+				for idx, ec := range encodeData {
 					data[idx][segIdx] = ec
 				}
 			} else {

@@ -5,9 +5,10 @@ import (
 	"io"
 	"sync/atomic"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 const StreamResultSize = 10
@@ -41,7 +42,7 @@ func (entry SegmentEntry) Error() error {
 }
 
 // PayloadStream implement a one-way data flow, writes bytes of any size
-// read the fixed data size with with paylaod meta data
+// read the fixed data size with payload metadata
 type PayloadStream struct {
 	objectId       uint64
 	replicaIdx     uint32

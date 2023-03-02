@@ -38,19 +38,19 @@ var DefaultSignerChainConfig = &SignerConfig{
 }
 
 func overrideConfigFromEnv(config *SignerConfig) {
-	if val, ok := os.LookupEnv(model.SPSignerAPIKey); ok {
+	if val, ok := os.LookupEnv(model.SpSignerAPIKey); ok {
 		config.APIKey = val
 	}
-	if val, ok := os.LookupEnv(model.SPOperatorPrivKey); ok {
+	if val, ok := os.LookupEnv(model.SpOperatorPrivKey); ok {
 		config.GreenfieldChainConfig.OperatorPrivateKey = val
 	}
-	if val, ok := os.LookupEnv(model.SPFundingPrivKey); ok {
+	if val, ok := os.LookupEnv(model.SpFundingPrivKey); ok {
 		config.GreenfieldChainConfig.FundingPrivateKey = val
 	}
-	if val, ok := os.LookupEnv(model.SPApprovalPrivKey); ok {
+	if val, ok := os.LookupEnv(model.SpApprovalPrivKey); ok {
 		config.GreenfieldChainConfig.ApprovalPrivateKey = val
 	}
-	if val, ok := os.LookupEnv(model.SPSealPrivKey); ok {
+	if val, ok := os.LookupEnv(model.SpSealPrivKey); ok {
 		config.GreenfieldChainConfig.SealPrivateKey = val
 	}
 }

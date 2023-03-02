@@ -11,9 +11,9 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var _ lifecycle.Service = &SignerServer{}

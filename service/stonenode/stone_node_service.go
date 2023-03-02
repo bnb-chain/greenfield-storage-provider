@@ -63,7 +63,6 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 		}
 		node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
 		log.CtxInfow(ctx, "seal object on chain", "success", success)
-		return
 	}()
 
 	params, err := node.spDB.GetStorageParams()
@@ -81,13 +80,13 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 		log.CtxErrorw(ctx, "failed to encode payload", "error", err)
 		return
 	}
-	spList, err := node.spDB.FetchAllSPWithoutOwnSP(sptypes.STATUS_IN_SERVICE)
+	spList, err := node.spDB.FetchAllSpWithoutOwnSp(sptypes.STATUS_IN_SERVICE)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
 		return
 	}
 
-	sealMsg.Operator = node.config.SPOperatorAddress
+	sealMsg.Operator = node.config.SpOperatorAddress
 	sealMsg.BucketName = objectInfo.GetBucketName()
 	sealMsg.ObjectName = objectInfo.GetObjectName()
 	sealMsg.SecondarySpAddresses = make([]string, replicates)
@@ -167,13 +166,10 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 }
 
 // QueryReplicatingObject query a replicating object information by object id
-func (node *StoneNode) QueryReplicatingObject(
-	ctx context.Context,
-	req *types.QueryReplicatingObjectRequest) (
+func (node *StoneNode) QueryReplicatingObject(ctx context.Context, req *types.QueryReplicatingObjectRequest) (
 	resp *types.QueryReplicatingObjectResponse, err error) {
-	ctx = log.Context(ctx, req)
-	objectID := req.GetObjectId()
-	val, ok := node.cache.Get(objectID)
+	objectId := req.GetObjectId()
+	val, ok := node.cache.Get(objectId)
 	if !ok {
 		err = merrors.ErrCacheMiss
 		return

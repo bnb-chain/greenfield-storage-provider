@@ -93,7 +93,7 @@ func (reqContext *requestContext) verifySignature() (sdk.AccAddress, error) {
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
 		return reqContext.verifySignatureV2(requestSignature[len(v2SignaturePrefix):])
 	}
-	return nil, errors.ErrUnsupportSignType
+	return nil, errors.ErrUnsupportedSignType
 }
 
 // verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed
@@ -253,7 +253,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 			reqContext.bucketName,
 			reqContext.objectName,
 			addr.String(),
-			g.config.SPOperatorAddress)
+			g.config.SpOperatorAddress)
 		if err != nil {
 			log.Errorw("failed to auth download",
 				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName,

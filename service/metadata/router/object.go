@@ -1,9 +1,10 @@
 package router
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/util/https"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/gin-gonic/gin"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util/https"
 )
 
 func NewBucketNameWrapper(f func(ctx *gin.Context, bucketName string) (resp interface{}, herr *https.Error)) https.Handler {

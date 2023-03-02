@@ -30,7 +30,7 @@ func (s *SQLDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 		IntegrityHash: integrityHash,
 		Signature:     signature,
 	}
-	meta.Checksum, err = util.StringToBytesSlice(queryReturn.Checksum)
+	meta.Checksum, err = util.StringToBytesSlice(queryReturn.PieceHashList)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (s *SQLDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 func (s *SQLDB) SetObjectIntegrity(meta *IntegrityMeta) error {
 	insertIntegrityMetaRecord := &IntegrityMetaTable{
 		ObjectID:      meta.ObjectID,
-		Checksum:      util.BytesSliceToString(meta.Checksum),
+		PieceHashList: util.BytesSliceToString(meta.Checksum),
 		IntegrityHash: hex.EncodeToString(meta.IntegrityHash),
 		Signature:     hex.EncodeToString(meta.Signature),
 	}

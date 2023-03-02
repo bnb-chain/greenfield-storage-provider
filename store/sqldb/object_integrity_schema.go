@@ -5,7 +5,7 @@ import msqldb "github.com/bnb-chain/greenfield-storage-provider/model/sqldb"
 // IntegrityMetaTable table schema
 type IntegrityMetaTable struct {
 	ObjectID      uint64 `gorm:"primary_key"`
-	Checksum      string
+	PieceHashList string
 	IntegrityHash string
 	Signature     string
 }
