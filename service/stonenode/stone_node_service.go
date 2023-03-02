@@ -92,6 +92,7 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 	sealMsg.ObjectName = objectInfo.GetObjectName()
 	sealMsg.SecondarySpAddresses = make([]string, replicates)
 	sealMsg.SecondarySpSignatures = make([][]byte, replicates)
+	objectInfo.SecondarySpAddresses = make([]string, replicates)
 
 	var mux sync.Mutex
 	getSpFunc := func() (*sptypes.StorageProvider, error) {
@@ -154,6 +155,8 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 				sealMsg.GetSecondarySpSignatures()[rIdx] = signature
 				processInfo.SegmentInfos[rIdx].Signature = signature
 				processInfo.SegmentInfos[rIdx].IntegrityHash = integrityHash
+				objectInfo.SecondarySpAddresses[rIdx] = sp.GetOperator().String()
+				node.spDB.SetObjectInfo(objectInfo.Id.Uint64(), objectInfo)
 				node.cache.Add(objectInfo.Id.Uint64(), processInfo)
 				log.CtxInfow(ctx, "success to sync payload to sp",
 					"sp", sp.GetOperator(), "endpoint", sp.GetEndpoint(), "replica_idx", rIdx)
