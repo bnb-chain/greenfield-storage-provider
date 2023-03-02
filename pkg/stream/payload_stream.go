@@ -27,9 +27,9 @@ func (entry SegmentEntry) ID() uint64 {
 
 func (entry SegmentEntry) Key() string {
 	if entry.redundancyType == storagetypes.REDUNDANCY_EC_TYPE {
-		return piecestore.EncodeSegmentPieceKey(entry.objectId, entry.segmentIdx)
+		return piecestore.EncodeECPieceKey(entry.objectId, entry.replicaIdx, entry.segmentIdx)
 	}
-	return piecestore.EncodeECPieceKey(entry.objectId, entry.replicaIdx, entry.segmentIdx)
+	return piecestore.EncodeSegmentPieceKey(entry.objectId, entry.segmentIdx)
 }
 
 func (entry SegmentEntry) Data() []byte {

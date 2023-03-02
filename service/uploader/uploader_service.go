@@ -56,6 +56,13 @@ func (uploader *Uploader) UploadObject(
 		traceInfo.IntegrityHash = integrityHash
 		traceInfo.Signature = signature
 		uploader.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
+		err = uploader.stone.ReplicateObject(context.Background(), traceInfo.GetObjectInfo())
+		if err != nil {
+			log.Errorw("failed to notify stone node to replicate object", "error", err)
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
+			return
+		}
 		err = stream.SendAndClose(resp)
 		pstream.Close()
 		uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
@@ -93,6 +100,8 @@ func (uploader *Uploader) UploadObject(
 				traceInfo.ObjectInfo = req.GetObjectInfo()
 				uploader.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
 				uploader.spDB.CreateUploadJob(req.GetObjectInfo())
+				uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+					servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING)
 				init = false
 			}
 			pstream.StreamWrite(req.GetPayload())
@@ -101,8 +110,6 @@ func (uploader *Uploader) UploadObject(
 
 	// read payload from stream, the payload is spilt to segment size
 	for {
-		uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
-			servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING)
 		select {
 		case entry := <-pstream.AsyncStreamRead():
 			log.Debugw("read segment from stream", "segment_key", entry.Key(), "error", entry.Error())
