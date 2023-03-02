@@ -12,6 +12,6 @@ type SQLDBConfig struct {
 var DefaultSQLDBConfig = &SQLDBConfig{
 	User:     "root",
 	Passwd:   "test_pwd",
-	Address:  "local:3306",
+	Address:  "localhost:3306",
 	Database: "storage_provider_db",
 }

@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var _ types.DownloaderServiceServer = &Downloader{}

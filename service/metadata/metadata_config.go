@@ -6,10 +6,10 @@ import (
 
 type MetadataConfig struct {
 	Address    string
-	SPDBConfig *config.SQLDBConfig
+	SpDBConfig *config.SQLDBConfig
 }
 
 var DefaultMetadataConfig = &MetadataConfig{
 	Address:    "127.0.0.1:9733",
-	SPDBConfig: config.DefaultSQLDBConfig,
+	SpDBConfig: config.DefaultSQLDBConfig,
 }

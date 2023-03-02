@@ -283,7 +283,7 @@ func TestS3_ListSuccess(t *testing.T) {
 func TestS3_ListAll(t *testing.T) {
 	store := setupS3Test(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
-	assert.Equal(t, merrors.ErrUnsupportMethod, err)
+	assert.Equal(t, merrors.ErrUnsupportedMethod, err)
 }
 
 type mockS3ClientError struct {

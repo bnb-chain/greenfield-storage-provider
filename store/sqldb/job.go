@@ -14,7 +14,7 @@ import (
 )
 
 // CreateUploadJob create JobTable record and ObjectTable record; use JobID field for association
-func (s *SQLDB) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicetypes.JobContext, error) {
+func (s *SpDBImpl) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicetypes.JobContext, error) {
 	insertJobRecord := &JobTable{
 		JobType:      int32(servicetypes.JobType_JOB_TYPE_UPLOAD_OBJECT),
 		JobState:     int32(servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED),
@@ -39,8 +39,8 @@ func (s *SQLDB) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicety
 		ObjectStatus:         int32(objectInfo.GetObjectStatus()),
 		RedundancyType:       int32(objectInfo.GetRedundancyType()),
 		SourceType:           int32(objectInfo.GetSourceType()),
-		Checksum:             util.BytesSliceToString(objectInfo.GetChecksums()),
-		SecondarySPAddresses: util.JoinWithComma(objectInfo.GetSecondarySpAddresses()),
+		SpIntegrityHash:      util.BytesSliceToString(objectInfo.GetChecksums()),
+		SecondarySpAddresses: util.JoinWithComma(objectInfo.GetSecondarySpAddresses()),
 	}
 	result = s.db.Create(insertObjectRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -58,7 +58,7 @@ func (s *SQLDB) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicety
 }
 
 // UpdateJobState update JobTable record's state
-func (s *SQLDB) UpdateJobState(objectID uint64, state servicetypes.JobState) error {
+func (s *SpDBImpl) UpdateJobState(objectID uint64, state servicetypes.JobState) error {
 	queryObjectReturn := &ObjectTable{}
 	result := s.db.First(queryObjectReturn, "object_id = ?", objectID)
 	if result.Error != nil {
@@ -79,7 +79,7 @@ func (s *SQLDB) UpdateJobState(objectID uint64, state servicetypes.JobState) err
 }
 
 // GetJobByID query JobTable by jobID and convert to service/types.JobContext
-func (s *SQLDB) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
+func (s *SpDBImpl) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
 	queryReturn := &JobTable{}
 	result := s.db.First(queryReturn, "job_id = ?", jobID)
 	if result.Error != nil {
@@ -95,8 +95,8 @@ func (s *SQLDB) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
 	}, nil
 }
 
-// GetJobByObjectID query JobTable by jpbID and convert to service/types.JobContext
-func (s *SQLDB) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error) {
+// GetJobByObjectID query JobTable by jobID and convert to service/types.JobContext
+func (s *SpDBImpl) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error) {
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
@@ -118,13 +118,13 @@ func (s *SQLDB) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, err
 }
 
 // GetObjectInfo query ObjectTable by objectID and convert to storage/types.ObjectInfo.
-func (s *SQLDB) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error) {
+func (s *SpDBImpl) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error) {
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query object table: %s", result.Error)
 	}
-	checksums, err := util.StringToBytesSlice(queryReturn.Checksum)
+	checksums, err := util.StringToBytesSlice(queryReturn.SpIntegrityHash)
 	if err != nil {
 		return nil, err
 	}
@@ -141,14 +141,13 @@ func (s *SQLDB) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error)
 		RedundancyType:       storagetypes.RedundancyType(queryReturn.RedundancyType),
 		SourceType:           storagetypes.SourceType(queryReturn.SourceType),
 		Checksums:            checksums,
-		SecondarySpAddresses: strings.Split(queryReturn.SecondarySPAddresses, ","),
+		SecondarySpAddresses: strings.Split(queryReturn.SecondarySpAddresses, ","),
 	}, nil
 }
 
 // SetObjectInfo set ObjectTable's record by objectID
-func (s *SQLDB) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error {
+func (s *SpDBImpl) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error {
 	queryReturn := &ObjectTable{}
-	// result := s.db.Where("object_id = ?", objectID).Find(queryReturn)
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	isNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
 	if result.Error != nil && !isNotFound {
@@ -167,8 +166,8 @@ func (s *SQLDB) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectIn
 		ObjectStatus:         int32(objectInfo.GetObjectStatus()),
 		RedundancyType:       int32(objectInfo.GetRedundancyType()),
 		SourceType:           int32(objectInfo.GetSourceType()),
-		Checksum:             util.BytesSliceToString(objectInfo.GetChecksums()),
-		SecondarySPAddresses: util.JoinWithComma(objectInfo.GetSecondarySpAddresses()),
+		SpIntegrityHash:      util.BytesSliceToString(objectInfo.GetChecksums()),
+		SecondarySpAddresses: util.JoinWithComma(objectInfo.GetSecondarySpAddresses()),
 	}
 	if isNotFound {
 		// if record is not found, insert a new record

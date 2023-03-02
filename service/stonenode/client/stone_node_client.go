@@ -47,8 +47,8 @@ func (client *StoneNodeClient) ReplicateObject(ctx context.Context, object *stor
 }
 
 // QueryReplicatingObject query a replicating object payload information by object id
-func (client *StoneNodeClient) QueryReplicatingObject(ctx context.Context, objectId uint64) (*servicetype.ReplicateSegmentInfo, error) {
-	resp, err := client.node.QueryReplicatingObject(ctx, &types.QueryReplicatingObjectRequest{ObjectId: objectId})
+func (client *StoneNodeClient) QueryReplicatingObject(ctx context.Context, objectID uint64) (*servicetype.ReplicateSegmentInfo, error) {
+	resp, err := client.node.QueryReplicatingObject(ctx, &types.QueryReplicatingObjectRequest{ObjectId: objectID})
 	if err != nil {
 		return nil, err
 	}

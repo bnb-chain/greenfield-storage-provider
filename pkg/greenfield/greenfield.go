@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-go-sdk/client/chain"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
@@ -32,7 +33,7 @@ func (client *GreenfieldClient) GnfdCompositeClient() *chain.GnfdCompositeClient
 	return client.gnfdCompositeClient
 }
 
-// Greenfield encapsulation of greenfiled chain go sdk, support for more query request
+// Greenfield encapsulation of greenfield chain go sdk, support for more query request
 type Greenfield struct {
 	config        *GreenfieldChainConfig
 	client        *GreenfieldClient
@@ -49,9 +50,9 @@ func NewGreenfield(cfg *GreenfieldChainConfig) (*Greenfield, error) {
 	var clients []*GreenfieldClient
 	for _, config := range cfg.NodeAddr {
 		client := &GreenfieldClient{
-			Provider: config.GreenfieldAddrs,
-			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddrs, config.TendermintAddrs, cfg.ChainID,
-				chain.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials()))),
+			Provider: config.GreenfieldAddresses,
+			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddresses, config.TendermintAddresses,
+				cfg.ChainID, chain.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials()))),
 		}
 		client.gnfdCompositeClient, _ = client.gnfdCompositeClients.GetClient()
 		clients = append(clients, client)

@@ -50,10 +50,9 @@ func (client *SyncerClient) SyncObject(
 }
 
 // QuerySyncingObject a syncing object info by object id
-func (client *SyncerClient) QuerySyncingObject(
-	ctx context.Context, objectId uint64) (*servicetypes.SegmentInfo, error) {
+func (client *SyncerClient) QuerySyncingObject(ctx context.Context, objectID uint64) (*servicetypes.SegmentInfo, error) {
 	req := &types.QuerySyncingObjectRequest{
-		ObjectId: objectId,
+		ObjectId: objectID,
 	}
 	resp, err := client.syncer.QuerySyncingObject(ctx, req)
 	if err != nil {

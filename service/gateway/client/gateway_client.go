@@ -38,10 +38,7 @@ func NewGatewayClient(address string) (*GatewayClient, error) {
 	return client, nil
 }
 
-func (gatewayClient *GatewayClient) SyncPieceData(
-	objectInfo *types.ObjectInfo,
-	replicateIdx uint32,
-	segmentSize uint32,
+func (gatewayClient *GatewayClient) SyncPieceData(objectInfo *types.ObjectInfo, replicateIdx uint32, segmentSize uint32,
 	pieceData [][]byte) (integrityHash []byte, signature []byte, err error) {
 	marshalObjectInfo := hex.EncodeToString(types.ModuleCdc.MustMarshalJSON(objectInfo))
 	marshalPieceData, err := json.Marshal(pieceData)

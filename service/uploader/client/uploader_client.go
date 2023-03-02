@@ -37,12 +37,10 @@ func (client *UploaderClient) Close() error {
 }
 
 // QueryUploadingObject query an uploading object info with object id
-func (client *UploaderClient) QueryUploadingObject(
-	ctx context.Context,
-	objectId uint64,
-	opts ...grpc.CallOption) (*servicetypes.SegmentInfo, error) {
+func (client *UploaderClient) QueryUploadingObject(ctx context.Context, objectID uint64, opts ...grpc.CallOption) (
+	*servicetypes.SegmentInfo, error) {
 	resp, err := client.uploader.QueryUploadingObject(ctx,
-		&types.QueryUploadingObjectRequest{ObjectId: objectId}, opts...)
+		&types.QueryUploadingObjectRequest{ObjectId: objectID}, opts...)
 	if err != nil {
 		return nil, err
 	}

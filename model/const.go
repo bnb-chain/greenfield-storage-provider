@@ -1,43 +1,70 @@
 package model
 
+import "strings"
+
 // define storage provider include service
-const (
+var (
 	// GatewayService defines the name of gateway service
-	GatewayService = "Gateway"
+	GatewayService = strings.ToLower("Gateway")
 	// UploaderService defines the name of uploader service
-	UploaderService = "Uploader"
+	UploaderService = strings.ToLower("Uploader")
 	// DownloaderService defines the name of downloader service
-	DownloaderService = "Downloader"
+	DownloaderService = strings.ToLower("Downloader")
 	// ChallengeService defines the name of challenge service
-	ChallengeService = "Challenge"
+	ChallengeService = strings.ToLower("Challenge")
 	// StoneNodeService defines the name of stone node service
-	StoneNodeService = "StoneNode"
+	StoneNodeService = strings.ToLower("StoneNode")
 	// SyncerService defines the name of syncer service
-	SyncerService = "Syncer"
+	SyncerService = strings.ToLower("Syncer")
 	// SignerService defines the name of signer service
-	SignerService = "Signer"
+	SignerService = strings.ToLower("Signer")
 	// MetadataService defines the name of metadata service
-	MetadataService = "Metadata"
+	MetadataService = strings.ToLower("Metadata")
 	// BlockSyncerService defines the name of block sync service
-	BlockSyncerService = "BlockSyncer"
+	BlockSyncerService = strings.ToLower("BlockSyncer")
 )
 
-// define storage provider service gGRPC default address
+// SpServiceDesc defines the service description in storage provider
+var SpServiceDesc = map[string]string{
+	GatewayService:     "Entrance for external user access",
+	UploaderService:    "Upload object to the backend",
+	DownloaderService:  "Download object from the backend and statistical read traffic",
+	ChallengeService:   "Provides the ability to query the integrity hash",
+	StoneNodeService:   "The smallest unit of background task execution",
+	SyncerService:      "Receive object from other storage provider and store",
+	SignerService:      "Sign the transaction and broadcast to chain",
+	MetadataService:    "Provides the ability to query meta data",
+	BlockSyncerService: "Syncer block data to db",
+}
+
+// define storage provider service gRPC default address
 const (
-	// GatewayHttpAddress default Http address of gateway
-	GatewayHttpAddress = "localhost:9033"
-	// UploaderGrpcAddress default gGRPC address of uploader
-	UploaderGrpcAddress = "localhost:9133"
-	// DownloaderGrpcAddress default gGRPC address of downloader
-	DownloaderGrpcAddress = "localhost:9233"
-	// ChallengeGrpcAddress default gGRPC address of challenge
-	ChallengeGrpcAddress = "localhost:9333"
-	// StoneNodeGrpcAddress default gGRPC address of stone node
-	StoneNodeGrpcAddress = "localhost:9433"
-	// SyncerGrpcAddress default gGRPC address of syncer
-	SyncerGrpcAddress = "localhost:9533"
-	// SignerGrpcAddress default gGRPC address of signer
-	SignerGrpcAddress = "localhost:9633"
+	// GatewayHTTPAddress default HTTP address of gateway
+	GatewayHTTPAddress = "localhost:9033"
+	// UploaderGRPCAddress default gRPC address of uploader
+	UploaderGRPCAddress = "localhost:9133"
+	// DownloaderGRPCAddress default gRPC address of downloader
+	DownloaderGRPCAddress = "localhost:9233"
+	// ChallengeGRPCAddress default gRPC address of challenge
+	ChallengeGRPCAddress = "localhost:9333"
+	// StoneNodeGRPCAddress default gRPC address of stone node
+	StoneNodeGRPCAddress = "localhost:9433"
+	// SyncerGRPCAddress default gRPC address of syncer
+	SyncerGRPCAddress = "localhost:9533"
+	// SignerGRPCAddress default gRPC address of signer
+	SignerGRPCAddress = "localhost:9633"
+)
+
+// define greenfield chain default address
+const (
+	// GreenfieldAddress default greenfield chain address
+	GreenfieldAddress = "localhost:9090"
+	// TendermintAddress default Tendermint address
+	TendermintAddress = "http://localhost:26750"
+	// GreenfieldChainID default greenfield chainID
+	GreenfieldChainID = "greenfield_9000-121"
+	// WhiteListCIDR default whitelist CIDR
+	WhiteListCIDR = "127.0.0.1/32"
 )
 
 // environment constants
@@ -58,6 +85,8 @@ const (
 
 	// SpOperatorAddress defines env variable name for sp operator address
 	SpOperatorAddress = "SP_OPERATOR_PUB_KEY"
+	// SpSignerAPIKey defines env variable for signer api key
+	SpSignerAPIKey = "SIGNER_API_KEY"
 	// SpOperatorPrivKey defines env variable name for sp operator priv key
 	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
 	// SpFundingPrivKey defines env variable name for sp funding priv key

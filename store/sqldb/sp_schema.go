@@ -1,7 +1,7 @@
 package sqldb
 
-// SPInfoTable table schema
-type SPInfoTable struct {
+// SpInfoTable table schema
+type SpInfoTable struct {
 	OperatorAddress string `gorm:"primary_key"`
 	IsOwn           bool   `gorm:"primary_key"`
 	FundingAddress  string
@@ -17,9 +17,9 @@ type SPInfoTable struct {
 	Details         string
 }
 
-// TableName is used to set StorageProviderInfoTable Schema's table name in database
-func (SPInfoTable) TableName() string {
-	return SPInfoTableName
+// TableName is used to set SpInfoTable Schema's table name in database
+func (SpInfoTable) TableName() string {
+	return SpInfoTableName
 }
 
 // StorageParamsTable table schema

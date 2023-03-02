@@ -8,12 +8,13 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	syncertypes "github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {

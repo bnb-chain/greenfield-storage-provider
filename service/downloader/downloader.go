@@ -37,7 +37,7 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 		log.Errorw("failed to create chain client", "err", err)
 		return nil, err
 	}
-	spDB, err := sqldb.NewSQLStore(cfg.SPDBConfig)
+	spDB, err := sqldb.NewSpDB(cfg.SpDBConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (downloader *Downloader) Start(ctx context.Context) error {
 	errCh := make(chan error)
 
 	go func(errCh chan error) {
-		lis, err := net.Listen("tcp", downloader.cfg.GrpcAddress)
+		lis, err := net.Listen("tcp", downloader.cfg.GRPCAddress)
 		errCh <- err
 		if err != nil {
 			log.Errorw("syncer listen failed", "error", err)
