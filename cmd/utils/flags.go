@@ -19,11 +19,11 @@ var (
 	DBUserFlag = cli.StringFlag{
 		Name:   "user",
 		Usage:  "DB user name",
-		EnvVar: model.SpDBUser,
+		EnvVar: model.SPDBUser,
 	}
 	DBPasswordFlag = cli.StringFlag{
 		Name:   "password",
 		Usage:  "DB password",
-		EnvVar: model.SpDBPasswd,
+		EnvVar: model.SPDBPasswd,
 	}
 )

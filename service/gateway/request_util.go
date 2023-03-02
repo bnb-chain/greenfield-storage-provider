@@ -253,7 +253,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 			reqContext.bucketName,
 			reqContext.objectName,
 			addr.String(),
-			g.config.OperatorAddress)
+			g.config.SPOperatorAddress)
 		if err != nil {
 			log.Errorw("failed to auth download",
 				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName,

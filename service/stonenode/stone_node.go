@@ -90,7 +90,7 @@ func (node *StoneNode) Stop(ctx context.Context) error {
 }
 
 func (node *StoneNode) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", node.config.GrpcAddress)
+	lis, err := net.Listen("tcp", node.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("fail to listen", "err", err)

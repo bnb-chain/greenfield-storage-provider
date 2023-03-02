@@ -23,7 +23,7 @@ func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 		log.Errorw("create storage error", "error", err)
 		return nil, err
 	}
-	log.Debugf("pieceStore is running", "Storage", pieceConfig.Store.Storage,
+	log.Debugw("pieceStore is running", "Storage", pieceConfig.Store.Storage,
 		"shards", pieceConfig.Shards)
 
 	return &PieceStore{blob}, nil

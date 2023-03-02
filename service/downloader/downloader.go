@@ -60,7 +60,7 @@ func (downloader *Downloader) Start(ctx context.Context) error {
 	errCh := make(chan error)
 
 	go func(errCh chan error) {
-		lis, err := net.Listen("tcp", downloader.cfg.GrpcAddress)
+		lis, err := net.Listen("tcp", downloader.cfg.GRPCAddress)
 		errCh <- err
 		if err != nil {
 			log.Errorw("syncer listen failed", "error", err)

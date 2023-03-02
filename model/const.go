@@ -22,22 +22,22 @@ const (
 	BlockSyncerService = "BlockSyncer"
 )
 
-// define storage provider service gGRPC default address
+// define storage provider service default address
 const (
-	// GatewayHttpAddress default Http address of gateway
-	GatewayHttpAddress = "localhost:9033"
-	// UploaderGrpcAddress default gGRPC address of uploader
-	UploaderGrpcAddress = "localhost:9133"
-	// DownloaderGrpcAddress default gGRPC address of downloader
-	DownloaderGrpcAddress = "localhost:9233"
-	// ChallengeGrpcAddress default gGRPC address of challenge
-	ChallengeGrpcAddress = "localhost:9333"
-	// StoneNodeGrpcAddress default gGRPC address of stone node
-	StoneNodeGrpcAddress = "localhost:9433"
-	// SyncerGrpcAddress default gGRPC address of syncer
-	SyncerGrpcAddress = "localhost:9533"
-	// SignerGrpcAddress default gGRPC address of signer
-	SignerGrpcAddress = "localhost:9633"
+	// GatewayHTTPAddress default HTTP address of gateway
+	GatewayHTTPAddress = "localhost:9033"
+	// UploaderGRPCAddress default gRPC address of uploader
+	UploaderGRPCAddress = "localhost:9133"
+	// DownloaderGRPCAddress default gRPC address of downloader
+	DownloaderGRPCAddress = "localhost:9233"
+	// ChallengeGRPCAddress default gRPC address of challenge
+	ChallengeGRPCAddress = "localhost:9333"
+	// StoneNodeGRPCAddress default gRPC address of stone node
+	StoneNodeGRPCAddress = "localhost:9433"
+	// SyncerGRPCAddress default gRPC address of syncer
+	SyncerGRPCAddress = "localhost:9533"
+	// SignerGRPCAddress default gRPC address of signer
+	SignerGRPCAddress = "localhost:9633"
 )
 
 // environment constants
@@ -51,21 +51,23 @@ const (
 	// AWSSessionToken defines env variable name for aws session token
 	AWSSessionToken = "AWS_SESSION_TOKEN"
 
-	// SpDBUser defines env variable name for sp db user name
-	SpDBUser = "SP_DB_USER"
-	// SpDBPasswd defines env variable name for sp db user passwd
-	SpDBPasswd = "SP_DB_PASSWORD"
+	// SPDBUser defines env variable name for sp db user name
+	SPDBUser = "SP_DB_USER"
+	// SPDBPasswd defines env variable name for sp db user passwd
+	SPDBPasswd = "SP_DB_PASSWORD"
 
-	// SpOperatorAddress defines env variable name for sp operator address
-	SpOperatorAddress = "SP_OPERATOR_PUB_KEY"
-	// SpOperatorPrivKey defines env variable name for sp operator priv key
-	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
-	// SpFundingPrivKey defines env variable name for sp funding priv key
-	SpFundingPrivKey = "SIGNER_FUNDING_PRIV_KEY"
-	// SpApprovalPrivKey defines env variable name for sp approval priv key
-	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
-	// SpSealPrivKey defines env variable name for sp seal priv key
-	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
+	// SPOperatorAddress defines env variable name for sp operator address
+	SPOperatorAddress = "SP_OPERATOR_PUB_KEY"
+	// SPSignerAPIKey defines env variable for signer api key
+	SPSignerAPIKey = "SIGNER_API_KEY"
+	// SPOperatorPrivKey defines env variable name for sp operator priv key
+	SPOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
+	// SPFundingPrivKey defines env variable name for sp funding priv key
+	SPFundingPrivKey = "SIGNER_FUNDING_PRIV_KEY"
+	// SPApprovalPrivKey defines env variable name for sp approval priv key
+	SPApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
+	// SPSealPrivKey defines env variable name for sp seal priv key
+	SPSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
 )
 
 // define cache size

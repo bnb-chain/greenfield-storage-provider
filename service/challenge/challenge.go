@@ -52,7 +52,7 @@ func (challenge *Challenge) Start(ctx context.Context) error {
 	errCh := make(chan error)
 
 	go func(errCh chan error) {
-		lis, err := net.Listen("tcp", challenge.config.GrpcAddress)
+		lis, err := net.Listen("tcp", challenge.config.GRPCAddress)
 		errCh <- err
 		if err != nil {
 			log.Errorw("challenge listen failed", "error", err)

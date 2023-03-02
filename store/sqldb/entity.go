@@ -63,7 +63,7 @@ func GetNowTimeUnix() int64 {
 	return time.Now().Unix()
 }
 
-// TimeUnix2Time convent a second timestamp to time.Time
+// TimeUnix2Time convert a second timestamp to time.Time
 func TimeUnix2Time(timeUnix int64) time.Time {
 	return time.Unix(timeUnix, 0)
 }

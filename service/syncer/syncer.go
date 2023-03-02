@@ -37,7 +37,7 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	if err != nil {
 		return nil, err
 	}
-	signer, err := signerclient.NewSignerClient(config.SignerGrpcAddress)
+	signer, err := signerclient.NewSignerClient(config.SignerGRPCAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (syncer *Syncer) Stop(ctx context.Context) error {
 }
 
 func (syncer *Syncer) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", syncer.config.GrpcAddress)
+	lis, err := net.Listen("tcp", syncer.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "err", err)

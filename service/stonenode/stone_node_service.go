@@ -87,7 +87,7 @@ func (node *StoneNode) AsyncReplicateObject(ctx context.Context,
 		return
 	}
 
-	sealMsg.Operator = node.config.SpOperatorAddress
+	sealMsg.Operator = node.config.SPOperatorAddress
 	sealMsg.BucketName = objectInfo.GetBucketName()
 	sealMsg.ObjectName = objectInfo.GetObjectName()
 	sealMsg.SecondarySpAddresses = make([]string, replicates)

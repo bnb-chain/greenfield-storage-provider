@@ -10,9 +10,3 @@ const (
 	BucketTrafficTableName = "bucket_traffic"
 	ReadRecordTableName    = "read_record"
 )
-
-// SPDB environment constants
-const (
-	SPDBUser   = "SP_DB_USER"
-	SPDBPasswd = "SP_DB_PASSWORD"
-)

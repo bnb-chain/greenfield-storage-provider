@@ -1,6 +1,10 @@
 package sqldb
 
-import "time"
+import (
+	"time"
+
+	msqldb "github.com/bnb-chain/greenfield-storage-provider/model/sqldb"
+)
 
 // JobTable table schema
 type JobTable struct {
@@ -14,7 +18,7 @@ type JobTable struct {
 
 // TableName is used to set JobTable Schema's table name in database
 func (JobTable) TableName() string {
-	return JobTableName
+	return msqldb.JobTableName
 }
 
 // ObjectTable table schema
@@ -37,5 +41,5 @@ type ObjectTable struct {
 
 // TableName is used to set ObjectTable Schema's table name in database
 func (ObjectTable) TableName() string {
-	return ObjectTableName
+	return msqldb.ObjectTableName
 }

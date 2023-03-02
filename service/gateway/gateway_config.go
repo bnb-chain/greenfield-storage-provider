@@ -6,7 +6,7 @@ import (
 )
 
 type GatewayConfig struct {
-	OperatorAddress          string
+	SPOperatorAddress        string
 	Address                  string
 	Domain                   string
 	UploaderServiceAddress   string
@@ -18,13 +18,13 @@ type GatewayConfig struct {
 }
 
 var DefaultGatewayConfig = &GatewayConfig{
-	OperatorAddress:          model.SpOperatorAddress,
-	Address:                  model.GatewayHttpAddress,
+	SPOperatorAddress:        model.SPOperatorAddress,
+	Address:                  model.GatewayHTTPAddress,
 	Domain:                   "gnfd.nodereal.com",
-	UploaderServiceAddress:   model.UploaderGrpcAddress,
-	DownloaderServiceAddress: model.DownloaderGrpcAddress,
-	SyncerServiceAddress:     model.SyncerGrpcAddress,
-	SignerServiceAddress:     model.SignerGrpcAddress,
-	ChallengeServiceAddress:  model.ChallengeGrpcAddress,
+	UploaderServiceAddress:   model.UploaderGRPCAddress,
+	DownloaderServiceAddress: model.DownloaderGRPCAddress,
+	SyncerServiceAddress:     model.SyncerGRPCAddress,
+	SignerServiceAddress:     model.SignerGRPCAddress,
+	ChallengeServiceAddress:  model.ChallengeGRPCAddress,
 	ChainConfig:              gnfd.DefaultGreenfieldChainConfig,
 }

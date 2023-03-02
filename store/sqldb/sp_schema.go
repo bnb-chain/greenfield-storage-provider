@@ -1,5 +1,7 @@
 package sqldb
 
+import msqldb "github.com/bnb-chain/greenfield-storage-provider/model/sqldb"
+
 // SPInfoTable table schema
 type SPInfoTable struct {
 	OperatorAddress string `gorm:"primary_key"`
@@ -19,7 +21,7 @@ type SPInfoTable struct {
 
 // TableName is used to set StorageProviderInfoTable Schema's table name in database
 func (SPInfoTable) TableName() string {
-	return SPInfoTableName
+	return msqldb.SPInfoTableName
 }
 
 // StorageParamsTable table schema
@@ -33,5 +35,5 @@ type StorageParamsTable struct {
 
 // TableName is used to set StorageParamsTable Schema's table name in database
 func (StorageParamsTable) TableName() string {
-	return StorageParamsTableName
+	return msqldb.StorageParamsTableName
 }

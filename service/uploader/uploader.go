@@ -82,7 +82,7 @@ func (uploader *Uploader) Stop(ctx context.Context) error {
 }
 
 func (uploader *Uploader) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", uploader.config.GrpAddress)
+	lis, err := net.Listen("tcp", uploader.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "err", err)

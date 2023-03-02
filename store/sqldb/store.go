@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -72,10 +73,10 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 
 // loadDBConfigFromEnv load db user and password from env vars
 func loadDBConfigFromEnv(config *config.SQLDBConfig) {
-	if val, ok := os.LookupEnv(SPDBUser); ok {
+	if val, ok := os.LookupEnv(model.SPDBUser); ok {
 		config.User = val
 	}
-	if val, ok := os.LookupEnv(SPDBPasswd); ok {
+	if val, ok := os.LookupEnv(model.SPDBPasswd); ok {
 		config.Passwd = val
 	}
 }
