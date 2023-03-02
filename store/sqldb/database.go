@@ -7,7 +7,7 @@ import (
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 )
 
-// Job interface
+// Job interface which contains job related to object id interface
 type Job interface {
 	// CreateUploadJob create upload job and return job context
 	CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicetypes.JobContext, error)
@@ -22,7 +22,7 @@ type Job interface {
 	// Batch
 }
 
-// Object interface
+// Object interface which contains get and set object info interface
 type Object interface {
 	// GetObjectInfo get object info by object id
 	GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error)

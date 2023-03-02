@@ -19,7 +19,7 @@ type SPInfoTable struct {
 
 // TableName is used to set StorageProviderInfoTable Schema's table name in database
 func (SPInfoTable) TableName() string {
-	return "sp_info"
+	return SPInfoTableName
 }
 
 // StorageParamsTable table schema
@@ -33,5 +33,5 @@ type StorageParamsTable struct {
 
 // TableName is used to set StorageParamsTable Schema's table name in database
 func (StorageParamsTable) TableName() string {
-	return "storage_params"
+	return StorageParamsTableName
 }

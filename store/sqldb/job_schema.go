@@ -14,7 +14,7 @@ type JobTable struct {
 
 // TableName is used to set JobTable Schema's table name in database
 func (JobTable) TableName() string {
-	return "job"
+	return JobTableName
 }
 
 // ObjectTable table schema
@@ -37,5 +37,5 @@ type ObjectTable struct {
 
 // TableName is used to set ObjectTable Schema's table name in database
 func (ObjectTable) TableName() string {
-	return "object"
+	return ObjectTableName
 }

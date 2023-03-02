@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// UpdateAllSP implements SPInfo interface
+// UpdateAllSP update(maybe overwrite) all sp info in db
 func (s *SQLDB) UpdateAllSP(spList []*sptypes.StorageProvider) error {
 	for _, value := range spList {
 		queryReturn := &SPInfoTable{}
@@ -39,6 +39,7 @@ func (s *SQLDB) UpdateAllSP(spList []*sptypes.StorageProvider) error {
 	return nil
 }
 
+// insertNewRecordInSPInfoTable insert a new record in sp info table
 func (s *SQLDB) insertNewRecordInSPInfoTable(sp *sptypes.StorageProvider) error {
 	insertRecord := &SPInfoTable{
 		OperatorAddress: sp.GetOperatorAddress(),
@@ -62,7 +63,7 @@ func (s *SQLDB) insertNewRecordInSPInfoTable(sp *sptypes.StorageProvider) error 
 	return nil
 }
 
-// FetchAllSP implements SPInfo interface
+// FetchAllSP get all sp info
 func (s *SQLDB) FetchAllSP(status ...sptypes.Status) ([]*sptypes.StorageProvider, error) {
 	queryReturn := []SPInfoTable{}
 	if len(status) == 0 {
@@ -102,7 +103,7 @@ func (s *SQLDB) FetchAllSP(status ...sptypes.Status) ([]*sptypes.StorageProvider
 	return records, nil
 }
 
-// FetchAllSPWithoutOwnSP implements SPInfo interface
+// FetchAllSPWithoutOwnSP get all spp info without own sp info, own sp is identified by is_own field in db
 func (s *SQLDB) FetchAllSPWithoutOwnSP(status ...sptypes.Status) ([]*sptypes.StorageProvider, error) {
 	ownSP, err := s.GetOwnSPInfo()
 	if err != nil {
@@ -147,7 +148,7 @@ func (s *SQLDB) FetchAllSPWithoutOwnSP(status ...sptypes.Status) ([]*sptypes.Sto
 	return records, nil
 }
 
-// GetSPByAddress implement SPInfo interface
+// GetSPByAddress query sp info in db by address and address type
 func (s *SQLDB) GetSPByAddress(address string, addressType SPAddressType) (*sptypes.StorageProvider, error) {
 	condition, err := getAddressCondition(addressType)
 	if err != nil {
@@ -176,6 +177,7 @@ func (s *SQLDB) GetSPByAddress(address string, addressType SPAddressType) (*spty
 	}, nil
 }
 
+// getAddressCondition return different condition by address type
 func getAddressCondition(addressType SPAddressType) (string, error) {
 	var condition string
 	switch addressType {
@@ -193,7 +195,7 @@ func getAddressCondition(addressType SPAddressType) (string, error) {
 	return condition, nil
 }
 
-// // GetSPByEndpoint implement SPInfo interface
+// // GetSPByEndpoint query sp info by endpoint
 func (s *SQLDB) GetSPByEndpoint(endpoint string) (*sptypes.StorageProvider, error) {
 	queryReturn := &SPInfoTable{}
 	result := s.db.First(queryReturn, "endpoint = ? and is_own = false", endpoint)
@@ -218,7 +220,7 @@ func (s *SQLDB) GetSPByEndpoint(endpoint string) (*sptypes.StorageProvider, erro
 	}, nil
 }
 
-// GetOwnSPInfo implements SPInfo interface
+// GetOwnSPInfo query own sp info in db
 func (s *SQLDB) GetOwnSPInfo() (*sptypes.StorageProvider, error) {
 	queryReturn := &SPInfoTable{}
 	result := s.db.First(queryReturn, "is_own = true")
@@ -243,7 +245,7 @@ func (s *SQLDB) GetOwnSPInfo() (*sptypes.StorageProvider, error) {
 	}, nil
 }
 
-// SetOwnSPInfo implements SPInfo interface
+// SetOwnSPInfo set(maybe overwrite) own sp info to db
 func (s *SQLDB) SetOwnSPInfo(sp *sptypes.StorageProvider) error {
 	_, err := s.GetOwnSPInfo()
 	isNotFound := strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error())
@@ -283,7 +285,7 @@ func (s *SQLDB) SetOwnSPInfo(sp *sptypes.StorageProvider) error {
 	}
 }
 
-// GetStorageParams implements StorageParam interface
+// GetStorageParams query storage params in db
 func (s *SQLDB) GetStorageParams() (*storagetypes.Params, error) {
 	queryReturn := &StorageParamsTable{}
 	result := s.db.Last(queryReturn)
@@ -298,7 +300,7 @@ func (s *SQLDB) GetStorageParams() (*storagetypes.Params, error) {
 	}, nil
 }
 
-// SetStorageParams implements StorageParam interface
+// SetStorageParams set(maybe overwrite) storage params to db
 func (s *SQLDB) SetStorageParams(params *storagetypes.Params) error {
 	queryReturn := &StorageParamsTable{}
 	result := s.db.Last(queryReturn)

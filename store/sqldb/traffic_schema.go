@@ -17,7 +17,7 @@ type BucketTrafficTable struct {
 
 // TableName is used to set BucketTraffic Schema's table name in database
 func (BucketTrafficTable) TableName() string {
-	return "bucket_traffic"
+	return BucketTrafficTableName
 }
 
 // ReadRecordTable table schema
@@ -36,5 +36,5 @@ type ReadRecordTable struct {
 
 // TableName is used to set ReadRecord Schema's table name in database
 func (ReadRecordTable) TableName() string {
-	return "read_record"
+	return ReadRecordTableName
 }

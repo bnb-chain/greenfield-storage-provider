@@ -2,7 +2,7 @@ package sqldb
 
 import "time"
 
-// IntegrityMeta
+// IntegrityMeta defines the payload integrity hash and piece checksum with objectID
 type IntegrityMeta struct {
 	ObjectID      uint64
 	Checksum      [][]byte
@@ -10,6 +10,7 @@ type IntegrityMeta struct {
 	Signature     []byte
 }
 
+// SPAddressType identify address type
 type SPAddressType int32
 
 const (
@@ -19,7 +20,7 @@ const (
 	ApprovalAddressType
 )
 
-// BucketQuota is a quota config from chain
+// BucketQuota defines read quota of a bucket
 type BucketQuota struct {
 	ReadQuotaSize int64
 }
@@ -41,7 +42,7 @@ type TrafficTimeRange struct {
 	LimitNum  int // is unlimited if LimitNum <= 0
 }
 
-// ReadRecord is a read request
+// ReadRecord defines a read request record, will decrease the bucket read quota
 type ReadRecord struct {
 	BucketID    uint64
 	ObjectID    uint64
@@ -52,6 +53,7 @@ type ReadRecord struct {
 	ReadTime    int64
 }
 
+// GetCurrentYearMonth get current year and month
 func GetCurrentYearMonth() string {
 	return Time2YearMonth(time.Now())
 }

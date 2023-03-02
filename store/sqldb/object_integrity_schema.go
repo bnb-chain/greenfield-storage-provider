@@ -2,7 +2,7 @@ package sqldb
 
 // IntegrityMetaTable table schema
 type IntegrityMetaTable struct {
-	ObjectID      uint64 `gorm:"index:idx_integrity_meta"`
+	ObjectID      uint64 `gorm:"primary_key"`
 	Checksum      string
 	IntegrityHash string
 	Signature     string
@@ -10,5 +10,5 @@ type IntegrityMetaTable struct {
 
 // TableName is used to set IntegrityMetaTable schema's table name in database
 func (IntegrityMetaTable) TableName() string {
-	return "integrity_meta"
+	return IntegrityMetaTableName
 }

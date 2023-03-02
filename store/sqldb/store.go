@@ -11,12 +11,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
 
-const (
-	// SPDB environment constants
-	SPDBUser   = "SP_DB_USER"
-	SPDBPasswd = "SP_DB_PASSWORD"
-)
-
 var _ SPDB = &SQLDB{}
 
 // SQLDB storage provider database, implements SPDB interface
@@ -76,6 +70,7 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
+// loadDBConfigFromEnv load db user and password from env vars
 func loadDBConfigFromEnv(config *config.SQLDBConfig) {
 	if val, ok := os.LookupEnv(SPDBUser); ok {
 		config.User = val
