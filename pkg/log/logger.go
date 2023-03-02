@@ -337,14 +337,6 @@ func Context(ctx context.Context, opts ...interface{}) context.Context {
 				ctx = metainfo.WithValue(ctx, "object_id", strconv.FormatUint(objectID, 10))
 			}
 		}
-		if reflect.ValueOf(req).MethodByName("GetObjectInfo").IsValid() {
-			valList := reflect.ValueOf(req).MethodByName("GetObjectInfo").Call([]reflect.Value{})
-			if len(valList) > 0 && !valList[0].IsZero() {
-				rValue := reflect.ValueOf(valList[0])
-				objectID := rValue.FieldByName("Id").Uint()
-				ctx = metainfo.WithValue(ctx, "object_id", strconv.FormatUint(objectID, 10))
-			}
-		}
 	}
 	return ctx
 }

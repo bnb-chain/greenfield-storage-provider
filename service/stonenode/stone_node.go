@@ -3,7 +3,6 @@ package stonenode
 import (
 	"context"
 	"net"
-	"sync"
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
@@ -122,8 +121,9 @@ func (node *StoneNode) EncodeReplicateSegments(
 	for i := 0; i < replicates; i++ {
 		data = append(data, make([][]byte, int(segments)))
 	}
+	log.Debugw("start to encode payload", "object_id", objectId, "segment_count", segments,
+		"replicas", replicates, "redundancy_type", rType)
 
-	var mux sync.Mutex
 	var done int64
 	errCh := make(chan error, 10)
 	for segIdx := 0; segIdx < int(segments); segIdx++ {
@@ -142,19 +142,16 @@ func (node *StoneNode) EncodeReplicateSegments(
 					errCh <- err
 					return
 				}
-				mux.Lock()
-				defer mux.Unlock()
 				for idx, ec := range encodeData {
 					data[idx][segIdx] = ec
 				}
 			} else {
-				mux.Lock()
-				defer mux.Unlock()
 				for idx := 0; idx < replicates; idx++ {
 					data[idx][segIdx] = segmentData
 				}
 			}
-			if atomic.AddInt64(&done, 1) == int64(replicates) {
+			log.Debugw("finish to encode payload", "object_id", objectId, "segment_idx", segIdx)
+			if atomic.AddInt64(&done, 1) == int64(segments) {
 				errCh <- nil
 				return
 			}
