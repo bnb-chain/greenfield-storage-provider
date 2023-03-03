@@ -138,7 +138,9 @@ func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObject
 // QueryUploadingObject query an uploading object with object id from cache
 func (uploader *Uploader) QueryUploadingObject(ctx context.Context, req *types.QueryUploadingObjectRequest) (
 	resp *types.QueryUploadingObjectResponse, err error) {
+	ctx = log.Context(ctx, req)
 	objectID := req.GetObjectId()
+	log.CtxDebugw(ctx, "query uploading object", "objectID", objectID)
 	val, ok := uploader.cache.Get(objectID)
 	if !ok {
 		err = merrors.ErrCacheMiss

@@ -8,7 +8,6 @@ import (
 
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	xtypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -141,7 +140,7 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 						"sp", sp.GetApprovalAddress(), "endpoint", sp.GetEndpoint(), "error", err)
 					continue
 				}
-				err = xtypes.VerifySignature(approvalAddr, sdk.Keccak256(msg), signature)
+				err = storagetypes.VerifySignature(approvalAddr, sdk.Keccak256(msg), signature)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to verify sp signature",
 						"sp", sp.GetApprovalAddress(), "endpoint", sp.GetEndpoint(), "error", err)
