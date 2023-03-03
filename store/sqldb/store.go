@@ -61,11 +61,15 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		return nil, err
 	}
 	if err := db.AutoMigrate(&BucketTrafficTable{}); err != nil {
-		log.Warnw("failed to create bucket traffic table", "error", err)
+		log.Errorw("failed to create bucket traffic table", "error", err)
 		return nil, err
 	}
 	if err := db.AutoMigrate(&ReadRecordTable{}); err != nil {
-		log.Warnw("failed to create read record table", "error", err)
+		log.Errorw("failed to create read record table", "error", err)
+		return nil, err
+	}
+	if err := db.AutoMigrate(&ServiceConfigTable{}); err != nil {
+		log.Errorw("failed to create service config table", "error", err)
 		return nil, err
 	}
 	return db, nil

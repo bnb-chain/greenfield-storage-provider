@@ -90,6 +90,12 @@ type Traffic interface {
 	GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 }
 
+// ServiceConfig defines a series of reading and setting service config interfaces
+type ServiceConfig interface {
+	GetAllServiceConfigs() (string, string, error)
+	SetAllServiceConfigs(version, config string) error
+}
+
 // SPDB contains all the methods required by sql database
 type SPDB interface {
 	Job
