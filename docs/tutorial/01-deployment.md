@@ -27,15 +27,14 @@ cd build
 > TODO:: waiting for the greenfield chain doc pr merged
 
 ## Make configuration
-### Dump configuration template
   ```shell
   # dump the configuration template to './config.toml'
   ./gnfd-sp config.dump
+  
+  # Edit configuration template
   ```
 
-
-### Edit configuration template
-> TODO:: the config file will change the format after changing will commit the template
+> TODO:: add the link of edit configuration example
 
 ## Start with local model
 ```shell
@@ -45,7 +44,6 @@ cd build
 # start 
 ./gnfd-sp -config ${config_file} -server ${service_name_list}
 ```
-gnfd-sp supports any combination of services that are included in greenfield storage provider to run inside a process.
 
 gnfd-sp supports obtaining sensitive information from environment variablesm includes:
 ```shell
@@ -72,22 +70,16 @@ SIGNER_SEAL_PRIV_KEY
 The remote mode will upload the configuration to the SQL DB, avoid the inconsistency caused by configuration transfer.
 > TODO::support configuration dynamic delivery and hot loading.
 
-### Upload configuration
   ```shell
+  # Upload configuration
   ./gnfd-sp config.upload -db.user ${db_user} -db.password ${db_password} -db.address ${db_address} -file ${config_file}
   
-  export SP_DB_USER=${SP_DB_USER}
-  export SP_DB_PASSWORD=${SP_DB_PASSWORD}
-  ./gnfd-sp config.upload -db.address ${db_address}
-  
-  ```
 
-
-### Start service
-  ```shell
+  # start service
   export SP_DB_USER=${SP_DB_USER}
   export SP_DB_PASSWORD=${SP_DB_PASSWORD}
   ./gnfd-sp config.remote -db.address ${db_address} -server ${service_name_list}
+  
   ```
 
   
