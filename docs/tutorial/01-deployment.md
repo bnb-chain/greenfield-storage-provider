@@ -1,4 +1,3 @@
-# Deployment
 ## Dependence
 * SQL: no special requirements for the SQL DB version
 > MariaDB - 5.5.68 and Aurora(MySQL 5.7) 2.10.3 has been practiced.
@@ -74,16 +73,20 @@ The remote mode will upload the configuration to the SQL DB, avoid the inconsist
   # Upload configuration
   ./gnfd-sp config.upload -db.user ${db_user} -db.password ${db_password} -db.address ${db_address} -file ${config_file}
   
-
-  # start service
+  # set env var to upload
   export SP_DB_USER=${SP_DB_USER}
   export SP_DB_PASSWORD=${SP_DB_PASSWORD}
-  ./gnfd-sp config.remote -db.address ${db_address} -server ${service_name_list}
+  export SP_DB_PASSWORD=${SP_DB_Address}
+  ./gnfd-sp config.upload -file ${config_file}
+  
+
+  # start service
+  ./gnfd-sp config.remote -db.user ${db_user} -db.password ${db_password} -db.address ${db_address} -file ${config_file}
+  
+   # set env var to start
+  export SP_DB_USER=${SP_DB_USER}
+  export SP_DB_PASSWORD=${SP_DB_PASSWORD}
+  export SP_DB_PASSWORD=${SP_DB_Address}
+  ./gnfd-sp config.remote -server ${service_name_list}
   
   ```
-
-  
-
-  
-
-  
