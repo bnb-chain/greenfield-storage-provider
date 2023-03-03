@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"strings"
-
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -55,15 +53,3 @@ var (
 		Value: "./gnfd.log",
 	}
 )
-
-func SplitTagsFlag(tagFlag string) []string {
-	tagFlag = strings.TrimSpace(tagFlag)
-	tagFlags := strings.Split(tagFlag, ",")
-	var flags []string
-	for _, flag := range tagFlags {
-		if len(strings.TrimSpace(flag)) > 0 {
-			flags = append(flags, strings.TrimSpace(flag))
-		}
-	}
-	return flags
-}

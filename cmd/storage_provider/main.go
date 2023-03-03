@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
@@ -67,7 +68,7 @@ func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 	cfg := &config.StorageProviderConfig{}
 	var services []string
 	if ctx.IsSet(utils.ServerFlag.Name) {
-		services = utils.SplitTagsFlag(ctx.String(utils.ServerFlag.Name))
+		services = util.SplitByComma(ctx.String(utils.ServerFlag.Name))
 		for _, service := range services {
 			if _, ok := model.SpServiceDesc[strings.ToLower(service)]; !ok {
 				return nil, fmt.Errorf("invalid service %s", service)
