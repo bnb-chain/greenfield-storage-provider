@@ -139,4 +139,4 @@ Service = [
     Address = "127.0.0.1:9833"
     [MetadataCfg.MetaSqlDBConfig]
         Address = "127.0.0.1:3306"
-        Database = "meta_db"
+        Database = "block_syncer"

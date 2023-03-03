@@ -15,8 +15,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metalevel"
-	"github.com/bnb-chain/greenfield-storage-provider/store/metadb/metasql"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	dbConf "github.com/forbole/juno/v4/database/config"
@@ -42,7 +42,7 @@ func initConfig() {
 	cfg.ChallengeCfg = challenge.DefaultChallengeConfig
 	cfg.StoneNodeCfg = stonenode.DefaultStoneNodeConfig
 	if cfg.SyncerCfg.MetaSqlDBConfig == nil {
-		cfg.SyncerCfg.MetaSqlDBConfig = metasql.DefaultMetaSqlDBConfig
+		cfg.SyncerCfg.MetaSqlDBConfig = bsdb.DefaultBSDBConfig
 	}
 	if cfg.SyncerCfg.MetaLevelDBConfig == nil {
 		cfg.SyncerCfg.MetaLevelDBConfig = metalevel.DefaultMetaLevelDBConfig

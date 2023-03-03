@@ -49,7 +49,7 @@ func NewBSDB(sqlDBConfig *config.SqlDBConfig) (*bsdb.Store, error) {
 	// load bs db config from env vars
 	sqlDBConfig.User, sqlDBConfig.Passwd, err = getDBConfigFromEnv(model.BlockerSyncerDBUser, model.BlockerSyncerDBPassword)
 	if err != nil {
-		log.Error("load meta db config from env failed")
+		log.Error("load block syncer db config from env failed")
 		return nil, err
 	}
 	bsDB, err = bsdb.NewStore(sqlDBConfig)
