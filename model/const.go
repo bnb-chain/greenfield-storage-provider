@@ -1,28 +1,44 @@
 package model
 
+import "strings"
+
 // define storage provider include service
-const (
+var (
 	// GatewayService defines the name of gateway service
-	GatewayService = "Gateway"
+	GatewayService = strings.ToLower("Gateway")
 	// UploaderService defines the name of uploader service
-	UploaderService = "Uploader"
+	UploaderService = strings.ToLower("Uploader")
 	// DownloaderService defines the name of downloader service
-	DownloaderService = "Downloader"
+	DownloaderService = strings.ToLower("Downloader")
 	// ChallengeService defines the name of challenge service
-	ChallengeService = "Challenge"
+	ChallengeService = strings.ToLower("Challenge")
 	// StoneNodeService defines the name of stone node service
-	StoneNodeService = "StoneNode"
+	StoneNodeService = strings.ToLower("StoneNode")
 	// SyncerService defines the name of syncer service
-	SyncerService = "Syncer"
+	SyncerService = strings.ToLower("Syncer")
 	// SignerService defines the name of signer service
-	SignerService = "Signer"
+	SignerService = strings.ToLower("Signer")
 	// MetadataService defines the name of metadata service
-	MetadataService = "Metadata"
+	MetadataService = strings.ToLower("Metadata")
 	// BlockSyncerService defines the name of block sync service
-	BlockSyncerService = "BlockSyncer"
+	BlockSyncerService = strings.ToLower("BlockSyncer")
 )
 
 // define storage provider service default address
+// SpServiceDesc defines the service description in storage provider
+var SpServiceDesc = map[string]string{
+	GatewayService:     "Entrance for external user access",
+	UploaderService:    "Upload object to the backend",
+	DownloaderService:  "Download object from the backend and statistical read traffic",
+	ChallengeService:   "Provides the ability to query the integrity hash",
+	StoneNodeService:   "The smallest unit of background task execution",
+	SyncerService:      "Receive object from other storage provider and store",
+	SignerService:      "Sign the transaction and broadcast to chain",
+	MetadataService:    "Provides the ability to query meta data",
+	BlockSyncerService: "Syncer block data to db",
+}
+
+// define storage provider service gGRPC default address
 const (
 	// GatewayHTTPAddress default HTTP address of gateway
 	GatewayHTTPAddress = "localhost:9033"
