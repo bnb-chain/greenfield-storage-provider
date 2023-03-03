@@ -8,5 +8,5 @@ type ServiceConfigTable struct {
 
 // TableName is used to set ServiceConfigTable Schema's table name in database
 func (ServiceConfigTable) TableName() string {
-	return JobTableName
+	return ServiceConfigTableName
 }

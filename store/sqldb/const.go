@@ -9,4 +9,5 @@ const (
 	StorageParamsTableName = "storage_params"
 	BucketTrafficTableName = "bucket_traffic"
 	ReadRecordTableName    = "read_record"
+	ServiceConfigTableName = "service_config"
 )
