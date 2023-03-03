@@ -17,12 +17,12 @@ func (s *SpDBImpl) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 		queryReturn := &SpInfoTable{}
 		// 1. check record whether exists
 		result := s.db.Where("operator_address = ? and is_own = false", value.GetOperatorAddress()).First(queryReturn)
-		sameError := errors.Is(result.Error, gorm.ErrRecordNotFound)
-		if result.Error != nil && !sameError {
+		recordNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
+		if result.Error != nil && !recordNotFound {
 			return fmt.Errorf("failed to query record in sp info table: %s", result.Error)
 		}
 		// 2. if there is no record, insert new record; otherwise delete old record, then insert new record
-		if sameError {
+		if recordNotFound {
 			if err := s.insertNewRecordInSpInfoTable(value); err != nil {
 				return err
 			}
@@ -247,9 +247,8 @@ func (s *SpDBImpl) GetOwnSpInfo() (*sptypes.StorageProvider, error) {
 
 // SetOwnSpInfo set(maybe overwrite) own sp info to db
 func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
-	_, err := s.GetOwnSpInfo()
-	isNotFound := strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error())
-	if err != nil && !isNotFound {
+	spInfo, err := s.GetOwnSpInfo()
+	if err != nil && !strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error()) {
 		return err
 	}
 
@@ -269,7 +268,7 @@ func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 		Details:         sp.GetDescription().Details,
 	}
 	// if there is no records in SPInfoTable, insert a new record
-	if isNotFound {
+	if spInfo == nil {
 		result := s.db.Create(insertRecord)
 		if result.Error != nil || result.RowsAffected != 1 {
 			return fmt.Errorf("failed to insert own sp record in sp info table: %s", result.Error)
@@ -304,8 +303,8 @@ func (s *SpDBImpl) GetStorageParams() (*storagetypes.Params, error) {
 func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
 	queryReturn := &StorageParamsTable{}
 	result := s.db.Last(queryReturn)
-	isNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
-	if result.Error != nil && !isNotFound {
+	recordNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
+	if result.Error != nil && !recordNotFound {
 		return fmt.Errorf("failed to query storage params table: %s", result.Error)
 	}
 
@@ -316,7 +315,7 @@ func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
 		MaxPayloadSize:          params.GetMaxPayloadSize(),
 	}
 	// if there is no records in StorageParamsTable, insert a new record
-	if isNotFound {
+	if recordNotFound {
 		result = s.db.Create(&insertParamsRecord)
 		if result.Error != nil || result.RowsAffected != 1 {
 			return fmt.Errorf("failed to insert storage params table: %s", result.Error)

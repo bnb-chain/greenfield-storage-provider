@@ -41,7 +41,7 @@ func userName(uid int) string {
 	if !ok {
 		u, err := user.LookupId(strconv.Itoa(uid))
 		if err != nil {
-			log.Warnf("lookup uid %d: %s", uid, err)
+			log.Errorf("lookup uid %d: %s", uid, err)
 			name = strconv.Itoa(uid)
 		} else {
 			name = u.Username
@@ -56,7 +56,7 @@ func groupName(gid int) string {
 	if !ok {
 		g, err := user.LookupGroupId(strconv.Itoa(gid))
 		if err != nil {
-			log.Warnf("lookup gid %d: %s", gid, err)
+			log.Errorf("lookup gid %d: %s", gid, err)
 			name = strconv.Itoa(gid)
 		} else {
 			name = g.Name
