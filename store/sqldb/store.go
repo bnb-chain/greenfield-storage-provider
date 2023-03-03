@@ -21,7 +21,7 @@ type SpDBImpl struct {
 
 // NewSpDB return a database instance
 func NewSpDB(config *config.SQLDBConfig) (*SpDBImpl, error) {
-	loadDBConfigFromEnv(config)
+	LoadDBConfigFromEnv(config)
 	db, err := InitDB(config)
 	if err != nil {
 		return nil, err
@@ -61,22 +61,32 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		return nil, err
 	}
 	if err := db.AutoMigrate(&BucketTrafficTable{}); err != nil {
-		log.Warnw("failed to create bucket traffic table", "error", err)
+		log.Errorw("failed to create bucket traffic table", "error", err)
 		return nil, err
 	}
 	if err := db.AutoMigrate(&ReadRecordTable{}); err != nil {
-		log.Warnw("failed to create read record table", "error", err)
+		log.Errorw("failed to create read record table", "error", err)
+		return nil, err
+	}
+	if err := db.AutoMigrate(&ServiceConfigTable{}); err != nil {
+		log.Errorw("failed to create service config table", "error", err)
 		return nil, err
 	}
 	return db, nil
 }
 
-// loadDBConfigFromEnv load db user and password from env vars
-func loadDBConfigFromEnv(config *config.SQLDBConfig) {
+// LoadDBConfigFromEnv load db user and password from env vars
+func LoadDBConfigFromEnv(config *config.SQLDBConfig) {
 	if val, ok := os.LookupEnv(model.SpDBUser); ok {
 		config.User = val
 	}
 	if val, ok := os.LookupEnv(model.SpDBPasswd); ok {
 		config.Passwd = val
+	}
+	if val, ok := os.LookupEnv(model.SpDBAddress); ok {
+		config.Address = val
+	}
+	if val, ok := os.LookupEnv(model.SpDBDataBase); ok {
+		config.Database = val
 	}
 }

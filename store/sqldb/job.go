@@ -194,7 +194,6 @@ func (s *SpDBImpl) SetObjectInfo(objectID uint64, objectInfo *storagetypes.Objec
 		if result.Error != nil || result.RowsAffected != 1 {
 			return fmt.Errorf("failed to update object table: %s", result.Error)
 		}
-
 	}
 	return nil
 }

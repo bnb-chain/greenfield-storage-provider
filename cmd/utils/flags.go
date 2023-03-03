@@ -7,11 +7,6 @@ import (
 )
 
 var (
-	VersionFlag = &cli.BoolFlag{
-		Name:    "version",
-		Aliases: []string{"v"},
-		Usage:   "Show the storage provider version information",
-	}
 	ConfigFileFlag = &cli.StringFlag{
 		Name:    "config",
 		Aliases: []string{"c"},
@@ -19,8 +14,9 @@ var (
 		Value:   "./config.toml",
 	}
 	ConfigRemoteFlag = &cli.BoolFlag{
-		Name:  "config.remote",
-		Usage: "Flag load config from remote db",
+		Name: "configremote",
+		Usage: "Flag load config from remote db,if 'config.remote' be set, the db.user, " +
+			"db.password and db.address flags are needed, otherwise use default value",
 	}
 	ServerFlag = &cli.StringFlag{
 		Name:    "server",
@@ -38,9 +34,16 @@ var (
 		EnvVars: []string{model.SpDBPasswd},
 	}
 	DBAddressFlag = &cli.StringFlag{
-		Name:  "db.address",
-		Usage: "DB address",
-		Value: "localhost:3306",
+		Name:    "db.address",
+		Usage:   "DB address",
+		EnvVars: []string{model.SpDBAddress},
+		Value:   "localhost:3306",
+	}
+	DBDataBaseFlag = &cli.StringFlag{
+		Name:    "db.database",
+		Usage:   "DB database",
+		EnvVars: []string{model.SpDBDataBase},
+		Value:   "localhost:3306",
 	}
 	LogLevelFlag = &cli.StringFlag{
 		Name:  "log.level",
@@ -51,5 +54,9 @@ var (
 		Name:  "log.path",
 		Usage: "log path",
 		Value: "./gnfd.log",
+	}
+	LogStdOutputFlag = &cli.BoolFlag{
+		Name:  "log.std",
+		Usage: "log standard output",
 	}
 )
