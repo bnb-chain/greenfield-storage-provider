@@ -63,7 +63,15 @@ func JoinWithComma(slice []string) string {
 }
 
 func SplitByComma(str string) []string {
-	return strings.Split(str, ",")
+	str = strings.TrimSpace(str)
+	strArr := strings.Split(str, ",")
+	var trimStr []string
+	for _, item := range strArr {
+		if len(strings.TrimSpace(item)) > 0 {
+			trimStr = append(trimStr, strings.TrimSpace(item))
+		}
+	}
+	return trimStr
 }
 
 func Uint64ToString(u uint64) string {
