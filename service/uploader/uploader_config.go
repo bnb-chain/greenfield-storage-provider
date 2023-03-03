@@ -7,17 +7,17 @@ import (
 )
 
 type UploaderConfig struct {
-	GrpAddress           string
+	GRPCAddress          string
 	SignerGrpcAddress    string
 	StoneNodeGrpcAddress string
-	SPDBConfig           *config.SQLDBConfig
+	SpDBConfig           *config.SQLDBConfig
 	PieceStoreConfig     *storage.PieceStoreConfig
 }
 
 var DefaultUploaderConfig = &UploaderConfig{
-	GrpAddress:           model.UploaderGrpcAddress,
-	SignerGrpcAddress:    model.SyncerGrpcAddress,
-	StoneNodeGrpcAddress: model.StoneNodeGrpcAddress,
-	SPDBConfig:           config.DefaultSQLDBConfig,
+	GRPCAddress:          model.UploaderGRPCAddress,
+	SignerGrpcAddress:    model.SyncerGRPCAddress,
+	StoneNodeGrpcAddress: model.StoneNodeGRPCAddress,
+	SpDBConfig:           config.DefaultSQLDBConfig,
 	PieceStoreConfig:     storage.DefaultPieceStoreConfig,
 }

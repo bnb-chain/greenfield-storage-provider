@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	"github.com/naoina/toml"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"

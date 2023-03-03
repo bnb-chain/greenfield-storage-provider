@@ -1,6 +1,8 @@
 package sqldb
 
-import "time"
+import (
+	"time"
+)
 
 // JobTable table schema
 type JobTable struct {
@@ -31,8 +33,8 @@ type ObjectTable struct {
 	ObjectStatus         int32
 	RedundancyType       int32
 	SourceType           int32
-	Checksum             string
-	SecondarySPAddresses string
+	SpIntegrityHash      string
+	SecondarySpAddresses string
 }
 
 // TableName is used to set ObjectTable Schema's table name in database

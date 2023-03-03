@@ -40,22 +40,22 @@ type ObjectIntegrity interface {
 
 // SPInfo interface
 type SPInfo interface {
-	// UpdateAllSP update all sp info, delete old sp info
-	UpdateAllSP(spList []*sptypes.StorageProvider) error
-	// FetchAllSP if status is nil return all sp info; otherwise return sp info by status
-	FetchAllSP(status ...sptypes.Status) ([]*sptypes.StorageProvider, error)
-	// FetchAllSPWithoutOwnSP if status is nil return all sp info without own sp;
+	// UpdateAllSp update all sp info, delete old sp info
+	UpdateAllSp(spList []*sptypes.StorageProvider) error
+	// FetchAllSp if status is nil return all sp info; otherwise return sp info by status
+	FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvider, error)
+	// FetchAllSpWithoutOwnSp if status is nil return all sp info without own sp;
 	// otherwise return sp info by status without own sp
-	FetchAllSPWithoutOwnSP(status ...sptypes.Status) ([]*sptypes.StorageProvider, error)
-	// GetSPByAddress return sp info by address and addressType
-	GetSPByAddress(address string, addressType SPAddressType) (*sptypes.StorageProvider, error)
-	// GetSPByEndpoint return sp info by endpoint
-	GetSPByEndpoint(endpoint string) (*sptypes.StorageProvider, error)
+	FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.StorageProvider, error)
+	// GetSpByAddress return sp info by address and addressType
+	GetSpByAddress(address string, addressType SpAddressType) (*sptypes.StorageProvider, error)
+	// GetSpByEndpoint return sp info by endpoint
+	GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error)
 
-	// GetOwnSPInfo return own sp info
-	GetOwnSPInfo() (*sptypes.StorageProvider, error)
-	// SetOwnSPInfo set(maybe overwrite) own sp info
-	SetOwnSPInfo(sp *sptypes.StorageProvider) error
+	// GetOwnSpInfo return own sp info
+	GetOwnSpInfo() (*sptypes.StorageProvider, error)
+	// SetOwnSpInfo set(maybe overwrite) own sp info
+	SetOwnSpInfo(sp *sptypes.StorageProvider) error
 }
 
 // StorageParam interface

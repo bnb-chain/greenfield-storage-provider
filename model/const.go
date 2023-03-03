@@ -37,22 +37,34 @@ var SpServiceDesc = map[string]string{
 	BlockSyncerService: "Syncer block data to db",
 }
 
-// define storage provider service gGRPC default address
+// define storage provider service gRPC default address
 const (
-	// GatewayHttpAddress default Http address of gateway
-	GatewayHttpAddress = "localhost:9033"
-	// UploaderGrpcAddress default gGRPC address of uploader
-	UploaderGrpcAddress = "localhost:9133"
-	// DownloaderGrpcAddress default gGRPC address of downloader
-	DownloaderGrpcAddress = "localhost:9233"
-	// ChallengeGrpcAddress default gGRPC address of challenge
-	ChallengeGrpcAddress = "localhost:9333"
-	// StoneNodeGrpcAddress default gGRPC address of stone node
-	StoneNodeGrpcAddress = "localhost:9433"
-	// SyncerGrpcAddress default gGRPC address of syncer
-	SyncerGrpcAddress = "localhost:9533"
-	// SignerGrpcAddress default gGRPC address of signer
-	SignerGrpcAddress = "localhost:9633"
+	// GatewayHTTPAddress default HTTP address of gateway
+	GatewayHTTPAddress = "localhost:9033"
+	// UploaderGRPCAddress default gRPC address of uploader
+	UploaderGRPCAddress = "localhost:9133"
+	// DownloaderGRPCAddress default gRPC address of downloader
+	DownloaderGRPCAddress = "localhost:9233"
+	// ChallengeGRPCAddress default gRPC address of challenge
+	ChallengeGRPCAddress = "localhost:9333"
+	// StoneNodeGRPCAddress default gRPC address of stone node
+	StoneNodeGRPCAddress = "localhost:9433"
+	// SyncerGRPCAddress default gRPC address of syncer
+	SyncerGRPCAddress = "localhost:9533"
+	// SignerGRPCAddress default gRPC address of signer
+	SignerGRPCAddress = "localhost:9633"
+)
+
+// define greenfield chain default address
+const (
+	// GreenfieldAddress default greenfield chain address
+	GreenfieldAddress = "localhost:9090"
+	// TendermintAddress default Tendermint address
+	TendermintAddress = "http://localhost:26750"
+	// GreenfieldChainID default greenfield chainID
+	GreenfieldChainID = "greenfield_9000-121"
+	// WhiteListCIDR default whitelist CIDR
+	WhiteListCIDR = "127.0.0.1/32"
 )
 
 // environment constants
@@ -73,6 +85,8 @@ const (
 
 	// SpOperatorAddress defines env variable name for sp operator address
 	SpOperatorAddress = "SP_OPERATOR_PUB_KEY"
+	// SpSignerAPIKey defines env variable for signer api key
+	SpSignerAPIKey = "SIGNER_API_KEY"
 	// SpOperatorPrivKey defines env variable name for sp operator priv key
 	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
 	// SpFundingPrivKey defines env variable name for sp funding priv key

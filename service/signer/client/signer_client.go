@@ -4,7 +4,6 @@ import (
 	"context"
 
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	xtypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -38,7 +37,7 @@ func (client *SignerClient) Close() error {
 }
 
 func (client *SignerClient) SignBucketApproval(ctx context.Context,
-	msg *xtypes.MsgCreateBucket, opts ...grpc.CallOption) ([]byte, error) {
+	msg *storagetypes.MsgCreateBucket, opts ...grpc.CallOption) ([]byte, error) {
 	resp, err := client.signer.SignBucketApproval(ctx,
 		&types.SignBucketApprovalRequest{CreateBucketMsg: msg}, opts...)
 	if err != nil {
@@ -48,7 +47,7 @@ func (client *SignerClient) SignBucketApproval(ctx context.Context,
 }
 
 func (client *SignerClient) VerifyBucketApproval(ctx context.Context,
-	msg *xtypes.MsgCreateBucket, opts ...grpc.CallOption) (bool, error) {
+	msg *storagetypes.MsgCreateBucket, opts ...grpc.CallOption) (bool, error) {
 	resp, err := client.signer.VerifyBucketApproval(ctx,
 		&types.VerifyBucketApprovalRequest{CreateBucketMsg: msg}, opts...)
 	if err != nil {
@@ -58,7 +57,7 @@ func (client *SignerClient) VerifyBucketApproval(ctx context.Context,
 }
 
 func (client *SignerClient) SignObjectApproval(ctx context.Context,
-	msg *xtypes.MsgCreateObject, opts ...grpc.CallOption) ([]byte, error) {
+	msg *storagetypes.MsgCreateObject, opts ...grpc.CallOption) ([]byte, error) {
 	resp, err := client.signer.SignObjectApproval(ctx,
 		&types.SignObjectApprovalRequest{CreateObjectMsg: msg}, opts...)
 	if err != nil {
@@ -68,7 +67,7 @@ func (client *SignerClient) SignObjectApproval(ctx context.Context,
 }
 
 func (client *SignerClient) VerifyObjectApproval(ctx context.Context,
-	msg *xtypes.MsgCreateObject, opts ...grpc.CallOption) (bool, error) {
+	msg *storagetypes.MsgCreateObject, opts ...grpc.CallOption) (bool, error) {
 	resp, err := client.signer.VerifyObjectApproval(ctx,
 		&types.VerifyObjectApprovalRequest{CreateObjectMsg: msg}, opts...)
 	if err != nil {

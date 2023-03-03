@@ -11,6 +11,7 @@ import (
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	signer "github.com/bnb-chain/greenfield-go-sdk/keys/signer"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // requestContext is a request context.
@@ -93,7 +93,7 @@ func (reqContext *requestContext) verifySignature() (sdk.AccAddress, error) {
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
 		return reqContext.verifySignatureV2(requestSignature[len(v2SignaturePrefix):])
 	}
-	return nil, errors.ErrUnsupportSignType
+	return nil, errors.ErrUnsupportedSignType
 }
 
 // verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed
@@ -253,7 +253,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 			reqContext.bucketName,
 			reqContext.objectName,
 			addr.String(),
-			g.config.OperatorAddress)
+			g.config.SpOperatorAddress)
 		if err != nil {
 			log.Errorw("failed to auth download",
 				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName,

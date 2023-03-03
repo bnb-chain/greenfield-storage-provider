@@ -6,26 +6,22 @@ import (
 	"sync"
 	"sync/atomic"
 
-	xtypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	gatewayclient "github.com/bnb-chain/greenfield-storage-provider/service/gateway/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-
-	gatewayclient "github.com/bnb-chain/greenfield-storage-provider/service/gateway/client"
 )
 
 var _ types.StoneNodeServiceServer = &StoneNode{}
 
 // ReplicateObject call AsyncReplicateObject non-blocking upstream services
-func (node *StoneNode) ReplicateObject(
-	ctx context.Context,
-	req *types.ReplicateObjectRequest) (
+func (node *StoneNode) ReplicateObject(ctx context.Context, req *types.ReplicateObjectRequest) (
 	resp *types.ReplicateObjectResponse, err error) {
 	resp = &types.ReplicateObjectResponse{}
 	node.spDB.UpdateJobState(req.GetObjectInfo().Id.Uint64(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
@@ -73,15 +69,14 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 	}
 	segments := piecestore.ComputeSegmentCount(objectInfo.GetPayloadSize(),
 		params.GetMaxSegmentSize())
-	replicates := params.GetRedundantDataChunkNum() +
-		params.GetRedundantParityChunkNum()
+	replicates := params.GetRedundantDataChunkNum() + params.GetRedundantParityChunkNum()
 	replicateData, err := node.EncodeReplicateSegments(ctx, objectInfo.Id.Uint64(),
 		segments, int(replicates), objectInfo.GetRedundancyType())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to encode payload", "error", err)
 		return
 	}
-	spList, err := node.spDB.FetchAllSPWithoutOwnSP(sptypes.STATUS_IN_SERVICE)
+	spList, err := node.spDB.FetchAllSpWithoutOwnSp(sptypes.STATUS_IN_SERVICE)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
 		return
@@ -145,7 +140,7 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 						"sp", sp.GetApprovalAddress(), "endpoint", sp.GetEndpoint(), "error", err)
 					continue
 				}
-				err = xtypes.VerifySignature(approvalAddr, sdk.Keccak256(msg), signature)
+				err = storagetypes.VerifySignature(approvalAddr, sdk.Keccak256(msg), signature)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to verify sp signature",
 						"sp", sp.GetApprovalAddress(), "endpoint", sp.GetEndpoint(), "error", err)
@@ -177,12 +172,11 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 }
 
 // QueryReplicatingObject query a replicating object information by object id
-func (node *StoneNode) QueryReplicatingObject(
-	ctx context.Context,
-	req *types.QueryReplicatingObjectRequest) (
+func (node *StoneNode) QueryReplicatingObject(ctx context.Context, req *types.QueryReplicatingObjectRequest) (
 	resp *types.QueryReplicatingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
 	objectID := req.GetObjectId()
+	log.CtxDebugw(ctx, "query replicating object", "objectID", objectID)
 	val, ok := node.cache.Get(objectID)
 	if !ok {
 		err = merrors.ErrCacheMiss

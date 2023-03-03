@@ -3,7 +3,7 @@ package sqldb
 // IntegrityMetaTable table schema
 type IntegrityMetaTable struct {
 	ObjectID      uint64 `gorm:"primary_key"`
-	Checksum      string
+	PieceHashList string
 	IntegrityHash string
 	Signature     string
 }

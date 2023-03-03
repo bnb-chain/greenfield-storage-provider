@@ -26,7 +26,7 @@ var _ lifecycle.Service = &StoneNode{}
 
 // StoneNode as background min execution unit, execute storage provider's background tasks
 // implements the gRPC of StoneNodeService,
-// TODO :: StoneNode support more task tpyes, such as gc etc.
+// TODO :: StoneNode support more task types, such as gc etc.
 type StoneNode struct {
 	config     *StoneNodeConfig
 	cache      *lru.Cache
@@ -52,7 +52,7 @@ func NewStoneNodeService(config *StoneNodeConfig) (*StoneNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	spDB, err := sqldb.NewSQLStore(config.SPDBConfig)
+	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (node *StoneNode) Stop(ctx context.Context) error {
 }
 
 func (node *StoneNode) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", node.config.GrpcAddress)
+	lis, err := net.Listen("tcp", node.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("fail to listen", "err", err)
@@ -107,13 +107,8 @@ func (node *StoneNode) serve(errCh chan error) {
 }
 
 // EncodeReplicateSegments load segment data and encode according to redundancy type
-func (node *StoneNode) EncodeReplicateSegments(
-	ctx context.Context,
-	objectId uint64,
-	segments uint32,
-	replicates int,
-	rType storagetypes.RedundancyType) (
-	data [][][]byte, err error) {
+func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID uint64, segments uint32, replicates int,
+	rType storagetypes.RedundancyType) (data [][][]byte, err error) {
 	params, err := node.spDB.GetStorageParams()
 	if err != nil {
 		return
@@ -121,14 +116,14 @@ func (node *StoneNode) EncodeReplicateSegments(
 	for i := 0; i < replicates; i++ {
 		data = append(data, make([][]byte, int(segments)))
 	}
-	log.Debugw("start to encode payload", "object_id", objectId, "segment_count", segments,
+	log.Debugw("start to encode payload", "object_id", objectID, "segment_count", segments,
 		"replicas", replicates, "redundancy_type", rType)
 
 	var done int64
 	errCh := make(chan error, 10)
 	for segIdx := 0; segIdx < int(segments); segIdx++ {
 		go func(segIdx int) {
-			key := piecestore.EncodeSegmentPieceKey(objectId, uint32(segIdx))
+			key := piecestore.EncodeSegmentPieceKey(objectID, uint32(segIdx))
 			segmentData, err := node.pieceStore.GetSegment(ctx, key, 0, 0)
 			if err != nil {
 				errCh <- err
@@ -150,7 +145,7 @@ func (node *StoneNode) EncodeReplicateSegments(
 					data[idx][segIdx] = segmentData
 				}
 			}
-			log.Debugw("finish to encode payload", "object_id", objectId, "segment_idx", segIdx)
+			log.Debugw("finish to encode payload", "object_id", objectID, "segment_idx", segIdx)
 			if atomic.AddInt64(&done, 1) == int64(segments) {
 				errCh <- nil
 				return

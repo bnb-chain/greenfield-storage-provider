@@ -14,7 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	stoneclient "github.com/bnb-chain/greenfield-storage-provider/service/stonenode/client"
-	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
@@ -41,11 +41,14 @@ func NewUploaderService(config *UploaderConfig) (*Uploader, error) {
 		return nil, err
 	}
 	stone, err := stoneclient.NewStoneNodeClient(config.StoneNodeGrpcAddress)
+	if err != nil {
+		return nil, err
+	}
 	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
 	if err != nil {
 		return nil, err
 	}
-	spDB, err := sqldb.NewSQLStore(config.SPDBConfig)
+	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +85,7 @@ func (uploader *Uploader) Stop(ctx context.Context) error {
 }
 
 func (uploader *Uploader) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", uploader.config.GrpAddress)
+	lis, err := net.Listen("tcp", uploader.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "err", err)

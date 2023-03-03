@@ -3,11 +3,11 @@ package signer
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield-common/go/hash"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-common/go/hash"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"

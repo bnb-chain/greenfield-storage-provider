@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -11,21 +12,21 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
 
-var _ SPDB = &SQLDB{}
+var _ SPDB = &SpDBImpl{}
 
-// SQLDB storage provider database, implements SPDB interface
-type SQLDB struct {
+// SpDBImpl storage provider database, implements SPDB interface
+type SpDBImpl struct {
 	db *gorm.DB
 }
 
-// NewSQLStore return a database instance
-func NewSQLStore(config *config.SQLDBConfig) (*SQLDB, error) {
+// NewSpDB return a database instance
+func NewSpDB(config *config.SQLDBConfig) (*SpDBImpl, error) {
 	loadDBConfigFromEnv(config)
 	db, err := InitDB(config)
 	if err != nil {
 		return nil, err
 	}
-	return &SQLDB{db: db}, err
+	return &SpDBImpl{db: db}, err
 }
 
 // InitDB init a db instance
@@ -47,7 +48,7 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to create object table", "error", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&SPInfoTable{}); err != nil {
+	if err := db.AutoMigrate(&SpInfoTable{}); err != nil {
 		log.Errorw("failed to create sp info table", "error", err)
 		return nil, err
 	}
@@ -72,10 +73,10 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 
 // loadDBConfigFromEnv load db user and password from env vars
 func loadDBConfigFromEnv(config *config.SQLDBConfig) {
-	if val, ok := os.LookupEnv(SPDBUser); ok {
+	if val, ok := os.LookupEnv(model.SpDBUser); ok {
 		config.User = val
 	}
-	if val, ok := os.LookupEnv(SPDBPasswd); ok {
+	if val, ok := os.LookupEnv(model.SpDBPasswd); ok {
 		config.Passwd = val
 	}
 }

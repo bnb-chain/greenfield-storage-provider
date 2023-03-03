@@ -6,11 +6,12 @@ import (
 	"math"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getApprovalHandler handle create bucket or create object approval
@@ -19,7 +20,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		err            error
 		errDescription *errorDescription
 		reqContext     *requestContext
-		addr           sdk.AccAddress
+		addr           sdktypes.AccAddress
 	)
 
 	reqContext = newRequestContext(r)
@@ -85,7 +86,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		msg.PrimarySpApproval.Sig = approvalSignature
 		bz := types.ModuleCdc.MustMarshalJSON(&msg)
-		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
+		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	case createObjectApprovalAction:
 		var (
 			msg               = types.MsgCreateObject{}
@@ -111,7 +112,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		msg.PrimarySpApproval.Sig = approvalSignature
 		bz := types.ModuleCdc.MustMarshalJSON(&msg)
-		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
+		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	default:
 		log.Errorw("failed to get approval due to unimplemented approval type", "action", actionName)
 		errDescription = NotImplementedError
@@ -126,7 +127,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		err            error
 		errDescription *errorDescription
 		reqContext     *requestContext
-		addr           sdk.AccAddress
+		addr           sdktypes.AccAddress
 		objectID       uint64
 		redundancyIdx  int32
 		segmentIdx     uint32

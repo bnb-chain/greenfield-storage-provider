@@ -8,16 +8,16 @@ import (
 
 type SyncerConfig struct {
 	SpOperatorAddress string
-	GrpcAddress       string
-	SignerGrpcAddress string
-	SPDBConfig        *config.SQLDBConfig
+	GRPCAddress       string
+	SignerGRPCAddress string
+	SpDBConfig        *config.SQLDBConfig
 	PieceStoreConfig  *storage.PieceStoreConfig
 }
 
 var DefaultSyncerConfig = &SyncerConfig{
 	SpOperatorAddress: model.SpOperatorAddress,
-	GrpcAddress:       model.SyncerGrpcAddress,
-	SignerGrpcAddress: model.SignerGrpcAddress,
-	SPDBConfig:        config.DefaultSQLDBConfig,
+	GRPCAddress:       model.SyncerGRPCAddress,
+	SignerGRPCAddress: model.SignerGRPCAddress,
+	SpDBConfig:        config.DefaultSQLDBConfig,
 	PieceStoreConfig:  storage.DefaultPieceStoreConfig,
 }

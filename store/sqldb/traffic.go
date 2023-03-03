@@ -8,8 +8,8 @@ import (
 )
 
 // CheckQuotaAndAddReadRecord check current quota, and add read record
-func (s *SQLDB) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
-	yearMonth := Time2YearMonth(TimeUnix2Time(record.ReadTime))
+func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
+	yearMonth := TimeToYearMonth(TimeUnixToTime(record.ReadTime))
 	bucketTraffic, err := s.GetBucketTraffic(record.BucketID, yearMonth)
 	if err != nil {
 		return err
@@ -50,8 +50,7 @@ func (s *SQLDB) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuot
 
 	// check quota
 	if bucketTraffic.ReadCostSize+record.ReadSize > bucketTraffic.ReadQuotaSize {
-		// TODO: check this error in outside, 定义一个专门的错误，外部做判断
-		return fmt.Errorf("failed to check quota")
+		return fmt.Errorf("exceed read quota size")
 	}
 
 	// update bucket traffic
@@ -83,7 +82,7 @@ func (s *SQLDB) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuot
 }
 
 // GetBucketTraffic return bucket traffic info
-func (s *SQLDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
+func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
 	var (
 		result      *gorm.DB
 		queryReturn BucketTrafficTable
@@ -108,7 +107,7 @@ func (s *SQLDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraf
 }
 
 // GetReadRecord return record list by time range
-func (s *SQLDB) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SpDBImpl) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	var (
 		result       *gorm.DB
 		records      []*ReadRecord
@@ -140,7 +139,7 @@ func (s *SQLDB) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error
 }
 
 // GetBucketReadRecord return bucket record list by time range
-func (s *SQLDB) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SpDBImpl) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	var (
 		result       *gorm.DB
 		records      []*ReadRecord
@@ -174,7 +173,7 @@ func (s *SQLDB) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange
 }
 
 // GetObjectReadRecord return object record list by time range
-func (s *SQLDB) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SpDBImpl) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	var (
 		result       *gorm.DB
 		records      []*ReadRecord
@@ -208,7 +207,7 @@ func (s *SQLDB) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange
 }
 
 // GetUserReadRecord return user record list by time range
-func (s *SQLDB) GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SpDBImpl) GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	var (
 		result       *gorm.DB
 		records      []*ReadRecord
