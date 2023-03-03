@@ -58,9 +58,9 @@ func (s *SpDBImpl) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servic
 }
 
 // UpdateJobState update JobTable record's state
-func (s *SpDBImpl) UpdateJobState(ObjectID uint64, state servicetypes.JobState) error {
+func (s *SpDBImpl) UpdateJobState(objectID uint64, state servicetypes.JobState) error {
 	queryObjectReturn := &ObjectTable{}
-	result := s.db.First(queryObjectReturn, "object_id = ?", ObjectID)
+	result := s.db.First(queryObjectReturn, "object_id = ?", objectID)
 	if result.Error != nil {
 		return fmt.Errorf("failed to query object table: %s", result.Error)
 	}
@@ -78,10 +78,10 @@ func (s *SpDBImpl) UpdateJobState(ObjectID uint64, state servicetypes.JobState) 
 	return nil
 }
 
-// GetJobByID query JobTable by JobID and convert to service/types.JobContext
-func (s *SpDBImpl) GetJobByID(JobID uint64) (*servicetypes.JobContext, error) {
+// GetJobByID query JobTable by jobID and convert to service/types.JobContext
+func (s *SpDBImpl) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
 	queryReturn := &JobTable{}
-	result := s.db.First(queryReturn, "job_id = ?", JobID)
+	result := s.db.First(queryReturn, "job_id = ?", jobID)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query job table: %s", result.Error)
 	}
@@ -95,10 +95,10 @@ func (s *SpDBImpl) GetJobByID(JobID uint64) (*servicetypes.JobContext, error) {
 	}, nil
 }
 
-// GetJobByObjectID query JobTable by JobID and convert to service/types.JobContext
-func (s *SpDBImpl) GetJobByObjectID(ObjectID uint64) (*servicetypes.JobContext, error) {
+// GetJobByObjectID query JobTable by jobID and convert to service/types.JobContext
+func (s *SpDBImpl) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error) {
 	queryReturn := &ObjectTable{}
-	result := s.db.First(queryReturn, "object_id = ?", ObjectID)
+	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query object table: %s", result.Error)
 	}
@@ -117,10 +117,10 @@ func (s *SpDBImpl) GetJobByObjectID(ObjectID uint64) (*servicetypes.JobContext, 
 	}, nil
 }
 
-// GetObjectInfo query ObjectTable by ObjectID and convert to storage/types.ObjectInfo.
-func (s *SpDBImpl) GetObjectInfo(ObjectID uint64) (*storagetypes.ObjectInfo, error) {
+// GetObjectInfo query ObjectTable by objectID and convert to storage/types.ObjectInfo.
+func (s *SpDBImpl) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error) {
 	queryReturn := &ObjectTable{}
-	result := s.db.First(queryReturn, "object_id = ?", ObjectID)
+	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query object table: %s", result.Error)
 	}
@@ -146,16 +146,16 @@ func (s *SpDBImpl) GetObjectInfo(ObjectID uint64) (*storagetypes.ObjectInfo, err
 }
 
 // SetObjectInfo set ObjectTable's record by objectID
-func (s *SpDBImpl) SetObjectInfo(ObjectID uint64, objectInfo *storagetypes.ObjectInfo) error {
+func (s *SpDBImpl) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error {
 	queryReturn := &ObjectTable{}
-	result := s.db.First(queryReturn, "object_id = ?", ObjectID)
+	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	isNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
 	if result.Error != nil && !isNotFound {
 		return fmt.Errorf("failed to query object table: %s", result.Error)
 	}
 
 	updateFields := &ObjectTable{
-		ObjectID:             ObjectID,
+		ObjectID:             objectID,
 		Owner:                objectInfo.GetOwner(),
 		BucketName:           objectInfo.GetBucketName(),
 		ObjectName:           objectInfo.GetObjectName(),
@@ -188,7 +188,7 @@ func (s *SpDBImpl) SetObjectInfo(ObjectID uint64, objectInfo *storagetypes.Objec
 		}
 	} else {
 		// if record exists, update record
-		queryCondition := &ObjectTable{ObjectID: ObjectID}
+		queryCondition := &ObjectTable{ObjectID: objectID}
 		updateFields.JobID = queryReturn.JobID
 		result = s.db.Model(queryCondition).Updates(updateFields)
 		if result.Error != nil || result.RowsAffected != 1 {

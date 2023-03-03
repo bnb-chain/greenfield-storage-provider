@@ -8,10 +8,10 @@ import (
 )
 
 // GetObjectIntegrity return the integrity hash info
-func (s *SpDBImpl) GetObjectIntegrity(ObjectID uint64) (*IntegrityMeta, error) {
+func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 	queryReturn := &IntegrityMetaTable{}
 	result := s.db.Model(&IntegrityMetaTable{}).
-		Where("object_id = ?", ObjectID).
+		Where("object_id = ?", objectID).
 		First(queryReturn)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query integrity meta record: %s", result.Error)
