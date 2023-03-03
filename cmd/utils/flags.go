@@ -38,9 +38,10 @@ var (
 		EnvVars: []string{model.SpDBPasswd},
 	}
 	DBAddressFlag = &cli.StringFlag{
-		Name:  "db.address",
-		Usage: "DB address",
-		Value: "localhost:3306",
+		Name:    "db.address",
+		Usage:   "DB address",
+		EnvVars: []string{model.SpDBAddress},
+		Value:   "localhost:3306",
 	}
 	LogLevelFlag = &cli.StringFlag{
 		Name:  "log.level",

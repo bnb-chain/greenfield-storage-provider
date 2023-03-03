@@ -82,6 +82,8 @@ const (
 	SpDBUser = "SP_DB_USER"
 	// SpDBPasswd defines env variable name for sp db user passwd
 	SpDBPasswd = "SP_DB_PASSWORD"
+	// SpDBAddress defines env variable name for sp db address
+	SpDBAddress = "SP_DB_Address"
 
 	// SpOperatorAddress defines env variable name for sp operator address
 	SpOperatorAddress = "SP_OPERATOR_PUB_KEY"
