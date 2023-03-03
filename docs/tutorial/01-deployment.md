@@ -22,11 +22,11 @@ cd build
 # show the gnfd-sp help
 ./gnfd-sp -h
 ```
-## Setup
-### Join greenfield chain
+
+## Join greenfield chain
 > TODO:: waiting for the greenfield chain doc pr merged
 
-### Make configuration
+## Make configuration
 ### Dump configuration template
   ```shell
   # dump the configuration template to './config.toml'
@@ -37,7 +37,7 @@ cd build
 ### Edit configuration template
 > TODO:: the config file will change the format after changing will commit the template
 
-### 1. Start with local model
+## Start with local model
 ```shell
 # show greenfield storeage field supports the services list 
 ./gnfd-sp list
@@ -68,7 +68,7 @@ SIGNER_SEAL_PRIV_KEY
 
 
 
-### 2. Start with remote mode
+## Start with remote mode
 The remote mode will upload the configuration to the SQL DB, avoid the inconsistency caused by configuration transfer.
 > TODO::support configuration dynamic delivery and hot loading.
 
@@ -76,7 +76,6 @@ The remote mode will upload the configuration to the SQL DB, avoid the inconsist
   ```shell
   ./gnfd-sp config.upload -db.user ${db_user} -db.password ${db_password} -db.address ${db_address} -file ${config_file}
   
-  # db,user and db.password flags support ENV Vars
   export SP_DB_USER=${SP_DB_USER}
   export SP_DB_PASSWORD=${SP_DB_PASSWORD}
   ./gnfd-sp config.upload -db.address ${db_address}
