@@ -21,8 +21,7 @@ func (s *SpDBImpl) GetAllServiceConfigs() (string, string, error) {
 // otherwise update data in db
 func (s *SpDBImpl) SetAllServiceConfigs(version, config string) error {
 	configVersion, _, err := s.GetAllServiceConfigs()
-	isNotFound := strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error())
-	if err != nil && !isNotFound {
+	if err != nil && !strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error()) {
 		return fmt.Errorf("failed to query service config table: %s", err)
 	}
 
@@ -30,7 +29,8 @@ func (s *SpDBImpl) SetAllServiceConfigs(version, config string) error {
 		ConfigVersion: version,
 		ServiceConfig: config,
 	}
-	if isNotFound {
+	// if there is no record in db, insert a new record
+	if configVersion == "" {
 		if err := s.insertNewRecordIntoSvcCfgTable(newRecord); err != nil {
 			return err
 		}
