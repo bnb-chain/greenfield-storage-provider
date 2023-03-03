@@ -46,7 +46,8 @@ cd build
 ./gnfd-sp -config ${config_file} -server ${service_name_list}
 ```
 gnfd-sp supports any combination of services that are included in greenfield storage provider to run inside a process.
-Considering security factors, gnfd-sp supports obtaining sensitive information from environment variablesm includes:
+
+gnfd-sp supports obtaining sensitive information from environment variablesm includes:
 ```shell
 # AWS
 AWS_ACCESS_KEY
@@ -64,7 +65,8 @@ SIGNER_FUNDING_PRIV_KEY
 SIGNER_APPROVAL_PRIV_KEY
 SIGNER_SEAL_PRIV_KEY
 ```
-The above information can be set to default, gnfd-sp will lookup from ENV if fields are the default value.
+
+
 
 ### 2. Start with remote mode
 The remote mode will upload the configuration to the SQL DB, avoid the inconsistency caused by configuration transfer.
