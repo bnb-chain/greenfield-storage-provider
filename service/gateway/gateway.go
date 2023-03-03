@@ -98,12 +98,12 @@ func (g *Gateway) Start(ctx context.Context) error {
 	if g.running.Swap(true) {
 		return errors.New("gateway has started")
 	}
-	go g.Serve()
+	go g.serve()
 	return nil
 }
 
 // Serve starts http service.
-func (g *Gateway) Serve() {
+func (g *Gateway) serve() {
 	router := mux.NewRouter().SkipClean(true)
 	g.registerHandler(router)
 	server := &http.Server{

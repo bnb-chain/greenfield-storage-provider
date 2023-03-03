@@ -72,8 +72,8 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err = msg.ValidateBasic(); err != nil {
-			log.Errorw("failed to check bucket msg", "bucket_msg", msg, "error", err)
-			errDescription = InvalidBucketName
+			log.Errorw("failed to basic check", "bucket_msg", msg, "error", err)
+			errDescription = InvalidHeader
 			return
 		}
 		// TODO: to config it
@@ -98,8 +98,8 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err = msg.ValidateBasic(); err != nil {
-			log.Errorw("failed to check object_info", "object_info", msg, "error", err)
-			errDescription = InvalidBucketName
+			log.Errorw("failed to basic check", "object_msg", msg, "error", err)
+			errDescription = InvalidHeader
 			return
 		}
 		// TODO: to config it

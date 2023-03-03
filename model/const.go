@@ -117,6 +117,12 @@ const (
 	MaxCallMsgSize = 25 * 1024 * 1024
 )
 
+// define gateway constants
+const (
+	// StreamBufSize defines gateway stream forward payload buf size
+	StreamBufSize = 64 * 1024
+)
+
 // http header constants
 const (
 	// ContentTypeHeader and below are standard http protocols

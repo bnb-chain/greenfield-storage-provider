@@ -51,6 +51,9 @@ func (reqContext *requestContext) generateRequestDetail() string {
 	var headerToString = func(header http.Header) string {
 		var sb = strings.Builder{}
 		for k := range header {
+			if k == model.GnfdObjectInfoHeader || k == model.GnfdUnsignedApprovalMsgHeader {
+				continue
+			}
 			if sb.Len() != 0 {
 				sb.WriteString(",")
 			}
