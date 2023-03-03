@@ -44,8 +44,6 @@ func TestLog(t *testing.T) {
 	log.Error("error")
 
 	mlog.Info("info")
-	// log.Panic("panic")
-
 	printLogContent(t)
 }
 
@@ -56,7 +54,6 @@ func TestLogf(t *testing.T) {
 	log.Infof("msg: %v", "info")
 	log.Warnf("msg: %v", "warn")
 	log.Errorf("msg: %v", "error")
-	// log.Panic("panic")
 
 	printLogContent(t)
 }
@@ -68,7 +65,6 @@ func TestLogw(t *testing.T) {
 	log.Infow("msg: %v", "info", 2)
 	log.Warnw("msg: %v", "warn", 3)
 	log.Errorw("msg: %v", "error", 4)
-	// log.Panicw("panic", "panic", 4)
 
 	printLogContent(t)
 }
@@ -81,7 +77,6 @@ func TestCtxLog(t *testing.T) {
 	log.CtxInfo(ctx, "info")
 	log.CtxWarn(ctx, "warn")
 	log.CtxError(ctx, "error")
-	// log.CtxPanic("panic")
 
 	printLogContent(t)
 }
@@ -93,7 +88,6 @@ func TestCtxLogf(t *testing.T) {
 	log.CtxInfof(testContext(), "msg: %v", "info")
 	log.CtxWarnf(testContext(), "msg: %v", "warn")
 	log.CtxErrorf(testContext(), "msg: %v", "error")
-	// log.Panic("panic")
 
 	printLogContent(t)
 }
@@ -105,7 +99,6 @@ func TestCtxLogw(t *testing.T) {
 	log.CtxInfow(testContext(), "msg", "info", 1, 2, 3, 4)
 	log.CtxWarnw(testContext(), "msg", "warn", 3)
 	log.CtxErrorw(testContext(), "msg", "error", 4)
-	// log.Panicw("panic", "panic", 4)
 
 	printLogContent(t)
 }
@@ -117,7 +110,6 @@ func TestWith(t *testing.T) {
 	log.With("info", nil, "info", 9).Info("test")
 	log.With("warn", nil, 1, 2, 3, 4).Warn("test")
 	log.With("error", nil, "key", "value").Error("test")
-
 	log.With("t", 1, "hhh", "xxx", "hhh", "www").Warn("test")
 
 	printLogContent(t)

@@ -1,5 +1,7 @@
 package greenfield
 
+import "github.com/bnb-chain/greenfield-storage-provider/model"
+
 type NodeConfig struct {
 	GreenfieldAddresses []string
 	TendermintAddresses []string
@@ -13,7 +15,7 @@ type GreenfieldChainConfig struct {
 var DefaultGreenfieldChainConfig = &GreenfieldChainConfig{
 	ChainID: "greenfield_9000-1741",
 	NodeAddr: []*NodeConfig{{
-		GreenfieldAddresses: []string{"localhost:9090"},
-		TendermintAddresses: []string{"http://localhost:26750"},
+		GreenfieldAddresses: []string{model.GreenfieldAddress},
+		TendermintAddresses: []string{model.TendermintAddress},
 	}},
 }

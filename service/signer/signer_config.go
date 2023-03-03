@@ -17,8 +17,8 @@ type GreenfieldChainConfig struct {
 }
 
 var DefaultGreenfieldChainConfig = &GreenfieldChainConfig{
-	GRPCAddress: "localhost:9090",
-	ChainID:     "greenfield_9000-121",
+	GRPCAddress: model.GreenfieldAddress,
+	ChainID:     model.GreenfieldChainID,
 	GasLimit:    210000,
 }
 
@@ -30,10 +30,8 @@ type SignerConfig struct {
 }
 
 var DefaultSignerChainConfig = &SignerConfig{
-	GRPCAddress: model.SignerGRPCAddress,
-	WhitelistCIDR: []string{
-		"127.0.0.1/32",
-	},
+	GRPCAddress:           model.SignerGRPCAddress,
+	WhitelistCIDR:         []string{model.WhiteListCIDR},
 	GreenfieldChainConfig: DefaultGreenfieldChainConfig,
 }
 

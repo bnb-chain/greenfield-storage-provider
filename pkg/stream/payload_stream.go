@@ -68,13 +68,13 @@ func NewAsyncPayloadStream() *PayloadStream {
 
 // InitAsyncPayloadStream only be called once, init the payload metadata
 // must be called before write or read stream
-func (stream *PayloadStream) InitAsyncPayloadStream(oID uint64, rIdx uint32, segSize uint64,
+func (stream *PayloadStream) InitAsyncPayloadStream(objectID uint64, rIdx uint32, segSize uint64,
 	redundancyType storagetypes.RedundancyType) error {
 	if stream.init.Load() {
 		return nil
 	}
 	stream.init.Store(true)
-	stream.objectID = oID
+	stream.objectID = objectID
 	stream.replicaIdx = rIdx
 	stream.segmentSize = segSize
 	stream.redundancyType = redundancyType

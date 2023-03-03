@@ -175,8 +175,8 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 func (node *StoneNode) QueryReplicatingObject(ctx context.Context, req *types.QueryReplicatingObjectRequest) (
 	resp *types.QueryReplicatingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
-	log.CtxDebugw(ctx, "query replicating object")
 	objectID := req.GetObjectId()
+	log.CtxDebugw(ctx, "query replicating object", "objectID", objectID)
 	val, ok := node.cache.Get(objectID)
 	if !ok {
 		err = merrors.ErrCacheMiss

@@ -118,8 +118,8 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 func (syncer *Syncer) QuerySyncingObject(ctx context.Context, req *types.QuerySyncingObjectRequest) (
 	resp *types.QuerySyncingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
-	log.CtxDebugw(ctx, "query syncing object")
 	objectID := req.GetObjectId()
+	log.CtxDebugw(ctx, "query syncing object", "objectID", objectID)
 	cached, ok := syncer.cache.Get(objectID)
 	if !ok {
 		err = merrors.ErrCacheMiss

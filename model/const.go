@@ -24,7 +24,6 @@ var (
 	BlockSyncerService = strings.ToLower("BlockSyncer")
 )
 
-// define storage provider service default address
 // SpServiceDesc defines the service description in storage provider
 var SpServiceDesc = map[string]string{
 	GatewayService:     "Entrance for external user access",
@@ -38,7 +37,7 @@ var SpServiceDesc = map[string]string{
 	BlockSyncerService: "Syncer block data to db",
 }
 
-// define storage provider service gGRPC default address
+// define storage provider service gRPC default address
 const (
 	// GatewayHTTPAddress default HTTP address of gateway
 	GatewayHTTPAddress = "localhost:9033"
@@ -54,6 +53,18 @@ const (
 	SyncerGRPCAddress = "localhost:9533"
 	// SignerGRPCAddress default gRPC address of signer
 	SignerGRPCAddress = "localhost:9633"
+)
+
+// define greenfield chain default address
+const (
+	// GreenfieldAddress default greenfield chain address
+	GreenfieldAddress = "localhost:9090"
+	// TendermintAddress default Tendermint address
+	TendermintAddress = "http://localhost:26750"
+	// GreenfieldChainID default greenfield chainID
+	GreenfieldChainID = "greenfield_9000-121"
+	// WhiteListCIDR default whitelist CIDR
+	WhiteListCIDR = "127.0.0.1/32"
 )
 
 // environment constants
