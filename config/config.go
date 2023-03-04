@@ -114,6 +114,7 @@ type LogConfig struct {
 
 // DefaultLogConfig defines the default configuration of log
 var DefaultLogConfig = &LogConfig{
+	// TODO:: change to info level after releasing
 	Level: "debug",
 	Path:  "./gnfd-sp.log",
 }

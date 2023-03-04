@@ -21,8 +21,8 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 		Domain:            cfg.Domain,
 		ChainConfig:       cfg.ChainConfig,
 	}
-	if _, ok := cfg.HTTPAddress[model.GatewayHTTPAddress]; ok {
-		gCfg.HTTPAddress = cfg.HTTPAddress[model.GatewayHTTPAddress]
+	if _, ok := cfg.HTTPAddress[model.GatewayService]; ok {
+		gCfg.HTTPAddress = cfg.HTTPAddress[model.GatewayService]
 	} else {
 		return nil, fmt.Errorf("missing gateway HTTP address configuration for gateway service")
 	}

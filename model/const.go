@@ -26,11 +26,13 @@ var (
 
 // SpServiceDesc defines the service description in storage provider
 var SpServiceDesc = map[string]string{
-	GatewayService:     "Entrance for external user access",
-	UploaderService:    "Upload object to the backend",
-	DownloaderService:  "Download object from the backend and statistical read traffic",
-	ChallengeService:   "Provides the ability to query the integrity hash",
-	StoneNodeService:   "The smallest unit of background task execution",
+	GatewayService:    "Entrance for external user access",
+	UploaderService:   "Upload object to the backend",
+	DownloaderService: "Download object from the backend and statistical read traffic",
+	ChallengeService:  "Provides the ability to query the integrity hash",
+	// TODO:: change other service name, maybe TaskService
+	StoneNodeService: "The smallest unit of background task execution",
+	// TODO:: change other service name, maybe ReplicateService
 	SyncerService:      "Receive object from other storage provider and store",
 	SignerService:      "Sign the transaction and broadcast to chain",
 	MetadataService:    "Provides the ability to query meta data",
