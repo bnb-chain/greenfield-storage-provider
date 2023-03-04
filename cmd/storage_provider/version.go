@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"runtime"
+
+	"github.com/urfave/cli/v2"
 )
 
 const (
@@ -38,4 +40,20 @@ func DumpVersion() string {
 		BranchName,
 		CommitID,
 		runtime.Version(), runtime.GOOS, runtime.GOARCH, BuildTime)
+}
+
+var VersionCmd = &cli.Command{
+	Action:   versionAction,
+	Name:     "version",
+	Aliases:  []string{"v"},
+	Usage:    "Print version information",
+	Category: "MISCELLANEOUS COMMANDS",
+	Description: `
+The output of this command is supposed to be machine-readable.
+`,
+}
+
+func versionAction(ctx *cli.Context) error {
+	fmt.Print(DumpLogo() + "\n" + DumpVersion())
+	return nil
 }

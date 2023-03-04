@@ -48,6 +48,10 @@ func (gatewayClient *GatewayClient) SyncPieceData(objectInfo *types.ObjectInfo, 
 	}
 
 	req, err := http.NewRequest(http.MethodPut, gatewayClient.address+model.SyncerPath, bytes.NewReader(marshalPieceData))
+	if err != nil {
+		log.Errorw("failed to new http request", "error", err)
+		return nil, nil, err
+	}
 	req.Header.Add(model.GnfdObjectInfoHeader, marshalObjectInfo)
 	req.Header.Add(model.GnfdReplicateIdxHeader, util.Uint32ToString(replicateIdx))
 	req.Header.Add(model.GnfdSegmentSizeHeader, util.Uint32ToString(segmentSize))

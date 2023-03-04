@@ -5,13 +5,12 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/config"
-	storeconf "github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
 
 var ConfigDumpCmd = &cli.Command{
 	Action:   dumpConfigAction,
 	Name:     "config.dump",
-	Usage:    "Dump default configuration to file for editing",
+	Usage:    "Dump default configuration to the './config.toml' file for editing",
 	Category: "CONFIG COMMANDS",
 	Description: `
 The config.dump command writes default configuration 
@@ -32,6 +31,7 @@ var ConfigUploadCmd = &cli.Command{
 		utils.DBUserFlag,
 		utils.DBPasswordFlag,
 		utils.DBAddressFlag,
+		utils.DBDataBaseFlag,
 	},
 	Category: "CONFIG COMMANDS",
 	Description: `
@@ -42,13 +42,14 @@ SP_DB_USER and SP_DB_PASSWORD`,
 
 // configUploadAction is the config.upload command.
 func configUploadAction(ctx *cli.Context) error {
-	_ = config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
-	_ = &storeconf.SQLDBConfig{
-		User:     ctx.String(utils.DBUserFlag.Name),
-		Passwd:   ctx.String(utils.DBPasswordFlag.Name),
-		Address:  ctx.String(utils.DBAddressFlag.Name),
-		Database: "job_db",
+	spDB, err := utils.MakeSPDB(ctx)
+	if err != nil {
+		return err
 	}
-	// TODO:: new sp db and upload config
-	return nil
+	cfg := config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
+	cfgBytes, err := cfg.JsonMarshal()
+	if err != nil {
+		return err
+	}
+	return spDB.SetAllServiceConfigs("default", string(cfgBytes))
 }

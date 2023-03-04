@@ -113,8 +113,8 @@ func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID uin
 	if err != nil {
 		return
 	}
-	for i := 0; i < replicates; i++ {
-		data = append(data, make([][]byte, int(segments)))
+	for i := 0; i < int(segments); i++ {
+		data = append(data, make([][]byte, replicates))
 	}
 	log.Debugw("start to encode payload", "object_id", objectID, "segment_count", segments,
 		"replicas", replicates, "redundancy_type", rType)
@@ -137,12 +137,10 @@ func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID uin
 					errCh <- err
 					return
 				}
-				for idx, ec := range encodeData {
-					data[idx][segIdx] = ec
-				}
+				copy(data[segIdx], encodeData)
 			} else {
-				for idx := 0; idx < replicates; idx++ {
-					data[idx][segIdx] = segmentData
+				for rIdx := 0; rIdx < replicates; rIdx++ {
+					data[segIdx][rIdx] = segmentData
 				}
 			}
 			log.Debugw("finish to encode payload", "object_id", objectID, "segment_idx", segIdx)
@@ -152,11 +150,8 @@ func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID uin
 			}
 		}(segIdx)
 	}
-
-	for {
-		select {
-		case err = <-errCh:
-			return
-		}
+	for err = range errCh {
+		return
 	}
+	return
 }
