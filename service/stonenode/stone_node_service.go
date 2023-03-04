@@ -101,7 +101,6 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 		spList = spList[1:]
 		return sp, nil
 	}
-
 	processInfo.SegmentInfos = make([]*servicetypes.SegmentInfo, replicates)
 	var done int64
 	errCh := make(chan error, 10)
@@ -117,7 +116,7 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 				}
 				var data [][]byte
 				for idx := 0; idx < int(segments); idx++ {
-					data = append(data, replicateData[rIdx][idx])
+					data = append(data, replicateData[idx][rIdx])
 				}
 				gatewayClient, err := gatewayclient.NewGatewayClient(sp.GetEndpoint())
 				if err != nil {
