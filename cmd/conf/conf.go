@@ -10,7 +10,7 @@ import (
 var ConfigDumpCmd = &cli.Command{
 	Action:   dumpConfigAction,
 	Name:     "config.dump",
-	Usage:    "Dump default configuration to file for editing",
+	Usage:    "Dump default configuration to the './config.toml' file for editing",
 	Category: "CONFIG COMMANDS",
 	Description: `
 The config.dump command writes default configuration 
