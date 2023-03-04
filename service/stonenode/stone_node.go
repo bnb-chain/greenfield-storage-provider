@@ -137,9 +137,7 @@ func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID uin
 					errCh <- err
 					return
 				}
-				for rIdx, ecData := range encodeData {
-					data[segIdx][rIdx] = ecData
-				}
+				copy(data[segIdx], encodeData)
 			} else {
 				for rIdx := 0; rIdx < replicates; rIdx++ {
 					data[segIdx][rIdx] = segmentData
@@ -152,11 +150,8 @@ func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID uin
 			}
 		}(segIdx)
 	}
-
-	for {
-		select {
-		case err = <-errCh:
-			return
-		}
+	for err = range errCh {
+		return
 	}
+	return
 }

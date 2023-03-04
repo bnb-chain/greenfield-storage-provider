@@ -59,7 +59,6 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 		}
 		node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
 		log.CtxInfow(ctx, "seal object on chain", "success", success)
-		return
 	}()
 
 	params, err := node.spDB.GetStorageParams()
@@ -162,12 +161,10 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 			}
 		}(rIdx)
 	}
-	for {
-		select {
-		case err = <-errCh:
-			return
-		}
+	for err = range errCh {
+		return
 	}
+	return
 }
 
 // QueryReplicatingObject query a replicating object information by object id
