@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+
+basedir=$(cd `dirname $0`; pwd)
+workspace=${basedir}
+source ${workspace}/env.info
+sp_bin_name=gnfd-sp
+sp_bin=${workspace}/../../build/${sp_bin_name}
+
+#########################
+# the command line help #
+#########################
+display_help() {
+    echo "Usage: $0 [option...] {help|reset|start|stop|print}" >&2
+    echo
+    echo "   --help                 display help info"
+    echo "   --reset first-time     reset env, first-time = 0 or 1"
+    echo "   --config               make configs real according to env.info, db.info and sp.info"
+    echo "   --start                start storage providers"
+    echo "   --stop                 stop storage providers"
+    echo "   --print                print sp local env work directory"
+    echo
+    exit 0
+}
+
+################################
+# generate sp config templates #
+################################
+generate_env() {
+  first_time=$1
+  bash ${workspace}/../../build.sh
+  mkdir -p ${workspace}/${SP_DEPLOY_DIR}
+
+  for ((i=0;i<${SP_NUM};i++));do
+    mkdir -p ${workspace}/${SP_DEPLOY_DIR}/sp${i}
+    cp -rf ${sp_bin} ${workspace}/${SP_DEPLOY_DIR}/sp${i}/${sp_bin_name}${i}
+    if [ ${first_time} -eq 1 ]
+    then
+      cd ${workspace}/${SP_DEPLOY_DIR}/sp${i}/
+      ./${sp_bin_name}${i}  config.dump
+      {
+        echo '#!/usr/bin/env bash'
+        echo 'USER=""'
+        echo 'PWD=""'
+        echo 'ADDRESS=""'
+        echo 'DATABASE=""'
+      } > db.info
+      {
+        echo '#!/usr/bin/env bash'
+        echo 'SP_ENDPOINT=""'
+        echo 'OPERATOR_ADDRESS=""'
+        echo 'OPERATOR_PRIVATE_KEY=""'
+        echo 'FUNDING_PRIVATE_KEY=""'
+        echo 'SEAL_PRIVATE_KEY=""'
+        echo 'APPROVAL_PRIVATE_KEY=""'
+      } > sp.info
+      cd - >/dev/null
+    fi
+  done
+}
+
+###############################################################
+# make sp config.toml real according env.info/db.info/sp.info #
+###############################################################
+make_config() {
+  index=0
+  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
+      cur_port=$((SP_START_PORT+1000*$index))
+      cd ${sp_dir}
+        source db.info
+        source sp.info
+        # db
+        sed -i -e "s/root/${USER}/g" config.toml
+        sed -i -e "s/test_pwd/${PWD}/g" config.toml
+        sed -i -e "s/localhost\:3306/${ADDRESS}/g" config.toml
+        sed -i -e "s/storage_provider_db/${DATABASE}/g" config.toml
+        # sp
+        sed -i -e "s/localhost\:9033/${SP_ENDPOINT}/g" config.toml
+        sed -i -e "s/9133/$(($cur_port+133))/g" config.toml
+        sed -i -e "s/9233/$(($cur_port+233))/g" config.toml
+        sed -i -e "s/9333/$(($cur_port+333))/g" config.toml
+        sed -i -e "s/9433/$(($cur_port+433))/g" config.toml
+        sed -i -e "s/9533/$(($cur_port+533))/g" config.toml
+        sed -i -e "s/9633/$(($cur_port+633))/g" config.toml
+        sed -i -e "s/SP_OPERATOR_PUB_KEY/${OPERATOR_ADDRESS}/g" config.toml
+        sed -i -e "s/OperatorPrivateKey = \".*\"/OperatorPrivateKey = \"${OPERATOR_PRIVATE_KEY}\"/g" config.toml
+        sed -i -e "s/FundingPrivateKey = \".*\"/FundingPrivateKey = \"${FUNDING_PRIVATE_KEY}\"/g" config.toml
+        sed -i -e "s/SealPrivateKey = \".*\"/SealPrivateKey = \"${SEAL_PRIVATE_KEY}\"/g" config.toml
+        sed -i -e "s/ApprovalPrivateKey = \".*\"/ApprovalPrivateKey = \"${APPROVAL_PRIVATE_KEY}\"/g" config.toml
+        # chain
+        sed -i -e "s/greenfield_9000-1741/${CHAIN_ID}/g" config.toml
+        sed -i -e "s/localhost\:9090/${CHAIN_GRPC_ENDPOINT}/g" config.toml
+        sed -i -e "s/localhost\:26750/${CHAIN_HTTP_ENDPOINT}/g" config.toml
+      cd -
+      index=$(($index+1))
+  done
+}
+
+#############
+# start sps #
+#############
+start_sp() {
+  echo "begin start storage providers"
+  index=0
+  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
+    cd ${sp_dir}
+      nohup ./${sp_bin_name}${index} -config config.toml --server "gateway,uploader,downloader,challenge,stonenode,syncer,signer" </dev/null >log.txt 2>&1&
+    cd -
+    index=$(($index+1))
+  done
+  echo "end start storage providers"
+}
+
+############
+# stop sps #
+############
+stop_sp() {
+  echo "begin finish storage providers"
+  kill -9 $(pgrep -f ${sp_bin_name}) >/dev/null 2>&1
+  echo "succeed to finish storage providers"
+}
+
+reset_db() {
+  echo "TODO reset db"
+}
+
+clean_piecestore() {
+  echo "TODO clear piecestore"
+}
+
+#############
+# reset sps #
+#############
+reset_sp() {
+  if [ $# != 1 ] ; then
+    echo "failed to reset sp, please check args by help info"
+    exit 1
+  fi
+  stop_sp
+  first_time=$1
+  if [ ${first_time} -eq 1 ]
+  then
+    generate_env ${first_time}
+    reset_db
+    echo
+    echo "succeed init templates, need to overwrite db.info and sp.info in the following working directory:"
+    print_work_dir
+    echo "after overwrite, and then config & start sp according to README"
+    echo
+  else
+    reset_db
+    clean_piecestore
+    generate_env 0
+    make_config
+    start_sp
+  fi
+}
+
+##################
+# print work dir #
+##################
+print_work_dir() {
+  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
+    echo "  "${sp_dir}
+  done
+}
+
+main() {
+  CMD=$1
+  case ${CMD} in
+  --reset)
+    reset_sp $2
+    ;;
+  --config)
+    make_config
+    ;;
+  --start)
+    start_sp
+    ;;
+  --stop)
+    stop_sp
+    ;;
+  --print)
+    print_work_dir
+    ;;
+  --help|*)
+    display_help
+    ;;
+  esac
+}
+
+main $@

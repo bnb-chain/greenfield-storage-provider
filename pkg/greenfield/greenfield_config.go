@@ -13,7 +13,7 @@ type GreenfieldChainConfig struct {
 }
 
 var DefaultGreenfieldChainConfig = &GreenfieldChainConfig{
-	ChainID: "greenfield_9000-1741",
+	ChainID: model.GreenfieldChainID,
 	NodeAddr: []*NodeConfig{{
 		GreenfieldAddresses: []string{model.GreenfieldAddress},
 		TendermintAddresses: []string{model.TendermintAddress},

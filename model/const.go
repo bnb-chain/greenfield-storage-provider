@@ -62,7 +62,7 @@ const (
 	// TendermintAddress default Tendermint address
 	TendermintAddress = "http://localhost:26750"
 	// GreenfieldChainID default greenfield chainID
-	GreenfieldChainID = "greenfield_9000-121"
+	GreenfieldChainID = "greenfield_9000-1741"
 	// WhiteListCIDR default whitelist CIDR
 	WhiteListCIDR = "127.0.0.1/32"
 )

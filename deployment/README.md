@@ -7,7 +7,8 @@ make build
 
 2. Dump Config Template
 ```bash
-./build/gnfd-sp config.dump
+SIZE=7 # The number of storage-provider clusters.
+bash ./deployment/localup/localup.sh generate ${SIZE}
 ```
 
 3. Creates all the SP configuration files
@@ -30,7 +31,7 @@ All these configuration files are in ~/.gnfd-sp by default, but you need overwri
 
 Start all sps establish a storage network.
 ```bash
-bash ./deployment/localup/localup.sh
+bash ./deployment/localup/localup.sh start
 ```
 The environment directory is as follows:
 ```
