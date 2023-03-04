@@ -33,6 +33,9 @@ func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	if ctx.IsSet(utils.LogPathFlag.Name) {
 		cfg.LogCfg.Path = ctx.String(utils.LogPathFlag.Name)
 	}
+	if ctx.IsSet(utils.LogStdOutputFlag.Name) {
+		cfg.LogCfg.Path = ""
+	}
 	logLevel, err := log.ParseLevel(cfg.LogCfg.Level)
 	if err != nil {
 		return err
