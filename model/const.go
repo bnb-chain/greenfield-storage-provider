@@ -26,11 +26,13 @@ var (
 
 // SpServiceDesc defines the service description in storage provider
 var SpServiceDesc = map[string]string{
-	GatewayService:     "Entrance for external user access",
-	UploaderService:    "Upload object to the backend",
-	DownloaderService:  "Download object from the backend and statistical read traffic",
-	ChallengeService:   "Provides the ability to query the integrity hash",
-	StoneNodeService:   "The smallest unit of background task execution",
+	GatewayService:    "Entrance for external user access",
+	UploaderService:   "Upload object to the backend",
+	DownloaderService: "Download object from the backend and statistical read traffic",
+	ChallengeService:  "Provides the ability to query the integrity hash",
+	// TODO:: change other service name, maybe TaskService
+	StoneNodeService: "The smallest unit of background task execution",
+	// TODO:: change other service name, maybe ReplicateService
 	SyncerService:      "Receive object from other storage provider and store",
 	SignerService:      "Sign the transaction and broadcast to chain",
 	MetadataService:    "Provides the ability to query meta data",
@@ -41,6 +43,8 @@ var SpServiceDesc = map[string]string{
 const (
 	// GatewayHTTPAddress default HTTP address of gateway
 	GatewayHTTPAddress = "localhost:9033"
+	// MetaDataServiceHTTPAddress default HTTP address of meta data service
+	MetaDataServiceHTTPAddress = "localhost:9733"
 	// UploaderGRPCAddress default gRPC address of uploader
 	UploaderGRPCAddress = "localhost:9133"
 	// DownloaderGRPCAddress default gRPC address of downloader
@@ -82,6 +86,10 @@ const (
 	SpDBUser = "SP_DB_USER"
 	// SpDBPasswd defines env variable name for sp db user passwd
 	SpDBPasswd = "SP_DB_PASSWORD"
+	// SpDBAddress defines env variable name for sp db address
+	SpDBAddress = "SP_DB_ADDRESS"
+	// SpDBDataBase defines env variable name for sp db database
+	SpDBDataBase = "SP_DB_DATABASE"
 
 	// SpOperatorAddress defines env variable name for sp operator address
 	SpOperatorAddress = "SP_OPERATOR_PUB_KEY"

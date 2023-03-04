@@ -59,7 +59,6 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 		}
 		node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
 		log.CtxInfow(ctx, "seal object on chain", "success", success)
-		return
 	}()
 
 	params, err := node.spDB.GetStorageParams()
@@ -101,7 +100,6 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 		spList = spList[1:]
 		return sp, nil
 	}
-
 	processInfo.SegmentInfos = make([]*servicetypes.SegmentInfo, replicates)
 	var done int64
 	errCh := make(chan error, 10)
@@ -117,7 +115,7 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 				}
 				var data [][]byte
 				for idx := 0; idx < int(segments); idx++ {
-					data = append(data, replicateData[rIdx][idx])
+					data = append(data, replicateData[idx][rIdx])
 				}
 				gatewayClient, err := gatewayclient.NewGatewayClient(sp.GetEndpoint())
 				if err != nil {
@@ -163,12 +161,10 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 			}
 		}(rIdx)
 	}
-	for {
-		select {
-		case err = <-errCh:
-			return
-		}
+	for err = range errCh {
+		return
 	}
+	return
 }
 
 // QueryReplicatingObject query a replicating object information by object id

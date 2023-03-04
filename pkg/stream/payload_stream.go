@@ -46,7 +46,6 @@ func (entry SegmentEntry) Error() error {
 type PayloadStream struct {
 	objectID       uint64
 	replicaIdx     uint32
-	segmentIdx     uint32
 	segmentSize    uint64
 	redundancyType storagetypes.RedundancyType
 	entryCh        chan *SegmentEntry

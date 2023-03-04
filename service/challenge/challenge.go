@@ -29,7 +29,6 @@ func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err err
 	if err != nil {
 		return nil, err
 	}
-	// TODO:: new sp db
 	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
 	if err != nil {
 		return nil, err
