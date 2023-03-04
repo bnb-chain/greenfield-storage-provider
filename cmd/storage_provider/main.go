@@ -34,6 +34,7 @@ var (
 		utils.DBAddressFlag,
 		utils.LogLevelFlag,
 		utils.LogPathFlag,
+		utils.LogStdOutputFlag,
 	}
 )
 
