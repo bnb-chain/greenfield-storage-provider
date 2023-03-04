@@ -41,6 +41,8 @@ var SpServiceDesc = map[string]string{
 const (
 	// GatewayHTTPAddress default HTTP address of gateway
 	GatewayHTTPAddress = "localhost:9033"
+	// MetaDataServiceHTTPAddress default HTTP address of meta data service
+	MetaDataServiceHTTPAddress = "localhost:9733"
 	// UploaderGRPCAddress default gRPC address of uploader
 	UploaderGRPCAddress = "localhost:9133"
 	// DownloaderGRPCAddress default gRPC address of downloader

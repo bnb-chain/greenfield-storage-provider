@@ -7,11 +7,6 @@ import (
 )
 
 var (
-	VersionFlag = &cli.BoolFlag{
-		Name:    "version",
-		Aliases: []string{"v"},
-		Usage:   "Show the storage provider version information",
-	}
 	ConfigFileFlag = &cli.StringFlag{
 		Name:    "config",
 		Aliases: []string{"c"},
@@ -19,8 +14,10 @@ var (
 		Value:   "./config.toml",
 	}
 	ConfigRemoteFlag = &cli.BoolFlag{
-		Name:  "config.remote",
-		Usage: "Flag load config from remote db",
+		Name: "config.remote",
+		Usage: `Flag load config from remote db, if 'config.remote' be set, 
+				the db.user, db.password and db.address flags are needed, 
+				otherwise use default value`,
 	}
 	ServerFlag = &cli.StringFlag{
 		Name:    "server",

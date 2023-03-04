@@ -5,7 +5,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/config"
-	storeconf "github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
 
 var ConfigDumpCmd = &cli.Command{
@@ -42,13 +41,14 @@ SP_DB_USER and SP_DB_PASSWORD`,
 
 // configUploadAction is the config.upload command.
 func configUploadAction(ctx *cli.Context) error {
-	_ = config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
-	_ = &storeconf.SQLDBConfig{
-		User:     ctx.String(utils.DBUserFlag.Name),
-		Passwd:   ctx.String(utils.DBPasswordFlag.Name),
-		Address:  ctx.String(utils.DBAddressFlag.Name),
-		Database: "job_db",
+	cfg := config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
+	cfgBytes, err := cfg.JsonMarshal()
+	if err != nil {
+		return err
 	}
-	// TODO:: new sp db and upload config
-	return nil
+	spDB, err := utils.MakeSPDB(ctx)
+	if err != nil {
+		return err
+	}
+	return spDB.SetAllServiceConfigs("default", string(cfgBytes))
 }
