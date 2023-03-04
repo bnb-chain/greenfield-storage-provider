@@ -50,7 +50,7 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		HandlerFunc(g.getObjectHandler)
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
-	// admin router, path style.
+	// admin router, path style
 	r.Path(model.GetApprovalPath).
 		Name(approvalRouterName).
 		Methods(http.MethodGet).

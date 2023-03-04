@@ -136,12 +136,11 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription *errorDescription
 		reqContext     *requestContext
 		addr           sdk.AccAddress
-		buf            = make([]byte, 65536)
+		size           int
 		readN          int
-		size           uint64
-		hashBuf        = make([]byte, 65536)
+		buf            = make([]byte, model.StreamBufSize)
+		hashBuf        = make([]byte, model.StreamBufSize)
 		md5Hash        = md5.New()
-		md5Value       string
 	)
 
 	reqContext = newRequestContext(r)
@@ -172,6 +171,8 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription = InvalidKey
 		return
 	}
+	// TODO: maybe tx_hash will be used in the future
+	_, _ = hex.DecodeString(reqContext.request.Header.Get(model.GnfdTransactionHashHeader))
 
 	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
@@ -183,9 +184,6 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription = UnauthorizedAccess
 		return
 	}
-
-	// TODO: maybe tx_hash will be used in the future
-	_, _ = hex.DecodeString(reqContext.request.Header.Get(model.GnfdTransactionHashHeader))
 
 	stream, err := g.uploader.UploadObject(context.Background())
 	if err != nil {
@@ -210,7 +208,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 				errDescription = InternalError
 				return
 			}
-			size += uint64(readN)
+			size += readN
 			copy(hashBuf, buf[:readN])
 			md5Hash.Write(hashBuf[:readN])
 		}
@@ -220,18 +218,17 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 				errDescription = InvalidPayload
 				return
 			}
-			resp, err := stream.CloseAndRecv()
+			_, err = stream.CloseAndRecv()
 			if err != nil {
 				log.Errorw("failed to put object due to stream close", "error", err)
 				errDescription = InternalError
 				return
 			}
-			// TODO: check response status code
-			_ = resp
+			// succeed to put object
 			break
 		}
 	}
-	md5Value = hex.EncodeToString(md5Hash.Sum(nil))
+
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
-	w.Header().Set(model.ETagHeader, md5Value)
+	w.Header().Set(model.ETagHeader, hex.EncodeToString(md5Hash.Sum(nil)))
 }
