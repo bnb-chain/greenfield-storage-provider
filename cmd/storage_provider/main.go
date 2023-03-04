@@ -32,6 +32,7 @@ var (
 		utils.DBUserFlag,
 		utils.DBPasswordFlag,
 		utils.DBAddressFlag,
+		utils.DBDataBaseFlag,
 		utils.LogLevelFlag,
 		utils.LogPathFlag,
 		utils.LogStdOutputFlag,

@@ -14,7 +14,7 @@ var (
 		Value:   "./config.toml",
 	}
 	ConfigRemoteFlag = &cli.BoolFlag{
-		Name: "config.remote",
+		Name: "configremote",
 		Usage: "Flag load config from remote db,if 'config.remote' be set, the db.user, " +
 			"db.password and db.address flags are needed, otherwise use default value",
 	}
@@ -37,6 +37,12 @@ var (
 		Name:    "db.address",
 		Usage:   "DB address",
 		EnvVars: []string{model.SpDBAddress},
+		Value:   "localhost:3306",
+	}
+	DBDataBaseFlag = &cli.StringFlag{
+		Name:    "db.database",
+		Usage:   "DB database",
+		EnvVars: []string{model.SpDBDataBase},
 		Value:   "localhost:3306",
 	}
 	LogLevelFlag = &cli.StringFlag{
