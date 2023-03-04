@@ -46,7 +46,7 @@ Build   : go1.20.1 darwin amd64 2023-03-04 23:54
   ./gnfd-sp config.dump
   ```
 
-[Edit configuration template]()
+[Edit configuration template](https://github.com/bnb-chain/greenfield-storage-provider/blob/develop_opt/docs/tutorial/02-config-template.toml)
 
 ## Start with local model
 ```shell
