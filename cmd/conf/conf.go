@@ -42,12 +42,12 @@ SP_DB_USER and SP_DB_PASSWORD`,
 
 // configUploadAction is the config.upload command.
 func configUploadAction(ctx *cli.Context) error {
-	cfg := config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
-	cfgBytes, err := cfg.JsonMarshal()
+	spDB, err := utils.MakeSPDB(ctx)
 	if err != nil {
 		return err
 	}
-	spDB, err := utils.MakeSPDB(ctx)
+	cfg := config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
+	cfgBytes, err := cfg.JsonMarshal()
 	if err != nil {
 		return err
 	}

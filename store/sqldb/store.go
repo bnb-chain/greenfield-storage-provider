@@ -86,4 +86,7 @@ func LoadDBConfigFromEnv(config *config.SQLDBConfig) {
 	if val, ok := os.LookupEnv(model.SpDBAddress); ok {
 		config.Address = val
 	}
+	if val, ok := os.LookupEnv(model.SpDBDataBase); ok {
+		config.Database = val
+	}
 }
