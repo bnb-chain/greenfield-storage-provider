@@ -6,19 +6,6 @@ type PieceStoreConfig struct {
 	Store  *ObjectStorageConfig // config of object storage
 }
 
-// DefaultPieceStoreConfig if no config in config file, use this default config
-var DefaultPieceStoreConfig = &PieceStoreConfig{
-	Shards: 0,
-	Store: &ObjectStorageConfig{
-		Storage:               "s3",
-		BucketURL:             "https://s3.ap-northeast-1.amazonaws.com/example",
-		NoSignRequest:         false,
-		MaxRetries:            5,
-		MinRetryDelay:         0,
-		TlsInsecureSkipVerify: false,
-	},
-}
-
 // ObjectStorageConfig object storage config
 type ObjectStorageConfig struct {
 	Storage               string // backend storage type (e.g. s3, file, memory)

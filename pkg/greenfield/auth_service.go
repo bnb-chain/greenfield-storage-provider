@@ -3,8 +3,9 @@ package greenfield
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // AuthUploadObjectWithAccount verify the greenfield chain information for upload object.
@@ -13,14 +14,16 @@ func (greenfield *Greenfield) AuthUploadObjectWithAccount(ctx context.Context, b
 	isSpBucket bool, ownerObject bool, err error) {
 	accountExist, err = greenfield.HasAccount(ctx, account)
 	if err != nil || !accountExist {
-		log.Errorw("failed to query account", "error", err, "is_account_exist", accountExist)
+		log.Errorw("failed to query account", "bucket", bucket,
+			"object", object, "account_exist", accountExist, "error", err)
 		return
 	}
 	var bucketInfo *storagetypes.BucketInfo
 	bucketInfo, err = greenfield.QueryBucketInfo(ctx, bucket)
 	if err != nil || bucketInfo == nil {
 		bucketExist = false
-		log.Errorw("failed to query bucket info", "error", err, "bucket_info", bucketInfo)
+		log.Errorw("failed to query bucket info", "bucket", bucket,
+			"object", object, "error", err)
 		return
 	}
 	bucketExist = true
@@ -29,18 +32,21 @@ func (greenfield *Greenfield) AuthUploadObjectWithAccount(ctx context.Context, b
 	objectInfo, err = greenfield.QueryObjectInfo(ctx, bucket, object)
 	if err != nil || objectInfo == nil {
 		isInitStatus = false
-		log.Errorw("failed to query object info", "error", err, "object_info", objectInfo)
+		log.Errorw("failed to query object info", "bucket", bucket,
+			"object", object, "error", err)
 		return
 	}
 	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_INIT {
 		isInitStatus = false
-		log.Errorw("object status is not equal to status_init", "status", objectInfo.GetObjectStatus())
+		log.Errorw("object status is not equal to status_init",
+			"status", objectInfo.GetObjectStatus())
 		return
 	}
 	isInitStatus = true
 	if objectInfo.GetOwner() != account {
 		ownerObject = false
-		log.Errorw("object owner is not equal to account", "owner", objectInfo.GetOwner(), "account", account)
+		log.Errorw("object owner is not equal to account",
+			"owner", objectInfo.GetOwner(), "account", account)
 		return
 	}
 	ownerObject = true
@@ -67,14 +73,16 @@ func (greenfield *Greenfield) AuthDownloadObjectWithAccount(ctx context.Context,
 
 	accountExist, err = greenfield.HasAccount(ctx, account)
 	if err != nil || !accountExist {
-		log.Errorw("failed to query account", "error", err, "is_account_exist", accountExist)
+		log.Errorw("failed to query account", "bucket", bucket,
+			"object", object, "account_exist", accountExist, "error", err)
 		return
 	}
 	var bucketInfo *storagetypes.BucketInfo
 	bucketInfo, err = greenfield.QueryBucketInfo(ctx, bucket)
 	if err != nil || bucketInfo == nil {
 		bucketExist = false
-		log.Errorw("failed to query bucket info", "error", err, "bucket_info", bucketInfo)
+		log.Errorw("failed to query bucket info",
+			"bucket", bucket, "object", object, "error", err)
 		return
 	}
 	bucketExist = true
@@ -83,18 +91,20 @@ func (greenfield *Greenfield) AuthDownloadObjectWithAccount(ctx context.Context,
 	objectInfo, err = greenfield.QueryObjectInfo(ctx, bucket, object)
 	if err != nil || objectInfo == nil {
 		isServiceStatus = false
-		log.Errorw("failed to query object info", "error", err, "object_info", objectInfo)
+		log.Errorw("failed to query object info",
+			"bucket", bucket, "object", object, "error", err)
 		return
 	}
 	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_IN_SERVICE {
 		isServiceStatus = false
-		log.Errorw("object status is not equal to status_in_service", "status", objectInfo.GetObjectStatus())
+		log.Errorw("object not in status_in_service",
+			"status", objectInfo.GetObjectStatus())
 		return
 	}
 	isServiceStatus = true
 	if objectInfo.GetOwner() != account {
 		ownerObject = false
-		log.Errorw("object owner is not equal to account", "owner", objectInfo.GetOwner(), "account", account)
+		log.Errorw("object owner mismatch", "owner", objectInfo.GetOwner(), "account", account)
 		return
 	}
 	ownerObject = true

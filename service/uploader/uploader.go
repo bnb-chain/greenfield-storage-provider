@@ -2,78 +2,90 @@ package uploader
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net"
-	"sync/atomic"
 
-	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
+	stoneclient "github.com/bnb-chain/greenfield-storage-provider/service/stonenode/client"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
-// Uploader respond to putObject impl
+var _ lifecycle.Service = &Uploader{}
+
+// Uploader implements the gRPC of UploaderService,
+// responsible for uploading object payload data.
 type Uploader struct {
-	config  *UploaderConfig
-	name    string
-	running atomic.Bool
-
+	config     *UploaderConfig
+	cache      *lru.Cache
+	spDB       sqldb.SPDB
+	pieceStore *psclient.StoreClient
+	signer     *signerclient.SignerClient
+	stone      *stoneclient.StoneNodeClient
 	grpcServer *grpc.Server
-	stoneHub   *client.StoneHubClient
-	store      *client.StoreClient
-	chain      *gnfd.Greenfield
 }
 
-// NewUploaderService return the uploader instance
-func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
-	var (
-		err error
-		u   *Uploader
-	)
-
-	u = &Uploader{
-		config: cfg,
-		name:   model.UploaderService,
-	}
-	if u.stoneHub, err = client.NewStoneHubClient(cfg.StoneHubServiceAddress); err != nil {
-		log.Errorw("failed to stone hub client", "err", err)
+// NewUploaderService returns an instance of Uploader that implementation of
+// the lifecycle.Service and UploaderService interface
+func NewUploaderService(config *UploaderConfig) (*Uploader, error) {
+	cache, _ := lru.New(model.LruCacheLimit)
+	signer, err := signerclient.NewSignerClient(config.SignerGrpcAddress)
+	if err != nil {
 		return nil, err
 	}
-	if u.store, err = client.NewStoreClient(cfg.PieceStoreConfig); err != nil {
-		log.Errorw("failed to piece store client", "err", err)
+	stone, err := stoneclient.NewStoneNodeClient(config.StoneNodeGrpcAddress)
+	if err != nil {
 		return nil, err
 	}
-	if u.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
-		log.Errorw("failed to create chain client", "err", err)
+	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
+	if err != nil {
 		return nil, err
 	}
-	return u, err
+	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
+	if err != nil {
+		return nil, err
+	}
+	uploader := &Uploader{
+		config:     config,
+		cache:      cache,
+		spDB:       spDB,
+		stone:      stone,
+		pieceStore: pieceStore,
+		signer:     signer,
+	}
+	return uploader, nil
 }
 
-// Name implement the lifecycle interface
+// Name return the uploader service name, for the lifecycle management
 func (uploader *Uploader) Name() string {
-	return uploader.name
+	return model.UploaderService
 }
 
-// Start implement the lifecycle interface
+// Start the uploader gRPC service
 func (uploader *Uploader) Start(ctx context.Context) error {
-	if uploader.running.Swap(true) {
-		return errors.New("uploader has started")
-	}
 	errCh := make(chan error)
 	go uploader.serve(errCh)
 	err := <-errCh
 	return err
 }
 
-// Serve starts grpc service.
+// Stop the uploader gRPC service and recycle the resources
+func (uploader *Uploader) Stop(ctx context.Context) error {
+	uploader.grpcServer.GracefulStop()
+	uploader.signer.Close()
+	uploader.stone.Close()
+	return nil
+}
+
 func (uploader *Uploader) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", uploader.config.Address)
+	lis, err := net.Listen("tcp", uploader.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "err", err)
@@ -81,27 +93,11 @@ func (uploader *Uploader) serve(errCh chan error) {
 	}
 
 	grpcServer := grpc.NewServer()
-	stypes.RegisterUploaderServiceServer(grpcServer, uploader)
+	types.RegisterUploaderServiceServer(grpcServer, uploader)
 	uploader.grpcServer = grpcServer
 	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Errorw("failed to start grpc server", "err", err)
 		return
 	}
-}
-
-// Stop implement the lifecycle interface
-func (uploader *Uploader) Stop(ctx context.Context) error {
-	if !uploader.running.Swap(false) {
-		return errors.New("uploader has stopped")
-	}
-	uploader.grpcServer.GracefulStop()
-	var errs []error
-	if err := uploader.stoneHub.Close(); err != nil {
-		errs = append(errs, err)
-	}
-	if errs != nil {
-		return fmt.Errorf("%v", errs)
-	}
-	return nil
 }

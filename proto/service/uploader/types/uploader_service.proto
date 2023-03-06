@@ -1,0 +1,39 @@
+syntax = "proto3";
+package service.uploader.types;
+
+import "greenfield/storage/types.proto";
+import "service/types/storage_provider.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types";
+
+// UploadObjectRequest is request type for the UploadObject RPC method.
+message UploadObjectRequest {
+  // object_info defines the information of the object.
+  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  // payload defines the data of the object.
+  bytes payload = 2;
+}
+
+// UploadObjectResponse is response type for the UploadObject RPC method.
+message UploadObjectResponse {
+}
+
+// QueryUploadingObjectRequest is request type for the QueryUploadingObject RPC method.
+message QueryUploadingObjectRequest {
+  // object_id defines the unique id of the object.
+  uint64 object_id = 1;
+}
+
+// QueryUploadingObjectResponse is response type for the QueryUploadingObject RPC method.
+message QueryUploadingObjectResponse {
+  // segment_info defines the information of uploading object.
+  service.types.SegmentInfo segment_info = 1;
+}
+
+// UploaderService defines the gRPC service of uploading payload.
+service UploaderService {
+  // UploadObject upload the payload of the object.
+  rpc UploadObject(stream UploadObjectRequest) returns (UploadObjectResponse) {};
+  // QueryUploadingObject query an uploading object info with object id.
+  rpc QueryUploadingObject(QueryUploadingObjectRequest) returns (QueryUploadingObjectResponse) {};
+}

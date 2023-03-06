@@ -32,8 +32,9 @@ var (
 	BucketAlreadyExists = &errorDescription{errorCode: "CreateBucketFailed", errorMessage: "Duplicate bucket name.", statusCode: http.StatusConflict}
 	ObjectAlreadyExists = &errorDescription{errorCode: "PutObjectFailed", errorMessage: "Duplicate object name.", statusCode: http.StatusConflict}
 	// 5xx
-	InternalError       = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
-	NotImplementedError = &errorDescription{errorCode: "NotImplementedError", errorMessage: "Not Implemented Error", statusCode: http.StatusNotImplemented}
+	InternalError          = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
+	NotImplementedError    = &errorDescription{errorCode: "NotImplementedError", errorMessage: "Not Implemented Error", statusCode: http.StatusNotImplemented}
+	NotExistComponentError = &errorDescription{errorCode: "NotExistComponentError", errorMessage: "Not Exist Component Error", statusCode: http.StatusNotImplemented}
 )
 
 // errorResponse is used to error response xml.
@@ -67,8 +68,8 @@ func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *reque
 
 func generateContentRangeHeader(w http.ResponseWriter, start int64, end int64) {
 	if end < 0 {
-		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-")
+		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(start))+"-")
 	} else {
-		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-"+util.Uint64ToHeader(uint64(end)))
+		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(start))+"-"+util.Uint64ToString(uint64(end)))
 	}
 }

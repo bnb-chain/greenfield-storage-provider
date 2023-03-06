@@ -2,140 +2,120 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"syscall"
 
-	"github.com/bnb-chain/greenfield-storage-provider/config"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
-	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
-	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
-	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
-	metadata "github.com/bnb-chain/greenfield-storage-provider/service/metadata/service"
-	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/stonehub"
-	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
-	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/urfave/cli/v2"
+
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
+	"github.com/bnb-chain/greenfield-storage-provider/config"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 var (
-	version    = flag.Bool("version", false, "print version")
-	configFile = flag.String("config", "../../config/config.toml", "config file path")
+	appName  = "gnfd-sp"
+	appUsage = "the gnfd-sp command line interface"
 )
 
-// initService init service instance by name and config.
-func initService(serviceName string, cfg *config.StorageProviderConfig) (server lifecycle.Service, err error) {
-	switch serviceName {
-	case model.GatewayService:
-		if cfg.GatewayCfg == nil {
-			cfg.GatewayCfg = config.DefaultStorageProviderConfig.GatewayCfg
-		}
-		server, err = gateway.NewGatewayService(cfg.GatewayCfg)
-		if err != nil {
-			return nil, err
-		}
-	case model.UploaderService:
-		if cfg.UploaderCfg == nil {
-			cfg.UploaderCfg = config.DefaultStorageProviderConfig.UploaderCfg
-		}
-		server, err = uploader.NewUploaderService(cfg.UploaderCfg)
-		if err != nil {
-			return nil, err
-		}
-	case model.DownloaderService:
-		if cfg.DownloaderCfg == nil {
-			cfg.DownloaderCfg = config.DefaultStorageProviderConfig.DownloaderCfg
-		}
-		server, err = downloader.NewDownloaderService(cfg.DownloaderCfg)
-		if err != nil {
-			return nil, err
-		}
-	case model.StoneHubService:
-		if cfg.StoneHubCfg == nil {
-			cfg.StoneHubCfg = config.DefaultStorageProviderConfig.StoneHubCfg
-		}
-		server, err = stonehub.NewStoneHubService(cfg.StoneHubCfg)
-		if err != nil {
-			return nil, err
-		}
-	case model.StoneNodeService:
-		if cfg.StoneNodeCfg == nil {
-			cfg.StoneNodeCfg = config.DefaultStorageProviderConfig.StoneNodeCfg
-		}
-		server, err = stonenode.NewStoneNodeService(cfg.StoneNodeCfg)
-		if err != nil {
-			return nil, err
-		}
-	case model.SyncerService:
-		if cfg.SyncerCfg == nil {
-			cfg.SyncerCfg = config.DefaultStorageProviderConfig.SyncerCfg
-		}
-		server, err = syncer.NewSyncerService(cfg.SyncerCfg)
-		if err != nil {
-			return nil, err
-		}
-	case model.ChallengeService:
-		if cfg.ChallengeCfg == nil {
-			cfg.ChallengeCfg = config.DefaultStorageProviderConfig.ChallengeCfg
-		}
-		server, err = challenge.NewChallengeService(cfg.ChallengeCfg)
-		if err != nil {
-			return nil, err
-		}
-	case model.SignerService:
-		if cfg.SignerCfg == nil {
-			cfg.SignerCfg = config.DefaultStorageProviderConfig.SignerCfg
-		}
-		server, err = signer.NewSignerServer(cfg.SignerCfg)
-		if err != nil {
-			return nil, err
-		}
-	case model.MetadataService:
-		if cfg.MetadataCfg == nil {
-			cfg.MetadataCfg = config.DefaultStorageProviderConfig.MetadataCfg
-		}
-		server, err = metadata.NewMetadataService(cfg.MetadataCfg, context.Background())
-		if err != nil {
-			return nil, err
-		}
-	case model.BlockSyncerService:
-		server, err = blocksyncer.NewBlockSyncerService(cfg.BlockSyncerCfg)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		log.Errorw("unknown service", "service", serviceName)
-		return nil, fmt.Errorf("unknow service: %s", serviceName)
+var app *cli.App
+
+var (
+	// flags that configure the storage provider
+	spFlags = []cli.Flag{
+		utils.ConfigFileFlag,
+		utils.ConfigRemoteFlag,
+		utils.ServerFlag,
+		utils.DBUserFlag,
+		utils.DBPasswordFlag,
+		utils.DBAddressFlag,
+		utils.DBDataBaseFlag,
+		utils.LogLevelFlag,
+		utils.LogPathFlag,
+		utils.LogStdOutputFlag,
 	}
-	return server, nil
+)
+
+func init() {
+	app = cli.NewApp()
+	app.Name = appName
+	app.Usage = appUsage
+	app.Action = storageProvider
+	app.HideVersion = true
+	app.Flags = append(app.Flags, spFlags...)
+	app.Commands = []*cli.Command{
+		// config category commands
+		conf.ConfigDumpCmd,
+		conf.ConfigUploadCmd,
+		// miscellaneous commands
+		VersionCmd,
+		utils.ListServiceCmd,
+	}
 }
 
 func main() {
-	flag.Parse()
-	if *version {
-		fmt.Print(DumpLogo() + DumpVersion())
-		os.Exit(0)
+	if err := app.Run(os.Args); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
+}
 
-	cfg := config.LoadConfig(*configFile)
+// makeConfig loads the configuration and creates the storage provider backend.
+func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
+	// load config from remote db or local config file
+	cfg := config.DefaultStorageProviderConfig
+	if ctx.IsSet(utils.ConfigRemoteFlag.Name) {
+		spDB, err := utils.MakeSPDB(ctx)
+		if err != nil {
+			return nil, err
+		}
+		_, cfgBytes, err := spDB.GetAllServiceConfigs()
+		if err != nil {
+			return nil, err
+		}
+		if err := cfg.JsonUnMarshal([]byte(cfgBytes)); err != nil {
+			return nil, err
+		}
+	} else if ctx.IsSet(utils.ConfigFileFlag.Name) {
+		cfg = config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
+	}
+	// override the services to be started by flag
+	if ctx.IsSet(utils.ServerFlag.Name) {
+		services := util.SplitByComma(ctx.String(utils.ServerFlag.Name))
+		cfg.Service = services
+	}
+	// init log
+	if err := initLog(ctx, cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
+// storageProvider is the main entry point into the system if no special subcommand is ran.
+// It uses default config to run storage provider services based on the command line arguments
+// and runs it in blocking mode, waiting for it to be shut down.
+func storageProvider(ctx *cli.Context) error {
+	cfg, err := makeConfig(ctx)
+	if err != nil {
+		return err
+	}
 	slc := lifecycle.NewServiceLifecycle()
 	for _, serviceName := range cfg.Service {
-		// 1. init service instance.
+		// init service instance.
 		service, err := initService(serviceName, cfg)
 		if err != nil {
-			log.Errorw("init service failed", "service_name", serviceName, "error", err)
+			log.Errorw("failed to init service", "service", serviceName, "error", err)
 			os.Exit(1)
 		}
-		log.Debugw("init service success", "service_name", serviceName)
-		// 2. register service to lifecycle.
+		log.Debugw("success to init service ", "service", serviceName)
+		// register service to lifecycle.
 		slc.RegisterServices(service)
 	}
-	// 3. start all services and listen os signals.
-	ctx := context.Background()
-	slc.Signals(syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP).StartServices(ctx).Wait(ctx)
+	// start all services and listen os signals.
+	slcCtx := context.Background()
+	slc.Signals(syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP).StartServices(slcCtx).Wait(slcCtx)
+	return nil
 }
