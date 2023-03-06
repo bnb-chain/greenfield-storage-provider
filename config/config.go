@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	"github.com/naoina/toml"
@@ -32,7 +31,6 @@ type StorageProviderConfig struct {
 	ChainConfig       *gnfd.GreenfieldChainConfig
 	SignerCfg         *signer.SignerConfig
 	BlockSyncerCfg    *tomlconfig.TomlConfig
-	MetadataCfg       *metadata.MetadataConfig
 	LogCfg            *LogConfig
 }
 
@@ -65,7 +63,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SyncerService:     model.SyncerGRPCAddress,
 		model.StoneNodeService:  model.StoneNodeGRPCAddress,
 		model.SignerService:     model.SignerGRPCAddress,
-		model.MetadataService:   model.MetaDataServiceGRPCAddress,
+		model.MetadataService:   model.MetaDataGRPCAddress,
 	},
 	HTTPAddress: map[string]string{
 		model.GatewayService: model.GatewayHTTPAddress,
@@ -77,7 +75,6 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	ChainConfig:       DefaultGreenfieldChainConfig,
 	SignerCfg:         signer.DefaultSignerChainConfig,
 	BlockSyncerCfg:    blocksyncer.DefaultBlockSyncerConfig,
-	MetadataCfg:       DefaultMetadataConfig,
 	LogCfg:            DefaultLogConfig,
 }
 
@@ -109,11 +106,6 @@ var DefaultGreenfieldChainConfig = &gnfd.GreenfieldChainConfig{
 		GreenfieldAddresses: []string{model.GreenfieldAddress},
 		TendermintAddresses: []string{model.TendermintAddress},
 	}},
-}
-
-var DefaultMetadataConfig = &metadata.MetadataConfig{
-	Address:    model.MetaDataServiceGRPCAddress,
-	SpDBConfig: DefaultSQLDBConfig,
 }
 
 type LogConfig struct {

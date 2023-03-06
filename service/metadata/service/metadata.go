@@ -46,7 +46,7 @@ func (metadata *Metadata) Start(ctx context.Context) error {
 
 // Serve starts grpc service.
 func (metadata *Metadata) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", metadata.config.Address)
+	lis, err := net.Listen("tcp", metadata.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "err", err)
