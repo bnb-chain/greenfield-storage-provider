@@ -26,7 +26,7 @@ type diskFileStore struct {
 	DefaultObjectStorage
 }
 
-func newDiskFileStore(cfg *ObjectStorageConfig) (ObjectStorage, error) {
+func newDiskFileStore(cfg ObjectStorageConfig) (ObjectStorage, error) {
 	// For Windows, the path looks like /C:/a/b/c/
 	endPoint := cfg.BucketURL
 	if runtime.GOOS == windowsOS && strings.HasPrefix(endPoint, "/") {

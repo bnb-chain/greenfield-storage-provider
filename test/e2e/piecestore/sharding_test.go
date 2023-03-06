@@ -3,14 +3,13 @@ package piecestore_e2e
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestDiskFileStore(t *testing.T) {
+func TestSharding(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setup(t, mpiecestore.DiskFileStore, "", 0)
+	handler, err := setup(t, mpiecestore.DiskFileStore, "", 3)
 	assert.Equal(t, err, nil)
 
 	doOperations(t, handler)

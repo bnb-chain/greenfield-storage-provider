@@ -73,15 +73,6 @@ const (
 
 // environment constants
 const (
-	// BucketURL defines env variable name for bucket url
-	BucketURL = "BUCKET_URL"
-	// AWSAccessKey defines env variable name for aws assess key
-	AWSAccessKey = "AWS_ACCESS_KEY"
-	// AWSSecretKey defines env variable name for aws secret key
-	AWSSecretKey = "AWS_SECRET_KEY"
-	// AWSSessionToken defines env variable name for aws session token
-	AWSSessionToken = "AWS_SESSION_TOKEN"
-
 	// SpDBUser defines env variable name for sp db user name
 	SpDBUser = "SP_DB_USER"
 	// SpDBPasswd defines env variable name for sp db user passwd
@@ -109,14 +100,6 @@ const (
 const (
 	// LruCacheLimit define maximum number of cached items in service trace queue
 	LruCacheLimit = 8192
-)
-
-// define piece store constants.
-const (
-	// BufPoolSize define buffer pool size
-	BufPoolSize = 32 << 10
-	// ChecksumAlgo define validation Algorithm Name
-	ChecksumAlgo = "Crc32c"
 )
 
 // RPC config

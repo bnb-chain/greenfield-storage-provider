@@ -27,7 +27,7 @@ type memoryObject struct {
 	modTime time.Time
 }
 
-func newMemoryStore(cfg *ObjectStorageConfig) (ObjectStorage, error) {
+func newMemoryStore(cfg ObjectStorageConfig) (ObjectStorage, error) {
 	store := &memoryStore{name: cfg.BucketURL}
 	store.objects = make(map[string]*memoryObject)
 	return store, nil

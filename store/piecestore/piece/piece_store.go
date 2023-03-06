@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
@@ -18,12 +18,12 @@ import (
 // NewPieceStore returns an instance of PieceStore
 func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 	checkConfig(pieceConfig)
-	blob, err := createStorage(pieceConfig)
+	blob, err := createStorage(*pieceConfig)
 	if err != nil {
 		log.Errorw("create storage error", "error", err)
 		return nil, err
 	}
-	log.Debugw("pieceStore is running", "Storage", pieceConfig.Store.Storage,
+	log.Debugw("piece store is running", "storage type", pieceConfig.Store.Storage,
 		"shards", pieceConfig.Shards)
 
 	return &PieceStore{blob}, nil
@@ -55,12 +55,12 @@ func checkConfig(cfg *storage.PieceStoreConfig) {
 }
 
 func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) {
-	if val, ok := os.LookupEnv(model.BucketURL); ok {
+	if val, ok := os.LookupEnv(mpiecestore.BucketURL); ok {
 		cfg.Store.BucketURL = val
 	}
 }
 
-func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error) {
+func createStorage(cfg storage.PieceStoreConfig) (storage.ObjectStorage, error) {
 	var (
 		object storage.ObjectStorage
 		err    error
