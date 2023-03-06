@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	"github.com/gorilla/mux"
 )
 

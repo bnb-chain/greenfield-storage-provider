@@ -3,15 +3,14 @@ package service
 import (
 	"context"
 	"errors"
+	"net"
 	"sync/atomic"
 
-	"net"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/store"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -73,7 +72,7 @@ func (metadata *Metadata) Stop(ctx context.Context) error {
 }
 
 func NewMetadataService(cfg *metadata.MetadataConfig, ctx context.Context) (metadata *Metadata, err error) {
-	metadataStore, _ := store.NewStore(cfg.MetaSqlDBConfig)
+	metadataStore, _ := store.NewStore(cfg.SpDBConfig)
 	metadata = &Metadata{
 		config: cfg,
 		name:   model.MetadataService,

@@ -6,52 +6,57 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // getApprovalHandler handle create bucket or create object approval
 func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err              error
-		errorDescription *errorDescription
-		requestContext   *requestContext
-		addr             sdk.AccAddress
+		err            error
+		errDescription *errorDescription
+		reqContext     *requestContext
+		addr           sdktypes.AccAddress
 	)
 
-	requestContext = newRequestContext(r)
+	reqContext = newRequestContext(r)
 	defer func() {
-		if errorDescription != nil {
-			_ = errorDescription.errorResponse(w, requestContext)
+		if errDescription != nil {
+			_ = errDescription.errorResponse(w, reqContext)
 		}
-		if errorDescription != nil && errorDescription.statusCode != http.StatusOK {
-			log.Errorf("action(%v) statusCode(%v) %v", approvalRouterName, errorDescription.statusCode, requestContext.generateRequestDetail())
+		if errDescription != nil && errDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", approvalRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Infof("action(%v) statusCode(200) %v", approvalRouterName, requestContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", approvalRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
-	if addr, err = requestContext.verifySignature(); err != nil {
-		log.Errorw("failed to verify signature", "error", err)
-		errorDescription = SignatureNotMatch
-		return
-	}
-	if err = g.checkAuthorization(requestContext, addr); err != nil {
-		log.Errorw("failed to check authorization", "error", err)
-		errorDescription = UnauthorizedAccess
+	if g.signer == nil {
+		log.Errorw("failed to get approval due to not config signer")
+		errDescription = NotExistComponentError
 		return
 	}
 
-	actionName := requestContext.vars["action"]
+	if addr, err = reqContext.verifySignature(); err != nil {
+		log.Errorw("failed to verify signature", "error", err)
+		errDescription = SignatureNotMatch
+		return
+	}
+	if err = g.checkAuthorization(reqContext, addr); err != nil {
+		log.Errorw("failed to check authorization", "error", err)
+		errDescription = UnauthorizedAccess
+		return
+	}
+
+	actionName := reqContext.vars["action"]
 	approvalMsg, err := hex.DecodeString(r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 	if err != nil {
-		log.Errorw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
-		errorDescription = InvalidHeader
+		log.Errorw("failed to parse approval header", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+		errDescription = InvalidHeader
 		return
 	}
 
@@ -62,30 +67,39 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			approvalSignature []byte
 		)
 		if types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg) != nil {
-			log.Errorw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
-			errorDescription = InvalidHeader
+			log.Errorw("failed to unmarshal approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+			errDescription = InvalidHeader
 			return
 		}
-
+		if err = msg.ValidateBasic(); err != nil {
+			log.Errorw("failed to basic check", "bucket_msg", msg, "error", err)
+			errDescription = InvalidHeader
+			return
+		}
 		// TODO: to config it
 		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: math.MaxUint64}
 		approvalSignature, err = g.signer.SignBucketApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create bucket approval", "error", err)
-			errorDescription = InternalError
+			errDescription = InternalError
 			return
 		}
 		msg.PrimarySpApproval.Sig = approvalSignature
 		bz := types.ModuleCdc.MustMarshalJSON(&msg)
-		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
+		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	case createObjectApprovalAction:
 		var (
 			msg               = types.MsgCreateObject{}
 			approvalSignature []byte
 		)
 		if types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg) != nil {
-			log.Errorw("invalid approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
-			errorDescription = InvalidHeader
+			log.Errorw("failed to unmarshal approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+			errDescription = InvalidHeader
+			return
+		}
+		if err = msg.ValidateBasic(); err != nil {
+			log.Errorw("failed to basic check", "object_msg", msg, "error", err)
+			errDescription = InvalidHeader
 			return
 		}
 		// TODO: to config it
@@ -93,102 +107,86 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		approvalSignature, err = g.signer.SignObjectApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create object approval", "error", err)
-			errorDescription = InternalError
+			errDescription = InternalError
 			return
 		}
 		msg.PrimarySpApproval.Sig = approvalSignature
 		bz := types.ModuleCdc.MustMarshalJSON(&msg)
-		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdk.MustSortJSON(bz)))
+		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	default:
-		log.Errorw("not implement approval", "action", actionName)
-		errorDescription = NotImplementedError
+		log.Errorw("failed to get approval due to unimplemented approval type", "action", actionName)
+		errDescription = NotImplementedError
 		return
 	}
-	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 }
 
 // challengeHandler handle challenge request
 func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err              error
-		errorDescription *errorDescription
-		requestContext   *requestContext
-		addr             sdk.AccAddress
-
-		objectID         uint64
-		challengePrimary bool
-		segmentIdx       uint32
-		ecIdx            uint32
-		redundancyType   ptypes.RedundancyType
-		spAddress        string
+		err            error
+		errDescription *errorDescription
+		reqContext     *requestContext
+		addr           sdktypes.AccAddress
+		objectID       uint64
+		redundancyIdx  int32
+		segmentIdx     uint32
 	)
 
-	requestContext = newRequestContext(r)
+	reqContext = newRequestContext(r)
 	defer func() {
-		if errorDescription != nil {
-			_ = errorDescription.errorResponse(w, requestContext)
+		if errDescription != nil {
+			_ = errDescription.errorResponse(w, reqContext)
 		}
-		if errorDescription != nil && errorDescription.statusCode != http.StatusOK {
-			log.Errorf("action(%v) statusCode(%v) %v", challengeRouterName, errorDescription.statusCode, requestContext.generateRequestDetail())
+		if errDescription != nil && errDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", challengeRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Infof("action(%v) statusCode(200) %v", challengeRouterName, requestContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", challengeRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
-	if addr, err = requestContext.verifySignature(); err != nil {
+	if g.challenge == nil {
+		log.Errorw("failed to get challenge due to not config challenge")
+		errDescription = NotExistComponentError
+		return
+	}
+
+	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errorDescription = SignatureNotMatch
+		errDescription = SignatureNotMatch
 		return
 	}
-	if err = g.checkAuthorization(requestContext, addr); err != nil {
+	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errorDescription = UnauthorizedAccess
+		errDescription = UnauthorizedAccess
 		return
 	}
 
-	if objectID, err = util.HeaderToUint64(requestContext.request.Header.Get(model.GnfdObjectIDHeader)); err != nil {
-		log.Errorw("invalid object id", "object_id", requestContext.request.Header.Get(model.GnfdObjectIDHeader))
-		errorDescription = InvalidHeader
+	if objectID, err = util.StringToUint64(reqContext.request.Header.Get(model.GnfdObjectIDHeader)); err != nil {
+		log.Errorw("failed to parse object_id", "object_id", reqContext.request.Header.Get(model.GnfdObjectIDHeader))
+		errDescription = InvalidHeader
 		return
 	}
 
-	redundancyIndex, err := util.HeaderToInt64(requestContext.request.Header.Get(model.GnfdRedundancyIndexHeader))
-	if err != nil {
-		log.Errorw("invalid redundancy index", "redundancy_index", requestContext.request.Header.Get(model.GnfdRedundancyIndexHeader))
-		errorDescription = InvalidHeader
+	if redundancyIdx, err = util.StringToInt32(reqContext.request.Header.Get(model.GnfdRedundancyIndexHeader)); err != nil {
+		log.Errorw("failed to parse redundancy_idx", "redundancy_idx", reqContext.request.Header.Get(model.GnfdRedundancyIndexHeader))
+		errDescription = InvalidHeader
 		return
 	}
-	if redundancyIndex < 0 {
-		challengePrimary = true
-	} else {
-		ecIdx = uint32(redundancyIndex)
-	}
-	if segmentIdx, err = util.HeaderToUint32(requestContext.request.Header.Get(model.GnfdPieceIndexHeader)); err != nil {
-		log.Errorw("invalid segment idx", "segment_idx", requestContext.request.Header.Get(model.GnfdPieceIndexHeader))
-		errorDescription = InvalidHeader
+	if segmentIdx, err = util.StringToUint32(reqContext.request.Header.Get(model.GnfdPieceIndexHeader)); err != nil {
+		log.Errorw("failed to parse segment_idx", "segment_idx", reqContext.request.Header.Get(model.GnfdPieceIndexHeader))
+		errDescription = InvalidHeader
 		return
 	}
-	spAddress = g.config.StorageProvider
-
-	req := &stypes.ChallengeServiceChallengePieceRequest{
-		TraceId:               requestContext.requestID,
-		ObjectId:              objectID,
-		ChallengePrimaryPiece: challengePrimary,
-		SegmentIdx:            segmentIdx,
-		EcIdx:                 ecIdx,
-		RedundancyType:        redundancyType,
-		StorageProviderId:     spAddress,
-	}
-	ctx := log.Context(context.Background(), req)
-	resp, err := g.challenge.ChallengePiece(ctx, req)
+	integrityHash, pieceHash, pieceData, err := g.challenge.ChallengePiece(context.Background(), objectID, redundancyIdx, segmentIdx)
 	if err != nil {
 		log.Errorf("failed to challenge", "error", err)
-		errorDescription = InternalError
+		errDescription = InternalError
 		return
 	}
-	w.Header().Set(model.GnfdRequestIDHeader, requestContext.requestID)
-	w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToHeader(objectID))
-	w.Header().Set(model.GnfdIntegrityHashHeader, hex.EncodeToString(resp.IntegrityHash))
-	w.Header().Set(model.GnfdPieceHashHeader, util.EncodePieceHash(resp.PieceHash))
-	w.Write(resp.PieceData)
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+	w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToString(objectID))
+	w.Header().Set(model.GnfdIntegrityHashHeader, hex.EncodeToString(integrityHash))
+	w.Header().Set(model.GnfdPieceHashHeader, util.BytesSliceToString(pieceHash))
+	w.Write(pieceData)
 }

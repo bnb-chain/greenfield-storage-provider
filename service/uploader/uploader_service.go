@@ -2,179 +2,150 @@ package uploader
 
 import (
 	"context"
-	"errors"
-	"sync"
+	"io"
+	"math"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-common/go/hash"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
-	ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/types/v1"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/util/hash"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
-type contextKey string
+var _ types.UploaderServiceServer = &Uploader{}
 
-// JobMeta is Job Context, got from stone hub.
-type JobMeta struct {
-	objectID      uint64
-	toUploadedIDs map[uint32]bool
-	txHash        []byte
-	pieceJob      *stypes.PieceJob
-	done          bool
-}
-
-// reportJobProgress report done piece index to stone hub.
-func (uploader *Uploader) reportJobProgress(ctx context.Context, jm *JobMeta, uploadID uint32, checkSum []byte) error {
+// UploadObject upload an object payload data with object info.
+func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObjectServer) (err error) {
 	var (
-		req      *stypes.StoneHubServiceDonePrimaryPieceJobRequest
-		pieceJob *stypes.PieceJob
+		resp          types.UploadObjectResponse
+		pstream       = payloadstream.NewAsyncPayloadStream()
+		traceInfo     = &servicetypes.SegmentInfo{}
+		checksum      [][]byte
+		integrityMeta = &sqldb.IntegrityMeta{}
+		errCh         = make(chan error, 10)
 	)
-	traceID, _ := ctx.Value("traceID").(string)
-	pieceJob = &stypes.PieceJob{
-		ObjectId:       jm.pieceJob.ObjectId,
-		PayloadSize:    jm.pieceJob.PayloadSize,
-		RedundancyType: jm.pieceJob.RedundancyType,
-	}
-	copy(pieceJob.TargetIdx, jm.pieceJob.TargetIdx)
-	pieceJob.StorageProviderSealInfo = &stypes.StorageProviderSealInfo{
-		StorageProviderId: uploader.config.StorageProvider,
-		PieceIdx:          uploadID,
-		PieceChecksum:     [][]byte{checkSum},
-	}
-	req = &stypes.StoneHubServiceDonePrimaryPieceJobRequest{
-		TraceId:  traceID,
-		PieceJob: pieceJob,
-	}
-	if _, err := uploader.stoneHub.DonePrimaryPieceJob(ctx, req); err != nil {
-		return err
-	}
-	return nil
-}
-
-// UploadPayload merge CreateObject, SetObjectCreateInfo and BeginUploadPayload, special for heavy client use.
-func (uploader *Uploader) UploadPayload(stream stypes.UploaderService_UploadPayloadServer) (err error) {
-	var (
-		txChan    = make(chan []byte)
-		pieceChan = make(chan *SegmentContext, 500)
-		wg        sync.WaitGroup
-		resp      stypes.UploaderServiceUploadPayloadResponse
-		waitDone  = make(chan bool)
-		errChan   = make(chan error)
-		ctx       = context.Background()
-		sr        *streamReader
-		jm        *JobMeta
-	)
-
-	defer func(resp *stypes.UploaderServiceUploadPayloadResponse, err error) {
+	defer func(resp *types.UploadObjectResponse, err error) {
 		if err != nil {
-			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
-			log.CtxErrorw(ctx, "failed to upload payload", "err", err)
+			log.Errorw("failed to replicate payload", "err", err)
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
+			return
 		}
-		if jm != nil {
-			resp.ObjectId = jm.objectID
+		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checksum)
+		if err != nil {
+			log.Errorw("failed to sign integrity hash", "err", err)
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
+			return
+		}
+		integrityMeta.Checksum = checksum
+		integrityMeta.IntegrityHash = integrityHash
+		integrityMeta.Signature = signature
+		err = uploader.spDB.SetObjectIntegrity(integrityMeta)
+		if err != nil {
+			log.Errorw("failed to write integrity hash to db", "error", err)
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
+			return
+		}
+		traceInfo.IntegrityHash = integrityHash
+		traceInfo.Signature = signature
+		uploader.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
+		err = uploader.stone.ReplicateObject(context.Background(), traceInfo.GetObjectInfo())
+		if err != nil {
+			log.Errorw("failed to notify stone node to replicate object", "error", err)
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
+			return
 		}
 		err = stream.SendAndClose(resp)
-		log.Infow("upload object payload", "response", resp, "error", err)
+		pstream.Close()
+		uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+			servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
+		log.Infow("finish to upload payload", "error", err)
 	}(&resp, err)
-
-	// fetch job meta, concurrently write payload's segments and report progresses.
-	go func() {
-		txHash, ok := <-txChan
-		if !ok {
-			return
-		}
-		if jm, err = uploader.checkAndPrepareMeta(sr, txHash); err != nil {
-			errChan <- err
-			return
-		}
-		for piece := range pieceChan {
-			go func(segPiece *SegmentContext) {
-				defer wg.Done()
-
-				if _, ok := jm.toUploadedIDs[segPiece.Index]; !ok {
-					// has uploaded, and skip.
-					return
-				}
-
-				pieceKey := piecestore.EncodeSegmentPieceKey(jm.objectID, segPiece.Index)
-				if err := uploader.store.PutPiece(pieceKey, segPiece.PieceData); err != nil {
-					errChan <- err
-					return
-				}
-				checksum := hash.GenerateChecksum(segPiece.PieceData)
-				ctx := context.WithValue(ctx, contextKey("traceID"), sr.traceID)
-				if err := uploader.reportJobProgress(ctx, jm, segPiece.Index, checksum); err != nil {
-					errChan <- err
-					return
-				}
-			}(piece)
-		}
-	}()
-
-	// stream read and split segments
-	sr = newStreamReader(stream, txChan)
-	err = sr.splitSegment(model.SegmentSize, pieceChan, &wg)
+	params, err := uploader.spDB.GetStorageParams()
 	if err != nil {
 		return
 	}
+	segmentSize := params.GetMaxSegmentSize()
 
+	// read payload from gRPC stream
 	go func() {
-		wg.Wait()
-		close(waitDone)
+		init := true
+		for {
+			req, err := stream.Recv()
+			if err == io.EOF {
+				pstream.StreamClose()
+				return
+			}
+			if err != nil {
+				log.Debugw("receive payload exception", "error", err)
+				pstream.StreamCloseWithError(err)
+				errCh <- err
+				return
+			}
+			if init {
+				pstream.InitAsyncPayloadStream(
+					req.GetObjectInfo().Id.Uint64(),
+					math.MaxUint32,
+					segmentSize,
+					storagetypes.REDUNDANCY_REPLICA_TYPE)
+				integrityMeta.ObjectID = req.GetObjectInfo().Id.Uint64()
+				traceInfo.ObjectInfo = req.GetObjectInfo()
+				uploader.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
+				uploader.spDB.CreateUploadJob(req.GetObjectInfo())
+				uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+					servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING)
+				init = false
+			}
+			pstream.StreamWrite(req.GetPayload())
+		}
 	}()
 
-	select {
-	case <-waitDone:
-		log.Info("succeed to upload")
-		return
-	case err = <-errChan:
-		log.Errorw("failed to upload", "err", err)
-		return
+	// read payload from stream, the payload is spilt to segment size
+	for {
+		select {
+		case entry := <-pstream.AsyncStreamRead():
+			log.Debugw("read segment from stream", "segment_key", entry.Key(), "error", entry.Error())
+			if entry.Error() == io.EOF {
+				errCh <- nil
+				return
+			}
+			if entry.Error() != nil {
+				errCh <- entry.Error()
+				return
+			}
+			checksum = append(checksum, hash.GenerateChecksum(entry.Data()))
+			traceInfo.Checksum = checksum
+			traceInfo.Completed++
+			uploader.cache.Add(entry.ID(), traceInfo)
+			go func() {
+				if err := uploader.pieceStore.PutSegment(entry.Key(), entry.Data()); err != nil {
+					errCh <- err
+				}
+			}()
+		case err = <-errCh:
+			return
+		}
 	}
 }
 
-// checkAndPrepareMeta get meta from chain and stone hub.
-func (uploader *Uploader) checkAndPrepareMeta(sr *streamReader, txHash []byte) (*JobMeta, error) {
-	objectInfo := &ptypes.ObjectInfo{
-		BucketName:     sr.bucket,
-		ObjectName:     sr.object,
-		Size:           sr.size,
-		PrimarySp:      &ptypes.StorageProviderInfo{SpId: uploader.config.StorageProvider},
-		RedundancyType: sr.redundancyType,
+// QueryUploadingObject query an uploading object with object id from cache
+func (uploader *Uploader) QueryUploadingObject(ctx context.Context, req *types.QueryUploadingObjectRequest) (
+	resp *types.QueryUploadingObjectResponse, err error) {
+	ctx = log.Context(ctx, req)
+	objectID := req.GetObjectId()
+	log.CtxDebugw(ctx, "query uploading object", "objectID", objectID)
+	val, ok := uploader.cache.Get(objectID)
+	if !ok {
+		err = merrors.ErrCacheMiss
+		return
 	}
-	chainObjectInfo, err := uploader.chain.QueryObjectInfo(context.Background(), objectInfo.BucketName, objectInfo.ObjectName)
-	if err != nil {
-		log.Errorw("failed to query chain",
-			"bucketName", objectInfo.BucketName, "objectName", objectInfo.ObjectName, "error", err)
-		return nil, err
-	}
-	objectInfo.ObjectId = chainObjectInfo.Id.Uint64()
-
-	resp, err := uploader.stoneHub.BeginUploadPayloadV2(context.Background(), &stypes.StoneHubServiceBeginUploadPayloadV2Request{
-		TraceId:    sr.traceID,
-		ObjectInfo: objectInfo,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if resp.GetPieceJob() == nil {
-		return nil, errors.New("stone dispatch piece job is nil")
-	}
-	// if resp.GetPrimaryDone() {
-	// }
-	jm := &JobMeta{
-		objectID:      resp.GetPieceJob().GetObjectId(),
-		pieceJob:      resp.GetPieceJob(),
-		done:          resp.GetPrimaryDone(),
-		txHash:        objectInfo.TxHash,
-		toUploadedIDs: make(map[uint32]bool),
-	}
-	if targetIdx := resp.PieceJob.GetTargetIdx(); targetIdx != nil {
-		for idx := range targetIdx {
-			jm.toUploadedIDs[uint32(idx)] = true
-		}
-	}
-	return jm, err
+	resp.SegmentInfo = val.(*servicetypes.SegmentInfo)
+	return
 }

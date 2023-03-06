@@ -26,15 +26,14 @@ func Test_verifySignatureV1(t *testing.T) {
 	require.NoError(t, err)
 	req.Header.Set(model.ContentTypeHeader, "application/x-www-form-urlencoded")
 	req.Host = "testBucket.gnfd.nodereal.com"
-	req.Header.Set(model.GnfdDateHeader, "11:10")
 	// mock
 	privKey, _, addrInput := testdata.KeyEthSecp256k1TestPubAddr()
 	keyManager, err := keys.NewPrivateKeyManager(hex.EncodeToString(privKey.Bytes()))
 	require.NoError(t, err)
 	// sign
-	client, err := sp.NewSpClientWithKeyManager("example.com", &sp.Option{}, keyManager)
+	spClient, err := sp.NewSpClient("example.com", sp.WithKeyManager(keyManager), sp.WithSecure(false))
 	require.NoError(t, err)
-	err = client.SignRequest(req, sp.NewAuthInfo(false, ""))
+	err = spClient.SignRequest(req, sp.NewAuthInfo(false, ""))
 	require.NoError(t, err)
 	// check sign
 	rc := &requestContext{
@@ -54,16 +53,15 @@ func Test_verifySignatureV2(t *testing.T) {
 	require.NoError(t, err)
 	req.Header.Set(model.ContentTypeHeader, "application/x-www-form-urlencoded")
 	req.Host = "testBucket.gnfd.nodereal.com"
-	req.Header.Set(model.GnfdDateHeader, "11:10")
 	// mock pk
 	privKey, _, _ := testdata.KeyEthSecp256k1TestPubAddr()
 	keyManager, err := keys.NewPrivateKeyManager(hex.EncodeToString(privKey.Bytes()))
 	require.NoError(t, err)
 
 	// sign
-	client, err := sp.NewSpClientWithKeyManager("gnfd.nodereal.com", &sp.Option{}, keyManager)
+	spClient, err := sp.NewSpClient("example.com", sp.WithKeyManager(keyManager), sp.WithSecure(false))
 	require.NoError(t, err)
-	err = client.SignRequest(req, sp.NewAuthInfo(true, hex.EncodeToString([]byte("123"))))
+	err = spClient.SignRequest(req, sp.NewAuthInfo(true, hex.EncodeToString([]byte("123"))))
 	require.NoError(t, err)
 	// check sign
 	rc := &requestContext{

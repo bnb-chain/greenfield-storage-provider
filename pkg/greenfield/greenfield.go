@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-go-sdk/client/chain"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
@@ -27,11 +28,12 @@ type GreenfieldClient struct {
 	Provider             []string
 }
 
+// GnfdCompositeClient return the greenfield chain client
 func (client *GreenfieldClient) GnfdCompositeClient() *chain.GnfdCompositeClient {
 	return client.gnfdCompositeClient
 }
 
-// Greenfield the greenfield chain service.
+// Greenfield encapsulation of greenfield chain go sdk, support for more query request
 type Greenfield struct {
 	config        *GreenfieldChainConfig
 	client        *GreenfieldClient
@@ -48,9 +50,9 @@ func NewGreenfield(cfg *GreenfieldChainConfig) (*Greenfield, error) {
 	var clients []*GreenfieldClient
 	for _, config := range cfg.NodeAddr {
 		client := &GreenfieldClient{
-			Provider: config.GreenfieldAddrs,
-			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddrs, config.TendermintAddrs, cfg.ChainID,
-				chain.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials()))),
+			Provider: config.GreenfieldAddresses,
+			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddresses, config.TendermintAddresses,
+				cfg.ChainID, chain.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials()))),
 		}
 		client.gnfdCompositeClient, _ = client.gnfdCompositeClients.GetClient()
 		clients = append(clients, client)
@@ -79,14 +81,14 @@ func (greenfield *Greenfield) getCurrentClient() *GreenfieldClient {
 	return greenfield.client
 }
 
-// setCurrentClient set current use client.
+// setCurrentClient set client to current client for using.
 func (greenfield *Greenfield) setCurrentClient(client *GreenfieldClient) {
 	greenfield.mutex.Lock()
 	defer greenfield.mutex.Unlock()
 	greenfield.client = client
 }
 
-// updateClient select block height is the largest from all clients and update to current client.
+// updateClient select the client that block height is the largest and set to current client.
 func (greenfield *Greenfield) updateClient() {
 	ticker := time.NewTicker(UpdateClientInternal * time.Second)
 	for {

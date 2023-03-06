@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/parser"
