@@ -235,7 +235,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		log.Errorw("failed to parse s3 endpoint", "error", err)
 		return nil, "", err
 	}
-	log.Debugw("s3 storage info", "endPoint", endpoint, "bucketName", bucketName, "region", region)
+	log.Debugw("s3 storage info", "endpoint", endpoint, "bucketName", bucketName, "region", region)
 
 	if sess, ok := sc.sessions[cfg]; ok {
 		return sess, bucketName, nil
