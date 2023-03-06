@@ -17,7 +17,7 @@ import (
 var shardNum = 5
 
 func TestSharding(t *testing.T) {
-	// 1. init PieceStore
+	// init PieceStore
 	handler, err := setup(t, mpiecestore.DiskFileStore, "./data/test%d", shardNum)
 	assert.Equal(t, err, nil)
 
@@ -55,10 +55,9 @@ func doShardingOperations(t *testing.T, handler *piece.PieceStore, shards int) {
 
 		// 3. delete piece
 		log.Info("Delete piece")
-		// err = handler.Delete(context.Background(), key)
-		// assert.Equal(t, nil, err)
+		err = handler.Delete(context.Background(), key)
+		assert.Equal(t, nil, err)
 	}
-
 }
 
 func createFiles(fileNum int) error {

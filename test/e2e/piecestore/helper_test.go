@@ -23,12 +23,10 @@ func setup(t *testing.T, storageType, bucketURL string, shards int) (*piece.Piec
 	return piece.NewPieceStore(&storage.PieceStoreConfig{
 		Shards: shards,
 		Store: storage.ObjectStorageConfig{
-			Storage:               storageType,
-			BucketURL:             bucketURL,
-			MaxRetries:            5,
-			MinRetryDelay:         0,
-			TLSInsecureSkipVerify: false,
-			TestMode:              true,
+			Storage:    storageType,
+			BucketURL:  bucketURL,
+			MaxRetries: 5,
+			TestMode:   true,
 		},
 	})
 }

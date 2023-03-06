@@ -89,11 +89,9 @@ var DefaultSQLDBConfig = &storeconfig.SQLDBConfig{
 var DefaultPieceStoreConfig = &storage.PieceStoreConfig{
 	Shards: 0,
 	Store: storage.ObjectStorageConfig{
-		Storage:               "file",
-		BucketURL:             "./data",
-		MaxRetries:            5,
-		MinRetryDelay:         0,
-		TLSInsecureSkipVerify: false,
+		Storage:    "file",
+		BucketURL:  "./data",
+		MaxRetries: 5,
 	},
 }
 
