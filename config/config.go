@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/hex"
 	"encoding/json"
-
 	"os"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
@@ -66,11 +65,10 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SyncerService:     model.SyncerGRPCAddress,
 		model.StoneNodeService:  model.StoneNodeGRPCAddress,
 		model.SignerService:     model.SignerGRPCAddress,
-		model.MetadataService:   model.MetaDataServiceHTTPAddress,
+		model.MetadataService:   model.MetaDataServiceGRPCAddress,
 	},
 	HTTPAddress: map[string]string{
 		model.GatewayService: model.GatewayHTTPAddress,
-		//model.MetadataService: model.MetaDataServiceHTTPAddress,
 	},
 	SpOperatorAddress: hex.EncodeToString([]byte("greenfield-storage-provider")),
 	Domain:            "gnfd.nodereal.com",
@@ -86,9 +84,9 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 // DefaultSQLDBConfig defines the default configuration of SQL DB
 var DefaultSQLDBConfig = &storeconfig.SQLDBConfig{
 	User:     "root",
-	Passwd:   "root1234",
+	Passwd:   "test_pwd",
 	Address:  "localhost:3306",
-	Database: "block_syncer",
+	Database: "storage_provider_db",
 }
 
 // DefaultPieceStoreConfig defines the default configuration of piece store
@@ -114,7 +112,7 @@ var DefaultGreenfieldChainConfig = &gnfd.GreenfieldChainConfig{
 }
 
 var DefaultMetadataConfig = &metadata.MetadataConfig{
-	Address:    model.MetaDataServiceHTTPAddress,
+	Address:    model.MetaDataServiceGRPCAddress,
 	SpDBConfig: DefaultSQLDBConfig,
 }
 
