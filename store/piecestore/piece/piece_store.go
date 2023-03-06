@@ -20,7 +20,7 @@ func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 	checkConfig(pieceConfig)
 	blob, err := createStorage(*pieceConfig)
 	if err != nil {
-		log.Errorw("create storage error", "error", err)
+		log.Errorw("failed to create storage", "error", err)
 		return nil, err
 	}
 	log.Debugw("piece store is running", "storage type", pieceConfig.Store.Storage,
@@ -71,12 +71,12 @@ func createStorage(cfg storage.PieceStoreConfig) (storage.ObjectStorage, error) 
 		object, err = storage.NewObjectStorage(cfg.Store)
 	}
 	if err != nil {
-		log.Errorw("create storage error", "error", err, "object", object)
+		log.Errorw("failed to create storage", "error", err, "object", object)
 		return nil, err
 	}
 
 	if err = checkBucket(context.Background(), object); err != nil {
-		log.Errorw("check bucket error, storage is not configured rightly ", "error", err,
+		log.Errorw("failed to check bucket due to storage is not configured rightly ", "error", err,
 			"object", object)
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func createStorage(cfg storage.PieceStoreConfig) (storage.ObjectStorage, error) 
 // checkBucket checks bucket if exists
 func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 	if err := store.HeadBucket(ctx); err != nil {
-		log.Errorw("head bucket error", "error", err)
+		log.Errorw("failed to head bucket", "error", err)
 		if errors.Is(err, merrors.ErrNotExistBucket) {
 			if err2 := store.CreateBucket(ctx); err2 != nil {
 				return fmt.Errorf("failed to create bucket in %s: %s, previous err: %s", store, err2, err)
@@ -97,7 +97,7 @@ func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 		}
 		return merrors.ErrNoPermissionAccessBucket
 	}
-	log.Debugf("head bucket succeeds in %s", store)
+	log.Debugf("succeed to head bucket in %s", store)
 	return nil
 }
 

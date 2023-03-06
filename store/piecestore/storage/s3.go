@@ -65,7 +65,7 @@ func (s *s3Store) CreateBucket(ctx context.Context) error {
 		Bucket: aws.String(s.bucketName),
 	})
 	if err != nil && isErrExists(err) {
-		log.Errorw("ObjectStorage S3 CreateBucket error", "error", err)
+		log.Errorw("S3 failed to create bucket", "error", err)
 		err = nil
 	}
 	return err
@@ -92,7 +92,7 @@ func (s *s3Store) GetObject(ctx context.Context, key string, offset, limit int64
 	}
 	resp, err := s.api.GetObjectWithContext(ctx, params)
 	if err != nil {
-		log.Errorw("ObjectStorage S3 GetObject error", "error", err)
+		log.Errorw("S3 failed to get object", "error", err)
 		return nil, err
 	}
 	if offset == 0 && limit == -1 {
@@ -135,7 +135,7 @@ func (s *s3Store) DeleteObject(ctx context.Context, key string) error {
 	}
 	_, err := s.api.DeleteObjectWithContext(ctx, param)
 	if err != nil && strings.Contains(err.Error(), "NoSuckKey") {
-		log.Errorw("ObjectStorage S3 DeleteObject error", "error", err)
+		log.Errorw("S3 failed to delete object", "error", err)
 		err = nil
 	}
 	return err
@@ -145,7 +145,7 @@ func (s *s3Store) HeadBucket(ctx context.Context) error {
 	if _, err := s.api.HeadBucketWithContext(ctx, &s3.HeadBucketInput{
 		Bucket: aws.String(s.bucketName),
 	}); err != nil {
-		log.Errorw("ObjectStorage S3 HeadBucket error", "error", err)
+		log.Errorw("S3 failed to head bucket", "error", err)
 		if reqErr, ok := err.(awserr.RequestFailure); ok {
 			if reqErr.StatusCode() == http.StatusNotFound {
 				return merrors.ErrNotExistBucket
@@ -166,7 +166,7 @@ func (s *s3Store) HeadObject(ctx context.Context, key string) (Object, error) {
 		if e, ok := err.(awserr.RequestFailure); ok && e.StatusCode() == http.StatusNotFound {
 			err = os.ErrNotExist
 		}
-		log.Errorw("ObjectStorage S3 HeadObject error", "error", err)
+		log.Errorw("S3 failed to head object", "error", err)
 		return nil, err
 	}
 	return &object{
@@ -187,7 +187,7 @@ func (s *s3Store) ListObjects(ctx context.Context, prefix, marker, delimiter str
 	}
 	resp, err := s.api.ListObjectsWithContext(ctx, param)
 	if err != nil {
-		log.Errorw("ObjectStorage S3 ListObjects error", "error", err)
+		log.Errorw("S3 failed to list objects", "error", err)
 		return nil, err
 	}
 
@@ -232,10 +232,10 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 
 	endpoint, bucketName, region, err := parseEndpoint(cfg.BucketURL)
 	if err != nil {
-		log.Errorw("failed to parse s3 endpoint", "error", err)
+		log.Errorw("failed to parse S3 endpoint", "error", err)
 		return nil, "", err
 	}
-	log.Debugw("s3 storage info", "endpoint", endpoint, "bucketName", bucketName, "region", region)
+	log.Debugw("S3 storage info", "endpoint", endpoint, "bucketName", bucketName, "region", region)
 
 	if sess, ok := sc.sessions[cfg]; ok {
 		return sess, bucketName, nil

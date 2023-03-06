@@ -14,10 +14,10 @@ import (
 
 func NewObjectStorage(cfg ObjectStorageConfig) (ObjectStorage, error) {
 	if fn, ok := storageMap[strings.ToLower(cfg.Storage)]; ok {
-		log.Debugf("creating %s storage at endpoint %s", cfg.Storage, cfg.BucketURL)
+		log.Debugf("created %s storage at endpoint %s", cfg.Storage, cfg.BucketURL)
 		return fn(cfg)
 	}
-	return nil, fmt.Errorf("Invalid object storage: %s", cfg.Storage)
+	return nil, fmt.Errorf("invalid object storage: %s", cfg.Storage)
 }
 
 type StorageFn func(cfg ObjectStorageConfig) (ObjectStorage, error)

@@ -24,6 +24,9 @@ func TestSharding(t *testing.T) {
 	err = createFiles(shardNum)
 	assert.Equal(t, nil, err)
 	doShardingOperations(t, handler, shardNum)
+
+	err = removeFiles(shardNum)
+	assert.Equal(t, nil, err)
 }
 
 func doShardingOperations(t *testing.T, handler *piece.PieceStore, shards int) {
@@ -71,6 +74,15 @@ func createFiles(fileNum int) error {
 		writer := bufio.NewWriter(f)
 		writer.WriteString(fmt.Sprintf("test sharding func: %d\n", i))
 		writer.Flush()
+	}
+	return nil
+}
+
+func removeFiles(fileNum int) error {
+	for i := 0; i < fileNum; i++ {
+		if err := os.Remove(fmt.Sprintf("./testdata/shards%d.txt", i)); err != nil {
+			return err
+		}
 	}
 	return nil
 }
