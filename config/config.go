@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"encoding/hex"
 	"encoding/json"
+
 	"os"
 
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	"github.com/naoina/toml"
@@ -31,6 +33,7 @@ type StorageProviderConfig struct {
 	ChainConfig       *gnfd.GreenfieldChainConfig
 	SignerCfg         *signer.SignerConfig
 	BlockSyncerCfg    *tomlconfig.TomlConfig
+	MetadataCfg       *metadata.MetadataConfig
 	LogCfg            *LogConfig
 }
 
@@ -54,6 +57,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.StoneNodeService,
 		model.SyncerService,
 		model.SignerService,
+		model.MetadataService,
 	},
 	GRPCAddress: map[string]string{
 		model.UploaderService:   model.UploaderGRPCAddress,
@@ -62,10 +66,11 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SyncerService:     model.SyncerGRPCAddress,
 		model.StoneNodeService:  model.StoneNodeGRPCAddress,
 		model.SignerService:     model.SignerGRPCAddress,
+		model.MetadataService:   model.MetaDataServiceHTTPAddress,
 	},
 	HTTPAddress: map[string]string{
-		model.GatewayService:  model.GatewayHTTPAddress,
-		model.MetadataService: model.MetaDataServiceHTTPAddress,
+		model.GatewayService: model.GatewayHTTPAddress,
+		//model.MetadataService: model.MetaDataServiceHTTPAddress,
 	},
 	SpOperatorAddress: hex.EncodeToString([]byte("greenfield-storage-provider")),
 	Domain:            "gnfd.nodereal.com",
@@ -74,15 +79,16 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	ChainConfig:       DefaultGreenfieldChainConfig,
 	SignerCfg:         signer.DefaultSignerChainConfig,
 	BlockSyncerCfg:    blocksyncer.DefaultBlockSyncerConfig,
+	MetadataCfg:       DefaultMetadataConfig,
 	LogCfg:            DefaultLogConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
 var DefaultSQLDBConfig = &storeconfig.SQLDBConfig{
 	User:     "root",
-	Passwd:   "test_pwd",
+	Passwd:   "root1234",
 	Address:  "localhost:3306",
-	Database: "storage_provider_db",
+	Database: "block_syncer",
 }
 
 // DefaultPieceStoreConfig defines the default configuration of piece store
@@ -105,6 +111,11 @@ var DefaultGreenfieldChainConfig = &gnfd.GreenfieldChainConfig{
 		GreenfieldAddresses: []string{model.GreenfieldAddress},
 		TendermintAddresses: []string{model.TendermintAddress},
 	}},
+}
+
+var DefaultMetadataConfig = &metadata.MetadataConfig{
+	Address:    model.MetaDataServiceHTTPAddress,
+	SpDBConfig: DefaultSQLDBConfig,
 }
 
 type LogConfig struct {

@@ -33,6 +33,7 @@ func (metadata *Metadata) Name() string {
 // Start implement the lifecycle interface
 // to delete api/v1
 func (metadata *Metadata) Start(ctx context.Context) error {
+	metadata.ctx = ctx
 	if metadata.running.Swap(true) {
 		return errors.New("metadata has started")
 	}
@@ -71,12 +72,11 @@ func (metadata *Metadata) Stop(ctx context.Context) error {
 	return nil
 }
 
-func NewMetadataService(cfg *metadata.MetadataConfig, ctx context.Context) (metadata *Metadata, err error) {
+func NewMetadataService(cfg *metadata.MetadataConfig) (metadata *Metadata, err error) {
 	metadataStore, _ := store.NewStore(cfg.SpDBConfig)
 	metadata = &Metadata{
 		config: cfg,
 		name:   model.MetadataService,
-		ctx:    ctx,
 		store:  metadataStore,
 	}
 	return

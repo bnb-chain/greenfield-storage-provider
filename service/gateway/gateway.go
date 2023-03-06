@@ -86,10 +86,14 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 			return nil, err
 		}
 	}
-	if g.metadata, err = client.NewMetadataClient(g.config.MetadataServiceAddress); err != nil {
-		log.Warnw("failed to create metadata client", "err", err)
-		return nil, err
+
+	if cfg.MetadataServiceAddress != "" {
+		if g.metadata, err = client.NewMetadataClient(cfg.MetadataServiceAddress); err != nil {
+			log.Warnw("failed to create metadata client", "err", err)
+			return nil, err
+		}
 	}
+
 	log.Debugw("gateway succeed to init")
 	return g, nil
 }
