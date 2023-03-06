@@ -153,7 +153,7 @@ func (cfg *StorageProviderConfig) MakeStoneNodeConfig() (*stonenode.StoneNodeCon
 	if _, ok := cfg.GRPCAddress[model.SignerService]; ok {
 		snCfg.SignerGrpcAddress = cfg.GRPCAddress[model.SignerService]
 	} else {
-		return nil, fmt.Errorf("missing metadata gPRC address configuration for stone node service")
+		return nil, fmt.Errorf("missing signer gPRC address configuration for stone node service")
 	}
 	return snCfg, nil
 }
@@ -166,7 +166,7 @@ func (cfg *StorageProviderConfig) MakeMetadataServiceConfig() (*metadata.Metadat
 	if _, ok := cfg.GRPCAddress[model.MetadataService]; ok {
 		mCfg.GRPCAddress = cfg.GRPCAddress[model.MetadataService]
 	} else {
-		return nil, fmt.Errorf("missing meta data HTTP address configuration for mate data service")
+		return nil, fmt.Errorf("missing meta data gRPC address configuration for mete data service")
 	}
 	return mCfg, nil
 }

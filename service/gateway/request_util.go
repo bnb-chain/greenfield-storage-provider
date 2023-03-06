@@ -33,6 +33,8 @@ type requestContext struct {
 	skipAuth bool
 	// objectInfo is queried from the greenfield blockchain
 	objectInfo *storagetypes.ObjectInfo
+	// accountID is used to provide authentication to the sp
+	accountID string
 }
 
 // newRequestContext return a request context.
@@ -42,6 +44,7 @@ func newRequestContext(r *http.Request) *requestContext {
 		requestID:  util.GenerateRequestID(),
 		bucketName: vars["bucket"],
 		objectName: vars["object"],
+		accountID:  vars["account_id"],
 		request:    r,
 		startTime:  time.Now(),
 		vars:       vars,

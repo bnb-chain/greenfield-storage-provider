@@ -89,7 +89,7 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 
 	if cfg.MetadataServiceAddress != "" {
 		if g.metadata, err = client.NewMetadataClient(cfg.MetadataServiceAddress); err != nil {
-			log.Errorw("failed to create metadata client", "err", err)
+			log.Errorw("failed to create metadata client", "error", err)
 			return nil, err
 		}
 	}

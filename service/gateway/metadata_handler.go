@@ -7,18 +7,40 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
-	"github.com/gorilla/mux"
+	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 )
 
 // getUserBucketsHandler handle get object request
 func (g *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+	var (
+		err            error
+		errDescription *errorDescription
+		reqContext     *requestContext
+		statusCode     = http.StatusOK
+	)
 
-	req := &stypes.MetadataServiceGetUserBucketsRequest{
-		AccountId: vars["account_id"],
+	reqContext = newRequestContext(r)
+	defer func() {
+		if errDescription != nil {
+			statusCode = errDescription.statusCode
+			_ = errDescription.errorJSONResponse(w, reqContext)
+		}
+		if statusCode == http.StatusOK {
+			log.Infof("action(%v) statusCode(%v) %v", getUserBucketsRouterName, statusCode, reqContext.generateRequestDetail())
+		} else {
+			log.Errorf("action(%v) statusCode(%v) %v", getUserBucketsRouterName, statusCode, reqContext.generateRequestDetail())
+		}
+	}()
+
+	if g.metadata == nil {
+		log.Errorw("failed to get user buckets due to not config metadata")
+		errDescription = NotExistComponentError
+		return
 	}
 
+	req := &metatypes.MetadataServiceGetUserBucketsRequest{
+		AccountId: reqContext.accountID,
+	}
 	ctx := log.Context(context.Background(), req)
 	resp, err := g.metadata.GetUserBuckets(ctx, req)
 	if err != nil {
@@ -36,11 +58,35 @@ func (g *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) 
 
 // listObjectsByBucketNameHandler handle list objects by bucket name request
 func (g *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+	var (
+		err            error
+		errDescription *errorDescription
+		reqContext     *requestContext
+		statusCode     = http.StatusOK
+	)
 
-	req := &stypes.MetadataServiceListObjectsByBucketNameRequest{
-		BucketName: vars["bucket_name"],
-		AccountId:  vars["account_id"],
+	reqContext = newRequestContext(r)
+	defer func() {
+		if errDescription != nil {
+			statusCode = errDescription.statusCode
+			_ = errDescription.errorJSONResponse(w, reqContext)
+		}
+		if statusCode == http.StatusOK {
+			log.Infof("action(%v) statusCode(%v) %v", listObjectsByBucketRouterName, statusCode, reqContext.generateRequestDetail())
+		} else {
+			log.Errorf("action(%v) statusCode(%v) %v", listObjectsByBucketRouterName, statusCode, reqContext.generateRequestDetail())
+		}
+	}()
+
+	if g.metadata == nil {
+		log.Errorw("failed to list objects by bucket name due to not config metadata")
+		errDescription = NotExistComponentError
+		return
+	}
+
+	req := &metatypes.MetadataServiceListObjectsByBucketNameRequest{
+		BucketName: reqContext.bucketName,
+		AccountId:  reqContext.accountID,
 	}
 
 	ctx := log.Context(context.Background(), req)
