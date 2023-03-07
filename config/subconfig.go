@@ -166,7 +166,7 @@ func (cfg *StorageProviderConfig) MakeMetadataServiceConfig() (*metadata.Metadat
 	if _, ok := cfg.GRPCAddress[model.MetadataService]; ok {
 		mCfg.GRPCAddress = cfg.GRPCAddress[model.MetadataService]
 	} else {
-		return nil, fmt.Errorf("missing meta data gRPC address configuration for mete data service")
+		return nil, fmt.Errorf("missing meta data gRPC address configuration for meta data service")
 	}
 	return mCfg, nil
 }
