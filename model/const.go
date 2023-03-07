@@ -43,8 +43,6 @@ var SpServiceDesc = map[string]string{
 const (
 	// GatewayHTTPAddress default HTTP address of gateway
 	GatewayHTTPAddress = "localhost:9033"
-	// MetaDataServiceHTTPAddress default HTTP address of meta data service
-	MetaDataServiceHTTPAddress = "localhost:9733"
 	// UploaderGRPCAddress default gRPC address of uploader
 	UploaderGRPCAddress = "localhost:9133"
 	// DownloaderGRPCAddress default gRPC address of downloader
@@ -57,6 +55,8 @@ const (
 	SyncerGRPCAddress = "localhost:9533"
 	// SignerGRPCAddress default gRPC address of signer
 	SignerGRPCAddress = "localhost:9633"
+	// MetaDataGRPCAddress default gRPC address of meta data service
+	MetaDataGRPCAddress = "localhost:9733"
 )
 
 // define greenfield chain default address

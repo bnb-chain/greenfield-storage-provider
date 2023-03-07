@@ -54,6 +54,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.StoneNodeService,
 		model.SyncerService,
 		model.SignerService,
+		model.MetadataService,
 	},
 	GRPCAddress: map[string]string{
 		model.UploaderService:   model.UploaderGRPCAddress,
@@ -62,10 +63,10 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SyncerService:     model.SyncerGRPCAddress,
 		model.StoneNodeService:  model.StoneNodeGRPCAddress,
 		model.SignerService:     model.SignerGRPCAddress,
+		model.MetadataService:   model.MetaDataGRPCAddress,
 	},
 	HTTPAddress: map[string]string{
-		model.GatewayService:  model.GatewayHTTPAddress,
-		model.MetadataService: model.MetaDataServiceHTTPAddress,
+		model.GatewayService: model.GatewayHTTPAddress,
 	},
 	SpOperatorAddress: hex.EncodeToString([]byte("greenfield-storage-provider")),
 	Domain:            "gnfd.nodereal.com",

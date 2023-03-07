@@ -8,11 +8,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	_ "github.com/go-sql-driver/mysql"
-	"gorm.io/gorm"
 )
 
 type Store struct {
-	userDB *gorm.DB
+	spDB sqldb.SPDB
 }
 
 type IStore interface {
@@ -21,24 +20,13 @@ type IStore interface {
 }
 
 func NewStore(cfg *config.SQLDBConfig) (*Store, error) {
-	userDB, err := newGORM(cfg)
+	spDB, err := sqldb.NewSpDB(cfg)
 	if err != nil {
 		log.Errorf("fail to new gorm cfg:%v err:%v", cfg, err)
 		return nil, err
 	}
 
 	return &Store{
-		userDB: userDB,
+		spDB: spDB,
 	}, nil
-}
-
-func newGORM(cfg *config.SQLDBConfig) (*gorm.DB, error) {
-	db, err := sqldb.InitDB(cfg)
-
-	if err != nil {
-		log.Infof("fail to open database err:%v", err)
-		return nil, err
-	}
-
-	return db, nil
 }
