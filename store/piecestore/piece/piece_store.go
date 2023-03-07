@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
@@ -18,12 +18,12 @@ import (
 // NewPieceStore returns an instance of PieceStore
 func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 	checkConfig(pieceConfig)
-	blob, err := createStorage(pieceConfig)
+	blob, err := createStorage(*pieceConfig)
 	if err != nil {
-		log.Errorw("create storage error", "error", err)
+		log.Errorw("failed to create storage", "error", err)
 		return nil, err
 	}
-	log.Debugw("pieceStore is running", "Storage", pieceConfig.Store.Storage,
+	log.Debugw("piece store is running", "storage type", pieceConfig.Store.Storage,
 		"shards", pieceConfig.Shards)
 
 	return &PieceStore{blob}, nil
@@ -47,7 +47,7 @@ func checkConfig(cfg *storage.PieceStoreConfig) {
 		}
 		p, err := filepath.Abs(cfg.Store.BucketURL)
 		if err != nil {
-			log.Panicw("Failed to get absolute path", "bucket", cfg.Store.BucketURL, "error", err)
+			log.Panicw("failed to get absolute path", "bucket", cfg.Store.BucketURL, "error", err)
 		}
 		cfg.Store.BucketURL = p
 		cfg.Store.BucketURL += "/"
@@ -55,12 +55,12 @@ func checkConfig(cfg *storage.PieceStoreConfig) {
 }
 
 func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) {
-	if val, ok := os.LookupEnv(model.BucketURL); ok {
+	if val, ok := os.LookupEnv(mpiecestore.BucketURL); ok {
 		cfg.Store.BucketURL = val
 	}
 }
 
-func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error) {
+func createStorage(cfg storage.PieceStoreConfig) (storage.ObjectStorage, error) {
 	var (
 		object storage.ObjectStorage
 		err    error
@@ -71,12 +71,12 @@ func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error)
 		object, err = storage.NewObjectStorage(cfg.Store)
 	}
 	if err != nil {
-		log.Errorw("createStorage error", "error", err, "object", object)
+		log.Errorw("failed to create storage", "error", err, "object", object)
 		return nil, err
 	}
 
 	if err = checkBucket(context.Background(), object); err != nil {
-		log.Errorw("checkBucket error, storage is not configured rightly ", "error", err,
+		log.Errorw("failed to check bucket due to storage is not configured rightly ", "error", err,
 			"object", object)
 		return nil, err
 	}
@@ -87,17 +87,17 @@ func createStorage(cfg *storage.PieceStoreConfig) (storage.ObjectStorage, error)
 // checkBucket checks bucket if exists
 func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 	if err := store.HeadBucket(ctx); err != nil {
-		log.Errorw("HeadBucket error", "error", err)
+		log.Errorw("failed to head bucket", "error", err)
 		if errors.Is(err, merrors.ErrNotExistBucket) {
 			if err2 := store.CreateBucket(ctx); err2 != nil {
-				return fmt.Errorf("Failed to create bucket in %s: %s, previous err: %s", store, err2, err)
+				return fmt.Errorf("failed to create bucket in %s: %s, previous err: %s", store, err2, err)
 			}
-			log.Info("Create bucket successfully!")
+			log.Info("create bucket successfully!")
 			return nil
 		}
 		return merrors.ErrNoPermissionAccessBucket
 	}
-	log.Debugf("HeadBucket succeeds in %s", store)
+	log.Debugf("succeed to head bucket in %s", store)
 	return nil
 }
 

@@ -7,25 +7,26 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-func NewObjectStorage(cfg *ObjectStorageConfig) (ObjectStorage, error) {
+func NewObjectStorage(cfg ObjectStorageConfig) (ObjectStorage, error) {
 	if fn, ok := storageMap[strings.ToLower(cfg.Storage)]; ok {
-		log.Debugf("creating %s storage at endpoint %s", cfg.Storage, cfg.BucketURL)
+		log.Debugf("created %s storage at endpoint %s", cfg.Storage, cfg.BucketURL)
 		return fn(cfg)
 	}
-	return nil, fmt.Errorf("Invalid object storage: %s", cfg.Storage)
+	return nil, fmt.Errorf("invalid object storage: %s", cfg.Storage)
 }
 
-type StorageFn func(cfg *ObjectStorageConfig) (ObjectStorage, error)
+type StorageFn func(cfg ObjectStorageConfig) (ObjectStorage, error)
 
 var storageMap = map[string]StorageFn{
-	"s3":     newS3Store,
-	"file":   newDiskFileStore,
-	"memory": newMemoryStore,
+	mpiecestore.S3Store:       newS3Store,
+	mpiecestore.MinioStore:    newMinioStore,
+	mpiecestore.DiskFileStore: newDiskFileStore,
+	mpiecestore.MemoryStore:   newMemoryStore,
 }
 
 type DefaultObjectStorage struct{}
@@ -35,11 +36,11 @@ func (s DefaultObjectStorage) CreateBucket(ctx context.Context) error {
 }
 
 func (s DefaultObjectStorage) ListObjects(ctx context.Context, prefix, marker, delimiter string, limit int64) ([]Object, error) {
-	return nil, errors.ErrUnsupportedMethod
+	return nil, merrors.ErrUnsupportedMethod
 }
 
 func (s DefaultObjectStorage) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan Object, error) {
-	return nil, errors.ErrUnsupportedMethod
+	return nil, merrors.ErrUnsupportedMethod
 }
 
 type file struct {
@@ -57,7 +58,27 @@ func (f *file) IsSymlink() bool   { return f.isSymlink }
 
 var bufPool = sync.Pool{
 	New: func() any {
-		buf := make([]byte, model.BufPoolSize)
+		buf := make([]byte, mpiecestore.BufPoolSize)
 		return &buf
 	},
+}
+
+type objectStorageSecretKey struct {
+	accessKey    string
+	secretKey    string
+	sessionToken string
+}
+
+func getSecretKeyFromEnv(accessKey, secretKey, sessionToken string) *objectStorageSecretKey {
+	key := &objectStorageSecretKey{}
+	if val, ok := os.LookupEnv(accessKey); ok {
+		key.accessKey = val
+	}
+	if val, ok := os.LookupEnv(secretKey); ok {
+		key.secretKey = val
+	}
+	if val, ok := os.LookupEnv(sessionToken); ok {
+		key.sessionToken = val
+	}
+	return key
 }

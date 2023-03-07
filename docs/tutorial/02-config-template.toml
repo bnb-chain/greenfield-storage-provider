@@ -38,10 +38,7 @@ Shards = 0
 [PieceStoreConfig.Store]
 Storage = "file"
 BucketURL = "./data"
-NoSignRequest = false
 MaxRetries = 5
-MinRetryDelay = 0
-TlsInsecureSkipVerify = false
 TestMode = false
 
 # interact with the greenfield chain

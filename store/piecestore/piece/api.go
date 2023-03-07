@@ -25,3 +25,8 @@ func (p *PieceStore) Put(ctx context.Context, key string, reader io.Reader) erro
 func (p *PieceStore) Delete(ctx context.Context, key string) error {
 	return p.storeAPI.DeleteObject(ctx, key)
 }
+
+// GetPieceInfo returns piece info in PieceStore
+func (p *PieceStore) GetPieceInfo(ctx context.Context, key string) (storage.Object, error) {
+	return p.storeAPI.HeadObject(ctx, key)
+}

@@ -29,27 +29,27 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 	if _, ok := cfg.GRPCAddress[model.UploaderService]; ok {
 		gCfg.UploaderServiceAddress = cfg.GRPCAddress[model.UploaderService]
 	} else {
-		return nil, fmt.Errorf("missing uploader gPRC address configuration for gateway service")
+		return nil, fmt.Errorf("missing uploader gRPC address configuration for gateway service")
 	}
 	if _, ok := cfg.GRPCAddress[model.DownloaderService]; ok {
 		gCfg.DownloaderServiceAddress = cfg.GRPCAddress[model.DownloaderService]
 	} else {
-		return nil, fmt.Errorf("missing downloader gPRC address configuration for gateway service")
+		return nil, fmt.Errorf("missing downloader gRPC address configuration for gateway service")
 	}
 	if _, ok := cfg.GRPCAddress[model.SignerService]; ok {
 		gCfg.SignerServiceAddress = cfg.GRPCAddress[model.SignerService]
 	} else {
-		return nil, fmt.Errorf("missing signer gPRC address configuration for gateway service")
+		return nil, fmt.Errorf("missing signer gRPC address configuration for gateway service")
 	}
 	if _, ok := cfg.GRPCAddress[model.ChallengeService]; ok {
 		gCfg.ChallengeServiceAddress = cfg.GRPCAddress[model.ChallengeService]
 	} else {
-		return nil, fmt.Errorf("missing challenge gPRC address configuration for gateway service")
+		return nil, fmt.Errorf("missing challenge gRPC address configuration for gateway service")
 	}
 	if _, ok := cfg.GRPCAddress[model.SyncerService]; ok {
 		gCfg.SyncerServiceAddress = cfg.GRPCAddress[model.SyncerService]
 	} else {
-		return nil, fmt.Errorf("missing syncer gPRC address configuration for gateway service")
+		return nil, fmt.Errorf("missing syncer gRPC address configuration for gateway service")
 	}
 	if _, ok := cfg.GRPCAddress[model.MetadataService]; ok {
 		gCfg.MetadataServiceAddress = cfg.GRPCAddress[model.MetadataService]
@@ -68,17 +68,17 @@ func (cfg *StorageProviderConfig) MakeUploaderConfig() (*uploader.UploaderConfig
 	if _, ok := cfg.GRPCAddress[model.UploaderService]; ok {
 		uCfg.GRPCAddress = cfg.GRPCAddress[model.UploaderService]
 	} else {
-		return nil, fmt.Errorf("missing uploader gPRC address configuration for uploader service")
+		return nil, fmt.Errorf("missing uploader gRPC address configuration for uploader service")
 	}
 	if _, ok := cfg.GRPCAddress[model.SignerService]; ok {
 		uCfg.SignerGrpcAddress = cfg.GRPCAddress[model.SignerService]
 	} else {
-		return nil, fmt.Errorf("missing signer gPRC address configuration for uploader service")
+		return nil, fmt.Errorf("missing signer gRPC address configuration for uploader service")
 	}
 	if _, ok := cfg.GRPCAddress[model.StoneNodeService]; ok {
 		uCfg.StoneNodeGrpcAddress = cfg.GRPCAddress[model.StoneNodeService]
 	} else {
-		return nil, fmt.Errorf("missing stone node gPRC address configuration for uploader service")
+		return nil, fmt.Errorf("missing stone node gRPC address configuration for uploader service")
 	}
 	return uCfg, nil
 }
@@ -93,7 +93,7 @@ func (cfg *StorageProviderConfig) MakeDownloaderConfig() (*downloader.Downloader
 	if _, ok := cfg.GRPCAddress[model.DownloaderService]; ok {
 		dCfg.GRPCAddress = cfg.GRPCAddress[model.DownloaderService]
 	} else {
-		return nil, fmt.Errorf("missing downloader gPRC address configuration for downloader service")
+		return nil, fmt.Errorf("missing downloader gRPC address configuration for downloader service")
 	}
 	return dCfg, nil
 }
@@ -108,12 +108,12 @@ func (cfg *StorageProviderConfig) MakeSyncerConfig() (*syncer.SyncerConfig, erro
 	if _, ok := cfg.GRPCAddress[model.SyncerService]; ok {
 		sCfg.GRPCAddress = cfg.GRPCAddress[model.SyncerService]
 	} else {
-		return nil, fmt.Errorf("missing syncer gPRC address configuration for syncer service")
+		return nil, fmt.Errorf("missing syncer gRPC address configuration for syncer service")
 	}
 	if _, ok := cfg.GRPCAddress[model.SignerService]; ok {
 		sCfg.SignerGRPCAddress = cfg.GRPCAddress[model.SignerService]
 	} else {
-		return nil, fmt.Errorf("missing signer gPRC address configuration for syncer service")
+		return nil, fmt.Errorf("missing signer gRPC address configuration for syncer service")
 	}
 	return sCfg, nil
 }
@@ -127,7 +127,7 @@ func (cfg *StorageProviderConfig) MakeChallengeConfig() (*challenge.ChallengeCon
 	if _, ok := cfg.GRPCAddress[model.ChallengeService]; ok {
 		cCfg.GRPCAddress = cfg.GRPCAddress[model.ChallengeService]
 	} else {
-		return nil, fmt.Errorf("missing challenge gPRC address configuration for challenge service")
+		return nil, fmt.Errorf("missing challenge gRPC address configuration for challenge service")
 	}
 	return cCfg, nil
 }
@@ -148,12 +148,12 @@ func (cfg *StorageProviderConfig) MakeStoneNodeConfig() (*stonenode.StoneNodeCon
 	if _, ok := cfg.GRPCAddress[model.StoneNodeService]; ok {
 		snCfg.GRPCAddress = cfg.GRPCAddress[model.StoneNodeService]
 	} else {
-		return nil, fmt.Errorf("missing stone node gPRC address configuration for stone node service")
+		return nil, fmt.Errorf("missing stone node gRPC address configuration for stone node service")
 	}
 	if _, ok := cfg.GRPCAddress[model.SignerService]; ok {
 		snCfg.SignerGrpcAddress = cfg.GRPCAddress[model.SignerService]
 	} else {
-		return nil, fmt.Errorf("missing signer gPRC address configuration for stone node service")
+		return nil, fmt.Errorf("missing signer gRPC address configuration for stone node service")
 	}
 	return snCfg, nil
 }
