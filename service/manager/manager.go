@@ -8,18 +8,21 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
+var _ lifecycle.Service = &Manager{}
+
 var (
-	// RefreshStorageParamsTimer define the period of refresh storage params
-	RefreshStorageParamsTimer = 60 * 60
-	// RefreshSPInfoTimer define the period of refresh sp info
-	RefreshSPInfoTimer = 60 * 60
+	// RefreshSPInfoAndStorageParamsTimer define the period of refresh sp info and storage params
+	RefreshSPInfoAndStorageParamsTimer = 5 * 60
 )
 
-// Manager is responsible for managing the storage provider cluster
+// Manager module is responsible for implementing internal management functions.
+// Currently, it supports periodic update of sp info list and storage params information in spdb.
+// TODO::support gc and configuration management, etc.
 type Manager struct {
 	cfg     *ManagerConfig
 	running atomic.Bool
@@ -28,7 +31,7 @@ type Manager struct {
 	spDB    sqldb.SPDB
 }
 
-// NewManagerService returns an instance of Manager that implementation of the lifecycle.Service
+// NewManagerService returns an instance of manager
 func NewManagerService(cfg *ManagerConfig) (*Manager, error) {
 	chain, err := gnfd.NewGreenfield(cfg.ChainConfig)
 	if err != nil {
@@ -48,12 +51,12 @@ func NewManagerService(cfg *ManagerConfig) (*Manager, error) {
 	return manager, nil
 }
 
-// Name return the manager service name, for the lifecycle management
+// Name return the manager service name
 func (m *Manager) Name() string {
 	return model.ManagerService
 }
 
-// Start stone hub service, implement the lifecycle interface.
+// Start function start background goroutine to execute refresh sp meta
 func (m *Manager) Start(ctx context.Context) error {
 	if m.running.Swap(true) {
 		return errors.New("manager has already started")
@@ -66,38 +69,20 @@ func (m *Manager) Start(ctx context.Context) error {
 
 // eventLoop background goroutine, responsible for refreshing sp info and storage params
 func (m *Manager) eventLoop() {
-	m.refreshStorageParams()
-	m.refreshSPInfo()
-	refreshStorageParamsTicker := time.NewTicker(time.Duration(RefreshStorageParamsTimer) * time.Second)
-	refreshSPInfoTicker := time.NewTicker(time.Duration(RefreshSPInfoTimer) * time.Second)
+	m.refreshSPInfoAndStorageParams()
+	refreshSPInfoAndStorageParamsTicker := time.NewTicker(time.Duration(RefreshSPInfoAndStorageParamsTimer) * time.Second)
 	for {
 		select {
-		case <-refreshStorageParamsTicker.C:
-			go m.refreshStorageParams()
-		case <-refreshSPInfoTicker.C:
-			go m.refreshSPInfo()
+		case <-refreshSPInfoAndStorageParamsTicker.C:
+			go m.refreshSPInfoAndStorageParams()
 		case <-m.stopCh:
 			return
 		}
 	}
 }
 
-// refreshStorageParams fetch storage params from chain and update to spdb
-func (m *Manager) refreshStorageParams() {
-	storageParams, err := m.chain.QueryStorageParams(context.Background())
-	if err != nil {
-		log.Errorw("failed to query storage params", "error", err)
-		return
-	}
-	if err = m.spDB.SetStorageParams(storageParams); err != nil {
-		log.Errorw("failed to update storage params", "error", err)
-		return
-	}
-	log.Infow("succeed to refresh storage params", "params", storageParams)
-}
-
-// refreshSPInfo fetch sp info from chain and update to spdb
-func (m *Manager) refreshSPInfo() {
+// refreshSPInfoAndStorageParams fetch sp info and storage params from chain and update to spdb
+func (m *Manager) refreshSPInfoAndStorageParams() {
 	spInfoList, err := m.chain.QuerySPInfo(context.Background())
 	if err != nil {
 		log.Errorw("failed to query sp info", "error", err)
@@ -116,9 +101,19 @@ func (m *Manager) refreshSPInfo() {
 		}
 	}
 	log.Infow("succeed to refresh sp info", "sp_info", spInfoList)
+	storageParams, err := m.chain.QueryStorageParams(context.Background())
+	if err != nil {
+		log.Errorw("failed to query storage params", "error", err)
+		return
+	}
+	if err = m.spDB.SetStorageParams(storageParams); err != nil {
+		log.Errorw("failed to update storage params", "error", err)
+		return
+	}
+	log.Infow("succeed to refresh storage params", "params", storageParams)
 }
 
-// Stop manager service, implement the lifecycle interface
+// Stop manager background goroutine
 func (m *Manager) Stop(ctx context.Context) error {
 	if !m.running.Swap(false) {
 		return errors.New("manager has already stop")
