@@ -16,19 +16,17 @@ func (g *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) 
 		err            error
 		errDescription *errorDescription
 		reqContext     *requestContext
-		statusCode     = http.StatusOK
 	)
 
 	reqContext = newRequestContext(r)
 	defer func() {
 		if errDescription != nil {
-			statusCode = errDescription.statusCode
 			_ = errDescription.errorJSONResponse(w, reqContext)
 		}
-		if statusCode == http.StatusOK {
-			log.Infof("action(%v) statusCode(%v) %v", getUserBucketsRouterName, statusCode, reqContext.generateRequestDetail())
+		if errDescription != nil && errDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", getUserBucketsRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Errorf("action(%v) statusCode(%v) %v", getUserBucketsRouterName, statusCode, reqContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", getUserBucketsRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
@@ -62,19 +60,17 @@ func (g *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.
 		err            error
 		errDescription *errorDescription
 		reqContext     *requestContext
-		statusCode     = http.StatusOK
 	)
 
 	reqContext = newRequestContext(r)
 	defer func() {
 		if errDescription != nil {
-			statusCode = errDescription.statusCode
 			_ = errDescription.errorJSONResponse(w, reqContext)
 		}
-		if statusCode == http.StatusOK {
-			log.Infof("action(%v) statusCode(%v) %v", listObjectsByBucketRouterName, statusCode, reqContext.generateRequestDetail())
+		if errDescription != nil && errDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", listObjectsByBucketRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Errorf("action(%v) statusCode(%v) %v", listObjectsByBucketRouterName, statusCode, reqContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", listObjectsByBucketRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
