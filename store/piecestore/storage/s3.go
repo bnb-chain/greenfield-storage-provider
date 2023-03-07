@@ -23,15 +23,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/viki-org/dnscache"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var (
-	// Re-used AWS sessions dramatically improve performance
+	// re-used AWS sessions dramatically improve performance
 	s3SessionCache = &SessionCache{
 		sessions: map[ObjectStorageConfig]*session.Session{},
 	}
@@ -44,13 +45,13 @@ type s3Store struct {
 	api        s3iface.S3API
 }
 
-func newS3Store(cfg *ObjectStorageConfig) (ObjectStorage, error) {
-	awsSession, bucket, err := s3SessionCache.newSession(*cfg)
+func newS3Store(cfg ObjectStorageConfig) (ObjectStorage, error) {
+	awsSession, bucket, err := s3SessionCache.newSession(cfg)
 	if err != nil {
-		log.Errorw("s3 newSession error", "error", err)
+		log.Errorw("failed to new s3 session", "error", err)
 		return nil, err
 	}
-	log.Infow("newS3Store succeeds", "bucket", bucket)
+	log.Infow("new S3 store succeeds", "bucket", bucket)
 
 	return &s3Store{bucketName: bucket, api: s3.New(awsSession)}, nil
 }
@@ -64,7 +65,7 @@ func (s *s3Store) CreateBucket(ctx context.Context) error {
 		Bucket: aws.String(s.bucketName),
 	})
 	if err != nil && isErrExists(err) {
-		log.Errorw("ObjectStorage S3 CreateBucket error", "error", err)
+		log.Errorw("S3 failed to create bucket", "error", err)
 		err = nil
 	}
 	return err
@@ -91,11 +92,11 @@ func (s *s3Store) GetObject(ctx context.Context, key string, offset, limit int64
 	}
 	resp, err := s.api.GetObjectWithContext(ctx, params)
 	if err != nil {
-		log.Errorw("ObjectStorage S3 GetObject error", "error", err)
+		log.Errorw("S3 failed to get object", "error", err)
 		return nil, err
 	}
 	if offset == 0 && limit == -1 {
-		cs := resp.Metadata[model.ChecksumAlgo]
+		cs := resp.Metadata[mpiecestore.ChecksumAlgo]
 		if cs != nil {
 			resp.Body = verifyChecksum(resp.Body, aws.StringValue(cs))
 		}
@@ -121,7 +122,7 @@ func (s *s3Store) PutObject(ctx context.Context, key string, reader io.Reader) e
 		Key:         aws.String(key),
 		Body:        body,
 		ContentType: aws.String(model.OctetStream),
-		Metadata:    map[string]*string{model.ChecksumAlgo: aws.String(checksum)},
+		Metadata:    map[string]*string{mpiecestore.ChecksumAlgo: aws.String(checksum)},
 	}
 	_, err := s.api.PutObjectWithContext(ctx, params)
 	return err
@@ -134,7 +135,7 @@ func (s *s3Store) DeleteObject(ctx context.Context, key string) error {
 	}
 	_, err := s.api.DeleteObjectWithContext(ctx, param)
 	if err != nil && strings.Contains(err.Error(), "NoSuckKey") {
-		log.Errorw("ObjectStorage S3 DeleteObject error", "error", err)
+		log.Errorw("S3 failed to delete object", "error", err)
 		err = nil
 	}
 	return err
@@ -144,7 +145,7 @@ func (s *s3Store) HeadBucket(ctx context.Context) error {
 	if _, err := s.api.HeadBucketWithContext(ctx, &s3.HeadBucketInput{
 		Bucket: aws.String(s.bucketName),
 	}); err != nil {
-		log.Errorw("ObjectStorage S3 HeadBucket error", "error", err)
+		log.Errorw("S3 failed to head bucket", "error", err)
 		if reqErr, ok := err.(awserr.RequestFailure); ok {
 			if reqErr.StatusCode() == http.StatusNotFound {
 				return merrors.ErrNotExistBucket
@@ -165,7 +166,7 @@ func (s *s3Store) HeadObject(ctx context.Context, key string) (Object, error) {
 		if e, ok := err.(awserr.RequestFailure); ok && e.StatusCode() == http.StatusNotFound {
 			err = os.ErrNotExist
 		}
-		log.Errorw("ObjectStorage S3 HeadObject error", "error", err)
+		log.Errorw("S3 failed to head object", "error", err)
 		return nil, err
 	}
 	return &object{
@@ -186,7 +187,7 @@ func (s *s3Store) ListObjects(ctx context.Context, prefix, marker, delimiter str
 	}
 	resp, err := s.api.ListObjectsWithContext(ctx, param)
 	if err != nil {
-		log.Errorw("ObjectStorage S3 ListObjects error", "error", err)
+		log.Errorw("S3 failed to list objects", "error", err)
 		return nil, err
 	}
 
@@ -229,12 +230,12 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	sc.Lock()
 	defer sc.Unlock()
 
-	endpoint, bucketName, region, err := parseEndPoint(cfg.BucketURL)
+	endpoint, bucketName, region, err := parseEndpoint(cfg.BucketURL)
 	if err != nil {
-		log.Errorw("s3 parseEndPoint error", "error", err)
+		log.Errorw("failed to parse S3 endpoint", "error", err)
 		return nil, "", err
 	}
-	log.Debugw("s3 storage info", "endPoint", endpoint, "bucketName", bucketName, "region", region)
+	log.Debugw("S3 storage info", "endpoint", endpoint, "bucketName", bucketName, "region", region)
 
 	if sess, ok := sc.sessions[cfg]; ok {
 		return sess, bucketName, nil
@@ -244,7 +245,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
 		DisableSSL:       aws.Bool(disableSSL),
-		HTTPClient:       getHTTPClient(cfg.TlsInsecureSkipVerify),
+		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
 		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
 		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
 	}
@@ -252,8 +253,8 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	// in this TestMode, if you want to visit private bucket, you should provide accessKey, secretKey.
 	// if TestMode is false, you can use service account or ec2 to visit your s3 straightly
 	if cfg.TestMode {
-		key := getAWSSecretKeyFromEnv()
-		if cfg.NoSignRequest {
+		key := getSecretKeyFromEnv(mpiecestore.AWSAccessKey, mpiecestore.AWSSecretKey, mpiecestore.AWSSessionToken)
+		if key.accessKey == "NoSignRequest" {
 			awsConfig.Credentials = credentials.AnonymousCredentials
 		} else if key.accessKey != "" && key.secretKey != "" {
 			awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
@@ -262,7 +263,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {
-		return nil, "", fmt.Errorf("Failed to create aws session: %s", err)
+		return nil, "", fmt.Errorf("failed to create aws session: %s", err)
 	}
 
 	sc.sessions[cfg] = sess
@@ -275,11 +276,11 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 //	sc.sessions = map[ObjectStorageConfig]*session.Session{}
 // }
 
-func parseEndPoint(endPoint string) (string, string, string, error) {
-	endPoint = strings.Trim(endPoint, "/")
-	uri, err := url.ParseRequestURI(endPoint)
+func parseEndpoint(endpoint string) (string, string, string, error) {
+	endpoint = strings.Trim(endpoint, "/")
+	uri, err := url.ParseRequestURI(endpoint)
 	if err != nil {
-		log.Errorw("ParseRequestURI error", "endPoint", endPoint, "error", err)
+		log.Errorw("failed to parse request uri", "endpoint", endpoint, "error", err)
 		return "", "", "", err
 	}
 
@@ -291,16 +292,16 @@ func parseEndPoint(endPoint string) (string, string, string, error) {
 		pathParts := strings.Split(uri.Path, "/")
 		bucketName = pathParts[1]
 		if strings.Contains(uri.Host, ".amazonaws.com") {
-			endPoint = uri.Host
-			region = parseRegion(endPoint)
+			endpoint = uri.Host
+			region = parseRegion(endpoint)
 		}
 		isVirtualHostStyle = false
 	} else { // Virtual hosted style: https://<bucketName>.s3.<region>.amazonaws.com(.cn)
 		if strings.Contains(uri.Host, ".amazonaws.com") {
 			hostParts := strings.SplitN(uri.Host, ".s3", 2)
 			bucketName = hostParts[0]
-			endPoint = "s3" + hostParts[1]
-			region = parseRegion(endPoint)
+			endpoint = "s3" + hostParts[1]
+			region = parseRegion(endpoint)
 			isVirtualHostStyle = true
 		}
 	}
@@ -314,7 +315,7 @@ func parseEndPoint(endPoint string) (string, string, string, error) {
 		disableSSL = true
 	}
 
-	return endPoint, bucketName, region, nil
+	return endpoint, bucketName, region, nil
 }
 
 func parseRegion(endpoint string) string {
@@ -379,24 +380,4 @@ func getHTTPClient(tlsInsecureSkipVerify bool) *http.Client {
 		},
 		Timeout: time.Hour,
 	}
-}
-
-type awsSecretKey struct {
-	accessKey    string
-	secretKey    string
-	sessionToken string
-}
-
-func getAWSSecretKeyFromEnv() *awsSecretKey {
-	key := &awsSecretKey{}
-	if val, ok := os.LookupEnv(model.AWSAccessKey); ok {
-		key.accessKey = val
-	}
-	if val, ok := os.LookupEnv(model.AWSSecretKey); ok {
-		key.secretKey = val
-	}
-	if val, ok := os.LookupEnv(model.AWSSessionToken); ok {
-		key.sessionToken = val
-	}
-	return key
 }

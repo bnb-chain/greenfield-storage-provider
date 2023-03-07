@@ -8,9 +8,9 @@ import (
 	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 )
 
-func TestDiskFileStore(t *testing.T) {
+func TestMemoryStore(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setup(t, mpiecestore.DiskFileStore, "", 0)
+	handler, err := setup(t, mpiecestore.MemoryStore, "", 0)
 	assert.Equal(t, err, nil)
 
 	doOperations(t, handler)

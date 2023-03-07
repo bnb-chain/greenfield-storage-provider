@@ -6,13 +6,13 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
@@ -89,13 +89,10 @@ var DefaultSQLDBConfig = &storeconfig.SQLDBConfig{
 // DefaultPieceStoreConfig defines the default configuration of piece store
 var DefaultPieceStoreConfig = &storage.PieceStoreConfig{
 	Shards: 0,
-	Store: &storage.ObjectStorageConfig{
-		Storage:               "file",
-		BucketURL:             "./data",
-		NoSignRequest:         false,
-		MaxRetries:            5,
-		MinRetryDelay:         0,
-		TlsInsecureSkipVerify: false,
+	Store: storage.ObjectStorageConfig{
+		Storage:    "file",
+		BucketURL:  "./data",
+		MaxRetries: 5,
 	},
 }
 
