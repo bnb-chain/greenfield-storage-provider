@@ -124,12 +124,14 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	// Create workers
 	workers := make([]parser.Worker, config.Cfg.Parser.Workers)
 	for i := range workers {
-		commonWorker := parser.NewWorker(s.parserCtx, exportQueue, i, config.Cfg.Parser.ConcurrentSync, config.Cfg.Parser.WorkerType)
+		commonIndexer := parser.NewCommonIndexer(s.parserCtx)
 		switch config.Cfg.Parser.WorkerType {
 		case config.BlockSyncerWorkerType:
-			workers[i] = &blocksyncer.Worker{CommonWorker: commonWorker}
+			indexer := &blocksyncer.Indexer{Ctx: context.Background(), CommonIndexer: commonIndexer}
+			workers[i] = parser.NewWorker(indexer, exportQueue, i, config.Cfg.Parser.ConcurrentSync, config.Cfg.Parser.WorkerType)
 		case config.ExplorerWorkerType:
-			workers[i] = &explorer.Worker{CommonWorker: commonWorker}
+			indexer := &explorer.Indexer{CommonIndexer: commonIndexer}
+			workers[i] = parser.NewWorker(indexer, exportQueue, i, config.Cfg.Parser.ConcurrentSync, config.Cfg.Parser.WorkerType)
 		}
 	}
 
@@ -137,7 +139,7 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	// off of the export queue.
 	for i, w := range workers {
 		log.Debugw("starting worker...", "number", i+1)
-		go w.Start(w)
+		go w.Start()
 	}
 
 	if config.Cfg.Parser.ParseOldBlocks {
