@@ -55,8 +55,8 @@ const (
 	SyncerGRPCAddress = "localhost:9533"
 	// SignerGRPCAddress default gRPC address of signer
 	SignerGRPCAddress = "localhost:9633"
-	// MetaDataGRPCAddress default gRPC address of meta data service
-	MetaDataGRPCAddress = "localhost:9733"
+	// MetadataGRPCAddress default gRPC address of meta data service
+	MetadataGRPCAddress = "localhost:9733"
 )
 
 // define greenfield chain default address
@@ -66,7 +66,7 @@ const (
 	// TendermintAddress default Tendermint address
 	TendermintAddress = "http://localhost:26750"
 	// GreenfieldChainID default greenfield chainID
-	GreenfieldChainID = "greenfield_9000-121"
+	GreenfieldChainID = "greenfield_9000-1741"
 	// WhiteListCIDR default whitelist CIDR
 	WhiteListCIDR = "127.0.0.1/32"
 )
