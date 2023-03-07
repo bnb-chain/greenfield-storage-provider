@@ -12,7 +12,7 @@ import (
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
-	pscli "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
 // Downloader implements the gRPC of DownloaderService,
@@ -21,24 +21,25 @@ type Downloader struct {
 	cfg        *DownloaderConfig
 	spDB       sqldb.SPDB
 	chain      *gnfd.Greenfield
-	pieceStore *pscli.StoreClient
+	pieceStore *psclient.StoreClient
 }
 
 // NewDownloaderService returns an instance of Downloader that implementation of
 // the lifecycle.Service and DownloaderService interface
 func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
-	pieceStore, err := pscli.NewStoreClient(cfg.PieceStoreConfig)
+	pieceStore, err := psclient.NewStoreClient(cfg.PieceStoreConfig)
 	if err != nil {
-		log.Errorw("failed to create piece store client", "err", err)
+		log.Errorw("failed to create piece store client", "error", err)
 		return nil, err
 	}
 	chain, err := gnfd.NewGreenfield(cfg.ChainConfig)
 	if err != nil {
-		log.Errorw("failed to create chain client", "err", err)
+		log.Errorw("failed to create chain client", "error", err)
 		return nil, err
 	}
 	spDB, err := sqldb.NewSpDB(cfg.SpDBConfig)
 	if err != nil {
+		log.Errorw("failed to create spdb client", "error", err)
 		return nil, err
 	}
 	downloader := &Downloader{
@@ -63,14 +64,14 @@ func (downloader *Downloader) Start(ctx context.Context) error {
 		lis, err := net.Listen("tcp", downloader.cfg.GRPCAddress)
 		errCh <- err
 		if err != nil {
-			log.Errorw("syncer listen failed", "error", err)
+			log.Errorw("failed to listen", "error", err)
 			return
 		}
 		grpcServer := grpc.NewServer()
 		types.RegisterDownloaderServiceServer(grpcServer, downloader)
 		reflection.Register(grpcServer)
 		if err = grpcServer.Serve(lis); err != nil {
-			log.Errorw("syncer serve failed", "error", err)
+			log.Errorw("failed to serve", "error", err)
 			return
 		}
 	}(errCh)

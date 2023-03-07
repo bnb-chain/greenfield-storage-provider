@@ -55,6 +55,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SyncerService,
 		model.SignerService,
 		model.MetadataService,
+		model.ManagerService,
 	},
 	GRPCAddress: map[string]string{
 		model.UploaderService:   model.UploaderGRPCAddress,

@@ -7,6 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
@@ -169,4 +170,14 @@ func (cfg *StorageProviderConfig) MakeMetadataServiceConfig() (*metadata.Metadat
 		return nil, fmt.Errorf("missing meta data gRPC address configuration for meta data service")
 	}
 	return mCfg, nil
+}
+
+// MakeManagerServiceConfig make manager service config from StorageProviderConfig
+func (cfg *StorageProviderConfig) MakeManagerServiceConfig() (*manager.ManagerConfig, error) {
+	managerConfig := &manager.ManagerConfig{
+		SpOperatorAddress: cfg.SpOperatorAddress,
+		ChainConfig:       cfg.ChainConfig,
+		SpDBConfig:        cfg.SpDBConfig,
+	}
+	return managerConfig, nil
 }

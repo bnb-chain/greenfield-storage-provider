@@ -22,6 +22,8 @@ var (
 	MetadataService = strings.ToLower("Metadata")
 	// BlockSyncerService defines the name of block sync service
 	BlockSyncerService = strings.ToLower("BlockSyncer")
+	// ManagerService defines the name of manager service
+	ManagerService = strings.ToLower("Manager")
 )
 
 // SpServiceDesc defines the service description in storage provider
