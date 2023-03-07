@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
@@ -112,7 +111,7 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-		server, err = metadata.NewMetadataService(mCfg, context.Background())
+		server, err = metadata.NewMetadataService(mCfg)
 		if err != nil {
 			return nil, err
 		}

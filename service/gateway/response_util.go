@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"net/http"
 
@@ -61,6 +62,35 @@ func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *reque
 	w.WriteHeader(desc.statusCode)
 	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
 	if _, err = w.Write(xmlBody); err != nil {
+		return err
+	}
+	return nil
+}
+
+// errorJSONResponse is used to error response JSON.
+func (desc *errorDescription) errorJSONResponse(w http.ResponseWriter, reqCtx *requestContext) error {
+	var (
+		jsonBody []byte
+		err      error
+	)
+
+	var jsonInfo = struct {
+		Code      string `json:"Code"`
+		Message   string `json:"Message"`
+		RequestId string `json:"RequestId"`
+	}{
+		Code:      desc.errorCode,
+		Message:   desc.errorMessage,
+		RequestId: reqCtx.requestID,
+	}
+	if jsonBody, err = json.Marshal(&jsonInfo); err != nil {
+		return err
+	}
+
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.WriteHeader(desc.statusCode)
+
+	if _, err = w.Write(jsonBody); err != nil {
 		return err
 	}
 	return nil

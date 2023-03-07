@@ -5,6 +5,6 @@ import (
 )
 
 type MetadataConfig struct {
-	Address    string
-	SpDBConfig *config.SQLDBConfig
+	GRPCAddress string
+	SpDBConfig  *config.SQLDBConfig
 }
