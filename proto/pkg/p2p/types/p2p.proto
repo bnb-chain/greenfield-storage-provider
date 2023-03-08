@@ -1,0 +1,54 @@
+syntax = "proto3";
+package pkg.p2p.types;
+
+import "greenfield/storage/types.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types";
+
+// Ping defines the heartbeat request between p2p nodes
+message Ping {
+  // sp_operator_address define sp operator public key
+  string sp_operator_address = 1;
+  // signature define the signature of sp sign the msg
+  bytes signature = 2;
+}
+
+// Node defines the p2p node info
+message Node {
+  // node_id defines the node id
+  string node_id = 1;
+  // multi_addr define the node multi addr
+  repeated string multi_addr = 2;
+}
+
+// Pong defines the heartbeat response between p2p nodes
+message Pong {
+  // nodes define the
+  repeated Node nodes = 1;
+  // sp_operator_address define sp operator public key
+  string sp_operator_address = 2;
+  // signature define the signature of sp sign the msg
+  bytes signature = 3;
+}
+
+// GetApprovalRequest defines the request of getting approval
+message GetApprovalRequest {
+  // object_info define the object info for getting approval
+  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  // sp_operator_address define sp operator public key
+  string sp_operator_address = 2;
+  // signature define the signature of sp sign the msg
+  bytes signature = 4;
+}
+
+// GetApprovalResponse defines the response of getting approval
+message GetApprovalResponse {
+  // object_info define the object info for getting approval
+  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  // sp_operator_address define sp operator public key
+  string sp_operator_address = 2;
+  // refuse_reason defines the reason of refusing
+  string refuse_reason = 3;
+  // signature define the signature of sp sign the msg
+  bytes signature = 4;
+}

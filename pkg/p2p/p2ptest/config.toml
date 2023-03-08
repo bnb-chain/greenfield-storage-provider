@@ -1,0 +1,6 @@
+# notice: localhost does not meet multiaddr specification
+Address = "127.0.0.1:7133"
+SpOperatorAddress = ""
+PrivKey = ""
+Bootstrap = []
+PingPeriod = 1
