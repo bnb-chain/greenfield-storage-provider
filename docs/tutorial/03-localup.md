@@ -1,13 +1,21 @@
 ## Setup Local StorageProviders
 
+## Dependence
+* SQLDB: MariaDB - 5.5.68 and Aurora(MySQL 5.7) 2.10.3 has been practiced.
+* Greenfield: [setup local chain](https://github.com/bnb-chain/greenfield/tree/master/deployment)
+
+## SP join Greenfield local chain
+> TODO:: waiting for the greenfield chain doc pr merged
+
+## Setup local sps
 1. Generate localup env
 
 Including build sp binary, generate directories/configs, create databases.
 ```bash
-# The first time is equal to 1, and the other time is equal to 0.
+# The first time setup GEN_CONFIG_TEMPLATE=1, and the other time is 0.
 # When equal to 1, the configuration template will be generated.
-FIRST_TIME=1
-bash ./deployment/localup/localup.sh --reset ${FIRST_TIME}
+GEN_CONFIG_TEMPLATE=1
+bash ./deployment/localup/localup.sh --reset ${GEN_CONFIG_TEMPLATE}
 ```
 
 2. Overwrite db and sp info
@@ -17,10 +25,10 @@ Overwrite all sps' db.info and sp.info according to the real environment.
 ```
 deployment/localup/local_env/
 ├── sp0
-│   ├── config.toml
-│   ├── db.info       # Overwrite db info
-│   ├── gnfd-sp0
-│   └── sp.info       # Overwrite sp info
+│   ├── config.toml   # templated config
+│   ├── db.info       # to overwrite real db info
+│   ├── gnfd-sp0      # sp binary
+│   └── sp.info       # to overwrite real sp info
 ├── sp1
 ├── ...
 ```
@@ -30,20 +38,21 @@ deployment/localup/local_env/
 Make config.toml real according to db.info and sp.info, and start sps.
 
 ```bash
-# The first time is equal to 1, and the other time is equal to 0.
+# In first time setup GEN_CONFIG_TEMPLATE=1, and the other time is 0.
 # When equal to 1, the configuration template will be generated.
-FIRST_TIME=0
-bash ./deployment/localup/localup.sh --reset ${FIRST_TIME}
+GEN_CONFIG_TEMPLATE=0
+bash ./deployment/localup/localup.sh --reset ${GEN_CONFIG_TEMPLATE}
+bash ./deployment/localup/localup.sh --start
 ```
 The environment directory is as follows:
 ```
 deployment/localup/local_env/
 ├── sp0
-│   ├── config.toml
-│   ├── data
+│   ├── config.toml    # real config
+│   ├── data           # piecestore data directory
 │   ├── db.info
 │   ├── gnfd-sp0
-│   ├── gnfd-sp.log   # gnfd log file
+│   ├── gnfd-sp.log    # gnfd log file
 │   ├── log.txt
 │   └── sp.info
 ├── sp1
@@ -55,9 +64,9 @@ deployment/localup/local_env/
 % bash ./deployment/localup/localup.sh --help
 Usage: deployment/localup/localup.sh [option...] {help|reset|start|stop|print}
 
-   --help                 display help info
-   --reset $FIRST_TIME    reset env, $FIRST_TIME=0 or =1
-   --start                start storage providers
-   --stop                 stop storage providers
-   --print                print sp local env work directory
+   --help                           display help info
+   --reset $GEN_CONFIG_TEMPLATE     reset env, $GEN_CONFIG_TEMPLATE=0 or =1
+   --start                          start storage providers
+   --stop                           stop storage providers
+   --print                          print sp local env work directory
 ```

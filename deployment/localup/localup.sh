@@ -12,11 +12,11 @@ sp_bin=${workspace}/../../build/${sp_bin_name}
 display_help() {
     echo "Usage: $0 [option...] {help|reset|start|stop|print}" >&2
     echo
-    echo "   --help                 display help info"
-    echo "   --reset \$FIRST_TIME    reset env, \$FIRST_TIME=0 or =1"
-    echo "   --start                start storage providers"
-    echo "   --stop                 stop storage providers"
-    echo "   --print                print sp local env work directory"
+    echo "   --help                           display help info"
+    echo "   --reset \$GEN_CONFIG_TEMPLATE     reset env, \$GEN_CONFIG_TEMPLATE=0 or =1"
+    echo "   --start                          start storage providers"
+    echo "   --stop                           stop storage providers"
+    echo "   --print                          print sp local env work directory"
     echo
     exit 0
 }
@@ -25,14 +25,14 @@ display_help() {
 # generate sp config templates #
 ################################
 generate_env() {
-  first_time=$1
+  gen_config_template=$1
   bash ${workspace}/../../build.sh
   mkdir -p ${workspace}/${SP_DEPLOY_DIR}
 
   for ((i=0;i<${SP_NUM};i++));do
     mkdir -p ${workspace}/${SP_DEPLOY_DIR}/sp${i}
     cp -rf ${sp_bin} ${workspace}/${SP_DEPLOY_DIR}/sp${i}/${sp_bin_name}${i}
-    if [ ${first_time} -eq 1 ]
+    if [ ${gen_config_template} -eq 1 ]
     then
       cd ${workspace}/${SP_DEPLOY_DIR}/sp${i}/
       ./${sp_bin_name}${i}  config.dump
@@ -155,10 +155,10 @@ reset_sp() {
     exit 1
   fi
   stop_sp
-  first_time=$1
-  if [ ${first_time} -eq 1 ]
+  gen_config_template=$1
+  if [ ${gen_config_template} -eq 1 ]
   then
-    generate_env ${first_time}
+    generate_env ${gen_config_template}
     echo
     echo "succeed to generate templates, and need to overwrite db.info and sp.info in the following working directory:"
     print_work_dir
@@ -169,7 +169,6 @@ reset_sp() {
     reset_store
     generate_env 0
     make_config
-    start_sp
   fi
 }
 
