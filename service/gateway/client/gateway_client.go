@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -26,13 +27,16 @@ type GatewayClient struct {
 
 // NewGatewayClient return a gateway grpc client instance, and use http://ip:port or http://domain_name as address
 func NewGatewayClient(address string) (*GatewayClient, error) {
-	tr := &http.Transport{
-		MaxIdleConns:    maxIdleConns,
-		IdleConnTimeout: idleConnTimout,
+	if !strings.HasPrefix(address, "http://") && !strings.HasPrefix(address, "https://") {
+		address = "http://" + address
 	}
 	client := &GatewayClient{
-		address:    address,
-		httpClient: &http.Client{Transport: tr},
+		address: address,
+		httpClient: &http.Client{
+			Transport: &http.Transport{
+				MaxIdleConns:    maxIdleConns,
+				IdleConnTimeout: idleConnTimout,
+			}},
 	}
 	return client, nil
 }

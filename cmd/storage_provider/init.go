@@ -7,6 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
+	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
@@ -120,9 +121,18 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
+	case model.ManagerService:
+		managerCfg, err := cfg.MakeManagerServiceConfig()
+		if err != nil {
+			return nil, err
+		}
+		server, err = manager.NewManagerService(managerCfg)
+		if err != nil {
+			return nil, err
+		}
 	default:
 		log.Errorw("unknown service", "service", serviceName)
-		return nil, fmt.Errorf("unknow service: %s", serviceName)
+		return nil, fmt.Errorf("unknown service: %s", serviceName)
 	}
 	return server, nil
 }

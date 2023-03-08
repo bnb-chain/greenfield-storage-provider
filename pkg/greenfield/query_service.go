@@ -7,6 +7,7 @@ import (
 
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -57,6 +58,17 @@ func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.Stora
 		spInfos = append(spInfos, &resp.GetSps()[i])
 	}
 	return spInfos, nil
+}
+
+// QueryStorageParams returns storage params
+func (greenfield *Greenfield) QueryStorageParams(ctx context.Context) (params *storagetypes.Params, err error) {
+	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	resp, err := client.StorageQueryClient.Params(ctx, &storagetypes.QueryParamsRequest{})
+	if err != nil {
+		log.Errorw("failed to query storage params", "error", err)
+		return nil, err
+	}
+	return &resp.Params, nil
 }
 
 // QueryBucketInfo return the bucket info by name.

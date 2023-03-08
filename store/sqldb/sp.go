@@ -41,13 +41,17 @@ func (s *SpDBImpl) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 
 // insertNewRecordInSpInfoTable insert a new record in sp info table
 func (s *SpDBImpl) insertNewRecordInSpInfoTable(sp *sptypes.StorageProvider) error {
+	var totalDeposit int64
+	if !sp.TotalDeposit.IsNil() && sp.TotalDeposit.IsInt64() {
+		totalDeposit = sp.TotalDeposit.Int64()
+	}
 	insertRecord := &SpInfoTable{
 		OperatorAddress: sp.GetOperatorAddress(),
 		IsOwn:           false,
 		FundingAddress:  sp.GetFundingAddress(),
 		SealAddress:     sp.GetSealAddress(),
 		ApprovalAddress: sp.GetApprovalAddress(),
-		TotalDeposit:    sp.TotalDeposit.Int64(),
+		TotalDeposit:    totalDeposit,
 		Status:          int32(sp.Status),
 		Endpoint:        sp.GetEndpoint(),
 		Moniker:         sp.GetDescription().Moniker,
@@ -195,7 +199,7 @@ func getAddressCondition(addressType SpAddressType) (string, error) {
 	return condition, nil
 }
 
-// // GetSpByEndpoint query sp info by endpoint
+// GetSpByEndpoint query sp info by endpoint
 func (s *SpDBImpl) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error) {
 	queryReturn := &SpInfoTable{}
 	result := s.db.First(queryReturn, "endpoint = ? and is_own = false", endpoint)
@@ -308,7 +312,7 @@ func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
 		return fmt.Errorf("failed to query storage params table: %s", result.Error)
 	}
 
-	insertParamsRecord := StorageParamsTable{
+	insertParamsRecord := &StorageParamsTable{
 		MaxSegmentSize:          params.GetMaxSegmentSize(),
 		RedundantDataChunkNum:   params.GetRedundantDataChunkNum(),
 		RedundantParityChunkNum: params.GetRedundantParityChunkNum(),
@@ -316,7 +320,7 @@ func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
 	}
 	// if there is no records in StorageParamsTable, insert a new record
 	if recordNotFound {
-		result = s.db.Create(&insertParamsRecord)
+		result = s.db.Create(insertParamsRecord)
 		if result.Error != nil || result.RowsAffected != 1 {
 			return fmt.Errorf("failed to insert storage params table: %s", result.Error)
 		}
@@ -324,7 +328,7 @@ func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
 	} else {
 		queryCondition := &StorageParamsTable{ID: queryReturn.ID}
 		result = s.db.Model(queryCondition).Updates(insertParamsRecord)
-		if result.Error != nil || result.RowsAffected != 1 {
+		if result.Error != nil {
 			return fmt.Errorf("failed to update storage params table: %s", result.Error)
 		}
 		return nil
