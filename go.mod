@@ -1,6 +1,6 @@
 module github.com/bnb-chain/greenfield-storage-provider
 
-go 1.19
+go 1.18
 
 replace (
 	// TODO: point to develop branch, will be changed to v0.0.6 after greenfield v0.0.6 released

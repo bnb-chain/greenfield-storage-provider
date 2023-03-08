@@ -3,7 +3,7 @@ package stream
 import (
 	"errors"
 	"io"
-	"sync/atomic"
+	"sync"
 
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
@@ -49,8 +49,9 @@ type PayloadStream struct {
 	segmentSize    uint64
 	redundancyType storagetypes.RedundancyType
 	entryCh        chan *SegmentEntry
-	init           atomic.Bool
-	close          atomic.Bool
+	init           bool
+	close          bool
+	mux            sync.Mutex
 
 	pRead  *io.PipeReader
 	pWrite *io.PipeWriter
@@ -69,10 +70,12 @@ func NewAsyncPayloadStream() *PayloadStream {
 // must be called before write or read stream
 func (stream *PayloadStream) InitAsyncPayloadStream(objectID uint64, rIdx uint32, segSize uint64,
 	redundancyType storagetypes.RedundancyType) error {
-	if stream.init.Load() {
-		return nil
+	stream.mux.Lock()
+	defer stream.mux.Unlock()
+	if stream.init {
+		return errors.New("payload stream has been initialized")
 	}
-	stream.init.Store(true)
+	stream.init = true
 	stream.objectID = objectID
 	stream.replicaIdx = rIdx
 	stream.segmentSize = segSize
@@ -83,33 +86,33 @@ func (stream *PayloadStream) InitAsyncPayloadStream(objectID uint64, rIdx uint32
 
 // StreamWrite writes data with the bytes of any size
 func (stream *PayloadStream) StreamWrite(data []byte) (n int, err error) {
-	if !stream.init.Load() {
-		return 0, errors.New("payload stream uninitialized")
-	}
-	if stream.close.Load() {
-		return 0, errors.New("payload stream has been closed")
+	stream.mux.Lock()
+	defer stream.mux.Unlock()
+	if !stream.init || stream.close {
+		return 0, errors.New("payload stream is uninitialized or closed")
 	}
 	return stream.pWrite.Write(data)
 }
 
 // StreamClose close write stream without error
 func (stream *PayloadStream) StreamClose() error {
-	if stream.close.Load() {
-		return nil
+	stream.mux.Lock()
+	defer stream.mux.Unlock()
+	if stream.close {
+		return errors.New("payload stream has been closed")
 	}
-	stream.close.Store(true)
+	stream.close = true
 	return stream.pWrite.Close()
 }
 
 // StreamCloseWithError close write stream with error
 func (stream *PayloadStream) StreamCloseWithError(err error) error {
-	if !stream.init.Load() {
-		return errors.New("payload stream is uninitialized")
+	stream.mux.Lock()
+	defer stream.mux.Unlock()
+	if stream.close {
+		return errors.New("payload stream has been closed")
 	}
-	if stream.close.Load() {
-		return nil
-	}
-	stream.close.Store(true)
+	stream.close = true
 	return stream.pWrite.CloseWithError(err)
 }
 
