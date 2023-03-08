@@ -64,7 +64,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SyncerService:     model.SyncerGRPCAddress,
 		model.StoneNodeService:  model.StoneNodeGRPCAddress,
 		model.SignerService:     model.SignerGRPCAddress,
-		model.MetadataService:   model.MetaDataGRPCAddress,
+		model.MetadataService:   model.MetadataGRPCAddress,
 	},
 	HTTPAddress: map[string]string{
 		model.GatewayService: model.GatewayHTTPAddress,
