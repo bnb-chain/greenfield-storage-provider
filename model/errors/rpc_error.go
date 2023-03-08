@@ -10,6 +10,10 @@ var (
 	ErrCacheMiss = errors.New("cache missing")
 	// ErrSealTimeout defines seal object timeout error
 	ErrSealTimeout = errors.New("seal object timeout")
+	// ErrNotExistObject defines not exist object error
+	ErrNotExistObject = errors.New("object is not existed")
+	// ErrNotExistBucket defines not exist bucket error
+	ErrNotExistBucket = errors.New("bucket is not existed")
 )
 
 // piece store errors
@@ -20,10 +24,6 @@ var (
 	ErrUnsupportedDelimiter = errors.New("unsupported delimiter")
 	// ErrInvalidObjectKey defines invalid object key error
 	ErrInvalidObjectKey = errors.New("invalid object key")
-	// ErrNotExitObject defines not exist object in memory error
-	ErrNotExitObject = errors.New("object not exist")
-	// ErrNotExistBucket defines not exist bucket error
-	ErrNotExistBucket = errors.New("bucket not exist")
 	// ErrNoPermissionAccessBucket defines deny access bucket error
 	ErrNoPermissionAccessBucket = errors.New("deny access bucket")
 )
@@ -38,7 +38,6 @@ var (
 	ErrDuplicateObject = errors.New("duplicate object")
 	// ErrPayloadZero defines payload size is zero error
 	ErrPayloadZero = errors.New("object payload is zero")
-
 	// ErrAuthorizationFormat defines the invalid authorization format error
 	ErrAuthorizationFormat = errors.New("authorization format error")
 	// ErrRequestConsistent defines the invalid request checksum error
@@ -51,6 +50,12 @@ var (
 	ErrEmptyReqHeader = errors.New("request header is empty")
 	// ErrInvalidHeader defines the invalid header error
 	ErrInvalidHeader = errors.New("invalid request header")
+	// ErrHasNoPermission defines the authorization error
+	ErrHasNoPermission = errors.New("has no permission")
+	// ErrCheckObjectState defines the check object state error
+	ErrCheckObjectState = errors.New("failed to check object state")
+	// ErrCheckBilling defines check payment status and bucket quota
+	ErrCheckBilling = errors.New("failed to check billing")
 )
 
 // signer service error

@@ -43,12 +43,12 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 
 	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = SignatureNotMatch
+		errDescription = generateErrorDescription(err)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = UnauthorizedAccess
+		errDescription = generateErrorDescription(err)
 		return
 	}
 
@@ -153,12 +153,12 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = SignatureNotMatch
+		errDescription = generateErrorDescription(err)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = UnauthorizedAccess
+		errDescription = generateErrorDescription(err)
 		return
 	}
 

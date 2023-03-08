@@ -67,7 +67,7 @@ func TestMemory_GetError(t *testing.T) {
 		{
 			name:      "memory_get_error_test2",
 			key:       mockKey,
-			wantedErr: errors.ErrNotExitObject,
+			wantedErr: errors.ErrNotExistObject,
 		},
 	}
 	for _, tt := range cases {

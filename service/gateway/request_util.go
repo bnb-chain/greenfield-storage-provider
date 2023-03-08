@@ -10,6 +10,7 @@ import (
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	signer "github.com/bnb-chain/greenfield-go-sdk/keys/signer"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
@@ -29,9 +30,9 @@ type requestContext struct {
 	request    *http.Request
 	startTime  time.Time
 	vars       map[string]string
-	// for auth v2 test
-	skipAuth bool
-	// objectInfo is queried from the greenfield blockchain
+	// TODO: for auth v2 test, remove it in the future
+	skipAuth   bool
+	bucketInfo *storagetypes.BucketInfo
 	objectInfo *storagetypes.ObjectInfo
 	// accountID is used to provide authentication to the sp
 	accountID string
@@ -217,7 +218,7 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 	return false, -1, -1
 }
 
-// TODO: can be optimized by retirver
+// TODO: can be optimized by retriever
 // checkAuthorization check addr authorization
 func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAddress) error {
 	var (
@@ -234,52 +235,95 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 	}
 	if !accountExist {
 		log.Errorw("account is not exist", "address", addr.String(), "error", err)
-		return fmt.Errorf("account is not exist")
+		return errors.ErrHasNoPermission
 	}
 
 	switch mux.CurrentRoute(reqContext.request).GetName() {
 	case putObjectRouterName:
-		reqContext.objectInfo, err = g.chain.QueryObjectInfo(context.Background(),
-			reqContext.bucketName, reqContext.objectName)
-		if err != nil || reqContext.objectInfo == nil {
-			log.Errorw("failed to query object info on chain",
+		if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
+			context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
+			log.Errorw("failed to query bucket info and object info on chain",
 				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
 			return err
 		}
 		if reqContext.objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_INIT {
-			log.Errorw("failed to auth due to object status is not init",
+			log.Errorw("failed to auth due to object status is not in inited",
 				"object_status", reqContext.objectInfo.GetObjectStatus())
-			return fmt.Errorf("account has no permission")
+			return errors.ErrCheckObjectState
 		}
 		if reqContext.objectInfo.GetOwner() != addr.String() {
 			log.Errorw("failed to auth due to account is not equal to object owner",
-				"object_status", reqContext.objectInfo.GetObjectStatus())
-			return fmt.Errorf("account has no permission")
+				"object_owner", reqContext.objectInfo.GetOwner(),
+				"request_address", addr.String())
+			return errors.ErrHasNoPermission
 		}
-		// TODO: check SP operator address and account payment
+		if reqContext.bucketInfo.GetPrimarySpAddress() != g.config.SpOperatorAddress {
+			log.Errorw("failed to auth due to bucket primary sp is not equal to current sp",
+				"bucket_primary_sp", reqContext.bucketInfo.GetPrimarySpAddress(),
+				"current_sp", g.config.SpOperatorAddress)
+			return errors.ErrHasNoPermission
+		}
 
 	case getObjectRouterName:
-		_, bucketExist, isServiceStatus, tokenEnough, isSpBucket, bucketID, readQuota, ownObj, err := g.chain.AuthDownloadObjectWithAccount(
-			context.Background(),
-			reqContext.bucketName,
-			reqContext.objectName,
-			addr.String(),
-			g.config.SpOperatorAddress)
-		if err != nil {
-			log.Errorw("failed to auth download",
-				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName,
-				"address", addr.String(), "error", err)
+		if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
+			context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
+			log.Errorw("failed to query bucket info and object info on chain",
+				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
 			return err
 		}
-		if !bucketExist || !isServiceStatus || !tokenEnough || !isSpBucket || !ownObj {
-			log.Errorw("failed to auth download",
-				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName,
-				"address", addr.String(), "error", err)
-			return fmt.Errorf("account has no permission")
+		if reqContext.objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_IN_SERVICE {
+			log.Errorw("object is not in service",
+				"status", reqContext.objectInfo.GetObjectStatus())
+			return errors.ErrCheckObjectState
 		}
-		// TODO: query read quota enough
-		_, _ = bucketID, readQuota
-		// TODO: update read quota
+		if reqContext.objectInfo.GetOwner() != addr.String() {
+			log.Errorw("failed to auth due to account is not equal to object owner",
+				"object_owner", reqContext.objectInfo.GetOwner(),
+				"request_address", addr.String())
+			return errors.ErrHasNoPermission
+		}
+		if reqContext.bucketInfo.GetPrimarySpAddress() != g.config.SpOperatorAddress {
+			log.Errorw("failed to auth due to bucket primary sp is not equal to current sp",
+				"bucket_primary_sp", reqContext.bucketInfo.GetPrimarySpAddress(),
+				"current_sp", g.config.SpOperatorAddress)
+			return errors.ErrHasNoPermission
+		}
+	}
+	return nil
+}
+
+// checkBilling check payment account status and traffic quota
+func (g *Gateway) checkBilling(reqContext *requestContext, addr sdk.AccAddress) error {
+	switch mux.CurrentRoute(reqContext.request).GetName() {
+	case getObjectRouterName:
+		streamRecord, err := g.chain.QueryStreamRecord(context.Background(), reqContext.bucketInfo.PaymentAddress)
+		if err != nil {
+			log.Errorw("failed to check billing", "error", err)
+			return err
+		}
+		// TODO: need update to enum by the latest greenfield release tag
+		if streamRecord.Status != 0 {
+			log.Errorw("failed to check billing due to payment account status", "status", streamRecord.Status)
+			return errors.ErrCheckBilling
+		}
+		// TODO: support range read size
+		if err = g.spDB.CheckQuotaAndAddReadRecord(
+			&sqldb.ReadRecord{
+				BucketID:    reqContext.bucketInfo.Id.Uint64(),
+				ObjectID:    reqContext.objectInfo.Id.Uint64(),
+				UserAddress: addr.String(),
+				BucketName:  reqContext.bucketInfo.GetBucketName(),
+				ObjectName:  reqContext.objectInfo.GetObjectName(),
+				ReadSize:    int64(reqContext.objectInfo.PayloadSize),
+				ReadTime:    sqldb.GetCurrentUnixTime(),
+			},
+			&sqldb.BucketQuota{
+				ReadQuotaSize: int64(reqContext.bucketInfo.GetReadQuota()),
+			},
+		); err != nil {
+			log.Errorw("failed to check billing due to bucket quota", "error", err)
+			return err
+		}
 	}
 	return nil
 }

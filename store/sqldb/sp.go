@@ -255,14 +255,17 @@ func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 	if err != nil && !strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error()) {
 		return err
 	}
-
+	var totalDeposit int64
+	if !sp.TotalDeposit.IsNil() && sp.TotalDeposit.IsInt64() {
+		totalDeposit = sp.TotalDeposit.Int64()
+	}
 	insertRecord := &SpInfoTable{
 		OperatorAddress: sp.GetOperatorAddress(),
 		IsOwn:           true,
 		FundingAddress:  sp.GetFundingAddress(),
 		SealAddress:     sp.GetSealAddress(),
 		ApprovalAddress: sp.GetApprovalAddress(),
-		TotalDeposit:    sp.TotalDeposit.Int64(),
+		TotalDeposit:    totalDeposit,
 		Status:          int32(sp.GetStatus()),
 		Endpoint:        sp.GetEndpoint(),
 		Moniker:         sp.GetDescription().Moniker,
@@ -281,7 +284,7 @@ func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 	} else {
 		// if there is a record in SPInfoTable, update record
 		result := s.db.Model(&SpInfoTable{}).Where("is_own = true").Updates(insertRecord)
-		if result.Error != nil || result.RowsAffected != 1 {
+		if result.Error != nil {
 			return fmt.Errorf("failed to update own sp record in sp info table: %s", result.Error)
 		}
 		return nil

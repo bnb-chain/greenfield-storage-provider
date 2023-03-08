@@ -5,13 +5,14 @@ import (
 	"math"
 	"time"
 
+	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	merror "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -96,6 +97,19 @@ func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, objec
 	return resp.GetObjectInfo(), nil
 }
 
+// QueryBucketInfoAndObjectInfo return bucket info and object info, if not found, return the corresponding error code
+func (greenfield *Greenfield) QueryBucketInfoAndObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.BucketInfo, *storagetypes.ObjectInfo, error) {
+	bucketInfo, err := greenfield.QueryBucketInfo(ctx, bucket)
+	if err == storagetypes.ErrNoSuchBucket {
+		return nil, nil, merrors.ErrNotExistBucket
+	}
+	objectInfo, err := greenfield.QueryObjectInfo(ctx, bucket, object)
+	if err == storagetypes.ErrNoSuchObject {
+		return nil, nil, merrors.ErrNotExistObject
+	}
+	return bucketInfo, objectInfo, nil
+}
+
 // ListenObjectSeal return an indication of the object is sealed.
 // TODO:: retrieve service support seal event subscription
 func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, object string, timeOutHeight int) (seal bool, err error) {
@@ -113,6 +127,19 @@ func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, obje
 		}
 	}
 	log.Errorw("seal object timeout", "bucket_name", bucket, "object_name", object)
-	err = merror.ErrSealTimeout
+	err = merrors.ErrSealTimeout
 	return
+}
+
+// QueryStreamRecord return the steam record info by account.
+func (greenfield *Greenfield) QueryStreamRecord(ctx context.Context, account string) (*paymenttypes.StreamRecord, error) {
+	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	resp, err := client.StreamRecord(ctx, &paymenttypes.QueryGetStreamRecordRequest{
+		Account: account,
+	})
+	if err != nil {
+		log.Errorw("failed to query stream record", "account", account, "error", err)
+		return nil, err
+	}
+	return &resp.StreamRecord, nil
 }

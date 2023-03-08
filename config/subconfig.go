@@ -21,6 +21,7 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 		SpOperatorAddress: cfg.SpOperatorAddress,
 		Domain:            cfg.Domain,
 		ChainConfig:       cfg.ChainConfig,
+		SpDBConfig:        cfg.SpDBConfig,
 	}
 	if _, ok := cfg.HTTPAddress[model.GatewayService]; ok {
 		gCfg.HTTPAddress = cfg.HTTPAddress[model.GatewayService]

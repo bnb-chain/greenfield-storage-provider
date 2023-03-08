@@ -63,12 +63,17 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = SignatureNotMatch
+		errDescription = generateErrorDescription(err)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = UnauthorizedAccess
+		errDescription = generateErrorDescription(err)
+		return
+	}
+	if err = g.checkBilling(reqContext, addr); err != nil {
+		log.Errorw("failed to check billing", "error", err)
+		errDescription = generateErrorDescription(err)
 		return
 	}
 
@@ -104,7 +109,6 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// TODO: check error resp.code
 		if readN = len(resp.Data); readN == 0 {
 			log.Errorw("failed to download due to return empty data", "response", resp)
 			continue
@@ -176,12 +180,12 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = SignatureNotMatch
+		errDescription = generateErrorDescription(err)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = UnauthorizedAccess
+		errDescription = generateErrorDescription(err)
 		return
 	}
 
