@@ -22,7 +22,6 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		reqContext     *requestContext
 		addr           sdktypes.AccAddress
 	)
-
 	reqContext = newRequestContext(r)
 	defer func() {
 		if errDescription != nil {
@@ -180,7 +179,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	integrityHash, pieceHash, pieceData, err := g.challenge.ChallengePiece(context.Background(), objectID, redundancyIdx, segmentIdx)
 	if err != nil {
-		log.Errorf("failed to challenge", "error", err)
+		log.Errorw("failed to challenge", "error", err)
 		errDescription = InternalError
 		return
 	}
