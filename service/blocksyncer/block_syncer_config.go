@@ -1,6 +1,8 @@
 package blocksyncer
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
@@ -11,6 +13,7 @@ import (
 )
 
 var avgBlockTime = time.Second
+var DSN_BLOCK_SYNCER = "BLOCK_SYNCER_DSN"
 
 var DefaultBlockSyncerConfig = &tomlconfig.TomlConfig{
 	Node: tomlconfig.NodeConfig{
@@ -35,4 +38,12 @@ var DefaultBlockSyncerConfig = &tomlconfig.TomlConfig{
 		},
 	},
 	Logging: config.DefaultLogConfig(),
+}
+
+func getDBConfigFromEnv(dsn string) (string, error) {
+	dsnVal, ok := os.LookupEnv(dsn)
+	if !ok {
+		return "", fmt.Errorf("dsn %s config is not set in environment", dsnVal)
+	}
+	return dsnVal, nil
 }

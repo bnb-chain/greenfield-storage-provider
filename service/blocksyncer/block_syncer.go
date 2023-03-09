@@ -6,8 +6,6 @@ import (
 	"sync/atomic"
 
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
-	"github.com/forbole/juno/v4/parser/blocksyncer"
-	"github.com/forbole/juno/v4/parser/explorer"
 	"github.com/forbole/juno/v4/types"
 
 	"github.com/forbole/juno/v4/cmd"
@@ -67,6 +65,15 @@ func (s *BlockSyncer) initClient() error {
 		log.Info("readErr: %v", readErr)
 		return readErr
 	}
+	// read DSN from env
+	dsn, envErr := getDBConfigFromEnv(DSN_BLOCK_SYNCER)
+	if envErr != nil {
+		log.Info("readErr: %v", envErr)
+		return envErr
+	}
+	if dsn != "" {
+		config.Cfg.Database.DSN = dsn
+	}
 	log.Info(s.config.Node)
 	log.Info(config.Cfg.Node)
 	var ctx *parser.Context
@@ -122,17 +129,10 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	exportQueue := types.NewQueue(25)
 
 	// Create workers
-	workers := make([]parser.Worker, config.Cfg.Parser.Workers)
+	workers := make([]*parser.Worker, config.Cfg.Parser.Workers)
 	for i := range workers {
-		commonIndexer := parser.NewCommonIndexer(s.parserCtx)
-		switch config.Cfg.Parser.WorkerType {
-		case config.BlockSyncerWorkerType:
-			indexer := &blocksyncer.Indexer{Ctx: context.Background(), CommonIndexer: commonIndexer}
-			workers[i] = parser.NewWorker(indexer, exportQueue, i, config.Cfg.Parser.ConcurrentSync, config.Cfg.Parser.WorkerType)
-		case config.ExplorerWorkerType:
-			indexer := &explorer.Indexer{CommonIndexer: commonIndexer}
-			workers[i] = parser.NewWorker(indexer, exportQueue, i, config.Cfg.Parser.ConcurrentSync, config.Cfg.Parser.WorkerType)
-		}
+		workers[i] = parser.NewWorker(s.parserCtx, exportQueue, i, config.Cfg.Parser.ConcurrentSync)
+		workers[i].SetIndexer(NewIndexer(s.parserCtx.EncodingConfig.Marshaler, s.parserCtx.Node, s.parserCtx.Database, s.parserCtx.Modules))
 	}
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs

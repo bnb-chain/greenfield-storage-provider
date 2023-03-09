@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/forbole/juno/v4/types"
 	"math/rand"
 	"net"
 	"os"
@@ -188,4 +189,15 @@ func TransferRedundancyType(redundancyType string) (ptypes.RedundancyType, error
 	default:
 		return -1, merrors.ErrRedundancyType
 	}
+}
+
+// SumGasTxs returns the total gas consumed by a set of transactions.
+func SumGasTxs(txs []*types.Tx) uint64 {
+	var totalGas uint64
+
+	for _, tx := range txs {
+		totalGas += uint64(tx.GasUsed)
+	}
+
+	return totalGas
 }

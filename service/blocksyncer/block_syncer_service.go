@@ -4,12 +4,16 @@ import (
 	"context"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	eventutil "github.com/forbole/juno/v4/types/event"
+
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
 	"github.com/forbole/juno/v4/types/utils"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // enqueueMissingBlocks enqueues jobs (block heights) for missed blocks starting
@@ -93,4 +97,14 @@ func mustGetLatestHeight(ctx *parser.Context) uint64 {
 	}
 
 	return 0
+}
+
+func filterEventsType(tx *abci.ResponseDeliverTx) []sdk.Event {
+	filteredEvents := make([]sdk.Event, 0)
+	for _, event := range tx.Events {
+		if _, ok := eventutil.EventProcessedMap[event.Type]; ok {
+			filteredEvents = append(filteredEvents, sdk.Event(event))
+		}
+	}
+	return filteredEvents
 }
