@@ -7,17 +7,19 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/metrics"
 	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
 	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	syncerclient "github.com/bnb-chain/greenfield-storage-provider/service/syncer/client"
 	uploaderclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
 // Gateway is the primary entry point of SP
@@ -115,7 +117,10 @@ func (g *Gateway) Start(ctx context.Context) error {
 // Serve starts http service.
 func (g *Gateway) serve() {
 	router := mux.NewRouter().SkipClean(true)
+	middleware := metrics.NewPrometheusMiddleware(metrics.Opts{})
+	router.Use(middleware.InstrumentHandler)
 	g.registerHandler(router)
+	router.Path("/metrics").Handler(promhttp.Handler())
 	server := &http.Server{
 		Addr:    g.config.HTTPAddress,
 		Handler: router,

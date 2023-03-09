@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"math"
+	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -55,6 +56,7 @@ func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObject
 		traceInfo.IntegrityHash = integrityHash
 		traceInfo.Signature = signature
 		uploader.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
+		time.Sleep(10 * time.Second)
 		err = uploader.stone.ReplicateObject(context.Background(), traceInfo.GetObjectInfo())
 		if err != nil {
 			log.Errorw("failed to notify stone node to replicate object", "error", err)

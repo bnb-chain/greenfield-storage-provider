@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
@@ -180,4 +181,12 @@ func (cfg *StorageProviderConfig) MakeManagerServiceConfig() (*manager.ManagerCo
 		SpDBConfig:        cfg.SpDBConfig,
 	}
 	return managerConfig, nil
+}
+
+func (cfg *StorageProviderConfig) MakeMetricsConfig() (*metrics.MetricsConfig, error) {
+	// metricsConfig := &metrics.MetricsConfig{
+	// 	Enabled:     cfg.,
+	// 	HTTPAddress: "",
+	// }
+	return nil, nil
 }
