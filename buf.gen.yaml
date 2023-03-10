@@ -7,3 +7,4 @@ plugins:
       - Mgoogle/protobuf/duration.proto=github.com/golang/protobuf/ptypes/duration
       - plugins=grpc
       - paths=source_relative
+      - paths=source_relative

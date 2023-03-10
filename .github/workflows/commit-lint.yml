@@ -48,34 +48,13 @@ jobs:
         with:
           configFile: /github/workspace/.github/commitlint.config.js
 
-#  commit-lint-success:
-#    needs: commit-lint
-#    if: ${{ success() }}
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Notify Slack on success
-#        uses: rtCamp/action-slack-notify@v2.2.0
-#        env:
-#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-#          SLACK_CHANNEL: greenfield_storage_ci
-#          SLACK_USERNAME: SP Git Lint
-#          SLACK_ICON_EMOJI: ':heavy_check_mark:'
-#          SLACK_COLOR: good
-#          SLACK_MESSAGE: Greenfield SP git commit lint passed
-#          SLACK_FOOTER: ''
-
-#  commit-lint-failure:
-#    needs: commit-lint
-#    if: ${{ failure() }}
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Notify Slack on failure
-#        uses: rtCamp/action-slack-notify@v2.2.0
-#        env:
-#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-#          SLACK_CHANNEL: greenfield_storage_ci
-#          SLACK_USERNAME: SP Git Lint
-#          SLACK_ICON_EMOJI: ':x:'
-#          SLACK_COLOR: danger
-#          SLACK_MESSAGE: Greenfield SP git commit lint failed
-#          SLACK_FOOTER: ''
+  branch-naming-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: deepakputhraya/action-branch-name@master
+        with:
+          regex: '([a-z])+\-([a-z])+'
+          allowed_prefixes: 'build,chore,ci,docs,feat,fix,perf,refactor,revert,style,test'
+          ignore: master,develop,release
+          min_length: 5
+          max_length: 20

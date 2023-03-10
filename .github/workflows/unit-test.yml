@@ -60,8 +60,8 @@ jobs:
         uses: arduino/setup-protoc@v1
 
       - run: |
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+          go install github.com/bufbuild/buf/cmd/buf@v1.13.1
+          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
           buf generate
 
       - name: Setup GitHub Token
@@ -70,35 +70,3 @@ jobs:
       - name: Unit Test
         run: |
           make test
-
-#  unit-test-success:
-#    needs: unit-test
-#    if: ${{ success() }}
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Notify Slack on success
-#        uses: rtCamp/action-slack-notify@v2.2.0
-#        env:
-#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-#          SLACK_CHANNEL: greenfield_storage_ci
-#          SLACK_USERNAME: SP Unit Test
-#          SLACK_ICON_EMOJI: ':heavy_check_mark:'
-#          SLACK_COLOR: good
-#          SLACK_MESSAGE: Greenfield SP unit test passed
-#          SLACK_FOOTER: ''
-
-#  unit-test-failure:
-#    needs: unit-test
-#    if: ${{ failure() }}
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Notify Slack on failure
-#        uses: rtCamp/action-slack-notify@v2.2.0
-#        env:
-#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-#          SLACK_CHANNEL: greenfield_storage_ci
-#          SLACK_USERNAME: SP Unit Test
-#          SLACK_ICON_EMOJI: ':x:'
-#          SLACK_COLOR: danger
-#          SLACK_MESSAGE: Greenfield SP unit test failed
-#          SLACK_FOOTER: ''
