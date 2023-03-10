@@ -2,10 +2,14 @@ package piecestore
 
 // define storage type constants
 const (
-	S3Store       = "s3"
-	MinioStore    = "minio"
+	// S3Store defines storage type for s3
+	S3Store = "s3"
+	// MinioStore defines storage type for minio
+	MinioStore = "minio"
+	// DiskFileStore defines storage type for file
 	DiskFileStore = "file"
-	MemoryStore   = "memory"
+	// MemoryStore defines storage type for memory
+	MemoryStore = "memory"
 )
 
 // piece store storage environment constants
@@ -18,6 +22,7 @@ const (
 	AWSSecretKey = "AWS_SECRET_KEY"
 	// AWSSessionToken defines env variable name for aws session token
 	AWSSessionToken = "AWS_SESSION_TOKEN"
+
 	// MinioRegion defines env variable name for minio region
 	MinioRegion = "MINIO_REGION"
 	// MinioAccessKey defines env variable name for minio access key
@@ -32,6 +37,6 @@ const (
 const (
 	// BufPoolSize define buffer pool size
 	BufPoolSize = 32 << 10
-	// ChecksumAlgo define validation Algorithm Name
+	// ChecksumAlgo define validation algorithm name
 	ChecksumAlgo = "Crc32c"
 )
