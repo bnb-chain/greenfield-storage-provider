@@ -30,7 +30,7 @@ func (challenge *Challenge) ChallengePiece(
 		key = piecestore.EncodeSegmentPieceKey(req.ObjectId.String(), req.GetSegmentIdx())
 	} else {
 		key = piecestore.EncodeECPieceKey(req.ObjectId.String(),
-			uint32(req.GetReplicaIdx()), req.GetSegmentIdx())
+			req.GetSegmentIdx(), uint32(req.GetReplicaIdx()))
 	}
 	resp.PieceData, err = challenge.pieceStore.GetSegment(ctx, key, 0, -1)
 	if err != nil {

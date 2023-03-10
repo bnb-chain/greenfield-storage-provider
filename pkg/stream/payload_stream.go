@@ -29,7 +29,7 @@ func (entry SegmentEntry) ID() sdkmath.Uint {
 
 func (entry SegmentEntry) Key() string {
 	if entry.redundancyType == storagetypes.REDUNDANCY_EC_TYPE {
-		return piecestore.EncodeECPieceKey(entry.objectID.String(), entry.replicaIdx, entry.segmentIdx)
+		return piecestore.EncodeECPieceKey(entry.objectID.String(), entry.segmentIdx, entry.replicaIdx)
 	}
 	return piecestore.EncodeSegmentPieceKey(entry.objectID.String(), entry.segmentIdx)
 }
