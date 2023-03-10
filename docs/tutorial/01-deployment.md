@@ -38,7 +38,10 @@ Build   : go1.20.1 darwin amd64 2023-03-04 23:54
 ```
 
 ## Join greenfield chain
-> TODO:: waiting for the greenfield chain doc pr merged
+[join mainnet, join testnet, setup private netWork](https://github.com/bnb-chain/greenfield/tree/master/docs/tutorial)
+
+## Add SP to greenfield chain
+[add sp to greenfield chain](https://github.com/bnb-chain/greenfield/blob/fynn/doc/docs/tutorial/07-storage-provider.md)
 
 ## Make configuration
   ```shell
@@ -46,7 +49,7 @@ Build   : go1.20.1 darwin amd64 2023-03-04 23:54
   ./gnfd-sp config.dump
   ```
 
-[Edit configuration template](https://github.com/bnb-chain/greenfield-storage-provider/blob/develop_opt/docs/tutorial/02-config-template.toml)
+[edit configuration template](https://github.com/bnb-chain/greenfield-storage-provider/blob/develop/docs/tutorial/02-config-template.toml)
 
 ## Start with local model
 ```shell
