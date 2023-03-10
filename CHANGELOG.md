@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.0.3
+
+FEATURES
+* [\#169](https://github.com/bnb-chain/greenfield-storage-provider/pull/169)
+* [\#172](https://github.com/bnb-chain/greenfield-storage-provider/pull/172)
+* [\#173](https://github.com/bnb-chain/greenfield-storage-provider/pull/173)
+
+IMPROVEMENT
+* [\#154](https://github.com/bnb-chain/greenfield-storage-provider/pull/154)
+* [\#156](https://github.com/bnb-chain/greenfield-storage-provider/pull/156)
+* [\#157](https://github.com/bnb-chain/greenfield-storage-provider/pull/157)
+* [\#162](https://github.com/bnb-chain/greenfield-storage-provider/pull/162)
+* [\#165](https://github.com/bnb-chain/greenfield-storage-provider/pull/165)
+* [\#171](https://github.com/bnb-chain/greenfield-storage-provider/pull/171)
+* [\#176](https://github.com/bnb-chain/greenfield-storage-provider/pull/176)
+
+
 ## v0.0.2
 
 This release includes following features:
@@ -30,7 +47,7 @@ IMPROVEMENT
 * [\#83](https://github.com/bnb-chain/greenfield-storage-provider/pull/83) chore(sql): polish sql workflow
 * [\#87](https://github.com/bnb-chain/greenfield-storage-provider/pull/87) chore: add setup-test-env tool
 
-Build
+BIILD
 * [\#74](https://github.com/bnb-chain/greenfield-storage-provider/pull/74) ci: add docker release pipe
 * [\#67](https://github.com/bnb-chain/greenfield-storage-provider/pull/67) ci: add commit lint, code lint and unit test ci files
 * [\#85](https://github.com/bnb-chain/greenfield-storage-provider/pull/85) chore: add pull request template
