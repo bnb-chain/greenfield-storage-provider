@@ -38,7 +38,10 @@ Build   : go1.20.1 darwin amd64 2023-03-04 23:54
 ```
 
 ## Join greenfield chain
-> TODO:: waiting for the greenfield chain doc pr merged
+[Join Mainnet, Join Testnet, Setup Private NetWork](https://github.com/bnb-chain/greenfield/tree/master/docs/tutorial)
+
+## Add SP to greenfield chain
+[Add SP to greenfield chain](https://github.com/bnb-chain/greenfield/blob/fynn/doc/docs/tutorial/07-storage-provider.md)
 
 ## Make configuration
   ```shell
