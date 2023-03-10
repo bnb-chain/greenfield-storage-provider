@@ -145,7 +145,7 @@ Service = [
 [BlockSyncerCfg]
     [BlockSyncerCfg.Chain]
     Bech32Prefix = "cosmos"
-    Modules = [ "block", "bucket", "object", ]
+    Modules = [ "epoch", "bucket", "object", "payment", ]
 
 [BlockSyncerCfg.Node]
     Type = "remote"

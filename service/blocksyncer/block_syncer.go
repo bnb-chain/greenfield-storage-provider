@@ -141,16 +141,9 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 		log.Debugw("starting worker...", "number", i+1)
 		go w.Start()
 	}
-
-	if config.Cfg.Parser.ParseOldBlocks {
-		if config.Cfg.Parser.ConcurrentSync {
-			go enqueueMissingBlocks(exportQueue, s.parserCtx)
-		} else {
-			enqueueMissingBlocks(exportQueue, s.parserCtx)
-		}
+	latestBlockHeight, err := enqueueMissingBlocks(exportQueue, s.parserCtx)
+	if err != nil {
+		panic(err)
 	}
-
-	if config.Cfg.Parser.ParseNewBlocks {
-		go enqueueNewBlocks(exportQueue, s.parserCtx)
-	}
+	go enqueueNewBlocks(exportQueue, s.parserCtx, latestBlockHeight)
 }

@@ -8,7 +8,6 @@ import (
 	eventutil "github.com/forbole/juno/v4/types/event"
 
 	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
@@ -18,18 +17,19 @@ import (
 
 // enqueueMissingBlocks enqueues jobs (block heights) for missed blocks starting
 // at the startHeight up until the latest known height.
-func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context) {
+func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context) (uint64, error) {
 	// Get the config
 	cfg := config.Cfg.Parser
 
 	// Get the latest height
 	latestBlockHeight := mustGetLatestHeight(ctx)
 
-	lastDbBlockHeight, err := ctx.Database.GetLastBlockHeight(context.TODO())
+	epoch, err := ctx.Database.GetEpoch(context.TODO())
 	if err != nil {
 		log.Errorw("failed to get last block height from database", "error", err)
+		return 0, err
 	}
-
+	lastDbBlockHeight := uint64(epoch.BlockHeight)
 	// Get the start height, default to the config's height
 	startHeight := cfg.StartHeight
 
@@ -39,33 +39,17 @@ func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context) {
 		startHeight = utils.MaxUint64(0, lastDbBlockHeight)
 	}
 
-	if cfg.FastSync {
-		log.Infow("fast sync is enabled, ignoring all previous blocks", "latest_block_height", latestBlockHeight)
-		for _, module := range ctx.Modules {
-			if mod, ok := module.(modules.FastSyncModule); ok {
-				err := mod.DownloadState(int64(latestBlockHeight))
-				if err != nil {
-					log.Error("error while performing fast sync",
-						"err", err,
-						"last_block_height", latestBlockHeight,
-						"module", module.Name(),
-					)
-				}
-			}
-		}
-	} else {
-		log.Infow("syncing missing blocks...", "latest_block_height", latestBlockHeight)
-		for _, i := range ctx.Database.GetMissingHeights(context.TODO(), startHeight, latestBlockHeight) {
-			log.Debugw("enqueueing missing block", "height", i)
-			exportQueue <- i
-		}
+	log.Infow("syncing missing blocks...", "latest_block_height", latestBlockHeight)
+	for i := lastDbBlockHeight + 1; i <= latestBlockHeight; i++ {
+		log.Debugw("enqueueing missing block", "height", i)
+		exportQueue <- i
 	}
+
+	return latestBlockHeight + 1, nil
 }
 
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
-func enqueueNewBlocks(exportQueue types.HeightQueue, ctx *parser.Context) {
-	currHeight := mustGetLatestHeight(ctx)
-
+func enqueueNewBlocks(exportQueue types.HeightQueue, ctx *parser.Context, currHeight uint64) {
 	// Enqueue upcoming heights
 	for {
 		latestBlockHeight := mustGetLatestHeight(ctx)

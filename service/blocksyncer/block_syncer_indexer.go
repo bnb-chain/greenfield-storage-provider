@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/forbole/juno/v4/models"
 
@@ -44,6 +44,10 @@ type Impl struct {
 	DB   database.Database
 }
 
+func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.ResultBlockResults, txs []*types.Tx, vals *coretypes.ResultValidators) error {
+	return nil
+}
+
 func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, index int, event sdk.Event) {
 
 }
@@ -61,7 +65,7 @@ func (i *Impl) Process(height uint64) error {
 		return fmt.Errorf("failed to get block results from node: %s", err)
 	}
 
-	err = i.ExportBlock(block, nil, nil, nil)
+	err = i.ExportEpoch(block)
 	if err != nil {
 		return fmt.Errorf("failed to ExportBlock: %s", err)
 	}
@@ -73,14 +77,17 @@ func (i *Impl) Process(height uint64) error {
 	return nil
 }
 
-func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.ResultBlockResults, txs []*types.Tx, vals *coretypes.ResultValidators) error {
+func (i *Impl) ExportEpoch(block *coretypes.ResultBlock) error {
 	// Save the block
-	err := i.DB.SaveBlock(i.Ctx, models.NewBlockFromTmBlock(block, util.SumGasTxs(txs)))
+	err := i.DB.SaveEpoch(i.Ctx, &models.Epoch{
+		ID:          1,
+		BlockHeight: block.Block.Height,
+		BlockHash:   common.HexToHash(block.BlockID.Hash.String()),
+		UpdateTime:  block.Block.Time.Unix(),
+	})
 	if err != nil {
 		return fmt.Errorf("failed to persist block: %s", err)
 	}
-
-	i.HandleBlock(block, events, txs, vals)
 
 	return nil
 }
