@@ -17,7 +17,7 @@ const (
 	// PeerFailureMax defines the threshold of setting node to fail
 	PeerFailureMax = 2
 	// PrunePeersNumberMax defines the threshold to trigger the prune p2p node
-	PrunePeersNumberMax = 50
+	PrunePeersNumberMax = 10
 	// PeerSpUnspecified defines default sp operator address
 	PeerSpUnspecified = "PEER_SP_UNSPECIFIED"
 )
@@ -150,17 +150,12 @@ func (pr PeerProvider) prunePeers() {
 			return peers[i].last > peers[j].last
 		})
 		var discard []peer.ID
-		for i := len(peers) - 1; i >= 0; i-- {
-			if peers[i].Fail() {
-				discard = append(discard, peers[i].ID())
-			} else {
-				peers = peers[0 : i+1]
-				break
-			}
+		for i := PrunePeersNumberMax; i <= len(peers); i++ {
+			discard = append(discard, peers[i].ID())
 		}
 		log.Infow("prune sp nodes", "prune_num", len(discard))
 		pr.deletePeers(discard)
-		sp2Peers[sp] = peers
+		sp2Peers[sp] = peers[0:PrunePeersNumberMax]
 	}
 	pr.spPeers = sp2Peers
 }

@@ -14,7 +14,7 @@ import (
 
 const (
 	// PingPeriodMin defines the min value that the period of sending ping request
-	PingPeriodMin = 30
+	PingPeriodMin = 60
 	// DailTimeOut defines default value that the timeout of dail other p2p node
 	DailTimeOut = 1
 	// DefaultDataPath defines default value that the path of peer store
