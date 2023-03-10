@@ -1,0 +1,116 @@
+# services list are to be started
+Service = ["gateway", "uploader", "downloader", "challenge", "stonenode", "syncer", "signer"]
+
+# sp operator address generate from sp's 'OperatorPublicKey'
+SpOperatorAddress = ""
+
+# Domain name for external services, be used for gateway ,
+Domain = "gnfd.nodereal.com"
+
+# http address, one for gateway, another for metadata
+[HTTPAddress]
+gateway = "localhost:9033"
+metadata = "localhost:9733"
+
+# all services gRPC addresses, there are dependencies between services
+# For details, to see (TODO:: Other introduction documents)
+# If only want to start a set of dependent services, be careful not to
+# omit the addresses of related services
+[GRPCAddress]
+challenge = "localhost:9333"
+downloader = "localhost:9233"
+signer = "localhost:9633"
+stonenode = "localhost:9433"
+syncer = "localhost:9533"
+uploader = "localhost:9133"
+
+# SQL DB ia a strong dependency for sp
+[SpDBConfig]
+User = "root"
+Passwd = "test_pwd"
+Address = "localhost:3306"
+Database = "storage_provider_db"
+
+# piece store used for storing payload, so it is also a strong dependency for sp
+[PieceStoreConfig]
+Shards = 0
+
+[PieceStoreConfig.Store]
+Storage = "file"
+BucketURL = "./data"
+MaxRetries = 5
+TestMode = false
+
+# interact with the greenfield chain
+[ChainConfig]
+ChainID = "greenfield_9000-121"
+
+[[ChainConfig.NodeAddr]]
+GreenfieldAddresses = ["localhost:9090"]
+TendermintAddresses = ["http://localhost:26750"]
+
+# signer service config
+[SignerCfg]
+GRPCAddress = "localhost:9633"
+APIKey = ""
+WhitelistCIDR = ["127.0.0.1/32"]
+
+[SignerCfg.GreenfieldChainConfig]
+GRPCAddress = "localhost:9090"
+ChainID = "greenfield_9000-121"
+GasLimit = 210000
+OperatorPrivateKey = ""
+FundingPrivateKey = ""
+SealPrivateKey = ""
+ApprovalPrivateKey = ""
+
+# signer service config
+[BlockSyncerCfg.Chain]
+Bech32Prefix = ""
+Modules = []
+
+[BlockSyncerCfg.Node]
+Type = "mysql"
+
+[BlockSyncerCfg.Node.RPC]
+ClientName = "juno"
+Address = "http://localhost:26750"
+MaxConnections = 20
+
+[BlockSyncerCfg.Node.GRPC]
+Address = "http://localhost:9090"
+Insecure = true
+
+[BlockSyncerCfg.Parser]
+GenesisFilePath = ""
+Workers = 0
+StartHeight = 0
+AvgBlockTime = 1000000000
+ParseNewBlocks = false
+ParseOldBlocks = false
+ParseGenesis = false
+FastSync = false
+
+[BlockSyncerCfg.Database]
+Type = ""
+DSN = ""
+SlowThreshold = "0s"
+MaxOpenConnections = 0
+MaxIdleConnections = 0
+ConnMaxIdleTime = "0s"
+ConnMaxLifetime = "0s"
+PartitionSize = 0
+PartitionBatchSize = 0
+
+[BlockSyncerCfg.Database.Secrets]
+SecretId = "1"
+Region = "1"
+
+[BlockSyncerCfg.Logging]
+ServiceName = ""
+RootDir = "./logs"
+Level = "debug"
+
+[LogCfg]
+Level = "debug"
+Path = "./gnfd-sp.log"

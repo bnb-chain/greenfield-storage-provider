@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"net/http"
 
@@ -32,8 +33,9 @@ var (
 	BucketAlreadyExists = &errorDescription{errorCode: "CreateBucketFailed", errorMessage: "Duplicate bucket name.", statusCode: http.StatusConflict}
 	ObjectAlreadyExists = &errorDescription{errorCode: "PutObjectFailed", errorMessage: "Duplicate object name.", statusCode: http.StatusConflict}
 	// 5xx
-	InternalError       = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
-	NotImplementedError = &errorDescription{errorCode: "NotImplementedError", errorMessage: "Not Implemented Error", statusCode: http.StatusNotImplemented}
+	InternalError          = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
+	NotImplementedError    = &errorDescription{errorCode: "NotImplementedError", errorMessage: "Not Implemented Error", statusCode: http.StatusNotImplemented}
+	NotExistComponentError = &errorDescription{errorCode: "NotExistComponentError", errorMessage: "Not Exist Component Error", statusCode: http.StatusNotImplemented}
 )
 
 // errorResponse is used to error response xml.
@@ -65,10 +67,39 @@ func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *reque
 	return nil
 }
 
+// errorJSONResponse is used to error response JSON.
+func (desc *errorDescription) errorJSONResponse(w http.ResponseWriter, reqCtx *requestContext) error {
+	var (
+		jsonBody []byte
+		err      error
+	)
+
+	var jsonInfo = struct {
+		Code      string `json:"Code"`
+		Message   string `json:"Message"`
+		RequestId string `json:"RequestId"`
+	}{
+		Code:      desc.errorCode,
+		Message:   desc.errorMessage,
+		RequestId: reqCtx.requestID,
+	}
+	if jsonBody, err = json.Marshal(&jsonInfo); err != nil {
+		return err
+	}
+
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.WriteHeader(desc.statusCode)
+
+	if _, err = w.Write(jsonBody); err != nil {
+		return err
+	}
+	return nil
+}
+
 func generateContentRangeHeader(w http.ResponseWriter, start int64, end int64) {
 	if end < 0 {
-		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-")
+		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(start))+"-")
 	} else {
-		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToHeader(uint64(start))+"-"+util.Uint64ToHeader(uint64(end)))
+		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(start))+"-"+util.Uint64ToString(uint64(end)))
 	}
 }

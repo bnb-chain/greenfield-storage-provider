@@ -8,16 +8,17 @@ import (
 	"strings"
 	"time"
 
-	commonhttp "github.com/bnb-chain/greenfield-common/http"
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	signer "github.com/bnb-chain/greenfield-go-sdk/keys/signer"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // requestContext is a request context.
@@ -28,22 +29,22 @@ type requestContext struct {
 	request    *http.Request
 	startTime  time.Time
 	vars       map[string]string
-
 	// for auth v2 test
 	skipAuth bool
+	// objectInfo is queried from the greenfield blockchain
+	objectInfo *storagetypes.ObjectInfo
+	// accountID is used to provide authentication to the sp
+	accountID string
 }
 
 // newRequestContext return a request context.
 func newRequestContext(r *http.Request) *requestContext {
-	// todo: sdk signature need ignore it, here will be deleted
-	// https://github.com/minio/minio-go/blob/7aa4b0e0d1a9fdb4a99f50df715c21ec21d91753/pkg/signer/request-signature-v4.go#L60
-	r.Header.Del("Accept-Encoding")
-
 	vars := mux.Vars(r)
 	return &requestContext{
 		requestID:  util.GenerateRequestID(),
 		bucketName: vars["bucket"],
 		objectName: vars["object"],
+		accountID:  vars["account_id"],
 		request:    r,
 		startTime:  time.Now(),
 		vars:       vars,
@@ -51,10 +52,13 @@ func newRequestContext(r *http.Request) *requestContext {
 }
 
 // generateRequestDetail is used to log print detailed info.
-func (requestContext *requestContext) generateRequestDetail() string {
+func (reqContext *requestContext) generateRequestDetail() string {
 	var headerToString = func(header http.Header) string {
 		var sb = strings.Builder{}
 		for k := range header {
+			if k == model.GnfdObjectInfoHeader || k == model.GnfdUnsignedApprovalMsgHeader {
+				continue
+			}
 			if sb.Len() != 0 {
 				sb.WriteString(",")
 			}
@@ -76,9 +80,9 @@ func (requestContext *requestContext) generateRequestDetail() string {
 		return IPAddress
 	}
 	return fmt.Sprintf("requestID(%v) host(%v) method(%v) url(%v) header(%v) remote(%v) cost(%v)",
-		requestContext.requestID, requestContext.request.Host, requestContext.request.Method,
-		requestContext.request.URL.String(), headerToString(requestContext.request.Header),
-		getRequestIP(requestContext.request), time.Since(requestContext.startTime))
+		reqContext.requestID, reqContext.request.Host, reqContext.request.Method,
+		reqContext.request.URL.String(), headerToString(reqContext.request.Header),
+		getRequestIP(reqContext.request), time.Since(reqContext.startTime))
 }
 
 // signaturePrefix return supported Authorization prefix
@@ -87,21 +91,21 @@ func signaturePrefix(version, algorithm string) string {
 }
 
 // verifySign used to verify request signature, return nil if check succeed
-func (requestContext *requestContext) verifySignature() (sdk.AccAddress, error) {
-	requestSignature := requestContext.request.Header.Get(model.GnfdAuthorizationHeader)
+func (reqContext *requestContext) verifySignature() (sdk.AccAddress, error) {
+	requestSignature := reqContext.request.Header.Get(model.GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
-		return requestContext.verifySignatureV1(requestSignature[len(v1SignaturePrefix):])
+		return reqContext.verifySignatureV1(requestSignature[len(v1SignaturePrefix):])
 	}
 	v2SignaturePrefix := signaturePrefix(model.SignTypeV2, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
-		return requestContext.verifySignatureV2(requestSignature[len(v2SignaturePrefix):])
+		return reqContext.verifySignatureV2(requestSignature[len(v2SignaturePrefix):])
 	}
 	return nil, errors.ErrUnsupportedSignType
 }
 
 // verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed
-func (requestContext *requestContext) verifySignatureV1(requestSignature string) (sdk.AccAddress, error) {
+func (reqContext *requestContext) verifySignatureV1(requestSignature string) (sdk.AccAddress, error) {
 	var (
 		signedMsg string
 		signature []byte
@@ -130,7 +134,7 @@ func (requestContext *requestContext) verifySignatureV1(requestSignature string)
 	}
 
 	// check request integrity
-	realMsgToSign := commonhttp.GetMsgToSign(requestContext.request)
+	realMsgToSign := commonhttp.GetMsgToSign(reqContext.request)
 	if hex.EncodeToString(realMsgToSign) != signedMsg {
 		log.Errorw("failed to check signed msg")
 		return nil, errors.ErrRequestConsistent
@@ -150,7 +154,7 @@ func (requestContext *requestContext) verifySignatureV1(requestSignature string)
 }
 
 // verifySignatureV2 used to verify request type v2 signature, return (address, nil) if check succeed
-func (requestContext *requestContext) verifySignatureV2(requestSignature string) (sdk.AccAddress, error) {
+func (reqContext *requestContext) verifySignatureV2(requestSignature string) (sdk.AccAddress, error) {
 	var (
 		signature []byte
 		err       error
@@ -176,8 +180,7 @@ func (requestContext *requestContext) verifySignatureV2(requestSignature string)
 	}
 	_ = signature
 	// TODO: parse metamask signature and check timeout
-	requestContext.skipAuth = true
-	// return nil, errors.ErrUnsupportedSignType
+	reqContext.skipAuth = true
 	return sdk.AccAddress{}, nil
 }
 
@@ -193,7 +196,7 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 	rangeStr = rangeStr[len("bytes="):]
 	if strings.HasSuffix(rangeStr, "-") {
 		rangeStr = rangeStr[:len(rangeStr)-1]
-		rangeStart, err := util.HeaderToUint64(rangeStr)
+		rangeStart, err := util.StringToUint64(rangeStr)
 		if err != nil {
 			return false, -1, -1
 		}
@@ -201,11 +204,11 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 	}
 	pair := strings.Split(rangeStr, "-")
 	if len(pair) == 2 {
-		rangeStart, err := util.HeaderToUint64(pair[0])
+		rangeStart, err := util.StringToUint64(pair[0])
 		if err != nil {
 			return false, -1, -1
 		}
-		rangeEnd, err := util.HeaderToUint64(pair[1])
+		rangeEnd, err := util.StringToUint64(pair[1])
 		if err != nil {
 			return false, -1, -1
 		}
@@ -216,58 +219,62 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 
 // TODO: can be optimized by retirver
 // checkAuthorization check addr authorization
-func (g *Gateway) checkAuthorization(requestContext *requestContext, addr sdk.AccAddress) error {
-	if requestContext.skipAuth {
+func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAddress) error {
+	var (
+		err          error
+		accountExist bool
+	)
+	if reqContext.skipAuth {
 		return nil
 	}
-	exist, err := g.chain.HasAccount(context.Background(), addr.String())
+	accountExist, err = g.chain.HasAccount(context.Background(), addr.String())
 	if err != nil {
-		log.Errorw("failed to check account on chain", "error", err, "address", addr.String())
+		log.Errorw("failed to check account on chain", "address", addr.String(), "error", err)
 		return err
 	}
-	if !exist {
-		log.Errorw("account is not exist", "error", err, "address", addr.String())
+	if !accountExist {
+		log.Errorw("account is not exist", "address", addr.String(), "error", err)
 		return fmt.Errorf("account is not exist")
 	}
 
-	switch mux.CurrentRoute(requestContext.request).GetName() {
+	switch mux.CurrentRoute(reqContext.request).GetName() {
 	case putObjectRouterName:
-		_, bucketExist, isInitStatus, tokenEnough, isSpBucket, ownObj, err := g.chain.AuthUploadObjectWithAccount(
-			context.Background(),
-			requestContext.bucketName,
-			requestContext.objectName,
-			addr.String(),
-			g.config.StorageProvider)
-		if err != nil {
-			log.Errorw("failed to auth upload", "err", err,
-				"bucket_name", requestContext.bucketName, "object_name", requestContext.objectName,
-				"address", addr.String())
+		reqContext.objectInfo, err = g.chain.QueryObjectInfo(context.Background(),
+			reqContext.bucketName, reqContext.objectName)
+		if err != nil || reqContext.objectInfo == nil {
+			log.Errorw("failed to query object info on chain",
+				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
 			return err
 		}
-		if !bucketExist || !isInitStatus || !tokenEnough || !isSpBucket || !ownObj {
-			log.Errorw("failed to auth upload", "err", err,
-				"bucket_name", requestContext.bucketName, "object_name", requestContext.objectName,
-				"address", addr.String())
+		if reqContext.objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_INIT {
+			log.Errorw("failed to auth due to object status is not init",
+				"object_status", reqContext.objectInfo.GetObjectStatus())
 			return fmt.Errorf("account has no permission")
 		}
+		if reqContext.objectInfo.GetOwner() != addr.String() {
+			log.Errorw("failed to auth due to account is not equal to object owner",
+				"object_status", reqContext.objectInfo.GetObjectStatus())
+			return fmt.Errorf("account has no permission")
+		}
+		// TODO: check SP operator address and account payment
 
 	case getObjectRouterName:
 		_, bucketExist, isServiceStatus, tokenEnough, isSpBucket, bucketID, readQuota, ownObj, err := g.chain.AuthDownloadObjectWithAccount(
 			context.Background(),
-			requestContext.bucketName,
-			requestContext.objectName,
+			reqContext.bucketName,
+			reqContext.objectName,
 			addr.String(),
-			g.config.StorageProvider)
+			g.config.SpOperatorAddress)
 		if err != nil {
-			log.Errorw("failed to auth download", "err", err,
-				"bucket_name", requestContext.bucketName, "object_name", requestContext.objectName,
-				"address", addr.String())
+			log.Errorw("failed to auth download",
+				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName,
+				"address", addr.String(), "error", err)
 			return err
 		}
 		if !bucketExist || !isServiceStatus || !tokenEnough || !isSpBucket || !ownObj {
-			log.Errorw("failed to auth download", "err", err,
-				"bucket_name", requestContext.bucketName, "object_name", requestContext.objectName,
-				"address", addr.String())
+			log.Errorw("failed to auth download",
+				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName,
+				"address", addr.String(), "error", err)
 			return fmt.Errorf("account has no permission")
 		}
 		// TODO: query read quota enough

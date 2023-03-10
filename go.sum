@@ -103,8 +103,6 @@ github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d h1:nalkkPQ
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d/go.mod h1:URdX5+vg25ts3aCh8H5IFZybJYKWhJHYMTnf+ULtoC4=
 github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
-github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613 h1:6icnpgpfaYbNFPvsZHrIPhUqNbubaeikWdpMdj40kp0=
-github.com/GeertJohan/go.linenoise v0.0.0-20141120151038-1918ff89d613/go.mod h1:hjDAY2N/A6k4IInagcBqLG/q8SyECV6TDzEu5dY0Mwg=
 github.com/GoogleCloudPlatform/cloudsql-proxy v0.0.0-20191009163259-e802c2cb94ae/go.mod h1:mjwGPas4yKduTyubHvD1Atl9r1rUq8DfVy+gkVvZ+oo=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/goutils v1.1.0/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
@@ -212,12 +210,10 @@ github.com/bnb-chain/gnfd-tendermint v0.0.1 h1:KWFuxWv8m6t1vUi3ADyVcEG0qVnEzQt1t
 github.com/bnb-chain/gnfd-tendermint v0.0.1/go.mod h1:/v9z9F6cq0+f7EGG92lYSLBcPYQDILoK91X8YM28hWo=
 github.com/bnb-chain/greenfield v0.0.0-20230220084048-b09d0197ee41 h1:DD/1yLWJZ19xi3ofWy637sCD7ie7Ef/0QQLm1sy5tkw=
 github.com/bnb-chain/greenfield v0.0.0-20230220084048-b09d0197ee41/go.mod h1:+7l0FQSh1UJyBlByIsgLsrMxrdqycCVY1xwLbZIJCno=
-github.com/bnb-chain/greenfield-common v0.0.3-0.20230223083211-e5b5e220939c h1:Tmyg3L5gNK2/jTtrLJ4bFnDEyoM7GQjKujgBaPywW+g=
-github.com/bnb-chain/greenfield-common v0.0.3-0.20230223083211-e5b5e220939c/go.mod h1:1Jh4CRNrgMhzI5l6gRtrcl+J7hMnqAb3vlLAirkrW2k=
-github.com/bnb-chain/greenfield-common/go v0.0.0-20230220095438-937c5b838b69 h1:zf0RTWOAFtPa9bS7ie1QSw5uQIIGVPJMmtMzg0Uhnfk=
-github.com/bnb-chain/greenfield-common/go v0.0.0-20230220095438-937c5b838b69/go.mod h1:c8DMlVkqGbVh6tV5l45R8YbS2VxeAe4PLo91r5yvq/4=
-github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230222033526-17e6b63b80bc h1:H5EmDqoxmgLEaLzeFwYAcp97u5cIrJm9ulHRBbmhoOc=
-github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230222033526-17e6b63b80bc/go.mod h1:rlkE/xNOQXt4ANJxz55V8SmhZHaP/LOOQlvAzIeVX68=
+github.com/bnb-chain/greenfield-common/go v0.0.0-20230227091017-b60c7936a1c6 h1:YFJz8O8p36qbNqXfzQ16Fh08U/N70qbRGNFNw7hNZT4=
+github.com/bnb-chain/greenfield-common/go v0.0.0-20230227091017-b60c7936a1c6/go.mod h1:Nzpqn+BK8P1Ub3Tgn300bHmWMUk9R6cBwvmasVY25J8=
+github.com/bnb-chain/greenfield-go-sdk v0.0.5 h1:DpAyBi3o6n8dEtGkh31Yl+yeH6Gv2lE+qbuEsliz6xE=
+github.com/bnb-chain/greenfield-go-sdk v0.0.5/go.mod h1:JxsUzwHwvGMQbqRdswr+r5anLyPLb2VcyB8SqncydlU=
 github.com/bnb-chain/juno/v4 v4.0.0-20230310073434-47ff40e855de h1:wFbdKOtachx1isTgUMwFeJV9QfcqadgopXFAvitVd6Y=
 github.com/bnb-chain/juno/v4 v4.0.0-20230310073434-47ff40e855de/go.mod h1:oQZkgavrYEz5hPchQg7TO4kK68PhyFIs0F3s5ev60bY=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
@@ -912,8 +908,8 @@ github.com/klauspost/cpuid v0.0.0-20170728055534-ae7887de9fa5/go.mod h1:Pj4uuM52
 github.com/klauspost/cpuid v1.2.3/go.mod h1:Pj4uuM528wm8OyEC2QMXAi2YiTZ96dNQPGgoMS4s3ek=
 github.com/klauspost/cpuid/v2 v2.0.4/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=
 github.com/klauspost/cpuid/v2 v2.0.9/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=
-github.com/klauspost/cpuid/v2 v2.2.3 h1:sxCkb+qR91z4vsqw4vGGZlDgPz3G7gjaLyK3V8y70BU=
-github.com/klauspost/cpuid/v2 v2.2.3/go.mod h1:RVVoqg1df56z8g3pUjL/3lE5UfnlrJX8tyFgg4nqhuY=
+github.com/klauspost/cpuid/v2 v2.2.4 h1:acbojRNwl3o09bUq+yDCtZFc1aiwaAAxtcn8YkZXnvk=
+github.com/klauspost/cpuid/v2 v2.2.4/go.mod h1:RVVoqg1df56z8g3pUjL/3lE5UfnlrJX8tyFgg4nqhuY=
 github.com/klauspost/crc32 v0.0.0-20161016154125-cb6bfca970f6/go.mod h1:+ZoRqAPRLkC4NPOvfYeR5KNOrY6TD+/sAC3HXPZgDYg=
 github.com/klauspost/pgzip v1.0.2-0.20170402124221-0bf5dcad4ada/go.mod h1:Ch1tH69qFZu15pkjo5kYi6mth2Zzwzt50oCQKQE9RUs=
 github.com/klauspost/reedsolomon v1.9.3/go.mod h1:CwCi+NUr9pqSVktrkN+Ondf06rkhYZ/pcNv7fu+8Un4=
@@ -1063,8 +1059,6 @@ github.com/libp2p/zeroconf/v2 v2.1.1/go.mod h1:fuJqLnUwZTshS3U/bMRJ3+ow/v9oid1n0
 github.com/lightstep/lightstep-tracer-common/golang/gogo v0.0.0-20190605223551-bc2310a04743/go.mod h1:qklhhLq1aX+mtWk9cPHPzaBjWImj5ULL6C7HFJtXQMM=
 github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0UBX0ZE6WURAspgAczcDHrL4=
 github.com/logrusorgru/aurora v2.0.3+incompatible/go.mod h1:7rIyQOR62GCctdiQpZ/zOJlFyk6y+94wXzv6RNZgaR4=
-github.com/looplab/fsm v1.0.0 h1:dyD2Nf6FforIQt7BHBTSX7Vk4UcVNJ++ouCEgU1i3wA=
-github.com/looplab/fsm v1.0.0/go.mod h1:PmD3fFvQEIsjMEfvZdrCDZ6y8VwKTwWNjlpEr6IKPO4=
 github.com/lucas-clemente/quic-go v0.23.0/go.mod h1:paZuzjXCE5mj6sikVLMvqXk8lJV2AsqtJ6bDhjEfxx0=
 github.com/lucas-clemente/quic-go v0.24.0/go.mod h1:paZuzjXCE5mj6sikVLMvqXk8lJV2AsqtJ6bDhjEfxx0=
 github.com/lunixbochs/vtclean v0.0.0-20180621232353-2d01aacdc34a/go.mod h1:pHhQNgMf3btfWnGBVipUOjRYhoOsdGqdm/+2c2E2WMI=
@@ -1254,8 +1248,6 @@ github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+
 github.com/oklog/oklog v0.3.2/go.mod h1:FCV+B7mhrz4o+ueLpx+KqkyXRGMWOYEvfiXtdGtbWGs=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
-github.com/oleiade/lane v1.0.1 h1:hXofkn7GEOubzTwNpeL9MaNy8WxolCYb9cInAIeqShU=
-github.com/oleiade/lane v1.0.1/go.mod h1:IyTkraa4maLfjq/GmHR+Dxb4kCMtEGeb+qmhlrQ5Mk4=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
 github.com/olekukonko/tablewriter v0.0.4/go.mod h1:zq6QwlOf5SlnkVbMSr5EoBv3636FWnp+qbPhuoO21uA=
 github.com/olekukonko/tablewriter v0.0.5 h1:P2Ga83D34wi1o9J6Wh1mRuqd4mF/x/lgBS7N7AbDhec=
@@ -1630,8 +1622,6 @@ github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijb
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/urfave/cli v1.22.4/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/urfave/cli v1.22.5/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
-github.com/urfave/cli v1.22.10 h1:p8Fspmz3iTctJstry1PYS3HVdllxnEzTEsgIgtxTrCk=
-github.com/urfave/cli v1.22.10/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/urfave/cli/v2 v2.3.0 h1:qph92Y649prgesehzOrQjdWyxFOp/QVM+6imKHad91M=
 github.com/urfave/cli/v2 v2.3.0/go.mod h1:LJmUH05zAU44vOAcrfzZQKsZbVcdbOG8rtL3/XcUArI=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=

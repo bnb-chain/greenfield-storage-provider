@@ -3,15 +3,14 @@ package service
 import (
 	"context"
 	"errors"
+	"net"
 	"sync/atomic"
 
-	"net"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/store"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -34,6 +33,7 @@ func (metadata *Metadata) Name() string {
 // Start implement the lifecycle interface
 // to delete api/v1
 func (metadata *Metadata) Start(ctx context.Context) error {
+	metadata.ctx = ctx
 	if metadata.running.Swap(true) {
 		return errors.New("metadata has started")
 	}
@@ -46,7 +46,7 @@ func (metadata *Metadata) Start(ctx context.Context) error {
 
 // Serve starts grpc service.
 func (metadata *Metadata) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", metadata.config.Address)
+	lis, err := net.Listen("tcp", metadata.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "err", err)
@@ -72,12 +72,11 @@ func (metadata *Metadata) Stop(ctx context.Context) error {
 	return nil
 }
 
-func NewMetadataService(cfg *metadata.MetadataConfig, ctx context.Context) (metadata *Metadata, err error) {
-	metadataStore, _ := store.NewStore(cfg.MetaSqlDBConfig)
+func NewMetadataService(cfg *metadata.MetadataConfig) (metadata *Metadata, err error) {
+	metadataStore, _ := store.NewStore(cfg.SpDBConfig)
 	metadata = &Metadata{
 		config: cfg,
 		name:   model.MetadataService,
-		ctx:    ctx,
 		store:  metadataStore,
 	}
 	return

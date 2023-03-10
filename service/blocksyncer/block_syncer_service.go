@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	eventutil "github.com/forbole/juno/v4/types/event"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"

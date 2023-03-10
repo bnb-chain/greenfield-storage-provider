@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const StopTimeout = 30
@@ -103,7 +103,7 @@ func (s *ServiceLifecycle) StopServices(ctx context.Context) {
 
 	<-gCtx.Done()
 	if errors.Is(gCtx.Err(), context.Canceled) {
-		log.Infow("services stop working", "service config timeout", s.timeout)
+		log.Infow("services stop working", "stop service timeout", s.timeout)
 	} else if errors.Is(gCtx.Err(), context.DeadlineExceeded) {
 		log.Error("timeout while stopping service, killing instance manually")
 	}
@@ -114,7 +114,7 @@ func (s *ServiceLifecycle) stop(ctx context.Context, cancel context.CancelFunc) 
 		if err := service.Stop(ctx); err != nil {
 			log.Errorf("service %s stops failure: %v", service.Name(), err)
 		} else {
-			log.Warnf("service %s stops successfully!", service.Name())
+			log.Infof("service %s stops successfully!", service.Name())
 		}
 	}
 	cancel()

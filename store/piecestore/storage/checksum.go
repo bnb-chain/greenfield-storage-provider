@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var crc32c = crc32.MakeTable(crc32.Castagnoli)
@@ -47,7 +47,7 @@ func (c *checksumReader) Read(buf []byte) (n int, err error) {
 	n, err = c.ReadCloser.Read(buf)
 	c.checksum = crc32.Update(c.checksum, crc32c, buf[:n])
 	if err == io.EOF && c.checksum != c.expected {
-		return 0, fmt.Errorf("verify checksum failed: %d != %d", c.checksum, c.expected)
+		return 0, fmt.Errorf("failed to verify checksum: %d != %d", c.checksum, c.expected)
 	}
 	return
 }

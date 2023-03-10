@@ -4,64 +4,74 @@ import (
 	"context"
 	"net"
 
-	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/service/client"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
-// Downloader manage the payload data download
+// Downloader implements the gRPC of DownloaderService,
+// responsible for downloading object payload data
 type Downloader struct {
 	cfg        *DownloaderConfig
-	name       string
-	pieceStore *client.StoreClient
+	spDB       sqldb.SPDB
 	chain      *gnfd.Greenfield
+	pieceStore *psclient.StoreClient
 }
 
-// NewDownloaderService return a downloader instance.
+// NewDownloaderService returns an instance of Downloader that implementation of
+// the lifecycle.Service and DownloaderService interface
 func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
-	var err error
+	pieceStore, err := psclient.NewStoreClient(cfg.PieceStoreConfig)
+	if err != nil {
+		log.Errorw("failed to create piece store client", "error", err)
+		return nil, err
+	}
+	chain, err := gnfd.NewGreenfield(cfg.ChainConfig)
+	if err != nil {
+		log.Errorw("failed to create chain client", "error", err)
+		return nil, err
+	}
+	spDB, err := sqldb.NewSpDB(cfg.SpDBConfig)
+	if err != nil {
+		log.Errorw("failed to create spdb client", "error", err)
+		return nil, err
+	}
 	downloader := &Downloader{
-		cfg:  cfg,
-		name: model.DownloaderService,
+		cfg:        cfg,
+		spDB:       spDB,
+		chain:      chain,
+		pieceStore: pieceStore,
 	}
-	if downloader.pieceStore, err = client.NewStoreClient(cfg.PieceStoreConfig); err != nil {
-		log.Errorw("failed to create piece store client", "err", err)
-		return nil, err
-	}
-	if downloader.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
-		log.Errorw("failed to create chain client", "err", err)
-		return nil, err
-	}
-
 	return downloader, nil
 }
 
-// Name implement the lifecycle interface
+// Name return the downloader service name, for the lifecycle management
 func (downloader *Downloader) Name() string {
-	return downloader.name
+	return model.DownloaderService
 }
 
-// Start implement the lifecycle interface
+// Start the downloader gRPC service
 func (downloader *Downloader) Start(ctx context.Context) error {
 	errCh := make(chan error)
 
 	go func(errCh chan error) {
-		lis, err := net.Listen("tcp", downloader.cfg.Address)
+		lis, err := net.Listen("tcp", downloader.cfg.GRPCAddress)
 		errCh <- err
 		if err != nil {
-			log.Errorw("syncer listen failed", "error", err)
+			log.Errorw("failed to listen", "error", err)
 			return
 		}
 		grpcServer := grpc.NewServer()
-		stypes.RegisterDownloaderServiceServer(grpcServer, downloader)
+		types.RegisterDownloaderServiceServer(grpcServer, downloader)
 		reflection.Register(grpcServer)
 		if err = grpcServer.Serve(lis); err != nil {
-			log.Errorw("syncer serve failed", "error", err)
+			log.Errorw("failed to serve", "error", err)
 			return
 		}
 	}(errCh)
@@ -70,7 +80,7 @@ func (downloader *Downloader) Start(ctx context.Context) error {
 	return err
 }
 
-// Stop implement the lifecycle interface
+// Stop the downloader gRPC service and recycle the resources
 func (downloader *Downloader) Stop(ctx context.Context) error {
 	return nil
 }

@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/forbole/juno/v4/models"
 
 	"github.com/forbole/juno/v4/database"
-
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/forbole/juno/v4/parser"

@@ -3,17 +3,15 @@ package service
 import (
 	"context"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/types/v1"
-	"github.com/bnb-chain/greenfield-storage-provider/util/log"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 )
 
 func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *stypes.MetadataServiceListObjectsByBucketNameRequest) (resp *stypes.MetadataServiceListObjectsByBucketNameResponse, err error) {
 	ctx = log.Context(ctx, req)
 	defer func() {
 		if err != nil {
-			resp.ErrMessage = merrors.MakeErrMsgResponse(err)
 			log.CtxErrorw(ctx, "failed to list objects by name", "err", err)
 		} else {
 			log.CtxInfow(ctx, "succeed to list objects by name")
