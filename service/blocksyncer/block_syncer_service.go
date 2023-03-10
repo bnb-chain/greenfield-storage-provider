@@ -4,14 +4,17 @@ import (
 	"context"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	eventutil "github.com/forbole/juno/v4/types/event"
 
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
+	eventutil "github.com/forbole/juno/v4/types/event"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -53,18 +56,15 @@ func enqueueNewBlocks(exportQueue types.HeightQueue, ctx *parser.Context, currHe
 }
 
 // mustGetLatestHeight tries getting the latest height from the RPC client.
-// If after 50 tries no latest height can be found, it returns 0.
+// If no latest height can be found after MaxRetryCount, it returns 0.
 func mustGetLatestHeight(ctx *parser.Context) uint64 {
-	for retryCount := 0; retryCount < 50; retryCount++ {
+	for retryCount := 0; retryCount < model.MaxRetryCount; retryCount++ {
 		latestBlockHeight, err := ctx.Node.LatestHeight()
 		if err == nil {
 			return uint64(latestBlockHeight)
 		}
 
-		log.Errorw("failed to get last block from RPCConfig client",
-			"err", err,
-			"retry interval", config.GetAvgBlockTime(),
-			"retry count", retryCount)
+		log.Errorw("failed to get last block from RPCConfig client", "error", err, "retry interval", config.GetAvgBlockTime(), "retry count", retryCount)
 
 		time.Sleep(config.GetAvgBlockTime())
 	}
@@ -72,7 +72,9 @@ func mustGetLatestHeight(ctx *parser.Context) uint64 {
 	return 0
 }
 
-func filterEventsType(tx *abci.ResponseDeliverTx) []sdk.Event {
+// filterEventsByType filter the event by types we are interested in.
+// Current we handle storage/payment/permission related events.
+func filterEventsByType(tx *abci.ResponseDeliverTx) []sdk.Event {
 	filteredEvents := make([]sdk.Event, 0)
 	for _, event := range tx.Events {
 		if _, ok := eventutil.EventProcessedMap[event.Type]; ok {

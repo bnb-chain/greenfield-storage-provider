@@ -23,19 +23,16 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
-// Syncer synchronizes ec data to piece store
+// BlockSyncer synchronizes storage,payment,permission data to db by handling related events
 type BlockSyncer struct {
 	config    *tomlconfig.TomlConfig
 	name      string
 	parserCtx *parser.Context
-	// store   client.PieceStoreAPI
-	// metaDB  spdb.MetaDB // storage provider meta db
-	running atomic.Bool
+	running   atomic.Bool
 }
 
-// NewSyncerService creates a syncer service to upload piece to piece store
+// NewBlockSyncerService create a BlockSyncer service to index block events data to db
 func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
-	log.Info(cfg.Database.Type)
 	s := &BlockSyncer{
 		config: cfg,
 		name:   model.BlockSyncerService,
@@ -50,7 +47,7 @@ func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
 	return s, nil
 }
 
-// initClient
+// initClient initialize a juno client using given configs
 func (s *BlockSyncer) initClient() error {
 	// JunoConfig the runner
 	junoConfig := cmd.NewConfig("juno").
@@ -61,25 +58,26 @@ func (s *BlockSyncer) initClient() error {
 		)
 	cmdCfg := junoConfig.GetParseConfig()
 	cmdCfg.WithTomlConfig(s.config)
+	log.Infof("cmd cfg: %+v", cmdCfg)
 	if readErr := parsecmdtypes.ReadConfigPreRunE(cmdCfg)(nil, nil); readErr != nil {
-		log.Info("readErr: %v", readErr)
+		log.Infof("readErr: %v", readErr)
 		return readErr
 	}
-	// read DSN from env
-	dsn, envErr := getDBConfigFromEnv(DsnBlockSyncer)
+	// get DSN from env first
+	dsn, envErr := getDBConfigFromEnv(model.DsnBlockSyncer)
 	if envErr != nil {
-		log.Errorf("readErr: %v", envErr)
-		return envErr
+		log.Info("failed to get db config from env, use db config from config file")
 	}
 	if dsn != "" {
+		log.Info("use db config from env")
 		config.Cfg.Database.DSN = dsn
 	}
-	log.Info(s.config.Node)
-	log.Info(config.Cfg.Node)
+
 	var ctx *parser.Context
 	ctx, err := parsecmdtypes.GetParserContext(config.Cfg, cmdCfg)
 	if err != nil {
-		panic(err)
+		log.Errorf("failed to GetParserContext err: %v", err)
+		return err
 	}
 	ctx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
 		ctx.Node,
@@ -87,11 +85,10 @@ func (s *BlockSyncer) initClient() error {
 		ctx.Modules)
 
 	s.parserCtx = ctx
-	//s.config = config.Cfg.Parser
 	return nil
 }
 
-// initDB init a meta-db instance
+// initDB create tables needed by block syncer. It depends on which modules are configured
 func (s *BlockSyncer) initDB() error {
 	// Prepare tables
 	var err error
@@ -106,12 +103,12 @@ func (s *BlockSyncer) initDB() error {
 	return nil
 }
 
-// Name describes the name of SyncerService
+// Name describes the name of BlockSyncer service
 func (s *BlockSyncer) Name() string {
 	return s.name
 }
 
-// Start running SyncerService
+// Start running BlockSyncer service
 func (s *BlockSyncer) Start(ctx context.Context) error {
 	if s.running.Swap(true) {
 		return errors.New("block syncer has already started")
@@ -120,7 +117,7 @@ func (s *BlockSyncer) Start(ctx context.Context) error {
 	return nil
 }
 
-// Stop running SyncerService
+// Stop running BlockSyncer service
 func (s *BlockSyncer) Stop(ctx context.Context) error {
 	if !s.running.Swap(false) {
 		return nil
@@ -128,7 +125,7 @@ func (s *BlockSyncer) Stop(ctx context.Context) error {
 	return nil
 }
 
-// serve start syncer rpc service
+// serve start BlockSyncer rpc service
 func (s *BlockSyncer) serve(ctx context.Context) {
 	// Create a queue that will collect, aggregate, and export blocks and metadata
 	exportQueue := types.NewQueue(25)
@@ -148,7 +145,7 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	}
 	latestBlockHeight, err := enqueueMissingBlocks(exportQueue, s.parserCtx)
 	if err != nil {
-		panic(err)
+		log.Errorf("failed to enqueue missing blocks error: %v", err)
 	}
 	go enqueueNewBlocks(exportQueue, s.parserCtx, latestBlockHeight)
 }
