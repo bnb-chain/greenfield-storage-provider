@@ -34,13 +34,13 @@ type StorageProviderConfig struct {
 	LogCfg            *LogConfig
 }
 
-// JsonMarshal marshal the StorageProviderConfig to json format
-func (cfg *StorageProviderConfig) JsonMarshal() ([]byte, error) {
+// JSONMarshal marshal the StorageProviderConfig to json format
+func (cfg *StorageProviderConfig) JSONMarshal() ([]byte, error) {
 	return json.Marshal(cfg)
 }
 
-// JsonUnMarshal unmarshal bytes to StorageProviderConfig struct
-func (cfg *StorageProviderConfig) JsonUnMarshal(jsonBytes []byte) error {
+// JSONUnmarshal unmarshal bytes to StorageProviderConfig struct
+func (cfg *StorageProviderConfig) JSONUnmarshal(jsonBytes []byte) error {
 	return json.Unmarshal(jsonBytes, cfg)
 }
 
