@@ -41,7 +41,7 @@ Build   : go1.20.1 darwin amd64 2023-03-04 23:54
 [join mainnet, join testnet, setup private netWork](https://github.com/bnb-chain/greenfield/tree/master/docs/tutorial)
 
 ## Add SP to greenfield chain
-[add SP to greenfield chain](https://github.com/bnb-chain/greenfield/blob/fynn/doc/docs/tutorial/07-storage-provider.md)
+[add sp to greenfield chain](https://github.com/bnb-chain/greenfield/blob/fynn/doc/docs/tutorial/07-storage-provider.md)
 
 ## Make configuration
   ```shell
