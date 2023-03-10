@@ -76,7 +76,7 @@ func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := cfg.JSONUnMarshal([]byte(cfgBytes)); err != nil {
+		if err := cfg.JSONUnmarshal([]byte(cfgBytes)); err != nil {
 			return nil, err
 		}
 	} else if ctx.IsSet(utils.ConfigFileFlag.Name) {

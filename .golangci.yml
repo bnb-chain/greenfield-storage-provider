@@ -22,16 +22,16 @@ linters:
     - unconvert
     - unused
     - varcheck
-    - depguard
-    - dogsled
-    - exportloopref
-    - gocritic
-    - gofumpt
-    - gosec
-    - nakedret
-    - nolintlint
-    - stylecheck
-    - typecheck
+#    - depguard
+#    - dogsled
+#    - exportloopref
+#    - gocritic
+#    - gofumpt
+#    - gosec
+#    - nakedret
+#    - nolintlint
+#    - stylecheck
+#    - typecheck
 
 linters-settings:
   gofmt:

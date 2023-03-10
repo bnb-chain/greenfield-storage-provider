@@ -39,8 +39,8 @@ func (cfg *StorageProviderConfig) JSONMarshal() ([]byte, error) {
 	return json.Marshal(cfg)
 }
 
-// JSONUnMarshal unmarshal bytes to StorageProviderConfig struct
-func (cfg *StorageProviderConfig) JSONUnMarshal(jsonBytes []byte) error {
+// JSONUnmarshal unmarshal bytes to StorageProviderConfig struct
+func (cfg *StorageProviderConfig) JSONUnmarshal(jsonBytes []byte) error {
 	return json.Unmarshal(jsonBytes, cfg)
 }
 

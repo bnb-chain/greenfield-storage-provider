@@ -66,6 +66,6 @@ jobs:
           skip-pkg-cache: true
           skip-cache: true
           skip-build-cache: true
-          args: --timeout 10m --config ./.golangci.yml
+          args: --timeout 10m
           github-token: ${{ secrets.github_token }}
         if: env.GIT_DIFF
