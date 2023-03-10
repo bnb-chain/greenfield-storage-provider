@@ -47,7 +47,7 @@ func configUploadAction(ctx *cli.Context) error {
 		return err
 	}
 	cfg := config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
-	cfgBytes, err := cfg.JsonMarshal()
+	cfgBytes, err := cfg.JSONMarshal()
 	if err != nil {
 		return err
 	}
