@@ -5,6 +5,7 @@ import (
 	"io"
 	"sync/atomic"
 
+	sdkmath "cosmossdk.io/math"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
@@ -14,7 +15,7 @@ import (
 const StreamResultSize = 10
 
 type SegmentEntry struct {
-	objectID       uint64
+	objectID       sdkmath.Uint
 	replicaIdx     uint32
 	segmentIdx     uint32
 	redundancyType storagetypes.RedundancyType
@@ -22,15 +23,15 @@ type SegmentEntry struct {
 	err            error
 }
 
-func (entry SegmentEntry) ID() uint64 {
+func (entry SegmentEntry) ID() sdkmath.Uint {
 	return entry.objectID
 }
 
 func (entry SegmentEntry) Key() string {
 	if entry.redundancyType == storagetypes.REDUNDANCY_EC_TYPE {
-		return piecestore.EncodeECPieceKey(entry.objectID, entry.replicaIdx, entry.segmentIdx)
+		return piecestore.EncodeECPieceKey(entry.objectID.String(), entry.replicaIdx, entry.segmentIdx)
 	}
-	return piecestore.EncodeSegmentPieceKey(entry.objectID, entry.segmentIdx)
+	return piecestore.EncodeSegmentPieceKey(entry.objectID.String(), entry.segmentIdx)
 }
 
 func (entry SegmentEntry) Data() []byte {
@@ -44,7 +45,7 @@ func (entry SegmentEntry) Error() error {
 // PayloadStream implement a one-way data flow, writes bytes of any size
 // read the fixed data size with payload metadata
 type PayloadStream struct {
-	objectID       uint64
+	objectID       sdkmath.Uint
 	replicaIdx     uint32
 	segmentSize    uint64
 	redundancyType storagetypes.RedundancyType
@@ -67,7 +68,7 @@ func NewAsyncPayloadStream() *PayloadStream {
 
 // InitAsyncPayloadStream only be called once, init the payload metadata
 // must be called before write or read stream
-func (stream *PayloadStream) InitAsyncPayloadStream(objectID uint64, rIdx uint32, segSize uint64,
+func (stream *PayloadStream) InitAsyncPayloadStream(objectID sdkmath.Uint, rIdx uint32, segSize uint64,
 	redundancyType storagetypes.RedundancyType) error {
 	if stream.init.Load() {
 		return nil

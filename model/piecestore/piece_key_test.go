@@ -10,13 +10,13 @@ import (
 func TestEncodeSegmentPieceKey(t *testing.T) {
 	cases := []struct {
 		name       string
-		req1       uint64
+		req1       string
 		req2       uint32
 		wantedResp string
 	}{
 		{
 			name:       "encode segment piece key successfully",
-			req1:       123456789,
+			req1:       "123456789",
 			req2:       0,
 			wantedResp: "123456789_s0",
 		},
@@ -33,49 +33,49 @@ func TestDecodeSegmentPieceKey(t *testing.T) {
 	cases := []struct {
 		name        string
 		req         string
-		wantedResp1 uint64
+		wantedResp1 string
 		wantedResp2 uint32
 		wantedErr   error
 	}{
 		{
 			name:        "decode segment piece key successfully",
 			req:         "123456789_s0",
-			wantedResp1: 123456789,
+			wantedResp1: "123456789",
 			wantedResp2: 0,
 			wantedErr:   nil,
 		},
 		{
 			name:        "invalid piece key 1",
 			req:         "testID_s2",
-			wantedResp1: 0,
+			wantedResp1: "0",
 			wantedResp2: 0,
 			wantedErr:   fmt.Errorf("invalid segment piece key"),
 		},
 		{
 			name:        "invalid piece key 2",
 			req:         "123456789_p",
-			wantedResp1: 0,
+			wantedResp1: "0",
 			wantedResp2: 0,
 			wantedErr:   fmt.Errorf("invalid segment piece key"),
 		},
 		{
 			name:        "invalid piece key 3",
 			req:         "123456789_s123r",
-			wantedResp1: 0,
+			wantedResp1: "0",
 			wantedResp2: 0,
 			wantedErr:   fmt.Errorf("invalid segment piece key"),
 		},
 		{
 			name:        "invalid piece key 4",
 			req:         "123456789_ss.123",
-			wantedResp1: 0,
+			wantedResp1: "0",
 			wantedResp2: 0,
 			wantedErr:   fmt.Errorf("invalid segment piece key"),
 		},
 		{
 			name:        "invalid segment piece key 4",
 			req:         "123456789_s123/111",
-			wantedResp1: 0,
+			wantedResp1: "0",
 			wantedResp2: 0,
 			wantedErr:   fmt.Errorf("invalid segment piece key"),
 		},
@@ -93,14 +93,14 @@ func TestDecodeSegmentPieceKey(t *testing.T) {
 func TestEncodeECPieceKey(t *testing.T) {
 	cases := []struct {
 		name       string
-		req1       uint64
+		req1       string
 		req2       uint32
 		req3       uint32
 		wantedResp string
 	}{
 		{
 			name:       "encode ec piece key successfully",
-			req1:       123456789,
+			req1:       "123456789",
 			req2:       1,
 			req3:       3,
 			wantedResp: "123456789_s1_p3",
@@ -118,7 +118,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 	cases := []struct {
 		name        string
 		req         string
-		wantedResp1 uint64
+		wantedResp1 string
 		wantedResp2 uint32
 		wantedResp3 uint32
 		wantedErr   error
@@ -126,7 +126,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 		{
 			name:        "encode ec piece key successfully",
 			req:         "123456789_s1_p3",
-			wantedResp1: 123456789,
+			wantedResp1: "123456789",
 			wantedResp2: 1,
 			wantedResp3: 3,
 			wantedErr:   nil,
@@ -134,7 +134,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 		{
 			name:        "invalid ec piece key 1",
 			req:         "ABCD123_s1",
-			wantedResp1: 0,
+			wantedResp1: "0",
 			wantedResp2: 0,
 			wantedResp3: 0,
 			wantedErr:   fmt.Errorf("invalid EC piece key"),
@@ -142,7 +142,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 		{
 			name:        "invalid ec piece key 2",
 			req:         "123456789_s1_p",
-			wantedResp1: 0,
+			wantedResp1: "0",
 			wantedResp2: 0,
 			wantedResp3: 0,
 			wantedErr:   fmt.Errorf("invalid EC piece key"),
@@ -150,7 +150,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 		{
 			name:        "invalid ec piece key 3",
 			req:         "123456789_s1_ps2",
-			wantedResp1: 0,
+			wantedResp1: "0",
 			wantedResp2: 0,
 			wantedResp3: 0,
 			wantedErr:   fmt.Errorf("invalid EC piece key"),
@@ -158,7 +158,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 		{
 			name:        "invalid ec piece key 4",
 			req:         "123456789_s1_p2_p3",
-			wantedResp1: 0,
+			wantedResp1: "0",
 			wantedResp2: 0,
 			wantedResp3: 0,
 			wantedErr:   fmt.Errorf("invalid EC piece key"),
@@ -166,7 +166,7 @@ func TestDecodeECPieceKey(t *testing.T) {
 		{
 			name:        "invalid ec piece key 5",
 			req:         "123456789_s1_p2n",
-			wantedResp1: 0,
+			wantedResp1: "0",
 			wantedResp2: 0,
 			wantedResp3: 0,
 			wantedErr:   fmt.Errorf("invalid EC piece key"),

@@ -72,17 +72,17 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 			}
 			if init {
 				pstream.InitAsyncPayloadStream(
-					req.GetObjectInfo().Id.Uint64(),
-					req.GetReplicateIdx(),
+					req.ObjectInfo.Id,
+					req.GetReplicaIdx(),
 					req.GetSegmentSize(),
 					req.GetObjectInfo().GetRedundancyType())
-				integrityMeta.ObjectID = req.GetObjectInfo().Id.Uint64()
+				integrityMeta.ObjectID = req.GetObjectInfo().Id.String()
 				traceInfo.ObjectInfo = req.GetObjectInfo()
 				syncer.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
 				init = false
 			}
 
-			pstream.StreamWrite(req.GetReplicateData())
+			pstream.StreamWrite(req.GetReplicaData())
 		}
 	}()
 
@@ -118,7 +118,7 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 func (syncer *Syncer) QuerySyncingObject(ctx context.Context, req *types.QuerySyncingObjectRequest) (
 	resp *types.QuerySyncingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
-	objectID := req.GetObjectId()
+	objectID := req.ObjectId.String()
 	log.CtxDebugw(ctx, "query syncing object", "objectID", objectID)
 	cached, ok := syncer.cache.Get(objectID)
 	if !ok {

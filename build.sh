@@ -11,7 +11,7 @@ if [ ! -d build  ];then
   mkdir -p build/data
 fi
 
-make buf-gen
+buf generate
 
 go build -ldflags "\
   -X 'main.Version=${Version}' \

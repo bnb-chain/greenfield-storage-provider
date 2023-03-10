@@ -6,12 +6,12 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield/x/storage/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-
+	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getApprovalHandler handle create bucket or create object approval
@@ -128,7 +128,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription *errorDescription
 		reqContext     *requestContext
 		addr           sdktypes.AccAddress
-		objectID       uint64
+		objectID       sdkmath.Uint
 		redundancyIdx  int32
 		segmentIdx     uint32
 	)
@@ -162,7 +162,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if objectID, err = util.StringToUint64(reqContext.request.Header.Get(model.GnfdObjectIDHeader)); err != nil {
+	if objectID, err = sdkmath.ParseUint(reqContext.request.Header.Get(model.GnfdObjectIDHeader)); err != nil {
 		log.Errorw("failed to parse object_id", "object_id", reqContext.request.Header.Get(model.GnfdObjectIDHeader))
 		errDescription = InvalidHeader
 		return
@@ -185,7 +185,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
-	w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToString(objectID))
+	w.Header().Set(model.GnfdObjectIDHeader, objectID.String())
 	w.Header().Set(model.GnfdIntegrityHashHeader, hex.EncodeToString(integrityHash))
 	w.Header().Set(model.GnfdPieceHashHeader, util.BytesSliceToString(pieceHash))
 	w.Write(pieceData)

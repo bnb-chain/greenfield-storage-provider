@@ -24,7 +24,7 @@ var _ types.StoneNodeServiceServer = &StoneNode{}
 func (node *StoneNode) ReplicateObject(ctx context.Context, req *types.ReplicateObjectRequest) (
 	resp *types.ReplicateObjectResponse, err error) {
 	resp = &types.ReplicateObjectResponse{}
-	node.spDB.UpdateJobState(req.GetObjectInfo().Id.Uint64(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
+	node.spDB.UpdateJobState(req.GetObjectInfo().Id.String(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
 	go node.AsyncReplicateObject(req)
 	log.Debugw("receive the replicate object task", "object_id", req.GetObjectInfo().Id)
 	return
@@ -38,26 +38,26 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 	objectInfo := req.GetObjectInfo()
 	defer func() {
 		if err != nil {
-			node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
+			node.spDB.UpdateJobState(objectInfo.Id.String(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
 			log.CtxErrorw(ctx, "failed to replicate payload data to sp", "error", err)
 			return
 		}
-		node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING)
+		node.spDB.UpdateJobState(objectInfo.Id.String(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING)
 		_, err = node.signer.SealObjectOnChain(ctx, sealMsg)
 		if err != nil {
-			node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR)
+			node.spDB.UpdateJobState(objectInfo.Id.String(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR)
 			log.CtxErrorw(ctx, "failed to sign object by signer", "error", err)
 			return
 		}
-		node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_TX_DOING)
+		node.spDB.UpdateJobState(objectInfo.Id.String(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_TX_DOING)
 		success, err := node.chain.ListenObjectSeal(ctx, objectInfo.GetBucketName(),
 			objectInfo.GetObjectName(), 10)
 		if err != nil {
-			node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
+			node.spDB.UpdateJobState(objectInfo.Id.String(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
 			log.CtxErrorw(ctx, "failed to seal object on chain", "error", err)
 			return
 		}
-		node.spDB.UpdateJobState(objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
+		node.spDB.UpdateJobState(objectInfo.Id.String(), servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
 		log.CtxInfow(ctx, "seal object on chain", "success", success)
 	}()
 
@@ -69,7 +69,7 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 	segments := piecestore.ComputeSegmentCount(objectInfo.GetPayloadSize(),
 		params.GetMaxSegmentSize())
 	replicates := params.GetRedundantDataChunkNum() + params.GetRedundantParityChunkNum()
-	replicateData, err := node.EncodeReplicateSegments(ctx, objectInfo.Id.Uint64(),
+	replicateData, err := node.EncodeReplicateSegments(ctx, objectInfo.Id,
 		segments, int(replicates), objectInfo.GetRedundancyType())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to encode payload", "error", err)
@@ -149,7 +149,7 @@ func (node *StoneNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (
 				processInfo.SegmentInfos[rIdx].Signature = signature
 				processInfo.SegmentInfos[rIdx].IntegrityHash = integrityHash
 				objectInfo.SecondarySpAddresses[rIdx] = sp.GetOperator().String()
-				node.spDB.SetObjectInfo(objectInfo.Id.Uint64(), objectInfo)
+				node.spDB.SetObjectInfo(objectInfo.Id.String(), objectInfo)
 				node.cache.Add(objectInfo.Id.Uint64(), processInfo)
 				log.CtxInfow(ctx, "success to sync payload to sp",
 					"sp", sp.GetOperator(), "endpoint", sp.GetEndpoint(), "replica_idx", rIdx)

@@ -5,6 +5,7 @@ import (
 	"net"
 	"sync/atomic"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
@@ -107,7 +108,7 @@ func (node *StoneNode) serve(errCh chan error) {
 }
 
 // EncodeReplicateSegments load segment data and encode according to redundancy type
-func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID uint64, segments uint32, replicates int,
+func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID sdkmath.Uint, segments uint32, replicates int,
 	rType storagetypes.RedundancyType) (data [][][]byte, err error) {
 	params, err := node.spDB.GetStorageParams()
 	if err != nil {
@@ -123,7 +124,7 @@ func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID uin
 	errCh := make(chan error, 10)
 	for segIdx := 0; segIdx < int(segments); segIdx++ {
 		go func(segIdx int) {
-			key := piecestore.EncodeSegmentPieceKey(objectID, uint32(segIdx))
+			key := piecestore.EncodeSegmentPieceKey(objectID.String(), uint32(segIdx))
 			segmentData, err := node.pieceStore.GetSegment(ctx, key, 0, 0)
 			if err != nil {
 				errCh <- err

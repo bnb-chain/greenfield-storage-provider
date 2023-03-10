@@ -27,7 +27,7 @@ func (s *SpDBImpl) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servic
 	}
 
 	insertObjectRecord := &ObjectTable{
-		ObjectID:             objectInfo.Id.Uint64(),
+		ObjectID:             objectInfo.Id.String(),
 		JobID:                insertJobRecord.JobID,
 		Owner:                objectInfo.GetOwner(),
 		BucketName:           objectInfo.GetBucketName(),
@@ -58,7 +58,7 @@ func (s *SpDBImpl) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servic
 }
 
 // UpdateJobState update JobTable record's state
-func (s *SpDBImpl) UpdateJobState(objectID uint64, state servicetypes.JobState) error {
+func (s *SpDBImpl) UpdateJobState(objectID string, state servicetypes.JobState) error {
 	queryObjectReturn := &ObjectTable{}
 	result := s.db.First(queryObjectReturn, "object_id = ?", objectID)
 	if result.Error != nil {
@@ -96,7 +96,7 @@ func (s *SpDBImpl) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
 }
 
 // GetJobByObjectID query JobTable by jobID and convert to service/types.JobContext
-func (s *SpDBImpl) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error) {
+func (s *SpDBImpl) GetJobByObjectID(objectID string) (*servicetypes.JobContext, error) {
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
@@ -118,7 +118,7 @@ func (s *SpDBImpl) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, 
 }
 
 // GetObjectInfo query ObjectTable by objectID and convert to storage/types.ObjectInfo.
-func (s *SpDBImpl) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error) {
+func (s *SpDBImpl) GetObjectInfo(objectID string) (*storagetypes.ObjectInfo, error) {
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
@@ -128,11 +128,15 @@ func (s *SpDBImpl) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, err
 	if err != nil {
 		return nil, err
 	}
+	Uint256Id, err := math.ParseUint(queryReturn.ObjectID)
+	if err != nil {
+		return nil, err
+	}
 	return &storagetypes.ObjectInfo{
 		Owner:                queryReturn.Owner,
 		BucketName:           queryReturn.BucketName,
 		ObjectName:           queryReturn.ObjectName,
-		Id:                   math.NewUint(queryReturn.ObjectID),
+		Id:                   Uint256Id,
 		PayloadSize:          queryReturn.PayloadSize,
 		IsPublic:             queryReturn.IsPublic,
 		ContentType:          queryReturn.ContentType,
@@ -146,7 +150,7 @@ func (s *SpDBImpl) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, err
 }
 
 // SetObjectInfo set ObjectTable's record by objectID
-func (s *SpDBImpl) SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error {
+func (s *SpDBImpl) SetObjectInfo(objectID string, objectInfo *storagetypes.ObjectInfo) error {
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	isNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)

@@ -6,7 +6,7 @@ import (
 
 // BucketTrafficTable table schema
 type BucketTrafficTable struct {
-	BucketID  uint64 `gorm:"primary_key"`
+	BucketID  string `gorm:"primary_key"`
 	YearMonth string `gorm:"primary_key"`
 
 	BucketName    string
@@ -24,8 +24,8 @@ func (BucketTrafficTable) TableName() string {
 type ReadRecordTable struct {
 	ReadRecordID uint64 `gorm:"primary_key;autoIncrement"`
 
-	BucketID    uint64 `gorm:"index:bucket_to_read_record"`
-	ObjectID    uint64 `gorm:"index:object_to_read_record"`
+	BucketID    string `gorm:"index:bucket_to_read_record"`
+	ObjectID    string `gorm:"index:object_to_read_record"`
 	UserAddress string `gorm:"index:user_to_read_record"`
 	ReadTime    int64  `gorm:"index:time_to_read_record"` // second timestamp
 

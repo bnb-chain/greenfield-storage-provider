@@ -17,7 +17,7 @@ func (challenge *Challenge) ChallengePiece(
 	ctx = log.Context(ctx, req)
 	resp = &types.ChallengePieceResponse{}
 
-	integrity, err := challenge.spDB.GetObjectIntegrity(req.GetObjectId())
+	integrity, err := challenge.spDB.GetObjectIntegrity(req.ObjectId.String())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get integrity hash from db", "error", err)
 		return
@@ -26,11 +26,11 @@ func (challenge *Challenge) ChallengePiece(
 	resp.PieceHash = integrity.Checksum
 
 	var key string
-	if req.GetReplicateIdx() < 0 {
-		key = piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())
+	if req.GetReplicaIdx() < 0 {
+		key = piecestore.EncodeSegmentPieceKey(req.ObjectId.String(), req.GetSegmentIdx())
 	} else {
-		key = piecestore.EncodeECPieceKey(req.GetObjectId(),
-			uint32(req.GetReplicateIdx()), req.GetSegmentIdx())
+		key = piecestore.EncodeECPieceKey(req.ObjectId.String(),
+			uint32(req.GetReplicaIdx()), req.GetSegmentIdx())
 	}
 	resp.PieceData, err = challenge.pieceStore.GetSegment(ctx, key, 0, -1)
 	if err != nil {

@@ -7,7 +7,7 @@ type SpInfoTable struct {
 	FundingAddress  string
 	SealAddress     string
 	ApprovalAddress string
-	TotalDeposit    int64
+	TotalDeposit    string
 	Status          int32
 	Endpoint        string
 	Moniker         string

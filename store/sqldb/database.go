@@ -12,11 +12,11 @@ type Job interface {
 	// CreateUploadJob create upload job and return job context
 	CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicetypes.JobContext, error)
 	// UpdateJobState update the state of a job by object id
-	UpdateJobState(objectID uint64, state servicetypes.JobState) error
+	UpdateJobState(objectID string, state servicetypes.JobState) error
 	// GetJobByID get job context by job id and return job context
 	GetJobByID(jobID uint64) (*servicetypes.JobContext, error)
 	// GetJobByObjectID get job context by object id
-	GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error)
+	GetJobByObjectID(objectID string) (*servicetypes.JobContext, error)
 
 	// Iterator
 	// Batch
@@ -25,15 +25,15 @@ type Job interface {
 // Object interface which contains get and set object info interface
 type Object interface {
 	// GetObjectInfo get object info by object id
-	GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error)
+	GetObjectInfo(objectID string) (*storagetypes.ObjectInfo, error)
 	// SetObjectInfo set(maybe overwrite) object info by object id
-	SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error
+	SetObjectInfo(objectID string, objectInfo *storagetypes.ObjectInfo) error
 }
 
 // ObjectIntegrity abstract object integrity interface
 type ObjectIntegrity interface {
 	// GetIntegrityMeta get integrity meta info by object id
-	GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error)
+	GetObjectIntegrity(objectID string) (*IntegrityMeta, error)
 	// SetIntegrityMeta set(maybe overwrite) integrity hash info to db
 	SetObjectIntegrity(integrity *IntegrityMeta) error
 }
@@ -75,16 +75,16 @@ type Traffic interface {
 
 	// GetBucketTraffic return bucket traffic info,
 	// notice maybe return (nil, nil) while there is no bucket traffic
-	GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error)
+	GetBucketTraffic(bucketID string, yearMonth string) (*BucketTraffic, error)
 
 	// GetReadRecord return record list by time range
 	GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 
 	// GetBucketReadRecord return bucket record list by time range
-	GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
+	GetBucketReadRecord(bucketID string, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 
 	// GetObjectReadRecord return object record list by time range
-	GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
+	GetObjectReadRecord(objectID string, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 
 	// GetUserReadRecord return user record list by time range
 	GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
@@ -62,7 +63,7 @@ func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectReques
 	//	offset, length = 0, objectInfo.Size
 	// }
 	var segmentInfo segments
-	segmentInfo, err = downloader.DownloadPieceInfo(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), offset, offset+length-1)
+	segmentInfo, err = downloader.DownloadPieceInfo(objectInfo.Id, objectInfo.GetPayloadSize(), offset, offset+length-1)
 	if err != nil {
 		return
 	}
@@ -90,7 +91,7 @@ type segments []*segment
 
 // DownloadPieceInfo compute the piece store info for download.
 // download interval [start, end]
-func (downloader *Downloader) DownloadPieceInfo(objectID, objectSize, start, end uint64) (pieceInfo segments, err error) {
+func (downloader *Downloader) DownloadPieceInfo(objectID sdkmath.Uint, objectSize, start, end uint64) (pieceInfo segments, err error) {
 	if objectSize == 0 || start > objectSize || end < start {
 		return pieceInfo, fmt.Errorf("param error, object size: %d, start: %d, end: %d", objectSize, start, end)
 	}
@@ -113,7 +114,7 @@ func (downloader *Downloader) DownloadPieceInfo(objectID, objectSize, start, end
 		}
 		if start >= currentStart && start <= currentEnd {
 			pieceInfo = append(pieceInfo, &segment{
-				pieceKey: piecestore.EncodeSegmentPieceKey(objectID, uint32(idx)),
+				pieceKey: piecestore.EncodeSegmentPieceKey(objectID.String(), uint32(idx)),
 				offset:   start - currentStart,
 				length:   currentEnd - start + 1,
 			})
@@ -123,7 +124,7 @@ func (downloader *Downloader) DownloadPieceInfo(objectID, objectSize, start, end
 		}
 		if end >= currentStart && end <= currentEnd {
 			pieceInfo = append(pieceInfo, &segment{
-				pieceKey: piecestore.EncodeSegmentPieceKey(objectID, uint32(idx)),
+				pieceKey: piecestore.EncodeSegmentPieceKey(objectID.String(), uint32(idx)),
 				offset:   0,
 				length:   end - currentStart + 1,
 			})
@@ -131,7 +132,7 @@ func (downloader *Downloader) DownloadPieceInfo(objectID, objectSize, start, end
 		}
 		if start < currentStart && end > currentEnd {
 			pieceInfo = append(pieceInfo, &segment{
-				pieceKey: piecestore.EncodeSegmentPieceKey(objectID, uint32(idx)),
+				pieceKey: piecestore.EncodeSegmentPieceKey(objectID.String(), uint32(idx)),
 			})
 		}
 	}

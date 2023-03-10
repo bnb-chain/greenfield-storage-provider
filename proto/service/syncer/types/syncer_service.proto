@@ -3,6 +3,8 @@ package service.syncer.types;
 
 import "greenfield/storage/types.proto";
 import "service/types/storage_provider.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/syncer/types";
 
@@ -10,12 +12,12 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/sy
 message SyncObjectRequest {
   // object_info defines the information of the object.
   bnbchain.greenfield.storage.ObjectInfo object_info = 1;
-  // replicate_idx defines the index of replicate.
-  uint32 replicate_idx = 2;
+  // replica_idx defines the index of replication.
+  uint32 replica_idx = 2;
   // segment_size defines the spilt size of replicate data.
   uint64 segment_size = 3;
-  // replicate_data defines the data that replicate to storage provider.
-  bytes replicate_data = 4;
+  // replica_data defines the data that replicate to storage provider.
+  bytes replica_data = 4;
 }
 
 // SyncObjectResponse is response type for the SyncObject RPC method.
@@ -29,7 +31,11 @@ message SyncObjectResponse {
 // QuerySyncingRequest is request type for the QuerySyncingObject RPC method.
 message QuerySyncingObjectRequest {
   // object_id defines the unique id of the object.
-  uint64 object_id = 1;
+  string object_id = 1[
+    (cosmos_proto.scalar) = "cosmos.Uint",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryUploadingResponse is response type for the QuerySyncingObject RPC method.

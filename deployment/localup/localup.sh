@@ -81,7 +81,7 @@ make_config() {
         sed -i -e "s/9533/$(($cur_port+533))/g" config.toml
         sed -i -e "s/9633/$(($cur_port+633))/g" config.toml
         sed -i -e "s/9733/$(($cur_port+733))/g" config.toml
-        sed -i -e "s/SP_OPERATOR_PUB_KEY/${OPERATOR_ADDRESS}/g" config.toml
+        sed -i -e "s/SpOperatorAddress = \".*\"/SpOperatorAddress = \"${OPERATOR_ADDRESS}\"/g" config.toml
         sed -i -e "s/OperatorPrivateKey = \".*\"/OperatorPrivateKey = \"${OPERATOR_PRIVATE_KEY}\"/g" config.toml
         sed -i -e "s/FundingPrivateKey = \".*\"/FundingPrivateKey = \"${FUNDING_PRIVATE_KEY}\"/g" config.toml
         sed -i -e "s/SealPrivateKey = \".*\"/SealPrivateKey = \"${SEAL_PRIVATE_KEY}\"/g" config.toml
@@ -91,7 +91,7 @@ make_config() {
         sed -i -e "s/localhost\:9090/${CHAIN_GRPC_ENDPOINT}/g" config.toml
         sed -i -e "s/localhost\:26750/${CHAIN_HTTP_ENDPOINT}/g" config.toml
         echo "succeed to generate config.toml in "${sp_dir}
-      cd -
+      cd - >/dev/null
       index=$(($index+1))
   done
 }
@@ -104,7 +104,8 @@ start_sp() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
     cd ${sp_dir}
     nohup ./${sp_bin_name}${index} --config config.toml </dev/null >log.txt 2>&1&
-    cd -
+    echo "succeed to start sp in "${sp_dir}
+    cd - >/dev/null
     index=$(($index+1))
   done
   echo "succeed to start storage providers"
@@ -130,7 +131,7 @@ reset_db() {
     mysql -u ${USER} -h ${hostname} -P ${port} -p${PWD} -e "drop database if exists ${DATABASE}"
     mysql -u ${USER} -h ${hostname} -P ${port} -p${PWD} -e "create database ${DATABASE}"
     echo "succeed to reset db in "${sp_dir}
-    cd -
+    cd - >/dev/null
   done
 }
 
@@ -142,7 +143,7 @@ reset_store() {
       cd ${sp_dir}
       rm -rf ./data
       echo "succeed to reset store in "${sp_dir}
-      cd -
+      cd - >/dev/null
     done
 }
 

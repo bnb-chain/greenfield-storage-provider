@@ -3,6 +3,8 @@ package service.uploader.types;
 
 import "greenfield/storage/types.proto";
 import "service/types/storage_provider.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types";
 
@@ -21,7 +23,11 @@ message UploadObjectResponse {
 // QueryUploadingObjectRequest is request type for the QueryUploadingObject RPC method.
 message QueryUploadingObjectRequest {
   // object_id defines the unique id of the object.
-  uint64 object_id = 1;
+  string object_id = 1[
+    (cosmos_proto.scalar) = "cosmos.Uint",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryUploadingObjectResponse is response type for the QueryUploadingObject RPC method.

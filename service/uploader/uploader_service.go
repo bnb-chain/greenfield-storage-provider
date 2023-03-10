@@ -31,14 +31,14 @@ func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObject
 	defer func(resp *types.UploadObjectResponse, err error) {
 		if err != nil {
 			log.Errorw("failed to replicate payload", "err", err)
-			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.String(),
 				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
 		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checksum)
 		if err != nil {
 			log.Errorw("failed to sign integrity hash", "err", err)
-			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.String(),
 				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
@@ -48,7 +48,7 @@ func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObject
 		err = uploader.spDB.SetObjectIntegrity(integrityMeta)
 		if err != nil {
 			log.Errorw("failed to write integrity hash to db", "error", err)
-			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.String(),
 				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
@@ -58,13 +58,13 @@ func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObject
 		err = uploader.stone.ReplicateObject(context.Background(), traceInfo.GetObjectInfo())
 		if err != nil {
 			log.Errorw("failed to notify stone node to replicate object", "error", err)
-			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.String(),
 				servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
 			return
 		}
 		err = stream.SendAndClose(resp)
 		pstream.Close()
-		uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+		uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.String(),
 			servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
 		log.Infow("finish to upload payload", "error", err)
 	}(&resp, err)
@@ -91,15 +91,15 @@ func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObject
 			}
 			if init {
 				pstream.InitAsyncPayloadStream(
-					req.GetObjectInfo().Id.Uint64(),
+					req.ObjectInfo.Id,
 					math.MaxUint32,
 					segmentSize,
 					storagetypes.REDUNDANCY_REPLICA_TYPE)
-				integrityMeta.ObjectID = req.GetObjectInfo().Id.Uint64()
+				integrityMeta.ObjectID = req.GetObjectInfo().Id.String()
 				traceInfo.ObjectInfo = req.GetObjectInfo()
 				uploader.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
 				uploader.spDB.CreateUploadJob(req.GetObjectInfo())
-				uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
+				uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.String(),
 					servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING)
 				init = false
 			}
@@ -139,7 +139,7 @@ func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObject
 func (uploader *Uploader) QueryUploadingObject(ctx context.Context, req *types.QueryUploadingObjectRequest) (
 	resp *types.QueryUploadingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
-	objectID := req.GetObjectId()
+	objectID := req.ObjectId.String()
 	log.CtxDebugw(ctx, "query uploading object", "objectID", objectID)
 	val, ok := uploader.cache.Get(objectID)
 	if !ok {

@@ -21,7 +21,7 @@ func (JobTable) TableName() string {
 
 // ObjectTable table schema
 type ObjectTable struct {
-	ObjectID             uint64 `gorm:"primary_key"`
+	ObjectID             string `gorm:"primary_key"`
 	JobID                uint64 `gorm:"index:job_to_object"` // Job.JobID
 	Owner                string
 	BucketName           string

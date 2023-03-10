@@ -12,20 +12,20 @@ import (
 var numberRegex = regexp.MustCompile("[0-9]+")
 
 // EncodeSegmentPieceKey encodes segment piece store key
-func EncodeSegmentPieceKey(objectID uint64, segmentIndex uint32) string {
-	return fmt.Sprintf("%d_s%d", objectID, segmentIndex)
+func EncodeSegmentPieceKey(objectID string, segmentIndex uint32) string {
+	return fmt.Sprintf("%s_s%d", objectID, segmentIndex)
 }
 
 // DecodeSegmentPieceKey decodes segment piece store key
 // Valid segment piece key: objectID_s0
-func DecodeSegmentPieceKey(pieceKey string) (uint64, uint32, error) {
+func DecodeSegmentPieceKey(pieceKey string) (string, uint32, error) {
 	keys := strings.Split(pieceKey, "_")
 	if valid := CheckSegmentPieceKey(keys); !valid {
 		log.Errorw("segment piece key is wrong", "segment piece key", pieceKey)
-		return 0, 0, fmt.Errorf("invalid segment piece key")
+		return "0", 0, fmt.Errorf("invalid segment piece key")
 	}
 
-	objectID, _ := strconv.ParseUint(keys[0], 10, 64)
+	objectID := keys[0]
 	s := numberRegex.FindString(keys[1])
 	segmentIndex, _ := strconv.ParseUint(s, 10, 32)
 
@@ -33,20 +33,20 @@ func DecodeSegmentPieceKey(pieceKey string) (uint64, uint32, error) {
 }
 
 // EncodeECPieceKey encodes ec piece store key
-func EncodeECPieceKey(objectID uint64, segmentIndex, ecIndex uint32) string {
-	return fmt.Sprintf("%d_s%d_p%d", objectID, segmentIndex, ecIndex)
+func EncodeECPieceKey(objectID string, segmentIndex, ecIndex uint32) string {
+	return fmt.Sprintf("%s_s%d_p%d", objectID, segmentIndex, ecIndex)
 }
 
 // DecodeECPieceKey decodes ec piece store key
 // Valid EC piece key: objectID_s0_p0
-func DecodeECPieceKey(pieceKey string) (uint64, uint32, uint32, error) {
+func DecodeECPieceKey(pieceKey string) (string, uint32, uint32, error) {
 	keys := strings.Split(pieceKey, "_")
 	if valid := CheckECPieceKey(keys); !valid {
 		log.Errorw("ec piece key is wrong", "ec piece key", pieceKey)
-		return 0, 0, 0, fmt.Errorf("invalid EC piece key")
+		return "0", 0, 0, fmt.Errorf("invalid EC piece key")
 	}
 
-	objectID, _ := strconv.ParseUint(keys[0], 10, 64)
+	objectID := keys[0]
 	s := numberRegex.FindString(keys[1])
 	segmentIndex, _ := strconv.ParseUint(s, 10, 32)
 	e := numberRegex.FindString(keys[2])
