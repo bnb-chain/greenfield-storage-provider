@@ -47,7 +47,7 @@ IMPROVEMENT
 * [\#83](https://github.com/bnb-chain/greenfield-storage-provider/pull/83) chore(sql): polish sql workflow
 * [\#87](https://github.com/bnb-chain/greenfield-storage-provider/pull/87) chore: add setup-test-env tool
 
-BIILD
+BUILD
 * [\#74](https://github.com/bnb-chain/greenfield-storage-provider/pull/74) ci: add docker release pipe
 * [\#67](https://github.com/bnb-chain/greenfield-storage-provider/pull/67) ci: add commit lint, code lint and unit test ci files
 * [\#85](https://github.com/bnb-chain/greenfield-storage-provider/pull/85) chore: add pull request template
