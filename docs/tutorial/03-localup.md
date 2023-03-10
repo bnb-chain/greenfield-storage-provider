@@ -2,10 +2,12 @@
 
 ## Dependence
 * SQLDB: MariaDB - 5.5.68 and Aurora(MySQL 5.7) 2.10.3 has been practiced.
-* Greenfield: [setup local chain](https://github.com/bnb-chain/greenfield/tree/master/deployment)
 
-## SP join Greenfield local chain
-> TODO:: waiting for the greenfield chain doc pr merged
+## Setup local greenfield chain
+[setup private netWork](https://github.com/bnb-chain/greenfield/blob/master/docs/tutorial/03-local-network.md)
+
+## Add SP to greenfield chain
+[add sp to greenfield chain](https://github.com/bnb-chain/greenfield/blob/fynn/doc/docs/tutorial/07-storage-provider.md)
 
 ## Setup local sps
 1. Generate localup env
