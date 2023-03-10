@@ -118,9 +118,9 @@ func (g *Gateway) Start(ctx context.Context) error {
 func (g *Gateway) serve() {
 	router := mux.NewRouter().SkipClean(true)
 	middleware := metrics.NewPrometheusMiddleware(metrics.Opts{})
-	router.Use(middleware.InstrumentHandler)
 	g.registerHandler(router)
 	router.Path("/metrics").Handler(promhttp.Handler())
+	router.Use(middleware.InstrumentHandler)
 	server := &http.Server{
 		Addr:    g.config.HTTPAddress,
 		Handler: router,
