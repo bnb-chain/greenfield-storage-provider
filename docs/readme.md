@@ -13,6 +13,7 @@ This section dives into the internals of the Greenfield Storage Provider impleme
   - Manager
   - Tasknode
 - Key Workflow
+  - Get Approval
   - Upload object
   - Download object
   - Challenge piece
