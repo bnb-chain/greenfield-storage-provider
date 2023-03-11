@@ -41,9 +41,9 @@ var (
 	// ErrAuthorizationFormat defines the invalid authorization format error
 	ErrAuthorizationFormat = errors.New("authorization format error")
 	// ErrRequestConsistent defines the invalid request checksum error
-	ErrRequestConsistent = errors.New("failed to check request consistent")
+	ErrRequestConsistent = errors.New("request is tampered")
 	// ErrSignatureConsistent defines the invalid signature error
-	ErrSignatureConsistent = errors.New("failed to check signature consistent")
+	ErrSignatureConsistent = errors.New("signature is not consistent")
 	// ErrUnsupportedSignType defines the unsupported signature type error
 	ErrUnsupportedSignType = errors.New("unsupported signature type")
 	// ErrEmptyReqHeader defines the empty header error
@@ -53,13 +53,13 @@ var (
 	// ErrNoPermission defines the authorization error
 	ErrNoPermission = errors.New("no permission")
 	// ErrCheckObjectCreated defines the check object state error
-	ErrCheckObjectCreated = errors.New("failed to check object created")
+	ErrCheckObjectCreated = errors.New("object is not created")
 	// ErrCheckObjectSealed defines the check object state error
-	ErrCheckObjectSealed = errors.New("failed to check object sealed")
+	ErrCheckObjectSealed = errors.New("object is not sealed")
 	// ErrCheckPayment defines check payment status
-	ErrCheckPayment = errors.New("failed to check payment account")
+	ErrCheckPayment = errors.New("payment account is not active")
 	// ErrCheckQuota defines check quota
-	ErrCheckQuota = errors.New("failed to check read quota")
+	ErrCheckQuota = errors.New("quota is not enough")
 )
 
 // signer service error

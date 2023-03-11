@@ -7,8 +7,8 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/ch
 message ChallengePieceRequest {
   // object_id defines the challenge object id
   uint64 object_id = 1;
-  // replicate_idx defines the challenge replicate idx
-  int32 replicate_idx = 2;
+  // replica_idx defines the challenge replica idx
+  int32 replica_idx = 2;
   // segment_idx defines the challenge segment idx
   uint32 segment_idx = 5;
 }

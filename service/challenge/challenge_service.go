@@ -26,11 +26,11 @@ func (challenge *Challenge) ChallengePiece(
 	resp.PieceHash = integrity.Checksum
 
 	var key string
-	if req.GetReplicateIdx() < 0 {
+	if req.GetReplicaIdx() < 0 {
 		key = piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())
 	} else {
 		key = piecestore.EncodeECPieceKey(req.GetObjectId(),
-			uint32(req.GetReplicateIdx()), req.GetSegmentIdx())
+			req.GetSegmentIdx(), uint32(req.GetReplicaIdx()))
 	}
 	resp.PieceData, err = challenge.pieceStore.GetSegment(ctx, key, 0, -1)
 	if err != nil {

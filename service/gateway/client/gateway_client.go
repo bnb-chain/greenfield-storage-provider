@@ -89,7 +89,7 @@ func (p *PieceDataReader) Read(buf []byte) (n int, err error) {
 // SyncPieceData sync piece data to the target storage-provider.
 func (gatewayClient *GatewayClient) SyncPieceData(
 	objectInfo *types.ObjectInfo,
-	replicateIdx uint32,
+	replicaIdx uint32,
 	segmentSize uint32,
 	pieceData [][]byte) (integrityHash []byte, signature []byte, err error) {
 	pieceDataReader, err := NewPieceDataReader(pieceData)
@@ -104,7 +104,7 @@ func (gatewayClient *GatewayClient) SyncPieceData(
 	}
 	marshalObjectInfo := hex.EncodeToString(types.ModuleCdc.MustMarshalJSON(objectInfo))
 	req.Header.Add(model.GnfdObjectInfoHeader, marshalObjectInfo)
-	req.Header.Add(model.GnfdReplicateIdxHeader, util.Uint32ToString(replicateIdx))
+	req.Header.Add(model.GnfdReplicaIdxHeader, util.Uint32ToString(replicaIdx))
 	req.Header.Add(model.GnfdSegmentSizeHeader, util.Uint32ToString(segmentSize))
 	req.Header.Add(model.ContentTypeHeader, model.OctetStream)
 

@@ -120,7 +120,7 @@ func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, obje
 		if err != nil {
 			continue
 		}
-		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_CREATED {
+		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
 			seal = true
 			err = nil
 			return

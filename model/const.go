@@ -174,8 +174,8 @@ const (
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
 	// GnfdObjectInfoHeader define object info, which is used by syncer
 	GnfdObjectInfoHeader = "X-Gnfd-Object-Info"
-	// GnfdReplicateIdxHeader defines replicate idx, which is used by syncer
-	GnfdReplicateIdxHeader = "X-Gnfd-Replicate-Idx"
+	// GnfdReplicaIdxHeader defines replica idx, which is used by syncer
+	GnfdReplicaIdxHeader = "X-Gnfd-Replica-Idx"
 	// GnfdSegmentSizeHeader defines segment size, which is used by syncer
 	GnfdSegmentSizeHeader = "X-Gnfd-Segment-Size"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by syncer
