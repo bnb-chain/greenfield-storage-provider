@@ -8,45 +8,28 @@ will respond to users' requests to write (upload) and read (download) data, and 
 authentications.
 
 ## Architecture
-[architecture.png](!docs/asset/architecture.png)
+<div align=center>
+<img src="../asset/architecture.png" alt="architecture.png" width="975" height="700" />
+</div>
+&emsp;
+                                                                                                
+**Gateway** is the entry point of each SP. It parses requests from the  client and dispatches them to special service.
 
-### Gateway
-The Gateway is the only service that interacts with the client, it receives the clients' 
-requests and dispatches them to the Backend Service by RPC. Most client requests are 
-HTTP requests following the S3 protocol.
+**Uploader** receives the object's payload data, splits it into segments, and stores them in piece store.
 
-### Uploader
-The Uploader is responsible for uploading payload data, it's responsible for storing
-data to Primary SP, and synchronizing to Secondary SP for Background Jobs completion.
+**Downloader** handles the user's downloading request and gets object data from the piece store.
 
-### Downloader
-The Downloader is responsible for reading payload and traffic billing, only Primary 
-SP Data is responsible for responding to user GetObjet requests.
+**Receiver** receives data pieces from Primary SP and stores them in the piece store when SP works as a secondary SP.
 
-## Challenge
-The Challenge is responsible for the challenger's(user or internal model) request, it
-will return the payload integrity hash for the challenger to check whether the payload 
-data is correctly stored.
+**Challenge** handles HA challenge requests and returns the challenged piece data and other pieces' hashes of the object.
 
-### Receiver
-The Receiver is a model unique to secondary SP, it's responsible for receiving a copy of
-payload from the primary SP and will compute the payload integrity hash of the secondary 
-SP and store it in the meta DB.
+**TaskNode** works as the execute unit, it watches tasks(the smallest unit of a job) and executes them.
 
-### Signer
-The Signer is a singleton, holds and uses the SP's private key to sign the transaction 
-then broadcasts to the Greenfield, Eg. SealObjectTX after uploading payload.
+**Manager** responsible for the service management of SP.
 
-### Manager
-The Manager is responsible for the service management of SP.
+**Signer** signs the transaction messages to the  Greenfield chain with the SP's private key.
 
-### TaskNode
-The TaskNode is responsible for executing the background  job, such as syncing the primary SP's 
-payload to the secondary SP.
+**PieceStore** interacts with underlying storage vendors, Eg. AWS S3.
 
-### PieceStore
-The module interacts with underlying storage vendors, with vendor-agnostic, production-
-ready, high-performance, and other characteristics, Eg. AWS S3.
+**JobDB** stores all the contexts of the background jobs and the metadata of the SP.
 
-### Job DB
-Store the context of background jobs, and SP meta data.
