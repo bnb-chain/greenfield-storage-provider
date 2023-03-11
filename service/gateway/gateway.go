@@ -8,7 +8,6 @@ import (
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -30,7 +29,6 @@ type Gateway struct {
 
 	// chain is the required component, used to check authorization
 	chain *chainclient.Greenfield
-	spDB  sqldb.SPDB
 
 	// the below components are optional according to the config
 	uploader   *uploaderclient.UploaderClient
@@ -53,10 +51,6 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 	}
 	if g.chain, err = chainclient.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Errorw("failed to create chain client", "error", err)
-		return nil, err
-	}
-	if g.spDB, err = sqldb.NewSpDB(cfg.SpDBConfig); err != nil {
-		log.Errorw("failed to create spdb client", "error", err)
 		return nil, err
 	}
 

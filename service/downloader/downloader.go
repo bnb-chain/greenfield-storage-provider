@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
@@ -20,7 +19,6 @@ import (
 type Downloader struct {
 	cfg        *DownloaderConfig
 	spDB       sqldb.SPDB
-	chain      *gnfd.Greenfield
 	pieceStore *psclient.StoreClient
 }
 
@@ -32,11 +30,6 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 		log.Errorw("failed to create piece store client", "error", err)
 		return nil, err
 	}
-	chain, err := gnfd.NewGreenfield(cfg.ChainConfig)
-	if err != nil {
-		log.Errorw("failed to create chain client", "error", err)
-		return nil, err
-	}
 	spDB, err := sqldb.NewSpDB(cfg.SpDBConfig)
 	if err != nil {
 		log.Errorw("failed to create spdb client", "error", err)
@@ -45,7 +38,6 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 	downloader := &Downloader{
 		cfg:        cfg,
 		spDB:       spDB,
-		chain:      chain,
 		pieceStore: pieceStore,
 	}
 	return downloader, nil

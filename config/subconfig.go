@@ -21,7 +21,6 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 		SpOperatorAddress: cfg.SpOperatorAddress,
 		Domain:            cfg.Domain,
 		ChainConfig:       cfg.ChainConfig,
-		SpDBConfig:        cfg.SpDBConfig,
 	}
 	if _, ok := cfg.HTTPAddress[model.GatewayService]; ok {
 		gCfg.HTTPAddress = cfg.HTTPAddress[model.GatewayService]
@@ -89,7 +88,6 @@ func (cfg *StorageProviderConfig) MakeUploaderConfig() (*uploader.UploaderConfig
 func (cfg *StorageProviderConfig) MakeDownloaderConfig() (*downloader.DownloaderConfig, error) {
 	dCfg := &downloader.DownloaderConfig{
 		SpDBConfig:       cfg.SpDBConfig,
-		ChainConfig:      cfg.ChainConfig,
 		PieceStoreConfig: cfg.PieceStoreConfig,
 	}
 	if _, ok := cfg.GRPCAddress[model.DownloaderService]; ok {

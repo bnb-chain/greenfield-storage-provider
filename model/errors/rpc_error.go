@@ -50,12 +50,16 @@ var (
 	ErrEmptyReqHeader = errors.New("request header is empty")
 	// ErrInvalidHeader defines the invalid header error
 	ErrInvalidHeader = errors.New("invalid request header")
-	// ErrHasNoPermission defines the authorization error
-	ErrHasNoPermission = errors.New("has no permission")
-	// ErrCheckObjectState defines the check object state error
-	ErrCheckObjectState = errors.New("failed to check object state")
-	// ErrCheckBilling defines check payment status and bucket quota
-	ErrCheckBilling = errors.New("failed to check billing")
+	// ErrNoPermission defines the authorization error
+	ErrNoPermission = errors.New("no permission")
+	// ErrCheckObjectCreated defines the check object state error
+	ErrCheckObjectCreated = errors.New("failed to check object created")
+	// ErrCheckObjectSealed defines the check object state error
+	ErrCheckObjectSealed = errors.New("failed to check object sealed")
+	// ErrCheckPayment defines check payment status
+	ErrCheckPayment = errors.New("failed to check payment account")
+	// ErrCheckQuota defines check quota
+	ErrCheckQuota = errors.New("failed to check read quota")
 )
 
 // signer service error

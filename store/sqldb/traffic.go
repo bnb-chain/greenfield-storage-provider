@@ -53,7 +53,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 
 	// check quota
 	if bucketTraffic.ReadCostSize+record.ReadSize > quota.ReadQuotaSize {
-		return errors.ErrCheckBilling
+		return errors.ErrCheckQuota
 	}
 
 	// update bucket traffic

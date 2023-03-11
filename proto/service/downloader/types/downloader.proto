@@ -1,27 +1,31 @@
 syntax = "proto3";
 package service.downloader.types;
 
+import "greenfield/storage/types.proto";
+
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/downloader/types";
 
 // DownloaderObjectRequest is request type for the DownloaderObject RPC method.
 message DownloaderObjectRequest {
-  // bucket_name defines the download bucket name
-  string bucket_name = 1;
-  // object_name defines the download object name
-  string object_name = 2;
+  // bucket_info defines the information of the bucket.
+  bnbchain.greenfield.storage.BucketInfo bucket_info = 1;
+  // object_info defines the information of the object.
+  bnbchain.greenfield.storage.ObjectInfo object_info = 2;
+  // user_address defines the request user address.
+  string user_address = 3;
   // offset defines the download payload offset
-  uint64 offset = 3;
+  uint64 offset = 4;
   // length defines the download payload length
-  uint64 length = 4; // if length == 0, download all object data
+  uint64 length = 5; // if length == 0, download all object data
   // is_range indicate whether it is rang download, compatible aws s3
-  bool is_range = 5;
+  bool is_range = 6;
   // range_start defines the start of range
   // [range_start, range_end], range_start >= object_size is invalid, download all object data
-  int64 range_start = 6;
+  int64 range_start = 7;
   // range_end defines the end of range
   // range_end >= object_size is invalid, download all object data
   // range_end < 0, download [range_start, object_end]
-  int64 range_end = 7;
+  int64 range_end = 8;
 }
 
 // DownloaderObjectResponse is response type for the DownloaderObject RPC method.
