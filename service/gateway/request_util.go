@@ -13,6 +13,9 @@ import (
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 
@@ -20,6 +23,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
+	authclient "github.com/bnb-chain/greenfield-storage-provider/service/auth/client"
+	authtypes "github.com/bnb-chain/greenfield-storage-provider/service/auth/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
@@ -33,6 +38,7 @@ type requestContext struct {
 	vars       map[string]string
 	// TODO: for auth v2 test, remove it in the future
 	skipAuth   bool
+	authClient *authclient.AuthClient
 	bucketInfo *storagetypes.BucketInfo
 	objectInfo *storagetypes.ObjectInfo
 	// accountID is used to provide authentication to the sp
@@ -93,15 +99,24 @@ func signaturePrefix(version, algorithm string) string {
 }
 
 // verifySign used to verify request signature, return nil if check succeed
-func (reqContext *requestContext) verifySignature() (sdk.AccAddress, error) {
+func (g *Gateway) verifySignature(reqContext *requestContext) (sdk.AccAddress, error) {
 	requestSignature := reqContext.request.Header.Get(model.GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
 		return reqContext.verifySignatureV1(requestSignature[len(v1SignaturePrefix):])
 	}
+	// v2 auth should be removed once we have confirmed those clients (like dapp) are working well with off chain auth solutions below
 	v2SignaturePrefix := signaturePrefix(model.SignTypeV2, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
 		return reqContext.verifySignatureV2(requestSignature[len(v2SignaturePrefix):])
+	}
+	personalSignSignaturePrefix := signaturePrefix(model.SignTypePersonal, model.SignAlgorithm)
+	if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
+		return reqContext.verifyPersonalSignature(requestSignature[len(personalSignSignaturePrefix):])
+	}
+	OffChainSignaturePrefix := signaturePrefix(model.SignTypeOffChain, model.SignAlgorithmEddsa)
+	if strings.HasPrefix(requestSignature, OffChainSignaturePrefix) {
+		return g.verifyOffChainSignature(reqContext, requestSignature[len(OffChainSignaturePrefix):])
 	}
 	return nil, errors.ErrUnsupportedSignType
 }
@@ -156,6 +171,7 @@ func (reqContext *requestContext) verifySignatureV1(requestSignature string) (sd
 }
 
 // verifySignatureV2 used to verify request type v2 signature, return (address, nil) if check succeed
+// todo to be removed after off-chain-auth is used in real case
 func (reqContext *requestContext) verifySignatureV2(requestSignature string) (sdk.AccAddress, error) {
 	var (
 		signature []byte
@@ -184,6 +200,100 @@ func (reqContext *requestContext) verifySignatureV2(requestSignature string) (sd
 	// TODO: parse metamask signature and check timeout
 	reqContext.skipAuth = true
 	return sdk.AccAddress{}, nil
+}
+
+func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string, error) {
+	var (
+		signedMsg string
+		signature string
+	)
+	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
+	signatureItems := strings.Split(requestSignature, ",")
+	if len(signatureItems) != 2 {
+		return nil, nil, errors.ErrAuthorizationFormat
+	}
+	for _, item := range signatureItems {
+		pair := strings.Split(item, "=")
+		if len(pair) != 2 {
+			return nil, nil, errors.ErrAuthorizationFormat
+		}
+		switch pair[0] {
+		case model.SignedMsg:
+			signedMsg = pair[1]
+		case model.Signature:
+			signature = pair[1]
+		default:
+			return nil, nil, errors.ErrAuthorizationFormat
+		}
+	}
+
+	return &signedMsg, &signature, nil
+}
+
+func (reqContext *requestContext) verifyPersonalSignature(requestSignature string) (sdk.AccAddress, error) {
+	var (
+		signedMsg *string
+		signature []byte
+		err       error
+	)
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	if err != nil {
+		return nil, err
+	}
+	signature, err = hexutil.Decode(*sigString)
+	if err != nil {
+		return nil, err
+	}
+
+	realMsgToSign := accounts.TextHash([]byte(*signedMsg))
+
+	if len(signature) != crypto.SignatureLength {
+		log.Errorw("signature length (actual: %d) doesn't match typical [R||S||V] signature 65 bytes")
+		return nil, errors.ErrSignatureConsistent
+	}
+	if signature[crypto.RecoveryIDOffset] == 27 || signature[crypto.RecoveryIDOffset] == 28 {
+		signature[crypto.RecoveryIDOffset] -= 27
+	}
+
+	// check signature consistent
+	addr, _, err := signer.RecoverAddr(realMsgToSign, signature)
+	if err != nil {
+		log.Errorw("failed to recover address")
+		return nil, errors.ErrSignatureConsistent
+	}
+
+	return addr, nil
+}
+
+// verifyOffChainSignature used to verify request type v2 signature, return (address, nil) if check succeed
+func (g *Gateway) verifyOffChainSignature(reqContext *requestContext, requestSignature string) (sdk.AccAddress, error) {
+	var (
+		signedMsg *string
+		err       error
+	)
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	if err != nil {
+		return nil, err
+	}
+
+	req := &authtypes.VerifyOffChainSignatureRequest{
+		AccountId:     reqContext.request.Header.Get(model.GnfdUserAddressHeader),
+		Domain:        reqContext.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader),
+		OffChainSig:   *sigString,
+		RealMsgToSign: *signedMsg,
+	}
+	ctx := log.Context(context.Background(), req)
+	verifyOffChainSignatureResp, err := g.auth.VerifyOffChainSignature(ctx, req)
+	if err != nil {
+		log.Errorf("failed to verifyOffChainSignature", "error", err)
+		return nil, err
+	}
+	if verifyOffChainSignatureResp.Result == true {
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(reqContext.request.Header.Get(model.GnfdUserAddressHeader))
+		return userAddress, nil
+	} else {
+		return nil, errors.ErrSignatureConsistent
+	}
 }
 
 func parseRange(rangeStr string) (bool, int64, int64) {
