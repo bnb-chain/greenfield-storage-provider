@@ -14,6 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	authclient "github.com/bnb-chain/greenfield-storage-provider/service/auth/client"
 	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
 	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
 	metadataclient "github.com/bnb-chain/greenfield-storage-provider/service/metadata/client"
@@ -40,6 +41,7 @@ type Gateway struct {
 	receiver   *receiverclient.ReceiverClient
 	signer     *signerclient.SignerClient
 	metadata   *metadataclient.MetadataClient
+	auth       *authclient.AuthClient
 }
 
 // NewGatewayService return the gateway instance
@@ -89,6 +91,12 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 	if cfg.MetadataServiceAddress != "" {
 		if gateway.metadata, err = metadataclient.NewMetadataClient(cfg.MetadataServiceAddress); err != nil {
 			log.Errorw("failed to create metadata client", "error", err)
+			return nil, err
+		}
+	}
+	if cfg.AuthServiceAddress != "" {
+		if gateway.auth, err = authclient.NewAuthClient(cfg.AuthServiceAddress); err != nil {
+			log.Errorw("failed to create auth client", "error", err)
 			return nil, err
 		}
 	}

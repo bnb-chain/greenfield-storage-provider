@@ -1,7 +1,8 @@
-Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager", "p2p"]
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager", "p2p", "auth"]
 SpOperatorAddress = "0xe620C05870A2392E4987676b345026E6C6228388"
 
 [Endpoint]
+auth = "localhost:13033"
 challenge = "localhost:13333"
 downloader = "localhost:13233"
 gateway = "gnfd.nodereal.com"
@@ -13,6 +14,7 @@ tasknode = "localhost:13433"
 uploader = "localhost:13133"
 
 [ListenAddress]
+auth = "localhost:13033"
 challenge = "localhost:13333"
 downloader = "localhost:13233"
 gateway = "127.0.0.1:9036"
