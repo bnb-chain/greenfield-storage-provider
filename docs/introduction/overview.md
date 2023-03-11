@@ -7,6 +7,7 @@ and the corresponding roles they play. They use Greenfield as the ledger and the
 will respond to users' requests to write (upload) and read (download) data, and serve as the gatekeeper for user rights and
 authentications.
 
+// TODO:: change picture
 ## Architecture
 <div align=center>
 <img src="../asset/architecture.png" alt="architecture.png" width="975" height="700" />

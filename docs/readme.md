@@ -6,17 +6,14 @@ This section dives into the internals of the Greenfield Storage Provider impleme
 - Introduction
   - [Overview](introduction/overview.md)
 - Modules
-  - Uploader
-  - Downloader
-  - Receiver
-  - Challenge
-  - Manager
-  - Tasknode
+  - Redundancy
+  - PieceStore
+  - Storage Provider DB
 - Key Workflow
   - Get Approval
-  - Upload object
-  - Download object
-  - Challenge piece
-- Run Node
-  - [Deployment](docs/tutorial/01-deployment.md)
-  - [Local Test](docs/tutorial/03-localup.md) 
+  - Upload Payload
+  - Download Payload
+  - Challenge Piece
+- Run SP
+  - [Deployment](run-book/01-deployment.md)
+  - [Local Test](run-book/03-localup.md) 
