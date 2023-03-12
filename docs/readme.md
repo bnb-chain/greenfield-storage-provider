@@ -11,7 +11,7 @@ This section dives into the internals of the Greenfield Storage Provider impleme
   - Storage Provider DB
 - Key Workflow
   - Get Approval
-  - Upload Payload
+  - [Upload Payload](workflow/uploader_payload.md)
   - Download Payload
   - Challenge Piece
 - Run SP
