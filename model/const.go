@@ -114,8 +114,8 @@ const (
 const (
 	// DefaultStreamBufSize defines gateway stream forward payload buf size
 	DefaultStreamBufSize = 64 * 1024
-	// DefaultExpiredHeight defines approval expired height
-	DefaultExpiredHeight = 100
+	// DefaultTimeoutHeight defines approval timeout height
+	DefaultTimeoutHeight = 100
 )
 
 // define downloader constants
