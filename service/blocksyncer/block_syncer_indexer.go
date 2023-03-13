@@ -49,7 +49,7 @@ func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.Resul
 }
 
 func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, index int, event sdk.Event) {
-	return
+
 }
 
 func (i *Impl) Process(height uint64) error {
