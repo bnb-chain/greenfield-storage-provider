@@ -59,6 +59,13 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	currentHeight, err := g.chain.GetCurrentHeight(context.Background())
+	if err != nil {
+		log.Errorw("failed to query current height", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+
 	switch actionName {
 	case createBucketApprovalAction:
 		var (
@@ -75,7 +82,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			errDescription = InvalidHeader
 			return
 		}
-		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: model.DefaultExpiredHeight}
+		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: currentHeight + model.DefaultTimeoutHeight}
 		approvalSignature, err = g.signer.SignBucketApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create bucket approval", "error", err)
@@ -100,7 +107,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			errDescription = InvalidHeader
 			return
 		}
-		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: model.DefaultExpiredHeight}
+		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: currentHeight + model.DefaultTimeoutHeight}
 		approvalSignature, err = g.signer.SignObjectApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create object approval", "error", err)

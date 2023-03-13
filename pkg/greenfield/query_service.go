@@ -17,7 +17,7 @@ import (
 )
 
 // GetCurrentHeight the block height sub one as the stable height.
-func (greenfield *Greenfield) GetCurrentHeight(ctx context.Context) (int64, error) {
+func (greenfield *Greenfield) GetCurrentHeight(ctx context.Context) (uint64, error) {
 	status, err := greenfield.getCurrentClient().GnfdCompositeClient().RpcClient.TmClient.Status(ctx)
 	if err != nil {
 		log.Errorw("failed to query status", "error", err)
@@ -27,7 +27,7 @@ func (greenfield *Greenfield) GetCurrentHeight(ctx context.Context) (int64, erro
 	if height > 0 {
 		height = height - 1
 	}
-	return height, nil
+	return uint64(height), nil
 }
 
 // HasAccount returns an indication of the existence of address.
