@@ -5,7 +5,7 @@
 FEATURES
 * [\#169](https://github.com/bnb-chain/greenfield-storage-provider/pull/169) feat: piece store adds minio storage type
 * [\#172](https://github.com/bnb-chain/greenfield-storage-provider/pull/172) feat: implement manager module
-* [\#173](https://github.com/bnb-chain/greenfield-storage-provider/pull/173) https://github.com/bnb-chain/greenfield-storage-provider/pull/173
+* [\#173](https://github.com/bnb-chain/greenfield-storage-provider/pull/173) feat: add check billing
 
 IMPROVEMENT
 * [\#154](https://github.com/bnb-chain/greenfield-storage-provider/pull/154) feat: syncer opt with chain data struct
