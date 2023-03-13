@@ -4,11 +4,12 @@
 * Receives the GetObject request from the client.
 * Verifies the signature of request to ensure that the request has not been tampered with.
 * Checks the authorization to ensure the corresponding account has permissions on resources.
-* Checks the object state and payment account state to ensure the object is sealed and payment account is active.
-* Dispatches the request to Downloader.
+* Checks the object state and payment account state to ensure the object is sealed and the payment account is active.
+* Dispatches the request to Downloader service.
 
 ## Downloader
-* Receives the GetObject request from the Gateway.
+* Receives the GetObject request from the Gateway service.
 * Check whether the read traffic exceeds the quota.
-  * If exceeds the quota, the Downloader refuses to serve and returns a not-enough-quota response.
-  * If is smaller than quota, the Downloader read object data from the piece store, insert read record into the SP traffic-db and return the payload response.
+  * If exceeds the quota, the Downloader refuses to serve and returns a not-enough-quota response to the Gateway service.
+  * If is smaller than quota, the Downloader insert read record into the SP traffic-db.
+* Splits the GetObject request info the GetPiece requests(support range read) to get piece payloads, and returns the object payload streaming to the Gateway service.
