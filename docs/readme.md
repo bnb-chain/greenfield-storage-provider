@@ -6,9 +6,9 @@ This section dives into the internals of the Greenfield Storage Provider impleme
 - Introduction
   - [Overview](introduction/overview.md)
 - Modules
-  - Redundancy
-  - PieceStore
-  - Storage Provider DB
+  - [PieceStore](modules/piece_store.md)
+  - [Redundancy](modules/redundancy.md)
+  - [Storage Provider DB](modules/sp_db.md)
 - Key Workflow
   - Get Approval
   - Upload Payload

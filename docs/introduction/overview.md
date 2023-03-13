@@ -10,7 +10,7 @@ authentications.
 // TODO:: change picture
 ## Architecture
 <div align=center>
-<img src="../asset/architecture.png" alt="architecture.png" width="975" height="700" />
+<img src="../asset/architecture.png" alt="architecture.png" width="975"/>
 </div>
 &emsp;
 
