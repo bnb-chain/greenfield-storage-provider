@@ -8,11 +8,11 @@ const (
 	ObjectTableName = "object"
 	// IntegrityMetaTableName defines the integrity meta table name
 	IntegrityMetaTableName = "integrity_meta"
-	// SpInfoTableName defines the SP info table name, the data come from greenfield chain
+	// SpInfoTableName defines the SP info table name
 	SpInfoTableName = "sp_info"
-	// StorageParamsTableName defines the storage params info table name, the data come from greenfield chain
+	// StorageParamsTableName defines the storage params info table name
 	StorageParamsTableName = "storage_params"
-	// BucketTrafficTableName defines the bucket traffic table name, uses for recoding the used quota by bucket
+	// BucketTrafficTableName defines the bucket traffic table name, which is used for recoding the used quota by bucket
 	BucketTrafficTableName = "bucket_traffic"
 	// ReadRecordTableName defines the read record table name
 	ReadRecordTableName = "read_record"
