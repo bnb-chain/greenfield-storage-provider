@@ -3,27 +3,28 @@ package service
 import (
 	"context"
 
+	model "github.com/bnb-chain/greenfield-storage-provider/model/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 )
 
+// ListObjectsByBucketName list objects info by a bucket name
 func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *stypes.MetadataServiceListObjectsByBucketNameRequest) (resp *stypes.MetadataServiceListObjectsByBucketNameResponse, err error) {
 	ctx = log.Context(ctx, req)
 	defer func() {
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to list objects by name", "err", err)
+			log.CtxErrorw(ctx, "failed to list objects by bucket name", "err", err)
 		} else {
-			log.CtxInfow(ctx, "succeed to list objects by name")
+			log.CtxInfow(ctx, "succeed to list objects by bucket name")
 		}
 	}()
-	//objects, err := metadata.store.ListObjectsByBucketName(ctx, req.BucketName)
 	var objects []*model.Object
+	// mock data until connect db
 	object1 := &model.Object{
 		Owner:                "46765cbc-d30c-4f4a-a814-b68181fcab12",
 		BucketName:           req.BucketName,
 		ObjectName:           "test-object",
-		Id:                   "1000",
+		ID:                   "1000",
 		PayloadSize:          100,
 		IsPublic:             false,
 		ContentType:          "video",
@@ -38,7 +39,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *styp
 		Owner:                "0xdc4f0dba80cc3ee55aa1ad222a350c85a84261bd",
 		BucketName:           req.BucketName,
 		ObjectName:           "ETH",
-		Id:                   "1001",
+		ID:                   "1001",
 		PayloadSize:          500,
 		IsPublic:             true,
 		ContentType:          "image",
@@ -56,7 +57,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *styp
 			Owner:                object.Owner,
 			BucketName:           object.BucketName,
 			ObjectName:           object.ObjectName,
-			Id:                   object.Id,
+			Id:                   object.ID,
 			PayloadSize:          object.PayloadSize,
 			IsPublic:             object.IsPublic,
 			ContentType:          object.ContentType,

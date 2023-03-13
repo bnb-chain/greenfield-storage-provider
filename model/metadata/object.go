@@ -1,4 +1,4 @@
-package model
+package metadata
 
 type Object struct {
 	Owner string `json:"owner"`
@@ -7,7 +7,7 @@ type Object struct {
 	// object_name is the name of object
 	ObjectName string `json:"objectName"`
 	// id is the unique identifier of object
-	Id string `json:"id"`
+	ID string `json:"id"`
 	// payloadSize is the total size of the object payload
 	PayloadSize uint64 `json:"payloadSize"`
 	// is_public define the highest permissions for object. When the object is public, everyone can access it.

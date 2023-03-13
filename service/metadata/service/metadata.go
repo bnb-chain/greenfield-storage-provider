@@ -2,46 +2,57 @@ package service
 
 import (
 	"context"
-	"errors"
 	"net"
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/store"
 	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
+// Metadata implements the gRPC of MetadataService,
+// responsible for interact with SP for complex query service.
 type Metadata struct {
-	config  *metadata.MetadataConfig
-	ctx     context.Context
-	name    string
-	running atomic.Bool
-
-	store      store.IStore
+	config     *metadata.MetadataConfig
+	name       string
+	running    atomic.Bool
+	store      bsdb.IStore
 	grpcServer *grpc.Server
 }
 
-// Name implement the lifecycle interface
+// NewMetadataService returns an instance of Metadata that implementation of
+// the lifecycle.Service and MetadataService interface
+func NewMetadataService(cfg *metadata.MetadataConfig) (metadata *Metadata, err error) {
+	metadataStore, _ := bsdb.NewStore(cfg.SpDBConfig)
+	metadata = &Metadata{
+		config: cfg,
+		name:   model.MetadataService,
+		store:  metadataStore,
+	}
+	return
+}
+
+// Name return the metadata service name, for the lifecycle management
 func (metadata *Metadata) Name() string {
 	return metadata.name
 }
 
-// Start implement the lifecycle interface
-// to delete api/v1
+// Start the metadata gRPC service
 func (metadata *Metadata) Start(ctx context.Context) error {
-	metadata.ctx = ctx
-	if metadata.running.Swap(true) {
-		return errors.New("metadata has started")
-	}
 	errCh := make(chan error)
 	go metadata.serve(errCh)
 	err := <-errCh
-	log.Debug("metadata service succeed to start")
 	return err
+}
+
+// Stop the metadata gRPC service and recycle the resources
+func (metadata *Metadata) Stop(ctx context.Context) error {
+	metadata.grpcServer.GracefulStop()
+	return nil
 }
 
 // Serve starts grpc service.
@@ -61,23 +72,4 @@ func (metadata *Metadata) serve(errCh chan error) {
 		log.Errorw("failed to start grpc server", "err", err)
 		return
 	}
-}
-
-// Stop implement the lifecycle interface
-func (metadata *Metadata) Stop(ctx context.Context) error {
-	if !metadata.running.Swap(false) {
-		return errors.New("uploader has stopped")
-	}
-	metadata.grpcServer.GracefulStop()
-	return nil
-}
-
-func NewMetadataService(cfg *metadata.MetadataConfig) (metadata *Metadata, err error) {
-	metadataStore, _ := store.NewStore(cfg.SpDBConfig)
-	metadata = &Metadata{
-		config: cfg,
-		name:   model.MetadataService,
-		store:  metadataStore,
-	}
-	return
 }
