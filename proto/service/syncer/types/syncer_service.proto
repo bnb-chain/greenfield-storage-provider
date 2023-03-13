@@ -10,12 +10,12 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/sy
 message SyncObjectRequest {
   // object_info defines the information of the object.
   bnbchain.greenfield.storage.ObjectInfo object_info = 1;
-  // replicate_idx defines the index of replicate.
-  uint32 replicate_idx = 2;
+  // replica_idx defines the index of replicate.
+  uint32 replica_idx = 2;
   // segment_size defines the spilt size of replicate data.
   uint64 segment_size = 3;
-  // replicate_data defines the data that replicate to storage provider.
-  bytes replicate_data = 4;
+  // replica_data defines the data that replicate to storage provider.
+  bytes replica_data = 4;
 }
 
 // SyncObjectResponse is response type for the SyncObject RPC method.

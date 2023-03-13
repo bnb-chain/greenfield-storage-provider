@@ -112,28 +112,45 @@ const (
 
 // define gateway constants
 const (
-	// StreamBufSize defines gateway stream forward payload buf size
-	StreamBufSize = 64 * 1024
+	// DefaultStreamBufSize defines gateway stream forward payload buf size
+	DefaultStreamBufSize = 64 * 1024
+	// DefaultTimeoutHeight defines approval timeout height
+	DefaultTimeoutHeight = 100
+)
+
+// define downloader constants
+const (
+	// DefaultReadQuotaSize defines bucket's default quota size
+	DefaultReadQuotaSize = 10 * 1024 * 1024 * 1024
 )
 
 // http header constants
 const (
-
-	// ContentTypeHeader and below are standard http protocols
-	ContentTypeHeader          = "Content-Type"
-	ETagHeader                 = "ETag"
-	ContentTypeXMLHeaderValue  = "application/xml"
-	RangeHeader                = "Range"
-	ContentRangeHeader         = "Content-Range"
-	OctetStream                = "application/octet-stream"
+	// ContentTypeHeader is used to indicate the media type of the resource
+	ContentTypeHeader = "Content-Type"
+	// ETagHeader is an MD5 digest of the object data
+	ETagHeader = "ETag"
+	// RangeHeader asks the server to send only a portion of an HTTP message back to a client
+	RangeHeader = "Range"
+	// ContentRangeHeader response HTTP header indicates where in a full body message a partial message belongs
+	ContentRangeHeader = "Content-Range"
+	// OctetStream is used to indicate the binary files
+	OctetStream = "application/octet-stream"
+	// ContentTypeJSONHeaderValue is used to indicate json
 	ContentTypeJSONHeaderValue = "application/json"
+	// ContentTypeXMLHeaderValue is used to indicate xml
+	ContentTypeXMLHeaderValue = "application/xml"
 
-	// SignAlgorithm and below are the signature-related constants
+	// SignAlgorithm uses secp256k1 with the ECDSA algorithm
 	SignAlgorithm = "ECDSA-secp256k1"
-	SignedMsg     = "SignedMsg"
-	Signature     = "Signature"
-	SignTypeV1    = "authTypeV1"
-	SignTypeV2    = "authTypeV2"
+	// SignedMsg is the request hash
+	SignedMsg = "SignedMsg"
+	// Signature is the request signature
+	Signature = "Signature"
+	// SignTypeV1 is an authentication algorithm, which is used by dapps
+	SignTypeV1 = "authTypeV1"
+	// SignTypeV2 is an authentication algorithm, which is used by metamask
+	SignTypeV2 = "authTypeV2"
 
 	// GetApprovalPath defines get-approval path style suffix
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
@@ -165,8 +182,8 @@ const (
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
 	// GnfdObjectInfoHeader define object info, which is used by syncer
 	GnfdObjectInfoHeader = "X-Gnfd-Object-Info"
-	// GnfdReplicateIdxHeader defines replicate idx, which is used by syncer
-	GnfdReplicateIdxHeader = "X-Gnfd-Replicate-Idx"
+	// GnfdReplicaIdxHeader defines replica idx, which is used by syncer
+	GnfdReplicaIdxHeader = "X-Gnfd-Replica-Idx"
 	// GnfdSegmentSizeHeader defines segment size, which is used by syncer
 	GnfdSegmentSizeHeader = "X-Gnfd-Segment-Size"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by syncer

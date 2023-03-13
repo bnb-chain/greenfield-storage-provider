@@ -36,18 +36,18 @@ func (client *UploaderClient) Close() error {
 	return client.conn.Close()
 }
 
-// QueryUploadingObject query an uploading object info with object id
-func (client *UploaderClient) QueryUploadingObject(ctx context.Context, objectID uint64, opts ...grpc.CallOption) (
+// QueryPuttingObject query a putting object info with object id
+func (client *UploaderClient) QueryPuttingObject(ctx context.Context, objectID uint64, opts ...grpc.CallOption) (
 	*servicetypes.SegmentInfo, error) {
-	resp, err := client.uploader.QueryUploadingObject(ctx,
-		&types.QueryUploadingObjectRequest{ObjectId: objectID}, opts...)
+	resp, err := client.uploader.QueryPuttingObject(ctx,
+		&types.QueryPuttingObjectRequest{ObjectId: objectID}, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return resp.GetSegmentInfo(), nil
 }
 
-// UploadObject return grpc stream client, and be used to upload object payload.
-func (client *UploaderClient) UploadObject(ctx context.Context, opts ...grpc.CallOption) (types.UploaderService_UploadObjectClient, error) {
-	return client.uploader.UploadObject(ctx, opts...)
+// PutObject return grpc stream client, and be used to upload object payload.
+func (client *UploaderClient) PutObject(ctx context.Context, opts ...grpc.CallOption) (types.UploaderService_PutObjectClient, error) {
+	return client.uploader.PutObject(ctx, opts...)
 }

@@ -14,7 +14,6 @@ IMPROVEMENT
 * [\#162](https://github.com/bnb-chain/greenfield-storage-provider/pull/162) feat: add command for devops and config log
 * [\#165](https://github.com/bnb-chain/greenfield-storage-provider/pull/165) feat: improve sync piece efficiency
 * [\#171](https://github.com/bnb-chain/greenfield-storage-provider/pull/171) feat: add localup script
-* [\#176](https://github.com/bnb-chain/greenfield-storage-provider/pull/176) fix: convert uint64 to uint256
 
 
 ## v0.0.2

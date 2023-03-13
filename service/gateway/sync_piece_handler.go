@@ -20,11 +20,11 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription         *errorDescription
 		reqContext             *requestContext
 		objectInfo             = types.ObjectInfo{}
-		replicateIdx           uint32
+		replicaIdx             uint32
 		segmentSize            uint64
 		size                   int
 		readN                  int
-		buf                    = make([]byte, model.StreamBufSize)
+		buf                    = make([]byte, model.DefaultStreamBufSize)
 		integrityHash          []byte
 		integrityHashSignature []byte
 	)
@@ -58,8 +58,8 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription = InvalidHeader
 		return
 	}
-	if replicateIdx, err = util.StringToUint32(r.Header.Get(model.GnfdReplicateIdxHeader)); err != nil {
-		log.Errorw("failed to parse replicate_idx header", "replicate_idx", r.Header.Get(model.GnfdReplicateIdxHeader))
+	if replicaIdx, err = util.StringToUint32(r.Header.Get(model.GnfdReplicaIdxHeader)); err != nil {
+		log.Errorw("failed to parse replica_idx header", "replica_idx", r.Header.Get(model.GnfdReplicaIdxHeader))
 		errDescription = InvalidHeader
 		return
 	}
@@ -84,10 +84,10 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if readN > 0 {
 			if err = stream.Send(&syncertypes.SyncObjectRequest{
-				ObjectInfo:    &objectInfo,
-				ReplicateIdx:  replicateIdx,
-				SegmentSize:   segmentSize,
-				ReplicateData: buf[:readN],
+				ObjectInfo:  &objectInfo,
+				ReplicaIdx:  replicaIdx,
+				SegmentSize: segmentSize,
+				ReplicaData: buf[:readN],
 			}); err != nil {
 				log.Errorw("failed to send stream", "error", err)
 				errDescription = InternalError

@@ -8,11 +8,11 @@ type GatewayConfig struct {
 	SpOperatorAddress        string
 	HTTPAddress              string
 	Domain                   string
+	ChainConfig              *gnfd.GreenfieldChainConfig
 	UploaderServiceAddress   string
 	DownloaderServiceAddress string
 	SignerServiceAddress     string
 	ChallengeServiceAddress  string
 	SyncerServiceAddress     string
-	ChainConfig              *gnfd.GreenfieldChainConfig
 	MetadataServiceAddress   string
 }

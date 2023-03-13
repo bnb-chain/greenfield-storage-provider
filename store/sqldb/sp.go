@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"gorm.io/gorm"
@@ -41,17 +41,13 @@ func (s *SpDBImpl) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 
 // insertNewRecordInSpInfoTable insert a new record in sp info table
 func (s *SpDBImpl) insertNewRecordInSpInfoTable(sp *sptypes.StorageProvider) error {
-	var totalDeposit int64
-	if !sp.TotalDeposit.IsNil() && sp.TotalDeposit.IsInt64() {
-		totalDeposit = sp.TotalDeposit.Int64()
-	}
 	insertRecord := &SpInfoTable{
 		OperatorAddress: sp.GetOperatorAddress(),
 		IsOwn:           false,
 		FundingAddress:  sp.GetFundingAddress(),
 		SealAddress:     sp.GetSealAddress(),
 		ApprovalAddress: sp.GetApprovalAddress(),
-		TotalDeposit:    totalDeposit,
+		TotalDeposit:    sp.GetTotalDeposit().String(),
 		Status:          int32(sp.Status),
 		Endpoint:        sp.GetEndpoint(),
 		Moniker:         sp.GetDescription().Moniker,
@@ -87,12 +83,16 @@ func (s *SpDBImpl) FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvi
 	}
 	records := []*sptypes.StorageProvider{}
 	for _, value := range queryReturn {
+		totalDeposit, ok := sdkmath.NewIntFromString(value.TotalDeposit)
+		if !ok {
+			return records, fmt.Errorf("failed to parse int")
+		}
 		records = append(records, &sptypes.StorageProvider{
 			OperatorAddress: value.OperatorAddress,
 			FundingAddress:  value.FundingAddress,
 			SealAddress:     value.SealAddress,
 			ApprovalAddress: value.ApprovalAddress,
-			TotalDeposit:    math.NewInt(value.TotalDeposit),
+			TotalDeposit:    totalDeposit,
 			Status:          sptypes.Status(value.Status),
 			Endpoint:        value.Endpoint,
 			Description: sptypes.Description{
@@ -132,12 +132,16 @@ func (s *SpDBImpl) FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.
 
 	records := []*sptypes.StorageProvider{}
 	for _, value := range queryReturn {
+		totalDeposit, ok := sdkmath.NewIntFromString(value.TotalDeposit)
+		if !ok {
+			return records, fmt.Errorf("failed to parse int")
+		}
 		records = append(records, &sptypes.StorageProvider{
 			OperatorAddress: value.OperatorAddress,
 			FundingAddress:  value.FundingAddress,
 			SealAddress:     value.SealAddress,
 			ApprovalAddress: value.ApprovalAddress,
-			TotalDeposit:    math.NewInt(value.TotalDeposit),
+			TotalDeposit:    totalDeposit,
 			Status:          sptypes.Status(value.Status),
 			Endpoint:        value.Endpoint,
 			Description: sptypes.Description{
@@ -163,12 +167,16 @@ func (s *SpDBImpl) GetSpByAddress(address string, addressType SpAddressType) (*s
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query sp info table: %s", result.Error)
 	}
+	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse int")
+	}
 	return &sptypes.StorageProvider{
 		OperatorAddress: queryReturn.OperatorAddress,
 		FundingAddress:  queryReturn.FundingAddress,
 		SealAddress:     queryReturn.SealAddress,
 		ApprovalAddress: queryReturn.ApprovalAddress,
-		TotalDeposit:    math.NewInt(queryReturn.TotalDeposit),
+		TotalDeposit:    totalDeposit,
 		Status:          sptypes.Status(queryReturn.Status),
 		Endpoint:        queryReturn.Endpoint,
 		Description: sptypes.Description{
@@ -206,12 +214,16 @@ func (s *SpDBImpl) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, e
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query sp info table: %s", result.Error)
 	}
+	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse int")
+	}
 	return &sptypes.StorageProvider{
 		OperatorAddress: queryReturn.OperatorAddress,
 		FundingAddress:  queryReturn.FundingAddress,
 		SealAddress:     queryReturn.SealAddress,
 		ApprovalAddress: queryReturn.ApprovalAddress,
-		TotalDeposit:    math.NewInt(queryReturn.TotalDeposit),
+		TotalDeposit:    totalDeposit,
 		Status:          sptypes.Status(queryReturn.Status),
 		Endpoint:        queryReturn.Endpoint,
 		Description: sptypes.Description{
@@ -231,12 +243,16 @@ func (s *SpDBImpl) GetOwnSpInfo() (*sptypes.StorageProvider, error) {
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query own sp record in sp info table: %s", result.Error)
 	}
+	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse int")
+	}
 	return &sptypes.StorageProvider{
 		OperatorAddress: queryReturn.OperatorAddress,
 		FundingAddress:  queryReturn.FundingAddress,
 		SealAddress:     queryReturn.SealAddress,
 		ApprovalAddress: queryReturn.ApprovalAddress,
-		TotalDeposit:    math.NewInt(queryReturn.TotalDeposit),
+		TotalDeposit:    totalDeposit,
 		Status:          sptypes.Status(queryReturn.Status),
 		Endpoint:        queryReturn.Endpoint,
 		Description: sptypes.Description{
@@ -262,7 +278,7 @@ func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 		FundingAddress:  sp.GetFundingAddress(),
 		SealAddress:     sp.GetSealAddress(),
 		ApprovalAddress: sp.GetApprovalAddress(),
-		TotalDeposit:    sp.TotalDeposit.Int64(),
+		TotalDeposit:    sp.GetTotalDeposit().String(),
 		Status:          int32(sp.GetStatus()),
 		Endpoint:        sp.GetEndpoint(),
 		Moniker:         sp.GetDescription().Moniker,
@@ -281,7 +297,7 @@ func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 	} else {
 		// if there is a record in SPInfoTable, update record
 		result := s.db.Model(&SpInfoTable{}).Where("is_own = true").Updates(insertRecord)
-		if result.Error != nil || result.RowsAffected != 1 {
+		if result.Error != nil {
 			return fmt.Errorf("failed to update own sp record in sp info table: %s", result.Error)
 		}
 		return nil

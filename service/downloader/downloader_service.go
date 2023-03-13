@@ -4,27 +4,26 @@ import (
 	"context"
 	"fmt"
 
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
 var _ types.DownloaderServiceServer = &Downloader{}
 
 // DownloaderObject download the payload of the object.
-func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectRequest,
-	stream types.DownloaderService_DownloaderObjectServer) (err error) {
+func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
+	stream types.DownloaderService_GetObjectServer) (err error) {
 	var (
-		objectInfo   *storagetypes.ObjectInfo
 		size         int
 		offset       uint64
 		length       uint64
 		isValidRange bool
 	)
 	ctx := log.Context(context.Background(), req)
-	resp := &types.DownloaderObjectResponse{}
+	resp := &types.GetObjectResponse{}
 	defer func() {
 		if err != nil {
 			return
@@ -33,17 +32,28 @@ func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectReques
 		log.CtxInfow(ctx, "finish to download object", "error", err, "sendSize", size)
 	}()
 
-	chainObjectInfo, err := downloader.chain.QueryObjectInfo(ctx, req.BucketName, req.ObjectName)
-	if err != nil {
-		log.Errorf("failed to query chain", "err", err)
-		return
-	}
-	objectInfo = &storagetypes.ObjectInfo{
-		Id:          chainObjectInfo.Id,
-		PayloadSize: chainObjectInfo.PayloadSize,
+	bucketInfo := req.GetBucketInfo()
+	objectInfo := req.GetObjectInfo()
+	if err = downloader.spDB.CheckQuotaAndAddReadRecord(
+		// TODO: support range read
+		&sqldb.ReadRecord{
+			BucketID:    bucketInfo.Id.Uint64(),
+			ObjectID:    objectInfo.Id.Uint64(),
+			UserAddress: req.GetUserAddress(),
+			BucketName:  bucketInfo.GetBucketName(),
+			ObjectName:  objectInfo.GetObjectName(),
+			ReadSize:    int64(objectInfo.PayloadSize),
+			ReadTime:    sqldb.GetCurrentUnixTime(),
+		},
+		&sqldb.BucketQuota{
+			ReadQuotaSize: int64(bucketInfo.GetReadQuota()) + model.DefaultReadQuotaSize,
+		},
+	); err != nil {
+		log.Errorw("failed to check billing due to bucket quota", "error", err)
+		return err
 	}
 
-	// TODO: It will be optimized here after connecting with the chain
+	// TODO: It will be optimized
 	// if length == 0, download all object data
 	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.GetPayloadSize()) &&
 		req.RangeEnd >= 0 && req.RangeEnd < int64(objectInfo.GetPayloadSize()) {
@@ -57,10 +67,6 @@ func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectReques
 	} else {
 		offset, length = 0, objectInfo.GetPayloadSize()
 	}
-	// offset, length = req.GetOffset(), req.GetLength()
-	// if req.GetLength() == 0 {
-	//	offset, length = 0, objectInfo.Size
-	// }
 	var segmentInfo segments
 	segmentInfo, err = downloader.DownloadPieceInfo(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), offset, offset+length-1)
 	if err != nil {

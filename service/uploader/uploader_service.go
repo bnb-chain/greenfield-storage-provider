@@ -18,17 +18,17 @@ import (
 
 var _ types.UploaderServiceServer = &Uploader{}
 
-// UploadObject upload an object payload data with object info.
-func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObjectServer) (err error) {
+// PutObject upload an object payload data with object info.
+func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer) (err error) {
 	var (
-		resp          types.UploadObjectResponse
+		resp          types.PutObjectResponse
 		pstream       = payloadstream.NewAsyncPayloadStream()
 		traceInfo     = &servicetypes.SegmentInfo{}
 		checksum      [][]byte
 		integrityMeta = &sqldb.IntegrityMeta{}
 		errCh         = make(chan error, 10)
 	)
-	defer func(resp *types.UploadObjectResponse, err error) {
+	defer func(resp *types.PutObjectResponse, err error) {
 		if err != nil {
 			log.Errorw("failed to replicate payload", "err", err)
 			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
@@ -135,12 +135,12 @@ func (uploader *Uploader) UploadObject(stream types.UploaderService_UploadObject
 	}
 }
 
-// QueryUploadingObject query an uploading object with object id from cache
-func (uploader *Uploader) QueryUploadingObject(ctx context.Context, req *types.QueryUploadingObjectRequest) (
-	resp *types.QueryUploadingObjectResponse, err error) {
+// QueryPuttingObject query an uploading object with object id from cache
+func (uploader *Uploader) QueryPuttingObject(ctx context.Context, req *types.QueryPuttingObjectRequest) (
+	resp *types.QueryPuttingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
 	objectID := req.GetObjectId()
-	log.CtxDebugw(ctx, "query uploading object", "objectID", objectID)
+	log.CtxDebugw(ctx, "query putting object", "objectID", objectID)
 	val, ok := uploader.cache.Get(objectID)
 	if !ok {
 		err = merrors.ErrCacheMiss

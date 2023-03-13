@@ -3,7 +3,6 @@ package gateway
 import (
 	"context"
 	"encoding/hex"
-	"math"
 	"net/http"
 
 	"github.com/bnb-chain/greenfield/x/storage/types"
@@ -43,12 +42,12 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 
 	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = SignatureNotMatch
+		errDescription = makeErrorDescription(err)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = UnauthorizedAccess
+		errDescription = makeErrorDescription(err)
 		return
 	}
 
@@ -57,6 +56,13 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorw("failed to parse approval header", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 		errDescription = InvalidHeader
+		return
+	}
+
+	currentHeight, err := g.chain.GetCurrentHeight(context.Background())
+	if err != nil {
+		log.Errorw("failed to query current height", "error", err)
+		errDescription = makeErrorDescription(err)
 		return
 	}
 
@@ -76,12 +82,11 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			errDescription = InvalidHeader
 			return
 		}
-		// TODO: to config it
-		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: math.MaxUint64}
+		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: currentHeight + model.DefaultTimeoutHeight}
 		approvalSignature, err = g.signer.SignBucketApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create bucket approval", "error", err)
-			errDescription = InternalError
+			errDescription = makeErrorDescription(err)
 			return
 		}
 		msg.PrimarySpApproval.Sig = approvalSignature
@@ -102,12 +107,11 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			errDescription = InvalidHeader
 			return
 		}
-		// TODO: to config it
-		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: math.MaxUint64}
+		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: currentHeight + model.DefaultTimeoutHeight}
 		approvalSignature, err = g.signer.SignObjectApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create object approval", "error", err)
-			errDescription = InternalError
+			errDescription = makeErrorDescription(err)
 			return
 		}
 		msg.PrimarySpApproval.Sig = approvalSignature
@@ -153,12 +157,12 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = SignatureNotMatch
+		errDescription = makeErrorDescription(err)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = UnauthorizedAccess
+		errDescription = makeErrorDescription(err)
 		return
 	}
 
@@ -181,7 +185,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	integrityHash, pieceHash, pieceData, err := g.challenge.ChallengePiece(context.Background(), objectID, redundancyIdx, segmentIdx)
 	if err != nil {
 		log.Errorf("failed to challenge", "error", err)
-		errDescription = InternalError
+		errDescription = makeErrorDescription(err)
 		return
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)

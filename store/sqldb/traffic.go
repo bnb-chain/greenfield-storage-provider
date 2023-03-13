@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +19,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 		// insert, if not existed
 		insertBucketTraffic := &BucketTrafficTable{
 			BucketID:      record.BucketID,
-			YearMonth:     yearMonth,
+			Month:         yearMonth,
 			BucketName:    record.BucketName,
 			ReadCostSize:  0,
 			ReadQuotaSize: quota.ReadQuotaSize,
@@ -28,16 +29,18 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 		if result.Error != nil || result.RowsAffected != 1 {
 			return fmt.Errorf("failed to insert bucket traffic table: %s", result.Error)
 		}
-		bucketTraffic.BucketID = insertBucketTraffic.BucketID
-		bucketTraffic.YearMonth = insertBucketTraffic.YearMonth
-		bucketTraffic.BucketName = insertBucketTraffic.BucketName
-		bucketTraffic.ReadCostSize = insertBucketTraffic.ReadCostSize
-		bucketTraffic.ReadQuotaSize = insertBucketTraffic.ReadQuotaSize
+		bucketTraffic = &BucketTraffic{
+			BucketID:      insertBucketTraffic.BucketID,
+			YearMonth:     insertBucketTraffic.Month,
+			BucketName:    insertBucketTraffic.BucketName,
+			ReadCostSize:  insertBucketTraffic.ReadCostSize,
+			ReadQuotaSize: insertBucketTraffic.ReadQuotaSize,
+		}
 	}
 	if bucketTraffic.ReadQuotaSize != quota.ReadQuotaSize {
 		// update if chain quota has changed
 		result := s.db.Model(&BucketTrafficTable{}).
-			Where("bucket_id = ? and year_month = ?", bucketTraffic.BucketID, bucketTraffic.YearMonth).
+			Where("bucket_id = ? and month = ?", bucketTraffic.BucketID, bucketTraffic.YearMonth).
 			Updates(BucketTrafficTable{
 				ReadQuotaSize: quota.ReadQuotaSize,
 				ModifiedTime:  time.Now(),
@@ -49,13 +52,13 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 	}
 
 	// check quota
-	if bucketTraffic.ReadCostSize+record.ReadSize > bucketTraffic.ReadQuotaSize {
-		return fmt.Errorf("exceed read quota size")
+	if bucketTraffic.ReadCostSize+record.ReadSize > quota.ReadQuotaSize {
+		return errors.ErrCheckQuotaEnough
 	}
 
 	// update bucket traffic
 	result := s.db.Model(&BucketTrafficTable{}).
-		Where("bucket_id = ? and year_month = ?", bucketTraffic.BucketID, bucketTraffic.YearMonth).
+		Where("bucket_id = ? and month = ?", bucketTraffic.BucketID, bucketTraffic.YearMonth).
 		Updates(BucketTrafficTable{
 			ReadCostSize: bucketTraffic.ReadCostSize + record.ReadSize,
 			ModifiedTime: time.Now(),
@@ -88,17 +91,17 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketT
 		queryReturn BucketTrafficTable
 	)
 
-	result = s.db.First(&queryReturn, "bucket_id = ? and year_month = ?", bucketID, yearMonth)
+	result = s.db.Where("bucket_id = ? and month = ?", bucketID, yearMonth).First(&queryReturn)
 	if result.Error == gorm.ErrRecordNotFound {
 		// not found
 		return nil, nil
 	}
 	if result.Error != nil {
-		return nil, fmt.Errorf("faile to query bucket traffic table: %s", result.Error)
+		return nil, fmt.Errorf("failed to query bucket traffic table: %s", result.Error)
 	}
 	return &BucketTraffic{
 		BucketID:      queryReturn.BucketID,
-		YearMonth:     queryReturn.YearMonth,
+		YearMonth:     queryReturn.Month,
 		BucketName:    queryReturn.BucketName,
 		ReadCostSize:  queryReturn.ReadCostSize,
 		ReadQuotaSize: queryReturn.ReadQuotaSize,

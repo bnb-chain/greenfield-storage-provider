@@ -6,8 +6,8 @@ import (
 
 // BucketTrafficTable table schema
 type BucketTrafficTable struct {
-	BucketID  uint64 `gorm:"primary_key"`
-	YearMonth string `gorm:"primary_key"`
+	BucketID uint64 `gorm:"primary_key"`
+	Month    string `gorm:"primary_key"`
 
 	BucketName    string
 	ReadCostSize  int64

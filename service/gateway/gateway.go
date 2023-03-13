@@ -7,14 +7,15 @@ import (
 	"net/http"
 	"sync/atomic"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+
+	chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
 	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
-	metadataclient "github.com/bnb-chain/greenfield-storage-provider/service/metadata/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	syncerclient "github.com/bnb-chain/greenfield-storage-provider/service/syncer/client"
 	uploaderclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"
@@ -35,7 +36,7 @@ type Gateway struct {
 	challenge  *challengeclient.ChallengeClient
 	syncer     *syncerclient.SyncerClient
 	signer     *signerclient.SignerClient
-	metadata   *metadataclient.MetadataClient
+	metadata   *client.MetadataClient
 }
 
 // NewGatewayService return the gateway instance
@@ -88,7 +89,7 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 	}
 
 	if cfg.MetadataServiceAddress != "" {
-		if g.metadata, err = metadataclient.NewMetadataClient(cfg.MetadataServiceAddress); err != nil {
+		if g.metadata, err = client.NewMetadataClient(cfg.MetadataServiceAddress); err != nil {
 			log.Errorw("failed to create metadata client", "error", err)
 			return nil, err
 		}
