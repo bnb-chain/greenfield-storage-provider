@@ -8,6 +8,7 @@
 * Dispatches the request to Downloader.
 
 ## Downloader
+* Receives the GetObject request from the Gateway.
 * Check whether the read traffic exceeds the quota.
   * If exceeds the quota, the Downloader refuses to serve and returns a not-enough-quota response.
-  * If smaller than quota, the Downloader read object data from the piece store, insert read record into the SP traffic-db and return the payload response.
+  * If is smaller than quota, the Downloader read object data from the piece store, insert read record into the SP traffic-db and return the payload response.
