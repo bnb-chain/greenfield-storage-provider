@@ -15,7 +15,7 @@ message Bucket {
 message Object {
   // object_info defines the information of the object.
   bnbchain.greenfield.storage.ObjectInfo object_info = 1;
-  // lockedBalance defines locked balance of object
+  // locked_balance defines locked balance of object
   string locked_balance = 2;
 }
 
