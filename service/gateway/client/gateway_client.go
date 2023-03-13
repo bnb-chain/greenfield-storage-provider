@@ -15,7 +15,9 @@ import (
 )
 
 const (
-	maxIdleConns   = 20
+	// maxIdleConns defines the max idle connections for HTTP server
+	maxIdleConns = 20
+	// idleConnTimout defines the idle time of connection for closing
 	idleConnTimout = 60 * time.Second
 )
 

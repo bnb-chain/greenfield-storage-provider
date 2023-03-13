@@ -69,7 +69,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	HTTPAddress: map[string]string{
 		model.GatewayService: model.GatewayHTTPAddress,
 	},
-	SpOperatorAddress: hex.EncodeToString([]byte("greenfield-storage-provider")),
+	SpOperatorAddress: hex.EncodeToString([]byte(model.SpOperatorAddress)),
 	Domain:            "gnfd.nodereal.com",
 	SpDBConfig:        DefaultSQLDBConfig,
 	PieceStoreConfig:  DefaultPieceStoreConfig,

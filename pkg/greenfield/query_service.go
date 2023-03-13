@@ -115,7 +115,7 @@ func (greenfield *Greenfield) QueryBucketInfoAndObjectInfo(ctx context.Context, 
 func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, object string, timeOutHeight int) (seal bool, err error) {
 	var objectInfo *storagetypes.ObjectInfo
 	for i := 0; i < timeOutHeight; i++ {
-		time.Sleep(ListenChainEventInternal * time.Second)
+		time.Sleep(ExpectedOutputBlockInternal * time.Second)
 		objectInfo, err = greenfield.QueryObjectInfo(ctx, bucket, object)
 		if err != nil {
 			continue

@@ -6,7 +6,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// MakeSPDB return sp db instance
+// MakeSPDB return sp db instance from db flags
 func MakeSPDB(ctx *cli.Context) (*sqldb.SpDBImpl, error) {
 	spDBCfg := config.DefaultSQLDBConfig
 	if ctx.IsSet(ctx.String(DBUserFlag.Name)) {
