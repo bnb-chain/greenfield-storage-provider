@@ -18,6 +18,7 @@ type Job interface {
 	// GetJobByObjectID get job context by object id
 	GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error)
 
+	// TODO:: supports Iterator and Batch interface for gc the job and retry the job
 	// Iterator
 	// Batch
 }
