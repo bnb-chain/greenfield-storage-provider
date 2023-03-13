@@ -148,7 +148,7 @@ func (s *s3Store) HeadBucket(ctx context.Context) error {
 		log.Errorw("S3 failed to head bucket", "error", err)
 		if reqErr, ok := err.(awserr.RequestFailure); ok {
 			if reqErr.StatusCode() == http.StatusNotFound {
-				return merrors.ErrNotExistBucket
+				return merrors.ErrNoSuchBucket
 			}
 		}
 		return err

@@ -88,7 +88,7 @@ func createStorage(cfg storage.PieceStoreConfig) (storage.ObjectStorage, error) 
 func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 	if err := store.HeadBucket(ctx); err != nil {
 		log.Errorw("failed to head bucket", "error", err)
-		if errors.Is(err, merrors.ErrNotExistBucket) {
+		if errors.Is(err, merrors.ErrNoSuchBucket) {
 			if err2 := store.CreateBucket(ctx); err2 != nil {
 				return fmt.Errorf("failed to create bucket in %s: %s, previous err: %s", store, err2, err)
 			}

@@ -144,7 +144,7 @@ func (d *diskFileStore) DeleteObject(ctx context.Context, key string) error {
 func (d *diskFileStore) HeadBucket(ctx context.Context) error {
 	if _, err := os.Stat(d.root); err != nil {
 		if os.IsNotExist(err) {
-			return errors.ErrNotExistBucket
+			return errors.ErrNoSuchBucket
 		}
 		return err
 	}

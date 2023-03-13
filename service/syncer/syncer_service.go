@@ -73,7 +73,7 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 			if init {
 				pstream.InitAsyncPayloadStream(
 					req.GetObjectInfo().Id.Uint64(),
-					req.GetReplicateIdx(),
+					req.GetReplicaIdx(),
 					req.GetSegmentSize(),
 					req.GetObjectInfo().GetRedundancyType())
 				integrityMeta.ObjectID = req.GetObjectInfo().Id.Uint64()
@@ -82,7 +82,7 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 				init = false
 			}
 
-			pstream.StreamWrite(req.GetReplicateData())
+			pstream.StreamWrite(req.GetReplicaData())
 		}
 	}()
 

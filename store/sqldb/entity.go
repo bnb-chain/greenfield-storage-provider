@@ -70,5 +70,5 @@ func TimeUnixToTime(timeUnix int64) time.Time {
 
 // TimeToYearMonth convent time.Time to YYYY-MM string
 func TimeToYearMonth(t time.Time) string {
-	return t.Format("2006-01-02 15:04:05")[0:6]
+	return t.Format("2006-01-02 15:04:05")[0:7]
 }

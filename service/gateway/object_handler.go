@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/bnb-chain/greenfield/types/s3util"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -50,12 +50,12 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = storagetypes.CheckValidBucketName(reqContext.bucketName); err != nil {
+	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
 		errDescription = InvalidBucketName
 		return
 	}
-	if err = storagetypes.CheckValidObjectName(reqContext.objectName); err != nil {
+	if err = s3util.CheckValidObjectName(reqContext.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqContext.objectName, "error", err)
 		errDescription = InvalidKey
 		return
@@ -63,12 +63,12 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = SignatureNotMatch
+		errDescription = makeErrorDescription(err)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = UnauthorizedAccess
+		errDescription = makeErrorDescription(err)
 		return
 	}
 
@@ -79,18 +79,19 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req := &types.DownloaderObjectRequest{
-		BucketName: reqContext.bucketName,
-		ObjectName: reqContext.objectName,
-		IsRange:    isRange,
-		RangeStart: rangeStart,
-		RangeEnd:   rangeEnd,
+	req := &types.GetObjectRequest{
+		BucketInfo:  reqContext.bucketInfo,
+		ObjectInfo:  reqContext.objectInfo,
+		UserAddress: addr.String(),
+		IsRange:     isRange,
+		RangeStart:  rangeStart,
+		RangeEnd:    rangeEnd,
 	}
 	ctx := log.Context(context.Background(), req)
-	stream, err := g.downloader.DownloaderObject(ctx, req)
+	stream, err := g.downloader.GetObject(ctx, req)
 	if err != nil {
 		log.Errorf("failed to get object", "error", err)
-		errDescription = InternalError
+		errDescription = makeErrorDescription(err)
 		return
 	}
 	for {
@@ -100,11 +101,10 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if err != nil {
 			log.Errorw("failed to read stream", "error", err)
-			errDescription = InternalError
+			errDescription = makeErrorDescription(err)
 			return
 		}
 
-		// TODO: check error resp.code
 		if readN = len(resp.Data); readN == 0 {
 			log.Errorw("failed to download due to return empty data", "response", resp)
 			continue
@@ -116,7 +116,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if writeN, err = w.Write(resp.Data); err != nil {
 			log.Errorw("failed to read stream", "error", err)
-			errDescription = InternalError
+			errDescription = makeErrorDescription(err)
 			return
 		}
 		if readN != writeN {
@@ -138,8 +138,8 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		addr           sdk.AccAddress
 		size           int
 		readN          int
-		buf            = make([]byte, model.StreamBufSize)
-		hashBuf        = make([]byte, model.StreamBufSize)
+		buf            = make([]byte, model.DefaultStreamBufSize)
+		hashBuf        = make([]byte, model.DefaultStreamBufSize)
 		md5Hash        = md5.New()
 	)
 
@@ -161,12 +161,12 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = storagetypes.CheckValidBucketName(reqContext.bucketName); err != nil {
+	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
 		errDescription = InvalidBucketName
 		return
 	}
-	if err = storagetypes.CheckValidObjectName(reqContext.objectName); err != nil {
+	if err = s3util.CheckValidObjectName(reqContext.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqContext.objectName, "error", err)
 		errDescription = InvalidKey
 		return
@@ -176,19 +176,19 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = SignatureNotMatch
+		errDescription = makeErrorDescription(err)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = UnauthorizedAccess
+		errDescription = makeErrorDescription(err)
 		return
 	}
 
-	stream, err := g.uploader.UploadObject(context.Background())
+	stream, err := g.uploader.PutObject(context.Background())
 	if err != nil {
 		log.Errorf("failed to put object", "error", err)
-		errDescription = InternalError
+		errDescription = makeErrorDescription(err)
 		return
 	}
 	for {
@@ -199,7 +199,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if readN > 0 {
-			req := &uploadertypes.UploadObjectRequest{
+			req := &uploadertypes.PutObjectRequest{
 				ObjectInfo: reqContext.objectInfo,
 				Payload:    buf[:readN],
 			}
@@ -221,7 +221,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			_, err = stream.CloseAndRecv()
 			if err != nil {
 				log.Errorw("failed to put object due to stream close", "error", err)
-				errDescription = InternalError
+				errDescription = makeErrorDescription(err)
 				return
 			}
 			// succeed to put object

@@ -88,7 +88,6 @@ func (cfg *StorageProviderConfig) MakeUploaderConfig() (*uploader.UploaderConfig
 func (cfg *StorageProviderConfig) MakeDownloaderConfig() (*downloader.DownloaderConfig, error) {
 	dCfg := &downloader.DownloaderConfig{
 		SpDBConfig:       cfg.SpDBConfig,
-		ChainConfig:      cfg.ChainConfig,
 		PieceStoreConfig: cfg.PieceStoreConfig,
 	}
 	if _, ok := cfg.GRPCAddress[model.DownloaderService]; ok {
