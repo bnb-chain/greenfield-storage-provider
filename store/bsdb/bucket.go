@@ -7,7 +7,12 @@ import (
 )
 
 // GetUserBuckets get buckets info by a user address
-func (s *Store) GetUserBuckets(ctx context.Context, accountID string) (ret []*metadata.Bucket, err error) {
+func (s *Store) GetUserBuckets(ctx context.Context, accountID string) ([]*metadata.Bucket, error) {
+	var (
+		ret []*metadata.Bucket
+		err error
+	)
+
 	//TODO:: cancel mock after impl db
 	bucket1 := metadata.Bucket{
 		Owner:            "46765cbc-d30c-4f4a-a814-b68181fcab12",
@@ -22,5 +27,5 @@ func (s *Store) GetUserBuckets(ctx context.Context, accountID string) (ret []*me
 		PaymentPriceTime: 0,
 	}
 	ret = append(ret, &bucket1)
-	return ret, nil
+	return ret, err
 }

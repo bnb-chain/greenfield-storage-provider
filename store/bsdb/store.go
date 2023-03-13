@@ -18,9 +18,9 @@ type Store struct {
 // IStore contains all the methods required by bs db database
 type IStore interface {
 	// GetUserBuckets get buckets info by a user address
-	GetUserBuckets(ctx context.Context, accountID string) (ret []*metadata.Bucket, err error)
+	GetUserBuckets(ctx context.Context, accountID string) ([]*metadata.Bucket, error)
 	// ListObjectsByBucketName list objects info by a bucket name
-	ListObjectsByBucketName(ctx context.Context, bucketName string) (ret []*metadata.Object, err error)
+	ListObjectsByBucketName(ctx context.Context, bucketName string) ([]*metadata.Object, error)
 }
 
 // NewStore return a database instance
