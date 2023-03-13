@@ -3,13 +3,16 @@ package service
 import (
 	"context"
 
+	"cosmossdk.io/math"
+
 	model "github.com/bnb-chain/greenfield-storage-provider/model/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	"github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // GetUserBuckets get buckets info by a user address
-func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *stypes.MetadataServiceGetUserBucketsRequest) (resp *stypes.MetadataServiceGetUserBucketsResponse, err error) {
+func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.MetadataServiceGetUserBucketsRequest) (resp *metatypes.MetadataServiceGetUserBucketsResponse, err error) {
 	ctx = log.Context(ctx, req)
 	defer func() {
 		if err != nil {
@@ -46,23 +49,28 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *stypes.Metada
 		PaymentPriceTime: 1677143663461,
 	}
 	buckets = append(buckets, bucket1, bucket2)
-	res := make([]*stypes.Bucket, 0)
+	res := make([]*metatypes.Bucket, 0)
 
 	for _, bucket := range buckets {
-		res = append(res, &stypes.Bucket{
-			Owner:            bucket.Owner,
-			BucketName:       bucket.BucketName,
-			IsPublic:         false,
-			Id:               bucket.ID,
-			SourceType:       stypes.SourceType(bucket.SourceType),
-			CreateAt:         bucket.CreateAt,
-			PaymentAddress:   bucket.PaymentAddress,
-			PrimarySpAddress: bucket.PrimarySpAddress,
-			ReadQuota:        stypes.ReadQuota(bucket.ReadQuota),
-			PaymentPriceTime: bucket.PaymentPriceTime,
-			PaymentOutFlows:  nil,
+		res = append(res, &metatypes.Bucket{
+			BucketInfo: &types.BucketInfo{
+				Owner:            bucket.Owner,
+				BucketName:       bucket.BucketName,
+				IsPublic:         false,
+				Id:               math.NewUintFromString(bucket.ID),
+				SourceType:       types.SourceType(bucket.SourceType),
+				CreateAt:         bucket.CreateAt,
+				PaymentAddress:   bucket.PaymentAddress,
+				PrimarySpAddress: bucket.PrimarySpAddress,
+				ReadQuota:        bucket.ReadQuota,
+				BillingInfo: types.BillingInfo{
+					PriceTime:              0,
+					TotalChargeSize:        0,
+					SecondarySpObjectsSize: nil,
+				},
+			},
 		})
 	}
-	resp = &stypes.MetadataServiceGetUserBucketsResponse{Buckets: res}
+	resp = &metatypes.MetadataServiceGetUserBucketsResponse{Buckets: res}
 	return resp, nil
 }

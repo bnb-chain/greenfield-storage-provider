@@ -7,13 +7,13 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 )
 
 // MetadataClient is an metadata gRPC service client wrapper
 type MetadataClient struct {
 	address  string
-	metadata stypes.MetadataServiceClient
+	metadata metatypes.MetadataServiceClient
 	conn     *grpc.ClientConn
 }
 
@@ -27,7 +27,7 @@ func NewMetadataClient(address string) (*MetadataClient, error) {
 	client := &MetadataClient{
 		address:  address,
 		conn:     conn,
-		metadata: stypes.NewMetadataServiceClient(conn),
+		metadata: metatypes.NewMetadataServiceClient(conn),
 	}
 	return client, nil
 }
@@ -38,7 +38,7 @@ func (client *MetadataClient) Close() error {
 }
 
 // GetUserBuckets get buckets info by a user address
-func (client *MetadataClient) GetUserBuckets(ctx context.Context, in *stypes.MetadataServiceGetUserBucketsRequest, opts ...grpc.CallOption) (*stypes.MetadataServiceGetUserBucketsResponse, error) {
+func (client *MetadataClient) GetUserBuckets(ctx context.Context, in *metatypes.MetadataServiceGetUserBucketsRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceGetUserBucketsResponse, error) {
 	resp, err := client.metadata.GetUserBuckets(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -49,7 +49,7 @@ func (client *MetadataClient) GetUserBuckets(ctx context.Context, in *stypes.Met
 }
 
 // ListObjectsByBucketName list objects info by a bucket name
-func (client *MetadataClient) ListObjectsByBucketName(ctx context.Context, in *stypes.MetadataServiceListObjectsByBucketNameRequest, opts ...grpc.CallOption) (*stypes.MetadataServiceListObjectsByBucketNameResponse, error) {
+func (client *MetadataClient) ListObjectsByBucketName(ctx context.Context, in *metatypes.MetadataServiceListObjectsByBucketNameRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceListObjectsByBucketNameResponse, error) {
 	resp, err := client.metadata.ListObjectsByBucketName(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {

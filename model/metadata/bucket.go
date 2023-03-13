@@ -22,7 +22,7 @@ type Bucket struct {
 	// leave this SP, unless you explicitly shift them to another SP.
 	PrimarySpAddress string `json:"primarySpAddress"`
 	// ReadQuota defines the traffic quota for read
-	ReadQuota int `json:"readQuota"`
+	ReadQuota uint64 `json:"readQuota"`
 	// PaymentPriceTime defines price time of payment
 	PaymentPriceTime int64 `json:"paymentPriceTime"`
 }

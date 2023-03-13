@@ -7,7 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -63,7 +63,7 @@ func (metadata *Metadata) serve(errCh chan error) {
 	}
 
 	grpcServer := grpc.NewServer()
-	stypes.RegisterMetadataServiceServer(grpcServer, metadata)
+	metatypes.RegisterMetadataServiceServer(grpcServer, metadata)
 	metadata.grpcServer = grpcServer
 	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {
