@@ -2,7 +2,7 @@
 
 ## What is the Greenfield Storage Provider
 
-Storage Providers (SP) are storage service infrastructures that organizations or individuals provide
+Storage Providers (abbreviated SP) are storage service infrastructures that organizations or individuals provide
 and the corresponding roles they play. They use Greenfield as the ledger and the single source of truth. Each SP can and
 will respond to users' requests to write (upload) and read (download) data, and serve as the gatekeeper for user rights and
 authentications.
@@ -13,24 +13,23 @@ authentications.
 <img src="../asset/architecture.png" alt="architecture.png" width="975" height="700" />
 </div>
 &emsp;
-                                                                                                
-**Gateway** is the entry point of each SP. It parses requests from the  client and dispatches them to special service.
 
-**Uploader** receives the object's payload data, splits it into segments, and stores them in piece store.
+- **Gateway** is the entry point of each SP. It parses requests from the  client and dispatches them to special service.
 
-**Downloader** handles the user's downloading request and gets object data from the piece store.
+- **Uploader** receives the object's payload data, splits it into segments, and stores them in piece store.
 
-**Receiver** receives data pieces from Primary SP and stores them in the piece store when SP works as a secondary SP.
+- **Downloader** handles the user's downloading request and gets object data from the piece store.
 
-**Challenge** handles HA challenge requests and returns the challenged piece data and other pieces' hashes of the object.
+- **Receiver** receives data pieces from Primary SP and stores them in the piece store when SP works as a secondary SP.
 
-**TaskNode** works as the execute unit, it watches tasks(the smallest unit of a job) and executes them.
+- **Challenge** handles HA challenge requests and returns the challenged piece data and other pieces' hashes of the object.
 
-**Manager** responsible for the service management of SP.
+- **TaskNode** works as the execute unit, it watches tasks(the smallest unit of a job) and executes them.
 
-**Signer** signs the transaction messages to the  Greenfield chain with the SP's private key.
+- **Manager** responsible for the service management of SP.
 
-**PieceStore** interacts with underlying storage vendors, Eg. AWS S3.
+- **Signer** signs the transaction messages to the  Greenfield chain with the SP's private key.
 
-**JobDB** stores all the contexts of the background jobs and the metadata of the SP.
+- **PieceStore** interacts with underlying storage vendors, eg. AWS S3, MinIO.
 
+- **JobDB** stores all the contexts of the background jobs and the metadata of the SP.
