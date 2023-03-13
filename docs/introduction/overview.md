@@ -7,12 +7,10 @@ and the corresponding roles they play. They use Greenfield as the ledger and the
 will respond to users' requests to write (upload) and read (download) data, and serve as the gatekeeper for user rights and
 authentications.
 
-// TODO:: change picture
 ## Architecture
-<div align=center>
-<img src="../asset/architecture.png" alt="architecture.png" width="975"/>
-</div>
-&emsp;
+
+<div align=center><img src="../asset/sp_arch.jpg" alt="architecture.png" width="700"/></div>
+<div align="center"><i>Storage Provider Architecture</i></div>
 
 - **Gateway** is the entry point of each SP. It parses requests from the  client and dispatches them to special service.
 
