@@ -30,3 +30,8 @@ Build   : go1.19.1 darwin amd64 2023-03-13 14:11
 # show help
 ./gnfd-sp help
 ```
+
+## Deployment
+[Deploy SP](docs/tutorial/01-deployment.md)
+
+[Setup Local Test](docs/tutorial/03-localup.md)
