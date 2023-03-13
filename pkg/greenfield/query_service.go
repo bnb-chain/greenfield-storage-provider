@@ -2,13 +2,13 @@ package greenfield
 
 import (
 	"context"
+	"errors"
 	"math"
 	"time"
 
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -100,11 +100,11 @@ func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, objec
 // QueryBucketInfoAndObjectInfo return bucket info and object info, if not found, return the corresponding error code
 func (greenfield *Greenfield) QueryBucketInfoAndObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.BucketInfo, *storagetypes.ObjectInfo, error) {
 	bucketInfo, err := greenfield.QueryBucketInfo(ctx, bucket)
-	if err == storagetypes.ErrNoSuchBucket {
+	if errors.Is(err, storagetypes.ErrNoSuchBucket) {
 		return nil, nil, merrors.ErrNoSuchBucket
 	}
 	objectInfo, err := greenfield.QueryObjectInfo(ctx, bucket, object)
-	if err == storagetypes.ErrNoSuchObject {
+	if errors.Is(err, storagetypes.ErrNoSuchObject) {
 		return nil, nil, merrors.ErrNoSuchObject
 	}
 	return bucketInfo, objectInfo, nil

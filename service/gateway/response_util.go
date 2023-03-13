@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
@@ -104,15 +104,15 @@ func generateContentRangeHeader(w http.ResponseWriter, start int64, end int64) {
 
 func makeErrorDescription(err error) *errorDescription {
 	switch err {
-	case errors.ErrNoSuchObject:
+	case merrors.ErrNoSuchObject:
 		return NoSuchKey
-	case errors.ErrNoSuchBucket:
+	case merrors.ErrNoSuchBucket:
 		return NoSuchBucket
-	case errors.ErrAuthorizationFormat, errors.ErrRequestConsistent, errors.ErrSignatureConsistent, errors.ErrUnsupportedSignType:
+	case merrors.ErrAuthorizationFormat, merrors.ErrRequestConsistent, merrors.ErrSignatureConsistent, merrors.ErrUnsupportedSignType:
 		return SignatureNotMatch
-	case errors.ErrNoPermission, errors.ErrCheckPaymentAccountActive, errors.ErrCheckQuotaEnough:
+	case merrors.ErrNoPermission, merrors.ErrCheckPaymentAccountActive, merrors.ErrCheckQuotaEnough:
 		return AccessDenied
-	case errors.ErrCheckObjectCreated, errors.ErrCheckObjectSealed:
+	case merrors.ErrCheckObjectCreated, merrors.ErrCheckObjectSealed:
 		return InvalidObjectState
 	default:
 		return &errorDescription{errorCode: "InternalError", errorMessage: err.Error(), statusCode: http.StatusInternalServerError}

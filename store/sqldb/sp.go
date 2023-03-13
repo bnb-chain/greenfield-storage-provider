@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"gorm.io/gorm"
@@ -83,7 +83,7 @@ func (s *SpDBImpl) FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvi
 	}
 	records := []*sptypes.StorageProvider{}
 	for _, value := range queryReturn {
-		totalDeposit, ok := math.NewIntFromString(value.TotalDeposit)
+		totalDeposit, ok := sdkmath.NewIntFromString(value.TotalDeposit)
 		if !ok {
 			return records, fmt.Errorf("failed to parse int")
 		}
@@ -132,7 +132,7 @@ func (s *SpDBImpl) FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.
 
 	records := []*sptypes.StorageProvider{}
 	for _, value := range queryReturn {
-		totalDeposit, ok := math.NewIntFromString(value.TotalDeposit)
+		totalDeposit, ok := sdkmath.NewIntFromString(value.TotalDeposit)
 		if !ok {
 			return records, fmt.Errorf("failed to parse int")
 		}
@@ -167,7 +167,7 @@ func (s *SpDBImpl) GetSpByAddress(address string, addressType SpAddressType) (*s
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query sp info table: %s", result.Error)
 	}
-	totalDeposit, ok := math.NewIntFromString(queryReturn.TotalDeposit)
+	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
 	if !ok {
 		return nil, fmt.Errorf("failed to parse int")
 	}
@@ -214,7 +214,7 @@ func (s *SpDBImpl) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, e
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query sp info table: %s", result.Error)
 	}
-	totalDeposit, ok := math.NewIntFromString(queryReturn.TotalDeposit)
+	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
 	if !ok {
 		return nil, fmt.Errorf("failed to parse int")
 	}
@@ -243,7 +243,7 @@ func (s *SpDBImpl) GetOwnSpInfo() (*sptypes.StorageProvider, error) {
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query own sp record in sp info table: %s", result.Error)
 	}
-	totalDeposit, ok := math.NewIntFromString(queryReturn.TotalDeposit)
+	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
 	if !ok {
 		return nil, fmt.Errorf("failed to parse int")
 	}
