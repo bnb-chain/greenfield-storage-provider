@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"net"
-	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -19,7 +18,6 @@ import (
 type Metadata struct {
 	config     *metadata.MetadataConfig
 	name       string
-	running    atomic.Bool
 	store      bsdb.IStore
 	grpcServer *grpc.Server
 }
