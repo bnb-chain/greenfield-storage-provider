@@ -168,7 +168,7 @@ const (
 const (
 	// LruCacheLimit define maximum number of cached items in service trace queue
 	LruCacheLimit = 8192
-	// MaxCallMsgSize defines gPRCt max send or recv msg size
+	// MaxCallMsgSize defines gPRC max send or recv msg size
 	MaxCallMsgSize = 25 * 1024 * 1024
 	// DefaultReadQuotaSize defines bucket's default quota size
 	DefaultReadQuotaSize = 10 * 1024 * 1024 * 1024

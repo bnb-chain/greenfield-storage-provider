@@ -10,7 +10,7 @@ type IntegrityMeta struct {
 	Signature     []byte
 }
 
-// SpAddressType identify SP's address type
+// SpAddressType identify address type of  SP
 type SpAddressType int32
 
 const (
