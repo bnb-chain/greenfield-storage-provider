@@ -65,13 +65,14 @@ func (i *Impl) Process(height uint64) error {
 		return fmt.Errorf("failed to get block results from node: %s", err)
 	}
 
-	err = i.ExportEpoch(block)
-	if err != nil {
-		return fmt.Errorf("failed to ExportBlock: %s", err)
-	}
 	err = i.ExportEvents(i.Ctx, block, events)
 	if err != nil {
 		return fmt.Errorf("failed to ExportEvents: %s", err)
+	}
+
+	err = i.ExportEpoch(block)
+	if err != nil {
+		return fmt.Errorf("failed to ExportEpoch: %s", err)
 	}
 
 	return nil

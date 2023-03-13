@@ -17,9 +17,10 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/parser"
+
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 // Syncer synchronizes ec data to piece store
@@ -65,7 +66,7 @@ func (s *BlockSyncer) initClient() error {
 		return readErr
 	}
 	// read DSN from env
-	dsn, envErr := getDBConfigFromEnv(DSN_BLOCK_SYNCER)
+	dsn, envErr := getDBConfigFromEnv(DsnBlockSyncer)
 	if envErr != nil {
 		log.Errorf("readErr: %v", envErr)
 		return envErr
@@ -80,6 +81,11 @@ func (s *BlockSyncer) initClient() error {
 	if err != nil {
 		panic(err)
 	}
+	ctx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
+		ctx.Node,
+		ctx.Database,
+		ctx.Modules)
+
 	s.parserCtx = ctx
 	//s.config = config.Cfg.Parser
 	return nil
@@ -131,7 +137,7 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	workers := make([]*parser.Worker, config.Cfg.Parser.Workers)
 	for i := range workers {
 		workers[i] = parser.NewWorker(s.parserCtx, exportQueue, i, config.Cfg.Parser.ConcurrentSync)
-		workers[i].SetIndexer(NewIndexer(s.parserCtx.EncodingConfig.Marshaler, s.parserCtx.Node, s.parserCtx.Database, s.parserCtx.Modules))
+		workers[i].SetIndexer(s.parserCtx.Indexer)
 	}
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
