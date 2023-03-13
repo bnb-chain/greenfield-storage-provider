@@ -11,8 +11,9 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+
+	chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
 	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"

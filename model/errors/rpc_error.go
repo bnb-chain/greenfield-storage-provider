@@ -10,6 +10,10 @@ var (
 	ErrCacheMiss = errors.New("cache missing")
 	// ErrSealTimeout defines seal object timeout error
 	ErrSealTimeout = errors.New("seal object timeout")
+	// ErrNoSuchObject defines not existed object error
+	ErrNoSuchObject = errors.New("the specified key does not exist")
+	// ErrNoSuchBucket defines not existed bucket error
+	ErrNoSuchBucket = errors.New("the specified bucket does not exist")
 )
 
 // piece store errors
@@ -20,10 +24,6 @@ var (
 	ErrUnsupportedDelimiter = errors.New("unsupported delimiter")
 	// ErrInvalidObjectKey defines invalid object key error
 	ErrInvalidObjectKey = errors.New("invalid object key")
-	// ErrNotExitObject defines not exist object in memory error
-	ErrNotExitObject = errors.New("object not exist")
-	// ErrNotExistBucket defines not exist bucket error
-	ErrNotExistBucket = errors.New("bucket not exist")
 	// ErrNoPermissionAccessBucket defines deny access bucket error
 	ErrNoPermissionAccessBucket = errors.New("deny access bucket")
 )
@@ -38,19 +38,28 @@ var (
 	ErrDuplicateObject = errors.New("duplicate object")
 	// ErrPayloadZero defines payload size is zero error
 	ErrPayloadZero = errors.New("object payload is zero")
-
 	// ErrAuthorizationFormat defines the invalid authorization format error
 	ErrAuthorizationFormat = errors.New("authorization format error")
 	// ErrRequestConsistent defines the invalid request checksum error
-	ErrRequestConsistent = errors.New("failed to check request consistent")
+	ErrRequestConsistent = errors.New("request is tampered")
 	// ErrSignatureConsistent defines the invalid signature error
-	ErrSignatureConsistent = errors.New("failed to check signature consistent")
+	ErrSignatureConsistent = errors.New("signature is not consistent")
 	// ErrUnsupportedSignType defines the unsupported signature type error
 	ErrUnsupportedSignType = errors.New("unsupported signature type")
 	// ErrEmptyReqHeader defines the empty header error
 	ErrEmptyReqHeader = errors.New("request header is empty")
 	// ErrInvalidHeader defines the invalid header error
 	ErrInvalidHeader = errors.New("invalid request header")
+	// ErrNoPermission defines the authorization error
+	ErrNoPermission = errors.New("no permission")
+	// ErrCheckObjectCreated defines the check object state error
+	ErrCheckObjectCreated = errors.New("object is not created")
+	// ErrCheckObjectSealed defines the check object state error
+	ErrCheckObjectSealed = errors.New("object is not sealed")
+	// ErrCheckPaymentAccountActive defines check payment account state is active
+	ErrCheckPaymentAccountActive = errors.New("payment account is not active")
+	// ErrCheckQuotaEnough defines check quota is enough
+	ErrCheckQuotaEnough = errors.New("quota is not enough")
 )
 
 // signer service error

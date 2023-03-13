@@ -39,12 +39,12 @@ func (client *ChallengeClient) Close() error {
 }
 
 // ChallengePiece send challenge piece request
-func (client *ChallengeClient) ChallengePiece(ctx context.Context, objectID uint64, replicateIdx int32, segmentIdx uint32,
+func (client *ChallengeClient) ChallengePiece(ctx context.Context, objectID uint64, replicaIdx int32, segmentIdx uint32,
 	opts ...grpc.CallOption) ([]byte, [][]byte, []byte, error) {
 	resp, err := client.challenge.ChallengePiece(ctx, &types.ChallengePieceRequest{
-		ObjectId:     objectID,
-		ReplicateIdx: replicateIdx,
-		SegmentIdx:   segmentIdx,
+		ObjectId:   objectID,
+		ReplicaIdx: replicaIdx,
+		SegmentIdx: segmentIdx,
 	}, opts...)
 	return resp.IntegrityHash, resp.PieceHash, resp.PieceData, err
 }
