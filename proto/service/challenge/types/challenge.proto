@@ -10,7 +10,7 @@ message ChallengePieceRequest {
   // replica_idx defines the challenge replica idx
   int32 replica_idx = 2;
   // segment_idx defines the challenge segment idx
-  uint32 segment_idx = 5;
+  uint32 segment_idx = 3;
 }
 
 // ChallengePieceResponse is response type for the ChallengePiece RPC method.

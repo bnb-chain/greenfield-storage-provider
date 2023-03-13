@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
@@ -13,8 +14,8 @@ import (
 var _ types.DownloaderServiceServer = &Downloader{}
 
 // DownloaderObject download the payload of the object.
-func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectRequest,
-	stream types.DownloaderService_DownloaderObjectServer) (err error) {
+func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
+	stream types.DownloaderService_GetObjectServer) (err error) {
 	var (
 		size         int
 		offset       uint64
@@ -22,7 +23,7 @@ func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectReques
 		isValidRange bool
 	)
 	ctx := log.Context(context.Background(), req)
-	resp := &types.DownloaderObjectResponse{}
+	resp := &types.GetObjectResponse{}
 	defer func() {
 		if err != nil {
 			return
@@ -45,7 +46,7 @@ func (downloader *Downloader) DownloaderObject(req *types.DownloaderObjectReques
 			ReadTime:    sqldb.GetCurrentUnixTime(),
 		},
 		&sqldb.BucketQuota{
-			ReadQuotaSize: int64(bucketInfo.GetReadQuota()),
+			ReadQuotaSize: int64(bucketInfo.GetReadQuota()) + model.DefaultReadQuotaSize,
 		},
 	); err != nil {
 		log.Errorw("failed to check billing due to bucket quota", "error", err)

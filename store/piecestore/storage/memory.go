@@ -46,7 +46,7 @@ func (m *memoryStore) GetObject(ctx context.Context, key string, offset, limit i
 	}
 	d, ok := m.objects[key]
 	if !ok {
-		return nil, errors.ErrNotExistObject
+		return nil, errors.ErrNoSuchObject
 	}
 
 	if offset > int64(len(d.data)) {

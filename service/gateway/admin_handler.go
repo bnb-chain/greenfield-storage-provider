@@ -3,7 +3,6 @@ package gateway
 import (
 	"context"
 	"encoding/hex"
-	"math"
 	"net/http"
 
 	"github.com/bnb-chain/greenfield/x/storage/types"
@@ -76,8 +75,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			errDescription = InvalidHeader
 			return
 		}
-		// TODO: to config it
-		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: math.MaxUint64}
+		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: model.DefaultExpiredHeight}
 		approvalSignature, err = g.signer.SignBucketApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create bucket approval", "error", err)
@@ -102,8 +100,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			errDescription = InvalidHeader
 			return
 		}
-		// TODO: to config it
-		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: math.MaxUint64}
+		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: model.DefaultExpiredHeight}
 		approvalSignature, err = g.signer.SignObjectApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create object approval", "error", err)

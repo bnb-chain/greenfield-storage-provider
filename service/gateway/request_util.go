@@ -295,7 +295,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		}
 		if streamRecord.Status != paymenttypes.STREAM_ACCOUNT_STATUS_ACTIVE {
 			log.Errorw("failed to check payment due to account status is not active", "status", streamRecord.Status)
-			return errors.ErrCheckPayment
+			return errors.ErrCheckPaymentAccountActive
 		}
 	}
 	return nil

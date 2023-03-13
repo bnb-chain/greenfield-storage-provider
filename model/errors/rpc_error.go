@@ -10,10 +10,10 @@ var (
 	ErrCacheMiss = errors.New("cache missing")
 	// ErrSealTimeout defines seal object timeout error
 	ErrSealTimeout = errors.New("seal object timeout")
-	// ErrNotExistObject defines not exist object error
-	ErrNotExistObject = errors.New("object is not existed")
-	// ErrNotExistBucket defines not exist bucket error
-	ErrNotExistBucket = errors.New("bucket is not existed")
+	// ErrNoSuchObject defines not existed object error
+	ErrNoSuchObject = errors.New("the specified key does not exist")
+	// ErrNoSuchBucket defines not existed bucket error
+	ErrNoSuchBucket = errors.New("the specified bucket does not exist")
 )
 
 // piece store errors
@@ -56,10 +56,10 @@ var (
 	ErrCheckObjectCreated = errors.New("object is not created")
 	// ErrCheckObjectSealed defines the check object state error
 	ErrCheckObjectSealed = errors.New("object is not sealed")
-	// ErrCheckPayment defines check payment status
-	ErrCheckPayment = errors.New("payment account is not active")
-	// ErrCheckQuota defines check quota
-	ErrCheckQuota = errors.New("quota is not enough")
+	// ErrCheckPaymentAccountActive defines check payment account state is active
+	ErrCheckPaymentAccountActive = errors.New("payment account is not active")
+	// ErrCheckQuotaEnough defines check quota is enough
+	ErrCheckQuotaEnough = errors.New("quota is not enough")
 )
 
 // signer service error

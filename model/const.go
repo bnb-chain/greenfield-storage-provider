@@ -112,8 +112,16 @@ const (
 
 // define gateway constants
 const (
-	// StreamBufSize defines gateway stream forward payload buf size
-	StreamBufSize = 64 * 1024
+	// DefaultStreamBufSize defines gateway stream forward payload buf size
+	DefaultStreamBufSize = 64 * 1024
+	// DefaultExpiredHeight defines approval expired height
+	DefaultExpiredHeight = 100
+)
+
+// define downloader constants
+const (
+	// DefaultReadQuotaSize defines bucket's default quota size
+	DefaultReadQuotaSize = 10 * 1024 * 1024 * 1024
 )
 
 // http header constants

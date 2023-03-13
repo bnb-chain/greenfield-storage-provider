@@ -104,13 +104,13 @@ func generateContentRangeHeader(w http.ResponseWriter, start int64, end int64) {
 
 func makeErrorDescription(err error) *errorDescription {
 	switch err {
-	case errors.ErrNotExistObject:
+	case errors.ErrNoSuchObject:
 		return NoSuchKey
-	case errors.ErrNotExistBucket:
+	case errors.ErrNoSuchBucket:
 		return NoSuchBucket
 	case errors.ErrAuthorizationFormat, errors.ErrRequestConsistent, errors.ErrSignatureConsistent, errors.ErrUnsupportedSignType:
 		return SignatureNotMatch
-	case errors.ErrNoPermission, errors.ErrCheckPayment, errors.ErrCheckQuota:
+	case errors.ErrNoPermission, errors.ErrCheckPaymentAccountActive, errors.ErrCheckQuotaEnough:
 		return AccessDenied
 	case errors.ErrCheckObjectCreated, errors.ErrCheckObjectSealed:
 		return InvalidObjectState

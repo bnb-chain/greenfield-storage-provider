@@ -24,7 +24,7 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		segmentSize            uint64
 		size                   int
 		readN                  int
-		buf                    = make([]byte, model.StreamBufSize)
+		buf                    = make([]byte, model.DefaultStreamBufSize)
 		integrityHash          []byte
 		integrityHashSignature []byte
 	)

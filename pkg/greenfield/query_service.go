@@ -101,11 +101,11 @@ func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, objec
 func (greenfield *Greenfield) QueryBucketInfoAndObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.BucketInfo, *storagetypes.ObjectInfo, error) {
 	bucketInfo, err := greenfield.QueryBucketInfo(ctx, bucket)
 	if err == storagetypes.ErrNoSuchBucket {
-		return nil, nil, merrors.ErrNotExistBucket
+		return nil, nil, merrors.ErrNoSuchBucket
 	}
 	objectInfo, err := greenfield.QueryObjectInfo(ctx, bucket, object)
 	if err == storagetypes.ErrNoSuchObject {
-		return nil, nil, merrors.ErrNotExistObject
+		return nil, nil, merrors.ErrNoSuchObject
 	}
 	return bucketInfo, objectInfo, nil
 }

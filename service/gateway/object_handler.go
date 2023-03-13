@@ -79,7 +79,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req := &types.DownloaderObjectRequest{
+	req := &types.GetObjectRequest{
 		BucketInfo:  reqContext.bucketInfo,
 		ObjectInfo:  reqContext.objectInfo,
 		UserAddress: addr.String(),
@@ -88,7 +88,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		RangeEnd:    rangeEnd,
 	}
 	ctx := log.Context(context.Background(), req)
-	stream, err := g.downloader.DownloaderObject(ctx, req)
+	stream, err := g.downloader.GetObject(ctx, req)
 	if err != nil {
 		log.Errorf("failed to get object", "error", err)
 		errDescription = makeErrorDescription(err)
@@ -138,8 +138,8 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		addr           sdk.AccAddress
 		size           int
 		readN          int
-		buf            = make([]byte, model.StreamBufSize)
-		hashBuf        = make([]byte, model.StreamBufSize)
+		buf            = make([]byte, model.DefaultStreamBufSize)
+		hashBuf        = make([]byte, model.DefaultStreamBufSize)
 		md5Hash        = md5.New()
 	)
 
@@ -185,7 +185,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stream, err := g.uploader.UploadObject(context.Background())
+	stream, err := g.uploader.PutObject(context.Background())
 	if err != nil {
 		log.Errorf("failed to put object", "error", err)
 		errDescription = makeErrorDescription(err)
@@ -199,7 +199,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if readN > 0 {
-			req := &uploadertypes.UploadObjectRequest{
+			req := &uploadertypes.PutObjectRequest{
 				ObjectInfo: reqContext.objectInfo,
 				Payload:    buf[:readN],
 			}
