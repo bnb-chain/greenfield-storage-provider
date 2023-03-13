@@ -57,6 +57,7 @@ type PayloadStream struct {
 }
 
 // NewAsyncPayloadStream return an instance of PayloadStream, and start async read stream
+// TODO:: implement the SyncPayloadStream in the future base on requirements
 func NewAsyncPayloadStream() *PayloadStream {
 	stream := &PayloadStream{
 		entryCh: make(chan *SegmentEntry, StreamResultSize),
