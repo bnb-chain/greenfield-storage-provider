@@ -20,7 +20,7 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *stypes.Metada
 	}()
 
 	var buckets []*model.Bucket
-	// mock data until connect db
+	//TODO:: cancel mock after impl db
 	bucket1 := &model.Bucket{
 		Owner:            "46765cbc-d30c-4f4a-a814-b68181fcab12",
 		BucketName:       "BBC News",

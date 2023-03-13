@@ -3,10 +3,11 @@ package client
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 )
 
 // MetadataClient is an metadata gRPC service client wrapper
@@ -20,7 +21,7 @@ type MetadataClient struct {
 func NewMetadataClient(address string) (*MetadataClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Errorw("invoke metadata service grpc.DialContext failed", "error", err)
+		log.Errorw("failed to invoke metadata service grpc.DialContext", "error", err)
 		return nil, err
 	}
 	client := &MetadataClient{
@@ -41,7 +42,7 @@ func (client *MetadataClient) GetUserBuckets(ctx context.Context, in *stypes.Met
 	resp, err := client.metadata.GetUserBuckets(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
-		log.CtxErrorw(ctx, "send get user buckets rpc failed", "error", err)
+		log.CtxErrorw(ctx, "failed to send get user buckets rpc", "error", err)
 		return nil, err
 	}
 	return resp, nil
@@ -52,7 +53,7 @@ func (client *MetadataClient) ListObjectsByBucketName(ctx context.Context, in *s
 	resp, err := client.metadata.ListObjectsByBucketName(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
-		log.CtxErrorw(ctx, "send list object by bucket name rpc failed", "error", err)
+		log.CtxErrorw(ctx, "failed to send list objects by bucket name rpc", "error", err)
 		return nil, err
 	}
 	return resp, nil

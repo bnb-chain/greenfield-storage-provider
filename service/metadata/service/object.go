@@ -19,7 +19,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *styp
 		}
 	}()
 	var objects []*model.Object
-	// mock data until connect db
+	//TODO:: cancel mock after impl db
 	object1 := &model.Object{
 		Owner:                "46765cbc-d30c-4f4a-a814-b68181fcab12",
 		BucketName:           req.BucketName,

@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	metadataclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -16,6 +15,7 @@ import (
 	chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
 	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
+	metadataclient "github.com/bnb-chain/greenfield-storage-provider/service/metadata/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	syncerclient "github.com/bnb-chain/greenfield-storage-provider/service/syncer/client"
 	uploaderclient "github.com/bnb-chain/greenfield-storage-provider/service/uploader/client"

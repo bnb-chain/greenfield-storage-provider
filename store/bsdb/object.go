@@ -8,7 +8,7 @@ import (
 
 // ListObjectsByBucketName list objects info by a bucket name
 func (s *Store) ListObjectsByBucketName(ctx context.Context, bucketName string) (ret []*metadata.Object, err error) {
-	// mock data until connect db
+	//TODO:: cancel mock after impl db
 	object1 := &metadata.Object{
 		Owner:                "46765cbc-d30c-4f4a-a814-b68181fcab12",
 		BucketName:           bucketName,

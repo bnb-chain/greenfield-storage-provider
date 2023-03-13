@@ -189,3 +189,8 @@ const (
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by syncer
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 )
+
+const (
+	BucketTableName = "bucket"
+	ObjectTableName = "object"
+)

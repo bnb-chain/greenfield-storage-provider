@@ -8,7 +8,7 @@ import (
 
 // GetUserBuckets get buckets info by a user address
 func (s *Store) GetUserBuckets(ctx context.Context, accountID string) (ret []*metadata.Bucket, err error) {
-	// mock data until connect db
+	//TODO:: cancel mock after impl db
 	bucket1 := metadata.Bucket{
 		Owner:            "46765cbc-d30c-4f4a-a814-b68181fcab12",
 		BucketName:       "BBC News",

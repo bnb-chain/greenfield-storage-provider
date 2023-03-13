@@ -1,35 +1,39 @@
 package metadata
 
+import (
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+)
+
+// Object is the structure for user object
 type Object struct {
+	// Owner is the account address of object creator, it is also the object owner.
 	Owner string `json:"owner"`
-	// bucket_name is the name of the bucket
+	// BucketName is the name of the bucket
 	BucketName string `json:"bucketName"`
-	// object_name is the name of object
+	// ObjectName is the name of object
 	ObjectName string `json:"objectName"`
-	// id is the unique identifier of object
+	// ID is the unique identifier of object
 	ID string `json:"id"`
-	// payloadSize is the total size of the object payload
+	// PayloadSize is the total size of the object payload
 	PayloadSize uint64 `json:"payloadSize"`
-	// is_public define the highest permissions for object. When the object is public, everyone can access it.
+	// IsPublic defines the highest permissions for object. When the object is public, everyone can access it.
 	IsPublic bool `json:"isPublic"`
-	// content_type define the format of the object which should be a standard MIME type.
+	// ContentType defines the format of the object which should be a standard MIME type.
 	ContentType string `json:"contentType"`
-	// create_at define the block number when the object created
+	// CreateAt defines the block number when the object created
 	CreateAt int64 `json:"createAt"`
-	// object_status define the upload status of the object.
+	// ObjectStatus defines the upload status of the object.
 	ObjectStatus int `json:"objectStatus"`
-	// redundancy_type define the type of the redundancy which can be multi-replication or EC.
+	// RedundancyType defines the type of the redundancy which can be multi-replication or EC.
 	RedundancyType int `json:"redundancyType"`
-	// source_type define the source of the object.
+	// SourceType defines the source of the object.
 	SourceType int `json:"sourceType"`
-	// checksums define the root hash of the pieces which stored in a SP.
-	//Checksums []byte `json:"checksums"`
-	// secondary_sp_addresses define the addresses of secondary_sps
+	// SecondarySpAddresses defines the addresses of secondary_sps
 	SecondarySpAddresses []string `json:"secondarySpAddresses"`
-	// lockedBalance
+	// LockedBalance defines locked balance of object
 	LockedBalance string `json:"lockedBalance"`
 }
 
 func (a *Object) TableName() string {
-	return "object"
+	return model.ObjectTableName
 }

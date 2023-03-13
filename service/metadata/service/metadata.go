@@ -22,8 +22,8 @@ type Metadata struct {
 	grpcServer *grpc.Server
 }
 
-// NewMetadataService returns an instance of Metadata that implementation of
-// the lifecycle.Service and MetadataService interface
+// NewMetadataService returns an instance of Metadata that
+// supply query service for Inscription network
 func NewMetadataService(cfg *metadata.MetadataConfig) (metadata *Metadata, err error) {
 	metadataStore, _ := bsdb.NewStore(cfg.SpDBConfig)
 	metadata = &Metadata{
