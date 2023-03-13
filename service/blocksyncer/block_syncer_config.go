@@ -13,7 +13,8 @@ import (
 )
 
 var avgBlockTime = time.Second
-var DSN_BLOCK_SYNCER = "BLOCK_SYNCER_DSN"
+
+const DSN_BLOCK_SYNCER = "BLOCK_SYNCER_DSN"
 
 var DefaultBlockSyncerConfig = &tomlconfig.TomlConfig{
 	Node: tomlconfig.NodeConfig{
