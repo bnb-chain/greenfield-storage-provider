@@ -85,7 +85,7 @@ const (
 	SpDBDataBase = "SP_DB_DATABASE"
 
 	// SpOperatorAddress defines env variable name for sp operator address
-	SpOperatorAddress = "SP_OPERATOR_PUB_KEY"
+	SpOperatorAddress = "greenfield-storage-provider"
 	// SpSignerAPIKey defines env variable for signer api key
 	SpSignerAPIKey = "SIGNER_API_KEY"
 	// SpOperatorPrivKey defines env variable name for sp operator priv key
@@ -96,32 +96,6 @@ const (
 	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
 	// SpSealPrivKey defines env variable name for sp seal priv key
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
-)
-
-// define cache size
-const (
-	// LruCacheLimit define maximum number of cached items in service trace queue
-	LruCacheLimit = 8192
-)
-
-// RPC config
-const (
-	// MaxCallMsgSize defines gPRCt max send or recv msg size
-	MaxCallMsgSize = 25 * 1024 * 1024
-)
-
-// define gateway constants
-const (
-	// DefaultStreamBufSize defines gateway stream forward payload buf size
-	DefaultStreamBufSize = 64 * 1024
-	// DefaultTimeoutHeight defines approval timeout height
-	DefaultTimeoutHeight = 100
-)
-
-// define downloader constants
-const (
-	// DefaultReadQuotaSize defines bucket's default quota size
-	DefaultReadQuotaSize = 10 * 1024 * 1024 * 1024
 )
 
 // http header constants
@@ -188,4 +162,18 @@ const (
 	GnfdSegmentSizeHeader = "X-Gnfd-Segment-Size"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by syncer
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
+)
+
+// define all kinds of size
+const (
+	// LruCacheLimit define maximum number of cached items in service trace queue
+	LruCacheLimit = 8192
+	// MaxCallMsgSize defines gPRCt max send or recv msg size
+	MaxCallMsgSize = 25 * 1024 * 1024
+	// DefaultReadQuotaSize defines bucket's default quota size
+	DefaultReadQuotaSize = 10 * 1024 * 1024 * 1024
+	// DefaultStreamBufSize defines gateway stream forward payload buf size
+	DefaultStreamBufSize = 64 * 1024
+	// DefaultTimeoutHeight defines approval timeout height
+	DefaultTimeoutHeight = 100
 )
