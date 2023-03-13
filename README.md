@@ -11,5 +11,22 @@ make install-tools
 ```shell
 bash build.sh &&
 cd build &&
-./gnfd-sp --version
+
+# show version
+./gnfd-sp version
+Greenfield Storage Provider
+    __                                                       _     __
+    _____/ /_____  _________ _____ ____     ____  _________ _   __(_)___/ /__  _____
+    / ___/ __/ __ \/ ___/ __  / __  / _ \   / __ \/ ___/ __ \ | / / / __  / _ \/ ___/
+    (__  ) /_/ /_/ / /  / /_/ / /_/ /  __/  / /_/ / /  / /_/ / |/ / / /_/ /  __/ /
+    /____/\__/\____/_/   \__,_/\__, /\___/  / .___/_/   \____/|___/_/\__,_/\___/_/
+    /____/       /_/
+
+Version : v0.0.3
+Branch  : master
+Commit  : e332362ec59724e143725dc5a5a0dacae3be73be
+Build   : go1.19.1 darwin amd64 2023-03-13 14:11
+
+# show help
+./gnfd-sp help
 ```
