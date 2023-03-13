@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
+	metadataclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -36,7 +36,7 @@ type Gateway struct {
 	challenge  *challengeclient.ChallengeClient
 	syncer     *syncerclient.SyncerClient
 	signer     *signerclient.SignerClient
-	metadata   *client.MetadataClient
+	metadata   *metadataclient.MetadataClient
 }
 
 // NewGatewayService return the gateway instance
@@ -89,7 +89,7 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 	}
 
 	if cfg.MetadataServiceAddress != "" {
-		if g.metadata, err = client.NewMetadataClient(cfg.MetadataServiceAddress); err != nil {
+		if g.metadata, err = metadataclient.NewMetadataClient(cfg.MetadataServiceAddress); err != nil {
 			log.Errorw("failed to create metadata client", "error", err)
 			return nil, err
 		}
