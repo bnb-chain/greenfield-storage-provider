@@ -43,6 +43,5 @@ func (client *DownloaderClient) Close() error {
 // GetObject download the payload of the object
 func (client *DownloaderClient) GetObject(ctx context.Context, req *types.GetObjectRequest,
 	opts ...grpc.CallOption) (types.DownloaderService_GetObjectClient, error) {
-	// ctx = log.Context(context.Background(), req)
 	return client.downloader.GetObject(ctx, req, opts...)
 }
