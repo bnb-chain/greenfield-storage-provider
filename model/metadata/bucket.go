@@ -27,6 +27,7 @@ type Bucket struct {
 	PaymentPriceTime int64 `json:"paymentPriceTime"`
 }
 
+// TableName is used to set Bucket table name in database
 func (a *Bucket) TableName() string {
 	return model.BucketTableName
 }

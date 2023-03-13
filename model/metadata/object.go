@@ -34,6 +34,7 @@ type Object struct {
 	LockedBalance string `json:"lockedBalance"`
 }
 
+// TableName is used to set Object table name in database
 func (a *Object) TableName() string {
 	return model.ObjectTableName
 }

@@ -190,7 +190,10 @@ const (
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 )
 
+// define table name constant of block syncer db
 const (
+	// BucketTableName defines the name of bucket table
 	BucketTableName = "bucket"
+	// ObjectTableName defines the name of object table
 	ObjectTableName = "object"
 )
