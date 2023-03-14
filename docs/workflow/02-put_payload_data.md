@@ -16,7 +16,7 @@
 * Asynchronously executes replicating object data to secondary SPs, and the uploader can always quickly receive the successful result from the TaskNode. The JobContext's state turn to `ALLOC_SECONDARY_DOING` from `UPLOAD_OBJECT_DONE`.
 * Sends the GetSecondarySPApproval request to P2P node, it will broadcast to other SPs , and collect results back to TaskNode for selecting the secondary SPs. The JobContext's state enters `ALLOC_SECONDARY_DONE`, and turns into `REPLICATE_OBJECT_DOING` state immediately from `ALLOC_SECONDARY_DONE` state.
 * Gets segments from PieceStore in parallel and computes a data redundancy solution for these segments based on Erasure Coding (EC), generating the EC pieces. Reorganize the EC pieces into six replicate data groups, each replicate data group contains several EC pieces according to the Redundancy policy.
-* Then Sends the replicate data groups in streaming to the selected secondary SPs in parallel.
+* Then sends the replicate data groups in streaming to the selected secondary SPs in parallel.
 * The secondary SP information of JobContext will be updated once if the replicating of a secondary SP is completed, until all secondary SPs are completed, the state of the JobContext will be updated to `REPLICATE_OBJECT_DONE` from `REPLICATE_OBJECT_DOING`.
 
 ## Receiver

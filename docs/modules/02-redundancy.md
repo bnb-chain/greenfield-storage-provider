@@ -40,4 +40,4 @@ Below is how the key of each piece is defined:
 
 2. The key is `"objectID_s"+"segIndex_p"+"SPIndex"` for each groups after EC, such as `objectID_s0_p0`.
 
-The same column data will be stored into same sp SP.
+The same column data will be stored into same SP.

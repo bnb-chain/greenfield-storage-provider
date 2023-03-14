@@ -32,4 +32,4 @@ authentications.
 
 - **PieceStore** interacts with underlying storage vendors, eg. AWS S3, MinIO.
 
-- **JobDB** stores all the contexts of the background jobs and the metadata of the SP.
+- **SPDB** stores all the contexts of the background jobs and the metadata of the SP.
