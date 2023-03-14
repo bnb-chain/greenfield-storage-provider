@@ -1,5 +1,5 @@
 # services list are to be started
-Service = ["gateway", "uploader", "downloader", "challenge", "stonenode", "syncer", "signer"]
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer"]
 
 # sp operator address generate from sp's 'OperatorPublicKey'
 SpOperatorAddress = ""
@@ -20,8 +20,8 @@ metadata = "localhost:9733"
 challenge = "localhost:9333"
 downloader = "localhost:9233"
 signer = "localhost:9633"
-stonenode = "localhost:9433"
-syncer = "localhost:9533"
+tasknode = "localhost:9433"
+receiver = "localhost:9533"
 uploader = "localhost:9133"
 
 # SQL DB ia a strong dependency for sp

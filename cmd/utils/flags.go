@@ -21,7 +21,7 @@ var (
 	ServerFlag = &cli.StringFlag{
 		Name:    "server",
 		Aliases: []string{"service", "s"},
-		Usage:   "Services to be started list, eg -server gateway,uploader,syncer... ",
+		Usage:   "Services to be started list, eg -server gateway,uploader,receiver... ",
 	}
 	DBUserFlag = &cli.StringFlag{
 		Name:    "db.user",

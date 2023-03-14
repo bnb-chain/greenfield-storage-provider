@@ -62,8 +62,8 @@ downloader           Download object from the backend and statistical read traff
 gateway              Entrance for external user access
 metadata             Provides the ability to query meta data
 signer               Sign the transaction and broadcast to chain
-stonenode            The smallest unit of background task execution(TODO::change service name)
-syncer               Receive object from other storage provider and store(TODO::change service name)
+tasknode             The smallest unit of background task execution
+receiver             Receive object from other storage provider and store
 uploader             Upload object to the backend
 
 
