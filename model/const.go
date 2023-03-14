@@ -28,15 +28,15 @@ var (
 
 // SpServiceDesc defines the service description in storage provider
 var SpServiceDesc = map[string]string{
-	GatewayService:     "Entrance for external user access",
-	UploaderService:    "Upload object to the backend",
-	DownloaderService:  "Download object from the backend and statistical read traffic",
-	ChallengeService:   "Provides the ability to query the integrity hash",
-	TaskNodeService:    "The smallest unit of background task execution",
-	ReceiverService:    "Receive object from other storage provider and store",
+	GatewayService:     "Receives the sdk request",
+	UploaderService:    "Uploads object to the backend",
+	DownloaderService:  "Downloads object from the backend and statistical read traffic",
+	ChallengeService:   "Provides the ability to query the integrity hash and piece data",
+	TaskNodeService:    "Executes background task, include replication task",
+	ReceiverService:    "Receives object from other storage provider and store",
 	SignerService:      "Sign the transaction and broadcast to chain",
 	MetadataService:    "Provides the ability to query meta data",
-	BlockSyncerService: "Syncer block data to db",
+	BlockSyncerService: "Syncs block data to db",
 }
 
 // define storage provider service gRPC default address
