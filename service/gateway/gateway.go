@@ -24,7 +24,7 @@ import (
 // Gateway is the primary entry point of SP
 type Gateway struct {
 	config     *GatewayConfig
-	running    atomic.Bool
+	running    atomic.Value
 	httpServer *http.Server
 
 	// chain is the required component, used to check authorization
@@ -106,7 +106,7 @@ func (g *Gateway) Name() string {
 
 // Start implement the lifecycle interface
 func (g *Gateway) Start(ctx context.Context) error {
-	if g.running.Swap(true) {
+	if g.running.Swap(true) == true {
 		return errors.New("gateway has started")
 	}
 	go g.serve()
@@ -130,7 +130,7 @@ func (g *Gateway) serve() {
 
 // Stop implement the lifecycle interface
 func (g *Gateway) Stop(ctx context.Context) error {
-	if !g.running.Swap(false) {
+	if g.running.Swap(false) == false {
 		return errors.New("gateway has stopped")
 	}
 	var errs []error
