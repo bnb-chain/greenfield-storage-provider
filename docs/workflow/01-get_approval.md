@@ -1,19 +1,20 @@
 # Get Approval
 
-Before CreateBucket, PutObject, replicate Object to the secondary SPs, the request initiator need send a GetApproval request to 
-ask whether the SP is willing to serve the related objects. The SP can consider whether it is willing to accept approval based 
-on some dimensions, such ad bucket, object and user, eg: SP can reject users with bad reputation, and can reject specific objects 
-or buckets. The SP acknowledges the request by signing a message about the operation and response to the initiator, if the SP does 
-not want to serve(the default policy is to serve, each SP can customize its own strategy), it can refuse to sign.
+When creating a bucket on the primary SP or storing data to one SP, such as CreateBucket, PutObject, ReplicateObjectData operations, 
+the request originator need send a GetApproval request to ask whether the SP is willing to serve the request. The SP can consider 
+whether it is willing to accept approval based on some dimensions, such ad bucket, object and user, eg: SP can reject users with 
+bad reputation, and can reject specific objects or buckets. The SP acknowledges the request by signing a message for the operation 
+and response to the originator, if the SP does not want to serve(the default policy is to serve, each SP can customize its own strategy), 
+it can refuse to the request.
 
 ## Gateway
-* Receives the GetApproval request from the request initiator.
+* Receives the GetApproval request from the request originator.
 * Verifies the signature of request to ensure that the request has not been tampered with.
 * Checks the authorization to ensure the corresponding account is existed.
 * Fills the CreateBucket/PutObject/ReplicateObjectData message's timeout field and dispatches the request to Signer service.
-* Gets Signature from Signer and fill the message's approval signature field, and returns to the request initiator.
+* Gets Signature from Signer and fills the message's approval signature field, and returns to the request originator.
 
-### GetApproval to the primary SP
+### GetApproval message to primary SP
 ```protobuf
 message Approval {
   uint64 expired_height = 1;
@@ -65,7 +66,7 @@ message MsgCreateObject {
 ```
 
 
-### GetApproval to the secondary SP
+### GetApproval message to secondary SP
 ```protobuf
 
 message ReplicateApproval {
@@ -81,8 +82,7 @@ message MsgReplicateObjectData {
 
 ```
 * The SP receives the CreateBucket/CreateObject/ReplicateObjectData GetApproval request.
-  * If refuse to serve(the default policy is to serve, each SP can customize its own strategy), the SP returns a refused response and reason.
-  * If willing to serve, the SP add the expired-height/expired-time  field to the Approval field and sign it, and returns.
+  * If the SP is willing to serve the request, it fills the expired-height and expired-time fields of the message and sign it, then responses to the originator; otherwise it refuses with a message response.
 
 ## Signer
-* Receives the CreateBucket/PutObject/ReplicateObjectData message, sign it by using the approval private key and response to the Gateway service.
+* Receives the CreateBucket/PutObject/ReplicateObjectData message, sign it with the SP's private key and response to the Gateway service.
