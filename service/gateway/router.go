@@ -11,13 +11,18 @@ import (
 )
 
 const (
-	putObjectRouterName           = "PutObject"
-	getObjectRouterName           = "GetObject"
-	approvalRouterName            = "GetApproval"
-	challengeRouterName           = "Challenge"
-	syncPieceRouterName           = "SyncPiece"
-	getUserBucketsRouterName      = "GetUserBuckets"
-	listObjectsByBucketRouterName = "ListObjectsByBucketName"
+	putObjectRouterName      = "PutObject"
+	getObjectRouterName      = "GetObject"
+	approvalRouterName       = "GetApproval"
+	challengeRouterName      = "Challenge"
+	syncPieceRouterName      = "SyncPiece"
+	getUserBucketsRouterName = "GetUserBuckets"
+	//TODO delete redundent name
+	getUserBucketsCountRouterName                  = "GetUserBucketsCount"
+	getBucketByBucketIDRouterName                  = "GetBucketByBucketID"
+	getBucketByBucketNameRouterName                = "GetBucketByBucketName"
+	listObjectsByBucketRouterName                  = "ListObjectsByBucketName"
+	listDeletedObjectsByBlockNumberRangeRouterName = "ListDeletedObjectsByBlockNumberRange"
 )
 
 const (
@@ -50,7 +55,21 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
 		HandlerFunc(g.getObjectHandler)
+	bucketRouter.NewRoute().
+		Name(listObjectsByBucketRouterName).
+		Methods(http.MethodGet).
+		Path("/").
+		HandlerFunc(g.listObjectsByBucketNameHandler)
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
+
+	// bucket list router, virtual-hosted style
+	bucketListRouter := r.Host(g.config.Domain).Subrouter()
+	bucketListRouter.NewRoute().
+		Name(getUserBucketsRouterName).
+		Methods(http.MethodGet).
+		Path("/").
+		HandlerFunc(g.getUserBucketsHandler)
+	bucketListRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	// admin router, path style
 	r.Path(model.GetApprovalPath).
@@ -68,14 +87,31 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodPut).
 		HandlerFunc(g.syncPieceHandler)
 	//metadata router
-	r.Name(getUserBucketsRouterName).
+	//r.Name(getUserBucketsRouterName).
+	//	Methods(http.MethodGet).
+	//	Path("/accounts/{account_id:.+}/buckets").
+	//	HandlerFunc(g.getUserBucketsHandler)
+	r.Name(getUserBucketsCountRouterName).
 		Methods(http.MethodGet).
-		Path("/accounts/{account_id:.+}/buckets").
-		HandlerFunc(g.getUserBucketsHandler)
-	r.Name(listObjectsByBucketRouterName).
+		Path("/accounts/{account_id:.+}/buckets/count").
+		HandlerFunc(g.getUserBucketsCountHandler)
+	r.Name(getBucketByBucketNameRouterName).
 		Methods(http.MethodGet).
-		Path("/accounts/{account_id:.+}/buckets/{bucket_name:.+}/objects").
-		HandlerFunc(g.listObjectsByBucketNameHandler)
+		Path("/buckets/name/{bucket_name:.+}/{is_full_list:.+}").
+		HandlerFunc(g.getBucketByBucketNameHandler)
+	//TODO barry remove all sp internal handlers
+	r.Name(getBucketByBucketIDRouterName).
+		Methods(http.MethodGet).
+		Path("/buckets/id/{bucket_id:.+}/{is_full_list:.+}").
+		HandlerFunc(g.getBucketByBucketIDHandler)
+	//r.Name(listObjectsByBucketRouterName).
+	//	Methods(http.MethodGet).
+	//	Path("/accounts/{account_id:.+}/buckets/{bucket:.+}/objects").
+	//	HandlerFunc(g.listObjectsByBucketNameHandler)
+	r.Name(listDeletedObjectsByBlockNumberRangeRouterName).
+		Methods(http.MethodGet).
+		Path("/delete/{start:.+}/{end:.+}/{is_full_list:.+}").
+		HandlerFunc(g.listDeletedObjectsByBlockNumberRangeHandler)
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }

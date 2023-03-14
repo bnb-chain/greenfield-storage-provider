@@ -4,65 +4,38 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/ethereum/go-ethereum/common"
 
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	model "github.com/bnb-chain/greenfield-storage-provider/model/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
-	"github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // GetUserBuckets get buckets info by a user address
 func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.MetadataServiceGetUserBucketsRequest) (resp *metatypes.MetadataServiceGetUserBucketsResponse, err error) {
 	ctx = log.Context(ctx, req)
-	defer func() {
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get user buckets", "err", err)
-		} else {
-			log.CtxInfow(ctx, "succeed to get user buckets")
-		}
-	}()
+	buckets, err := metadata.spDB.GetUserBuckets(common.HexToAddress(req.AccountId))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get user buckets", "error", err)
+		return
+	}
 
-	var buckets []*model.Bucket
-	//TODO:: cancel mock after impl db
-	bucket1 := &model.Bucket{
-		Owner:            "46765cbc-d30c-4f4a-a814-b68181fcab12",
-		BucketName:       "BBC News",
-		IsPublic:         true,
-		ID:               "1",
-		SourceType:       1,
-		CreateAt:         1676530547,
-		PaymentAddress:   "0x000000006b4BD0274e8f943201A922295D13fc28",
-		PrimarySpAddress: "0x000000006b4BD0274e8f943201A922295D13fc28",
-		ReadQuota:        2,
-		PaymentPriceTime: 1677143663461,
-	}
-	bucket2 := &model.Bucket{
-		Owner:            "46765cbc-d30c-4f4a-a814-b68181fcab12",
-		BucketName:       "bnb-chain",
-		IsPublic:         true,
-		ID:               "2",
-		SourceType:       1,
-		CreateAt:         1676530547,
-		PaymentAddress:   "0xF9A8db17431DD8563747D6FC770297E438Aa12eB",
-		PrimarySpAddress: "0xF9A8db17431DD8563747D6FC770297E438Aa12eB",
-		ReadQuota:        5,
-		PaymentPriceTime: 1677143663461,
-	}
-	buckets = append(buckets, bucket1, bucket2)
 	res := make([]*metatypes.Bucket, 0)
-
 	for _, bucket := range buckets {
 		res = append(res, &metatypes.Bucket{
 			BucketInfo: &types.BucketInfo{
-				Owner:            bucket.Owner,
+				Owner:            bucket.Owner.String(),
 				BucketName:       bucket.BucketName,
 				IsPublic:         false,
-				Id:               math.NewUintFromString(bucket.ID),
-				SourceType:       types.SourceType(bucket.SourceType),
+				Id:               math.NewUint(uint64(bucket.BucketId)),
+				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
 				CreateAt:         bucket.CreateAt,
-				PaymentAddress:   bucket.PaymentAddress,
-				PrimarySpAddress: bucket.PrimarySpAddress,
-				ReadQuota:        bucket.ReadQuota,
+				PaymentAddress:   bucket.PaymentAddress.String(),
+				PrimarySpAddress: bucket.PrimarySpAddress.String(),
+				// TODO:: update the below code after block syncer update ReadQuota from string to uint64 and implement BillingInfo
+				ReadQuota: 0,
 				BillingInfo: types.BillingInfo{
 					PriceTime:              0,
 					TotalChargeSize:        0,
@@ -72,5 +45,94 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Met
 		})
 	}
 	resp = &metatypes.MetadataServiceGetUserBucketsResponse{Buckets: res}
+	return resp, nil
+}
+
+// GetBucketByBucketName get buckets info by a bucket name
+func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metatypes.MetadataServiceGetBucketByBucketNameRequest) (resp *metatypes.MetadataServiceGetBucketByBucketNameResponse, err error) {
+	var (
+		bucket *model.Bucket
+		res    *metatypes.Bucket
+	)
+
+	ctx = log.Context(ctx, req)
+	if req.BucketName == "" {
+		return nil, merrors.ErrInvalidBucketName
+	}
+
+	bucket, err = metadata.spDB.GetBucketByName(req.BucketName, req.IsFullList)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get bucket by bucket name", "error", err)
+		return nil, err
+	}
+
+	if bucket != nil {
+		res = &metatypes.Bucket{
+			BucketInfo: &types.BucketInfo{
+				Owner:            bucket.Owner.String(),
+				BucketName:       bucket.BucketName,
+				IsPublic:         bucket.IsPublic,
+				Id:               math.NewUint(uint64(bucket.BucketId)),
+				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
+				CreateAt:         bucket.CreateAt,
+				PaymentAddress:   bucket.PaymentAddress.String(),
+				PrimarySpAddress: bucket.PrimarySpAddress.String(),
+				// TODO:: update the below code after block syncer update ReadQuota from string to uint64 and implement BillingInfo Barry
+				ReadQuota: 0,
+			},
+			Removed: bucket.Removed,
+		}
+	}
+	resp = &metatypes.MetadataServiceGetBucketByBucketNameResponse{Bucket: res}
+	log.CtxInfow(ctx, "success to get bucket by bucket name")
+	return resp, nil
+}
+
+// GetBucketByBucketID get buckets info by by a bucket id
+func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatypes.MetadataServiceGetBucketByBucketIDRequest) (resp *metatypes.MetadataServiceGetBucketByBucketIDResponse, err error) {
+	var (
+		bucket *model.Bucket
+		res    *metatypes.Bucket
+	)
+
+	ctx = log.Context(ctx, req)
+	bucket, err = metadata.spDB.GetBucketByID(req.BucketId, req.IsFullList)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get bucket by bucket id", "error", err)
+		return nil, err
+	}
+
+	if bucket != nil {
+		res = &metatypes.Bucket{
+			BucketInfo: &types.BucketInfo{
+				Owner:            bucket.Owner.String(),
+				BucketName:       bucket.BucketName,
+				IsPublic:         bucket.IsPublic,
+				Id:               math.NewUint(uint64(bucket.BucketId)),
+				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
+				CreateAt:         bucket.CreateAt,
+				PaymentAddress:   bucket.PaymentAddress.String(),
+				PrimarySpAddress: bucket.PrimarySpAddress.String(),
+				// TODO:: update the below code after block syncer updates ReadQuota from string to uint64 and implements BillingInfo Barry
+				ReadQuota: 0,
+			},
+			Removed: bucket.Removed,
+		}
+	}
+	resp = &metatypes.MetadataServiceGetBucketByBucketIDResponse{Bucket: res}
+	log.CtxInfow(ctx, "success to get bucket by bucket id")
+	return resp, nil
+}
+
+// GetUserBucketsCount get buckets count by a user address
+func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatypes.MetadataServiceGetUserBucketsCountRequest) (resp *metatypes.MetadataServiceGetUserBucketsCountResponse, err error) {
+	ctx = log.Context(ctx, req)
+	count, err := metadata.spDB.GetUserBucketsCount(common.HexToAddress(req.AccountId))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get user buckets count", "error", err)
+		return
+	}
+
+	resp = &metatypes.MetadataServiceGetUserBucketsCountResponse{Count: count}
 	return resp, nil
 }

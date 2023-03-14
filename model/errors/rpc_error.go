@@ -73,3 +73,9 @@ var (
 	// ErrSealObjectOnChain defines send seal object tx to chain error
 	ErrSealObjectOnChain = errors.New("send sealObject msg failed")
 )
+
+// metadata service error
+var (
+	// ErrInvalidBucketName defines invalid bucket name
+	ErrInvalidBucketName = errors.New("invalid bucket name")
+)

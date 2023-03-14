@@ -9,6 +9,8 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/metadata/t
 message Bucket {
   // bucket_info defines the information of the bucket.
   bnbchain.greenfield.storage.BucketInfo bucket_info = 1;
+  // removed define the bucket is deleted or not
+  bool removed = 2;
 }
 
 // Object is the structure for user object
@@ -17,6 +19,8 @@ message Object {
   bnbchain.greenfield.storage.ObjectInfo object_info = 1;
   // locked_balance defines locked balance of object
   string locked_balance = 2;
+  // removed define the object is deleted or not
+  bool removed = 3;
 }
 
 // MetadataServiceGetUserBucketsRequest is request type for the GetUserBuckets RPC method.
@@ -33,6 +37,40 @@ message MetadataServiceListObjectsByBucketNameRequest {
   string account_id = 2;
 }
 
+// MetadataServiceGetBucketByBucketNameRequest is request type for the GetBucketByBucketName RPC method
+message MetadataServiceGetBucketByBucketNameRequest {
+  // bucket_name is the name of the bucket
+  string bucket_name = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
+// MetadataServiceGetBucketByBucketIDRequest is request type for the GetBucketByBucketID RPC method
+message MetadataServiceGetBucketByBucketIDRequest {
+  // bucket_id is the unique identifier of bucket
+  int64 bucket_id = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
+// MetadataServiceListDeletedObjectsByBlockNumberRangeRequest is request type for the ListDeletedObjectsByBlockNumberRange RPC method
+message MetadataServiceListDeletedObjectsByBlockNumberRangeRequest {
+  // start_block_number defines the start of range
+  // [start_block_number, end_block_number], start_block_number > end_block_number is invalid, response all objects data
+  int64 start_block_number = 1;
+  // end_block_number defines the end of range
+  // end_block_number < 0 or start_block_number > end_block_number is invalid, response all objects data
+  int64 end_block_number = 2;
+  // is_full_list indicates whether this request can get the private objects information
+  bool is_full_list = 3;
+}
+
+// MetadataServiceGetUserBucketsCountRequest is request type for the GetUserBucketsCount RPC method.
+message MetadataServiceGetUserBucketsCountRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+}
+
 // MetadataServiceGetUserBucketsResponse is response type for the GetUserBuckets RPC method.
 message MetadataServiceGetUserBucketsResponse {
   // buckets defines the list of bucket
@@ -45,10 +83,44 @@ message MetadataServiceListObjectsByBucketNameResponse {
   repeated Object objects = 1;
 }
 
+// MetadataServiceGetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.
+message MetadataServiceGetBucketByBucketNameResponse {
+  // bucket defines the information of a bucket
+  Bucket bucket = 1;;
+}
+
+// MetadataServiceGetBucketByBucketIDResponse is response type for the GetBucketByBucketID RPC method.
+message MetadataServiceGetBucketByBucketIDResponse {
+  // bucket defines the information of a bucket
+  Bucket bucket = 1;;
+}
+
+// MetadataServiceListDeletedObjectsByBlockNumberRangeResponse is response type for the ListDeletedObjectsByBlockNumberRange RPC method.
+message MetadataServiceListDeletedObjectsByBlockNumberRangeResponse {
+  // objects defines the list of object
+  repeated Object objects = 1;
+  // latest_block_number defines the response objects latest block number
+  int64 latest_block_number = 2;
+}
+
+// MetadataServiceGetUserBucketsCountResponse is response type for the GetUserBucketsCount RPC method.
+message MetadataServiceGetUserBucketsCountResponse {
+  // count defines total count of user buckets
+  int64 count = 1;
+}
+
 // MetadataService defines the gRPC service of metadata
 service MetadataService {
   // GetUserBuckets get buckets info by a user address
   rpc GetUserBuckets(MetadataServiceGetUserBucketsRequest) returns (MetadataServiceGetUserBucketsResponse) {};
   // ListObjectsByBucketName list objects info by a bucket name
   rpc ListObjectsByBucketName(MetadataServiceListObjectsByBucketNameRequest) returns (MetadataServiceListObjectsByBucketNameResponse) {};
+  // GetBucketByBucketName get bucket info by a bucket name
+  rpc GetBucketByBucketName(MetadataServiceGetBucketByBucketNameRequest) returns (MetadataServiceGetBucketByBucketNameResponse) {};
+  // GetBucketByBucketID get bucket info by a bucket id
+  rpc GetBucketByBucketID(MetadataServiceGetBucketByBucketIDRequest) returns (MetadataServiceGetBucketByBucketIDResponse) {};
+  // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block range
+  rpc ListDeletedObjectsByBlockNumberRange(MetadataServiceListDeletedObjectsByBlockNumberRangeRequest) returns (MetadataServiceListDeletedObjectsByBlockNumberRangeResponse) {};
+  // GetUserBucketsCount GetUserBuckets get buckets count by a user address
+  rpc GetUserBucketsCount(MetadataServiceGetUserBucketsCountRequest) returns (MetadataServiceGetUserBucketsCountResponse) {};
 }

@@ -58,3 +58,47 @@ func (client *MetadataClient) ListObjectsByBucketName(ctx context.Context, in *m
 	}
 	return resp, nil
 }
+
+// GetBucketByBucketName get bucket info by a bucket name
+func (client *MetadataClient) GetBucketByBucketName(ctx context.Context, in *metatypes.MetadataServiceGetBucketByBucketNameRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceGetBucketByBucketNameResponse, error) {
+	resp, err := client.metadata.GetBucketByBucketName(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get bucket rpc by bucket name", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// GetBucketByBucketID get bucket info by a bucket id
+func (client *MetadataClient) GetBucketByBucketID(ctx context.Context, in *metatypes.MetadataServiceGetBucketByBucketIDRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceGetBucketByBucketIDResponse, error) {
+	resp, err := client.metadata.GetBucketByBucketID(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get bucket by bucket id rpc", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block range
+func (client *MetadataClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, in *metatypes.MetadataServiceListDeletedObjectsByBlockNumberRangeRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceListDeletedObjectsByBlockNumberRangeResponse, error) {
+	resp, err := client.metadata.ListDeletedObjectsByBlockNumberRange(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send list deleted objects by block number rpc", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// GetUserBucketsCount get buckets count by a user address
+func (client *MetadataClient) GetUserBucketsCount(ctx context.Context, in *metatypes.MetadataServiceGetUserBucketsCountRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceGetUserBucketsCountResponse, error) {
+	resp, err := client.metadata.GetUserBucketsCount(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get user buckets count rpc", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}

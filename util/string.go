@@ -113,3 +113,14 @@ func StringToBytesSlice(str string) ([][]byte, error) {
 	}
 	return hashList, nil
 }
+
+// TODO review by annie
+
+// StringListToBytesSlice is used to deserialize
+func StringListToBytesSlice(stringList []string) [][]byte {
+	hashList := make([][]byte, len(stringList))
+	for idx := range stringList {
+		hashList[idx] = []byte(stringList[idx])
+	}
+	return hashList
+}
