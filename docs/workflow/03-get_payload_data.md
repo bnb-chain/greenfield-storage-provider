@@ -11,5 +11,5 @@
 * Receives the GetObject request from the Gateway service.
 * Check whether the read traffic exceeds the quota.
   * If exceeds the quota, the Downloader refuses to serve and returns a not-enough-quota error to the Gateway.
-  * If the quota is sufficient, the Downloader insert read record into the SP traffic-db.
+  * If the quota is sufficient, the Downloader inserts read record into the SP traffic-db.
 * Splits the GetObject request info the GetPiece requests(support range read) to get piece payload data, and returns the object payload data streaming to the Gateway.
