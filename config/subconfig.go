@@ -9,9 +9,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
-	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
 
@@ -47,10 +47,10 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 	} else {
 		return nil, fmt.Errorf("missing challenge gRPC address configuration for gateway service")
 	}
-	if _, ok := cfg.GRPCAddress[model.SyncerService]; ok {
-		gCfg.SyncerServiceAddress = cfg.GRPCAddress[model.SyncerService]
+	if _, ok := cfg.GRPCAddress[model.ReceiverService]; ok {
+		gCfg.ReceiverServiceAddress = cfg.GRPCAddress[model.ReceiverService]
 	} else {
-		return nil, fmt.Errorf("missing syncer gRPC address configuration for gateway service")
+		return nil, fmt.Errorf("missing receiver gRPC address configuration for gateway service")
 	}
 	if _, ok := cfg.GRPCAddress[model.MetadataService]; ok {
 		gCfg.MetadataServiceAddress = cfg.GRPCAddress[model.MetadataService]
@@ -76,10 +76,10 @@ func (cfg *StorageProviderConfig) MakeUploaderConfig() (*uploader.UploaderConfig
 	} else {
 		return nil, fmt.Errorf("missing signer gRPC address configuration for uploader service")
 	}
-	if _, ok := cfg.GRPCAddress[model.StoneNodeService]; ok {
-		uCfg.StoneNodeGrpcAddress = cfg.GRPCAddress[model.StoneNodeService]
+	if _, ok := cfg.GRPCAddress[model.TaskNodeService]; ok {
+		uCfg.TaskNodeGrpcAddress = cfg.GRPCAddress[model.TaskNodeService]
 	} else {
-		return nil, fmt.Errorf("missing stone node gRPC address configuration for uploader service")
+		return nil, fmt.Errorf("missing task node gRPC address configuration for uploader service")
 	}
 	return uCfg, nil
 }
@@ -98,22 +98,22 @@ func (cfg *StorageProviderConfig) MakeDownloaderConfig() (*downloader.Downloader
 	return dCfg, nil
 }
 
-// MakeSyncerConfig make syncer service config from StorageProviderConfig
-func (cfg *StorageProviderConfig) MakeSyncerConfig() (*syncer.SyncerConfig, error) {
-	sCfg := &syncer.SyncerConfig{
+// MakeReceiverConfig make receiver service config from StorageProviderConfig
+func (cfg *StorageProviderConfig) MakeReceiverConfig() (*receiver.ReceiverConfig, error) {
+	sCfg := &receiver.ReceiverConfig{
 		SpOperatorAddress: cfg.SpOperatorAddress,
 		SpDBConfig:        cfg.SpDBConfig,
 		PieceStoreConfig:  cfg.PieceStoreConfig,
 	}
-	if _, ok := cfg.GRPCAddress[model.SyncerService]; ok {
-		sCfg.GRPCAddress = cfg.GRPCAddress[model.SyncerService]
+	if _, ok := cfg.GRPCAddress[model.ReceiverService]; ok {
+		sCfg.GRPCAddress = cfg.GRPCAddress[model.ReceiverService]
 	} else {
-		return nil, fmt.Errorf("missing syncer gRPC address configuration for syncer service")
+		return nil, fmt.Errorf("missing receiver gRPC address configuration for receiver service")
 	}
 	if _, ok := cfg.GRPCAddress[model.SignerService]; ok {
 		sCfg.SignerGRPCAddress = cfg.GRPCAddress[model.SignerService]
 	} else {
-		return nil, fmt.Errorf("missing signer gRPC address configuration for syncer service")
+		return nil, fmt.Errorf("missing signer gRPC address configuration for receiver service")
 	}
 	return sCfg, nil
 }
@@ -137,23 +137,23 @@ func (cfg *StorageProviderConfig) MakeSignerConfig() (*signer.SignerConfig, erro
 	return cfg.SignerCfg, nil
 }
 
-// MakeStoneNodeConfig make stone node service config from StorageProviderConfig
-func (cfg *StorageProviderConfig) MakeStoneNodeConfig() (*stonenode.StoneNodeConfig, error) {
-	snCfg := &stonenode.StoneNodeConfig{
+// MakeTaskNodeConfig make task node service config from StorageProviderConfig
+func (cfg *StorageProviderConfig) MakeTaskNodeConfig() (*tasknode.TaskNodeConfig, error) {
+	snCfg := &tasknode.TaskNodeConfig{
 		SpOperatorAddress: cfg.SpOperatorAddress,
 		SpDBConfig:        cfg.SpDBConfig,
 		PieceStoreConfig:  cfg.PieceStoreConfig,
 		ChainConfig:       cfg.ChainConfig,
 	}
-	if _, ok := cfg.GRPCAddress[model.StoneNodeService]; ok {
-		snCfg.GRPCAddress = cfg.GRPCAddress[model.StoneNodeService]
+	if _, ok := cfg.GRPCAddress[model.TaskNodeService]; ok {
+		snCfg.GRPCAddress = cfg.GRPCAddress[model.TaskNodeService]
 	} else {
-		return nil, fmt.Errorf("missing stone node gRPC address configuration for stone node service")
+		return nil, fmt.Errorf("missing task node gRPC address configuration for task node service")
 	}
 	if _, ok := cfg.GRPCAddress[model.SignerService]; ok {
 		snCfg.SignerGrpcAddress = cfg.GRPCAddress[model.SignerService]
 	} else {
-		return nil, fmt.Errorf("missing signer gRPC address configuration for stone node service")
+		return nil, fmt.Errorf("missing signer gRPC address configuration for task node service")
 	}
 	return snCfg, nil
 }

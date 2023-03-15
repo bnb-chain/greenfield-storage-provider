@@ -1,4 +1,4 @@
-package stonenode
+package tasknode
 
 import (
 	"context"
@@ -18,17 +18,17 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
-	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types"
+	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
-var _ lifecycle.Service = &StoneNode{}
+var _ lifecycle.Service = &TaskNode{}
 
-// StoneNode as background min execution unit, execute storage provider's background tasks
-// implements the gRPC of StoneNodeService,
-// TODO :: StoneNode support more task types, such as gc etc.
-type StoneNode struct {
-	config     *StoneNodeConfig
+// TaskNode as background min execution unit, execute storage provider's background tasks
+// implements the gRPC of TaskNodeService,
+// TODO :: TaskNode support more task types, such as gc etc.
+type TaskNode struct {
+	config     *TaskNodeConfig
 	cache      *lru.Cache
 	signer     *signerclient.SignerClient
 	spDB       sqldb.SPDB
@@ -37,79 +37,84 @@ type StoneNode struct {
 	grpcServer *grpc.Server
 }
 
-// NewStoneNodeService return an instance of StoneNode and init resource
-func NewStoneNodeService(config *StoneNodeConfig) (*StoneNode, error) {
-	cache, _ := lru.New(model.LruCacheLimit)
-	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
-	if err != nil {
+// NewTaskNodeService return an instance of TaskNode and init resource
+func NewTaskNodeService(cfg *TaskNodeConfig) (*TaskNode, error) {
+	var (
+		taskNode *TaskNode
+		err      error
+	)
+
+	taskNode = &TaskNode{
+		config: cfg,
+	}
+	if taskNode.cache, err = lru.New(model.LruCacheLimit); err != nil {
+		log.Errorw("failed to create lru cache", "error", err)
 		return nil, err
 	}
-	signer, err := signerclient.NewSignerClient(config.SignerGrpcAddress)
-	if err != nil {
+	if taskNode.pieceStore, err = psclient.NewStoreClient(cfg.PieceStoreConfig); err != nil {
+		log.Errorw("failed to create piece store client", "error", err)
 		return nil, err
 	}
-	chain, err := greenfield.NewGreenfield(config.ChainConfig)
-	if err != nil {
+	if taskNode.signer, err = signerclient.NewSignerClient(cfg.SignerGrpcAddress); err != nil {
+		log.Errorw("failed to create signer client", "error", err)
 		return nil, err
 	}
-	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
-	if err != nil {
+	if taskNode.chain, err = greenfield.NewGreenfield(cfg.ChainConfig); err != nil {
+		log.Errorw("failed to create chain client", "error", err)
 		return nil, err
 	}
-	node := &StoneNode{
-		config:     config,
-		cache:      cache,
-		signer:     signer,
-		spDB:       spDB,
-		chain:      chain,
-		pieceStore: pieceStore,
+	if taskNode.spDB, err = sqldb.NewSpDB(cfg.SpDBConfig); err != nil {
+		log.Errorw("failed to create sp db client", "error", err)
+		return nil, err
 	}
-	return node, nil
+
+	return taskNode, nil
 }
 
-// Name return the stone node service name, for the lifecycle management
-func (node *StoneNode) Name() string {
-	return model.StoneNodeService
+// Name return the task node service name, for the lifecycle management
+func (taskNode *TaskNode) Name() string {
+	return model.TaskNodeService
 }
 
-// Start the stone node gRPC service and background tasks
-func (node *StoneNode) Start(ctx context.Context) error {
+// Start the task node gRPC service and background tasks
+func (taskNode *TaskNode) Start(ctx context.Context) error {
 	errCh := make(chan error)
-	go node.serve(errCh)
+	go taskNode.serve(errCh)
 	err := <-errCh
 	return err
 }
 
-// Stop the stone node gRPC service and recycle the resources
-func (node *StoneNode) Stop(ctx context.Context) error {
-	node.grpcServer.GracefulStop()
-	node.signer.Close()
-	node.chain.Close()
+// Stop the task node gRPC service and recycle the resources
+func (taskNode *TaskNode) Stop(ctx context.Context) error {
+	taskNode.grpcServer.GracefulStop()
+	taskNode.signer.Close()
+	taskNode.chain.Close()
 	return nil
 }
 
-func (node *StoneNode) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", node.config.GRPCAddress)
+// serve start the task node gRPC service
+func (taskNode *TaskNode) serve(errCh chan error) {
+	lis, err := net.Listen("tcp", taskNode.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
-		log.Errorw("fail to listen", "err", err)
+		log.Errorw("failed to listen", "error", err)
 		return
 	}
 
 	grpcServer := grpc.NewServer()
-	types.RegisterStoneNodeServiceServer(grpcServer, node)
-	node.grpcServer = grpcServer
+	types.RegisterTaskNodeServiceServer(grpcServer, taskNode)
+	taskNode.grpcServer = grpcServer
 	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Errorw("failed to start grpc server", "err", err)
+		log.Errorw("failed to start grpc server", "error", err)
 		return
 	}
 }
 
 // EncodeReplicateSegments load segment data and encode according to redundancy type
-func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID uint64, segments uint32, replicates int,
+func (taskNode *TaskNode) EncodeReplicateSegments(ctx context.Context, objectID uint64, segments uint32, replicates int,
 	rType storagetypes.RedundancyType) (data [][][]byte, err error) {
-	params, err := node.spDB.GetStorageParams()
+	params, err := taskNode.spDB.GetStorageParams()
 	if err != nil {
 		return
 	}
@@ -124,7 +129,7 @@ func (node *StoneNode) EncodeReplicateSegments(ctx context.Context, objectID uin
 	for segIdx := 0; segIdx < int(segments); segIdx++ {
 		go func(segIdx int) {
 			key := piecestore.EncodeSegmentPieceKey(objectID, uint32(segIdx))
-			segmentData, err := node.pieceStore.GetSegment(ctx, key, 0, 0)
+			segmentData, err := taskNode.pieceStore.GetSegment(ctx, key, 0, 0)
 			if err != nil {
 				errCh <- err
 				return

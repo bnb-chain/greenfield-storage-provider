@@ -5,7 +5,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
 
-// ManagerConfig is the manager module config
+// ManagerConfig defines manager service config
 type ManagerConfig struct {
 	SpOperatorAddress string
 	ChainConfig       *gnfd.GreenfieldChainConfig

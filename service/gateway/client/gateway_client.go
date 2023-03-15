@@ -89,7 +89,7 @@ func (p *PieceDataReader) Read(buf []byte) (n int, err error) {
 }
 
 // SyncPieceData sync piece data to the target storage-provider.
-func (gatewayClient *GatewayClient) SyncPieceData(
+func (client *GatewayClient) SyncPieceData(
 	objectInfo *types.ObjectInfo,
 	replicaIdx uint32,
 	segmentSize uint32,
@@ -99,7 +99,7 @@ func (gatewayClient *GatewayClient) SyncPieceData(
 		log.Errorw("failed to sync piece data due to new piece data reader error", "error", err)
 		return nil, nil, err
 	}
-	req, err := http.NewRequest(http.MethodPut, gatewayClient.address+model.SyncerPath, pieceDataReader)
+	req, err := http.NewRequest(http.MethodPut, client.address+model.SyncPath, pieceDataReader)
 	if err != nil {
 		log.Errorw("failed to sync piece data due to new request error", "error", err)
 		return nil, nil, err
@@ -110,14 +110,14 @@ func (gatewayClient *GatewayClient) SyncPieceData(
 	req.Header.Add(model.GnfdSegmentSizeHeader, util.Uint32ToString(segmentSize))
 	req.Header.Add(model.ContentTypeHeader, model.OctetStream)
 
-	resp, err := gatewayClient.httpClient.Do(req)
+	resp, err := client.httpClient.Do(req)
 	if err != nil {
-		log.Errorw("failed to sync piece data to other sp", "sp_endpoint", gatewayClient.address, "error", err)
+		log.Errorw("failed to sync piece data to other sp", "sp_endpoint", client.address, "error", err)
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		log.Errorw("failed to sync piece data", "status_code", resp.StatusCode, "sp_endpoint", gatewayClient.address)
+		log.Errorw("failed to sync piece data", "status_code", resp.StatusCode, "sp_endpoint", client.address)
 		return nil, nil, fmt.Errorf("failed to sync piece")
 	}
 
@@ -125,14 +125,14 @@ func (gatewayClient *GatewayClient) SyncPieceData(
 	if err != nil {
 		log.Errorw("failed to parse integrity hash header",
 			"integrity_hash", resp.Header.Get(model.GnfdIntegrityHashHeader),
-			"sp_endpoint", gatewayClient.address, "error", err)
+			"sp_endpoint", client.address, "error", err)
 		return nil, nil, err
 	}
 	signature, err = hex.DecodeString(resp.Header.Get(model.GnfdIntegrityHashSignatureHeader))
 	if err != nil {
 		log.Errorw("failed to parse integrity hash signature header",
 			"integrity_hash_signature", resp.Header.Get(model.GnfdIntegrityHashSignatureHeader),
-			"sp_endpoint", gatewayClient.address, "error", err)
+			"sp_endpoint", client.address, "error", err)
 		return nil, nil, err
 	}
 	return integrityHash, signature, nil
