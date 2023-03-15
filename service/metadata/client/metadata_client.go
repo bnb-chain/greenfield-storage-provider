@@ -21,7 +21,7 @@ type MetadataClient struct {
 func NewMetadataClient(address string) (*MetadataClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Errorw("failed to invoke metadata service grpc.DialContext", "error", err)
+		log.Errorw("failed to dial metadata service", "error", err)
 		return nil, err
 	}
 	client := &MetadataClient{

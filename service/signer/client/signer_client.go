@@ -21,7 +21,7 @@ func NewSignerClient(address string) (*SignerClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Errorw("failed to dail signer", "error", err)
+		log.Errorw("failed to dial signer", "error", err)
 		return nil, err
 	}
 	client := &SignerClient{

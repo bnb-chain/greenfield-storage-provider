@@ -99,7 +99,7 @@ func (s *BlockSyncer) Name() string {
 // Start running SyncerService
 func (s *BlockSyncer) Start(ctx context.Context) error {
 	if s.running.Swap(true) {
-		return errors.New("stone hub has already started")
+		return errors.New("block syncer hub has already started")
 	}
 	go s.serve()
 	return nil

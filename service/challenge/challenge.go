@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -13,6 +14,8 @@ import (
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
+
+var _ lifecycle.Service = &Challenge{}
 
 // Challenge implements the gRPC of ChallengeService,
 // responsible for handling challenge piece request.
@@ -24,20 +27,24 @@ type Challenge struct {
 
 // NewChallengeService returns an instance of Challenge that implementation of
 // the lifecycle.Service and ChallengeService interface
-func NewChallengeService(config *ChallengeConfig) (challenge *Challenge, err error) {
-	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
-	if err != nil {
-		return nil, err
-	}
-	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
-	if err != nil {
-		return nil, err
-	}
+func NewChallengeService(cfg *ChallengeConfig) (*Challenge, error) {
+	var (
+		challenge *Challenge
+		err       error
+	)
+
 	challenge = &Challenge{
-		config:     config,
-		spDB:       spDB,
-		pieceStore: pieceStore,
+		config: cfg,
 	}
+	if challenge.pieceStore, err = psclient.NewStoreClient(cfg.PieceStoreConfig); err != nil {
+		log.Errorw("failed to create piece store client", "error", err)
+		return nil, err
+	}
+	if challenge.spDB, err = sqldb.NewSpDB(cfg.SpDBConfig); err != nil {
+		log.Errorw("failed to create sp db client", "error", err)
+		return nil, err
+	}
+
 	return challenge, nil
 }
 
@@ -54,14 +61,14 @@ func (challenge *Challenge) Start(ctx context.Context) error {
 		lis, err := net.Listen("tcp", challenge.config.GRPCAddress)
 		errCh <- err
 		if err != nil {
-			log.Errorw("challenge listen failed", "error", err)
+			log.Errorw("failed to listen", "error", err)
 			return
 		}
 		grpcServer := grpc.NewServer()
 		types.RegisterChallengeServiceServer(grpcServer, challenge)
 		reflection.Register(grpcServer)
 		if err = grpcServer.Serve(lis); err != nil {
-			log.Errorw("challenge serve failed", "error", err)
+			log.Errorw("failed to serve", "error", err)
 			return
 		}
 	}(errCh)

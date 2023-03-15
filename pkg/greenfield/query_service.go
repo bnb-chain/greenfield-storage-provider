@@ -112,7 +112,7 @@ func (greenfield *Greenfield) QueryBucketInfoAndObjectInfo(ctx context.Context, 
 
 // ListenObjectSeal return an indication of the object is sealed.
 // TODO:: retrieve service support seal event subscription
-func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, object string, timeOutHeight int) (seal bool, err error) {
+func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, object string, timeOutHeight int) (err error) {
 	var objectInfo *storagetypes.ObjectInfo
 	for i := 0; i < timeOutHeight; i++ {
 		time.Sleep(ExpectedOutputBlockInternal * time.Second)
@@ -121,7 +121,6 @@ func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, obje
 			continue
 		}
 		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
-			seal = true
 			err = nil
 			return
 		}
