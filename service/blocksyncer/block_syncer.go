@@ -5,21 +5,18 @@ import (
 	"errors"
 	"sync/atomic"
 
-	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
-
-	"github.com/forbole/juno/v4/cmd"
-	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
-	"github.com/forbole/juno/v4/modules/messages"
-	"github.com/forbole/juno/v4/modules/registrar"
-
-	"github.com/forbole/juno/v4/types/config"
-
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/forbole/juno/v4/cmd"
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
+	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
 	"github.com/forbole/juno/v4/modules"
+	"github.com/forbole/juno/v4/modules/messages"
+	"github.com/forbole/juno/v4/modules/registrar"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
+	"github.com/forbole/juno/v4/types/config"
 )
 
 // Syncer synchronizes ec data to piece store
@@ -29,7 +26,7 @@ type BlockSyncer struct {
 	parserCtx *parser.Context
 	// store   client.PieceStoreAPI
 	// metaDB  spdb.MetaDB // storage provider meta db
-	running atomic.Bool
+	running atomic.Value
 }
 
 // NewSyncerService creates a syncer service to upload piece to piece store
@@ -98,7 +95,7 @@ func (s *BlockSyncer) Name() string {
 
 // Start running SyncerService
 func (s *BlockSyncer) Start(ctx context.Context) error {
-	if s.running.Swap(true) {
+	if s.running.Swap(true) == true {
 		return errors.New("stone hub has already started")
 	}
 	go s.serve()
@@ -107,7 +104,7 @@ func (s *BlockSyncer) Start(ctx context.Context) error {
 
 // Stop running SyncerService
 func (s *BlockSyncer) Stop(ctx context.Context) error {
-	if !s.running.Swap(false) {
+	if s.running.Swap(false) == false {
 		return nil
 	}
 	return nil
