@@ -3,15 +3,15 @@ package main
 import (
 	"fmt"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
+	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/stonenode"
-	"github.com/bnb-chain/greenfield-storage-provider/service/syncer"
-	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -19,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	metadata "github.com/bnb-chain/greenfield-storage-provider/service/metadata/service"
+	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
 
@@ -74,12 +75,12 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-	case model.SyncerService:
-		sCfg, err := cfg.MakeSyncerConfig()
+	case model.ReceiverService:
+		sCfg, err := cfg.MakeReceiverConfig()
 		if err != nil {
 			return nil, err
 		}
-		server, err = syncer.NewSyncerService(sCfg)
+		server, err = receiver.NewReceiverService(sCfg)
 		if err != nil {
 			return nil, err
 		}
@@ -98,12 +99,12 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-	case model.StoneNodeService:
-		snCfg, err := cfg.MakeStoneNodeConfig()
+	case model.TaskNodeService:
+		snCfg, err := cfg.MakeTaskNodeConfig()
 		if err != nil {
 			return nil, err
 		}
-		server, err = stonenode.NewStoneNodeService(snCfg)
+		server, err = tasknode.NewTaskNodeService(snCfg)
 		if err != nil {
 			return nil, err
 		}

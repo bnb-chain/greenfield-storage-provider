@@ -4,14 +4,12 @@ BranchName=`git rev-parse --abbrev-ref HEAD`
 CommitID=`git rev-parse HEAD`
 BuildTime=`date +%Y-%m-%d\ %H:%M`
 
-#[[ "-$GOPATH" == "-" ]] && { echo "GOPATH not set"; exit 1; }
-
 if [ ! -d build  ];then
   mkdir -p build
   mkdir -p build/data
 fi
 
-make buf-gen
+buf generate
 
 go build -ldflags "\
   -X 'main.Version=${Version}' \

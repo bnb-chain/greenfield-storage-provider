@@ -57,4 +57,4 @@ jobs:
           allowed_prefixes: 'build,chore,ci,docs,feat,fix,perf,refactor,revert,style,test'
           ignore: master,develop,release
           min_length: 5
-          max_length: 20
+          max_length: 30
