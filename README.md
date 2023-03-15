@@ -123,6 +123,7 @@ TendermintAddresses = ["http://localhost:26750"]
 
 ## Document
 * [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): the official Greenfield Whitepaper. 
+* [Greenfield](https://github.com/bnb-chain/greenfield#readme): the Greenfield documents.
 * [SP Introduce](docs/readme.md): the Greenfield Storage Provider documents.
 * [Storage Metadata](https://github.com/bnb-chain/greenfield/blob/master/docs/core-concept/storage-metadata-models.md) : the storage metadata on Greenfield Chain.
 * [SP on Greenfield](https://github.com/bnb-chain/greenfield/blob/master/docs/modules/storage_provider_management.md): the SP module on Greenfield Chain.
@@ -148,3 +149,5 @@ If you wish to submit more complex changes though, please check up with the core
 through github issue(going to have a discord channel soon) to ensure those changes are in 
 line with the general philosophy of the project and/or get some early feedback which can make 
 both your efforts much lighter as well as our review and merge procedures quick and simple.
+
+## Licence (pending)
