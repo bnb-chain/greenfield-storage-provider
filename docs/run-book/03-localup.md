@@ -7,7 +7,7 @@
 [setup private netWork](https://github.com/bnb-chain/greenfield/blob/master/docs/tutorial/03-local-network.md)
 
 ## Add SP to greenfield chain
-[add sp to greenfield chain](https://github.com/bnb-chain/greenfield/blob/fynn/doc/docs/tutorial/07-storage-provider.md)
+[add sp to greenfield chain](https://github.com/bnb-chain/greenfield/blob/master/docs/cli/storage-provider.md)
 
 ## Setup local sps
 1. Generate localup env

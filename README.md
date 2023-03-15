@@ -1,6 +1,6 @@
 # Greenfield Storage Provider
 
-Storage Providers (abbreviated SP) are storage service infrastructure providers. They use Greenfield as the ledger 
+Storage Provider (abbreviated SP) is storage service infrastructure providers. It uses Greenfield as the ledger 
 and the single source of truth. Each SP can and will respond to users' requests to write (upload) and read (download) 
 data, and serve as the gatekeeper for user rights and authentications.
 
@@ -9,14 +9,17 @@ data, and serve as the gatekeeper for user rights and authentications.
 notification and not ready for production use. The code and security audit have not been fully completed and not ready
 for any bug bounty. We advise you to be careful and experiment on the network at your own risk. Stay safe out there.**
 
-## Compile
+## Quick Started
+
+*Note*: Requires [Go 1.18+](https://go.dev/dl/)
+
 ### Install-Tools
 ```shell
 make install-tools
 ```
 ### Build
 ```shell
-bash build.sh &&
+make build &&
 cd build &&
 
 # show version
@@ -36,12 +39,25 @@ Build   : go1.19.1 darwin amd64 2023-03-13 14:11
 
 # show help
 ./gnfd-sp help
+
+# dump configuration template
+./gnfd-sp config.dump
+
+# edit config file 
+# reference SP Configuration section
+
+# start sp
+./gnfd-sp --config ${config_file_path}
 ```
+
+### SP Configuration
+[configuration sample](docs/run-book/02-config_template.toml)
+
+### Add SP to Greenfield chain
+[add sp to greenfield chain](https://github.com/bnb-chain/greenfield/blob/master/docs/cli/storage-provider.md)
 
 ## Deployment
 [Deploy SP](docs/tutorial/01-deployment.md)
-
-[Quick Started](docs/tutorial/03-localup.md)
 
 ## Related
 * [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): the official Greenfield Whitepaper.
