@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -29,7 +30,7 @@ type StorageProviderConfig struct {
 	PieceStoreConfig  *storage.PieceStoreConfig
 	ChainConfig       *gnfd.GreenfieldChainConfig
 	SignerCfg         *signer.SignerConfig
-	BlockSyncerCfg    *blocksyncer.Config
+	BlockSyncerCfg    *tomlconfig.TomlConfig
 	LogCfg            *LogConfig
 }
 
@@ -74,7 +75,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	PieceStoreConfig:  DefaultPieceStoreConfig,
 	ChainConfig:       DefaultGreenfieldChainConfig,
 	SignerCfg:         signer.DefaultSignerChainConfig,
-	BlockSyncerCfg:    DefaultBlockSyncerConfig,
+	BlockSyncerCfg:    blocksyncer.DefaultBlockSyncerConfig,
 	LogCfg:            DefaultLogConfig,
 }
 
@@ -103,12 +104,6 @@ var DefaultGreenfieldChainConfig = &gnfd.GreenfieldChainConfig{
 		GreenfieldAddresses: []string{model.GreenfieldAddress},
 		TendermintAddresses: []string{model.TendermintAddress},
 	}},
-}
-
-// DefaultBlockSyncerConfig defines the default configuration of BlockSyncer service
-var DefaultBlockSyncerConfig = &blocksyncer.Config{
-	Modules: []string{"epoch", "bucket", "object", "payment"},
-	Dsn:     "localhost:3306",
 }
 
 type LogConfig struct {
