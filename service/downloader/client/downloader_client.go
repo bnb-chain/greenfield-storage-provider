@@ -24,7 +24,7 @@ func NewDownloaderClient(address string) (*DownloaderClient, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)))
 	if err != nil {
-		log.Errorw("invoke downloader service dail failed", "error", err)
+		log.Errorw("failed to dial downloader", "error", err)
 		return nil, err
 	}
 	client := &DownloaderClient{
@@ -43,6 +43,5 @@ func (client *DownloaderClient) Close() error {
 // GetObject download the payload of the object
 func (client *DownloaderClient) GetObject(ctx context.Context, req *types.GetObjectRequest,
 	opts ...grpc.CallOption) (types.DownloaderService_GetObjectClient, error) {
-	// ctx = log.Context(context.Background(), req)
 	return client.downloader.GetObject(ctx, req, opts...)
 }

@@ -63,12 +63,12 @@ func main() {
 	}
 }
 
-// makeConfig loads the configuration and creates the storage provider backend.
+// makeConfig loads the configuration from local file and remote db.
 func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 	// load config from remote db or local config file
 	cfg := config.DefaultStorageProviderConfig
 	if ctx.IsSet(utils.ConfigRemoteFlag.Name) {
-		spDB, err := utils.MakeSPDB(ctx)
+		spDB, err := utils.MakeSPDB(ctx, cfg.SpDBConfig)
 		if err != nil {
 			return nil, err
 		}

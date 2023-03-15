@@ -8,6 +8,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 )
 
+var _ types.ChallengeServiceServer = &Challenge{}
+
 // ChallengePiece handles the piece challenge request
 // return the replica's integrity hash, piece hash and piece data
 func (challenge *Challenge) ChallengePiece(
@@ -37,6 +39,6 @@ func (challenge *Challenge) ChallengePiece(
 		log.CtxErrorw(ctx, "failed to get payload", "error", err)
 		return
 	}
-	log.CtxInfow(ctx, "success to challenge the payload")
+	log.CtxInfow(ctx, "succeed to challenge the payload")
 	return
 }

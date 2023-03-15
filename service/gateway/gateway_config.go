@@ -4,6 +4,7 @@ import (
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 )
 
+// GatewayConfig defines gateway service config
 type GatewayConfig struct {
 	SpOperatorAddress        string
 	HTTPAddress              string
@@ -13,6 +14,6 @@ type GatewayConfig struct {
 	DownloaderServiceAddress string
 	SignerServiceAddress     string
 	ChallengeServiceAddress  string
-	SyncerServiceAddress     string
+	ReceiverServiceAddress   string
 	MetadataServiceAddress   string
 }

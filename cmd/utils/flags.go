@@ -15,13 +15,13 @@ var (
 	}
 	ConfigRemoteFlag = &cli.BoolFlag{
 		Name: "configremote",
-		Usage: "Flag load config from remote db,if 'config.remote' be set, the db.user, " +
+		Usage: "Flag load config from remote db,if 'configremote' be set, the db.user, " +
 			"db.password and db.address flags are needed, otherwise use default value",
 	}
 	ServerFlag = &cli.StringFlag{
 		Name:    "server",
 		Aliases: []string{"service", "s"},
-		Usage:   "Services to be started list, eg -server gateway,uploader,syncer... ",
+		Usage:   "Services to be started list, eg -server gateway,uploader,receiver... ",
 	}
 	DBUserFlag = &cli.StringFlag{
 		Name:    "db.user",
@@ -30,18 +30,18 @@ var (
 	}
 	DBPasswordFlag = &cli.StringFlag{
 		Name:    "db.password",
-		Usage:   "DB password",
+		Usage:   "DB user password",
 		EnvVars: []string{model.SpDBPasswd},
 	}
 	DBAddressFlag = &cli.StringFlag{
 		Name:    "db.address",
-		Usage:   "DB address",
+		Usage:   "DB listen address",
 		EnvVars: []string{model.SpDBAddress},
 		Value:   "localhost:3306",
 	}
 	DBDataBaseFlag = &cli.StringFlag{
 		Name:    "db.database",
-		Usage:   "DB database",
+		Usage:   "DB database name",
 		EnvVars: []string{model.SpDBDataBase},
 		Value:   "localhost:3306",
 	}
@@ -52,11 +52,11 @@ var (
 	}
 	LogPathFlag = &cli.StringFlag{
 		Name:  "log.path",
-		Usage: "log path",
-		Value: "./gnfd.log",
+		Usage: "log output file path",
+		Value: "./gnfd-sp.log",
 	}
 	LogStdOutputFlag = &cli.BoolFlag{
 		Name:  "log.std",
-		Usage: "log standard output",
+		Usage: "log output standard io",
 	}
 )
