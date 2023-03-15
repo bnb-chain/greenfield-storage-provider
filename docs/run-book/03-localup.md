@@ -54,7 +54,7 @@ deployment/localup/local_env/
 │   ├── data           # piecestore data directory
 │   ├── db.info
 │   ├── gnfd-sp0
-│   ├── gnfd-sp.log    # gnfd log file
+│   ├── gnfd-sp.log    # gnfd-sp log file
 │   ├── log.txt
 │   └── sp.info
 ├── sp1

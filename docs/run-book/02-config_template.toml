@@ -1,37 +1,25 @@
-# services list are to be started
-Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer"]
-
-# sp operator address generate from sp's 'OperatorPublicKey'
-SpOperatorAddress = ""
-
-# Domain name for external services, be used for gateway ,
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager"]
+SpOperatorAddress = "677265656e6669656c642d73746f726167652d70726f7669646572"
 Domain = "gnfd.nodereal.com"
 
-# http address, one for gateway, another for metadata
 [HTTPAddress]
 gateway = "localhost:9033"
-metadata = "localhost:9733"
 
-# all services gRPC addresses, there are dependencies between services
-# For details, to see (TODO:: Other introduction documents)
-# If only want to start a set of dependent services, be careful not to
-# omit the addresses of related services
 [GRPCAddress]
 challenge = "localhost:9333"
 downloader = "localhost:9233"
+metadata = "localhost:9733"
+receiver = "localhost:9533"
 signer = "localhost:9633"
 tasknode = "localhost:9433"
-receiver = "localhost:9533"
 uploader = "localhost:9133"
 
-# SQL DB ia a strong dependency for sp
 [SpDBConfig]
 User = "root"
 Passwd = "test_pwd"
 Address = "localhost:3306"
 Database = "storage_provider_db"
 
-# piece store used for storing payload, so it is also a strong dependency for sp
 [PieceStoreConfig]
 Shards = 0
 
@@ -39,17 +27,17 @@ Shards = 0
 Storage = "file"
 BucketURL = "./data"
 MaxRetries = 5
+MinRetryDelay = 0
+TLSInsecureSkipVerify = false
 TestMode = false
 
-# interact with the greenfield chain
 [ChainConfig]
-ChainID = "greenfield_9000-121"
+ChainID = "greenfield_9000-1741"
 
 [[ChainConfig.NodeAddr]]
 GreenfieldAddresses = ["localhost:9090"]
 TendermintAddresses = ["http://localhost:26750"]
 
-# signer service config
 [SignerCfg]
 GRPCAddress = "localhost:9633"
 APIKey = ""
@@ -57,14 +45,13 @@ WhitelistCIDR = ["127.0.0.1/32"]
 
 [SignerCfg.GreenfieldChainConfig]
 GRPCAddress = "localhost:9090"
-ChainID = "greenfield_9000-121"
+ChainID = "greenfield_9000-1741"
 GasLimit = 210000
 OperatorPrivateKey = ""
 FundingPrivateKey = ""
 SealPrivateKey = ""
 ApprovalPrivateKey = ""
 
-# signer service config
 [BlockSyncerCfg.Chain]
 Bech32Prefix = ""
 Modules = []
