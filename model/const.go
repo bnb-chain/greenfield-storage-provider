@@ -29,11 +29,11 @@ var (
 // SpServiceDesc defines the service description in storage provider
 var SpServiceDesc = map[string]string{
 	GatewayService:     "Receives the sdk request",
-	UploaderService:    "Uploads object to the backend",
+	UploaderService:    "Uploads object payload to greenfield",
 	DownloaderService:  "Downloads object from the backend and statistical read traffic",
 	ChallengeService:   "Provides the ability to query the integrity hash and piece data",
-	TaskNodeService:    "Executes background task, include replication task",
-	ReceiverService:    "Receives object from other storage provider and store",
+	TaskNodeService:    "Executes background task",
+	ReceiverService:    "Receives data pieces of an object from other storage provider and store",
 	SignerService:      "Sign the transaction and broadcast to chain",
 	MetadataService:    "Provides the ability to query meta data",
 	BlockSyncerService: "Syncs block data to db",
