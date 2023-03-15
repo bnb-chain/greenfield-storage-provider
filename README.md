@@ -1,6 +1,6 @@
 # Greenfield Storage Provider
 
-Storage Provider (abbreviated SP) is storage service infrastructure providers. It uses Greenfield as the ledger 
+Greenfield Storage Provider (abbreviated SP) is storage service infrastructure providers. It uses Greenfield as the ledger 
 and the single source of truth. Each SP can and will respond to users' requests to write (upload) and read (download) 
 data, and serve as the gatekeeper for user rights and authentications.
 
@@ -9,7 +9,27 @@ data, and serve as the gatekeeper for user rights and authentications.
 notification and not ready for production use. The code and security audit have not been fully completed and not ready
 for any bug bounty. We advise you to be careful and experiment on the network at your own risk. Stay safe out there.**
 
-## SP Core(coming soon)
+## SP Core
+SPs store the objects' real data, i.e. the payload data. Each SP runs its own object storage system. Similar to Amazon 
+S3 and other object store systems, the objects stored on SPs are immutable. The users may delete and re-create the object 
+(under the different ID, or under the same ID after certain publicly declared settings), but they cannot modify it.
+
+SPs have to register themselves first by depositing on the Greenfield blockchain as their "Service Stake". Greenfield 
+validators will go through a dedicated governance procedure to vote for the SPs of their election. SPs are encouraged 
+to advertise their information and prove to the community their capability, as SPs have to provide a professional storage 
+system with high-quality SLA.
+
+SPs provide publicly accessible APIs for users to upload, download, and manage data. These APIs are very similar to Amazon 
+S3 APIs so that existing developers may feel familiar enough to write code for it. Meanwhile, they provide each other REST 
+APIs and form another white-listed P2P network to communicate with each other to ensure data availability and redundancy. 
+There will also be a P2P-based upload/download network across SPs and user-end client software to facilitate easy connections 
+and fast data download, which is similar to BitTorrent.
+
+Among the multiple SPs that one object is stored on, one SP will be the "Primary SP", while the others are "Secondary SP".
+
+When users want to write an object into Greenfield, they or the client software they use must specify the primary SP. Primary 
+SP should be used as the only SP to download the data. Users can change the primary SP for their objects later if they are not 
+satisfied with their service.
 
 
 ## Quick Started
