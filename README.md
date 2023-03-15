@@ -111,14 +111,14 @@ GreenfieldAddresses = ["localhost:9090"]
 TendermintAddresses = ["http://localhost:26750"]
 ```
 
-#### Start
+### Start
 
 ```shell
 # start sp
 ./gnfd-sp --config ${config_file_path}
 ```
 
-#### Add Greenfield Chain
+### Add Greenfield Chain
 [Add SP to Greenfield](https://github.com/bnb-chain/greenfield/blob/master/docs/cli/storage-provider.md)
 
 ## Document
