@@ -25,7 +25,7 @@ var (
 // TODO::support gc and configuration management, etc.
 type Manager struct {
 	config  *ManagerConfig
-	running atomic.Bool
+	running atomic.Value
 	stopCh  chan struct{}
 	chain   *gnfd.Greenfield
 	spDB    sqldb.SPDB
@@ -60,7 +60,7 @@ func (m *Manager) Name() string {
 
 // Start function start background goroutine to execute refresh sp meta
 func (m *Manager) Start(ctx context.Context) error {
-	if m.running.Swap(true) {
+	if m.running.Swap(true) == true {
 		return errors.New("manager has already started")
 	}
 
@@ -117,7 +117,7 @@ func (m *Manager) refreshSPInfoAndStorageParams() {
 
 // Stop manager background goroutine
 func (m *Manager) Stop(ctx context.Context) error {
-	if !m.running.Swap(false) {
+	if m.running.Swap(false) == false {
 		return errors.New("manager has already stop")
 	}
 	close(m.stopCh)
