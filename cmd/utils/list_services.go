@@ -12,10 +12,10 @@ import (
 var ListServiceCmd = &cli.Command{
 	Action:   listServiceAction,
 	Name:     "list",
-	Usage:    "List the services in storage provider",
+	Usage:    "List the services in greenfield storage provider",
 	Category: "MISCELLANEOUS COMMANDS",
 	Description: `
-The list command output the services in storage provider`,
+The list command output the services in greenfield storage provider`,
 }
 
 func listServiceAction(ctx *cli.Context) error {

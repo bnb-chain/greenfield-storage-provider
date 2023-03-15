@@ -1,14 +1,14 @@
 package utils
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/config"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/urfave/cli/v2"
+
+	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
-// MakeSPDB return sp db instance
-func MakeSPDB(ctx *cli.Context) (*sqldb.SpDBImpl, error) {
-	spDBCfg := config.DefaultSQLDBConfig
+// MakeSPDB return sp db instance from db flags
+func MakeSPDB(ctx *cli.Context, spDBCfg *storeconfig.SQLDBConfig) (*sqldb.SpDBImpl, error) {
 	if ctx.IsSet(ctx.String(DBUserFlag.Name)) {
 		spDBCfg.User = ctx.String(DBUserFlag.Name)
 	}

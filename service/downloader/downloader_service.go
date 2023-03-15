@@ -13,7 +13,7 @@ import (
 
 var _ types.DownloaderServiceServer = &Downloader{}
 
-// DownloaderObject download the payload of the object.
+// GetObject download the payload of the object.
 func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	stream types.DownloaderService_GetObjectServer) (err error) {
 	var (
@@ -22,6 +22,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		length       uint64
 		isValidRange bool
 	)
+
 	ctx := log.Context(context.Background(), req)
 	resp := &types.GetObjectResponse{}
 	defer func() {
@@ -29,7 +30,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 			return
 		}
 		resp.IsValidRange = isValidRange
-		log.CtxInfow(ctx, "finish to download object", "error", err, "sendSize", size)
+		log.CtxInfow(ctx, "succeed to get object", "error", err, "sendSize", size)
 	}()
 
 	bucketInfo := req.GetBucketInfo()

@@ -62,8 +62,8 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Name(challengeRouterName).
 		Methods(http.MethodGet).
 		HandlerFunc(g.challengeHandler)
-	// sync piece to syncer
-	r.Path(model.SyncerPath).
+	// sync piece to receiver
+	r.Path(model.SyncPath).
 		Name(syncPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.syncPieceHandler)

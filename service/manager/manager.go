@@ -24,7 +24,7 @@ var (
 // Currently, it supports periodic update of sp info list and storage params information in spdb.
 // TODO::support gc and configuration management, etc.
 type Manager struct {
-	cfg     *ManagerConfig
+	config  *ManagerConfig
 	running atomic.Bool
 	stopCh  chan struct{}
 	chain   *gnfd.Greenfield
@@ -33,21 +33,23 @@ type Manager struct {
 
 // NewManagerService returns an instance of manager
 func NewManagerService(cfg *ManagerConfig) (*Manager, error) {
-	chain, err := gnfd.NewGreenfield(cfg.ChainConfig)
-	if err != nil {
+	var (
+		manager *Manager
+		err     error
+	)
+
+	manager = &Manager{
+		config: cfg,
+	}
+	if manager.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Errorw("failed to create chain client", "error", err)
 		return nil, err
 	}
-	spDB, err := sqldb.NewSpDB(cfg.SpDBConfig)
-	if err != nil {
+	if manager.spDB, err = sqldb.NewSpDB(cfg.SpDBConfig); err != nil {
 		log.Errorw("failed to create spdb client", "error", err)
 		return nil, err
 	}
-	manager := &Manager{
-		cfg:   cfg,
-		spDB:  spDB,
-		chain: chain,
-	}
+
 	return manager, nil
 }
 
@@ -93,7 +95,7 @@ func (m *Manager) refreshSPInfoAndStorageParams() {
 		return
 	}
 	for _, spInfo := range spInfoList {
-		if spInfo.OperatorAddress == m.cfg.SpOperatorAddress {
+		if spInfo.OperatorAddress == m.config.SpOperatorAddress {
 			if err = m.spDB.SetOwnSpInfo(spInfo); err != nil {
 				log.Errorw("failed to set own sp info", "error", err)
 				return
