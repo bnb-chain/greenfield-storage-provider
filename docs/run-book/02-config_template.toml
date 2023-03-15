@@ -1,0 +1,103 @@
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager"]
+SpOperatorAddress = "677265656e6669656c642d73746f726167652d70726f7669646572"
+Domain = "gnfd.nodereal.com"
+
+[HTTPAddress]
+gateway = "localhost:9033"
+
+[GRPCAddress]
+challenge = "localhost:9333"
+downloader = "localhost:9233"
+metadata = "localhost:9733"
+receiver = "localhost:9533"
+signer = "localhost:9633"
+tasknode = "localhost:9433"
+uploader = "localhost:9133"
+
+[SpDBConfig]
+User = "root"
+Passwd = "test_pwd"
+Address = "localhost:3306"
+Database = "storage_provider_db"
+
+[PieceStoreConfig]
+Shards = 0
+
+[PieceStoreConfig.Store]
+Storage = "file"
+BucketURL = "./data"
+MaxRetries = 5
+MinRetryDelay = 0
+TLSInsecureSkipVerify = false
+TestMode = false
+
+[ChainConfig]
+ChainID = "greenfield_9000-1741"
+
+[[ChainConfig.NodeAddr]]
+GreenfieldAddresses = ["localhost:9090"]
+TendermintAddresses = ["http://localhost:26750"]
+
+[SignerCfg]
+GRPCAddress = "localhost:9633"
+APIKey = ""
+WhitelistCIDR = ["127.0.0.1/32"]
+
+[SignerCfg.GreenfieldChainConfig]
+GRPCAddress = "localhost:9090"
+ChainID = "greenfield_9000-1741"
+GasLimit = 210000
+OperatorPrivateKey = ""
+FundingPrivateKey = ""
+SealPrivateKey = ""
+ApprovalPrivateKey = ""
+
+[BlockSyncerCfg.Chain]
+Bech32Prefix = ""
+Modules = []
+
+[BlockSyncerCfg.Node]
+Type = "mysql"
+
+[BlockSyncerCfg.Node.RPC]
+ClientName = "juno"
+Address = "http://localhost:26750"
+MaxConnections = 20
+
+[BlockSyncerCfg.Node.GRPC]
+Address = "http://localhost:9090"
+Insecure = true
+
+[BlockSyncerCfg.Parser]
+GenesisFilePath = ""
+Workers = 0
+StartHeight = 0
+AvgBlockTime = 1000000000
+ParseNewBlocks = false
+ParseOldBlocks = false
+ParseGenesis = false
+FastSync = false
+
+[BlockSyncerCfg.Database]
+Type = ""
+DSN = ""
+SlowThreshold = "0s"
+MaxOpenConnections = 0
+MaxIdleConnections = 0
+ConnMaxIdleTime = "0s"
+ConnMaxLifetime = "0s"
+PartitionSize = 0
+PartitionBatchSize = 0
+
+[BlockSyncerCfg.Database.Secrets]
+SecretId = "1"
+Region = "1"
+
+[BlockSyncerCfg.Logging]
+ServiceName = ""
+RootDir = "./logs"
+Level = "debug"
+
+[LogCfg]
+Level = "debug"
+Path = "./gnfd-sp.log"

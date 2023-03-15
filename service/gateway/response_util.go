@@ -94,7 +94,8 @@ func (desc *errorDescription) errorJSONResponse(w http.ResponseWriter, reqCtx *r
 	return nil
 }
 
-func generateContentRangeHeader(w http.ResponseWriter, start int64, end int64) {
+// makeContentRangeHeader make http response range header
+func makeContentRangeHeader(w http.ResponseWriter, start int64, end int64) {
 	if end < 0 {
 		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(start))+"-")
 	} else {
@@ -102,6 +103,7 @@ func generateContentRangeHeader(w http.ResponseWriter, start int64, end int64) {
 	}
 }
 
+// makeErrorDescription is used to convent err to errorDescription
 func makeErrorDescription(err error) *errorDescription {
 	switch err {
 	case merrors.ErrNoSuchObject:

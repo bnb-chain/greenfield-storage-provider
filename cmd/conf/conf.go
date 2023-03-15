@@ -35,19 +35,19 @@ var ConfigUploadCmd = &cli.Command{
 	},
 	Category: "CONFIG COMMANDS",
 	Description: `
-The config.upload command upload the file to db for sp to load
-db.user and db.password flag support come from ENV Var
-SP_DB_USER and SP_DB_PASSWORD`,
+The config.upload command uploads the file to db. If db.user,db.password,db.address 
+and db.database flags are not set, uses the 'SpDBConfig' in config file, it will load
+SP_DB_USER, SP_DB_PASSWORD, SP_DB_ADDRESS and SP_DB_DATABASE from ENV.`,
 }
 
 // configUploadAction is the config.upload command.
 func configUploadAction(ctx *cli.Context) error {
-	spDB, err := utils.MakeSPDB(ctx)
+	cfg := config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
+	cfgBytes, err := cfg.JSONMarshal()
 	if err != nil {
 		return err
 	}
-	cfg := config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
-	cfgBytes, err := cfg.JSONMarshal()
+	spDB, err := utils.MakeSPDB(ctx, cfg.SpDBConfig)
 	if err != nil {
 		return err
 	}

@@ -13,7 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
-	stoneclient "github.com/bnb-chain/greenfield-storage-provider/service/stonenode/client"
+	tasknodeclient "github.com/bnb-chain/greenfield-storage-provider/service/tasknode/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
@@ -28,38 +28,43 @@ type Uploader struct {
 	spDB       sqldb.SPDB
 	pieceStore *psclient.StoreClient
 	signer     *signerclient.SignerClient
-	stone      *stoneclient.StoneNodeClient
+	taskNode   *tasknodeclient.TaskNodeClient
 	grpcServer *grpc.Server
 }
 
 // NewUploaderService returns an instance of Uploader that implementation of
 // the lifecycle.Service and UploaderService interface
-func NewUploaderService(config *UploaderConfig) (*Uploader, error) {
-	cache, _ := lru.New(model.LruCacheLimit)
-	signer, err := signerclient.NewSignerClient(config.SignerGrpcAddress)
-	if err != nil {
+func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
+	var (
+		uploader *Uploader
+		err      error
+	)
+
+	uploader = &Uploader{
+		config: cfg,
+	}
+
+	if uploader.cache, err = lru.New(model.LruCacheLimit); err != nil {
+		log.Errorw("failed to create lru cache", "error", err)
 		return nil, err
 	}
-	stone, err := stoneclient.NewStoneNodeClient(config.StoneNodeGrpcAddress)
-	if err != nil {
+	if uploader.signer, err = signerclient.NewSignerClient(cfg.SignerGrpcAddress); err != nil {
+		log.Errorw("failed to create signer client", "error", err)
 		return nil, err
 	}
-	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
-	if err != nil {
+	if uploader.taskNode, err = tasknodeclient.NewTaskNodeClient(cfg.TaskNodeGrpcAddress); err != nil {
+		log.Errorw("failed to create task node client", "error", err)
 		return nil, err
 	}
-	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
-	if err != nil {
+	if uploader.pieceStore, err = psclient.NewStoreClient(cfg.PieceStoreConfig); err != nil {
+		log.Errorw("failed to create piece store client", "error", err)
 		return nil, err
 	}
-	uploader := &Uploader{
-		config:     config,
-		cache:      cache,
-		spDB:       spDB,
-		stone:      stone,
-		pieceStore: pieceStore,
-		signer:     signer,
+	if uploader.spDB, err = sqldb.NewSpDB(cfg.SpDBConfig); err != nil {
+		log.Errorw("failed to create sp db client", "error", err)
+		return nil, err
 	}
+
 	return uploader, nil
 }
 
@@ -80,15 +85,16 @@ func (uploader *Uploader) Start(ctx context.Context) error {
 func (uploader *Uploader) Stop(ctx context.Context) error {
 	uploader.grpcServer.GracefulStop()
 	uploader.signer.Close()
-	uploader.stone.Close()
+	uploader.taskNode.Close()
 	return nil
 }
 
+// serve start the uploader gRPC service
 func (uploader *Uploader) serve(errCh chan error) {
 	lis, err := net.Listen("tcp", uploader.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
-		log.Errorw("failed to listen", "err", err)
+		log.Errorw("failed to listen", "error", err)
 		return
 	}
 
@@ -97,7 +103,7 @@ func (uploader *Uploader) serve(errCh chan error) {
 	uploader.grpcServer = grpcServer
 	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Errorw("failed to start grpc server", "err", err)
+		log.Errorw("failed to start grpc server", "error", err)
 		return
 	}
 }

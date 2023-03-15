@@ -17,7 +17,7 @@ import (
 )
 
 // getObjectHandler handle get object request
-func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
+func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
 		errDescription *errorDescription
@@ -44,7 +44,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if g.downloader == nil {
+	if gateway.downloader == nil {
 		log.Errorw("failed to get object due to not config downloader")
 		errDescription = NotExistComponentError
 		return
@@ -66,7 +66,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription = makeErrorDescription(err)
 		return
 	}
-	if err = g.checkAuthorization(reqContext, addr); err != nil {
+	if err = gateway.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
@@ -88,7 +88,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		RangeEnd:    rangeEnd,
 	}
 	ctx := log.Context(context.Background(), req)
-	stream, err := g.downloader.GetObject(ctx, req)
+	stream, err := gateway.downloader.GetObject(ctx, req)
 	if err != nil {
 		log.Errorf("failed to get object", "error", err)
 		errDescription = makeErrorDescription(err)
@@ -112,7 +112,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		if resp.IsValidRange {
 			statusCode = http.StatusPartialContent
 			w.WriteHeader(statusCode)
-			generateContentRangeHeader(w, rangeStart, rangeEnd)
+			makeContentRangeHeader(w, rangeStart, rangeEnd)
 		}
 		if writeN, err = w.Write(resp.Data); err != nil {
 			log.Errorw("failed to read stream", "error", err)
@@ -130,7 +130,7 @@ func (g *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // putObjectHandler handle put object request
-func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
+func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
 		errDescription *errorDescription
@@ -155,7 +155,7 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if g.uploader == nil {
+	if gateway.uploader == nil {
 		log.Errorw("failed to put object due to not config uploader")
 		errDescription = NotExistComponentError
 		return
@@ -179,13 +179,13 @@ func (g *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription = makeErrorDescription(err)
 		return
 	}
-	if err = g.checkAuthorization(reqContext, addr); err != nil {
+	if err = gateway.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}
 
-	stream, err := g.uploader.PutObject(context.Background())
+	stream, err := gateway.uploader.PutObject(context.Background())
 	if err != nil {
 		log.Errorf("failed to put object", "error", err)
 		errDescription = makeErrorDescription(err)

@@ -11,7 +11,7 @@ import (
 )
 
 // getUserBucketsHandler handle get object request
-func (g *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) {
+func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
 		errDescription *errorDescription
@@ -30,7 +30,7 @@ func (g *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) 
 		}
 	}()
 
-	if g.metadata == nil {
+	if gateway.metadata == nil {
 		log.Errorw("failed to get user buckets due to not config metadata")
 		errDescription = NotExistComponentError
 		return
@@ -40,7 +40,7 @@ func (g *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) 
 		AccountId: reqContext.accountID,
 	}
 	ctx := log.Context(context.Background(), req)
-	resp, err := g.metadata.GetUserBuckets(ctx, req)
+	resp, err := gateway.metadata.GetUserBuckets(ctx, req)
 	if err != nil {
 		log.Errorf("failed to get user buckets", "error", err)
 		return
@@ -55,7 +55,7 @@ func (g *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 // listObjectsByBucketNameHandler handle list objects by bucket name request
-func (g *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
+func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
 		errDescription *errorDescription
@@ -74,7 +74,7 @@ func (g *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.
 		}
 	}()
 
-	if g.metadata == nil {
+	if gateway.metadata == nil {
 		log.Errorw("failed to list objects by bucket name due to not config metadata")
 		errDescription = NotExistComponentError
 		return
@@ -86,7 +86,7 @@ func (g *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.
 	}
 
 	ctx := log.Context(context.Background(), req)
-	resp, err := g.metadata.ListObjectsByBucketName(ctx, req)
+	resp, err := gateway.metadata.ListObjectsByBucketName(ctx, req)
 	if err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
 		return
