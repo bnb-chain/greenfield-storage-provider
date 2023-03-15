@@ -179,7 +179,9 @@ const (
 // define table name constant of block syncer db
 const (
 	// BucketTableName defines the name of bucket table
-	BucketTableName = "bucket"
+	BucketTableName = "buckets"
 	// ObjectTableName defines the name of object table
-	ObjectTableName = "object"
+	ObjectTableName = "objects"
+	// BlockTableName defines the name of block table
+	BlockTableName = "blocks"
 )

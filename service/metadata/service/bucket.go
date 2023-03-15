@@ -77,8 +77,7 @@ func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metaty
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
 				PrimarySpAddress: bucket.PrimarySpAddress.String(),
-				// TODO:: update the below code after block syncer update ReadQuota from string to uint64 and implement BillingInfo Barry
-				ReadQuota: 0,
+				ReadQuota:        0,
 			},
 			Removed: bucket.Removed,
 		}
@@ -113,8 +112,7 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
 				PrimarySpAddress: bucket.PrimarySpAddress.String(),
-				// TODO:: update the below code after block syncer updates ReadQuota from string to uint64 and implements BillingInfo Barry
-				ReadQuota: 0,
+				ReadQuota:        0,
 			},
 			Removed: bucket.Removed,
 		}

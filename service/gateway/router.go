@@ -11,18 +11,13 @@ import (
 )
 
 const (
-	putObjectRouterName      = "PutObject"
-	getObjectRouterName      = "GetObject"
-	approvalRouterName       = "GetApproval"
-	challengeRouterName      = "Challenge"
-	syncPieceRouterName      = "SyncPiece"
-	getUserBucketsRouterName = "GetUserBuckets"
-	//TODO delete redundent name
-	getUserBucketsCountRouterName                  = "GetUserBucketsCount"
-	getBucketByBucketIDRouterName                  = "GetBucketByBucketID"
-	getBucketByBucketNameRouterName                = "GetBucketByBucketName"
-	listObjectsByBucketRouterName                  = "ListObjectsByBucketName"
-	listDeletedObjectsByBlockNumberRangeRouterName = "ListDeletedObjectsByBlockNumberRange"
+	putObjectRouterName           = "PutObject"
+	getObjectRouterName           = "GetObject"
+	approvalRouterName            = "GetApproval"
+	challengeRouterName           = "Challenge"
+	syncPieceRouterName           = "SyncPiece"
+	getUserBucketsRouterName      = "GetUserBuckets"
+	listObjectsByBucketRouterName = "ListObjectsByBucketName"
 )
 
 const (
@@ -86,32 +81,5 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Name(syncPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.syncPieceHandler)
-	//metadata router
-	//r.Name(getUserBucketsRouterName).
-	//	Methods(http.MethodGet).
-	//	Path("/accounts/{account_id:.+}/buckets").
-	//	HandlerFunc(g.getUserBucketsHandler)
-	r.Name(getUserBucketsCountRouterName).
-		Methods(http.MethodGet).
-		Path("/accounts/{account_id:.+}/buckets/count").
-		HandlerFunc(g.getUserBucketsCountHandler)
-	r.Name(getBucketByBucketNameRouterName).
-		Methods(http.MethodGet).
-		Path("/buckets/name/{bucket_name:.+}/{is_full_list:.+}").
-		HandlerFunc(g.getBucketByBucketNameHandler)
-	//TODO barry remove all sp internal handlers
-	r.Name(getBucketByBucketIDRouterName).
-		Methods(http.MethodGet).
-		Path("/buckets/id/{bucket_id:.+}/{is_full_list:.+}").
-		HandlerFunc(g.getBucketByBucketIDHandler)
-	//r.Name(listObjectsByBucketRouterName).
-	//	Methods(http.MethodGet).
-	//	Path("/accounts/{account_id:.+}/buckets/{bucket:.+}/objects").
-	//	HandlerFunc(g.listObjectsByBucketNameHandler)
-	r.Name(listDeletedObjectsByBlockNumberRangeRouterName).
-		Methods(http.MethodGet).
-		Path("/delete/{start:.+}/{end:.+}/{is_full_list:.+}").
-		HandlerFunc(g.listDeletedObjectsByBlockNumberRangeHandler)
-
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }

@@ -40,9 +40,13 @@ type Object struct {
 	// SecondarySpAddresses defines the addresses of secondary_sps
 	SecondarySpAddresses SecondarySpAddresses `gorm:"secondary_sp_addresses;type:text"`
 	// LockedBalance defines locked balance of object
-	LockedBalance string `json:"lockedBalance"`
+	LockedBalance string `gorm:"locked_balance"`
 	// Removed defines the object is deleted or not
 	Removed bool `gorm:"removed"`
+	// UpdateTime defines the time when the object updated
+	UpdateTime int64 `gorm:"update_time"`
+	// UpdateAt defines the block number when the object updated
+	UpdateAt int64 `gorm:"update_at"`
 }
 
 // TableName is used to set Object table name in database

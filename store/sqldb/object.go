@@ -23,11 +23,20 @@ func (s *SpDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 		err     error
 	)
 
+	if isFullList {
+		err = s.db.Table((&metadata.Object{}).TableName()).
+			Select("*").
+			Where("update_at >= ? and update_at <= ? and removed = ?", startBlockNumber, endBlockNumber, true).
+			Limit(DeletedObjectsDefaultSize).
+			Order("update_at asc").
+			Find(&objects).Error
+		return objects, err
+	}
 	err = s.db.Table((&metadata.Object{}).TableName()).
 		Select("*").
-		Where("create_at >= ? and create_at <= ? and is_public = ?", startBlockNumber, endBlockNumber, true).
+		Where("update_at >= ? and update_at <= ? and removed = ? and is_public = ?", startBlockNumber, endBlockNumber, true, true).
 		Limit(DeletedObjectsDefaultSize).
-		Order("create_at asc").
+		Order("update_at asc").
 		Find(&objects).Error
 	return objects, err
 }
