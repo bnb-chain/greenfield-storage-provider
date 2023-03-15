@@ -53,18 +53,17 @@ Build   : go1.20.1 darwin amd64 2023-03-04 23:54
 
 ## Start with local model
 ```shell
-# show greenfield storeage provider supports the services list 
+# show services list
 ./gnfd-sp list
-
-blocksyncer          Syncer block data to db
-challenge            Provides the ability to query the integrity hash
-downloader           Download object from the backend and statistical read traffic
-gateway              Entrance for external user access
+blocksyncer          Syncs block data to db
+challenge            Provides the ability to query the integrity hash and piece data
+downloader           Downloads object from the backend and statistical read traffic
+gateway              Receives the sdk request
 metadata             Provides the ability to query meta data
+receiver             Receives data pieces of an object from other storage provider and store
 signer               Sign the transaction and broadcast to chain
-stonenode            The smallest unit of background task execution(TODO::change service name)
-syncer               Receive object from other storage provider and store(TODO::change service name)
-uploader             Upload object to the backend
+tasknode             Executes background task
+uploader             Uploads object payload to greenfield
 
 
 # start 

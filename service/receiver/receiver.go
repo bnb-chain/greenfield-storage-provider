@@ -1,4 +1,4 @@
-package syncer
+package receiver
 
 import (
 	"context"
@@ -12,17 +12,17 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/receiver/types"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
-	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 )
 
-var _ lifecycle.Service = &Syncer{}
+var _ lifecycle.Service = &Receiver{}
 
-// Syncer implements the gRPC of SyncerService,
+// Receiver implements the gRPC of ReceiverService,
 // responsible for receive replicate object payload data
-type Syncer struct {
-	config     *SyncerConfig
+type Receiver struct {
+	config     *ReceiverConfig
 	cache      *lru.Cache
 	signer     *signerclient.SignerClient
 	pieceStore *psclient.StoreClient
@@ -30,8 +30,8 @@ type Syncer struct {
 	grpcServer *grpc.Server
 }
 
-// NewSyncerService return a Syncer instance and init the resource
-func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
+// NewReceiverService return a Receiver instance and init the resource
+func NewReceiverService(config *ReceiverConfig) (*Receiver, error) {
 	cache, _ := lru.New(model.LruCacheLimit)
 	pieceStore, err := psclient.NewStoreClient(config.PieceStoreConfig)
 	if err != nil {
@@ -45,7 +45,7 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &Syncer{
+	s := &Receiver{
 		config:     config,
 		cache:      cache,
 		pieceStore: pieceStore,
@@ -55,27 +55,28 @@ func NewSyncerService(config *SyncerConfig) (*Syncer, error) {
 	return s, nil
 }
 
-// Name return the syncer service name, for the lifecycle management
-func (syncer *Syncer) Name() string {
-	return model.SyncerService
+// Name return the receiver service name, for the lifecycle management
+func (receiver *Receiver) Name() string {
+	return model.ReceiverService
 }
 
-// Start the syncer background goroutine
-func (syncer *Syncer) Start(ctx context.Context) error {
+// Start the receiver background goroutine
+func (receiver *Receiver) Start(ctx context.Context) error {
 	errCh := make(chan error)
-	go syncer.serve(errCh)
+	go receiver.serve(errCh)
 	err := <-errCh
 	return err
 }
 
-// Stop the syncer gRPC service and recycle the resources
-func (syncer *Syncer) Stop(ctx context.Context) error {
-	syncer.grpcServer.GracefulStop()
+// Stop the receiver gRPC service and recycle the resources
+func (receiver *Receiver) Stop(ctx context.Context) error {
+	receiver.grpcServer.GracefulStop()
 	return nil
 }
 
-func (syncer *Syncer) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", syncer.config.GRPCAddress)
+// serve
+func (receiver *Receiver) serve(errCh chan error) {
+	lis, err := net.Listen("tcp", receiver.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "err", err)
@@ -83,8 +84,8 @@ func (syncer *Syncer) serve(errCh chan error) {
 	}
 
 	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize))
-	types.RegisterSyncerServiceServer(grpcServer, syncer)
-	syncer.grpcServer = grpcServer
+	types.RegisterReceiverServiceServer(grpcServer, receiver)
+	receiver.grpcServer = grpcServer
 	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Errorw("failed to start grpc server", "err", err)

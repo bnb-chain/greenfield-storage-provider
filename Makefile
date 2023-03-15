@@ -37,4 +37,4 @@ test:
 	# go test -cover ./...
 
 clean:
-	rm -rf ./pkg/types/v1/*.pb.go && rm -rf ./service/types/v1/*.pb.go
+	rm -rf ./service/types/*.pb.go && rm -rf ./service/*/types/*.pb.go

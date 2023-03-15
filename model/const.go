@@ -12,10 +12,10 @@ var (
 	DownloaderService = strings.ToLower("Downloader")
 	// ChallengeService defines the name of challenge service
 	ChallengeService = strings.ToLower("Challenge")
-	// StoneNodeService defines the name of stone node service
-	StoneNodeService = strings.ToLower("StoneNode")
-	// SyncerService defines the name of syncer service
-	SyncerService = strings.ToLower("Syncer")
+	// TaskNodeService defines the name of task node service
+	TaskNodeService = strings.ToLower("TaskNode")
+	// ReceiverService defines the name of receiver service
+	ReceiverService = strings.ToLower("Receiver")
 	// SignerService defines the name of signer service
 	SignerService = strings.ToLower("Signer")
 	// MetadataService defines the name of metadata service
@@ -28,17 +28,15 @@ var (
 
 // SpServiceDesc defines the service description in storage provider
 var SpServiceDesc = map[string]string{
-	GatewayService:    "Entrance for external user access",
-	UploaderService:   "Upload object to the backend",
-	DownloaderService: "Download object from the backend and statistical read traffic",
-	ChallengeService:  "Provides the ability to query the integrity hash",
-	// TODO:: change other service name, maybe TaskService
-	StoneNodeService: "The smallest unit of background task execution",
-	// TODO:: change other service name, maybe ReplicateService
-	SyncerService:      "Receive object from other storage provider and store",
+	GatewayService:     "Receives the sdk request",
+	UploaderService:    "Uploads object payload to greenfield",
+	DownloaderService:  "Downloads object from the backend and statistical read traffic",
+	ChallengeService:   "Provides the ability to query the integrity hash and piece data",
+	TaskNodeService:    "Executes background task",
+	ReceiverService:    "Receives data pieces of an object from other storage provider and store",
 	SignerService:      "Sign the transaction and broadcast to chain",
 	MetadataService:    "Provides the ability to query meta data",
-	BlockSyncerService: "Syncer block data to db",
+	BlockSyncerService: "Syncs block data to db",
 }
 
 // define storage provider service gRPC default address
@@ -51,10 +49,10 @@ const (
 	DownloaderGRPCAddress = "localhost:9233"
 	// ChallengeGRPCAddress default gRPC address of challenge
 	ChallengeGRPCAddress = "localhost:9333"
-	// StoneNodeGRPCAddress default gRPC address of stone node
-	StoneNodeGRPCAddress = "localhost:9433"
-	// SyncerGRPCAddress default gRPC address of syncer
-	SyncerGRPCAddress = "localhost:9533"
+	// TaskNodeGRPCAddress default gRPC address of task node
+	TaskNodeGRPCAddress = "localhost:9433"
+	// ReceiverGRPCAddress default gRPC address of receiver
+	ReceiverGRPCAddress = "localhost:9533"
 	// SignerGRPCAddress default gRPC address of signer
 	SignerGRPCAddress = "localhost:9633"
 	// MetadataGRPCAddress default gRPC address of meta data service
@@ -132,8 +130,8 @@ const (
 	ActionQuery = "action"
 	// ChallengePath defines challenge path style suffix
 	ChallengePath = "/greenfield/admin/v1/challenge"
-	// SyncerPath defines sync-object path style
-	SyncerPath = "/greenfield/syncer/v1/sync-piece"
+	// SyncPath defines sync-object path style
+	SyncPath = "/greenfield/receiver/v1/sync-piece"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
 	// GnfdTransactionHashHeader defines blockchain tx-hash
@@ -146,7 +144,7 @@ const (
 	GnfdPieceIndexHeader = "X-Gnfd-Piece-Index"
 	// GnfdRedundancyIndexHeader defines redundancy idx, which is used by challenge
 	GnfdRedundancyIndexHeader = "X-Gnfd-Redundancy-Index"
-	// GnfdIntegrityHashHeader defines integrity hash, which is used by challenge and syncer
+	// GnfdIntegrityHashHeader defines integrity hash, which is used by challenge and receiver
 	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
 	// GnfdPieceHashHeader defines piece hash list, which is used by challenge
 	GnfdPieceHashHeader = "X-Gnfd-Piece-Hash"
@@ -154,13 +152,13 @@ const (
 	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
 	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
-	// GnfdObjectInfoHeader define object info, which is used by syncer
+	// GnfdObjectInfoHeader define object info, which is used by receiver
 	GnfdObjectInfoHeader = "X-Gnfd-Object-Info"
-	// GnfdReplicaIdxHeader defines replica idx, which is used by syncer
+	// GnfdReplicaIdxHeader defines replica idx, which is used by receiver
 	GnfdReplicaIdxHeader = "X-Gnfd-Replica-Idx"
-	// GnfdSegmentSizeHeader defines segment size, which is used by syncer
+	// GnfdSegmentSizeHeader defines segment size, which is used by receiver
 	GnfdSegmentSizeHeader = "X-Gnfd-Segment-Size"
-	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by syncer
+	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 )
 
@@ -168,7 +166,7 @@ const (
 const (
 	// LruCacheLimit define maximum number of cached items in service trace queue
 	LruCacheLimit = 8192
-	// MaxCallMsgSize defines gPRC max send or recv msg size
+	// MaxCallMsgSize defines gPRC max send or receive msg size
 	MaxCallMsgSize = 25 * 1024 * 1024
 	// DefaultReadQuotaSize defines bucket's default quota size
 	DefaultReadQuotaSize = 10 * 1024 * 1024 * 1024

@@ -22,7 +22,7 @@ func NewChallengeClient(address string) (*ChallengeClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Errorw("failed to dail challenge", "error", err)
+		log.Errorw("failed to dial challenge", "error", err)
 		return nil, err
 	}
 	client := &ChallengeClient{

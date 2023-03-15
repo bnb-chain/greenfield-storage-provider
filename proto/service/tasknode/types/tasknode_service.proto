@@ -1,10 +1,10 @@
 syntax = "proto3";
-package service.stonenode.types;
+package service.tasknode.types;
 
 import "greenfield/storage/types.proto";
 import "service/types/storage_provider.proto";
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/stonenode/types";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types";
 
 // ReplicateObjectRequest is request type for the ReplicateObject RPC method.
 message ReplicateObjectRequest {
@@ -28,8 +28,8 @@ message QueryReplicatingObjectResponse {
   service.types.ReplicateSegmentInfo replicate_segment_info = 1;
 }
 
-// StoneNodeService defines the gRPC service of background tasks in storage provider.
-service StoneNodeService {
+// TaskNodeService defines the gRPC service of background tasks in storage provider.
+service TaskNodeService {
   // ReplicateObject replicate an object payload to other storage providers.
   rpc ReplicateObject(ReplicateObjectRequest) returns (ReplicateObjectResponse) {};
   // QueryReplicatingObject query a replicating object payload information by object id.
