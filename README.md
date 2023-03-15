@@ -50,18 +50,20 @@ Build   : go1.19.1 darwin amd64 2023-03-13 14:11
 ./gnfd-sp --config ${config_file_path}
 ```
 
-### SP Configuration
-[configuration sample](docs/run-book/02-config_template.toml)
+### [SP Configuration](docs/run-book/02-config_template.toml)
 
-### Add SP to Greenfield chain
-[add sp to greenfield chain](https://github.com/bnb-chain/greenfield/blob/master/docs/cli/storage-provider.md)
+### [Add SP to Greenfield chain](https://github.com/bnb-chain/greenfield/blob/master/docs/cli/storage-provider.md)
 
 ## Deployment
 [Deploy SP](docs/tutorial/01-deployment.md)
 
-## Related
+## Related Document
 * [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): the official Greenfield Whitepaper.
 * [Greenfield Storage Provider](docs/readme.md): the Greenfield Storage Provider documents.
+* [Greenfield Storage Provider Deployment](docs/tutorial/01-deployment.md)
+* [Greenfield Storage Provider Local Setup](docs/run-book/03-local.toml)
+
+
 * [Greenfield](https://github.com/bnb-chain/greenfield): the Golang implementation of the Greenfield Blockchain.
 * [Greenfield-Common](https://github.com/bnb-chain/greenfield-common): the Greenfield common package.
 
