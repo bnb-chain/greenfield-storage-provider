@@ -1,13 +1,20 @@
 Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager"]
 SpOperatorAddress = "677265656e6669656c642d73746f726167652d70726f7669646572"
-Domain = "gnfd.nodereal.com"
 
-[HTTPAddress]
-gateway = "localhost:9033"
-
-[GRPCAddress]
+[Endpoint]
 challenge = "localhost:9333"
 downloader = "localhost:9233"
+gateway = "gnfd.sp.com"
+metadata = "localhost:9733"
+receiver = "localhost:9533"
+signer = "localhost:9633"
+tasknode = "localhost:9433"
+uploader = "localhost:9133"
+
+[ListenAddress]
+challenge = "localhost:9333"
+downloader = "localhost:9233"
+gateway = "localhost:9033"
 metadata = "localhost:9733"
 receiver = "localhost:9533"
 signer = "localhost:9633"

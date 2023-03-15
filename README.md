@@ -77,18 +77,25 @@ Build   : go1.19.1 darwin amd64 2023-03-13 14:11
 Service = ["gateway", "uploader", "downloader", "challenge", "stonenode", "syncer", "signer", "metadata", "manager"]
 # sp operator address 
 SpOperatorAddress = ""
-Domain = "gnfd.nodereal.com"
-# gate listen http address
-[HTTPAddress]
-gateway = "localhost:9033"
-# service listen address
-[GRPCAddress]
+# service endpoint for other to connect
+[Endpoint]
 challenge = "localhost:9333"
 downloader = "localhost:9233"
+gateway = "gnfd.nodereal.com"
 metadata = "localhost:9733"
+receiver = "localhost:9533"
 signer = "localhost:9633"
-stonenode = "localhost:9433"
-syncer = "localhost:9533"
+tasknode = "localhost:9433"
+uploader = "localhost:9133"
+# service listen address
+[ListenAddress]
+challenge = "localhost:9333"
+downloader = "localhost:9233"
+gateway = "localhost:9033"
+metadata = "localhost:9733"
+receiver = "localhost:9533"
+signer = "localhost:9633"
+tasknode = "localhost:9433"
 uploader = "localhost:9133"
 # SQL configuration
 [SpDBConfig]
