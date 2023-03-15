@@ -91,27 +91,31 @@ GreenfieldAddresses = ["localhost:9090"]
 TendermintAddresses = ["http://localhost:26750"]
 ```
 
-#### Start SP
+#### Start
 
 ```shell
 # start sp
 ./gnfd-sp --config ${config_file_path}
 ```
 
-#### Add SP to Greenfield
+#### Add Greenfield Chain
 [Add SP to Greenfield](https://github.com/bnb-chain/greenfield/blob/master/docs/cli/storage-provider.md)
 
 ## Document
-* [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): the official Greenfield Whitepaper.
+* [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): the official Greenfield Whitepaper. 
 * [SP Introduce](docs/readme.md): the Greenfield Storage Provider documents.
+* [Storage Metadata](https://github.com/bnb-chain/greenfield/blob/master/docs/core-concept/storage-metadata-models.md) : the storage metadata on Greenfield Chain.
+* [SP on Greenfield](https://github.com/bnb-chain/greenfield/blob/master/docs/modules/storage_provider_management.md): the SP module on Greenfield Chain.
+* [Data Availability Challenge](https://github.com/bnb-chain/greenfield/blob/master/docs/modules/data_availability_challenge.md): the correctness of payload be stored in SP. 
 * [SP Deployment](docs/tutorial/01-deployment.md): the detailed introduction to deploying sp.
 * [SP Local Setup](docs/run-book/03-local.toml): the introduction to set up local SP env for testing.
 
 ## Related Projects
 * [Greenfield](https://github.com/bnb-chain/greenfield): the Golang implementation of the Greenfield Blockchain.
 * [Greenfield-Common](https://github.com/bnb-chain/greenfield-common): the Greenfield common package.
-* [reedsolomon](https://github.com/klauspost/reedsolomon): the Reed-Solomon Erasure package in prue Go, with speeds exceeding 1GB/s/cpu core.
-* [Greenfield Go SDK](https://github.com/bnb-chain/greenfield-go-sdk): the Greenfield SDK, interact with SP, Greenfield and Tendermint.
+* [Reed-Solomon](https://github.com/klauspost/reedsolomon): the Reed-Solomon Erasure package in prue Go, with speeds exceeding 1GB/s/cpu core.
+* [Juno](https://github.com/bnb-chain/juno): the Cosmos Hub blockchain data aggregator and exporter package.
+* [Greenfield-Go-SDK](https://github.com/bnb-chain/greenfield-go-sdk): the Greenfield SDK, interact with SP, Greenfield and Tendermint.
 
 
 ## Contribution
