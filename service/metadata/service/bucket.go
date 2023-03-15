@@ -125,10 +125,6 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatypes.MetadataServiceGetUserBucketsCountRequest) (resp *metatypes.MetadataServiceGetUserBucketsCountResponse, err error) {
 	ctx = log.Context(ctx, req)
 
-	if req.AccountId == "" {
-		return nil, merrors.ErrInvalidAccountID
-	}
-
 	count, err := metadata.spDB.GetUserBucketsCount(common.HexToAddress(req.AccountId))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get user buckets count", "error", err)
