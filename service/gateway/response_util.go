@@ -20,12 +20,13 @@ type errorDescription struct {
 // refer: https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
 var (
 	// 4xx
-	InvalidHeader      = &errorDescription{errorCode: "InvalidHeader", errorMessage: "The headers maybe is invalid.", statusCode: http.StatusBadRequest}
+	InvalidHeader      = &errorDescription{errorCode: "InvalidHeader", errorMessage: "The headers are invalid.", statusCode: http.StatusBadRequest}
+	InvalidQuery       = &errorDescription{errorCode: "InvalidQuery", errorMessage: "The queries are invalid.", statusCode: http.StatusBadRequest}
 	InvalidBucketName  = &errorDescription{errorCode: "InvalidBucketName", errorMessage: "The specified bucket is not valid.", statusCode: http.StatusBadRequest}
 	InvalidKey         = &errorDescription{errorCode: "InvalidKey", errorMessage: "Object key is Illegal", statusCode: http.StatusBadRequest}
-	InvalidPayload     = &errorDescription{errorCode: "InvalidPayload", errorMessage: "payload is empty", statusCode: http.StatusBadRequest}
-	InvalidObjectState = &errorDescription{errorCode: "InvalidObjectState", errorMessage: "object state is invalid", statusCode: http.StatusBadRequest}
-	InvalidRange       = &errorDescription{errorCode: "InvalidRange", errorMessage: "range is invalid", statusCode: http.StatusBadRequest}
+	InvalidPayload     = &errorDescription{errorCode: "InvalidPayload", errorMessage: "Payload is empty", statusCode: http.StatusBadRequest}
+	InvalidObjectState = &errorDescription{errorCode: "InvalidObjectState", errorMessage: "Object state is invalid", statusCode: http.StatusBadRequest}
+	InvalidRange       = &errorDescription{errorCode: "InvalidRange", errorMessage: "Range is invalid", statusCode: http.StatusBadRequest}
 	SignatureNotMatch  = &errorDescription{errorCode: "SignatureDoesNotMatch", errorMessage: "SignatureDoesNotMatch", statusCode: http.StatusForbidden}
 	AccessDenied       = &errorDescription{errorCode: "AccessDenied", errorMessage: "Access Denied", statusCode: http.StatusForbidden}
 	NoSuchKey          = &errorDescription{errorCode: "NoSuchKey", errorMessage: "The specified key does not exist.", statusCode: http.StatusNotFound}
@@ -33,7 +34,7 @@ var (
 	// 5xx
 	InternalError          = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
 	NotImplementedError    = &errorDescription{errorCode: "NotImplementedError", errorMessage: "Not Implemented Error", statusCode: http.StatusNotImplemented}
-	NotExistComponentError = &errorDescription{errorCode: "NotExistComponentError", errorMessage: "Not Exist Component Error", statusCode: http.StatusNotImplemented}
+	NotExistComponentError = &errorDescription{errorCode: "NotExistComponentError", errorMessage: "Not Existed Component Error", statusCode: http.StatusNotImplemented}
 )
 
 // errorResponse is used to error response xml.

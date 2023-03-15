@@ -11,13 +11,15 @@ import (
 )
 
 const (
-	putObjectRouterName           = "PutObject"
-	getObjectRouterName           = "GetObject"
-	approvalRouterName            = "GetApproval"
-	challengeRouterName           = "Challenge"
-	syncPieceRouterName           = "SyncPiece"
-	getUserBucketsRouterName      = "GetUserBuckets"
-	listObjectsByBucketRouterName = "ListObjectsByBucketName"
+	approvalRouterName             = "GetApproval"
+	putObjectRouterName            = "PutObject"
+	getObjectRouterName            = "GetObject"
+	challengeRouterName            = "Challenge"
+	syncPieceRouterName            = "SyncPiece"
+	getUserBucketsRouterName       = "GetUserBuckets"
+	listObjectsByBucketRouterName  = "ListObjectsByBucketName"
+	getBucketReadQuotaRouterName   = "GetBucketReadQuota"
+	listBucketReadRecordRouterName = "ListBucketReadRecord"
 )
 
 const (
@@ -55,6 +57,20 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodGet).
 		Path("/").
 		HandlerFunc(g.listObjectsByBucketNameHandler)
+	bucketRouter.NewRoute().
+		Name(getBucketReadQuotaRouterName).
+		Methods(http.MethodGet).
+		Queries(model.GetBucketReadQuotaQuery, "",
+			model.GetBucketReadQuotaMonthQuery, "{year+month}").
+		HandlerFunc(g.getBucketReadQuotaHandler)
+	bucketRouter.NewRoute().
+		Name(listBucketReadRecordRouterName).
+		Methods(http.MethodGet).
+		Queries(model.ListBucketReadRecordQuery, "",
+			model.ListBucketReadRecordMaxRecordsQuery, "{max_records}",
+			model.StartTimestampUs, "{start_ts}",
+			model.EndTimestampUs, "{end_ts}").
+		HandlerFunc(g.getBucketReadQuotaHandler)
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	// bucket list router, virtual-hosted style

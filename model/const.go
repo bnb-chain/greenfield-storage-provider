@@ -139,6 +139,18 @@ const (
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
 	ActionQuery = "action"
+	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request
+	GetBucketReadQuotaQuery = "read-quota"
+	// GetBucketReadQuotaMonthQuery defines bucket read quota query month
+	GetBucketReadQuotaMonthQuery = "year-month"
+	// ListBucketReadRecordQuery defines list bucket read record query, which is used to route request
+	ListBucketReadRecordQuery = "list-read-record"
+	// ListBucketReadRecordMaxRecordsQuery defines list read record max num
+	ListBucketReadRecordMaxRecordsQuery = "max-records"
+	// StartTimestampUs defines start timestamp in microsecond, which is used by list read record, [start_ts,end_ts)
+	StartTimestampUs = "start-timestamp"
+	// EndTimestampUs defines end timestamp in microsecond, which is used by list read record, [start_ts,end_ts)
+	EndTimestampUs = "end-timestamp"
 	// ChallengePath defines challenge path style suffix
 	ChallengePath = "/greenfield/admin/v1/challenge"
 	// SyncPath defines sync-object path style
@@ -177,18 +189,20 @@ const (
 
 // define all kinds of size
 const (
-	// LruCacheLimit define maximum number of cached items in service trace queue
+	// LruCacheLimit defines maximum number of cached items in service trace queue
 	LruCacheLimit = 8192
 	// MaxCallMsgSize defines gPRC max send or receive msg size
 	MaxCallMsgSize = 25 * 1024 * 1024
 	// MaxRetryCount defines getting the latest height from the RPC client max retry count
 	MaxRetryCount = 50
-	// DefaultReadQuotaSize defines bucket's default quota size
-	DefaultReadQuotaSize = 10 * 1024 * 1024 * 1024
+	// DefaultSpFreeReadQuotaSize defines sp bucket's default free quota size, the SP can modify it by itself
+	DefaultSpFreeReadQuotaSize = 10 * 1024 * 1024 * 1024
 	// DefaultStreamBufSize defines gateway stream forward payload buf size
 	DefaultStreamBufSize = 64 * 1024
 	// DefaultTimeoutHeight defines approval timeout height
 	DefaultTimeoutHeight = 100
 	// DefaultPartitionSize defines partition size
 	DefaultPartitionSize = 10_000
+	// DefaultMaxListLimit defines maximum number of the list request
+	DefaultMaxListLimit = 1000
 )

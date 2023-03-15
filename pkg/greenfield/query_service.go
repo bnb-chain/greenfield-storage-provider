@@ -76,6 +76,9 @@ func (greenfield *Greenfield) QueryStorageParams(ctx context.Context) (params *s
 func (greenfield *Greenfield) QueryBucketInfo(ctx context.Context, bucket string) (*storagetypes.BucketInfo, error) {
 	client := greenfield.getCurrentClient().GnfdCompositeClient()
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
+	if errors.Is(err, storagetypes.ErrNoSuchBucket) {
+		return nil, merrors.ErrNoSuchBucket
+	}
 	if err != nil {
 		log.Errorw("failed to query bucket", "bucket_name", bucket, "error", err)
 		return nil, err

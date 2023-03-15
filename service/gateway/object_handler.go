@@ -16,7 +16,7 @@ import (
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 )
 
-// getObjectHandler handle get object request
+// getObjectHandler handles the get object request
 func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
@@ -129,7 +129,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 }
 
-// putObjectHandler handle put object request
+// putObjectHandler handles the put object request
 func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error

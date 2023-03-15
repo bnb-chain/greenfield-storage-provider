@@ -234,7 +234,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		return err
 	}
 	if !accountExist {
-		log.Errorw("account is not exist", "address", addr.String(), "error", err)
+		log.Errorw("account is not existed", "address", addr.String(), "error", err)
 		return errors.ErrNoPermission
 	}
 
@@ -296,6 +296,19 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		if streamRecord.Status != paymenttypes.STREAM_ACCOUNT_STATUS_ACTIVE {
 			log.Errorw("failed to check payment due to account status is not active", "status", streamRecord.Status)
 			return errors.ErrCheckPaymentAccountActive
+		}
+	case getBucketReadQuotaRouterName, listBucketReadRecordRouterName:
+		if reqContext.bucketInfo, err = g.chain.QueryBucketInfo(
+			context.Background(), reqContext.bucketName); err != nil {
+			log.Errorw("failed to query bucket info and object info on chain",
+				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
+			return err
+		}
+		if reqContext.bucketInfo.GetOwner() != addr.String() {
+			log.Errorw("failed to auth due to account is not equal to bucket owner",
+				"bucket_owner", reqContext.bucketInfo.GetOwner(),
+				"request_address", addr.String())
+			return errors.ErrNoPermission
 		}
 	}
 	return nil
