@@ -103,7 +103,7 @@ func (gateway *Gateway) Name() string {
 
 // Start implement the lifecycle interface
 func (gateway *Gateway) Start(ctx context.Context) error {
-	if g.running.Swap(true) == true {
+	if gateway.running.Swap(true) == true {
 		return errors.New("gateway has started")
 	}
 	go gateway.serve()

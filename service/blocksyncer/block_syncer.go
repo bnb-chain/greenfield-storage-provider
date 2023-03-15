@@ -29,7 +29,7 @@ type BlockSyncer struct {
 	parserCtx *parser.Context
 	// store   client.PieceStoreAPI
 	// metaDB  spdb.MetaDB // storage provider meta db
-	running atomic.Bool
+	running atomic.Value
 }
 
 // NewSyncerService creates a syncer service to upload piece to piece store
@@ -98,7 +98,7 @@ func (s *BlockSyncer) Name() string {
 
 // Start running SyncerService
 func (s *BlockSyncer) Start(ctx context.Context) error {
-	if s.running.Swap(true) {
+	if s.running.Swap(true) == true {
 		return errors.New("block syncer hub has already started")
 	}
 	go s.serve()
@@ -107,7 +107,7 @@ func (s *BlockSyncer) Start(ctx context.Context) error {
 
 // Stop running SyncerService
 func (s *BlockSyncer) Stop(ctx context.Context) error {
-	if !s.running.Swap(false) {
+	if s.running.Swap(false) == false {
 		return nil
 	}
 	return nil
