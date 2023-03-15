@@ -9,6 +9,9 @@ data, and serve as the gatekeeper for user rights and authentications.
 notification and not ready for production use. The code and security audit have not been fully completed and not ready
 for any bug bounty. We advise you to be careful and experiment on the network at your own risk. Stay safe out there.**
 
+## SP Core(coming soon)
+
+
 ## Quick Started
 
 *Note*: Requires [Go 1.18+](https://go.dev/dl/)
@@ -39,33 +42,77 @@ Build   : go1.19.1 darwin amd64 2023-03-13 14:11
 
 # show help
 ./gnfd-sp help
+```
+### Configuration
 
-# dump configuration template
+#### Make configuration template
+```shell
+# dump default configuration
 ./gnfd-sp config.dump
+```
 
-# edit config file 
-# reference SP Configuration section
+#### Edit configuration 
+```shell
+# start service list
+Service = ["gateway", "uploader", "downloader", "challenge", "stonenode", "syncer", "signer", "metadata", "manager"]
+# sp operator address 
+SpOperatorAddress = ""
+Domain = "gnfd.nodereal.com"
+# gate listen http address
+[HTTPAddress]
+gateway = "localhost:9033"
+# service listen address
+[GRPCAddress]
+challenge = "localhost:9333"
+downloader = "localhost:9233"
+metadata = "localhost:9733"
+signer = "localhost:9633"
+stonenode = "localhost:9433"
+syncer = "localhost:9533"
+uploader = "localhost:9133"
+# SQL configuration
+[SpDBConfig]
+User = "root"
+Passwd = "test_pwd"
+Address = "localhost:3306"
+Database = "storage_provider_db"
+# piece store configuration
+[PieceStoreConfig]
+Shards = 0
+[PieceStoreConfig.Store]
+# default use local file system 
+Storage = "file"
+BucketURL = "./data"
+# greenfiel chain configuration
+[ChainConfig]
+ChainID = "greenfield_9000-1741"
+[[ChainConfig.NodeAddr]]
+GreenfieldAddresses = ["localhost:9090"]
+TendermintAddresses = ["http://localhost:26750"]
+```
 
+#### Start SP
+
+```shell
 # start sp
 ./gnfd-sp --config ${config_file_path}
 ```
 
-### [SP Configuration](docs/run-book/02-config_template.toml)
+#### Add SP to Greenfield
+[Add SP to Greenfield](https://github.com/bnb-chain/greenfield/blob/master/docs/cli/storage-provider.md)
 
-### [Add SP to Greenfield chain](https://github.com/bnb-chain/greenfield/blob/master/docs/cli/storage-provider.md)
-
-## Deployment
-[Deploy SP](docs/tutorial/01-deployment.md)
-
-## Related Document
+## Document
 * [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): the official Greenfield Whitepaper.
-* [Greenfield Storage Provider](docs/readme.md): the Greenfield Storage Provider documents.
-* [Greenfield Storage Provider Deployment](docs/tutorial/01-deployment.md)
-* [Greenfield Storage Provider Local Setup](docs/run-book/03-local.toml)
+* [SP Introduce](docs/readme.md): the Greenfield Storage Provider documents.
+* [SP Deployment](docs/tutorial/01-deployment.md): the detailed introduction to deploying sp.
+* [SP Local Setup](docs/run-book/03-local.toml): the introduction to set up local SP env for testing.
 
-
+## Related Projects
 * [Greenfield](https://github.com/bnb-chain/greenfield): the Golang implementation of the Greenfield Blockchain.
 * [Greenfield-Common](https://github.com/bnb-chain/greenfield-common): the Greenfield common package.
+* [reedsolomon](https://github.com/klauspost/reedsolomon): the Reed-Solomon Erasure package in prue Go, with speeds exceeding 1GB/s/cpu core.
+* [Greenfield Go SDK](https://github.com/bnb-chain/greenfield-go-sdk): the Greenfield SDK, interact with SP, Greenfield and Tendermint.
+
 
 ## Contribution
 Thank you for considering to help out with the source code! We welcome contributions from 
