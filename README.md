@@ -1,6 +1,6 @@
 # Greenfield Storage Provider
 
-Greenfield Storage Provider (abbreviated SP) is storage service infrastructure providers. It uses Greenfield as the ledger 
+Greenfield Storage Provider (abbreviated SP) is storage service infrastructure provider. It uses Greenfield as the ledger 
 and the single source of truth. Each SP can and will respond to users' requests to write (upload) and read (download) 
 data, and serve as the gatekeeper for user rights and authentications.
 
@@ -29,7 +29,7 @@ Among the multiple SPs that one object is stored on, one SP will be the "Primary
 
 When users want to write an object into Greenfield, they or the client software they use must specify the primary SP. Primary 
 SP should be used as the only SP to download the data. Users can change the primary SP for their objects later if they are not 
-satisfied with their service.
+satisfied with its service.
 
 
 ## Quick Started
@@ -72,7 +72,7 @@ Build   : go1.19.1 darwin amd64 2023-03-13 14:11
 ```
 
 #### Edit configuration 
-```shell
+```toml
 # start service list
 Service = ["gateway", "uploader", "downloader", "challenge", "stonenode", "syncer", "signer", "metadata", "manager"]
 # sp operator address 
