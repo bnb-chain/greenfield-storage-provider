@@ -1,8 +1,9 @@
 package metadata
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/ethereum/go-ethereum/common"
+
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 // Bucket is the structure for user bucket

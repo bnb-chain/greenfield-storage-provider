@@ -30,13 +30,14 @@ func (s SecondarySpAddresses) Value() (driver.Value, error) {
 	return json.Marshal(s)
 }
 
+// CheckSums defines the root hash of the pieces which stored in a SP
 type CheckSums []string
 
 // Scan value into bytes, implements sql.Scanner interface
 func (s *CheckSums) Scan(value interface{}) error {
 	bytesValue, ok := value.([]byte)
 	if !ok {
-		return errors.New(fmt.Sprint("Failed to unmarshal SecondarySpAddresses value:", value))
+		return errors.New(fmt.Sprint("Failed to unmarshal CheckSums value:", value))
 	}
 	if len(bytesValue) == 0 {
 		return nil

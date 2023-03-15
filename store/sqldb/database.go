@@ -1,11 +1,11 @@
 package sqldb
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/model/metadata"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model/metadata"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 )
 

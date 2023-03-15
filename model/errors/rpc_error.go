@@ -78,4 +78,6 @@ var (
 var (
 	// ErrInvalidBucketName defines invalid bucket name
 	ErrInvalidBucketName = errors.New("invalid bucket name")
+	// ErrInvalidAccountID defines invalid account id
+	ErrInvalidAccountID = errors.New("invalid account id")
 )

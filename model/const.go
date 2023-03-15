@@ -112,6 +112,8 @@ const (
 	ContentTypeJSONHeaderValue = "application/json"
 	// ContentTypeXMLHeaderValue is used to indicate xml
 	ContentTypeXMLHeaderValue = "application/xml"
+	// HTTPHeaderAddress is used to pass the address in header
+	HTTPHeaderAddress = "X-Gnfd-Address"
 
 	// SignAlgorithm uses secp256k1 with the ECDSA algorithm
 	SignAlgorithm = "ECDSA-secp256k1"

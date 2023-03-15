@@ -12,10 +12,6 @@ import (
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 )
 
-const (
-	HTTPHeaderAddress = "X-Gnfd-Address"
-)
-
 // getUserBucketsHandler handle get object request
 func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -44,7 +40,7 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	req := &metatypes.MetadataServiceGetUserBucketsRequest{
-		AccountId: r.Header.Get(HTTPHeaderAddress),
+		AccountId: r.Header.Get(model.HTTPHeaderAddress),
 	}
 	ctx := log.Context(context.Background(), req)
 	resp, err := gateway.metadata.GetUserBuckets(ctx, req)

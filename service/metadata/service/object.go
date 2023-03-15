@@ -45,7 +45,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 	}
 
 	resp = &metatypes.MetadataServiceListObjectsByBucketNameResponse{Objects: res}
-	log.CtxInfow(ctx, "success to  list objects by bucket name")
+	log.CtxInfow(ctx, "success to list objects by bucket name")
 	return resp, nil
 }
 

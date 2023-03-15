@@ -56,10 +56,10 @@ message MetadataServiceGetBucketByBucketIDRequest {
 // MetadataServiceListDeletedObjectsByBlockNumberRangeRequest is request type for the ListDeletedObjectsByBlockNumberRange RPC method
 message MetadataServiceListDeletedObjectsByBlockNumberRangeRequest {
   // start_block_number defines the start of range
-  // [start_block_number, end_block_number], start_block_number > end_block_number is invalid, response all objects data
+  // [start_block_number, end_block_number], start_block_number > end_block_number is invalid
   int64 start_block_number = 1;
   // end_block_number defines the end of range
-  // end_block_number < 0 or start_block_number > end_block_number is invalid, response all objects data
+  // end_block_number < 0 or start_block_number > end_block_number is invalid
   int64 end_block_number = 2;
   // is_full_list indicates whether this request can get the private objects information
   bool is_full_list = 3;
@@ -86,13 +86,13 @@ message MetadataServiceListObjectsByBucketNameResponse {
 // MetadataServiceGetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.
 message MetadataServiceGetBucketByBucketNameResponse {
   // bucket defines the information of a bucket
-  Bucket bucket = 1;;
+  Bucket bucket = 1;
 }
 
 // MetadataServiceGetBucketByBucketIDResponse is response type for the GetBucketByBucketID RPC method.
 message MetadataServiceGetBucketByBucketIDResponse {
   // bucket defines the information of a bucket
-  Bucket bucket = 1;;
+  Bucket bucket = 1;
 }
 
 // MetadataServiceListDeletedObjectsByBlockNumberRangeResponse is response type for the ListDeletedObjectsByBlockNumberRange RPC method.

@@ -35,7 +35,7 @@ type Object struct {
 	RedundancyType string `gorm:"redundancy_type"`
 	// SourceType defines the source of the object.
 	SourceType string `gorm:"source_type"`
-	// Checksums defines the root hash of the pieces which stored in a SP
+	// CheckSums defines the root hash of the pieces which stored in a SP
 	CheckSums CheckSums `gorm:"check_sums;type:text"`
 	// SecondarySpAddresses defines the addresses of secondary_sps
 	SecondarySpAddresses SecondarySpAddresses `gorm:"secondary_sp_addresses;type:text"`

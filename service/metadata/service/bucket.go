@@ -34,8 +34,7 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Met
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
 				PrimarySpAddress: bucket.PrimarySpAddress.String(),
-				// TODO:: update the below code after block syncer update ReadQuota from string to uint64 and implement BillingInfo
-				ReadQuota: 0,
+				ReadQuota:        0,
 				BillingInfo: types.BillingInfo{
 					PriceTime:              0,
 					TotalChargeSize:        0,
@@ -125,6 +124,11 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 // GetUserBucketsCount get buckets count by a user address
 func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatypes.MetadataServiceGetUserBucketsCountRequest) (resp *metatypes.MetadataServiceGetUserBucketsCountResponse, err error) {
 	ctx = log.Context(ctx, req)
+
+	if req.AccountId == "" {
+		return nil, merrors.ErrInvalidAccountID
+	}
+
 	count, err := metadata.spDB.GetUserBucketsCount(common.HexToAddress(req.AccountId))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get user buckets count", "error", err)
@@ -132,5 +136,6 @@ func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatype
 	}
 
 	resp = &metatypes.MetadataServiceGetUserBucketsCountResponse{Count: count}
+	log.CtxInfow(ctx, "success to get buckets count by a user address")
 	return resp, nil
 }
