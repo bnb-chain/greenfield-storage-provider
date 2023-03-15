@@ -35,10 +35,9 @@ var ConfigUploadCmd = &cli.Command{
 	},
 	Category: "CONFIG COMMANDS",
 	Description: `
-The config.upload command upload the file to db. If does not set db.user,
-db.password, db.address, db.database flags, uses the 'SpDBConfig' in config 
-file, and these support come from ENV vars SP_DB_USER, SP_DB_PASSWORD, 
-SP_DB_ADDRESS and SP_DB_DATABASE.`,
+The config.upload command uploads the file to db. If db.user,db.password,db.address 
+and db.database flags are not set, uses the 'SpDBConfig' in config file, it will load
+SP_DB_USER, SP_DB_PASSWORD, SP_DB_ADDRESS and SP_DB_DATABASE from ENV.`,
 }
 
 // configUploadAction is the config.upload command.

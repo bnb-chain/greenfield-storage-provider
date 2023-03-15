@@ -2,10 +2,10 @@
 
 ## What is the Greenfield Storage Provider
 
-Storage Providers (abbreviated SP) are storage service infrastructures that organizations or individuals provide
-and the corresponding roles they play. They use Greenfield as the ledger and the single source of truth. Each SP can and
-will respond to users' requests to write (upload) and read (download) data, and serve as the gatekeeper for user rights and
-authentications.
+Storage Providers (abbreviated SP) are storage service infrastructure providers.
+They use Greenfield as the ledger and the single source of truth. Each SP can and
+will respond to users' requests to write (upload) and read (download) data, and 
+serve as the gatekeeper for user rights and authentications.
 
 ## Architecture
 

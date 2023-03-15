@@ -1,8 +1,9 @@
 # Challenge Object Data
 It is always the first priority of any decentralized storage network to guarantee data integrity and availability.
-SP use the challenge workflow ensure it. Each SP splits the object payload data to segments, and store segment data to piece store and store segment checksum to SP DB. 
-And the greenfield chain store root checksum, which is calculated according to all segment checksum.
-When users want to challenge object data, they need to specify segment index. The SP returns segment's payload data and all segments checksum, the user recalculates the root checksum and compare it with the root checksum on the greenfield chain.
+We use data challenge instead of storage proof to get better HA. There will be some data challenges to random 
+pieces on greenfield chain continuously. And the SP,  which stores the challenged piece, uses the challenge workflow 
+to response. Each SP splits the object payload data to segments, and store segment data to piece store and store 
+segment checksum to SP DB.
 
 ## Gateway
 * Receives the Challenge request from the client.

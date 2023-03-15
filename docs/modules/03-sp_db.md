@@ -153,7 +153,7 @@ enum SourceType {
 
 ## Integrity
 
-Integrity is used to record an object integrity hash for users' to challenge whether payload data is right store in SP.
+For each object there are some pieces root hashes stored on greenfield chain to keep data integrity. And for the pieces of an object stored on a specific SP, the SP keeps these pieces' hashes, which are used for storage proof.
 
 ### Integrity Table
 

@@ -1,7 +1,7 @@
 # Get Approval
 
 When creating a bucket on the primary SP or storing data to one SP, such as CreateBucket, PutObject, ReplicateObjectData operations, 
-the request originator need send a GetApproval request to ask whether the SP is willing to serve the request. The SP can consider 
+the request originator needs to send a GetApproval request to ask whether the SP is willing to serve the request. The SP can decide 
 whether it is willing to accept approval based on some dimensions, such ad bucket, object and user, eg: SP can reject users with 
 bad reputation, and can reject specific objects or buckets. The SP acknowledges the request by signing a message for the operation 
 and response to the originator, if the SP does not want to serve(the default policy is to serve, each SP can customize its own strategy), 
