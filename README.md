@@ -1,13 +1,20 @@
-# Greenfield-storage-provider
+# Greenfield Storage Provider
 
-Greenfield-Storage-Providers storage service infrastructures provided by either organizations or individuals. They use GreenField-Storage-Chain as the ledger and the golden data source of meta. Each SP can and will respond to users’ requests to write (upload) and read (download) data, and be the gatekeeper for user rights and authentications.
+Storage Providers (abbreviated SP) are storage service infrastructure providers. They use Greenfield as the ledger 
+and the single source of truth. Each SP can and will respond to users' requests to write (upload) and read (download) 
+data, and serve as the gatekeeper for user rights and authentications.
 
-# Service
-## Install-Tools
+## Disclaimer
+**The software and related documentation are under active development, all subject to potential future change without
+notification and not ready for production use. The code and security audit have not been fully completed and not ready
+for any bug bounty. We advise you to be careful and experiment on the network at your own risk. Stay safe out there.**
+
+## Compile
+### Install-Tools
 ```shell
 make install-tools
 ```
-## Build
+### Build
 ```shell
 bash build.sh &&
 cd build &&
@@ -34,4 +41,21 @@ Build   : go1.19.1 darwin amd64 2023-03-13 14:11
 ## Deployment
 [Deploy SP](docs/tutorial/01-deployment.md)
 
-[Setup Local Test](docs/tutorial/03-localup.md)
+[Quick Started](docs/tutorial/03-localup.md)
+
+## Related
+* [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): the official Greenfield Whitepaper.
+* [Greenfield Storage Provider](docs/readme.md): the Greenfield Storage Provider documents.
+* [Greenfield](https://github.com/bnb-chain/greenfield): the Golang implementation of the Greenfield Blockchain.
+* [Greenfield-Common](https://github.com/bnb-chain/greenfield-common): the Greenfield common package.
+
+## Contribution
+Thank you for considering to help out with the source code! We welcome contributions from 
+anyone on the internet, and are grateful for even the smallest of fixes!
+
+If you'd like to contribute to Greenfield Storage Provider, please fork, fix, commit and 
+send a pull request for the maintainers to review and merge into the main code base. 
+If you wish to submit more complex changes though, please check up with the core devs first 
+through github issue(going to have a discord channel soon) to ensure those changes are in 
+line with the general philosophy of the project and/or get some early feedback which can make 
+both your efforts much lighter as well as our review and merge procedures quick and simple.
