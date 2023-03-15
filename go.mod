@@ -1,6 +1,6 @@
 module github.com/bnb-chain/greenfield-storage-provider
 
-go 1.19
+go 1.18
 
 replace (
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b432c
