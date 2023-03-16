@@ -4,13 +4,14 @@ import (
 	"context"
 	"net"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 // Metadata implements the gRPC of MetadataService,
@@ -18,18 +19,21 @@ import (
 type Metadata struct {
 	config     *metadata.MetadataConfig
 	name       string
-	store      bsdb.IStore
+	bsDB       bsdb.BSDB
 	grpcServer *grpc.Server
 }
 
 // NewMetadataService returns an instance of Metadata that
 // supply query service for Inscription network
-func NewMetadataService(cfg *metadata.MetadataConfig) (metadata *Metadata, err error) {
-	metadataStore, _ := bsdb.NewStore(cfg.SpDBConfig)
+func NewMetadataService(config *metadata.MetadataConfig) (metadata *Metadata, err error) {
+	bsDB, err := bsdb.NewBsDB(config.SpDBConfig)
+	if err != nil {
+		return nil, err
+	}
 	metadata = &Metadata{
-		config: cfg,
+		config: config,
 		name:   model.MetadataService,
-		store:  metadataStore,
+		bsDB:   bsDB,
 	}
 	return
 }

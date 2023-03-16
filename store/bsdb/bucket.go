@@ -1,31 +1,74 @@
 package bsdb
 
 import (
-	"context"
+	"errors"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model/metadata"
+	"github.com/ethereum/go-ethereum/common"
+	"gorm.io/gorm"
 )
 
 // GetUserBuckets get buckets info by a user address
-func (s *Store) GetUserBuckets(ctx context.Context, accountID string) ([]*metadata.Bucket, error) {
+func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
 	var (
-		ret []*metadata.Bucket
-		err error
+		buckets []*Bucket
+		err     error
 	)
 
-	//TODO:: cancel mock after impl db
-	bucket1 := metadata.Bucket{
-		Owner:            "46765cbc-d30c-4f4a-a814-b68181fcab12",
-		BucketName:       "BBC News",
-		IsPublic:         true,
-		ID:               "1",
-		SourceType:       1,
-		CreateAt:         1676530547,
-		PaymentAddress:   "0x000000006b4BD0274e8f943201A922295D13fc28",
-		PrimarySpAddress: "0x000000006b4BD0274e8f943201A922295D13fc28",
-		ReadQuota:        2,
-		PaymentPriceTime: 0,
+	err = b.db.Find(&buckets, "owner = ?", accountID).Error
+	return buckets, err
+}
+
+// GetBucketByName get buckets info by a bucket name
+func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*Bucket, error) {
+	var (
+		bucket *Bucket
+		err    error
+	)
+
+	if isFullList {
+		err = b.db.Take(&bucket, "bucket_name = ?", bucketName).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return bucket, nil
 	}
-	ret = append(ret, &bucket1)
-	return ret, err
+
+	err = b.db.Take(&bucket, "bucket_name = ? and is_public = ?", bucketName, true).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return bucket, err
+}
+
+// GetBucketByID get buckets info by by a bucket id
+func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, error) {
+	var (
+		bucket *Bucket
+		err    error
+	)
+
+	if isFullList {
+		err = b.db.Take(&bucket, "bucket_id = ?", bucketID).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return bucket, err
+	}
+
+	err = b.db.Take(&bucket, "bucket_id = ? and is_public = ?", bucketID, true).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return bucket, err
+}
+
+// GetUserBucketsCount get buckets count by a user address
+func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address) (int64, error) {
+	var (
+		count int64
+		err   error
+	)
+
+	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
+	return count, err
 }
