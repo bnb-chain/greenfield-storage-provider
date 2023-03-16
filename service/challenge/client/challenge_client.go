@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -20,7 +21,8 @@ type ChallengeClient struct {
 // NewChallengeClient return a ChallengeClient instance
 func NewChallengeClient(address string) (*ChallengeClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)))
 	if err != nil {
 		log.Errorw("failed to dail challenge", "error", err)
 		return nil, err
