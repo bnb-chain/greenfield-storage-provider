@@ -49,7 +49,7 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true}
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true}
 	if err = m.Marshal(&b, resp); err != nil {
 		log.Errorf("failed to get user buckets", "error", err)
 		return
@@ -97,7 +97,7 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true}
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true}
 	if err = m.Marshal(&b, resp); err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
 		return
