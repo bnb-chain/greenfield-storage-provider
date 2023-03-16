@@ -46,5 +46,6 @@ func (client *ChallengeClient) ChallengePiece(ctx context.Context, objectID uint
 		ReplicaIdx: replicaIdx,
 		SegmentIdx: segmentIdx,
 	}, opts...)
-	return resp.IntegrityHash, resp.PieceHash, resp.PieceData, err
+	log.Debugw("finish to challenge piece", "error", err)
+	return resp.GetIntegrityHash(), resp.GetPieceHash(), resp.GetPieceData(), err
 }
