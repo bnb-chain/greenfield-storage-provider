@@ -14,7 +14,7 @@ import (
 
 var _ BSDB = &BsDBImpl{}
 
-// BsDBImpl storage provider database, implements BSDB interface
+// BsDBImpl block syncer database, implements BSDB interface
 type BsDBImpl struct {
 	db *gorm.DB
 }

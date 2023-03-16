@@ -6,7 +6,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/metadata"
 )
 
-// Metadata contains all the methods required by bs db database
+// Metadata contains all the methods required by block syncer db database
 type Metadata interface {
 	// GetUserBuckets get buckets info by a user address
 	GetUserBuckets(accountID common.Address) ([]*metadata.Bucket, error)

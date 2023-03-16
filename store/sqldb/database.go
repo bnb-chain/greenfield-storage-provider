@@ -1,10 +1,10 @@
 package sqldb
 
 import (
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
-
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 )
 
 // Job interface which contains job related to object id interface
