@@ -1,9 +1,7 @@
-package metadata
+package bsdb
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 // Block is the structure for Block Info
@@ -41,5 +39,5 @@ type Block struct {
 }
 
 func (a *Block) TableName() string {
-	return model.BlockTableName
+	return BlockTableName
 }

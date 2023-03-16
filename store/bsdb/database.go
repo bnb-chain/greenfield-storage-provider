@@ -2,26 +2,24 @@ package bsdb
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model/metadata"
 )
 
 // Metadata contains all the methods required by block syncer db database
 type Metadata interface {
 	// GetUserBuckets get buckets info by a user address
-	GetUserBuckets(accountID common.Address) ([]*metadata.Bucket, error)
+	GetUserBuckets(accountID common.Address) ([]*Bucket, error)
 	// GetUserBucketsCount get buckets count by a user address
 	GetUserBucketsCount(accountID common.Address) (int64, error)
 	// GetBucketByName get buckets info by a bucket name
-	GetBucketByName(bucketName string, isFullList bool) (*metadata.Bucket, error)
+	GetBucketByName(bucketName string, isFullList bool) (*Bucket, error)
 	// GetBucketByID get buckets info by by a bucket id
-	GetBucketByID(bucketID int64, isFullList bool) (*metadata.Bucket, error)
+	GetBucketByID(bucketID int64, isFullList bool) (*Bucket, error)
 	// GetLatestBlockNumber get current latest block number
 	GetLatestBlockNumber() (int64, error)
 	// ListObjectsByBucketName list objects info by a bucket name
-	ListObjectsByBucketName(bucketName string) ([]*metadata.Object, error)
+	ListObjectsByBucketName(bucketName string) ([]*Object, error)
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
-	ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, isFullList bool) ([]*metadata.Object, error)
+	ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, isFullList bool) ([]*Object, error)
 }
 
 // BSDB contains all the methods required by block syncer database

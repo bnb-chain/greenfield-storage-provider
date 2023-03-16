@@ -1,7 +1,6 @@
-package metadata
+package bsdb
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -51,5 +50,5 @@ type Object struct {
 
 // TableName is used to set Object table name in database
 func (a *Object) TableName() string {
-	return model.ObjectTableName
+	return ObjectTableName
 }

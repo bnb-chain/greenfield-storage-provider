@@ -1,4 +1,4 @@
-package metadata
+package bsdb
 
 import (
 	"database/sql/driver"

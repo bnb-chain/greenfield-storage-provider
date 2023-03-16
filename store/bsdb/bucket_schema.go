@@ -1,9 +1,7 @@
-package metadata
+package bsdb
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 // Bucket is the structure for user bucket
@@ -17,7 +15,7 @@ type Bucket struct {
 	// IsPublic defines the highest permissions for bucket. When the bucket is public, everyone can get the object in it.
 	IsPublic bool `gorm:"is_public"`
 	// ID is the unique identification for bucket.
-	BucketId int64 `gorm:"bucket_id"`
+	BucketID int64 `gorm:"bucket_id"`
 	// SourceType defines which chain the user should send the bucket management transactions to
 	SourceType string `gorm:"source_type"`
 	// CreateAt defines the block number when the bucket created.
@@ -37,5 +35,5 @@ type Bucket struct {
 
 // TableName is used to set Bucket table name in database
 func (a *Bucket) TableName() string {
-	return model.BucketTableName
+	return BucketTableName
 }

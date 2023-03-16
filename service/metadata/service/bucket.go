@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	"github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	model "github.com/bnb-chain/greenfield-storage-provider/model/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 )
@@ -29,7 +29,7 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Get
 				Owner:            bucket.Owner.String(),
 				BucketName:       bucket.BucketName,
 				IsPublic:         false,
-				Id:               math.NewUint(uint64(bucket.BucketId)),
+				Id:               math.NewUint(uint64(bucket.BucketID)),
 				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
@@ -72,7 +72,7 @@ func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metaty
 				Owner:            bucket.Owner.String(),
 				BucketName:       bucket.BucketName,
 				IsPublic:         bucket.IsPublic,
-				Id:               math.NewUint(uint64(bucket.BucketId)),
+				Id:               math.NewUint(uint64(bucket.BucketID)),
 				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
@@ -107,7 +107,7 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 				Owner:            bucket.Owner.String(),
 				BucketName:       bucket.BucketName,
 				IsPublic:         bucket.IsPublic,
-				Id:               math.NewUint(uint64(bucket.BucketId)),
+				Id:               math.NewUint(uint64(bucket.BucketID)),
 				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),

@@ -5,14 +5,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"gorm.io/gorm"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model/metadata"
 )
 
 // GetUserBuckets get buckets info by a user address
-func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*metadata.Bucket, error) {
+func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
 	var (
-		buckets []*metadata.Bucket
+		buckets []*Bucket
 		err     error
 	)
 
@@ -21,9 +19,9 @@ func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*metadata.Bucket,
 }
 
 // GetBucketByName get buckets info by a bucket name
-func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*metadata.Bucket, error) {
+func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*Bucket, error) {
 	var (
-		bucket *metadata.Bucket
+		bucket *Bucket
 		err    error
 	)
 
@@ -43,9 +41,9 @@ func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*metadat
 }
 
 // GetBucketByID get buckets info by by a bucket id
-func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*metadata.Bucket, error) {
+func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, error) {
 	var (
-		bucket *metadata.Bucket
+		bucket *Bucket
 		err    error
 	)
 
@@ -71,6 +69,6 @@ func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address) (int64, error) 
 		err   error
 	)
 
-	err = b.db.Table((&metadata.Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
+	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
 	return count, err
 }
