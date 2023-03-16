@@ -116,6 +116,10 @@ ChainID = "greenfield_9000-1741"
 [[ChainConfig.NodeAddr]]
 GreenfieldAddresses = ["localhost:9090"]
 TendermintAddresses = ["http://localhost:26750"]
+# block syncer configuration
+[BlockSyncerCfg]
+Modules = ["epoch", "bucket", "object", "payment"]
+Dsn = "localhost:3306"
 ```
 
 ### Start
