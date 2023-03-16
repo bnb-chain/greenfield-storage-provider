@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -19,7 +21,10 @@ type UploaderClient struct {
 
 // NewUploaderClient return an UploaderClient instance
 func NewUploaderClient(address string) (*UploaderClient, error) {
-	conn, err := grpc.DialContext(context.Background(), address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.DialContext(context.Background(), address,
+		grpc.WithUnaryInterceptor(openmetrics.UnaryClientInterceptor(metrics.DefaultGRPCClientMetrics)),
+		grpc.WithStreamInterceptor(openmetrics.StreamClientInterceptor(metrics.DefaultGRPCClientMetrics)),
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Errorw("fail to invoke uploader service client", "error", err)
 		return nil, err

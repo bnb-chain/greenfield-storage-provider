@@ -6,19 +6,19 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
-	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
-	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
-	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
-	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
-	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
 	metadata "github.com/bnb-chain/greenfield-storage-provider/service/metadata/service"
+	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
+	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
@@ -135,9 +135,32 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
+	case model.MetricsMonitorService:
+		metricsCfg, err := cfg.MakeMetricsMonitorConfig()
+		if err != nil {
+			return nil, err
+		}
+		server, err = metrics.NewMetricsMonitor(metricsCfg)
+		if err != nil {
+			return nil, err
+		}
 	default:
 		log.Errorw("unknown service", "service", serviceName)
 		return nil, fmt.Errorf("unknown service: %s", serviceName)
 	}
 	return server, nil
+}
+
+// setupMetrics init service metrics to prometheus
+func setupMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
+	return nil
+}
+
+func applyMetricConfig(ctx *cli.Context, cfg *metrics.MetricsMonitorConfig) {
+	if ctx.IsSet(utils.MetricsEnabledFlag.Name) {
+		cfg.Enabled = ctx.Bool(utils.MetricsEnabledFlag.Name)
+	}
+	if ctx.IsSet(utils.MetricsHTTPFlag.Name) {
+		cfg.HTTPAddress = ctx.String(utils.MetricsHTTPFlag.Name)
+	}
 }

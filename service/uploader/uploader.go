@@ -4,7 +4,9 @@ import (
 	"context"
 	"net"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -98,11 +100,17 @@ func (uploader *Uploader) serve(errCh chan error) {
 		return
 	}
 
-	grpcServer := grpc.NewServer()
-	types.RegisterUploaderServiceServer(grpcServer, uploader)
-	uploader.grpcServer = grpcServer
-	reflection.Register(grpcServer)
-	if err := grpcServer.Serve(lis); err != nil {
+	// create a gRPC server with gRPC interceptor
+	uploader.grpcServer = grpc.NewServer(
+		grpc.ChainUnaryInterceptor(openmetrics.UnaryServerInterceptor(metrics.DefaultGRPCServerMetrics)),
+		grpc.ChainStreamInterceptor(openmetrics.StreamServerInterceptor(metrics.DefaultGRPCServerMetrics)),
+	)
+	// initialize all metrics
+	metrics.DefaultGRPCServerMetrics.InitializeMetrics(uploader.grpcServer)
+
+	types.RegisterUploaderServiceServer(uploader.grpcServer, uploader)
+	reflection.Register(uploader.grpcServer)
+	if err := uploader.grpcServer.Serve(lis); err != nil {
 		log.Errorw("failed to start grpc server", "error", err)
 		return
 	}

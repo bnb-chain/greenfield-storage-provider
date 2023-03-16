@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
 	loggingconfig "github.com/forbole/juno/v4/log/config"
@@ -227,4 +228,17 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 			Level: "debug",
 		},
 	}, nil
+}
+
+// MakeMetricsMonitorConfig make metrics monitor config from StorageProviderConfig
+func (cfg StorageProviderConfig) MakeMetricsMonitorConfig() (*metrics.MetricsMonitorConfig, error) {
+	metricsConfig := &metrics.MetricsMonitorConfig{
+		Enabled: true,
+	}
+	if _, ok := cfg.ListenAddress[model.MetricsMonitorService]; ok {
+		metricsConfig.HTTPAddress = cfg.ListenAddress[model.MetadataService]
+	} else {
+		return nil, fmt.Errorf("missing meta data HTTP address configuration for metrics monitor service")
+	}
+	return metricsConfig, nil
 }

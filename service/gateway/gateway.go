@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -113,6 +114,7 @@ func (gateway *Gateway) Start(ctx context.Context) error {
 // Serve starts http service.
 func (gateway *Gateway) serve() {
 	router := mux.NewRouter().SkipClean(true)
+	router.Use(metrics.DefaultHTTPServerMetrics.InstrumentationHandler)
 	gateway.registerHandler(router)
 	server := &http.Server{
 		Addr:    gateway.config.HTTPAddress,

@@ -6,12 +6,12 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/config"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )

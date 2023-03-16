@@ -24,6 +24,8 @@ var (
 	BlockSyncerService = strings.ToLower("BlockSyncer")
 	// ManagerService defines the name of manager service
 	ManagerService = strings.ToLower("Manager")
+	// MetricsMonitorService defines the name of metrics service
+	MetricsMonitorService = strings.ToLower("MetricsMonitor")
 )
 
 // SpServiceDesc defines the service description in storage provider
