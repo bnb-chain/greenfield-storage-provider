@@ -1,4 +1,4 @@
-Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager"]
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager"]
 SpOperatorAddress = "677265656e6669656c642d73746f726167652d70726f7669646572"
 
 [Endpoint]
@@ -59,51 +59,9 @@ FundingPrivateKey = ""
 SealPrivateKey = ""
 ApprovalPrivateKey = ""
 
-[BlockSyncerCfg.Chain]
-Bech32Prefix = ""
-Modules = []
-
-[BlockSyncerCfg.Node]
-Type = "mysql"
-
-[BlockSyncerCfg.Node.RPC]
-ClientName = "juno"
-Address = "http://localhost:26750"
-MaxConnections = 20
-
-[BlockSyncerCfg.Node.GRPC]
-Address = "http://localhost:9090"
-Insecure = true
-
-[BlockSyncerCfg.Parser]
-GenesisFilePath = ""
-Workers = 0
-StartHeight = 0
-AvgBlockTime = 1000000000
-ParseNewBlocks = false
-ParseOldBlocks = false
-ParseGenesis = false
-FastSync = false
-
-[BlockSyncerCfg.Database]
-Type = ""
-DSN = ""
-SlowThreshold = "0s"
-MaxOpenConnections = 0
-MaxIdleConnections = 0
-ConnMaxIdleTime = "0s"
-ConnMaxLifetime = "0s"
-PartitionSize = 0
-PartitionBatchSize = 0
-
-[BlockSyncerCfg.Database.Secrets]
-SecretId = "1"
-Region = "1"
-
-[BlockSyncerCfg.Logging]
-ServiceName = ""
-RootDir = "./logs"
-Level = "debug"
+[BlockSyncerCfg]
+Modules = ["epoch", "bucket", "object", "payment"]
+Dsn = "localhost:3306"
 
 [LogCfg]
 Level = "debug"
