@@ -3,6 +3,13 @@ package config
 import (
 	"fmt"
 
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
+	databaseconfig "github.com/forbole/juno/v4/database/config"
+	loggingconfig "github.com/forbole/juno/v4/log/config"
+	"github.com/forbole/juno/v4/node/remote"
+	parserconfig "github.com/forbole/juno/v4/parser/config"
+	"github.com/forbole/juno/v4/types/config"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -183,4 +190,41 @@ func (cfg *StorageProviderConfig) MakeManagerServiceConfig() (*manager.ManagerCo
 		SpDBConfig:        cfg.SpDBConfig,
 	}
 	return managerConfig, nil
+}
+
+// MakeBlockSyncerConfig make block syncer service config from StorageProviderConfig
+func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfig, error) {
+	rpcAddress := cfg.ChainConfig.NodeAddr[0].TendermintAddresses[0]
+	grpcAddress := cfg.ChainConfig.NodeAddr[0].GreenfieldAddresses[0]
+
+	return &tomlconfig.TomlConfig{
+		Chain: config.ChainConfig{
+			Bech32Prefix: "cosmos",
+			Modules:      cfg.BlockSyncerCfg.Modules,
+		},
+		Node: tomlconfig.NodeConfig{
+			Type: "remote",
+			RPC: &remote.RPCConfig{
+				ClientName: "juno",
+				Address:    rpcAddress,
+			},
+			GRPC: &remote.GRPCConfig{
+				Address:  grpcAddress,
+				Insecure: true,
+			},
+		},
+		Parser: parserconfig.Config{
+			Workers: 1,
+		},
+		Database: databaseconfig.Config{
+			Type:               "mysql",
+			DSN:                cfg.BlockSyncerCfg.Dsn,
+			PartitionBatchSize: model.DefaultPartitionSize,
+			MaxIdleConnections: 1,
+			MaxOpenConnections: 1,
+		},
+		Logging: loggingconfig.Config{
+			Level: "debug",
+		},
+	}, nil
 }

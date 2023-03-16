@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
@@ -10,7 +12,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
 	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -117,7 +118,11 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			return nil, err
 		}
 	case model.BlockSyncerService:
-		server, err = blocksyncer.NewBlockSyncerService(cfg.BlockSyncerCfg)
+		bsCfg, err := cfg.MakeBlockSyncerConfig()
+		if err != nil {
+			return nil, err
+		}
+		server, err = blocksyncer.NewBlockSyncerService(bsCfg)
 		if err != nil {
 			return nil, err
 		}

@@ -94,6 +94,8 @@ const (
 	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
 	// SpSealPrivKey defines env variable name for sp seal priv key
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
+	// DsnBlockSyncer defines env variable name for block syncer dsn
+	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
 )
 
 // http header constants
@@ -168,12 +170,16 @@ const (
 	LruCacheLimit = 8192
 	// MaxCallMsgSize defines gPRC max send or receive msg size
 	MaxCallMsgSize = 25 * 1024 * 1024
+	// MaxRetryCount defines getting the latest height from the RPC client max retry count
+	MaxRetryCount = 50
 	// DefaultReadQuotaSize defines bucket's default quota size
 	DefaultReadQuotaSize = 10 * 1024 * 1024 * 1024
 	// DefaultStreamBufSize defines gateway stream forward payload buf size
 	DefaultStreamBufSize = 64 * 1024
 	// DefaultTimeoutHeight defines approval timeout height
 	DefaultTimeoutHeight = 100
+	// DefaultPartitionSize defines partition size
+	DefaultPartitionSize = 10_000
 )
 
 // define table name constant of block syncer db
