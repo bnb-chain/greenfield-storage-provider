@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/types/s3util"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 // GetUserBuckets get buckets info by a user address
@@ -28,7 +28,7 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Get
 			BucketInfo: &types.BucketInfo{
 				Owner:            bucket.Owner.String(),
 				BucketName:       bucket.BucketName,
-				IsPublic:         false,
+				IsPublic:         bucket.IsPublic,
 				Id:               math.NewUint(uint64(bucket.BucketID)),
 				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
 				CreateAt:         bucket.CreateAt,
@@ -41,6 +41,7 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Get
 					SecondarySpObjectsSize: nil,
 				},
 			},
+			Removed: bucket.Removed,
 		})
 	}
 	resp = &metatypes.GetUserBucketsResponse{Buckets: res}
