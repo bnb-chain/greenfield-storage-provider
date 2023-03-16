@@ -39,8 +39,8 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	req := &metatypes.MetadataServiceGetUserBucketsRequest{
-		AccountId: r.Header.Get(model.HTTPHeaderAddress),
+	req := &metatypes.GetUserBucketsRequest{
+		AccountId: r.Header.Get(model.GnfdUserAddressHeader),
 	}
 	ctx := log.Context(context.Background(), req)
 	resp, err := gateway.metadata.GetUserBuckets(ctx, req)
@@ -86,7 +86,7 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	req := &metatypes.MetadataServiceListObjectsByBucketNameRequest{
+	req := &metatypes.ListObjectsByBucketNameRequest{
 		BucketName: reqContext.bucketName,
 	}
 

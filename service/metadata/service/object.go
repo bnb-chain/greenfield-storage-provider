@@ -12,7 +12,7 @@ import (
 )
 
 // ListObjectsByBucketName list objects info by a bucket name
-func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *metatypes.MetadataServiceListObjectsByBucketNameRequest) (resp *metatypes.MetadataServiceListObjectsByBucketNameResponse, err error) {
+func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *metatypes.ListObjectsByBucketNameRequest) (resp *metatypes.ListObjectsByBucketNameResponse, err error) {
 	ctx = log.Context(ctx, req)
 
 	objects, err := metadata.spDB.ListObjectsByBucketName(req.BucketName)
@@ -44,13 +44,13 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		})
 	}
 
-	resp = &metatypes.MetadataServiceListObjectsByBucketNameResponse{Objects: res}
+	resp = &metatypes.ListObjectsByBucketNameResponse{Objects: res}
 	log.CtxInfow(ctx, "success to list objects by bucket name")
 	return resp, nil
 }
 
 // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
-func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Context, req *metatypes.MetadataServiceListDeletedObjectsByBlockNumberRangeRequest) (resp *metatypes.MetadataServiceListDeletedObjectsByBlockNumberRangeResponse, err error) {
+func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Context, req *metatypes.ListDeletedObjectsByBlockNumberRangeRequest) (resp *metatypes.ListDeletedObjectsByBlockNumberRangeResponse, err error) {
 	ctx = log.Context(ctx, req)
 
 	endBlockNumber, err := metadata.spDB.GetLatestBlockNumber()
@@ -92,7 +92,7 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 		})
 	}
 
-	resp = &metatypes.MetadataServiceListDeletedObjectsByBlockNumberRangeResponse{
+	resp = &metatypes.ListDeletedObjectsByBlockNumberRangeResponse{
 		Objects:           res,
 		LatestBlockNumber: endBlockNumber,
 	}

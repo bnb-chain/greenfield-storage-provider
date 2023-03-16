@@ -3,7 +3,6 @@ package metadata
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -14,7 +13,7 @@ type SecondarySpAddresses []string
 func (s *SecondarySpAddresses) Scan(value interface{}) error {
 	bytesValue, ok := value.([]byte)
 	if !ok {
-		return errors.New(fmt.Sprint("Failed to unmarshal SecondarySpAddresses value:", value))
+		return fmt.Errorf("failed to unmarshal SecondarySpAddresses value: %v", value)
 	}
 	if len(bytesValue) == 0 {
 		return nil
@@ -37,7 +36,7 @@ type CheckSums []string
 func (s *CheckSums) Scan(value interface{}) error {
 	bytesValue, ok := value.([]byte)
 	if !ok {
-		return errors.New(fmt.Sprint("Failed to unmarshal CheckSums value:", value))
+		return fmt.Errorf("failed to unmarshal CheckSums value: %v", value)
 	}
 	if len(bytesValue) == 0 {
 		return nil

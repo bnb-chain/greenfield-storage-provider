@@ -14,6 +14,8 @@ var (
 	ErrNoSuchObject = errors.New("the specified key does not exist")
 	// ErrNoSuchBucket defines not existed bucket error
 	ErrNoSuchBucket = errors.New("the specified bucket does not exist")
+	// ErrInvalidBucketName defines invalid bucket name
+	ErrInvalidBucketName = errors.New("invalid bucket name")
 )
 
 // piece store errors
@@ -76,8 +78,6 @@ var (
 
 // metadata service error
 var (
-	// ErrInvalidBucketName defines invalid bucket name
-	ErrInvalidBucketName = errors.New("invalid bucket name")
 	// ErrInvalidAccountID defines invalid account id
 	ErrInvalidAccountID = errors.New("invalid account id")
 )

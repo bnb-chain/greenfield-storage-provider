@@ -38,7 +38,7 @@ func (client *MetadataClient) Close() error {
 }
 
 // GetUserBuckets get buckets info by a user address
-func (client *MetadataClient) GetUserBuckets(ctx context.Context, in *metatypes.MetadataServiceGetUserBucketsRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceGetUserBucketsResponse, error) {
+func (client *MetadataClient) GetUserBuckets(ctx context.Context, in *metatypes.GetUserBucketsRequest, opts ...grpc.CallOption) (*metatypes.GetUserBucketsResponse, error) {
 	resp, err := client.metadata.GetUserBuckets(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -49,7 +49,7 @@ func (client *MetadataClient) GetUserBuckets(ctx context.Context, in *metatypes.
 }
 
 // ListObjectsByBucketName list objects info by a bucket name
-func (client *MetadataClient) ListObjectsByBucketName(ctx context.Context, in *metatypes.MetadataServiceListObjectsByBucketNameRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceListObjectsByBucketNameResponse, error) {
+func (client *MetadataClient) ListObjectsByBucketName(ctx context.Context, in *metatypes.ListObjectsByBucketNameRequest, opts ...grpc.CallOption) (*metatypes.ListObjectsByBucketNameResponse, error) {
 	resp, err := client.metadata.ListObjectsByBucketName(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -60,7 +60,7 @@ func (client *MetadataClient) ListObjectsByBucketName(ctx context.Context, in *m
 }
 
 // GetBucketByBucketName get bucket info by a bucket name
-func (client *MetadataClient) GetBucketByBucketName(ctx context.Context, in *metatypes.MetadataServiceGetBucketByBucketNameRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceGetBucketByBucketNameResponse, error) {
+func (client *MetadataClient) GetBucketByBucketName(ctx context.Context, in *metatypes.GetBucketByBucketNameRequest, opts ...grpc.CallOption) (*metatypes.GetBucketByBucketNameResponse, error) {
 	resp, err := client.metadata.GetBucketByBucketName(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -71,7 +71,7 @@ func (client *MetadataClient) GetBucketByBucketName(ctx context.Context, in *met
 }
 
 // GetBucketByBucketID get bucket info by a bucket id
-func (client *MetadataClient) GetBucketByBucketID(ctx context.Context, in *metatypes.MetadataServiceGetBucketByBucketIDRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceGetBucketByBucketIDResponse, error) {
+func (client *MetadataClient) GetBucketByBucketID(ctx context.Context, in *metatypes.GetBucketByBucketIDRequest, opts ...grpc.CallOption) (*metatypes.GetBucketByBucketIDResponse, error) {
 	resp, err := client.metadata.GetBucketByBucketID(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -82,7 +82,7 @@ func (client *MetadataClient) GetBucketByBucketID(ctx context.Context, in *metat
 }
 
 // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block range
-func (client *MetadataClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, in *metatypes.MetadataServiceListDeletedObjectsByBlockNumberRangeRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceListDeletedObjectsByBlockNumberRangeResponse, error) {
+func (client *MetadataClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, in *metatypes.ListDeletedObjectsByBlockNumberRangeRequest, opts ...grpc.CallOption) (*metatypes.ListDeletedObjectsByBlockNumberRangeResponse, error) {
 	resp, err := client.metadata.ListDeletedObjectsByBlockNumberRange(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -93,7 +93,7 @@ func (client *MetadataClient) ListDeletedObjectsByBlockNumberRange(ctx context.C
 }
 
 // GetUserBucketsCount get buckets count by a user address
-func (client *MetadataClient) GetUserBucketsCount(ctx context.Context, in *metatypes.MetadataServiceGetUserBucketsCountRequest, opts ...grpc.CallOption) (*metatypes.MetadataServiceGetUserBucketsCountResponse, error) {
+func (client *MetadataClient) GetUserBucketsCount(ctx context.Context, in *metatypes.GetUserBucketsCountRequest, opts ...grpc.CallOption) (*metatypes.GetUserBucketsCountResponse, error) {
 	resp, err := client.metadata.GetUserBucketsCount(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {

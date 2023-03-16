@@ -4,17 +4,17 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield/types/s3util"
 	"github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	model "github.com/bnb-chain/greenfield-storage-provider/model/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 )
 
 // GetUserBuckets get buckets info by a user address
-func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.MetadataServiceGetUserBucketsRequest) (resp *metatypes.MetadataServiceGetUserBucketsResponse, err error) {
+func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.GetUserBucketsRequest) (resp *metatypes.GetUserBucketsResponse, err error) {
 	ctx = log.Context(ctx, req)
 	buckets, err := metadata.spDB.GetUserBuckets(common.HexToAddress(req.AccountId))
 	if err != nil {
@@ -43,20 +43,21 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Met
 			},
 		})
 	}
-	resp = &metatypes.MetadataServiceGetUserBucketsResponse{Buckets: res}
+	resp = &metatypes.GetUserBucketsResponse{Buckets: res}
 	return resp, nil
 }
 
 // GetBucketByBucketName get buckets info by a bucket name
-func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metatypes.MetadataServiceGetBucketByBucketNameRequest) (resp *metatypes.MetadataServiceGetBucketByBucketNameResponse, err error) {
+func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metatypes.GetBucketByBucketNameRequest) (resp *metatypes.GetBucketByBucketNameResponse, err error) {
 	var (
 		bucket *model.Bucket
 		res    *metatypes.Bucket
 	)
 
 	ctx = log.Context(ctx, req)
-	if req.BucketName == "" {
-		return nil, merrors.ErrInvalidBucketName
+	if err = s3util.CheckValidBucketName(req.BucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", req.BucketName, "error", err)
+		return nil, err
 	}
 
 	bucket, err = metadata.spDB.GetBucketByName(req.BucketName, req.IsFullList)
@@ -81,13 +82,13 @@ func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metaty
 			Removed: bucket.Removed,
 		}
 	}
-	resp = &metatypes.MetadataServiceGetBucketByBucketNameResponse{Bucket: res}
-	log.CtxInfow(ctx, "success to get bucket by bucket name")
+	resp = &metatypes.GetBucketByBucketNameResponse{Bucket: res}
+	log.CtxInfo(ctx, "success to get bucket by bucket name")
 	return resp, nil
 }
 
 // GetBucketByBucketID get buckets info by by a bucket id
-func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatypes.MetadataServiceGetBucketByBucketIDRequest) (resp *metatypes.MetadataServiceGetBucketByBucketIDResponse, err error) {
+func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatypes.GetBucketByBucketIDRequest) (resp *metatypes.GetBucketByBucketIDResponse, err error) {
 	var (
 		bucket *model.Bucket
 		res    *metatypes.Bucket
@@ -116,13 +117,13 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 			Removed: bucket.Removed,
 		}
 	}
-	resp = &metatypes.MetadataServiceGetBucketByBucketIDResponse{Bucket: res}
+	resp = &metatypes.GetBucketByBucketIDResponse{Bucket: res}
 	log.CtxInfow(ctx, "success to get bucket by bucket id")
 	return resp, nil
 }
 
 // GetUserBucketsCount get buckets count by a user address
-func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatypes.MetadataServiceGetUserBucketsCountRequest) (resp *metatypes.MetadataServiceGetUserBucketsCountResponse, err error) {
+func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatypes.GetUserBucketsCountRequest) (resp *metatypes.GetUserBucketsCountResponse, err error) {
 	ctx = log.Context(ctx, req)
 
 	count, err := metadata.spDB.GetUserBucketsCount(common.HexToAddress(req.AccountId))
@@ -131,7 +132,7 @@ func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatype
 		return
 	}
 
-	resp = &metatypes.MetadataServiceGetUserBucketsCountResponse{Count: count}
+	resp = &metatypes.GetUserBucketsCountResponse{Count: count}
 	log.CtxInfow(ctx, "success to get buckets count by a user address")
 	return resp, nil
 }
