@@ -74,7 +74,7 @@ Build   : go1.19.1 darwin amd64 2023-03-13 14:11
 #### Edit configuration 
 ```toml
 # start service list
-Service = ["gateway", "uploader", "downloader", "challenge", "stonenode", "syncer", "signer", "metadata", "manager"]
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager"]
 # sp operator address 
 SpOperatorAddress = ""
 # service endpoint for other to connect
