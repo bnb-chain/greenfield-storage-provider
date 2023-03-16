@@ -1,9 +1,11 @@
 package gateway
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"net/http"
+
+	"github.com/gogo/protobuf/jsonpb"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -14,6 +16,7 @@ import (
 func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
+		b              bytes.Buffer
 		errDescription *errorDescription
 		reqContext     *requestContext
 	)
@@ -36,8 +39,8 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	req := &metatypes.MetadataServiceGetUserBucketsRequest{
-		AccountId: reqContext.accountID,
+	req := &metatypes.GetUserBucketsRequest{
+		AccountId: r.Header.Get(model.GnfdUserAddressHeader),
 	}
 	ctx := log.Context(context.Background(), req)
 	resp, err := gateway.metadata.GetUserBuckets(ctx, req)
@@ -45,19 +48,22 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 		log.Errorf("failed to get user buckets", "error", err)
 		return
 	}
-	ret, err := json.Marshal(resp)
-	if err != nil {
+
+	m := jsonpb.Marshaler{EmitDefaults: true}
+	if err = m.Marshal(&b, resp); err != nil {
 		log.Errorf("failed to get user buckets", "error", err)
 		return
 	}
+
 	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
-	w.Write(ret)
+	w.Write(b.Bytes())
 }
 
 // listObjectsByBucketNameHandler handle list objects by bucket name request
 func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
+		b              bytes.Buffer
 		errDescription *errorDescription
 		reqContext     *requestContext
 	)
@@ -80,9 +86,8 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	req := &metatypes.MetadataServiceListObjectsByBucketNameRequest{
+	req := &metatypes.ListObjectsByBucketNameRequest{
 		BucketName: reqContext.bucketName,
-		AccountId:  reqContext.accountID,
 	}
 
 	ctx := log.Context(context.Background(), req)
@@ -91,11 +96,13 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		log.Errorf("failed to list objects by bucket name", "error", err)
 		return
 	}
-	ret, err := json.Marshal(resp)
-	if err != nil {
+
+	m := jsonpb.Marshaler{EmitDefaults: true}
+	if err = m.Marshal(&b, resp); err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
 		return
 	}
+
 	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
-	w.Write(ret)
+	w.Write(b.Bytes())
 }

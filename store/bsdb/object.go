@@ -1,34 +1,40 @@
 package bsdb
 
-import (
-	"context"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model/metadata"
-)
-
 // ListObjectsByBucketName list objects info by a bucket name
-func (s *Store) ListObjectsByBucketName(ctx context.Context, bucketName string) ([]*metadata.Object, error) {
+func (b *BsDBImpl) ListObjectsByBucketName(bucketName string) ([]*Object, error) {
 	var (
-		ret []*metadata.Object
-		err error
+		objects []*Object
+		err     error
 	)
 
-	//TODO:: cancel mock after impl db
-	object1 := &metadata.Object{
-		Owner:                "46765cbc-d30c-4f4a-a814-b68181fcab12",
-		BucketName:           bucketName,
-		ObjectName:           "test-object",
-		ID:                   "1000",
-		PayloadSize:          100,
-		IsPublic:             false,
-		ContentType:          "video",
-		CreateAt:             0,
-		ObjectStatus:         1,
-		RedundancyType:       1,
-		SourceType:           1,
-		SecondarySpAddresses: nil,
-		LockedBalance:        "1000",
+	err = b.db.Table((&Object{}).TableName()).
+		Select("*").
+		Where("bucket_name = ?", bucketName).
+		Find(&objects).Error
+	return objects, err
+}
+
+// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
+func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, isFullList bool) ([]*Object, error) {
+	var (
+		objects []*Object
+		err     error
+	)
+
+	if isFullList {
+		err = b.db.Table((&Object{}).TableName()).
+			Select("*").
+			Where("update_at >= ? and update_at <= ? and removed = ?", startBlockNumber, endBlockNumber, true).
+			Limit(DeletedObjectsDefaultSize).
+			Order("update_at asc").
+			Find(&objects).Error
+		return objects, err
 	}
-	ret = append(ret, object1)
-	return ret, err
+	err = b.db.Table((&Object{}).TableName()).
+		Select("*").
+		Where("update_at >= ? and update_at <= ? and removed = ? and is_public = ?", startBlockNumber, endBlockNumber, true, true).
+		Limit(DeletedObjectsDefaultSize).
+		Order("update_at asc").
+		Find(&objects).Error
+	return objects, err
 }
