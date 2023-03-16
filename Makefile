@@ -19,7 +19,7 @@ generate:
 
 install-tools:
 	go install github.com/bufbuild/buf/cmd/buf@v1.13.1
-	go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+	go install github.com/gogo/protobuf/protoc-gen-gogo@latest
 
 buf-gen:
 	buf generate

@@ -1,6 +1,9 @@
 syntax = "proto3";
 package service.receiver.types;
 
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
 import "greenfield/storage/types.proto";
 import "service/types/storage_provider.proto";
 
@@ -29,7 +32,11 @@ message SyncObjectResponse {
 // QuerySyncingRequest is request type for the QuerySyncingObject RPC method.
 message QuerySyncingObjectRequest {
   // object_id defines the unique id of the object.
-  uint64 object_id = 1;
+  string object_id = 1[
+    (cosmos_proto.scalar) = "cosmos.Uint",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryUploadingResponse is response type for the QuerySyncingObject RPC method.

@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"google.golang.org/grpc"
@@ -50,7 +51,7 @@ func (client *ReceiverClient) SyncObject(
 }
 
 // QuerySyncingObject a syncing object info by object id
-func (client *ReceiverClient) QuerySyncingObject(ctx context.Context, objectID uint64) (*servicetypes.SegmentInfo, error) {
+func (client *ReceiverClient) QuerySyncingObject(ctx context.Context, objectID sdkmath.Uint) (*servicetypes.SegmentInfo, error) {
 	req := &types.QuerySyncingObjectRequest{
 		ObjectId: objectID,
 	}

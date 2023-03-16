@@ -119,7 +119,7 @@ func (receiver *Receiver) SyncObject(stream types.ReceiverService_SyncObjectServ
 func (receiver *Receiver) QuerySyncingObject(ctx context.Context, req *types.QuerySyncingObjectRequest) (
 	resp *types.QuerySyncingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
-	objectID := req.GetObjectId()
+	objectID := req.ObjectId.Uint64()
 	log.CtxDebugw(ctx, "query syncing object", "objectID", objectID)
 	cached, ok := receiver.cache.Get(objectID)
 	if !ok {

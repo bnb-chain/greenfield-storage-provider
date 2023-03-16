@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	sdkmath "cosmossdk.io/math"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -37,7 +38,7 @@ func (client *UploaderClient) Close() error {
 }
 
 // QueryPuttingObject query a putting object info with object id
-func (client *UploaderClient) QueryPuttingObject(ctx context.Context, objectID uint64, opts ...grpc.CallOption) (
+func (client *UploaderClient) QueryPuttingObject(ctx context.Context, objectID sdkmath.Uint, opts ...grpc.CallOption) (
 	*servicetypes.SegmentInfo, error) {
 	resp, err := client.uploader.QueryPuttingObject(ctx,
 		&types.QueryPuttingObjectRequest{ObjectId: objectID}, opts...)

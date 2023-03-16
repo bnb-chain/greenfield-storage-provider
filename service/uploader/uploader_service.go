@@ -139,7 +139,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 func (uploader *Uploader) QueryPuttingObject(ctx context.Context, req *types.QueryPuttingObjectRequest) (
 	resp *types.QueryPuttingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
-	objectID := req.GetObjectId()
+	objectID := req.ObjectId.Uint64()
 	log.CtxDebugw(ctx, "query putting object", "objectID", objectID)
 	val, ok := uploader.cache.Get(objectID)
 	if !ok {
