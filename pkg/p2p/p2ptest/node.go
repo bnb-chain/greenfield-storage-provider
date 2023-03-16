@@ -5,6 +5,10 @@ import (
 	"context"
 	"os"
 	"syscall"
+	"time"
+
+	sdkmath "cosmossdk.io/math"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -31,9 +35,41 @@ func main() {
 	if err != nil {
 		log.Errorw("failed to init p2p node", "error", err)
 	}
+	node.PeersProvider().UpdateSp([]string{"test_sp_operator_address_1", "test_sp_operator_address_2"})
 	// start p2p node
 	slc := lifecycle.NewServiceLifecycle()
 	slc.RegisterServices(node)
 	slcCtx := context.Background()
+	// background send get approval request period
+	go func() {
+		object := &storagetypes.ObjectInfo{}
+		object.Id = sdkmath.NewUint(uint64(0))
+		sleepTimer := time.NewTimer(5 * time.Second)
+		approvalTicker := time.NewTicker(1 * time.Second)
+		begin := false
+		for {
+			select {
+			case <-sleepTimer.C:
+				begin = true
+			case <-approvalTicker.C:
+				if !begin {
+					continue
+				}
+				object.Id.AddUint64(uint64(1))
+				accept, refuse, err := node.GetApproval(object, 9, 10)
+				if err != nil {
+					log.Errorw("failed to get approval from background", "error", err)
+					continue
+				}
+				log.Infow("success collect get approval response", "accept", len(accept), "refuse", len(refuse))
+				for _, response := range accept {
+					log.Infow("receive get approval accept", "remote_sp", response.GetSpOperatorAddress(), "object_id", response.GetObjectInfo().Id.Uint64())
+				}
+				for _, response := range refuse {
+					log.Infow("receive get approval refuse", "remote_sp", response.GetSpOperatorAddress(), "object_id", response.GetObjectInfo().Id.Uint64())
+				}
+			}
+		}
+	}()
 	slc.Signals(syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP).StartServices(slcCtx).Wait(slcCtx)
 }

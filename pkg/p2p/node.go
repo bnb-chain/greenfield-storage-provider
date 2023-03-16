@@ -5,8 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	ggio "github.com/gogo/protobuf/io"
 	"github.com/gogo/protobuf/proto"
 	ds "github.com/ipfs/go-datastore"
@@ -17,6 +15,10 @@ import (
 	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/libp2p/go-libp2p/core/protocol"
 	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoreds"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // Node defines the p2p protocol node, encapsulates the go-lib.p2p
@@ -27,6 +29,7 @@ type Node struct {
 	node         host.Host
 	peers        *PeerProvider
 	persistentDB ds.Batching
+	approval     *ApprovalProtocol
 	stopCh       chan struct{}
 }
 
@@ -74,10 +77,18 @@ func NewNode(config *NodeConfig) (*Node, error) {
 		persistentDB: ds,
 		stopCh:       make(chan struct{}),
 	}
-	n.node.SetStreamHandler(PingProtocol, n.onPing)
-	n.node.SetStreamHandler(PongProtocol, n.onPong)
+	n.initProtocol()
 	log.Infow("success to init p2p node", "node_id", n.node.ID())
 	return n, nil
+}
+
+func (n *Node) initProtocol() {
+	// inline protocol
+	n.node.SetStreamHandler(PingProtocol, n.onPing)
+	n.node.SetStreamHandler(PongProtocol, n.onPong)
+	// approval protocol
+	n.approval = NewApprovalProtocol(n)
+	return
 }
 
 // Name return the p2p protocol node name
@@ -96,6 +107,54 @@ func (n *Node) Stop(ctx context.Context) error {
 	close(n.stopCh)
 	n.persistentDB.Close()
 	return nil
+}
+
+// PeersProvider returns the p2p peers provider
+func (n *Node) PeersProvider() *PeerProvider {
+	return n.peers
+}
+
+// GetApproval broadcast get approval request and blocking goroutine until timeout or
+// collect expect accept approval response number
+func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectAccept int, timeout int64) (
+	accept map[string]*types.GetApprovalResponse, refuse map[string]*types.GetApprovalResponse, err error) {
+	approvalCH, err := n.approval.hangApprovalRequest(object.Id.Uint64())
+	if err != nil {
+		return
+	}
+	defer n.approval.cancelApprovalRequest(object.Id.Uint64())
+	accept = make(map[string]*types.GetApprovalResponse)
+	refuse = make(map[string]*types.GetApprovalResponse)
+	getApprovalReq := &types.GetApprovalRequest{
+		ObjectInfo:        object,
+		SpOperatorAddress: n.config.SpOperatorAddress,
+	}
+	// TODO::sign the getApprovalReq by signer
+	n.broadcast(GetApprovalRequest, getApprovalReq)
+	ticker := time.NewTicker(time.Duration(timeout) * time.Second)
+	for {
+		select {
+		case approval := <-approvalCH:
+			if approval.GetTimeOut() <= time.Now().Unix() {
+				log.Warnw("discard expired approval", "sp", approval.GetSpOperatorAddress(),
+					"object_id", approval.GetObjectInfo().Id.Uint64(), "expire_time", approval.GetTimeOut())
+				continue
+			}
+			if len(approval.GetRefuseReason()) != 0 {
+				if _, ok := refuse[approval.GetSpOperatorAddress()]; !ok {
+					refuse[approval.GetSpOperatorAddress()] = approval
+					delete(accept, approval.GetSpOperatorAddress())
+				}
+			} else {
+				delete(refuse, approval.GetSpOperatorAddress())
+				if _, ok := accept[approval.GetSpOperatorAddress()]; !ok {
+					accept[approval.GetSpOperatorAddress()] = approval
+				}
+			}
+		case <-ticker.C:
+			return
+		}
+	}
 }
 
 // eventloop run the background task

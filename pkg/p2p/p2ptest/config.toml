@@ -1,4 +1,4 @@
-# notice: localhost does not meet multiaddr specification
+# notice: localhost does not follow the  multiaddr specification
 Address = "127.0.0.1:7133"
 SpOperatorAddress = ""
 PrivKey = ""

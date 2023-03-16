@@ -35,12 +35,14 @@ func (n *Node) onPing(s network.Stream) {
 	data := &types.Ping{}
 	buf, err := io.ReadAll(s)
 	if err != nil {
+		log.Errorw("failed to read ping msg from stream", "error", err)
 		s.Reset()
 		return
 	}
 	s.Close()
 	err = proto.Unmarshal(buf, data)
 	if err != nil {
+		log.Errorw("failed to unmarshal ping msg", "error", err)
 		return
 	}
 	log.Debugf("%s received ping request from %s. Message: %s", s.Conn().LocalPeer(), s.Conn().RemotePeer(), data.String())
@@ -83,12 +85,14 @@ func (n *Node) onPong(s network.Stream) {
 	data := &types.Pong{}
 	buf, err := io.ReadAll(s)
 	if err != nil {
+		log.Errorw("failed to read pong msg from stream", "error", err)
 		s.Reset()
 		return
 	}
 	s.Close()
 	err = proto.Unmarshal(buf, data)
 	if err != nil {
+		log.Errorw("failed to unmarshal ping msg", "error", err)
 		return
 	}
 	// TODO:: change to debug level at release time

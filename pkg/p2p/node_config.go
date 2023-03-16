@@ -6,10 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	ma "github.com/multiformats/go-multiaddr"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (

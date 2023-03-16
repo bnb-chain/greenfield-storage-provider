@@ -82,13 +82,13 @@ func NewPeerProvider(store peerstore.Peerstore) *PeerProvider {
 	}
 }
 
-// UpdateSp change the storage operator
-func (pr PeerProvider) UpdateSp(Sps []string) {
-	pr.mux.RLock()
+// UpdateSp change the storage provider
+func (pr *PeerProvider) UpdateSp(SPs []string) {
+	pr.mux.Lock()
 	defer pr.mux.Unlock()
 	sp2Peers := make(map[string]Peers)
 	sp2Peers[PeerSpUnspecified] = pr.spPeers[PeerSpUnspecified]
-	for _, sp := range Sps {
+	for _, sp := range SPs {
 		peers, ok := pr.spPeers[sp]
 		if ok {
 			sp2Peers[sp] = peers
@@ -99,8 +99,15 @@ func (pr PeerProvider) UpdateSp(Sps []string) {
 	pr.spPeers = sp2Peers
 }
 
+func (pr *PeerProvider) validSp(sp string) bool {
+	pr.mux.RLock()
+	defer pr.mux.RUnlock()
+	_, ok := pr.spPeers[sp]
+	return ok
+}
+
 // DeletePeer increase the peer's fail counter and trigger prunePeers
-func (pr PeerProvider) DeletePeer(peerID peer.ID) {
+func (pr *PeerProvider) DeletePeer(peerID peer.ID) {
 	pr.mux.Lock()
 	defer pr.mux.Unlock()
 	peer, ok := pr.peers[peerID]
@@ -112,7 +119,7 @@ func (pr PeerProvider) DeletePeer(peerID peer.ID) {
 }
 
 // AddPeer add a new peer or reset an old peer
-func (pr PeerProvider) AddPeer(peerID peer.ID, sp string, addr ma.Multiaddr) {
+func (pr *PeerProvider) AddPeer(peerID peer.ID, sp string, addr ma.Multiaddr) {
 	pr.mux.Lock()
 	defer pr.mux.Unlock()
 	if _, ok := pr.spPeers[sp]; !ok {
@@ -134,7 +141,8 @@ func (pr PeerProvider) AddPeer(peerID peer.ID, sp string, addr ma.Multiaddr) {
 }
 
 // prunePeers deletes the peers that in fail state and there are enough backups
-func (pr PeerProvider) prunePeers() {
+// notice: no lock for prune peers, only be called by DeletePeer and AddPeer
+func (pr *PeerProvider) prunePeers() {
 	sp2Peers := make(map[string]Peers)
 	sps := maps.SortKeys(pr.spPeers)
 	for _, sp := range sps {
@@ -161,7 +169,8 @@ func (pr PeerProvider) prunePeers() {
 }
 
 // deletePeers deletes the peer from store
-func (pr PeerProvider) deletePeers(peers []peer.ID) {
+// notice: no lock for delete peers, only be called by prunePeers
+func (pr *PeerProvider) deletePeers(peers []peer.ID) {
 	for _, peerID := range peers {
 		pr.peerStore.ClearAddrs(peerID)
 		pr.peerStore.RemovePeer(peerID)
