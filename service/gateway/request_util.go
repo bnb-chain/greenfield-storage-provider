@@ -276,10 +276,10 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 				"status", reqContext.objectInfo.GetObjectStatus())
 			return errors.ErrCheckObjectSealed
 		}
-		if reqContext.objectInfo.GetOwner() != addr.String() {
-			log.Errorw("failed to auth due to account is not equal to object owner",
-				"object_owner", reqContext.objectInfo.GetOwner(),
-				"request_address", addr.String())
+		if isAllow, err := g.chain.VerifyGetObjectPermission(context.Background(), addr.String(),
+			reqContext.bucketName, reqContext.objectName); !isAllow || err != nil {
+			log.Errorw("failed to auth due to verify permission",
+				"is_allow", isAllow, "error", err)
 			return errors.ErrNoPermission
 		}
 		if reqContext.bucketInfo.GetPrimarySpAddress() != g.config.SpOperatorAddress {
@@ -290,7 +290,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		}
 		streamRecord, err := g.chain.QueryStreamRecord(context.Background(), reqContext.bucketInfo.PaymentAddress)
 		if err != nil {
-			log.Errorw("failed to check billing", "error", err)
+			log.Errorw("failed to check payment account status", "error", err)
 			return err
 		}
 		if streamRecord.Status != paymenttypes.STREAM_ACCOUNT_STATUS_ACTIVE {

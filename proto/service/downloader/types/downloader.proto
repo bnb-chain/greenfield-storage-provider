@@ -1,6 +1,7 @@
 syntax = "proto3";
 package service.downloader.types;
 
+import "gogoproto/gogo.proto";
 import "greenfield/storage/types.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/downloader/types";
@@ -83,7 +84,7 @@ message ReadRecord {
 // ListBucketReadRecordResponse is response type for the ListBucketReadRecord RPC method.
 message ListBucketReadRecordResponse {
   // read_records are the read record list
-  repeated ReadRecord read_records = 1;
+  repeated ReadRecord read_records = 1[(gogoproto.nullable) = true];
   // next_start_timestamp_us is used to fetch next batch, When the list is completed, it is 0.
   int64 next_start_timestamp_us = 2;
 }

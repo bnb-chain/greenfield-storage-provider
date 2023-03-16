@@ -185,10 +185,9 @@ func (downloader *Downloader) ListBucketReadRecord(ctx context.Context, req *typ
 		return nil, err
 	}
 	nextStartTimestampUs := int64(0)
-	resp := &types.ListBucketReadRecordResponse{}
-	resp.ReadRecords = make([]*types.ReadRecord, len(records))
+	readRecords := make([]*types.ReadRecord, 0)
 	for _, r := range records {
-		resp.ReadRecords = append(resp.ReadRecords, &types.ReadRecord{
+		readRecords = append(readRecords, &types.ReadRecord{
 			ObjectName:     r.ObjectName,
 			ObjectId:       r.ObjectID,
 			AccountAddress: r.UserAddress,
@@ -199,6 +198,9 @@ func (downloader *Downloader) ListBucketReadRecord(ctx context.Context, req *typ
 			nextStartTimestampUs = r.ReadTimestampUs + 1
 		}
 	}
-	resp.NextStartTimestampUs = nextStartTimestampUs
+	resp := &types.ListBucketReadRecordResponse{
+		ReadRecords:          readRecords,
+		NextStartTimestampUs: nextStartTimestampUs,
+	}
 	return resp, nil
 }

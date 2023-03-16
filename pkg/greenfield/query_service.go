@@ -7,6 +7,7 @@ import (
 	"time"
 
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -144,4 +145,22 @@ func (greenfield *Greenfield) QueryStreamRecord(ctx context.Context, account str
 		return nil, err
 	}
 	return &resp.StreamRecord, nil
+}
+
+// VerifyGetObjectPermission verify get object permission.
+func (greenfield *Greenfield) VerifyGetObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
+	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{
+		Operator:   account,
+		BucketName: bucket,
+		ObjectName: object,
+	})
+	if err != nil {
+		log.Errorw("failed to verify get object permission", "account", account, "error", err)
+		return false, err
+	}
+	if resp.GetEffect() == permissiontypes.EFFECT_ALLOW {
+		return true, err
+	}
+	return false, err
 }

@@ -63,7 +63,7 @@ func (g *Gateway) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Reque
 		SPFreeReadQuotaSize uint64   `xml:"SPFreeReadQuotaSize"`
 		ReadConsumedSize    uint64   `xml:"ReadConsumedSize"`
 	}{
-		Version:             "1.0",
+		Version:             model.GnfdResponseXmlVersion,
 		BucketName:          reqContext.bucketInfo.GetBucketName(),
 		BucketID:            util.Uint64ToString(reqContext.bucketInfo.Id.Uint64()),
 		ReadQuotaSize:       resp.GetQuotaSize(),
@@ -72,16 +72,18 @@ func (g *Gateway) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Reque
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
-		log.Errorw("failed to xml marshal", "error", err)
+		log.Errorw("failed to marshal xml", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	log.Debugw("get bucket quota", "xml_info", xmlInfo)
 }
 
 // listBucketReadRecord handles the list bucket read records request
@@ -104,7 +106,7 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 		if errDescription != nil && errDescription.statusCode != http.StatusOK {
 			log.Errorf("action(%v) statusCode(%v) %v", listBucketReadRecordRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Infof("action(%v) statusCode(200) %v", listObjectsByBucketRouterName, reqContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", listBucketReadRecordRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
@@ -158,7 +160,7 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 		ReadTimestampUs    int64    `xml:"ReadTimestampUs"`
 		ReadSize           uint64   `xml:"ReadSize"`
 	}
-	xmlRecords := make([]ReadRecord, len(resp.ReadRecords))
+	xmlRecords := make([]ReadRecord, 0)
 	for _, r := range resp.ReadRecords {
 		xmlRecords = append(xmlRecords, ReadRecord{
 			ObjectName:         r.GetObjectName(),
@@ -172,22 +174,25 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 		XMLName              xml.Name     `xml:"GetBucketReadQuotaResult"`
 		Version              string       `xml:"version,attr"`
 		NextStartTimestampUs int64        `xml:"NextStartTimestampUs"`
-		ReadRecords          []ReadRecord `xml:"ReadRecords"`
+		ReadRecords          []ReadRecord `xml:"ReadRecord"`
 	}{
-		Version:              "1.0",
+		Version:              model.GnfdResponseXmlVersion,
 		NextStartTimestampUs: resp.GetNextStartTimestampUs(),
 		ReadRecords:          xmlRecords,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
-		log.Errorw("failed to xml marshal", "error", err)
+		log.Errorw("failed to marshal xml", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	log.Debugw("list bucket read records", "xml_info", xmlInfo)
 }

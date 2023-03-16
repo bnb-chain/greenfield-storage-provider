@@ -107,7 +107,7 @@ const (
 	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
 )
 
-// http header constants
+// define all kinds of http constants
 const (
 	// ContentTypeHeader is used to indicate the media type of the resource
 	ContentTypeHeader = "Content-Type"
@@ -185,6 +185,8 @@ const (
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 	// GnfdUserAddressHeader defines the user address
 	GnfdUserAddressHeader = "X-Gnfd-User-Address"
+	// GnfdResponseXmlVersion defines the response xml version
+	GnfdResponseXmlVersion = "1.0"
 )
 
 // define all kinds of size

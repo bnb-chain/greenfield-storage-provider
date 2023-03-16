@@ -31,6 +31,7 @@ var (
 	AccessDenied       = &errorDescription{errorCode: "AccessDenied", errorMessage: "Access Denied", statusCode: http.StatusForbidden}
 	NoSuchKey          = &errorDescription{errorCode: "NoSuchKey", errorMessage: "The specified key does not exist.", statusCode: http.StatusNotFound}
 	NoSuchBucket       = &errorDescription{errorCode: "NoSuchBucket", errorMessage: "The specified bucket does not exist.", statusCode: http.StatusNotFound}
+	NoRouter           = &errorDescription{errorCode: "NoRouter", errorMessage: "The request can not route any handlers", statusCode: http.StatusNotFound}
 	// 5xx
 	InternalError          = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
 	NotImplementedError    = &errorDescription{errorCode: "NotImplementedError", errorMessage: "Not Implemented Error", statusCode: http.StatusNotImplemented}
@@ -57,9 +58,8 @@ func (desc *errorDescription) errorResponse(w http.ResponseWriter, reqCtx *reque
 	if xmlBody, err = xml.Marshal(&xmlInfo); err != nil {
 		return err
 	}
-
-	w.WriteHeader(desc.statusCode)
 	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
+	w.WriteHeader(desc.statusCode)
 	if _, err = w.Write(xmlBody); err != nil {
 		return err
 	}
