@@ -16,7 +16,7 @@ import (
 // GetUserBuckets get buckets info by a user address
 func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.GetUserBucketsRequest) (resp *metatypes.GetUserBucketsResponse, err error) {
 	ctx = log.Context(ctx, req)
-	buckets, err := metadata.spDB.GetUserBuckets(common.HexToAddress(req.AccountId))
+	buckets, err := metadata.bsDB.GetUserBuckets(common.HexToAddress(req.AccountId))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get user buckets", "error", err)
 		return
@@ -60,7 +60,7 @@ func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metaty
 		return nil, err
 	}
 
-	bucket, err = metadata.spDB.GetBucketByName(req.BucketName, req.IsFullList)
+	bucket, err = metadata.bsDB.GetBucketByName(req.BucketName, req.IsFullList)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket by bucket name", "error", err)
 		return nil, err
@@ -95,7 +95,7 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 	)
 
 	ctx = log.Context(ctx, req)
-	bucket, err = metadata.spDB.GetBucketByID(req.BucketId, req.IsFullList)
+	bucket, err = metadata.bsDB.GetBucketByID(req.BucketId, req.IsFullList)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket by bucket id", "error", err)
 		return nil, err
@@ -126,7 +126,7 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatypes.GetUserBucketsCountRequest) (resp *metatypes.GetUserBucketsCountResponse, err error) {
 	ctx = log.Context(ctx, req)
 
-	count, err := metadata.spDB.GetUserBucketsCount(common.HexToAddress(req.AccountId))
+	count, err := metadata.bsDB.GetUserBucketsCount(common.HexToAddress(req.AccountId))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get user buckets count", "error", err)
 		return

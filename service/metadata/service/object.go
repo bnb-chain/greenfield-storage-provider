@@ -15,7 +15,7 @@ import (
 func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *metatypes.ListObjectsByBucketNameRequest) (resp *metatypes.ListObjectsByBucketNameResponse, err error) {
 	ctx = log.Context(ctx, req)
 
-	objects, err := metadata.spDB.ListObjectsByBucketName(req.BucketName)
+	objects, err := metadata.bsDB.ListObjectsByBucketName(req.BucketName)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by bucket name", "error", err)
 		return
@@ -53,7 +53,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Context, req *metatypes.ListDeletedObjectsByBlockNumberRangeRequest) (resp *metatypes.ListDeletedObjectsByBlockNumberRangeResponse, err error) {
 	ctx = log.Context(ctx, req)
 
-	endBlockNumber, err := metadata.spDB.GetLatestBlockNumber()
+	endBlockNumber, err := metadata.bsDB.GetLatestBlockNumber()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get the latest block number", "error", err)
 		return nil, err
@@ -63,7 +63,7 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 		endBlockNumber = req.EndBlockNumber
 	}
 
-	objects, err := metadata.spDB.ListDeletedObjectsByBlockNumberRange(req.StartBlockNumber, endBlockNumber, req.IsFullList)
+	objects, err := metadata.bsDB.ListDeletedObjectsByBlockNumberRange(req.StartBlockNumber, endBlockNumber, req.IsFullList)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list deleted objects by block number range", "error", err)
 		return nil, err

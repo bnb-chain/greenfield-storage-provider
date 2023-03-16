@@ -11,7 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 // Metadata implements the gRPC of MetadataService,
@@ -19,21 +19,21 @@ import (
 type Metadata struct {
 	config     *metadata.MetadataConfig
 	name       string
-	spDB       sqldb.SPDB
+	bsDB       bsdb.BSDB
 	grpcServer *grpc.Server
 }
 
 // NewMetadataService returns an instance of Metadata that
 // supply query service for Inscription network
 func NewMetadataService(config *metadata.MetadataConfig) (metadata *Metadata, err error) {
-	spDB, err := sqldb.NewSpDB(config.SpDBConfig)
+	bsDB, err := bsdb.NewBsDB(config.SpDBConfig)
 	if err != nil {
 		return nil, err
 	}
 	metadata = &Metadata{
 		config: config,
 		name:   model.MetadataService,
-		spDB:   spDB,
+		bsDB:   bsDB,
 	}
 	return
 }
