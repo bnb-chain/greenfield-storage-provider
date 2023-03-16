@@ -24,7 +24,7 @@ type Metadata interface {
 	ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, isFullList bool) ([]*metadata.Object, error)
 }
 
-// BSDB contains all the methods required by sql database
+// BSDB contains all the methods required by block syncer database
 type BSDB interface {
 	Metadata
 }
