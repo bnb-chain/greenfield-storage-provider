@@ -101,12 +101,14 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), req.GetObjectInfo().Id.Uint64())
 
 	// TODO:: verify the req's signature
-	if a.node.peers.validSp(req.GetSpOperatorAddress()) == false {
-		log.Warnw("ignore invalid sp get approval request", "sp", req.GetSpOperatorAddress())
+	if a.node.peers.checkSp(req.GetSpOperatorAddress()) == false {
+		log.Warnw("ignore invalid sp get approval request", "sp", req.GetSpOperatorAddress(),
+			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	if strings.Compare(req.GetSpOperatorAddress(), a.node.config.SpOperatorAddress) == 0 {
-		log.Warnw("ignore self get approval request", "sp", req.GetSpOperatorAddress())
+		log.Warnw("ignore self get approval request", "sp", req.GetSpOperatorAddress(),
+			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	validTime, _ := time.ParseDuration(ValidApprovalDuration)
@@ -141,12 +143,14 @@ func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), resp.GetObjectInfo().Id.Uint64())
 
 	// TODO:: verify the resp's signature
-	if a.node.peers.validSp(resp.GetSpOperatorAddress()) == false {
-		log.Warnw("ignore invalid sp get approval response", "sp", resp.GetSpOperatorAddress())
+	if a.node.peers.checkSp(resp.GetSpOperatorAddress()) == false {
+		log.Warnw("ignore invalid sp get approval response", "sp", resp.GetSpOperatorAddress(),
+			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	if strings.Compare(resp.GetSpOperatorAddress(), a.node.config.SpOperatorAddress) == 0 {
-		log.Warnw("ignore self get approval response", "sp", resp.GetSpOperatorAddress())
+		log.Warnw("ignore self get approval response", "sp", resp.GetSpOperatorAddress(),
+			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	err = a.notifyApprovalResponse(resp)

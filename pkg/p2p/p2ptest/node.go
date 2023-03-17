@@ -43,7 +43,6 @@ func main() {
 	// background send get approval request period
 	go func() {
 		object := &storagetypes.ObjectInfo{}
-		object.Id = sdkmath.NewUint(uint64(0))
 		sleepTimer := time.NewTimer(5 * time.Second)
 		approvalTicker := time.NewTicker(1 * time.Second)
 		begin := false
@@ -55,7 +54,7 @@ func main() {
 				if !begin {
 					continue
 				}
-				object.Id.AddUint64(uint64(1))
+				object.Id = sdkmath.NewUint(uint64(time.Now().Unix()))
 				accept, refuse, err := node.GetApproval(object, 9, 10)
 				if err != nil {
 					log.Errorw("failed to get approval from background", "error", err)
