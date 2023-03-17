@@ -185,8 +185,8 @@ const (
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 	// GnfdUserAddressHeader defines the user address
 	GnfdUserAddressHeader = "X-Gnfd-User-Address"
-	// GnfdResponseXmlVersion defines the response xml version
-	GnfdResponseXmlVersion = "1.0"
+	// GnfdResponseXMLVersion defines the response xml version
+	GnfdResponseXMLVersion = "1.0"
 )
 
 // define all kinds of size

@@ -45,7 +45,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 	}()
 
 	if gateway.downloader == nil {
-		log.Errorw("failed to get object due to not config downloader")
+		log.Error("failed to get object due to not config downloader")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -156,7 +156,7 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 	}()
 
 	if gateway.uploader == nil {
-		log.Errorw("failed to put object due to not config uploader")
+		log.Error("failed to put object due to not config uploader")
 		errDescription = NotExistComponentError
 		return
 	}

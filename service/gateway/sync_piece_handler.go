@@ -43,7 +43,7 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 	}()
 
 	if gateway.receiver == nil {
-		log.Errorw("failed to sync data due to not config receiver")
+		log.Error("failed to sync data due to not config receiver")
 		errDescription = NotExistComponentError
 		return
 	}

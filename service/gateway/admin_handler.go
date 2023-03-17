@@ -35,7 +35,7 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 	}()
 
 	if gateway.signer == nil {
-		log.Errorw("failed to get approval due to not config signer")
+		log.Error("failed to get approval due to not config signer")
 		errDescription = NotExistComponentError
 		return
 	}

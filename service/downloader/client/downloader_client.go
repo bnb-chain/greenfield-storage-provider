@@ -62,12 +62,12 @@ func (client *DownloaderClient) GetBucketReadQuota(ctx context.Context, bucketIn
 }
 
 // ListBucketReadRecord get read record list of the specified time range
-func (client *DownloaderClient) ListBucketReadRecord(ctx context.Context, bucketInfo *storagetypes.BucketInfo, startTS int64, endTS int64, maxRecordNum int64, opts ...grpc.CallOption) (*types.ListBucketReadRecordResponse, error) {
+func (client *DownloaderClient) ListBucketReadRecord(ctx context.Context, bucketInfo *storagetypes.BucketInfo, startTimestampUs, endTimestampUs, maxRecordNum int64, opts ...grpc.CallOption) (*types.ListBucketReadRecordResponse, error) {
 	resp, err := client.downloader.ListBucketReadRecord(ctx,
 		&types.ListBucketReadRecordRequest{
 			BucketInfo:       bucketInfo,
-			StartTimestampUs: startTS,
-			EndTimestampUs:   endTS,
+			StartTimestampUs: startTimestampUs,
+			EndTimestampUs:   endTimestampUs,
 			MaxRecordNum:     maxRecordNum,
 		}, opts...)
 	if err != nil {

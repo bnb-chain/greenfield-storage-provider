@@ -184,7 +184,7 @@ func (downloader *Downloader) ListBucketReadRecord(ctx context.Context, req *typ
 		log.Errorw("failed to list bucket read record", "error", err)
 		return nil, err
 	}
-	nextStartTimestampUs := int64(0)
+	var nextStartTimestampUs int64
 	readRecords := make([]*types.ReadRecord, 0)
 	for _, r := range records {
 		readRecords = append(readRecords, &types.ReadRecord{

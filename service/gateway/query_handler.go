@@ -33,7 +33,7 @@ func (g *Gateway) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Reque
 	}()
 
 	if g.downloader == nil {
-		log.Errorw("failed to get bucket read quota due to not config downloader")
+		log.Error("failed to get bucket read quota due to not config downloader")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -63,7 +63,7 @@ func (g *Gateway) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Reque
 		SPFreeReadQuotaSize uint64   `xml:"SPFreeReadQuotaSize"`
 		ReadConsumedSize    uint64   `xml:"ReadConsumedSize"`
 	}{
-		Version:             model.GnfdResponseXmlVersion,
+		Version:             model.GnfdResponseXMLVersion,
 		BucketName:          reqContext.bucketInfo.GetBucketName(),
 		BucketID:            util.Uint64ToString(reqContext.bucketInfo.Id.Uint64()),
 		ReadQuotaSize:       resp.GetQuotaSize(),
@@ -111,7 +111,7 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 	}()
 
 	if g.downloader == nil {
-		log.Errorw("failed to list bucket read record due to not config downloader")
+		log.Error("failed to list bucket read record due to not config downloader")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -176,7 +176,7 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 		NextStartTimestampUs int64        `xml:"NextStartTimestampUs"`
 		ReadRecords          []ReadRecord `xml:"ReadRecord"`
 	}{
-		Version:              model.GnfdResponseXmlVersion,
+		Version:              model.GnfdResponseXMLVersion,
 		NextStartTimestampUs: resp.GetNextStartTimestampUs(),
 		ReadRecords:          xmlRecords,
 	}
