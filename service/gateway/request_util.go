@@ -225,7 +225,15 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		err          error
 		accountExist bool
 	)
+
+	// TODO: just for auth v2 js-sdk, will refine it in the future
 	if reqContext.skipAuth {
+		if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
+			context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
+			log.Errorw("failed to query bucket info and object info on chain",
+				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
+			return err
+		}
 		return nil
 	}
 	accountExist, err = g.chain.HasAccount(context.Background(), addr.String())

@@ -2,6 +2,7 @@ package syncer
 
 import (
 	"context"
+	"encoding/hex"
 	"io"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -40,6 +41,11 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 		integrityMeta.Checksum = checksum
 		integrityMeta.IntegrityHash = resp.IntegrityHash
 		integrityMeta.Signature = resp.Signature
+		log.Debugw("integrity meta", "integrity hash", hex.EncodeToString(integrityMeta.IntegrityHash),
+			"integrity signature", hex.EncodeToString(integrityMeta.Signature))
+		for i, pieceHash := range integrityMeta.Checksum {
+			log.Debugw("integrity meta", "piece hash idx", i, "piece hash", hex.EncodeToString(pieceHash))
+		}
 		err = syncer.spDB.SetObjectIntegrity(integrityMeta)
 		if err != nil {
 			log.Errorw("failed to write integrity hash to db", "error", err)

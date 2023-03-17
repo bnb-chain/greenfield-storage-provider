@@ -84,6 +84,15 @@ const (
 	// SpDBDataBase defines env variable name for sp db database
 	SpDBDataBase = "SP_DB_DATABASE"
 
+	// BsDBUser defines env variable name for block syncer db user name
+	BsDBUser = "BS_DB_USER"
+	// BsDBPasswd defines env variable name for block syncer db user passwd
+	BsDBPasswd = "BS_DB_PASSWORD"
+	// BsDBAddress defines env variable name for block syncer db address
+	BsDBAddress = "BS_DB_ADDRESS"
+	// BsDBDataBase defines env variable name for block syncer db database
+	BsDBDataBase = "BS_DB_DATABASE"
+
 	// SpOperatorAddress defines env variable name for sp operator address
 	SpOperatorAddress = "SP_OPERATOR_PUB_KEY"
 	// SpSignerAPIKey defines env variable for signer api key
@@ -194,4 +203,6 @@ const (
 	GnfdSegmentSizeHeader = "X-Gnfd-Segment-Size"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by syncer
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
+	// GnfdUserAddressHeader defines the user address
+	GnfdUserAddressHeader = "X-Gnfd-User-Address"
 )
