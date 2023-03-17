@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.0.4
+
+FEATURES
+* [\#202](https://github.com/bnb-chain/greenfield-storage-provider/pull/202) feat: update get bucket apis
+* [\#205](https://github.com/bnb-chain/greenfield-storage-provider/pull/205) fix: blocksyncer adapt event param to chain side and payment module added
+* [\#206](https://github.com/bnb-chain/greenfield-storage-provider/pull/206) feat: support query quota and list read record
+* [\#215](https://github.com/bnb-chain/greenfield-storage-provider/pull/215) fix: potential attack risks in on-chain storage module
+
+IMPROVEMENT
+* [\#188](https://github.com/bnb-chain/greenfield-storage-provider/pull/188) refactor: refactor metadata service
+* [\#196](https://github.com/bnb-chain/greenfield-storage-provider/pull/196) docs: add sp docs
+* [\#197](https://github.com/bnb-chain/greenfield-storage-provider/pull/197) refactor: rename stonenode, syncer to tasknode, recevier
+* [\#200](https://github.com/bnb-chain/greenfield-storage-provider/pull/200) docs: refining readme
+* [\#208](https://github.com/bnb-chain/greenfield-storage-provider/pull/208) docs: add block syncer config
+* [\#209](https://github.com/bnb-chain/greenfield-storage-provider/pull/209) fix: block syncer db response style
+
+BUGFIX
+* [\#189](https://github.com/bnb-chain/greenfield-storage-provider/pull/189) fix: fix approval expired height bug
+* [\#212](https://github.com/bnb-chain/greenfield-storage-provider/pull/212) fix: authv2 workflow
+* [\#216](https://github.com/bnb-chain/greenfield-storage-provider/pull/216) fix: metadata buckets api
+
+BUILD
+* [\#179](https://github.com/bnb-chain/greenfield-storage-provider/pull/179) ci: add branch naming rules
+* [\#198](https://github.com/bnb-chain/greenfield-storage-provider/pull/198) build: replace go1.19 with go1.18
+
+
 ## v0.0.3
 
 FEATURES
