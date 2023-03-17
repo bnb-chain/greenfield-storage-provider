@@ -87,27 +87,27 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 	req := &types.GetApprovalRequest{}
 	buf, err := io.ReadAll(s)
 	if err != nil {
-		log.Errorw("failed to read get approval request msg from stream", "error", err)
+		log.Errorw("failed to read approval request msg from stream", "error", err)
 		s.Reset()
 		return
 	}
 	s.Close()
 	err = proto.Unmarshal(buf, req)
 	if err != nil {
-		log.Errorw("failed to unmarshal get approval request msg", "error", err)
+		log.Errorw("failed to unmarshal approval request msg", "error", err)
 		return
 	}
-	log.Debugf("%s received get approval request from %s, object_id: %d",
+	log.Debugf("%s received approval request from %s, object_id: %d",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), req.GetObjectInfo().Id.Uint64())
 
 	// TODO:: verify the req's signature
 	if a.node.peers.checkSp(req.GetSpOperatorAddress()) == false {
-		log.Warnw("ignore invalid sp get approval request", "sp", req.GetSpOperatorAddress(),
+		log.Warnw("ignore invalid sp approval request", "sp", req.GetSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	if strings.Compare(req.GetSpOperatorAddress(), a.node.config.SpOperatorAddress) == 0 {
-		log.Warnw("ignore self get approval request", "sp", req.GetSpOperatorAddress(),
+		log.Warnw("ignore self approval request", "sp", req.GetSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
@@ -120,7 +120,7 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 	// TODO:: customized approval strategy, if refuse will fill back resp's refuse field
 	// TODO:: send resp to signer for signing and fill back resp's signature field
 	err = a.node.sendToPeer(s.Conn().RemotePeer(), GetApprovalResponse, resp)
-	log.Infof("%s response to %s get approval request, error: %s",
+	log.Infof("%s response to %s approval request, error: %s",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), err)
 }
 
@@ -129,31 +129,31 @@ func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 	resp := &types.GetApprovalResponse{}
 	buf, err := io.ReadAll(s)
 	if err != nil {
-		log.Errorw("failed to read get approval response msg from stream", "error", err)
+		log.Errorw("failed to read approval response msg from stream", "error", err)
 		s.Reset()
 		return
 	}
 	s.Close()
 	err = proto.Unmarshal(buf, resp)
 	if err != nil {
-		log.Errorw("failed to unmarshal get approval response msg", "error", err)
+		log.Errorw("failed to unmarshal approval response msg", "error", err)
 		return
 	}
-	log.Debugf("%s received get approval response from %s, object_id: %d",
+	log.Debugf("%s received approval response from %s, object_id: %d",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), resp.GetObjectInfo().Id.Uint64())
 
 	// TODO:: verify the resp's signature
 	if a.node.peers.checkSp(resp.GetSpOperatorAddress()) == false {
-		log.Warnw("ignore invalid sp get approval response", "sp", resp.GetSpOperatorAddress(),
+		log.Warnw("ignore invalid sp approval response", "sp", resp.GetSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	if strings.Compare(resp.GetSpOperatorAddress(), a.node.config.SpOperatorAddress) == 0 {
-		log.Warnw("ignore self get approval response", "sp", resp.GetSpOperatorAddress(),
+		log.Warnw("ignore self approval response", "sp", resp.GetSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	err = a.notifyApprovalResponse(resp)
-	log.Infof("%s received get approval response to %s, and notify to hang request error: %s",
+	log.Infof("%s received approval response to %s, and notify to hang request error: %s",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), err)
 }
