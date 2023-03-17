@@ -46,13 +46,7 @@ GreenfieldAddresses = ["localhost:9090"]
 TendermintAddresses = ["http://localhost:26750"]
 
 [SignerCfg]
-GRPCAddress = "localhost:9633"
-APIKey = ""
 WhitelistCIDR = ["127.0.0.1/32"]
-
-[SignerCfg.GreenfieldChainConfig]
-GRPCAddress = "localhost:9090"
-ChainID = "greenfield_9000-1741"
 GasLimit = 210000
 OperatorPrivateKey = ""
 FundingPrivateKey = ""

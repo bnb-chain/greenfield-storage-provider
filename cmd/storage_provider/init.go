@@ -94,8 +94,11 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			return nil, err
 		}
 	case model.SignerService:
-		sCfg, _ := cfg.MakeSignerConfig()
-		server, err = signer.NewSignerServer(sCfg)
+		sCfg, chainCfg, err := cfg.MakeSignerConfig()
+		if err != nil {
+			return nil, err
+		}
+		server, err = signer.NewSignerServer(sCfg, chainCfg)
 		if err != nil {
 			return nil, err
 		}

@@ -6,9 +6,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
-type GreenfieldChainConfig struct {
+type SignerConfig struct {
 	GRPCAddress        string
-	ChainID            string
+	APIKey             string
+	WhitelistCIDR      []string
 	GasLimit           uint64
 	OperatorPrivateKey string
 	FundingPrivateKey  string
@@ -16,23 +17,10 @@ type GreenfieldChainConfig struct {
 	ApprovalPrivateKey string
 }
 
-var DefaultGreenfieldChainConfig = &GreenfieldChainConfig{
-	GRPCAddress: model.GreenfieldAddress,
-	ChainID:     model.GreenfieldChainID,
-	GasLimit:    210000,
-}
-
-type SignerConfig struct {
-	GRPCAddress           string
-	APIKey                string
-	WhitelistCIDR         []string
-	GreenfieldChainConfig *GreenfieldChainConfig
-}
-
 var DefaultSignerChainConfig = &SignerConfig{
-	GRPCAddress:           model.SignerGRPCAddress,
-	WhitelistCIDR:         []string{model.WhiteListCIDR},
-	GreenfieldChainConfig: DefaultGreenfieldChainConfig,
+	GRPCAddress:   model.SignerGRPCAddress,
+	WhitelistCIDR: []string{model.WhiteListCIDR},
+	GasLimit:      210000,
 }
 
 func overrideConfigFromEnv(config *SignerConfig) {
@@ -40,15 +28,15 @@ func overrideConfigFromEnv(config *SignerConfig) {
 		config.APIKey = val
 	}
 	if val, ok := os.LookupEnv(model.SpOperatorPrivKey); ok {
-		config.GreenfieldChainConfig.OperatorPrivateKey = val
+		config.OperatorPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(model.SpFundingPrivKey); ok {
-		config.GreenfieldChainConfig.FundingPrivateKey = val
+		config.FundingPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(model.SpApprovalPrivKey); ok {
-		config.GreenfieldChainConfig.ApprovalPrivateKey = val
+		config.ApprovalPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(model.SpSealPrivKey); ok {
-		config.GreenfieldChainConfig.SealPrivateKey = val
+		config.SealPrivateKey = val
 	}
 }
