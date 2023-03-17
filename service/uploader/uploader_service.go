@@ -35,7 +35,8 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
-		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checksum)
+		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(),
+			integrityMeta.ObjectID, checksum)
 		if err != nil {
 			log.Errorw("failed to sign integrity hash", "err", err)
 			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),

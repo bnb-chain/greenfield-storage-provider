@@ -6,6 +6,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"cosmossdk.io/math"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -131,7 +132,8 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 				}
 				log.CtxDebugw(ctx, "receive the sp response", "replica_idx", rIdx, "integrity_hash",
 					integrityHash, "endpoint", sp.GetEndpoint(), "signature", signature)
-				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), integrityHash).GetSignBytes()
+
+				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), math.NewUint(objectInfo.Id.Uint64()), integrityHash).GetSignBytes()
 				approvalAddr, err := sdk.AccAddressFromHexUnsafe(sp.GetApprovalAddress())
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to parser sp operator address",

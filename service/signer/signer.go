@@ -2,6 +2,7 @@ package signer
 
 import (
 	"context"
+	"errors"
 	"net"
 
 	"github.com/cloudflare/cfssl/whitelist"
@@ -10,6 +11,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
@@ -20,41 +22,51 @@ var _ lifecycle.Service = &SignerServer{}
 
 // SignerServer signer service
 type SignerServer struct {
-	config    *SignerConfig
-	whitelist *whitelist.BasicNet
-	client    *client.GreenfieldChainSignClient
+	config       *SignerConfig
+	chainConfig  *gnfd.GreenfieldChainConfig
+	svcWhitelist *whitelist.BasicNet
+	client       *client.GreenfieldChainSignClient
 
 	server *grpc.Server
 }
 
 // NewSignerServer return SignerServer instance
-func NewSignerServer(config *SignerConfig) (*SignerServer, error) {
+func NewSignerServer(config *SignerConfig, chainConfig *gnfd.GreenfieldChainConfig) (*SignerServer, error) {
 	overrideConfigFromEnv(config)
 
-	whitelist := whitelist.NewBasicNet()
+	svcWhitelist := whitelist.NewBasicNet()
 	for _, cidr := range config.WhitelistCIDR {
 		_, subnet, err := net.ParseCIDR(cidr)
 		if err != nil {
 			return nil, err
 		}
-		whitelist.Add(subnet)
+		svcWhitelist.Add(subnet)
+	}
+	if len(chainConfig.NodeAddr) == 0 {
+		return nil, errors.New("greenfield nodes missing")
+	}
+
+	if len(chainConfig.NodeAddr[0].GreenfieldAddresses) == 0 {
+		return nil, errors.New("greenfield endpoints missing")
 	}
 
 	client, err := client.NewGreenfieldChainSignClient(
-		config.GreenfieldChainConfig.GRPCAddress,
-		config.GreenfieldChainConfig.ChainID,
-		config.GreenfieldChainConfig.GasLimit,
-		config.GreenfieldChainConfig.OperatorPrivateKey,
-		config.GreenfieldChainConfig.FundingPrivateKey,
-		config.GreenfieldChainConfig.SealPrivateKey,
-		config.GreenfieldChainConfig.ApprovalPrivateKey)
+		// TODO: greenfield SDK may support multiple endpoints.
+		chainConfig.NodeAddr[0].GreenfieldAddresses[0],
+		chainConfig.ChainID,
+		config.GasLimit,
+		config.OperatorPrivateKey,
+		config.FundingPrivateKey,
+		config.SealPrivateKey,
+		config.ApprovalPrivateKey)
 	if err != nil {
 		return nil, err
 	}
 	return &SignerServer{
-		config:    config,
-		client:    client,
-		whitelist: whitelist,
+		config:       config,
+		chainConfig:  chainConfig,
+		client:       client,
+		svcWhitelist: svcWhitelist,
 	}, nil
 }
 
