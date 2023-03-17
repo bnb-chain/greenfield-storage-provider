@@ -3,72 +3,99 @@ package service
 import (
 	"context"
 
+	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/model"
-	stypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
-func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *stypes.MetadataServiceListObjectsByBucketNameRequest) (resp *stypes.MetadataServiceListObjectsByBucketNameResponse, err error) {
+// ListObjectsByBucketName list objects info by a bucket name
+func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *metatypes.ListObjectsByBucketNameRequest) (resp *metatypes.ListObjectsByBucketNameResponse, err error) {
 	ctx = log.Context(ctx, req)
-	defer func() {
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to list objects by name", "err", err)
-		} else {
-			log.CtxInfow(ctx, "succeed to list objects by name")
-		}
-	}()
-	//objects, err := metadata.store.ListObjectsByBucketName(ctx, req.BucketName)
-	var objects []*model.Object
-	object1 := &model.Object{
-		Owner:                "46765cbc-d30c-4f4a-a814-b68181fcab12",
-		BucketName:           req.BucketName,
-		ObjectName:           "test-object",
-		Id:                   "1000",
-		PayloadSize:          100,
-		IsPublic:             false,
-		ContentType:          "video",
-		CreateAt:             1677143663461,
-		ObjectStatus:         1,
-		RedundancyType:       1,
-		SourceType:           1,
-		SecondarySpAddresses: nil,
-		LockedBalance:        "1000",
+
+	objects, err := metadata.bsDB.ListObjectsByBucketName(req.BucketName)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list objects by bucket name", "error", err)
+		return
 	}
-	object2 := &model.Object{
-		Owner:                "0xdc4f0dba80cc3ee55aa1ad222a350c85a84261bd",
-		BucketName:           req.BucketName,
-		ObjectName:           "ETH",
-		Id:                   "1001",
-		PayloadSize:          500,
-		IsPublic:             true,
-		ContentType:          "image",
-		CreateAt:             1677143880209,
-		ObjectStatus:         2,
-		RedundancyType:       2,
-		SourceType:           2,
-		SecondarySpAddresses: nil,
-		LockedBalance:        "1000",
-	}
-	objects = append(objects, object1, object2)
-	res := make([]*stypes.Object, 0)
+
+	res := make([]*metatypes.Object, 0)
 	for _, object := range objects {
-		res = append(res, &stypes.Object{
-			Owner:                object.Owner,
-			BucketName:           object.BucketName,
-			ObjectName:           object.ObjectName,
-			Id:                   object.Id,
-			PayloadSize:          object.PayloadSize,
-			IsPublic:             object.IsPublic,
-			ContentType:          object.ContentType,
-			CreateAt:             object.CreateAt,
-			ObjectStatus:         stypes.ObjectStatus(object.ObjectStatus),
-			RedundancyType:       stypes.RedundancyType(object.RedundancyType),
-			SourceType:           stypes.SourceType(object.SourceType),
-			Checksums:            nil,
-			SecondarySpAddresses: object.SecondarySpAddresses,
-			LockedBalance:        object.LockedBalance,
+		res = append(res, &metatypes.Object{
+			ObjectInfo: &types.ObjectInfo{
+				Owner:                object.Owner.String(),
+				BucketName:           object.BucketName,
+				ObjectName:           object.ObjectName,
+				Id:                   math.NewUint(uint64(object.ObjectID)),
+				PayloadSize:          object.PayloadSize,
+				IsPublic:             object.IsPublic,
+				ContentType:          object.ContentType,
+				CreateAt:             object.CreateAt,
+				ObjectStatus:         types.ObjectStatus(types.ObjectStatus_value[object.ObjectStatus]),
+				RedundancyType:       types.RedundancyType(types.RedundancyType_value[object.RedundancyType]),
+				SourceType:           types.SourceType(types.SourceType_value[object.SourceType]),
+				Checksums:            util.StringListToBytesSlice(object.CheckSums),
+				SecondarySpAddresses: object.SecondarySpAddresses,
+			},
+			LockedBalance: object.LockedBalance,
+			Removed:       object.Removed,
 		})
 	}
-	resp = &stypes.MetadataServiceListObjectsByBucketNameResponse{Objects: res}
+
+	resp = &metatypes.ListObjectsByBucketNameResponse{Objects: res}
+	log.CtxInfow(ctx, "success to list objects by bucket name")
+	return resp, nil
+}
+
+// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
+func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Context, req *metatypes.ListDeletedObjectsByBlockNumberRangeRequest) (resp *metatypes.ListDeletedObjectsByBlockNumberRangeResponse, err error) {
+	ctx = log.Context(ctx, req)
+
+	endBlockNumber, err := metadata.bsDB.GetLatestBlockNumber()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get the latest block number", "error", err)
+		return nil, err
+	}
+
+	if endBlockNumber > req.EndBlockNumber {
+		endBlockNumber = req.EndBlockNumber
+	}
+
+	objects, err := metadata.bsDB.ListDeletedObjectsByBlockNumberRange(req.StartBlockNumber, endBlockNumber, req.IsFullList)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list deleted objects by block number range", "error", err)
+		return nil, err
+	}
+
+	res := make([]*metatypes.Object, 0)
+	for _, object := range objects {
+		res = append(res, &metatypes.Object{
+			ObjectInfo: &types.ObjectInfo{
+				Owner:                object.Owner.String(),
+				BucketName:           object.BucketName,
+				ObjectName:           object.ObjectName,
+				Id:                   math.NewUint(uint64(object.ObjectID)),
+				PayloadSize:          object.PayloadSize,
+				IsPublic:             object.IsPublic,
+				ContentType:          object.ContentType,
+				CreateAt:             object.CreateAt,
+				ObjectStatus:         types.ObjectStatus(types.ObjectStatus_value[object.ObjectStatus]),
+				RedundancyType:       types.RedundancyType(types.RedundancyType_value[object.RedundancyType]),
+				SourceType:           types.SourceType(types.SourceType_value[object.SourceType]),
+				Checksums:            util.StringListToBytesSlice(object.CheckSums),
+				SecondarySpAddresses: object.SecondarySpAddresses,
+			},
+			LockedBalance: object.LockedBalance,
+			Removed:       object.Removed,
+		})
+	}
+
+	resp = &metatypes.ListDeletedObjectsByBlockNumberRangeResponse{
+		Objects:           res,
+		LatestBlockNumber: endBlockNumber,
+	}
+	log.CtxInfow(ctx, "success to list deleted objects by block number range")
 	return resp, nil
 }

@@ -14,6 +14,8 @@ var (
 	ErrNoSuchObject = errors.New("the specified key does not exist")
 	// ErrNoSuchBucket defines not existed bucket error
 	ErrNoSuchBucket = errors.New("the specified bucket does not exist")
+	// ErrInvalidBucketName defines invalid bucket name
+	ErrInvalidBucketName = errors.New("invalid bucket name")
 )
 
 // piece store errors
@@ -72,4 +74,10 @@ var (
 	ErrSignMsg = errors.New("sign message with private key failed")
 	// ErrSealObjectOnChain defines send seal object tx to chain error
 	ErrSealObjectOnChain = errors.New("send sealObject msg failed")
+)
+
+// metadata service error
+var (
+	// ErrInvalidAccountID defines invalid account id
+	ErrInvalidAccountID = errors.New("invalid account id")
 )

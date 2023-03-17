@@ -50,7 +50,21 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
 		HandlerFunc(g.getObjectHandler)
+	bucketRouter.NewRoute().
+		Name(listObjectsByBucketRouterName).
+		Methods(http.MethodGet).
+		Path("/").
+		HandlerFunc(g.listObjectsByBucketNameHandler)
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
+
+	// bucket list router, virtual-hosted style
+	bucketListRouter := r.Host(g.config.Domain).Subrouter()
+	bucketListRouter.NewRoute().
+		Name(getUserBucketsRouterName).
+		Methods(http.MethodGet).
+		Path("/").
+		HandlerFunc(g.getUserBucketsHandler)
+	bucketListRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	// admin router, path style
 	r.Path(model.GetApprovalPath).
@@ -67,15 +81,5 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Name(syncPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.syncPieceHandler)
-	//metadata router
-	r.Name(getUserBucketsRouterName).
-		Methods(http.MethodGet).
-		Path("/accounts/{account_id:.+}/buckets").
-		HandlerFunc(g.getUserBucketsHandler)
-	r.Name(listObjectsByBucketRouterName).
-		Methods(http.MethodGet).
-		Path("/accounts/{account_id:.+}/buckets/{bucket_name:.+}/objects").
-		HandlerFunc(g.listObjectsByBucketNameHandler)
-
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }
