@@ -9,9 +9,10 @@ type BucketTrafficTable struct {
 	BucketID uint64 `gorm:"primary_key"`
 	Month    string `gorm:"primary_key"`
 
-	BucketName    string
-	ReadCostSize  int64
-	ReadQuotaSize int64
+	BucketName       string
+	ReadConsumedSize uint64
+	// ReadQuotaSize = the greenfield chain bucket quota + the sp default free quota
+	ReadQuotaSize uint64
 	ModifiedTime  time.Time
 }
 
@@ -24,14 +25,14 @@ func (BucketTrafficTable) TableName() string {
 type ReadRecordTable struct {
 	ReadRecordID uint64 `gorm:"primary_key;autoIncrement"`
 
-	BucketID    uint64 `gorm:"index:bucket_to_read_record"`
-	ObjectID    uint64 `gorm:"index:object_to_read_record"`
-	UserAddress string `gorm:"index:user_to_read_record"`
-	ReadTime    int64  `gorm:"index:time_to_read_record"` // second timestamp
+	BucketID        uint64 `gorm:"index:bucket_to_read_record"`
+	ObjectID        uint64 `gorm:"index:object_to_read_record"`
+	UserAddress     string `gorm:"index:user_to_read_record"`
+	ReadTimestampUs int64  `gorm:"index:time_to_read_record"` // microsecond timestamp
 
 	BucketName string
 	ObjectName string
-	ReadSize   int64
+	ReadSize   uint64
 }
 
 // TableName is used to set ReadRecord Schema's table name in database

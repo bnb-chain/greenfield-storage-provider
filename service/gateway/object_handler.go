@@ -16,7 +16,7 @@ import (
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 )
 
-// getObjectHandler handle get object request
+// getObjectHandler handles the get object request
 func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
@@ -45,7 +45,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 	}()
 
 	if gateway.downloader == nil {
-		log.Errorw("failed to get object due to not config downloader")
+		log.Error("failed to get object due to not config downloader")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -129,7 +129,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 }
 
-// putObjectHandler handle put object request
+// putObjectHandler handles the put object request
 func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
@@ -156,7 +156,7 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 	}()
 
 	if gateway.uploader == nil {
-		log.Errorw("failed to put object due to not config uploader")
+		log.Error("failed to put object due to not config uploader")
 		errDescription = NotExistComponentError
 		return
 	}

@@ -11,13 +11,15 @@ import (
 )
 
 const (
-	putObjectRouterName           = "PutObject"
-	getObjectRouterName           = "GetObject"
-	approvalRouterName            = "GetApproval"
-	challengeRouterName           = "Challenge"
-	syncPieceRouterName           = "SyncPiece"
-	getUserBucketsRouterName      = "GetUserBuckets"
-	listObjectsByBucketRouterName = "ListObjectsByBucketName"
+	approvalRouterName             = "GetApproval"
+	putObjectRouterName            = "PutObject"
+	getObjectRouterName            = "GetObject"
+	challengeRouterName            = "Challenge"
+	syncPieceRouterName            = "SyncPiece"
+	getUserBucketsRouterName       = "GetUserBuckets"
+	listObjectsByBucketRouterName  = "ListObjectsByBucketName"
+	getBucketReadQuotaRouterName   = "GetBucketReadQuota"
+	listBucketReadRecordRouterName = "ListBucketReadRecord"
 )
 
 const (
@@ -28,12 +30,12 @@ const (
 // notFoundHandler log not found request info.
 func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	log.Errorw("not found handler", "header", r.Header, "host", r.Host, "url", r.URL)
-	s, err := io.ReadAll(r.Body)
-	if err != nil {
+	if _, err := io.ReadAll(r.Body); err != nil {
 		log.Errorw("failed to read the unknown request", "error", err)
 	}
-	w.WriteHeader(http.StatusNotFound)
-	w.Write(s)
+	if err := NoRouter.errorResponse(w, &requestContext{}); err != nil {
+		log.Errorw("failed to response the unknown request", "error", err)
+	}
 }
 
 // registerHandler is used to register mux handlers.
@@ -50,6 +52,20 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
 		HandlerFunc(g.getObjectHandler)
+	bucketRouter.NewRoute().
+		Name(getBucketReadQuotaRouterName).
+		Methods(http.MethodGet).
+		Queries(model.GetBucketReadQuotaQuery, "",
+			model.GetBucketReadQuotaMonthQuery, "{year_month}").
+		HandlerFunc(g.getBucketReadQuotaHandler)
+	bucketRouter.NewRoute().
+		Name(listBucketReadRecordRouterName).
+		Methods(http.MethodGet).
+		Queries(model.ListBucketReadRecordQuery, "",
+			model.ListBucketReadRecordMaxRecordsQuery, "{max_records}",
+			model.StartTimestampUs, "{start_ts}",
+			model.EndTimestampUs, "{end_ts}").
+		HandlerFunc(g.listBucketReadRecordHandler)
 	bucketRouter.NewRoute().
 		Name(listObjectsByBucketRouterName).
 		Methods(http.MethodGet).

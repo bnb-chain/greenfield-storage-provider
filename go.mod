@@ -22,7 +22,6 @@ require (
 	github.com/bnb-chain/greenfield-go-sdk v0.0.5
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
-	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.7
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
@@ -43,7 +42,6 @@ require (
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20230131160201-f062dba9d201
 	google.golang.org/grpc v1.53.0
-	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
 	gorm.io/driver/mysql v1.4.6
 	gorm.io/gorm v1.24.5
 )
@@ -69,6 +67,7 @@ require (
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
@@ -199,6 +198,7 @@ require (
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20230223222841-637eb2293923 // indirect
+	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
