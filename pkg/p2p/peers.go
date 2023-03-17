@@ -15,7 +15,7 @@ import (
 
 const (
 	// PeerFailureMax defines the threshold of setting node to fail
-	PeerFailureMax = 2
+	PeerFailureMax = 1
 	// PrunePeersNumberMax defines the threshold to trigger the prune p2p node
 	PrunePeersNumberMax = 10
 	// PeerSpUnspecified defines default sp operator address
@@ -59,8 +59,6 @@ func (p *Peer) Reset() {
 	p.last = time.Now().Unix()
 }
 
-type Peers []*Peer
-
 // PeerProvider implements the pruning function of permanent nodes. Ping service only add permanent node,
 // for zombie nodes, PeerProvider's pruning strategy takes into account the information of the storage
 // provider dimension, and uses a very conservative pruning strategy. Nodes are only pruned if there are
@@ -69,7 +67,7 @@ type Peers []*Peer
 type PeerProvider struct {
 	peerStore peerstore.Peerstore
 	peers     map[peer.ID]*Peer
-	spPeers   map[string]Peers
+	spPeers   map[string][]*Peer
 	mux       sync.RWMutex
 }
 
@@ -78,7 +76,7 @@ func NewPeerProvider(store peerstore.Peerstore) *PeerProvider {
 	return &PeerProvider{
 		peerStore: store,
 		peers:     make(map[peer.ID]*Peer),
-		spPeers:   make(map[string]Peers),
+		spPeers:   make(map[string][]*Peer),
 	}
 }
 
@@ -86,14 +84,14 @@ func NewPeerProvider(store peerstore.Peerstore) *PeerProvider {
 func (pr *PeerProvider) UpdateSp(SPs []string) {
 	pr.mux.Lock()
 	defer pr.mux.Unlock()
-	sp2Peers := make(map[string]Peers)
+	sp2Peers := make(map[string][]*Peer)
 	sp2Peers[PeerSpUnspecified] = pr.spPeers[PeerSpUnspecified]
 	for _, sp := range SPs {
 		peers, ok := pr.spPeers[sp]
 		if ok {
 			sp2Peers[sp] = peers
 		} else {
-			sp2Peers[sp] = make(Peers, 0)
+			sp2Peers[sp] = make([]*Peer, 0)
 		}
 	}
 	pr.spPeers = sp2Peers
@@ -126,26 +124,37 @@ func (pr *PeerProvider) AddPeer(peerID peer.ID, sp string, addr ma.Multiaddr) {
 	if _, ok := pr.spPeers[sp]; !ok {
 		sp = PeerSpUnspecified
 	}
-	peer, ok := pr.peers[peerID]
+	node, ok := pr.peers[peerID]
 	if !ok {
-		peer = &Peer{
+		node = &Peer{
 			peerID: peerID,
 			sp:     sp,
 			addr:   addr,
 		}
-		pr.peers[peerID] = peer
-		pr.spPeers[sp] = append(pr.spPeers[sp], peer)
-	} else {
-		peer.Reset()
+		pr.peers[node.peerID] = node
 	}
+	if _, ok = pr.spPeers[sp]; !ok {
+		pr.spPeers[sp] = make([]*Peer, 0)
+	}
+	find := false
+	for _, spPeer := range pr.spPeers[sp] {
+		if node.peerID.String() == spPeer.peerID.String() {
+			find = true
+			break
+		}
+	}
+	if !find {
+		pr.spPeers[sp] = append(pr.spPeers[sp], node)
+	}
+	node.Reset()
 	pr.prunePeers()
 }
 
 // prunePeers deletes the peers that in fail state and there are enough backups
 // notice: no lock for prune peers, only be called by DeletePeer and AddPeer
 func (pr *PeerProvider) prunePeers() {
-	sp2Peers := make(map[string]Peers)
-	sps := maps.SortKeys(pr.spPeers)
+	sp2Peers := pr.spPeers
+	sps := maps.SortKeys(sp2Peers)
 	for _, sp := range sps {
 		peers := pr.spPeers[sp]
 		if len(peers) <= PrunePeersNumberMax {

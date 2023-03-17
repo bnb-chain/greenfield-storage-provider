@@ -178,7 +178,7 @@ func (n *Node) eventloop() {
 // broadcast sends request to all p2p nodes
 func (n *Node) broadcast(pc protocol.ID, data proto.Message) {
 	for _, peerID := range n.node.Peerstore().PeersWithAddrs() {
-		log.Debugw("broadcast ping to peer", "peer_id", peerID)
+		log.Debugw("broadcast msg to peer", "peer_id", peerID, "protocol", pc)
 		if strings.Compare(n.node.ID().String(), peerID.String()) == 0 {
 			continue
 		}
@@ -191,14 +191,14 @@ func (n *Node) sendToPeer(peerID peer.ID, pc protocol.ID, data proto.Message) er
 	host := n.node
 	s, err := host.NewStream(context.Background(), peerID, pc)
 	if err != nil {
-		log.Warnw("failed to init stream", "error", err)
+		log.Debugw("failed to init stream", "peer_id", peerID, "protocol", pc, "error", err)
 		n.peers.DeletePeer(peerID)
 		return err
 	}
 	writer := ggio.NewFullWriter(s)
 	err = writer.WriteMsg(data)
 	if err != nil {
-		log.Infow("failed to send msg", "peer_id", peerID, "protocol", pc, "error", err)
+		log.Warnw("failed to send msg", "peer_id", peerID, "protocol", pc, "error", err)
 		s.Close()
 		n.peers.DeletePeer(peerID)
 		return err
