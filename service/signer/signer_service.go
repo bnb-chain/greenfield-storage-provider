@@ -3,6 +3,7 @@ package signer
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
@@ -84,7 +85,7 @@ func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *types.Si
 		return nil, err
 	}
 
-	msg := storagetypes.NewSecondarySpSignDoc(opAddr, integrityHash).GetSignBytes()
+	msg := storagetypes.NewSecondarySpSignDoc(opAddr, math.NewUint(req.ObjectId), integrityHash).GetSignBytes()
 	sig, err := signer.client.Sign(client.SignApproval, msg)
 	if err != nil {
 		return nil, err
