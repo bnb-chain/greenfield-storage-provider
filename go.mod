@@ -17,9 +17,9 @@ replace (
 require (
 	cosmossdk.io/math v1.0.0-beta.6
 	github.com/aws/aws-sdk-go v1.44.159
-	github.com/bnb-chain/greenfield v0.0.6
-	github.com/bnb-chain/greenfield-common/go v0.0.0-20230227091017-b60c7936a1c6
-	github.com/bnb-chain/greenfield-go-sdk v0.0.5
+	github.com/bnb-chain/greenfield v0.0.7
+	github.com/bnb-chain/greenfield-common/go v0.0.0-20230310033112-2d379fdc2987
+	github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230314083410-f0d6dbbec179
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
 	github.com/cosmos/cosmos-sdk v0.46.7

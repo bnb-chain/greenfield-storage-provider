@@ -39,6 +39,7 @@ func (challenge *Challenge) ChallengePiece(
 		log.CtxErrorw(ctx, "failed to get payload", "error", err)
 		return
 	}
-	log.CtxInfow(ctx, "succeed to challenge the payload")
+	log.CtxInfow(ctx, "success to challenge the payload", "object_id", req.GetObjectId(),
+		"piece_idx", req.GetSegmentIdx(), "replicate_idx", req.GetReplicaIdx(), "segment_count", len(integrity.Checksum))
 	return
 }

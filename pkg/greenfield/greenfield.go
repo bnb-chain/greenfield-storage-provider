@@ -56,7 +56,7 @@ func NewGreenfield(cfg *GreenfieldChainConfig) (*Greenfield, error) {
 			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddresses, config.TendermintAddresses,
 				cfg.ChainID, chain.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials()))),
 		}
-		client.gnfdCompositeClient, _ = client.gnfdCompositeClients.GetClient()
+		client.gnfdCompositeClient = client.gnfdCompositeClients.GetClient()
 		clients = append(clients, client)
 	}
 	greenfield := &Greenfield{
@@ -101,11 +101,11 @@ func (greenfield *Greenfield) updateClient() {
 				maxHeightClient = greenfield.getCurrentClient()
 			)
 			for _, client := range greenfield.backUpClients {
-				gnfdCompositeClient, err := client.gnfdCompositeClients.GetClient()
-				if err != nil {
-					log.Errorw("get composite client failed ", "node_addr", client.Provider, "error", err)
-					continue
-				}
+				gnfdCompositeClient := client.gnfdCompositeClients.GetClient()
+				// if err != nil {
+				// 	log.Errorw("get composite client failed ", "node_addr", client.Provider, "error", err)
+				// 	continue
+				// }
 				status, err := gnfdCompositeClient.RpcClient.TmClient.Status(context.Background())
 				if err != nil {
 					log.Errorw("get status failed", "node_addr", client.Provider, "error", err)
