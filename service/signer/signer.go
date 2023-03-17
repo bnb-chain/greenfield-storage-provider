@@ -22,10 +22,10 @@ var _ lifecycle.Service = &SignerServer{}
 
 // SignerServer signer service
 type SignerServer struct {
-	config      *SignerConfig
-	chainConfig *gnfd.GreenfieldChainConfig
-	whitelist   *whitelist.BasicNet
-	client      *client.GreenfieldChainSignClient
+	config       *SignerConfig
+	chainConfig  *gnfd.GreenfieldChainConfig
+	svcWhitelist *whitelist.BasicNet
+	client       *client.GreenfieldChainSignClient
 
 	server *grpc.Server
 }
@@ -34,13 +34,13 @@ type SignerServer struct {
 func NewSignerServer(config *SignerConfig, chainConfig *gnfd.GreenfieldChainConfig) (*SignerServer, error) {
 	overrideConfigFromEnv(config)
 
-	whitelist := whitelist.NewBasicNet()
+	svcWhitelist := whitelist.NewBasicNet()
 	for _, cidr := range config.WhitelistCIDR {
 		_, subnet, err := net.ParseCIDR(cidr)
 		if err != nil {
 			return nil, err
 		}
-		whitelist.Add(subnet)
+		svcWhitelist.Add(subnet)
 	}
 	if len(chainConfig.NodeAddr) == 0 {
 		return nil, errors.New("greenfield nodes missing")
@@ -63,10 +63,10 @@ func NewSignerServer(config *SignerConfig, chainConfig *gnfd.GreenfieldChainConf
 		return nil, err
 	}
 	return &SignerServer{
-		config:      config,
-		chainConfig: chainConfig,
-		client:      client,
-		whitelist:   whitelist,
+		config:       config,
+		chainConfig:  chainConfig,
+		client:       client,
+		svcWhitelist: svcWhitelist,
 	}, nil
 }
 

@@ -77,11 +77,11 @@ func (client *SignerClient) VerifyObjectApproval(ctx context.Context,
 }
 
 func (client *SignerClient) SignIntegrityHash(ctx context.Context,
-	objectId uint64,
+	objectID uint64,
 	checksum [][]byte, opts ...grpc.CallOption,
 ) ([]byte, []byte, error) {
 	resp, err := client.signer.SignIntegrityHash(ctx,
-		&types.SignIntegrityHashRequest{Data: checksum, ObjectId: objectId}, opts...)
+		&types.SignIntegrityHashRequest{Data: checksum, ObjectId: objectID}, opts...)
 	if err != nil {
 		return []byte{}, []byte{}, err
 	}

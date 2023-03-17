@@ -3,7 +3,7 @@ package signer
 import (
 	"context"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
@@ -85,7 +85,7 @@ func (signer *SignerServer) SignIntegrityHash(ctx context.Context, req *types.Si
 		return nil, err
 	}
 
-	msg := storagetypes.NewSecondarySpSignDoc(opAddr, math.NewUint(req.ObjectId), integrityHash).GetSignBytes()
+	msg := storagetypes.NewSecondarySpSignDoc(opAddr, sdkmath.NewUint(req.ObjectId), integrityHash).GetSignBytes()
 	sig, err := signer.client.Sign(client.SignApproval, msg)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func (signer *SignerServer) SealObjectOnChain(ctx context.Context, req *types.Se
 func (signer *SignerServer) IPWhitelistInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		ip := util.GetIPFromGRPCContext(ctx)
-		if !signer.whitelist.Permitted(ip) {
+		if !signer.svcWhitelist.Permitted(ip) {
 			return nil, merrors.ErrIPBlocked
 		}
 
