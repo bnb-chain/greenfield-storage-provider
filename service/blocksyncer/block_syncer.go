@@ -28,7 +28,7 @@ type BlockSyncer struct {
 	config    *tomlconfig.TomlConfig
 	name      string
 	parserCtx *parser.Context
-	running   atomic.Bool
+	running   atomic.Value
 }
 
 // NewBlockSyncerService create a BlockSyncer service to index block events data to db
@@ -110,8 +110,8 @@ func (s *BlockSyncer) Name() string {
 
 // Start running BlockSyncer service
 func (s *BlockSyncer) Start(ctx context.Context) error {
-	if s.running.Swap(true) {
-		return errors.New("block syncer has already started")
+	if s.running.Swap(true) == true {
+		return errors.New("block syncer hub has already started")
 	}
 	go s.serve(ctx)
 	return nil
@@ -119,7 +119,7 @@ func (s *BlockSyncer) Start(ctx context.Context) error {
 
 // Stop running BlockSyncer service
 func (s *BlockSyncer) Stop(ctx context.Context) error {
-	if !s.running.Swap(false) {
+	if s.running.Swap(false) == false {
 		return nil
 	}
 	return nil

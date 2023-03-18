@@ -22,9 +22,8 @@ import (
 type StorageProviderConfig struct {
 	Service           []string
 	SpOperatorAddress string
-	Domain            string
-	HTTPAddress       map[string]string
-	GRPCAddress       map[string]string
+	Endpoint          map[string]string
+	ListenAddress     map[string]string
 	SpDBConfig        *config.SQLDBConfig
 	PieceStoreConfig  *storage.PieceStoreConfig
 	ChainConfig       *gnfd.GreenfieldChainConfig
@@ -50,26 +49,33 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.UploaderService,
 		model.DownloaderService,
 		model.ChallengeService,
-		model.StoneNodeService,
-		model.SyncerService,
+		model.TaskNodeService,
+		model.ReceiverService,
 		model.SignerService,
 		model.MetadataService,
 		model.ManagerService,
 	},
-	GRPCAddress: map[string]string{
+	ListenAddress: map[string]string{
+		model.GatewayService:    model.GatewayHTTPAddress,
 		model.UploaderService:   model.UploaderGRPCAddress,
 		model.DownloaderService: model.DownloaderGRPCAddress,
 		model.ChallengeService:  model.ChallengeGRPCAddress,
-		model.SyncerService:     model.SyncerGRPCAddress,
-		model.StoneNodeService:  model.StoneNodeGRPCAddress,
+		model.ReceiverService:   model.ReceiverGRPCAddress,
+		model.TaskNodeService:   model.TaskNodeGRPCAddress,
 		model.SignerService:     model.SignerGRPCAddress,
 		model.MetadataService:   model.MetadataGRPCAddress,
 	},
-	HTTPAddress: map[string]string{
-		model.GatewayService: model.GatewayHTTPAddress,
+	Endpoint: map[string]string{
+		model.GatewayService:    "gnfd.nodereal.com",
+		model.UploaderService:   model.UploaderGRPCAddress,
+		model.DownloaderService: model.DownloaderGRPCAddress,
+		model.ChallengeService:  model.ChallengeGRPCAddress,
+		model.ReceiverService:   model.ReceiverGRPCAddress,
+		model.TaskNodeService:   model.TaskNodeGRPCAddress,
+		model.SignerService:     model.SignerGRPCAddress,
+		model.MetadataService:   model.MetadataGRPCAddress,
 	},
-	SpOperatorAddress: hex.EncodeToString([]byte("greenfield-storage-provider")),
-	Domain:            "gnfd.nodereal.com",
+	SpOperatorAddress: hex.EncodeToString([]byte(model.SpOperatorAddress)),
 	SpDBConfig:        DefaultSQLDBConfig,
 	PieceStoreConfig:  DefaultPieceStoreConfig,
 	ChainConfig:       DefaultGreenfieldChainConfig,

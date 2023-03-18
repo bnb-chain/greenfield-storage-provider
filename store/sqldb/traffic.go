@@ -1,40 +1,41 @@
 package sqldb
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"gorm.io/gorm"
 )
 
 // CheckQuotaAndAddReadRecord check current quota, and add read record
 func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
-	yearMonth := TimeToYearMonth(TimeUnixToTime(record.ReadTime))
+	yearMonth := TimeToYearMonth(TimestampUsToTime(record.ReadTimestampUs))
 	bucketTraffic, err := s.GetBucketTraffic(record.BucketID, yearMonth)
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if bucketTraffic == nil {
 		// insert, if not existed
 		insertBucketTraffic := &BucketTrafficTable{
-			BucketID:      record.BucketID,
-			Month:         yearMonth,
-			BucketName:    record.BucketName,
-			ReadCostSize:  0,
-			ReadQuotaSize: quota.ReadQuotaSize,
-			ModifiedTime:  time.Now(),
+			BucketID:         record.BucketID,
+			Month:            yearMonth,
+			BucketName:       record.BucketName,
+			ReadConsumedSize: 0,
+			ReadQuotaSize:    quota.ReadQuotaSize,
+			ModifiedTime:     time.Now(),
 		}
 		result := s.db.Create(insertBucketTraffic)
 		if result.Error != nil || result.RowsAffected != 1 {
 			return fmt.Errorf("failed to insert bucket traffic table: %s", result.Error)
 		}
 		bucketTraffic = &BucketTraffic{
-			BucketID:      insertBucketTraffic.BucketID,
-			YearMonth:     insertBucketTraffic.Month,
-			BucketName:    insertBucketTraffic.BucketName,
-			ReadCostSize:  insertBucketTraffic.ReadCostSize,
-			ReadQuotaSize: insertBucketTraffic.ReadQuotaSize,
+			BucketID:         insertBucketTraffic.BucketID,
+			YearMonth:        insertBucketTraffic.Month,
+			BucketName:       insertBucketTraffic.BucketName,
+			ReadConsumedSize: insertBucketTraffic.ReadConsumedSize,
+			ReadQuotaSize:    insertBucketTraffic.ReadQuotaSize,
 		}
 	}
 	if bucketTraffic.ReadQuotaSize != quota.ReadQuotaSize {
@@ -52,16 +53,16 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 	}
 
 	// check quota
-	if bucketTraffic.ReadCostSize+record.ReadSize > quota.ReadQuotaSize {
-		return errors.ErrCheckQuotaEnough
+	if bucketTraffic.ReadConsumedSize+record.ReadSize > quota.ReadQuotaSize {
+		return merrors.ErrCheckQuotaEnough
 	}
 
 	// update bucket traffic
 	result := s.db.Model(&BucketTrafficTable{}).
 		Where("bucket_id = ? and month = ?", bucketTraffic.BucketID, bucketTraffic.YearMonth).
 		Updates(BucketTrafficTable{
-			ReadCostSize: bucketTraffic.ReadCostSize + record.ReadSize,
-			ModifiedTime: time.Now(),
+			ReadConsumedSize: bucketTraffic.ReadConsumedSize + record.ReadSize,
+			ModifiedTime:     time.Now(),
 		})
 	if result.Error != nil || result.RowsAffected != 1 {
 		return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
@@ -69,13 +70,13 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 
 	// add read record
 	insertReadRecord := &ReadRecordTable{
-		BucketID:    record.BucketID,
-		ObjectID:    record.ObjectID,
-		UserAddress: record.UserAddress,
-		ReadTime:    record.ReadTime,
-		BucketName:  record.BucketName,
-		ObjectName:  record.ObjectName,
-		ReadSize:    record.ReadSize,
+		BucketID:        record.BucketID,
+		ObjectID:        record.ObjectID,
+		UserAddress:     record.UserAddress,
+		ReadTimestampUs: record.ReadTimestampUs,
+		BucketName:      record.BucketName,
+		ObjectName:      record.ObjectName,
+		ReadSize:        record.ReadSize,
 	}
 	result = s.db.Create(insertReadRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -92,20 +93,19 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketT
 	)
 
 	result = s.db.Where("bucket_id = ? and month = ?", bucketID, yearMonth).First(&queryReturn)
-	if result.Error == gorm.ErrRecordNotFound {
-		// not found
-		return nil, nil
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, result.Error
 	}
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query bucket traffic table: %s", result.Error)
 	}
 	return &BucketTraffic{
-		BucketID:      queryReturn.BucketID,
-		YearMonth:     queryReturn.Month,
-		BucketName:    queryReturn.BucketName,
-		ReadCostSize:  queryReturn.ReadCostSize,
-		ReadQuotaSize: queryReturn.ReadQuotaSize,
-		ModifyTime:    queryReturn.ModifiedTime.Unix(),
+		BucketID:         queryReturn.BucketID,
+		YearMonth:        queryReturn.Month,
+		BucketName:       queryReturn.BucketName,
+		ReadConsumedSize: queryReturn.ReadConsumedSize,
+		ReadQuotaSize:    queryReturn.ReadQuotaSize,
+		ModifyTime:       queryReturn.ModifiedTime.Unix(),
 	}, nil
 }
 
@@ -118,24 +118,27 @@ func (s *SpDBImpl) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, er
 	)
 
 	if timeRange.LimitNum <= 0 {
-		result = s.db.Where("read_time >= ? and read_time < ?", timeRange.StartTime, timeRange.EndTime).
+		result = s.db.Where("read_timestamp_us >= ? and read_timestamp_us < ?", timeRange.StartTimestampUs, timeRange.EndTimestampUs).
 			Find(&queryReturns)
 	} else {
-		result = s.db.Where("read_time >= ? and read_time < ?", timeRange.StartTime, timeRange.EndTime).
+		result = s.db.Where("read_timestamp_us >= ? and read_timestamp_us < ?", timeRange.StartTimestampUs, timeRange.EndTimestampUs).
 			Limit(timeRange.LimitNum).Find(&queryReturns)
+	}
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, result.Error
 	}
 	if result.Error != nil {
 		return records, fmt.Errorf("failed to read record table: %s", result.Error)
 	}
 	for _, record := range queryReturns {
 		records = append(records, &ReadRecord{
-			BucketID:    record.BucketID,
-			ObjectID:    record.ObjectID,
-			UserAddress: record.UserAddress,
-			BucketName:  record.BucketName,
-			ObjectName:  record.ObjectName,
-			ReadSize:    record.ReadSize,
-			ReadTime:    record.ReadTime,
+			BucketID:        record.BucketID,
+			ObjectID:        record.ObjectID,
+			UserAddress:     record.UserAddress,
+			BucketName:      record.BucketName,
+			ObjectName:      record.ObjectName,
+			ReadSize:        record.ReadSize,
+			ReadTimestampUs: record.ReadTimestampUs,
 		})
 	}
 	return records, nil
@@ -150,12 +153,12 @@ func (s *SpDBImpl) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRa
 	)
 
 	if timeRange.LimitNum <= 0 {
-		result = s.db.Where("read_time >= ? and read_time < ? and bucket_id = ?",
-			timeRange.StartTime, timeRange.EndTime, bucketID).
+		result = s.db.Where("read_timestamp_us >= ? and read_timestamp_us < ? and bucket_id = ?",
+			timeRange.StartTimestampUs, timeRange.EndTimestampUs, bucketID).
 			Find(&queryReturns)
 	} else {
-		result = s.db.Where("read_time >= ? and read_time < ? and bucket_id = ?",
-			timeRange.StartTime, timeRange.EndTime, bucketID).
+		result = s.db.Where("read_timestamp_us >= ? and read_timestamp_us < ? and bucket_id = ?",
+			timeRange.StartTimestampUs, timeRange.EndTimestampUs, bucketID).
 			Limit(timeRange.LimitNum).Find(&queryReturns)
 	}
 	if result.Error != nil {
@@ -163,13 +166,13 @@ func (s *SpDBImpl) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRa
 	}
 	for _, record := range queryReturns {
 		records = append(records, &ReadRecord{
-			BucketID:    record.BucketID,
-			ObjectID:    record.ObjectID,
-			UserAddress: record.UserAddress,
-			BucketName:  record.BucketName,
-			ObjectName:  record.ObjectName,
-			ReadSize:    record.ReadSize,
-			ReadTime:    record.ReadTime,
+			BucketID:        record.BucketID,
+			ObjectID:        record.ObjectID,
+			UserAddress:     record.UserAddress,
+			BucketName:      record.BucketName,
+			ObjectName:      record.ObjectName,
+			ReadSize:        record.ReadSize,
+			ReadTimestampUs: record.ReadTimestampUs,
 		})
 	}
 	return records, nil
@@ -184,12 +187,12 @@ func (s *SpDBImpl) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRa
 	)
 
 	if timeRange.LimitNum <= 0 {
-		result = s.db.Where("read_time >= ? and read_time < ? and object_id = ?",
-			timeRange.StartTime, timeRange.EndTime, objectID).
+		result = s.db.Where("read_timestamp_us >= ? and read_timestamp_us < ? and object_id = ?",
+			timeRange.StartTimestampUs, timeRange.EndTimestampUs, objectID).
 			Find(&queryReturns)
 	} else {
-		result = s.db.Where("read_time >= ? and read_time < ? and object_id = ?",
-			timeRange.StartTime, timeRange.EndTime, objectID).
+		result = s.db.Where("read_timestamp_us >= ? and read_timestamp_us < ? and object_id = ?",
+			timeRange.StartTimestampUs, timeRange.EndTimestampUs, objectID).
 			Limit(timeRange.LimitNum).Find(&queryReturns)
 	}
 	if result.Error != nil {
@@ -197,13 +200,13 @@ func (s *SpDBImpl) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRa
 	}
 	for _, record := range queryReturns {
 		records = append(records, &ReadRecord{
-			BucketID:    record.BucketID,
-			ObjectID:    record.ObjectID,
-			UserAddress: record.UserAddress,
-			BucketName:  record.BucketName,
-			ObjectName:  record.ObjectName,
-			ReadSize:    record.ReadSize,
-			ReadTime:    record.ReadTime,
+			BucketID:        record.BucketID,
+			ObjectID:        record.ObjectID,
+			UserAddress:     record.UserAddress,
+			BucketName:      record.BucketName,
+			ObjectName:      record.ObjectName,
+			ReadSize:        record.ReadSize,
+			ReadTimestampUs: record.ReadTimestampUs,
 		})
 	}
 	return records, nil
@@ -218,12 +221,12 @@ func (s *SpDBImpl) GetUserReadRecord(userAddress string, timeRange *TrafficTimeR
 	)
 
 	if timeRange.LimitNum <= 0 {
-		result = s.db.Where("read_time >= ? and read_time < ? and user_address = ?",
-			timeRange.StartTime, timeRange.EndTime, userAddress).
+		result = s.db.Where("read_timestamp_us >= ? and read_timestamp_us < ? and user_address = ?",
+			timeRange.StartTimestampUs, timeRange.EndTimestampUs, userAddress).
 			Find(&queryReturns)
 	} else {
-		result = s.db.Where("read_time >= ? and read_time < ? and user_address = ?",
-			timeRange.StartTime, timeRange.EndTime, userAddress).
+		result = s.db.Where("read_timestamp_us >= ? and read_timestamp_us < ? and user_address = ?",
+			timeRange.StartTimestampUs, timeRange.EndTimestampUs, userAddress).
 			Limit(timeRange.LimitNum).Find(&queryReturns)
 	}
 	if result.Error != nil {
@@ -231,13 +234,13 @@ func (s *SpDBImpl) GetUserReadRecord(userAddress string, timeRange *TrafficTimeR
 	}
 	for _, record := range queryReturns {
 		records = append(records, &ReadRecord{
-			BucketID:    record.BucketID,
-			ObjectID:    record.ObjectID,
-			UserAddress: record.UserAddress,
-			BucketName:  record.BucketName,
-			ObjectName:  record.ObjectName,
-			ReadSize:    record.ReadSize,
-			ReadTime:    record.ReadTime,
+			BucketID:        record.BucketID,
+			ObjectID:        record.ObjectID,
+			UserAddress:     record.UserAddress,
+			BucketName:      record.BucketName,
+			ObjectName:      record.ObjectName,
+			ReadSize:        record.ReadSize,
+			ReadTimestampUs: record.ReadTimestampUs,
 		})
 	}
 	return records, nil

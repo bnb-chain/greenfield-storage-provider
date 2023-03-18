@@ -242,7 +242,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		return err
 	}
 	if !accountExist {
-		log.Errorw("account is not exist", "address", addr.String(), "error", err)
+		log.Errorw("account is not existed", "address", addr.String(), "error", err)
 		return errors.ErrNoPermission
 	}
 
@@ -284,10 +284,10 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 				"status", reqContext.objectInfo.GetObjectStatus())
 			return errors.ErrCheckObjectSealed
 		}
-		if reqContext.objectInfo.GetOwner() != addr.String() {
-			log.Errorw("failed to auth due to account is not equal to object owner",
-				"object_owner", reqContext.objectInfo.GetOwner(),
-				"request_address", addr.String())
+		if isAllow, err := g.chain.VerifyGetObjectPermission(context.Background(), addr.String(),
+			reqContext.bucketName, reqContext.objectName); !isAllow || err != nil {
+			log.Errorw("failed to auth due to verify permission",
+				"is_allow", isAllow, "error", err)
 			return errors.ErrNoPermission
 		}
 		if reqContext.bucketInfo.GetPrimarySpAddress() != g.config.SpOperatorAddress {
@@ -298,12 +298,25 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		}
 		streamRecord, err := g.chain.QueryStreamRecord(context.Background(), reqContext.bucketInfo.PaymentAddress)
 		if err != nil {
-			log.Errorw("failed to check billing", "error", err)
+			log.Errorw("failed to check payment account status", "error", err)
 			return err
 		}
 		if streamRecord.Status != paymenttypes.STREAM_ACCOUNT_STATUS_ACTIVE {
 			log.Errorw("failed to check payment due to account status is not active", "status", streamRecord.Status)
 			return errors.ErrCheckPaymentAccountActive
+		}
+	case getBucketReadQuotaRouterName, listBucketReadRecordRouterName:
+		if reqContext.bucketInfo, err = g.chain.QueryBucketInfo(
+			context.Background(), reqContext.bucketName); err != nil {
+			log.Errorw("failed to query bucket info and object info on chain",
+				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
+			return err
+		}
+		if reqContext.bucketInfo.GetOwner() != addr.String() {
+			log.Errorw("failed to auth due to account is not equal to bucket owner",
+				"bucket_owner", reqContext.bucketInfo.GetOwner(),
+				"request_address", addr.String())
+			return errors.ErrNoPermission
 		}
 	}
 	return nil

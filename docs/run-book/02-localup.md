@@ -4,10 +4,10 @@
 * SQLDB: MariaDB - 5.5.68 and Aurora(MySQL 5.7) 2.10.3 has been practiced.
 
 ## Setup local greenfield chain
-[setup private netWork](https://github.com/bnb-chain/greenfield/blob/master/docs/tutorial/03-local-network.md)
+[setup private network](https://github.com/bnb-chain/greenfield/blob/master/docs/tutorial/03-local-network.md)
 
 ## Add SP to greenfield chain
-[add sp to greenfield chain](https://github.com/bnb-chain/greenfield/blob/fynn/doc/docs/tutorial/07-storage-provider.md)
+[add sp to greenfield chain](https://github.com/bnb-chain/greenfield/blob/master/docs/cli/storage-provider.md)
 
 ## Setup local sps
 1. Generate localup env
@@ -54,7 +54,7 @@ deployment/localup/local_env/
 │   ├── data           # piecestore data directory
 │   ├── db.info
 │   ├── gnfd-sp0
-│   ├── gnfd-sp.log    # gnfd log file
+│   ├── gnfd-sp.log    # gnfd-sp log file
 │   ├── log.txt
 │   └── sp.info
 ├── sp1

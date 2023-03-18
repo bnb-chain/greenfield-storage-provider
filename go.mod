@@ -1,14 +1,15 @@
 module github.com/bnb-chain/greenfield-storage-provider
 
-go 1.19
+go 1.18
 
 replace (
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b432c
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.7
+	// TODO: upgrade github.com/bnb-chain/greenfield and github.com/bnb-chain/greenfield, github.com/cosmos/cosmos-sdk to official release
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230317064252-2f6792df78ab
+
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	//github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.9
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.9
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230313080333-afa15006962d
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.2-0.20230316090342-debd6c0c82a7
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230315120403-3093b5ed5267
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.2
 )
@@ -19,13 +20,9 @@ require (
 	github.com/bnb-chain/greenfield v0.0.7
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230310033112-2d379fdc2987
 	github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230314083410-f0d6dbbec179
-	//github.com/bnb-chain/greenfield-common/go v0.0.0-20230227091017-b60c7936a1c6
-	//github.com/bnb-chain/greenfield-go-sdk v0.0.5
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
-	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
 	github.com/cosmos/cosmos-sdk v0.46.7
-	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.8.2
@@ -45,7 +42,6 @@ require (
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20230131160201-f062dba9d201
 	google.golang.org/grpc v1.53.0
-	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
 	gorm.io/driver/mysql v1.4.6
 	gorm.io/gorm v1.24.5
 )
@@ -71,7 +67,9 @@ require (
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
+	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.4 // indirect
 	github.com/cosmos/ibc-go/v5 v5.2.0 // indirect
@@ -200,6 +198,7 @@ require (
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20230223222841-637eb2293923 // indirect
+	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

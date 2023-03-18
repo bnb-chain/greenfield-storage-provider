@@ -21,7 +21,7 @@ func NewSignerClient(address string) (*SignerClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Errorw("failed to dail signer", "error", err)
+		log.Errorw("failed to dial signer", "error", err)
 		return nil, err
 	}
 	client := &SignerClient{
@@ -77,9 +77,11 @@ func (client *SignerClient) VerifyObjectApproval(ctx context.Context,
 }
 
 func (client *SignerClient) SignIntegrityHash(ctx context.Context,
-	checksum [][]byte, opts ...grpc.CallOption) ([]byte, []byte, error) {
+	objectID uint64,
+	checksum [][]byte, opts ...grpc.CallOption,
+) ([]byte, []byte, error) {
 	resp, err := client.signer.SignIntegrityHash(ctx,
-		&types.SignIntegrityHashRequest{Data: checksum}, opts...)
+		&types.SignIntegrityHashRequest{Data: checksum, ObjectId: objectID}, opts...)
 	if err != nil {
 		return []byte{}, []byte{}, err
 	}

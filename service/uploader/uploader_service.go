@@ -35,7 +35,8 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
-		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checksum)
+		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(),
+			integrityMeta.ObjectID, checksum)
 		if err != nil {
 			log.Errorw("failed to sign integrity hash", "err", err)
 			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
@@ -55,9 +56,9 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 		traceInfo.IntegrityHash = integrityHash
 		traceInfo.Signature = signature
 		uploader.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
-		err = uploader.stone.ReplicateObject(context.Background(), traceInfo.GetObjectInfo())
+		err = uploader.taskNode.ReplicateObject(context.Background(), traceInfo.GetObjectInfo())
 		if err != nil {
-			log.Errorw("failed to notify stone node to replicate object", "error", err)
+			log.Errorw("failed to notify task node to replicate object", "error", err)
 			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
 				servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
 			return

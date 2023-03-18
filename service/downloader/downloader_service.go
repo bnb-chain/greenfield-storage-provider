@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -9,11 +10,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	"gorm.io/gorm"
 )
 
 var _ types.DownloaderServiceServer = &Downloader{}
 
-// DownloaderObject download the payload of the object.
+// GetObject downloads the payload of the object.
 func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	stream types.DownloaderService_GetObjectServer) (err error) {
 	var (
@@ -22,6 +24,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		length       uint64
 		isValidRange bool
 	)
+
 	ctx := log.Context(context.Background(), req)
 	resp := &types.GetObjectResponse{}
 	defer func() {
@@ -29,7 +32,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 			return
 		}
 		resp.IsValidRange = isValidRange
-		log.CtxInfow(ctx, "finish to download object", "error", err, "sendSize", size)
+		log.CtxInfow(ctx, "succeed to get object", "send_size", size)
 	}()
 
 	bucketInfo := req.GetBucketInfo()
@@ -37,16 +40,16 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	if err = downloader.spDB.CheckQuotaAndAddReadRecord(
 		// TODO: support range read
 		&sqldb.ReadRecord{
-			BucketID:    bucketInfo.Id.Uint64(),
-			ObjectID:    objectInfo.Id.Uint64(),
-			UserAddress: req.GetUserAddress(),
-			BucketName:  bucketInfo.GetBucketName(),
-			ObjectName:  objectInfo.GetObjectName(),
-			ReadSize:    int64(objectInfo.PayloadSize),
-			ReadTime:    sqldb.GetCurrentUnixTime(),
+			BucketID:        bucketInfo.Id.Uint64(),
+			ObjectID:        objectInfo.Id.Uint64(),
+			UserAddress:     req.GetUserAddress(),
+			BucketName:      bucketInfo.GetBucketName(),
+			ObjectName:      objectInfo.GetObjectName(),
+			ReadSize:        objectInfo.GetPayloadSize(),
+			ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
 		},
 		&sqldb.BucketQuota{
-			ReadQuotaSize: int64(bucketInfo.GetReadQuota()) + model.DefaultReadQuotaSize,
+			ReadQuotaSize: bucketInfo.GetReadQuota() + model.DefaultSpFreeReadQuotaSize,
 		},
 	); err != nil {
 		log.Errorw("failed to check billing due to bucket quota", "error", err)
@@ -98,7 +101,7 @@ type segments []*segment
 // download interval [start, end]
 func (downloader *Downloader) DownloadPieceInfo(objectID, objectSize, start, end uint64) (pieceInfo segments, err error) {
 	if objectSize == 0 || start > objectSize || end < start {
-		return pieceInfo, fmt.Errorf("param error, object size: %d, start: %d, end: %d", objectSize, start, end)
+		return pieceInfo, fmt.Errorf("failed to check param, object size: %d, start: %d, end: %d", objectSize, start, end)
 	}
 	params, err := downloader.spDB.GetStorageParams()
 	if err != nil {
@@ -142,4 +145,62 @@ func (downloader *Downloader) DownloadPieceInfo(objectID, objectSize, start, end
 		}
 	}
 	return
+}
+
+// GetBucketReadQuota get the quota info of the specified month.
+func (downloader *Downloader) GetBucketReadQuota(ctx context.Context, req *types.GetBucketReadQuotaRequest) (*types.GetBucketReadQuotaResponse, error) {
+	bucketTraffic, err := downloader.spDB.GetBucketTraffic(req.GetBucketInfo().Id.Uint64(), req.GetYearMonth())
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return &types.GetBucketReadQuotaResponse{
+			QuotaSize:       req.GetBucketInfo().GetReadQuota(),
+			SpFreeQuotaSize: model.DefaultSpFreeReadQuotaSize,
+			ConsumedSize:    0,
+		}, nil
+	}
+	if err != nil {
+		log.Errorw("failed to get bucket traffic", "error", err)
+		return nil, err
+	}
+	return &types.GetBucketReadQuotaResponse{
+		QuotaSize:       req.GetBucketInfo().GetReadQuota(),
+		SpFreeQuotaSize: model.DefaultSpFreeReadQuotaSize,
+		ConsumedSize:    bucketTraffic.ReadConsumedSize,
+	}, nil
+}
+
+// ListBucketReadRecord get read record list of the specified time range.
+func (downloader *Downloader) ListBucketReadRecord(ctx context.Context, req *types.ListBucketReadRecordRequest) (*types.ListBucketReadRecordResponse, error) {
+	records, err := downloader.spDB.GetBucketReadRecord(req.GetBucketInfo().Id.Uint64(), &sqldb.TrafficTimeRange{
+		StartTimestampUs: req.StartTimestampUs,
+		EndTimestampUs:   req.EndTimestampUs,
+		LimitNum:         int(req.MaxRecordNum),
+	})
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return &types.ListBucketReadRecordResponse{
+			NextStartTimestampUs: 0,
+		}, nil
+	}
+	if err != nil {
+		log.Errorw("failed to list bucket read record", "error", err)
+		return nil, err
+	}
+	var nextStartTimestampUs int64
+	readRecords := make([]*types.ReadRecord, 0)
+	for _, r := range records {
+		readRecords = append(readRecords, &types.ReadRecord{
+			ObjectName:     r.ObjectName,
+			ObjectId:       r.ObjectID,
+			AccountAddress: r.UserAddress,
+			TimestampUs:    r.ReadTimestampUs,
+			ReadSize:       r.ReadSize,
+		})
+		if r.ReadTimestampUs >= nextStartTimestampUs {
+			nextStartTimestampUs = r.ReadTimestampUs + 1
+		}
+	}
+	resp := &types.ListBucketReadRecordResponse{
+		ReadRecords:          readRecords,
+		NextStartTimestampUs: nextStartTimestampUs,
+	}
+	return resp, nil
 }

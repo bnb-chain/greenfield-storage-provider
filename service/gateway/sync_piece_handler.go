@@ -10,11 +10,12 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	syncertypes "github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
+	receivertypes "github.com/bnb-chain/greenfield-storage-provider/service/receiver/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
-func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
+// syncPieceHandler handle sync piece data request
+func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err                    error
 		errDescription         *errorDescription
@@ -41,8 +42,8 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if g.syncer == nil {
-		log.Errorw("failed to sync data due to not config syncer")
+	if gateway.receiver == nil {
+		log.Error("failed to sync data due to not config receiver")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -69,7 +70,7 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stream, err := g.syncer.SyncObject(context.Background())
+	stream, err := gateway.receiver.SyncObject(context.Background())
 	if err != nil {
 		log.Errorw("failed to sync piece", "error", err)
 		errDescription = InternalError
@@ -83,7 +84,7 @@ func (g *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if readN > 0 {
-			if err = stream.Send(&syncertypes.SyncObjectRequest{
+			if err = stream.Send(&receivertypes.SyncObjectRequest{
 				ObjectInfo:  &objectInfo,
 				ReplicaIdx:  replicaIdx,
 				SegmentSize: segmentSize,

@@ -1,10 +1,10 @@
 syntax = "proto3";
-package service.syncer.types;
+package service.receiver.types;
 
 import "greenfield/storage/types.proto";
 import "service/types/storage_provider.proto";
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/syncer/types";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/receiver/types";
 
 // SyncObjectRequest is request type for the SyncObject RPC method.
 message SyncObjectRequest {
@@ -38,8 +38,8 @@ message QuerySyncingObjectResponse {
   service.types.SegmentInfo segment_info = 1;
 }
 
-// SyncerService defines the gRPC service of syncing the replicate object .
-service SyncerService {
+// ReceiverService defines the gRPC service of syncing the replicate object .
+service ReceiverService {
   // SyncObject an object payload to storage provider.
   rpc SyncObject(stream SyncObjectRequest) returns (SyncObjectResponse) {};
   // QuerySyncingObject a syncing object info by object id.

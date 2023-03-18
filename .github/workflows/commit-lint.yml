@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         node-version: [14.x]
-        os: [ubuntu-20.04]
+        os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -49,7 +49,10 @@ jobs:
           configFile: /github/workspace/.github/commitlint.config.js
 
   branch-naming-rules:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: deepakputhraya/action-branch-name@master
         with:
@@ -57,4 +60,4 @@ jobs:
           allowed_prefixes: 'build,chore,ci,docs,feat,fix,perf,refactor,revert,style,test'
           ignore: master,develop,release
           min_length: 5
-          max_length: 20
+          max_length: 30

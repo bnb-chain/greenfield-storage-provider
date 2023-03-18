@@ -1,8 +1,7 @@
-package syncer
+package receiver
 
 import (
 	"context"
-	"encoding/hex"
 	"io"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -10,15 +9,15 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
-	"github.com/bnb-chain/greenfield-storage-provider/service/syncer/types"
+	"github.com/bnb-chain/greenfield-storage-provider/service/receiver/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
-var _ types.SyncerServiceServer = &Syncer{}
+var _ types.ReceiverServiceServer = &Receiver{}
 
 // SyncObject an object payload to storage provider.
-func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (err error) {
+func (receiver *Receiver) SyncObject(stream types.ReceiverService_SyncObjectServer) (err error) {
 	var (
 		resp          types.SyncObjectResponse
 		pstream       = payloadstream.NewAsyncPayloadStream()
@@ -30,33 +29,30 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 
 	defer func(resp *types.SyncObjectResponse, err error) {
 		if err != nil {
-			log.Errorw("failed to replicate payload", "err", err)
+			log.Errorw("failed to replicate payload", "error", err)
 			return
 		}
-		resp.IntegrityHash, resp.Signature, err = syncer.signer.SignIntegrityHash(context.Background(), checksum)
-		if err != nil {
-			log.Errorw("failed to sign integrity hash", "err", err)
+		if resp.IntegrityHash, resp.Signature, err = receiver.signer.SignIntegrityHash(context.Background(),
+			integrityMeta.ObjectID, checksum); err != nil {
+			log.Errorw("failed to sign integrity hash", "error", err)
 			return
 		}
 		integrityMeta.Checksum = checksum
 		integrityMeta.IntegrityHash = resp.IntegrityHash
 		integrityMeta.Signature = resp.Signature
-		log.Debugw("integrity meta", "integrity hash", hex.EncodeToString(integrityMeta.IntegrityHash),
-			"integrity signature", hex.EncodeToString(integrityMeta.Signature))
-		for i, pieceHash := range integrityMeta.Checksum {
-			log.Debugw("integrity meta", "piece hash idx", i, "piece hash", hex.EncodeToString(pieceHash))
-		}
-		err = syncer.spDB.SetObjectIntegrity(integrityMeta)
-		if err != nil {
+		if err = receiver.spDB.SetObjectIntegrity(integrityMeta); err != nil {
 			log.Errorw("failed to write integrity hash to db", "error", err)
 			return
 		}
 		traceInfo.IntegrityHash = resp.IntegrityHash
 		traceInfo.Signature = resp.Signature
-		syncer.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
-		err = stream.SendAndClose(resp)
+		receiver.cache.Add(traceInfo.ObjectInfo.Id.Uint64(), traceInfo)
+		if err = stream.SendAndClose(resp); err != nil {
+			log.Errorw("failed to send and close stream", "error", err)
+			return
+		}
 		pstream.Close()
-		log.Infow("replicate payload", "response", resp, "error", err)
+		log.Infow("succeed to replicate payload", "response", resp)
 	}(&resp, err)
 
 	// TODO:: add flow control, syncing one object request cost 4 parallel goroutine at least
@@ -84,7 +80,7 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 					req.GetObjectInfo().GetRedundancyType())
 				integrityMeta.ObjectID = req.GetObjectInfo().Id.Uint64()
 				traceInfo.ObjectInfo = req.GetObjectInfo()
-				syncer.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
+				receiver.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
 				init = false
 			}
 
@@ -108,9 +104,9 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 			checksum = append(checksum, hash.GenerateChecksum(entry.Data()))
 			traceInfo.Checksum = checksum
 			traceInfo.Completed++
-			syncer.cache.Add(entry.ID(), traceInfo)
+			receiver.cache.Add(entry.ID(), traceInfo)
 			go func() {
-				if err := syncer.pieceStore.PutSegment(entry.Key(), entry.Data()); err != nil {
+				if err := receiver.pieceStore.PutSegment(entry.Key(), entry.Data()); err != nil {
 					errCh <- err
 				}
 			}()
@@ -121,12 +117,12 @@ func (syncer *Syncer) SyncObject(stream types.SyncerService_SyncObjectServer) (e
 }
 
 // QuerySyncingObject query a syncing object info by object id.
-func (syncer *Syncer) QuerySyncingObject(ctx context.Context, req *types.QuerySyncingObjectRequest) (
+func (receiver *Receiver) QuerySyncingObject(ctx context.Context, req *types.QuerySyncingObjectRequest) (
 	resp *types.QuerySyncingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
 	objectID := req.GetObjectId()
 	log.CtxDebugw(ctx, "query syncing object", "objectID", objectID)
-	cached, ok := syncer.cache.Get(objectID)
+	cached, ok := receiver.cache.Get(objectID)
 	if !ok {
 		err = merrors.ErrCacheMiss
 		return

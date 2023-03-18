@@ -49,14 +49,15 @@ type PayloadStream struct {
 	segmentSize    uint64
 	redundancyType storagetypes.RedundancyType
 	entryCh        chan *SegmentEntry
-	init           atomic.Bool
-	close          atomic.Bool
+	init           atomic.Value
+	close          atomic.Value
 
 	pRead  *io.PipeReader
 	pWrite *io.PipeWriter
 }
 
 // NewAsyncPayloadStream return an instance of PayloadStream, and start async read stream
+// TODO:: implement the SyncPayloadStream in the future base on requirements
 func NewAsyncPayloadStream() *PayloadStream {
 	stream := &PayloadStream{
 		entryCh: make(chan *SegmentEntry, StreamResultSize),
@@ -69,7 +70,7 @@ func NewAsyncPayloadStream() *PayloadStream {
 // must be called before write or read stream
 func (stream *PayloadStream) InitAsyncPayloadStream(objectID uint64, rIdx uint32, segSize uint64,
 	redundancyType storagetypes.RedundancyType) error {
-	if stream.init.Load() {
+	if stream.init.Load() == true {
 		return nil
 	}
 	stream.init.Store(true)
@@ -83,10 +84,10 @@ func (stream *PayloadStream) InitAsyncPayloadStream(objectID uint64, rIdx uint32
 
 // StreamWrite writes data with the bytes of any size
 func (stream *PayloadStream) StreamWrite(data []byte) (n int, err error) {
-	if !stream.init.Load() {
+	if stream.init.Load() == nil {
 		return 0, errors.New("payload stream uninitialized")
 	}
-	if stream.close.Load() {
+	if stream.close.Load() == true {
 		return 0, errors.New("payload stream has been closed")
 	}
 	return stream.pWrite.Write(data)
@@ -94,7 +95,7 @@ func (stream *PayloadStream) StreamWrite(data []byte) (n int, err error) {
 
 // StreamClose close write stream without error
 func (stream *PayloadStream) StreamClose() error {
-	if stream.close.Load() {
+	if stream.close.Load() == true {
 		return nil
 	}
 	stream.close.Store(true)
@@ -103,10 +104,10 @@ func (stream *PayloadStream) StreamClose() error {
 
 // StreamCloseWithError close write stream with error
 func (stream *PayloadStream) StreamCloseWithError(err error) error {
-	if !stream.init.Load() {
+	if stream.init.Load() == nil {
 		return errors.New("payload stream is uninitialized")
 	}
-	if stream.close.Load() {
+	if stream.close.Load() == true {
 		return nil
 	}
 	stream.close.Store(true)

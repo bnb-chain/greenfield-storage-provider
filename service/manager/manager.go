@@ -24,8 +24,8 @@ var (
 // Currently, it supports periodic update of sp info list and storage params information in spdb.
 // TODO::support gc and configuration management, etc.
 type Manager struct {
-	cfg     *ManagerConfig
-	running atomic.Bool
+	config  *ManagerConfig
+	running atomic.Value
 	stopCh  chan struct{}
 	chain   *gnfd.Greenfield
 	spDB    sqldb.SPDB
@@ -33,21 +33,23 @@ type Manager struct {
 
 // NewManagerService returns an instance of manager
 func NewManagerService(cfg *ManagerConfig) (*Manager, error) {
-	chain, err := gnfd.NewGreenfield(cfg.ChainConfig)
-	if err != nil {
+	var (
+		manager *Manager
+		err     error
+	)
+
+	manager = &Manager{
+		config: cfg,
+	}
+	if manager.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Errorw("failed to create chain client", "error", err)
 		return nil, err
 	}
-	spDB, err := sqldb.NewSpDB(cfg.SpDBConfig)
-	if err != nil {
+	if manager.spDB, err = sqldb.NewSpDB(cfg.SpDBConfig); err != nil {
 		log.Errorw("failed to create spdb client", "error", err)
 		return nil, err
 	}
-	manager := &Manager{
-		cfg:   cfg,
-		spDB:  spDB,
-		chain: chain,
-	}
+
 	return manager, nil
 }
 
@@ -58,7 +60,7 @@ func (m *Manager) Name() string {
 
 // Start function start background goroutine to execute refresh sp meta
 func (m *Manager) Start(ctx context.Context) error {
-	if m.running.Swap(true) {
+	if m.running.Swap(true) == true {
 		return errors.New("manager has already started")
 	}
 
@@ -93,7 +95,7 @@ func (m *Manager) refreshSPInfoAndStorageParams() {
 		return
 	}
 	for _, spInfo := range spInfoList {
-		if spInfo.OperatorAddress == m.cfg.SpOperatorAddress {
+		if spInfo.OperatorAddress == m.config.SpOperatorAddress {
 			if err = m.spDB.SetOwnSpInfo(spInfo); err != nil {
 				log.Errorw("failed to set own sp info", "error", err)
 				return
@@ -115,7 +117,7 @@ func (m *Manager) refreshSPInfoAndStorageParams() {
 
 // Stop manager background goroutine
 func (m *Manager) Stop(ctx context.Context) error {
-	if !m.running.Swap(false) {
+	if m.running.Swap(false) == false {
 		return errors.New("manager has already stop")
 	}
 	close(m.stopCh)

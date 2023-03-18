@@ -14,8 +14,10 @@ import (
 )
 
 const (
-	UpdateClientInternal     = 60
-	ListenChainEventInternal = 2
+	// UpdateClientInternal defines the period of updating the best chain client
+	UpdateClientInternal = 60
+	// ExpectedOutputBlockInternal defines the time of estimating output block time
+	ExpectedOutputBlockInternal = 2
 )
 
 // GreenfieldClient the greenfield chain client, only use to query.
@@ -74,7 +76,7 @@ func (greenfield *Greenfield) Close() error {
 	return nil
 }
 
-// getCurrentClient return current use client.
+// getCurrentClient return the current client to use.
 func (greenfield *Greenfield) getCurrentClient() *GreenfieldClient {
 	greenfield.mutex.RLock()
 	defer greenfield.mutex.RUnlock()

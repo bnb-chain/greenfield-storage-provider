@@ -13,8 +13,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
-// getApprovalHandler handle create bucket or create object approval
-func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
+// getApprovalHandler handles the bucket create or object create approval
+func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
 		errDescription *errorDescription
@@ -34,8 +34,8 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if g.signer == nil {
-		log.Errorw("failed to get approval due to not config signer")
+	if gateway.signer == nil {
+		log.Error("failed to get approval due to not config signer")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -45,7 +45,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription = makeErrorDescription(err)
 		return
 	}
-	if err = g.checkAuthorization(reqContext, addr); err != nil {
+	if err = gateway.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
@@ -59,7 +59,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currentHeight, err := g.chain.GetCurrentHeight(context.Background())
+	currentHeight, err := gateway.chain.GetCurrentHeight(context.Background())
 	if err != nil {
 		log.Errorw("failed to query current height", "error", err)
 		errDescription = makeErrorDescription(err)
@@ -83,7 +83,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: currentHeight + model.DefaultTimeoutHeight}
-		approvalSignature, err = g.signer.SignBucketApproval(context.Background(), &msg)
+		approvalSignature, err = gateway.signer.SignBucketApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create bucket approval", "error", err)
 			errDescription = makeErrorDescription(err)
@@ -108,7 +108,7 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: currentHeight + model.DefaultTimeoutHeight}
-		approvalSignature, err = g.signer.SignObjectApproval(context.Background(), &msg)
+		approvalSignature, err = gateway.signer.SignObjectApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create object approval", "error", err)
 			errDescription = makeErrorDescription(err)
@@ -125,8 +125,8 @@ func (g *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 }
 
-// challengeHandler handle challenge request
-func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
+// challengeHandler handles the challenge request
+func (gateway *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
 		errDescription *errorDescription
@@ -149,7 +149,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if g.challenge == nil {
+	if gateway.challenge == nil {
 		log.Errorw("failed to get challenge due to not config challenge")
 		errDescription = NotExistComponentError
 		return
@@ -160,7 +160,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription = makeErrorDescription(err)
 		return
 	}
-	if err = g.checkAuthorization(reqContext, addr); err != nil {
+	if err = gateway.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
@@ -182,7 +182,7 @@ func (g *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		errDescription = InvalidHeader
 		return
 	}
-	integrityHash, pieceHash, pieceData, err := g.challenge.ChallengePiece(context.Background(), objectID, redundancyIdx, segmentIdx)
+	integrityHash, pieceHash, pieceData, err := gateway.challenge.ChallengePiece(context.Background(), objectID, redundancyIdx, segmentIdx)
 	if err != nil {
 		log.Errorf("failed to challenge", "error", err)
 		errDescription = makeErrorDescription(err)

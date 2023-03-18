@@ -24,7 +24,7 @@ func NewChallengeClient(address string) (*ChallengeClient, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)))
 	if err != nil {
-		log.Errorw("failed to dail challenge", "error", err)
+		log.Errorw("failed to dial challenge", "error", err)
 		return nil, err
 	}
 	client := &ChallengeClient{
