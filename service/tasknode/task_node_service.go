@@ -123,7 +123,7 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 		processInfo.SegmentInfos[rIdx] = &servicetypes.SegmentInfo{ObjectInfo: objectInfo}
 		go func(rIdx int) {
 			for {
-				sp, _, err := getSpFunc()
+				sp, approval, err := getSpFunc()
 				if err != nil {
 					errCh <- err
 					return
@@ -140,7 +140,7 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 				}
 				// TODO:: add approval param to gateway, and secondary sp check the timeout, signature, spOpAddr of approval
 				integrityHash, signature, err := gatewayClient.SyncPieceData(
-					req.GetObjectInfo(), uint32(rIdx), uint32(len(replicateData[0][0])), data)
+					req.GetObjectInfo(), uint32(rIdx), uint32(len(replicateData[0][0])), approval, data)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to sync piece data", "endpoint", sp.GetEndpoint(), "error", err)
 					continue

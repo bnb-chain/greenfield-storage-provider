@@ -188,6 +188,8 @@ const (
 	GnfdReplicaIdxHeader = "X-Gnfd-Replica-Idx"
 	// GnfdSegmentSizeHeader defines segment size, which is used by receiver
 	GnfdSegmentSizeHeader = "X-Gnfd-Segment-Size"
+	// GnfdReplicateApproval defines SP approval that allow to replicate piece data, which is used by receiver
+	GnfdReplicateApproval = "X-Gnfd-Replica-Approval"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 	// GnfdUserAddressHeader defines the user address

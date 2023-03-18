@@ -62,6 +62,10 @@ var (
 	ErrCheckPaymentAccountActive = errors.New("payment account is not active")
 	// ErrCheckQuotaEnough defines check quota is enough
 	ErrCheckQuotaEnough = errors.New("quota is not enough")
+	// ErrSPMismatch defines the SP's operate address mismatch error
+	ErrSPMismatch = errors.New("SP's operate address mismatch")
+	// ErrApprovalExpire defines the SP's operate address mismatch error
+	ErrApprovalExpire = errors.New("approval expire")
 )
 
 // signer service error
