@@ -65,7 +65,6 @@ func (n *Node) onPing(s network.Stream) {
 	pong.SpOperatorAddress = n.SpOperatorAddress
 	// TODO:: send to signer and back fill the signature field
 	err = n.sendToPeer(s.Conn().RemotePeer(), PongProtocol, pong)
-	return
 }
 
 // onPong handles remote node pong response

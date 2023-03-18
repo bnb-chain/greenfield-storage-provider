@@ -93,7 +93,6 @@ func (n *Node) initProtocol() {
 	n.node.SetStreamHandler(PongProtocol, n.onPong)
 	// approval protocol
 	n.approval = NewApprovalProtocol(n)
-	return
 }
 
 // Name return the p2p protocol node name

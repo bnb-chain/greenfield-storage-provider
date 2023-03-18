@@ -101,7 +101,7 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), req.GetObjectInfo().Id.Uint64())
 
 	// TODO:: verify the req's signature
-	if a.node.peers.checkSp(req.GetSpOperatorAddress()) == false {
+	if !a.node.peers.checkSp(req.GetSpOperatorAddress()) {
 		log.Warnw("ignore invalid sp approval request", "sp", req.GetSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
@@ -143,7 +143,7 @@ func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), resp.GetObjectInfo().Id.Uint64())
 
 	// TODO:: verify the resp's signature
-	if a.node.peers.checkSp(resp.GetSpOperatorAddress()) == false {
+	if !a.node.peers.checkSp(resp.GetSpOperatorAddress()) {
 		log.Warnw("ignore invalid sp approval response", "sp", resp.GetSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
