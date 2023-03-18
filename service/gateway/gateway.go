@@ -6,12 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"sync/atomic"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	
 	"github.com/gorilla/mux"
 
-	chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
 	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
