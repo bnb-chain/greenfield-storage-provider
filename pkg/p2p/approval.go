@@ -106,7 +106,7 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
-	if strings.Compare(req.GetSpOperatorAddress(), a.node.config.SpOperatorAddress) == 0 {
+	if strings.Compare(req.GetSpOperatorAddress(), a.node.SpOperatorAddress) == 0 {
 		log.Warnw("ignore self approval request", "sp", req.GetSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
@@ -114,7 +114,7 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 	validTime, _ := time.ParseDuration(ValidApprovalDuration)
 	resp := &types.GetApprovalResponse{
 		ObjectInfo:        req.GetObjectInfo(),
-		SpOperatorAddress: a.node.config.SpOperatorAddress,
+		SpOperatorAddress: a.node.SpOperatorAddress,
 		TimeOut:           time.Now().Add(validTime).Unix(),
 	}
 	// TODO:: customized approval strategy, if refuse will fill back resp's refuse field
@@ -148,7 +148,7 @@ func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
-	if strings.Compare(resp.GetSpOperatorAddress(), a.node.config.SpOperatorAddress) == 0 {
+	if strings.Compare(resp.GetSpOperatorAddress(), a.node.SpOperatorAddress) == 0 {
 		log.Warnw("ignore self approval response", "sp", resp.GetSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return

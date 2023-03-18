@@ -26,10 +26,8 @@ const (
 
 // NodeConfig defines the p2p node config
 type NodeConfig struct {
-	// Address defines the p2p listen address, used to make multiaddr
-	Address string
-	// SpOperatorAddress defines the sp operator public key
-	SpOperatorAddress string
+	// ListenAddress defines the p2p listen address, used to make multiaddr
+	ListenAddress string
 	// PrivKey defines the p2p node private key, only support Secp256k1
 	// if default value, creates random private-public key pairs
 	// TODO::support more crypto algorithm for generating and verifying private-public key pairs
@@ -62,9 +60,9 @@ func (cfg *NodeConfig) ParseConfing() (privKey crypto.PrivKey, hostAddr ma.Multi
 		}
 	}
 
-	addrInfo := strings.Split(strings.TrimSpace(cfg.Address), ":")
+	addrInfo := strings.Split(strings.TrimSpace(cfg.ListenAddress), ":")
 	if len(addrInfo) != 2 {
-		err = fmt.Errorf("failed to parser p2p listen address '%s' configuration", cfg.Address)
+		err = fmt.Errorf("failed to parser p2p listen address '%s' configuration", cfg.ListenAddress)
 		return privKey, hostAddr, bootstrapIDs, bootstrapAddrs, err
 	}
 	host := strings.TrimSpace(addrInfo[0])
@@ -74,7 +72,7 @@ func (cfg *NodeConfig) ParseConfing() (privKey crypto.PrivKey, hostAddr ma.Multi
 	}
 	hostAddr, err = MakeMultiaddr(host, port)
 	if err != nil {
-		log.Errorw("failed to make local mulit addr", "address", cfg.Address, "error", err)
+		log.Errorw("failed to make local mulit addr", "address", cfg.ListenAddress, "error", err)
 		return privKey, hostAddr, bootstrapIDs, bootstrapAddrs, err
 	}
 	bootstrapIDs, bootstrapAddrs, err = MakeBootstrapMultiaddr(cfg.Bootstrap)

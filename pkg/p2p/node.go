@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	ggio "github.com/gogo/protobuf/io"
 	"github.com/gogo/protobuf/proto"
 	ds "github.com/ipfs/go-datastore"
@@ -25,16 +26,18 @@ import (
 // p2p protocol message interactive security based on storage provider
 // operator private-public key pair signature, use leveldb as underlying DB.
 type Node struct {
-	config       *NodeConfig
-	node         host.Host
-	peers        *PeerProvider
-	persistentDB ds.Batching
-	approval     *ApprovalProtocol
-	stopCh       chan struct{}
+	config            *NodeConfig
+	SpOperatorAddress string
+	node              host.Host
+	signer            *signerclient.SignerClient
+	peers             *PeerProvider
+	persistentDB      ds.Batching
+	approval          *ApprovalProtocol
+	stopCh            chan struct{}
 }
 
 // NewNode return an instance of Node
-func NewNode(config *NodeConfig) (*Node, error) {
+func NewNode(config *NodeConfig, SPAddr string, signer *signerclient.SignerClient) (*Node, error) {
 	if config.PingPeriod < PingPeriodMin {
 		config.PingPeriod = PingPeriodMin
 	}
@@ -71,11 +74,13 @@ func NewNode(config *NodeConfig) (*Node, error) {
 		host.Peerstore().AddAddr(bootstrapIDs[i], addr, peerstore.PermanentAddrTTL)
 	}
 	n := &Node{
-		config:       config,
-		node:         host,
-		peers:        NewPeerProvider(store),
-		persistentDB: ds,
-		stopCh:       make(chan struct{}),
+		config:            config,
+		SpOperatorAddress: SPAddr,
+		node:              host,
+		signer:            signer,
+		peers:             NewPeerProvider(store),
+		persistentDB:      ds,
+		stopCh:            make(chan struct{}),
 	}
 	n.initProtocol()
 	log.Infow("success to init p2p node", "node_id", n.node.ID())
@@ -127,7 +132,7 @@ func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectAccept int, ti
 	refuse = make(map[string]*types.GetApprovalResponse)
 	getApprovalReq := &types.GetApprovalRequest{
 		ObjectInfo:        object,
-		SpOperatorAddress: n.config.SpOperatorAddress,
+		SpOperatorAddress: n.SpOperatorAddress,
 	}
 	// TODO::sign the getApprovalReq by signer
 	n.broadcast(GetApprovalRequest, getApprovalReq)
@@ -167,7 +172,7 @@ func (n *Node) eventloop() {
 		case <-ticker.C:
 			// TODO:: send to signer and back fill the signature field
 			ping := &types.Ping{
-				SpOperatorAddress: n.config.SpOperatorAddress,
+				SpOperatorAddress: n.SpOperatorAddress,
 			}
 			log.Debugw("trigger broadcast ping")
 			n.broadcast(PingProtocol, ping)

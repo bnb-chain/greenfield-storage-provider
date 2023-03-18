@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
@@ -135,6 +136,15 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			return nil, err
 		}
 		server, err = manager.NewManagerService(managerCfg)
+		if err != nil {
+			return nil, err
+		}
+	case model.P2pService:
+		p2pCfg, err := cfg.MakeP2PServiceConfig()
+		if err != nil {
+			return nil, err
+		}
+		server, err = p2p.NewP2PServer(p2pCfg)
 		if err != nil {
 			return nil, err
 		}

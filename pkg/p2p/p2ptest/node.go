@@ -31,7 +31,7 @@ func main() {
 		return
 	}
 	// init p2p node
-	node, err := p2p.NewNode(cfg)
+	node, err := p2p.NewNode(cfg, "test_sp_operator_address_1", nil)
 	if err != nil {
 		log.Errorw("failed to init p2p node", "error", err)
 	}

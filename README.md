@@ -116,10 +116,26 @@ ChainID = "greenfield_9000-1741"
 [[ChainConfig.NodeAddr]]
 GreenfieldAddresses = ["localhost:9090"]
 TendermintAddresses = ["http://localhost:26750"]
+# signer configuration
+[SignerCfg]
+GRPCAddress = "localhost:9633"
+APIKey = ""
+WhitelistCIDR = ["127.0.0.1/32"]
+GasLimit = 210000
+OperatorPrivateKey = ""
+FundingPrivateKey = ""
+SealPrivateKey = ""
+ApprovalPrivateKey = ""
 # block syncer configuration
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]
 Dsn = "localhost:3306"
+# p2p node configuration
+[P2PConfig]
+ListenAddress = ""
+PrivKey = ""
+Bootstrap = []
+PingPeriod = 0
 ```
 
 ### Start

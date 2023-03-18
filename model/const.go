@@ -24,6 +24,8 @@ var (
 	BlockSyncerService = strings.ToLower("BlockSyncer")
 	// ManagerService defines the name of manager service
 	ManagerService = strings.ToLower("Manager")
+	// P2pService defines the name of p2p service
+	P2pService = strings.ToLower("p2p")
 )
 
 // SpServiceDesc defines the service description in storage provider
@@ -37,6 +39,7 @@ var SpServiceDesc = map[string]string{
 	SignerService:      "Sign the transaction and broadcast to chain",
 	MetadataService:    "Provides the ability to query meta data",
 	BlockSyncerService: "Syncs block data to db",
+	P2pService:         "Interaction of p2p protocol between SP",
 }
 
 // define storage provider service gRPC default address
@@ -57,6 +60,8 @@ const (
 	SignerGRPCAddress = "localhost:9633"
 	// MetadataGRPCAddress default gRPC address of meta data service
 	MetadataGRPCAddress = "localhost:9733"
+	// P2PGRPCAddress default gRPC address of p2p service
+	P2PGRPCAddress = "localhost:9833"
 )
 
 // define greenfield chain default address

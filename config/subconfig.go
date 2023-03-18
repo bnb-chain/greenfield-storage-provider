@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
 	loggingconfig "github.com/forbole/juno/v4/log/config"
@@ -234,4 +235,24 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 			Level: "debug",
 		},
 	}, nil
+}
+
+// MakeP2PServiceConfig make p2p service config from StorageProviderConfig
+func (cfg *StorageProviderConfig) MakeP2PServiceConfig() (*p2p.P2PConfig, error) {
+	pCfg := &p2p.P2PConfig{
+		SpOperatorAddress: cfg.SpOperatorAddress,
+		SpDBConfig:        cfg.SpDBConfig,
+		P2PConfig:         cfg.P2PConfig,
+	}
+	if _, ok := cfg.ListenAddress[model.P2pService]; ok {
+		pCfg.GRPCAddress = cfg.ListenAddress[model.P2pService]
+	} else {
+		return nil, fmt.Errorf("missing p2p service gRPC address configuration for p2p service")
+	}
+	if _, ok := cfg.Endpoint[model.SignerService]; ok {
+		pCfg.SignerGRPCAddress = cfg.Endpoint[model.SignerService]
+	} else {
+		return nil, fmt.Errorf("missing signer gRPC address configuration for p2p service")
+	}
+	return pCfg, nil
 }
