@@ -81,3 +81,11 @@ var (
 	// ErrInvalidAccountID defines invalid account id
 	ErrInvalidAccountID = errors.New("invalid account id")
 )
+
+// task node service error
+var (
+	// ErrSPApprovalNumber defines failed to insufficient SPs' approvals from p2p server
+	ErrSPApprovalNumber = errors.New("failed to get sufficient SPs' approvals from p2p server")
+	// ErrSPNumber defines failed to get insufficient SPs from DB
+	ErrSPNumber = errors.New("failed to get sufficient SPs from DB")
+)

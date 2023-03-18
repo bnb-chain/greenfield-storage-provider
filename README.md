@@ -132,10 +132,11 @@ Modules = ["epoch", "bucket", "object", "payment"]
 Dsn = "localhost:3308"
 # p2p node configuration
 [P2PConfig]
-ListenAddress = ""
+ListenAddress = "localhost:9933"
+# p2p node msg Secp256k1 encryption key, it is different from other SP's addresses
 PrivKey = ""
+# p2p node's bootstrap node, format: [node_id1@ip1:port1, node_id2@ip1:port2]
 Bootstrap = []
-PingPeriod = 0
 # log configuration
 [LogCfg]
 Level = "info"

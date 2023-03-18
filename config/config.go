@@ -86,7 +86,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	ChainConfig:       DefaultGreenfieldChainConfig,
 	SignerCfg:         signer.DefaultSignerChainConfig,
 	BlockSyncerCfg:    DefaultBlockSyncerConfig,
-	P2PConfig:         &p2p.NodeConfig{},
+	P2PConfig:         DefaultP2PConfig,
 	LogCfg:            DefaultLogConfig,
 }
 
@@ -133,6 +133,11 @@ var DefaultLogConfig = &LogConfig{
 	// TODO:: change to info level after releasing
 	Level: "debug",
 	Path:  "./gnfd-sp.log",
+}
+
+var DefaultP2PConfig = &p2p.NodeConfig{
+	ListenAddress: model.P2PGListenAddress,
+	PingPeriod:    2,
 }
 
 // LoadConfig loads the config file from path

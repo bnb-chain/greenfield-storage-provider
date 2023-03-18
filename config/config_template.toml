@@ -58,9 +58,10 @@ Modules = ["epoch", "bucket", "object", "payment"]
 Dsn = "localhost:3308"
 
 [P2PConfig]
-ListenAddress = ""
+ListenAddress = "localhost:9933"
 PrivKey = ""
 Bootstrap = []
+PingPeriod = 2
 
 [LogCfg]
 Level = "debug"
