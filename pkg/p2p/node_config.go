@@ -33,7 +33,7 @@ type NodeConfig struct {
 	// TODO::support more crypto algorithm for generating and verifying private-public key pairs
 	PrivKey string
 	// Bootstrap defines Bootstrap p2p node, cannot be empty
-	// format: [node_id1@host1:port1, node_id2@host2:port2]
+	// format: [node_id1@ip1:port1, node_id2@ip1:port2]
 	Bootstrap []string
 	// PingPeriod defines the period of ping other p2p nodes
 	PingPeriod int

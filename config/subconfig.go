@@ -175,7 +175,7 @@ func (cfg *StorageProviderConfig) MakeTaskNodeConfig() (*tasknode.TaskNodeConfig
 		return nil, fmt.Errorf("missing signer gRPC address configuration for task node service")
 	}
 	if _, ok := cfg.Endpoint[model.P2pService]; ok {
-		snCfg.SignerGrpcAddress = cfg.Endpoint[model.P2pService]
+		snCfg.P2PGrpcAddress = cfg.Endpoint[model.P2pService]
 	} else {
 		return nil, fmt.Errorf("missing p2p server gRPC address configuration for task node service")
 	}

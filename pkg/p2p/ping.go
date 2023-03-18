@@ -94,8 +94,7 @@ func (n *Node) onPong(s network.Stream) {
 		log.Errorw("failed to unmarshal ping msg", "error", err)
 		return
 	}
-	// TODO:: change to debug level at release time
-	log.Infof("%s received pong request from %s.", s.Conn().LocalPeer(), s.Conn().RemotePeer())
+	log.Debugf("%s received pong request from %s.", s.Conn().LocalPeer(), s.Conn().RemotePeer())
 	// TODO:: verify the signature
 	n.peers.AddPeer(peerID, data.SpOperatorAddress, s.Conn().RemoteMultiaddr())
 

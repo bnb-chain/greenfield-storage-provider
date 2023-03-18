@@ -63,7 +63,7 @@ const (
 	// P2PGRPCAddress default gRPC address of p2p service
 	P2PGRPCAddress = "localhost:9833"
 	// P2PGListenAddress default p2p protocol listen address of p2p node
-	P2PGListenAddress = "localhost:9933"
+	P2PGListenAddress = "127.0.0.1:9933"
 )
 
 // define greenfield chain default address

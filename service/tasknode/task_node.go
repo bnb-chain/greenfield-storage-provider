@@ -61,7 +61,7 @@ func NewTaskNodeService(cfg *TaskNodeConfig) (*TaskNode, error) {
 		log.Errorw("failed to create signer client", "error", err)
 		return nil, err
 	}
-	if taskNode.p2p, err = p2pclient.NewP2PClient(cfg.SpOperatorAddress); err != nil {
+	if taskNode.p2p, err = p2pclient.NewP2PClient(cfg.P2PGrpcAddress); err != nil {
 		log.Errorw("failed to create p2p server client", "error", err)
 		return nil, err
 	}

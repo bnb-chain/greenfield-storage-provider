@@ -69,6 +69,7 @@ func (p *P2PServer) Start(ctx context.Context) error {
 	go p.serve(errCh)
 	go p.eventLoop()
 	err := <-errCh
+	err = p.node.Start(ctx)
 	return err
 }
 
