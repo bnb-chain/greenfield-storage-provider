@@ -120,7 +120,7 @@ var DefaultGreenfieldChainConfig = &gnfd.GreenfieldChainConfig{
 // DefaultBlockSyncerConfig defines the default configuration of BlockSyncer service
 var DefaultBlockSyncerConfig = &blocksyncer.Config{
 	Modules: []string{"epoch", "bucket", "object", "payment"},
-	Dsn:     "localhost:3306",
+	Dsn:     "localhost:3308",
 }
 
 type LogConfig struct {

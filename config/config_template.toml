@@ -55,7 +55,7 @@ ApprovalPrivateKey = ""
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]
-Dsn = "localhost:3306"
+Dsn = "localhost:3308"
 
 [P2PConfig]
 ListenAddress = ""

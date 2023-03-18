@@ -129,13 +129,17 @@ ApprovalPrivateKey = ""
 # block syncer configuration
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]
-Dsn = "localhost:3306"
+Dsn = "localhost:3308"
 # p2p node configuration
 [P2PConfig]
 ListenAddress = ""
 PrivKey = ""
 Bootstrap = []
 PingPeriod = 0
+# log configuration
+[LogCfg]
+Level = "info"
+Path = "./gnfd-sp.log"
 ```
 
 ### Start
