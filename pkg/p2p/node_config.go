@@ -3,9 +3,11 @@ package p2p
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	ma "github.com/multiformats/go-multiaddr"
@@ -39,8 +41,15 @@ type NodeConfig struct {
 	PingPeriod int
 }
 
+func (cfg *NodeConfig) overrideConfigFromEnv() {
+	if val, ok := os.LookupEnv(model.P2PPrivKey); ok {
+		cfg.PrivKey = val
+	}
+}
+
 // ParseConfing parsers the configuration into a format that go-libp2p can use
 func (cfg *NodeConfig) ParseConfing() (privKey crypto.PrivKey, hostAddr ma.Multiaddr, bootstrapIDs []peer.ID, bootstrapAddrs []ma.Multiaddr, err error) {
+	cfg.overrideConfigFromEnv()
 	if len(cfg.PrivKey) > 0 {
 		priKeyBytes, err := hex.DecodeString(cfg.PrivKey)
 		if err != nil {

@@ -112,6 +112,8 @@ const (
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
 	// DsnBlockSyncer defines env variable name for block syncer dsn
 	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
+	// P2PPrivKey defines env variable for p2p protocol private key
+	P2PPrivKey = "P2P_PRIV_KEY"
 )
 
 // define all kinds of http constants
