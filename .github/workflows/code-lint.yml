@@ -16,9 +16,6 @@ on:
 jobs:
   golangci:
     name: golangci-lint
-    strategy:
-      matrix:
-        os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
     env:
       GOPRIVATE: github.com/bnb-chain
@@ -27,6 +24,7 @@ jobs:
     strategy:
       matrix:
         go-version: [1.18.x]
+        os: [ ubuntu-latest ]
     steps:
       - uses: actions/checkout@v3
       - name: Setup GitHub Token

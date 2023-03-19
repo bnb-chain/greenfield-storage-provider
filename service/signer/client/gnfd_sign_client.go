@@ -125,32 +125,6 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	client.mu.Lock()
 	defer client.mu.Unlock()
 
-	//var (
-	//	secondarySPAccs       = make([]sdk.AccAddress, 0, len(object.SecondarySps))
-	//	secondarySPSignatures = make([][]byte, 0, len(object.SecondarySps))
-	//	indexArray            []int
-	//)
-	//
-	//// TODO: polish it by use new proto
-	//for indexStr := range object.SecondarySps {
-	//	indexInt, err := strconv.Atoi(indexStr)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	indexArray = append(indexArray, indexInt)
-	//}
-	//sort.Ints(indexArray)
-	//for index := range indexArray {
-	//	sp := object.SecondarySps[strconv.Itoa(index)]
-	//	opAddr, err := sdk.AccAddressFromHexUnsafe(sp.SpId) // should be 0x...
-	//	if err != nil {
-	//		log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", sp.SpId)
-	//		return nil, err
-	//	}
-	//	secondarySPAccs = append(secondarySPAccs, opAddr)
-	//	secondarySPSignatures = append(secondarySPSignatures, sp.Signature)
-	//}
-
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "err", err)

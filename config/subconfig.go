@@ -12,6 +12,7 @@ import (
 	"github.com/forbole/juno/v4/types/config"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
@@ -145,8 +146,14 @@ func (cfg *StorageProviderConfig) MakeChallengeConfig() (*challenge.ChallengeCon
 }
 
 // MakeSignerConfig make singer service config from StorageProviderConfig
-func (cfg *StorageProviderConfig) MakeSignerConfig() (*signer.SignerConfig, error) {
-	return cfg.SignerCfg, nil
+func (cfg *StorageProviderConfig) MakeSignerConfig() (*signer.SignerConfig, *gnfd.GreenfieldChainConfig, error) {
+	sCfg := cfg.SignerCfg
+	signerAddr, ok := cfg.ListenAddress[model.SignerService]
+	if !ok {
+		return nil, nil, fmt.Errorf("missing signer gRPC address configuration for signer service")
+	}
+	sCfg.GRPCAddress = signerAddr
+	return cfg.SignerCfg, cfg.ChainConfig, nil
 }
 
 // MakeTaskNodeConfig make task node service config from StorageProviderConfig

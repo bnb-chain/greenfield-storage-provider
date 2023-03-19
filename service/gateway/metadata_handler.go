@@ -34,7 +34,7 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 	}()
 
 	if gateway.metadata == nil {
-		log.Errorw("failed to get user buckets due to not config metadata")
+		log.Error("failed to get user buckets due to not config metadata")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -81,7 +81,7 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	}()
 
 	if gateway.metadata == nil {
-		log.Errorw("failed to list objects by bucket name due to not config metadata")
+		log.Error("failed to list objects by bucket name due to not config metadata")
 		errDescription = NotExistComponentError
 		return
 	}
