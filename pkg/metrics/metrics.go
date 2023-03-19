@@ -31,7 +31,7 @@ var (
 
 func init() {
 	reg.MustRegister(DefaultGRPCServerMetrics, DefaultGRPCClientMetrics, DefaultHTTPServerMetrics,
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}), PanicsTotal)
 }
 
 // Metrics is used to monitor sp services

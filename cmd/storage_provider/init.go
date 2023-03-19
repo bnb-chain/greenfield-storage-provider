@@ -154,16 +154,12 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 	return server, nil
 }
 
-// setupMetrics init service metrics to prometheus
-func setupMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
-	return nil
-}
-
-func applyMetricConfig(ctx *cli.Context, cfg *metrics.MetricsMonitorConfig) {
+// applyMetricConfig will use the config cli first
+func applyMetricConfig(ctx *cli.Context, cfg *config.StorageProviderConfig) {
 	if ctx.IsSet(utils.MetricsEnabledFlag.Name) {
-		cfg.Enabled = ctx.Bool(utils.MetricsEnabledFlag.Name)
+		cfg.MetricsMonitorCfg.Enabled = ctx.Bool(utils.MetricsEnabledFlag.Name)
 	}
 	if ctx.IsSet(utils.MetricsHTTPFlag.Name) {
-		cfg.HTTPAddress = ctx.String(utils.MetricsHTTPFlag.Name)
+		cfg.MetricsMonitorCfg.HTTPAddress = ctx.String(utils.MetricsHTTPFlag.Name)
 	}
 }

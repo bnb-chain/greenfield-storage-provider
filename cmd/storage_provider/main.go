@@ -36,6 +36,8 @@ var (
 		utils.LogLevelFlag,
 		utils.LogPathFlag,
 		utils.LogStdOutputFlag,
+		utils.MetricsEnabledFlag,
+		utils.MetricsHTTPFlag,
 	}
 )
 
@@ -87,6 +89,7 @@ func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 		services := util.SplitByComma(ctx.String(utils.ServerFlag.Name))
 		cfg.Service = services
 	}
+	applyMetricConfig(ctx, cfg)
 	// init log
 	if err := initLog(ctx, cfg); err != nil {
 		return nil, err
@@ -110,7 +113,7 @@ func storageProvider(ctx *cli.Context) error {
 			log.Errorw("failed to init service", "service", serviceName, "error", err)
 			os.Exit(1)
 		}
-		log.Debugw("success to init service ", "service", serviceName)
+		log.Debugw("succeed to init service ", "service", serviceName)
 		// register service to lifecycle.
 		slc.RegisterServices(service)
 	}

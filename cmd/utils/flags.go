@@ -21,13 +21,13 @@ var (
 	}
 	ConfigRemoteFlag = &cli.BoolFlag{
 		Name: "configremote",
-		Usage: "Flag load config from remote db,if 'configremote' be set, the db.user, " +
+		Usage: "Flag load config from remote db, if 'configremote' be set, the db.user, " +
 			"db.password and db.address flags are needed, otherwise use default value",
 	}
 	ServerFlag = &cli.StringFlag{
 		Name:    "server",
 		Aliases: []string{"service", "s"},
-		Usage:   "Services to be started list, eg -server gateway,uploader,receiver... ",
+		Usage:   "Services to be started list, e.g. -server gateway,uploader,receiver... ",
 	}
 	// database flags
 	DBUserFlag = &cli.StringFlag{

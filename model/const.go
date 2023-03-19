@@ -59,6 +59,8 @@ const (
 	SignerGRPCAddress = "localhost:9633"
 	// MetadataGRPCAddress default gRPC address of meta data service
 	MetadataGRPCAddress = "localhost:9733"
+	// MetricsMonitorHTTPAddress default HTTP address of metrics monitor service
+	MetricsMonitorHTTPAddress = "localhost:9833"
 )
 
 // define greenfield chain default address

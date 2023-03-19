@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -30,6 +31,7 @@ type StorageProviderConfig struct {
 	SignerCfg         *signer.SignerConfig
 	BlockSyncerCfg    *blocksyncer.Config
 	LogCfg            *LogConfig
+	MetricsMonitorCfg *metrics.MetricsMonitorConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -56,15 +58,14 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.ManagerService,
 	},
 	ListenAddress: map[string]string{
-		model.GatewayService:        model.GatewayHTTPAddress,
-		model.UploaderService:       model.UploaderGRPCAddress,
-		model.DownloaderService:     model.DownloaderGRPCAddress,
-		model.ChallengeService:      model.ChallengeGRPCAddress,
-		model.ReceiverService:       model.ReceiverGRPCAddress,
-		model.TaskNodeService:       model.TaskNodeGRPCAddress,
-		model.SignerService:         model.SignerGRPCAddress,
-		model.MetadataService:       model.MetadataGRPCAddress,
-		model.MetricsMonitorService: model.GatewayHTTPAddress,
+		model.GatewayService:    model.GatewayHTTPAddress,
+		model.UploaderService:   model.UploaderGRPCAddress,
+		model.DownloaderService: model.DownloaderGRPCAddress,
+		model.ChallengeService:  model.ChallengeGRPCAddress,
+		model.ReceiverService:   model.ReceiverGRPCAddress,
+		model.TaskNodeService:   model.TaskNodeGRPCAddress,
+		model.SignerService:     model.SignerGRPCAddress,
+		model.MetadataService:   model.MetadataGRPCAddress,
 	},
 	Endpoint: map[string]string{
 		model.GatewayService:    "gnfd.nodereal.com",
@@ -83,6 +84,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	SignerCfg:         signer.DefaultSignerChainConfig,
 	BlockSyncerCfg:    DefaultBlockSyncerConfig,
 	LogCfg:            DefaultLogConfig,
+	MetricsMonitorCfg: DefaultMetricsMonitorConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -116,6 +118,12 @@ var DefaultGreenfieldChainConfig = &gnfd.GreenfieldChainConfig{
 var DefaultBlockSyncerConfig = &blocksyncer.Config{
 	Modules: []string{"epoch", "bucket", "object", "payment"},
 	Dsn:     "localhost:3306",
+}
+
+// DefaultMetricsMonitorConfig defines the default config of MetricsMonitor service
+var DefaultMetricsMonitorConfig = &metrics.MetricsMonitorConfig{
+	Enabled:     true,
+	HTTPAddress: model.MetricsMonitorHTTPAddress,
 }
 
 type LogConfig struct {

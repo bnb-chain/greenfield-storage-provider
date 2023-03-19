@@ -10,7 +10,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
-	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 )
 
 // UploaderClient is an uploader gRPC service client wrapper
@@ -36,7 +36,7 @@ func NewUploaderClient(address string) (*UploaderClient, error) {
 	return client, nil
 }
 
-// Close the uploader gPRC client connection
+// Close the uploader gRPC client connection
 func (client *UploaderClient) Close() error {
 	return client.conn.Close()
 }

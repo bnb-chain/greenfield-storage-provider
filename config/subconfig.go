@@ -185,7 +185,7 @@ func (cfg *StorageProviderConfig) MakeMetadataServiceConfig() (*metadata.Metadat
 	if _, ok := cfg.ListenAddress[model.MetadataService]; ok {
 		mCfg.GRPCAddress = cfg.ListenAddress[model.MetadataService]
 	} else {
-		return nil, fmt.Errorf("missing meta data gRPC address configuration for meta data service")
+		return nil, fmt.Errorf("missing metadata gRPC address configuration for meta data service")
 	}
 	return mCfg, nil
 }
@@ -239,13 +239,8 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 
 // MakeMetricsMonitorConfig make metrics monitor config from StorageProviderConfig
 func (cfg StorageProviderConfig) MakeMetricsMonitorConfig() (*metrics.MetricsMonitorConfig, error) {
-	metricsConfig := &metrics.MetricsMonitorConfig{
-		Enabled: true,
-	}
-	if _, ok := cfg.ListenAddress[model.MetricsMonitorService]; ok {
-		metricsConfig.HTTPAddress = cfg.ListenAddress[model.MetadataService]
-	} else {
-		return nil, fmt.Errorf("missing meta data HTTP address configuration for metrics monitor service")
-	}
-	return metricsConfig, nil
+	return &metrics.MetricsMonitorConfig{
+		Enabled:     cfg.MetricsMonitorCfg.Enabled,
+		HTTPAddress: cfg.MetricsMonitorCfg.HTTPAddress,
+	}, nil
 }
