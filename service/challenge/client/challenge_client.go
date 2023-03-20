@@ -22,7 +22,8 @@ type ChallengeClient struct {
 func NewChallengeClient(address string) (*ChallengeClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)))
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
 	if err != nil {
 		log.Errorw("failed to dial challenge", "error", err)
 		return nil, err

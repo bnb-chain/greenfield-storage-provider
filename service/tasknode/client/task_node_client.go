@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	servicetype "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
@@ -22,7 +23,9 @@ type TaskNodeClient struct {
 // NewTaskNodeClient return a TaskNodeClient instance
 func NewTaskNodeClient(address string) (*TaskNodeClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
 	if err != nil {
 		log.Errorw("failed to dial task node", "error", err)
 		return nil, err

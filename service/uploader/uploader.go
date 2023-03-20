@@ -98,7 +98,7 @@ func (uploader *Uploader) serve(errCh chan error) {
 		return
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize))
 	types.RegisterUploaderServiceServer(grpcServer, uploader)
 	uploader.grpcServer = grpcServer
 	reflection.Register(grpcServer)
