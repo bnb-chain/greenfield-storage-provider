@@ -101,7 +101,7 @@ func (taskNode *TaskNode) serve(errCh chan error) {
 		return
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize))
 	types.RegisterTaskNodeServiceServer(grpcServer, taskNode)
 	taskNode.grpcServer = grpcServer
 	reflection.Register(grpcServer)
