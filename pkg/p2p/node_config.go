@@ -41,6 +41,7 @@ type NodeConfig struct {
 	PingPeriod int
 }
 
+// overrideConfigFromEnv load private from ENV var
 func (cfg *NodeConfig) overrideConfigFromEnv() {
 	if val, ok := os.LookupEnv(model.P2PPrivKey); ok {
 		cfg.PrivKey = val
