@@ -23,7 +23,8 @@ type DownloaderClient struct {
 func NewDownloaderClient(address string) (*DownloaderClient, error) {
 	conn, err := grpc.DialContext(context.Background(), address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)))
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
 	if err != nil {
 		log.Errorw("failed to dial downloader", "error", err)
 		return nil, err
