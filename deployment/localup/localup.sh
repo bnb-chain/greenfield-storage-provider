@@ -191,6 +191,7 @@ main() {
     reset_sp $2
     ;;
   --start)
+    stop_sp
     start_sp
     ;;
   --stop)
