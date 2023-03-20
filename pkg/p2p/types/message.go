@@ -11,7 +11,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
-// GetSignBytes returns the message bytes to sign over.
+// GetSignBytes returns the ping message bytes to sign over.
 func (m *Ping) GetSignBytes() []byte {
 	fakeMsg := proto.Clone(m).(*Ping)
 	fakeMsg.Signature = []byte{}
@@ -19,7 +19,7 @@ func (m *Ping) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// GetSignBytes returns the message bytes to sign over.
+// GetSignBytes returns the pong message bytes to sign over.
 func (m *Pong) GetSignBytes() []byte {
 	fakeMsg := proto.Clone(m).(*Pong)
 	fakeMsg.Signature = []byte{}
@@ -27,7 +27,7 @@ func (m *Pong) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// GetSignBytes returns the message bytes to sign over.
+// GetSignBytes returns the get approval request message bytes to sign over.
 func (m *GetApprovalRequest) GetSignBytes() []byte {
 	fakeMsg := proto.Clone(m).(*GetApprovalRequest)
 	fakeMsg.Signature = []byte{}
@@ -35,7 +35,7 @@ func (m *GetApprovalRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// GetSignBytes returns the message bytes to sign over.
+// GetSignBytes returns the get approval response message bytes to sign over.
 func (m *GetApprovalResponse) GetSignBytes() []byte {
 	fakeMsg := proto.Clone(m).(*GetApprovalResponse)
 	fakeMsg.Signature = []byte{}

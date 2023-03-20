@@ -2,6 +2,7 @@ syntax = "proto3";
 package service.signer.types;
 
 import "greenfield/storage/tx.proto";
+import "pkg/p2p/types/p2p.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/signer/types";
 
@@ -81,6 +82,46 @@ message SealObjectOnChainResponse {
   bytes tx_hash = 1;
 }
 
+// SignPingMsgRequest is request type for the SignPingMsg RPC method.
+message SignPingMsgRequest {
+  pkg.p2p.types.Ping ping = 1;
+}
+
+// SignPingMsgResponse is response type for the SignPingMsg RPC method.
+message SignPingMsgResponse {
+  pkg.p2p.types.Ping ping = 1;
+}
+
+// SignPongMsgRequest is request type for the SignPongMsg RPC method.
+message SignPongMsgRequest {
+  pkg.p2p.types.Pong pong = 1;
+}
+
+// SignPongMsgResponse is response type for the SignPongMsg RPC method.
+message SignPongMsgResponse {
+  pkg.p2p.types.Pong pong = 1;
+}
+
+// SignReplicateApprovalReqMsgRequest is request type for the SignReplicateApprovalReqMsg RPC method.
+message SignReplicateApprovalReqMsgRequest {
+  pkg.p2p.types.GetApprovalRequest approval = 1;
+}
+
+// SignGetApprovalReqResponse is response type for the SignReplicateApprovalReqMsg RPC method
+message SignReplicateApprovalReqMsgResponse {
+  pkg.p2p.types.GetApprovalRequest approval = 1;
+}
+
+// SignReplicateApprovalRspMsgRequest is request type for the SignReplicateApprovalRspMsg RPC method.
+message SignReplicateApprovalRspMsgRequest {
+  pkg.p2p.types.GetApprovalResponse approval = 1;
+}
+
+// SignReplicateApprovalRspMsgResponse is response type for the SignReplicateApprovalRspMsg RPC method
+message SignReplicateApprovalRspMsgResponse {
+  pkg.p2p.types.GetApprovalResponse approval = 1;
+}
+
 // SignerService defines the service for signing and verifying storage-related approvals and sealing objects on the chain.
 service SignerService {
   // SignBucketApproval signs the approval for creating a storage bucket.
@@ -95,4 +136,12 @@ service SignerService {
   rpc SignIntegrityHash(SignIntegrityHashRequest) returns (SignIntegrityHashResponse) {};
   // SealObjectOnChain seals the storage object on the blockchain.
   rpc SealObjectOnChain(SealObjectOnChainRequest) returns (SealObjectOnChainResponse) {};
+  // SignPingMsg signs the ping msg for p2p node
+  rpc SignPingMsg(SignPingMsgRequest) returns (SignPingMsgResponse){}
+  // SignPongMsg signs the pong msg for p2p node
+  rpc SignPongMsg(SignPongMsgRequest) returns (SignPongMsgResponse){}
+  // SignReplicateApprovalReqMsg signs the get approval request msg for p2p node
+  rpc SignReplicateApprovalReqMsg(SignReplicateApprovalReqMsgRequest) returns (SignReplicateApprovalReqMsgResponse){}
+  // SignReplicateApprovalRspMsg signs the get approval response msg for p2p node
+  rpc SignReplicateApprovalRspMsg(SignReplicateApprovalRspMsgRequest) returns (SignReplicateApprovalRspMsgResponse){}
 }
