@@ -154,9 +154,29 @@ func (greenfield *Greenfield) VerifyGetObjectPermission(ctx context.Context, acc
 		Operator:   account,
 		BucketName: bucket,
 		ObjectName: object,
+		ActionType: permissiontypes.ACTION_GET_OBJECT,
 	})
 	if err != nil {
 		log.Errorw("failed to verify get object permission", "account", account, "error", err)
+		return false, err
+	}
+	if resp.GetEffect() == permissiontypes.EFFECT_ALLOW {
+		return true, err
+	}
+	return false, err
+}
+
+// VerifyPutObjectPermission verify put object permission.
+func (greenfield *Greenfield) VerifyPutObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
+	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{
+		Operator:   account,
+		BucketName: bucket,
+		ObjectName: object,
+		ActionType: permissiontypes.ACTION_CREATE_OBJECT,
+	})
+	if err != nil {
+		log.Errorw("failed to verify put object permission", "account", account, "error", err)
 		return false, err
 	}
 	if resp.GetEffect() == permissiontypes.EFFECT_ALLOW {
