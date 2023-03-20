@@ -68,7 +68,7 @@ const (
 	// GreenfieldChainID default greenfield chainID
 	GreenfieldChainID = "greenfield_9000-1741"
 	// WhiteListCIDR default whitelist CIDR
-	WhiteListCIDR = "127.0.0.1/32"
+	WhiteListCIDR = "0.0.0.0/0"
 )
 
 // environment constants
