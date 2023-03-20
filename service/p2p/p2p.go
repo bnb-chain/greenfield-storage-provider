@@ -68,8 +68,11 @@ func (p *P2PServer) Start(ctx context.Context) error {
 	errCh := make(chan error)
 	go p.serve(errCh)
 	go p.eventLoop()
-	err := <-errCh
-	err = p.node.Start(ctx)
+	err := p.node.Start(ctx)
+	if err != nil {
+		return err
+	}
+	err = <-errCh
 	return err
 }
 
