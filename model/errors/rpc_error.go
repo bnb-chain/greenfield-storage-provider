@@ -66,6 +66,8 @@ var (
 	ErrSPMismatch = errors.New("SP's operate address mismatch")
 	// ErrApprovalExpire defines the SP's operate address mismatch error
 	ErrApprovalExpire = errors.New("approval expire")
+	// ErrSignatureInvalid defines the replicate approval signature invalid
+	ErrSignatureInvalid = errors.New("invalid replicate approval signature")
 )
 
 // signer service error

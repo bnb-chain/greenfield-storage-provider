@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"context"
 	"errors"
 	"io"
 	"strings"
@@ -100,8 +101,12 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 	log.Debugf("%s received approval request from %s, object_id: %d",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), req.GetObjectInfo().Id.Uint64())
 
-	// TODO:: verify the req's signature
-	if !a.node.peers.checkSp(req.GetSpOperatorAddress()) {
+	err = types.VerifySignature(req.GetSpOperatorAddress(), req.GetSignBytes(), req.GetSignature())
+	if err != nil {
+		log.Errorw("failed to verify get approval request msg signature", "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
+		return
+	}
+	if !a.node.peers.checkSP(req.GetSpOperatorAddress()) {
 		log.Warnw("ignore invalid sp approval request", "sp", req.GetSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
@@ -117,8 +122,12 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 		SpOperatorAddress: a.node.SpOperatorAddress,
 		TimeOut:           time.Now().Add(validTime).Unix(),
 	}
-	// TODO:: customized approval strategy, if refuse will fill back resp's refuse field
-	// TODO:: send resp to signer for signing and fill back resp's signature field
+	// TODO:: customized approval strategy, if refuse will fill back resp refuse field
+	resp, err = a.node.signer.SignReplicateApprovalRspMsg(context.Background(), resp)
+	if err != nil {
+		log.Errorw("failed to sign get approval response msg", "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
+		return
+	}
 	err = a.node.sendToPeer(s.Conn().RemotePeer(), GetApprovalResponse, resp)
 	log.Infof("%s response to %s approval request, error: %s",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), err)
@@ -142,8 +151,12 @@ func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 	log.Debugf("%s received approval response from %s, object_id: %d",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), resp.GetObjectInfo().Id.Uint64())
 
-	// TODO:: verify the resp's signature
-	if !a.node.peers.checkSp(resp.GetSpOperatorAddress()) {
+	err = types.VerifySignature(resp.GetSpOperatorAddress(), resp.GetSignBytes(), resp.GetSignature())
+	if err != nil {
+		log.Errorw("failed to verify get approval response msg signature", "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
+		return
+	}
+	if !a.node.peers.checkSP(resp.GetSpOperatorAddress()) {
 		log.Warnw("ignore invalid sp approval response", "sp", resp.GetSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return

@@ -325,7 +325,11 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 
 // verifyReplicateApproval verify the piece replicate approval
 func (g *Gateway) verifyReplicateApproval(approval *p2ptypes.GetApprovalResponse) error {
-	// TODO:: unsigned the signature, and check the OperatorAddress whether correctness
+	err := p2ptypes.VerifySignature(approval.GetSpOperatorAddress(), approval.GetSignBytes(), approval.GetSignature())
+	if err != nil {
+		log.Errorw("failed to verify approval signature", "error", err)
+		return errors.ErrSignatureInvalid
+	}
 	if strings.Compare(g.config.SpOperatorAddress, approval.GetSpOperatorAddress()) != 0 {
 		log.Errorw("failed to verify replicate approval's SP operate address",
 			"approval_operate_address", approval.GetSpOperatorAddress(),

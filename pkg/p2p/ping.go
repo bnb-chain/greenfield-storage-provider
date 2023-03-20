@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"context"
 	"io"
 
 	"github.com/gogo/protobuf/proto"
@@ -32,7 +33,7 @@ func (n *Node) onPing(s network.Stream) {
 		}
 		log.Debugw("success to response ping", "peer_id", peerID)
 	}()
-	data := &types.Ping{}
+	ping := &types.Ping{}
 	buf, err := io.ReadAll(s)
 	if err != nil {
 		log.Errorw("failed to read ping msg from stream", "error", err)
@@ -40,15 +41,20 @@ func (n *Node) onPing(s network.Stream) {
 		return
 	}
 	s.Close()
-	err = proto.Unmarshal(buf, data)
+	err = proto.Unmarshal(buf, ping)
 	if err != nil {
 		log.Errorw("failed to unmarshal ping msg", "error", err)
 		return
 	}
-	log.Debugf("%s received ping request from %s. Message: %s", s.Conn().LocalPeer(), s.Conn().RemotePeer(), data.String())
-	// TODO:: verify the signature
+	log.Debugf("%s received ping request from %s. Message: %s", s.Conn().LocalPeer(), s.Conn().RemotePeer(), ping.String())
+
+	err = types.VerifySignature(ping.GetSpOperatorAddress(), ping.GetSignBytes(), ping.GetSignature())
+	if err != nil {
+		log.Warnw("failed to verify ping msg signature", "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
+		return
+	}
 	n.node.Peerstore().AddAddr(s.Conn().RemotePeer(), s.Conn().RemoteMultiaddr(), peerstore.PermanentAddrTTL)
-	n.peers.AddPeer(peerID, data.SpOperatorAddress, s.Conn().RemoteMultiaddr())
+	n.peers.AddPeer(peerID, ping.SpOperatorAddress, s.Conn().RemoteMultiaddr())
 
 	pong := &types.Pong{}
 	for _, pID := range n.node.Peerstore().PeersWithAddrs() {
@@ -63,7 +69,11 @@ func (n *Node) onPing(s network.Stream) {
 		log.Debugw("send node to remote", "node_id", pID.String(), "remote_node", s.Conn().RemotePeer())
 	}
 	pong.SpOperatorAddress = n.SpOperatorAddress
-	// TODO:: send to signer and back fill the signature field
+	pong, err = n.signer.SignPongMsg(context.Background(), pong)
+	if err != nil {
+		log.Errorw("failed to sign pong msg", "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
+		return
+	}
 	err = n.sendToPeer(s.Conn().RemotePeer(), PongProtocol, pong)
 }
 
@@ -81,7 +91,7 @@ func (n *Node) onPong(s network.Stream) {
 		}
 		log.Debugw("success to receive pong", "peer_id", peerID)
 	}()
-	data := &types.Pong{}
+	pong := &types.Pong{}
 	buf, err := io.ReadAll(s)
 	if err != nil {
 		log.Errorw("failed to read pong msg from stream", "error", err)
@@ -89,16 +99,21 @@ func (n *Node) onPong(s network.Stream) {
 		return
 	}
 	s.Close()
-	err = proto.Unmarshal(buf, data)
+	err = proto.Unmarshal(buf, pong)
 	if err != nil {
 		log.Errorw("failed to unmarshal ping msg", "error", err)
 		return
 	}
 	log.Debugf("%s received pong request from %s.", s.Conn().LocalPeer(), s.Conn().RemotePeer())
-	// TODO:: verify the signature
-	n.peers.AddPeer(peerID, data.SpOperatorAddress, s.Conn().RemoteMultiaddr())
 
-	for _, node := range data.Nodes {
+	err = types.VerifySignature(pong.GetSpOperatorAddress(), pong.GetSignBytes(), pong.GetSignature())
+	if err != nil {
+		log.Warnw("failed to verify pong msg signature", "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
+		return
+	}
+	n.peers.AddPeer(peerID, pong.SpOperatorAddress, s.Conn().RemoteMultiaddr())
+
+	for _, node := range pong.Nodes {
 		pID, err := peer.Decode(node.NodeId)
 		if err != nil {
 			continue

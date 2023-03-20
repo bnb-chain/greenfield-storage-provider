@@ -133,7 +133,11 @@ func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectAccept int, ti
 		ObjectInfo:        object,
 		SpOperatorAddress: n.SpOperatorAddress,
 	}
-	// TODO::sign the getApprovalReq by signer
+	getApprovalReq, err = n.signer.SignReplicateApprovalReqMsg(context.Background(), getApprovalReq)
+	if err != nil {
+		log.Errorw("failed to sign the get approval request", "object_id", object.Id.Uint64())
+		return
+	}
 	n.broadcast(GetApprovalRequest, getApprovalReq)
 	ticker := time.NewTicker(time.Duration(timeout) * time.Second)
 	for {
@@ -154,6 +158,9 @@ func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectAccept int, ti
 				if _, ok := accept[approval.GetSpOperatorAddress()]; !ok {
 					accept[approval.GetSpOperatorAddress()] = approval
 				}
+				if len(accept) >= expectAccept {
+					return
+				}
 			}
 		case <-ticker.C:
 			return
@@ -172,6 +179,11 @@ func (n *Node) eventloop() {
 			// TODO:: send to signer and back fill the signature field
 			ping := &types.Ping{
 				SpOperatorAddress: n.SpOperatorAddress,
+			}
+			ping, err := n.signer.SignPingMsg(context.Background(), ping)
+			if err != nil {
+				log.Warnw("failed to sign ping msg", "error", err)
+				continue
 			}
 			log.Debugw("trigger broadcast ping")
 			n.broadcast(PingProtocol, ping)

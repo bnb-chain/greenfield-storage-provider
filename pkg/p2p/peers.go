@@ -97,8 +97,8 @@ func (pr *PeerProvider) UpdateSp(SPs []string) {
 	pr.spPeers = sp2Peers
 }
 
-// checkSp checks the sp is valid
-func (pr *PeerProvider) checkSp(sp string) bool {
+// checkSP checks the sp is valid
+func (pr *PeerProvider) checkSP(sp string) bool {
 	pr.mux.RLock()
 	defer pr.mux.RUnlock()
 	_, ok := pr.spPeers[sp]
