@@ -115,6 +115,7 @@ func (uploader *Uploader) serve(errCh chan error) {
 		grpc.ChainUnaryInterceptor(openmetrics.UnaryServerInterceptor(metrics.DefaultGRPCServerMetrics),
 			grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(gRPCPanicRecoveryHandler))),
 		grpc.ChainStreamInterceptor(openmetrics.StreamServerInterceptor(metrics.DefaultGRPCServerMetrics)),
+		grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize),
 	)
 	// initialize all metrics
 	metrics.DefaultGRPCServerMetrics.InitializeMetrics(uploader.grpcServer)

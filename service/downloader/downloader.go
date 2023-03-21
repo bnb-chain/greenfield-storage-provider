@@ -64,7 +64,7 @@ func (downloader *Downloader) Start(ctx context.Context) error {
 			log.Errorw("failed to listen", "error", err)
 			return
 		}
-		grpcServer := grpc.NewServer()
+		grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize))
 		types.RegisterDownloaderServiceServer(grpcServer, downloader)
 		reflection.Register(grpcServer)
 		if err = grpcServer.Serve(lis); err != nil {

@@ -83,7 +83,7 @@ func (receiver *Receiver) serve(errCh chan error) {
 		return
 	}
 
-	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize))
+	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize))
 	types.RegisterReceiverServiceServer(grpcServer, receiver)
 	receiver.grpcServer = grpcServer
 	reflection.Register(grpcServer)
