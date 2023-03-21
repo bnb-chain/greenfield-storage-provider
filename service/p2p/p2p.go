@@ -36,7 +36,7 @@ type P2PServer struct {
 
 // NewP2PServer return an instance of P2PServer
 func NewP2PServer(config *P2PConfig) (*P2PServer, error) {
-	signer, err := signerclient.NewSignerClient(config.SignerGRPCAddress)
+	signer, err := signerclient.NewSignerClient(config.SignerGrpcAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (p *P2PServer) Stop(ctx context.Context) error {
 }
 
 func (p *P2PServer) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", p.config.GrpcAddress)
+	lis, err := net.Listen("tcp", p.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "err", err)

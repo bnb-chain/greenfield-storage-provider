@@ -10,9 +10,9 @@ message GetApprovalRequest {
   // approval defines the object info for approval
   pkg.p2p.types.GetApprovalRequest approval = 1;
   // expected_accept defines the number of expecting accept approval
-  int64 expected_accept = 3;
+  int64 expected_accept = 2;
   // timeout defines approval request time out
-  int64 timeout = 4;
+  int64 timeout = 3;
 }
 
 // GetApprovalResponse is response type for the GetApproval RPC method.

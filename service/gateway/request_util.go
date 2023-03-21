@@ -336,7 +336,7 @@ func (g *Gateway) verifyReplicateApproval(approval *p2ptypes.GetApprovalResponse
 			"own_operate_address", g.config.SpOperatorAddress)
 		return errors.ErrSPMismatch
 	}
-	if time.Now().Unix() > approval.Timeout {
+	if time.Now().Unix() > approval.GetExpiredTime() {
 		return errors.ErrApprovalExpire
 	}
 	return nil

@@ -250,12 +250,12 @@ func (cfg *StorageProviderConfig) MakeP2PServiceConfig() (*p2p.P2PConfig, error)
 		P2PConfig:         cfg.P2PConfig,
 	}
 	if _, ok := cfg.ListenAddress[model.P2PService]; ok {
-		pCfg.GrpcAddress = cfg.ListenAddress[model.P2PService]
+		pCfg.GRPCAddress = cfg.ListenAddress[model.P2PService]
 	} else {
 		return nil, fmt.Errorf("missing p2p service gRPC address configuration for p2p service")
 	}
 	if _, ok := cfg.Endpoint[model.SignerService]; ok {
-		pCfg.SignerGRPCAddress = cfg.Endpoint[model.SignerService]
+		pCfg.SignerGrpcAddress = cfg.Endpoint[model.SignerService]
 	} else {
 		return nil, fmt.Errorf("missing signer gRPC address configuration for p2p service")
 	}

@@ -120,7 +120,7 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 	resp := &types.GetApprovalResponse{
 		ObjectInfo:        req.GetObjectInfo(),
 		SpOperatorAddress: a.node.SpOperatorAddress,
-		Timeout:           time.Now().Add(validTime).Unix(),
+		ExpiredTime:       time.Now().Add(validTime).Unix(),
 	}
 	// TODO:: customized approval strategy, if refuse will fill back resp refuse field
 	resp, err = a.node.signer.SignReplicateApprovalRspMsg(context.Background(), resp)

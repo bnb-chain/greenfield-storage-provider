@@ -47,8 +47,8 @@ message GetApprovalResponse {
   bnbchain.greenfield.storage.ObjectInfo object_info = 1;
   // sp_operator_address define sp operator public key
   string sp_operator_address = 2;
-  // timeout defines the approval valid deadline
-  int64 timeout = 3;
+  // expired_time defines the approval valid deadline
+  int64 expired_time = 3;
   // refused_reason defines the reason of refusing
   string refused_reason = 4;
   // signature define the signature of sp sign the msg

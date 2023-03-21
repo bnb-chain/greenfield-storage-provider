@@ -136,7 +136,7 @@ Dsn = "localhost:3308"
 [P2PConfig]
 ListenAddress = "127.0.0.1:9933"
 # p2p node msg Secp256k1 encryption key, it is different from other SP's addresses
-PrivKey = ""
+P2PPrivateKey = ""
 # p2p node's bootstrap node, format: [node_id1@ip1:port1, node_id2@ip1:port2]
 Bootstrap = []
 # log configuration

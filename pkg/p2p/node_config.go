@@ -18,7 +18,7 @@ import (
 const (
 	// PingPeriodMin defines the min value that the period of sending ping request
 	PingPeriodMin = 1
-	// DailTimeOut defines default value that the timeout of dail other p2p node
+	// DailTimeout defines default value that the timeout of dail other p2p node
 	DailTimeout = 1
 	// DefaultDataPath defines default value that the path of peer store
 	DefaultDataPath = "./data"
@@ -30,10 +30,10 @@ const (
 type NodeConfig struct {
 	// ListenAddress defines the p2p listen address, used to make multiaddr
 	ListenAddress string
-	// PrivKey defines the p2p node private key, only support Secp256k1
+	// P2PPrivateKey defines the p2p node private key, only support Secp256k1
 	// if default value, creates random private-public key pairs
 	// TODO::support more crypto algorithm for generating and verifying private-public key pairs
-	PrivKey string
+	P2PPrivateKey string
 	// Bootstrap defines Bootstrap p2p node, cannot be empty
 	// format: [node_id1@ip1:port1, node_id2@ip1:port2]
 	Bootstrap []string
@@ -41,25 +41,25 @@ type NodeConfig struct {
 	PingPeriod int
 }
 
-// overrideConfigFromEnv load private from ENV var
+// overrideConfigFromEnv load private key from ENV var
 func (cfg *NodeConfig) overrideConfigFromEnv() {
-	if val, ok := os.LookupEnv(model.P2PPrivKey); ok {
-		cfg.PrivKey = val
+	if val, ok := os.LookupEnv(model.P2PPrivateKey); ok {
+		cfg.P2PPrivateKey = val
 	}
 }
 
 // ParseConfing parsers the configuration into a format that go-libp2p can use
 func (cfg *NodeConfig) ParseConfing() (privKey crypto.PrivKey, hostAddr ma.Multiaddr, bootstrapIDs []peer.ID, bootstrapAddrs []ma.Multiaddr, err error) {
 	cfg.overrideConfigFromEnv()
-	if len(cfg.PrivKey) > 0 {
-		priKeyBytes, err := hex.DecodeString(cfg.PrivKey)
+	if len(cfg.P2PPrivateKey) > 0 {
+		priKeyBytes, err := hex.DecodeString(cfg.P2PPrivateKey)
 		if err != nil {
-			log.Errorw("failed to hex decode private key", "priv_key", cfg.PrivKey, "error", err)
+			log.Errorw("failed to hex decode private key", "priv_key", cfg.P2PPrivateKey, "error", err)
 			return privKey, hostAddr, bootstrapIDs, bootstrapAddrs, err
 		}
 		privKey, err = crypto.UnmarshalSecp256k1PrivateKey(priKeyBytes)
 		if err != nil {
-			log.Errorw("failed to unmarshal secp256k1 private key", "priv_key", cfg.PrivKey, "error", err)
+			log.Errorw("failed to unmarshal secp256k1 private key", "priv_key", cfg.P2PPrivateKey, "error", err)
 			return privKey, hostAddr, bootstrapIDs, bootstrapAddrs, err
 		}
 	} else {

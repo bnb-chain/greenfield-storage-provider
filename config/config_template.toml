@@ -61,7 +61,7 @@ Dsn = "localhost:3308"
 
 [P2PConfig]
 ListenAddress = "127.0.0.1:9933"
-PrivKey = ""
+P2PPrivateKey = ""
 Bootstrap = []
 PingPeriod = 2
 

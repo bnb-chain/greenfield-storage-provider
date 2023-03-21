@@ -143,9 +143,9 @@ func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectedAccept int, 
 	for {
 		select {
 		case approval := <-approvalCh:
-			if approval.GetTimeout() <= time.Now().Unix() {
+			if approval.GetExpiredTime() <= time.Now().Unix() {
 				log.Warnw("discard expired approval", "sp", approval.GetSpOperatorAddress(),
-					"object_id", approval.GetObjectInfo().Id.Uint64(), "expire_time", approval.GetTimeout())
+					"object_id", approval.GetObjectInfo().Id.Uint64(), "expire_time", approval.GetExpiredTime())
 				continue
 			}
 			if len(approval.GetRefusedReason()) != 0 {

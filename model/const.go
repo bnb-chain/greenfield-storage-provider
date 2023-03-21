@@ -39,7 +39,7 @@ var SpServiceDesc = map[string]string{
 	SignerService:      "Sign the transaction and broadcast to chain",
 	MetadataService:    "Provides the ability to query meta data",
 	BlockSyncerService: "Syncs block data to db",
-	P2PService:         "Service for p2p protocol interaction between SPs",
+	P2PService:         "Communicate with SPs on p2p protocol",
 }
 
 // define storage provider service gRPC default address
@@ -112,8 +112,8 @@ const (
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
 	// DsnBlockSyncer defines env variable name for block syncer dsn
 	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
-	// P2PPrivKey defines env variable for p2p protocol private key
-	P2PPrivKey = "P2P_PRIV_KEY"
+	// P2PPrivateKey defines env variable for p2p protocol private key
+	P2PPrivateKey = "P2P_PRIVATE_KEY"
 )
 
 // define all kinds of http constants

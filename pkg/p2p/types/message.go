@@ -44,7 +44,7 @@ func (m *GetApprovalResponse) GetSignBytes() []byte {
 	fakeMsg := &GetApprovalResponse{
 		SpOperatorAddress: m.GetSpOperatorAddress(),
 		ObjectInfo:        &object,
-		Timeout:           m.GetTimeout(),
+		ExpiredTime:       m.GetExpiredTime(),
 		RefusedReason:     m.GetRefusedReason(),
 	}
 	fakeMsg.Signature = []byte{}
