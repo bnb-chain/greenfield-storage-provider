@@ -56,7 +56,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SignerService,
 		model.MetadataService,
 		model.ManagerService,
-		model.P2pService,
+		model.P2PService,
 	},
 	ListenAddress: map[string]string{
 		model.GatewayService:    model.GatewayHTTPAddress,
@@ -67,7 +67,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.TaskNodeService:   model.TaskNodeGRPCAddress,
 		model.SignerService:     model.SignerGRPCAddress,
 		model.MetadataService:   model.MetadataGRPCAddress,
-		model.P2pService:        model.P2PGRPCAddress,
+		model.P2PService:        model.P2PGRPCAddress,
 	},
 	Endpoint: map[string]string{
 		model.GatewayService:    "gnfd.nodereal.com",
@@ -78,7 +78,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.TaskNodeService:   model.TaskNodeGRPCAddress,
 		model.SignerService:     model.SignerGRPCAddress,
 		model.MetadataService:   model.MetadataGRPCAddress,
-		model.P2pService:        model.P2PGRPCAddress,
+		model.P2PService:        model.P2PGRPCAddress,
 	},
 	SpOperatorAddress: hex.EncodeToString([]byte(model.SpOperatorAddress)),
 	SpDBConfig:        DefaultSQLDBConfig,
@@ -136,7 +136,7 @@ var DefaultLogConfig = &LogConfig{
 }
 
 var DefaultP2PConfig = &p2p.NodeConfig{
-	ListenAddress: model.P2PGListenAddress,
+	ListenAddress: model.P2PListenAddress,
 	PingPeriod:    model.DefaultPingPeriod,
 }
 

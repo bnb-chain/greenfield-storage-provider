@@ -333,10 +333,10 @@ func (g *Gateway) verifyReplicateApproval(approval *p2ptypes.GetApprovalResponse
 	if strings.Compare(g.config.SpOperatorAddress, approval.GetSpOperatorAddress()) != 0 {
 		log.Errorw("failed to verify replicate approval's SP operate address",
 			"approval_operate_address", approval.GetSpOperatorAddress(),
-			"self_operate_address", g.config.SpOperatorAddress)
+			"own_operate_address", g.config.SpOperatorAddress)
 		return errors.ErrSPMismatch
 	}
-	if time.Now().Unix() > approval.TimeOut {
+	if time.Now().Unix() > approval.Timeout {
 		return errors.ErrApprovalExpire
 	}
 	return nil

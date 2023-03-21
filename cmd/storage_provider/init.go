@@ -3,23 +3,22 @@ package main
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
-	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
-	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
-	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
-	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
-	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
 	metadata "github.com/bnb-chain/greenfield-storage-provider/service/metadata/service"
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
+	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
+	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
@@ -139,7 +138,7 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-	case model.P2pService:
+	case model.P2PService:
 		p2pCfg, err := cfg.MakeP2PServiceConfig()
 		if err != nil {
 			return nil, err

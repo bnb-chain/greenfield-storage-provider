@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	ma "github.com/multiformats/go-multiaddr"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -19,7 +19,7 @@ const (
 	// PingPeriodMin defines the min value that the period of sending ping request
 	PingPeriodMin = 1
 	// DailTimeOut defines default value that the timeout of dail other p2p node
-	DailTimeOut = 1
+	DailTimeout = 1
 	// DefaultDataPath defines default value that the path of peer store
 	DefaultDataPath = "./data"
 	// P2PNode defines the p2p protocol node name

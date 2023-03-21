@@ -44,12 +44,12 @@ func (p *P2PClient) Close() error {
 }
 
 // GetApproval asks the approval to other SP.
-func (p *P2PClient) GetApproval(ctx context.Context, object *storagetypes.ObjectInfo, expect int64, timeout int64, opts ...grpc.CallOption) (
+func (p *P2PClient) GetApproval(ctx context.Context, object *storagetypes.ObjectInfo, expected int64, timeout int64, opts ...grpc.CallOption) (
 	map[string]*p2ptypes.GetApprovalResponse, map[string]*p2ptypes.GetApprovalResponse, error) {
 	req := &types.GetApprovalRequest{
-		Approval:     &p2ptypes.GetApprovalRequest{ObjectInfo: object},
-		ExpectAccept: expect,
-		TimeOut:      timeout,
+		Approval:       &p2ptypes.GetApprovalRequest{ObjectInfo: object},
+		ExpectedAccept: expected,
+		Timeout:        timeout,
 	}
 	resp, err := p.p2p.GetApproval(ctx, req, opts...)
 	if err != nil {

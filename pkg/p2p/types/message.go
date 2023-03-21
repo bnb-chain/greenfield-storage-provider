@@ -44,8 +44,8 @@ func (m *GetApprovalResponse) GetSignBytes() []byte {
 	fakeMsg := &GetApprovalResponse{
 		SpOperatorAddress: m.GetSpOperatorAddress(),
 		ObjectInfo:        &object,
-		TimeOut:           m.GetTimeOut(),
-		RefuseReason:      m.GetRefuseReason(),
+		Timeout:           m.GetTimeout(),
+		RefusedReason:     m.GetRefusedReason(),
 	}
 	fakeMsg.Signature = []byte{}
 	bz := ModuleCdc.MustMarshalJSON(fakeMsg)

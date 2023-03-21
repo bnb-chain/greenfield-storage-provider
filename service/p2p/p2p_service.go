@@ -13,7 +13,7 @@ var _ p2ptypes.P2PServiceServer = &P2PServer{}
 func (p *P2PServer) GetApproval(ctx context.Context, req *p2ptypes.GetApprovalRequest) (*p2ptypes.GetApprovalResponse, error) {
 	ctx = log.Context(ctx, req)
 	objectInfo := req.GetApproval().GetObjectInfo()
-	accept, refuse, err := p.node.GetApproval(objectInfo, int(req.GetExpectAccept()), req.GetTimeOut())
+	accept, refuse, err := p.node.GetApproval(objectInfo, int(req.GetExpectedAccept()), req.GetTimeout())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get approval", "object_id", objectInfo.Id.Uint64(), "error", err)
 		return nil, err

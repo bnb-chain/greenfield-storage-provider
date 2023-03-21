@@ -65,7 +65,7 @@ func NewNode(config *NodeConfig, SPAddr string, signer *signerclient.SignerClien
 		// to the same sp all fail and are replaced, then the sp will be unable to communicate, this requires
 		// dynamic updates permanent nodes
 		libp2p.Ping(false),
-		libp2p.WithDialTimeout(time.Duration(DailTimeOut)*time.Second),
+		libp2p.WithDialTimeout(time.Duration(DailTimeout)*time.Second),
 	)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func NewNode(config *NodeConfig, SPAddr string, signer *signerclient.SignerClien
 		stopCh:            make(chan struct{}),
 	}
 	n.initProtocol()
-	log.Infow("success to init p2p node", "node_id", n.node.ID())
+	log.Infow("succeed to init p2p node", "node_id", n.node.ID())
 	return n, nil
 }
 
@@ -120,9 +120,9 @@ func (n *Node) PeersProvider() *PeerProvider {
 
 // GetApproval broadcast get approval request and blocking goroutine until timeout or
 // collect expect accept approval response number
-func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectAccept int, timeout int64) (
+func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectedAccept int, timeout int64) (
 	accept map[string]*types.GetApprovalResponse, refuse map[string]*types.GetApprovalResponse, err error) {
-	approvalCH, err := n.approval.hangApprovalRequest(object.Id.Uint64())
+	approvalCh, err := n.approval.hangApprovalRequest(object.Id.Uint64())
 	if err != nil {
 		return
 	}
@@ -142,13 +142,13 @@ func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectAccept int, ti
 	ticker := time.NewTicker(time.Duration(timeout) * time.Second)
 	for {
 		select {
-		case approval := <-approvalCH:
-			if approval.GetTimeOut() <= time.Now().Unix() {
+		case approval := <-approvalCh:
+			if approval.GetTimeout() <= time.Now().Unix() {
 				log.Warnw("discard expired approval", "sp", approval.GetSpOperatorAddress(),
-					"object_id", approval.GetObjectInfo().Id.Uint64(), "expire_time", approval.GetTimeOut())
+					"object_id", approval.GetObjectInfo().Id.Uint64(), "expire_time", approval.GetTimeout())
 				continue
 			}
-			if len(approval.GetRefuseReason()) != 0 {
+			if len(approval.GetRefusedReason()) != 0 {
 				if _, ok := refuse[approval.GetSpOperatorAddress()]; !ok {
 					refuse[approval.GetSpOperatorAddress()] = approval
 					delete(accept, approval.GetSpOperatorAddress())
@@ -158,7 +158,7 @@ func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectAccept int, ti
 				if _, ok := accept[approval.GetSpOperatorAddress()]; !ok {
 					accept[approval.GetSpOperatorAddress()] = approval
 				}
-				if len(accept) >= expectAccept {
+				if len(accept) >= expectedAccept {
 					return
 				}
 			}
@@ -185,7 +185,6 @@ func (n *Node) eventloop() {
 				log.Warnw("failed to sign ping msg", "error", err)
 				continue
 			}
-			log.Debugw("trigger broadcast ping")
 			n.broadcast(PingProtocol, ping)
 		}
 	}
@@ -214,7 +213,7 @@ func (n *Node) sendToPeer(peerID peer.ID, pc protocol.ID, data proto.Message) er
 	writer := ggio.NewFullWriter(s)
 	err = writer.WriteMsg(data)
 	if err != nil {
-		log.Warnw("failed to send msg", "peer_id", peerID, "protocol", pc, "error", err)
+		log.Errorw("failed to send msg", "peer_id", peerID, "protocol", pc, "error", err)
 		s.Close()
 		n.peers.DeletePeer(peerID)
 		return err

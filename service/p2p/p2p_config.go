@@ -7,7 +7,7 @@ import (
 
 type P2PConfig struct {
 	SpOperatorAddress string
-	GRPCAddress       string
+	GrpcAddress       string
 	SignerGRPCAddress string
 	SpDBConfig        *config.SQLDBConfig
 	P2PConfig         *p2p.NodeConfig

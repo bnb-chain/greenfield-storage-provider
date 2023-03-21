@@ -60,7 +60,7 @@ func NewP2PServer(config *P2PConfig) (*P2PServer, error) {
 
 // Name return the p2p server name, for the lifecycle management
 func (p *P2PServer) Name() string {
-	return model.P2pService
+	return model.P2PService
 }
 
 // Start the p2p server background goroutine
@@ -85,7 +85,7 @@ func (p *P2PServer) Stop(ctx context.Context) error {
 }
 
 func (p *P2PServer) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", p.config.GRPCAddress)
+	lis, err := net.Listen("tcp", p.config.GrpcAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "err", err)

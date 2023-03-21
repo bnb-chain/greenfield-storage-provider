@@ -63,9 +63,9 @@ var (
 	// ErrCheckQuotaEnough defines check quota is enough
 	ErrCheckQuotaEnough = errors.New("quota is not enough")
 	// ErrSPMismatch defines the SP's operate address mismatch error
-	ErrSPMismatch = errors.New("SP's operate address mismatch")
+	ErrSPMismatch = errors.New("the operator address of SP is a mismatch")
 	// ErrApprovalExpire defines the SP's operate address mismatch error
-	ErrApprovalExpire = errors.New("approval expire")
+	ErrApprovalExpire = errors.New("approval expired")
 	// ErrSignatureInvalid defines the replicate approval signature invalid
 	ErrSignatureInvalid = errors.New("invalid replicate approval signature")
 )
@@ -91,7 +91,7 @@ var (
 // task node service error
 var (
 	// ErrSPApprovalNumber defines failed to insufficient SPs' approvals from p2p server
-	ErrSPApprovalNumber = errors.New("failed to get sufficient SPs' approvals from p2p server")
+	ErrSPApprovalNumber = errors.New("failed to get sufficient approvals of SPs from p2p server")
 	// ErrSPNumber defines failed to get insufficient SPs from DB
 	ErrSPNumber = errors.New("failed to get sufficient SPs from DB")
 )
