@@ -93,6 +93,11 @@ make_config() {
         sed -i -e "s/localhost\:9090/${CHAIN_GRPC_ENDPOINT}/g" config.toml
         sed -i -e "s/localhost\:26750/${CHAIN_HTTP_ENDPOINT}/g" config.toml
         echo "succeed to generate config.toml in "${sp_dir}
+        # p2p
+        node=Node${index}
+        boot=Boot${index}
+        sed -i -e "s/PrivKey = \".*\"/PrivKey = \"${node}\"/g" config.toml
+        sed -i -e "s/Bootstrap = [\".*\"/Bootstrap = [\"${boot}\"/g" config.toml
       cd - >/dev/null
       index=$(($index+1))
   done
