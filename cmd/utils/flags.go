@@ -1,12 +1,14 @@
 package utils
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 const (
+	ConfigCategory   = "SP CONFIG"
 	LoggingCategory  = "LOGGING AND DEBUGGING"
 	MetricsCategory  = "METRICS AND STATS"
 	DatabaseCategory = "DATABASE"
@@ -14,21 +16,25 @@ const (
 
 var (
 	ConfigFileFlag = &cli.StringFlag{
-		Name:    "config",
-		Aliases: []string{"c"},
-		Usage:   "Config file path for uploading to db",
-		Value:   "./config.toml",
+		Name:     "config",
+		Category: ConfigCategory,
+		Aliases:  []string{"c"},
+		Usage:    "Config file path for uploading to db",
+		Value:    "./config.toml",
 	}
 	ConfigRemoteFlag = &cli.BoolFlag{
-		Name: "configremote",
+		Name:     "configremote",
+		Category: ConfigCategory,
 		Usage: "Flag load config from remote db, if 'configremote' be set, the db.user, " +
-			"db.password and db.address flags are needed, otherwise use default value",
+			"db.password and db.address flags are needed, otherwise use default the value",
 	}
 	ServerFlag = &cli.StringFlag{
-		Name:    "server",
-		Aliases: []string{"service", "s"},
-		Usage:   "Services to be started list, e.g. -server gateway,uploader,receiver... ",
+		Name:     "server",
+		Category: ConfigCategory,
+		Aliases:  []string{"service", "svc"},
+		Usage:    "Services to be started list, e.g. -server gateway, uploader, receiver...",
 	}
+
 	// database flags
 	DBUserFlag = &cli.StringFlag{
 		Name:     "db.user",
@@ -47,15 +53,16 @@ var (
 		Category: DatabaseCategory,
 		Usage:    "DB listen address",
 		EnvVars:  []string{model.SpDBAddress},
-		Value:    "localhost:3306",
+		Value:    config.DefaultSQLDBConfig.Address,
 	}
-	DBDataBaseFlag = &cli.StringFlag{
+	DBDatabaseFlag = &cli.StringFlag{
 		Name:     "db.database",
 		Category: DatabaseCategory,
 		Usage:    "DB database name",
 		EnvVars:  []string{model.SpDBDataBase},
-		Value:    "localhost:3306",
+		Value:    config.DefaultSQLDBConfig.Database,
 	}
+
 	// log flags
 	LogLevelFlag = &cli.StringFlag{
 		Name:     "log.level",
@@ -67,23 +74,34 @@ var (
 		Name:     "log.path",
 		Category: LoggingCategory,
 		Usage:    "log output file path",
-		Value:    "./gnfd-sp.log",
+		Value:    config.DefaultLogConfig.Path,
 	}
 	LogStdOutputFlag = &cli.BoolFlag{
 		Name:     "log.std",
 		Category: LoggingCategory,
 		Usage:    "log output standard io",
 	}
+
 	// Metrics flags
 	MetricsEnabledFlag = &cli.BoolFlag{
 		Name:     "metrics",
-		Usage:    "Enable metrics collection and reporting",
 		Category: MetricsCategory,
+		Usage:    "Enable metrics collection and reporting",
+		Value:    config.DefaultMetricsConfig.Enabled,
 	}
-	// MetricsHTTPFlag defines the endpoint for a stand-alone metrics HTTP endpoint.
 	MetricsHTTPFlag = &cli.StringFlag{
 		Name:     "metrics.addr",
-		Usage:    `Enable stand-alone metrics HTTP server listening interface`,
 		Category: MetricsCategory,
+		Usage:    "Enable stand-alone metrics HTTP server listening address",
+		Value:    config.DefaultMetricsConfig.HTTPAddress,
 	}
 )
+
+// Merge merges the given flag slices.
+func Merge(groups ...[]cli.Flag) []cli.Flag {
+	var ret []cli.Flag
+	for _, group := range groups {
+		ret = append(ret, group...)
+	}
+	return ret
+}

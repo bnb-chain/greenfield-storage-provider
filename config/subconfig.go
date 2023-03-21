@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
 	loggingconfig "github.com/forbole/juno/v4/log/config"
@@ -234,13 +233,5 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 		Logging: loggingconfig.Config{
 			Level: "debug",
 		},
-	}, nil
-}
-
-// MakeMetricsMonitorConfig make metrics monitor config from StorageProviderConfig
-func (cfg StorageProviderConfig) MakeMetricsMonitorConfig() (*metrics.MetricsMonitorConfig, error) {
-	return &metrics.MetricsMonitorConfig{
-		Enabled:     cfg.MetricsMonitorCfg.Enabled,
-		HTTPAddress: cfg.MetricsMonitorCfg.HTTPAddress,
 	}, nil
 }

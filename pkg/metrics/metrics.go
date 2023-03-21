@@ -2,11 +2,12 @@ package metrics
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/mux"
-	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -14,50 +15,68 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	metricshttp "github.com/bnb-chain/greenfield-storage-provider/pkg/metrics/http"
 )
-
-var _ lifecycle.Service = &MetricsMonitor{}
 
 var (
-	reg = prometheus.NewRegistry()
-	// DefaultGRPCServerMetrics create default gRPC server metrics
-	DefaultGRPCServerMetrics = openmetrics.NewServerMetrics(openmetrics.WithServerHandlingTimeHistogram())
-	// DefaultGRPCClientMetrics create default gRPC client metrics
-	DefaultGRPCClientMetrics = openmetrics.NewClientMetrics(openmetrics.WithClientHandlingTimeHistogram())
-	// DefaultHTTPServerMetrics create default HTTP server metrics
-	DefaultHTTPServerMetrics = metricshttp.NewServerMetrics()
+	mMonitor MetricsMonitor
+	once     sync.Once
 )
 
-func init() {
-	reg.MustRegister(DefaultGRPCServerMetrics, DefaultGRPCClientMetrics, DefaultHTTPServerMetrics,
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}), PanicsTotal)
+// MetricsMonitor defines abstract method
+type MetricsMonitor interface {
+	lifecycle.Service
+	Enabled() bool
 }
 
 // Metrics is used to monitor sp services
-type MetricsMonitor struct {
-	config     *MetricsMonitorConfig
+type Metrics struct {
+	config     *MetricsConfig
+	registry   *prometheus.Registry
 	httpServer *http.Server
 }
 
-// NewMetricsMonitor returns an instance of Metrics
-func NewMetricsMonitor(cfg *MetricsMonitorConfig) (*MetricsMonitor, error) {
-	return &MetricsMonitor{config: cfg}, nil
+// NewMetrics returns the singleton instance of Metrics.
+// Note: if you want to use metrics service in storage provider, you must call NewMetrics in initMetricsConfig func.
+// if you use GetMetrics method straightly without calling NewMetrics firstly, you won't start metrics service to collect
+// stats data about sp.
+func NewMetrics(cfg *MetricsConfig) MetricsMonitor {
+	return initMetrics(cfg)
 }
 
-// Name describes service name
-func (m *MetricsMonitor) Name() string {
-	return model.MetricsMonitorService
+// GetMetrics gets an instance of MetricsMonitor, you can use this in the service logic of sp
+func GetMetrics() MetricsMonitor {
+	return initMetrics(nil)
+}
+
+// initMetrics is used to init metrics by MetricsConfig
+func initMetrics(cfg *MetricsConfig) MetricsMonitor {
+	once.Do(func() {
+		if cfg == nil || !cfg.Enabled {
+			mMonitor = NilMetrics{}
+		} else {
+			mMonitor = &Metrics{
+				config:   cfg,
+				registry: prometheus.NewRegistry(),
+			}
+		}
+	})
+	return mMonitor
+}
+
+// Name describes metrics service name
+func (m *Metrics) Name() string {
+	return model.MetricsService
 }
 
 // Start HTTP server
-func (m *MetricsMonitor) Start(ctx context.Context) error {
+func (m *Metrics) Start(ctx context.Context) error {
+	m.registerMetricItems()
 	go m.serve()
 	return nil
 }
 
 // Stop HTTP server
-func (m *MetricsMonitor) Stop(ctx context.Context) error {
+func (m *Metrics) Stop(ctx context.Context) error {
 	var errs []error
 	if err := m.httpServer.Shutdown(ctx); err != nil {
 		errs = append(errs, err)
@@ -68,9 +87,23 @@ func (m *MetricsMonitor) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (m *MetricsMonitor) serve() {
+// Enabled returns whether starts prometheus metrics
+func (m *Metrics) Enabled() bool {
+	if m.config != nil {
+		return m.config.Enabled
+	} else {
+		return false
+	}
+}
+
+func (m *Metrics) registerMetricItems() {
+	m.registry.MustRegister(DefaultGRPCServerMetrics, DefaultGRPCClientMetrics, DefaultHTTPServerMetrics,
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}), PanicsTotal)
+}
+
+func (m *Metrics) serve() {
 	router := mux.NewRouter()
-	router.Path("/metrics").Handler(promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
+	router.Path("/metrics").Handler(promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{}))
 	m.httpServer = &http.Server{
 		Addr:    m.config.HTTPAddress,
 		Handler: router,
@@ -79,4 +112,27 @@ func (m *MetricsMonitor) serve() {
 		log.Errorw("failed to listen and serve", "error", err)
 		return
 	}
+}
+
+// NilMetrics is a no-op Metrics
+type NilMetrics struct{}
+
+// Name is a no-op
+func (NilMetrics) Name() string {
+	return ""
+}
+
+// Start is a no-op
+func (NilMetrics) Start(ctx context.Context) error {
+	return errors.New("unimplemented method")
+}
+
+// Stop is a no-op
+func (NilMetrics) Stop(ctx context.Context) error {
+	return errors.New("unimplemented method")
+}
+
+// Enabled is a no-op
+func (NilMetrics) Enabled() bool {
+	return false
 }

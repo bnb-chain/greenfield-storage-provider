@@ -45,6 +45,23 @@ func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	return nil
 }
 
+// initMetricsConfig initializes metrics, this will use cli first
+func initMetricsConfig(ctx *cli.Context, cfg *config.StorageProviderConfig) {
+	if cfg == nil {
+		cfg.MetricsCfg = config.DefaultMetricsConfig
+	}
+	if ctx.IsSet(utils.MetricsEnabledFlag.Name) {
+		cfg.MetricsCfg.Enabled = ctx.Bool(utils.MetricsEnabledFlag.Name)
+	}
+	if ctx.IsSet(utils.MetricsHTTPFlag.Name) {
+		cfg.MetricsCfg.HTTPAddress = ctx.String(utils.MetricsHTTPFlag.Name)
+	}
+	if cfg.MetricsCfg.Enabled {
+		slc := lifecycle.NewServiceLifecycle()
+		slc.RegisterServices(metrics.NewMetrics(cfg.MetricsCfg))
+	}
+}
+
 // initService init service instance by name and config.
 func initService(serviceName string, cfg *config.StorageProviderConfig) (server lifecycle.Service, err error) {
 	switch serviceName {
@@ -138,28 +155,9 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-	case model.MetricsMonitorService:
-		metricsCfg, err := cfg.MakeMetricsMonitorConfig()
-		if err != nil {
-			return nil, err
-		}
-		server, err = metrics.NewMetricsMonitor(metricsCfg)
-		if err != nil {
-			return nil, err
-		}
 	default:
 		log.Errorw("unknown service", "service", serviceName)
 		return nil, fmt.Errorf("unknown service: %s", serviceName)
 	}
 	return server, nil
-}
-
-// applyMetricConfig will use the config cli first
-func applyMetricConfig(ctx *cli.Context, cfg *config.StorageProviderConfig) {
-	if ctx.IsSet(utils.MetricsEnabledFlag.Name) {
-		cfg.MetricsMonitorCfg.Enabled = ctx.Bool(utils.MetricsEnabledFlag.Name)
-	}
-	if ctx.IsSet(utils.MetricsHTTPFlag.Name) {
-		cfg.MetricsMonitorCfg.HTTPAddress = ctx.String(utils.MetricsHTTPFlag.Name)
-	}
 }

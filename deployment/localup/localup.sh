@@ -81,6 +81,7 @@ make_config() {
         sed -i -e "s/9533/$(($cur_port+533))/g" config.toml
         sed -i -e "s/9633/$(($cur_port+633))/g" config.toml
         sed -i -e "s/9733/$(($cur_port+733))/g" config.toml
+        sed -i -e "s/24036/$(($cur_port+4036))/g" config.toml
         sed -i -e "s/SpOperatorAddress = \".*\"/SpOperatorAddress = \"${OPERATOR_ADDRESS}\"/g" config.toml
         sed -i -e "s/OperatorPrivateKey = \".*\"/OperatorPrivateKey = \"${OPERATOR_PRIVATE_KEY}\"/g" config.toml
         sed -i -e "s/FundingPrivateKey = \".*\"/FundingPrivateKey = \"${FUNDING_PRIVATE_KEY}\"/g" config.toml

@@ -24,8 +24,8 @@ var (
 	BlockSyncerService = strings.ToLower("BlockSyncer")
 	// ManagerService defines the name of manager service
 	ManagerService = strings.ToLower("Manager")
-	// MetricsMonitorService defines the name of metrics service
-	MetricsMonitorService = strings.ToLower("MetricsMonitor")
+	// MetricsService defines the name of metrics service
+	MetricsService = strings.ToLower("Metrics")
 )
 
 // SpServiceDesc defines the service description in storage provider
@@ -59,8 +59,8 @@ const (
 	SignerGRPCAddress = "localhost:9633"
 	// MetadataGRPCAddress default gRPC address of meta data service
 	MetadataGRPCAddress = "localhost:9733"
-	// MetricsMonitorHTTPAddress default HTTP address of metrics monitor service
-	MetricsMonitorHTTPAddress = "localhost:9833"
+	// MetricsHTTPAddress default HTTP address of metrics service
+	MetricsHTTPAddress = "localhost:24036"
 )
 
 // define greenfield chain default address

@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
@@ -31,7 +31,7 @@ type StorageProviderConfig struct {
 	SignerCfg         *signer.SignerConfig
 	BlockSyncerCfg    *blocksyncer.Config
 	LogCfg            *LogConfig
-	MetricsMonitorCfg *metrics.MetricsMonitorConfig
+	MetricsCfg        *metrics.MetricsConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -84,7 +84,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	SignerCfg:         signer.DefaultSignerChainConfig,
 	BlockSyncerCfg:    DefaultBlockSyncerConfig,
 	LogCfg:            DefaultLogConfig,
-	MetricsMonitorCfg: DefaultMetricsMonitorConfig,
+	MetricsCfg:        DefaultMetricsConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -120,10 +120,10 @@ var DefaultBlockSyncerConfig = &blocksyncer.Config{
 	Dsn:     "localhost:3306",
 }
 
-// DefaultMetricsMonitorConfig defines the default config of MetricsMonitor service
-var DefaultMetricsMonitorConfig = &metrics.MetricsMonitorConfig{
-	Enabled:     true,
-	HTTPAddress: model.MetricsMonitorHTTPAddress,
+// DefaultMetricsConfig defines the default config of Metrics service
+var DefaultMetricsConfig = &metrics.MetricsConfig{
+	Enabled:     false,
+	HTTPAddress: model.MetricsHTTPAddress,
 }
 
 type LogConfig struct {

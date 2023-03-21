@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/trace"
@@ -21,6 +22,7 @@ type ServerMetrics struct {
 
 // NewServerMetrics returns an instance of ServerMetrics
 func NewServerMetrics(opts ...ServerMetricsOption) *ServerMetrics {
+	log.Info("uuuuuu")
 	var config serverMetricsConfig
 	config.apply(opts)
 	return &ServerMetrics{
@@ -28,27 +30,27 @@ func NewServerMetrics(opts ...ServerMetricsOption) *ServerMetrics {
 		serverReqTotalCounter: prometheus.NewCounterVec(
 			config.counterOpts.apply(prometheus.CounterOpts{
 				Name: "http_server_received_total_requests",
-				Help: "Tracks the total number of HTTP requests",
+				Help: "Tracks the total number of HTTP requests.",
 			}), []string{"handler_name", "method", "code"}),
 		serverReqInflightGauge: prometheus.NewGaugeVec(
 			config.gaugeOpts.apply(prometheus.GaugeOpts{
 				Name: "http_server_inflight_requests",
-				Help: "Current number of HTTP requests the handler is responding to",
+				Help: "Current number of HTTP requests the handler is responding to.",
 			}), []string{"handler_name", "method"}),
 		serverReqSizeSummary: prometheus.NewSummaryVec(
 			config.summaryOpts.apply(prometheus.SummaryOpts{
 				Name: "http_request_size_bytes",
-				Help: "Tracks the size of HTTP requests",
+				Help: "Tracks the size of HTTP requests.",
 			}), []string{"handler_name", "method", "code"}),
 		serverRespSizeSummary: prometheus.NewSummaryVec(
 			config.summaryOpts.apply(prometheus.SummaryOpts{
 				Name: "http_response_size_bytes",
-				Help: "Tracks the size of HTTP responses",
+				Help: "Tracks the size of HTTP responses.",
 			}), []string{"handler_name", "method", "code"}),
 		serverReqDuration: prometheus.NewHistogramVec(
 			config.histogramOpts.apply(prometheus.HistogramOpts{
 				Name:    "http_request_duration_seconds",
-				Help:    "Tracks the latencies for HTTP requests",
+				Help:    "Tracks the latencies for HTTP requests.",
 				Buckets: prometheus.DefBuckets,
 			}), []string{"handler_name", "method", "code"}),
 	}
@@ -113,6 +115,7 @@ func (m *ServerMetrics) Collect(ch chan<- prometheus.Metric) {
 // on an HTTP server. This is useful, to ensure that all metrics exist when collecting and querying.
 func (m *ServerMetrics) InstrumentationHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Info("hhhhh")
 		now := time.Now()
 
 		wd := &responseWriterDelegator{w: w}

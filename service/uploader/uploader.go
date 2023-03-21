@@ -6,7 +6,7 @@ import (
 	"runtime/debug"
 
 	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -113,12 +113,14 @@ func (uploader *Uploader) serve(errCh chan error) {
 	// create a gRPC server with gRPC interceptor
 	uploader.grpcServer = grpc.NewServer(
 		grpc.ChainUnaryInterceptor(openmetrics.UnaryServerInterceptor(metrics.DefaultGRPCServerMetrics),
-			grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(gRPCPanicRecoveryHandler))),
+			grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(gRPCPanicRecoveryHandler))),
 		grpc.ChainStreamInterceptor(openmetrics.StreamServerInterceptor(metrics.DefaultGRPCServerMetrics)),
 		grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize),
 	)
-	// initialize all metrics
-	metrics.DefaultGRPCServerMetrics.InitializeMetrics(uploader.grpcServer)
+	if metrics.GetMetrics().Enabled() {
+		// initialize all metrics
+		metrics.DefaultGRPCServerMetrics.InitializeMetrics(uploader.grpcServer)
+	}
 
 	types.RegisterUploaderServiceServer(uploader.grpcServer, uploader)
 	reflection.Register(uploader.grpcServer)
