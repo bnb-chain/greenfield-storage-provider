@@ -29,15 +29,24 @@ func (m *Pong) GetSignBytes() []byte {
 
 // GetSignBytes returns the get approval request message bytes to sign over.
 func (m *GetApprovalRequest) GetSignBytes() []byte {
-	fakeMsg := proto.Clone(m).(*GetApprovalRequest)
-	fakeMsg.Signature = []byte{}
+	object := *m.GetObjectInfo()
+	fakeMsg := &GetApprovalRequest{
+		SpOperatorAddress: m.GetSpOperatorAddress(),
+		ObjectInfo:        &object,
+	}
 	bz := ModuleCdc.MustMarshalJSON(fakeMsg)
 	return sdk.MustSortJSON(bz)
 }
 
 // GetSignBytes returns the get approval response message bytes to sign over.
 func (m *GetApprovalResponse) GetSignBytes() []byte {
-	fakeMsg := proto.Clone(m).(*GetApprovalResponse)
+	object := *m.GetObjectInfo()
+	fakeMsg := &GetApprovalResponse{
+		SpOperatorAddress: m.GetSpOperatorAddress(),
+		ObjectInfo:        &object,
+		TimeOut:           m.GetTimeOut(),
+		RefuseReason:      m.GetRefuseReason(),
+	}
 	fakeMsg.Signature = []byte{}
 	bz := ModuleCdc.MustMarshalJSON(fakeMsg)
 	return sdk.MustSortJSON(bz)

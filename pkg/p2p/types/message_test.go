@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/sdk/keys"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,7 +56,10 @@ func Test_verifyGetApprovalRequestMsgSignature(t *testing.T) {
 	km, err := setupKM()
 	assert.NoError(t, err)
 	approvalReqMsg := &GetApprovalRequest{
-		ObjectInfo:        &storagetypes.ObjectInfo{BucketName: "test_bucket"},
+		ObjectInfo: &storagetypes.ObjectInfo{
+			Id:         sdkmath.NewUint(uint64(0)),
+			BucketName: "test_bucket",
+		},
 		SpOperatorAddress: km.GetAddr().String(),
 	}
 	sigs, err := km.GetPrivKey().Sign(sdk.Keccak256(approvalReqMsg.GetSignBytes()))
@@ -71,7 +75,10 @@ func Test_verifyGetApprovalResponseMsgSignature(t *testing.T) {
 	km, err := setupKM()
 	assert.NoError(t, err)
 	approvalRspMsg := &GetApprovalResponse{
-		ObjectInfo:        &storagetypes.ObjectInfo{BucketName: "test_bucket"},
+		ObjectInfo: &storagetypes.ObjectInfo{
+			Id:         sdkmath.NewUint(uint64(1)),
+			BucketName: "test_bucket",
+		},
 		SpOperatorAddress: km.GetAddr().String(),
 	}
 	sigs, err := km.GetPrivKey().Sign(approvalRspMsg.GetSignBytes())
