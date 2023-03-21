@@ -74,15 +74,12 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	// bucket list router, virtual-hosted style
-	/*
-		bucketListRouter := r.Host(g.config.Domain).Subrouter()
-		bucketListRouter.NewRoute().
-			Name(getUserBucketsRouterName).
-			Methods(http.MethodGet).
-			Path("/").
-			HandlerFunc(g.getUserBucketsHandler)
-		bucketListRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
-	*/
+	bucketListRouter := r.Host(g.config.Domain).Subrouter()
+	bucketListRouter.NewRoute().
+		Name(getUserBucketsRouterName).
+		Methods(http.MethodGet).
+		Path("/").
+		HandlerFunc(g.getUserBucketsHandler)
 
 	// admin router, path style
 	r.Path(model.GetApprovalPath).
