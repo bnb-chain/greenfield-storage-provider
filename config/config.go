@@ -137,7 +137,7 @@ var DefaultLogConfig = &LogConfig{
 
 var DefaultP2PConfig = &p2p.NodeConfig{
 	ListenAddress: model.P2PGListenAddress,
-	PingPeriod:    2,
+	PingPeriod:    model.DefaultPingPeriod,
 }
 
 // LoadConfig loads the config file from path

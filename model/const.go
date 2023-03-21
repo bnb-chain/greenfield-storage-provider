@@ -208,6 +208,8 @@ const (
 	MaxCallMsgSize = 25 * 1024 * 1024
 	// MaxRetryCount defines getting the latest height from the RPC client max retry count
 	MaxRetryCount = 50
+	// DefaultPingPeriod defines p2p node ping period
+	DefaultPingPeriod = 1
 	// DefaultSpFreeReadQuotaSize defines sp bucket's default free quota size, the SP can modify it by itself
 	DefaultSpFreeReadQuotaSize = 10 * 1024 * 1024 * 1024
 	// DefaultStreamBufSize defines gateway stream forward payload buf size

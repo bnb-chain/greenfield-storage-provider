@@ -96,8 +96,8 @@ make_config() {
         # p2p
         node=Node${index}
         boot=Boot${index}
-        sed -i -e "s/PrivKey = \".*\"/PrivKey = \"${node}\"/g" config.toml
-        sed -i -e "s/Bootstrap = [\".*\"/Bootstrap = [\"${boot}\"/g" config.toml
+        sed -i -e "s/PrivKey = \".*\"/PrivKey = \"${!node}\"/g" config.toml
+        sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\"${!boot}\"\]/g" config.toml
       cd - >/dev/null
       index=$(($index+1))
   done
