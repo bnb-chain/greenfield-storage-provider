@@ -66,8 +66,8 @@ P2PPrivateKey = ""
 Bootstrap = []
 PingPeriod = 2
 
-[MetricsMonitorCfg]
-Enabled = true
+[MetricsCfg]
+Enabled = false
 HTTPAddress = "localhost:9833"
 
 [LogCfg]

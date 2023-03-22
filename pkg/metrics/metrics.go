@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -13,6 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
@@ -35,7 +35,7 @@ type Metrics struct {
 	httpServer *http.Server
 }
 
-// NewMetrics returns the singleton instance of Metrics.
+// NewMetrics returns a singleton instance of Metrics.
 // Note: if you want to use metrics service in storage provider, you must call NewMetrics in initMetricsConfig func.
 // if you use GetMetrics method straightly without calling NewMetrics firstly, you won't start metrics service to collect
 // stats data about sp.
@@ -124,12 +124,12 @@ func (NilMetrics) Name() string {
 
 // Start is a no-op
 func (NilMetrics) Start(ctx context.Context) error {
-	return errors.New("unimplemented method")
+	return merrors.ErrUnsupportedMethod
 }
 
 // Stop is a no-op
 func (NilMetrics) Stop(ctx context.Context) error {
-	return errors.New("unimplemented method")
+	return merrors.ErrUnsupportedMethod
 }
 
 // Enabled is a no-op

@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
-	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 )
 
 // UploaderClient is an uploader gRPC service client wrapper

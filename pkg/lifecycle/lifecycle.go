@@ -38,7 +38,7 @@ var (
 	once sync.Once
 )
 
-// NewServiceLifecycle returns an initialized service lifecycle in Singleton
+// NewServiceLifecycle returns a singleton instance of ServiceLifecycle
 func NewServiceLifecycle() *ServiceLifecycle {
 	once.Do(func() {
 		innerCtx, innerCancel := context.WithCancel(context.Background())

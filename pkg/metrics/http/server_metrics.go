@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/trace"
@@ -22,7 +21,6 @@ type ServerMetrics struct {
 
 // NewServerMetrics returns an instance of ServerMetrics
 func NewServerMetrics(opts ...ServerMetricsOption) *ServerMetrics {
-	log.Info("uuuuuu")
 	var config serverMetricsConfig
 	config.apply(opts)
 	return &ServerMetrics{
@@ -115,7 +113,6 @@ func (m *ServerMetrics) Collect(ch chan<- prometheus.Metric) {
 // on an HTTP server. This is useful, to ensure that all metrics exist when collecting and querying.
 func (m *ServerMetrics) InstrumentationHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Info("hhhhh")
 		now := time.Now()
 
 		wd := &responseWriterDelegator{w: w}

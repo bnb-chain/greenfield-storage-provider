@@ -16,12 +16,12 @@ var (
 	ErrNoSuchBucket = errors.New("the specified bucket does not exist")
 	// ErrInvalidBucketName defines invalid bucket name
 	ErrInvalidBucketName = errors.New("invalid bucket name")
+	// ErrUnsupportedMethod defines unsupported method error
+	ErrUnsupportedMethod = errors.New("unsupported method")
 )
 
 // piece store errors
 var (
-	// ErrUnsupportedMethod defines unsupported method error
-	ErrUnsupportedMethod = errors.New("unsupported method")
 	// ErrUnsupportedDelimiter defines invalid key with delimiter error
 	ErrUnsupportedDelimiter = errors.New("unsupported delimiter")
 	// ErrInvalidObjectKey defines invalid object key error
