@@ -22,6 +22,6 @@ func (p *P2PServer) GetApproval(ctx context.Context, req *p2ptypes.GetApprovalRe
 		Accept: accept,
 		Refuse: refuse,
 	}
-	log.CtxInfow(ctx, "success to get approval", "object_id", objectInfo.Id.Uint64(), "accept", len(accept), "refuse", len(refuse))
+	log.CtxInfow(ctx, "succeed to get approval", "object_id", objectInfo.Id.Uint64(), "accept", len(accept), "refuse", len(refuse))
 	return resp, nil
 }

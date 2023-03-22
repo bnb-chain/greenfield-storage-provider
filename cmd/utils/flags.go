@@ -16,7 +16,7 @@ var (
 	ConfigRemoteFlag = &cli.BoolFlag{
 		Name: "config.remote",
 		Usage: "Flag load config from remote db,if 'config.remote' be set, the db.user, " +
-			"db.password and db.address flags are needed, otherwise use default value",
+			"db.password and db.address flags are needed, otherwise use the default value",
 	}
 	ServerFlag = &cli.StringFlag{
 		Name:    "server",

@@ -39,7 +39,7 @@ var SpServiceDesc = map[string]string{
 	SignerService:      "Sign the transaction and broadcast to chain",
 	MetadataService:    "Provides the ability to query meta data",
 	BlockSyncerService: "Syncs block data to db",
-	P2PService:         "Communicate with SPs on p2p protocol",
+	P2PService:         "Communicates with SPs on p2p protocol",
 }
 
 // define storage provider service gRPC default address
