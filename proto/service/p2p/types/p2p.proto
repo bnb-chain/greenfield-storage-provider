@@ -1,0 +1,30 @@
+syntax = "proto3";
+package service.p2p.types;
+
+import "pkg/p2p/types/p2p.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/p2p/types";
+
+// GetApprovalRequest is request type for the GetApproval RPC method.
+message GetApprovalRequest {
+  // approval defines the object info for approval
+  pkg.p2p.types.GetApprovalRequest approval = 1;
+  // expected_accept defines the number of expecting accept approval
+  int64 expected_accept = 2;
+  // timeout defines approval request time out
+  int64 timeout = 3;
+}
+
+// GetApprovalResponse is response type for the GetApproval RPC method.
+message GetApprovalResponse {
+  // accept defines accept approvals
+  map<string, pkg.p2p.types.GetApprovalResponse> accept = 1;
+  // refuse defines refuse approvals
+  map<string, pkg.p2p.types.GetApprovalResponse> refuse = 2;
+}
+
+// P2PService defines the service offer gRPC service for other service to use p2p protocol.
+service P2PService {
+  // GetApproval asks the approval to other SP.
+  rpc GetApproval(GetApprovalRequest) returns (GetApprovalResponse) {};
+}

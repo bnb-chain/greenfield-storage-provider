@@ -9,6 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
@@ -61,7 +62,9 @@ func init() {
 		// config category commands
 		conf.ConfigDumpCmd,
 		conf.ConfigUploadCmd,
-		// miscellaneous commands
+		// p2p category commands
+		p2p.P2PCreateKeysCmd,
+		// miscellaneous category commands
 		VersionCmd,
 		utils.ListServiceCmd,
 	}

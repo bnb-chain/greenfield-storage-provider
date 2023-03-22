@@ -110,6 +110,58 @@ func (signer *SignerServer) SealObjectOnChain(ctx context.Context, req *types.Se
 
 }
 
+// SignPingMsg signs the ping msg for p2p node
+func (signer *SignerServer) SignPingMsg(ctx context.Context, req *types.SignPingMsgRequest) (*types.SignPingMsgResponse, error) {
+	msg := req.GetPing()
+	sig, err := signer.client.Sign(client.SignOperator, msg.GetSignBytes())
+	if err != nil {
+		return nil, err
+	}
+	msg.Signature = sig
+	return &types.SignPingMsgResponse{
+		Ping: msg,
+	}, nil
+}
+
+// SignPongMsg signs the pong msg for p2p node
+func (signer *SignerServer) SignPongMsg(ctx context.Context, req *types.SignPongMsgRequest) (*types.SignPongMsgResponse, error) {
+	msg := req.GetPong()
+	sig, err := signer.client.Sign(client.SignOperator, msg.GetSignBytes())
+	if err != nil {
+		return nil, err
+	}
+	msg.Signature = sig
+	return &types.SignPongMsgResponse{
+		Pong: msg,
+	}, nil
+}
+
+// SignReplicateApprovalReqMsg signs the get approval request msg for p2p node
+func (signer *SignerServer) SignReplicateApprovalReqMsg(ctx context.Context, req *types.SignReplicateApprovalReqMsgRequest) (*types.SignReplicateApprovalReqMsgResponse, error) {
+	msg := req.GetApproval()
+	sig, err := signer.client.Sign(client.SignOperator, msg.GetSignBytes())
+	if err != nil {
+		return nil, err
+	}
+	msg.Signature = sig
+	return &types.SignReplicateApprovalReqMsgResponse{
+		Approval: msg,
+	}, nil
+}
+
+// SignReplicateApprovalRspMsg signs the get approval response msg for p2p node
+func (signer *SignerServer) SignReplicateApprovalRspMsg(ctx context.Context, req *types.SignReplicateApprovalRspMsgRequest) (*types.SignReplicateApprovalRspMsgResponse, error) {
+	msg := req.GetApproval()
+	sig, err := signer.client.Sign(client.SignOperator, msg.GetSignBytes())
+	if err != nil {
+		return nil, err
+	}
+	msg.Signature = sig
+	return &types.SignReplicateApprovalRspMsgResponse{
+		Approval: msg,
+	}, nil
+}
+
 // IPWhitelistInterceptor returns a new unary server interceptors that performs per-request ip whitelist.
 func (signer *SignerServer) IPWhitelistInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

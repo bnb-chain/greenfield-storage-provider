@@ -17,6 +17,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
 	metadata "github.com/bnb-chain/greenfield-storage-provider/service/metadata/service"
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
@@ -152,6 +153,15 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			return nil, err
 		}
 		server, err = manager.NewManagerService(managerCfg)
+		if err != nil {
+			return nil, err
+		}
+	case model.P2PService:
+		p2pCfg, err := cfg.MakeP2PServiceConfig()
+		if err != nil {
+			return nil, err
+		}
+		server, err = p2p.NewP2PServer(p2pCfg)
 		if err != nil {
 			return nil, err
 		}

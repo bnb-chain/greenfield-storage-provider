@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -31,6 +33,10 @@ type GatewayClient struct {
 func NewGatewayClient(address string) (*GatewayClient, error) {
 	if !strings.HasPrefix(address, "http://") && !strings.HasPrefix(address, "https://") {
 		address = "http://" + address
+	}
+	// TODO: currently only support http
+	if strings.HasPrefix(address, "https://") {
+		address = "http://" + address[8:]
 	}
 	client := &GatewayClient{
 		address: address,
@@ -93,6 +99,7 @@ func (client *GatewayClient) SyncPieceData(
 	objectInfo *types.ObjectInfo,
 	replicaIdx uint32,
 	segmentSize uint32,
+	approval *p2ptypes.GetApprovalResponse,
 	pieceData [][]byte) (integrityHash []byte, signature []byte, err error) {
 	pieceDataReader, err := NewPieceDataReader(pieceData)
 	if err != nil {
@@ -105,9 +112,15 @@ func (client *GatewayClient) SyncPieceData(
 		return nil, nil, err
 	}
 	marshalObjectInfo := hex.EncodeToString(types.ModuleCdc.MustMarshalJSON(objectInfo))
+	marshalApproval, err := json.Marshal(approval)
+	if err != nil {
+		log.Errorw("failed to proto marshal approval", "error", err)
+		return
+	}
 	req.Header.Add(model.GnfdObjectInfoHeader, marshalObjectInfo)
 	req.Header.Add(model.GnfdReplicaIdxHeader, util.Uint32ToString(replicaIdx))
 	req.Header.Add(model.GnfdSegmentSizeHeader, util.Uint32ToString(segmentSize))
+	req.Header.Add(model.GnfdReplicateApproval, string(marshalApproval))
 	req.Header.Add(model.ContentTypeHeader, model.OctetStream)
 
 	resp, err := client.httpClient.Do(req)

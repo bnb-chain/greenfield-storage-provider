@@ -19,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
@@ -318,6 +319,25 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 				"request_address", addr.String())
 			return errors.ErrNoPermission
 		}
+	}
+	return nil
+}
+
+// verifyReplicateApproval verify the piece replicate approval
+func (g *Gateway) verifyReplicateApproval(approval *p2ptypes.GetApprovalResponse) error {
+	err := p2ptypes.VerifySignature(approval.GetSpOperatorAddress(), approval.GetSignBytes(), approval.GetSignature())
+	if err != nil {
+		log.Errorw("failed to verify approval signature", "error", err)
+		return errors.ErrSignatureInvalid
+	}
+	if strings.Compare(g.config.SpOperatorAddress, approval.GetSpOperatorAddress()) != 0 {
+		log.Errorw("failed to verify replicate approval's SP operate address",
+			"approval_operate_address", approval.GetSpOperatorAddress(),
+			"own_operate_address", g.config.SpOperatorAddress)
+		return errors.ErrSPMismatch
+	}
+	if time.Now().Unix() > approval.GetExpiredTime() {
+		return errors.ErrApprovalExpire
 	}
 	return nil
 }

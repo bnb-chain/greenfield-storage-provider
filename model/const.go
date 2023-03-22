@@ -26,6 +26,8 @@ var (
 	ManagerService = strings.ToLower("Manager")
 	// MetricsService defines the name of metrics service
 	MetricsService = strings.ToLower("Metrics")
+	// P2PService defines the name of p2p service
+	P2PService = strings.ToLower("p2p")
 )
 
 // SpServiceDesc defines the service description in storage provider
@@ -39,6 +41,7 @@ var SpServiceDesc = map[string]string{
 	SignerService:      "Sign the transaction and broadcast to chain",
 	MetadataService:    "Provides the ability to query meta data",
 	BlockSyncerService: "Syncs block data to db",
+	P2PService:         "Communicates with SPs on p2p protocol",
 }
 
 // define storage provider service gRPC default address
@@ -61,6 +64,10 @@ const (
 	MetadataGRPCAddress = "localhost:9733"
 	// MetricsHTTPAddress default HTTP address of metrics service
 	MetricsHTTPAddress = "localhost:24036"
+	// P2PGRPCAddress default gRPC address of p2p service
+	P2PGRPCAddress = "localhost:9833"
+	// P2PListenAddress default p2p protocol listen address of p2p node
+	P2PListenAddress = "127.0.0.1:9933"
 )
 
 // define greenfield chain default address
@@ -72,7 +79,7 @@ const (
 	// GreenfieldChainID default greenfield chainID
 	GreenfieldChainID = "greenfield_9000-1741"
 	// WhiteListCIDR default whitelist CIDR
-	WhiteListCIDR = "127.0.0.1/32"
+	WhiteListCIDR = "0.0.0.0/0"
 )
 
 // environment constants
@@ -109,6 +116,8 @@ const (
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
 	// DsnBlockSyncer defines env variable name for block syncer dsn
 	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
+	// P2PPrivateKey defines env variable for p2p protocol private key
+	P2PPrivateKey = "P2P_PRIVATE_KEY"
 )
 
 // define all kinds of http constants
@@ -185,6 +194,8 @@ const (
 	GnfdReplicaIdxHeader = "X-Gnfd-Replica-Idx"
 	// GnfdSegmentSizeHeader defines segment size, which is used by receiver
 	GnfdSegmentSizeHeader = "X-Gnfd-Segment-Size"
+	// GnfdReplicateApproval defines SP approval that allow to replicate piece data, which is used by receiver
+	GnfdReplicateApproval = "X-Gnfd-Replica-Approval"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 	// GnfdUserAddressHeader defines the user address
@@ -201,6 +212,8 @@ const (
 	MaxCallMsgSize = 25 * 1024 * 1024
 	// MaxRetryCount defines getting the latest height from the RPC client max retry count
 	MaxRetryCount = 50
+	// DefaultPingPeriod defines p2p node ping period
+	DefaultPingPeriod = 1
 	// DefaultSpFreeReadQuotaSize defines sp bucket's default free quota size, the SP can modify it by itself
 	DefaultSpFreeReadQuotaSize = 10 * 1024 * 1024 * 1024
 	// DefaultStreamBufSize defines gateway stream forward payload buf size
