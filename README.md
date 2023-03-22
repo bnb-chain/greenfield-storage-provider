@@ -141,7 +141,7 @@ ApprovalPrivateKey = "${SP_Approval_PrivKey}"
 Modules = ["epoch", "bucket", "object", "payment"]
 Dsn = "localhost:3308"
 # p2p node configuration
-[P2PConfig]
+[P2PCfg]
 ListenAddress = "127.0.0.1:9933"
 # p2p node msg Secp256k1 encryption key, it is different from other SP's addresses
 P2PPrivateKey = ""

@@ -247,7 +247,7 @@ func (cfg *StorageProviderConfig) MakeP2PServiceConfig() (*p2p.P2PConfig, error)
 	pCfg := &p2p.P2PConfig{
 		SpOperatorAddress: cfg.SpOperatorAddress,
 		SpDBConfig:        cfg.SpDBConfig,
-		P2PConfig:         cfg.P2PConfig,
+		P2PConfig:         cfg.P2PCfg,
 	}
 	if _, ok := cfg.ListenAddress[model.P2PService]; ok {
 		pCfg.GRPCAddress = cfg.ListenAddress[model.P2PService]

@@ -59,7 +59,7 @@ ApprovalPrivateKey = ""
 Modules = ["epoch", "bucket", "object", "payment"]
 Dsn = "localhost:3308"
 
-[P2PConfig]
+[P2PCfg]
 ListenAddress = "127.0.0.1:9933"
 P2PPrivateKey = ""
 Bootstrap = []

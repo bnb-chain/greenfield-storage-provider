@@ -30,7 +30,7 @@ type StorageProviderConfig struct {
 	ChainConfig       *gnfd.GreenfieldChainConfig
 	SignerCfg         *signer.SignerConfig
 	BlockSyncerCfg    *blocksyncer.Config
-	P2PConfig         *p2p.NodeConfig
+	P2PCfg            *p2p.NodeConfig
 	LogCfg            *LogConfig
 }
 
@@ -86,7 +86,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	ChainConfig:       DefaultGreenfieldChainConfig,
 	SignerCfg:         signer.DefaultSignerChainConfig,
 	BlockSyncerCfg:    DefaultBlockSyncerConfig,
-	P2PConfig:         DefaultP2PConfig,
+	P2PCfg:            DefaultP2PConfig,
 	LogCfg:            DefaultLogConfig,
 }
 
