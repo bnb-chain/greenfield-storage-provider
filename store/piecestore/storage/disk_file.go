@@ -56,14 +56,14 @@ func (d *diskFileStore) GetObject(ctx context.Context, key string, offset, limit
 
 	f, err := os.Open(p)
 	if err != nil {
-		log.Errorw("disk file failed to get object dut to open file", "error", err)
+		log.Errorw("failed to get object due to open file", "error", err)
 		return nil, err
 	}
 
 	info, err := f.Stat()
 	if err != nil {
 		_ = f.Close()
-		log.Errorw("disk file failed to get object dut to Stat file", "error", err)
+		log.Errorw("failed to get object due to stat file", "error", err)
 		return nil, err
 	}
 	if info.IsDir() {
@@ -82,7 +82,7 @@ func (d *diskFileStore) GetObject(ctx context.Context, key string, offset, limit
 		buf := make([]byte, limit)
 		n, err := f.Read(buf)
 		if err != nil {
-			log.Errorw("disk file failed to get object dut to read file", "error", err)
+			log.Errorw("failed to get object due to read file", "error", err)
 			return nil, err
 		}
 		return io.NopCloser(bytes.NewBuffer(buf[:n])), nil
@@ -101,13 +101,13 @@ func (d *diskFileStore) PutObject(ctx context.Context, key string, reader io.Rea
 	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil && os.IsNotExist(err) {
 		if err = os.MkdirAll(filepath.Dir(p), os.FileMode(0755)); err != nil {
-			log.Errorw("disk file failed to put object dut to MkdirAll", "error", err)
+			log.Errorw("failed to put object due to mkdir", "error", err)
 			return err
 		}
 		f, err = os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	}
 	if err != nil {
-		log.Errorw("disk file failed to put object dut to open file", "error", err)
+		log.Errorw("failed to put object due to open file", "error", err)
 		return err
 	}
 	defer func() {
@@ -120,12 +120,12 @@ func (d *diskFileStore) PutObject(ctx context.Context, key string, reader io.Rea
 	defer bufPool.Put(buf)
 	_, err = io.CopyBuffer(f, reader, *buf)
 	if err != nil {
-		log.Errorw("disk file failed to put object dut to copy buffer", "error", err)
+		log.Errorw("failed to put object due to copy buffer", "error", err)
 		_ = f.Close()
 		return err
 	}
 	if err = f.Close(); err != nil {
-		log.Errorw("disk file failed to put object due to Close file", "error", err)
+		log.Errorw("failed to put object due to close file", "error", err)
 		return err
 	}
 
@@ -135,7 +135,7 @@ func (d *diskFileStore) PutObject(ctx context.Context, key string, reader io.Rea
 func (d *diskFileStore) DeleteObject(ctx context.Context, key string) error {
 	err := os.Remove(d.path(key))
 	if err != nil && os.IsNotExist(err) {
-		log.Errorw("disk file failed to delete object due to remove file", "error", err)
+		log.Errorw("failed to delete object due to remove file", "error", err)
 		err = nil
 	}
 	return err
@@ -155,7 +155,7 @@ func (d *diskFileStore) HeadObject(ctx context.Context, key string) (Object, err
 	p := d.path(key)
 	fileInfo, err := os.Stat(p)
 	if err != nil {
-		log.Errorw("disk file failed to Head object due to Stat file", "error", err)
+		log.Errorw("failed to Head object due to Stat file", "error", err)
 		return nil, err
 	}
 	size := fileInfo.Size()

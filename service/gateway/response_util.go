@@ -118,6 +118,7 @@ func makeErrorDescription(err error) *errorDescription {
 	case merrors.ErrCheckObjectCreated, merrors.ErrCheckObjectSealed:
 		return InvalidObjectState
 	default:
+		// TODO: do not expose internal detailed errors in the future
 		return &errorDescription{errorCode: "InternalError", errorMessage: err.Error(), statusCode: http.StatusInternalServerError}
 	}
 }

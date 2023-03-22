@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
@@ -53,7 +54,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		},
 	); err != nil {
 		log.Errorw("failed to check billing due to bucket quota", "error", err)
-		return err
+		return merrors.InnerErrorToGRPCError(err)
 	}
 
 	// TODO: It will be optimized

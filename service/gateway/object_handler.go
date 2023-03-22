@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -101,7 +102,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		}
 		if err != nil {
 			log.Errorw("failed to read stream", "error", err)
-			errDescription = makeErrorDescription(err)
+			errDescription = makeErrorDescription(merrors.GRPCErrorToInnerError(err))
 			return
 		}
 
