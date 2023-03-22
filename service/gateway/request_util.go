@@ -260,10 +260,10 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 				"object_status", reqContext.objectInfo.GetObjectStatus())
 			return errors.ErrCheckObjectCreated
 		}
-		if reqContext.objectInfo.GetOwner() != addr.String() {
-			log.Errorw("failed to auth due to account is not equal to object owner",
-				"object_owner", reqContext.objectInfo.GetOwner(),
-				"request_address", addr.String())
+		if isAllow, err := g.chain.VerifyPutObjectPermission(context.Background(), addr.String(),
+			reqContext.bucketName, reqContext.objectName); !isAllow || err != nil {
+			log.Errorw("failed to auth due to verify permission",
+				"is_allow", isAllow, "error", err)
 			return errors.ErrNoPermission
 		}
 		if reqContext.bucketInfo.GetPrimarySpAddress() != g.config.SpOperatorAddress {

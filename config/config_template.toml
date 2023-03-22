@@ -48,7 +48,7 @@ GreenfieldAddresses = ["localhost:9090"]
 TendermintAddresses = ["http://localhost:26750"]
 
 [SignerCfg]
-WhitelistCIDR = ["127.0.0.1/32"]
+WhitelistCIDR = ["0.0.0.0/0"]
 GasLimit = 210000
 OperatorPrivateKey = ""
 FundingPrivateKey = ""

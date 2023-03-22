@@ -4,9 +4,7 @@ go 1.18
 
 replace (
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b432c
-	// TODO: upgrade github.com/bnb-chain/greenfield and github.com/bnb-chain/greenfield, github.com/cosmos/cosmos-sdk to official release
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230317064252-2f6792df78ab
-
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.9
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.2-0.20230316090342-debd6c0c82a7
 	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230315120403-3093b5ed5267
@@ -22,8 +20,10 @@ require (
 	github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230314083410-f0d6dbbec179
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
+	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.7
 	github.com/cosmos/gogoproto v1.4.6
+	github.com/crx666/protobuf-gogofast v1.2.7
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.8.2

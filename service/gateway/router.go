@@ -80,9 +80,7 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodGet).
 		Path("/").
 		HandlerFunc(g.getUserBucketsHandler)
-	bucketListRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
-
-	// admin router, path style
+	// admin router, path style, new router will prefer use virtual-hosted style
 	r.Path(model.GetApprovalPath).
 		Name(approvalRouterName).
 		Methods(http.MethodGet).
