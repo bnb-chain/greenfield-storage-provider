@@ -117,6 +117,14 @@ ChainID = "greenfield_9000-1741"
 GreenfieldAddresses = ["localhost:9090"]
 TendermintAddresses = ["http://localhost:26750"]
 # block syncer configuration
+# signer configuration
+[SignerCfg]
+WhitelistCIDR = ["0.0.0.0/0"]
+GasLimit = 210000
+OperatorPrivateKey = "${SP_Operator_PrivKey}"
+FundingPrivateKey = "${SP_Funding_PrivKey}"
+SealPrivateKey = "${SP_Seal_PrivKey}"
+ApprovalPrivateKey = "${SP_Approval_PrivKey}"
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]
 Dsn = "localhost:3306"

@@ -32,6 +32,10 @@ func NewGatewayClient(address string) (*GatewayClient, error) {
 	if !strings.HasPrefix(address, "http://") && !strings.HasPrefix(address, "https://") {
 		address = "http://" + address
 	}
+	// TODO: currently only support http
+	if strings.HasPrefix(address, "https://") {
+		address = "http://" + address[8:]
+	}
 	client := &GatewayClient{
 		address: address,
 		httpClient: &http.Client{
