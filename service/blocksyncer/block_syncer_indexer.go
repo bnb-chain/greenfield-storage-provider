@@ -132,10 +132,9 @@ func (i *Impl) ExportEvents(ctx context.Context, block *coretypes.ResultBlock, e
 	// get all events in order from the txs within the block
 	for _, tx := range events.TxsResults {
 		// handle all events contained inside the transaction
-		events := filterEventsByType(tx)
 		// call the event handlers
-		for _, event := range events {
-			i.HandleEvent(ctx, block, event)
+		for _, event := range tx.Events {
+			i.HandleEvent(ctx, block, sdk.Event(event))
 		}
 	}
 	return nil
