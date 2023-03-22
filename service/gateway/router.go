@@ -11,13 +11,15 @@ import (
 )
 
 const (
-	putObjectRouterName           = "PutObject"
-	getObjectRouterName           = "GetObject"
-	approvalRouterName            = "GetApproval"
-	challengeRouterName           = "Challenge"
-	syncPieceRouterName           = "SyncPiece"
-	getUserBucketsRouterName      = "GetUserBuckets"
-	listObjectsByBucketRouterName = "ListObjectsByBucketName"
+	approvalRouterName             = "GetApproval"
+	putObjectRouterName            = "PutObject"
+	getObjectRouterName            = "GetObject"
+	challengeRouterName            = "Challenge"
+	syncPieceRouterName            = "SyncPiece"
+	getUserBucketsRouterName       = "GetUserBuckets"
+	listObjectsByBucketRouterName  = "ListObjectsByBucketName"
+	getBucketReadQuotaRouterName   = "GetBucketReadQuota"
+	listBucketReadRecordRouterName = "ListBucketReadRecord"
 )
 
 const (
@@ -28,12 +30,12 @@ const (
 // notFoundHandler log not found request info.
 func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	log.Errorw("not found handler", "header", r.Header, "host", r.Host, "url", r.URL)
-	s, err := io.ReadAll(r.Body)
-	if err != nil {
+	if _, err := io.ReadAll(r.Body); err != nil {
 		log.Errorw("failed to read the unknown request", "error", err)
 	}
-	w.WriteHeader(http.StatusNotFound)
-	w.Write(s)
+	if err := NoRouter.errorResponse(w, &requestContext{}); err != nil {
+		log.Errorw("failed to response the unknown request", "error", err)
+	}
 }
 
 // registerHandler is used to register mux handlers.
@@ -50,9 +52,35 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
 		HandlerFunc(g.getObjectHandler)
+	bucketRouter.NewRoute().
+		Name(getBucketReadQuotaRouterName).
+		Methods(http.MethodGet).
+		Queries(model.GetBucketReadQuotaQuery, "",
+			model.GetBucketReadQuotaMonthQuery, "{year_month}").
+		HandlerFunc(g.getBucketReadQuotaHandler)
+	bucketRouter.NewRoute().
+		Name(listBucketReadRecordRouterName).
+		Methods(http.MethodGet).
+		Queries(model.ListBucketReadRecordQuery, "",
+			model.ListBucketReadRecordMaxRecordsQuery, "{max_records}",
+			model.StartTimestampUs, "{start_ts}",
+			model.EndTimestampUs, "{end_ts}").
+		HandlerFunc(g.listBucketReadRecordHandler)
+	bucketRouter.NewRoute().
+		Name(listObjectsByBucketRouterName).
+		Methods(http.MethodGet).
+		Path("/").
+		HandlerFunc(g.listObjectsByBucketNameHandler)
 	bucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
-	// admin router, path style
+	// bucket list router, virtual-hosted style
+	bucketListRouter := r.Host(g.config.Domain).Subrouter()
+	bucketListRouter.NewRoute().
+		Name(getUserBucketsRouterName).
+		Methods(http.MethodGet).
+		Path("/").
+		HandlerFunc(g.getUserBucketsHandler)
+	// admin router, path style, new router will prefer use virtual-hosted style
 	r.Path(model.GetApprovalPath).
 		Name(approvalRouterName).
 		Methods(http.MethodGet).
@@ -67,15 +95,5 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Name(syncPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.syncPieceHandler)
-	//metadata router
-	r.Name(getUserBucketsRouterName).
-		Methods(http.MethodGet).
-		Path("/accounts/{account_id:.+}/buckets").
-		HandlerFunc(g.getUserBucketsHandler)
-	r.Name(listObjectsByBucketRouterName).
-		Methods(http.MethodGet).
-		Path("/accounts/{account_id:.+}/buckets/{bucket_name:.+}/objects").
-		HandlerFunc(g.listObjectsByBucketNameHandler)
-
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }

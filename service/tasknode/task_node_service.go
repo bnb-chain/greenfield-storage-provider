@@ -6,6 +6,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,9 +15,16 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	gatewayclient "github.com/bnb-chain/greenfield-storage-provider/service/gateway/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+)
+
+const (
+	ReplicateFactor    = 2
+	GetApprovalTimeout = 10
 )
 
 var _ types.TaskNodeServiceServer = &TaskNode{}
@@ -75,9 +84,27 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 		log.CtxErrorw(ctx, "failed to encode payload", "error", err)
 		return
 	}
-	spList, err := taskNode.spDB.FetchAllSpWithoutOwnSp(sptypes.STATUS_IN_SERVICE)
+	spList, approvals, err := taskNode.getApproval(objectInfo, int(replicates), int(replicates*ReplicateFactor), GetApprovalTimeout)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
+		return
+	}
+	spEndpoints := maps.SortKeys(approvals)
+	var mux sync.Mutex
+	getSpFunc := func() (sp *sptypes.StorageProvider, approval *p2ptypes.GetApprovalResponse, err error) {
+		mux.Lock()
+		defer mux.Unlock()
+		if len(approvals) == 0 {
+			log.CtxErrorw(ctx, "backup storage providers depleted")
+			err = errors.New("no backup sp to pick up")
+			return
+		}
+		endpoint := spEndpoints[0]
+		sp = spList[endpoint]
+		approval = approvals[endpoint]
+		spEndpoints = spEndpoints[1:]
+		delete(spList, endpoint)
+		delete(approvals, endpoint)
 		return
 	}
 
@@ -88,18 +115,6 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 	sealMsg.SecondarySpSignatures = make([][]byte, replicates)
 	objectInfo.SecondarySpAddresses = make([]string, replicates)
 
-	var mux sync.Mutex
-	getSpFunc := func() (*sptypes.StorageProvider, error) {
-		mux.Lock()
-		defer mux.Unlock()
-		if len(spList) == 0 {
-			log.CtxErrorw(ctx, "backup storage providers depleted")
-			return nil, errors.New("no backup sp to pick up")
-		}
-		sp := spList[0]
-		spList = spList[1:]
-		return sp, nil
-	}
 	processInfo.SegmentInfos = make([]*servicetypes.SegmentInfo, replicates)
 	var done int64
 	errCh := make(chan error, 10)
@@ -108,7 +123,7 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 		processInfo.SegmentInfos[rIdx] = &servicetypes.SegmentInfo{ObjectInfo: objectInfo}
 		go func(rIdx int) {
 			for {
-				sp, err := getSpFunc()
+				sp, approval, err := getSpFunc()
 				if err != nil {
 					errCh <- err
 					return
@@ -123,15 +138,17 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 						"sp_endpoint", sp.GetEndpoint(), "error", err)
 					continue
 				}
+				// TODO:: add approval param to gateway, and secondary sp check the timeout, signature, spOpAddr of approval
 				integrityHash, signature, err := gatewayClient.SyncPieceData(
-					req.GetObjectInfo(), uint32(rIdx), uint32(len(replicateData[0][0])), data)
+					req.GetObjectInfo(), uint32(rIdx), uint32(len(replicateData[0][0])), approval, data)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to sync piece data", "endpoint", sp.GetEndpoint(), "error", err)
 					continue
 				}
 				log.CtxDebugw(ctx, "receive the sp response", "replica_idx", rIdx, "integrity_hash",
 					integrityHash, "endpoint", sp.GetEndpoint(), "signature", signature)
-				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), integrityHash).GetSignBytes()
+
+				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), math.NewUint(objectInfo.Id.Uint64()), integrityHash).GetSignBytes()
 				approvalAddr, err := sdk.AccAddressFromHexUnsafe(sp.GetApprovalAddress())
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to parser sp operator address",
@@ -180,4 +197,32 @@ func (taskNode *TaskNode) QueryReplicatingObject(ctx context.Context, req *types
 	}
 	resp.ReplicateSegmentInfo = val.(*servicetypes.ReplicateSegmentInfo)
 	return
+}
+
+func (taskNode *TaskNode) getApproval(
+	objectInfo *storagetypes.ObjectInfo, low, high int, timeout int64) (
+	map[string]*sptypes.StorageProvider, map[string]*p2ptypes.GetApprovalResponse, error) {
+	var (
+		spList       = make(map[string]*sptypes.StorageProvider)
+		approvalList = make(map[string]*p2ptypes.GetApprovalResponse)
+	)
+	approvals, _, err := taskNode.p2p.GetApproval(context.Background(), objectInfo, int64(high), timeout)
+	if err != nil {
+		return spList, approvalList, err
+	}
+	if len(approvals) < low {
+		return spList, approvalList, merrors.ErrSPApprovalNumber
+	}
+	for spOpAddr, approval := range approvals {
+		sp, err := taskNode.spDB.GetSpByAddress(spOpAddr, sqldb.OperatorAddressType)
+		if err != nil {
+			continue
+		}
+		spList[sp.GetEndpoint()] = sp
+		approvalList[sp.GetEndpoint()] = approval
+	}
+	if len(spList) < low {
+		return spList, approvalList, merrors.ErrSPNumber
+	}
+	return spList, approvalList, nil
 }

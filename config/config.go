@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -22,14 +23,14 @@ import (
 type StorageProviderConfig struct {
 	Service           []string
 	SpOperatorAddress string
-	Domain            string
-	HTTPAddress       map[string]string
-	GRPCAddress       map[string]string
+	Endpoint          map[string]string
+	ListenAddress     map[string]string
 	SpDBConfig        *config.SQLDBConfig
 	PieceStoreConfig  *storage.PieceStoreConfig
 	ChainConfig       *gnfd.GreenfieldChainConfig
 	SignerCfg         *signer.SignerConfig
 	BlockSyncerCfg    *blocksyncer.Config
+	P2PCfg            *p2p.NodeConfig
 	LogCfg            *LogConfig
 }
 
@@ -55,8 +56,10 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SignerService,
 		model.MetadataService,
 		model.ManagerService,
+		model.P2PService,
 	},
-	GRPCAddress: map[string]string{
+	ListenAddress: map[string]string{
+		model.GatewayService:    model.GatewayHTTPAddress,
 		model.UploaderService:   model.UploaderGRPCAddress,
 		model.DownloaderService: model.DownloaderGRPCAddress,
 		model.ChallengeService:  model.ChallengeGRPCAddress,
@@ -64,17 +67,26 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.TaskNodeService:   model.TaskNodeGRPCAddress,
 		model.SignerService:     model.SignerGRPCAddress,
 		model.MetadataService:   model.MetadataGRPCAddress,
+		model.P2PService:        model.P2PGRPCAddress,
 	},
-	HTTPAddress: map[string]string{
-		model.GatewayService: model.GatewayHTTPAddress,
+	Endpoint: map[string]string{
+		model.GatewayService:    "gnfd.nodereal.com",
+		model.UploaderService:   model.UploaderGRPCAddress,
+		model.DownloaderService: model.DownloaderGRPCAddress,
+		model.ChallengeService:  model.ChallengeGRPCAddress,
+		model.ReceiverService:   model.ReceiverGRPCAddress,
+		model.TaskNodeService:   model.TaskNodeGRPCAddress,
+		model.SignerService:     model.SignerGRPCAddress,
+		model.MetadataService:   model.MetadataGRPCAddress,
+		model.P2PService:        model.P2PGRPCAddress,
 	},
 	SpOperatorAddress: hex.EncodeToString([]byte(model.SpOperatorAddress)),
-	Domain:            "gnfd.nodereal.com",
 	SpDBConfig:        DefaultSQLDBConfig,
 	PieceStoreConfig:  DefaultPieceStoreConfig,
 	ChainConfig:       DefaultGreenfieldChainConfig,
 	SignerCfg:         signer.DefaultSignerChainConfig,
 	BlockSyncerCfg:    DefaultBlockSyncerConfig,
+	P2PCfg:            DefaultP2PConfig,
 	LogCfg:            DefaultLogConfig,
 }
 
@@ -108,7 +120,7 @@ var DefaultGreenfieldChainConfig = &gnfd.GreenfieldChainConfig{
 // DefaultBlockSyncerConfig defines the default configuration of BlockSyncer service
 var DefaultBlockSyncerConfig = &blocksyncer.Config{
 	Modules: []string{"epoch", "bucket", "object", "payment"},
-	Dsn:     "localhost:3306",
+	Dsn:     "localhost:3308",
 }
 
 type LogConfig struct {
@@ -121,6 +133,11 @@ var DefaultLogConfig = &LogConfig{
 	// TODO:: change to info level after releasing
 	Level: "debug",
 	Path:  "./gnfd-sp.log",
+}
+
+var DefaultP2PConfig = &p2p.NodeConfig{
+	ListenAddress: model.P2PListenAddress,
+	PingPeriod:    model.DefaultPingPeriod,
 }
 
 // LoadConfig loads the config file from path

@@ -81,6 +81,8 @@ make_config() {
         sed -i -e "s/9533/$(($cur_port+533))/g" config.toml
         sed -i -e "s/9633/$(($cur_port+633))/g" config.toml
         sed -i -e "s/9733/$(($cur_port+733))/g" config.toml
+        sed -i -e "s/9833/$(($cur_port+833))/g" config.toml
+        sed -i -e "s/9933/$(($cur_port+933))/g" config.toml
         sed -i -e "s/SpOperatorAddress = \".*\"/SpOperatorAddress = \"${OPERATOR_ADDRESS}\"/g" config.toml
         sed -i -e "s/OperatorPrivateKey = \".*\"/OperatorPrivateKey = \"${OPERATOR_PRIVATE_KEY}\"/g" config.toml
         sed -i -e "s/FundingPrivateKey = \".*\"/FundingPrivateKey = \"${FUNDING_PRIVATE_KEY}\"/g" config.toml
@@ -91,6 +93,11 @@ make_config() {
         sed -i -e "s/localhost\:9090/${CHAIN_GRPC_ENDPOINT}/g" config.toml
         sed -i -e "s/localhost\:26750/${CHAIN_HTTP_ENDPOINT}/g" config.toml
         echo "succeed to generate config.toml in "${sp_dir}
+        # p2p
+        node=NODE${index}
+        boot=BOOT${index}
+        sed -i -e "s/P2PPrivateKey = \".*\"/P2PPrivateKey = \"${!node}\"/g" config.toml
+        sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\"${!boot}\"\]/g" config.toml
       cd - >/dev/null
       index=$(($index+1))
   done
@@ -189,6 +196,7 @@ main() {
     reset_sp $2
     ;;
   --start)
+    stop_sp
     start_sp
     ;;
   --stop)

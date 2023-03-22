@@ -32,7 +32,8 @@ func (receiver *Receiver) SyncObject(stream types.ReceiverService_SyncObjectServ
 			log.Errorw("failed to replicate payload", "error", err)
 			return
 		}
-		if resp.IntegrityHash, resp.Signature, err = receiver.signer.SignIntegrityHash(context.Background(), checksum); err != nil {
+		if resp.IntegrityHash, resp.Signature, err = receiver.signer.SignIntegrityHash(context.Background(),
+			integrityMeta.ObjectID, checksum); err != nil {
 			log.Errorw("failed to sign integrity hash", "error", err)
 			return
 		}

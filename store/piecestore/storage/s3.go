@@ -341,7 +341,8 @@ func getHTTPClient(tlsInsecureSkipVerify bool) *http.Client {
 
 	return &http.Client{
 		Transport: &http.Transport{
-			Proxy:                 http.ProxyFromEnvironment,
+			Proxy: http.ProxyFromEnvironment,
+			// #nosec
 			TLSClientConfig:       &tls.Config{InsecureSkipVerify: tlsInsecureSkipVerify},
 			TLSHandshakeTimeout:   time.Second * 20,
 			ResponseHeaderTimeout: time.Second * 30,

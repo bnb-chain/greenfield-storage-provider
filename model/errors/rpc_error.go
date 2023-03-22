@@ -14,6 +14,8 @@ var (
 	ErrNoSuchObject = errors.New("the specified key does not exist")
 	// ErrNoSuchBucket defines not existed bucket error
 	ErrNoSuchBucket = errors.New("the specified bucket does not exist")
+	// ErrInvalidBucketName defines invalid bucket name
+	ErrInvalidBucketName = errors.New("invalid bucket name")
 )
 
 // piece store errors
@@ -60,6 +62,12 @@ var (
 	ErrCheckPaymentAccountActive = errors.New("payment account is not active")
 	// ErrCheckQuotaEnough defines check quota is enough
 	ErrCheckQuotaEnough = errors.New("quota is not enough")
+	// ErrSPMismatch defines the SP's operate address mismatch error
+	ErrSPMismatch = errors.New("the operator address of SP is a mismatch")
+	// ErrApprovalExpire defines the SP's operate address mismatch error
+	ErrApprovalExpire = errors.New("approval expired")
+	// ErrSignatureInvalid defines the replicate approval signature invalid
+	ErrSignatureInvalid = errors.New("invalid replicate approval signature")
 )
 
 // signer service error
@@ -72,4 +80,18 @@ var (
 	ErrSignMsg = errors.New("sign message with private key failed")
 	// ErrSealObjectOnChain defines send seal object tx to chain error
 	ErrSealObjectOnChain = errors.New("send sealObject msg failed")
+)
+
+// metadata service error
+var (
+	// ErrInvalidAccountID defines invalid account id
+	ErrInvalidAccountID = errors.New("invalid account id")
+)
+
+// task node service error
+var (
+	// ErrSPApprovalNumber defines failed to insufficient SPs' approvals from p2p server
+	ErrSPApprovalNumber = errors.New("failed to get sufficient approvals of SPs from p2p server")
+	// ErrSPNumber defines failed to get insufficient SPs from DB
+	ErrSPNumber = errors.New("failed to get sufficient SPs from DB")
 )

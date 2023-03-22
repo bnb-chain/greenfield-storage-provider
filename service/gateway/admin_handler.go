@@ -13,7 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
-// getApprovalHandler handle create bucket or create object approval
+// getApprovalHandler handles the bucket create or object create approval
 func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
@@ -35,7 +35,7 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 	}()
 
 	if gateway.signer == nil {
-		log.Errorw("failed to get approval due to not config signer")
+		log.Error("failed to get approval due to not config signer")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -125,7 +125,7 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 }
 
-// challengeHandler handle challenge request
+// challengeHandler handles the challenge request
 func (gateway *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error

@@ -19,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
@@ -225,7 +226,15 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		err          error
 		accountExist bool
 	)
+
+	// TODO: just for auth v2 js-sdk, will refine it in the future
 	if reqContext.skipAuth {
+		if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
+			context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
+			log.Errorw("failed to query bucket info and object info on chain",
+				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
+			return err
+		}
 		return nil
 	}
 	accountExist, err = g.chain.HasAccount(context.Background(), addr.String())
@@ -234,7 +243,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		return err
 	}
 	if !accountExist {
-		log.Errorw("account is not exist", "address", addr.String(), "error", err)
+		log.Errorw("account is not existed", "address", addr.String(), "error", err)
 		return errors.ErrNoPermission
 	}
 
@@ -251,10 +260,10 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 				"object_status", reqContext.objectInfo.GetObjectStatus())
 			return errors.ErrCheckObjectCreated
 		}
-		if reqContext.objectInfo.GetOwner() != addr.String() {
-			log.Errorw("failed to auth due to account is not equal to object owner",
-				"object_owner", reqContext.objectInfo.GetOwner(),
-				"request_address", addr.String())
+		if isAllow, err := g.chain.VerifyPutObjectPermission(context.Background(), addr.String(),
+			reqContext.bucketName, reqContext.objectName); !isAllow || err != nil {
+			log.Errorw("failed to auth due to verify permission",
+				"is_allow", isAllow, "error", err)
 			return errors.ErrNoPermission
 		}
 		if reqContext.bucketInfo.GetPrimarySpAddress() != g.config.SpOperatorAddress {
@@ -276,10 +285,10 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 				"status", reqContext.objectInfo.GetObjectStatus())
 			return errors.ErrCheckObjectSealed
 		}
-		if reqContext.objectInfo.GetOwner() != addr.String() {
-			log.Errorw("failed to auth due to account is not equal to object owner",
-				"object_owner", reqContext.objectInfo.GetOwner(),
-				"request_address", addr.String())
+		if isAllow, err := g.chain.VerifyGetObjectPermission(context.Background(), addr.String(),
+			reqContext.bucketName, reqContext.objectName); !isAllow || err != nil {
+			log.Errorw("failed to auth due to verify permission",
+				"is_allow", isAllow, "error", err)
 			return errors.ErrNoPermission
 		}
 		if reqContext.bucketInfo.GetPrimarySpAddress() != g.config.SpOperatorAddress {
@@ -290,13 +299,45 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		}
 		streamRecord, err := g.chain.QueryStreamRecord(context.Background(), reqContext.bucketInfo.PaymentAddress)
 		if err != nil {
-			log.Errorw("failed to check billing", "error", err)
+			log.Errorw("failed to check payment account status", "error", err)
 			return err
 		}
 		if streamRecord.Status != paymenttypes.STREAM_ACCOUNT_STATUS_ACTIVE {
 			log.Errorw("failed to check payment due to account status is not active", "status", streamRecord.Status)
 			return errors.ErrCheckPaymentAccountActive
 		}
+	case getBucketReadQuotaRouterName, listBucketReadRecordRouterName:
+		if reqContext.bucketInfo, err = g.chain.QueryBucketInfo(
+			context.Background(), reqContext.bucketName); err != nil {
+			log.Errorw("failed to query bucket info and object info on chain",
+				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
+			return err
+		}
+		if reqContext.bucketInfo.GetOwner() != addr.String() {
+			log.Errorw("failed to auth due to account is not equal to bucket owner",
+				"bucket_owner", reqContext.bucketInfo.GetOwner(),
+				"request_address", addr.String())
+			return errors.ErrNoPermission
+		}
+	}
+	return nil
+}
+
+// verifyReplicateApproval verify the piece replicate approval
+func (g *Gateway) verifyReplicateApproval(approval *p2ptypes.GetApprovalResponse) error {
+	err := p2ptypes.VerifySignature(approval.GetSpOperatorAddress(), approval.GetSignBytes(), approval.GetSignature())
+	if err != nil {
+		log.Errorw("failed to verify approval signature", "error", err)
+		return errors.ErrSignatureInvalid
+	}
+	if strings.Compare(g.config.SpOperatorAddress, approval.GetSpOperatorAddress()) != 0 {
+		log.Errorw("failed to verify replicate approval's SP operate address",
+			"approval_operate_address", approval.GetSpOperatorAddress(),
+			"own_operate_address", g.config.SpOperatorAddress)
+		return errors.ErrSPMismatch
+	}
+	if time.Now().Unix() > approval.GetExpiredTime() {
+		return errors.ErrApprovalExpire
 	}
 	return nil
 }

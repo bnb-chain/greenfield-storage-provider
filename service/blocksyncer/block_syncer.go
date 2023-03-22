@@ -28,7 +28,7 @@ type BlockSyncer struct {
 	config    *tomlconfig.TomlConfig
 	name      string
 	parserCtx *parser.Context
-	running atomic.Value
+	running   atomic.Value
 }
 
 // NewBlockSyncerService create a BlockSyncer service to index block events data to db

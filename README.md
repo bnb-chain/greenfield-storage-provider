@@ -43,7 +43,7 @@ make install-tools
 ### Build
 ```shell
 # build gnfd-sp
-bash build.sh && cd build 
+make builc && cd build 
 
 # show version
 ./gnfd-sp version
@@ -74,21 +74,30 @@ Build   : go1.19.1 darwin amd64 2023-03-13 14:11
 #### Edit configuration 
 ```toml
 # start service list
-Service = ["gateway", "uploader", "downloader", "challenge", "stonenode", "syncer", "signer", "metadata", "manager"]
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager"]
 # sp operator address 
 SpOperatorAddress = ""
-Domain = "gnfd.nodereal.com"
-# gate listen http address
-[HTTPAddress]
-gateway = "localhost:9033"
-# service listen address
-[GRPCAddress]
+# service endpoint for other to connect
+[Endpoint]
 challenge = "localhost:9333"
 downloader = "localhost:9233"
+gateway = "gnfd.nodereal.com"
 metadata = "localhost:9733"
+p2p = "localhost:9833"
+receiver = "localhost:9533"
 signer = "localhost:9633"
-stonenode = "localhost:9433"
-syncer = "localhost:9533"
+tasknode = "localhost:9433"
+uploader = "localhost:9133"
+# service listen address
+[ListenAddress]
+challenge = "localhost:9333"
+downloader = "localhost:9233"
+gateway = "localhost:9033"
+metadata = "localhost:9733"
+p2p = "localhost:9833"
+receiver = "localhost:9533"
+signer = "localhost:9633"
+tasknode = "localhost:9433"
 uploader = "localhost:9133"
 # SQL configuration
 [SpDBConfig]
@@ -109,6 +118,39 @@ ChainID = "greenfield_9000-1741"
 [[ChainConfig.NodeAddr]]
 GreenfieldAddresses = ["localhost:9090"]
 TendermintAddresses = ["http://localhost:26750"]
+# signer configuration
+[SignerCfg]
+GRPCAddress = "localhost:9633"
+APIKey = ""
+WhitelistCIDR = ["127.0.0.1/32"]
+GasLimit = 210000
+OperatorPrivateKey = ""
+FundingPrivateKey = ""
+SealPrivateKey = ""
+ApprovalPrivateKey = ""
+# block syncer configuration
+# signer configuration
+[SignerCfg]
+WhitelistCIDR = ["0.0.0.0/0"]
+GasLimit = 210000
+OperatorPrivateKey = "${SP_Operator_PrivKey}"
+FundingPrivateKey = "${SP_Funding_PrivKey}"
+SealPrivateKey = "${SP_Seal_PrivKey}"
+ApprovalPrivateKey = "${SP_Approval_PrivKey}"
+[BlockSyncerCfg]
+Modules = ["epoch", "bucket", "object", "payment"]
+Dsn = "localhost:3308"
+# p2p node configuration
+[P2PCfg]
+ListenAddress = "127.0.0.1:9933"
+# p2p node msg Secp256k1 encryption key, it is different from other SP's addresses
+P2PPrivateKey = ""
+# p2p node's bootstrap node, format: [node_id1@ip1:port1, node_id2@ip1:port2]
+Bootstrap = []
+# log configuration
+[LogCfg]
+Level = "info"
+Path = "./gnfd-sp.log"
 ```
 
 ### Start

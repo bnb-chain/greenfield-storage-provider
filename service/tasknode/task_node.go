@@ -6,8 +6,6 @@ import (
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
@@ -15,11 +13,14 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	p2pclient "github.com/bnb-chain/greenfield-storage-provider/service/p2p/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
 var _ lifecycle.Service = &TaskNode{}
@@ -31,6 +32,7 @@ type TaskNode struct {
 	config     *TaskNodeConfig
 	cache      *lru.Cache
 	signer     *signerclient.SignerClient
+	p2p        *p2pclient.P2PClient
 	spDB       sqldb.SPDB
 	chain      *greenfield.Greenfield
 	pieceStore *psclient.StoreClient
@@ -57,6 +59,10 @@ func NewTaskNodeService(cfg *TaskNodeConfig) (*TaskNode, error) {
 	}
 	if taskNode.signer, err = signerclient.NewSignerClient(cfg.SignerGrpcAddress); err != nil {
 		log.Errorw("failed to create signer client", "error", err)
+		return nil, err
+	}
+	if taskNode.p2p, err = p2pclient.NewP2PClient(cfg.P2PGrpcAddress); err != nil {
+		log.Errorw("failed to create p2p server client", "error", err)
 		return nil, err
 	}
 	if taskNode.chain, err = greenfield.NewGreenfield(cfg.ChainConfig); err != nil {
@@ -88,6 +94,7 @@ func (taskNode *TaskNode) Start(ctx context.Context) error {
 func (taskNode *TaskNode) Stop(ctx context.Context) error {
 	taskNode.grpcServer.GracefulStop()
 	taskNode.signer.Close()
+	taskNode.p2p.Close()
 	taskNode.chain.Close()
 	return nil
 }
@@ -101,7 +108,7 @@ func (taskNode *TaskNode) serve(errCh chan error) {
 		return
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize))
 	types.RegisterTaskNodeServiceServer(grpcServer, taskNode)
 	taskNode.grpcServer = grpcServer
 	reflection.Register(grpcServer)

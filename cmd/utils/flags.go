@@ -14,9 +14,9 @@ var (
 		Value:   "./config.toml",
 	}
 	ConfigRemoteFlag = &cli.BoolFlag{
-		Name: "configremote",
-		Usage: "Flag load config from remote db,if 'configremote' be set, the db.user, " +
-			"db.password and db.address flags are needed, otherwise use default value",
+		Name: "config.remote",
+		Usage: "Flag load config from remote db,if 'config.remote' be set, the db.user, " +
+			"db.password and db.address flags are needed, otherwise use the default value",
 	}
 	ServerFlag = &cli.StringFlag{
 		Name:    "server",

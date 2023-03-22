@@ -35,7 +35,8 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 				servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			return
 		}
-		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(), checksum)
+		integrityHash, signature, err := uploader.signer.SignIntegrityHash(context.Background(),
+			integrityMeta.ObjectID, checksum)
 		if err != nil {
 			log.Errorw("failed to sign integrity hash", "err", err)
 			uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
@@ -113,22 +114,20 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 		case entry := <-pstream.AsyncStreamRead():
 			log.Debugw("read segment from stream", "segment_key", entry.Key(), "error", entry.Error())
 			if entry.Error() == io.EOF {
-				errCh <- nil
+				err = nil
 				return
 			}
 			if entry.Error() != nil {
-				errCh <- entry.Error()
+				err = entry.Error()
 				return
 			}
 			checksum = append(checksum, hash.GenerateChecksum(entry.Data()))
 			traceInfo.Checksum = checksum
 			traceInfo.Completed++
 			uploader.cache.Add(entry.ID(), traceInfo)
-			go func() {
-				if err := uploader.pieceStore.PutSegment(entry.Key(), entry.Data()); err != nil {
-					errCh <- err
-				}
-			}()
+			if err = uploader.pieceStore.PutSegment(entry.Key(), entry.Data()); err != nil {
+				return
+			}
 		case err = <-errCh:
 			return
 		}
