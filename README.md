@@ -43,7 +43,7 @@ make install-tools
 ### Build
 ```shell
 # build gnfd-sp
-make builc && cd build 
+make build && cd build 
 
 # show version
 ./gnfd-sp version
@@ -170,8 +170,8 @@ Path = "./gnfd-sp.log"
 * [Storage Metadata](https://github.com/bnb-chain/greenfield/blob/master/docs/core-concept/storage-metadata-models.md) : the storage metadata on Greenfield Chain.
 * [SP on Greenfield](https://github.com/bnb-chain/greenfield/blob/master/docs/modules/storage_provider_management.md): the SP module on Greenfield Chain.
 * [Data Availability Challenge](https://github.com/bnb-chain/greenfield/blob/master/docs/modules/data_availability_challenge.md): the correctness of payload be stored in SP. 
-* [SP Deployment](docs/tutorial/01-deployment.md): the detailed introduction to deploying sp.
-* [SP Local Setup](docs/run-book/03-local.toml): the introduction to set up local SP env for testing.
+* [SP Deployment](docs/run-book/01-deployment.md): the detailed introduction to deploying sp.
+* [SP Local Setup](docs/run-book/02-localup.md): the introduction to set up local SP env for testing.
 
 ## Related Projects
 * [Greenfield](https://github.com/bnb-chain/greenfield): the Golang implementation of the Greenfield Blockchain.

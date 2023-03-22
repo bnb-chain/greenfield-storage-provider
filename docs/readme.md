@@ -5,6 +5,7 @@ This section dives into the internals of the Greenfield Storage Provider impleme
 
 - Introduction
   - [Overview](introduction/01-overview.md)
+  - [RestfulAPI](introduction/02-restful_api.md)
 - Modules
   - [PieceStore](modules/01-piece_store.md)
   - [Redundancy](modules/02-redundancy.md)
