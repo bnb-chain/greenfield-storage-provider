@@ -40,6 +40,7 @@ func NewManagerService(cfg *ManagerConfig) (*Manager, error) {
 
 	manager = &Manager{
 		config: cfg,
+		stopCh: make(chan struct{}),
 	}
 	if manager.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Errorw("failed to create chain client", "error", err)
