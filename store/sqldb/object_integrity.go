@@ -2,9 +2,11 @@ package sqldb
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"gorm.io/gorm"
 )
 
 // GetObjectIntegrity return the integrity hash info
@@ -13,6 +15,9 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 	result := s.db.Model(&IntegrityMetaTable{}).
 		Where("object_id = ?", objectID).
 		First(queryReturn)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, result.Error
+	}
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query integrity meta record: %s", result.Error)
 	}

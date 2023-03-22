@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -50,5 +51,8 @@ func (client *ChallengeClient) ChallengePiece(ctx context.Context, objectID uint
 		SegmentIdx: segmentIdx,
 	}, opts...)
 	log.Debugw("finish to challenge piece", "error", err)
+	if err != nil {
+		return nil, nil, nil, merrors.GRPCErrorToInnerError(err)
+	}
 	return resp.GetIntegrityHash(), resp.GetPieceHash(), resp.GetPieceData(), err
 }

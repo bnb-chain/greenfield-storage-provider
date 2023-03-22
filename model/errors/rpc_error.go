@@ -2,6 +2,10 @@ package errors
 
 import (
 	"errors"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 )
 
 // common error
@@ -95,3 +99,27 @@ var (
 	// ErrSPNumber defines failed to get insufficient SPs from DB
 	ErrSPNumber = errors.New("failed to get sufficient SPs from DB")
 )
+
+// InnerErrorToGRPCError convents inner error to grpc/status error
+func InnerErrorToGRPCError(err error) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) ||
+		errors.Is(err, ErrNoSuchObject) {
+		return status.Errorf(codes.NotFound, "Object is not found")
+	}
+	if errors.Is(err, ErrCheckQuotaEnough) {
+		return status.Errorf(codes.PermissionDenied, "Quota is not enough")
+	}
+	return err
+}
+
+// GRPCErrorToInnerError convents grpc/status error to inner error
+func GRPCErrorToInnerError(err error) error {
+	errStatus, _ := status.FromError(err)
+	if codes.NotFound == errStatus.Code() {
+		return ErrNoSuchObject
+	}
+	if codes.PermissionDenied == errStatus.Code() {
+		return ErrNoPermission
+	}
+	return err
+}
