@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - develop
+      - release*
     paths:
       - 'proto/**'
 
@@ -12,6 +13,7 @@ on:
     branches:
       - master
       - develop
+      - release*
     paths:
       - 'proto/**'
 
