@@ -46,6 +46,7 @@ func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.Resul
 func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, event sdk.Event) {
 	for _, module := range i.Modules {
 		if eventModule, ok := module.(modules.EventModule); ok {
+			log.Infof("module name :%s event type: %s, height: %d", module.Name(), event.Type, block.Block.Height)
 			err := eventModule.HandleEvent(ctx, block, event)
 			if err != nil {
 				log.Errorw("failed to handle event", "module", module.Name(), "event", event, "error", err)
