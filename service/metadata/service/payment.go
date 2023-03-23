@@ -41,7 +41,7 @@ func (metadata *Metadata) GetPaymentByBucketName(ctx context.Context, req *metat
 	}
 
 	resp = &metatypes.GetPaymentByBucketNameResponse{StreamRecord: res}
-	log.CtxInfow(ctx, "success to get payment by bucket name")
+	log.CtxInfow(ctx, "succeed to get payment by bucket name")
 	return resp, nil
 }
 
@@ -75,6 +75,6 @@ func (metadata *Metadata) GetPaymentByBucketID(ctx context.Context, req *metatyp
 	}
 
 	resp = &metatypes.GetPaymentByBucketIDResponse{StreamRecord: res}
-	log.CtxInfow(ctx, "success to get payment by bucket id")
+	log.CtxInfow(ctx, "succeed to get payment by bucket id")
 	return resp, nil
 }
