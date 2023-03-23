@@ -31,11 +31,11 @@ func (s SecondarySpAddresses) Value() (driver.Value, error) {
 	return json.Marshal(s)
 }
 
-// CheckSums defines the root hash of the pieces which stored in a SP
-type CheckSums []string
+// Checksums defines the root hash of the pieces which stored in a SP
+type Checksums []string
 
 // Scan value into bytes, implements sql.Scanner interface
-func (c *CheckSums) Scan(value interface{}) error {
+func (c *Checksums) Scan(value interface{}) error {
 	bytesValue, ok := value.([]byte)
 	if !ok {
 		return fmt.Errorf("failed to unmarshal CheckSums value: %v", value)
@@ -47,7 +47,7 @@ func (c *CheckSums) Scan(value interface{}) error {
 }
 
 // Value returns []string value, implements driver.Valuer interface
-func (c CheckSums) Value() (driver.Value, error) {
+func (c Checksums) Value() (driver.Value, error) {
 	if len(c) == 0 {
 		return nil, nil
 	}

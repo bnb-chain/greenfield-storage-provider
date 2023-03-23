@@ -7,7 +7,7 @@ import (
 
 type StreamRecord struct {
 	// ID defines db auto_increment id of stream record
-	Id uint64 `gorm:"id"`
+	ID uint64 `gorm:"id"`
 	// Account defines the account address
 	Account common.Address `gorm:"account"`
 	// UpdateTime defines the latest update timestamp of the stream record

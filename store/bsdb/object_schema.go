@@ -37,7 +37,7 @@ type Object struct {
 	// SourceType defines the source of the object.
 	SourceType string `gorm:"source_type"`
 	// CheckSums defines the root hash of the pieces which stored in a SP
-	CheckSums CheckSums `gorm:"check_sums;type:text"`
+	Checksums Checksums `gorm:"check_sums;type:text"`
 	// SecondarySpAddresses defines the addresses of secondary_sps
 	SecondarySpAddresses SecondarySpAddresses `gorm:"secondary_sp_addresses;type:text"`
 	// LockedBalance defines locked balance of object
