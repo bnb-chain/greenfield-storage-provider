@@ -237,7 +237,8 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 			MaxOpenConnections: 1,
 		},
 		Logging: loggingconfig.Config{
-			Level: "debug",
+			Level:   "debug",
+			RootDir: "./",
 		},
 	}, nil
 }
