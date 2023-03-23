@@ -65,6 +65,10 @@ P2PPrivateKey = ""
 Bootstrap = []
 PingPeriod = 2
 
+[MetricsCfg]
+Enabled = false
+HTTPAddress = "localhost:9833"
+
 [LogCfg]
 Level = "debug"
 Path = "./gnfd-sp.log"

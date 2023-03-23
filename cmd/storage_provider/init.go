@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -23,7 +24,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
 
-// initLog init global log level and log path.
+// initLog initializes global log level and log path.
 func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	if cfg.LogCfg == nil {
 		cfg.LogCfg = config.DefaultLogConfig
@@ -42,6 +43,24 @@ func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 		return err
 	}
 	log.Init(logLevel, cfg.LogCfg.Path)
+	return nil
+}
+
+// initMetrics initializes global metrics.
+func initMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
+	if cfg == nil {
+		cfg.MetricsCfg = config.DefaultMetricsConfig
+	}
+	if ctx.IsSet(utils.MetricsEnabledFlag.Name) {
+		cfg.MetricsCfg.Enabled = ctx.Bool(utils.MetricsEnabledFlag.Name)
+	}
+	if ctx.IsSet(utils.MetricsHTTPFlag.Name) {
+		cfg.MetricsCfg.HTTPAddress = ctx.String(utils.MetricsHTTPFlag.Name)
+	}
+	if cfg.MetricsCfg.Enabled {
+		slc := lifecycle.NewServiceLifecycle()
+		slc.RegisterServices(metrics.NewMetrics(cfg.MetricsCfg))
+	}
 	return nil
 }
 

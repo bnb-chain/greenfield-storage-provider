@@ -24,19 +24,30 @@ var (
 
 var app *cli.App
 
+// flags that configure the storage provider
 var (
-	// flags that configure the storage provider
-	spFlags = []cli.Flag{
+	configFlags = []cli.Flag{
 		utils.ConfigFileFlag,
 		utils.ConfigRemoteFlag,
 		utils.ServerFlag,
+	}
+
+	dbFlags = []cli.Flag{
 		utils.DBUserFlag,
 		utils.DBPasswordFlag,
 		utils.DBAddressFlag,
-		utils.DBDataBaseFlag,
+		utils.DBDatabaseFlag,
+	}
+
+	logFlags = []cli.Flag{
 		utils.LogLevelFlag,
 		utils.LogPathFlag,
 		utils.LogStdOutputFlag,
+	}
+
+	metricsFlags = []cli.Flag{
+		utils.MetricsEnabledFlag,
+		utils.MetricsHTTPFlag,
 	}
 )
 
@@ -46,7 +57,12 @@ func init() {
 	app.Usage = appUsage
 	app.Action = storageProvider
 	app.HideVersion = true
-	app.Flags = append(app.Flags, spFlags...)
+	app.Flags = utils.MergeFlags(
+		configFlags,
+		dbFlags,
+		logFlags,
+		metricsFlags,
+	)
 	app.Commands = []*cli.Command{
 		// config category commands
 		conf.ConfigDumpCmd,
@@ -85,6 +101,7 @@ func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 	} else if ctx.IsSet(utils.ConfigFileFlag.Name) {
 		cfg = config.LoadConfig(ctx.String(utils.ConfigFileFlag.Name))
 	}
+
 	// override the services to be started by flag
 	if ctx.IsSet(utils.ServerFlag.Name) {
 		services := util.SplitByComma(ctx.String(utils.ServerFlag.Name))
@@ -92,6 +109,10 @@ func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 	}
 	// init log
 	if err := initLog(ctx, cfg); err != nil {
+		return nil, err
+	}
+	// init metrics
+	if err := initMetrics(ctx, cfg); err != nil {
 		return nil, err
 	}
 	return cfg, nil
@@ -113,7 +134,7 @@ func storageProvider(ctx *cli.Context) error {
 			log.Errorw("failed to init service", "service", serviceName, "error", err)
 			os.Exit(1)
 		}
-		log.Debugw("success to init service ", "service", serviceName)
+		log.Debugw("succeed to init service ", "service", serviceName)
 		// register service to lifecycle.
 		slc.RegisterServices(service)
 	}

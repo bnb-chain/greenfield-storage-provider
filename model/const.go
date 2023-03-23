@@ -24,6 +24,8 @@ var (
 	BlockSyncerService = strings.ToLower("BlockSyncer")
 	// ManagerService defines the name of manager service
 	ManagerService = strings.ToLower("Manager")
+	// MetricsService defines the name of metrics service
+	MetricsService = strings.ToLower("Metrics")
 	// P2PService defines the name of p2p service
 	P2PService = strings.ToLower("p2p")
 )
@@ -60,6 +62,8 @@ const (
 	SignerGRPCAddress = "localhost:9633"
 	// MetadataGRPCAddress default gRPC address of meta data service
 	MetadataGRPCAddress = "localhost:9733"
+	// MetricsHTTPAddress default HTTP address of metrics service
+	MetricsHTTPAddress = "localhost:24036"
 	// P2PGRPCAddress default gRPC address of p2p service
 	P2PGRPCAddress = "localhost:9833"
 	// P2PListenAddress default p2p protocol listen address of p2p node

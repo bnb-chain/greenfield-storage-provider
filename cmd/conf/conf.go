@@ -31,7 +31,7 @@ var ConfigUploadCmd = &cli.Command{
 		utils.DBUserFlag,
 		utils.DBPasswordFlag,
 		utils.DBAddressFlag,
-		utils.DBDataBaseFlag,
+		utils.DBDatabaseFlag,
 	},
 	Category: "CONFIG COMMANDS",
 	Description: `

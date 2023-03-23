@@ -3,13 +3,15 @@ package client
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
+	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
-	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 )
 
 // UploaderClient is an uploader gRPC service client wrapper
@@ -20,10 +22,15 @@ type UploaderClient struct {
 
 // NewUploaderClient return an UploaderClient instance
 func NewUploaderClient(address string) (*UploaderClient, error) {
-	conn, err := grpc.DialContext(context.Background(), address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
+	var options []grpc.DialOption
+	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)))
+	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, grpc.WithChainUnaryInterceptor(openmetrics.UnaryClientInterceptor(metrics.DefaultGRPCClientMetrics)))
+		options = append(options, grpc.WithChainStreamInterceptor(openmetrics.StreamClientInterceptor(metrics.DefaultGRPCClientMetrics)))
+	}
+	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
 		log.Errorw("fail to invoke uploader service client", "error", err)
 		return nil, err
@@ -35,7 +42,7 @@ func NewUploaderClient(address string) (*UploaderClient, error) {
 	return client, nil
 }
 
-// Close the uploader gPRC client connection
+// Close the uploader gRPC client connection
 func (client *UploaderClient) Close() error {
 	return client.conn.Close()
 }

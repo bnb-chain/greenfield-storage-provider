@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"os/signal"
+	"sync"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -32,14 +33,22 @@ type ServiceLifecycle struct {
 	timeout     time.Duration
 }
 
-// NewServiceLifecycle returns an initialized service lifecycle
+var (
+	slc  *ServiceLifecycle
+	once sync.Once
+)
+
+// NewServiceLifecycle returns a singleton instance of ServiceLifecycle
 func NewServiceLifecycle() *ServiceLifecycle {
-	innerCtx, innerCancel := context.WithCancel(context.Background())
-	return &ServiceLifecycle{
-		innerCtx:    innerCtx,
-		innerCancel: innerCancel,
-		timeout:     time.Duration(StopTimeout) * time.Second,
-	}
+	once.Do(func() {
+		innerCtx, innerCancel := context.WithCancel(context.Background())
+		slc = &ServiceLifecycle{
+			innerCtx:    innerCtx,
+			innerCancel: innerCancel,
+			timeout:     time.Duration(StopTimeout) * time.Second,
+		}
+	})
+	return slc
 }
 
 // RegisterServices register services of an application
