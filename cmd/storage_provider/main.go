@@ -107,7 +107,7 @@ func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 		return nil, err
 	}
 	// init metrics
-	initMetricsConfig(ctx, cfg)
+	initMetrics(ctx, cfg)
 	return cfg, nil
 }
 

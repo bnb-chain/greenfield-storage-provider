@@ -22,12 +22,23 @@ type UploaderClient struct {
 
 // NewUploaderClient return an UploaderClient instance
 func NewUploaderClient(address string) (*UploaderClient, error) {
-	conn, err := grpc.DialContext(context.Background(), address,
-		grpc.WithChainUnaryInterceptor(openmetrics.UnaryClientInterceptor(metrics.DefaultGRPCClientMetrics)),
-		grpc.WithChainStreamInterceptor(openmetrics.StreamClientInterceptor(metrics.DefaultGRPCClientMetrics)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)),
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+	var (
+		conn *grpc.ClientConn
+		err  error
+	)
+	if metrics.GetMetrics().Enabled() {
+		conn, err = grpc.DialContext(context.Background(), address,
+			grpc.WithChainUnaryInterceptor(openmetrics.UnaryClientInterceptor(metrics.DefaultGRPCClientMetrics)),
+			grpc.WithChainStreamInterceptor(openmetrics.StreamClientInterceptor(metrics.DefaultGRPCClientMetrics)),
+			grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
+			grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)),
+			grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		conn, err = grpc.DialContext(context.Background(), address,
+			grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
+			grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)),
+			grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
 	if err != nil {
 		log.Errorw("fail to invoke uploader service client", "error", err)
 		return nil, err

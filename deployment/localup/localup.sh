@@ -57,9 +57,9 @@ generate_env() {
   done
 }
 
-###############################################################
-# make sp config.toml real according env.info/db.info/sp.info #
-###############################################################
+##################################################################
+# make sp config.toml real according to env.info/db.info/sp.info #
+##################################################################
 make_config() {
   index=0
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do

@@ -46,8 +46,10 @@ func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	return nil
 }
 
-// initMetricsConfig initializes metrics, this will use cli first
-func initMetricsConfig(ctx *cli.Context, cfg *config.StorageProviderConfig) {
+// initMetrics initializes metrics
+// If set metrics through command line and config.toml at the same time, the config of command line would
+// override the config.toml.
+func initMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) {
 	if cfg == nil {
 		cfg.MetricsCfg = config.DefaultMetricsConfig
 	}

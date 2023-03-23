@@ -37,7 +37,7 @@ type Metrics struct {
 
 // NewMetrics returns a singleton instance of Metrics.
 // Note: if you want to use metrics service in storage provider, you must call NewMetrics in initMetricsConfig func.
-// if you use GetMetrics method straightly without calling NewMetrics firstly, you won't start metrics service to collect
+// If you use GetMetrics method straightly without calling NewMetrics firstly, you won't start metrics service to collect
 // stats data about sp.
 func NewMetrics(cfg *MetricsConfig) MetricsMonitor {
 	return initMetrics(cfg)
@@ -48,7 +48,7 @@ func GetMetrics() MetricsMonitor {
 	return initMetrics(nil)
 }
 
-// initMetrics is used to init metrics by MetricsConfig
+// initMetrics is used to init metrics according to MetricsConfig
 func initMetrics(cfg *MetricsConfig) MetricsMonitor {
 	once.Do(func() {
 		if cfg == nil || !cfg.Enabled {
