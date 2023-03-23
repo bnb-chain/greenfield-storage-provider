@@ -74,9 +74,9 @@ func (desc *errorDescription) errorJSONResponse(w http.ResponseWriter, reqCtx *r
 	)
 
 	var jsonInfo = struct {
-		Code      string `json:"Code"`
-		Message   string `json:"Message"`
-		RequestId string `json:"RequestId"`
+		Code      string `json:"code"`
+		Message   string `json:"message"`
+		RequestId string `json:"requestId"`
 	}{
 		Code:      desc.errorCode,
 		Message:   desc.errorMessage,

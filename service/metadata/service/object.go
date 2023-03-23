@@ -39,7 +39,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 				Checksums:            util.StringListToBytesSlice(object.CheckSums),
 				SecondarySpAddresses: object.SecondarySpAddresses,
 			},
-			LockedBalance: object.LockedBalance,
+			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
 		})
 	}
@@ -87,7 +87,7 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 				Checksums:            util.StringListToBytesSlice(object.CheckSums),
 				SecondarySpAddresses: object.SecondarySpAddresses,
 			},
-			LockedBalance: object.LockedBalance,
+			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
 		})
 	}
