@@ -24,7 +24,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
 
-// initLog init global log level and log path.
+// initLog initializes global log level and log path.
 func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	if cfg.LogCfg == nil {
 		cfg.LogCfg = config.DefaultLogConfig
@@ -46,8 +46,7 @@ func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	return nil
 }
 
-// initMetrics initializes metrics,if set metrics through command line and config.toml
-//at the same time, the config of command line would override the config.toml.
+// initMetrics initializes global metrics.
 func initMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	if cfg == nil {
 		cfg.MetricsCfg = config.DefaultMetricsConfig
