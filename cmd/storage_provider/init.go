@@ -46,10 +46,9 @@ func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	return nil
 }
 
-// initMetrics initializes metrics
-// If set metrics through command line and config.toml at the same time, the config of command line would
-// override the config.toml.
-func initMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) {
+// initMetrics initializes metrics,if set metrics through command line and config.toml
+//at the same time, the config of command line would override the config.toml.
+func initMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	if cfg == nil {
 		cfg.MetricsCfg = config.DefaultMetricsConfig
 	}
@@ -63,6 +62,7 @@ func initMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) {
 		slc := lifecycle.NewServiceLifecycle()
 		slc.RegisterServices(metrics.NewMetrics(cfg.MetricsCfg))
 	}
+	return nil
 }
 
 // initService init service instance by name and config.

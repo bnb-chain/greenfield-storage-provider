@@ -12,7 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
@@ -36,14 +35,14 @@ type Metrics struct {
 }
 
 // NewMetrics returns a singleton instance of Metrics.
-// Note: if you want to use metrics service in storage provider, you must call NewMetrics in initMetricsConfig func.
-// If you use GetMetrics method straightly without calling NewMetrics firstly, you won't start metrics service to collect
-// stats data about sp.
+// Note: enable metrics should call NewMetrics with MetricsConfig and MetricsConfig.Enabled is set true.
+// GetMetrics will return the singleton instance of Metrics to use at anywhere. If NewMetrics is not called,
+// then the metrics is disabled when calls GetMetrics.
 func NewMetrics(cfg *MetricsConfig) MetricsMonitor {
 	return initMetrics(cfg)
 }
 
-// GetMetrics gets an instance of MetricsMonitor, you can use this in the service logic of sp
+// GetMetrics gets an instance of MetricsMonitor
 func GetMetrics() MetricsMonitor {
 	return initMetrics(nil)
 }
@@ -124,12 +123,12 @@ func (NilMetrics) Name() string {
 
 // Start is a no-op
 func (NilMetrics) Start(ctx context.Context) error {
-	return merrors.ErrUnsupportedMethod
+	return nil
 }
 
 // Stop is a no-op
 func (NilMetrics) Stop(ctx context.Context) error {
-	return merrors.ErrUnsupportedMethod
+	return nil
 }
 
 // Enabled is a no-op

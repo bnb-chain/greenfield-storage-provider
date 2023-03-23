@@ -110,20 +110,15 @@ func (uploader *Uploader) serve(errCh chan error) {
 		return status.Errorf(codes.Internal, "%s", p)
 	}
 
+	var options []grpc.ServerOption
+	options = append(options, grpc.MaxRecvMsgSize(model.MaxCallMsgSize))
+	options = append(options, grpc.MaxSendMsgSize(model.MaxCallMsgSize))
 	if metrics.GetMetrics().Enabled() {
-		// create a gRPC server with gRPC interceptor
-		uploader.grpcServer = grpc.NewServer(
-			grpc.ChainUnaryInterceptor(openmetrics.UnaryServerInterceptor(metrics.DefaultGRPCServerMetrics),
-				grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(gRPCPanicRecoveryHandler))),
-			grpc.ChainStreamInterceptor(openmetrics.StreamServerInterceptor(metrics.DefaultGRPCServerMetrics)),
-			grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize),
-		)
-		// initialize all metrics
-		metrics.DefaultGRPCServerMetrics.InitializeMetrics(uploader.grpcServer)
-	} else {
-		uploader.grpcServer = grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize))
+		options = append(options, grpc.ChainUnaryInterceptor(openmetrics.UnaryServerInterceptor(metrics.DefaultGRPCServerMetrics),
+			grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(gRPCPanicRecoveryHandler))))
+		options = append(options, grpc.ChainStreamInterceptor(openmetrics.StreamServerInterceptor(metrics.DefaultGRPCServerMetrics)))
 	}
-
+	uploader.grpcServer = grpc.NewServer(options...)
 	types.RegisterUploaderServiceServer(uploader.grpcServer, uploader)
 	reflection.Register(uploader.grpcServer)
 	if err := uploader.grpcServer.Serve(lis); err != nil {

@@ -97,8 +97,8 @@ var (
 	}
 )
 
-// Merge merges the given flag slices.
-func Merge(groups ...[]cli.Flag) []cli.Flag {
+// MergeFlags merges the given flag slices.
+func MergeFlags(groups ...[]cli.Flag) []cli.Flag {
 	var ret []cli.Flag
 	for _, group := range groups {
 		ret = append(ret, group...)

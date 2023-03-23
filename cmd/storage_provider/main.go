@@ -57,7 +57,12 @@ func init() {
 	app.Usage = appUsage
 	app.Action = storageProvider
 	app.HideVersion = true
-	app.Flags = utils.Merge(configFlags, dbFlags, logFlags, metricsFlags)
+	app.Flags = utils.MergeFlags(
+		configFlags,
+		dbFlags,
+		logFlags,
+		metricsFlags,
+	)
 	app.Commands = []*cli.Command{
 		// config category commands
 		conf.ConfigDumpCmd,
@@ -107,7 +112,9 @@ func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 		return nil, err
 	}
 	// init metrics
-	initMetrics(ctx, cfg)
+	if err := initMetrics(ctx, cfg); err != nil {
+		return nil, err
+	}
 	return cfg, nil
 }
 
