@@ -4,6 +4,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+
+	"github.com/bnb-chain/greenfield/x/payment/types"
 )
 
 // SecondarySpAddresses defines the addresses of secondary_sps
@@ -21,7 +23,7 @@ func (s *SecondarySpAddresses) Scan(value interface{}) error {
 	return json.Unmarshal(bytesValue, s)
 }
 
-// Value return []string value, implement driver.Valuer interface
+// Value returns []string value, implements driver.Valuer interface
 func (s SecondarySpAddresses) Value() (driver.Value, error) {
 	if len(s) == 0 {
 		return nil, nil
@@ -29,11 +31,11 @@ func (s SecondarySpAddresses) Value() (driver.Value, error) {
 	return json.Marshal(s)
 }
 
-// CheckSums defines the root hash of the pieces which stored in a SP
-type CheckSums []string
+// Checksums defines the root hash of the pieces which stored in a SP
+type Checksums []string
 
 // Scan value into bytes, implements sql.Scanner interface
-func (s *CheckSums) Scan(value interface{}) error {
+func (c *Checksums) Scan(value interface{}) error {
 	bytesValue, ok := value.([]byte)
 	if !ok {
 		return fmt.Errorf("failed to unmarshal CheckSums value: %v", value)
@@ -41,13 +43,37 @@ func (s *CheckSums) Scan(value interface{}) error {
 	if len(bytesValue) == 0 {
 		return nil
 	}
-	return json.Unmarshal(bytesValue, s)
+	return json.Unmarshal(bytesValue, c)
 }
 
-// Value return []string value, implement driver.Valuer interface
-func (s CheckSums) Value() (driver.Value, error) {
-	if len(s) == 0 {
+// Value returns []string value, implements driver.Valuer interface
+func (c Checksums) Value() (driver.Value, error) {
+	if len(c) == 0 {
 		return nil, nil
 	}
-	return json.Marshal(s)
+	return json.Marshal(c)
+}
+
+// OutFlows defines the accumulated outflow rates of the stream account
+type OutFlows []types.OutFlow
+
+// Scan value into bytes, implements sql.Scanner interface
+func (o *OutFlows) Scan(value interface{}) error {
+	bytesValue, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal OutFlows value: %v", value)
+	}
+	if len(bytesValue) == 0 {
+		return nil
+	}
+
+	return json.Unmarshal(bytesValue, &o)
+}
+
+// Value returns []types.OutFlow value, implements driver.Valuer interface
+func (o OutFlows) Value() (driver.Value, error) {
+	if len(o) == 0 {
+		return nil, nil
+	}
+	return json.Marshal(o)
 }

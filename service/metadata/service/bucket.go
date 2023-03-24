@@ -34,7 +34,7 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Get
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
 				PrimarySpAddress: bucket.PrimarySpAddress.String(),
-				ReadQuota:        0,
+				ReadQuota:        bucket.ReadQuota,
 				BillingInfo: types.BillingInfo{
 					PriceTime:              0,
 					TotalChargeSize:        0,
@@ -78,7 +78,7 @@ func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metaty
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
 				PrimarySpAddress: bucket.PrimarySpAddress.String(),
-				ReadQuota:        0,
+				ReadQuota:        bucket.ReadQuota,
 			},
 			Removed: bucket.Removed,
 		}
@@ -113,7 +113,7 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
 				PrimarySpAddress: bucket.PrimarySpAddress.String(),
-				ReadQuota:        0,
+				ReadQuota:        bucket.ReadQuota,
 			},
 			Removed: bucket.Removed,
 		}

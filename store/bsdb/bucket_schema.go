@@ -19,14 +19,16 @@ type Bucket struct {
 	// SourceType defines which chain the user should send the bucket management transactions to
 	SourceType string `gorm:"source_type"`
 	// CreateAt defines the block number when the bucket created.
-	CreateAt int64 `json:"createAt"`
+	CreateAt int64 `gorm:"create_at"`
+	// CreateTime defines the timestamp when the bucket created
+	CreateTime int64 `gorm:"create_time"`
 	// PaymentAddress is the address of the payment account
 	PaymentAddress common.Address `gorm:"payment_address"`
 	// PrimarySpAddress is the address of the primary sp. Objects belong to this bucket will never
 	// leave this SP, unless you explicitly shift them to another SP.
 	PrimarySpAddress common.Address `gorm:"primary_sp_address"`
 	// ReadQuota defines the traffic quota for read
-	ReadQuota string `gorm:"read_quota"`
+	ReadQuota uint64 `gorm:"read_quota"`
 	// PaymentPriceTime defines price time of payment
 	PaymentPriceTime int64 `gorm:"payment_price_time"`
 	// Removed defines the bucket is deleted or not
