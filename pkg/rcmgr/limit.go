@@ -1,0 +1,92 @@
+package rcmgr
+
+import (
+	"math"
+
+	"github.com/shirou/gopsutil/mem"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+)
+
+const (
+	LimitFactor = 0.85
+)
+
+// Limit is an object that specifies basic resource limits.
+type Limit interface {
+	// GetMemoryLimit returns the (current) memory limit.
+	GetMemoryLimit() int64
+	// GetConnLimit returns the connection limit, for inbound or outbound connections.
+	GetConnLimit(Direction) int
+	// GetConnTotalLimit returns the total connection limit
+	GetConnTotalLimit() int
+	// GetFDLimit returns the file descriptor limit.
+	GetFDLimit() int
+}
+
+// Limiter is the interface for providing limits to the resource manager.
+type Limiter interface {
+	GetSystemLimits() Limit
+	GetTransientLimits() Limit
+	GetServiceLimits(svc string) Limit
+}
+
+var _ Limit = &BaseLimit{}
+
+// BaseLimit is a mixin type for basic resource limits.
+type BaseLimit struct {
+	Conns         int   `json:",omitempty"`
+	ConnsInbound  int   `json:",omitempty"`
+	ConnsOutbound int   `json:",omitempty"`
+	FD            int   `json:",omitempty"`
+	Memory        int64 `json:",omitempty"`
+}
+
+// GetMemoryLimit returns the (current) memory limit.
+func (limit *BaseLimit) GetMemoryLimit() int64 {
+	return limit.Memory
+}
+
+// GetConnLimit returns the connection limit, for inbound or outbound connections.
+func (limit *BaseLimit) GetConnLimit(direction Direction) int {
+	if direction == DirInbound {
+		return limit.ConnsInbound
+	}
+	return limit.ConnsOutbound
+}
+
+// GetConnTotalLimit returns the total connection limit
+func (limit *BaseLimit) GetConnTotalLimit() int {
+	return limit.Conns
+}
+
+// GetFDLimit returns the file descriptor limit.
+func (limit *BaseLimit) GetFDLimit() int {
+	return limit.FD
+}
+
+// InfiniteBaseLimit are a limiter configuration that uses unlimited limits, thus effectively not limiting anything.
+// Keep in mind that the operating system limits the number of file descriptors that an application can use.
+var InfiniteBaseLimit = BaseLimit{
+	Conns:         math.MaxInt,
+	ConnsInbound:  math.MaxInt,
+	ConnsOutbound: math.MaxInt,
+	FD:            math.MaxInt,
+	Memory:        math.MaxInt64,
+}
+
+// SystemBaseLimit are a limiter configuration that uses operating system limits.
+var SystemBaseLimit BaseLimit
+
+func init() {
+	virtualMem, err := mem.VirtualMemory()
+	if err != nil {
+		log.Panicw("failed to get os memory states", "error", err)
+	}
+	SystemBaseLimit.Memory = int64(float64(virtualMem.Available) * LimitFactor)
+	// TODO:: get from os and compatible with a variety of os
+	SystemBaseLimit.FD = math.MaxInt
+	SystemBaseLimit.Conns = math.MaxInt
+	SystemBaseLimit.ConnsInbound = math.MaxInt
+	SystemBaseLimit.ConnsOutbound = math.MaxInt
+}
