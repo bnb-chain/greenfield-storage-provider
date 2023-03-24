@@ -296,6 +296,25 @@ func (s *resourceScope) ReleaseResources(st ScopeStat) {
 	}
 }
 
+// Release explicitly releases self resource.
+func (s *resourceScope) Release() {
+	s.Lock()
+	defer s.Unlock()
+	if s.done {
+		return
+	}
+	st := s.rc.stat()
+	s.rc.releaseMemory(st.Memory)
+	s.rc.removeConns(st.NumConnsInbound, st.NumConnsOutbound, st.NumFD)
+	if s.owner != nil {
+		s.owner.ReleaseResources(st)
+	} else {
+		for _, e := range s.edges {
+			e.ReleaseForChild(st)
+		}
+	}
+}
+
 // ReleaseForChild explicitly releases resource in the child scope by ScopeStat.
 func (s *resourceScope) ReleaseForChild(st ScopeStat) {
 	s.Lock()

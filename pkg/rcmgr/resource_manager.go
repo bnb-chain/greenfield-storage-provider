@@ -124,6 +124,8 @@ type ResourceScope interface {
 	Name() string
 	// BeginSpan creates a new span scope rooted at this scope
 	BeginSpan() (ResourceScopeSpan, error)
+	// Release resource at this scope
+	Release()
 }
 
 // ResourceScopeSpan is a ResourceScope with a delimited span.
@@ -189,3 +191,4 @@ func (n *NullScope) Stat() ScopeStat                          { return ScopeStat
 func (n *NullScope) BeginSpan() (ResourceScopeSpan, error)    { return &NullScope{}, nil }
 func (n *NullScope) Done()                                    {}
 func (n *NullScope) Name() string                             { return "" }
+func (n *NullScope) Release()                                 {}

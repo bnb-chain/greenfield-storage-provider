@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -82,6 +83,12 @@ func initResourceManager(ctx *cli.Context) error {
 			return err
 		}
 	}
+	bz, err := json.Marshal(&limits)
+	if err == nil {
+		log.Errorw("failed to marshal resource manager limit config", "error", err)
+		return err
+	}
+	log.Infow("resource manager limit", "config", string(bz))
 	if _, err = rcmgr.NewResourceManager(limits); err != nil {
 		return err
 	}
