@@ -8,14 +8,9 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
-	eventutil "github.com/forbole/juno/v4/types/event"
-
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // enqueueMissingBlocks enqueues jobs (block heights) for missed blocks starting
@@ -70,16 +65,4 @@ func mustGetLatestHeight(ctx *parser.Context) uint64 {
 	}
 
 	return 0
-}
-
-// filterEventsByType filter the event by types we are interested in.
-// Current we handle storage/payment/permission related events.
-func filterEventsByType(tx *abci.ResponseDeliverTx) []sdk.Event {
-	filteredEvents := make([]sdk.Event, 0)
-	for _, event := range tx.Events {
-		if _, ok := eventutil.EventProcessedMap[event.Type]; ok {
-			filteredEvents = append(filteredEvents, sdk.Event(event))
-		}
-	}
-	return filteredEvents
 }
