@@ -19,10 +19,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/viki-org/dnscache"
 
@@ -240,30 +242,49 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	if sess, ok := sc.sessions[cfg]; ok {
 		return sess, bucketName, nil
 	}
-
-	awsConfig := &aws.Config{
-		Region:           aws.String(region),
-		Endpoint:         aws.String(endpoint),
-		DisableSSL:       aws.Bool(disableSSL),
-		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
-		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
-		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
-	}
-	// if TestMode is true, you can communicate with private bucket or public bucket，
-	// in this TestMode, if you want to visit private bucket, you should provide accessKey, secretKey.
-	// if TestMode is false, you can use service account or ec2 to visit your s3 straightly
-	if cfg.TestMode {
-		key := getSecretKeyFromEnv(mpiecestore.AWSAccessKey, mpiecestore.AWSSecretKey, mpiecestore.AWSSessionToken)
-		if key.accessKey == "NoSignRequest" {
-			awsConfig.Credentials = credentials.AnonymousCredentials
-		} else if key.accessKey != "" && key.secretKey != "" {
-			awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
+	awsCfg := aws.NewConfig()
+	awsCfg = awsCfg.WithEndpoint(endpoint).WithS3ForcePathStyle(!isVirtualHostStyle).
+		WithHTTPClient(getHTTPClient(cfg.TLSInsecureSkipVerify)).WithRegion(region)
+	var sess *session.Session
+	if !cfg.TestMode {
+		awsConfig := &aws.Config{
+			Region:           aws.String(region),
+			Endpoint:         aws.String(endpoint),
+			DisableSSL:       aws.Bool(disableSSL),
+			HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
+			S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
+			Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
 		}
-	}
+		// if TestMode is true, you can communicate with private bucket or public bucket，
+		// in this TestMode, if you want to visit private bucket, you should provide accessKey, secretKey.
+		// if TestMode is false, you can use service account or ec2 to visit your s3 straightly
+		if cfg.TestMode {
+			key := getSecretKeyFromEnv(mpiecestore.AWSAccessKey, mpiecestore.AWSSecretKey, mpiecestore.AWSSessionToken)
+			if key.accessKey == "NoSignRequest" {
+				awsConfig.Credentials = credentials.AnonymousCredentials
+			} else if key.accessKey != "" && key.secretKey != "" {
+				awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
+			}
+		}
 
-	sess, err := session.NewSession(awsConfig)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to create aws session: %s", err)
+		sess, err = session.NewSession(awsConfig)
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to create aws session: %s", err)
+		}
+	} else {
+		sess = session.Must(session.NewSession())
+		awsCfg.WithCredentialsChainVerboseErrors(true).
+			WithCredentials(credentials.NewChainCredentials([]credentials.Provider{
+				&credentials.EnvProvider{},
+				&credentials.SharedCredentialsProvider{},
+				// Required for IRSA
+				stscreds.NewWebIdentityRoleProvider(
+					sts.New(sess),
+					os.Getenv("AWS_ROLE_ARN"),
+					"",
+					os.Getenv("AWS_WEB_IDENTITY_TOKEN_FILE"),
+				),
+			}))
 	}
 
 	sc.sessions[cfg] = sess
