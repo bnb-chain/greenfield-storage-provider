@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -22,6 +23,7 @@ var _ lifecycle.Service = &Challenge{}
 type Challenge struct {
 	config     *ChallengeConfig
 	spDB       sqldb.SPDB
+	rcScope    rcmgr.ResourceScope
 	pieceStore *psclient.StoreClient
 }
 
@@ -42,6 +44,10 @@ func NewChallengeService(cfg *ChallengeConfig) (*Challenge, error) {
 	}
 	if challenge.spDB, err = sqldb.NewSpDB(cfg.SpDBConfig); err != nil {
 		log.Errorw("failed to create sp db client", "error", err)
+		return nil, err
+	}
+	if challenge.rcScope, err = rcmgr.RcManager().OpenService(model.ChallengeService); err != nil {
+		log.Errorw("failed to open challenger resource scope", "error", err)
 		return nil, err
 	}
 
@@ -79,5 +85,6 @@ func (challenge *Challenge) Start(ctx context.Context) error {
 
 // Stop the challenge gRPC service and recycle the resources
 func (challenge *Challenge) Stop(ctx context.Context) error {
+	challenge.rcScope.Release()
 	return nil
 }
