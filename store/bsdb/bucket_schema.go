@@ -9,13 +9,13 @@ type Bucket struct {
 	// ID defines db auto_increment id of bucket
 	ID uint64 `gorm:"id"`
 	// Owner is the account address of bucket creator, it is also the bucket owner.
-	Owner common.Address `gorm:"owner"`
+	Owner common.Address `gorm:"column:owner_address"`
 	// BucketName is a globally unique name of bucket
 	BucketName string `gorm:"bucket_name"`
 	// IsPublic defines the highest permissions for bucket. When the bucket is public, everyone can get the object in it.
 	IsPublic bool `gorm:"is_public"`
 	// ID is the unique identification for bucket.
-	BucketID int64 `gorm:"bucket_id"`
+	BucketID common.Hash `gorm:"bucket_id"`
 	// SourceType defines which chain the user should send the bucket management transactions to
 	SourceType string `gorm:"source_type"`
 	// CreateAt defines the block number when the bucket created.
