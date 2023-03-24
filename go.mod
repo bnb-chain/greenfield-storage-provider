@@ -4,20 +4,21 @@ go 1.18
 
 replace (
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b432c
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.9
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230324062005-e4879c010e7e
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.2-0.20230316090342-debd6c0c82a7
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230315120403-3093b5ed5267
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.2-0.20230320074759-0df1525c4090
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230324084957-b078fc07978e
+
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.2
+	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.3
 )
 
 require (
 	cosmossdk.io/math v1.0.0-beta.6
 	github.com/aws/aws-sdk-go v1.44.159
-	github.com/bnb-chain/greenfield v0.0.7
+	github.com/bnb-chain/greenfield v0.0.9
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230310033112-2d379fdc2987
-	github.com/bnb-chain/greenfield-go-sdk v0.0.0-20230314083410-f0d6dbbec179
+	github.com/bnb-chain/greenfield-go-sdk v0.0.7
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
 	github.com/cosmos/cosmos-sdk v0.46.7
@@ -39,6 +40,7 @@ require (
 	github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416
 	github.com/pkg/sftp v1.13.5
 	github.com/prometheus/client_golang v1.14.0
+	github.com/shopspring/decimal v1.3.1
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.35.9
 	github.com/urfave/cli/v2 v2.25.0
@@ -228,7 +230,6 @@ require (
 	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
-	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
