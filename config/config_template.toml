@@ -36,7 +36,7 @@ BucketURL = "./data"
 MaxRetries = 5
 MinRetryDelay = 0
 TLSInsecureSkipVerify = false
-TestMode = false
+IAMType = "AKSK"
 
 [ChainConfig]
 ChainID = "greenfield_9000-1741"

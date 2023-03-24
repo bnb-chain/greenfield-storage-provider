@@ -242,53 +242,67 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	if sess, ok := sc.sessions[cfg]; ok {
 		return sess, bucketName, nil
 	}
-	awsCfg := aws.NewConfig()
-	awsCfg = awsCfg.WithEndpoint(endpoint).WithS3ForcePathStyle(!isVirtualHostStyle).
-		WithHTTPClient(getHTTPClient(cfg.TLSInsecureSkipVerify)).WithRegion(region)
-	var sess *session.Session
-	if !cfg.TestMode {
-		awsConfig := &aws.Config{
-			Region:           aws.String(region),
-			Endpoint:         aws.String(endpoint),
-			DisableSSL:       aws.Bool(disableSSL),
-			HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
-			S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
-			Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
-		}
-		// if TestMode is true, you can communicate with private bucket or public bucket，
-		// in this TestMode, if you want to visit private bucket, you should provide accessKey, secretKey.
-		// if TestMode is false, you can use service account or ec2 to visit your s3 straightly
-		if cfg.TestMode {
-			key := getSecretKeyFromEnv(mpiecestore.AWSAccessKey, mpiecestore.AWSSecretKey, mpiecestore.AWSSessionToken)
-			if key.accessKey == "NoSignRequest" {
-				awsConfig.Credentials = credentials.AnonymousCredentials
-			} else if key.accessKey != "" && key.secretKey != "" {
-				awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
-			}
-		}
 
-		sess, err = session.NewSession(awsConfig)
-		if err != nil {
-			return nil, "", fmt.Errorf("failed to create aws session: %s", err)
+	awsConfig := &aws.Config{
+		Region:           aws.String(region),
+		Endpoint:         aws.String(endpoint),
+		DisableSSL:       aws.Bool(disableSSL),
+		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
+		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
+		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
+	}
+	sess := session.Must(session.NewSession(awsConfig))
+	// If you want to access s3 bucket, you must set IAM type in config.toml.
+	// If IAM type is AKSK, you must provide access key, secret key and session token(optional) to access s3 bucket
+	// If you want to access public bucket, you should set IAM type to AKSK and accessKey to be NoSignRequest
+	// If IAM type is SA, you can use service account or ec2 to visit your s3 straightly
+	switch cfg.IAMType {
+	case mpiecestore.AKSKIAMType:
+		key := getSecretKeyFromEnv(mpiecestore.AWSAccessKey, mpiecestore.AWSSecretKey, mpiecestore.AWSSessionToken)
+		if key.accessKey == "NoSignRequest" {
+			// access public s3 bucket
+			awsConfig.Credentials = credentials.AnonymousCredentials
+		} else if key.accessKey != "" && key.secretKey != "" {
+			awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
 		}
-	} else {
-		sess = session.Must(session.NewSession())
-		awsCfg.WithCredentialsChainVerboseErrors(true).
-			WithCredentials(credentials.NewChainCredentials([]credentials.Provider{
-				&credentials.EnvProvider{},
-				&credentials.SharedCredentialsProvider{},
-				// Required for IRSA
-				stscreds.NewWebIdentityRoleProvider(
-					sts.New(sess),
-					os.Getenv("AWS_ROLE_ARN"),
-					"",
-					os.Getenv("AWS_WEB_IDENTITY_TOKEN_FILE"),
-				),
-			}))
+	default: // default is service account iam type
+		svc := sts.New(sess)
+		awsConfig.Credentials = getAWSChainCredentials(svc)
 	}
 
 	sc.sessions[cfg] = sess
 	return sess, bucketName, nil
+}
+
+func getAWSChainCredentials(svc *sts.STS) *credentials.Credentials {
+	irsa, roleARN, tokenPath := checkIRSAAvailable()
+	chain := []credentials.Provider{
+		&credentials.EnvProvider{},
+		&credentials.SharedCredentialsProvider{},
+	}
+
+	if irsa {
+		chain = append(chain, stscreds.NewWebIdentityRoleProviderWithOptions(svc, roleARN, "",
+			stscreds.FetchTokenPath(tokenPath)))
+	}
+	creds := credentials.NewChainCredentials(chain)
+	// IMPORTANT DO NOT remove otherwise throws error: RequestCanceled: request context canceled
+	creds.Get()
+
+	return creds
+}
+
+func checkIRSAAvailable() (bool, string, string) {
+	irsa := true
+	roleARN, exists := os.LookupEnv(mpiecestore.AWSRoleARN)
+	if !exists {
+		irsa = false
+	}
+	tokenPath, exists := os.LookupEnv(mpiecestore.AWSWebIdentityTokenFile)
+	if !exists {
+		irsa = false
+	}
+	return irsa, roleARN, tokenPath
 }
 
 // func (sc *SessionCache) clear() {

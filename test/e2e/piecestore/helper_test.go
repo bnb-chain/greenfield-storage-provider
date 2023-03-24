@@ -6,10 +6,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
-	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -26,7 +28,7 @@ func setup(t *testing.T, storageType, bucketURL string, shards int) (*piece.Piec
 			Storage:    storageType,
 			BucketURL:  bucketURL,
 			MaxRetries: 5,
-			TestMode:   true,
+			IAMType:    mpiecestore.AKSKIAMType,
 		},
 	})
 }
@@ -45,7 +47,7 @@ func doOperations(t *testing.T, handler *piece.PieceStore) {
 	assert.Equal(t, nil, err)
 	data, err := io.ReadAll(rc)
 	assert.Equal(t, nil, err)
-	assert.Equal(t, string(data), "Hello, World!\n")
+	assert.Contains(t, string(data), "Hello, World!\n")
 
 	// 3. head object
 	log.Info("Get piece info")

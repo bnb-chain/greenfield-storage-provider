@@ -41,7 +41,7 @@ func checkConfig(cfg *storage.PieceStoreConfig) {
 	if cfg.Store.MinRetryDelay < 0 {
 		log.Panic("MinRetryDelay should be equal or greater than zero")
 	}
-	if cfg.Store.Storage == "file" {
+	if cfg.Store.Storage == mpiecestore.DiskFileStore {
 		if cfg.Store.BucketURL == "" {
 			cfg.Store.BucketURL = setDefaultFileStorePath()
 		}
@@ -51,6 +51,9 @@ func checkConfig(cfg *storage.PieceStoreConfig) {
 		}
 		cfg.Store.BucketURL = p
 		cfg.Store.BucketURL += "/"
+	}
+	if cfg.Store.IAMType != mpiecestore.AKSKIAMType && cfg.Store.IAMType != mpiecestore.SAIAMType {
+		log.Panicf("unknown IAM type: %s", cfg.Store.IAMType)
 	}
 }
 
