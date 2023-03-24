@@ -48,7 +48,7 @@ func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 
 // initMetrics initializes global metrics.
 func initMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
-	if cfg == nil {
+	if cfg.MetricsCfg == nil {
 		cfg.MetricsCfg = config.DefaultMetricsConfig
 	}
 	if ctx.IsSet(utils.MetricsEnabledFlag.Name) {
