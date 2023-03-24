@@ -72,6 +72,6 @@ func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address) (int64, error) 
 		err   error
 	)
 
-	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
+	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner_address = ?", accountID).Error
 	return count, err
 }

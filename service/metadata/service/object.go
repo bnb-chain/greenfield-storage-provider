@@ -92,8 +92,8 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 	}
 
 	resp = &metatypes.ListDeletedObjectsByBlockNumberRangeResponse{
-		Objects:           res,
-		LatestBlockNumber: endBlockNumber,
+		Objects:        res,
+		EndBlockNumber: endBlockNumber,
 	}
 	log.CtxInfow(ctx, "succeed to list deleted objects by block number range")
 	return resp, nil
