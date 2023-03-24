@@ -2,9 +2,10 @@ package bsdb
 
 import (
 	"errors"
+	"strconv"
+
 	"github.com/ethereum/go-ethereum/common"
 	"gorm.io/gorm"
-	"strconv"
 )
 
 // GetUserBuckets get buckets info by a user address
