@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	ConfigCategory   = "SP CONFIG"
-	LoggingCategory  = "LOGGING AND DEBUGGING"
-	MetricsCategory  = "METRICS AND STATS"
-	DatabaseCategory = "DATABASE"
+	ConfigCategory          = "SP CONFIG"
+	LoggingCategory         = "LOGGING AND DEBUGGING"
+	MetricsCategory         = "METRICS AND STATS"
+	DatabaseCategory        = "DATABASE"
+	ResourceManagerCategory = "Resource Manager"
 )
 
 var (
@@ -63,23 +64,37 @@ var (
 		Value:    config.DefaultSQLDBConfig.Database,
 	}
 
+	// resource manager flags
+	DisableResourceManagerFlag = &cli.BoolFlag{
+		Name:     "rcmgr.disable",
+		Category: ResourceManagerCategory,
+		Usage:    "Disable resource manager",
+		Value:    false,
+	}
+	ResourceManagerConfigFlag = &cli.StringFlag{
+		Name:     "rcmgr.config",
+		Category: ResourceManagerCategory,
+		Usage:    "Resource manager config file path",
+		Value:    "",
+	}
+
 	// log flags
 	LogLevelFlag = &cli.StringFlag{
 		Name:     "log.level",
 		Category: LoggingCategory,
-		Usage:    "log level",
+		Usage:    "Log level",
 		Value:    "info",
 	}
 	LogPathFlag = &cli.StringFlag{
 		Name:     "log.path",
 		Category: LoggingCategory,
-		Usage:    "log output file path",
+		Usage:    "Log output file path",
 		Value:    config.DefaultLogConfig.Path,
 	}
 	LogStdOutputFlag = &cli.BoolFlag{
 		Name:     "log.std",
 		Category: LoggingCategory,
-		Usage:    "log output standard io",
+		Usage:    "Log output standard io",
 	}
 
 	// Metrics flags

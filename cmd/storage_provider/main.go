@@ -39,6 +39,11 @@ var (
 		utils.DBDatabaseFlag,
 	}
 
+	rcmgrFlags = []cli.Flag{
+		utils.DisableResourceManagerFlag,
+		utils.ResourceManagerConfigFlag,
+	}
+
 	logFlags = []cli.Flag{
 		utils.LogLevelFlag,
 		utils.LogPathFlag,
@@ -60,6 +65,7 @@ func init() {
 	app.Flags = utils.MergeFlags(
 		configFlags,
 		dbFlags,
+		rcmgrFlags,
 		logFlags,
 		metricsFlags,
 	)
@@ -107,15 +113,23 @@ func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 		services := util.SplitByComma(ctx.String(utils.ServerFlag.Name))
 		cfg.Service = services
 	}
+	return cfg, nil
+}
+
+func makeEnv(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	// init log
 	if err := initLog(ctx, cfg); err != nil {
-		return nil, err
+		return err
 	}
 	// init metrics
 	if err := initMetrics(ctx, cfg); err != nil {
-		return nil, err
+		return err
 	}
-	return cfg, nil
+	// init resource manager
+	if err := initResourceManager(ctx); err != nil {
+		return err
+	}
+	return nil
 }
 
 // storageProvider is the main entry point into the system if no special subcommand is ran.
@@ -123,6 +137,10 @@ func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 // and runs it in blocking mode, waiting for it to be shut down.
 func storageProvider(ctx *cli.Context) error {
 	cfg, err := makeConfig(ctx)
+	if err != nil {
+		return err
+	}
+	err = makeEnv(ctx, cfg)
 	if err != nil {
 		return err
 	}

@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	LimitFactor = 0.85
+	LimitFactor              = 0.85
+	DefaultMemorySize uint64 = 8 * 1024 * 1024
 )
 
 // Limit is an object that specifies basic resource limits.
@@ -75,18 +76,21 @@ var InfiniteBaseLimit = BaseLimit{
 	Memory:        math.MaxInt64,
 }
 
-// SystemBaseLimit are a limiter configuration that uses operating system limits.
-var SystemBaseLimit BaseLimit
-
-func init() {
+// DynamicLimits generate limits by os resource
+func DynamicLimits() *BaseLimit {
+	availableMem := DefaultMemorySize
 	virtualMem, err := mem.VirtualMemory()
 	if err != nil {
-		log.Panicw("failed to get os memory states", "error", err)
+		log.Errorw("failed to get os memory states", "error", err)
+	} else {
+		availableMem = virtualMem.Available
 	}
-	SystemBaseLimit.Memory = int64(float64(virtualMem.Available) * LimitFactor)
+	limits := &BaseLimit{}
+	limits.Memory = int64(float64(availableMem) * LimitFactor)
 	// TODO:: get from os and compatible with a variety of os
-	SystemBaseLimit.FD = math.MaxInt
-	SystemBaseLimit.Conns = math.MaxInt
-	SystemBaseLimit.ConnsInbound = math.MaxInt
-	SystemBaseLimit.ConnsOutbound = math.MaxInt
+	limits.FD = math.MaxInt
+	limits.Conns = math.MaxInt
+	limits.ConnsInbound = math.MaxInt
+	limits.ConnsOutbound = math.MaxInt
+	return limits
 }

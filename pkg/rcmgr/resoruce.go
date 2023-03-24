@@ -41,15 +41,12 @@ func (rc *resources) checkMemory(rsvp int64, prio uint8) error {
 	if rsvp < 0 {
 		return fmt.Errorf("can't reserve negative memory. rsvp=%v", rsvp)
 	}
-
 	limit := rc.limit.GetMemoryLimit()
 	if limit == math.MaxInt64 {
 		// Special case where we've set max limits.
 		return nil
 	}
-
 	newmem, addOk := addInt64WithOverflow(rc.memory, rsvp)
-
 	threshold, mulOk := mulInt64WithOverflow(1+int64(prio), limit)
 	if !mulOk {
 		thresholdBig := big.NewInt(limit)
@@ -58,12 +55,13 @@ func (rc *resources) checkMemory(rsvp int64, prio uint8) error {
 		if !thresholdBig.IsInt64() {
 			// Shouldn't happen since the threshold can only be <= limit
 			threshold = limit
+			goto finish
 		}
 		threshold = thresholdBig.Int64()
 	} else {
 		threshold = threshold / 256
 	}
-
+finish:
 	if !addOk || newmem > threshold {
 		return &ErrMemoryLimitExceeded{
 			current:   rc.memory,

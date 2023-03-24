@@ -7,7 +7,7 @@ import (
 )
 
 func TestOpenServiceScope(t *testing.T) {
-	limits := NewLimitConfigFromToml("./testdata/limit.toml")
+	limits, _ := NewLimitConfigFromToml("./testdata/limit.toml")
 	rm, err := NewResourceManager(limits)
 	assert.NoError(t, err)
 

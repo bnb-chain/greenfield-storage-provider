@@ -18,14 +18,14 @@ type LimitConfig struct {
 }
 
 var DefaultLimitConfig = &LimitConfig{
-	SystemLimit: &SystemBaseLimit,
+	SystemLimit: DynamicLimits(),
 	Service:     make(map[string]*BaseLimit),
 }
 
-func NewLimitConfigFromToml(file string) *LimitConfig {
+func NewLimitConfigFromToml(file string) (*LimitConfig, error) {
 	f, err := os.Open(file)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer f.Close()
 
@@ -33,9 +33,10 @@ func NewLimitConfigFromToml(file string) *LimitConfig {
 	err = util.TomlSettings.NewDecoder(bufio.NewReader(f)).Decode(&cfg)
 	// Add file name to errors that have a line number.
 	if _, ok := err.(*toml.LineError); ok {
-		log.Panicw("failed to parser resource manager limit config file", "error", err)
+		log.Errorw("failed to parser resource manager limit config file", "error", err)
+		return nil, err
 	}
-	return &cfg
+	return &cfg, nil
 }
 
 func (cfg *LimitConfig) GetSystemLimits() Limit {
