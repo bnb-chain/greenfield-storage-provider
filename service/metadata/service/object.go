@@ -8,7 +8,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // ListObjectsByBucketName list objects info by a bucket name
@@ -28,7 +27,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 				Owner:                object.Owner.String(),
 				BucketName:           object.BucketName,
 				ObjectName:           object.ObjectName,
-				Id:                   math.NewUint(uint64(object.ObjectID)),
+				Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
 				PayloadSize:          object.PayloadSize,
 				IsPublic:             object.IsPublic,
 				ContentType:          object.ContentType,
@@ -36,7 +35,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 				ObjectStatus:         types.ObjectStatus(types.ObjectStatus_value[object.ObjectStatus]),
 				RedundancyType:       types.RedundancyType(types.RedundancyType_value[object.RedundancyType]),
 				SourceType:           types.SourceType(types.SourceType_value[object.SourceType]),
-				Checksums:            util.StringListToBytesSlice(object.Checksums),
+				Checksums:            object.Checksums,
 				SecondarySpAddresses: object.SecondarySpAddresses,
 			},
 			LockedBalance: object.LockedBalance.String(),
@@ -45,7 +44,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 	}
 
 	resp = &metatypes.ListObjectsByBucketNameResponse{Objects: res}
-	log.CtxInfow(ctx, "success to list objects by bucket name")
+	log.CtxInfow(ctx, "succeed to list objects by bucket name")
 	return resp, nil
 }
 
@@ -76,7 +75,7 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 				Owner:                object.Owner.String(),
 				BucketName:           object.BucketName,
 				ObjectName:           object.ObjectName,
-				Id:                   math.NewUint(uint64(object.ObjectID)),
+				Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
 				PayloadSize:          object.PayloadSize,
 				IsPublic:             object.IsPublic,
 				ContentType:          object.ContentType,
@@ -84,7 +83,7 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 				ObjectStatus:         types.ObjectStatus(types.ObjectStatus_value[object.ObjectStatus]),
 				RedundancyType:       types.RedundancyType(types.RedundancyType_value[object.RedundancyType]),
 				SourceType:           types.SourceType(types.SourceType_value[object.SourceType]),
-				Checksums:            util.StringListToBytesSlice(object.Checksums),
+				Checksums:            object.Checksums,
 				SecondarySpAddresses: object.SecondarySpAddresses,
 			},
 			LockedBalance: object.LockedBalance.String(),
@@ -96,6 +95,6 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 		Objects:           res,
 		LatestBlockNumber: endBlockNumber,
 	}
-	log.CtxInfow(ctx, "success to list deleted objects by block number range")
+	log.CtxInfow(ctx, "succeed to list deleted objects by block number range")
 	return resp, nil
 }

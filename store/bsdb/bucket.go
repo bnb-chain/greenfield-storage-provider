@@ -2,9 +2,9 @@ package bsdb
 
 import (
 	"errors"
-
 	"github.com/ethereum/go-ethereum/common"
 	"gorm.io/gorm"
+	"strconv"
 )
 
 // GetUserBuckets get buckets info by a user address
@@ -14,7 +14,7 @@ func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
 		err     error
 	)
 
-	err = b.db.Find(&buckets, "owner = ?", accountID).Error
+	err = b.db.Find(&buckets, "owner_address = ?", accountID).Error
 	return buckets, err
 }
 
@@ -40,22 +40,24 @@ func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*Bucket,
 	return bucket, err
 }
 
-// GetBucketByID get buckets info by by a bucket id
+// GetBucketByID get buckets info by a bucket id
 func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, error) {
 	var (
-		bucket *Bucket
-		err    error
+		bucket       *Bucket
+		err          error
+		bucketIDHash common.Hash
 	)
 
+	bucketIDHash = common.HexToHash(strconv.FormatInt(bucketID, 10))
 	if isFullList {
-		err = b.db.Take(&bucket, "bucket_id = ?", bucketID).Error
+		err = b.db.Take(&bucket, "bucket_id = ?", bucketIDHash).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return bucket, err
 	}
 
-	err = b.db.Take(&bucket, "bucket_id = ? and is_public = ?", bucketID, true).Error
+	err = b.db.Take(&bucket, "bucket_id = ? and is_public = ?", bucketIDHash, true).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}

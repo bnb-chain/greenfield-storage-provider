@@ -29,7 +29,7 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Get
 				Owner:            bucket.Owner.String(),
 				BucketName:       bucket.BucketName,
 				IsPublic:         bucket.IsPublic,
-				Id:               math.NewUint(uint64(bucket.BucketID)),
+				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
 				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
@@ -45,6 +45,7 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Get
 		})
 	}
 	resp = &metatypes.GetUserBucketsResponse{Buckets: res}
+	log.CtxInfow(ctx, "succeed to get user buckets")
 	return resp, nil
 }
 
@@ -73,7 +74,7 @@ func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metaty
 				Owner:            bucket.Owner.String(),
 				BucketName:       bucket.BucketName,
 				IsPublic:         bucket.IsPublic,
-				Id:               math.NewUint(uint64(bucket.BucketID)),
+				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
 				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
@@ -84,7 +85,7 @@ func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metaty
 		}
 	}
 	resp = &metatypes.GetBucketByBucketNameResponse{Bucket: res}
-	log.CtxInfo(ctx, "success to get bucket by bucket name")
+	log.CtxInfo(ctx, "succeed to get bucket by bucket name")
 	return resp, nil
 }
 
@@ -108,7 +109,7 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 				Owner:            bucket.Owner.String(),
 				BucketName:       bucket.BucketName,
 				IsPublic:         bucket.IsPublic,
-				Id:               math.NewUint(uint64(bucket.BucketID)),
+				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
 				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
 				CreateAt:         bucket.CreateAt,
 				PaymentAddress:   bucket.PaymentAddress.String(),
@@ -119,7 +120,7 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 		}
 	}
 	resp = &metatypes.GetBucketByBucketIDResponse{Bucket: res}
-	log.CtxInfow(ctx, "success to get bucket by bucket id")
+	log.CtxInfow(ctx, "succeed to get bucket by bucket id")
 	return resp, nil
 }
 
@@ -134,6 +135,6 @@ func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatype
 	}
 
 	resp = &metatypes.GetUserBucketsCountResponse{Count: count}
-	log.CtxInfow(ctx, "success to get buckets count by a user address")
+	log.CtxInfow(ctx, "succeed to get buckets count by a user address")
 	return resp, nil
 }
