@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/forbole/juno/v4/common"
+
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/forbole/juno/v4/database"
 	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
@@ -42,12 +43,13 @@ func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.Resul
 }
 
 // HandleEvent accepts the transaction and handles events contained inside the transaction.
-func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, index int, event sdk.Event) {
+func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, event sdk.Event) {
 	for _, module := range i.Modules {
 		if eventModule, ok := module.(modules.EventModule); ok {
-			err := eventModule.HandleEvent(ctx, block, index, event)
+			log.Infof("module name :%s event type: %s, height: %d", module.Name(), event.Type, block.Block.Height)
+			err := eventModule.HandleEvent(ctx, block, event)
 			if err != nil {
-				log.Errorw("failed to handle event", "module", module, "event", event, "error", err)
+				log.Errorw("failed to handle event", "module", module.Name(), "event", event, "error", err)
 			}
 		}
 	}
@@ -89,7 +91,7 @@ func (i *Impl) Process(height uint64) error {
 func (i *Impl) ExportEpoch(block *coretypes.ResultBlock) error {
 	// Save the block
 	err := i.DB.SaveEpoch(context.Background(), &models.Epoch{
-		ID:          1,
+		OneRowId:    true,
 		BlockHeight: block.Block.Height,
 		BlockHash:   common.HexToHash(block.BlockID.Hash.String()),
 		UpdateTime:  block.Block.Time.Unix(),
@@ -104,7 +106,7 @@ func (i *Impl) ExportEpoch(block *coretypes.ResultBlock) error {
 
 // ExportTxs accepts a slice of transactions and persists then inside the database.
 // An error is returned if write fails.
-func (i *Impl) ExportTxs(txs []*types.Tx) error {
+func (i *Impl) ExportTxs(block *coretypes.ResultBlock, txs []*types.Tx) error {
 	return nil
 }
 
@@ -131,10 +133,9 @@ func (i *Impl) ExportEvents(ctx context.Context, block *coretypes.ResultBlock, e
 	// get all events in order from the txs within the block
 	for _, tx := range events.TxsResults {
 		// handle all events contained inside the transaction
-		events := filterEventsByType(tx)
 		// call the event handlers
-		for idx, event := range events {
-			i.HandleEvent(ctx, block, idx, event)
+		for _, event := range tx.Events {
+			i.HandleEvent(ctx, block, sdk.Event(event))
 		}
 	}
 	return nil
@@ -159,10 +160,21 @@ func (i *Impl) HandleBlock(block *coretypes.ResultBlock, events *coretypes.Resul
 
 // HandleTx accepts the transaction and calls the tx handlers.
 func (i *Impl) HandleTx(tx *types.Tx) {
-	log.Infof("HandleTx")
+	log.Info("HandleTx")
 }
 
 // HandleMessage accepts the transaction and handles messages contained inside the transaction.
 func (i *Impl) HandleMessage(index int, msg sdk.Msg, tx *types.Tx) {
-	log.Infof("HandleMessage")
+	log.Info("HandleMessage")
+}
+
+// Processed tells whether the current Indexer has already processed the given height of Block
+// An error is returned if the operation fails.
+func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
+	ep, err := i.DB.GetEpoch(context.Background())
+	if err != nil {
+		return false, err
+	}
+	log.Infof("epoch height:%d, cur height: %d", ep.BlockHeight, height)
+	return ep.BlockHeight > int64(height), nil
 }
