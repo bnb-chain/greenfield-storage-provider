@@ -16,11 +16,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mdgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	p2pclient "github.com/bnb-chain/greenfield-storage-provider/service/p2p/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 var _ lifecycle.Service = &TaskNode{}
@@ -108,11 +111,14 @@ func (taskNode *TaskNode) serve(errCh chan error) {
 		return
 	}
 
-	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize))
-	types.RegisterTaskNodeServiceServer(grpcServer, taskNode)
-	taskNode.grpcServer = grpcServer
-	reflection.Register(grpcServer)
-	if err := grpcServer.Serve(lis); err != nil {
+	options := utilgrpc.GetDefaultServerOptions()
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mdgrpc.GetDefaultServerInterceptor()...)
+	}
+	taskNode.grpcServer = grpc.NewServer(options...)
+	types.RegisterTaskNodeServiceServer(taskNode.grpcServer, taskNode)
+	reflection.Register(taskNode.grpcServer)
+	if err := taskNode.grpcServer.Serve(lis); err != nil {
 		log.Errorw("failed to start grpc server", "error", err)
 		return
 	}

@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
-	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	ggio "github.com/gogo/protobuf/io"
 	"github.com/gogo/protobuf/proto"
 	ds "github.com/ipfs/go-datastore"
 	leveldb "github.com/ipfs/go-ds-leveldb"
-	libp2p "github.com/libp2p/go-libp2p"
+	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/peerstore"
@@ -19,7 +19,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 )
 
 // Node defines the p2p protocol node, encapsulates the go-lib.p2p
@@ -102,7 +102,7 @@ func (n *Node) Name() string {
 
 // Start runs background task that trigger broadcast ping request
 func (n *Node) Start(ctx context.Context) error {
-	go n.eventloop()
+	go n.eventLoop()
 	return nil
 }
 
@@ -168,8 +168,8 @@ func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectedAccept int, 
 	}
 }
 
-// eventloop run the background task
-func (n *Node) eventloop() {
+// eventLoop run the background task
+func (n *Node) eventLoop() {
 	ticker := time.NewTicker(time.Duration(n.config.PingPeriod) * time.Second)
 	for {
 		select {
