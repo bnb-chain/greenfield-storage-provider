@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"

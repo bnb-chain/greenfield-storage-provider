@@ -14,6 +14,11 @@ const (
 
 // piece store storage environment constants
 const (
+	// AWSRoleARN defines aws role arn
+	AWSRoleARN = "AWS_ROLE_ARN"
+	// AWSWebIdentityTokenFile defines aws identity token file
+	AWSWebIdentityTokenFile = "AWS_WEB_IDENTITY_TOKEN_FILE"
+
 	// BucketURL defines env variable name for bucket url
 	BucketURL = "BUCKET_URL"
 	// AWSAccessKey defines env variable name for aws access key
@@ -31,6 +36,14 @@ const (
 	MinioSecretKey = "MINIO_SECRET_KEY"
 	// MinioSessionToken defines env variable name for minio session token
 	MinioSessionToken = "MINIO_SESSION_TOKEN"
+)
+
+// piece store IAM type
+const (
+	// AKSKIAMType defines IAM type which uses access key and secret key to access aws s3
+	AKSKIAMType = "AKSK"
+	// SAIAMType defines IAM type which uses service account to access aws s3
+	SAIAMType = "SA"
 )
 
 // define piece store constants.
