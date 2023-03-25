@@ -72,13 +72,31 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	} else {
 		offset, length = 0, objectInfo.GetPayloadSize()
 	}
+
 	// allocate memory form resource manager
 	scope, err := downloader.rcScope.BeginSpan()
 	if err != nil {
+		log.Errorw("failed to  begin reserve resource", "error", err)
 		return
 	}
-	scope.ReserveMemory(int(length), rcmgr.ReservationPriorityAlways)
-	defer scope.ReleaseMemory(int(length))
+	stateFunc := func() string {
+		var state string
+		rcmgr.RcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
+			state = scope.Stat().String()
+			return nil
+		})
+		return state
+	}
+	err = scope.ReserveMemory(int(length), rcmgr.ReservationPriorityAlways)
+	if err != nil {
+		log.Errorw("failed to reserve memory from resource manager",
+			"reserve_size", length, "resource_state", stateFunc, "error", err)
+		return
+	}
+	defer func() {
+		scope.Done()
+		log.Debugw("end download request", "resource_state", stateFunc)
+	}()
 
 	var segmentInfo segments
 	segmentInfo, err = downloader.DownloadPieceInfo(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), offset, offset+length-1)

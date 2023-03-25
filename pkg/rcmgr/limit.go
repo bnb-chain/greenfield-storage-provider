@@ -1,6 +1,7 @@
 package rcmgr
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/shirou/gopsutil/mem"
@@ -23,6 +24,8 @@ type Limit interface {
 	GetConnTotalLimit() int
 	// GetFDLimit returns the file descriptor limit.
 	GetFDLimit() int
+	// String returns the Limit state string
+	String() string
 }
 
 // Limiter is the interface for providing limits to the resource manager.
@@ -30,6 +33,7 @@ type Limiter interface {
 	GetSystemLimits() Limit
 	GetTransientLimits() Limit
 	GetServiceLimits(svc string) Limit
+	String() string
 }
 
 var _ Limit = &BaseLimit{}
@@ -64,6 +68,12 @@ func (limit *BaseLimit) GetConnTotalLimit() int {
 // GetFDLimit returns the file descriptor limit.
 func (limit *BaseLimit) GetFDLimit() int {
 	return limit.FD
+}
+
+// String returns the Limit state string
+// TODO:: supports connection and fd field
+func (limit *BaseLimit) String() string {
+	return fmt.Sprintf("memory limits %d", limit.Memory)
 }
 
 // InfiniteBaseLimit are a limiter configuration that uses unlimited limits, thus effectively not limiting anything.

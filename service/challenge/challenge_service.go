@@ -45,12 +45,32 @@ func (challenge *Challenge) ChallengePiece(
 			req.GetSegmentIdx(), uint32(req.GetReplicaIdx()))
 		memSize = int(math.Ceil(float64(params.GetMaxSegmentSize()) / float64(params.GetRedundantDataChunkNum())))
 	}
+
+	// allocates memory from resource manager
 	scope, err := challenge.rcScope.BeginSpan()
 	if err != nil {
+		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
 		return
 	}
-	scope.ReserveMemory(memSize, rcmgr.ReservationPriorityAlways)
-	defer scope.ReleaseMemory(memSize)
+	stateFunc := func() string {
+		var state string
+		rcmgr.RcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
+			state = scope.Stat().String()
+			return nil
+		})
+		return state
+	}
+	err = scope.ReserveMemory(memSize, rcmgr.ReservationPriorityAlways)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
+			"reserve_size", memSize, "resource_state", stateFunc, "error", err)
+		return
+	}
+	defer func() {
+		scope.Done()
+		log.CtxDebugw(ctx, "end challenge request", "resource_state", stateFunc)
+	}()
+
 	resp.PieceData, err = challenge.pieceStore.GetSegment(ctx, key, 0, -1)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get payload", "error", err)

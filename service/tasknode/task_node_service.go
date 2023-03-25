@@ -106,13 +106,27 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 	}
 	scope, err := taskNode.rcScope.BeginSpan()
 	if err != nil {
+		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
 		return
+	}
+	stateFunc := func() string {
+		var state string
+		rcmgr.RcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
+			state = scope.Stat().String()
+			return nil
+		})
+		return state
 	}
 	err = scope.ReserveMemory(memSize, rcmgr.ReservationPriorityAlways)
 	if err != nil {
+		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
+			"reserve_size", memSize, "resource_state", stateFunc, "error", err)
 		return
 	}
-	defer scope.Done()
+	defer func() {
+		scope.Done()
+		log.Debugw("end replicate object request", "resource_state", stateFunc)
+	}()
 
 	spEndpoints := maps.SortKeys(approvals)
 	var mux sync.Mutex

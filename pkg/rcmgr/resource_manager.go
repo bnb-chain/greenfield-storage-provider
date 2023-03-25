@@ -1,5 +1,7 @@
 package rcmgr
 
+import "fmt"
+
 // SP Resource Manager reference go-libp2p, see:
 // https://github.com/libp2p/go-libp2p/blob/master/core/network/
 // https://github.com/libp2p/go-libp2p/tree/master/p2p/host/resource-manager
@@ -164,6 +166,12 @@ type ScopeStat struct {
 	NumConnsOutbound int
 	NumFD            int
 	Memory           int64
+}
+
+// String returns the state string of ScopeStat
+// TODO:: supports connections and fd field
+func (s ScopeStat) String() string {
+	return fmt.Sprintf("memory reserved [%d]", s.Memory)
 }
 
 // NullResourceManager is a stub for tests and initialization of default values

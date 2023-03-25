@@ -2,6 +2,7 @@ package rcmgr
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 
 	"github.com/naoina/toml"
@@ -53,4 +54,13 @@ func (cfg *LimitConfig) GetServiceLimits(svc string) Limit {
 		return cfg.Service[svc]
 	}
 	return nil
+}
+
+func (cfg *LimitConfig) String() string {
+	output := fmt.Sprintf("system limits [%s]", cfg.SystemLimit.String())
+	for svc, limit := range cfg.Service {
+		svcOutput := fmt.Sprintf("%s service limits [%s]", svc, limit.String())
+		output = output + "," + svcOutput
+	}
+	return output
 }
