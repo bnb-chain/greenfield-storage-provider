@@ -36,13 +36,15 @@ func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.Replic
 	resp *types.ReplicateObjectResponse, err error) {
 	resp = &types.ReplicateObjectResponse{}
 	taskNode.spDB.UpdateJobState(req.GetObjectInfo().Id.Uint64(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
-	go taskNode.AsyncReplicateObject(req)
+	errCh := make(chan error)
+	go taskNode.AsyncReplicateObject(req, errCh)
+	err = <-errCh
 	log.Debugw("receive the replicate object task", "object_id", req.GetObjectInfo().Id)
 	return
 }
 
 // AsyncReplicateObject replicate an object payload to other storage providers and seal object.
-func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (err error) {
+func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest, notifyErrCh chan error) (err error) {
 	ctx := context.Background()
 	processInfo := &servicetypes.ReplicateSegmentInfo{}
 	sealMsg := &storagetypes.MsgSealObject{}
@@ -75,20 +77,16 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 	params, err := taskNode.spDB.GetStorageParams()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query sp params", "error", err)
+		notifyErrCh <- err
 		return
 	}
 	segments := piecestore.ComputeSegmentCount(objectInfo.GetPayloadSize(),
 		params.GetMaxSegmentSize())
 	replicates := params.GetRedundantDataChunkNum() + params.GetRedundantParityChunkNum()
-	replicateData, err := taskNode.EncodeReplicateSegments(ctx, objectInfo.Id.Uint64(),
-		segments, int(replicates), objectInfo.GetRedundancyType())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to encode payload", "error", err)
-		return
-	}
 	spList, approvals, err := taskNode.getApproval(objectInfo, int(replicates), int(replicates*ReplicateFactor), GetApprovalTimeout)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
+		notifyErrCh <- err
 		return
 	}
 
@@ -107,6 +105,7 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 	scope, err := taskNode.rcScope.BeginSpan()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
+		notifyErrCh <- err
 		return
 	}
 	stateFunc := func() string {
@@ -121,12 +120,23 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
 			"reserve_size", memSize, "resource_state", stateFunc(), "error", err)
+		notifyErrCh <- err
 		return
 	}
 	defer func() {
 		scope.Done()
 		log.Debugw("end replicate object request", "resource_state", stateFunc())
 	}()
+
+	replicateData, err := taskNode.EncodeReplicateSegments(ctx, objectInfo.Id.Uint64(),
+		segments, int(replicates), objectInfo.GetRedundancyType())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to encode payload", "error", err)
+		notifyErrCh <- err
+		return
+	}
+	// all preparations are completed, notify uploader
+	notifyErrCh <- nil
 
 	spEndpoints := maps.SortKeys(approvals)
 	var mux sync.Mutex
