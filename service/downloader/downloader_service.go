@@ -90,12 +90,12 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	err = scope.ReserveMemory(int(length), rcmgr.ReservationPriorityAlways)
 	if err != nil {
 		log.Errorw("failed to reserve memory from resource manager",
-			"reserve_size", length, "resource_state", stateFunc, "error", err)
+			"reserve_size", length, "resource_state", stateFunc(), "error", err)
 		return
 	}
 	defer func() {
 		scope.Done()
-		log.Debugw("end download request", "resource_state", stateFunc)
+		log.Debugw("end get object request", "resource_state", stateFunc())
 	}()
 
 	var segmentInfo segments

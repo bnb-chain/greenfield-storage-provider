@@ -63,12 +63,12 @@ func (challenge *Challenge) ChallengePiece(
 	err = scope.ReserveMemory(memSize, rcmgr.ReservationPriorityAlways)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
-			"reserve_size", memSize, "resource_state", stateFunc, "error", err)
+			"reserve_size", memSize, "resource_state", stateFunc(), "error", err)
 		return
 	}
 	defer func() {
 		scope.Done()
-		log.CtxDebugw(ctx, "end challenge request", "resource_state", stateFunc)
+		log.CtxDebugw(ctx, "end challenge piece request", "resource_state", stateFunc())
 	}()
 
 	resp.PieceData, err = challenge.pieceStore.GetSegment(ctx, key, 0, -1)

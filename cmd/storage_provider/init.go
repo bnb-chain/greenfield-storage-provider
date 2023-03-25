@@ -82,7 +82,7 @@ func initResourceManager(ctx *cli.Context) error {
 			return err
 		}
 	}
-	log.Infow("resource manager limit", "config", limits.String())
+	log.Infow("resource manager", "limits", limits.String())
 	if _, err = rcmgr.NewResourceManager(limits); err != nil {
 		return err
 	}

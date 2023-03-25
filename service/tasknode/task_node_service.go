@@ -120,12 +120,12 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 	err = scope.ReserveMemory(memSize, rcmgr.ReservationPriorityAlways)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
-			"reserve_size", memSize, "resource_state", stateFunc, "error", err)
+			"reserve_size", memSize, "resource_state", stateFunc(), "error", err)
 		return
 	}
 	defer func() {
 		scope.Done()
-		log.Debugw("end replicate object request", "resource_state", stateFunc)
+		log.Debugw("end replicate object request", "resource_state", stateFunc())
 	}()
 
 	spEndpoints := maps.SortKeys(approvals)

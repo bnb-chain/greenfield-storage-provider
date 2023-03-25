@@ -116,6 +116,7 @@ func makeConfig(ctx *cli.Context) (*config.StorageProviderConfig, error) {
 	return cfg, nil
 }
 
+// makeEnv init storage provider runtime environment
 func makeEnv(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	// init log
 	if err := initLog(ctx, cfg); err != nil {
