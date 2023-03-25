@@ -3,10 +3,12 @@ package tasknode
 import (
 	"context"
 	"errors"
+	"math"
 	"sync"
 	"sync/atomic"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -89,6 +91,29 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
 		return
 	}
+
+	// allocates memory from resource manager
+	var memSize int
+	if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
+		memSize = (int(params.GetRedundantDataChunkNum()) +
+			int(params.GetRedundantParityChunkNum())) *
+			int(objectInfo.GetPayloadSize())
+	} else {
+		memSize = int(math.Ceil(
+			((float64(params.GetRedundantDataChunkNum()) + float64(params.GetRedundantParityChunkNum())) /
+				float64(params.GetRedundantDataChunkNum())) *
+				float64(objectInfo.GetPayloadSize())))
+	}
+	scope, err := taskNode.rcScope.BeginSpan()
+	if err != nil {
+		return
+	}
+	err = scope.ReserveMemory(memSize, rcmgr.ReservationPriorityAlways)
+	if err != nil {
+		return
+	}
+	defer scope.Done()
+
 	spEndpoints := maps.SortKeys(approvals)
 	var mux sync.Mutex
 	getSpFunc := func() (sp *sptypes.StorageProvider, approval *p2ptypes.GetApprovalResponse, err error) {
@@ -148,7 +173,7 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 				log.CtxDebugw(ctx, "receive the sp response", "replica_idx", rIdx, "integrity_hash",
 					integrityHash, "endpoint", sp.GetEndpoint(), "signature", signature)
 
-				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), math.NewUint(objectInfo.Id.Uint64()), integrityHash).GetSignBytes()
+				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), sdkmath.NewUint(objectInfo.Id.Uint64()), integrityHash).GetSignBytes()
 				approvalAddr, err := sdk.AccAddressFromHexUnsafe(sp.GetApprovalAddress())
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to parser sp operator address",
