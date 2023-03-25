@@ -183,9 +183,15 @@ func (n *NullResourceManager) ViewTransient(f func(ResourceScope) error) error {
 func (n *NullResourceManager) ViewService(svc string, f func(ResourceScope) error) error {
 	return f(&NullScope{})
 }
-func (n *NullResourceManager) ViewSystem(f func(ResourceScope) error) error  { return f(&NullScope{}) }
-func (n *NullResourceManager) OpenService(svc string) (ResourceScope, error) { return nil, nil }
-func (n *NullResourceManager) Close() error                                  { return nil }
+func (n *NullResourceManager) ViewSystem(f func(ResourceScope) error) error {
+	return f(&NullScope{})
+}
+func (n *NullResourceManager) OpenService(svc string) (ResourceScope, error) {
+	return &NullScope{}, nil
+}
+func (n *NullResourceManager) Close() error {
+	return nil
+}
 
 var _ ResourceScope = (*NullScope)(nil)
 var _ ResourceScopeSpan = (*NullScope)(nil)

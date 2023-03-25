@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/urfave/cli/v2"
@@ -83,12 +82,7 @@ func initResourceManager(ctx *cli.Context) error {
 			return err
 		}
 	}
-	bz, err := json.Marshal(&limits)
-	if err == nil {
-		log.Errorw("failed to marshal resource manager limit config", "error", err)
-		return err
-	}
-	log.Infow("resource manager limit", "config", string(bz))
+	log.Infow("resource manager limit", "config", limits.String())
 	if _, err = rcmgr.NewResourceManager(limits); err != nil {
 		return err
 	}

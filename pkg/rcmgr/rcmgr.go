@@ -26,10 +26,24 @@ func init() {
 	rescmger = &NullResourceManager{}
 }
 
-// NewResourceManager return singleton instance of ResourceManager
+// NewResourceManager inits and returns singleton instance of ResourceManager
 func NewResourceManager(limits Limiter) (ResourceManager, error) {
+	return initResourceManager(limits)
+}
+
+// RcManager return the global singleton instance of ResourceManager
+func RcManager() ResourceManager {
+	manager, _ := initResourceManager(nil)
+	return manager
+}
+
+func initResourceManager(limits Limiter) (ResourceManager, error) {
 	var err error
 	once.Do(func() {
+		if limits == nil {
+			rescmger = &NullResourceManager{}
+			return
+		}
 		r := &resourceManager{
 			limits: limits,
 			svc:    make(map[string]*resourceScope),
@@ -40,10 +54,6 @@ func NewResourceManager(limits Limiter) (ResourceManager, error) {
 		rescmger = r
 	})
 	return rescmger, err
-}
-
-func RcManager() ResourceManager {
-	return rescmger
 }
 
 // OpenService creates a new service resource scope associated with system resource scope
