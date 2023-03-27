@@ -7,6 +7,7 @@ FEATURES
 * [\#221](https://github.com/bnb-chain/greenfield-storage-provider/pull/221) feat: implement p2p protocol and rpc service
 * [\#232](https://github.com/bnb-chain/greenfield-storage-provider/pull/232) chore: refine gRPC error code
 * [\#235](https://github.com/bnb-chain/greenfield-storage-provider/pull/235) feat: implement metadata payment apis
+* [\#244](https://github.com/bnb-chain/greenfield-storage-provider/pull/244) feat: update the juno version
 * [\#246](https://github.com/bnb-chain/greenfield-storage-provider/pull/246) feat: resource manager
 
 BUILD
