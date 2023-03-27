@@ -11,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -64,7 +65,31 @@ func initMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	return nil
 }
 
-// initService init service instance by name and config.
+// initResourceManager initializes global resource manager.
+func initResourceManager(ctx *cli.Context) error {
+	if ctx.IsSet(utils.DisableResourceManagerFlag.Name) &&
+		ctx.Bool(utils.DisableResourceManagerFlag.Name) {
+		return nil
+	}
+	var (
+		limits = rcmgr.DefaultLimitConfig
+		err    error
+	)
+	if ctx.IsSet(utils.ResourceManagerConfigFlag.Name) {
+		limits, err = rcmgr.NewLimitConfigFromToml(
+			ctx.String(utils.ResourceManagerConfigFlag.Name))
+		if err != nil {
+			return err
+		}
+	}
+	if _, err = rcmgr.NewResourceManager(limits); err != nil {
+		return err
+	}
+	log.Infow("init resource manager", "limits", limits.String(), "error", err)
+	return nil
+}
+
+// initService initializes service instance by name and config.
 func initService(serviceName string, cfg *config.StorageProviderConfig) (server lifecycle.Service, err error) {
 	switch serviceName {
 	case model.GatewayService:

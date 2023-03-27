@@ -9,6 +9,7 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"gorm.io/gorm"
@@ -71,6 +72,32 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	} else {
 		offset, length = 0, objectInfo.GetPayloadSize()
 	}
+
+	// allocate memory form resource manager
+	scope, err := downloader.rcScope.BeginSpan()
+	if err != nil {
+		log.Errorw("failed to  begin reserve resource", "error", err)
+		return
+	}
+	stateFunc := func() string {
+		var state string
+		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
+			state = scope.Stat().String()
+			return nil
+		})
+		return state
+	}
+	err = scope.ReserveMemory(int(length), rcmgr.ReservationPriorityAlways)
+	if err != nil {
+		log.Errorw("failed to reserve memory from resource manager",
+			"reserve_size", length, "resource_state", stateFunc(), "error", err)
+		return
+	}
+	defer func() {
+		scope.Done()
+		log.Debugw("end get object request", "resource_state", stateFunc())
+	}()
+
 	var segmentInfo segments
 	segmentInfo, err = downloader.DownloadPieceInfo(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), offset, offset+length-1)
 	if err != nil {
