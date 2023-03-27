@@ -160,15 +160,15 @@ func (rc *resources) removeConns(incount, outcount, fdcount int) {
 	rc.nfd -= fdcount
 
 	if rc.nconnsIn < 0 {
-		log.Warn("BUG: too many inbound connections released")
+		log.Error("BUG: too many inbound connections released")
 		rc.nconnsIn = 0
 	}
 	if rc.nconnsOut < 0 {
-		log.Warn("BUG: too many outbound connections released")
+		log.Error("BUG: too many outbound connections released")
 		rc.nconnsOut = 0
 	}
 	if rc.nfd < 0 {
-		log.Warn("BUG: too many file descriptors released")
+		log.Error("BUG: too many file descriptors released")
 		rc.nfd = 0
 	}
 }

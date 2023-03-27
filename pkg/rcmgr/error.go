@@ -21,7 +21,7 @@ type ErrMemoryLimitExceeded struct {
 func (e *ErrMemoryLimitExceeded) Error() string { return e.err.Error() }
 func (e *ErrMemoryLimitExceeded) Unwrap() error { return e.err }
 
-// edge may be "" if this is not an edge error
+// edge may be empty if this is not an edge error
 func logValuesMemoryLimit(scope, edge string, stat ScopeStat, err error) []interface{} {
 	logValues := make([]interface{}, 0, 2*8)
 	logValues = append(logValues, "scope", scope)
@@ -48,7 +48,7 @@ type ErrConnLimitExceeded struct {
 func (e *ErrConnLimitExceeded) Error() string { return e.err.Error() }
 func (e *ErrConnLimitExceeded) Unwrap() error { return e.err }
 
-// edge may be "" if this is not an edge error
+// edge may be empty if this is not an edge error
 func logValuesConnLimit(scope, edge string, dir Direction, stat ScopeStat, err error) []interface{} {
 	logValues := make([]interface{}, 0, 2*9)
 	logValues = append(logValues, "scope", scope)

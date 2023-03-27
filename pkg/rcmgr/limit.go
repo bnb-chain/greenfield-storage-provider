@@ -14,7 +14,7 @@ const (
 	DefaultMemorySize uint64 = 8 * 1024 * 1024
 )
 
-// Limit is an object that specifies basic resource limits.
+// Limit is an interface that that specifies basic resource limits.
 type Limit interface {
 	// GetMemoryLimit returns the (current) memory limit.
 	GetMemoryLimit() int64
@@ -28,7 +28,7 @@ type Limit interface {
 	String() string
 }
 
-// Limiter is the interface for providing limits to the resource manager.
+// Limiter is an interface for providing limits to the resource manager.
 type Limiter interface {
 	GetSystemLimits() Limit
 	GetTransientLimits() Limit

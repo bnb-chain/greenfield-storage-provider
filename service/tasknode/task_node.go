@@ -75,7 +75,7 @@ func NewTaskNodeService(cfg *TaskNodeConfig) (*TaskNode, error) {
 		log.Errorw("failed to create sp db client", "error", err)
 		return nil, err
 	}
-	if taskNode.rcScope, err = rcmgr.RcManager().OpenService(model.TaskNodeService); err != nil {
+	if taskNode.rcScope, err = rcmgr.ResrcManager().OpenService(model.TaskNodeService); err != nil {
 		log.Errorw("failed to open task node resource scope", "error", err)
 		return nil, err
 	}

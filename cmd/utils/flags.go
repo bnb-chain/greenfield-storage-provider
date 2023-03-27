@@ -12,7 +12,7 @@ const (
 	LoggingCategory         = "LOGGING AND DEBUGGING"
 	MetricsCategory         = "METRICS AND STATS"
 	DatabaseCategory        = "DATABASE"
-	ResourceManagerCategory = "Resource Manager"
+	ResourceManagerCategory = "RESOURCE MANAGER"
 )
 
 var (

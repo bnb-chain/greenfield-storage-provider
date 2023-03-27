@@ -54,7 +54,7 @@ func (challenge *Challenge) ChallengePiece(
 	}
 	stateFunc := func() string {
 		var state string
-		rcmgr.RcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
+		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
 			state = scope.Stat().String()
 			return nil
 		})

@@ -45,7 +45,7 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 		log.Errorw("failed to create piece store client", "error", err)
 		return nil, err
 	}
-	if downloader.rcScope, err = rcmgr.RcManager().OpenService(model.DownloaderService); err != nil {
+	if downloader.rcScope, err = rcmgr.ResrcManager().OpenService(model.DownloaderService); err != nil {
 		log.Errorw("failed to open downloader resource scope", "error", err)
 		return nil, err
 	}

@@ -46,8 +46,8 @@ func NewChallengeService(cfg *ChallengeConfig) (*Challenge, error) {
 		log.Errorw("failed to create sp db client", "error", err)
 		return nil, err
 	}
-	if challenge.rcScope, err = rcmgr.RcManager().OpenService(model.ChallengeService); err != nil {
-		log.Errorw("failed to open challenger resource scope", "error", err)
+	if challenge.rcScope, err = rcmgr.ResrcManager().OpenService(model.ChallengeService); err != nil {
+		log.Errorw("failed to open challenge resource scope", "error", err)
 		return nil, err
 	}
 

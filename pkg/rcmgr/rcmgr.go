@@ -18,12 +18,12 @@ type resourceManager struct {
 var _ ResourceManager = &resourceManager{}
 
 var (
-	rescmger ResourceManager
+	resrcmgr ResourceManager
 	once     sync.Once
 )
 
 func init() {
-	rescmger = &NullResourceManager{}
+	resrcmgr = &NullResourceManager{}
 }
 
 // NewResourceManager inits and returns singleton instance of ResourceManager
@@ -31,8 +31,8 @@ func NewResourceManager(limits Limiter) (ResourceManager, error) {
 	return initResourceManager(limits)
 }
 
-// RcManager return the global singleton instance of ResourceManager
-func RcManager() ResourceManager {
+// ResrcManager return the global singleton instance of ResourceManager
+func ResrcManager() ResourceManager {
 	manager, _ := initResourceManager(nil)
 	return manager
 }
@@ -41,7 +41,7 @@ func initResourceManager(limits Limiter) (ResourceManager, error) {
 	var err error
 	once.Do(func() {
 		if limits == nil {
-			rescmger = &NullResourceManager{}
+			resrcmgr = &NullResourceManager{}
 			return
 		}
 		r := &resourceManager{
@@ -51,9 +51,9 @@ func initResourceManager(limits Limiter) (ResourceManager, error) {
 		r.system = newResourceScope(limits.GetSystemLimits(), nil, "system")
 		// TODO:: support transient resource scope
 		r.transient = r.system
-		rescmger = r
+		resrcmgr = r
 	})
-	return rescmger, err
+	return resrcmgr, err
 }
 
 // OpenService creates a new service resource scope associated with system resource scope
