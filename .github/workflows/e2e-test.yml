@@ -1,4 +1,4 @@
-name: E2E Test
+name: E2e Test
 
 on:
   push:
@@ -14,7 +14,7 @@ on:
       - release*
 
 jobs:
-  setup-mysql:
+  e2e-test:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
