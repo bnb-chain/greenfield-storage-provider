@@ -17,7 +17,6 @@ jobs:
   commit-lint:
     strategy:
       matrix:
-        node-version: [14.x]
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
     steps:
