@@ -66,7 +66,7 @@ func (g *Gateway) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Reque
 		Version:             model.GnfdResponseXMLVersion,
 		BucketName:          reqContext.bucketInfo.GetBucketName(),
 		BucketID:            util.Uint64ToString(reqContext.bucketInfo.Id.Uint64()),
-		ReadQuotaSize:       resp.GetQuotaSize(),
+		ReadQuotaSize:       resp.GetChargedQuotaSize(),
 		SPFreeReadQuotaSize: resp.GetSpFreeQuotaSize(),
 		ReadConsumedSize:    resp.GetConsumedSize(),
 	}

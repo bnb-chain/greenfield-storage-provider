@@ -21,7 +21,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       GOPRIVATE: github.com/bnb-chain
-      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_SECRET }}
+      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
     steps:
       - uses: actions/setup-go@v3
         with:
