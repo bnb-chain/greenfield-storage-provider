@@ -2,7 +2,9 @@ package bsdb
 
 import (
 	"errors"
+	"strconv"
 
+	"github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/ethereum/go-ethereum/common"
 	"gorm.io/gorm"
 )
@@ -14,7 +16,7 @@ func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
 		err     error
 	)
 
-	err = b.db.Find(&buckets, "owner = ?", accountID).Error
+	err = b.db.Find(&buckets, "owner_address = ?", accountID).Error
 	return buckets, err
 }
 
@@ -33,29 +35,31 @@ func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*Bucket,
 		return bucket, nil
 	}
 
-	err = b.db.Take(&bucket, "bucket_name = ? and is_public = ?", bucketName, true).Error
+	err = b.db.Take(&bucket, "bucket_name = ? and visibility = ?", bucketName, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
 	return bucket, err
 }
 
-// GetBucketByID get buckets info by by a bucket id
+// GetBucketByID get buckets info by a bucket id
 func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, error) {
 	var (
-		bucket *Bucket
-		err    error
+		bucket       *Bucket
+		err          error
+		bucketIDHash common.Hash
 	)
 
+	bucketIDHash = common.HexToHash(strconv.FormatInt(bucketID, 10))
 	if isFullList {
-		err = b.db.Take(&bucket, "bucket_id = ?", bucketID).Error
+		err = b.db.Take(&bucket, "bucket_id = ?", bucketIDHash).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return bucket, err
 	}
 
-	err = b.db.Take(&bucket, "bucket_id = ? and is_public = ?", bucketID, true).Error
+	err = b.db.Take(&bucket, "bucket_id = ? and visibility = ?", bucketIDHash, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -69,6 +73,6 @@ func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address) (int64, error) 
 		err   error
 	)
 
-	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
+	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner_address = ?", accountID).Error
 	return count, err
 }

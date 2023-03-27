@@ -18,6 +18,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	mdgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	p2pclient "github.com/bnb-chain/greenfield-storage-provider/service/p2p/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
@@ -38,6 +39,7 @@ type TaskNode struct {
 	p2p        *p2pclient.P2PClient
 	spDB       sqldb.SPDB
 	chain      *greenfield.Greenfield
+	rcScope    rcmgr.ResourceScope
 	pieceStore *psclient.StoreClient
 	grpcServer *grpc.Server
 }
@@ -76,6 +78,10 @@ func NewTaskNodeService(cfg *TaskNodeConfig) (*TaskNode, error) {
 		log.Errorw("failed to create sp db client", "error", err)
 		return nil, err
 	}
+	if taskNode.rcScope, err = rcmgr.ResrcManager().OpenService(model.TaskNodeService); err != nil {
+		log.Errorw("failed to open task node resource scope", "error", err)
+		return nil, err
+	}
 
 	return taskNode, nil
 }
@@ -99,6 +105,7 @@ func (taskNode *TaskNode) Stop(ctx context.Context) error {
 	taskNode.signer.Close()
 	taskNode.p2p.Close()
 	taskNode.chain.Close()
+	taskNode.rcScope.Release()
 	return nil
 }
 

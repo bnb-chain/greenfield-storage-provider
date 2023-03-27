@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
@@ -27,6 +28,7 @@ type Downloader struct {
 	spDB       sqldb.SPDB
 	pieceStore *psclient.StoreClient
 	grpcServer *grpc.Server
+	rcScope    rcmgr.ResourceScope
 }
 
 // NewDownloaderService returns an instance of Downloader that implementation of
@@ -39,7 +41,6 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 	downloader = &Downloader{
 		config: cfg,
 	}
-
 	if downloader.spDB, err = sqldb.NewSpDB(cfg.SpDBConfig); err != nil {
 		log.Errorw("failed to create sp db client", "error", err)
 		return nil, err
@@ -48,7 +49,10 @@ func NewDownloaderService(cfg *DownloaderConfig) (*Downloader, error) {
 		log.Errorw("failed to create piece store client", "error", err)
 		return nil, err
 	}
-
+	if downloader.rcScope, err = rcmgr.ResrcManager().OpenService(model.DownloaderService); err != nil {
+		log.Errorw("failed to open downloader resource scope", "error", err)
+		return nil, err
+	}
 	return downloader, nil
 }
 
@@ -68,6 +72,7 @@ func (downloader *Downloader) Start(ctx context.Context) error {
 // Stop the downloader gRPC service and recycle the resources
 func (downloader *Downloader) Stop(ctx context.Context) error {
 	downloader.grpcServer.GracefulStop()
+	downloader.rcScope.Release()
 	return nil
 }
 

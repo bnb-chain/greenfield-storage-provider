@@ -57,7 +57,7 @@ func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.Stora
 		return spInfos, err
 	}
 	for i := 0; i < len(resp.GetSps()); i++ {
-		spInfos = append(spInfos, &resp.GetSps()[i])
+		spInfos = append(spInfos, resp.GetSps()[i])
 	}
 	return spInfos, nil
 }

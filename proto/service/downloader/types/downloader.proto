@@ -47,8 +47,8 @@ message GetBucketReadQuotaRequest {
 
 // GetBucketReadQuotaResponse is response type for the GetBucketReadQuota RPC method.
 message GetBucketReadQuotaResponse {
-  // quota_size is the greenfield chain bucket info's read quota size
-  uint64 quota_size = 1;
+  // charged_quota_size is the greenfield chain bucket info's read quota size
+  uint64 charged_quota_size = 1;
   // sp_free_quota_size is the sp default free quota
   uint64 sp_free_quota_size = 2;
   // consumed_size is currently consumed size

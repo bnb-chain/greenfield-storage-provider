@@ -23,10 +23,11 @@ var (
 	InvalidHeader      = &errorDescription{errorCode: "InvalidHeader", errorMessage: "The headers are invalid.", statusCode: http.StatusBadRequest}
 	InvalidQuery       = &errorDescription{errorCode: "InvalidQuery", errorMessage: "The queries are invalid.", statusCode: http.StatusBadRequest}
 	InvalidBucketName  = &errorDescription{errorCode: "InvalidBucketName", errorMessage: "The specified bucket is not valid.", statusCode: http.StatusBadRequest}
-	InvalidKey         = &errorDescription{errorCode: "InvalidKey", errorMessage: "Object key is Illegal", statusCode: http.StatusBadRequest}
+	InvalidKey         = &errorDescription{errorCode: "InvalidKey", errorMessage: "Object key is illegal", statusCode: http.StatusBadRequest}
 	InvalidPayload     = &errorDescription{errorCode: "InvalidPayload", errorMessage: "Payload is empty", statusCode: http.StatusBadRequest}
 	InvalidObjectState = &errorDescription{errorCode: "InvalidObjectState", errorMessage: "Object state is invalid", statusCode: http.StatusBadRequest}
 	InvalidRange       = &errorDescription{errorCode: "InvalidRange", errorMessage: "Range is invalid", statusCode: http.StatusBadRequest}
+	InvalidAddress     = &errorDescription{errorCode: "InvalidAddress", errorMessage: "Address is illegal", statusCode: http.StatusBadRequest}
 	SignatureNotMatch  = &errorDescription{errorCode: "SignatureDoesNotMatch", errorMessage: "SignatureDoesNotMatch", statusCode: http.StatusForbidden}
 	AccessDenied       = &errorDescription{errorCode: "AccessDenied", errorMessage: "Access Denied", statusCode: http.StatusForbidden}
 	NoSuchKey          = &errorDescription{errorCode: "NoSuchKey", errorMessage: "The specified key does not exist.", statusCode: http.StatusNotFound}
@@ -74,13 +75,13 @@ func (desc *errorDescription) errorJSONResponse(w http.ResponseWriter, reqCtx *r
 	)
 
 	var jsonInfo = struct {
-		Code      string `json:"Code"`
-		Message   string `json:"Message"`
-		RequestId string `json:"RequestId"`
+		Code      string `json:"code"`
+		Message   string `json:"message"`
+		RequestID string `json:"requestID"`
 	}{
 		Code:      desc.errorCode,
 		Message:   desc.errorMessage,
-		RequestId: reqCtx.requestID,
+		RequestID: reqCtx.requestID,
 	}
 	if jsonBody, err = json.Marshal(&jsonInfo); err != nil {
 		return err

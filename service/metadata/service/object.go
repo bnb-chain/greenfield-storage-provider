@@ -8,7 +8,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // ListObjectsByBucketName list objects info by a bucket name
@@ -28,24 +27,24 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 				Owner:                object.Owner.String(),
 				BucketName:           object.BucketName,
 				ObjectName:           object.ObjectName,
-				Id:                   math.NewUint(uint64(object.ObjectID)),
+				Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
 				PayloadSize:          object.PayloadSize,
-				IsPublic:             object.IsPublic,
 				ContentType:          object.ContentType,
-				CreateAt:             object.CreateAt,
+				CreateAt:             object.CreateTime,
 				ObjectStatus:         types.ObjectStatus(types.ObjectStatus_value[object.ObjectStatus]),
 				RedundancyType:       types.RedundancyType(types.RedundancyType_value[object.RedundancyType]),
 				SourceType:           types.SourceType(types.SourceType_value[object.SourceType]),
-				Checksums:            util.StringListToBytesSlice(object.CheckSums),
+				Checksums:            object.Checksums,
 				SecondarySpAddresses: object.SecondarySpAddresses,
+				Visibility:           types.VisibilityType(types.VisibilityType_value[object.Visibility]),
 			},
-			LockedBalance: object.LockedBalance,
+			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
 		})
 	}
 
 	resp = &metatypes.ListObjectsByBucketNameResponse{Objects: res}
-	log.CtxInfow(ctx, "success to list objects by bucket name")
+	log.CtxInfow(ctx, "succeed to list objects by bucket name")
 	return resp, nil
 }
 
@@ -76,26 +75,26 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 				Owner:                object.Owner.String(),
 				BucketName:           object.BucketName,
 				ObjectName:           object.ObjectName,
-				Id:                   math.NewUint(uint64(object.ObjectID)),
+				Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
 				PayloadSize:          object.PayloadSize,
-				IsPublic:             object.IsPublic,
 				ContentType:          object.ContentType,
-				CreateAt:             object.CreateAt,
+				CreateAt:             object.CreateTime,
 				ObjectStatus:         types.ObjectStatus(types.ObjectStatus_value[object.ObjectStatus]),
 				RedundancyType:       types.RedundancyType(types.RedundancyType_value[object.RedundancyType]),
 				SourceType:           types.SourceType(types.SourceType_value[object.SourceType]),
-				Checksums:            util.StringListToBytesSlice(object.CheckSums),
+				Checksums:            object.Checksums,
 				SecondarySpAddresses: object.SecondarySpAddresses,
+				Visibility:           types.VisibilityType(types.VisibilityType_value[object.Visibility]),
 			},
-			LockedBalance: object.LockedBalance,
+			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
 		})
 	}
 
 	resp = &metatypes.ListDeletedObjectsByBlockNumberRangeResponse{
-		Objects:           res,
-		LatestBlockNumber: endBlockNumber,
+		Objects:        res,
+		EndBlockNumber: endBlockNumber,
 	}
-	log.CtxInfow(ctx, "success to list deleted objects by block number range")
+	log.CtxInfow(ctx, "succeed to list deleted objects by block number range")
 	return resp, nil
 }
