@@ -172,7 +172,6 @@ func (greenfield *Greenfield) VerifyPutObjectPermission(ctx context.Context, acc
 	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{
 		Operator:   account,
 		BucketName: bucket,
-		ObjectName: object,
 		ActionType: permissiontypes.ACTION_CREATE_OBJECT,
 	})
 	if err != nil {
