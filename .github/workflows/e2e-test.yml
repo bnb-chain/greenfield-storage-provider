@@ -23,6 +23,9 @@ jobs:
     env:
       GOPRIVATE: github.com/bnb-chain
       GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+      DB_DATABASE: test_db
+      DB_USER: root
+      DB_PASSWORD: root
     steps:
       - name: Install Go
         uses: actions/setup-go@v3
@@ -64,7 +67,7 @@ jobs:
           go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
           buf generate
 
-      - name: Test Build
+      - name: Set up MySQL
         run: |
-          make install-tools
-          make build
+          sudo /etc/init.d/mysql start
+          mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
