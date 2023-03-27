@@ -7,11 +7,13 @@ on:
     branches:
       - master
       - develop
+      - release*
 
   pull_request:
     branches:
       - master
       - develop
+      - release*
 
 jobs:
   golangci:

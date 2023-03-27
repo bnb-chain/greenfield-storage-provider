@@ -3,15 +3,16 @@ package gateway
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"io"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield/x/storage/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	receivertypes "github.com/bnb-chain/greenfield-storage-provider/service/receiver/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // syncPieceHandler handle sync piece data request
@@ -23,6 +24,7 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 		objectInfo             = types.ObjectInfo{}
 		replicaIdx             uint32
 		segmentSize            uint64
+		replicateApproval      = &p2ptypes.GetApprovalResponse{}
 		size                   int
 		readN                  int
 		buf                    = make([]byte, model.DefaultStreamBufSize)
@@ -66,6 +68,16 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 	}
 	if segmentSize, err = util.StringToUint64(r.Header.Get(model.GnfdSegmentSizeHeader)); err != nil {
 		log.Errorw("failed to parse segment_size header", "segment_size", r.Header.Get(model.GnfdSegmentSizeHeader))
+		errDescription = InvalidHeader
+		return
+	}
+	if err = json.Unmarshal([]byte(r.Header.Get(model.GnfdReplicateApproval)), replicateApproval); err != nil {
+		log.Errorw("failed to parse replicate_approval header", "replicate_approval", r.Header.Get(model.GnfdReplicateApproval))
+		errDescription = InvalidHeader
+		return
+	}
+	if err = gateway.verifyReplicateApproval(replicateApproval); err != nil {
+		log.Errorw("failed to verify replicate_approval header", "replicate_approval", r.Header.Get(model.GnfdReplicateApproval))
 		errDescription = InvalidHeader
 		return
 	}

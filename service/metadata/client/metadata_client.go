@@ -102,3 +102,25 @@ func (client *MetadataClient) GetUserBucketsCount(ctx context.Context, in *metat
 	}
 	return resp, nil
 }
+
+// GetPaymentByBucketName get bucket payment info by a bucket name
+func (client *MetadataClient) GetPaymentByBucketName(ctx context.Context, in *metatypes.GetPaymentByBucketNameRequest, opts ...grpc.CallOption) (*metatypes.GetPaymentByBucketNameResponse, error) {
+	resp, err := client.metadata.GetPaymentByBucketName(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get payment by bucket name rpc", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// GetPaymentByBucketID get bucket payment info by a bucket id
+func (client *MetadataClient) GetPaymentByBucketID(ctx context.Context, in *metatypes.GetPaymentByBucketIDRequest, opts ...grpc.CallOption) (*metatypes.GetPaymentByBucketIDResponse, error) {
+	resp, err := client.metadata.GetPaymentByBucketID(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get payment by bucket id rpc", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}

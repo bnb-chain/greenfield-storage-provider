@@ -18,8 +18,8 @@ func MakeSPDB(ctx *cli.Context, spDBCfg *storeconfig.SQLDBConfig) (*sqldb.SpDBIm
 	if ctx.IsSet(ctx.String(DBAddressFlag.Name)) {
 		spDBCfg.Address = ctx.String(DBAddressFlag.Name)
 	}
-	if ctx.IsSet(ctx.String(DBDataBaseFlag.Name)) {
-		spDBCfg.Database = ctx.String(DBDataBaseFlag.Name)
+	if ctx.IsSet(ctx.String(DBDatabaseFlag.Name)) {
+		spDBCfg.Database = ctx.String(DBDatabaseFlag.Name)
 	}
 	return sqldb.NewSpDB(spDBCfg)
 }

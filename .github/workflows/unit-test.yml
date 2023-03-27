@@ -5,11 +5,13 @@ on:
     branches:
       - master
       - develop
+      - release*
 
   pull_request:
     branches:
       - master
       - develop
+      - release*
 
 env:
   CGO_CFLAGS: "-O -D__BLST_PORTABLE__"

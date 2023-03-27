@@ -16,6 +16,12 @@ type Metadata interface {
 	GetBucketByID(bucketID int64, isFullList bool) (*Bucket, error)
 	// GetLatestBlockNumber get current latest block number
 	GetLatestBlockNumber() (int64, error)
+	// GetPaymentByBucketName get bucket payment info by a bucket name
+	GetPaymentByBucketName(bucketName string, isFullList bool) (*StreamRecord, error)
+	// GetPaymentByBucketID get bucket payment info by a bucket id
+	GetPaymentByBucketID(bucketID int64, isFullList bool) (*StreamRecord, error)
+	// GetPaymentByPaymentAddress get bucket payment info by a payment address
+	GetPaymentByPaymentAddress(address common.Address) (*StreamRecord, error)
 	// ListObjectsByBucketName list objects info by a bucket name
 	ListObjectsByBucketName(bucketName string) ([]*Object, error)
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range

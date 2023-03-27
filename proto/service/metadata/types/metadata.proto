@@ -2,6 +2,7 @@ syntax = "proto3";
 package service.metadata.types;
 
 import "greenfield/storage/types.proto";
+import "greenfield/payment/stream_record.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/metadata/types";
 
@@ -71,6 +72,22 @@ message GetUserBucketsCountRequest {
   string account_id = 1;
 }
 
+// GetPaymentByBucketNameRequest is request type for the GetPaymentByBucketName RPC method
+message GetPaymentByBucketNameRequest {
+  // bucket_name is the name of the bucket
+  string bucket_name = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
+// GetPaymentByBucketIDRequest is request type for the GetPaymentByBucketID RPC method
+message GetPaymentByBucketIDRequest {
+  // bucket_id is the unique identifier of bucket
+  int64 bucket_id = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
 // GetUserBucketsResponse is response type for the GetUserBuckets RPC method.
 message GetUserBucketsResponse {
   // buckets defines the list of bucket
@@ -100,13 +117,25 @@ message ListDeletedObjectsByBlockNumberRangeResponse {
   // objects defines the list of object
   repeated Object objects = 1;
   // latest_block_number defines the response objects latest block number
-  int64 latest_block_number = 2;
+  int64 end_block_number = 2;
 }
 
 // GetUserBucketsCountResponse is response type for the GetUserBucketsCount RPC method.
 message GetUserBucketsCountResponse {
   // count defines total count of user buckets
   int64 count = 1;
+}
+
+// GetPaymentByBucketNameResponse is response type for the GetPaymentByBucketName RPC method.
+message GetPaymentByBucketNameResponse {
+  // stream_record defines stream payment record of a stream account
+  bnbchain.greenfield.payment.StreamRecord stream_record = 1;
+}
+
+// GetPaymentByBucketIDResponse is response type for the GetPaymentByBucketID RPC method.
+message GetPaymentByBucketIDResponse {
+  // stream_record defines stream payment record of a stream account
+  bnbchain.greenfield.payment.StreamRecord stream_record = 1;
 }
 
 // MetadataService defines the gRPC service of metadata
@@ -123,4 +152,8 @@ service MetadataService {
   rpc ListDeletedObjectsByBlockNumberRange(ListDeletedObjectsByBlockNumberRangeRequest) returns (ListDeletedObjectsByBlockNumberRangeResponse) {};
   // GetUserBucketsCount GetUserBuckets get buckets count by a user address
   rpc GetUserBucketsCount(GetUserBucketsCountRequest) returns (GetUserBucketsCountResponse) {};
+  // GetPaymentByBucketName get bucket payment info by a bucket name
+  rpc GetPaymentByBucketName(GetPaymentByBucketNameRequest) returns (GetPaymentByBucketNameResponse) {};
+  // GetPaymentByBucketID get bucket payment info by a bucket id
+  rpc GetPaymentByBucketID(GetPaymentByBucketIDRequest) returns (GetPaymentByBucketIDResponse) {};
 }

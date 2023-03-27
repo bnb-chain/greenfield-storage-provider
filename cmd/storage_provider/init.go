@@ -6,24 +6,26 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
-	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
-	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
-	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
-	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
-	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-
 	"github.com/bnb-chain/greenfield-storage-provider/config"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
+	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
 	metadata "github.com/bnb-chain/greenfield-storage-provider/service/metadata/service"
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
+	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
+	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
 
-// initLog init global log level and log path.
+// initLog initializes global log level and log path.
 func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	if cfg.LogCfg == nil {
 		cfg.LogCfg = config.DefaultLogConfig
@@ -45,7 +47,49 @@ func initLog(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	return nil
 }
 
-// initService init service instance by name and config.
+// initMetrics initializes global metrics.
+func initMetrics(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
+	if cfg.MetricsCfg == nil {
+		cfg.MetricsCfg = config.DefaultMetricsConfig
+	}
+	if ctx.IsSet(utils.MetricsEnabledFlag.Name) {
+		cfg.MetricsCfg.Enabled = ctx.Bool(utils.MetricsEnabledFlag.Name)
+	}
+	if ctx.IsSet(utils.MetricsHTTPFlag.Name) {
+		cfg.MetricsCfg.HTTPAddress = ctx.String(utils.MetricsHTTPFlag.Name)
+	}
+	if cfg.MetricsCfg.Enabled {
+		slc := lifecycle.NewServiceLifecycle()
+		slc.RegisterServices(metrics.NewMetrics(cfg.MetricsCfg))
+	}
+	return nil
+}
+
+// initResourceManager initializes global resource manager.
+func initResourceManager(ctx *cli.Context) error {
+	if ctx.IsSet(utils.DisableResourceManagerFlag.Name) &&
+		ctx.Bool(utils.DisableResourceManagerFlag.Name) {
+		return nil
+	}
+	var (
+		limits = rcmgr.DefaultLimitConfig
+		err    error
+	)
+	if ctx.IsSet(utils.ResourceManagerConfigFlag.Name) {
+		limits, err = rcmgr.NewLimitConfigFromToml(
+			ctx.String(utils.ResourceManagerConfigFlag.Name))
+		if err != nil {
+			return err
+		}
+	}
+	if _, err = rcmgr.NewResourceManager(limits); err != nil {
+		return err
+	}
+	log.Infow("init resource manager", "limits", limits.String(), "error", err)
+	return nil
+}
+
+// initService initializes service instance by name and config.
 func initService(serviceName string, cfg *config.StorageProviderConfig) (server lifecycle.Service, err error) {
 	switch serviceName {
 	case model.GatewayService:
@@ -135,6 +179,15 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			return nil, err
 		}
 		server, err = manager.NewManagerService(managerCfg)
+		if err != nil {
+			return nil, err
+		}
+	case model.P2PService:
+		p2pCfg, err := cfg.MakeP2PServiceConfig()
+		if err != nil {
+			return nil, err
+		}
+		server, err = p2p.NewP2PServer(p2pCfg)
 		if err != nil {
 			return nil, err
 		}

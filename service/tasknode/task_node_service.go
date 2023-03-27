@@ -3,10 +3,13 @@ package tasknode
 import (
 	"context"
 	"errors"
+	"math"
 	"sync"
 	"sync/atomic"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,9 +17,16 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	gatewayclient "github.com/bnb-chain/greenfield-storage-provider/service/gateway/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+)
+
+const (
+	ReplicateFactor    = 2
+	GetApprovalTimeout = 10
 )
 
 var _ types.TaskNodeServiceServer = &TaskNode{}
@@ -26,13 +36,15 @@ func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.Replic
 	resp *types.ReplicateObjectResponse, err error) {
 	resp = &types.ReplicateObjectResponse{}
 	taskNode.spDB.UpdateJobState(req.GetObjectInfo().Id.Uint64(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
-	go taskNode.AsyncReplicateObject(req)
+	errCh := make(chan error)
+	go taskNode.AsyncReplicateObject(req, errCh)
+	err = <-errCh
 	log.Debugw("receive the replicate object task", "object_id", req.GetObjectInfo().Id)
 	return
 }
 
 // AsyncReplicateObject replicate an object payload to other storage providers and seal object.
-func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (err error) {
+func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest, notifyErrCh chan error) (err error) {
 	ctx := context.Background()
 	processInfo := &servicetypes.ReplicateSegmentInfo{}
 	sealMsg := &storagetypes.MsgSealObject{}
@@ -65,20 +77,83 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 	params, err := taskNode.spDB.GetStorageParams()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query sp params", "error", err)
+		notifyErrCh <- err
 		return
 	}
 	segments := piecestore.ComputeSegmentCount(objectInfo.GetPayloadSize(),
 		params.GetMaxSegmentSize())
 	replicates := params.GetRedundantDataChunkNum() + params.GetRedundantParityChunkNum()
+	spList, approvals, err := taskNode.getApproval(objectInfo, int(replicates), int(replicates*ReplicateFactor), GetApprovalTimeout)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
+		notifyErrCh <- err
+		return
+	}
+
+	// allocates memory from resource manager
+	var memSize int
+	if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
+		memSize = (int(params.GetRedundantDataChunkNum()) +
+			int(params.GetRedundantParityChunkNum())) *
+			int(objectInfo.GetPayloadSize())
+	} else {
+		memSize = int(math.Ceil(
+			((float64(params.GetRedundantDataChunkNum()) + float64(params.GetRedundantParityChunkNum())) /
+				float64(params.GetRedundantDataChunkNum())) *
+				float64(objectInfo.GetPayloadSize())))
+	}
+	scope, err := taskNode.rcScope.BeginSpan()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
+		notifyErrCh <- err
+		return
+	}
+	stateFunc := func() string {
+		var state string
+		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
+			state = scope.Stat().String()
+			return nil
+		})
+		return state
+	}
+	err = scope.ReserveMemory(memSize, rcmgr.ReservationPriorityAlways)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
+			"reserve_size", memSize, "resource_state", stateFunc(), "error", err)
+		notifyErrCh <- err
+		return
+	}
+	defer func() {
+		scope.Done()
+		log.Debugw("end replicate object request", "resource_state", stateFunc())
+	}()
+
 	replicateData, err := taskNode.EncodeReplicateSegments(ctx, objectInfo.Id.Uint64(),
 		segments, int(replicates), objectInfo.GetRedundancyType())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to encode payload", "error", err)
+		notifyErrCh <- err
 		return
 	}
-	spList, err := taskNode.spDB.FetchAllSpWithoutOwnSp(sptypes.STATUS_IN_SERVICE)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
+	// all preparations are completed, notify uploader
+	notifyErrCh <- nil
+
+	spEndpoints := maps.SortKeys(approvals)
+	var mux sync.Mutex
+	getSpFunc := func() (sp *sptypes.StorageProvider, approval *p2ptypes.GetApprovalResponse, err error) {
+		mux.Lock()
+		defer mux.Unlock()
+		if len(approvals) == 0 {
+			log.CtxErrorw(ctx, "backup storage providers depleted")
+			err = errors.New("no backup sp to pick up")
+			return
+		}
+		endpoint := spEndpoints[0]
+		sp = spList[endpoint]
+		approval = approvals[endpoint]
+		spEndpoints = spEndpoints[1:]
+		delete(spList, endpoint)
+		delete(approvals, endpoint)
 		return
 	}
 
@@ -89,18 +164,6 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 	sealMsg.SecondarySpSignatures = make([][]byte, replicates)
 	objectInfo.SecondarySpAddresses = make([]string, replicates)
 
-	var mux sync.Mutex
-	getSpFunc := func() (*sptypes.StorageProvider, error) {
-		mux.Lock()
-		defer mux.Unlock()
-		if len(spList) == 0 {
-			log.CtxErrorw(ctx, "backup storage providers depleted")
-			return nil, errors.New("no backup sp to pick up")
-		}
-		sp := spList[0]
-		spList = spList[1:]
-		return sp, nil
-	}
 	processInfo.SegmentInfos = make([]*servicetypes.SegmentInfo, replicates)
 	var done int64
 	errCh := make(chan error, 10)
@@ -109,7 +172,7 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 		processInfo.SegmentInfos[rIdx] = &servicetypes.SegmentInfo{ObjectInfo: objectInfo}
 		go func(rIdx int) {
 			for {
-				sp, err := getSpFunc()
+				sp, approval, err := getSpFunc()
 				if err != nil {
 					errCh <- err
 					return
@@ -124,8 +187,9 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 						"sp_endpoint", sp.GetEndpoint(), "error", err)
 					continue
 				}
+				// TODO:: add approval param to gateway, and secondary sp check the timeout, signature, spOpAddr of approval
 				integrityHash, signature, err := gatewayClient.SyncPieceData(
-					req.GetObjectInfo(), uint32(rIdx), uint32(len(replicateData[0][0])), data)
+					req.GetObjectInfo(), uint32(rIdx), uint32(len(replicateData[0][0])), approval, data)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to sync piece data", "endpoint", sp.GetEndpoint(), "error", err)
 					continue
@@ -133,7 +197,7 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 				log.CtxDebugw(ctx, "receive the sp response", "replica_idx", rIdx, "integrity_hash",
 					integrityHash, "endpoint", sp.GetEndpoint(), "signature", signature)
 
-				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), math.NewUint(objectInfo.Id.Uint64()), integrityHash).GetSignBytes()
+				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), sdkmath.NewUint(objectInfo.Id.Uint64()), integrityHash).GetSignBytes()
 				approvalAddr, err := sdk.AccAddressFromHexUnsafe(sp.GetApprovalAddress())
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to parser sp operator address",
@@ -182,4 +246,32 @@ func (taskNode *TaskNode) QueryReplicatingObject(ctx context.Context, req *types
 	}
 	resp.ReplicateSegmentInfo = val.(*servicetypes.ReplicateSegmentInfo)
 	return
+}
+
+func (taskNode *TaskNode) getApproval(
+	objectInfo *storagetypes.ObjectInfo, low, high int, timeout int64) (
+	map[string]*sptypes.StorageProvider, map[string]*p2ptypes.GetApprovalResponse, error) {
+	var (
+		spList       = make(map[string]*sptypes.StorageProvider)
+		approvalList = make(map[string]*p2ptypes.GetApprovalResponse)
+	)
+	approvals, _, err := taskNode.p2p.GetApproval(context.Background(), objectInfo, int64(high), timeout)
+	if err != nil {
+		return spList, approvalList, err
+	}
+	if len(approvals) < low {
+		return spList, approvalList, merrors.ErrSPApprovalNumber
+	}
+	for spOpAddr, approval := range approvals {
+		sp, err := taskNode.spDB.GetSpByAddress(spOpAddr, sqldb.OperatorAddressType)
+		if err != nil {
+			continue
+		}
+		spList[sp.GetEndpoint()] = sp
+		approvalList[sp.GetEndpoint()] = approval
+	}
+	if len(spList) < low {
+		return spList, approvalList, merrors.ErrSPNumber
+	}
+	return spList, approvalList, nil
 }

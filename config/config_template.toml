@@ -6,6 +6,7 @@ challenge = "localhost:9333"
 downloader = "localhost:9233"
 gateway = "gnfd.sp.com"
 metadata = "localhost:9733"
+p2p = "localhost:9833"
 receiver = "localhost:9533"
 signer = "localhost:9633"
 tasknode = "localhost:9433"
@@ -16,6 +17,7 @@ challenge = "localhost:9333"
 downloader = "localhost:9233"
 gateway = "localhost:9033"
 metadata = "localhost:9733"
+p2p = "localhost:9833"
 receiver = "localhost:9533"
 signer = "localhost:9633"
 tasknode = "localhost:9433"
@@ -46,7 +48,7 @@ GreenfieldAddresses = ["localhost:9090"]
 TendermintAddresses = ["http://localhost:26750"]
 
 [SignerCfg]
-WhitelistCIDR = ["127.0.0.1/32"]
+WhitelistCIDR = ["0.0.0.0/0"]
 GasLimit = 210000
 OperatorPrivateKey = ""
 FundingPrivateKey = ""
@@ -55,7 +57,17 @@ ApprovalPrivateKey = ""
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]
-Dsn = "localhost:3306"
+Dsn = "localhost:3308"
+
+[P2PCfg]
+ListenAddress = "127.0.0.1:9933"
+P2PPrivateKey = ""
+Bootstrap = []
+PingPeriod = 2
+
+[MetricsCfg]
+Enabled = false
+HTTPAddress = "localhost:9833"
 
 [LogCfg]
 Level = "debug"

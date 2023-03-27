@@ -13,6 +13,7 @@ import (
 	chainclient "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
 	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
 	metadataclient "github.com/bnb-chain/greenfield-storage-provider/service/metadata/client"
@@ -95,12 +96,12 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 	return gateway, nil
 }
 
-// Name implement the lifecycle interface
+// Name return the descriptions of gateway service
 func (gateway *Gateway) Name() string {
 	return model.GatewayService
 }
 
-// Start implement the lifecycle interface
+// Start gateway service
 func (gateway *Gateway) Start(ctx context.Context) error {
 	if gateway.running.Swap(true) == true {
 		return errors.New("gateway has started")
@@ -109,9 +110,12 @@ func (gateway *Gateway) Start(ctx context.Context) error {
 	return nil
 }
 
-// Serve starts http service.
+// Serve starts http server.
 func (gateway *Gateway) serve() {
 	router := mux.NewRouter().SkipClean(true)
+	if metrics.GetMetrics().Enabled() {
+		router.Use(metrics.DefaultHTTPServerMetrics.InstrumentationHandler)
+	}
 	gateway.registerHandler(router)
 	server := &http.Server{
 		Addr:    gateway.config.HTTPAddress,
@@ -124,7 +128,7 @@ func (gateway *Gateway) serve() {
 	}
 }
 
-// Stop implement the lifecycle interface
+// Stop gateway service
 func (gateway *Gateway) Stop(ctx context.Context) error {
 	if gateway.running.Swap(false) == false {
 		return errors.New("gateway has stopped")

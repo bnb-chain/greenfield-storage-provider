@@ -11,6 +11,7 @@ type TaskNodeConfig struct {
 	SpOperatorAddress string
 	GRPCAddress       string
 	SignerGrpcAddress string
+	P2PGrpcAddress    string
 	SpDBConfig        *config.SQLDBConfig
 	PieceStoreConfig  *storage.PieceStoreConfig
 	ChainConfig       *greenfield.GreenfieldChainConfig
