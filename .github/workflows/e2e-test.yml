@@ -23,14 +23,32 @@ jobs:
     env:
       GOPRIVATE: github.com/bnb-chain
       GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-      DB_DATABASE: test_db
       DB_USER: root
-      DB_PASSWORD: root
+      DB_PSW: root
+      DB_SP0: sp_0
+      DB_SP1: sp_1
+      DB_SP2: sp_2
+      DB_SP3: sp_3
+      DB_SP4: sp_4
+      DB_SP5: sp_5
+      DB_SP6: sp_6
     steps:
+      - name: Set up MySQL
+          run: |
+            sudo /etc/init.d/mysql start
+            mysql -e 'CREATE DATABASE ${{ env.DB_SP0 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+            mysql -e 'CREATE DATABASE ${{ env.DB_SP1 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+            mysql -e 'CREATE DATABASE ${{ env.DB_SP2 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+            mysql -e 'CREATE DATABASE ${{ env.DB_SP3 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+            mysql -e 'CREATE DATABASE ${{ env.DB_SP4 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+            mysql -e 'CREATE DATABASE ${{ env.DB_SP5 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+            mysql -e 'CREATE DATABASE ${{ env.DB_SP6 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+
       - name: Install Go
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
+
       - name: Setup GitHub Token
         run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
 
@@ -39,11 +57,6 @@ jobs:
 
       - uses: actions/cache@v3
         with:
-          # In order:
-          # * Module download cache
-          # * Build cache (Linux)
-          # * Build cache (Mac)
-          # * Build cache (Windows)
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
@@ -66,8 +79,3 @@ jobs:
           go install github.com/bufbuild/buf/cmd/buf@v1.13.1
           go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
           buf generate
-
-      - name: Set up MySQL
-        run: |
-          sudo /etc/init.d/mysql start
-          mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
