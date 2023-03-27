@@ -34,15 +34,15 @@ jobs:
       DB_SP6: sp_6
     steps:
       - name: Set up MySQL
-          run: |
-            sudo /etc/init.d/mysql start
-            mysql -e 'CREATE DATABASE ${{ env.DB_SP0 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-            mysql -e 'CREATE DATABASE ${{ env.DB_SP1 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-            mysql -e 'CREATE DATABASE ${{ env.DB_SP2 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-            mysql -e 'CREATE DATABASE ${{ env.DB_SP3 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-            mysql -e 'CREATE DATABASE ${{ env.DB_SP4 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-            mysql -e 'CREATE DATABASE ${{ env.DB_SP5 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-            mysql -e 'CREATE DATABASE ${{ env.DB_SP6 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+        run: |
+          sudo /etc/init.d/mysql start
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP0 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP1 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP2 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP3 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP4 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP5 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP6 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
 
       - name: Install Go
         uses: actions/setup-go@v3
@@ -79,3 +79,8 @@ jobs:
           go install github.com/bufbuild/buf/cmd/buf@v1.13.1
           go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
           buf generate
+
+      - name: Build SP
+          run: |
+            make install-tools
+            make build
