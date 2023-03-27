@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.5
+
+FEATURES
+* [\#211](https://github.com/bnb-chain/greenfield-storage-provider/pull/211) feat: sp services add metrics
+* [\#221](https://github.com/bnb-chain/greenfield-storage-provider/pull/221) feat: implement p2p protocol and rpc service
+* [\#232](https://github.com/bnb-chain/greenfield-storage-provider/pull/232) chore: refine gRPC error code
+* [\#235](https://github.com/bnb-chain/greenfield-storage-provider/pull/235) feat: implement metadata payment apis
+* [\#246](https://github.com/bnb-chain/greenfield-storage-provider/pull/246) feat: resource manager
+
+BUILD
+* [\#231](https://github.com/bnb-chain/greenfield-storage-provider/pull/231) ci: add gosec checker
+
+
 ## v0.0.4
 
 FEATURES
