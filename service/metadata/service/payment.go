@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/x/payment/types"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
@@ -16,6 +17,7 @@ func (metadata *Metadata) GetPaymentByBucketName(ctx context.Context, req *metat
 	var (
 		streamRecord *model.StreamRecord
 		res          *types.StreamRecord
+		outflows     []types.OutFlow
 	)
 
 	ctx = log.Context(ctx, req)
@@ -26,17 +28,23 @@ func (metadata *Metadata) GetPaymentByBucketName(ctx context.Context, req *metat
 		return
 	}
 
+	err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to unmarshal out flows", "error", err)
+		return
+	}
+
 	if streamRecord != nil {
 		res = &types.StreamRecord{
 			Account:         streamRecord.Account.String(),
 			CrudTimestamp:   streamRecord.UpdateTime,
-			NetflowRate:     math.NewIntFromBigInt(streamRecord.NetflowRate.BigInt()),
-			StaticBalance:   math.NewIntFromBigInt(streamRecord.StaticBalance.BigInt()),
-			BufferBalance:   math.NewIntFromBigInt(streamRecord.BufferBalance.BigInt()),
-			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.BigInt()),
+			NetflowRate:     math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
+			StaticBalance:   math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
+			BufferBalance:   math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
+			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
 			Status:          types.StreamAccountStatus(types.StreamAccountStatus_value[streamRecord.Status]),
 			SettleTimestamp: streamRecord.SettleTimestamp,
-			OutFlows:        streamRecord.OutFlows,
+			OutFlows:        outflows,
 		}
 	}
 
@@ -50,6 +58,7 @@ func (metadata *Metadata) GetPaymentByBucketID(ctx context.Context, req *metatyp
 	var (
 		streamRecord *model.StreamRecord
 		res          *types.StreamRecord
+		outflows     []types.OutFlow
 	)
 
 	ctx = log.Context(ctx, req)
@@ -60,17 +69,23 @@ func (metadata *Metadata) GetPaymentByBucketID(ctx context.Context, req *metatyp
 		return
 	}
 
+	err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to unmarshal out flows", "error", err)
+		return
+	}
+
 	if streamRecord != nil {
 		res = &types.StreamRecord{
 			Account:         streamRecord.Account.String(),
 			CrudTimestamp:   streamRecord.UpdateTime,
-			NetflowRate:     math.NewIntFromBigInt(streamRecord.NetflowRate.BigInt()),
-			StaticBalance:   math.NewIntFromBigInt(streamRecord.StaticBalance.BigInt()),
-			BufferBalance:   math.NewIntFromBigInt(streamRecord.BufferBalance.BigInt()),
-			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.BigInt()),
+			NetflowRate:     math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
+			StaticBalance:   math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
+			BufferBalance:   math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
+			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
 			Status:          types.StreamAccountStatus(types.StreamAccountStatus_value[streamRecord.Status]),
 			SettleTimestamp: streamRecord.SettleTimestamp,
-			OutFlows:        streamRecord.OutFlows,
+			OutFlows:        outflows,
 		}
 	}
 

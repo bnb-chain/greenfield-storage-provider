@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/ethereum/go-ethereum/common"
 	"gorm.io/gorm"
 )
@@ -34,7 +35,7 @@ func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*Bucket,
 		return bucket, nil
 	}
 
-	err = b.db.Take(&bucket, "bucket_name = ? and is_public = ?", bucketName, true).Error
+	err = b.db.Take(&bucket, "bucket_name = ? and visibility = ?", bucketName, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -58,7 +59,7 @@ func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, erro
 		return bucket, err
 	}
 
-	err = b.db.Take(&bucket, "bucket_id = ? and is_public = ?", bucketIDHash, true).Error
+	err = b.db.Take(&bucket, "bucket_id = ? and visibility = ?", bucketIDHash, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}

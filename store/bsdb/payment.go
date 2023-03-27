@@ -56,7 +56,7 @@ func (b *BsDBImpl) GetPaymentByPaymentAddress(paymentAddress common.Address) (*S
 		err          error
 	)
 
-	err = b.db.Take(&streamRecord, "account = ?", paymentAddress).Error
+	err = b.db.Table((&StreamRecord{}).TableName()).Take(&streamRecord, "account = ?", paymentAddress).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}

@@ -23,8 +23,8 @@ type Object struct {
 	BucketID common.Hash `gorm:"bucket_id"`
 	// PayloadSize is the total size of the object payload
 	PayloadSize uint64 `gorm:"payload_size"`
-	// IsPublic defines the highest permissions for object. When the object is public, everyone can access it
-	IsPublic bool `gorm:"is_public"`
+	// Visibility defines the highest permissions for bucket. When a bucket is public, everyone can get storage obj
+	Visibility string `gorm:"visibility"`
 	// ContentType defines the format of the object which should be a standard MIME type
 	ContentType string `gorm:"content_type"`
 	// CreateAt defines the block number when the object created
