@@ -33,7 +33,7 @@ jobs:
       DB_SP5: sp_5
       DB_SP6: sp_6
     steps:
-      - name: Set up MySQL
+      - name: Setup MySQL
         run: |
           sudo /etc/init.d/mysql start
           mysql -e 'CREATE DATABASE ${{ env.DB_SP0 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
@@ -51,6 +51,9 @@ jobs:
 
       - name: Setup GitHub Token
         run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
+
+      - name: Setup Greenfield
+        run: git install github.com/bnb-chain/greenfield@v0.0.10
 
       - name: Checkout code
         uses: actions/checkout@v3
