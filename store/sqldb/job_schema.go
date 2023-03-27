@@ -27,7 +27,7 @@ type ObjectTable struct {
 	BucketName           string
 	ObjectName           string
 	PayloadSize          uint64
-	IsPublic             bool
+	Visibility           int32
 	ContentType          string
 	CreatedAtHeight      int64
 	ObjectStatus         int32

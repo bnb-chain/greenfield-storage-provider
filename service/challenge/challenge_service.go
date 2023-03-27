@@ -2,10 +2,12 @@ package challenge
 
 import (
 	"context"
+	"math"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 )
 
@@ -29,13 +31,46 @@ func (challenge *Challenge) ChallengePiece(
 	resp.IntegrityHash = integrity.IntegrityHash
 	resp.PieceHash = integrity.Checksum
 
+	params, err := challenge.spDB.GetStorageParams()
+	if err != nil {
+		return
+	}
 	var key string
+	var memSize int
 	if req.GetReplicaIdx() < 0 {
 		key = piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())
+		memSize = int(params.GetMaxSegmentSize())
 	} else {
 		key = piecestore.EncodeECPieceKey(req.GetObjectId(),
 			req.GetSegmentIdx(), uint32(req.GetReplicaIdx()))
+		memSize = int(math.Ceil(float64(params.GetMaxSegmentSize()) / float64(params.GetRedundantDataChunkNum())))
 	}
+
+	// allocates memory from resource manager
+	scope, err := challenge.rcScope.BeginSpan()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
+		return
+	}
+	stateFunc := func() string {
+		var state string
+		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
+			state = scope.Stat().String()
+			return nil
+		})
+		return state
+	}
+	err = scope.ReserveMemory(memSize, rcmgr.ReservationPriorityAlways)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
+			"reserve_size", memSize, "resource_state", stateFunc(), "error", err)
+		return
+	}
+	defer func() {
+		scope.Done()
+		log.CtxDebugw(ctx, "end challenge piece request", "resource_state", stateFunc())
+	}()
+
 	resp.PieceData, err = challenge.pieceStore.GetSegment(ctx, key, 0, -1)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get payload", "error", err)

@@ -117,7 +117,7 @@ message ListDeletedObjectsByBlockNumberRangeResponse {
   // objects defines the list of object
   repeated Object objects = 1;
   // latest_block_number defines the response objects latest block number
-  int64 latest_block_number = 2;
+  int64 end_block_number = 2;
 }
 
 // GetUserBucketsCountResponse is response type for the GetUserBucketsCount RPC method.
