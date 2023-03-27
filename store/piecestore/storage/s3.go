@@ -243,6 +243,10 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		return sess, bucketName, nil
 	}
 
+	// If you want to access s3 bucket, you must set IAM type in config.toml.
+	// If IAM type is AKSK, you must provide access key, secret key and session token(optional) to access s3 bucket
+	// If you want to access public bucket, you should set IAM type to AKSK and accessKey to be NoSignRequest
+	// If IAM type is SA, you can visit your s3 straightly
 	awsConfig := &aws.Config{
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
@@ -252,61 +256,53 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
 	}
 	sess := session.Must(session.NewSession(awsConfig))
-	// If you want to access s3 bucket, you must set IAM type in config.toml.
-	// If IAM type is AKSK, you must provide access key, secret key and session token(optional) to access s3 bucket
-	// If you want to access public bucket, you should set IAM type to AKSK and accessKey to be NoSignRequest
-	// If IAM type is SA, you can visit your s3 straightly
 	switch cfg.IAMType {
 	case mpiecestore.AKSKIAMType:
 		key := getSecretKeyFromEnv(mpiecestore.AWSAccessKey, mpiecestore.AWSSecretKey, mpiecestore.AWSSessionToken)
 		if key.accessKey == "NoSignRequest" {
 			// access public s3 bucket
-			awsConfig.Credentials = credentials.AnonymousCredentials
+			sess.Config.Credentials = credentials.AnonymousCredentials
 		} else if key.accessKey != "" && key.secretKey != "" {
-			awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
+			sess.Config.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
 		}
 	default: // default is service account iam type
-		awsConfig.WithCredentialsChainVerboseErrors(true).WithCredentials(getAWSChainCredentials(sts.New(sess)))
+		irsa, roleARN, tokenPath := checkIRSAAvailable()
+		if irsa {
+			awsConfig.WithCredentialsChainVerboseErrors(true).WithCredentials(credentials.NewChainCredentials(
+				[]credentials.Provider{
+					&credentials.EnvProvider{},
+					&credentials.SharedCredentialsProvider{},
+					stscreds.NewWebIdentityRoleProviderWithOptions(sts.New(sess), roleARN, "",
+						stscreds.FetchTokenPath(tokenPath)),
+				}))
+		}
 	}
 
 	sc.sessions[cfg] = sess
 	return sess, bucketName, nil
 }
 
-func getAWSChainCredentials(svc *sts.STS) *credentials.Credentials {
-	irsa, roleARN, tokenPath := checkIRSAAvailable()
-	chain := []credentials.Provider{
-		&credentials.EnvProvider{},
-		&credentials.SharedCredentialsProvider{},
-	}
-
-	if irsa {
-		chain = append(chain, stscreds.NewWebIdentityRoleProviderWithOptions(svc, roleARN, "",
-			stscreds.FetchTokenPath(tokenPath)))
-	}
-	return credentials.NewChainCredentials(chain)
-	// IMPORTANT DO NOT remove otherwise throws error: RequestCanceled: request context canceled
-	// creds.Get()
-}
-
+// IRSA is IAM Roles for Service Account in Kubernetes
 func checkIRSAAvailable() (bool, string, string) {
 	irsa := true
 	roleARN, exists := os.LookupEnv(mpiecestore.AWSRoleARN)
 	if !exists {
 		irsa = false
+		log.Error("failed to read aws role arn")
 	}
 	tokenPath, exists := os.LookupEnv(mpiecestore.AWSWebIdentityTokenFile)
 	if !exists {
 		irsa = false
+		log.Error("failed to read aws web identity token file")
 	}
 	return irsa, roleARN, tokenPath
 }
 
-// func (sc *SessionCache) clear() {
-// 	sc.Lock()
-// 	defer sc.Unlock()
-// 	sc.sessions = map[ObjectStorageConfig]*session.Session{}
-// }
+func (sc *SessionCache) clear() {
+	sc.Lock()
+	defer sc.Unlock()
+	sc.sessions = map[ObjectStorageConfig]*session.Session{}
+}
 
 func parseEndpoint(endpoint string) (string, string, string, error) {
 	endpoint = strings.Trim(endpoint, "/")
