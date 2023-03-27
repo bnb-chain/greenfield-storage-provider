@@ -81,6 +81,6 @@ jobs:
           buf generate
 
       - name: Build SP
-          run: |
-            make install-tools
-            make build
+        run: |
+          make install-tools
+          make build
