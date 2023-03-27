@@ -53,7 +53,7 @@ jobs:
         run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
 
       - name: Setup Greenfield
-        run: git install github.com/bnb-chain/greenfield@v0.0.10
+        run: go install github.com/bnb-chain/greenfield@v0.0.10
 
       - name: Checkout code
         uses: actions/checkout@v3
