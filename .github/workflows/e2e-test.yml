@@ -30,6 +30,10 @@ jobs:
       DB_SP5: sp_5
       DB_SP6: sp_6
     steps:
+      - name: Install Go
+          uses: actions/setup-go@v3
+          with:
+            go-version: ${{ matrix.go-version }}
       - name: Setup MySQL
         run: |
           sudo /etc/init.d/mysql start
