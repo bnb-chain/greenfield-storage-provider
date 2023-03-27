@@ -1,0 +1,38 @@
+name: E2E Test
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - release*
+
+  pull_request:
+    branches:
+      - master
+      - develop
+      - release*
+
+jobs:
+  setup-mysql:
+    env:
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_SP0: sp_0
+      DB_SP1: sp_1
+      DB_SP2: sp_2
+      DB_SP3: sp_3
+      DB_SP4: sp_4
+      DB_SP5: sp_5
+      DB_SP6: sp_6
+    steps:
+      - name: Setup MySQL
+        run: |
+          sudo /etc/init.d/mysql start
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP0 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP1 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP2 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP3 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP4 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP5 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+          mysql -e 'CREATE DATABASE ${{ env.DB_SP6 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
