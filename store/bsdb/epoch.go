@@ -4,8 +4,8 @@ import "github.com/forbole/juno/v4/common"
 
 // Epoch stores current information of the latest block
 type Epoch struct {
-	// OneRowId defines if the table only has one row
-	OneRowId bool `gorm:"one_row_id;not null;default:true;primaryKey"`
+	// OneRowID defines if the table only has one row
+	OneRowID bool `gorm:"one_row_id;not null;default:true;primaryKey"`
 	// BlockHeight defines the latest block number
 	BlockHeight int64 `gorm:"block_height;type:bigint(64)"`
 	// BlockHash defines the latest block hash
