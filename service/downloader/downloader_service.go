@@ -50,7 +50,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 			ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
 		},
 		&sqldb.BucketQuota{
-			ReadQuotaSize: bucketInfo.GetReadQuota() + model.DefaultSpFreeReadQuotaSize,
+			ReadQuotaSize: bucketInfo.GetChargedReadQuota() + model.DefaultSpFreeReadQuotaSize,
 		},
 	); err != nil {
 		log.Errorw("failed to check billing due to bucket quota", "error", err)
@@ -153,9 +153,9 @@ func (downloader *Downloader) GetBucketReadQuota(ctx context.Context, req *types
 	bucketTraffic, err := downloader.spDB.GetBucketTraffic(req.GetBucketInfo().Id.Uint64(), req.GetYearMonth())
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &types.GetBucketReadQuotaResponse{
-			QuotaSize:       req.GetBucketInfo().GetReadQuota(),
-			SpFreeQuotaSize: model.DefaultSpFreeReadQuotaSize,
-			ConsumedSize:    0,
+			ChargedQuotaSize: req.GetBucketInfo().GetChargedReadQuota(),
+			SpFreeQuotaSize:  model.DefaultSpFreeReadQuotaSize,
+			ConsumedSize:     0,
 		}, nil
 	}
 	if err != nil {
@@ -163,9 +163,9 @@ func (downloader *Downloader) GetBucketReadQuota(ctx context.Context, req *types
 		return nil, err
 	}
 	return &types.GetBucketReadQuotaResponse{
-		QuotaSize:       req.GetBucketInfo().GetReadQuota(),
-		SpFreeQuotaSize: model.DefaultSpFreeReadQuotaSize,
-		ConsumedSize:    bucketTraffic.ReadConsumedSize,
+		ChargedQuotaSize: req.GetBucketInfo().GetChargedReadQuota(),
+		SpFreeQuotaSize:  model.DefaultSpFreeReadQuotaSize,
+		ConsumedSize:     bucketTraffic.ReadConsumedSize,
 	}, nil
 }
 

@@ -4,12 +4,12 @@ go 1.18
 
 replace (
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b432c
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.9
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.10
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.11
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230323095415-6b0a61c851ae
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.13
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230324094015-346c153e5832
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.2
+	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.3
 )
 
 require (
