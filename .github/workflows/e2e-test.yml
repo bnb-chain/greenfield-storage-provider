@@ -14,22 +14,15 @@ on:
       - release*
 
 jobs:
-  e2e-test:
+  build-test:
     strategy:
       matrix:
-        go-version: [ 1.18.x ]
+        go-version: [1.18.x]
         os: [ ubuntu-latest ]
-      runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     env:
-      DB_USER: root
-      DB_PASSWORD: root
-      DB_SP0: sp_0
-      DB_SP1: sp_1
-      DB_SP2: sp_2
-      DB_SP3: sp_3
-      DB_SP4: sp_4
-      DB_SP5: sp_5
-      DB_SP6: sp_6
+      GOPRIVATE: github.com/bnb-chain
+      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
     steps:
       - name: Install Go
         uses: actions/setup-go@v3
@@ -37,10 +30,17 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Setup GitHub Token
         run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
+
       - name: Checkout code
         uses: actions/checkout@v3
+
       - uses: actions/cache@v3
         with:
+          # In order:
+          # * Module download cache
+          # * Build cache (Linux)
+          # * Build cache (Mac)
+          # * Build cache (Windows)
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
@@ -49,24 +49,22 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
       - uses: bufbuild/buf-setup-action@v1.14.0
         with:
           version: 1.14.0
           buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
           buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
+
       - run: |
           go install github.com/bufbuild/buf/cmd/buf@v1.13.1
           go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
           buf generate
-      - name: Setup MySQL
+
+      - name: Test Build
         run: |
-          sudo /etc/init.d/mysql start
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP0 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP1 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP2 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP3 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP4 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP5 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP6 }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+          make install-tools
+          make build
