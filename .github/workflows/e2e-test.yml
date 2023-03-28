@@ -13,77 +13,48 @@ on:
       - develop
       - release*
 
+env:
+  MYSQL_USER: root
+  MYSQL_PASSWORD: root
+  MYSQL_ROOT_PASSWORD: root
+
 jobs:
-  build-test:
-    strategy:
-      matrix:
-        go-version: [1.18.x]
-        os: [ ubuntu-latest ]
-    runs-on: ${{ matrix.os }}
-    env:
-      GOPRIVATE: github.com/bnb-chain
-      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-      DB_USER: root
-      DB_PSW: root
-      DB_SP0: sp_0
-      DB_SP1: sp_1
-      DB_SP2: sp_2
-      DB_SP3: sp_3
-      DB_SP4: sp_4
-      DB_SP5: sp_5
-      DB_SP6: sp_6
+  create-databases:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Setup MySQL
+      - name: Set up MySQL service
+        uses: mysql/setup-mysql@v2
+        with:
+          mysql-version: '5.7'
+          mysql-root-password: ${{ env.MYSQL_ROOT_PASSWORD }}
+          mysql-user: ${{ env.MYSQL_USER }}
+          mysql-password: ${{ env.MYSQL_PASSWORD }}
+      - name: Create Databases
         run: |
-          sudo /etc/init.d/mysql start
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP0 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP1 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP2 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP3 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP4 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP5 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
-          mysql -e 'CREATE DATABASE ${{ env.DB_SP6 }};' -u${{ env.DB_USER }} -p${{ env.DB_PSW }}
+          mysql -h localhost -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -e "CREATE DATABASE sp_0; CREATE DATABASE sp2; CREATE DATABASE sp_3; CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;"
 
-      - name: Install Go
-        uses: actions/setup-go@v3
+  test-databases:
+    needs: create-databases
+    runs-on: ubuntu-latest
+
+    steps:
+      # Set up MySQL service
+      - name: Set up MySQL service
+        uses: mysql/setup-mysql@v2
         with:
-          go-version: ${{ matrix.go-version }}
+          mysql-version: '5.7'
+          mysql-root-password: ${{ env.MYSQL_ROOT_PASSWORD }}
+          mysql-user: ${{ env.MYSQL_USER }}
+          mysql-password: ${{ env.MYSQL_PASSWORD }}
 
-      - name: Setup GitHub Token
-        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
-
-      - name: Setup Greenfield
-        run: go install github.com/bnb-chain/greenfield@v0.0.10
-
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-            ~/Library/Caches/go-build
-            %LocalAppData%\go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - uses: bufbuild/buf-setup-action@v1.14.0
-        with:
-          version: 1.14.0
-          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
-          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-
-      - run: |
-          go install github.com/bufbuild/buf/cmd/buf@v1.13.1
-          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
-          buf generate
-
-      - name: Build SP
+      # Test databases
+      - name: Test databases
         run: |
-          make install-tools
-          make build
+          mysql -h localhost -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -D db0 -e "CREATE TABLE table1 (col1 INT);"
+          mysql -h localhost -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -D db1 -e "CREATE TABLE table1 (col1 INT);"
+          mysql -h localhost -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -D db2 -e "CREATE TABLE table2 (col1 INT);"
+          mysql -h localhost -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -D db3 -e "CREATE TABLE table3 (col1 INT);"
+          mysql -h localhost -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -D db4 -e "CREATE TABLE table1 (col1 INT);"
+          mysql -h localhost -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -D db5 -e "CREATE TABLE table2 (col1 INT);"
+          mysql -h localhost -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -D db6 -e "CREATE TABLE table3 (col1 INT);"
