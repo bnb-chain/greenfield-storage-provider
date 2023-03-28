@@ -103,6 +103,7 @@ jobs:
           /bin/cp -rf test/e2e/localup_env/greenfield_env greenfield/deployment/localup/.local
           cd greenfield
           bash ./deployment/localup/localup.sh all 1 7
+          echo $?
           cd ..
       # Run Greenfield-SP
       - name: Run Greenfield-SPs
@@ -110,8 +111,9 @@ jobs:
           /bin/cp -rf test/e2e/localup_env/greenfield_sp_env deployment/localup/local_env
           bash ./deployment/localup/localup.sh --reset 0
           bash ./deployment/localup/localup.sh --start
-      # Checkout and Config Greenfield Integration Test
-      - name: Run Greenfield Integration Test
+          echo $?
+      # Run E2E Test
+      - name: Run Greenfield E2E Test
         run: |
           git clone https://github.com/bnb-chain/greenfield-integration-test.git
           cd greenfield-integration-test
