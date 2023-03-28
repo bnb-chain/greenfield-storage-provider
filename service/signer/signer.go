@@ -14,8 +14,11 @@ import (
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 var _ lifecycle.Service = &SignerServer{}
@@ -96,12 +99,15 @@ func (signer *SignerServer) serve() {
 		log.Errorw("failed to listen", "address", signer.config.GRPCAddress, "error", err)
 		return
 	}
-	signer.server = grpc.NewServer(
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			signer.IPWhitelistInterceptor(),
-			signer.AuthInterceptor(),
-		)),
-	)
+	options := utilgrpc.GetDefaultServerOptions()
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mwgrpc.GetDefaultServerInterceptor()...)
+	}
+	options = append(options, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+		signer.IPWhitelistInterceptor(),
+		signer.AuthInterceptor(),
+	)))
+	signer.server = grpc.NewServer(options...)
 
 	types.RegisterSignerServiceServer(signer.server, signer)
 	// register reflection service

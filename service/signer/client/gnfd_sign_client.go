@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"sync"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield/sdk/client"
 	"github.com/bnb-chain/greenfield/sdk/keys"
 	ctypes "github.com/bnb-chain/greenfield/sdk/types"
@@ -45,40 +47,40 @@ type GreenfieldChainSignClient struct {
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
-func NewGreenfieldChainSignClient(
-	gRPCAddr string,
-	chainID string,
-	gasLimit uint64,
-	operatorPrivateKey string,
-	fundingPrivateKey string,
-	sealPrivateKey string,
-	approvalPrivateKey string) (*GreenfieldChainSignClient, error) {
+func NewGreenfieldChainSignClient(gRPCAddr, chainID string, gasLimit uint64, operatorPrivateKey, fundingPrivateKey,
+	sealPrivateKey, approvalPrivateKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
 	if err != nil {
 		return nil, err
 	}
+	options := []grpc.DialOption{}
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+	}
+	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
 	operatorClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(operatorKM),
-		client.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+		client.WithGrpcDialOption(options...))
 	fundingKM, err := keys.NewPrivateKeyManager(fundingPrivateKey)
 	if err != nil {
 		return nil, err
 	}
 	fundingClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(fundingKM),
-		client.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+		client.WithGrpcDialOption(options...))
 	sealKM, err := keys.NewPrivateKeyManager(sealPrivateKey)
 	if err != nil {
 		return nil, err
 	}
 	sealClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(sealKM),
-		client.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+		client.WithGrpcDialOption(options...))
 	approvalKM, err := keys.NewPrivateKeyManager(approvalPrivateKey)
 	if err != nil {
 		return nil, err
 	}
 	approvalClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(approvalKM),
-		client.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+		client.WithGrpcDialOption(options...))
 	greenfieldClients := map[SignType]*client.GreenfieldClient{
 		SignOperator: operatorClient,
 		SignFunding:  fundingClient,

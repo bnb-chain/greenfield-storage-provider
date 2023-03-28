@@ -3,13 +3,14 @@ package client
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 // ChallengeClient is a challenge gRPC service client wrapper
@@ -21,10 +22,11 @@ type ChallengeClient struct {
 
 // NewChallengeClient return a ChallengeClient instance
 func NewChallengeClient(address string) (*ChallengeClient, error) {
-	conn, err := grpc.DialContext(context.Background(), address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
+	options := utilgrpc.GetDefaultClientOptions()
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+	}
+	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
 		log.Errorw("failed to dial challenge", "error", err)
 		return nil, err

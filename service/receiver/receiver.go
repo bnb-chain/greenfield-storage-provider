@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -12,9 +11,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/service/receiver/types"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 var _ lifecycle.Service = &Receiver{}
@@ -83,11 +86,14 @@ func (receiver *Receiver) serve(errCh chan error) {
 		return
 	}
 
-	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize))
-	types.RegisterReceiverServiceServer(grpcServer, receiver)
-	receiver.grpcServer = grpcServer
-	reflection.Register(grpcServer)
-	if err := grpcServer.Serve(lis); err != nil {
+	options := utilgrpc.GetDefaultServerOptions()
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mwgrpc.GetDefaultServerInterceptor()...)
+	}
+	receiver.grpcServer = grpc.NewServer(options...)
+	types.RegisterReceiverServiceServer(receiver.grpcServer, receiver)
+	reflection.Register(receiver.grpcServer)
+	if err := receiver.grpcServer.Serve(lis); err != nil {
 		log.Errorw("failed to start grpc server", "err", err)
 		return
 	}
