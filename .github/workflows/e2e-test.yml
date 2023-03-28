@@ -19,6 +19,7 @@ env:
   MYSQL_ROOT_PASSWORD: root
   GOPRIVATE: github.com/bnb-chain
   GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+  GreenfileldTag: v0.0.10
 
 jobs:
   e2e-test:
@@ -86,11 +87,13 @@ jobs:
           make build
       # Checkout and Build Gnfd
       - name: Checkout Greenfield
-        uses: actions/checkout@v3
-        with:
-          repository: https://$GH_ACCESS_TOKEN@github.com/bnb-chain/greenfield
-          ref: v0.0.10
+        run: |
+          git clone https://github.com/bnb-chain/greenfield.git
+          cd greenfield
+          git checkout ${{ env.GreenfileldTag }}
+          cd ..
       - name: Build Greenfield
         run: |
           cd greenfield
           make proto-gen & make build
+          cd ..
