@@ -265,17 +265,25 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		} else if key.accessKey != "" && key.secretKey != "" {
 			sess.Config.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
 		}
-	default: // default is service account iam type
+		log.Debugw("use aksk to access s3", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
+	case mpiecestore.SAIAMType:
 		irsa, roleARN, tokenPath := checkIRSAAvailable()
 		if irsa {
 			awsConfig.WithCredentialsChainVerboseErrors(true).WithCredentials(credentials.NewChainCredentials(
 				[]credentials.Provider{
 					&credentials.EnvProvider{},
 					&credentials.SharedCredentialsProvider{},
-					stscreds.NewWebIdentityRoleProviderWithOptions(sts.New(sess), roleARN, "",
+					stscreds.NewWebIdentityRoleProviderWithOptions(
+						sts.New(sess), roleARN, "",
 						stscreds.FetchTokenPath(tokenPath)),
 				}))
+			log.Debugw("use sa to access s3", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
+		} else {
+			return nil, "", fmt.Errorf("failed to use sa to access s3")
 		}
+	default:
+		log.Errorf("unknown IAM type: %s", cfg.IAMType)
+		return nil, "", fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
 	}
 
 	sc.sessions[cfg] = sess

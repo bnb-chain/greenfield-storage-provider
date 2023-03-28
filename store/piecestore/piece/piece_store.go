@@ -52,9 +52,6 @@ func checkConfig(cfg *storage.PieceStoreConfig) {
 		cfg.Store.BucketURL = p
 		cfg.Store.BucketURL += "/"
 	}
-	if cfg.Store.IAMType != mpiecestore.AKSKIAMType && cfg.Store.IAMType != mpiecestore.SAIAMType {
-		log.Panicf("unknown IAM type: %s", cfg.Store.IAMType)
-	}
 }
 
 func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) {
