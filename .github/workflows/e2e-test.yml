@@ -50,14 +50,14 @@ jobs:
           mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_5; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
           # Test sp_6
           mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_6; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-      # Checkout and Build Gnfd-SP
+      # Checkout and Build Greenfield-SP
       - name: Install Go
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
       - name: Setup GitHub Token
         run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
-      - name: Checkout code
+      - name: Checkout Greenfield-SP
         uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
@@ -80,15 +80,15 @@ jobs:
           go install github.com/bufbuild/buf/cmd/buf@v1.13.1
           go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
           buf generate
-      - name: Gnfd-SP Build
+      - name: Build Greenfield-SP
         run: |
           make install-tools
           make build
       # Checkout and Build Gnfd
-      - name: Checkout Gnfd
+      - name: Checkout Greenfield
         uses: actions/checkout@v3
         with:
-          repository: bnb-chain/greenfield
+          repository: https://$GH_ACCESS_TOKEN@github.com/bnb-chain/greenfield
           ref: v0.0.10
       - name: Build Greenfield
         run: |
