@@ -1,0 +1,12 @@
+
+- address: 0x99f21889415e425a94Ba2Bc695A3C6a9b9538914
+  name: sp1
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A7eti9TwuieWazBFu+2YmeBWRgrarZIjCD7xg302Rcs3"}'
+  pubkey_hex: 03b7ad8bd4f0ba27966b3045bbed9899e056460adaad9223083ef1837d3645cb37
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+excite face wheel funny jewel pyramid wreck buzz rib negative fame cart exchange trade expose tired tunnel worry turn bless pear rhythm seek fortune

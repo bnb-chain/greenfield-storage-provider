@@ -1,0 +1,12 @@
+
+- address: 0x2F0843F669A81e5f0544dC239F62D9ffe6bb8723
+  name: sp1_seal
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Apju4A6EnmRFyqFwEUAX0dOdGhn3zAUpyrtRAzd2mDik"}'
+  pubkey_hex: 0298eee00e849e6445caa170114017d1d39d1a19f7cc0529cabb510337769838a4
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+crystal subway pigeon card palm avoid toe venture between toss food level dinosaur supply assist sense cherry burger jar need equal muscle renew glance

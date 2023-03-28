@@ -1,0 +1,12 @@
+
+- address: 0x3849d0D7fc766c69B6721e40d84F156b04dEdfFd
+  name: sp2_fund
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AypQ3ZVU1Ggm2IuIHm7QVQFSrW2M9uCXEW+t4zRi/wmF"}'
+  pubkey_hex: 032a50dd9554d46826d88b881e6ed0550152ad6d8cf6e097116fade33462ff0985
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+primary symbol nominee pull unlock south useless charge fork place hope color place dawn feature ceiling sugar celery method cloth senior swim million scan

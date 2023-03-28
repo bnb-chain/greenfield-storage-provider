@@ -1,0 +1,12 @@
+
+- address: 0x3898e612d36CDd18181db7cAb8fF658c16304C29
+  name: sp3_seal
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A2adYbJ0Dcw9l2BLsPuCm/7li8ynDj7PVghonj86Lbpq"}'
+  pubkey_hex: 03669d61b2740dcc3d97604bb0fb829bfee58bcca70e3ecf5608689e3f3a2dba6a
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+level robust solution kiwi outdoor review various noble naive drink reflect either test bread broken bounce enter drive artist enforce obvious gather exit neither

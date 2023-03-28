@@ -1,0 +1,12 @@
+
+- address: 0x836e11731eDE9b849cDe583f7d231d2a557C56Ba
+  name: sp0_fund
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AwM4S4cH6Fd4y0imi6NttlS+kQIzLl1kzFX2tfkDhEs3"}'
+  pubkey_hex: 0303384b8707e85778cb48a68ba36db654be9102332e5d64cc55f6b5f903844b37
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+wave update badge tomato refuse hero ring crawl robot volcano flash census sponsor power young program nasty rain crumble youth normal live jump grow

@@ -1,0 +1,12 @@
+
+- address: 0xb62d255959C4BA34D46d47ED939B6aa6eE861a61
+  name: sp5
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A3TPMGHgjHCax/sbRs6ICCmfUH/MLjnm6kOSQFIxHbDY"}'
+  pubkey_hex: 0374cf3061e08c709ac7fb1b46ce8808299f507fcc2e39e6ea43924052311db0d8
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+afford ankle horse marble like scare file faculty school axis multiply one pause security express potato edit spice sign deny faculty capable abandon grid

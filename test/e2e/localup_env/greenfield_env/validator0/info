@@ -1,0 +1,12 @@
+
+- address: 0x766Ec8db8cD1c6395a1683A031cCb4d92e539292
+  name: validator0
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A9cFatX6ilc5hsjCSr03k1pLvmbCviV2TMraRLd4OtXn"}'
+  pubkey_hex: 03d7056ad5fa8a573986c8c24abd37935a4bbe66c2be25764ccada44b7783ad5e7
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+demand enemy album test genius similar ivory liar coffee venue when armed emotion reward idea organ cushion bread salon decline calm label alcohol hospital

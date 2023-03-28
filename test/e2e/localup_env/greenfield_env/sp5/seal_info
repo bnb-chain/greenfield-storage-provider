@@ -1,0 +1,12 @@
+
+- address: 0x5f10F9585f9B686008811744409439a68BACEc25
+  name: sp5_seal
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Ao3rPos0V4gOYyy+ZxWYh6Hy5CRCF1lRGt3T8yQBo2iY"}'
+  pubkey_hex: 028deb3e8b3457880e632cbe67159887a1f2e424421759511addd3f32401a36898
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+gravity deal permit obey abuse build cloth wait mercy usual biology robot curtain magic farm edge inflict spot abandon spike burst assume draft cousin

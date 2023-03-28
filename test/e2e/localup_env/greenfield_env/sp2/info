@@ -1,0 +1,12 @@
+
+- address: 0xDF4a9b41eCC7cD3B1EfAb07Ce394677F641d503a
+  name: sp2
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AnQqlF1Q2nbGHEacnzNd4PpAxC3a8HiqXzqjcQjTziVX"}'
+  pubkey_hex: 02742a945d50da76c61c469c9f335de0fa40c42ddaf078aa5f3aa37108d3ce2557
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+cash photo about marine visit box bright diet outdoor sphere destroy sick number mule country they clever profit where grid mean divide clay angle

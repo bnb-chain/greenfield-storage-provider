@@ -1,0 +1,12 @@
+
+- address: 0x06c12e2E1E22547Ede81a798Aa33990d3401854c
+  name: sp0_seal
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A6G3aFNmlxXO5Cvz6mM07rYoqrTPUMnzUdR07DQC7i/4"}'
+  pubkey_hex: 03a1b76853669715cee42bf3ea6334eeb628aab4cf50c9f351d474ec3402ee2ff8
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+dial oppose afford dune behave payment advice essay call hover nothing order exhaust blur rug able rely follow exist bomb service critic hole garage

@@ -1,0 +1,12 @@
+
+- address: 0x93d0fbcdD2713Ba6a571F5F17F6dea4E83C5896d
+  name: sp3_approval
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A80TwRN1WxM3OLDu3CqXgapGVlX8rI8WK7EU2wEWgOZO"}'
+  pubkey_hex: 03cd13c113755b133738b0eedc2a9781aa465655fcac8f162bb114db011680e64e
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+wine balance kitchen verb print fortune kingdom velvet reunion smile flash draw pause vanish pigeon public advice minute tornado adapt toss annual rifle champion

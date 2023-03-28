@@ -1,0 +1,12 @@
+
+- address: 0x5eAaA679C8F67fF7c3E2bE14EbC4eE6776AA6c1f
+  name: sp6_fund
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A2SDbws8eHn+Xr0YTc+VUiX3avfpzO6l7KOoZWoZ7IOc"}'
+  pubkey_hex: 0364836f0b3c7879fe5ebd184dcf955225f76af7e9cceea5eca3a8656a19ec839c
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+matrix original slush pause chef lake lake faith middle humor foam dynamic below focus fashion toilet crystal slam jaguar original just loan defy mom

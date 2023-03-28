@@ -14,12 +14,12 @@ on:
       - release*
 
 env:
+  GreenfileldTag: v0.0.10
+  GOPRIVATE: github.com/bnb-chain
+  GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   MYSQL_USER: root
   MYSQL_PASSWORD: root
   MYSQL_ROOT_PASSWORD: root
-  GOPRIVATE: github.com/bnb-chain
-  GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-  GreenfileldTag: v0.0.10
 
 jobs:
   e2e-test:
@@ -31,12 +31,10 @@ jobs:
 
     steps:
       # Run and Test MySQL
-      - name: Run MySQL
+      - name: Run and Test MySQL
         run: |
           sudo /etc/init.d/mysql start
           mysql -h 127.0.0.1 -P 3306 -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
-      - name: Test MySQL
-        run: |
           # Test sp_0
           mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_0; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
           # Test sp_1
@@ -85,7 +83,7 @@ jobs:
         run: |
           make install-tools
           make build
-      # Checkout and Build Gnfd
+      # Checkout and Build Greenfield
       - name: Checkout Greenfield
         run: |
           git clone https://github.com/bnb-chain/greenfield.git
@@ -96,4 +94,12 @@ jobs:
         run: |
           cd greenfield
           make proto-gen & make build
+          cd ..
+      # Run Greenfield
+      - name: Run Greenfield Env
+        run: |
+          /bin/cp -rf test/e2e/localup_env/localup_greenfield.sh greenfield/deployment/localup/localup.sh
+          /bin/cp -rf test/e2e/localup_env/greenfield_env greenfield/deployment/localup/.local
+          cd greenfield
+          bash ./deployment/localup/localup.sh all 1 7
           cd ..

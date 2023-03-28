@@ -1,0 +1,12 @@
+
+- address: 0x09D8C3B4C05a62F1E320d548f0384958f84A774d
+  name: sp4_fund
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AqWllO3sCh4qhcf3ZbiideFBY6PFJ3kbEe0KA5XpLq4k"}'
+  pubkey_hex: 02a5a594edec0a1e2a85c7f765b8a275e14163a3c527791b11ed0a0395e92eae24
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+actor virus course decorate assume flavor bachelor just honey double puzzle grid hero fortune give shop physical song reward daring tape culture grunt source

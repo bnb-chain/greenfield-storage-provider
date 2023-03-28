@@ -1,0 +1,12 @@
+
+- address: 0xB660003B32F59Fb65356063eEBA14Aaa54c873B4
+  name: sp5_approval
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AixKCEG7wCIASdxWcXP6hV7dTZr2kgDdKyLvDpgukAaq"}'
+  pubkey_hex: 022c4a0841bbc0220049dc567173fa855edd4d9af69200dd2b22ef0e982e9006aa
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+hurt nuclear pride wink pioneer apology pupil alone armor interest polar token section badge come income rather grass twenty alert trumpet renew fever wealth

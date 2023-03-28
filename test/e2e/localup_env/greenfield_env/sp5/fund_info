@@ -1,0 +1,12 @@
+
+- address: 0x912FA6A19C14a36BBcC799eCF7fF37F9b36054a1
+  name: sp5_fund
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Apxk1Kz9KWSJHAaDBb/9ySToEg3Y+4csUX2PbOvEJGdy"}'
+  pubkey_hex: 029c64d4acfd2964891c068305bffdc924e8120dd8fb872c517d8f6cebc4246772
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+help effort economy elephant monster dune morning walk quote deal goat phone cage hamster noble network rebel cute hour two answer access foil warrior

@@ -1,0 +1,12 @@
+
+- address: 0xA9651eA6A619CE370c741c70870844Bb00B4e1dB
+  name: sp0_approval
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Ax0JvE+N2c6uPtUtlrFd5WGiQ+58h9jMzLEFxaDrxVsK"}'
+  pubkey_hex: 031d09bc4f8dd9ceae3ed52d96b15de561a243ee7c87d8ccccb105c5a0ebc55b0a
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+essay concert crush blast bullet move brief crack rib return erode emotion quiz unaware purity approve drink later laundry deny issue response grief moon

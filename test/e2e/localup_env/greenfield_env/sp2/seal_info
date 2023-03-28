@@ -1,0 +1,12 @@
+
+- address: 0x9AD4C77E6420FED068077D264b18F646dE80deaC
+  name: sp2_seal
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AwHNWJxPfpyfW9yeW6nriTATO41dUTBd0JkZbEXYptpz"}'
+  pubkey_hex: 0301cd589c4f7e9c9f5bdc9e5ba9eb8930133b8d5d51305dd099196c45d8a6da73
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+pitch glass amused crash lecture response skull forward dash citizen dentist lounge shell entire comic pottery minimum service coin sauce palm version offer hover

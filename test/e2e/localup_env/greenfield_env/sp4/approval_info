@@ -1,0 +1,12 @@
+
+- address: 0x0e255A33fDbA5Fca864DD2Cc7B61D025ee0EDd8d
+  name: sp4_approval
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AvtJk5ds+M6DTWcBDLeJfF6RvIrcTsx+8oo3/Qt2Y0Si"}'
+  pubkey_hex: 02fb4993976cf8ce834d67010cb7897c5e91bc8adc4ecc7ef28a37fd0b766344a2
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+analyst ozone help multiply staff outside type virus evil maple bacon muffin pumpkin ranch meat soccer intact mix case exotic frozen rather diary gloom

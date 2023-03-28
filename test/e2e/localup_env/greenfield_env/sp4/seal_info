@@ -1,0 +1,12 @@
+
+- address: 0x5e2EE9C6C059CD26ceAf1338Fdd0d5AeD42bf23F
+  name: sp4_seal
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"As1xT865Hq0L3s/Hsy0Ctu1mdmX6ylaG1q0/jAOG4iMr"}'
+  pubkey_hex: 02cd714fceb91ead0bdecfc7b32d02b6ed667665faca5686d6ad3f8c0386e2232b
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+stand hint minute spot trim lake shove amazing napkin coast juice wasp grab drink myself spin master useful flush fog exercise defy mango panel
