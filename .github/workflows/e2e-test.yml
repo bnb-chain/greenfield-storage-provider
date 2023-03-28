@@ -15,7 +15,7 @@ on:
 
 env:
   GreenfileldTag: v0.0.10
-  GreenfileldIntegrationTestBranch: storage
+  GreenfileldIntegrationTestBranch: gnfd-sp
   GOPRIVATE: github.com/bnb-chain
   GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   MYSQL_USER: root
@@ -120,7 +120,7 @@ jobs:
           cd greenfield-integration-test
           git checkout ${{ env.GreenfileldIntegrationTestBranch }}
           cd ..
-          /bin/cp -rf test/e2e/localup_env/greenfield_integration_test_env/config.yml config/config.yml
+          /bin/cp -rf test/e2e/localup_env/greenfield_integration_test_env/config.yml greenfield-integration-test/config/config.yml
           cd greenfield-integration-test
           go test tests/create_object_test.go
           cd ..
