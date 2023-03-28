@@ -36,27 +36,27 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run MySQL server
-        run: mysql -h 127.0.0.1 -P 3306 -u root -p"${{ secrets.MYSQL_ROOT_PASSWORD }}" -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
+        run: mysql -h 127.0.0.1 -P 3306 -u${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
 
       - name: Run tests
         run: |
           # Use sp_0
-          mysql -h 127.0.0.1 -P 3306 -u ${{ secrets.MYSQL_USER }} -p"${{ secrets.MYSQL_PASSWORD }}" -e 'USE sp_0; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -e 'USE sp_0; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
 
           # Use sp_1
-          mysql -h 127.0.0.1 -P 3306 -u ${{ secrets.MYSQL_USER }} -p"${{ secrets.MYSQL_PASSWORD }}" -e 'USE sp_1; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -e 'USE sp_1; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
           
           # Use sp_2
-          mysql -h 127.0.0.1 -P 3306 -u ${{ secrets.MYSQL_USER }} -p"${{ secrets.MYSQL_PASSWORD }}" -e 'USE sp_2; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -e 'USE sp_2; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
           
           # Use sp_3
-          mysql -h 127.0.0.1 -P 3306 -u ${{ secrets.MYSQL_USER }} -p"${{ secrets.MYSQL_PASSWORD }}" -e 'USE sp_3; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -e 'USE sp_3; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
           
           # Use sp_4
-          mysql -h 127.0.0.1 -P 3306 -u ${{ secrets.MYSQL_USER }} -p"${{ secrets.MYSQL_PASSWORD }}" -e 'USE sp_4; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -e 'USE sp_4; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
           
           # Use sp_5
-          mysql -h 127.0.0.1 -P 3306 -u ${{ secrets.MYSQL_USER }} -p"${{ secrets.MYSQL_PASSWORD }}" -e 'USE sp_5; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -e 'USE sp_5; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
           
           # Use sp_6
-          mysql -h 127.0.0.1 -P 3306 -u ${{ secrets.MYSQL_USER }} -p"${{ secrets.MYSQL_PASSWORD }}" -e 'USE sp_6; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p"${{ env.MYSQL_PASSWORD }}" -e 'USE sp_6; CREATE TABLE users (id INT, name VARCHAR(255)); INSERT INTO users (id, name) VALUES (1, "Bob");'
