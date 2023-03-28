@@ -17,50 +17,40 @@ env:
   MYSQL_USER: root
   MYSQL_PASSWORD: root
   MYSQL_ROOT_PASSWORD: root
+  GOPRIVATE: github.com/bnb-chain
+  GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 
 jobs:
-  create-and-test-mysql:
+  e2e-test:
+    strategy:
+      matrix:
+        go-version: [ 1.18.x ]
+        os: [ ubuntu-latest ]
     runs-on: ubuntu-latest
 
     steps:
-      - name: Run MySQL server
+      # Run and Test MySQL
+      - name: Run MySQL
         run: |
           sudo /etc/init.d/mysql start
           mysql -h 127.0.0.1 -P 3306 -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
-
-      - name: Run tests
+      - name: Test MySQL
         run: |
-          # Use sp_0
+          # Test sp_0
           mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_0; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-
-          # Use sp_1
+          # Test sp_1
           mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_1; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          
-          # Use sp_2
+          # Test sp_2
           mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_2; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          
-          # Use sp_3
+          # Test sp_3
           mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_3; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          
-          # Use sp_4
+          # Test sp_4
           mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_4; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          
-          # Use sp_5
+          # Test sp_5
           mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_5; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          
-          # Use sp_6
+          # Test sp_6
           mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_6; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-
-  build-gnfd-sp:
-    strategy:
-      matrix:
-        go-version: [1.18.x]
-        os: [ ubuntu-latest ]
-    runs-on: ${{ matrix.os }}
-    env:
-      GOPRIVATE: github.com/bnb-chain
-      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-    steps:
+      # Checkout and Build Gnfd-SP
       - name: Install Go
         uses: actions/setup-go@v3
         with:
@@ -90,29 +80,16 @@ jobs:
           go install github.com/bufbuild/buf/cmd/buf@v1.13.1
           go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
           buf generate
-      - name: Build
+      - name: Gnfd-SP Build
         run: |
           make install-tools
           make build
-
-  build-and-run-greenfield:
-    strategy:
-      matrix:
-        go-version: [ 1.18.x ]
-        os: [ ubuntu-latest ]
-    runs-on: ${{ matrix.os }}
-    env:
-      GOPRIVATE: github.com/bnb-chain
-      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-    needs: [create-and-test-mysql, build-gnfd-sp]
-
-    steps:
-      - name: Checkout Greenfield
+      # Checkout and Build Gnfd
+      - name: Checkout Gnfd
         uses: actions/checkout@v3
         with:
           repository: bnb-chain/greenfield
-          ref: main
-
+          ref: v0.0.10
       - name: Build Greenfield
         run: |
           cd greenfield
