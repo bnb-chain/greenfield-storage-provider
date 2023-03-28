@@ -1,0 +1,13 @@
+
+- address: 0x72D290836F35bd3018a7a6f5F0CA9Fc0bcD424Ed
+  name: relayer0
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AkX6pjGVN6H59ZAd45ALM8YbtzUUqIHK99vv8M49G01Q"}'
+  pubkey_hex: 0245faa6319537a1f9f5901de3900b33c61bb73514a881caf7dbeff0ce3d1b4d50
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+busy gentle cute vital library error quick second plug abuse conduct slab find soup shoot close amused seek gym because electric tomorrow crater cost
+

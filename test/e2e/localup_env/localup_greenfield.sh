@@ -268,8 +268,8 @@ stop)
     echo "===== end ===="
     ;;
 all)
-    echo "===== stop ===="
-    stop
+#    echo "===== stop ===="
+#    stop
     echo "===== init ===="
     init $SIZE $SP_SIZE
     echo "===== generate genesis ===="

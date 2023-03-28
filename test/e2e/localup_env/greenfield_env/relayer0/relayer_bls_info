@@ -1,0 +1,13 @@
+
+- address: 0x8fd1F7c94B9A94062B1BABA131Ec9F9cC0eF9Bcb
+  name: relayer_bls0
+  pubkey: '{"@type":"/cosmos.crypto.eth.bls.PubKey","key":"hLgU3yAR7y2RJxMhi49Qr2v2ZUSRj0HZVDmrEY/R98lLmpQGKxuroTHsn5zA75vL"}'
+  pubkey_hex: 84b814df2011ef2d912713218b8f50af6bf66544918f41d95439ab118fd1f7c94b9a94062b1baba131ec9f9cc0ef9bcb
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+only gentle bring legend onion general gold ready volcano funny east choice ceiling soup possible patrol insane vicious follow hope danger feature odor luggage
+

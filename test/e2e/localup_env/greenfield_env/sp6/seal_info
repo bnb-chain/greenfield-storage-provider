@@ -1,12 +1,13 @@
 
-- address: 0x2F0843F669A81e5f0544dC239F62D9ffe6bb8723
-  name: sp1_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Apju4A6EnmRFyqFwEUAX0dOdGhn3zAUpyrtRAzd2mDik"}'
-  pubkey_hex: 0298eee00e849e6445caa170114017d1d39d1a19f7cc0529cabb510337769838a4
+- address: 0x1fbE6A2fEa1785f7691189E0Fa7952A3becef6C3
+  name: sp6_seal
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Aj6jOvG92PLBG4nERIX9ZUw0nIAPvDd1hLzntevQMKtJ"}'
+  pubkey_hex: 023ea33af1bdd8f2c11b89c44485fd654c349c800fbc377584bce7b5ebd030ab49
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-crystal subway pigeon card palm avoid toe venture between toss food level dinosaur supply assist sense cherry burger jar need equal muscle renew glance
+film minor quick very another bring zone shield setup harvest butter network clap misery network muscle foot hollow very sport junk paddle dwarf identify
+
