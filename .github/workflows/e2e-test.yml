@@ -100,10 +100,10 @@ jobs:
       matrix:
         go-version: [ 1.18.x ]
         os: [ ubuntu-latest ]
-      runs-on: ${{ matrix.os }}
-      env:
-        GOPRIVATE: github.com/bnb-chain
-        GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+    runs-on: ${{ matrix.os }}
+    env:
+      GOPRIVATE: github.com/bnb-chain
+      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
     needs: create-and-test-mysql, build-gnfd-sp
 
     steps:
