@@ -25,7 +25,7 @@ uploader = "localhost:14133"
 
 [SpDBConfig]
 User = "root"
-Passwd = "bfs-test"
+Passwd = "root"
 Address = "localhost:3306"
 Database = "sp_4"
 
