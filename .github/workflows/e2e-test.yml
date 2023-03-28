@@ -104,6 +104,7 @@ jobs:
           bash ./deployment/localup/localup.sh all 1 7
           cd ..
       - name: Run Greenfield-SPs
+        run: |
           /bin/cp -rf test/e2e/localup_env/greenfield_sp_env deployment/localup/local_env
           bash ./deployment/localup/localup.sh --reset 0
           bash ./deployment/localup/localup.sh --start
