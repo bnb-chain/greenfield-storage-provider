@@ -1,0 +1,13 @@
+GreenfieldEndpoint: "localhost:26750"
+GreenfieldGRPC: "localhost:9090"
+GreenfieldChainId: "greenfield_9000-1741"
+GreenfieldRoot: "demand enemy album test genius similar ivory liar coffee venue when armed emotion reward idea organ cushion bread salon decline calm label alcohol hospital"
+GreenfieldValSecret:
+  - "demand enemy album test genius similar ivory liar coffee venue when armed emotion reward idea organ cushion bread salon decline calm label alcohol hospital"
+GreenfieldNodeIP:
+  - ""
+GreenfieldAccSecret:
+  - "car kid season rescue minimum mosquito space involve raven fish allow manage certain update winter state glove pretty toy sister nurse hurdle clip human"
+SPEndpoint:
+  - "127.0.0.1:9033"
+SPs:
