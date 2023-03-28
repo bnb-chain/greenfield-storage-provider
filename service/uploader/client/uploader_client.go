@@ -3,15 +3,14 @@ package client
 import (
 	"context"
 
-	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 // UploaderClient is an uploader gRPC service client wrapper
@@ -22,13 +21,9 @@ type UploaderClient struct {
 
 // NewUploaderClient return an UploaderClient instance
 func NewUploaderClient(address string) (*UploaderClient, error) {
-	var options []grpc.DialOption
-	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)))
-	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
+	options := utilgrpc.GetDefaultClientOptions()
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, grpc.WithChainUnaryInterceptor(openmetrics.UnaryClientInterceptor(metrics.DefaultGRPCClientMetrics)))
-		options = append(options, grpc.WithChainStreamInterceptor(openmetrics.StreamClientInterceptor(metrics.DefaultGRPCClientMetrics)))
+		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
 	}
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {

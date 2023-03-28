@@ -7,8 +7,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/p2p/types"
 )
@@ -22,10 +23,12 @@ type P2PClient struct {
 
 // NewP2PClient return a P2PClient instance
 func NewP2PClient(address string) (*P2PClient, error) {
-	conn, err := grpc.DialContext(context.Background(), address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
+	options := []grpc.DialOption{}
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+	}
+	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
 		log.Errorw("failed to dial p2p server", "error", err)
 		return nil, err

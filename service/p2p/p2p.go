@@ -14,6 +14,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/service/p2p/types"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
@@ -92,11 +94,14 @@ func (p *P2PServer) serve(errCh chan error) {
 		return
 	}
 
-	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize))
-	p2ptypes.RegisterP2PServiceServer(grpcServer, p)
-	p.grpcServer = grpcServer
-	reflection.Register(grpcServer)
-	if err := grpcServer.Serve(lis); err != nil {
+	options := []grpc.ServerOption{}
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mwgrpc.GetDefaultServerInterceptor()...)
+	}
+	p.grpcServer = grpc.NewServer(options...)
+	p2ptypes.RegisterP2PServiceServer(p.grpcServer, p)
+	reflection.Register(p.grpcServer)
+	if err := p.grpcServer.Serve(lis); err != nil {
 		log.Errorw("failed to start grpc server", "err", err)
 		return
 	}
