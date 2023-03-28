@@ -111,11 +111,13 @@ jobs:
           bash ./deployment/localup/localup.sh --reset 0
           bash ./deployment/localup/localup.sh --start
       # Checkout and Config Greenfield Integration Test
-      - name: Checkout Integration Test
+      - name: Run Greenfield Integration Test
         run: |
           git clone https://github.com/bnb-chain/greenfield-integration-test.git
           cd greenfield-integration-test
           git checkout ${{ env.GreenfileldIntegrationTestBranch }}
+          cd ..
           /bin/cp -rf test/e2e/localup_env/greenfield_integration_test_env/config.yml config/config.yml
+          cd greenfield-integration-test
           go test tests/create_object_test.go
           cd ..
