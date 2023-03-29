@@ -1,0 +1,13 @@
+
+- address: 0x73B3725eB1B19D0878c79096D943986bF5F69461
+  name: sp6_seal
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AyUJjZWAxCbFvbFdC4juKHYWnxgfI1MFhGX7HsMuOjzJ"}'
+  pubkey_hex: 0325098d9580c426c5bdb15d0b88ee2876169f181f2353058465fb1ec32e3a3cc9
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+cost town bone wash work crop region mechanic antenna host crew come slab canoe industry liquid absorb raccoon render tenant talk casual obvious estate
+

@@ -1,0 +1,13 @@
+
+- address: 0xc91D1896c2d0056B7c233D31F1A673ad5846DC08
+  name: sp4_fund
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AomytbyPfJ7vH4XroR1k+9U2n+kR1aAxokNMphRSj4M6"}'
+  pubkey_hex: 0289b2b5bc8f7c9eef1f85eba11d64fbd5369fe911d5a031a2434ca614528f833a
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+regular legend leisure pretty zebra ability rich extend express else scrap name canvas world burger beyond solution arrange normal axis private material calm fog
+

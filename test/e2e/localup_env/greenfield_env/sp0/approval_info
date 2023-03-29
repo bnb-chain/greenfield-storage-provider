@@ -1,0 +1,13 @@
+
+- address: 0xDd222B611e5d0A31e1Ed34f8d4e681942d8606B8
+  name: sp0_approval
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AzK4qwXM6i/XV3TUxWAMamN3d9P6OyU2PM74Ue2Qfd+b"}'
+  pubkey_hex: 0332b8ab05ccea2fd75774d4c5600c6a637777d3fa3b25363ccef851ed907ddf9b
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+level album unit argue reduce palace evidence blue wagon puzzle response holiday boss citizen pill case stereo immune cigar trap vanish tree famous width
+

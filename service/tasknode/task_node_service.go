@@ -25,7 +25,10 @@ import (
 )
 
 const (
-	ReplicateFactor    = 2
+	// ReplicateFactor defines the redundancy of replication
+	// TODO:: will update to （1, 2] on main net
+	ReplicateFactor = 1
+	// GetApprovalTimeout defines the timeout of getting secondary sp approval
 	GetApprovalTimeout = 10
 )
 

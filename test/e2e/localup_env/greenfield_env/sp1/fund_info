@@ -1,0 +1,13 @@
+
+- address: 0xbbDFe0Da142940d3e29c7B52Eb95aEb3fdF80666
+  name: sp1_fund
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AsA6XibajHEpw6SrwUf6rjSrNThZD1Xorb5F6xWDY48w"}'
+  pubkey_hex: 02c03a5e26da8c7129c3a4abc147faae34ab3538590f55e8adbe45eb1583638f30
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+oval fluid camp desk venture captain idea biology vault list phone ugly remind lottery behave whip all dad reopen zone force magic milk carbon
+

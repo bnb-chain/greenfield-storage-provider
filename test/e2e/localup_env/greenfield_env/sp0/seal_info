@@ -1,0 +1,13 @@
+
+- address: 0x350FF7A2bad0bBf7237b460656B9631704674040
+  name: sp0_seal
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AouKrnl3Llw8UxEpPbKgniCzZE+rDUKdNmVl4No0a3DW"}'
+  pubkey_hex: 028b8aae79772e5c3c5311293db2a09e20b3644fab0d429d366565e0da346b70d6
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+holiday attract cause achieve heavy noble inflict absurd report predict yard scatter wonder airport tuna visa erode collect render jar unique urban proof number
+
