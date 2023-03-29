@@ -1,5 +1,5 @@
 Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager", "p2p"]
-SpOperatorAddress = "0xDF4a9b41eCC7cD3B1EfAb07Ce394677F641d503a"
+SpOperatorAddress = "0x4C1674C0504bad30e023D7B3991824bCC47E193d"
 
 [Endpoint]
 challenge = "localhost:12333"
