@@ -52,10 +52,10 @@ GRPCAddress = "localhost:13633"
 APIKey = ""
 WhitelistCIDR = ["0.0.0.0/0"]
 GasLimit = 210000
-OperatorPrivateKey = "c018db9c206b65246f7e0b7f32206a22eed746c47764cf88858e7079883db4cd"
-FundingPrivateKey = "9493a1030c858e26dbbd43ff5548bb126fea2211406bd2e8e054bd3652626314"
-SealPrivateKey = "5119592f04f064aed572dfb9be4824a2eb7d69e1a1fe04ee57f23f0549497287"
-ApprovalPrivateKey = "31eb4dd94e37c9e79c2331094a2ca58ef350af0a540f2b577b01f7c6da22a5d8"
+OperatorPrivateKey = "96c8a7d57937d2e1131c883a62d3ea660c92eba233378c470fd14765dd9f32db"
+FundingPrivateKey = "ad42e0d4f6bfc83319ce75b2e94fe12f6e5263ba4f7cbf141b9827aca802238a"
+SealPrivateKey = "18f169ad84b6f149e9dd8f9f14e574272cb296bcaf17d60a9e42097c1d768420"
+ApprovalPrivateKey = "0165c481ac4e901bc768f1a94ccf8f9192a887c90f8dde8b249ea5f8925052b7"
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]
