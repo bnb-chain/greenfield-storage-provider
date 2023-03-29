@@ -59,27 +59,27 @@ jobs:
         run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
       - name: Checkout Greenfield-SP
         uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-            ~/Library/Caches/go-build
-            %LocalAppData%\go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - uses: bufbuild/buf-setup-action@v1.14.0
-        with:
-          version: 1.14.0
-          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
-          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-      - run: |
-          go install github.com/bufbuild/buf/cmd/buf@v1.13.1
-          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
-          buf generate
+#      - uses: actions/cache@v3
+#        with:
+#          path: |
+#            ~/go/pkg/mod
+#            ~/.cache/go-build
+#            ~/Library/Caches/go-build
+#            %LocalAppData%\go-build
+#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+#          restore-keys: |
+#            ${{ runner.os }}-go-
+#      - uses: bufbuild/buf-setup-action@v1.14.0
+#        with:
+#          version: 1.14.0
+#          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
+#          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
+#      - name: Install Protoc
+#        uses: arduino/setup-protoc@v1
+#      - run: |
+#          go install github.com/bufbuild/buf/cmd/buf@v1.13.1
+#          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+#          buf generate
       - name: Build Greenfield-SP
         run: |
           make install-tools
@@ -107,7 +107,6 @@ jobs:
           bash ./deployment/localup/localup.sh --reset 0
           bash ./deployment/localup/localup.sh --start
           ps -ef | grep gnfd-sp | wc -l
-          echo $?
       # Run E2E Test
       - name: Run Greenfield E2E Test
         run: |
