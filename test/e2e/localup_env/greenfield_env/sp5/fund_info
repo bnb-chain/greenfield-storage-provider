@@ -1,13 +1,13 @@
 
-- address: 0x912FA6A19C14a36BBcC799eCF7fF37F9b36054a1
+- address: 0xb97b0ec1537B2F58d5619B11F7f276c7cB7c7C57
   name: sp5_fund
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Apxk1Kz9KWSJHAaDBb/9ySToEg3Y+4csUX2PbOvEJGdy"}'
-  pubkey_hex: 029c64d4acfd2964891c068305bffdc924e8120dd8fb872c517d8f6cebc4246772
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Ak2psI8nwiVTWXpKRab8rW2fvh9cHyEZkeeHvdz7Si7Y"}'
+  pubkey_hex: 024da9b08f27c22553597a4a45a6fcad6d9fbe1f5c1f211991e787bddcfb4a2ed8
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-help effort economy elephant monster dune morning walk quote deal goat phone cage hamster noble network rebel cute hour two answer access foil warrior
+extend solar solar tissue chest bicycle laugh release series uniform common pen grid shallow good joke blouse involve shrug cushion october broom tag demand
 

@@ -1,13 +1,13 @@
 
-- address: 0x5e2EE9C6C059CD26ceAf1338Fdd0d5AeD42bf23F
+- address: 0xf7e5f5c6562DFbF6C0BF176125F14CBB4c618180
   name: sp4_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"As1xT865Hq0L3s/Hsy0Ctu1mdmX6ylaG1q0/jAOG4iMr"}'
-  pubkey_hex: 02cd714fceb91ead0bdecfc7b32d02b6ed667665faca5686d6ad3f8c0386e2232b
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A/OLGQ6LJskWKE3N6C8clDbDz3AkrKGCndMhxgeYT9hj"}'
+  pubkey_hex: 03f38b190e8b26c916284dcde82f1c9436c3cf7024aca1829dd321c607984fd863
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-stand hint minute spot trim lake shove amazing napkin coast juice wasp grab drink myself spin master useful flush fog exercise defy mango panel
+version resemble humble isolate cook help glare usual index way hybrid install expand drink electric frozen grain army inspire lobster kit shy moment two
 

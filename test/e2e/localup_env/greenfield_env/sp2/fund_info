@@ -1,13 +1,13 @@
 
-- address: 0x3849d0D7fc766c69B6721e40d84F156b04dEdfFd
+- address: 0x9579ac21386353E45A0c43965991297aF4915a21
   name: sp2_fund
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AypQ3ZVU1Ggm2IuIHm7QVQFSrW2M9uCXEW+t4zRi/wmF"}'
-  pubkey_hex: 032a50dd9554d46826d88b881e6ed0550152ad6d8cf6e097116fade33462ff0985
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AmhcI83aktfnAHYDHS1vLafC/g6IDmf1tz5kM8i4lE+Z"}'
+  pubkey_hex: 02685c23cdda92d7e70076031d2d6f2da7c2fe0e880e67f5b73e6433c8b8944f99
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-primary symbol nominee pull unlock south useless charge fork place hope color place dawn feature ceiling sugar celery method cloth senior swim million scan
+minimum citizen pig expand public observe portion pet bicycle ride crazy actor journey admit make invite this flip divide thrive wolf high aim sunset
 

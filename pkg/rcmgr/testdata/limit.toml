@@ -3,11 +3,25 @@ Conns = 1000
 ConnsInbound = 1000
 ConnsOutbound = 1000
 FD = 1000
-Memory = 1000
+Memory = 102400
 
 [Service.uploader]
 Conns = 1000
 ConnsInbound = 1000
 ConnsOutbound = 1000
 FD = 1000
-Memory = 1000
+Memory = 1024
+
+[Service.downloader]
+Conns = 1000
+ConnsInbound = 1000
+ConnsOutbound = 1000
+FD = 1000
+Memory = 1024
+
+[Service.challenge]
+Conns = 1000
+ConnsInbound = 1000
+ConnsOutbound = 1000
+FD = 1000
+Memory = 1024

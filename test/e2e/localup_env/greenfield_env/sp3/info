@@ -1,13 +1,13 @@
 
-- address: 0xD42aB1e8b1E63C89A185eA351F8034B0E7Ed9257
+- address: 0xe620C05870A2392E4987676b345026E6C6228388
   name: sp3
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A3F2/xCsGBXTsyKM5Al8p8BEWlHFQe3lij1IaZHB+9BY"}'
-  pubkey_hex: 037176ff10ac1815d3b3228ce4097ca7c0445a51c541ede58a3d486991c1fbd058
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A6pPM9Gzp2cKv4I3b2JJKr3Lhtb54KfGY6CYqqV5wxVO"}'
+  pubkey_hex: 03aa4f33d1b3a7670abf82376f62492abdcb86d6f9e0a7c663a098aaa579c3154e
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-labor spike dream couch surge loop sunny ball insane orange metal season veteran great neither heavy deer illness minute pilot crowd coach someone build
+pact flag ready addict fault hammer album please blanket because wild dash kit tomato stage sail inflict seek purity wild lab museum actress rabbit
 
