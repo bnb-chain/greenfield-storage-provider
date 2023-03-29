@@ -1,0 +1,13 @@
+
+- address: 0xBa299BB46260bE2cd735988F469896662d279e2F
+  name: sp3_fund
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AxuJmdqGSH7EzlaeafvF3cZQjSO0NJGE/hs4Q8KOCyVz"}'
+  pubkey_hex: 031b8999da86487ec4ce569e69fbc5ddc6508d23b4349184fe1b3843c28e0b2573
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+infant example essay private mountain midnight during zero dune swing unhappy muffin special penalty equip enough flip year grab axis aisle common capable major
+

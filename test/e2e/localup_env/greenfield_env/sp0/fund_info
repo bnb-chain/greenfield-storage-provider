@@ -1,0 +1,13 @@
+
+- address: 0xdD2E420f94D1debd40dc56e66B7706E0cD8b3A29
+  name: sp0_fund
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Auptw02gQTWpT7XfCNt88nb2dTrafCT7bry7ZG+zdlim"}'
+  pubkey_hex: 02ea6dc34da04135a94fb5df08db7cf276f6753ada7c24fb6ebcbb646fb37658a6
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+either cram fury pitch boring eager toast kingdom infant total festival juice amateur subway bronze nice crop crunch merge swallow spend hockey ostrich slight
+

@@ -1,0 +1,120 @@
+name: E2E Test
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - release*
+
+  pull_request:
+    branches:
+      - master
+      - develop
+      - release*
+
+env:
+  GreenfileldTag: v0.0.10
+  GreenfileldIntegrationTestBranch: gnfd-sp
+  GOPRIVATE: github.com/bnb-chain
+  GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+  MYSQL_USER: root
+  MYSQL_PASSWORD: root
+  MYSQL_ROOT_PASSWORD: root
+
+jobs:
+  e2e-test:
+    strategy:
+      matrix:
+        go-version: [ 1.18.x ]
+        os: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
+
+    steps:
+      # Run and Test MySQL
+      - name: Run and Test MySQL
+        run: |
+          sudo /etc/init.d/mysql start
+          mysql -h 127.0.0.1 -P 3306 -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
+          # Test sp_0
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_0; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+          # Test sp_1
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_1; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+          # Test sp_2
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_2; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+          # Test sp_3
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_3; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+          # Test sp_4
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_4; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+          # Test sp_5
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_5; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+          # Test sp_6
+          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_6; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+      # Checkout and Build Greenfield-SP
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Setup GitHub Token
+        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
+      - name: Checkout Greenfield-SP
+        uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            %LocalAppData%\go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - uses: bufbuild/buf-setup-action@v1.14.0
+        with:
+          version: 1.14.0
+          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
+          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+      - run: |
+          go install github.com/bufbuild/buf/cmd/buf@v1.13.1
+          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+          buf generate
+      - name: Build Greenfield-SP
+        run: |
+          make install-tools
+          make build
+      # Checkout and Build Greenfield
+      - name: Checkout and Build Greenfield
+        run: |
+          git clone https://github.com/bnb-chain/greenfield.git
+          cd greenfield
+          git checkout ${{ env.GreenfileldTag }}
+          make proto-gen & make build
+          cd ..
+      # Run Greenfield
+      - name: Run Greenfield
+        run: |
+#          /bin/cp -rf test/e2e/localup_env/localup_greenfield.sh greenfield/deployment/localup/localup.sh
+          /bin/cp -rf test/e2e/localup_env/greenfield_env greenfield/deployment/localup/.local
+          cd greenfield
+          bash ./deployment/localup/localup.sh start 1
+          cd ..
+      # Run Greenfield-SP
+      - name: Run Greenfield-SPs
+        run: |
+          /bin/cp -rf test/e2e/localup_env/greenfield_sp_env deployment/localup/local_env
+          bash ./deployment/localup/localup.sh --reset 0
+          bash ./deployment/localup/localup.sh --start
+          echo $?
+      # Run E2E Test
+      - name: Run Greenfield E2E Test
+        run: |
+          git clone https://github.com/bnb-chain/greenfield-integration-test.git
+          cd greenfield-integration-test
+          git checkout ${{ env.GreenfileldIntegrationTestBranch }}
+          cd ..
+          /bin/cp -rf test/e2e/localup_env/greenfield_integration_test_env/config.yml greenfield-integration-test/config/config.yml
+          cd greenfield-integration-test
+          go test tests/create_object_test.go
+          cd ..
