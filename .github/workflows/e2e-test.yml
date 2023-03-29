@@ -106,6 +106,7 @@ jobs:
           /bin/cp -rf test/e2e/localup_env/greenfield_sp_env deployment/localup/local_env
           bash ./deployment/localup/localup.sh --reset 0
           bash ./deployment/localup/localup.sh --start
+          ps -ef | grep gnfd-sp | wc -l
           echo $?
       # Run E2E Test
       - name: Run Greenfield E2E Test
