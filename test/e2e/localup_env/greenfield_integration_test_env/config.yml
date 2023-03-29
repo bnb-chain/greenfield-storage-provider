@@ -9,5 +9,5 @@ GreenfieldNodeIP:
 GreenfieldAccSecret:
   - "snow glove dish frost question protect wet estate recipe sample amazing once robot author blame conduct claw admit market adapt earth elegant power ahead"
 SPEndpoint:
-  - "localhost:9033"
+  - "127.0.0.1:9033"
 SPs:
