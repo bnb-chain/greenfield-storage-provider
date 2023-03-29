@@ -17,7 +17,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
-func Test_verifySignatureV1(t *testing.T) {
+func TestVerifySignatureV1(t *testing.T) {
 	// mock request
 	urlmap := url.Values{}
 	urlmap.Add("greenfield", "storage-provider")
@@ -44,7 +44,7 @@ func Test_verifySignatureV1(t *testing.T) {
 	assert.Equal(t, addrInput.String(), addrOutput.String())
 }
 
-func Test_verifySignatureV2(t *testing.T) {
+func TestVerifySignatureV2(t *testing.T) {
 	// mock request
 	urlmap := url.Values{}
 	urlmap.Add("greenfield", "storage-provider")
@@ -71,7 +71,7 @@ func Test_verifySignatureV2(t *testing.T) {
 	assert.Equal(t, nil, err)
 }
 
-func Test_parseRangeHeader(t *testing.T) {
+func TestParseRangeHeader(t *testing.T) {
 	isRange, _, _ := parseRange("bytes=1")
 	assert.Equal(t, false, isRange)
 
