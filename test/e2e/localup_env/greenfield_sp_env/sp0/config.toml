@@ -15,7 +15,7 @@ uploader = "localhost:10133"
 [ListenAddress]
 challenge = "localhost:10333"
 downloader = "localhost:10233"
-gateway = "127.0.0.1:9033"
+gateway = "localhost:9033"
 metadata = "localhost:10733"
 p2p = "localhost:10833"
 receiver = "localhost:10533"

@@ -32,24 +32,24 @@ jobs:
 
     steps:
       # Run and Test MySQL
-      - name: Run and Test MySQL
-        run: |
-          sudo /etc/init.d/mysql start
-          mysql -h 127.0.0.1 -P 3306 -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
-          # Test sp_0
-          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_0; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          # Test sp_1
-          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_1; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          # Test sp_2
-          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_2; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          # Test sp_3
-          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_3; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          # Test sp_4
-          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_4; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          # Test sp_5
-          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_5; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-          # Test sp_6
-          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_6; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+#      - name: Run and Test MySQL
+#        run: |
+#          sudo /etc/init.d/mysql start
+#          mysql -h 127.0.0.1 -P 3306 -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
+#          # Test sp_0
+#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_0; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+#          # Test sp_1
+#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_1; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+#          # Test sp_2
+#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_2; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+#          # Test sp_3
+#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_3; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+#          # Test sp_4
+#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_4; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+#          # Test sp_5
+#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_5; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
+#          # Test sp_6
+#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_6; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
       # Checkout and Build Greenfield-SP
       - name: Install Go
         uses: actions/setup-go@v3
@@ -59,16 +59,16 @@ jobs:
         run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
       - name: Checkout Greenfield-SP
         uses: actions/checkout@v3
-#      - uses: actions/cache@v3
-#        with:
-#          path: |
-#            ~/go/pkg/mod
-#            ~/.cache/go-build
-#            ~/Library/Caches/go-build
-#            %LocalAppData%\go-build
-#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-#          restore-keys: |
-#            ${{ runner.os }}-go-
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            %LocalAppData%\go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 #      - uses: bufbuild/buf-setup-action@v1.14.0
 #        with:
 #          version: 1.14.0
@@ -92,8 +92,11 @@ jobs:
           git checkout ${{ env.GreenfileldTag }}
           make proto-gen & make build
           cd ..
+      # Run MySQL
+      - name: Run and Test MySQL
+        run: |
+          sudo /etc/init.d/mysql start
       # Run Greenfield
-      # /bin/cp -rf test/e2e/localup_env/localup_greenfield.sh greenfield/deployment/localup/localup.sh
       - name: Run Greenfield
         run: |
           /bin/cp -rf test/e2e/localup_env/greenfield_env greenfield/deployment/localup/.local
