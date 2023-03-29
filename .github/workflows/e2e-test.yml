@@ -31,32 +31,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Run and Test MySQL
-#      - name: Run and Test MySQL
-#        run: |
-#          sudo /etc/init.d/mysql start
-#          mysql -h 127.0.0.1 -P 3306 -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
-#          # Test sp_0
-#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_0; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-#          # Test sp_1
-#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_1; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-#          # Test sp_2
-#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_2; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-#          # Test sp_3
-#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_3; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-#          # Test sp_4
-#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_4; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-#          # Test sp_5
-#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_5; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-#          # Test sp_6
-#          mysql -h 127.0.0.1 -P 3306 -u ${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'USE sp_6; CREATE TABLE testtable (id INT, name VARCHAR(255)); INSERT INTO testtable (id, name) VALUES (1, "Bob");'
-      # Checkout and Build Greenfield-SP
       - name: Install Go
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
       - name: Setup GitHub Token
         run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
+      # Checkout Greenfield-SP
       - name: Checkout Greenfield-SP
         uses: actions/checkout@v3
       - uses: actions/cache@v3
@@ -69,17 +50,7 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-#      - uses: bufbuild/buf-setup-action@v1.14.0
-#        with:
-#          version: 1.14.0
-#          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
-#          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
-#      - name: Install Protoc
-#        uses: arduino/setup-protoc@v1
-#      - run: |
-#          go install github.com/bufbuild/buf/cmd/buf@v1.13.1
-#          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
-#          buf generate
+      # Build Greenfield-SP
       - name: Build Greenfield-SP
         run: |
           make install-tools
@@ -93,7 +64,7 @@ jobs:
           make proto-gen & make build
           cd ..
       # Run MySQL
-      - name: Run and Test MySQL
+      - name: Run MySQL
         run: |
           sudo /etc/init.d/mysql start
       # Run Greenfield
@@ -107,7 +78,13 @@ jobs:
       - name: Run Greenfield-SPs
         run: |
           /bin/cp -rf test/e2e/localup_env/greenfield_sp_env deployment/localup/local_env
-          bash ./deployment/localup/localup.sh --reset 0
+          /bin/cp build/gnfd-sp deployment/localup/local_env/sp0/gnfd-sp0
+          /bin/cp build/gnfd-sp deployment/localup/local_env/sp1/gnfd-sp1
+          /bin/cp build/gnfd-sp deployment/localup/local_env/sp2/gnfd-sp2
+          /bin/cp build/gnfd-sp deployment/localup/local_env/sp3/gnfd-sp3
+          /bin/cp build/gnfd-sp deployment/localup/local_env/sp4/gnfd-sp4
+          /bin/cp build/gnfd-sp deployment/localup/local_env/sp5/gnfd-sp5
+          /bin/cp build/gnfd-sp deployment/localup/local_env/sp6/gnfd-sp6
           bash ./deployment/localup/localup.sh --start
           ps -ef | grep gnfd-sp | wc -l
       # Run E2E Test
