@@ -1,4 +1,4 @@
-name: gosec
+name: Gosec
 
 on:
   push:
