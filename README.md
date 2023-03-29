@@ -43,7 +43,7 @@ make install-tools
 ### Build
 ```shell
 # build gnfd-sp
-make builc && cd build 
+make build && cd build 
 
 # show version
 ./gnfd-sp version
