@@ -93,9 +93,9 @@ jobs:
           make proto-gen & make build
           cd ..
       # Run Greenfield
+      # /bin/cp -rf test/e2e/localup_env/localup_greenfield.sh greenfield/deployment/localup/localup.sh
       - name: Run Greenfield
         run: |
-#          /bin/cp -rf test/e2e/localup_env/localup_greenfield.sh greenfield/deployment/localup/localup.sh
           /bin/cp -rf test/e2e/localup_env/greenfield_env greenfield/deployment/localup/.local
           cd greenfield
           bash ./deployment/localup/localup.sh start 1
