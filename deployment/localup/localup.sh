@@ -111,7 +111,7 @@ start_sp() {
   index=0
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
     cd ${sp_dir}
-    nohup ./${sp_bin_name}${index} --config config.toml </dev/null >log.txt 2>&1&
+    ./${sp_bin_name}${index} --config config.toml --log.std
     echo "succeed to start sp in "${sp_dir}
     cd - >/dev/null
     index=$(($index+1))
