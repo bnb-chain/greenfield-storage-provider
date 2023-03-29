@@ -40,23 +40,13 @@ jobs:
       # Checkout Greenfield-SP
       - name: Checkout Greenfield-SP
         uses: actions/checkout@v3
-#      - uses: actions/cache@v3
-#        with:
-#          path: |
-#            ~/go/pkg/mod
-#            ~/.cache/go-build
-#            ~/Library/Caches/go-build
-#            %LocalAppData%\go-build
-#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-#          restore-keys: |
-#            ${{ runner.os }}-go-
       # Build Greenfield-SP
       - name: Build Greenfield-SP
         run: |
           make install-tools
           make build
-      # Checkout and Build Greenfield
-      - name: Checkout and Build Greenfield
+      # Build Greenfield
+      - name: Build Greenfield
         run: |
           git clone https://github.com/bnb-chain/greenfield.git
           cd greenfield
@@ -97,7 +87,7 @@ jobs:
           cd greenfield-integration-test
           git checkout ${{ env.GreenfileldIntegrationTestBranch }}
           cd ..
-          /bin/cp -rf test/e2e/localup_env/greenfield_integration_test_env/config.yml greenfield-integration-test/config/config.yml
+          /bin/cp -rf test/e2e/localup_env/integration_config/config.yml greenfield-integration-test/config/config.yml
           cd greenfield-integration-test
           go test tests/create_object_test.go
           cd ..
