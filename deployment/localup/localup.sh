@@ -113,8 +113,6 @@ start_sp() {
     cd ${sp_dir}
     nohup ./${sp_bin_name}${index} --config config.toml </dev/null >log.txt 2>&1&
     echo "succeed to start sp in "${sp_dir}
-    sleep 2
-    tail -n 100 ./gnfd-sp.log
     cd - >/dev/null
     index=$(($index+1))
   done

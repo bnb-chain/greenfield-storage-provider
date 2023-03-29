@@ -86,6 +86,7 @@ jobs:
           /bin/cp build/gnfd-sp deployment/localup/local_env/sp5/gnfd-sp5
           /bin/cp build/gnfd-sp deployment/localup/local_env/sp6/gnfd-sp6
           bash ./deployment/localup/localup.sh --start
+          tail -n 1000 deployment/localup/local_env/sp0/gnfd-sp.log
           ps -ef | grep gnfd-sp | wc -l
       # Run E2E Test
       - name: Run Greenfield E2E Test
