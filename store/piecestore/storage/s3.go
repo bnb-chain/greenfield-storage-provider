@@ -255,18 +255,20 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		S3ForcePathStyle: aws.Bool(!isVirtualHostStyle),
 		Retryer:          newCustomS3Retryer(cfg.MaxRetries, time.Duration(cfg.MinRetryDelay)),
 	}
-	sess := session.Must(session.NewSession(awsConfig))
+	var sess *session.Session
 	switch cfg.IAMType {
 	case mpiecestore.AKSKIAMType:
 		key := getSecretKeyFromEnv(mpiecestore.AWSAccessKey, mpiecestore.AWSSecretKey, mpiecestore.AWSSessionToken)
 		if key.accessKey == "NoSignRequest" {
 			// access public s3 bucket
-			sess.Config.Credentials = credentials.AnonymousCredentials
+			awsConfig.Credentials = credentials.AnonymousCredentials
 		} else if key.accessKey != "" && key.secretKey != "" {
-			sess.Config.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
+			awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
 		}
+		sess = session.Must(session.NewSession(awsConfig))
 		log.Debugw("use aksk to access s3", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
 	case mpiecestore.SAIAMType:
+		sess = session.Must(session.NewSession())
 		irsa, roleARN, tokenPath := checkIRSAAvailable()
 		if irsa {
 			awsConfig.WithCredentialsChainVerboseErrors(true).WithCredentials(credentials.NewChainCredentials(
@@ -277,7 +279,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 						sts.New(sess), roleARN, "",
 						stscreds.FetchTokenPath(tokenPath)),
 				}))
-			log.Debugw("use sa to access s3", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
+			log.Debug("use sa to access s3")
 		} else {
 			return nil, "", fmt.Errorf("failed to use sa to access s3")
 		}
