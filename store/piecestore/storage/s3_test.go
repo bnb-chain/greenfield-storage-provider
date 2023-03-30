@@ -4,31 +4,34 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/stretchr/testify/assert"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 )
 
 const (
-	endPoint     = "https://s3.mock-region-1.amazonaws.com/mockBucket"
-	accessKey    = "mockAccessKey"
-	secretKey    = "mockSecretKey"
-	sessionToken = "mockSessionToken"
-	mockBucket   = "mockBucket"
-	mockKey      = "mock"
-	mockSize     = 10
-	emptyString  = ""
+	mockEndpoint     = "https://s3.mock-region-1.amazonaws.com/mockBucket"
+	mockAccessKey    = "mockAccessKey"
+	mockSecretKey    = "mockSecretKey"
+	mockSessionToken = "mockSessionToken"
+	mockBucket       = "mockBucket"
+	mockKey          = "mock"
+	mockSize         = 10
+	emptyString      = ""
 )
 
-var modifiedTime = time.Date(2022, time.July, 1, 10, 0, 0, 0, time.UTC)
+var mockModifiedTime = time.Date(2022, time.July, 1, 10, 0, 0, 0, time.UTC)
 
 type mockS3Client struct {
 	s3iface.S3API
@@ -232,7 +235,7 @@ func TestS3_HeadSuccess(t *testing.T) {
 			key:  mockKey,
 			resp: s3.HeadObjectOutput{
 				ContentLength: aws.Int64(mockSize),
-				LastModified:  aws.Time(modifiedTime),
+				LastModified:  aws.Time(mockModifiedTime),
 			},
 			wantedErr: nil,
 		},
@@ -242,7 +245,7 @@ func TestS3_HeadSuccess(t *testing.T) {
 			store.api = mockS3Client{headObjectResp: tt.resp}
 			obj, err := store.HeadObject(context.TODO(), tt.key)
 			assert.Equal(t, int64(mockSize), obj.Size())
-			assert.Equal(t, modifiedTime, obj.ModTime())
+			assert.Equal(t, mockModifiedTime, obj.ModTime())
 			assert.Equal(t, tt.wantedErr, err)
 		})
 	}
@@ -252,7 +255,7 @@ func TestS3_ListSuccess(t *testing.T) {
 	store := setupS3Test(t)
 	s3Object := &s3.Object{
 		Key:          aws.String(mockKey),
-		LastModified: aws.Time(modifiedTime),
+		LastModified: aws.Time(mockModifiedTime),
 		Size:         aws.Int64(mockSize),
 	}
 	objectsList := make([]*s3.Object, 0)
@@ -273,7 +276,7 @@ func TestS3_ListSuccess(t *testing.T) {
 			store.api = mockS3Client{listObjectsResp: tt.resp}
 			objs, err := store.ListObjects(context.TODO(), emptyString, emptyString, emptyString, 0)
 			assert.Equal(t, mockKey, objs[0].Key())
-			assert.Equal(t, modifiedTime, objs[0].ModTime())
+			assert.Equal(t, mockModifiedTime, objs[0].ModTime())
 			assert.Equal(t, int64(mockSize), objs[0].Size())
 			assert.Equal(t, tt.wantedErr, err)
 		})
@@ -470,5 +473,27 @@ func TestS3_ListError(t *testing.T) {
 			assert.Equal(t, 0, len(objs))
 			assert.Equal(t, tt.wantedErr, err)
 		})
+	}
+}
+
+func TestNewSessionWithRegionSetViaEnv(t *testing.T) {
+	s3SessionCache.clear()
+
+	os.Setenv(mpiecestore.AWSAccessKey, "NoSignRequest")
+	defer os.Unsetenv(mpiecestore.AWSAccessKey)
+
+	sess, _, err := s3SessionCache.newSession(ObjectStorageConfig{
+		Storage:   mpiecestore.S3Store,
+		BucketURL: mockEndpoint,
+		IAMType:   mpiecestore.AKSKIAMType,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := sess.Config.Credentials
+	expected := credentials.AnonymousCredentials
+	if expected != got {
+		t.Fatalf("expected %v, got %v", expected, got)
 	}
 }

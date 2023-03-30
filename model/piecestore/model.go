@@ -12,8 +12,18 @@ const (
 	MemoryStore = "memory"
 )
 
-// piece store storage environment constants
+// piece store storage config and environment constants
 const (
+	// AKSKIAMType defines IAM type config which uses access key and secret key to access aws s3
+	AKSKIAMType = "AKSK"
+	// SAIAMType defines IAM type config which uses service account to access aws s3
+	SAIAMType = "SA"
+
+	// AWSRoleARN defines env variable for aws role arn
+	AWSRoleARN = "AWS_ROLE_ARN"
+	// AWSWebIdentityTokenFile defines env variable for aws identity token file
+	AWSWebIdentityTokenFile = "AWS_WEB_IDENTITY_TOKEN_FILE"
+
 	// BucketURL defines env variable name for bucket url
 	BucketURL = "BUCKET_URL"
 	// AWSAccessKey defines env variable name for aws access key

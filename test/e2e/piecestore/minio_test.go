@@ -10,7 +10,7 @@ import (
 
 func TestMinioStore(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setup(t, mpiecestore.MinioStore, s3Bucket, 0)
+	handler, err := setup(t, mpiecestore.MinioStore, s3BucketURL, 0)
 	assert.Equal(t, err, nil)
 
 	doOperations(t, handler)
