@@ -20,34 +20,35 @@ var _ types.DownloaderServiceServer = &Downloader{}
 // GetObject downloads the payload of the object.
 func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	stream types.DownloaderService_GetObjectServer) (err error) {
-	var (
-		size         int
-		offset       uint64
-		length       uint64
-		isValidRange bool
-	)
-
+	var sendSize int
 	ctx := log.Context(context.Background(), req)
 	resp := &types.GetObjectResponse{}
 	defer func() {
 		if err != nil {
 			return
 		}
-		resp.IsValidRange = isValidRange
-		log.CtxInfow(ctx, "succeed to get object", "send_size", size)
+		log.CtxInfow(ctx, "succeed to get object", "send_size", sendSize)
 	}()
 
 	bucketInfo := req.GetBucketInfo()
 	objectInfo := req.GetObjectInfo()
+
+	startOffset := uint64(0)
+	endOffset := objectInfo.GetPayloadSize() - 1
+	if req.GetIsRange() {
+		startOffset = req.GetRangeStart()
+		endOffset = req.GetRangeEnd()
+	}
+	readSize := endOffset - startOffset + 1
+
 	if err = downloader.spDB.CheckQuotaAndAddReadRecord(
-		// TODO: support range read
 		&sqldb.ReadRecord{
 			BucketID:        bucketInfo.Id.Uint64(),
 			ObjectID:        objectInfo.Id.Uint64(),
 			UserAddress:     req.GetUserAddress(),
 			BucketName:      bucketInfo.GetBucketName(),
 			ObjectName:      objectInfo.GetObjectName(),
-			ReadSize:        objectInfo.GetPayloadSize(),
+			ReadSize:        readSize,
 			ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
 		},
 		&sqldb.BucketQuota{
@@ -58,25 +59,10 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		return merrors.InnerErrorToGRPCError(err)
 	}
 
-	// TODO: It will be optimized
-	// if length == 0, download all object data
-	if req.RangeStart >= 0 && req.RangeStart < int64(objectInfo.GetPayloadSize()) &&
-		req.RangeEnd >= 0 && req.RangeEnd < int64(objectInfo.GetPayloadSize()) {
-		isValidRange = true
-		offset = uint64(req.RangeStart)
-		length = uint64(req.RangeEnd-req.RangeStart) + 1
-	} else if req.RangeStart > 0 && req.RangeStart < int64(objectInfo.GetPayloadSize()) && req.RangeEnd < 0 {
-		isValidRange = true
-		offset = uint64(req.RangeStart)
-		length = objectInfo.GetPayloadSize() - uint64(req.RangeStart)
-	} else {
-		offset, length = 0, objectInfo.GetPayloadSize()
-	}
-
 	// allocate memory form resource manager
 	scope, err := downloader.rcScope.BeginSpan()
 	if err != nil {
-		log.Errorw("failed to  begin reserve resource", "error", err)
+		log.Errorw("failed to begin reserve resource", "error", err)
 		return
 	}
 	stateFunc := func() string {
@@ -87,10 +73,10 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		})
 		return state
 	}
-	err = scope.ReserveMemory(int(length), rcmgr.ReservationPriorityAlways)
+	err = scope.ReserveMemory(int(readSize), rcmgr.ReservationPriorityAlways)
 	if err != nil {
 		log.Errorw("failed to reserve memory from resource manager",
-			"reserve_size", length, "resource_state", stateFunc(), "error", err)
+			"reserve_size", readSize, "resource_state", stateFunc(), "error", err)
 		return
 	}
 	defer func() {
@@ -98,77 +84,73 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		log.Debugw("end get object request", "resource_state", stateFunc())
 	}()
 
-	var segmentInfo segments
-	segmentInfo, err = downloader.DownloadPieceInfo(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), offset, offset+length-1)
+	pieceInfos, err := downloader.SplitToSegmentPieceInfos(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), startOffset, endOffset)
 	if err != nil {
 		return
 	}
-	for _, segment := range segmentInfo {
-		resp.Data, err = downloader.pieceStore.GetSegment(ctx, segment.pieceKey, int64(segment.offset), int64(segment.offset)+int64(segment.length))
+	for _, pInfo := range pieceInfos {
+		resp.Data, err = downloader.pieceStore.GetPiece(ctx, pInfo.segmentPieceKey, int64(pInfo.offset), int64(pInfo.length))
 		if err != nil {
 			return
 		}
-		resp.IsValidRange = isValidRange
 		if err = stream.Send(resp); err != nil {
 			return
 		}
-		size = size + len(resp.Data)
+		sendSize += len(resp.Data)
 	}
 	return nil
 }
 
-type segment struct {
-	pieceKey string
-	offset   uint64
-	length   uint64
+type segmentPieceInfo struct {
+	segmentPieceKey string
+	offset          uint64
+	length          uint64
 }
 
-type segments []*segment
-
-// DownloadPieceInfo compute the piece store info for download.
-// download interval [start, end]
-func (downloader *Downloader) DownloadPieceInfo(objectID, objectSize, start, end uint64) (pieceInfo segments, err error) {
-	if objectSize == 0 || start > objectSize || end < start {
-		return pieceInfo, fmt.Errorf("failed to check param, object size: %d, start: %d, end: %d", objectSize, start, end)
+// SplitToSegmentPieceInfos compute the piece store info for get object, object data range [start, end].
+func (downloader *Downloader) SplitToSegmentPieceInfos(objectID, objectSize, start, end uint64) (pieceInfos []*segmentPieceInfo, err error) {
+	if objectSize == 0 || start >= objectSize || end >= objectSize || end < start {
+		return pieceInfos, fmt.Errorf("failed to check param, object size: %d, start: %d, end: %d", objectSize, start, end)
 	}
 	params, err := downloader.spDB.GetStorageParams()
 	if err != nil {
-		return pieceInfo, err
+		return pieceInfos, err
 	}
+
 	segmentSize := params.GetMaxSegmentSize()
-	segmentCount := int(objectSize / segmentSize)
+	segmentCount := objectSize / segmentSize
 	if objectSize%segmentSize != 0 {
 		segmentCount++
 	}
-	for idx := 0; idx < segmentCount; idx++ {
-		finish := false
-		currentStart := uint64(idx) * segmentSize
-		currentEnd := uint64(idx+1)*segmentSize - 1
-		if currentEnd >= end {
+
+	for segmentPieceIndex := uint64(0); segmentPieceIndex < segmentCount; segmentPieceIndex++ {
+		currentStart := segmentPieceIndex * segmentSize
+		currentEnd := (segmentPieceIndex+1)*segmentSize - 1
+		if start > currentEnd {
+			continue
+		}
+		if start > currentStart {
+			currentStart = start
+		}
+
+		if end <= currentEnd {
 			currentEnd = end
-			finish = true
-		}
-		if start >= currentStart && start <= currentEnd {
-			pieceInfo = append(pieceInfo, &segment{
-				pieceKey: piecestore.EncodeSegmentPieceKey(objectID, uint32(idx)),
-				offset:   start - currentStart,
-				length:   currentEnd - start + 1,
+			offsetInPiece := currentStart - (segmentPieceIndex * segmentSize)
+			lengthInPiece := currentEnd - currentStart + 1
+			pieceInfos = append(pieceInfos, &segmentPieceInfo{
+				segmentPieceKey: piecestore.EncodeSegmentPieceKey(objectID, uint32(segmentPieceIndex)),
+				offset:          offsetInPiece,
+				length:          lengthInPiece,
 			})
-			if finish {
-				break
-			}
-		}
-		if end >= currentStart && end <= currentEnd {
-			pieceInfo = append(pieceInfo, &segment{
-				pieceKey: piecestore.EncodeSegmentPieceKey(objectID, uint32(idx)),
-				offset:   0,
-				length:   end - currentStart + 1,
-			})
+			// break to finish
 			break
-		}
-		if start < currentStart && end > currentEnd {
-			pieceInfo = append(pieceInfo, &segment{
-				pieceKey: piecestore.EncodeSegmentPieceKey(objectID, uint32(idx)),
+		} else {
+			offsetInPiece := currentStart - (segmentPieceIndex * segmentSize)
+			lengthInPiece := currentEnd - currentStart + 1
+			pieceInfos = append(pieceInfos, &segmentPieceInfo{
+				segmentPieceKey: piecestore.EncodeSegmentPieceKey(objectID, uint32(segmentPieceIndex)),
+				offset:          offsetInPiece,
+				length:          lengthInPiece,
 			})
 		}
 	}

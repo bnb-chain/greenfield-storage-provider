@@ -106,7 +106,7 @@ func (receiver *Receiver) SyncObject(stream types.ReceiverService_SyncObjectServ
 			traceInfo.Completed++
 			receiver.cache.Add(entry.ID(), traceInfo)
 			go func() {
-				if err := receiver.pieceStore.PutSegment(entry.Key(), entry.Data()); err != nil {
+				if err := receiver.pieceStore.PutPiece(entry.Key(), entry.Data()); err != nil {
 					errCh <- err
 				}
 			}()

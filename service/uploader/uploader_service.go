@@ -125,7 +125,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			traceInfo.Checksum = checksum
 			traceInfo.Completed++
 			uploader.cache.Add(entry.ID(), traceInfo)
-			if err = uploader.pieceStore.PutSegment(entry.Key(), entry.Data()); err != nil {
+			if err = uploader.pieceStore.PutPiece(entry.Key(), entry.Data()); err != nil {
 				return
 			}
 		case err = <-errCh:

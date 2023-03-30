@@ -71,9 +71,8 @@ jobs:
         uses: arduino/setup-protoc@v1
 
       - run: |
-          go install github.com/bufbuild/buf/cmd/buf@v1.13.1
-          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
-          buf generate
+          make install-tools
+          make buf-gen
 
       # ==============================
       #       Linux Build
@@ -81,7 +80,6 @@ jobs:
 
       - name: Build Binary for ${{matrix.os}}
         run: |
-          make install-tools
           make build
           
       # ==============================

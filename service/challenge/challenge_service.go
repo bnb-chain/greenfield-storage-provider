@@ -71,7 +71,7 @@ func (challenge *Challenge) ChallengePiece(
 		log.CtxDebugw(ctx, "end challenge piece request", "resource_state", stateFunc())
 	}()
 
-	resp.PieceData, err = challenge.pieceStore.GetSegment(ctx, key, 0, -1)
+	resp.PieceData, err = challenge.pieceStore.GetPiece(ctx, key, 0, -1)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get payload", "error", err)
 		err = merrors.InnerErrorToGRPCError(err)

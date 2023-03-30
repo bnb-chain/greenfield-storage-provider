@@ -62,9 +62,8 @@ jobs:
         uses: arduino/setup-protoc@v1
 
       - run: |
-          go install github.com/bufbuild/buf/cmd/buf@v1.13.1
-          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
-          buf generate
+          make install-tools
+          make buf-gen
 
       - name: Setup GitHub Token
         run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/

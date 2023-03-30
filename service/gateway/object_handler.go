@@ -74,8 +74,10 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	isRange, rangeStart, rangeEnd = parseRange(reqContext.request.Header.Get(model.RangeHeader))
-
-	if rangeStart > 0 && rangeEnd > 0 && rangeStart > rangeEnd {
+	if isRange && (rangeEnd < 0 || rangeEnd >= int64(reqContext.objectInfo.GetPayloadSize())) {
+		rangeEnd = int64(reqContext.objectInfo.GetPayloadSize()) - 1
+	}
+	if isRange && (rangeStart < 0 || rangeEnd < 0 || rangeStart > rangeEnd) {
 		errDescription = InvalidRange
 		return
 	}
@@ -85,8 +87,8 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		ObjectInfo:  reqContext.objectInfo,
 		UserAddress: addr.String(),
 		IsRange:     isRange,
-		RangeStart:  rangeStart,
-		RangeEnd:    rangeEnd,
+		RangeStart:  uint64(rangeStart),
+		RangeEnd:    uint64(rangeEnd),
 	}
 	ctx := log.Context(context.Background(), req)
 	stream, err := gateway.downloader.GetObject(ctx, req)
@@ -107,10 +109,10 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		}
 
 		if readN = len(resp.Data); readN == 0 {
-			log.Errorw("failed to download due to return empty data", "response", resp)
+			log.Errorw("failed to get object due to return empty data", "response", resp)
 			continue
 		}
-		if resp.IsValidRange {
+		if isRange {
 			statusCode = http.StatusPartialContent
 			w.WriteHeader(statusCode)
 			makeContentRangeHeader(w, rangeStart, rangeEnd)

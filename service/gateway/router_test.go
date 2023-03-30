@@ -24,7 +24,7 @@ var (
 )
 
 type routerTestContext struct {
-	title       string      // title of the test
+	title       string      // title of the test case
 	router      *mux.Router // the router being tested
 	method      string      // the request method
 	url         string      // the request url, include path + query
@@ -41,7 +41,7 @@ func newRequest(ctx *routerTestContext) *http.Request {
 	return req
 }
 
-func testRouter(t *testing.T, ctx *routerTestContext) {
+func checkRouter(t *testing.T, ctx *routerTestContext) {
 	request := newRequest(ctx)
 	router := ctx.router
 
@@ -143,7 +143,7 @@ func TestRouters(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.title, func(t *testing.T) {
-			testRouter(t, &testCase)
+			checkRouter(t, &testCase)
 		})
 	}
 }
