@@ -1,0 +1,13 @@
+
+- address: 0x8f0144062E16B9291A28ed8b81e7DA9A09d21499
+  name: sp2_seal
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AprxKn5jQyUDGwRVFqDc9qGlht3UE3RnkZD15Vfa2c/t"}'
+  pubkey_hex: 029af12a7e634325031b045516a0dcf6a1a586ddd41374679190f5e557dad9cfed
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+intact vivid fresh chief region program tilt fossil thank they trust license gossip edge hour wolf ten talent junior cake crime gospel kick census
+

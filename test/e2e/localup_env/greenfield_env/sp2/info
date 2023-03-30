@@ -1,0 +1,13 @@
+
+- address: 0x4C1674C0504bad30e023D7B3991824bCC47E193d
+  name: sp2
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A1/BPxotwfW6GvjEJuYcaHSddEbZ5YzmHvL2KuG23h4F"}'
+  pubkey_hex: 035fc13f1a2dc1f5ba1af8c426e61c68749d7446d9e58ce61ef2f62ae1b6de1e05
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+shoulder buzz double fetch fortune amount rebel add denial hungry toast crowd warfare twice slim oblige unique average tuna tag pilot angle today sponsor
+

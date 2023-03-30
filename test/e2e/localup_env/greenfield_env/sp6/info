@@ -1,0 +1,13 @@
+
+- address: 0x193ae94602232A0600854D26eF322617aDDB2A44
+  name: sp6
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A2u0sfn2jCGaBSsY5a6HVSkixzzPvxzYuk8tJqIIZnRb"}'
+  pubkey_hex: 036bb4b1f9f68c219a052b18e5ae87552922c73ccfbf1cd8ba4f2d26a20866745b
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+ignore addict prison panther daughter divide venture nominee extend ship first advice refuse lobster tissue mean assume purity elder strike suggest sport oven project
+
