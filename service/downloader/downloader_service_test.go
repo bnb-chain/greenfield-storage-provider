@@ -37,7 +37,7 @@ func checkSplitToSegmentPieceInfos(t *testing.T, ctx *splitToSegmentPieceInfosCo
 	assert.Equal(t, ctx.endOffset-ctx.startOffset+1, realLength)
 }
 
-func TestMakeSegmentPieceInfos(t *testing.T) {
+func TestSplitToSegmentPieceInfos(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	//nolint:all
@@ -48,7 +48,6 @@ func TestMakeSegmentPieceInfos(t *testing.T) {
 	mockDB.EXPECT().GetStorageParams().Return(&storagetypes.Params{
 		MaxSegmentSize: 16 * 1024 * 1024,
 	}, nil).MaxTimes(100)
-	_ = d
 
 	testCases := []splitToSegmentPieceInfosContext{
 		{

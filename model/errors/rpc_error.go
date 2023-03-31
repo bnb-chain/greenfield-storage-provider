@@ -22,6 +22,8 @@ var (
 	ErrInvalidBucketName = errors.New("invalid bucket name")
 	// ErrUnsupportedMethod defines unsupported method error
 	ErrUnsupportedMethod = errors.New("unsupported method")
+	// ErrIntegerOverflow defines integer overflow
+	ErrIntegerOverflow = errors.New("integer overflow")
 )
 
 // piece store errors
