@@ -10,6 +10,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName string) ([]*Object, error)
 	err = b.db.Table((&Object{}).TableName()).
 		Select("*").
 		Where("bucket_name = ?", bucketName).
+		Order("create_at desc").
 		Find(&objects).Error
 	return objects, err
 }
