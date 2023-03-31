@@ -16,7 +16,11 @@ func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
 		err     error
 	)
 
-	err = b.db.Find(&buckets, "owner_address = ?", accountID).Error
+	err = b.db.Table((&Bucket{}).TableName()).
+		Select("*").
+		Where("owner_address = ?", accountID).
+		Order("create_at desc").
+		Find(&buckets).Error
 	return buckets, err
 }
 
