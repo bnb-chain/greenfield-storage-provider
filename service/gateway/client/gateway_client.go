@@ -75,21 +75,21 @@ func (p *PieceDataReader) Read(buf []byte) (n int, err error) {
 		return 0, fmt.Errorf("failed to read due to invalid args")
 	}
 
-	readLen := 0
+	totalReadLen := 0
 	for p.outerIdx < len(p.pieceData) {
-		curReadLen := copy(buf[readLen:], p.pieceData[p.outerIdx][p.innerIdx:])
+		curReadLen := copy(buf[totalReadLen:], p.pieceData[p.outerIdx][p.innerIdx:])
 		p.innerIdx += curReadLen
 		if p.innerIdx == len(p.pieceData[p.outerIdx]) {
 			p.outerIdx += 1
 			p.innerIdx = 0
 		}
-		readLen = readLen + curReadLen
-		if readLen == len(buf) {
+		totalReadLen += curReadLen
+		if totalReadLen == len(buf) {
 			break
 		}
 	}
-	if readLen != 0 {
-		return readLen, nil
+	if totalReadLen != 0 {
+		return totalReadLen, nil
 	}
 	return 0, io.EOF
 }
@@ -97,8 +97,8 @@ func (p *PieceDataReader) Read(buf []byte) (n int, err error) {
 // SyncPieceData sync piece data to the target storage-provider.
 func (client *GatewayClient) SyncPieceData(
 	objectInfo *types.ObjectInfo,
-	replicaIdx uint32,
-	segmentSize uint32,
+	redundancyIdx uint32,
+	pieceSize uint32,
 	approval *p2ptypes.GetApprovalResponse,
 	pieceData [][]byte) (integrityHash []byte, signature []byte, err error) {
 	pieceDataReader, err := NewPieceDataReader(pieceData)
@@ -118,8 +118,8 @@ func (client *GatewayClient) SyncPieceData(
 		return
 	}
 	req.Header.Add(model.GnfdObjectInfoHeader, marshalObjectInfo)
-	req.Header.Add(model.GnfdReplicaIdxHeader, util.Uint32ToString(replicaIdx))
-	req.Header.Add(model.GnfdSegmentSizeHeader, util.Uint32ToString(segmentSize))
+	req.Header.Add(model.GnfdRedundancyIndexHeader, util.Uint32ToString(redundancyIdx))
+	req.Header.Add(model.GnfdPieceSizeHeader, util.Uint32ToString(pieceSize))
 	req.Header.Add(model.GnfdReplicateApproval, string(marshalApproval))
 	req.Header.Add(model.ContentTypeHeader, model.OctetStream)
 

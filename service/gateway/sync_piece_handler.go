@@ -22,8 +22,8 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 		errDescription         *errorDescription
 		reqContext             *requestContext
 		objectInfo             = types.ObjectInfo{}
-		replicaIdx             uint32
-		segmentSize            uint64
+		pieceSize              uint64
+		redundancyIdx          int32
 		replicateApproval      = &p2ptypes.GetApprovalResponse{}
 		size                   int
 		readN                  int
@@ -61,13 +61,13 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 		errDescription = InvalidHeader
 		return
 	}
-	if replicaIdx, err = util.StringToUint32(r.Header.Get(model.GnfdReplicaIdxHeader)); err != nil {
-		log.Errorw("failed to parse replica_idx header", "replica_idx", r.Header.Get(model.GnfdReplicaIdxHeader))
+	if redundancyIdx, err = util.StringToInt32(r.Header.Get(model.GnfdRedundancyIndexHeader)); err != nil {
+		log.Errorw("failed to parse redundancy_idx header", "redundancy_idx", r.Header.Get(model.GnfdRedundancyIndexHeader))
 		errDescription = InvalidHeader
 		return
 	}
-	if segmentSize, err = util.StringToUint64(r.Header.Get(model.GnfdSegmentSizeHeader)); err != nil {
-		log.Errorw("failed to parse segment_size header", "segment_size", r.Header.Get(model.GnfdSegmentSizeHeader))
+	if pieceSize, err = util.StringToUint64(r.Header.Get(model.GnfdPieceSizeHeader)); err != nil {
+		log.Errorw("failed to parse piece_size header", "piece_size", r.Header.Get(model.GnfdPieceSizeHeader))
 		errDescription = InvalidHeader
 		return
 	}
@@ -97,10 +97,10 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 		}
 		if readN > 0 {
 			if err = stream.Send(&receivertypes.SyncObjectRequest{
-				ObjectInfo:  &objectInfo,
-				ReplicaIdx:  replicaIdx,
-				SegmentSize: segmentSize,
-				ReplicaData: buf[:readN],
+				ObjectInfo:    &objectInfo,
+				PieceSize:     pieceSize,
+				RedundancyIdx: redundancyIdx,
+				ReplicaData:   buf[:readN],
 			}); err != nil {
 				log.Errorw("failed to send stream", "error", err)
 				errDescription = InternalError

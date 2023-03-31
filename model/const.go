@@ -178,7 +178,7 @@ const (
 	GnfdObjectIDHeader = "X-Gnfd-Object-ID"
 	// GnfdPieceIndexHeader defines piece idx, which is used by challenge
 	GnfdPieceIndexHeader = "X-Gnfd-Piece-Index"
-	// GnfdRedundancyIndexHeader defines redundancy idx, which is used by challenge
+	// GnfdRedundancyIndexHeader defines redundancy idx, which is used by challenge and receiver
 	GnfdRedundancyIndexHeader = "X-Gnfd-Redundancy-Index"
 	// GnfdIntegrityHashHeader defines integrity hash, which is used by challenge and receiver
 	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
@@ -190,10 +190,8 @@ const (
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
 	// GnfdObjectInfoHeader define object info, which is used by receiver
 	GnfdObjectInfoHeader = "X-Gnfd-Object-Info"
-	// GnfdReplicaIdxHeader defines replica idx, which is used by receiver
-	GnfdReplicaIdxHeader = "X-Gnfd-Replica-Idx"
-	// GnfdSegmentSizeHeader defines segment size, which is used by receiver
-	GnfdSegmentSizeHeader = "X-Gnfd-Segment-Size"
+	// GnfdPieceSizeHeader defines piece size, which is used to split by receiver
+	GnfdPieceSizeHeader = "X-Gnfd-Piece-Size"
 	// GnfdReplicateApproval defines SP approval that allow to replicate piece data, which is used by receiver
 	GnfdReplicateApproval = "X-Gnfd-Replica-Approval"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver

@@ -2,6 +2,7 @@ package stream
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"sync/atomic"
 
@@ -11,44 +12,47 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-const StreamResultSize = 10
-
-type SegmentEntry struct {
-	objectID       uint64
-	replicaIdx     uint32
-	segmentIdx     uint32
-	redundancyType storagetypes.RedundancyType
-	segmentData    []byte
-	err            error
+// PieceEntry is used to stream produce piece data.
+type PieceEntry struct {
+	objectID          uint64
+	redundancyType    storagetypes.RedundancyType
+	segmentPieceIndex uint32
+	ecPieceIndex      uint32 // meaningful iff redundancyType == REDUNDANCY_EC_TYPE
+	pieceData         []byte
+	err               error
 }
 
-func (entry SegmentEntry) ID() uint64 {
+// ObjectID returns piece's object id
+func (entry *PieceEntry) ObjectID() uint64 {
 	return entry.objectID
 }
 
-func (entry SegmentEntry) Key() string {
+// PieceKey returns piece key, may be ECPieceKey/SegmentPieceKey
+func (entry *PieceEntry) PieceKey() string {
 	if entry.redundancyType == storagetypes.REDUNDANCY_EC_TYPE {
-		return piecestore.EncodeECPieceKey(entry.objectID, entry.segmentIdx, entry.replicaIdx)
+		return piecestore.EncodeECPieceKey(entry.objectID, entry.segmentPieceIndex, entry.ecPieceIndex)
 	}
-	return piecestore.EncodeSegmentPieceKey(entry.objectID, entry.segmentIdx)
+	return piecestore.EncodeSegmentPieceKey(entry.objectID, entry.segmentPieceIndex)
 }
 
-func (entry SegmentEntry) Data() []byte {
-	return entry.segmentData
+// Data returns piece data
+func (entry *PieceEntry) Data() []byte {
+	return entry.pieceData
 }
 
-func (entry SegmentEntry) Error() error {
+// Error returns stream read error
+func (entry *PieceEntry) Error() error {
 	return entry.err
 }
 
-// PayloadStream implement a one-way data flow, writes bytes of any size
+// PayloadStream implements a one-way data flow, writes bytes of any size
 // read the fixed data size with payload metadata
 type PayloadStream struct {
 	objectID       uint64
-	replicaIdx     uint32
-	segmentSize    uint64
 	redundancyType storagetypes.RedundancyType
-	entryCh        chan *SegmentEntry
+	pieceSize      uint64 // pieceSize is used to split
+	ecPieceIndex   uint32
+	entryCh        chan *PieceEntry
 	init           atomic.Value
 	close          atomic.Value
 
@@ -56,11 +60,11 @@ type PayloadStream struct {
 	pWrite *io.PipeWriter
 }
 
-// NewAsyncPayloadStream return an instance of PayloadStream, and start async read stream
+// NewAsyncPayloadStream returns an instance of PayloadStream, and start async read stream
 // TODO:: implement the SyncPayloadStream in the future base on requirements
 func NewAsyncPayloadStream() *PayloadStream {
 	stream := &PayloadStream{
-		entryCh: make(chan *SegmentEntry, StreamResultSize),
+		entryCh: make(chan *PieceEntry, 10),
 	}
 	stream.pRead, stream.pWrite = io.Pipe()
 	return stream
@@ -68,16 +72,16 @@ func NewAsyncPayloadStream() *PayloadStream {
 
 // InitAsyncPayloadStream only be called once, init the payload metadata
 // must be called before write or read stream
-func (stream *PayloadStream) InitAsyncPayloadStream(objectID uint64, rIdx uint32, segSize uint64,
-	redundancyType storagetypes.RedundancyType) error {
+func (stream *PayloadStream) InitAsyncPayloadStream(objectID uint64, redundancyType storagetypes.RedundancyType,
+	pieceSize uint64, ecPieceIndex uint32) error {
 	if stream.init.Load() == true {
 		return nil
 	}
 	stream.init.Store(true)
 	stream.objectID = objectID
-	stream.replicaIdx = rIdx
-	stream.segmentSize = segSize
 	stream.redundancyType = redundancyType
+	stream.pieceSize = pieceSize
+	stream.ecPieceIndex = ecPieceIndex
 	go stream.readStream()
 	return nil
 }
@@ -93,7 +97,7 @@ func (stream *PayloadStream) StreamWrite(data []byte) (n int, err error) {
 	return stream.pWrite.Write(data)
 }
 
-// StreamClose close write stream without error
+// StreamClose closes write stream without error
 func (stream *PayloadStream) StreamClose() error {
 	if stream.close.Load() == true {
 		return nil
@@ -102,7 +106,7 @@ func (stream *PayloadStream) StreamClose() error {
 	return stream.pWrite.Close()
 }
 
-// StreamCloseWithError close write stream with error
+// StreamCloseWithError closes write stream with error
 func (stream *PayloadStream) StreamCloseWithError(err error) error {
 	if stream.init.Load() == nil {
 		return errors.New("payload stream is uninitialized")
@@ -114,12 +118,12 @@ func (stream *PayloadStream) StreamCloseWithError(err error) error {
 	return stream.pWrite.CloseWithError(err)
 }
 
-// AsyncStreamRead return a channel that receive the payload and it's metadata
-func (stream *PayloadStream) AsyncStreamRead() <-chan *SegmentEntry {
+// AsyncStreamRead returns a channel which receives PieceEntry
+func (stream *PayloadStream) AsyncStreamRead() <-chan *PieceEntry {
 	return stream.entryCh
 }
 
-// Close write and read stream by the safe way
+// Close writes and reads stream by the safe way
 func (stream *PayloadStream) Close() {
 	close(stream.entryCh)
 	stream.StreamClose()
@@ -127,20 +131,20 @@ func (stream *PayloadStream) Close() {
 
 func (stream *PayloadStream) readStream() {
 	var (
-		count    uint32
-		readSize uint32
+		segmentPieceIdx uint32
+		totalReadSize   int
 	)
 	for {
-		entry := &SegmentEntry{
-			objectID:       stream.objectID,
-			replicaIdx:     stream.replicaIdx,
-			segmentIdx:     count,
-			redundancyType: stream.redundancyType,
+		entry := &PieceEntry{
+			objectID:          stream.objectID,
+			redundancyType:    stream.redundancyType,
+			segmentPieceIndex: segmentPieceIdx,
+			ecPieceIndex:      stream.ecPieceIndex,
 		}
-		data := make([]byte, stream.segmentSize)
+		data := make([]byte, stream.pieceSize)
 		n, err := stream.readN(data)
 		if err != nil && err != io.EOF {
-			log.Errorw("failed to read payload stream", "err", err)
+			log.Errorw("failed to read payload stream", "error", err)
 			entry.err = err
 			stream.entryCh <- entry
 			return
@@ -152,30 +156,32 @@ func (stream *PayloadStream) readStream() {
 			log.Debugw("payload stream on closed", "object_id", stream.objectID)
 			return
 		}
-		entry.segmentData = data
+		entry.pieceData = data
 		stream.entryCh <- entry
-		count++
-		readSize = readSize + uint32(n)
-		log.Debugw("payload stream has read", "read_total_size", readSize, "object_id", stream.objectID,
-			"segment_count:", count-1)
+		segmentPieceIdx++
+		totalReadSize += n
+		log.Debugw("payload stream has read", "total_read_size", totalReadSize, "object_id", stream.objectID,
+			"segment_piece_index", segmentPieceIdx-1, "cur_read_size", n, "error", err)
 	}
 }
 
+// readN is used to read len(b) data or io.EOF.
 func (stream *PayloadStream) readN(b []byte) (int, error) {
+	if len(b) == 0 {
+		return 0, fmt.Errorf("failed to read due to invalid args")
+	}
+
 	var (
-		err       error
-		totalSize int
-		curSize   int
-		size      int
+		totalReadLen int
+		curReadLen   int
+		err          error
 	)
 
-	totalSize = len(b)
 	for {
-		size, err = stream.pRead.Read(b[curSize:])
-		curSize = curSize + size
-		if err != nil || curSize == totalSize {
-			break
+		curReadLen, err = stream.pRead.Read(b[totalReadLen:])
+		totalReadLen += curReadLen
+		if err != nil || totalReadLen == len(b) {
+			return totalReadLen, err
 		}
 	}
-	return curSize, err
 }

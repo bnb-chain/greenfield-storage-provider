@@ -102,10 +102,6 @@ func (greenfield *Greenfield) updateClient() {
 			)
 			for _, client := range greenfield.backUpClients {
 				gnfdCompositeClient := client.gnfdCompositeClients.GetClient()
-				// if err != nil {
-				// 	log.Errorw("get composite client failed ", "node_addr", client.Provider, "error", err)
-				// 	continue
-				// }
 				status, err := gnfdCompositeClient.RpcClient.TmClient.Status(context.Background())
 				if err != nil {
 					log.Errorw("get status failed", "node_addr", client.Provider, "error", err)
@@ -119,7 +115,7 @@ func (greenfield *Greenfield) updateClient() {
 				}
 				client.currentHeight = currentHeight
 				client.updatedAt = time.Now()
-				log.Debugw("chain info", "node_addr", client.Provider, "current_height", currentHeight)
+				// log.Debugw("chain info", "node_addr", client.Provider, "current_height", currentHeight)
 			}
 			if maxHeightClient != greenfield.getCurrentClient() {
 				greenfield.setCurrentClient(maxHeightClient)
