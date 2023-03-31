@@ -10,6 +10,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName string) ([]*Object, error)
 	err = b.db.Table((&Object{}).TableName()).
 		Select("*").
 		Where("bucket_name = ?", bucketName).
+		Order("create_at desc").
 		Find(&objects).Error
 	return objects, err
 }
@@ -40,4 +41,18 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 		Order("objects.update_at asc").
 		Find(&objects).Error
 	return objects, err
+}
+
+// GetObjectByObjectAndBucketName get object info by an object and a bucket name
+func (b *BsDBImpl) GetObjectByObjectAndBucketName(objectName string, bucketName string) (*Object, error) {
+	var (
+		object *Object
+		err    error
+	)
+
+	err = b.db.Table((&Object{}).TableName()).
+		Select("*").
+		Where("object_name = ? and bucket_name = ?", objectName, bucketName).
+		Find(&object).Error
+	return object, err
 }

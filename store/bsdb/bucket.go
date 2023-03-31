@@ -16,7 +16,8 @@ func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
 		err     error
 	)
 
-	err = b.db.Find(&buckets, "owner_address = ?", accountID).Error
+	err = b.db.Order("create_at desc").
+		Find(&buckets, "owner_address = ?", accountID).Error
 	return buckets, err
 }
 

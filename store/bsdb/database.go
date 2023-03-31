@@ -22,6 +22,8 @@ type Metadata interface {
 	GetPaymentByBucketID(bucketID int64, isFullList bool) (*StreamRecord, error)
 	// GetPaymentByPaymentAddress get bucket payment info by a payment address
 	GetPaymentByPaymentAddress(address common.Address) (*StreamRecord, error)
+	// GetObjectByObjectAndBucketName get object info by an object and a bucket name
+	GetObjectByObjectAndBucketName(objectName string, bucketName string) (*Object, error)
 	// ListObjectsByBucketName list objects info by a bucket name
 	ListObjectsByBucketName(bucketName string) ([]*Object, error)
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
