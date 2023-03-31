@@ -45,14 +45,13 @@ func (client *ChallengeClient) Close() error {
 }
 
 // ChallengePiece send challenge piece request
-func (client *ChallengeClient) ChallengePiece(ctx context.Context, objectID uint64, replicaIdx int32, segmentIdx uint32,
+func (client *ChallengeClient) ChallengePiece(ctx context.Context, objectID uint64, redundancyIdx int32, segmentIdx uint32,
 	opts ...grpc.CallOption) ([]byte, [][]byte, []byte, error) {
 	resp, err := client.challenge.ChallengePiece(ctx, &types.ChallengePieceRequest{
-		ObjectId:   objectID,
-		ReplicaIdx: replicaIdx,
-		SegmentIdx: segmentIdx,
+		ObjectId:      objectID,
+		SegmentIdx:    segmentIdx,
+		RedundancyIdx: redundancyIdx,
 	}, opts...)
-	log.Debugw("finish to challenge piece", "error", err)
 	if err != nil {
 		return nil, nil, nil, merrors.GRPCErrorToInnerError(err)
 	}

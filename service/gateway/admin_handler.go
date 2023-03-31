@@ -184,7 +184,7 @@ func (gateway *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request)
 	}
 	integrityHash, pieceHash, pieceData, err := gateway.challenge.ChallengePiece(context.Background(), objectID, redundancyIdx, segmentIdx)
 	if err != nil {
-		log.Errorf("failed to challenge", "error", err)
+		log.Errorf("failed to challenge piece", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}
