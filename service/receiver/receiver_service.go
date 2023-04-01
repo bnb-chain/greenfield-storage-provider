@@ -91,12 +91,11 @@ func (receiver *Receiver) SyncObject(stream types.ReceiverService_SyncObjectServ
 	// read payload from stream, the payload is spilt to segment size
 	for {
 		select {
-		case entry := <-pstream.AsyncStreamRead():
-			log.Debugw("read segment from stream", "segment_key", entry.PieceKey(), "error", entry.Error())
-			if entry.Error() == io.EOF {
-				errCh <- nil
+		case entry, ok := <-pstream.AsyncStreamRead():
+			if !ok { // has finished
 				return
 			}
+			log.Debugw("get piece entry from stream", "piece_key", entry.PieceKey(), "piece_len", len(entry.Data()), "error", entry.Error())
 			if entry.Error() != nil {
 				errCh <- entry.Error()
 				return

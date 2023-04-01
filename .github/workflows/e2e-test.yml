@@ -91,4 +91,3 @@ jobs:
           cd greenfield-integration-test
           go test tests/create_object_test.go
           cd ..
-          tail -n 1000 deployment/localup/local_env/sp0/gnfd-sp.log

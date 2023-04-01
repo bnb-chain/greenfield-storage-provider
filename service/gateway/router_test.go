@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -34,11 +35,7 @@ type routerTestContext struct {
 
 // newRequest is a helper function to create a new request with params context.
 func newRequest(ctx *routerTestContext) *http.Request {
-	req, err := http.NewRequest(ctx.method, ctx.url, strings.NewReader(""))
-	if err != nil {
-		panic(err)
-	}
-	return req
+	return httptest.NewRequest(ctx.method, ctx.url, strings.NewReader(""))
 }
 
 func checkRouter(t *testing.T, ctx *routerTestContext) {

@@ -125,7 +125,6 @@ func (stream *PayloadStream) AsyncStreamRead() <-chan *PieceEntry {
 
 // Close writes and reads stream by the safe way
 func (stream *PayloadStream) Close() {
-	close(stream.entryCh)
 	stream.StreamClose()
 }
 
@@ -151,17 +150,19 @@ func (stream *PayloadStream) readStream() {
 		}
 		data = data[0:n]
 		if err == io.EOF && n == 0 {
-			entry.err = err
-			stream.entryCh <- entry
-			log.Debugw("payload stream on closed", "object_id", stream.objectID)
+			close(stream.entryCh)
 			return
 		}
 		entry.pieceData = data
 		stream.entryCh <- entry
 		segmentPieceIdx++
 		totalReadSize += n
-		log.Debugw("payload stream has read", "total_read_size", totalReadSize, "object_id", stream.objectID,
+		log.Debugw("succeed to produce stream piece", "total_read_size", totalReadSize, "object_id", stream.objectID,
 			"segment_piece_index", segmentPieceIdx-1, "cur_read_size", n, "error", err)
+		if err == io.EOF {
+			close(stream.entryCh)
+			return
+		}
 	}
 }
 

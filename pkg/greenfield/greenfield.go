@@ -115,7 +115,6 @@ func (greenfield *Greenfield) updateClient() {
 				}
 				client.currentHeight = currentHeight
 				client.updatedAt = time.Now()
-				// log.Debugw("chain info", "node_addr", client.Provider, "current_height", currentHeight)
 			}
 			if maxHeightClient != greenfield.getCurrentClient() {
 				greenfield.setCurrentClient(maxHeightClient)

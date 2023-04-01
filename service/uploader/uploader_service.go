@@ -112,13 +112,12 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 	// read payload from stream, the payload is spilt to pieces by piece size
 	for {
 		select {
-		case entry := <-pstream.AsyncStreamRead():
-			log.Debugw("read piece data from stream", "piece_key", entry.PieceKey(),
-				"piece_len", len(entry.Data()), "error", entry.Error())
-			if entry.Error() == io.EOF {
-				err = nil
+		case entry, ok := <-pstream.AsyncStreamRead():
+			if !ok { // has finished
 				return
 			}
+			log.Debugw("get piece entry from stream", "piece_key", entry.PieceKey(),
+				"piece_len", len(entry.Data()), "error", entry.Error())
 			if entry.Error() != nil {
 				err = entry.Error()
 				return
