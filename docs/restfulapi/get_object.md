@@ -26,15 +26,15 @@ You should set `BucketName` in url host to download an object.
 
 ### Path Parameter
 
-None
+The request does not have a path parameter.
 
 ### Query Parameter
 
-None
+The request does not have a query parameter.
 
 ### Request Body
 
-None
+The request does not have a request body.
 
 ## Request Syntax
 
@@ -47,9 +47,9 @@ Range: Range
 
 ## HTTP Response Header
 
-| ParameterName     | Type   | Required | Description                           |
-| ----------------- | ------ | -------- | ------------------------------------- |
-| X-Gnfd-Request-ID | string | yes      | defines trace id, trace request in sp |
+| ParameterName     | Type   | Description                           |
+| ----------------- | ------ | ------------------------------------- |
+| X-Gnfd-Request-ID | string | defines trace id, trace request in sp |
 
 ## HTTP Response Parameter
 

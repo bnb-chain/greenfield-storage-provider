@@ -28,11 +28,11 @@ You should set `BucketName` in url host to upload an object.
 
 ### Path Parameter
 
-None
+The request does not have a path parameter.
 
 ### Query Parameter
 
-None
+The request does not have a query parameter.
 
 ### Request Body
 
@@ -51,14 +51,16 @@ Body
 
 ## HTTP Response Header
 
-| ParameterName     | Type   | Required | Description                           |
-| ----------------- | ------ | -------- | ------------------------------------- |
-| X-Gnfd-Request-ID | string | yes      | defines trace id, trace request in sp |
-| Etag              | string | yes      | Entity tag for the uploaded object    |
+| ParameterName     | Type   | Description                           |
+| ----------------- | ------ | ------------------------------------- |
+| X-Gnfd-Request-ID | string | defines trace id, trace request in sp |
+| Etag              | string | Entity tag for the uploaded object    |
 
 ## HTTP Response Parameter
 
 ### Response Body
+
+If the request is successful, the service sends back an HTTP 200 response.
 
 If you failed to send request to put object, you will get reponse body in XML:
 

@@ -24,7 +24,7 @@ This API is used to sign an approval for creating a bucket action or creating an
 
 ### Path Parameter
 
-None
+The request does not have a path parameter.
 
 ### Query Parameter
 
@@ -34,7 +34,7 @@ None
 
 ### Request Body
 
-None
+The request does not have a request body.
 
 ## Request Syntax
 
@@ -47,14 +47,16 @@ Authorization: Authorization
 
 ## HTTP Response Header
 
-| ParameterName                                     | Type   | Required | Description                           |
-| ------------------------------------------------- | ------ | -------- | ------------------------------------- |
-| X-Gnfd-Request-ID                                 | string | yes      | defines trace id, trace request in sp |
-| [X-Gnfd-Signed-Msg](./header/get_approval_header.md) | string | yes      | defines signed msg                    |
+| ParameterName                                     | Type   | Description                           |
+| ------------------------------------------------- | ------ | ------------------------------------- |
+| X-Gnfd-Request-ID                                 | string | defines trace id, trace request in sp |
+| [X-Gnfd-Signed-Msg](./header/get_approval_header.md) | string | defines signed msg                    |
 
 ## HTTP Response Parameter
 
 ### Response Body
+
+If the request is successful, the service sends back an HTTP 200 response.
 
 If you failed to send request to get approval, you will get reponse body in XML:
 

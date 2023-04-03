@@ -25,15 +25,15 @@ This API is used to challenge object data.
 
 ### Path Parameter
 
-None
+The request does not have a path parameter.
 
 ### Query Parameter
 
-None
+The request does not have a query parameter.
 
 ### Request Body
 
-None
+The request does not have a request body.
 
 ## Request Syntax
 
@@ -47,17 +47,17 @@ Authorization: Authorization
 
 ## HTTP Response Header
 
-| ParameterName         | Type   | Required | Description                           |
-| --------------------- | ------ | -------- | ------------------------------------- |
-| X-Gnfd-Request-ID     | string | yes      | defines trace id, trace request in sp |
-| X-Gnfd-Integrity-Hash | string | yes      | defines integrity hash                |
-| X-Gnfd-Piece-Hash     | string | yes      | defines piece hash list               |
+| ParameterName         | Type   | Description                           |
+| --------------------- | ------ | ------------------------------------- |
+| X-Gnfd-Request-ID     | string | defines trace id, trace request in sp |
+| X-Gnfd-Integrity-Hash | string | defines integrity hash                |
+| X-Gnfd-Piece-Hash     | string | defines piece hash list               |
 
 ## HTTP Response Parameter
 
 ### Response Body
 
-If you challenge object data successfully, you will get piece data in response body which could 4M or 16M.
+If you challenge object data successfully, you will get piece data in response body which could be 4M or 16M.
 
 If you failed to send request to put object, you will get reponse body in XML:
 
@@ -79,7 +79,7 @@ Body
 
 ## Examples
 
-### Example 1: Challenge an object
+### Example 1: Challenge object data
 
 ```shell
 GET /greenfield/admin/v1/challenge HTTP/1.1
@@ -91,7 +91,7 @@ X-Gnfd-Redundancy-Index: 1
 X-Gnfd-Piece-Index: 2
 ```
 
-### Sample Response: Download an object successfully
+### Sample Response: Challenge object data successfully
 
 ```shell
 HTTP/1.1 200 OK
