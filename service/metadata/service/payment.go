@@ -36,7 +36,7 @@ func (metadata *Metadata) GetPaymentByBucketName(ctx context.Context, req *metat
 		}
 		res = &types.StreamRecord{
 			Account:         streamRecord.Account.String(),
-			CrudTimestamp:   streamRecord.UpdateTime,
+			CrudTimestamp:   streamRecord.CrudTimestamp,
 			NetflowRate:     math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
 			StaticBalance:   math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
 			BufferBalance:   math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
@@ -76,7 +76,7 @@ func (metadata *Metadata) GetPaymentByBucketID(ctx context.Context, req *metatyp
 		}
 		res = &types.StreamRecord{
 			Account:         streamRecord.Account.String(),
-			CrudTimestamp:   streamRecord.UpdateTime,
+			CrudTimestamp:   streamRecord.CrudTimestamp,
 			NetflowRate:     math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
 			StaticBalance:   math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
 			BufferBalance:   math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),

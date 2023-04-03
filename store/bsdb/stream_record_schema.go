@@ -10,7 +10,7 @@ type StreamRecord struct {
 	// Account defines the account address
 	Account common.Address `gorm:"account"`
 	// UpdateTime defines the latest update timestamp of the stream record
-	UpdateTime int64 `gorm:"update_time"`
+	CrudTimestamp int64 `gorm:"crud_timestamp"`
 	// NetflowRate defines the per-second rate that an account's balance is changing.
 	// It is the sum of the account's inbound and outbound flow rates.
 	NetflowRate *common.Big `gorm:"netflow_rate"`
@@ -24,7 +24,7 @@ type StreamRecord struct {
 	// Status defines the status of the stream account
 	Status string `gorm:"status"`
 	// SettleTimestamp defines the unix timestamp when the stream account will be settled
-	SettleTimestamp int64 `gorm:"column:settle_time"`
+	SettleTimestamp int64 `gorm:"column:settle_timestamp"`
 	// OutFlows defines the accumulated outflow rates of the stream account
 	OutFlows []byte `gorm:"out_flows;type:longblob"`
 }
