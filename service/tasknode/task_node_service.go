@@ -37,12 +37,24 @@ var _ types.TaskNodeServiceServer = &TaskNode{}
 // ReplicateObject call AsyncReplicateObject non-blocking upstream services
 func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.ReplicateObjectRequest) (
 	resp *types.ReplicateObjectResponse, err error) {
+	/*
+		resp = &types.ReplicateObjectResponse{}
+		taskNode.spDB.UpdateJobState(req.GetObjectInfo().Id.Uint64(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
+		errCh := make(chan error)
+		go taskNode.AsyncReplicateObject(req, errCh)
+		err = <-errCh
+		log.Debugw("receive the replicate object task", "object_id", req.GetObjectInfo().Id)
+		return
+	*/
 	resp = &types.ReplicateObjectResponse{}
-	taskNode.spDB.UpdateJobState(req.GetObjectInfo().Id.Uint64(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
-	errCh := make(chan error)
-	go taskNode.AsyncReplicateObject(req, errCh)
-	err = <-errCh
-	log.Debugw("receive the replicate object task", "object_id", req.GetObjectInfo().Id)
+	t, err := newReplicateObjectTask(taskNode, req.GetObjectInfo())
+	if err != nil {
+		return
+	}
+	if err = t.init(); err != nil {
+		return
+	}
+	go t.execute()
 	return
 }
 

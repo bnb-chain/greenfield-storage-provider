@@ -150,3 +150,55 @@ func (client *GatewayClient) SyncPieceData(
 	}
 	return integrityHash, signature, nil
 }
+
+// ReplicateObjectData replicates object piece data to the target storage-provider.
+func (client *GatewayClient) ReplicateObjectData(
+	objectInfo *types.ObjectInfo,
+	pieceSize uint32,
+	redundancyIdx uint32,
+	approval *p2ptypes.GetApprovalResponse,
+	objectDataReader io.Reader) (integrityHash []byte, signature []byte, err error) {
+	req, err := http.NewRequest(http.MethodPut, client.address+model.SyncPath, objectDataReader)
+	if err != nil {
+		log.Errorw("failed to sync piece data due to new request error", "error", err)
+		return nil, nil, err
+	}
+	marshalObjectInfo := hex.EncodeToString(types.ModuleCdc.MustMarshalJSON(objectInfo))
+	marshalApproval, err := json.Marshal(approval)
+	if err != nil {
+		log.Errorw("failed to proto marshal approval", "error", err)
+		return
+	}
+	req.Header.Add(model.GnfdObjectInfoHeader, marshalObjectInfo)
+	req.Header.Add(model.GnfdRedundancyIndexHeader, util.Uint32ToString(redundancyIdx))
+	req.Header.Add(model.GnfdPieceSizeHeader, util.Uint32ToString(pieceSize))
+	req.Header.Add(model.GnfdReplicateApproval, string(marshalApproval))
+	req.Header.Add(model.ContentTypeHeader, model.OctetStream)
+
+	resp, err := client.httpClient.Do(req)
+	if err != nil {
+		log.Errorw("failed to sync piece data to other sp", "sp_endpoint", client.address, "error", err)
+		return nil, nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		log.Errorw("failed to sync piece data", "status_code", resp.StatusCode, "sp_endpoint", client.address)
+		return nil, nil, fmt.Errorf("failed to sync piece")
+	}
+
+	integrityHash, err = hex.DecodeString(resp.Header.Get(model.GnfdIntegrityHashHeader))
+	if err != nil {
+		log.Errorw("failed to parse integrity hash header",
+			"integrity_hash", resp.Header.Get(model.GnfdIntegrityHashHeader),
+			"sp_endpoint", client.address, "error", err)
+		return nil, nil, err
+	}
+	signature, err = hex.DecodeString(resp.Header.Get(model.GnfdIntegrityHashSignatureHeader))
+	if err != nil {
+		log.Errorw("failed to parse integrity hash signature header",
+			"integrity_hash_signature", resp.Header.Get(model.GnfdIntegrityHashSignatureHeader),
+			"sp_endpoint", client.address, "error", err)
+		return nil, nil, err
+	}
+	return integrityHash, signature, nil
+}
