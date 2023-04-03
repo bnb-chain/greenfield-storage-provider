@@ -16,12 +16,12 @@ This API is used by primary SP to replicate object data to secondary SP.
 
 ## HTTP Request Header
 
-| ParameterName           | Type   | Required | Description                                                                                                                      |
-| ----------------------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| X-Gnfd-Object-Info      | string | yes      | The marshal string of the [ObjectInfo](./header/replicate_object_data_header.md#objectinfo) Message                              |
-| X-Gnfd-Replica-Idx      | string | yes      | The index of SP which will be changed to `RedundancyIndex`                                                                       |
-| X-Gnfd-Segment-Size     | string | yes      | The piece size of replicated data which will be changed to `PieceSize`                                                           |
-| X-Gnfd-Replica-Approval | string | yes      | The replicated approval which will be changed to [ReplicateApproval](./header/replicate_object_data_header.md#replicateapproval) |
+| ParameterName           | Type   | Required | Description                                                                                                                         |
+| ----------------------- | ------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| X-Gnfd-Object-Info      | string | yes      | The marshal string of the [ObjectInfo](./header/replicate_object_data_header.md#objectinfo) Message                                   |
+| X-Gnfd-Redundancy-Index | string | yes      | The index of SP.                                                                                                                    |
+| X-Gnfd-Piece-Size       | string | yes      | The piece size of replicated data.                                                                                                  |
+| X-Gnfd-Replica-Approval | string | yes      | Defines SP approval that allows to replicate piece data[ReplicateApproval](./header/replicate_object_data_header.md#replicateapproval) |
 
 ## HTTP Request Parameter
 
@@ -43,14 +43,16 @@ The replicated binary data.
 PUT /greenfield/receiver/v1/sync-piece
 Host: gnfd.nodereal.com
 X-Gnfd-Object-Info: ObjectInfo
-X-Gnfd-Replica-Idx: ReplicaIdx
-X-Gnfd-Segment-Size: SegmentSize
+X-Gnfd-Redundancy-Index: RedundancyIndex
+X-Gnfd-Piece-Size: PieceSize
 X-Gnfd-Replica-Approval: ReplicaApproval
 
 Body
 ```
 
 ## HTTP Response Header
+
+The response returns the following HTTP headers.
 
 | ParameterName                   | Type   | Description                                           |
 | ------------------------------- | ------ | ----------------------------------------------------- |
@@ -64,12 +66,7 @@ Body
 
 If the request is successful, the service sends back an HTTP 200 response.
 
-If you failed to send request to put object, you will get reponse body in XML:
-
-| ParameterName | Type   | Description                        |
-| ------------- | ------ | ---------------------------------- |
-| errorCode     | string | error returned code                |
-| errorMessage  | string | the message of error returned code |
+If you failed to send request to get approval, you will get error response body in [XML](./common/error.md#sp-error-response-parameter).
 
 ## Response Syntax
 
@@ -89,8 +86,8 @@ GET /greenfield/receiver/v1/sync-piece HTTP/1.1
 Host: gnfd.nodereal.com
 Date: Fri, 31 March 2023 17:32:00 GMT
 X-Gnfd-Object-Info: ObjectInfo
-X-Gnfd-Replica-Idx: ReplicaIdx
-X-Gnfd-Segment-Size: SegmentSize
+X-Gnfd-Redundancy-Index: RedundancyIndex
+X-Gnfd-Piece-Size: PieceSize
 X-Gnfd-Replica-Approval: ReplicaApproval
 
 [14194304 bytes of object data]

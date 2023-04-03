@@ -14,12 +14,12 @@ This API is used to challenge object data.
 
 ## HTTP Request Header
 
-| ParameterName           | Type   | Required | Description                                                               |
-| ----------------------- | ------ | -------- | ------------------------------------------------------------------------- |
-| X-Gnfd-Object-ID        | string | yes      | Object ID of the challenged object                                        |
-| X-Gnfd-Redundancy-Index | string | yes      | Redundancy Index of the challenged object which is used to specify the SP |
-| X-Gnfd-Piece-Index      | string | yes      | Piece Index is used to specify the object's piece data                    |
-| Authorization           | string | yes      | The authorization string of the HTTP request                              |
+| ParameterName           | Type   | Required | Description                                                                |
+| ----------------------- | ------ | -------- | -------------------------------------------------------------------------- |
+| X-Gnfd-Object-ID        | string | yes      | Object ID of the challenged object.                                        |
+| X-Gnfd-Redundancy-Index | string | yes      | Redundancy Index of the challenged object which is used to specify the SP. |
+| X-Gnfd-Piece-Index      | string | yes      | Piece Index is used to specify the object's piece data.                    |
+| Authorization           | string | yes      | The authorization string of the HTTP request.                              |
 
 ## HTTP Request Parameter
 
@@ -47,6 +47,8 @@ Authorization: Authorization
 
 ## HTTP Response Header
 
+The response returns the following HTTP headers.
+
 | ParameterName         | Type   | Description                           |
 | --------------------- | ------ | ------------------------------------- |
 | X-Gnfd-Request-ID     | string | defines trace id, trace request in sp |
@@ -59,12 +61,7 @@ Authorization: Authorization
 
 If you challenge object data successfully, you will get piece data in response body which could be 4M or 16M.
 
-If you failed to send request to put object, you will get reponse body in XML:
-
-| ParameterName | Type   | Description                        |
-| ------------- | ------ | ---------------------------------- |
-| errorCode     | string | error returned code                |
-| errorMessage  | string | the message of error returned code |
+If you failed to send request to get approval, you will get error response body in [XML](./common/error.md#sp-error-response-parameter).
 
 ## Response Syntax
 

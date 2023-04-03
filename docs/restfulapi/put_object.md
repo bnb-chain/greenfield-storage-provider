@@ -51,6 +51,8 @@ Body
 
 ## HTTP Response Header
 
+The response returns the following HTTP headers.
+
 | ParameterName     | Type   | Description                           |
 | ----------------- | ------ | ------------------------------------- |
 | X-Gnfd-Request-ID | string | defines trace id, trace request in sp |
@@ -62,12 +64,7 @@ Body
 
 If the request is successful, the service sends back an HTTP 200 response.
 
-If you failed to send request to put object, you will get reponse body in XML:
-
-| ParameterName | Type   | Description                        |
-| ------------- | ------ | ---------------------------------- |
-| errorCode     | string | error returned code                |
-| errorMessage  | string | the message of error returned code |
+If you failed to send request to get approval, you will get error response body in [XML](./common/error.md#sp-error-response-parameter).
 
 ## Response Syntax
 

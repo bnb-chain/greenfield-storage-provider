@@ -48,10 +48,12 @@ Authorization: Authorization
 
 ## HTTP Response Header
 
+The response returns the following HTTP headers.
+
 | ParameterName     | Type   | Description                           |
 | ----------------- | ------ | ------------------------------------- |
 | X-Gnfd-Request-ID | string | defines trace id, trace request in sp |
-| Content-Type      | string | value is `application/xml`            |
+| Content-Type      | string | value is `application/xml`          |
 
 ## HTTP Response Parameter
 
@@ -67,12 +69,7 @@ If the request is successful, the service sends back an HTTP 200 response.
 | SPFreeReadQuotaSize | integer | SPFreeReadQuotaSize is the sp default free quota                    |
 | ReadConsumedSize    | integer | ReadConsumedSize is currently consumed size                         |
 
-If you failed to send request to put object, you will get reponse body in XML:
-
-| ParameterName | Type   | Description                        |
-| ------------- | ------ | ---------------------------------- |
-| errorCode     | string | error returned code                |
-| errorMessage  | string | the message of error returned code |
+If you failed to send request to get approval, you will get error response body in [XML](./common/error.md#sp-error-response-parameter).
 
 ## Response Syntax
 

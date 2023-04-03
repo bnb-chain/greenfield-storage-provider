@@ -47,6 +47,8 @@ Authorization: Authorization
 
 ## HTTP Response Header
 
+The response returns the following HTTP headers.
+
 | ParameterName                                     | Type   | Description                           |
 | ------------------------------------------------- | ------ | ------------------------------------- |
 | X-Gnfd-Request-ID                                 | string | defines trace id, trace request in sp |
@@ -58,12 +60,7 @@ Authorization: Authorization
 
 If the request is successful, the service sends back an HTTP 200 response.
 
-If you failed to send request to get approval, you will get reponse body in XML:
-
-| ParameterName | Type   | Description                        |
-| ------------- | ------ | ---------------------------------- |
-| errorCode     | string | error returned code                |
-| errorMessage  | string | the message of error returned code |
+If you failed to send request to get approval, you will get error response body in [XML](./common/error.md#sp-error-response-parameter).
 
 ## Response Syntax
 
@@ -75,7 +72,7 @@ X-Gnfd-Signed-Msg: SignedMsg
 
 ## Examples
 
-### Example 1: CreateBucket
+### Example 1: Create bucket
 
 The following request sends `CreateBucket` action to get approval.
 
@@ -87,7 +84,7 @@ X-Gnfd-Unsigned-Msg: unsigned msg string
 Authorization: authorization string
 ```
 
-### Sample Response: CreateBucket successfully
+### Sample Response: Create bucket successfully
 
 ```shell
 HTTP/1.1 200 OK
@@ -95,7 +92,7 @@ X-Gnfd-Request-ID: 14779951378820359452
 X-Gnfd-Signed-Msg: df5857b2ac67b491ba6d9c6632618be7fb22de13662356b593d74103408cf1af46eed90edaa77bdb65b12fc63ee3bec8314ad7bb0f3ae099ccf7dafe22abff2e01
 ```
 
-## Example 2: CreateObject
+## Example 2: Create object
 
 The following request sends `CreateObject` action to get approval.
 
@@ -107,10 +104,34 @@ X-Gnfd-Unsigned-Msg: unsigned msg string
 Authorization: authorization string
 ```
 
-### Sample Response: CreateObject successfully
+### Sample Response: Create object successfully
 
 ```shell
 HTTP/1.1 200 OK
 X-Gnfd-Request-ID: 4208447844380058399
 X-Gnfd-Signed-Msg: f00daace3251076f270984e596bbd72b1b1f2a1ae0443e6f32f37cef73d541d568a542333f6a9af2f235724d2a763b3cdc0b370d978d0315b8414fa51fc32a2e00
+```
+
+## Example 3: Failed to create bucket
+
+The following request sends `CreateBucket` action to get approval.
+
+```shell
+GET /greenfield/admin/v1/get-approval?action=CreateBucket HTTP/1.1
+Host: gnfd.nodereal.com
+Date: Fri, 31 March 2023 17:32:00 GMT
+X-Gnfd-Unsigned-Msg: unsigned msg string
+Authorization: authorization string
+```
+
+## Sample Response: There is an internal error in SP server
+
+```shell
+HTTP/1.1 403 Forbidden
+
+<Error>
+    <Code>InvalidUnsignedMsg</Code>
+    <Message>The uinsigned message is not valid for creating bucket</Message>
+    <RequestId>14379357152578345503</RequestId>
+</Error>
 ```
