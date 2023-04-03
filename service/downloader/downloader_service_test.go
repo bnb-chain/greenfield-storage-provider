@@ -10,33 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type splitToSegmentPieceInfosContext struct {
-	title       string // title of the test case
-	d           *Downloader
-	objectID    uint64
-	objectSize  uint64
-	startOffset uint64
-	endOffset   uint64
-	isErr       bool
-	pieceCount  int
-}
-
-func checkSplitToSegmentPieceInfos(t *testing.T, ctx *splitToSegmentPieceInfosContext) {
-	pieceInfos, err := ctx.d.SplitToSegmentPieceInfos(ctx.objectID, ctx.objectSize, ctx.startOffset, ctx.endOffset)
-	if !ctx.isErr {
-		require.NoError(t, err)
-	} else {
-		require.Error(t, err)
-		return
-	}
-	assert.Equal(t, ctx.pieceCount, len(pieceInfos))
-	realLength := uint64(0)
-	for _, p := range pieceInfos {
-		realLength += p.length
-	}
-	assert.Equal(t, ctx.endOffset-ctx.startOffset+1, realLength)
-}
-
 func TestSplitToSegmentPieceInfos(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -49,7 +22,16 @@ func TestSplitToSegmentPieceInfos(t *testing.T) {
 		MaxSegmentSize: 16 * 1024 * 1024,
 	}, nil).MaxTimes(100)
 
-	testCases := []splitToSegmentPieceInfosContext{
+	testCases := []struct {
+		name             string
+		d                *Downloader
+		objectID         uint64
+		objectSize       uint64
+		startOffset      uint64
+		endOffset        uint64
+		isErr            bool
+		wantedPieceCount int
+	}{
 		{
 			"invalid params",
 			d,
@@ -132,8 +114,21 @@ func TestSplitToSegmentPieceInfos(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.title, func(t *testing.T) {
-			checkSplitToSegmentPieceInfos(t, &testCase)
+		t.Run(testCase.name, func(t *testing.T) {
+			pieceInfos, err := testCase.d.SplitToSegmentPieceInfos(testCase.objectID, testCase.objectSize,
+				testCase.startOffset, testCase.endOffset)
+			if !testCase.isErr {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				return
+			}
+			assert.Equal(t, testCase.wantedPieceCount, len(pieceInfos))
+			realLength := uint64(0)
+			for _, p := range pieceInfos {
+				realLength += p.length
+			}
+			assert.Equal(t, testCase.endOffset-testCase.startOffset+1, realLength)
 		})
 	}
 }

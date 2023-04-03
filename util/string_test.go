@@ -8,13 +8,12 @@ import (
 )
 
 func TestStringToUint64(t *testing.T) {
-	type StringToUint64CaseContext struct {
-		title          string // title of the test case
-		originString   string
-		isErr          bool
-		expectedUint64 uint64
-	}
-	testCases := []StringToUint64CaseContext{
+	testCases := []struct {
+		name         string
+		originString string
+		wantedIsErr  bool
+		wantedUint64 uint64
+	}{
 		{
 			"invalid integer case",
 			"aa100aa",
@@ -42,24 +41,23 @@ func TestStringToUint64(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.title, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			outputUint64, err := StringToUint64(testCase.originString)
-			if testCase.isErr {
+			if testCase.wantedIsErr {
 				require.Error(t, err)
 			}
-			assert.Equal(t, testCase.expectedUint64, outputUint64)
+			assert.Equal(t, testCase.wantedUint64, outputUint64)
 		})
 	}
 }
 
 func TestStringToInt64(t *testing.T) {
-	type StringToInt64CaseContext struct {
-		title         string // title of the test case
-		originString  string
-		isErr         bool
-		expectedInt64 int64
-	}
-	testCases := []StringToInt64CaseContext{
+	testCases := []struct {
+		name         string
+		originString string
+		wantedIsErr  bool
+		wantedInt64  int64
+	}{
 		{
 			"invalid integer case",
 			"aa100aa",
@@ -93,24 +91,23 @@ func TestStringToInt64(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.title, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			outputInt64, err := StringToInt64(testCase.originString)
-			if testCase.isErr {
+			if testCase.wantedIsErr {
 				require.Error(t, err)
 			}
-			assert.Equal(t, testCase.expectedInt64, outputInt64)
+			assert.Equal(t, testCase.wantedInt64, outputInt64)
 		})
 	}
 }
 
 func TestStringToUint32(t *testing.T) {
-	type StringToUint32CaseContext struct {
-		title          string // title of the test case
-		originString   string
-		isErr          bool
-		expectedUint32 uint32
-	}
-	testCases := []StringToUint32CaseContext{
+	testCases := []struct {
+		name         string
+		originString string
+		wantedIsErr  bool
+		wantedUint32 uint32
+	}{
 		{
 			"invalid uint32",
 			"-100",
@@ -132,24 +129,23 @@ func TestStringToUint32(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.title, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			outputUint32, err := StringToUint32(testCase.originString)
-			if testCase.isErr {
+			if testCase.wantedIsErr {
 				require.Error(t, err)
 			}
-			assert.Equal(t, testCase.expectedUint32, outputUint32)
+			assert.Equal(t, testCase.wantedUint32, outputUint32)
 		})
 	}
 }
 
 func TestStringToInt32(t *testing.T) {
-	type StringToUint32CaseContext struct {
-		title         string // title of the test case
-		originString  string
-		isErr         bool
-		expectedInt32 int32
-	}
-	testCases := []StringToUint32CaseContext{
+	testCases := []struct {
+		name         string
+		originString string
+		wantedIsErr  bool
+		wantedInt32  int32
+	}{
 		{
 			"invalid int32",
 			"aa100aa",
@@ -177,24 +173,23 @@ func TestStringToInt32(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.title, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			outputInt32, err := StringToInt32(testCase.originString)
-			if testCase.isErr {
+			if testCase.wantedIsErr {
 				require.Error(t, err)
 			}
-			assert.Equal(t, testCase.expectedInt32, outputInt32)
+			assert.Equal(t, testCase.wantedInt32, outputInt32)
 		})
 	}
 }
 
 func TestStringToBool(t *testing.T) {
-	type StringToBoolCaseContext struct {
-		title        string // title of the test case
+	testCases := []struct {
+		name         string
 		originString string
-		isErr        bool
-		expectedBool bool
-	}
-	testCases := []StringToBoolCaseContext{
+		wantedIsErr  bool
+		wantedBool   bool
+	}{
 		{
 			"invalid bool",
 			"xxx",
@@ -215,23 +210,22 @@ func TestStringToBool(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.title, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			outputBool, err := StringToBool(testCase.originString)
-			if testCase.isErr {
+			if testCase.wantedIsErr {
 				require.Error(t, err)
 			}
-			assert.Equal(t, testCase.expectedBool, outputBool)
+			assert.Equal(t, testCase.wantedBool, outputBool)
 		})
 	}
 }
 
 func TestBoolToInt(t *testing.T) {
-	type TestBoolToIntCaseContext struct {
-		title       string // title of the test case
-		originBool  bool
-		expectedInt int
-	}
-	testCases := []TestBoolToIntCaseContext{
+	testCases := []struct {
+		name       string
+		originBool bool
+		wantedInt  int
+	}{
 		{
 			"false bool",
 			false,
@@ -244,20 +238,19 @@ func TestBoolToInt(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.title, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			outputInt := BoolToInt(testCase.originBool)
-			assert.Equal(t, testCase.expectedInt, outputInt)
+			assert.Equal(t, testCase.wantedInt, outputInt)
 		})
 	}
 }
 
 func TestJoinWithComma(t *testing.T) {
-	type TestJoinWithCommaCaseContext struct {
-		title             string // title of the test case
+	testCases := []struct {
+		name              string
 		originStringSlice []string
-		expectedString    string
-	}
-	testCases := []TestJoinWithCommaCaseContext{
+		wantedString      string
+	}{
 		{
 			"multi slice",
 			[]string{"123", "456"},
@@ -275,20 +268,19 @@ func TestJoinWithComma(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.title, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			outputString := JoinWithComma(testCase.originStringSlice)
-			assert.Equal(t, testCase.expectedString, outputString)
+			assert.Equal(t, testCase.wantedString, outputString)
 		})
 	}
 }
 
 func TestSplitByComma(t *testing.T) {
-	type TestSplitByCommaCaseContext struct {
-		title          string // title of the test case
-		originString   string
-		expectedString string
-	}
-	testCases := []TestSplitByCommaCaseContext{
+	testCases := []struct {
+		name         string
+		originString string
+		wantedString string
+	}{
 		{
 			"normal case",
 			"a,b,c",
@@ -301,9 +293,9 @@ func TestSplitByComma(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.title, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			outputStringSlice := SplitByComma(testCase.originString)
-			assert.Equal(t, testCase.expectedString, JoinWithComma(outputStringSlice))
+			assert.Equal(t, testCase.wantedString, JoinWithComma(outputStringSlice))
 		})
 	}
 }

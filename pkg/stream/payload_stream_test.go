@@ -10,54 +10,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type payloadStreamTestContext struct {
-	title            string // title of the test case
-	initFunc         func() *PayloadStream
-	sendFunc         func(*PayloadStream)
-	entryNumber      int // expected entry number
-	totalEntryLength int // expected sum of all the entry length
-	lastEntryLength  int // expected the last entry length
-	isError          bool
-}
-
-func checkPayloadStream(t *testing.T, ctx *payloadStreamTestContext) {
-	var (
-		err                  error
-		realEntryNumber      int
-		realTotalEntryLength int
-		realLastEntryLength  int
-	)
-	s := ctx.initFunc()
-	go ctx.sendFunc(s)
-
-	for {
-		entry, ok := <-s.AsyncStreamRead()
-		if !ok { // has finished
-			break
-		}
-		if entry.Error() != nil {
-			err = entry.Error()
-			break
-		}
-		log.Debugw("get piece entry from stream", "piece_key", entry.PieceKey(),
-			"piece_len", len(entry.Data()), "error", entry.Error())
-		realEntryNumber++
-		realLastEntryLength = len(entry.Data())
-		realTotalEntryLength += len(entry.Data())
-
-	}
-
-	if ctx.isError {
-		require.Error(t, err)
-	} else {
-		assert.Equal(t, realEntryNumber, ctx.entryNumber)
-		assert.Equal(t, realTotalEntryLength, ctx.totalEntryLength)
-		assert.Equal(t, realLastEntryLength, ctx.lastEntryLength)
-	}
-}
-
 func TestPayloadStream(t *testing.T) {
-	testCases := []payloadStreamTestContext{
+	testCases := []struct {
+		name                   string
+		initFunc               func() *PayloadStream
+		sendFunc               func(*PayloadStream)
+		wantedEntryNumber      int
+		wantedTotalEntryLength int
+		wantedLastEntryLength  int
+		wantedIsError          bool
+	}{
 		{
 			"invalid case",
 			func() *PayloadStream {
@@ -140,8 +102,40 @@ func TestPayloadStream(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.title, func(t *testing.T) {
-			checkPayloadStream(t, &testCase)
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				err                  error
+				realEntryNumber      int
+				realTotalEntryLength int
+				realLastEntryLength  int
+			)
+			s := testCase.initFunc()
+			go testCase.sendFunc(s)
+
+			for {
+				entry, ok := <-s.AsyncStreamRead()
+				if !ok { // has finished
+					break
+				}
+				if entry.Error() != nil {
+					err = entry.Error()
+					break
+				}
+				log.Debugw("get piece entry from stream", "piece_key", entry.PieceKey(),
+					"piece_len", len(entry.Data()), "error", entry.Error())
+				realEntryNumber++
+				realLastEntryLength = len(entry.Data())
+				realTotalEntryLength += len(entry.Data())
+
+			}
+
+			if testCase.wantedIsError {
+				require.Error(t, err)
+			} else {
+				assert.Equal(t, realEntryNumber, testCase.wantedEntryNumber)
+				assert.Equal(t, realTotalEntryLength, testCase.wantedTotalEntryLength)
+				assert.Equal(t, realLastEntryLength, testCase.wantedLastEntryLength)
+			}
 		})
 	}
 }
