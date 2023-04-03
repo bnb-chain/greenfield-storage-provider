@@ -24,6 +24,8 @@ var (
 	BlockSyncerService = strings.ToLower("BlockSyncer")
 	// ManagerService defines the name of manager service
 	ManagerService = strings.ToLower("Manager")
+	// MetricsService defines the name of metrics service
+	MetricsService = strings.ToLower("Metrics")
 	// P2PService defines the name of p2p service
 	P2PService = strings.ToLower("p2p")
 )
@@ -60,6 +62,8 @@ const (
 	SignerGRPCAddress = "localhost:9633"
 	// MetadataGRPCAddress default gRPC address of meta data service
 	MetadataGRPCAddress = "localhost:9733"
+	// MetricsHTTPAddress default HTTP address of metrics service
+	MetricsHTTPAddress = "localhost:24036"
 	// P2PGRPCAddress default gRPC address of p2p service
 	P2PGRPCAddress = "localhost:9833"
 	// P2PListenAddress default p2p protocol listen address of p2p node
@@ -174,7 +178,7 @@ const (
 	GnfdObjectIDHeader = "X-Gnfd-Object-ID"
 	// GnfdPieceIndexHeader defines piece idx, which is used by challenge
 	GnfdPieceIndexHeader = "X-Gnfd-Piece-Index"
-	// GnfdRedundancyIndexHeader defines redundancy idx, which is used by challenge
+	// GnfdRedundancyIndexHeader defines redundancy idx, which is used by challenge and receiver
 	GnfdRedundancyIndexHeader = "X-Gnfd-Redundancy-Index"
 	// GnfdIntegrityHashHeader defines integrity hash, which is used by challenge and receiver
 	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
@@ -186,10 +190,8 @@ const (
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
 	// GnfdObjectInfoHeader define object info, which is used by receiver
 	GnfdObjectInfoHeader = "X-Gnfd-Object-Info"
-	// GnfdReplicaIdxHeader defines replica idx, which is used by receiver
-	GnfdReplicaIdxHeader = "X-Gnfd-Replica-Idx"
-	// GnfdSegmentSizeHeader defines segment size, which is used by receiver
-	GnfdSegmentSizeHeader = "X-Gnfd-Segment-Size"
+	// GnfdPieceSizeHeader defines piece size, which is used to split by receiver
+	GnfdPieceSizeHeader = "X-Gnfd-Piece-Size"
 	// GnfdReplicateApproval defines SP approval that allow to replicate piece data, which is used by receiver
 	GnfdReplicateApproval = "X-Gnfd-Replica-Approval"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver

@@ -5,6 +5,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield/types/s3util"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gogo/protobuf/jsonpb"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -39,6 +41,12 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	if ok := common.IsHexAddress(r.Header.Get(model.GnfdUserAddressHeader)); !ok {
+		log.Errorw("failed to check account id", "account_id", reqContext.accountID, "error", err)
+		errDescription = InvalidAddress
+		return
+	}
+
 	req := &metatypes.GetUserBucketsRequest{
 		AccountId: r.Header.Get(model.GnfdUserAddressHeader),
 	}
@@ -46,12 +54,14 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 	resp, err := gateway.metadata.GetUserBuckets(ctx, req)
 	if err != nil {
 		log.Errorf("failed to get user buckets", "error", err)
+		errDescription = makeErrorDescription(err)
 		return
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true}
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, resp); err != nil {
 		log.Errorf("failed to get user buckets", "error", err)
+		errDescription = makeErrorDescription(err)
 		return
 	}
 
@@ -86,6 +96,12 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		return
 	}
 
+	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
+		errDescription = InvalidBucketName
+		return
+	}
+
 	req := &metatypes.ListObjectsByBucketNameRequest{
 		BucketName: reqContext.bucketName,
 	}
@@ -94,12 +110,14 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	resp, err := gateway.metadata.ListObjectsByBucketName(ctx, req)
 	if err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
+		errDescription = makeErrorDescription(err)
 		return
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true}
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, resp); err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
+		errDescription = makeErrorDescription(err)
 		return
 	}
 

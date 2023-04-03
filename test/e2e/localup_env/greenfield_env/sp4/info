@@ -1,0 +1,13 @@
+
+- address: 0x1ee57886094E9A7E08Cc8e740C1F8A51DDf40c63
+  name: sp4
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AqIAQajN7c2yoJdFcZczChFkV2ADBLdy0P+QmaNg1A0L"}'
+  pubkey_hex: 02a20041a8cdedcdb2a097457197330a116457600304b772d0ff9099a360d40d0b
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+pledge toe fiction possible example page gun jacket worth lesson object mammal patch royal expect extra organ wrong option obscure struggle wonder card plug
+

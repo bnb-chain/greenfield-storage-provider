@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -12,10 +11,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	tasknodeclient "github.com/bnb-chain/greenfield-storage-provider/service/tasknode/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 var _ lifecycle.Service = &Uploader{}
@@ -98,11 +101,14 @@ func (uploader *Uploader) serve(errCh chan error) {
 		return
 	}
 
-	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize))
-	types.RegisterUploaderServiceServer(grpcServer, uploader)
-	uploader.grpcServer = grpcServer
-	reflection.Register(grpcServer)
-	if err := grpcServer.Serve(lis); err != nil {
+	options := utilgrpc.GetDefaultServerOptions()
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mwgrpc.GetDefaultServerInterceptor()...)
+	}
+	uploader.grpcServer = grpc.NewServer(options...)
+	types.RegisterUploaderServiceServer(uploader.grpcServer, uploader)
+	reflection.Register(uploader.grpcServer)
+	if err := uploader.grpcServer.Serve(lis); err != nil {
 		log.Errorw("failed to start grpc server", "error", err)
 		return
 	}

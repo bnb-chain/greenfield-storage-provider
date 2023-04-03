@@ -96,6 +96,7 @@ func (s *BlockSyncer) initDB() error {
 		if module, ok := module.(modules.PrepareTablesModule); ok {
 			err = module.PrepareTables()
 			if err != nil {
+				log.Errorw("failed to prepare tables", "error", err)
 				return err
 			}
 		}

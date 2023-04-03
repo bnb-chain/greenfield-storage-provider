@@ -31,7 +31,7 @@ func NewStoreClient(pieceConfig *storage.PieceStoreConfig) (*StoreClient, error)
 	return &StoreClient{ps: ps}, nil
 }
 
-func (client *StoreClient) GetSegment(ctx context.Context, key string, offset, limit int64) ([]byte, error) {
+func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, limit int64) ([]byte, error) {
 	rc, err := client.ps.Get(ctx, key, offset, limit)
 	if err != nil {
 		log.Errorw("get piece data from piece store failed", "error", err)
@@ -46,6 +46,6 @@ func (client *StoreClient) GetSegment(ctx context.Context, key string, offset, l
 	return buf.Bytes(), nil
 }
 
-func (client *StoreClient) PutSegment(key string, value []byte) error {
+func (client *StoreClient) PutPiece(key string, value []byte) error {
 	return client.ps.Put(context.Background(), key, bytes.NewReader(value))
 }

@@ -10,10 +10,10 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/re
 message SyncObjectRequest {
   // object_info defines the information of the object.
   bnbchain.greenfield.storage.ObjectInfo object_info = 1;
-  // replica_idx defines the index of replicate.
-  uint32 replica_idx = 2;
-  // segment_size defines the spilt size of replicate data.
-  uint64 segment_size = 3;
+  // piece_size defines the spilt size of replicate data.
+  uint64 piece_size = 2;
+  // redundancy_idx defines the ec piece idx iff >= 0
+  int32 redundancy_idx = 3;
   // replica_data defines the data that replicate to storage provider.
   bytes replica_data = 4;
 }

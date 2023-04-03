@@ -3,10 +3,12 @@ package tasknode
 import (
 	"context"
 	"errors"
+	"math"
 	"sync"
 	"sync/atomic"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -23,7 +25,10 @@ import (
 )
 
 const (
-	ReplicateFactor    = 2
+	// ReplicateFactor defines the redundancy of replication
+	// TODO:: will update to （1, 2] on main net
+	ReplicateFactor = 1
+	// GetApprovalTimeout defines the timeout of getting secondary sp approval
 	GetApprovalTimeout = 10
 )
 
@@ -34,13 +39,15 @@ func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.Replic
 	resp *types.ReplicateObjectResponse, err error) {
 	resp = &types.ReplicateObjectResponse{}
 	taskNode.spDB.UpdateJobState(req.GetObjectInfo().Id.Uint64(), servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
-	go taskNode.AsyncReplicateObject(req)
+	errCh := make(chan error)
+	go taskNode.AsyncReplicateObject(req, errCh)
+	err = <-errCh
 	log.Debugw("receive the replicate object task", "object_id", req.GetObjectInfo().Id)
 	return
 }
 
 // AsyncReplicateObject replicate an object payload to other storage providers and seal object.
-func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest) (err error) {
+func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest, notifyErrCh chan error) (err error) {
 	ctx := context.Background()
 	processInfo := &servicetypes.ReplicateSegmentInfo{}
 	sealMsg := &storagetypes.MsgSealObject{}
@@ -73,22 +80,67 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 	params, err := taskNode.spDB.GetStorageParams()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query sp params", "error", err)
+		notifyErrCh <- err
 		return
 	}
 	segments := piecestore.ComputeSegmentCount(objectInfo.GetPayloadSize(),
 		params.GetMaxSegmentSize())
 	replicates := params.GetRedundantDataChunkNum() + params.GetRedundantParityChunkNum()
+	spList, approvals, err := taskNode.getApproval(objectInfo, int(replicates), int(replicates*ReplicateFactor), GetApprovalTimeout)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
+		notifyErrCh <- err
+		return
+	}
+
+	// allocates memory from resource manager
+	var memSize int
+	if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
+		memSize = (int(params.GetRedundantDataChunkNum()) +
+			int(params.GetRedundantParityChunkNum())) *
+			int(objectInfo.GetPayloadSize())
+	} else {
+		memSize = int(math.Ceil(
+			((float64(params.GetRedundantDataChunkNum()) + float64(params.GetRedundantParityChunkNum())) /
+				float64(params.GetRedundantDataChunkNum())) *
+				float64(objectInfo.GetPayloadSize())))
+	}
+	scope, err := taskNode.rcScope.BeginSpan()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
+		notifyErrCh <- err
+		return
+	}
+	stateFunc := func() string {
+		var state string
+		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
+			state = scope.Stat().String()
+			return nil
+		})
+		return state
+	}
+	err = scope.ReserveMemory(memSize, rcmgr.ReservationPriorityAlways)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
+			"reserve_size", memSize, "resource_state", stateFunc(), "error", err)
+		notifyErrCh <- err
+		return
+	}
+	defer func() {
+		scope.Done()
+		log.Debugw("end replicate object request", "resource_state", stateFunc())
+	}()
+
 	replicateData, err := taskNode.EncodeReplicateSegments(ctx, objectInfo.Id.Uint64(),
 		segments, int(replicates), objectInfo.GetRedundancyType())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to encode payload", "error", err)
+		notifyErrCh <- err
 		return
 	}
-	spList, approvals, err := taskNode.getApproval(objectInfo, int(replicates), int(replicates*ReplicateFactor), GetApprovalTimeout)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to get storage providers to replicate", "error", err)
-		return
-	}
+	// all preparations are completed, notify uploader
+	notifyErrCh <- nil
+
 	spEndpoints := maps.SortKeys(approvals)
 	var mux sync.Mutex
 	getSpFunc := func() (sp *sptypes.StorageProvider, approval *p2ptypes.GetApprovalResponse, err error) {
@@ -148,7 +200,7 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 				log.CtxDebugw(ctx, "receive the sp response", "replica_idx", rIdx, "integrity_hash",
 					integrityHash, "endpoint", sp.GetEndpoint(), "signature", signature)
 
-				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), math.NewUint(objectInfo.Id.Uint64()), integrityHash).GetSignBytes()
+				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), sdkmath.NewUint(objectInfo.Id.Uint64()), integrityHash).GetSignBytes()
 				approvalAddr, err := sdk.AccAddressFromHexUnsafe(sp.GetApprovalAddress())
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to parser sp operator address",
@@ -168,7 +220,7 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 				objectInfo.SecondarySpAddresses[rIdx] = sp.GetOperator().String()
 				taskNode.spDB.SetObjectInfo(objectInfo.Id.Uint64(), objectInfo)
 				taskNode.cache.Add(objectInfo.Id.Uint64(), processInfo)
-				log.CtxInfow(ctx, "success to sync payload to sp",
+				log.CtxInfow(ctx, "succeed to sync object piece to sp",
 					"sp", sp.GetOperator(), "endpoint", sp.GetEndpoint(), "replica_idx", rIdx)
 				if atomic.AddInt64(&done, 1) == int64(replicates) {
 					log.CtxInfow(ctx, "finish to sync all replicas")

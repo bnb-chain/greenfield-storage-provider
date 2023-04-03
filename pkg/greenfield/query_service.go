@@ -57,7 +57,7 @@ func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.Stora
 		return spInfos, err
 	}
 	for i := 0; i < len(resp.GetSps()); i++ {
-		spInfos = append(spInfos, &resp.GetSps()[i])
+		spInfos = append(spInfos, resp.GetSps()[i])
 	}
 	return spInfos, nil
 }
@@ -168,11 +168,13 @@ func (greenfield *Greenfield) VerifyGetObjectPermission(ctx context.Context, acc
 
 // VerifyPutObjectPermission verify put object permission.
 func (greenfield *Greenfield) VerifyPutObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
+	_ = object
 	client := greenfield.getCurrentClient().GnfdCompositeClient()
 	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{
 		Operator:   account,
 		BucketName: bucket,
-		ObjectName: object,
+		// TODO: Polish the function interface according to the semantics
+		// ObjectName: object,
 		ActionType: permissiontypes.ACTION_CREATE_OBJECT,
 	})
 	if err != nil {

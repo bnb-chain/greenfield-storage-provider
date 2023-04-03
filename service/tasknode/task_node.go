@@ -16,11 +16,15 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mdgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	p2pclient "github.com/bnb-chain/greenfield-storage-provider/service/p2p/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 var _ lifecycle.Service = &TaskNode{}
@@ -35,6 +39,7 @@ type TaskNode struct {
 	p2p        *p2pclient.P2PClient
 	spDB       sqldb.SPDB
 	chain      *greenfield.Greenfield
+	rcScope    rcmgr.ResourceScope
 	pieceStore *psclient.StoreClient
 	grpcServer *grpc.Server
 }
@@ -73,6 +78,10 @@ func NewTaskNodeService(cfg *TaskNodeConfig) (*TaskNode, error) {
 		log.Errorw("failed to create sp db client", "error", err)
 		return nil, err
 	}
+	if taskNode.rcScope, err = rcmgr.ResrcManager().OpenService(model.TaskNodeService); err != nil {
+		log.Errorw("failed to open task node resource scope", "error", err)
+		return nil, err
+	}
 
 	return taskNode, nil
 }
@@ -96,6 +105,7 @@ func (taskNode *TaskNode) Stop(ctx context.Context) error {
 	taskNode.signer.Close()
 	taskNode.p2p.Close()
 	taskNode.chain.Close()
+	taskNode.rcScope.Release()
 	return nil
 }
 
@@ -108,11 +118,14 @@ func (taskNode *TaskNode) serve(errCh chan error) {
 		return
 	}
 
-	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(model.MaxCallMsgSize), grpc.MaxSendMsgSize(model.MaxCallMsgSize))
-	types.RegisterTaskNodeServiceServer(grpcServer, taskNode)
-	taskNode.grpcServer = grpcServer
-	reflection.Register(grpcServer)
-	if err := grpcServer.Serve(lis); err != nil {
+	options := utilgrpc.GetDefaultServerOptions()
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mdgrpc.GetDefaultServerInterceptor()...)
+	}
+	taskNode.grpcServer = grpc.NewServer(options...)
+	types.RegisterTaskNodeServiceServer(taskNode.grpcServer, taskNode)
+	reflection.Register(taskNode.grpcServer)
+	if err := taskNode.grpcServer.Serve(lis); err != nil {
 		log.Errorw("failed to start grpc server", "error", err)
 		return
 	}
@@ -135,24 +148,24 @@ func (taskNode *TaskNode) EncodeReplicateSegments(ctx context.Context, objectID 
 	errCh := make(chan error, 10)
 	for segIdx := 0; segIdx < int(segments); segIdx++ {
 		go func(segIdx int) {
-			key := piecestore.EncodeSegmentPieceKey(objectID, uint32(segIdx))
-			segmentData, err := taskNode.pieceStore.GetSegment(ctx, key, 0, 0)
+			segmentPiecekey := piecestore.EncodeSegmentPieceKey(objectID, uint32(segIdx))
+			segmentPieceData, err := taskNode.pieceStore.GetPiece(ctx, segmentPiecekey, 0, 0)
 			if err != nil {
 				errCh <- err
 				return
 			}
 			if rType == storagetypes.REDUNDANCY_EC_TYPE {
-				encodeData, err := redundancy.EncodeRawSegment(segmentData,
+				ecPieceData, err := redundancy.EncodeRawSegment(segmentPieceData,
 					int(params.GetRedundantDataChunkNum()),
 					int(params.GetRedundantParityChunkNum()))
 				if err != nil {
 					errCh <- err
 					return
 				}
-				copy(data[segIdx], encodeData)
+				copy(data[segIdx], ecPieceData)
 			} else {
 				for rIdx := 0; rIdx < replicates; rIdx++ {
-					data[segIdx][rIdx] = segmentData
+					data[segIdx][rIdx] = segmentPieceData
 				}
 			}
 			log.Debugw("finish to encode payload", "object_id", objectID, "segment_idx", segIdx)

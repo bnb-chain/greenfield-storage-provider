@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
@@ -32,6 +33,7 @@ type StorageProviderConfig struct {
 	BlockSyncerCfg    *blocksyncer.Config
 	P2PCfg            *p2p.NodeConfig
 	LogCfg            *LogConfig
+	MetricsCfg        *metrics.MetricsConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -88,6 +90,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	BlockSyncerCfg:    DefaultBlockSyncerConfig,
 	P2PCfg:            DefaultP2PConfig,
 	LogCfg:            DefaultLogConfig,
+	MetricsCfg:        DefaultMetricsConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -121,6 +124,12 @@ var DefaultGreenfieldChainConfig = &gnfd.GreenfieldChainConfig{
 var DefaultBlockSyncerConfig = &blocksyncer.Config{
 	Modules: []string{"epoch", "bucket", "object", "payment"},
 	Dsn:     "localhost:3308",
+}
+
+// DefaultMetricsConfig defines the default config of Metrics service
+var DefaultMetricsConfig = &metrics.MetricsConfig{
+	Enabled:     false,
+	HTTPAddress: model.MetricsHTTPAddress,
 }
 
 type LogConfig struct {

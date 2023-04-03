@@ -1,4 +1,4 @@
-name: Lint Commit Messages
+name: Branch and Commit Lint
 
 on:
   push:
@@ -14,7 +14,7 @@ on:
       - release*
 
 jobs:
-  commit-lint:
+  commit-message-lint:
     strategy:
       matrix:
         node-version: [14.x]
@@ -50,7 +50,7 @@ jobs:
         with:
           configFile: /github/workspace/.github/commitlint.config.js
 
-  branch-naming-rules:
+  branch-naming-lint:
     strategy:
       matrix:
         os: [ ubuntu-latest ]

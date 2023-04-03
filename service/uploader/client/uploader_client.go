@@ -3,13 +3,14 @@ package client
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
-	types "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 // UploaderClient is an uploader gRPC service client wrapper
@@ -20,10 +21,11 @@ type UploaderClient struct {
 
 // NewUploaderClient return an UploaderClient instance
 func NewUploaderClient(address string) (*UploaderClient, error) {
-	conn, err := grpc.DialContext(context.Background(), address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
+	options := utilgrpc.GetDefaultClientOptions()
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+	}
+	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
 		log.Errorw("fail to invoke uploader service client", "error", err)
 		return nil, err
@@ -35,7 +37,7 @@ func NewUploaderClient(address string) (*UploaderClient, error) {
 	return client, nil
 }
 
-// Close the uploader gPRC client connection
+// Close the uploader gRPC client connection
 func (client *UploaderClient) Close() error {
 	return client.conn.Close()
 }

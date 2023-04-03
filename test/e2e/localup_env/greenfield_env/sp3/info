@@ -1,0 +1,13 @@
+
+- address: 0xe620C05870A2392E4987676b345026E6C6228388
+  name: sp3
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A6pPM9Gzp2cKv4I3b2JJKr3Lhtb54KfGY6CYqqV5wxVO"}'
+  pubkey_hex: 03aa4f33d1b3a7670abf82376f62492abdcb86d6f9e0a7c663a098aaa579c3154e
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+pact flag ready addict fault hammer album please blanket because wild dash kit tomato stage sail inflict seek purity wild lab museum actress rabbit
+

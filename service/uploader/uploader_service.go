@@ -67,13 +67,13 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 		pstream.Close()
 		uploader.spDB.UpdateJobState(traceInfo.GetObjectInfo().Id.Uint64(),
 			servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
-		log.Infow("finish to upload payload", "error", err)
+		log.Infow("succeed to put object", "error", err)
 	}(&resp, err)
 	params, err := uploader.spDB.GetStorageParams()
 	if err != nil {
 		return
 	}
-	segmentSize := params.GetMaxSegmentSize()
+	segmentPieceSize := params.GetMaxSegmentSize()
 
 	// read payload from gRPC stream
 	go func() {
@@ -93,9 +93,10 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			if init {
 				pstream.InitAsyncPayloadStream(
 					req.GetObjectInfo().Id.Uint64(),
-					math.MaxUint32,
-					segmentSize,
-					storagetypes.REDUNDANCY_REPLICA_TYPE)
+					storagetypes.REDUNDANCY_REPLICA_TYPE,
+					segmentPieceSize,
+					math.MaxUint32, /*useless*/
+				)
 				integrityMeta.ObjectID = req.GetObjectInfo().Id.Uint64()
 				traceInfo.ObjectInfo = req.GetObjectInfo()
 				uploader.cache.Add(req.GetObjectInfo().Id.Uint64(), traceInfo)
@@ -108,15 +109,15 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 		}
 	}()
 
-	// read payload from stream, the payload is spilt to segment size
+	// read payload from stream, the payload is spilt to pieces by piece size
 	for {
 		select {
-		case entry := <-pstream.AsyncStreamRead():
-			log.Debugw("read segment from stream", "segment_key", entry.Key(), "error", entry.Error())
-			if entry.Error() == io.EOF {
-				err = nil
+		case entry, ok := <-pstream.AsyncStreamRead():
+			if !ok { // has finished
 				return
 			}
+			log.Debugw("get piece entry from stream", "piece_key", entry.PieceKey(),
+				"piece_len", len(entry.Data()), "error", entry.Error())
 			if entry.Error() != nil {
 				err = entry.Error()
 				return
@@ -124,8 +125,8 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			checksum = append(checksum, hash.GenerateChecksum(entry.Data()))
 			traceInfo.Checksum = checksum
 			traceInfo.Completed++
-			uploader.cache.Add(entry.ID(), traceInfo)
-			if err = uploader.pieceStore.PutSegment(entry.Key(), entry.Data()); err != nil {
+			uploader.cache.Add(entry.ObjectID(), traceInfo)
+			if err = uploader.pieceStore.PutPiece(entry.PieceKey(), entry.Data()); err != nil {
 				return
 			}
 		case err = <-errCh:

@@ -1,0 +1,75 @@
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager", "p2p"]
+SpOperatorAddress = "0xe620C05870A2392E4987676b345026E6C6228388"
+
+[Endpoint]
+challenge = "localhost:13333"
+downloader = "localhost:13233"
+gateway = "gnfd.nodereal.com"
+metadata = "localhost:13733"
+p2p = "localhost:13833"
+receiver = "localhost:13533"
+signer = "localhost:13633"
+tasknode = "localhost:13433"
+uploader = "localhost:13133"
+
+[ListenAddress]
+challenge = "localhost:13333"
+downloader = "localhost:13233"
+gateway = "127.0.0.1:9036"
+metadata = "localhost:13733"
+p2p = "localhost:13833"
+receiver = "localhost:13533"
+signer = "localhost:13633"
+tasknode = "localhost:13433"
+uploader = "localhost:13133"
+
+[SpDBConfig]
+User = "root"
+Passwd = "root"
+Address = "localhost:3306"
+Database = "sp_3"
+
+[PieceStoreConfig]
+Shards = 0
+
+[PieceStoreConfig.Store]
+Storage = "file"
+BucketURL = "./data"
+MaxRetries = 5
+MinRetryDelay = 0
+TLSInsecureSkipVerify = false
+TestMode = false
+
+[ChainConfig]
+ChainID = "greenfield_9000-1741"
+
+[[ChainConfig.NodeAddr]]
+GreenfieldAddresses = ["localhost:9090"]
+TendermintAddresses = ["http://localhost:26750"]
+
+[SignerCfg]
+GRPCAddress = "localhost:13633"
+APIKey = ""
+WhitelistCIDR = ["0.0.0.0/0"]
+GasLimit = 210000
+OperatorPrivateKey = "96c8a7d57937d2e1131c883a62d3ea660c92eba233378c470fd14765dd9f32db"
+FundingPrivateKey = "ad42e0d4f6bfc83319ce75b2e94fe12f6e5263ba4f7cbf141b9827aca802238a"
+SealPrivateKey = "18f169ad84b6f149e9dd8f9f14e574272cb296bcaf17d60a9e42097c1d768420"
+ApprovalPrivateKey = "0165c481ac4e901bc768f1a94ccf8f9192a887c90f8dde8b249ea5f8925052b7"
+
+[BlockSyncerCfg]
+Modules = ["epoch", "bucket", "object", "payment"]
+Dsn = "localhost:3308"
+
+[P2PCfg]
+ListenAddress = "127.0.0.1:13933"
+P2PPrivateKey = "a6282fcd91d2f3765df7de061048c62ce23d7a1dc09216101d73414042b5681f"
+Bootstrap = ["16Uiu2HAmUKZHakpHSZfAfdjwAMRbLmFTz6ikmSQ3HZLB3BSU1saj@127.0.0.1:10933"]
+PingPeriod = 1
+
+[LogCfg]
+Level = "debug"
+Path = "./gnfd-sp.log"
+
+[MetricsCfg]
+HTTPAddress = "localhost:17036"

@@ -1,0 +1,13 @@
+
+- address: 0x68F6033A60565f53dADBe0ddC8d60102F026Ec14
+  name: validator_bls0
+  pubkey: '{"@type":"/cosmos.crypto.eth.bls.PubKey","key":"ooOwy0JraQYnHkS3baqolWnm/49w1eIqOjn65Gj2AzpgVl9T2tvg3cjWAQLwJuwU"}'
+  pubkey_hex: a283b0cb426b6906271e44b76daaa89569e6ff8f70d5e22a3a39fae468f6033a60565f53dadbe0ddc8d60102f026ec14
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+fortune bubble vacant amount reflect rent vanish primary miracle magic material cricket acoustic cover cupboard artefact adapt clarify grunt vicious cousin mad monitor hat
+

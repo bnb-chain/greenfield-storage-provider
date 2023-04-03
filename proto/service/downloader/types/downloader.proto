@@ -14,27 +14,20 @@ message GetObjectRequest {
   bnbchain.greenfield.storage.ObjectInfo object_info = 2;
   // user_address defines the request user address.
   string user_address = 3;
-  // offset defines the download payload offset
-  uint64 offset = 4;
-  // length defines the download payload length
-  uint64 length = 5; // if length == 0, download all object data
-  // is_range indicate whether it is rang download, compatible aws s3
-  bool is_range = 6;
-  // range_start defines the start of range
-  // [range_start, range_end], range_start >= object_size is invalid, download all object data
-  int64 range_start = 7;
-  // range_end defines the end of range
-  // range_end >= object_size is invalid, download all object data
-  // range_end < 0, download [range_start, object_end]
-  int64 range_end = 8;
+  // is_range indicate whether it is ranged get, compatible aws s3
+  bool is_range = 4;
+  // range_start defines the start of range, [range_start, range_end],
+  // it is valid iff is_range is true.
+  uint64 range_start = 5;
+  // range_end defines the end of range, [range_start, range_end],
+  // it is valid iff is_range is true.
+  uint64 range_end = 6;
 }
 
 // GetObjectResponse is response type for the GetObject RPC method.
 message GetObjectResponse {
-  // is_valid_range indicates whether ths range valid
-  bool is_valid_range = 1;
   // data defines the download data
-  bytes data = 2;
+  bytes data = 1;
 }
 
 // GetBucketReadQuotaRequest is request type for the GetBucketReadQuota RPC method.
@@ -47,8 +40,8 @@ message GetBucketReadQuotaRequest {
 
 // GetBucketReadQuotaResponse is response type for the GetBucketReadQuota RPC method.
 message GetBucketReadQuotaResponse {
-  // quota_size is the greenfield chain bucket info's read quota size
-  uint64 quota_size = 1;
+  // charged_quota_size is the greenfield chain bucket info's read quota size
+  uint64 charged_quota_size = 1;
   // sp_free_quota_size is the sp default free quota
   uint64 sp_free_quota_size = 2;
   // consumed_size is currently consumed size

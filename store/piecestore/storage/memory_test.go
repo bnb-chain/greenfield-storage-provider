@@ -32,7 +32,7 @@ func TestMemory_GetSuccess(t *testing.T) {
 		{
 			name:         "memory_get_success_test1",
 			key:          mockKey,
-			wantedResult: accessKey,
+			wantedResult: mockAccessKey,
 			wantedErr:    nil,
 		},
 	}
@@ -40,7 +40,7 @@ func TestMemory_GetSuccess(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := setupMemoryTest(t)
 			store.objects = map[string]*memoryObject{
-				mockKey: {data: []byte(accessKey)},
+				mockKey: {data: []byte(mockAccessKey)},
 			}
 			data, err := store.GetObject(context.TODO(), tt.key, 0, 0)
 			assert.Equal(t, tt.wantedErr, err)
@@ -74,7 +74,7 @@ func TestMemory_GetError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := setupMemoryTest(t)
 			store.objects = map[string]*memoryObject{
-				accessKey: {data: []byte(secretKey)},
+				mockSecretKey: {data: []byte(mockSecretKey)},
 			}
 			data, err := store.GetObject(context.TODO(), tt.key, 0, 0)
 			assert.Equal(t, tt.wantedErr, err)
@@ -93,13 +93,13 @@ func TestMemory_Put(t *testing.T) {
 		{
 			name:      "memory_put_test1",
 			key:       emptyString,
-			data:      endPoint,
+			data:      mockEndpoint,
 			wantedErr: errors.ErrInvalidObjectKey,
 		},
 		{
 			name:      "memory_put_test2",
-			key:       accessKey,
-			data:      endPoint,
+			key:       mockAccessKey,
+			data:      mockEndpoint,
 			wantedErr: nil,
 		},
 	}
@@ -107,7 +107,7 @@ func TestMemory_Put(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := setupMemoryTest(t)
 			store.objects = map[string]*memoryObject{
-				accessKey: {data: []byte(secretKey)},
+				mockAccessKey: {data: []byte(mockSecretKey)},
 			}
 			err := store.PutObject(context.TODO(), tt.key, strings.NewReader(tt.data))
 			assert.Equal(t, tt.wantedErr, err)
@@ -128,7 +128,7 @@ func TestMemory_Delete(t *testing.T) {
 		},
 		{
 			name:      "memory_delete_test2",
-			key:       accessKey,
+			key:       mockAccessKey,
 			wantedErr: nil,
 		},
 	}
@@ -136,7 +136,7 @@ func TestMemory_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := setupMemoryTest(t)
 			store.objects = map[string]*memoryObject{
-				accessKey: {data: []byte(secretKey)},
+				mockAccessKey: {data: []byte(mockSecretKey)},
 			}
 			err := store.DeleteObject(context.TODO(), tt.key)
 			assert.Equal(t, tt.wantedErr, err)
@@ -152,7 +152,7 @@ func TestMemory_HeadSuccess(t *testing.T) {
 	}{
 		{
 			name:      "memory_head_success_test1",
-			key:       accessKey,
+			key:       mockAccessKey,
 			wantedErr: nil,
 		},
 	}
@@ -160,11 +160,11 @@ func TestMemory_HeadSuccess(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := setupMemoryTest(t)
 			store.objects = map[string]*memoryObject{
-				accessKey: {data: []byte(secretKey)},
+				mockAccessKey: {data: []byte(mockSecretKey)},
 			}
 			obj, err := store.HeadObject(context.TODO(), tt.key)
 			assert.Equal(t, tt.wantedErr, err)
-			assert.Equal(t, accessKey, obj.Key())
+			assert.Equal(t, mockAccessKey, obj.Key())
 		})
 	}
 }
@@ -204,7 +204,7 @@ func TestMemory_ListSuccess(t *testing.T) {
 	}{
 		{
 			name:      "memory_list_success_test1",
-			prefix:    accessKey,
+			prefix:    mockAccessKey,
 			wantedErr: nil,
 		},
 	}
@@ -212,11 +212,11 @@ func TestMemory_ListSuccess(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			store := setupMemoryTest(t)
 			store.objects = map[string]*memoryObject{
-				accessKey: {data: []byte(secretKey)},
+				mockAccessKey: {data: []byte(mockSecretKey)},
 			}
 			objs, err := store.ListObjects(context.TODO(), tt.prefix, emptyString, emptyString, 1)
 			assert.Equal(t, tt.wantedErr, err)
-			assert.Equal(t, accessKey, objs[0].Key())
+			assert.Equal(t, mockAccessKey, objs[0].Key())
 		})
 	}
 }

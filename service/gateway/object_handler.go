@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
@@ -73,8 +74,10 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	isRange, rangeStart, rangeEnd = parseRange(reqContext.request.Header.Get(model.RangeHeader))
-
-	if rangeStart > 0 && rangeEnd > 0 && rangeStart > rangeEnd {
+	if isRange && (rangeEnd < 0 || rangeEnd >= int64(reqContext.objectInfo.GetPayloadSize())) {
+		rangeEnd = int64(reqContext.objectInfo.GetPayloadSize()) - 1
+	}
+	if isRange && (rangeStart < 0 || rangeEnd < 0 || rangeStart > rangeEnd) {
 		errDescription = InvalidRange
 		return
 	}
@@ -84,8 +87,8 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		ObjectInfo:  reqContext.objectInfo,
 		UserAddress: addr.String(),
 		IsRange:     isRange,
-		RangeStart:  rangeStart,
-		RangeEnd:    rangeEnd,
+		RangeStart:  uint64(rangeStart),
+		RangeEnd:    uint64(rangeEnd),
 	}
 	ctx := log.Context(context.Background(), req)
 	stream, err := gateway.downloader.GetObject(ctx, req)
@@ -101,15 +104,15 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		}
 		if err != nil {
 			log.Errorw("failed to read stream", "error", err)
-			errDescription = makeErrorDescription(err)
+			errDescription = makeErrorDescription(merrors.GRPCErrorToInnerError(err))
 			return
 		}
 
 		if readN = len(resp.Data); readN == 0 {
-			log.Errorw("failed to download due to return empty data", "response", resp)
+			log.Errorw("failed to get object due to return empty data", "response", resp)
 			continue
 		}
-		if resp.IsValidRange {
+		if isRange {
 			statusCode = http.StatusPartialContent
 			w.WriteHeader(statusCode)
 			makeContentRangeHeader(w, rangeStart, rangeEnd)

@@ -1,0 +1,13 @@
+
+- address: 0x84646D1d4AD147a6C1E1B67F771F39e89593aF4B
+  name: sp0
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A+XuwWH4lqnZ9aQJL2iOjoyM0/YDLSprrae3seLUam41"}'
+  pubkey_hex: 03e5eec161f896a9d9f5a4092f688e8e8c8cd3f6032d2a6bada7b7b1e2d46a6e35
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+snow glove dish frost question protect wet estate recipe sample amazing once robot author blame conduct claw admit market adapt earth elegant power ahead
+
