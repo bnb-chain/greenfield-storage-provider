@@ -33,9 +33,9 @@ type Object interface {
 
 // ObjectIntegrity abstract object integrity interface
 type ObjectIntegrity interface {
-	// GetIntegrityMeta get integrity meta info by object id
+	// GetObjectIntegrity get integrity meta info by object id
 	GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error)
-	// SetIntegrityMeta set(maybe overwrite) integrity hash info to db
+	// SetObjectIntegrity set(maybe overwrite) integrity hash info to db
 	SetObjectIntegrity(integrity *IntegrityMeta) error
 }
 

@@ -7,10 +7,11 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/ch
 message ChallengePieceRequest {
   // object_id defines the challenge object id
   uint64 object_id = 1;
-  // replica_idx defines the challenge replica idx
-  int32 replica_idx = 2;
   // segment_idx defines the challenge segment idx
-  uint32 segment_idx = 3;
+  uint32 segment_idx = 2;
+  // redundancy_idx defines the challenge redundancy idx
+  // It is useless iff < 0, and as ec index iff > 0
+  int32 redundancy_idx = 3;
 }
 
 // ChallengePieceResponse is response type for the ChallengePiece RPC method.
@@ -23,8 +24,8 @@ message ChallengePieceResponse {
   repeated bytes piece_hash = 3;
 }
 
-// ChallengeService defines the gRPC service of challenge segment.
+// ChallengeService defines the gRPC service of challenge piece.
 service ChallengeService {
-  // ChallengePiece challenge the segment of the object.
+  // ChallengePiece challenges the piece of the object.
   rpc ChallengePiece(ChallengePieceRequest) returns (ChallengePieceResponse) {};
 }

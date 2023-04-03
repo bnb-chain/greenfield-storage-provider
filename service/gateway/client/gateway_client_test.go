@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_pieceDataReader(t *testing.T) {
+func TestPieceDataReader(t *testing.T) {
 	pieceData := make([][]byte, 3)
 	pieceData[0] = []byte{'A', 'B'}
 	pieceData[1] = []byte{'C', 'D', 'E'}

@@ -220,7 +220,7 @@ func (taskNode *TaskNode) AsyncReplicateObject(req *types.ReplicateObjectRequest
 				objectInfo.SecondarySpAddresses[rIdx] = sp.GetOperator().String()
 				taskNode.spDB.SetObjectInfo(objectInfo.Id.Uint64(), objectInfo)
 				taskNode.cache.Add(objectInfo.Id.Uint64(), processInfo)
-				log.CtxInfow(ctx, "success to sync payload to sp",
+				log.CtxInfow(ctx, "succeed to sync object piece to sp",
 					"sp", sp.GetOperator(), "endpoint", sp.GetEndpoint(), "replica_idx", rIdx)
 				if atomic.AddInt64(&done, 1) == int64(replicates) {
 					log.CtxInfow(ctx, "finish to sync all replicas")
