@@ -15,10 +15,10 @@ This API is used to sign an approval for creating a bucket action or creating an
 
 ## HTTP Request Header
 
-| ParameterName                                          | Type   | Required | Description                                                     |
-| ------------------------------------------------------ | ------ | -------- | --------------------------------------------------------------- |
-| [X-Gnfd-Unsigned-Msg](./header/get_approval_header.md) | string | YES      | defines unsigned msg                                            |
-| Authorization                                          | string | YES      | defines authorization, verify signature and check authorization |
+| ParameterName                                       | Type   | Required | Description                                  |
+| --------------------------------------------------- | ------ | -------- | -------------------------------------------- |
+| [X-Gnfd-Unsigned-Msg](./header/get_approval_header.md) | string | yes      | defines unsigned msg                         |
+| Authorization                                       | string | yes      | The authorization string of the HTTP request |
 
 ## HTTP Request Parameter
 
@@ -28,9 +28,9 @@ None
 
 ### Query Parameter
 
-| ParameterName | Type   | Required | Description                                              |
-| ------------- | ------ | -------- | -------------------------------------------------------- |
-| action        | string | YES      | The action of approval: `CreateBucket` or `CreateObject` |
+| ParameterName | Type   | Required | Description                                                 |
+| ------------- | ------ | -------- | ----------------------------------------------------------- |
+| action        | string | yes      | The action of approval:`CreateBucket` or `CreateObject` |
 
 ### Request Body
 
@@ -47,17 +47,16 @@ Authorization: Authorization
 
 ## HTTP Response Header
 
-| ParameterName                                        | Type   | Required | Description                           |
-| ---------------------------------------------------- | ------ | -------- | ------------------------------------- |
-| X-Gnfd-Request-ID                                    | string | YES      | defines trace id, trace request in sp |
-| [X-Gnfd-Signed-Msg](./header/get_approval_header.md) | string | YES      | defines signed msg                    |
+| ParameterName                                     | Type   | Required | Description                           |
+| ------------------------------------------------- | ------ | -------- | ------------------------------------- |
+| X-Gnfd-Request-ID                                 | string | yes      | defines trace id, trace request in sp |
+| [X-Gnfd-Signed-Msg](./header/get_approval_header.md) | string | yes      | defines signed msg                    |
 
 ## HTTP Response Parameter
 
-### Reponse Body
+### Response Body
 
-If you failed to send request to get-approval, you will get reponse body in XML:
-
+If you failed to send request to get approval, you will get reponse body in XML:
 
 | ParameterName | Type   | Description                        |
 | ------------- | ------ | ---------------------------------- |
@@ -72,7 +71,9 @@ X-Gnfd-Request-ID: RequestID
 X-Gnfd-Signed-Msg: SignedMsg
 ```
 
-## Sample Request: CreateBucket
+## Examples
+
+### Example 1: CreateBucket
 
 The following request sends `CreateBucket` action to get approval.
 
@@ -84,7 +85,7 @@ X-Gnfd-Unsigned-Msg: unsigned msg string
 Authorization: authorization string
 ```
 
-## Success Response: CreateBucket
+### Sample Response: CreateBucket successfully
 
 ```shell
 HTTP/1.1 200 OK
@@ -92,7 +93,7 @@ X-Gnfd-Request-ID: 14779951378820359452
 X-Gnfd-Signed-Msg: df5857b2ac67b491ba6d9c6632618be7fb22de13662356b593d74103408cf1af46eed90edaa77bdb65b12fc63ee3bec8314ad7bb0f3ae099ccf7dafe22abff2e01
 ```
 
-## Sample Request: CreateObject
+## Example 2: CreateObject
 
 The following request sends `CreateObject` action to get approval.
 
@@ -104,7 +105,7 @@ X-Gnfd-Unsigned-Msg: unsigned msg string
 Authorization: authorization string
 ```
 
-## Success Response: CreateObject
+### Sample Response: CreateObject successfully
 
 ```shell
 HTTP/1.1 200 OK
