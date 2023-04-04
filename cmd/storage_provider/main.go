@@ -39,7 +39,7 @@ var (
 		utils.DBDatabaseFlag,
 	}
 
-	rcmgrFlags = []cli.Flag{
+	rcMgrFlags = []cli.Flag{
 		utils.DisableResourceManagerFlag,
 		utils.ResourceManagerConfigFlag,
 	}
@@ -65,7 +65,7 @@ func init() {
 	app.Flags = utils.MergeFlags(
 		configFlags,
 		dbFlags,
-		rcmgrFlags,
+		rcMgrFlags,
 		logFlags,
 		metricsFlags,
 	)

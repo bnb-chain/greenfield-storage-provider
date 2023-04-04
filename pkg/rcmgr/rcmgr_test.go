@@ -42,9 +42,9 @@ func TestOpenServiceScope(t *testing.T) {
 		return nil
 	})
 
-	downRcmgr, err := downloaderScope.BeginSpan()
+	downRcMgr, err := downloaderScope.BeginSpan()
 	assert.NoError(t, err)
-	err = downRcmgr.ReserveMemory(100, ReservationPriorityAlways)
+	err = downRcMgr.ReserveMemory(100, ReservationPriorityAlways)
 	assert.NoError(t, err)
 	rm.ViewSystem(func(scope ResourceScope) error {
 		system := scope.(*resourceScope)
@@ -56,7 +56,7 @@ func TestOpenServiceScope(t *testing.T) {
 		assert.Equal(t, int64(200), uploader.rc.memory)
 		return nil
 	})
-	downRcmgr.Done()
+	downRcMgr.Done()
 	rm.ViewSystem(func(scope ResourceScope) error {
 		system := scope.(*resourceScope)
 		assert.Equal(t, int64(200), system.rc.memory)

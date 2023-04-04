@@ -46,7 +46,7 @@ func (rc *resources) checkMemory(rsvp int64, prio uint8) error {
 		// Special case where we've set max limits.
 		return nil
 	}
-	newmem, addOk := addInt64WithOverflow(rc.memory, rsvp)
+	newMem, addOk := addInt64WithOverflow(rc.memory, rsvp)
 	threshold, mulOk := mulInt64WithOverflow(1+int64(prio), limit)
 	if !mulOk {
 		thresholdBig := big.NewInt(limit)
@@ -62,7 +62,7 @@ func (rc *resources) checkMemory(rsvp int64, prio uint8) error {
 		threshold = threshold / 256
 	}
 finish:
-	if !addOk || newmem > threshold {
+	if !addOk || newMem > threshold {
 		return &ErrMemoryLimitExceeded{
 			current:   rc.memory,
 			attempted: rsvp,
@@ -98,52 +98,52 @@ func (rc *resources) addConn(dir Direction) error {
 	return rc.addConns(0, 1, 1)
 }
 
-func (rc *resources) addConns(incount, outcount, fdcount int) error {
-	if incount > 0 {
+func (rc *resources) addConns(inCount, outCount, fdCount int) error {
+	if inCount > 0 {
 		limit := rc.limit.GetConnLimit(DirInbound)
-		if rc.nconnsIn+incount > limit {
+		if rc.nconnsIn+inCount > limit {
 			return &ErrConnLimitExceeded{
 				current:   rc.nconnsIn,
-				attempted: incount,
+				attempted: inCount,
 				limit:     limit,
 				err:       fmt.Errorf("cannot reserve inbound connection: %w", ErrResourceLimitExceeded),
 			}
 		}
 	}
-	if outcount > 0 {
+	if outCount > 0 {
 		limit := rc.limit.GetConnLimit(DirOutbound)
-		if rc.nconnsOut+outcount > limit {
+		if rc.nconnsOut+outCount > limit {
 			return &ErrConnLimitExceeded{
 				current:   rc.nconnsOut,
-				attempted: outcount,
+				attempted: outCount,
 				limit:     limit,
 				err:       fmt.Errorf("cannot reserve outbound connection: %w", ErrResourceLimitExceeded),
 			}
 		}
 	}
-	if connLimit := rc.limit.GetConnTotalLimit(); rc.nconnsIn+incount+rc.nconnsOut+outcount > connLimit {
+	if connLimit := rc.limit.GetConnTotalLimit(); rc.nconnsIn+inCount+rc.nconnsOut+outCount > connLimit {
 		return &ErrConnLimitExceeded{
 			current:   rc.nconnsIn + rc.nconnsOut,
-			attempted: incount + outcount,
+			attempted: inCount + outCount,
 			limit:     connLimit,
 			err:       fmt.Errorf("cannot reserve connection: %w", ErrResourceLimitExceeded),
 		}
 	}
-	if fdcount > 0 {
+	if fdCount > 0 {
 		limit := rc.limit.GetFDLimit()
-		if rc.nfd+fdcount > limit {
+		if rc.nfd+fdCount > limit {
 			return &ErrConnLimitExceeded{
 				current:   rc.nfd,
-				attempted: fdcount,
+				attempted: fdCount,
 				limit:     limit,
 				err:       fmt.Errorf("cannot reserve file descriptor: %w", ErrResourceLimitExceeded),
 			}
 		}
 	}
 
-	rc.nconnsIn += incount
-	rc.nconnsOut += outcount
-	rc.nfd += fdcount
+	rc.nconnsIn += inCount
+	rc.nconnsOut += outCount
+	rc.nfd += fdCount
 	return nil
 }
 
@@ -154,10 +154,10 @@ func (rc *resources) removeConn(dir Direction) {
 	rc.removeConns(0, 1, 1)
 }
 
-func (rc *resources) removeConns(incount, outcount, fdcount int) {
-	rc.nconnsIn -= incount
-	rc.nconnsOut -= outcount
-	rc.nfd -= fdcount
+func (rc *resources) removeConns(inCount, outCount, fdCount int) {
+	rc.nconnsIn -= inCount
+	rc.nconnsOut -= outCount
+	rc.nfd -= fdCount
 
 	if rc.nconnsIn < 0 {
 		log.Error("BUG: too many inbound connections released")

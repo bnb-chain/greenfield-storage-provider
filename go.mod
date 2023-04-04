@@ -30,6 +30,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2 v2.0.0-rc.3
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.3
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/ipfs/go-datastore v0.6.0
 	github.com/ipfs/go-ds-leveldb v0.5.0
@@ -39,8 +40,8 @@ require (
 	github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416
 	github.com/pkg/sftp v1.13.5
 	github.com/prometheus/client_golang v1.14.0
-	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible
-	github.com/stretchr/testify v1.8.1
+	github.com/shirou/gopsutil/v3 v3.23.3
+	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/tendermint v0.35.9
 	github.com/urfave/cli/v2 v2.25.0
 	github.com/viki-org/dnscache v0.0.0-20130720023526-c70c1f23c5d8
@@ -57,6 +58,8 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/shirou/gopsutil/v3 v3.23.3 // indirect
+	github.com/tklauser/go-sysconf v0.3.11 // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 )
@@ -134,7 +137,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/gtank/merlin v0.1.1 // indirect

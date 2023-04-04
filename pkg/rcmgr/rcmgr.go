@@ -18,12 +18,12 @@ type resourceManager struct {
 var _ ResourceManager = &resourceManager{}
 
 var (
-	resrcmgr ResourceManager
+	resrcMgr ResourceManager
 	once     sync.Once
 )
 
 func init() {
-	resrcmgr = &NullResourceManager{}
+	resrcMgr = &NullResourceManager{}
 }
 
 // NewResourceManager inits and returns singleton instance of ResourceManager
@@ -41,7 +41,7 @@ func initResourceManager(limits Limiter) (ResourceManager, error) {
 	var err error
 	once.Do(func() {
 		if limits == nil {
-			resrcmgr = &NullResourceManager{}
+			resrcMgr = &NullResourceManager{}
 			return
 		}
 		r := &resourceManager{
@@ -51,9 +51,9 @@ func initResourceManager(limits Limiter) (ResourceManager, error) {
 		r.system = newResourceScope(limits.GetSystemLimits(), nil, "system")
 		// TODO:: support transient resource scope
 		r.transient = r.system
-		resrcmgr = r
+		resrcMgr = r
 	})
-	return resrcmgr, err
+	return resrcMgr, err
 }
 
 // OpenService creates a new service resource scope associated with system resource scope
@@ -91,9 +91,9 @@ func (r *resourceManager) ViewTransient(f func(ResourceScope) error) error {
 
 // ViewService retrieves a service-specific scope.
 func (r *resourceManager) ViewService(name string, f func(ResourceScope) error) error {
-	scop, ok := r.svc[name]
+	scope, ok := r.svc[name]
 	if !ok {
 		return nil
 	}
-	return f(scop)
+	return f(scope)
 }
