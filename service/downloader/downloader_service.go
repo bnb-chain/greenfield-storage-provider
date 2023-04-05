@@ -36,14 +36,14 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		endOffset   uint64
 	)
 	defer func() {
+		if scope != nil {
+			scope.Done()
+		}
 		var state string
 		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
 			state = scope.Stat().String()
 			return nil
 		})
-		if scope != nil {
-			scope.Done()
-		}
 		log.CtxInfow(ctx, "finish to get object", "send_size", sendSize,
 			"resource_state", state, "error", err)
 	}()

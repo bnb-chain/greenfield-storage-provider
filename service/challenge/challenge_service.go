@@ -27,14 +27,14 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 		approximatedPieceSize int
 	)
 	defer func() {
+		if scope != nil {
+			scope.Done()
+		}
 		var state string
 		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
 			state = scope.Stat().String()
 			return nil
 		})
-		if scope != nil {
-			scope.Done()
-		}
 		log.CtxInfow(ctx, "finish to challenge piece request", "resource_state", state, "error", err)
 	}()
 	scope, err = challenge.rcScope.BeginSpan()
