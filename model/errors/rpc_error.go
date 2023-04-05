@@ -24,6 +24,8 @@ var (
 	ErrUnsupportedMethod = errors.New("unsupported method")
 	// ErrIntegerOverflow defines integer overflow
 	ErrIntegerOverflow = errors.New("integer overflow")
+	// ErrDanglingPointer defines the nil pointer error
+	ErrDanglingPointer = errors.New("pointer dangling")
 )
 
 // piece store errors
