@@ -30,10 +30,12 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 		buf                    = make([]byte, model.DefaultStreamBufSize)
 		integrityHash          []byte
 		integrityHashSignature []byte
+		ctx, cancel            = context.WithCancel(context.Background())
 	)
 
 	reqContext = newRequestContext(r)
 	defer func() {
+		cancel()
 		if errDescription != nil {
 			_ = errDescription.errorResponse(w, reqContext)
 		}
@@ -82,7 +84,7 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	stream, err := gateway.receiver.SyncObject(context.Background())
+	stream, err := gateway.receiver.SyncObject(ctx)
 	if err != nil {
 		log.Errorw("failed to sync piece", "error", err)
 		errDescription = InternalError
