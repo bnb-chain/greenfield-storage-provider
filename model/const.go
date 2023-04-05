@@ -127,9 +127,9 @@ const (
 	// DefaultConnMaxIdleTime defines the default max idle time of connection
 	DefaultConnMaxIdleTime = 60
 	// DefaultMaxIdleConns defines the default max number of idle connections
-	DefaultMaxIdleConns = 16
-	// DefaultMaxIdleConns defines the default max number of open connections
-	DefaultMaxOpenConns = 128
+	DefaultMaxIdleConns = 128
+	// DefaultMaxOpenConns defines the default max number of open connections
+	DefaultMaxOpenConns = 1024
 )
 
 // define all kinds of http constants
