@@ -104,6 +104,14 @@ var (
 	ErrSPNumber = errors.New("failed to get sufficient SPs from DB")
 )
 
+// uploader service error
+var (
+	// ErrMismatchIntegrityHash defines integrity hash mismatch error
+	ErrMismatchIntegrityHash = errors.New("integrity hash mismatch")
+	// ErrMismatchChecksumNum defines checksum number mismatch error
+	ErrMismatchChecksumNum = errors.New("checksum number mismatch")
+)
+
 // InnerErrorToGRPCError convents inner error to grpc/status error
 func InnerErrorToGRPCError(err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) ||

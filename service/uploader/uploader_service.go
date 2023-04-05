@@ -1,6 +1,7 @@
 package uploader
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"math"
@@ -42,7 +43,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			return
 		}
 		uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
-		err = uploader.signIntegrityHash(ctx, objectID, checksum)
+		err = uploader.signIntegrityHash(ctx, objectID, objectInfo.GetChecksums()[0], checksum)
 		if err != nil {
 			return
 		}
@@ -77,10 +78,14 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			}
 			if !init {
 				if req.GetObjectInfo() == nil {
-					err = merrors.ErrDanglingPointer
+					errCh <- merrors.ErrDanglingPointer
 					return
 				}
 				objectInfo = req.GetObjectInfo()
+				if int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()+1) !=
+					len(objectInfo.GetChecksums()) {
+					errCh <- merrors.ErrMismatchChecksumNum
+				}
 				objectID = req.GetObjectInfo().Id.Uint64()
 				ctx = log.WithValue(ctx, "object_id", req.GetObjectInfo().Id.String())
 				pstream.InitAsyncPayloadStream(
@@ -120,7 +125,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 	}
 }
 
-func (uploader *Uploader) signIntegrityHash(ctx context.Context, objectID uint64, checksum [][]byte) (err error) {
+func (uploader *Uploader) signIntegrityHash(ctx context.Context, objectID uint64, rootHash []byte, checksum [][]byte) (err error) {
 	var (
 		integrityMeta = &sqldb.IntegrityMeta{ObjectID: objectID, Checksum: checksum}
 	)
@@ -136,6 +141,10 @@ func (uploader *Uploader) signIntegrityHash(ctx context.Context, objectID uint64
 	}()
 	integrityMeta.IntegrityHash, integrityMeta.Signature, err = uploader.signer.SignIntegrityHash(ctx, objectID, checksum)
 	if err != nil {
+		return
+	}
+	if !bytes.Equal(rootHash, integrityMeta.IntegrityHash) {
+		err = merrors.ErrMismatchIntegrityHash
 		return
 	}
 	err = uploader.spDB.SetObjectIntegrity(integrityMeta)
