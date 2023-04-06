@@ -3,13 +3,10 @@ package uploader
 import (
 	"context"
 	"net"
-	"runtime/debug"
 
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"

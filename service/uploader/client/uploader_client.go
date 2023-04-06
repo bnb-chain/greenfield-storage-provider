@@ -5,7 +5,6 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
