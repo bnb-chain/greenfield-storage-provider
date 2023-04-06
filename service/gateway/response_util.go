@@ -30,6 +30,7 @@ var (
 	InvalidAddress     = &errorDescription{errorCode: "InvalidAddress", errorMessage: "Address is illegal", statusCode: http.StatusBadRequest}
 	SignatureNotMatch  = &errorDescription{errorCode: "SignatureDoesNotMatch", errorMessage: "SignatureDoesNotMatch", statusCode: http.StatusForbidden}
 	AccessDenied       = &errorDescription{errorCode: "AccessDenied", errorMessage: "Access Denied", statusCode: http.StatusForbidden}
+	OutOfQuota         = &errorDescription{errorCode: "AccessDenied", errorMessage: "Out of Quota", statusCode: http.StatusForbidden}
 	NoSuchKey          = &errorDescription{errorCode: "NoSuchKey", errorMessage: "The specified key does not exist.", statusCode: http.StatusNotFound}
 	NoSuchBucket       = &errorDescription{errorCode: "NoSuchBucket", errorMessage: "The specified bucket does not exist.", statusCode: http.StatusNotFound}
 	NoRouter           = &errorDescription{errorCode: "NoRouter", errorMessage: "The request can not route any handlers", statusCode: http.StatusNotFound}
@@ -114,12 +115,13 @@ func makeErrorDescription(err error) *errorDescription {
 		return NoSuchBucket
 	case merrors.ErrAuthorizationFormat, merrors.ErrRequestConsistent, merrors.ErrSignatureConsistent, merrors.ErrUnsupportedSignType:
 		return SignatureNotMatch
-	case merrors.ErrNoPermission, merrors.ErrCheckPaymentAccountActive, merrors.ErrCheckQuotaEnough:
+	case merrors.ErrNoPermission, merrors.ErrCheckPaymentAccountActive:
 		return AccessDenied
+	case merrors.ErrCheckQuotaEnough:
+		return OutOfQuota
 	case merrors.ErrCheckObjectCreated, merrors.ErrCheckObjectSealed:
 		return InvalidObjectState
 	default:
-		// TODO: do not expose internal detailed errors in the future
-		return &errorDescription{errorCode: "InternalError", errorMessage: err.Error(), statusCode: http.StatusInternalServerError}
+		return InternalError
 	}
 }

@@ -2,9 +2,8 @@ package challenge
 
 import (
 	"context"
-	"math"
-	"strconv"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -17,15 +16,21 @@ var _ types.ChallengeServiceServer = &Challenge{}
 // ChallengePiece handles the piece challenge request
 // return the piece's integrity hash, piece hash and piece data
 func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.ChallengePieceRequest) (*types.ChallengePieceResponse, error) {
-	// TODO:: gateway transparent transmission object info
-	ctx = log.WithValue(ctx, "object_id", strconv.FormatUint(req.ObjectId, 10))
+	objectInfo := req.GetObjectInfo()
+	// prevent gateway forgetting transparent transmission
+	if objectInfo == nil {
+		return nil, merrors.ErrDanglingPointer
+	}
 	var (
-		scope                 rcmgr.ResourceScopeSpan
-		resp                  *types.ChallengePieceResponse
-		err                   error
-		pieceKey              string
-		approximatedPieceSize int
+		scope                rcmgr.ResourceScopeSpan
+		resp                 *types.ChallengePieceResponse
+		err                  error
+		pieceType            model.PieceType
+		pieceKey             string
+		approximatePieceSize int
 	)
+	ctx = log.WithValue(ctx, "object_id", objectInfo.Id.String())
+
 	defer func() {
 		if scope != nil {
 			scope.Done()
@@ -48,24 +53,30 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 		return resp, err
 	}
 	if req.GetRedundancyIdx() < 0 {
+		pieceType = model.SegmentPieceType
 		// useless iff it is a segment piece
-		pieceKey = piecestore.EncodeSegmentPieceKey(req.GetObjectId(), req.GetSegmentIdx())
-		approximatedPieceSize = int(params.GetMaxSegmentSize())
+		pieceKey = piecestore.EncodeSegmentPieceKey(objectInfo.Id.Uint64(), req.GetSegmentIdx())
 	} else {
-		// as the ec piece index iff it is a ec piece
-		pieceKey = piecestore.EncodeECPieceKey(req.GetObjectId(),
+		pieceType = model.ECPieceType
+		// as the ec piece index iff it is an ec piece
+		pieceKey = piecestore.EncodeECPieceKey(objectInfo.Id.Uint64(),
 			req.GetSegmentIdx(), uint32(req.GetRedundancyIdx()))
-		approximatedPieceSize = int(math.Ceil(float64(params.GetMaxSegmentSize()) / float64(params.GetRedundantDataChunkNum())))
 	}
-
-	err = scope.ReserveMemory(approximatedPieceSize, rcmgr.ReservationPriorityAlways)
+	approximatePieceSize, err = piecestore.ComputeApproximatePieceSize(objectInfo,
+		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum(), pieceType, req.GetSegmentIdx())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to compute Approximate piece size",
+			"reserve_size", approximatePieceSize, "error", err)
+		return resp, err
+	}
+	err = scope.ReserveMemory(approximatePieceSize, rcmgr.ReservationPriorityAlways)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
-			"reserve_size", approximatedPieceSize, "error", err)
+			"reserve_size", approximatePieceSize, "error", err)
 		return resp, err
 	}
 
-	integrity, err := challenge.spDB.GetObjectIntegrity(req.GetObjectId())
+	integrity, err := challenge.spDB.GetObjectIntegrity(objectInfo.Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get integrity hash from db", "error", err)
 		err = merrors.InnerErrorToGRPCError(err)
@@ -80,7 +91,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 		err = merrors.InnerErrorToGRPCError(err)
 		return resp, err
 	}
-	log.CtxInfow(ctx, "succeed to challenge piece", "object_id", req.GetObjectId(),
+	log.CtxInfow(ctx, "succeed to challenge piece", "object_id", objectInfo.Id.Uint64(),
 		"piece_idx", req.GetSegmentIdx(), "redundancy_idx", req.GetRedundancyIdx(), "segment_count", len(integrity.Checksum))
 	return resp, err
 }

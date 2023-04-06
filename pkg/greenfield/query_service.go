@@ -101,15 +101,37 @@ func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, objec
 	return resp.GetObjectInfo(), nil
 }
 
+// QueryObjectInfoByID return the object info by name.
+func (greenfield *Greenfield) QueryObjectInfoByID(ctx context.Context, objectID string) (*storagetypes.ObjectInfo, error) {
+	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	resp, err := client.HeadObjectById(ctx, &storagetypes.QueryHeadObjectByIdRequest{
+		ObjectId: objectID,
+	})
+	if errors.Is(err, storagetypes.ErrNoSuchObject) {
+		return nil, merrors.ErrNoSuchObject
+	}
+	if err != nil {
+		log.Errorw("failed to query object", "object_id", objectID, "error", err)
+		return nil, err
+	}
+	return resp.GetObjectInfo(), nil
+}
+
 // QueryBucketInfoAndObjectInfo return bucket info and object info, if not found, return the corresponding error code
 func (greenfield *Greenfield) QueryBucketInfoAndObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.BucketInfo, *storagetypes.ObjectInfo, error) {
 	bucketInfo, err := greenfield.QueryBucketInfo(ctx, bucket)
 	if errors.Is(err, storagetypes.ErrNoSuchBucket) {
 		return nil, nil, merrors.ErrNoSuchBucket
 	}
+	if err != nil {
+		return nil, nil, err
+	}
 	objectInfo, err := greenfield.QueryObjectInfo(ctx, bucket, object)
 	if errors.Is(err, storagetypes.ErrNoSuchObject) {
 		return nil, nil, merrors.ErrNoSuchObject
+	}
+	if err != nil {
+		return nil, nil, err
 	}
 	return bucketInfo, objectInfo, nil
 }

@@ -26,6 +26,8 @@ var (
 	ErrIntegerOverflow = errors.New("integer overflow")
 	// ErrDanglingPointer defines the nil pointer error
 	ErrDanglingPointer = errors.New("pointer dangling")
+	// ErrInvalidParams defines invalid params
+	ErrInvalidParams = errors.New("invalid params")
 )
 
 // piece store errors
@@ -131,7 +133,7 @@ func GRPCErrorToInnerError(err error) error {
 		return ErrNoSuchObject
 	}
 	if codes.PermissionDenied == errStatus.Code() {
-		return ErrNoPermission
+		return ErrCheckQuotaEnough
 	}
 	return err
 }
