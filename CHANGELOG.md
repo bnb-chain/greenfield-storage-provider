@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.1.0
+
+BUGFIX
+* [\#258](https://github.com/bnb-chain/greenfield-storage-provider/pull/258) fix put object verify permission bug
+* [\#264](https://github.com/bnb-chain/greenfield-storage-provider/pull/264) fix: fix payment apis nil pointer error
+* [\#265](https://github.com/bnb-chain/greenfield-storage-provider/pull/265) fix: fix sa iam type to access s3
+* [\#268](https://github.com/bnb-chain/greenfield-storage-provider/pull/268) feat: update buckets/objects order
+* [\#270](https://github.com/bnb-chain/greenfield-storage-provider/pull/270) feat: update buckets/objects order
+* [\#272](https://github.com/bnb-chain/greenfield-storage-provider/pull/272) fix: upgrade juno version for a property length fix
+
+BUILD
+* [\#259](https://github.com/bnb-chain/greenfield-storage-provider/pull/259) ci: fix release.yml uncorrect env var name
+* [\#263](https://github.com/bnb-chain/greenfield-storage-provider/pull/263) feat: add e2e test to workflow
+
+
 ## v0.0.5
 
 FEATURES

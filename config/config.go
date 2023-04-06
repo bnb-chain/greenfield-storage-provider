@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"os"
-	
+
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"

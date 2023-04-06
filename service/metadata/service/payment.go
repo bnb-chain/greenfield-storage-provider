@@ -67,7 +67,6 @@ func (metadata *Metadata) GetPaymentByBucketID(ctx context.Context, req *metatyp
 		log.CtxErrorw(ctx, "failed to get payment by bucket id", "error", err)
 		return
 	}
-  
 	if streamRecord != nil {
 		err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
 		if err != nil {
