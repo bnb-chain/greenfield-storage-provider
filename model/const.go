@@ -120,6 +120,18 @@ const (
 	P2PPrivateKey = "P2P_PRIVATE_KEY"
 )
 
+// SQLDB default configuration parmas
+const (
+	// DefaultConnMaxLifetime defines the default max liveness time of connection
+	DefaultConnMaxLifetime = 3600
+	// DefaultConnMaxIdleTime defines the default max idle time of connection
+	DefaultConnMaxIdleTime = 60
+	// DefaultMaxIdleConns defines the default max number of idle connections
+	DefaultMaxIdleConns = 128
+	// DefaultMaxOpenConns defines the default max number of open connections
+	DefaultMaxOpenConns = 1024
+)
+
 // define all kinds of http constants
 const (
 	// ContentTypeHeader is used to indicate the media type of the resource

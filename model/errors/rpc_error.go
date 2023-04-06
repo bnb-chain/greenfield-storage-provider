@@ -24,6 +24,8 @@ var (
 	ErrUnsupportedMethod = errors.New("unsupported method")
 	// ErrIntegerOverflow defines integer overflow
 	ErrIntegerOverflow = errors.New("integer overflow")
+	// ErrDanglingPointer defines the nil pointer error
+	ErrDanglingPointer = errors.New("pointer dangling")
 )
 
 // piece store errors
@@ -100,6 +102,14 @@ var (
 	ErrSPApprovalNumber = errors.New("failed to get sufficient approvals of SPs from p2p server")
 	// ErrSPNumber defines failed to get insufficient SPs from DB
 	ErrSPNumber = errors.New("failed to get sufficient SPs from DB")
+)
+
+// uploader service error
+var (
+	// ErrMismatchIntegrityHash defines integrity hash mismatch error
+	ErrMismatchIntegrityHash = errors.New("integrity hash mismatch")
+	// ErrMismatchChecksumNum defines checksum number mismatch error
+	ErrMismatchChecksumNum = errors.New("checksum number mismatch")
 )
 
 // InnerErrorToGRPCError convents inner error to grpc/status error
