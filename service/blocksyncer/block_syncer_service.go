@@ -1,7 +1,6 @@
 package blocksyncer
 
 import (
-	"context"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -15,16 +14,9 @@ import (
 
 // enqueueMissingBlocks enqueues jobs (block heights) for missed blocks starting
 // at the startHeight up until the latest known height.
-func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context) (uint64, error) {
+func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context, lastDbBlockHeight uint64) (uint64, error) {
 	// Get the latest height
 	latestBlockHeight := mustGetLatestHeight(ctx)
-
-	epoch, err := ctx.Database.GetEpoch(context.TODO())
-	if err != nil {
-		log.Errorw("failed to get last block height from database", "error", err)
-		return 0, err
-	}
-	lastDbBlockHeight := uint64(epoch.BlockHeight)
 
 	log.Infow("syncing missing blocks...", "latest_block_height", latestBlockHeight)
 	for i := lastDbBlockHeight + 1; i <= latestBlockHeight; i++ {

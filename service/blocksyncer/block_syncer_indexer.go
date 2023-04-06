@@ -3,10 +3,9 @@ package blocksyncer
 import (
 	"context"
 	"encoding/json"
-
-	"github.com/forbole/juno/v4/common"
-
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/forbole/juno/v4/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,11 +42,11 @@ func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.Resul
 }
 
 // HandleEvent accepts the transaction and handles events contained inside the transaction.
-func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, event sdk.Event) {
+func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, txHash common.Hash, event sdk.Event) {
 	for _, module := range i.Modules {
 		if eventModule, ok := module.(modules.EventModule); ok {
 			log.Infof("module name :%s event type: %s, height: %d", module.Name(), event.Type, block.Block.Height)
-			err := eventModule.HandleEvent(ctx, block, event)
+			err := eventModule.HandleEvent(ctx, block, txHash, event)
 			if err != nil {
 				log.Errorw("failed to handle event", "module", module.Name(), "event", event, "error", err)
 			}
@@ -59,20 +58,31 @@ func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, ev
 // It returns an error if any export process fails.
 func (i *Impl) Process(height uint64) error {
 	log.Debugw("processing block", "height", height)
-
-	block, err := i.Node.Block(int64(height))
-	if err != nil {
-		log.Errorf("failed to get block from node: %s", err)
-		return err
+	blockAny, ok := blockMap.Load(height)
+	if !ok {
+		log.Errorf("failed to get block from map need retry")
+		return errors.ErrBlockNotFound
 	}
 
-	events, err := i.Node.BlockResults(int64(height))
-	if err != nil {
-		log.Errorf("failed to get block results from node: %s", err)
-		return err
+	eventsAny, ok := eventMap.Load(height)
+	if !ok {
+		log.Warnf("failed to get event from map need retry")
+		return errors.ErrEventNotFound
 	}
 
-	err = i.ExportEvents(context.Background(), block, events)
+	block, ok := blockAny.(*coretypes.ResultBlock)
+	if !ok {
+		log.Warnf("failed to get block from map need retry")
+		return errors.ErrBlockNotFound
+	}
+
+	events := eventsAny.(*coretypes.ResultBlockResults)
+	if !ok {
+		log.Errorf("failed to get event from map need retry")
+		return errors.ErrEventNotFound
+	}
+
+	err := i.ExportEvents(context.Background(), block, events)
 	if err != nil {
 		log.Errorf("failed to ExportEvents: %s", err)
 		return err
@@ -83,6 +93,9 @@ func (i *Impl) Process(height uint64) error {
 		log.Errorf("failed to ExportEpoch: %s", err)
 		return err
 	}
+
+	blockMap.Delete(height)
+	eventMap.Delete(height)
 
 	return nil
 }
@@ -135,7 +148,7 @@ func (i *Impl) ExportEvents(ctx context.Context, block *coretypes.ResultBlock, e
 		// handle all events contained inside the transaction
 		// call the event handlers
 		for _, event := range tx.Events {
-			i.HandleEvent(ctx, block, sdk.Event(event))
+			i.HandleEvent(ctx, block, common.Hash{}, sdk.Event(event))
 		}
 	}
 	return nil
@@ -176,5 +189,9 @@ func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
 		return false, err
 	}
 	log.Infof("epoch height:%d, cur height: %d", ep.BlockHeight, height)
+	if ep.BlockHeight > int64(height) {
+		blockMap.Delete(height)
+		eventMap.Delete(height)
+	}
 	return ep.BlockHeight > int64(height), nil
 }

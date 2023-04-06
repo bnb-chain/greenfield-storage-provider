@@ -3,6 +3,7 @@ package blocksyncer
 import (
 	"context"
 	"errors"
+	"sync"
 	"sync/atomic"
 
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
@@ -31,12 +32,19 @@ type BlockSyncer struct {
 	running   atomic.Value
 }
 
+var (
+	blockMap *sync.Map
+	eventMap *sync.Map
+)
+
 // NewBlockSyncerService create a BlockSyncer service to index block events data to db
 func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
 	s := &BlockSyncer{
 		config: cfg,
 		name:   model.BlockSyncerService,
 	}
+	blockMap = new(sync.Map)
+	eventMap = new(sync.Map)
 	if err := s.initClient(); err != nil {
 		return nil, err
 	}
@@ -132,21 +140,54 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	exportQueue := types.NewQueue(25)
 
 	// Create workers
-	workers := make([]*parser.Worker, config.Cfg.Parser.Workers)
-	for i := range workers {
-		workers[i] = parser.NewWorker(s.parserCtx, exportQueue, i, config.Cfg.Parser.ConcurrentSync)
-		workers[i].SetIndexer(s.parserCtx.Indexer)
+	worker := parser.NewWorker(s.parserCtx, exportQueue, 0, config.Cfg.Parser.ConcurrentSync)
+	worker.SetIndexer(s.parserCtx.Indexer)
+
+	lastDbBlockHeight := uint64(0)
+	for {
+		epoch, err := s.parserCtx.Database.GetEpoch(context.TODO())
+		if err != nil {
+			log.Errorw("failed to get last block height from database", "error", err)
+			continue
+		}
+		lastDbBlockHeight = uint64(epoch.BlockHeight)
+		break
 	}
+
+	// fetch block data
+	go s.fetchBlockData(lastDbBlockHeight + 1)
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	// off of the export queue.
-	for i, w := range workers {
-		log.Debugw("starting worker...", "number", i+1)
-		go w.Start()
-	}
-	latestBlockHeight, err := enqueueMissingBlocks(exportQueue, s.parserCtx)
+	go worker.Start()
+
+	latestBlockHeight, err := enqueueMissingBlocks(exportQueue, s.parserCtx, lastDbBlockHeight)
 	if err != nil {
 		log.Errorf("failed to enqueue missing blocks error: %v", err)
 	}
 	go enqueueNewBlocks(exportQueue, s.parserCtx, latestBlockHeight)
+}
+
+func (s *BlockSyncer) fetchBlockData(startHeight uint64) {
+	count := uint64(s.config.Parser.Workers)
+	for i := uint64(0); i < count; i++ {
+		go func(idx uint64) {
+			for cycle := uint64(0); ; cycle++ {
+				height := idx + count*cycle + startHeight
+				block, err := s.parserCtx.Node.Block(int64(height))
+				if err != nil {
+					log.Warnf("failed to get block from node: %s", err)
+					continue
+				}
+
+				events, err := s.parserCtx.Node.BlockResults(int64(height))
+				if err != nil {
+					log.Warnf("failed to get block results from node: %s", err)
+					continue
+				}
+				blockMap.Store(height, block)
+				eventMap.Store(height, events)
+			}
+		}(i)
+	}
 }
