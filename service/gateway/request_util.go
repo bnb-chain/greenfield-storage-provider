@@ -319,6 +319,12 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 				"request_address", addr.String())
 			return errors.ErrNoPermission
 		}
+	case challengeRouterName:
+		objectID := reqContext.request.Header.Get(model.GnfdObjectIDHeader)
+		if reqContext.objectInfo, err = g.chain.QueryObjectInfoByID(context.Background(), objectID); err != nil {
+			log.Errorw("failed to query object info  on chain", "object_id", objectID, "error", err)
+			return err
+		}
 	}
 	return nil
 }

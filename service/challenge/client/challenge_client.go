@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -45,10 +46,10 @@ func (client *ChallengeClient) Close() error {
 }
 
 // ChallengePiece send challenge piece request
-func (client *ChallengeClient) ChallengePiece(ctx context.Context, objectID uint64, redundancyIdx int32, segmentIdx uint32,
+func (client *ChallengeClient) ChallengePiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo, redundancyIdx int32, segmentIdx uint32,
 	opts ...grpc.CallOption) ([]byte, [][]byte, []byte, error) {
 	resp, err := client.challenge.ChallengePiece(ctx, &types.ChallengePieceRequest{
-		ObjectId:      objectID,
+		ObjectInfo:    objectInfo,
 		SegmentIdx:    segmentIdx,
 		RedundancyIdx: redundancyIdx,
 	}, opts...)
