@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 	"github.com/bnb-chain/greenfield/sdk/client"
 	"github.com/bnb-chain/greenfield/sdk/keys"
 	ctypes "github.com/bnb-chain/greenfield/sdk/types"

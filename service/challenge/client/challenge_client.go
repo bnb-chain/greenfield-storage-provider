@@ -8,7 +8,6 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
@@ -24,7 +23,7 @@ type ChallengeClient struct {
 func NewChallengeClient(address string) (*ChallengeClient, error) {
 	options := utilgrpc.GetDefaultClientOptions()
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {

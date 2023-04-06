@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/service/p2p/types"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"

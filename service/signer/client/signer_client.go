@@ -3,13 +3,13 @@ package client
 import (
 	"context"
 
+	mdgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mdgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	p2ptpyes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
 )
