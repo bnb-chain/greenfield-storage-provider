@@ -192,4 +192,12 @@ through github issue(going to have a discord channel soon) to ensure those chang
 line with the general philosophy of the project and/or get some early feedback which can make 
 both your efforts much lighter as well as our review and merge procedures quick and simple.
 
-## Licence (pending)
+## Licence
+
+The greenfield storage provider library (i.e. all code outside the `cmd` directory) is licensed under the
+[GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html),
+also included in our repository in the `COPYING.LESSER` file.
+
+The greenfield storage provider binaries (i.e. all code inside the `cmd` directory) is licensed under the
+[GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html), also
+included in our repository in the `COPYING` file.
