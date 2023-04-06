@@ -8,6 +8,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mdgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	p2ptpyes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
 )
@@ -19,8 +21,12 @@ type SignerClient struct {
 }
 
 func NewSignerClient(address string) (*SignerClient, error) {
-	conn, err := grpc.DialContext(context.Background(), address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+	options := []grpc.DialOption{}
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mdgrpc.GetDefaultClientInterceptor()...)
+	}
+	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
 		log.Errorw("failed to dial signer", "error", err)
 		return nil, err

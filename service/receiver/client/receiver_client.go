@@ -3,13 +3,14 @@ package client
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/service/receiver/types"
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 // ReceiverClient is a receiver gRPC service client wrapper
@@ -21,10 +22,11 @@ type ReceiverClient struct {
 
 // NewReceiverClient return a ReceiverClient instance
 func NewReceiverClient(address string) (*ReceiverClient, error) {
-	conn, err := grpc.DialContext(context.Background(), address,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(model.MaxCallMsgSize)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(model.MaxCallMsgSize)))
+	options := utilgrpc.GetDefaultClientOptions()
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+	}
+	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
 		log.Errorw("failed to dial receiver", "error", err)
 		return nil, err

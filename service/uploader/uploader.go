@@ -3,25 +3,22 @@ package uploader
 import (
 	"context"
 	"net"
-	"runtime/debug"
 
-	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
-	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	tasknodeclient "github.com/bnb-chain/greenfield-storage-provider/service/tasknode/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 var _ lifecycle.Service = &Uploader{}
@@ -104,19 +101,9 @@ func (uploader *Uploader) serve(errCh chan error) {
 		return
 	}
 
-	gRPCPanicRecoveryHandler := func(p interface{}) (err error) {
-		metrics.PanicsTotal.WithLabelValues().Inc()
-		log.Errorw("recovered from panic", "panic", p, "stack", debug.Stack())
-		return status.Errorf(codes.Internal, "%s", p)
-	}
-
-	var options []grpc.ServerOption
-	options = append(options, grpc.MaxRecvMsgSize(model.MaxCallMsgSize))
-	options = append(options, grpc.MaxSendMsgSize(model.MaxCallMsgSize))
+	options := utilgrpc.GetDefaultServerOptions()
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, grpc.ChainUnaryInterceptor(openmetrics.UnaryServerInterceptor(metrics.DefaultGRPCServerMetrics),
-			grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(gRPCPanicRecoveryHandler))))
-		options = append(options, grpc.ChainStreamInterceptor(openmetrics.StreamServerInterceptor(metrics.DefaultGRPCServerMetrics)))
+		options = append(options, mwgrpc.GetDefaultServerInterceptor()...)
 	}
 	uploader.grpcServer = grpc.NewServer(options...)
 	types.RegisterUploaderServiceServer(uploader.grpcServer, uploader)

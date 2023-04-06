@@ -28,13 +28,12 @@ func (metadata *Metadata) GetPaymentByBucketName(ctx context.Context, req *metat
 		return
 	}
 
-	err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to unmarshal out flows", "error", err)
-		return
-	}
-
 	if streamRecord != nil {
+		err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to unmarshal out flows", "error", err)
+			return
+		}
 		res = &types.StreamRecord{
 			Account:         streamRecord.Account.String(),
 			CrudTimestamp:   streamRecord.UpdateTime,
@@ -68,14 +67,12 @@ func (metadata *Metadata) GetPaymentByBucketID(ctx context.Context, req *metatyp
 		log.CtxErrorw(ctx, "failed to get payment by bucket id", "error", err)
 		return
 	}
-
-	err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to unmarshal out flows", "error", err)
-		return
-	}
-
 	if streamRecord != nil {
+		err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to unmarshal out flows", "error", err)
+			return
+		}
 		res = &types.StreamRecord{
 			Account:         streamRecord.Account.String(),
 			CrudTimestamp:   streamRecord.UpdateTime,

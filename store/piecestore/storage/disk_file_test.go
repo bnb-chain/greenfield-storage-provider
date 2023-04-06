@@ -138,7 +138,7 @@ func TestDiskFile_PutSuccess(t *testing.T) {
 	}{
 		{
 			name:      "disk_file_put_cfr_true_success_test1",
-			data:      sessionToken,
+			data:      mockSessionToken,
 			cfr:       true,
 			key:       f.Name(),
 			wantedErr: nil,
@@ -146,14 +146,14 @@ func TestDiskFile_PutSuccess(t *testing.T) {
 		{
 			name:      "disk_file_put_cfr_false_success_test2",
 			key:       f.Name(),
-			data:      sessionToken,
+			data:      mockSessionToken,
 			cfr:       false,
 			wantedErr: nil,
 		},
 		{
 			name:      "disk_file_put_with_dir_suffix_success_test3",
 			key:       "test/",
-			data:      sessionToken,
+			data:      mockSessionToken,
 			cfr:       false,
 			wantedErr: nil,
 		},
@@ -185,7 +185,7 @@ func TestDiskFile_PutError(t *testing.T) {
 	}{
 		{
 			name:      "disk_file_put_error_test1",
-			data:      sessionToken,
+			data:      mockSessionToken,
 			cfr:       true,
 			key:       emptyString,
 			wantedErr: errors.New("no such file or directory"),
