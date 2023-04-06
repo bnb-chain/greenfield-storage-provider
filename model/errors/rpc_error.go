@@ -104,6 +104,8 @@ var (
 	ErrSPApprovalNumber = errors.New("failed to get sufficient approvals of SPs from p2p server")
 	// ErrSPNumber defines failed to get insufficient SPs from DB
 	ErrSPNumber = errors.New("failed to get sufficient SPs from DB")
+	// ErrDepletedSP defines no backup SP to pick up error
+	ErrDepletedSP = errors.New("backup storage providers depleted")
 )
 
 // uploader service error

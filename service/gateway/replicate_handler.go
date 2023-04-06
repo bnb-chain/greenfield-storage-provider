@@ -16,12 +16,12 @@ import (
 )
 
 // syncPieceHandler handle sync piece data request
-func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request) {
+func (gateway *Gateway) replicatePieceHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err                    error
 		errDescription         *errorDescription
 		reqContext             *requestContext
-		objectInfo             = types.ObjectInfo{}
+		objectInfo             *types.ObjectInfo
 		pieceSize              uint64
 		redundancyIdx          int32
 		replicateApproval      = &p2ptypes.GetApprovalResponse{}
@@ -40,26 +40,22 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 			_ = errDescription.errorResponse(w, reqContext)
 		}
 		if errDescription != nil && errDescription.statusCode == http.StatusOK {
-			log.Errorf("action(%v) statusCode(%v) %v", syncPieceRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+			log.Errorf("action(%v) statusCode(%v) %v", replicateObjectPieceRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Infof("action(%v) statusCode(200) %v", syncPieceRouterName, reqContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", replicateObjectPieceRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
 	if gateway.receiver == nil {
-		log.Error("failed to sync data due to not config receiver")
+		log.Error("failed to replicate piece due to not config receiver")
 		errDescription = NotExistComponentError
 		return
 	}
 
-	objectInfoMsg, err := hex.DecodeString(r.Header.Get(model.GnfdObjectInfoHeader))
-	if err != nil {
-		log.Errorw("failed to parse object info header", "object_info", r.Header.Get(model.GnfdObjectInfoHeader))
-		errDescription = InvalidHeader
-		return
-	}
-	if types.ModuleCdc.UnmarshalJSON(objectInfoMsg, &objectInfo) != nil {
-		log.Errorw("failed to unmarshal object info header", "object_info", r.Header.Get(model.GnfdObjectInfoHeader))
+	// check object info by querying chain
+	objectID := reqContext.request.Header.Get(model.GnfdObjectIDHeader)
+	if objectInfo, err = gateway.chain.QueryObjectInfoByID(context.Background(), objectID); err != nil {
+		log.Errorw("failed to query object info  on chain", "object_id", objectID, "error", err)
 		errDescription = InvalidHeader
 		return
 	}
@@ -79,27 +75,27 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if err = gateway.verifyReplicateApproval(replicateApproval); err != nil {
-		log.Errorw("failed to verify replicate_approval header", "replicate_approval", r.Header.Get(model.GnfdReplicateApproval))
+		log.Errorw("failed to verify replicate_approval header", "replicate_approval", replicateApproval)
 		errDescription = InvalidHeader
 		return
 	}
 
 	stream, err := gateway.receiver.SyncObject(ctx)
 	if err != nil {
-		log.Errorw("failed to sync piece", "error", err)
+		log.Errorw("failed to replicate piece", "error", err)
 		errDescription = InternalError
 		return
 	}
 	for {
 		readN, err = r.Body.Read(buf)
 		if err != nil && err != io.EOF {
-			log.Errorw("failed to sync piece due to reader error", "error", err)
+			log.Errorw("failed to replicate piece due to reader error", "error", err)
 			errDescription = InternalError
 			return
 		}
 		if readN > 0 {
 			if err = stream.Send(&receivertypes.SyncObjectRequest{
-				ObjectInfo:    &objectInfo,
+				ObjectInfo:    objectInfo,
 				PieceSize:     pieceSize,
 				RedundancyIdx: redundancyIdx,
 				ReplicaData:   buf[:readN],
@@ -112,13 +108,13 @@ func (gateway *Gateway) syncPieceHandler(w http.ResponseWriter, r *http.Request)
 		}
 		if err == io.EOF {
 			if size == 0 {
-				log.Errorw("failed to sync piece due to payload is empty")
+				log.Errorw("failed to replicate piece due to payload is empty")
 				errDescription = InvalidPayload
 				return
 			}
 			resp, err := stream.CloseAndRecv()
 			if err != nil {
-				log.Errorw("failed to sync piece due to stream close", "error", err)
+				log.Errorw("failed to replicate piece due to stream close", "error", err)
 				errDescription = InternalError
 				return
 			}

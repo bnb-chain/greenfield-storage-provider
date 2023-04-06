@@ -2,7 +2,6 @@ package tasknode
 
 import (
 	"context"
-	"errors"
 	"io"
 	"sync"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	gatewayclient "github.com/bnb-chain/greenfield-storage-provider/service/gateway/client"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
@@ -21,11 +21,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// streamReader is used to the specified redundancy index piece stream.
+const (
+	// ReplicateFactor defines the redundancy of replication
+	// TODO:: will update to （1, 2] on main net
+	ReplicateFactor = 1
+	// GetApprovalTimeout defines the timeout of getting secondary sp approval
+	GetApprovalTimeout = 10
+)
+
+// streamReader is used to stream produce/consume piece data stream.
 type streamReader struct {
-	redundancyIndex int
-	pRead           *io.PipeReader
-	pWrite          *io.PipeWriter
+	pRead  *io.PipeReader
+	pWrite *io.PipeWriter
 }
 
 // Read populates the given byte slice with data and returns the number of bytes populated and an error value.
@@ -34,7 +41,7 @@ func (s *streamReader) Read(buf []byte) (n int, err error) {
 	return s.pRead.Read(buf)
 }
 
-// streamReaderGroup is used to the primary sp replicate object data to other secondary sps.
+// streamReaderGroup is used to the primary sp replicate object piece data to other secondary sps.
 type streamReaderGroup struct {
 	task            *replicateObjectTask
 	pieceSize       int
@@ -53,9 +60,7 @@ func newStreamReaderGroup(t *replicateObjectTask, excludeIndexMap map[int]bool) 
 			if excludeIndexMap[idx] {
 				continue
 			}
-			sg.streamReaderMap[idx] = &streamReader{
-				redundancyIndex: idx,
-			}
+			sg.streamReaderMap[idx] = &streamReader{}
 			sg.streamReaderMap[idx].pRead, sg.streamReaderMap[idx].pWrite = io.Pipe()
 			atLeastHasOne = true
 		}
@@ -66,7 +71,8 @@ func newStreamReaderGroup(t *replicateObjectTask, excludeIndexMap map[int]bool) 
 	return sg, nil
 }
 
-func (sg *streamReaderGroup) streamProducePieceData() {
+// produceStreamPieceData produce stream piece data
+func (sg *streamReaderGroup) produceStreamPieceData() {
 	ch := make(chan int)
 	go func(pieceSizeCh chan int) {
 		defer close(pieceSizeCh)
@@ -106,14 +112,65 @@ func (sg *streamReaderGroup) streamProducePieceData() {
 	sg.pieceSize = <-ch
 }
 
+// streamPieceDataReplicator replicates a piece stream to the target sp
+type streamPieceDataReplicator struct {
+	task            *replicateObjectTask
+	pieceSize       uint32
+	redundancyIndex uint32
+	streamReader    *streamReader
+	sp              *sptypes.StorageProvider
+	approval        *p2ptypes.GetApprovalResponse
+}
+
+// replicate is used to start replicate the piece stream
+func (r *streamPieceDataReplicator) replicate() (integrityHash []byte, signature []byte, err error) {
+	var (
+		gwClient      *gatewayclient.GatewayClient
+		originMsgHash []byte
+		approvalAddr  sdk.AccAddress
+	)
+
+	gwClient, err = gatewayclient.NewGatewayClient(r.sp.GetEndpoint())
+	if err != nil {
+		log.Errorw("failed to create gateway client",
+			"sp_endpoint", r.sp.GetEndpoint(), "error", err)
+		return
+	}
+	integrityHash, signature, err = gwClient.ReplicateObjectPieceStream(r.task.objectInfo.Id.Uint64(), r.pieceSize,
+		r.redundancyIndex, r.approval, r.streamReader)
+	if err != nil {
+		log.Errorw("failed to replicate object piece stream",
+			"endpoint", r.sp.GetEndpoint(), "error", err)
+		return
+	}
+	// verify secondary signature
+	originMsgHash = storagetypes.NewSecondarySpSignDoc(r.sp.GetOperator(), sdkmath.NewUint(r.task.objectInfo.Id.Uint64()), integrityHash).GetSignBytes()
+	approvalAddr, err = sdk.AccAddressFromHexUnsafe(r.sp.GetApprovalAddress())
+	if err != nil {
+		log.Errorw("failed to parse sp operator address",
+			"sp", r.sp.GetApprovalAddress(), "endpoint", r.sp.GetEndpoint(),
+			"error", err)
+		return
+	}
+	err = storagetypes.VerifySignature(approvalAddr, sdk.Keccak256(originMsgHash), signature)
+	if err != nil {
+		log.Errorw("failed to verify sp signature",
+			"sp", r.sp.GetApprovalAddress(), "endpoint", r.sp.GetEndpoint(), "error", err)
+		return
+	}
+
+	return integrityHash, signature, nil
+}
+
 // replicateObjectTask represents the background object replicate task, include replica/ec redundancy type.
 type replicateObjectTask struct {
-	taskNode           *TaskNode
-	objectInfo         *types.ObjectInfo
-	storageParams      *storagetypes.Params
-	segmentPieceNumber int
-	redundancyNumber   int
-
+	ctx                 context.Context
+	taskNode            *TaskNode
+	objectInfo          *types.ObjectInfo
+	approximateMemSize  int
+	storageParams       *storagetypes.Params
+	segmentPieceNumber  int
+	redundancyNumber    int
 	mux                 sync.Mutex
 	spMap               map[string]*sptypes.StorageProvider
 	approvalResponseMap map[string]*p2ptypes.GetApprovalResponse
@@ -121,18 +178,19 @@ type replicateObjectTask struct {
 }
 
 // newReplicateObjectTask returns a ReplicateObjectTask instance
-func newReplicateObjectTask(t *TaskNode, o *types.ObjectInfo) (*replicateObjectTask, error) {
-	if t == nil || o == nil {
+func newReplicateObjectTask(ctx context.Context, task *TaskNode, object *types.ObjectInfo) (*replicateObjectTask, error) {
+	if ctx == nil || task == nil || object == nil {
 		return nil, merrors.ErrInvalidParams
 	}
-	if o.GetRedundancyType() != types.REDUNDANCY_EC_TYPE {
-		log.Errorw("failed to new replicate object task due to unsupported redundancy type",
-			"redundancy_type", o.GetRedundancyType())
+	if object.GetRedundancyType() != types.REDUNDANCY_EC_TYPE {
+		log.CtxErrorw(ctx, "failed to new replicate object task due to unsupported redundancy type",
+			"redundancy_type", object.GetRedundancyType())
 		return nil, merrors.ErrInvalidParams
 	}
 	return &replicateObjectTask{
-		taskNode:            t,
-		objectInfo:          o,
+		ctx:                 ctx,
+		taskNode:            task,
+		objectInfo:          object,
 		spMap:               make(map[string]*sptypes.StorageProvider),
 		approvalResponseMap: make(map[string]*p2ptypes.GetApprovalResponse),
 	}, nil
@@ -148,7 +206,7 @@ func (t *replicateObjectTask) init() error {
 	var err error
 	t.storageParams, err = t.taskNode.spDB.GetStorageParams()
 	if err != nil {
-		log.Errorw("failed to query sp params", "error", err)
+		log.CtxErrorw(t.ctx, "failed to query sp params", "error", err)
 		return err
 	}
 	t.segmentPieceNumber = int(piecestore.ComputeSegmentCount(t.objectInfo.GetPayloadSize(),
@@ -158,19 +216,40 @@ func (t *replicateObjectTask) init() error {
 		t.objectInfo, t.redundancyNumber, t.redundancyNumber*ReplicateFactor, GetApprovalTimeout)
 	t.sortedSpEndpoints = maps.SortKeys(t.approvalResponseMap)
 	if err != nil {
-		log.Errorw("failed to get approvals", "error", err)
+		log.CtxErrorw(t.ctx, "failed to get approvals", "error", err)
 		return err
 	}
+	// reserve memory
+	t.approximateMemSize = int(float64(t.storageParams.GetMaxSegmentSize()) *
+		(float64(t.redundancyNumber)/float64(t.storageParams.GetRedundantDataChunkNum()) + 1))
+	if t.objectInfo.GetPayloadSize() < t.storageParams.GetMaxSegmentSize() {
+		t.approximateMemSize = int(float64(t.objectInfo.GetPayloadSize()) *
+			(float64(t.redundancyNumber)/float64(t.storageParams.GetRedundantDataChunkNum()) + 1))
+	}
+	err = t.taskNode.rcScope.ReserveMemory(t.approximateMemSize, rcmgr.ReservationPriorityAlways)
+	if err != nil {
+		log.CtxErrorw(t.ctx, "failed to reserve memory from resource manager",
+			"reserve_size", t.approximateMemSize, "error", err)
+		return err
+	}
+	log.CtxDebugw(t.ctx, "reserve memory from resource manager",
+		"reserve_size", t.approximateMemSize, "resource_state", rcmgr.GetCurrentState())
 	return nil
 }
 
-// execute is used to execute the task.
+// execute is used to start the task.
 func (t *replicateObjectTask) execute() {
 	var (
 		sealMsg         *storagetypes.MsgSealObject
 		processInfo     *servicetypes.ReplicateSegmentInfo
 		succeedIndexMap map[int]bool
 	)
+	defer func() {
+		t.taskNode.rcScope.ReleaseMemory(t.approximateMemSize)
+		log.CtxDebugw(t.ctx, "release memory to resource manager",
+			"release_size", t.approximateMemSize, "resource_state", rcmgr.GetCurrentState())
+	}()
+
 	succeedIndexMap = make(map[int]bool, t.redundancyNumber)
 	isAllSucceed := func(inputIndexMap map[int]bool) bool {
 		for i := 0; i < t.redundancyNumber; i++ {
@@ -180,12 +259,12 @@ func (t *replicateObjectTask) execute() {
 		}
 		return true
 	}
-	getSpFunc := func() (sp *sptypes.StorageProvider, approval *p2ptypes.GetApprovalResponse, err error) {
+	pickSp := func() (sp *sptypes.StorageProvider, approval *p2ptypes.GetApprovalResponse, err error) {
 		t.mux.Lock()
 		defer t.mux.Unlock()
 		if len(t.approvalResponseMap) == 0 {
-			log.Error("backup storage providers depleted")
-			err = errors.New("no backup sp to pick up")
+			log.CtxError(t.ctx, "backup storage providers depleted")
+			err = merrors.ErrDepletedSP
 			return
 		}
 		endpoint := t.sortedSpEndpoints[0]
@@ -210,15 +289,15 @@ func (t *replicateObjectTask) execute() {
 
 	for retry := 0; retry < 2; retry++ {
 		if isAllSucceed(succeedIndexMap) {
-			log.Infow("succeed to replicate object data")
+			log.CtxInfo(t.ctx, "succeed to replicate object data")
 			break
 		}
 		sg, err := newStreamReaderGroup(t, succeedIndexMap)
 		if err != nil {
-			log.Errorw("failed to new stream reader group", "error", err)
+			log.CtxErrorw(t.ctx, "failed to new stream reader group", "error", err)
 			return
 		}
-		sg.streamProducePieceData()
+		sg.produceStreamPieceData()
 
 		var wg sync.WaitGroup
 		for redundancyIdx := range sg.streamReaderMap {
@@ -226,40 +305,25 @@ func (t *replicateObjectTask) execute() {
 			go func(rIdx int) {
 				defer wg.Done()
 
-				sp, approval, innerErr := getSpFunc()
+				sp, approval, innerErr := pickSp()
 				if innerErr != nil {
-					log.Errorw("failed to get secondary sp", "redundancy_index", rIdx, "error", innerErr)
+					log.CtxErrorw(t.ctx, "failed to pick a secondary sp", "redundancy_index", rIdx, "error", innerErr)
 					return
 				}
-				gatewayClient, innerErr := gatewayclient.NewGatewayClient(sp.GetEndpoint())
-				if innerErr != nil {
-					log.Errorw("failed to create gateway client",
-						"sp_endpoint", sp.GetEndpoint(), "redundancy_index", rIdx, "error", innerErr)
-					return
+				r := &streamPieceDataReplicator{
+					task:            t,
+					pieceSize:       uint32(sg.pieceSize),
+					redundancyIndex: uint32(rIdx),
+					streamReader:    sg.streamReaderMap[rIdx],
+					sp:              sp,
+					approval:        approval,
 				}
-				integrityHash, signature, innerErr := gatewayClient.ReplicateObjectData(t.objectInfo, uint32(sg.pieceSize),
-					uint32(rIdx), approval, sg.streamReaderMap[rIdx])
+				integrityHash, signature, innerErr := r.replicate()
 				if innerErr != nil {
-					log.Errorw("failed to sync piece data",
-						"endpoint", sp.GetEndpoint(), "redundancy_index", rIdx, "error", innerErr)
+					log.CtxErrorw(t.ctx, "failed to replicate piece stream", "redundancy_index", rIdx, "error", innerErr)
 					return
 				}
 
-				msg := storagetypes.NewSecondarySpSignDoc(sp.GetOperator(), sdkmath.NewUint(t.objectInfo.Id.Uint64()), integrityHash).GetSignBytes()
-				approvalAddr, innerErr := sdk.AccAddressFromHexUnsafe(sp.GetApprovalAddress())
-				if innerErr != nil {
-					log.Errorw("failed to parse sp operator address",
-						"sp", sp.GetApprovalAddress(), "endpoint", sp.GetEndpoint(),
-						"redundancy_index", rIdx, "error", innerErr)
-					return
-				}
-				innerErr = storagetypes.VerifySignature(approvalAddr, sdk.Keccak256(msg), signature)
-				if innerErr != nil {
-					log.Errorw("failed to verify sp signature",
-						"sp", sp.GetApprovalAddress(), "endpoint", sp.GetEndpoint(),
-						"redundancy_index", rIdx, "error", innerErr)
-					return
-				}
 				succeedIndexMap[rIdx] = true
 				sealMsg.GetSecondarySpAddresses()[rIdx] = sp.GetOperator().String()
 				sealMsg.GetSecondarySpSignatures()[rIdx] = signature
@@ -271,7 +335,7 @@ func (t *replicateObjectTask) execute() {
 				t.objectInfo.SecondarySpAddresses[rIdx] = sp.GetOperator().String()
 				t.taskNode.spDB.SetObjectInfo(t.objectInfo.Id.Uint64(), t.objectInfo)
 				t.taskNode.cache.Add(t.objectInfo.Id.Uint64(), processInfo)
-				log.Infow("succeed to replicate object data to sp",
+				log.CtxInfow(t.ctx, "succeed to replicate object piece stream to the target sp",
 					"sp", sp.GetOperator(), "endpoint", sp.GetEndpoint(), "redundancy_index", rIdx)
 
 			}(redundancyIdx)
@@ -285,22 +349,22 @@ func (t *replicateObjectTask) execute() {
 		_, err := t.taskNode.signer.SealObjectOnChain(context.Background(), sealMsg)
 		if err != nil {
 			t.taskNode.spDB.UpdateJobState(t.objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR)
-			log.Errorw("failed to sign object by signer", "error", err)
+			log.CtxErrorw(t.ctx, "failed to sign object by signer", "error", err)
 			return
 		}
-		t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_TX_DOING)
+		t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DOING)
 		err = t.taskNode.chain.ListenObjectSeal(context.Background(), t.objectInfo.GetBucketName(),
 			t.objectInfo.GetObjectName(), 10)
 		if err != nil {
 			t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
-			log.Errorw("failed to seal object on chain", "error", err)
+			log.CtxErrorw(t.ctx, "failed to seal object on chain", "error", err)
 			return
 		}
 		t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
-		log.Info("succeed to seal object on chain")
+		log.CtxInfo(t.ctx, "succeed to seal object on chain")
 	} else {
 		err := t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
-		log.Errorw("failed to replicate object data to sp", "error", err, "succeed_index_map", succeedIndexMap)
+		log.CtxErrorw(t.ctx, "failed to replicate object data to sp", "error", err, "succeed_index_map", succeedIndexMap)
 		return
 	}
 }

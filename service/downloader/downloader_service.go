@@ -21,7 +21,6 @@ var _ types.DownloaderServiceServer = &Downloader{}
 func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	stream types.DownloaderService_GetObjectServer) (err error) {
 	objectInfo := req.GetObjectInfo()
-	// prevent gateway forgetting transparent transmission
 	if objectInfo == nil {
 		return merrors.ErrDanglingPointer
 	}

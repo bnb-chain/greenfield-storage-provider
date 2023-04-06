@@ -97,3 +97,12 @@ func (r *resourceManager) ViewService(name string, f func(ResourceScope) error) 
 	}
 	return f(scop)
 }
+
+func GetCurrentState() string {
+	var state string
+	ResrcManager().ViewSystem(func(scope ResourceScope) error {
+		state = scope.Stat().String()
+		return nil
+	})
+	return state
+}

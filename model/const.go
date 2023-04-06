@@ -178,8 +178,8 @@ const (
 	EndTimestampUs = "end-timestamp"
 	// ChallengePath defines challenge path style suffix
 	ChallengePath = "/greenfield/admin/v1/challenge"
-	// SyncPath defines sync-object path style
-	SyncPath = "/greenfield/receiver/v1/sync-piece"
+	// ReplicateObjectPiecePath defines replicate-object path style
+	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
 	// GnfdTransactionHashHeader defines blockchain tx-hash
@@ -200,8 +200,6 @@ const (
 	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
 	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
-	// GnfdObjectInfoHeader define object info, which is used by receiver
-	GnfdObjectInfoHeader = "X-Gnfd-Object-Info"
 	// GnfdPieceSizeHeader defines piece size, which is used to split by receiver
 	GnfdPieceSizeHeader = "X-Gnfd-Piece-Size"
 	// GnfdReplicateApproval defines SP approval that allow to replicate piece data, which is used by receiver
