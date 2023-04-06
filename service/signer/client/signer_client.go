@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 
-	mdgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -12,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	p2ptpyes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 type SignerClient struct {
@@ -20,11 +20,19 @@ type SignerClient struct {
 	conn    *grpc.ClientConn
 }
 
+const signerRPCServiceName = "service.signer.types.SignerService"
+
 func NewSignerClient(address string) (*SignerClient, error) {
 	options := []grpc.DialOption{}
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mdgrpc.GetDefaultClientInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}
+	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(signerRPCServiceName)
+	if err != nil {
+		log.Errorw("failed to get signer client retry option", "error", err)
+		return nil, err
+	}
+	options = append(options, retryOption)
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {

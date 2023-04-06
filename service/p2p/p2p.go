@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -20,6 +19,7 @@ import (
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/service/p2p/types"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 const UpdateSPDuration = 2
@@ -96,7 +96,7 @@ func (p *P2PServer) serve(errCh chan error) {
 
 	options := []grpc.ServerOption{}
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultServerInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
 	}
 	p.grpcServer = grpc.NewServer(options...)
 	p2ptypes.RegisterP2PServiceServer(p.grpcServer, p)

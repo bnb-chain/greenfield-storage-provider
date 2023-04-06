@@ -19,9 +19,17 @@ type DownloaderClient struct {
 	downloader types.DownloaderServiceClient
 }
 
+const downloaderRPCServiceName = "service.downloader.types.DownloaderService"
+
 // NewDownloaderClient returns a DownloaderClient instance
 func NewDownloaderClient(address string) (*DownloaderClient, error) {
 	options := utilgrpc.GetDefaultClientOptions()
+	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(downloaderRPCServiceName)
+	if err != nil {
+		log.Errorw("failed to get downloader client retry option", "error", err)
+		return nil, err
+	}
+	options = append(options, retryOption)
 	if metrics.GetMetrics().Enabled() {
 		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}

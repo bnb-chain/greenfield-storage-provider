@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -10,7 +11,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
 	servicetype "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // TaskNodeClient is a task node gRPC service client wrapper
@@ -20,9 +20,17 @@ type TaskNodeClient struct {
 	taskNode types.TaskNodeServiceClient
 }
 
+const taskNodeRPCServiceName = "service.tasknode.types.TaskNodeService"
+
 // NewTaskNodeClient return a TaskNodeClient instance
 func NewTaskNodeClient(address string) (*TaskNodeClient, error) {
 	options := utilgrpc.GetDefaultClientOptions()
+	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(taskNodeRPCServiceName)
+	if err != nil {
+		log.Errorw("failed to get task node client retry option", "error", err)
+		return nil, err
+	}
+	options = append(options, retryOption)
 	if metrics.GetMetrics().Enabled() {
 		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}

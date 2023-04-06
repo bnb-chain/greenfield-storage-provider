@@ -19,9 +19,17 @@ type ReceiverClient struct {
 	receiver types.ReceiverServiceClient
 }
 
+const receiverRPCServiceName = "service.receiver.types.ReceiverService"
+
 // NewReceiverClient return a ReceiverClient instance
 func NewReceiverClient(address string) (*ReceiverClient, error) {
 	options := utilgrpc.GetDefaultClientOptions()
+	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(receiverRPCServiceName)
+	if err != nil {
+		log.Errorw("failed to get receiver client retry option", "error", err)
+		return nil, err
+	}
+	options = append(options, retryOption)
 	if metrics.GetMetrics().Enabled() {
 		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}

@@ -8,8 +8,6 @@ import (
 	"sync/atomic"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,10 +16,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	gatewayclient "github.com/bnb-chain/greenfield-storage-provider/service/gateway/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
 )
 
 const (

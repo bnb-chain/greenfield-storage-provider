@@ -35,7 +35,7 @@ func (client *GreenfieldClient) GnfdCompositeClient() *chain.GnfdCompositeClient
 	return client.gnfdCompositeClient
 }
 
-// Greenfield encapsulation of greenfield chain go sdk, support for more query request
+// Greenfield is an encapsulation of greenfield chain go sdk which supports for more query request
 type Greenfield struct {
 	config        *GreenfieldChainConfig
 	client        *GreenfieldClient
