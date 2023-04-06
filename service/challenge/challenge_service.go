@@ -22,12 +22,12 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 		return nil, merrors.ErrDanglingPointer
 	}
 	var (
-		scope                 rcmgr.ResourceScopeSpan
-		resp                  *types.ChallengePieceResponse
-		err                   error
-		pieceKeyType          model.PieceType
-		pieceKey              string
-		approximatedPieceSize int
+		scope                rcmgr.ResourceScopeSpan
+		resp                 *types.ChallengePieceResponse
+		err                  error
+		pieceType            model.PieceType
+		pieceKey             string
+		approximatePieceSize int
 	)
 	ctx = log.WithValue(ctx, "object_id", objectInfo.Id.String())
 
@@ -53,26 +53,26 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 		return resp, err
 	}
 	if req.GetRedundancyIdx() < 0 {
-		pieceKeyType = model.SegmentPieceType
+		pieceType = model.SegmentPieceType
 		// useless iff it is a segment piece
 		pieceKey = piecestore.EncodeSegmentPieceKey(objectInfo.Id.Uint64(), req.GetSegmentIdx())
 	} else {
-		pieceKeyType = model.ECPieceType
+		pieceType = model.ECPieceType
 		// as the ec piece index iff it is an ec piece
 		pieceKey = piecestore.EncodeECPieceKey(objectInfo.Id.Uint64(),
 			req.GetSegmentIdx(), uint32(req.GetRedundancyIdx()))
 	}
-	approximatedPieceSize, err = piecestore.ComputeApproximatedPieceSize(objectInfo,
-		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum(), pieceKeyType, req.GetSegmentIdx())
+	approximatePieceSize, err = piecestore.ComputeApproximatePieceSize(objectInfo,
+		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum(), pieceType, req.GetSegmentIdx())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to compute approximated piece size",
-			"reserve_size", approximatedPieceSize, "error", err)
+		log.CtxErrorw(ctx, "failed to compute Approximate piece size",
+			"reserve_size", approximatePieceSize, "error", err)
 		return resp, err
 	}
-	err = scope.ReserveMemory(approximatedPieceSize, rcmgr.ReservationPriorityAlways)
+	err = scope.ReserveMemory(approximatePieceSize, rcmgr.ReservationPriorityAlways)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
-			"reserve_size", approximatedPieceSize, "error", err)
+			"reserve_size", approximatePieceSize, "error", err)
 		return resp, err
 	}
 

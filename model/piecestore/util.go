@@ -3,18 +3,19 @@ package piecestore
 import (
 	"math"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-// ComputeApproximatedPieceSize return the size of piece data
-func ComputeApproximatedPieceSize(object *storagetypes.ObjectInfo, maxSegmentPieceSize uint64, dataChunkNum uint32,
-	dataType model.PieceType, idx uint32) (int, error) {
+// ComputeApproximatePieceSize return the size of piece data
+func ComputeApproximatePieceSize(object *storagetypes.ObjectInfo, maxSegmentPieceSize uint64, dataChunkNum uint32,
+	pieceType model.PieceType, idx uint32) (int, error) {
 	if object.GetPayloadSize() == 0 {
 		return 0, merrors.ErrPayloadZero
 	}
-	switch dataType {
+	switch pieceType {
 	case model.SegmentPieceType:
 		segmentCnt := ComputeSegmentCount(object.GetPayloadSize(), maxSegmentPieceSize)
 		if idx > segmentCnt-1 {
