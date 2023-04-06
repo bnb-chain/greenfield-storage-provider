@@ -3,6 +3,7 @@ package challenge
 import (
 	"context"
 	"math"
+	"strconv"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
@@ -16,14 +17,32 @@ var _ types.ChallengeServiceServer = &Challenge{}
 // ChallengePiece handles the piece challenge request
 // return the piece's integrity hash, piece hash and piece data
 func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.ChallengePieceRequest) (*types.ChallengePieceResponse, error) {
+	// TODO:: gateway transparent transmission object info
+	ctx = log.WithValue(ctx, "object_id", strconv.FormatUint(req.ObjectId, 10))
 	var (
+		scope                 rcmgr.ResourceScopeSpan
+		resp                  *types.ChallengePieceResponse
+		err                   error
 		pieceKey              string
 		approximatedPieceSize int
-		err                   error
-		resp                  *types.ChallengePieceResponse
 	)
+	defer func() {
+		if scope != nil {
+			scope.Done()
+		}
+		var state string
+		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
+			state = scope.Stat().String()
+			return nil
+		})
+		log.CtxInfow(ctx, "finish to challenge piece request", "resource_state", state, "error", err)
+	}()
+	scope, err = challenge.rcScope.BeginSpan()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
+		return resp, err
+	}
 
-	ctx = log.Context(ctx, req)
 	params, err := challenge.spDB.GetStorageParams()
 	if err != nil {
 		return resp, err
@@ -39,30 +58,12 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 		approximatedPieceSize = int(math.Ceil(float64(params.GetMaxSegmentSize()) / float64(params.GetRedundantDataChunkNum())))
 	}
 
-	// allocates memory from resource manager
-	scope, err := challenge.rcScope.BeginSpan()
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
-		return resp, err
-	}
-	stateFunc := func() string {
-		var state string
-		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
-			state = scope.Stat().String()
-			return nil
-		})
-		return state
-	}
 	err = scope.ReserveMemory(approximatedPieceSize, rcmgr.ReservationPriorityAlways)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
-			"reserve_size", approximatedPieceSize, "resource_state", stateFunc(), "error", err)
+			"reserve_size", approximatedPieceSize, "error", err)
 		return resp, err
 	}
-	defer func() {
-		scope.Done()
-		log.CtxDebugw(ctx, "end challenge piece request", "resource_state", stateFunc())
-	}()
 
 	integrity, err := challenge.spDB.GetObjectIntegrity(req.GetObjectId())
 	if err != nil {

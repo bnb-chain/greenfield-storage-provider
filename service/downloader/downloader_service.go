@@ -20,27 +20,52 @@ var _ types.DownloaderServiceServer = &Downloader{}
 // GetObject downloads the payload of the object.
 func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	stream types.DownloaderService_GetObjectServer) (err error) {
-	var sendSize int
-	ctx := log.Context(context.Background(), req)
-	resp := &types.GetObjectResponse{}
+	objectInfo := req.GetObjectInfo()
+	// prevent gateway forgetting transparent transmission
+	if objectInfo == nil {
+		return merrors.ErrDanglingPointer
+	}
+	var (
+		ctx      = log.WithValue(context.Background(), "object_id", objectInfo.Id.String())
+		scope    rcmgr.ResourceScopeSpan
+		sendSize int
+
+		bucketInfo  = req.GetBucketInfo()
+		resp        = &types.GetObjectResponse{}
+		startOffset uint64
+		endOffset   uint64
+	)
 	defer func() {
-		if err != nil {
-			return
+		if scope != nil {
+			scope.Done()
 		}
-		log.CtxInfow(ctx, "succeed to get object", "send_size", sendSize)
+		var state string
+		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
+			state = scope.Stat().String()
+			return nil
+		})
+		log.CtxInfow(ctx, "finish to get object", "send_size", sendSize,
+			"resource_state", state, "error", err)
 	}()
 
-	bucketInfo := req.GetBucketInfo()
-	objectInfo := req.GetObjectInfo()
-
-	startOffset := uint64(0)
-	endOffset := objectInfo.GetPayloadSize() - 1
+	scope, err = downloader.rcScope.BeginSpan()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
+		return
+	}
+	startOffset = uint64(0)
+	endOffset = objectInfo.GetPayloadSize() - 1
 	if req.GetIsRange() {
 		startOffset = req.GetRangeStart()
 		endOffset = req.GetRangeEnd()
 	}
 	readSize := endOffset - startOffset + 1
-
+	err = scope.ReserveMemory(int(readSize), rcmgr.ReservationPriorityAlways)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
+			"reserve_size", readSize, "error", err)
+		return
+	}
 	if err = downloader.spDB.CheckQuotaAndAddReadRecord(
 		&sqldb.ReadRecord{
 			BucketID:        bucketInfo.Id.Uint64(),
@@ -55,35 +80,9 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 			ReadQuotaSize: bucketInfo.GetChargedReadQuota() + model.DefaultSpFreeReadQuotaSize,
 		},
 	); err != nil {
-		log.Errorw("failed to check billing due to bucket quota", "error", err)
+		log.CtxErrorw(ctx, "failed to check billing due to bucket quota", "error", err)
 		return merrors.InnerErrorToGRPCError(err)
 	}
-
-	// allocate memory form resource manager
-	scope, err := downloader.rcScope.BeginSpan()
-	if err != nil {
-		log.Errorw("failed to begin reserve resource", "error", err)
-		return
-	}
-	stateFunc := func() string {
-		var state string
-		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
-			state = scope.Stat().String()
-			return nil
-		})
-		return state
-	}
-	err = scope.ReserveMemory(int(readSize), rcmgr.ReservationPriorityAlways)
-	if err != nil {
-		log.Errorw("failed to reserve memory from resource manager",
-			"reserve_size", readSize, "resource_state", stateFunc(), "error", err)
-		return
-	}
-	defer func() {
-		scope.Done()
-		log.Debugw("end get object request", "resource_state", stateFunc())
-	}()
-
 	pieceInfos, err := downloader.SplitToSegmentPieceInfos(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), startOffset, endOffset)
 	if err != nil {
 		return
@@ -98,7 +97,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		}
 		sendSize += len(resp.Data)
 	}
-	return nil
+	return
 }
 
 type segmentPieceInfo struct {
