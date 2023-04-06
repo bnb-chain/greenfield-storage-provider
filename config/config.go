@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
