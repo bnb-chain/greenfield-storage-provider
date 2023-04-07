@@ -26,10 +26,11 @@ import (
 
 // BlockSyncer synchronizes storage,payment,permission data to db by handling related events
 type BlockSyncer struct {
-	config    *tomlconfig.TomlConfig
-	name      string
-	parserCtx *parser.Context
-	running   atomic.Value
+	config            *tomlconfig.TomlConfig
+	name              string
+	parserCtx         *parser.Context
+	running           atomic.Value
+	latestBlockHeight uint64
 }
 
 var (
@@ -87,12 +88,13 @@ func (s *BlockSyncer) initClient() error {
 		log.Errorf("failed to GetParserContext err: %v", err)
 		return err
 	}
-	ctx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
+	s.parserCtx = ctx
+	latestBlockHeight := mustGetLatestHeight(s.parserCtx)
+	s.latestBlockHeight = latestBlockHeight
+	s.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
 		ctx.Node,
 		ctx.Database,
-		ctx.Modules)
-
-	s.parserCtx = ctx
+		ctx.Modules, s.latestBlockHeight)
 	return nil
 }
 
@@ -155,7 +157,7 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	}
 
 	// fetch block data
-	go s.fetchBlockData(lastDbBlockHeight + 1)
+	go s.quickFetchBlockData(lastDbBlockHeight+1, s.latestBlockHeight)
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	// off of the export queue.
@@ -168,12 +170,15 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	go enqueueNewBlocks(exportQueue, s.parserCtx, latestBlockHeight)
 }
 
-func (s *BlockSyncer) fetchBlockData(startHeight uint64) {
+func (s *BlockSyncer) quickFetchBlockData(startHeight, endHeight uint64) {
 	count := uint64(s.config.Parser.Workers)
 	for i := uint64(0); i < count; i++ {
 		go func(idx uint64) {
 			for cycle := uint64(0); ; cycle++ {
 				height := idx + count*cycle + startHeight
+				if height > endHeight {
+					return
+				}
 				block, err := s.parserCtx.Node.Block(int64(height))
 				if err != nil {
 					log.Warnf("failed to get block from node: %s", err)

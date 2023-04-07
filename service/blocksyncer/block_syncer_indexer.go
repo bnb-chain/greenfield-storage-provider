@@ -19,20 +19,22 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module) parser.Indexer {
+func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, syncModeHeight uint64) parser.Indexer {
 	return &Impl{
-		codec:   codec,
-		Node:    proxy,
-		DB:      db,
-		Modules: modules,
+		codec:          codec,
+		Node:           proxy,
+		DB:             db,
+		Modules:        modules,
+		SyncModeHeight: syncModeHeight,
 	}
 }
 
 type Impl struct {
-	Modules []modules.Module
-	codec   codec.Codec
-	Node    node.Node
-	DB      database.Database
+	Modules        []modules.Module
+	codec          codec.Codec
+	Node           node.Node
+	DB             database.Database
+	SyncModeHeight uint64
 }
 
 // ExportBlock accepts a finalized block and persists then inside the database.
@@ -58,31 +60,32 @@ func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, tx
 // It returns an error if any export process fails.
 func (i *Impl) Process(height uint64) error {
 	log.Debugw("processing block", "height", height)
-	blockAny, ok := blockMap.Load(height)
-	if !ok {
-		log.Errorf("failed to get block from map need retry")
-		return errors.ErrBlockNotFound
+	var block *coretypes.ResultBlock
+	var events *coretypes.ResultBlockResults
+	var err error
+	if height <= i.SyncModeHeight {
+		blockAny, okb := blockMap.Load(height)
+		eventsAny, oke := eventMap.Load(height)
+		if !okb || !oke {
+			return errors.ErrBlockNotFound
+		}
+		block, _ = blockAny.(*coretypes.ResultBlock)
+		events, _ = eventsAny.(*coretypes.ResultBlockResults)
+	} else {
+		block, err = i.Node.Block(int64(height))
+		if err != nil {
+			log.Errorf("failed to get block from node: %s", err)
+			return err
+		}
+
+		events, err = i.Node.BlockResults(int64(height))
+		if err != nil {
+			log.Errorf("failed to get block results from node: %s", err)
+			return err
+		}
 	}
 
-	eventsAny, ok := eventMap.Load(height)
-	if !ok {
-		log.Warnf("failed to get event from map need retry")
-		return errors.ErrEventNotFound
-	}
-
-	block, ok := blockAny.(*coretypes.ResultBlock)
-	if !ok {
-		log.Warnf("failed to get block from map need retry")
-		return errors.ErrBlockNotFound
-	}
-
-	events := eventsAny.(*coretypes.ResultBlockResults)
-	if !ok {
-		log.Errorf("failed to get event from map need retry")
-		return errors.ErrEventNotFound
-	}
-
-	err := i.ExportEvents(context.Background(), block, events)
+	err = i.ExportEvents(context.Background(), block, events)
 	if err != nil {
 		log.Errorf("failed to ExportEvents: %s", err)
 		return err
@@ -94,8 +97,10 @@ func (i *Impl) Process(height uint64) error {
 		return err
 	}
 
-	blockMap.Delete(height)
-	eventMap.Delete(height)
+	if height < i.SyncModeHeight {
+		blockMap.Delete(height)
+		eventMap.Delete(height)
+	}
 
 	return nil
 }

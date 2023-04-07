@@ -4,10 +4,10 @@ go 1.18
 
 replace (
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b432c
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.10
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.1.0
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.13
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230404103835-f9f9c34e5b4f
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230407031340-bda71c92f7e2
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.3
 )
@@ -15,7 +15,7 @@ replace (
 require (
 	cosmossdk.io/math v1.0.0-beta.6
 	github.com/aws/aws-sdk-go v1.44.159
-	github.com/bnb-chain/greenfield v0.0.10
+	github.com/bnb-chain/greenfield v0.1.0
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230327055559-264d5271f271
 	github.com/bnb-chain/greenfield-go-sdk v0.0.8
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
