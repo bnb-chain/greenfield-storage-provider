@@ -1,7 +1,7 @@
 package bsdb
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/forbole/juno/v4/common"
 	"github.com/lib/pq"
 )
 
