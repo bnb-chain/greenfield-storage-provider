@@ -9,7 +9,7 @@ type StreamRecord struct {
 	ID uint64 `gorm:"id"`
 	// Account defines the account address
 	Account common.Address `gorm:"account"`
-	// UpdateTime defines the latest update timestamp of the stream record
+	// CrudTimestamp defines the latest update timestamp of the stream record
 	CrudTimestamp int64 `gorm:"crud_timestamp"`
 	// NetflowRate defines the per-second rate that an account's balance is changing.
 	// It is the sum of the account's inbound and outbound flow rates.

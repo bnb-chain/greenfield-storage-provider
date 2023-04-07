@@ -1,7 +1,7 @@
 package bsdb
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/forbole/juno/v4/common"
 )
 
 // Metadata contains all the methods required by block syncer db database
@@ -22,6 +22,16 @@ type Metadata interface {
 	GetPaymentByBucketID(bucketID int64, isFullList bool) (*StreamRecord, error)
 	// GetPaymentByPaymentAddress get bucket payment info by a payment address
 	GetPaymentByPaymentAddress(address common.Address) (*StreamRecord, error)
+	// GetObjectInfo get object info by an object and a bucket name
+	GetObjectInfo(objectName, bucketName string) (*Object, error)
+	// GetPermissionByResourceAndPrincipal get permission info by resource type & id, principal type & value
+	GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue string) (*Permission, error)
+	// GetStatementsByPolicyID get statements info by a policy id
+	GetStatementsByPolicyID(policyIDList []common.Hash) ([]*Statement, error)
+	// GetPermissionsByResourceAndPrincipleType get permissions info by resource type & id, principal type
+	GetPermissionsByResourceAndPrincipleType(resourceType, resourceID, principalType string) ([]*Permission, error)
+	// GetGroupsByGroupIDAndAccount get groups info by group id list and account id
+	GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Hash) ([]*Group, error)
 	// ListObjectsByBucketName list objects info by a bucket name
 	ListObjectsByBucketName(bucketName string) ([]*Object, error)
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range

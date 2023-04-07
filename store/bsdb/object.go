@@ -42,3 +42,17 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 		Find(&objects).Error
 	return objects, err
 }
+
+// GetObjectInfo get object info by an object and a bucket name
+func (b *BsDBImpl) GetObjectInfo(objectName string, bucketName string) (*Object, error) {
+	var (
+		object *Object
+		err    error
+	)
+
+	err = b.db.Table((&Object{}).TableName()).
+		Select("*").
+		Where("object_name = ? and bucket_name = ?", objectName, bucketName).
+		Find(&object).Error
+	return object, err
+}
