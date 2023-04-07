@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/forbole/juno/v4/common"
-
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+
+	"github.com/forbole/juno/v4/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -100,6 +101,8 @@ func (i *Impl) ExportEpoch(block *coretypes.ResultBlock) error {
 		log.Errorf("failed to persist block: %s", err)
 		return err
 	}
+
+	metrics.BlockHeightLagGauge.WithLabelValues("blocksyncer").Set(float64(block.Block.Height))
 
 	return nil
 }
