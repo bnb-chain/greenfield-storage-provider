@@ -43,11 +43,11 @@ func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.Resul
 }
 
 // HandleEvent accepts the transaction and handles events contained inside the transaction.
-func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, event sdk.Event) {
+func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, txHash common.Hash, event sdk.Event) {
 	for _, module := range i.Modules {
 		if eventModule, ok := module.(modules.EventModule); ok {
 			log.Infof("module name :%s event type: %s, height: %d", module.Name(), event.Type, block.Block.Height)
-			err := eventModule.HandleEvent(ctx, block, event)
+			err := eventModule.HandleEvent(ctx, block, txHash, event)
 			if err != nil {
 				log.Errorw("failed to handle event", "module", module.Name(), "event", event, "error", err)
 			}
@@ -135,7 +135,7 @@ func (i *Impl) ExportEvents(ctx context.Context, block *coretypes.ResultBlock, e
 		// handle all events contained inside the transaction
 		// call the event handlers
 		for _, event := range tx.Events {
-			i.HandleEvent(ctx, block, sdk.Event(event))
+			i.HandleEvent(ctx, block, common.Hash{}, sdk.Event(event))
 		}
 	}
 	return nil
