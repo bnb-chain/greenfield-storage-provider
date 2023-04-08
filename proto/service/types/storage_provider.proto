@@ -51,8 +51,8 @@ message JobContext {
   int64 modify_time = 6;
 }
 
-// SegmentInfo defines the information of the segment.
-message SegmentInfo {
+// PieceInfo defines the information of the piece.
+message PieceInfo {
   // object_info defines the information of the object.
   bnbchain.greenfield.storage.ObjectInfo object_info = 1;
   // check_sum defines the hash of the segments.
@@ -61,13 +61,13 @@ message SegmentInfo {
   bytes integrity_hash = 3;
   // signature defines the storage provider sign to the integrity hash.
   bytes signature = 4;
-  // completed defines the status of replicate segment, completed or not.
-  uint32 completed = 5;
+  // completed_num defines the status of replicate piece, completed or not.
+  uint32 completed_num = 5;
 }
 
-// ReplicateSegmentInfo defines the information of the segments that
+// ReplicatePieceInfo defines the information of the pieces that
 // need to replicate to other storage providers.
-message ReplicateSegmentInfo {
-  // segment_infos defines all the replicate segments info.
-  repeated SegmentInfo segment_infos = 2;
+message ReplicatePieceInfo {
+  // piece_infos defines all the replicate segments info.
+  repeated PieceInfo piece_infos = 1;
 }

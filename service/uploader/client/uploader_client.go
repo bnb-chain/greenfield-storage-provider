@@ -44,13 +44,13 @@ func (client *UploaderClient) Close() error {
 
 // QueryPuttingObject query a putting object info with object id
 func (client *UploaderClient) QueryPuttingObject(ctx context.Context, objectID uint64, opts ...grpc.CallOption) (
-	*servicetypes.SegmentInfo, error) {
+	*servicetypes.PieceInfo, error) {
 	resp, err := client.uploader.QueryPuttingObject(ctx,
 		&types.QueryPuttingObjectRequest{ObjectId: objectID}, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetSegmentInfo(), nil
+	return resp.GetPieceInfo(), nil
 }
 
 // PutObject return grpc stream client, and be used to upload object payload.

@@ -18,15 +18,16 @@ var _ types.TaskNodeServiceServer = &TaskNode{}
 // ReplicateObject call AsyncReplicateObject non-blocking upstream services
 func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.ReplicateObjectRequest) (
 	*types.ReplicateObjectResponse, error) {
+	if req.GetObjectInfo() == nil {
+		return nil, merrors.ErrDanglingPointer
+	}
+
 	var (
 		resp *types.ReplicateObjectResponse
 		err  error
 		task *replicateObjectTask
 	)
 
-	if req.GetObjectInfo() == nil {
-		return nil, merrors.ErrDanglingPointer
-	}
 	ctx = log.WithValue(ctx, "object_id", req.GetObjectInfo().Id.String())
 	if task, err = newReplicateObjectTask(ctx, taskNode, req.GetObjectInfo()); err != nil {
 		log.CtxErrorw(ctx, "failed to new replicate object task", "error", err)
@@ -52,7 +53,7 @@ func (taskNode *TaskNode) QueryReplicatingObject(ctx context.Context, req *types
 		err = merrors.ErrCacheMiss
 		return
 	}
-	resp.ReplicateSegmentInfo = val.(*servicetypes.ReplicateSegmentInfo)
+	resp.ReplicatePieceInfo = val.(*servicetypes.ReplicatePieceInfo)
 	return
 }
 

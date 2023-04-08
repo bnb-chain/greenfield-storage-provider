@@ -16,9 +16,7 @@ var _ types.ChallengeServiceServer = &Challenge{}
 // ChallengePiece handles the piece challenge request
 // return the piece's integrity hash, piece hash and piece data
 func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.ChallengePieceRequest) (*types.ChallengePieceResponse, error) {
-	objectInfo := req.GetObjectInfo()
-	// prevent gateway forgetting transparent transmission
-	if objectInfo == nil {
+	if req.GetObjectInfo() == nil {
 		return nil, merrors.ErrDanglingPointer
 	}
 	var (
@@ -28,6 +26,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 		pieceType            model.PieceType
 		pieceKey             string
 		approximatePieceSize int
+		objectInfo           = req.GetObjectInfo()
 	)
 	ctx = log.WithValue(ctx, "object_id", objectInfo.Id.String())
 
@@ -35,12 +34,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 		if scope != nil {
 			scope.Done()
 		}
-		var state string
-		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
-			state = scope.Stat().String()
-			return nil
-		})
-		log.CtxInfow(ctx, "finish to challenge piece request", "resource_state", state, "error", err)
+		log.CtxInfow(ctx, "finish to challenge piece request", "resource_state", rcmgr.GetCurrentState(), "error", err)
 	}()
 	scope, err = challenge.rcScope.BeginSpan()
 	if err != nil {

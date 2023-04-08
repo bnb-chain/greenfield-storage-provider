@@ -76,6 +76,7 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 	ch := make(chan int)
 	go func(pieceSizeCh chan int) {
 		defer close(pieceSizeCh)
+		gotPieceSize := false
 
 		for segmentPieceIdx := 0; segmentPieceIdx < sg.task.segmentPieceNumber; segmentPieceIdx++ {
 			segmentPiecekey := piecestore.EncodeSegmentPieceKey(sg.task.objectInfo.Id.Uint64(), uint32(segmentPieceIdx))
@@ -87,7 +88,6 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 				log.Errorw("failed to get piece data", "piece_key", segmentPiecekey, "error", err)
 				return
 			}
-			// TODO: support replica type
 			ecPieceData, err := redundancy.EncodeRawSegment(segmentPieceData,
 				int(sg.task.storageParams.GetRedundantDataChunkNum()),
 				int(sg.task.storageParams.GetRedundantParityChunkNum()))
@@ -98,7 +98,10 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 				log.Errorw("failed to encode ec piece data", "error", err)
 				return
 			}
-			pieceSizeCh <- len(ecPieceData[0])
+			if !gotPieceSize {
+				pieceSizeCh <- len(ecPieceData[0])
+				gotPieceSize = true
+			}
 			for idx := range sg.streamReaderMap {
 				sg.streamReaderMap[idx].pWrite.Write(ecPieceData[idx])
 				log.Debugw("succeed to produce an ec piece data", "piece_len", len(ecPieceData[idx]), "redundancy_index", idx)
@@ -241,7 +244,7 @@ func (t *replicateObjectTask) init() error {
 func (t *replicateObjectTask) execute() {
 	var (
 		sealMsg         *storagetypes.MsgSealObject
-		processInfo     *servicetypes.ReplicateSegmentInfo
+		progressInfo    *servicetypes.ReplicatePieceInfo
 		succeedIndexMap map[int]bool
 	)
 	defer func() {
@@ -283,8 +286,8 @@ func (t *replicateObjectTask) execute() {
 		SecondarySpSignatures: make([][]byte, t.redundancyNumber),
 	}
 	t.objectInfo.SecondarySpAddresses = make([]string, t.redundancyNumber)
-	processInfo = &servicetypes.ReplicateSegmentInfo{
-		SegmentInfos: make([]*servicetypes.SegmentInfo, t.redundancyNumber),
+	progressInfo = &servicetypes.ReplicatePieceInfo{
+		PieceInfos: make([]*servicetypes.PieceInfo, t.redundancyNumber),
 	}
 
 	for retry := 0; retry < 2; retry++ {
@@ -327,14 +330,14 @@ func (t *replicateObjectTask) execute() {
 				succeedIndexMap[rIdx] = true
 				sealMsg.GetSecondarySpAddresses()[rIdx] = sp.GetOperator().String()
 				sealMsg.GetSecondarySpSignatures()[rIdx] = signature
-				processInfo.SegmentInfos[rIdx] = &servicetypes.SegmentInfo{
+				progressInfo.PieceInfos[rIdx] = &servicetypes.PieceInfo{
 					ObjectInfo:    t.objectInfo,
 					Signature:     signature,
 					IntegrityHash: integrityHash,
 				}
 				t.objectInfo.SecondarySpAddresses[rIdx] = sp.GetOperator().String()
 				t.taskNode.spDB.SetObjectInfo(t.objectInfo.Id.Uint64(), t.objectInfo)
-				t.taskNode.cache.Add(t.objectInfo.Id.Uint64(), processInfo)
+				t.taskNode.cache.Add(t.objectInfo.Id.Uint64(), progressInfo)
 				log.CtxInfow(t.ctx, "succeed to replicate object piece stream to the target sp",
 					"sp", sp.GetOperator(), "endpoint", sp.GetEndpoint(), "redundancy_index", rIdx)
 

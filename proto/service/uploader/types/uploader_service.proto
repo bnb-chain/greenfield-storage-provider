@@ -26,8 +26,8 @@ message QueryPuttingObjectRequest {
 
 // QueryPuttingObjectResponse is response type for the QueryPuttingObject RPC method.
 message QueryPuttingObjectResponse {
-  // segment_info defines the information of uploading object.
-  service.types.SegmentInfo segment_info = 1;
+  // piece_info defines the information of uploading object.
+  service.types.PieceInfo piece_info = 1;
 }
 
 // UploaderService defines the gRPC service of uploading payload.

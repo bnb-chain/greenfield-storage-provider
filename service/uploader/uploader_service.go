@@ -165,6 +165,6 @@ func (uploader *Uploader) QueryPuttingObject(ctx context.Context, req *types.Que
 		err = merrors.ErrCacheMiss
 		return
 	}
-	resp.SegmentInfo = val.(*servicetypes.SegmentInfo)
+	resp.PieceInfo = val.(*servicetypes.PieceInfo)
 	return
 }

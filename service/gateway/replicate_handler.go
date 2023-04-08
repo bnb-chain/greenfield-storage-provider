@@ -39,7 +39,7 @@ func (gateway *Gateway) replicatePieceHandler(w http.ResponseWriter, r *http.Req
 		if errDescription != nil {
 			_ = errDescription.errorResponse(w, reqContext)
 		}
-		if errDescription != nil && errDescription.statusCode == http.StatusOK {
+		if errDescription != nil && errDescription.statusCode != http.StatusOK {
 			log.Errorf("action(%v) statusCode(%v) %v", replicateObjectPieceRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
 			log.Infof("action(%v) statusCode(200) %v", replicateObjectPieceRouterName, reqContext.generateRequestDetail())
@@ -80,7 +80,7 @@ func (gateway *Gateway) replicatePieceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	stream, err := gateway.receiver.SyncObject(ctx)
+	stream, err := gateway.receiver.ReceiveObjectPiece(ctx)
 	if err != nil {
 		log.Errorw("failed to replicate piece", "error", err)
 		errDescription = InternalError
@@ -94,11 +94,11 @@ func (gateway *Gateway) replicatePieceHandler(w http.ResponseWriter, r *http.Req
 			return
 		}
 		if readN > 0 {
-			if err = stream.Send(&receivertypes.SyncObjectRequest{
-				ObjectInfo:    objectInfo,
-				PieceSize:     pieceSize,
-				RedundancyIdx: redundancyIdx,
-				ReplicaData:   buf[:readN],
+			if err = stream.Send(&receivertypes.ReceiveObjectPieceRequest{
+				ObjectInfo:      objectInfo,
+				PieceSize:       pieceSize,
+				RedundancyIdx:   redundancyIdx,
+				PieceStreamData: buf[:readN],
 			}); err != nil {
 				log.Errorw("failed to send stream", "error", err)
 				errDescription = InternalError
