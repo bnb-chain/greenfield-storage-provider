@@ -45,9 +45,8 @@ func (client *ReceiverClient) Close() error {
 }
 
 // ReceiveObjectPiece an object payload with object info
-func (client *ReceiverClient) ReceiveObjectPiece(
-	ctx context.Context,
-	opts ...grpc.CallOption) (types.ReceiverService_ReceiveObjectPieceClient, error) {
+func (client *ReceiverClient) ReceiveObjectPiece(ctx context.Context, opts ...grpc.CallOption) (
+	types.ReceiverService_ReceiveObjectPieceClient, error) {
 	return client.receiver.ReceiveObjectPiece(ctx, opts...)
 }
 

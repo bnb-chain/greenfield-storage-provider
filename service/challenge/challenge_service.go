@@ -34,7 +34,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 		if scope != nil {
 			scope.Done()
 		}
-		log.CtxInfow(ctx, "finish to challenge piece request", "resource_state", rcmgr.GetCurrentState(), "error", err)
+		log.CtxInfow(ctx, "finished to challenge piece request", "resource_state", rcmgr.GetServiceState(model.ChallengeService), "error", err)
 	}()
 	scope, err = challenge.rcScope.BeginSpan()
 	if err != nil {
@@ -44,6 +44,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 
 	params, err := challenge.spDB.GetStorageParams()
 	if err != nil {
+		log.CtxErrorw(ctx, "failed to get storage params", "error", err)
 		return resp, err
 	}
 	if req.GetRedundancyIdx() < 0 {
@@ -85,7 +86,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 		err = merrors.InnerErrorToGRPCError(err)
 		return resp, err
 	}
-	log.CtxInfow(ctx, "succeed to challenge piece", "object_id", objectInfo.Id.Uint64(),
-		"piece_idx", req.GetSegmentIdx(), "redundancy_idx", req.GetRedundancyIdx(), "segment_count", len(integrity.Checksum))
+	log.CtxInfow(ctx, "succeed to challenge piece", "piece_idx", req.GetSegmentIdx(),
+		"redundancy_idx", req.GetRedundancyIdx(), "segment_count", len(integrity.Checksum))
 	return resp, err
 }

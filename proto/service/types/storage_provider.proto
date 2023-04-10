@@ -61,7 +61,7 @@ message PieceInfo {
   bytes integrity_hash = 3;
   // signature defines the storage provider sign to the integrity hash.
   bytes signature = 4;
-  // completed_num defines the status of replicate piece, completed or not.
+  // completed_num defines the number of replicated piece.
   uint32 completed_num = 5;
 }
 

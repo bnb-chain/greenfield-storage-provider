@@ -38,7 +38,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 			scope.Done()
 		}
 		log.CtxInfow(ctx, "finish to get object", "send_size", sendSize,
-			"resource_state", rcmgr.GetCurrentState(), "error", err)
+			"resource_state", rcmgr.GetServiceState(model.DownloaderService), "error", err)
 	}()
 
 	scope, err = downloader.rcScope.BeginSpan()
