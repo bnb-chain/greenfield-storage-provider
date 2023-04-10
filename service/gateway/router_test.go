@@ -111,12 +111,12 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: challengeRouterName,
 		},
 		{
-			name:             "Sync router",
+			name:             "Replicate router",
 			router:           gwRouter,
 			method:           http.MethodPut,
-			url:              scheme + testDomain + model.SyncPath,
+			url:              scheme + testDomain + model.ReplicateObjectPiecePath,
 			shouldMatch:      true,
-			wantedRouterName: syncPieceRouterName,
+			wantedRouterName: replicateObjectPieceRouterName,
 		},
 	}
 	for _, testCase := range testCases {

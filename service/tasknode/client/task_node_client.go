@@ -59,10 +59,10 @@ func (client *TaskNodeClient) ReplicateObject(ctx context.Context, object *stora
 }
 
 // QueryReplicatingObject query a replicating object payload information by object id
-func (client *TaskNodeClient) QueryReplicatingObject(ctx context.Context, objectID uint64) (*servicetype.ReplicateSegmentInfo, error) {
+func (client *TaskNodeClient) QueryReplicatingObject(ctx context.Context, objectID uint64) (*servicetype.ReplicatePieceInfo, error) {
 	resp, err := client.taskNode.QueryReplicatingObject(ctx, &types.QueryReplicatingObjectRequest{ObjectId: objectID})
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetReplicateSegmentInfo(), err
+	return resp.GetReplicatePieceInfo(), err
 }

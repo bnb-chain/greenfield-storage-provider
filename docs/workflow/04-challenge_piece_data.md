@@ -1,7 +1,7 @@
 # Challenge Object Data
 It is always the first priority of any decentralized storage network to guarantee data integrity and availability.
 We use data challenge instead of storage proof to get better HA. There will be some data challenges to random 
-pieces on greenfield chain continuously. And the SP,  which stores the challenged piece, uses the challenge workflow 
+pieces on greenfield chain continuously. And the SP, which stores the challenged piece, uses the challenge workflow 
 to response. Each SP splits the object payload data to segments, and store segment data to piece store and store 
 segment checksum to SP DB.
 

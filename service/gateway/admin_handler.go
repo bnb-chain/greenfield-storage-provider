@@ -182,7 +182,7 @@ func (gateway *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request)
 		errDescription = InvalidHeader
 		return
 	}
-	integrityHash, pieceHash, pieceData, err := gateway.challenge.ChallengePiece(context.Background(), objectID, redundancyIdx, segmentIdx)
+	integrityHash, pieceHash, pieceData, err := gateway.challenge.ChallengePiece(context.Background(), reqContext.objectInfo, redundancyIdx, segmentIdx)
 	if err != nil {
 		log.Errorf("failed to challenge piece", "error", err)
 		errDescription = makeErrorDescription(err)

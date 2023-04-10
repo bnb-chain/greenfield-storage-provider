@@ -3,16 +3,12 @@ package tasknode
 import (
 	"context"
 	"net"
-	"sync/atomic"
 
-	"github.com/bnb-chain/greenfield-common/go/redundancy"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -128,54 +124,4 @@ func (taskNode *TaskNode) serve(errCh chan error) {
 		log.Errorw("failed to start grpc server", "error", err)
 		return
 	}
-}
-
-// EncodeReplicateSegments load segment data and encode according to redundancy type
-func (taskNode *TaskNode) EncodeReplicateSegments(ctx context.Context, objectID uint64, segments uint32, replicates int,
-	rType storagetypes.RedundancyType) (data [][][]byte, err error) {
-	params, err := taskNode.spDB.GetStorageParams()
-	if err != nil {
-		return
-	}
-	for i := 0; i < int(segments); i++ {
-		data = append(data, make([][]byte, replicates))
-	}
-	log.Debugw("start to encode payload", "object_id", objectID, "segment_count", segments,
-		"replicas", replicates, "redundancy_type", rType)
-
-	var done int64
-	errCh := make(chan error, 10)
-	for segIdx := 0; segIdx < int(segments); segIdx++ {
-		go func(segIdx int) {
-			segmentPiecekey := piecestore.EncodeSegmentPieceKey(objectID, uint32(segIdx))
-			segmentPieceData, err := taskNode.pieceStore.GetPiece(ctx, segmentPiecekey, 0, 0)
-			if err != nil {
-				errCh <- err
-				return
-			}
-			if rType == storagetypes.REDUNDANCY_EC_TYPE {
-				ecPieceData, err := redundancy.EncodeRawSegment(segmentPieceData,
-					int(params.GetRedundantDataChunkNum()),
-					int(params.GetRedundantParityChunkNum()))
-				if err != nil {
-					errCh <- err
-					return
-				}
-				copy(data[segIdx], ecPieceData)
-			} else {
-				for rIdx := 0; rIdx < replicates; rIdx++ {
-					data[segIdx][rIdx] = segmentPieceData
-				}
-			}
-			log.Debugw("finish to encode payload", "object_id", objectID, "segment_idx", segIdx)
-			if atomic.AddInt64(&done, 1) == int64(segments) {
-				errCh <- nil
-				return
-			}
-		}(segIdx)
-	}
-	for err = range errCh {
-		return
-	}
-	return
 }

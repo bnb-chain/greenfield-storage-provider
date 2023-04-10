@@ -7,8 +7,9 @@ import (
 )
 
 type Config struct {
-	Modules []string
-	Dsn     string
+	Modules        []string
+	Dsn            string
+	RecreateTables bool
 }
 
 func getDBConfigFromEnv(dsn string) (string, error) {

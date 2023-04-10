@@ -51,21 +51,20 @@ func (client *ReceiverClient) Close() error {
 	return client.conn.Close()
 }
 
-// SyncObject an object payload with object info
-func (client *ReceiverClient) SyncObject(
-	ctx context.Context,
-	opts ...grpc.CallOption) (types.ReceiverService_SyncObjectClient, error) {
-	return client.receiver.SyncObject(ctx, opts...)
+// ReceiveObjectPiece an object payload with object info
+func (client *ReceiverClient) ReceiveObjectPiece(ctx context.Context, opts ...grpc.CallOption) (
+	types.ReceiverService_ReceiveObjectPieceClient, error) {
+	return client.receiver.ReceiveObjectPiece(ctx, opts...)
 }
 
-// QuerySyncingObject a syncing object info by object id
-func (client *ReceiverClient) QuerySyncingObject(ctx context.Context, objectID uint64) (*servicetypes.SegmentInfo, error) {
-	req := &types.QuerySyncingObjectRequest{
+// QueryReceivingObject a syncing object info by object id
+func (client *ReceiverClient) QueryReceivingObject(ctx context.Context, objectID uint64) (*servicetypes.PieceInfo, error) {
+	req := &types.QueryReceivingObjectRequest{
 		ObjectId: objectID,
 	}
-	resp, err := client.receiver.QuerySyncingObject(ctx, req)
+	resp, err := client.receiver.QueryReceivingObject(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetSegmentInfo(), nil
+	return resp.GetPieceInfo(), nil
 }
