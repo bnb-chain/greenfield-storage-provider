@@ -125,11 +125,11 @@ const (
 	// DefaultConnMaxLifetime defines the default max liveness time of connection
 	DefaultConnMaxLifetime = 3600
 	// DefaultConnMaxIdleTime defines the default max idle time of connection
-	DefaultConnMaxIdleTime = 60
+	DefaultConnMaxIdleTime = 1800
 	// DefaultMaxIdleConns defines the default max number of idle connections
-	DefaultMaxIdleConns = 128
+	DefaultMaxIdleConns = 32
 	// DefaultMaxOpenConns defines the default max number of open connections
-	DefaultMaxOpenConns = 1024
+	DefaultMaxOpenConns = 128
 )
 
 // define all kinds of http constants
