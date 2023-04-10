@@ -20,32 +20,25 @@ var _ types.DownloaderServiceServer = &Downloader{}
 // GetObject downloads the payload of the object.
 func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	stream types.DownloaderService_GetObjectServer) (err error) {
-	objectInfo := req.GetObjectInfo()
-	// prevent gateway forgetting transparent transmission
-	if objectInfo == nil {
+	if req.GetObjectInfo() == nil {
 		return merrors.ErrDanglingPointer
 	}
 	var (
-		ctx      = log.WithValue(context.Background(), "object_id", objectInfo.Id.String())
-		scope    rcmgr.ResourceScopeSpan
-		sendSize int
-
+		scope       rcmgr.ResourceScopeSpan
+		sendSize    int
+		objectInfo  = req.GetObjectInfo()
 		bucketInfo  = req.GetBucketInfo()
 		resp        = &types.GetObjectResponse{}
 		startOffset uint64
 		endOffset   uint64
+		ctx         = log.WithValue(context.Background(), "object_id", objectInfo.Id.String())
 	)
 	defer func() {
 		if scope != nil {
 			scope.Done()
 		}
-		var state string
-		rcmgr.ResrcManager().ViewSystem(func(scope rcmgr.ResourceScope) error {
-			state = scope.Stat().String()
-			return nil
-		})
 		log.CtxInfow(ctx, "finish to get object", "send_size", sendSize,
-			"resource_state", state, "error", err)
+			"resource_state", rcmgr.GetServiceState(model.DownloaderService), "error", err)
 	}()
 
 	scope, err = downloader.rcScope.BeginSpan()
