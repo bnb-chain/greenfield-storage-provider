@@ -15,7 +15,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
@@ -101,7 +100,7 @@ func (signer *SignerServer) serve() {
 	}
 	options := utilgrpc.GetDefaultServerOptions()
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultServerInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
 	}
 	options = append(options, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 		signer.IPWhitelistInterceptor(),

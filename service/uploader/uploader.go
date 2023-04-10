@@ -12,7 +12,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	tasknodeclient "github.com/bnb-chain/greenfield-storage-provider/service/tasknode/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
@@ -103,7 +102,7 @@ func (uploader *Uploader) serve(errCh chan error) {
 
 	options := utilgrpc.GetDefaultServerOptions()
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultServerInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
 	}
 	uploader.grpcServer = grpc.NewServer(options...)
 	types.RegisterUploaderServiceServer(uploader.grpcServer, uploader)

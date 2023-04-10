@@ -15,8 +15,7 @@ message PutObjectRequest {
 }
 
 // PutObjectResponse is response type for the UploadObject RPC method.
-message PutObjectResponse {
-}
+message PutObjectResponse {}
 
 // QueryUPuttingObjectRequest is request type for the QueryPuttingObject RPC method.
 message QueryPuttingObjectRequest {

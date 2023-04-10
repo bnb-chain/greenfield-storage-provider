@@ -7,7 +7,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
@@ -19,15 +18,23 @@ type UploaderClient struct {
 	conn     *grpc.ClientConn
 }
 
+const uploaderRPCServiceName = "service.uploader.types.UploaderService"
+
 // NewUploaderClient return an UploaderClient instance
 func NewUploaderClient(address string) (*UploaderClient, error) {
 	options := utilgrpc.GetDefaultClientOptions()
+	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(uploaderRPCServiceName)
+	if err != nil {
+		log.Errorw("failed to get uploader client retry option", "error", err)
+		return nil, err
+	}
+	options = append(options, retryOption)
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
-		log.Errorw("fail to invoke uploader service client", "error", err)
+		log.Errorw("failed to invoke uploader service client", "error", err)
 		return nil, err
 	}
 	client := &UploaderClient{
