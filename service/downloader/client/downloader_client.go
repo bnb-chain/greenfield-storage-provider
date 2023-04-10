@@ -8,7 +8,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
@@ -20,11 +19,19 @@ type DownloaderClient struct {
 	downloader types.DownloaderServiceClient
 }
 
+const downloaderRPCServiceName = "service.downloader.types.DownloaderService"
+
 // NewDownloaderClient returns a DownloaderClient instance
 func NewDownloaderClient(address string) (*DownloaderClient, error) {
 	options := utilgrpc.GetDefaultClientOptions()
+	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(downloaderRPCServiceName)
+	if err != nil {
+		log.Errorw("failed to get downloader client retry option", "error", err)
+		return nil, err
+	}
+	options = append(options, retryOption)
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {

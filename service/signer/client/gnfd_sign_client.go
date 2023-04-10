@@ -5,8 +5,6 @@ import (
 	"encoding/hex"
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield/sdk/client"
 	"github.com/bnb-chain/greenfield/sdk/keys"
 	ctypes "github.com/bnb-chain/greenfield/sdk/types"
@@ -19,6 +17,8 @@ import (
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 // SignType is the type of msg signature
@@ -57,24 +57,27 @@ func NewGreenfieldChainSignClient(gRPCAddr, chainID string, gasLimit uint64, ope
 	}
 	options := []grpc.DialOption{}
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	operatorClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(operatorKM),
 		client.WithGrpcDialOption(options...))
+
 	fundingKM, err := keys.NewPrivateKeyManager(fundingPrivateKey)
 	if err != nil {
 		return nil, err
 	}
 	fundingClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(fundingKM),
 		client.WithGrpcDialOption(options...))
+
 	sealKM, err := keys.NewPrivateKeyManager(sealPrivateKey)
 	if err != nil {
 		return nil, err
 	}
 	sealClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(sealKM),
 		client.WithGrpcDialOption(options...))
+
 	approvalKM, err := keys.NewPrivateKeyManager(approvalPrivateKey)
 	if err != nil {
 		return nil, err

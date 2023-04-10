@@ -13,7 +13,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mdgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	p2pclient "github.com/bnb-chain/greenfield-storage-provider/service/p2p/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
@@ -116,7 +115,7 @@ func (taskNode *TaskNode) serve(errCh chan error) {
 
 	options := utilgrpc.GetDefaultServerOptions()
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mdgrpc.GetDefaultServerInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
 	}
 	taskNode.grpcServer = grpc.NewServer(options...)
 	types.RegisterTaskNodeServiceServer(taskNode.grpcServer, taskNode)

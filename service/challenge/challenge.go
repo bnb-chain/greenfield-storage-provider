@@ -11,7 +11,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
@@ -88,7 +87,7 @@ func (challenge *Challenge) serve(errCh chan error) {
 
 	options := utilgrpc.GetDefaultServerOptions()
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultServerInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
 	}
 	challenge.grpcServer = grpc.NewServer(options...)
 	types.RegisterChallengeServiceServer(challenge.grpcServer, challenge)
