@@ -6,42 +6,43 @@ import "service/types/storage_provider.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/receiver/types";
 
-// SyncObjectRequest is request type for the SyncObject RPC method.
-message SyncObjectRequest {
+// ReceiveObjectPieceRequest is request type for the ReceiveObjectPiece RPC method.
+message ReceiveObjectPieceRequest {
   // object_info defines the information of the object.
   bnbchain.greenfield.storage.ObjectInfo object_info = 1;
   // piece_size defines the spilt size of replicate data.
   uint64 piece_size = 2;
   // redundancy_idx defines the ec piece idx iff >= 0
   int32 redundancy_idx = 3;
-  // replica_data defines the data that replicate to storage provider.
-  bytes replica_data = 4;
+  // piece_stream_data defines the pieces which are belonged to the object.
+  // The piece data need split to piece by piece_size.
+  bytes piece_stream_data = 4;
 }
 
-// SyncObjectResponse is response type for the SyncObject RPC method.
-message SyncObjectResponse {
+// ReceiveObjectPieceResponse is response type for the ReceiveObjectPiece RPC method.
+message ReceiveObjectPieceResponse {
   // integrity_hash defines the integrity hash of the replicate payload.
   bytes integrity_hash = 1;
   // signature defines the result of storage provider sign the replicate payload.
   bytes signature = 2;
 }
 
-// QuerySyncingRequest is request type for the QuerySyncingObject RPC method.
-message QuerySyncingObjectRequest {
+// QueryReceivingObjectRequest is request type for the QueryReceivingObject RPC method.
+message QueryReceivingObjectRequest {
   // object_id defines the unique id of the object.
   uint64 object_id = 1;
 }
 
-// QueryUploadingResponse is response type for the QuerySyncingObject RPC method.
-message QuerySyncingObjectResponse {
-  // segment_info defines the information of syncing object.
-  service.types.SegmentInfo segment_info = 1;
+// QueryReceivingObjectResponse is response type for the QueryReceivingObject RPC method.
+message QueryReceivingObjectResponse {
+  // piece_info defines the information of replicate object.
+  service.types.PieceInfo piece_info = 1;
 }
 
 // ReceiverService defines the gRPC service of syncing the replicate object .
 service ReceiverService {
-  // SyncObject an object payload to storage provider.
-  rpc SyncObject(stream SyncObjectRequest) returns (SyncObjectResponse) {};
-  // QuerySyncingObject a syncing object info by object id.
-  rpc QuerySyncingObject(QuerySyncingObjectRequest) returns (QuerySyncingObjectResponse) {};
+  // ReceiveObjectPiece is used to receive an object piece stream to storage provider.
+  rpc ReceiveObjectPiece(stream ReceiveObjectPieceRequest) returns (ReceiveObjectPieceResponse) {};
+  // QueryReceivingObjectPiece is used to query a receiving object info by object id.
+  rpc QueryReceivingObject(QueryReceivingObjectRequest) returns (QueryReceivingObjectResponse) {};
 }

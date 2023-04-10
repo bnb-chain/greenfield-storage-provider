@@ -76,7 +76,7 @@ enum JobState {
   JOB_STATE_SIGN_OBJECT_ERROR = 12;
 
   // seal object transaction is doing on chain
-  JOB_STATE_SEAL_OBJECT_TX_DOING = 13;
+  JOB_STATE_SEAL_OBJECT_DOING = 13;
   // seal object transaction has done
   JOB_STATE_SEAL_OBJECT_DONE = 14;
   // failed to run seal object transaction

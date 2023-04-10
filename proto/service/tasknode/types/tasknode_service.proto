@@ -24,8 +24,8 @@ message QueryReplicatingObjectRequest {
 
 // QueryReplicatingObjectResponse is response type for the QueryReplicatingObject RPC method.
 message QueryReplicatingObjectResponse {
-  // replicate_segment_info defines the information of uploading object.
-  service.types.ReplicateSegmentInfo replicate_segment_info = 1;
+  // replicate_piece_info defines the information of uploading object.
+  service.types.ReplicatePieceInfo replicate_piece_info = 1;
 }
 
 // TaskNodeService defines the gRPC service of background tasks in storage provider.
