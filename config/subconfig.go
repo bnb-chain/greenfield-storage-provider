@@ -3,13 +3,14 @@ package config
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
 	loggingconfig "github.com/forbole/juno/v4/log/config"
 	"github.com/forbole/juno/v4/node/remote"
 	parserconfig "github.com/forbole/juno/v4/parser/config"
 	"github.com/forbole/juno/v4/types/config"
+
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
@@ -239,6 +240,7 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 		Logging: loggingconfig.Config{
 			Level: "debug",
 		},
+		RecreateTables: cfg.BlockSyncerCfg.RecreateTables,
 	}, nil
 }
 
