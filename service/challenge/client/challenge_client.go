@@ -56,7 +56,7 @@ func (client *ChallengeClient) Close() error {
 func (client *ChallengeClient) ChallengePiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo, redundancyIdx int32, segmentIdx uint32,
 	opts ...grpc.CallOption) ([]byte, [][]byte, []byte, error) {
 	resp, err := client.challenge.ChallengePiece(ctx, &types.ChallengePieceRequest{
-		ObjectInfo:    objectInfo,
+		//ObjectInfo:    objectInfo,
 		SegmentIdx:    segmentIdx,
 		RedundancyIdx: redundancyIdx,
 	}, opts...)

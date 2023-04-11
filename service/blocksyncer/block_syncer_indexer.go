@@ -166,8 +166,7 @@ func (i *Impl) HandleTx(tx *types.Tx) {
 	log.Info("HandleTx")
 }
 
-// HandleMessage accepts the transaction and handles messages contained inside the transaction.
-func (i *Impl) HandleMessage(index int, msg sdk.Msg, tx *types.Tx) {
+func (i *Impl) HandleMessage(block *coretypes.ResultBlock, index int, msg sdk.Msg, tx *types.Tx) {
 	log.Info("HandleMessage")
 }
 
