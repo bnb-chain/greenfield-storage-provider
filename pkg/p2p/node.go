@@ -16,6 +16,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/libp2p/go-libp2p/core/protocol"
 	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoreds"
+	"github.com/libp2p/go-libp2p/p2p/security/noise"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
@@ -66,6 +67,8 @@ func NewNode(config *NodeConfig, SPAddr string, signer *signerclient.SignerClien
 		// dynamic updates permanent nodes
 		libp2p.Ping(false),
 		libp2p.NATPortMap(),
+		// support noise connections
+		libp2p.Security(noise.ID, noise.New),
 		libp2p.WithDialTimeout(time.Duration(DailTimeout)*time.Second),
 	)
 	if err != nil {
