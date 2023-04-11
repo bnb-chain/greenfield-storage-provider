@@ -53,7 +53,7 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: approvalRouterName,
 		},
 		{
-			name:             "Put object router",
+			name:             "Put object router，virtual host style",
 			router:           gwRouter,
 			method:           http.MethodPut,
 			url:              scheme + bucketName + "." + testDomain + "/" + objectName,
@@ -61,7 +61,15 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: putObjectRouterName,
 		},
 		{
-			name:             "Get object router",
+			name:             "Put object router，path style",
+			router:           gwRouter,
+			method:           http.MethodPut,
+			url:              scheme + testDomain + "/" + bucketName + "/" + objectName,
+			shouldMatch:      true,
+			wantedRouterName: putObjectRouterName,
+		},
+		{
+			name:             "Get object router, virtual host style",
 			router:           gwRouter,
 			method:           http.MethodGet,
 			url:              scheme + bucketName + "." + testDomain + "/" + objectName,
@@ -69,7 +77,15 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: getObjectRouterName,
 		},
 		{
-			name:             "Get bucket read quota router",
+			name:             "Get object router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/" + bucketName + "/" + objectName,
+			shouldMatch:      true,
+			wantedRouterName: getObjectRouterName,
+		},
+		{
+			name:             "Get bucket read quota router, virtual host style",
 			router:           gwRouter,
 			method:           http.MethodGet,
 			url:              scheme + bucketName + "." + testDomain + "/?" + model.GetBucketReadQuotaQuery + "&" + model.GetBucketReadQuotaMonthQuery,
@@ -77,7 +93,15 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: getBucketReadQuotaRouterName,
 		},
 		{
-			name:   "List bucket read records router",
+			name:             "Get bucket read quota router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/" + bucketName + "?" + model.GetBucketReadQuotaQuery + "&" + model.GetBucketReadQuotaMonthQuery,
+			shouldMatch:      true,
+			wantedRouterName: getBucketReadQuotaRouterName,
+		},
+		{
+			name:   "List bucket read records router, virtual host style",
 			router: gwRouter,
 			method: http.MethodGet,
 			url: scheme + bucketName + "." + testDomain + "/?" + model.ListBucketReadRecordQuery +
@@ -87,10 +111,28 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: listBucketReadRecordRouterName,
 		},
 		{
-			name:             "List bucket objects router",
+			name:   "List bucket read records router, path style",
+			router: gwRouter,
+			method: http.MethodGet,
+			url: scheme + testDomain + "/" + bucketName + "?" + model.ListBucketReadRecordQuery +
+				"&" + model.ListBucketReadRecordMaxRecordsQuery +
+				"&" + model.StartTimestampUs + "&" + model.EndTimestampUs,
+			shouldMatch:      true,
+			wantedRouterName: listBucketReadRecordRouterName,
+		},
+		{
+			name:             "List bucket objects router, virtual host style",
 			router:           gwRouter,
 			method:           http.MethodGet,
 			url:              scheme + bucketName + "." + testDomain + "/",
+			shouldMatch:      true,
+			wantedRouterName: listObjectsByBucketRouterName,
+		},
+		{
+			name:             "List bucket objects router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/" + bucketName + "/",
 			shouldMatch:      true,
 			wantedRouterName: listObjectsByBucketRouterName,
 		},

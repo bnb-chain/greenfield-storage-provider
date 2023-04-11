@@ -203,7 +203,7 @@ const (
 	// GnfdPieceSizeHeader defines piece size, which is used to split by receiver
 	GnfdPieceSizeHeader = "X-Gnfd-Piece-Size"
 	// GnfdReplicateApproval defines SP approval that allow to replicate piece data, which is used by receiver
-	GnfdReplicateApproval = "X-Gnfd-Replica-Approval"
+	GnfdReplicateApproval = "X-Gnfd-Replicate-Approval"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 	// GnfdUserAddressHeader defines the user address
