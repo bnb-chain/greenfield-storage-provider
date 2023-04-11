@@ -65,6 +65,7 @@ func NewNode(config *NodeConfig, SPAddr string, signer *signerclient.SignerClien
 		// to the same sp all fail and are replaced, then the sp will be unable to communicate, this requires
 		// dynamic updates permanent nodes
 		libp2p.Ping(false),
+		libp2p.NATPortMap(),
 		libp2p.WithDialTimeout(time.Duration(DailTimeout)*time.Second),
 	)
 	if err != nil {
