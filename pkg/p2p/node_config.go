@@ -3,6 +3,7 @@ package p2p
 import (
 	"encoding/hex"
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -117,6 +118,19 @@ func MakeBootstrapMultiaddr(bootstrap []string) (peersID []peer.ID, addrs []ma.M
 			return peersID, addrs, err
 		}
 		host := strings.TrimSpace(addrInfo[0])
+		if net.ParseIP(host) == nil {
+			hosts, err := net.LookupHost(host)
+			if err != nil {
+				err = fmt.Errorf("failed to parser bootstrap '%s' domain", boot)
+				return peersID, addrs, err
+			}
+			if len(hosts) == 0 {
+				err = fmt.Errorf("failed to parser bootstrap '%s' domain, the empty ip list", boot)
+				return peersID, addrs, err
+			}
+			// addr corresponds to node id one by one, only use the first
+			host = hosts[0]
+		}
 		port, err := strconv.Atoi(strings.TrimSpace(addrInfo[1]))
 		if err != nil {
 			return peersID, addrs, err
