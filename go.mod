@@ -20,6 +20,7 @@ require (
 	github.com/bnb-chain/greenfield-go-sdk v0.0.8
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
+	github.com/cockroachdb/errors v1.2.4
 	github.com/cosmos/cosmos-sdk v0.46.7
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/ethereum/go-ethereum v1.10.19
@@ -53,7 +54,10 @@ require (
 )
 
 require (
+	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d // indirect
+	github.com/cockroachdb/logtags v0.0.0-20190617123548-eb05cc24525f // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
+	github.com/getsentry/raven-go v0.2.0 // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 )

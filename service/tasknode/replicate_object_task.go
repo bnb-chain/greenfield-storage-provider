@@ -9,6 +9,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
@@ -238,6 +239,7 @@ func (t *replicateObjectTask) init() error {
 		log.CtxError(t.ctx, "failed to init due to redundancy number is not equal to checksums")
 		return merrors.ErrInvalidParams
 	}
+
 	t.spMap, t.approvalResponseMap, err = t.taskNode.getApproval(
 		t.objectInfo, t.redundancyNumber, t.redundancyNumber*ReplicateFactor, GetApprovalTimeout)
 	if err != nil {
@@ -252,6 +254,7 @@ func (t *replicateObjectTask) init() error {
 		t.approximateMemSize = int(float64(t.objectInfo.GetPayloadSize()) *
 			(float64(t.redundancyNumber)/float64(t.storageParams.GetRedundantDataChunkNum()) + 1))
 	}
+
 	err = t.taskNode.rcScope.ReserveMemory(t.approximateMemSize, rcmgr.ReservationPriorityAlways)
 	if err != nil {
 		log.CtxErrorw(t.ctx, "failed to reserve memory from resource manager",
@@ -264,6 +267,7 @@ func (t *replicateObjectTask) init() error {
 }
 
 // execute is used to start the task.
+// 成功/失败统计个数，成功的时间
 func (t *replicateObjectTask) execute() {
 	var (
 		sealMsg         *storagetypes.MsgSealObject

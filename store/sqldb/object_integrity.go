@@ -3,10 +3,11 @@ package sqldb
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"gorm.io/gorm"
+
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // GetObjectIntegrity return the integrity hash info
@@ -16,10 +17,11 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 		Where("object_id = ?", objectID).
 		First(queryReturn)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, result.Error
+		return nil, merrors.Error(merrors.RecordNotFound, "record is not found in integrity meta table")
 	}
 	if result.Error != nil {
-		return nil, fmt.Errorf("failed to query integrity meta record: %s", result.Error)
+		return nil, merrors.Errorf(merrors.QueryInIntegrityMetaTableErrCode,
+			"failed to query record in integrity meta table: %s", result.Error)
 	}
 	integrityHash, err := hex.DecodeString(queryReturn.IntegrityHash)
 	if err != nil {
@@ -37,7 +39,8 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 	}
 	meta.Checksum, err = util.StringToBytesSlice(queryReturn.PieceHashList)
 	if err != nil {
-		return nil, err
+		return nil, merrors.Wrap(err, merrors.ConvertStrToByteSliceErrCode,
+			"failed to convert piece hash list to checksum byte slice")
 	}
 	return meta, nil
 }
@@ -52,7 +55,8 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *IntegrityMeta) error {
 	}
 	result := s.db.Create(insertIntegrityMetaRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("failed to insert integrity meta record: %s", result.Error)
+		return merrors.Errorf(merrors.InsertInIntegrityMetaTableErrCode,
+			"failed to insert record in integrity meta table: %s", result.Error)
 	}
 	return nil
 }
