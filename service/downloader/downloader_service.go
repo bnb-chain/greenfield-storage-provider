@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
@@ -204,5 +203,20 @@ func (downloader *Downloader) ListBucketReadRecord(ctx context.Context, req *typ
 		ReadRecords:          readRecords,
 		NextStartTimestampUs: nextStartTimestampUs,
 	}
+	return resp, nil
+}
+
+// GetSpByAddress get sp by sp address
+func (downloader *Downloader) GetSpByAddress(ctx context.Context, req *types.GetSpByAddressRequest) (resp *types.GetSpByAddressResponse, err error) {
+	ctx = log.Context(ctx, req)
+
+	sp, err := downloader.spDB.GetSpByAddress(req.BucketName, sqldb.OperatorAddressType)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get sp", "error", err)
+		return
+	}
+
+	resp = &types.GetSpByAddressResponse{Endpoint: sp.Endpoint}
+	log.CtxInfow(ctx, "succeed to get sp by a sp address")
 	return resp, nil
 }

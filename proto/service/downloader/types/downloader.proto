@@ -82,6 +82,18 @@ message ListBucketReadRecordResponse {
   int64 next_start_timestamp_us = 2;
 }
 
+// GetEndpointBySpAddressRequest is request type for the GetEndpointBySpAddress RPC method
+message GetSpByAddressRequest {
+  // bucket_name is the name of the bucket
+  string bucket_name = 1;
+}
+
+// GetEndpointBySpAddressResponse is response type for the GetEndpointBySpAddress RPC method.
+message GetSpByAddressResponse {
+  // endpoint defines endpoint of a sp
+  string endpoint = 1;
+}
+
 // DownloaderService defines the gRPC service of download payload.
 service DownloaderService {
   // GetObject downloads the payload of the object.
@@ -90,4 +102,6 @@ service DownloaderService {
   rpc GetBucketReadQuota(GetBucketReadQuotaRequest) returns (GetBucketReadQuotaResponse) {};
   // ListBucketReadRecord gets read record list of the specified time range.
   rpc ListBucketReadRecord(ListBucketReadRecordRequest) returns (ListBucketReadRecordResponse) {};
+  // GetSpByBucketName get sp info by a bucket name
+  rpc GetSpByAddress(GetSpByAddressRequest) returns (GetSpByAddressResponse) {};
 }

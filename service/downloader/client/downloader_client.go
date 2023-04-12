@@ -86,3 +86,14 @@ func (client *DownloaderClient) ListBucketReadRecord(ctx context.Context, bucket
 	}
 	return resp, nil
 }
+
+// GetSpByAddress get sp by sp address
+func (client *DownloaderClient) GetSpByAddress(ctx context.Context, req *types.GetSpByAddressRequest, opts ...grpc.CallOption) (*types.GetSpByAddressResponse, error) {
+	resp, err := client.downloader.GetSpByAddress(ctx, req, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get sp by address rpc", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}
