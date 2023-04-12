@@ -4,11 +4,12 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"io"
-	"net/http"
-
+	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gorilla/mux"
+	"io"
+	"net/http"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -238,4 +239,150 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 	w.Header().Set(model.ETagHeader, hex.EncodeToString(md5Hash.Sum(nil)))
+}
+
+// getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
+func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err            error
+		errDescription *errorDescription
+		reqContext     *requestContext
+		addr           sdk.AccAddress
+		isRange        bool
+		rangeStart     int64
+		rangeEnd       int64
+		readN, writeN  int
+		size           int
+		statusCode     = http.StatusOK
+		ctx, cancel    = context.WithCancel(context.Background())
+	)
+
+	reqContext = newRequestContext(r)
+	vars := mux.Vars(r)
+	print(vars)
+	defer func() {
+		cancel()
+		if errDescription != nil {
+			statusCode = errDescription.statusCode
+			_ = errDescription.errorResponse(w, reqContext)
+		}
+		if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
+			log.Infof("action(%v) statusCode(%v) %v", getObjectRouterName, statusCode, reqContext.generateRequestDetail())
+		} else {
+			log.Errorf("action(%v) statusCode(%v) %v", getObjectRouterName, statusCode, reqContext.generateRequestDetail())
+		}
+	}()
+
+	if gateway.downloader == nil {
+		log.Error("failed to get object by universal endpoint due to not config downloader")
+		errDescription = NotExistComponentError
+		return
+	}
+
+	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
+		errDescription = InvalidBucketName
+		return
+	}
+	if err = s3util.CheckValidObjectName(reqContext.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqContext.objectName, "error", err)
+		errDescription = InvalidKey
+		return
+	}
+
+	getBucketInfoReq := &metatypes.GetBucketByBucketNameRequest{
+		BucketName: reqContext.bucketName,
+		IsFullList: true,
+	}
+
+	getBucketInfoRes, err := gateway.metadata.GetBucketByBucketName(ctx, getBucketInfoReq)
+	if err != nil || getBucketInfoRes == nil || getBucketInfoRes.GetBucket() == nil || getBucketInfoRes.GetBucket().GetBucketInfo() == nil {
+		log.Errorw("failed to check bucket info", "bucket_name", reqContext.bucketName, "error", err)
+		errDescription = InvalidKey
+		return
+	}
+
+	bucketPrimarySpAddress := getBucketInfoRes.GetBucket().GetBucketInfo().GetPrimarySpAddress()
+
+	//if bucket not in the current sp, 302 redirect to the sp that contains the bucket
+	if bucketPrimarySpAddress != gateway.config.SpOperatorAddress {
+		getSpByAddressReq := &types.GetSpByAddressRequest{
+			BucketName: bucketPrimarySpAddress,
+		}
+		getSpByAddressRes := &types.GetSpByAddressResponse{
+			Endpoint: "http://localhost:9033",
+		}
+		getSpByAddressRes, err := gateway.downloader.GetSpByAddress(ctx, getSpByAddressReq)
+
+		if err != nil || getSpByAddressRes == nil {
+			log.Errorw("failed to get sp by address ", "sp_address", reqContext.bucketName, "error", err)
+			errDescription = InvalidKey
+			return
+		}
+		redirectUrl := getSpByAddressRes.Endpoint + "/download/" + reqContext.bucketName + "/" + reqContext.objectName
+
+		http.Redirect(w, r, redirectUrl, 302)
+		return
+	}
+
+	getObjectInfoReq := &metatypes.GetObjectByObjectNameAndBucketNameRequest{
+		ObjectName: reqContext.objectName,
+		IsFullList: true,
+	}
+
+	getObjectInfoRes, err := gateway.metadata.GetObjectByObjectNameAndBucketName(ctx, getObjectInfoReq)
+	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.Object == nil {
+		log.Errorw("failed to check object info", "object_name", reqContext.objectName, "error", err)
+		errDescription = InvalidKey
+		return
+	}
+
+	getObjectReq := &types.GetObjectRequest{
+		BucketInfo:  getBucketInfoRes.Bucket.BucketInfo,
+		ObjectInfo:  getObjectInfoRes.Object.ObjectInfo,
+		UserAddress: addr.String(),
+		IsRange:     isRange,
+		RangeStart:  uint64(rangeStart),
+		RangeEnd:    uint64(rangeEnd),
+	}
+	// ctx := log.Context(context.Background(), req)
+	stream, err := gateway.downloader.GetObject(ctx, getObjectReq)
+	if err != nil {
+		log.Errorf("failed to get object", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+	for {
+		resp, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Errorw("failed to read stream", "error", err)
+			errDescription = makeErrorDescription(merrors.GRPCErrorToInnerError(err))
+			return
+		}
+
+		if readN = len(resp.Data); readN == 0 {
+			log.Errorw("failed to get object due to return empty data", "response", resp)
+			continue
+		}
+		if isRange {
+			statusCode = http.StatusPartialContent
+			w.WriteHeader(statusCode)
+			makeContentRangeHeader(w, rangeStart, rangeEnd)
+		}
+		if writeN, err = w.Write(resp.Data); err != nil {
+			log.Errorw("failed to read stream", "error", err)
+			errDescription = makeErrorDescription(err)
+			return
+		}
+		if readN != writeN {
+			log.Errorw("failed to read stream", "error", err)
+			errDescription = InternalError
+			return
+		}
+		size = size + writeN
+	}
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 }

@@ -1,5 +1,9 @@
 package bsdb
 
+import (
+	"github.com/bnb-chain/greenfield/x/storage/types"
+)
+
 // ListObjectsByBucketName list objects info by a bucket name
 func (b *BsDBImpl) ListObjectsByBucketName(bucketName string) ([]*Object, error) {
 	var (
@@ -41,4 +45,26 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 		Order("objects.update_at asc").
 		Find(&objects).Error
 	return objects, err
+}
+
+// GetObjectByName get object info by an object name
+func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, isFullList bool) (*Object, error) {
+	var (
+		object *Object
+		err    error
+	)
+
+	if isFullList {
+		err = b.db.Table((&Object{}).TableName()).
+			Select("*").
+			Where("object_name = ? and bucket_name = ?", objectName, bucketName).
+			Find(&object).Error
+		return object, err
+	}
+
+	err = b.db.Table((&Object{}).TableName()).
+		Select("*").
+		Where("object_name = ? and bucket_name = ? and visibility = ?", objectName, bucketName, types.VISIBILITY_TYPE_PUBLIC_READ.String()).
+		Find(&object).Error
+	return object, err
 }
