@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"io"
 	"sync"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
@@ -13,6 +14,7 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	gatewayclient "github.com/bnb-chain/greenfield-storage-provider/service/gateway/client"
@@ -82,13 +84,13 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 		gotPieceSize := false
 
 		for segmentPieceIdx := 0; segmentPieceIdx < sg.task.segmentPieceNumber; segmentPieceIdx++ {
-			segmentPiecekey := piecestore.EncodeSegmentPieceKey(sg.task.objectInfo.Id.Uint64(), uint32(segmentPieceIdx))
-			segmentPieceData, err := sg.task.taskNode.pieceStore.GetPiece(context.Background(), segmentPiecekey, 0, 0)
+			segmentPieceKey := piecestore.EncodeSegmentPieceKey(sg.task.objectInfo.Id.Uint64(), uint32(segmentPieceIdx))
+			segmentPieceData, err := sg.task.taskNode.pieceStore.GetPiece(context.Background(), segmentPieceKey, 0, 0)
 			if err != nil {
 				for idx := range sg.streamReaderMap {
 					sg.streamReaderMap[idx].pWrite.CloseWithError(err)
 				}
-				log.Errorw("failed to get piece data", "piece_key", segmentPiecekey, "error", err)
+				log.Errorw("failed to get piece data", "piece_key", segmentPieceKey, "error", err)
 				return
 			}
 			if sg.task.objectInfo.GetRedundancyType() == types.REDUNDANCY_EC_TYPE {
@@ -265,6 +267,7 @@ func (t *replicateObjectTask) init() error {
 
 // execute is used to start the task.
 func (t *replicateObjectTask) execute() {
+	startTime := time.Now()
 	var (
 		sealMsg              *storagetypes.MsgSealObject
 		progressInfo         *servicetypes.ReplicatePieceInfo
@@ -272,13 +275,16 @@ func (t *replicateObjectTask) execute() {
 		succeedIndexMap      map[int]bool
 	)
 	defer func() {
+		metrics.ReplicateObjectTaskGauge.WithLabelValues(model.TaskNodeService).Dec()
+		observer := metrics.SealObjectTimeHistogram.WithLabelValues(model.TaskNodeService)
+		observer.Observe(time.Since(startTime).Seconds())
 		t.taskNode.rcScope.ReleaseMemory(t.approximateMemSize)
 		log.CtxDebugw(t.ctx, "release memory to resource manager",
 			"release_size", t.approximateMemSize, "resource_state", rcmgr.GetServiceState(model.TaskNodeService))
 	}()
 
+	metrics.ReplicateObjectTaskGauge.WithLabelValues(model.TaskNodeService).Inc()
 	t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
-
 	succeedIndexMap = make(map[int]bool, t.redundancyNumber)
 	isAllSucceed := func(inputIndexMap map[int]bool) bool {
 		for i := 0; i < t.redundancyNumber; i++ {
@@ -374,7 +380,6 @@ func (t *replicateObjectTask) execute() {
 				t.taskNode.cache.Add(t.objectInfo.Id.Uint64(), progressInfo)
 				log.CtxInfow(t.ctx, "succeed to replicate object piece stream to the target sp",
 					"sp", sp.GetOperator(), "endpoint", sp.GetEndpoint(), "redundancy_index", rIdx)
-
 			}(redundancyIdx)
 		}
 		wg.Wait()
@@ -386,6 +391,7 @@ func (t *replicateObjectTask) execute() {
 		_, err := t.taskNode.signer.SealObjectOnChain(context.Background(), sealMsg)
 		if err != nil {
 			t.taskNode.spDB.UpdateJobState(t.objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR)
+			metrics.SealObjectTotalCounter.WithLabelValues("failure").Inc()
 			log.CtxErrorw(t.ctx, "failed to sign object by signer", "error", err)
 			return
 		}
@@ -394,10 +400,12 @@ func (t *replicateObjectTask) execute() {
 			t.objectInfo.GetObjectName(), 10)
 		if err != nil {
 			t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
+			metrics.SealObjectTotalCounter.WithLabelValues("failure").Inc()
 			log.CtxErrorw(t.ctx, "failed to seal object on chain", "error", err)
 			return
 		}
 		t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
+		metrics.SealObjectTotalCounter.WithLabelValues("success").Inc()
 		log.CtxInfo(t.ctx, "succeed to seal object on chain")
 	} else {
 		err := t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
