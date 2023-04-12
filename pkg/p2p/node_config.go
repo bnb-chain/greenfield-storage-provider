@@ -130,7 +130,8 @@ func MakeBootstrapMultiaddr(bootstrap []string) (peersID []peer.ID, addrs []ma.M
 			}
 			// addr corresponds to node id one by one, only use the first
 			for _, h := range hosts {
-				if net.ParseIP(h) == nil {
+				// TODO:: support IPv6
+				if strings.Contains(h, ":") {
 					continue
 				}
 				host = h
