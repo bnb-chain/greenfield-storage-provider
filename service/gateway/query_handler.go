@@ -7,7 +7,10 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -195,4 +198,88 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 	log.Debugw("list bucket read records", "xml_info", xmlInfo)
+}
+
+// getObjectPutStateHandler handles the get put object state request
+func (g *Gateway) getObjectPutStateHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err            error
+		errDescription *errorDescription
+		reqContext     *requestContext
+		addr           sdktypes.AccAddress
+		jobState       servicetypes.JobState
+		jobStateStr    string
+	)
+
+	reqContext = newRequestContext(r)
+	defer func() {
+		if errDescription != nil {
+			_ = errDescription.errorResponse(w, reqContext)
+		}
+		if errDescription != nil && errDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", getObjectPutStateRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+		} else {
+			log.Infof("action(%v) statusCode(200) %v", getObjectPutStateRouterName, reqContext.generateRequestDetail())
+		}
+	}()
+
+	if g.uploader == nil {
+		log.Error("failed to get bucket read quota due to not config uploader")
+		errDescription = NotExistComponentError
+		return
+	}
+
+	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
+		errDescription = InvalidBucketName
+		return
+	}
+	if err = s3util.CheckValidObjectName(reqContext.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqContext.objectName, "error", err)
+		errDescription = InvalidKey
+		return
+	}
+
+	if addr, err = reqContext.verifySignature(); err != nil {
+		log.Errorw("failed to verify signature", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+	if err = g.checkAuthorization(reqContext, addr); err != nil {
+		log.Errorw("failed to check authorization", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+	if reqContext.objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
+		jobStateStr = storagetypes.OBJECT_STATUS_SEALED.String()
+	} else {
+		if jobState, err = g.uploader.QueryObjectPutState(context.Background(), reqContext.objectInfo.Id.Uint64()); err != nil {
+			log.Errorw("failed to query object put state", "error", err)
+			errDescription = makeErrorDescription(err)
+			return
+		}
+		jobStateStr = jobState.String()
+	}
+	var xmlInfo = struct {
+		XMLName xml.Name `xml:"GetObjectPutState"`
+		Version string   `xml:"version,attr"`
+		State   string   `xml:"State"`
+	}{
+		Version: model.GnfdResponseXMLVersion,
+		State:   jobStateStr,
+	}
+	xmlBody, err := xml.Marshal(&xmlInfo)
+	if err != nil {
+		log.Errorw("failed to marshal xml", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+	if _, err = w.Write(xmlBody); err != nil {
+		log.Errorw("failed to write body", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+	log.Debugw("get object put state", "xml_info", xmlInfo)
 }

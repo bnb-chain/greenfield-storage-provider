@@ -164,6 +164,8 @@ const (
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
 	ActionQuery = "action"
+	// GetObjectPutStateQuery defines object put-state query, which is used to route request
+	GetObjectPutStateQuery = "object-put-state"
 	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request
 	GetBucketReadQuotaQuery = "read-quota"
 	// GetBucketReadQuotaMonthQuery defines bucket read quota query month
@@ -182,8 +184,6 @@ const (
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
-	// GnfdTransactionHashHeader defines blockchain tx-hash
-	GnfdTransactionHashHeader = "X-Gnfd-Txn-Hash"
 	// GnfdAuthorizationHeader defines authorization, verify signature and check authorization
 	GnfdAuthorizationHeader = "Authorization"
 	// GnfdObjectIDHeader defines object id

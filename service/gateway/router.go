@@ -20,6 +20,7 @@ const (
 	listObjectsByBucketRouterName  = "ListObjectsByBucketName"
 	getBucketReadQuotaRouterName   = "GetBucketReadQuota"
 	listBucketReadRecordRouterName = "ListBucketReadRecord"
+	getObjectPutStateRouterName    = "GetObjectPutState"
 )
 
 const (
@@ -29,7 +30,7 @@ const (
 
 // notFoundHandler log not found request info.
 func (g *Gateway) notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	log.Errorw("failed to find handler", "header", r.Header, "host", r.Host, "url", r.URL)
+	log.Errorw("failed to find the corresponding handler", "header", r.Header, "host", r.Host, "url", r.URL)
 	if _, err := io.ReadAll(r.Body); err != nil {
 		log.Errorw("failed to read the unknown request", "error", err)
 	}
@@ -47,6 +48,12 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
 		HandlerFunc(g.putObjectHandler)
+	hostBucketRouter.NewRoute().
+		Name(getObjectPutStateRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}").
+		Queries(model.GetObjectPutStateQuery, "").
+		HandlerFunc(g.getObjectPutStateHandler)
 	hostBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).
@@ -104,6 +111,12 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodPut).
 		Path("/{object:.+}").
 		HandlerFunc(g.putObjectHandler)
+	pathBucketRouter.NewRoute().
+		Name(getObjectPutStateRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}").
+		Queries(model.GetObjectPutStateQuery, "").
+		HandlerFunc(g.getObjectPutStateHandler)
 	pathBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).

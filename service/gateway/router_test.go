@@ -69,6 +69,22 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: putObjectRouterName,
 		},
 		{
+			name:             "Get object put state router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "/" + objectName + "?" + model.GetObjectPutStateQuery,
+			shouldMatch:      true,
+			wantedRouterName: getObjectPutStateRouterName,
+		},
+		{
+			name:             "Get object put state router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/" + bucketName + "/" + objectName + "?" + model.GetObjectPutStateQuery,
+			shouldMatch:      true,
+			wantedRouterName: getObjectPutStateRouterName,
+		},
+		{
 			name:             "Get object router, virtual host style",
 			router:           gwRouter,
 			method:           http.MethodGet,
@@ -76,6 +92,7 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: getObjectRouterName,
 		},
+
 		{
 			name:             "Get object router, path style",
 			router:           gwRouter,

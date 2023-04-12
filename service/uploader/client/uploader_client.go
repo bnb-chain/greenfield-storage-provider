@@ -49,7 +49,7 @@ func (client *UploaderClient) Close() error {
 	return client.conn.Close()
 }
 
-// QueryPuttingObject query a putting object info with object id
+// QueryPuttingObject queries a putting object info with object id
 func (client *UploaderClient) QueryPuttingObject(ctx context.Context, objectID uint64, opts ...grpc.CallOption) (
 	*servicetypes.PieceInfo, error) {
 	resp, err := client.uploader.QueryPuttingObject(ctx,
@@ -60,7 +60,16 @@ func (client *UploaderClient) QueryPuttingObject(ctx context.Context, objectID u
 	return resp.GetPieceInfo(), nil
 }
 
-// PutObject return grpc stream client, and be used to upload object payload.
+// PutObject returns grpc stream client, and be used to upload object payload.
 func (client *UploaderClient) PutObject(ctx context.Context, opts ...grpc.CallOption) (types.UploaderService_PutObjectClient, error) {
 	return client.uploader.PutObject(ctx, opts...)
+}
+
+// QueryObjectPutState is used to query put object job state
+func (client *UploaderClient) QueryObjectPutState(ctx context.Context, objectID uint64, opts ...grpc.CallOption) (servicetypes.JobState, error) {
+	resp, err := client.uploader.QueryObjectPutState(ctx, &types.QueryObjectPutStateRequest{ObjectId: objectID}, opts...)
+	if err != nil {
+		return servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED, err
+	}
+	return resp.GetJobState(), nil
 }

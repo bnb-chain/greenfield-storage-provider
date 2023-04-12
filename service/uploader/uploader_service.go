@@ -7,14 +7,13 @@ import (
 	"math"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var _ types.UploaderServiceServer = &Uploader{}
@@ -22,33 +21,31 @@ var _ types.UploaderServiceServer = &Uploader{}
 // PutObject upload an object payload data with object info.
 func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer) (err error) {
 	var (
-		init        bool
-		checksum    [][]byte
-		objectID    uint64
-		objectInfo  *storagetypes.ObjectInfo
-		params      *storagetypes.Params
-		req         *types.PutObjectRequest
-		resp        = &types.PutObjectResponse{}
-		pstream     = payloadstream.NewAsyncPayloadStream()
-		ctx, cancel = context.WithCancel(context.Background())
-		errCh       = make(chan error)
+		isInited          bool
+		pieceChecksumList [][]byte
+		objectID          uint64
+		params            *storagetypes.Params
+		req               *types.PutObjectRequest
+		resp              = &types.PutObjectResponse{}
+		pstream           = payloadstream.NewAsyncPayloadStream()
+		ctx, cancel       = context.WithCancel(context.Background())
+		errCh             = make(chan error)
 	)
+
 	defer func() {
 		defer cancel()
 		if err != nil {
-			if init {
+			if isInited {
 				uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 			}
-			log.CtxErrorw(ctx, "failed to replicate payload", "error", err)
+			log.CtxErrorw(ctx, "failed to put object", "error", err)
 			return
 		}
 		uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
-		err = uploader.signIntegrityHash(ctx, objectID, objectInfo.GetChecksums()[0], checksum)
-		if err != nil {
+		if err = uploader.signIntegrityHash(ctx, objectID, req.GetObjectInfo().GetChecksums()[0], pieceChecksumList); err != nil {
 			return
 		}
-		err = uploader.taskNode.ReplicateObject(ctx, objectInfo)
-		if err != nil {
+		if err = uploader.taskNode.ReplicateObject(ctx, req.GetObjectInfo()); err != nil {
 			log.CtxErrorw(ctx, "failed to notify task node to replicate object", "error", err)
 			uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
 			return
@@ -57,11 +54,11 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 		pstream.Close()
 		log.CtxInfow(ctx, "succeed to put object", "error", err)
 	}()
-	params, err = uploader.spDB.GetStorageParams()
-	if err != nil {
+	if params, err = uploader.spDB.GetStorageParams(); err != nil {
+		log.Errorw("failed to get storage params", "error", err)
 		return
 	}
-	segmentPieceSize := params.GetMaxSegmentSize()
+
 	// read payload from gRPC stream
 	go func() {
 		for {
@@ -76,14 +73,13 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 				errCh <- err
 				return
 			}
-			if !init {
+			if !isInited {
 				if req.GetObjectInfo() == nil {
 					errCh <- merrors.ErrDanglingPointer
 					return
 				}
-				objectInfo = req.GetObjectInfo()
 				if int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()+1) !=
-					len(objectInfo.GetChecksums()) {
+					len(req.GetObjectInfo().GetChecksums()) {
 					errCh <- merrors.ErrMismatchChecksumNum
 				}
 				objectID = req.GetObjectInfo().Id.Uint64()
@@ -91,12 +87,12 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 				pstream.InitAsyncPayloadStream(
 					objectID,
 					storagetypes.REDUNDANCY_REPLICA_TYPE,
-					segmentPieceSize,
+					params.GetMaxSegmentSize(),
 					math.MaxUint32, /*useless*/
 				)
-				uploader.spDB.CreateUploadJob(objectInfo)
+				uploader.spDB.CreateUploadJob(req.GetObjectInfo())
 				uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING)
-				init = true
+				isInited = true
 			}
 			pstream.StreamWrite(req.GetPayload())
 		}
@@ -115,7 +111,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 				err = entry.Error()
 				return
 			}
-			checksum = append(checksum, hash.GenerateChecksum(entry.Data()))
+			pieceChecksumList = append(pieceChecksumList, hash.GenerateChecksum(entry.Data()))
 			if err = uploader.pieceStore.PutPiece(entry.PieceKey(), entry.Data()); err != nil {
 				return
 			}
@@ -125,11 +121,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 	}
 }
 
-func (uploader *Uploader) signIntegrityHash(ctx context.Context, objectID uint64, rootHash []byte, checksum [][]byte) (err error) {
-	var (
-		integrityMeta = &sqldb.IntegrityMeta{ObjectID: objectID, Checksum: checksum}
-	)
-	uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING)
+func (uploader *Uploader) signIntegrityHash(ctx context.Context, objectID uint64, rootHash []byte, pieceChecksumList [][]byte) (err error) {
 	defer func() {
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
@@ -139,28 +131,47 @@ func (uploader *Uploader) signIntegrityHash(ctx context.Context, objectID uint64
 		uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
 		log.CtxInfow(ctx, "succeed to sign the integrity hash", "error", err)
 	}()
-	integrityMeta.IntegrityHash, integrityMeta.Signature, err = uploader.signer.SignIntegrityHash(ctx, objectID, checksum)
-	if err != nil {
+
+	integrityMeta := &sqldb.IntegrityMeta{ObjectID: objectID, Checksum: pieceChecksumList}
+	if integrityMeta.IntegrityHash, integrityMeta.Signature, err =
+		uploader.signer.SignIntegrityHash(ctx, objectID, pieceChecksumList); err != nil {
 		return
 	}
 	if !bytes.Equal(rootHash, integrityMeta.IntegrityHash) {
 		err = merrors.ErrMismatchIntegrityHash
 		return
 	}
-	err = uploader.spDB.SetObjectIntegrity(integrityMeta)
-	if err != nil {
+	if err = uploader.spDB.SetObjectIntegrity(integrityMeta); err != nil {
 		return
 	}
 	return
+}
+
+func (uploader *Uploader) QueryObjectPutState(ctx context.Context, req *types.QueryObjectPutStateRequest) (
+	resp *types.QueryObjectPutStateResponse, err error) {
+	ctx = log.Context(ctx, req)
+	defer func() {
+		log.CtxDebugw(ctx, "query object put state", "request", req, "response", resp, "error", err)
+	}()
+
+	job, err := uploader.spDB.GetJobByObjectID(req.GetObjectId())
+	if err != nil {
+		return nil, merrors.InnerErrorToGRPCError(err)
+	}
+	return &types.QueryObjectPutStateResponse{
+		JobState: job.JobState,
+	}, nil
 }
 
 // QueryPuttingObject query an uploading object with object id from cache
 func (uploader *Uploader) QueryPuttingObject(ctx context.Context, req *types.QueryPuttingObjectRequest) (
 	resp *types.QueryPuttingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
-	objectID := req.GetObjectId()
-	log.CtxDebugw(ctx, "query putting object", "objectID", objectID)
-	val, ok := uploader.cache.Get(objectID)
+	defer func() {
+		log.CtxDebugw(ctx, "query putting object", "request", req, "response", resp, "error", err)
+	}()
+
+	val, ok := uploader.cache.Get(req.GetObjectId())
 	if !ok {
 		err = merrors.ErrCacheMiss
 		return

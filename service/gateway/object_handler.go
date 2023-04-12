@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/bnb-chain/greenfield/types/s3util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -178,8 +179,6 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 		errDescription = InvalidKey
 		return
 	}
-	// TODO: maybe tx_hash will be used in the future
-	_, _ = hex.DecodeString(reqContext.request.Header.Get(model.GnfdTransactionHashHeader))
 
 	if addr, err = reqContext.verifySignature(); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
@@ -188,6 +187,14 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 	}
 	if err = gateway.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+
+	if reqContext.objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+		log.Errorw("failed to auth due to object status is not created",
+			"object_status", reqContext.objectInfo.GetObjectStatus())
+		err = merrors.ErrCheckObjectCreated
 		errDescription = makeErrorDescription(err)
 		return
 	}
