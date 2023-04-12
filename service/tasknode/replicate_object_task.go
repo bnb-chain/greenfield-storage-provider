@@ -266,9 +266,10 @@ func (t *replicateObjectTask) init() error {
 // execute is used to start the task.
 func (t *replicateObjectTask) execute() {
 	var (
-		sealMsg         *storagetypes.MsgSealObject
-		progressInfo    *servicetypes.ReplicatePieceInfo
-		succeedIndexMap map[int]bool
+		sealMsg              *storagetypes.MsgSealObject
+		progressInfo         *servicetypes.ReplicatePieceInfo
+		succeedIndexMapMutex sync.RWMutex
+		succeedIndexMap      map[int]bool
 	)
 	defer func() {
 		t.taskNode.rcScope.ReleaseMemory(t.approximateMemSize)
@@ -357,7 +358,10 @@ func (t *replicateObjectTask) execute() {
 					return
 				}
 
+				succeedIndexMapMutex.Lock()
 				succeedIndexMap[rIdx] = true
+				succeedIndexMapMutex.Unlock()
+
 				sealMsg.GetSecondarySpAddresses()[rIdx] = sp.GetOperator().String()
 				sealMsg.GetSecondarySpSignatures()[rIdx] = signature
 				progressInfo.PieceInfos[rIdx] = &servicetypes.PieceInfo{

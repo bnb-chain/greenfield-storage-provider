@@ -27,7 +27,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 			ModifiedTime:     time.Now(),
 		}
 		result := s.db.Create(insertBucketTraffic)
-		if result.Error != nil || result.RowsAffected != 1 {
+		if result.Error != nil {
 			return fmt.Errorf("failed to insert bucket traffic table: %s", result.Error)
 		}
 		bucketTraffic = &BucketTraffic{
@@ -46,7 +46,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 				ReadQuotaSize: quota.ReadQuotaSize,
 				ModifiedTime:  time.Now(),
 			})
-		if result.Error != nil || result.RowsAffected != 1 {
+		if result.Error != nil {
 			return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
 		}
 		bucketTraffic.ReadQuotaSize = quota.ReadQuotaSize
@@ -64,7 +64,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 			ReadConsumedSize: bucketTraffic.ReadConsumedSize + record.ReadSize,
 			ModifiedTime:     time.Now(),
 		})
-	if result.Error != nil || result.RowsAffected != 1 {
+	if result.Error != nil {
 		return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
 	}
 
