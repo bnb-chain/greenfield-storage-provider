@@ -129,7 +129,17 @@ func MakeBootstrapMultiaddr(bootstrap []string) (peersID []peer.ID, addrs []ma.M
 				return peersID, addrs, err
 			}
 			// addr corresponds to node id one by one, only use the first
-			host = hosts[0]
+			for _, h := range hosts {
+				if net.ParseIP(h) == nil {
+					continue
+				}
+				host = h
+				break
+			}
+			if net.ParseIP(host) == nil {
+				err = fmt.Errorf("failed to parser bootstrap '%s' domain, no usable ip", boot)
+				return peersID, addrs, err
+			}
 		}
 		port, err := strconv.Atoi(strings.TrimSpace(addrInfo[1]))
 		if err != nil {
