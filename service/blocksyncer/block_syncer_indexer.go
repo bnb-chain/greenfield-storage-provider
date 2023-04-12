@@ -3,6 +3,7 @@ package blocksyncer
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
@@ -67,15 +68,25 @@ func (i *Impl) Process(height uint64) error {
 		return err
 	}
 
-	events, err := i.Node.BlockResults(int64(height))
+	//events, err := i.Node.BlockResults(int64(height))
+	//if err != nil {
+	//	log.Errorf("failed to get block results from node: %s", err)
+	//	return err
+	//}
+
+	txs, err := i.Node.Txs(block)
 	if err != nil {
-		log.Errorf("failed to get block results from node: %s", err)
-		return err
+		return fmt.Errorf("failed to get transactions for block: %s", err)
 	}
 
-	err = i.ExportEvents(context.Background(), block, events)
+	//err = i.ExportEvents(context.Background(), block, events)
+	//if err != nil {
+	//	log.Errorf("failed to ExportEvents: %s", err)
+	//	return err
+	//}
+
+	err = i.ExportEventsByTxs(context.Background(), block, txs)
 	if err != nil {
-		log.Errorf("failed to ExportEvents: %s", err)
 		return err
 	}
 
@@ -144,6 +155,16 @@ func (i *Impl) ExportEvents(ctx context.Context, block *coretypes.ResultBlock, e
 	return nil
 }
 
+func (i *Impl) ExportEventsByTxs(ctx context.Context, block *coretypes.ResultBlock, txs []*types.Tx) error {
+	for _, tx := range txs {
+		txHash := common.HexToHash(tx.TxHash)
+		for _, event := range tx.Events {
+			i.HandleEvent(ctx, block, txHash, sdk.Event(event))
+		}
+	}
+	return nil
+}
+
 // HandleGenesis accepts a GenesisDoc and calls all the registered genesis handlers in the order in which they have been registered.
 func (i *Impl) HandleGenesis(genesisDoc *tmtypes.GenesisDoc, appState map[string]json.RawMessage) error {
 	return nil
@@ -167,7 +188,7 @@ func (i *Impl) HandleTx(tx *types.Tx) {
 }
 
 // HandleMessage accepts the transaction and handles messages contained inside the transaction.
-func (i *Impl) HandleMessage(index int, msg sdk.Msg, tx *types.Tx) {
+func (i *Impl) HandleMessage(block *coretypes.ResultBlock, index int, msg sdk.Msg, tx *types.Tx) {
 	log.Info("HandleMessage")
 }
 
