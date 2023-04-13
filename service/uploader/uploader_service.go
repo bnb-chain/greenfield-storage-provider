@@ -10,6 +10,7 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	payloadstream "github.com/bnb-chain/greenfield-storage-provider/pkg/stream"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
@@ -59,7 +60,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 	}()
 	params, err = uploader.spDB.GetStorageParams()
 	if err != nil {
-		return
+		return err
 	}
 	segmentPieceSize := params.GetMaxSegmentSize()
 	// read payload from gRPC stream
@@ -78,13 +79,13 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			}
 			if !init {
 				if req.GetObjectInfo() == nil {
-					errCh <- merrors.ErrDanglingPointer
+					errCh <- errorstypes.Error(merrors.DanglingPointerErrCode, merrors.ErrDanglingPointer.Error())
 					return
 				}
 				objectInfo = req.GetObjectInfo()
 				if int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()+1) !=
 					len(objectInfo.GetChecksums()) {
-					errCh <- merrors.ErrMismatchChecksumNum
+					errCh <- errorstypes.Error(merrors.UploaderMismatchChecksumNumErrCode, merrors.ErrMismatchChecksumNum.Error())
 				}
 				objectID = req.GetObjectInfo().Id.Uint64()
 				ctx = log.WithValue(ctx, "object_id", req.GetObjectInfo().Id.String())
@@ -107,20 +108,20 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 		select {
 		case entry, ok := <-pstream.AsyncStreamRead():
 			if !ok { // has finished
-				return
+				return nil
 			}
 			log.CtxDebugw(ctx, "get piece entry from stream", "piece_key", entry.PieceKey(),
 				"piece_len", len(entry.Data()), "error", entry.Error())
 			if entry.Error() != nil {
 				err = entry.Error()
-				return
+				return errorstypes.Error(merrors.PayloadStreamErrCode, entry.Error().Error())
 			}
 			checksum = append(checksum, hash.GenerateChecksum(entry.Data()))
 			if err = uploader.pieceStore.PutPiece(entry.PieceKey(), entry.Data()); err != nil {
-				return
+				return err
 			}
 		case err = <-errCh:
-			return
+			return err
 		}
 	}
 }
@@ -141,17 +142,16 @@ func (uploader *Uploader) signIntegrityHash(ctx context.Context, objectID uint64
 	}()
 	integrityMeta.IntegrityHash, integrityMeta.Signature, err = uploader.signer.SignIntegrityHash(ctx, objectID, checksum)
 	if err != nil {
-		return
+		return errorstypes.Error(merrors.SignerSignIntegrityHashErrCode, err.Error())
 	}
 	if !bytes.Equal(rootHash, integrityMeta.IntegrityHash) {
-		err = merrors.ErrMismatchIntegrityHash
-		return
+		return errorstypes.Error(merrors.MismatchIntegrityHashErrCode, merrors.ErrMismatchIntegrityHash.Error())
 	}
 	err = uploader.spDB.SetObjectIntegrity(integrityMeta)
 	if err != nil {
-		return
+		return err
 	}
-	return
+	return nil
 }
 
 // QueryPuttingObject query an uploading object with object id from cache
@@ -162,9 +162,8 @@ func (uploader *Uploader) QueryPuttingObject(ctx context.Context, req *types.Que
 	log.CtxDebugw(ctx, "query putting object", "objectID", objectID)
 	val, ok := uploader.cache.Get(objectID)
 	if !ok {
-		err = merrors.ErrCacheMiss
-		return
+		return nil, errorstypes.Error(merrors.CacheMissedErrCode, merrors.ErrCacheMiss.Error())
 	}
 	resp.PieceInfo = val.(*servicetypes.PieceInfo)
-	return
+	return resp, nil
 }

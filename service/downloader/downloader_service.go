@@ -2,17 +2,15 @@ package downloader
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
-	"gorm.io/gorm"
 )
 
 var _ types.DownloaderServiceServer = &Downloader{}
@@ -21,7 +19,7 @@ var _ types.DownloaderServiceServer = &Downloader{}
 func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	stream types.DownloaderService_GetObjectServer) (err error) {
 	if req.GetObjectInfo() == nil {
-		return merrors.ErrDanglingPointer
+		return errorstypes.Error(merrors.DanglingPointerErrCode, merrors.ErrDanglingPointer.Error())
 	}
 	var (
 		scope       rcmgr.ResourceScopeSpan
@@ -44,7 +42,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	scope, err = downloader.rcScope.BeginSpan()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
-		return
+		return errorstypes.Error(merrors.ResourceMgrBeginSpanErrCode, err.Error())
 	}
 	startOffset = uint64(0)
 	endOffset = objectInfo.GetPayloadSize() - 1
@@ -57,7 +55,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
 			"reserve_size", readSize, "error", err)
-		return
+		return errorstypes.Error(merrors.ResourceMgrReserveMemoryErrCode, err.Error())
 	}
 	if err = downloader.spDB.CheckQuotaAndAddReadRecord(
 		&sqldb.ReadRecord{
@@ -74,16 +72,18 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		},
 	); err != nil {
 		log.CtxErrorw(ctx, "failed to check billing due to bucket quota", "error", err)
-		return merrors.InnerErrorToGRPCError(err)
+		return err
 	}
 	pieceInfos, err := downloader.SplitToSegmentPieceInfos(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), startOffset, endOffset)
 	if err != nil {
-		return
+		log.Errorw("failed to split to segment piece infos", "error", err)
+		return err
 	}
 	for _, pInfo := range pieceInfos {
 		resp.Data, err = downloader.pieceStore.GetPiece(ctx, pInfo.segmentPieceKey, int64(pInfo.offset), int64(pInfo.length))
 		if err != nil {
-			return
+			log.Errorw("downloader failed to get piece", "error", err)
+			return err
 		}
 		if err = stream.Send(resp); err != nil {
 			return
@@ -102,10 +102,13 @@ type segmentPieceInfo struct {
 // SplitToSegmentPieceInfos compute the piece store info for get object, object data range [start, end].
 func (downloader *Downloader) SplitToSegmentPieceInfos(objectID, objectSize, start, end uint64) (pieceInfos []*segmentPieceInfo, err error) {
 	if objectSize == 0 || start >= objectSize || end >= objectSize || end < start {
-		return pieceInfos, fmt.Errorf("failed to check param, object size: %d, start: %d, end: %d", objectSize, start, end)
+		log.Errorf("invalid piece info params, object size: %d, start: %d, end: %d", objectSize, start, end)
+		return pieceInfos, errorstypes.Errorf(merrors.DownloaderInvalidPieceInfoParamsErrCode,
+			"invalid piece info params, object size: %d, start: %d, end: %d", objectSize, start, end)
 	}
 	params, err := downloader.spDB.GetStorageParams()
 	if err != nil {
+		log.Errorw("failed to get storage params", "error", err)
 		return pieceInfos, err
 	}
 
@@ -152,7 +155,7 @@ func (downloader *Downloader) SplitToSegmentPieceInfos(objectID, objectSize, sta
 // GetBucketReadQuota get the quota info of the specified month.
 func (downloader *Downloader) GetBucketReadQuota(ctx context.Context, req *types.GetBucketReadQuotaRequest) (*types.GetBucketReadQuotaResponse, error) {
 	bucketTraffic, err := downloader.spDB.GetBucketTraffic(req.GetBucketInfo().Id.Uint64(), req.GetYearMonth())
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if errorstypes.Code(err) == merrors.DBRecordNotFoundErrCode {
 		return &types.GetBucketReadQuotaResponse{
 			ChargedQuotaSize: req.GetBucketInfo().GetChargedReadQuota(),
 			SpFreeQuotaSize:  model.DefaultSpFreeReadQuotaSize,
@@ -177,7 +180,7 @@ func (downloader *Downloader) ListBucketReadRecord(ctx context.Context, req *typ
 		EndTimestampUs:   req.EndTimestampUs,
 		LimitNum:         int(req.MaxRecordNum),
 	})
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if errorstypes.Code(err) == merrors.DBRecordNotFoundErrCode {
 		return &types.ListBucketReadRecordResponse{
 			NextStartTimestampUs: 0,
 		}, nil

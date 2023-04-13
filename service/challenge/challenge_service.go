@@ -6,6 +6,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
@@ -17,7 +18,7 @@ var _ types.ChallengeServiceServer = &Challenge{}
 // return the piece's integrity hash, piece hash and piece data
 func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.ChallengePieceRequest) (*types.ChallengePieceResponse, error) {
 	if req.GetObjectInfo() == nil {
-		return nil, merrors.ErrDanglingPointer
+		return nil, errorstypes.Error(merrors.DanglingPointerErrCode, merrors.ErrDanglingPointer.Error())
 	}
 	var (
 		scope                rcmgr.ResourceScopeSpan
@@ -39,7 +40,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 	scope, err = challenge.rcScope.BeginSpan()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to begin reserve resource", "error", err)
-		return resp, err
+		return resp, errorstypes.Error(merrors.ResourceMgrBeginSpanErrCode, err.Error())
 	}
 
 	params, err := challenge.spDB.GetStorageParams()
@@ -62,19 +63,18 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to compute Approximate piece size",
 			"reserve_size", approximatePieceSize, "error", err)
-		return resp, err
+		return resp, errorstypes.Error(merrors.ComputePieceSizeErrCode, err.Error())
 	}
 	err = scope.ReserveMemory(approximatePieceSize, rcmgr.ReservationPriorityAlways)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve memory from resource manager",
 			"reserve_size", approximatePieceSize, "error", err)
-		return resp, err
+		return resp, errorstypes.Error(merrors.ResourceMgrReserveMemoryErrCode, err.Error())
 	}
 
 	integrity, err := challenge.spDB.GetObjectIntegrity(objectInfo.Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get integrity hash from db", "error", err)
-		err = merrors.InnerErrorToGRPCError(err)
 		return resp, err
 	}
 	resp = &types.ChallengePieceResponse{}
@@ -83,7 +83,6 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 	resp.PieceData, err = challenge.pieceStore.GetPiece(ctx, pieceKey, 0, -1)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
-		err = merrors.InnerErrorToGRPCError(err)
 		return resp, err
 	}
 	log.CtxInfow(ctx, "succeed to challenge piece", "piece_idx", req.GetSegmentIdx(),

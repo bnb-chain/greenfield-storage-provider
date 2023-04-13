@@ -1,0 +1,9 @@
+syntax = "proto3";
+package pkg.errors.types;
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types";
+
+message ServiceError {
+  uint32 code = 1;
+  string reason = 2;
+}

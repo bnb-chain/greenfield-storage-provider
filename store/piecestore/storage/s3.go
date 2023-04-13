@@ -25,6 +25,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/sts"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/viki-org/dnscache"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -95,7 +96,7 @@ func (s *s3Store) GetObject(ctx context.Context, key string, offset, limit int64
 	resp, err := s.api.GetObjectWithContext(ctx, params)
 	if err != nil {
 		log.Errorw("S3 failed to get object", "error", err)
-		return nil, err
+		return nil, checkGetObjectErr(err)
 	}
 	if offset == 0 && limit == -1 {
 		cs := resp.Metadata[mpiecestore.ChecksumAlgo]
@@ -104,6 +105,15 @@ func (s *s3Store) GetObject(ctx context.Context, key string, offset, limit int64
 		}
 	}
 	return resp.Body, nil
+}
+
+func checkGetObjectErr(err error) error {
+	msg := err.Error()
+	if strings.Contains(msg, s3.ErrCodeNoSuchKey) {
+		return errorstypes.Error(merrors.ObjectNotFoundErrCode, "object is not found")
+	} else {
+		return errorstypes.Error(merrors.PieceStoreGetObjectError, err.Error())
+	}
 }
 
 func (s *s3Store) PutObject(ctx context.Context, key string, reader io.Reader) error {
@@ -127,7 +137,7 @@ func (s *s3Store) PutObject(ctx context.Context, key string, reader io.Reader) e
 		Metadata:    map[string]*string{mpiecestore.ChecksumAlgo: aws.String(checksum)},
 	}
 	_, err := s.api.PutObjectWithContext(ctx, params)
-	return err
+	return errorstypes.Error(merrors.PieceStorePutObjectError, err.Error())
 }
 
 func (s *s3Store) DeleteObject(ctx context.Context, key string) error {

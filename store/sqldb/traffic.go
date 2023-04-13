@@ -2,12 +2,13 @@ package sqldb
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"gorm.io/gorm"
+
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // CheckQuotaAndAddReadRecord check current quota, and add read record
@@ -15,7 +16,7 @@ import (
 func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
 	yearMonth := TimeToYearMonth(TimestampUsToTime(record.ReadTimestampUs))
 	bucketTraffic, err := s.GetBucketTraffic(record.BucketID, yearMonth)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && errorstypes.Code(err) != merrors.DBRecordNotFoundErrCode {
 		return err
 	}
 	if bucketTraffic == nil {
@@ -30,7 +31,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 		}
 		result := s.db.Create(insertBucketTraffic)
 		if result.Error != nil {
-			return fmt.Errorf("failed to insert bucket traffic table: %s", result.Error)
+			return errorstypes.Error(merrors.DBInsertInBucketTrafficTableErrCode, result.Error.Error())
 		}
 		if result.RowsAffected != 1 {
 			log.Infow("insert traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
@@ -52,7 +53,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 				ModifiedTime:  time.Now(),
 			})
 		if result.Error != nil {
-			return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
+			return errorstypes.Error(merrors.DBUpdateInBucketTrafficTableErrCode, result.Error.Error())
 		}
 		if result.RowsAffected != 1 {
 			log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
@@ -62,7 +63,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 
 	// check quota
 	if bucketTraffic.ReadConsumedSize+record.ReadSize > quota.ReadQuotaSize {
-		return merrors.ErrCheckQuotaEnough
+		return errorstypes.Error(merrors.DBQuotaNotEnoughErrCode, merrors.ErrCheckQuotaEnough.Error())
 	}
 
 	// update bucket traffic
@@ -73,7 +74,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 			ModifiedTime:     time.Now(),
 		})
 	if result.Error != nil {
-		return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
+		return errorstypes.Error(merrors.DBUpdateInBucketTrafficTableErrCode, result.Error.Error())
 	}
 	if result.RowsAffected != 1 {
 		log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
@@ -91,7 +92,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 	}
 	result = s.db.Create(insertReadRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("failed to insert read record table: %s", result.Error)
+		return errorstypes.Error(merrors.DBInsertInReadRecordTableErrCode, result.Error.Error())
 	}
 	return nil
 }
@@ -105,10 +106,10 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketT
 
 	result = s.db.Where("bucket_id = ? and month = ?", bucketID, yearMonth).First(&queryReturn)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, result.Error
+		return nil, errorstypes.Error(merrors.DBRecordNotFoundErrCode, result.Error.Error())
 	}
 	if result.Error != nil {
-		return nil, fmt.Errorf("failed to query bucket traffic table: %s", result.Error)
+		return nil, errorstypes.Error(merrors.DBQueryInBucketTrafficTableErrCode, result.Error.Error())
 	}
 	return &BucketTraffic{
 		BucketID:         queryReturn.BucketID,
@@ -136,10 +137,10 @@ func (s *SpDBImpl) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, er
 			Limit(timeRange.LimitNum).Find(&queryReturns)
 	}
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, result.Error
+		return nil, errorstypes.Error(merrors.DBRecordNotFoundErrCode, result.Error.Error())
 	}
 	if result.Error != nil {
-		return records, fmt.Errorf("failed to read record table: %s", result.Error)
+		return records, errorstypes.Error(merrors.DBQueryInReadRecordTableErrCode, result.Error.Error())
 	}
 	for _, record := range queryReturns {
 		records = append(records, &ReadRecord{
@@ -173,7 +174,7 @@ func (s *SpDBImpl) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRa
 			Limit(timeRange.LimitNum).Find(&queryReturns)
 	}
 	if result.Error != nil {
-		return records, fmt.Errorf("failed to query read record table: %s", result.Error)
+		return records, errorstypes.Error(merrors.DBQueryInReadRecordTableErrCode, result.Error.Error())
 	}
 	for _, record := range queryReturns {
 		records = append(records, &ReadRecord{
@@ -207,7 +208,7 @@ func (s *SpDBImpl) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRa
 			Limit(timeRange.LimitNum).Find(&queryReturns)
 	}
 	if result.Error != nil {
-		return records, fmt.Errorf("failed to query read record table: %s", result.Error)
+		return records, errorstypes.Error(merrors.DBQueryInReadRecordTableErrCode, result.Error.Error())
 	}
 	for _, record := range queryReturns {
 		records = append(records, &ReadRecord{
@@ -241,7 +242,7 @@ func (s *SpDBImpl) GetUserReadRecord(userAddress string, timeRange *TrafficTimeR
 			Limit(timeRange.LimitNum).Find(&queryReturns)
 	}
 	if result.Error != nil {
-		return records, fmt.Errorf("failed to query read record table: %s", result.Error)
+		return records, errorstypes.Error(merrors.DBQueryInReadRecordTableErrCode, result.Error.Error())
 	}
 	for _, record := range queryReturns {
 		records = append(records, &ReadRecord{

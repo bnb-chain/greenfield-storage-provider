@@ -1,9 +1,10 @@
 package sqldb
 
 import (
-	"fmt"
 	"strings"
 
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"gorm.io/gorm"
 )
 
@@ -12,7 +13,7 @@ func (s *SpDBImpl) GetAllServiceConfigs() (string, string, error) {
 	queryReturn := &ServiceConfigTable{}
 	result := s.db.Last(&queryReturn)
 	if result.Error != nil {
-		return "", "", fmt.Errorf("failed to query service config table: %s", result.Error)
+		return "", "", errorstypes.Error(merrors.DBQueryInServiceConfigTableErrCode, result.Error.Error())
 	}
 	return queryReturn.ConfigVersion, queryReturn.ServiceConfig, nil
 }
@@ -22,7 +23,7 @@ func (s *SpDBImpl) GetAllServiceConfigs() (string, string, error) {
 func (s *SpDBImpl) SetAllServiceConfigs(version, config string) error {
 	configVersion, _, err := s.GetAllServiceConfigs()
 	if err != nil && !strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error()) {
-		return fmt.Errorf("failed to query service config table: %s", err)
+		return err
 	}
 
 	newRecord := &ServiceConfigTable{
@@ -38,7 +39,7 @@ func (s *SpDBImpl) SetAllServiceConfigs(version, config string) error {
 		queryReturn := &ServiceConfigTable{}
 		result := s.db.Where("config_version = ?", configVersion).Delete(queryReturn)
 		if result.Error != nil {
-			return fmt.Errorf("failed to detele record in service config table: %s", result.Error)
+			return errorstypes.Error(merrors.DBDeleteInServiceConfigTableErrCode, result.Error.Error())
 		}
 		if err := s.insertNewRecordIntoSvcCfgTable(newRecord); err != nil {
 			return err
@@ -51,7 +52,7 @@ func (s *SpDBImpl) SetAllServiceConfigs(version, config string) error {
 func (s *SpDBImpl) insertNewRecordIntoSvcCfgTable(newRecord *ServiceConfigTable) error {
 	result := s.db.Create(newRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("failed to insert record in service config table: %s", result.Error)
+		return errorstypes.Error(merrors.DBInsertInServiceConfigTableErrCode, result.Error.Error())
 	}
 	return nil
 }

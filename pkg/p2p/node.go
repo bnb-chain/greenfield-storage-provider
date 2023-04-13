@@ -128,7 +128,7 @@ func (n *Node) GetApproval(object *storagetypes.ObjectInfo, expectedAccept int, 
 	accept map[string]*types.GetApprovalResponse, refuse map[string]*types.GetApprovalResponse, err error) {
 	approvalCh, err := n.approval.hangApprovalRequest(object.Id.Uint64())
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 	defer n.approval.cancelApprovalRequest(object.Id.Uint64())
 	accept = make(map[string]*types.GetApprovalResponse)

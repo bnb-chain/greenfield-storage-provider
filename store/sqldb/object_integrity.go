@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
@@ -17,19 +18,18 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 		Where("object_id = ?", objectID).
 		First(queryReturn)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, merrors.Error(merrors.RecordNotFound, "record is not found in integrity meta table")
+		return nil, errorstypes.Error(merrors.DBRecordNotFoundErrCode, result.Error.Error())
 	}
 	if result.Error != nil {
-		return nil, merrors.Errorf(merrors.QueryInIntegrityMetaTableErrCode,
-			"failed to query record in integrity meta table: %s", result.Error)
+		return nil, errorstypes.Error(merrors.DBQueryInIntegrityMetaTableErrCode, result.Error.Error())
 	}
 	integrityHash, err := hex.DecodeString(queryReturn.IntegrityHash)
 	if err != nil {
-		return nil, err
+		return nil, errorstypes.Error(merrors.HexDecodeStringErrCode, err.Error())
 	}
 	signature, err := hex.DecodeString(queryReturn.Signature)
 	if err != nil {
-		return nil, err
+		return nil, errorstypes.Error(merrors.HexDecodeStringErrCode, err.Error())
 	}
 
 	meta := &IntegrityMeta{
@@ -39,8 +39,7 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 	}
 	meta.Checksum, err = util.StringToBytesSlice(queryReturn.PieceHashList)
 	if err != nil {
-		return nil, merrors.Wrap(err, merrors.ConvertStrToByteSliceErrCode,
-			"failed to convert piece hash list to checksum byte slice")
+		return nil, errorstypes.Error(merrors.StringToByteSliceErrCode, err.Error())
 	}
 	return meta, nil
 }
@@ -55,8 +54,7 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *IntegrityMeta) error {
 	}
 	result := s.db.Create(insertIntegrityMetaRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return merrors.Errorf(merrors.InsertInIntegrityMetaTableErrCode,
-			"failed to insert record in integrity meta table: %s", result.Error)
+		return errorstypes.Error(merrors.DBInsertInIntegrityMetaTableErrCode, result.Error.Error())
 	}
 	return nil
 }

@@ -91,8 +91,10 @@ func (client *SignerClient) VerifyObjectApproval(ctx context.Context,
 	return resp.GetResult(), nil
 }
 
-func (client *SignerClient) SignIntegrityHash(ctx context.Context, objectID uint64, checksum [][]byte,
-	opts ...grpc.CallOption) ([]byte, []byte, error) {
+func (client *SignerClient) SignIntegrityHash(ctx context.Context,
+	objectID uint64,
+	checksum [][]byte, opts ...grpc.CallOption,
+) ([]byte, []byte, error) {
 	resp, err := client.signer.SignIntegrityHash(ctx,
 		&types.SignIntegrityHashRequest{Data: checksum, ObjectId: objectID}, opts...)
 	if err != nil {
@@ -111,8 +113,7 @@ func (client *SignerClient) SealObjectOnChain(ctx context.Context,
 	return resp.GetTxHash(), nil
 }
 
-func (client *SignerClient) SignPingMsg(ctx context.Context, ping *p2ptpyes.Ping, opts ...grpc.CallOption) (
-	*p2ptpyes.Ping, error) {
+func (client *SignerClient) SignPingMsg(ctx context.Context, ping *p2ptpyes.Ping, opts ...grpc.CallOption) (*p2ptpyes.Ping, error) {
 	req := &types.SignPingMsgRequest{
 		Ping: ping,
 	}
@@ -123,8 +124,7 @@ func (client *SignerClient) SignPingMsg(ctx context.Context, ping *p2ptpyes.Ping
 	return resp.GetPing(), nil
 }
 
-func (client *SignerClient) SignPongMsg(ctx context.Context, pong *p2ptpyes.Pong, opts ...grpc.CallOption) (
-	*p2ptpyes.Pong, error) {
+func (client *SignerClient) SignPongMsg(ctx context.Context, pong *p2ptpyes.Pong, opts ...grpc.CallOption) (*p2ptpyes.Pong, error) {
 	req := &types.SignPongMsgRequest{
 		Pong: pong,
 	}
@@ -135,8 +135,7 @@ func (client *SignerClient) SignPongMsg(ctx context.Context, pong *p2ptpyes.Pong
 	return resp.GetPong(), nil
 }
 
-func (client *SignerClient) SignReplicateApprovalReqMsg(ctx context.Context, approval *p2ptpyes.GetApprovalRequest,
-	opts ...grpc.CallOption) (*p2ptpyes.GetApprovalRequest, error) {
+func (client *SignerClient) SignReplicateApprovalReqMsg(ctx context.Context, approval *p2ptpyes.GetApprovalRequest, opts ...grpc.CallOption) (*p2ptpyes.GetApprovalRequest, error) {
 	req := &types.SignReplicateApprovalReqMsgRequest{
 		Approval: approval,
 	}
@@ -147,8 +146,7 @@ func (client *SignerClient) SignReplicateApprovalReqMsg(ctx context.Context, app
 	return resp.GetApproval(), nil
 }
 
-func (client *SignerClient) SignReplicateApprovalRspMsg(ctx context.Context, approval *p2ptpyes.GetApprovalResponse,
-	opts ...grpc.CallOption) (*p2ptpyes.GetApprovalResponse, error) {
+func (client *SignerClient) SignReplicateApprovalRspMsg(ctx context.Context, approval *p2ptpyes.GetApprovalResponse, opts ...grpc.CallOption) (*p2ptpyes.GetApprovalResponse, error) {
 	req := &types.SignReplicateApprovalRspMsgRequest{
 		Approval: approval,
 	}

@@ -6,6 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
+
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 )
 
 // common error
@@ -120,10 +122,10 @@ var (
 func InnerErrorToGRPCError(err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) ||
 		errors.Is(err, ErrNoSuchObject) {
-		return status.Errorf(codes.NotFound, "Object is not found")
+		return errorstypes.Error(ObjectNotFoundErrCode, "object is not found")
 	}
 	if errors.Is(err, ErrCheckQuotaEnough) {
-		return status.Errorf(codes.PermissionDenied, "Quota is not enough")
+		return status.Errorf(codes.PermissionDenied, "quota is not enough")
 	}
 	return err
 }

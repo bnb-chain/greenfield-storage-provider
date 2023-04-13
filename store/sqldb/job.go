@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
@@ -24,8 +25,7 @@ func (s *SpDBImpl) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servic
 	}
 	result := s.db.Create(insertJobRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return nil, merrors.Errorf(merrors.InsertInJobTableErrCode, "failed to insert record in job table: %s",
-			result.Error)
+		return nil, errorstypes.Error(merrors.DBInsertInJobTableErrCode, result.Error.Error())
 	}
 
 	insertObjectRecord := &ObjectTable{
@@ -46,8 +46,7 @@ func (s *SpDBImpl) CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servic
 	}
 	result = s.db.Create(insertObjectRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return nil, merrors.Errorf(merrors.InsertInObjectTableErrCode,
-			"failed to insert record in object table: %s", result.Error)
+		return nil, errorstypes.Error(merrors.DBInsertInObjectTableErrCode, result.Error.Error())
 	}
 
 	return &servicetypes.JobContext{
@@ -65,8 +64,7 @@ func (s *SpDBImpl) UpdateJobState(objectID uint64, state servicetypes.JobState) 
 	queryObjectReturn := &ObjectTable{}
 	result := s.db.First(queryObjectReturn, "object_id = ?", objectID)
 	if result.Error != nil {
-		return merrors.Errorf(merrors.QueryInObjectTableErrCode, "failed to query record in object table: %s",
-			result.Error)
+		return errorstypes.Error(merrors.DBQueryInObjectTableErrCode, result.Error.Error())
 	}
 	queryCondition := &JobTable{
 		JobID: queryObjectReturn.JobID,
@@ -77,8 +75,7 @@ func (s *SpDBImpl) UpdateJobState(objectID uint64, state servicetypes.JobState) 
 	}
 	result = s.db.Model(queryCondition).Updates(updateFields)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return merrors.Errorf(merrors.UpdateInJobTableErrCode, "failed to update record in job table: %s",
-			result.Error)
+		return errorstypes.Error(merrors.DBUpdateInJobTableErrCode, result.Error.Error())
 	}
 	return nil
 }
@@ -88,8 +85,7 @@ func (s *SpDBImpl) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
 	queryReturn := &JobTable{}
 	result := s.db.First(queryReturn, "job_id = ?", jobID)
 	if result.Error != nil {
-		return nil, merrors.Errorf(merrors.QueryInJobTableErrCode, "failed to query record in job table: %s",
-			result.Error)
+		return nil, errorstypes.Error(merrors.DBQueryInJobTableErrCode, result.Error.Error())
 	}
 	return &servicetypes.JobContext{
 		JobId:        queryReturn.JobID,
@@ -106,14 +102,12 @@ func (s *SpDBImpl) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, 
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
-		return nil, merrors.Errorf(merrors.QueryInObjectTableErrCode, "failed to query record in object table: %s",
-			result.Error)
+		return nil, errorstypes.Error(merrors.DBQueryInObjectTableErrCode, result.Error.Error())
 	}
 	jobQueryReturn := &JobTable{}
 	result = s.db.First(jobQueryReturn, "job_id = ?", queryReturn.JobID)
 	if result.Error != nil {
-		return nil, merrors.Errorf(merrors.QueryInJobTableErrCode, "failed to query record in job table: %s",
-			result.Error)
+		return nil, errorstypes.Error(merrors.DBQueryInJobTableErrCode, result.Error.Error())
 	}
 	return &servicetypes.JobContext{
 		JobId:        jobQueryReturn.JobID,
@@ -130,12 +124,11 @@ func (s *SpDBImpl) GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, err
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
-		return nil, merrors.Errorf(merrors.QueryInObjectTableErrCode, "failed to query record in object table: %s",
-			result.Error)
+		return nil, errorstypes.Error(merrors.DBQueryInObjectTableErrCode, result.Error.Error())
 	}
 	checksums, err := util.StringToBytesSlice(queryReturn.SpIntegrityHash)
 	if err != nil {
-		return nil, err
+		return nil, errorstypes.Error(merrors.StringToByteSliceErrCode, err.Error())
 	}
 	return &storagetypes.ObjectInfo{
 		Owner:                queryReturn.Owner,
@@ -160,8 +153,7 @@ func (s *SpDBImpl) SetObjectInfo(objectID uint64, objectInfo *storagetypes.Objec
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	isNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
 	if result.Error != nil && !isNotFound {
-		return merrors.Errorf(merrors.QueryInObjectTableErrCode, "failed to query record in object table: %s",
-			result.Error)
+		return errorstypes.Error(merrors.DBQueryInObjectTableErrCode, result.Error.Error())
 	}
 
 	updateFields := &ObjectTable{
@@ -189,14 +181,12 @@ func (s *SpDBImpl) SetObjectInfo(objectID uint64, objectInfo *storagetypes.Objec
 		}
 		result = s.db.Create(insertJobRecord)
 		if result.Error != nil || result.RowsAffected != 1 {
-			return merrors.Errorf(merrors.InsertInJobTableErrCode, "failed to insert record in job table: %s",
-				result.Error)
+			return errorstypes.Error(merrors.DBInsertInJobTableErrCode, result.Error.Error())
 		}
 		updateFields.JobID = insertJobRecord.JobID
 		result = s.db.Create(updateFields)
 		if result.Error != nil || result.RowsAffected != 1 {
-			return merrors.Errorf(merrors.InsertInObjectTableErrCode, "failed to insert record in object table: %s",
-				result.Error)
+			return errorstypes.Error(merrors.DBInsertInObjectTableErrCode, result.Error.Error())
 		}
 	} else {
 		// if record exists, update record
@@ -204,8 +194,7 @@ func (s *SpDBImpl) SetObjectInfo(objectID uint64, objectInfo *storagetypes.Objec
 		updateFields.JobID = queryReturn.JobID
 		result = s.db.Model(queryCondition).Updates(updateFields)
 		if result.Error != nil || result.RowsAffected != 1 {
-			return merrors.Errorf(merrors.UpdateInObjectTableErrCode, "failed to update record in object table: %s",
-				result.Error)
+			return errorstypes.Error(merrors.DBUpdateInObjectTableErrCode, result.Error.Error())
 		}
 	}
 	return nil

@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 )
 
 // UpdateAllSp update(maybe overwrite) all sp info in db
@@ -20,8 +21,7 @@ func (s *SpDBImpl) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 		result := s.db.Where("operator_address = ? and is_own = false", value.GetOperatorAddress()).First(queryReturn)
 		recordNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
 		if result.Error != nil && !recordNotFound {
-			return merrors.Errorf(merrors.QueryInSPInfoTableErrCode, "failed to query record in sp info table: %s",
-				result.Error)
+			return errorstypes.Error(merrors.DBQueryInSPInfoTableErrCode, result.Error.Error())
 		}
 		// 2. if there is no record, insert new record; otherwise delete old record, then insert new record
 		if recordNotFound {
@@ -31,8 +31,7 @@ func (s *SpDBImpl) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 		} else {
 			result = s.db.Where("operator_address = ? and is_own = false", value.GetOperatorAddress()).Delete(queryReturn)
 			if result.Error != nil {
-				return merrors.Errorf(merrors.DeleteInSPInfoTableErrCode,
-					"failed to delete record in sp info table: %s", result.Error)
+				return errorstypes.Error(merrors.DBDeleteInSPInfoTableErrCode, result.Error.Error())
 			}
 			if err := s.insertNewRecordInSpInfoTable(value); err != nil {
 				return err
@@ -61,7 +60,7 @@ func (s *SpDBImpl) insertNewRecordInSpInfoTable(sp *sptypes.StorageProvider) err
 	}
 	result := s.db.Create(insertRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return merrors.Errorf(merrors.InsertInSPInfoTableErrCode, "failed to insert record in sp info table: %s", result.Error)
+		return errorstypes.Error(merrors.DBInsertInSPInfoTableErrCode, result.Error.Error())
 	}
 	return nil
 }
@@ -72,16 +71,14 @@ func (s *SpDBImpl) FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvi
 	if len(status) == 0 {
 		result := s.db.Where("is_own = false").Find(&queryReturn)
 		if result.Error != nil {
-			return nil, merrors.Errorf(merrors.QueryInSPInfoTableErrCode,
-				"failed to query record in sp info table: %s", result.Error)
+			return nil, errorstypes.Error(merrors.DBQueryInSPInfoTableErrCode, result.Error.Error())
 		}
 	} else {
 		for _, val := range status {
 			temp := []SpInfoTable{}
 			result := s.db.Where("is_own = false and status = ?", int32(val)).Find(&temp)
 			if result.Error != nil {
-				return nil, merrors.Errorf(merrors.QueryInSPInfoTableErrCode,
-					"failed to query record in sp info table: %s", result.Error)
+				return nil, errorstypes.Error(merrors.DBQueryInSPInfoTableErrCode, result.Error.Error())
 			}
 			queryReturn = append(queryReturn, temp...)
 		}
@@ -90,7 +87,7 @@ func (s *SpDBImpl) FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvi
 	for _, value := range queryReturn {
 		totalDeposit, ok := sdkmath.NewIntFromString(value.TotalDeposit)
 		if !ok {
-			return records, merrors.Error(merrors.ParseStrToIntErrCode, "failed to parse int")
+			return records, errorstypes.Error(merrors.ParseStringToIntErrCode, "failed to parse string to int")
 		}
 		records = append(records, &sptypes.StorageProvider{
 			OperatorAddress: value.OperatorAddress,
@@ -122,16 +119,14 @@ func (s *SpDBImpl) FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.
 	if len(status) == 0 {
 		result := s.db.Where("operator_address != ?", ownSp.GetOperatorAddress()).Find(&queryReturn)
 		if result.Error != nil {
-			return nil, merrors.Errorf(merrors.QueryInSPInfoTableErrCode,
-				"failed to query record in sp info table: %s", result.Error)
+			return nil, errorstypes.Error(merrors.DBQueryInSPInfoTableErrCode, result.Error.Error())
 		}
 	} else {
 		for _, val := range status {
 			temp := []SpInfoTable{}
 			result := s.db.Where("status = ? and operator_address != ?", int32(val), ownSp.GetOperatorAddress()).Find(&temp)
 			if result.Error != nil {
-				return nil, merrors.Errorf(merrors.QueryInSPInfoTableErrCode,
-					"failed to query record in sp info table: %s", result.Error)
+				return nil, errorstypes.Error(merrors.DBQueryInSPInfoTableErrCode, result.Error.Error())
 			}
 			queryReturn = append(queryReturn, temp...)
 		}
@@ -141,7 +136,7 @@ func (s *SpDBImpl) FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.
 	for _, value := range queryReturn {
 		totalDeposit, ok := sdkmath.NewIntFromString(value.TotalDeposit)
 		if !ok {
-			return records, merrors.Error(merrors.ParseStrToIntErrCode, "failed to parse int")
+			return records, errorstypes.Error(merrors.ParseStringToIntErrCode, "failed to parse string to int")
 		}
 		records = append(records, &sptypes.StorageProvider{
 			OperatorAddress: value.OperatorAddress,
@@ -172,12 +167,11 @@ func (s *SpDBImpl) GetSpByAddress(address string, addressType SpAddressType) (*s
 	queryReturn := &SpInfoTable{}
 	result := s.db.First(queryReturn, condition, address)
 	if result.Error != nil {
-		return nil, merrors.Errorf(merrors.QueryInSPInfoTableErrCode,
-			"failed to query record in sp info table: %s", result.Error)
+		return nil, errorstypes.Error(merrors.DBQueryInSPInfoTableErrCode, result.Error.Error())
 	}
 	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
 	if !ok {
-		return nil, merrors.Error(merrors.ParseStrToIntErrCode, "failed to parse int")
+		return nil, errorstypes.Error(merrors.ParseStringToIntErrCode, "failed to parse string to int")
 	}
 	return &sptypes.StorageProvider{
 		OperatorAddress: queryReturn.OperatorAddress,
@@ -210,7 +204,7 @@ func getAddressCondition(addressType SpAddressType) (string, error) {
 	case ApprovalAddressType:
 		condition = "approval_address = ? and is_own = false"
 	default:
-		return "", merrors.Error(merrors.UnKnownAddressType, "unknown address type")
+		return "", errorstypes.Error(merrors.DBUnknownAddressTypeErrCode, "unknown address type")
 	}
 	return condition, nil
 }
@@ -220,12 +214,11 @@ func (s *SpDBImpl) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, e
 	queryReturn := &SpInfoTable{}
 	result := s.db.First(queryReturn, "endpoint = ? and is_own = false", endpoint)
 	if result.Error != nil {
-		return nil, merrors.Errorf(merrors.QueryInSPInfoTableErrCode,
-			"failed to query record in sp info table: %s", result.Error)
+		return nil, errorstypes.Error(merrors.DBQueryInSPInfoTableErrCode, result.Error.Error())
 	}
 	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
 	if !ok {
-		return nil, merrors.Error(merrors.ParseStrToIntErrCode, "failed to parse int")
+		return nil, errorstypes.Error(merrors.ParseStringToIntErrCode, "failed to parse string to int")
 	}
 	return &sptypes.StorageProvider{
 		OperatorAddress: queryReturn.OperatorAddress,
@@ -250,12 +243,11 @@ func (s *SpDBImpl) GetOwnSpInfo() (*sptypes.StorageProvider, error) {
 	queryReturn := &SpInfoTable{}
 	result := s.db.First(queryReturn, "is_own = true")
 	if result.Error != nil {
-		return nil, merrors.Errorf(merrors.QueryOwnSPInSPInfoTableErrCode,
-			"failed to query own sp record in sp info table: %s", result.Error)
+		return nil, errorstypes.Error(merrors.DBQueryOwnSPInSPInfoTableErrCode, result.Error.Error())
 	}
 	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
 	if !ok {
-		return nil, merrors.Error(merrors.ParseStrToIntErrCode, "failed to parse int")
+		return nil, errorstypes.Error(merrors.ParseStringToIntErrCode, "failed to parse string to int")
 	}
 	return &sptypes.StorageProvider{
 		OperatorAddress: queryReturn.OperatorAddress,
@@ -301,16 +293,14 @@ func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 	if spInfo == nil {
 		result := s.db.Create(insertRecord)
 		if result.Error != nil || result.RowsAffected != 1 {
-			return merrors.Errorf(merrors.InsertOwnSPInSPInfoTableErrCode,
-				"failed to insert own sp record in sp info table: %s", result.Error)
+			return errorstypes.Error(merrors.DBInsertOwnSPInSPInfoTableErrCode, result.Error.Error())
 		}
 		return nil
 	} else {
 		// if there is a record in SPInfoTable, update record
 		result := s.db.Model(&SpInfoTable{}).Where("is_own = true").Updates(insertRecord)
 		if result.Error != nil {
-			return merrors.Errorf(merrors.UpdateOwnSPInSPInfoTableErrCode,
-				"failed to update own sp record in sp info table: %s", result.Error)
+			return errorstypes.Errorf(merrors.DBUpdateOwnSPInSPInfoTableErrCode, result.Error.Error())
 		}
 		return nil
 	}
@@ -321,8 +311,7 @@ func (s *SpDBImpl) GetStorageParams() (*storagetypes.Params, error) {
 	queryReturn := &StorageParamsTable{}
 	result := s.db.Last(queryReturn)
 	if result.Error != nil {
-		return nil, merrors.Errorf(merrors.QueryInStorageParamsTableErrCode,
-			"failed to query record in storage params table: %s", result.Error)
+		return nil, errorstypes.Error(merrors.DBQueryInStorageParamsTableErrCode, result.Error.Error())
 	}
 	return &storagetypes.Params{
 		MaxSegmentSize:          queryReturn.MaxSegmentSize,
@@ -338,8 +327,7 @@ func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
 	result := s.db.Last(queryReturn)
 	recordNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
 	if result.Error != nil && !recordNotFound {
-		return merrors.Errorf(merrors.QueryInStorageParamsTableErrCode,
-			"failed to query record in storage params table: %s", result.Error)
+		return errorstypes.Error(merrors.DBQueryInStorageParamsTableErrCode, result.Error.Error())
 	}
 
 	insertParamsRecord := &StorageParamsTable{
@@ -352,16 +340,14 @@ func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
 	if recordNotFound {
 		result = s.db.Create(insertParamsRecord)
 		if result.Error != nil || result.RowsAffected != 1 {
-			return merrors.Errorf(merrors.InsertInStorageParamsTableErrCode,
-				"failed to insert record in storage params table: %s", result.Error)
+			return errorstypes.Error(merrors.DBInsertInStorageParamsTableErrCode, result.Error.Error())
 		}
 		return nil
 	} else {
 		queryCondition := &StorageParamsTable{ID: queryReturn.ID}
 		result = s.db.Model(queryCondition).Updates(insertParamsRecord)
 		if result.Error != nil {
-			return merrors.Errorf(merrors.UpdateInStorageParamsTableErrCode,
-				"failed to update storage params table: %s", result.Error)
+			return errorstypes.Error(merrors.DBUpdateInStorageParamsTableErrCode, result.Error.Error())
 		}
 		return nil
 	}

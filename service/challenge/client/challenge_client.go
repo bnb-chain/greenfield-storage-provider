@@ -6,7 +6,6 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
@@ -61,7 +60,7 @@ func (client *ChallengeClient) ChallengePiece(ctx context.Context, objectInfo *s
 		RedundancyIdx: redundancyIdx,
 	}, opts...)
 	if err != nil {
-		return nil, nil, nil, merrors.GRPCErrorToInnerError(err)
+		return nil, nil, nil, err
 	}
 	return resp.GetIntegrityHash(), resp.GetPieceHash(), resp.GetPieceData(), err
 }
