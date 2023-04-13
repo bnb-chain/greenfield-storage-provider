@@ -23,9 +23,10 @@ func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.Replic
 	}
 
 	var (
-		resp *types.ReplicateObjectResponse
-		err  error
-		task *replicateObjectTask
+		resp   *types.ReplicateObjectResponse
+		err    error
+		task   *replicateObjectTask
+		waitCh chan error
 	)
 
 	ctx = log.WithValue(ctx, "object_id", req.GetObjectInfo().Id.String())
@@ -37,9 +38,16 @@ func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.Replic
 		log.CtxErrorw(ctx, "failed to init replicate object task", "error", err)
 		return nil, err
 	}
-	go task.execute()
+
+	waitCh = make(chan error)
+	go task.execute(waitCh)
+	if err = <-waitCh; err != nil {
+		return nil, err
+	}
+
 	resp = &types.ReplicateObjectResponse{}
 	return resp, nil
+
 }
 
 // QueryReplicatingObject query a replicating object information by object id
