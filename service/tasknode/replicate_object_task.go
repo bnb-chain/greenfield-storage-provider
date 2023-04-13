@@ -247,44 +247,29 @@ func (t *replicateObjectTask) init() error {
 		return err
 	}
 	t.sortedSpEndpoints = maps.SortKeys(t.approvalResponseMap)
-	// reserve memory
+	// calculate the reserve memory, which is used in execute time
 	t.approximateMemSize = int(float64(t.storageParams.GetMaxSegmentSize()) *
 		(float64(t.redundancyNumber)/float64(t.storageParams.GetRedundantDataChunkNum()) + 1))
 	if t.objectInfo.GetPayloadSize() < t.storageParams.GetMaxSegmentSize() {
 		t.approximateMemSize = int(float64(t.objectInfo.GetPayloadSize()) *
 			(float64(t.redundancyNumber)/float64(t.storageParams.GetRedundantDataChunkNum()) + 1))
 	}
-	err = t.taskNode.rcScope.ReserveMemory(t.approximateMemSize, rcmgr.ReservationPriorityAlways)
-	if err != nil {
-		log.CtxErrorw(t.ctx, "failed to reserve memory from resource manager",
-			"reserve_size", t.approximateMemSize, "error", err)
-		return err
-	}
-	log.CtxDebugw(t.ctx, "reserve memory from resource manager",
-		"reserve_size", t.approximateMemSize, "resource_state", rcmgr.GetServiceState(model.TaskNodeService))
 	return nil
 }
 
-// execute is used to start the task.
-func (t *replicateObjectTask) execute() {
-	startTime := time.Now()
+// execute is used to start the task, and waitCh is used to wait runtime initialization.
+func (t *replicateObjectTask) execute(waitCh chan error) {
 	var (
-		sealMsg              *storagetypes.MsgSealObject
-		progressInfo         *servicetypes.ReplicatePieceInfo
+		startTime            time.Time
 		succeedIndexMapMutex sync.RWMutex
 		succeedIndexMap      map[int]bool
+		err                  error
+		scopeSpan            rcmgr.ResourceScopeSpan
+		sealMsg              *storagetypes.MsgSealObject
+		progressInfo         *servicetypes.ReplicatePieceInfo
 	)
-	defer func() {
-		metrics.ReplicateObjectTaskGauge.WithLabelValues(model.TaskNodeService).Dec()
-		observer := metrics.SealObjectTimeHistogram.WithLabelValues(model.TaskNodeService)
-		observer.Observe(time.Since(startTime).Seconds())
-		t.taskNode.rcScope.ReleaseMemory(t.approximateMemSize)
-		log.CtxDebugw(t.ctx, "release memory to resource manager",
-			"release_size", t.approximateMemSize, "resource_state", rcmgr.GetServiceState(model.TaskNodeService))
-	}()
-
-	metrics.ReplicateObjectTaskGauge.WithLabelValues(model.TaskNodeService).Inc()
-	t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
+	// runtime initialization
+	startTime = time.Now()
 	succeedIndexMap = make(map[int]bool, t.redundancyNumber)
 	isAllSucceed := func(inputIndexMap map[int]bool) bool {
 		for i := 0; i < t.redundancyNumber; i++ {
@@ -294,6 +279,48 @@ func (t *replicateObjectTask) execute() {
 		}
 		return true
 	}
+	metrics.ReplicateObjectTaskGauge.WithLabelValues(model.TaskNodeService).Inc()
+	t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
+
+	if scopeSpan, err = t.taskNode.rcScope.BeginSpan(); err != nil {
+		log.CtxErrorw(t.ctx, "failed to begin span", "error", err)
+		waitCh <- err
+		return
+	}
+	if err = scopeSpan.ReserveMemory(t.approximateMemSize, rcmgr.ReservationPriorityAlways); err != nil {
+		log.CtxErrorw(t.ctx, "failed to reserve memory from resource manager",
+			"reserve_size", t.approximateMemSize, "error", err)
+		waitCh <- err
+		return
+	}
+	log.CtxDebugw(t.ctx, "reserve memory from resource manager",
+		"reserve_size", t.approximateMemSize, "resource_state", rcmgr.GetServiceState(model.TaskNodeService))
+	waitCh <- nil
+
+	// defer func
+	defer func() {
+		close(waitCh)
+		metrics.ReplicateObjectTaskGauge.WithLabelValues(model.TaskNodeService).Dec()
+		observer := metrics.SealObjectTimeHistogram.WithLabelValues(model.TaskNodeService)
+		observer.Observe(time.Since(startTime).Seconds())
+
+		if isAllSucceed(succeedIndexMap) {
+			metrics.SealObjectTotalCounter.WithLabelValues("success").Inc()
+			log.CtxInfo(t.ctx, "succeed to seal object on chain")
+		} else {
+			t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
+			metrics.SealObjectTotalCounter.WithLabelValues("failure").Inc()
+			log.CtxErrorw(t.ctx, "failed to replicate object data to sp", "error", err, "succeed_index_map", succeedIndexMap)
+		}
+
+		if scopeSpan != nil {
+			scopeSpan.Done()
+			log.CtxDebugw(t.ctx, "release memory to resource manager",
+				"release_size", t.approximateMemSize, "resource_state", rcmgr.GetServiceState(model.TaskNodeService))
+		}
+	}()
+
+	// execution
 	pickSp := func() (sp *sptypes.StorageProvider, approval *p2ptypes.GetApprovalResponse, err error) {
 		t.mux.Lock()
 		defer t.mux.Unlock()
@@ -327,13 +354,15 @@ func (t *replicateObjectTask) execute() {
 			log.CtxInfo(t.ctx, "succeed to replicate object data")
 			break
 		}
-		sg, err := newStreamReaderGroup(t, succeedIndexMap)
+		var sg *streamReaderGroup
+		sg, err = newStreamReaderGroup(t, succeedIndexMap)
 		if err != nil {
 			log.CtxErrorw(t.ctx, "failed to new stream reader group", "error", err)
 			return
 		}
 		if len(sg.streamReaderMap) > len(t.sortedSpEndpoints) {
 			log.CtxError(t.ctx, "failed to replicate due to sp is not enough")
+			err = merrors.ErrExhaustedSP
 			return
 		}
 		sg.produceStreamPieceData()
@@ -385,13 +414,12 @@ func (t *replicateObjectTask) execute() {
 		wg.Wait()
 	}
 
-	// seal info
+	// seal onto the greenfield chain
 	if isAllSucceed(succeedIndexMap) {
 		t.updateTaskState(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING)
-		_, err := t.taskNode.signer.SealObjectOnChain(context.Background(), sealMsg)
+		_, err = t.taskNode.signer.SealObjectOnChain(context.Background(), sealMsg)
 		if err != nil {
 			t.taskNode.spDB.UpdateJobState(t.objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR)
-			metrics.SealObjectTotalCounter.WithLabelValues("failure").Inc()
 			log.CtxErrorw(t.ctx, "failed to sign object by signer", "error", err)
 			return
 		}
@@ -400,16 +428,9 @@ func (t *replicateObjectTask) execute() {
 			t.objectInfo.GetObjectName(), 10)
 		if err != nil {
 			t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
-			metrics.SealObjectTotalCounter.WithLabelValues("failure").Inc()
 			log.CtxErrorw(t.ctx, "failed to seal object on chain", "error", err)
 			return
 		}
 		t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
-		metrics.SealObjectTotalCounter.WithLabelValues("success").Inc()
-		log.CtxInfo(t.ctx, "succeed to seal object on chain")
-	} else {
-		err := t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
-		log.CtxErrorw(t.ctx, "failed to replicate object data to sp", "error", err, "succeed_index_map", succeedIndexMap)
-		return
-	}
+	} // the else failed case is in defer func
 }
