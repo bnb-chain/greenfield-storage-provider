@@ -202,3 +202,20 @@ func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
 	log.Infof("epoch height:%d, cur height: %d", ep.BlockHeight, height)
 	return ep.BlockHeight > int64(height), nil
 }
+
+// GetBlockRecordNum returns total number of blocks stored in database.
+func (i *Impl) GetBlockRecordNum(_ context.Context) int64 {
+	return 1
+}
+
+// GetLastBlockRecordHeight returns the last block height stored inside the database
+func (i *Impl) GetLastBlockRecordHeight(ctx context.Context) (uint64, error) {
+	var lastBlockRecordHeight uint64
+	currentEpoch, err := i.DB.GetEpoch(ctx)
+	if err == nil {
+		lastBlockRecordHeight = 0
+	} else {
+		lastBlockRecordHeight = uint64(currentEpoch.BlockHeight)
+	}
+	return lastBlockRecordHeight, err
+}
