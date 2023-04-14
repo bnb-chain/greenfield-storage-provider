@@ -22,6 +22,8 @@ message Object {
   string locked_balance = 2;
   // removed defines the object is deleted or not
   bool removed = 3;
+  // update_at defines the block number when the object updated
+  int64 update_at = 4;
 }
 
 // GetUserBucketsRequest is request type for the GetUserBuckets RPC method.
