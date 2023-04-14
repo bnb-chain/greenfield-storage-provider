@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	"github.com/bnb-chain/greenfield/types/s3util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 	"io"
@@ -290,28 +290,50 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		return
 	}
 
-	getBucketInfoReq := &metatypes.GetBucketByBucketNameRequest{
-		BucketName: reqContext.bucketName,
-		IsFullList: true,
-	}
+	//getBucketInfoReq := &metatypes.GetBucketByBucketNameRequest{
+	//	BucketName: reqContext.bucketName,
+	//	IsFullList: true,
+	//}
+	//
+	//getBucketInfoRes, err := gateway.metadata.GetBucketByBucketName(ctx, getBucketInfoReq)
+	//if err != nil || getBucketInfoRes == nil || getBucketInfoRes.GetBucket() == nil || getBucketInfoRes.GetBucket().GetBucketInfo() == nil {
+	//	log.Errorw("failed to check bucket info", "bucket_name", reqContext.bucketName, "error", err)
+	//	errDescription = InvalidKey
+	//	return
+	//}
 
-	getBucketInfoRes, err := gateway.metadata.GetBucketByBucketName(ctx, getBucketInfoReq)
-	if err != nil || getBucketInfoRes == nil || getBucketInfoRes.GetBucket() == nil || getBucketInfoRes.GetBucket().GetBucketInfo() == nil {
-		log.Errorw("failed to check bucket info", "bucket_name", reqContext.bucketName, "error", err)
-		errDescription = InvalidKey
+	if reqContext.bucketInfo, reqContext.objectInfo, err = gateway.chain.QueryBucketInfoAndObjectInfo(
+		context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
+		log.Errorw("failed to query bucket info and object info on chain",
+			"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
 		return
 	}
 
-	bucketPrimarySpAddress := getBucketInfoRes.GetBucket().GetBucketInfo().GetPrimarySpAddress()
+	log.Debugw("getting bucketInfo and objectInfo:",
+		"reqContext.objectInfo.Id.Uint64()", reqContext.objectInfo.Id.Uint64(), "reqContext.objectInfo.GetPayloadSize()", reqContext.objectInfo.GetPayloadSize(),
+		"reqContext.bucketInfo.Id.Uint64()", reqContext.bucketInfo.Id.Uint64(), "reqContext.bucketInfo.ChargedReadQuota", reqContext.bucketInfo.ChargedReadQuota,
+	)
+
+	if reqContext.objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+		log.Errorw("object is not sealed",
+			"status", reqContext.objectInfo.GetObjectStatus())
+		return
+	}
+
+	bucketPrimarySpAddress := reqContext.bucketInfo.GetPrimarySpAddress()
+	log.Debugw("getting bucketPrimarySpAddress:", "bucketPrimarySpAddress", bucketPrimarySpAddress)
+
+	//bucketPrimarySpAddress := getBucketInfoRes.GetBucket().GetBucketInfo().GetPrimarySpAddress()
 
 	//if bucket not in the current sp, 302 redirect to the sp that contains the bucket
 	if bucketPrimarySpAddress != gateway.config.SpOperatorAddress {
+		log.Debugw("primary sp address not matched ",
+			"bucketPrimarySpAddress", bucketPrimarySpAddress, "gateway.config.SpOperatorAddress", gateway.config.SpOperatorAddress,
+		)
 		getSpByAddressReq := &types.GetSpByAddressRequest{
 			BucketName: bucketPrimarySpAddress,
 		}
-		getSpByAddressRes := &types.GetSpByAddressResponse{
-			Endpoint: "http://localhost:9033",
-		}
+
 		getSpByAddressRes, err := gateway.downloader.GetSpByAddress(ctx, getSpByAddressReq)
 
 		if err != nil || getSpByAddressRes == nil {
@@ -321,25 +343,29 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		}
 		redirectUrl := getSpByAddressRes.Endpoint + "/download/" + reqContext.bucketName + "/" + reqContext.objectName
 
+		log.Debugw("getting redirect url:", "redirectUrl", redirectUrl)
+
 		http.Redirect(w, r, redirectUrl, 302)
 		return
 	}
 
-	getObjectInfoReq := &metatypes.GetObjectByObjectNameAndBucketNameRequest{
-		ObjectName: reqContext.objectName,
-		IsFullList: true,
-	}
-
-	getObjectInfoRes, err := gateway.metadata.GetObjectByObjectNameAndBucketName(ctx, getObjectInfoReq)
-	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.Object == nil {
-		log.Errorw("failed to check object info", "object_name", reqContext.objectName, "error", err)
-		errDescription = InvalidKey
-		return
-	}
+	//getObjectInfoReq := &metatypes.GetObjectByObjectNameAndBucketNameRequest{
+	//	ObjectName: reqContext.objectName,
+	//	IsFullList: true,
+	//}
+	//
+	//getObjectInfoRes, err := gateway.metadata.GetObjectByObjectNameAndBucketName(ctx, getObjectInfoReq)
+	//if err != nil || getObjectInfoRes == nil || getObjectInfoRes.Object == nil {
+	//	log.Errorw("failed to check object info", "object_name", reqContext.objectName, "error", err)
+	//	errDescription = InvalidKey
+	//	return
+	//}
 
 	getObjectReq := &types.GetObjectRequest{
-		BucketInfo:  getBucketInfoRes.Bucket.BucketInfo,
-		ObjectInfo:  getObjectInfoRes.Object.ObjectInfo,
+		//BucketInfo:  getBucketInfoRes.Bucket.BucketInfo,
+		//ObjectInfo:  getObjectInfoRes.Object.ObjectInfo,
+		BucketInfo:  reqContext.bucketInfo,
+		ObjectInfo:  reqContext.objectInfo,
 		UserAddress: addr.String(),
 		IsRange:     isRange,
 		RangeStart:  uint64(rangeStart),
