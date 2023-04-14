@@ -14,7 +14,7 @@ const (
 	ObjectTableName = "objects"
 	// EpochTableName defines the name of epoch table
 	EpochTableName = "epoch"
-	// PermissionTableName defines the name of payment table
+	// PermissionTableName defines the name of permission table
 	PermissionTableName = "permission"
 	// StatementTableName defines the name of statement table
 	StatementTableName = "statements"

@@ -25,7 +25,7 @@ type Statement struct {
 	ExpirationTime int64 `gorm:"expiration_time"`
 	// LimitSize defines the total data size that is allowed to operate. If not explicitly specified, it means it will not limit.
 	LimitSize uint64 `gorm:"limit_size"`
-	// Removed defines the permission is deleted or not
+	// Removed defines the statement is deleted or not
 	Removed bool `gorm:"removed"`
 }
 

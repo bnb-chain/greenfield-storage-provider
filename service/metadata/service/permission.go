@@ -72,17 +72,12 @@ func (metadata *Metadata) VerifyPermission(ctx context.Context, req *storagetype
 	return resp, nil
 }
 
-// VerifyBucketPermission Bucket permissions checks are divided into three steps:
-// First, if the bucket is a public bucket and the action is a read-only action, it returns "allow".
-// Second, if the operator is the owner of the bucket, it returns "allow", as the owner has the highest permission.
-// Third, verify the policy corresponding to the bucket and the operator.
-//  1. If the policy is evaluated as "allow", return "allow" to the user.
-//  2. If it is evaluated as "deny" or "unspecified", return "deny".
+// VerifyBucketPermission verify bucket permission
 func (metadata *Metadata) VerifyBucketPermission(ctx context.Context, bucketInfo *bsdb.Bucket, operator sdk.AccAddress,
 	action permtypes.ActionType, options *permtypes.VerifyOptions) (permtypes.Effect, error) {
 	var (
-		owner  sdk.AccAddress
 		err    error
+		owner  sdk.AccAddress
 		effect permtypes.Effect
 	)
 
@@ -108,6 +103,7 @@ func (metadata *Metadata) VerifyBucketPermission(ctx context.Context, bucketInfo
 		log.CtxErrorw(ctx, "failed to verify bucket policy", "error", err)
 		return permtypes.EFFECT_DENY, err
 	}
+
 	if effect == permtypes.EFFECT_ALLOW {
 		return permtypes.EFFECT_ALLOW, nil
 	}
@@ -130,15 +126,18 @@ func (metadata *Metadata) VerifyObjectPermission(ctx context.Context, bucketInfo
 		(objectInfo.Visibility == storagetypes.VISIBILITY_TYPE_INHERIT.String() && bucketInfo.Visibility == storagetypes.VISIBILITY_TYPE_PUBLIC_READ.String()) {
 		visibility = true
 	}
+
 	if visibility && keeper.PublicReadObjectAllowedActions[action] {
 		return permtypes.EFFECT_ALLOW
 	}
+
 	// The owner has full permissions
 	ownerAcc, err = sdk.AccAddressFromHexUnsafe(objectInfo.Owner.String())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "error", err)
 		return permtypes.EFFECT_DENY
 	}
+
 	if ownerAcc.Equals(operator) {
 		return permtypes.EFFECT_ALLOW
 	}
@@ -171,8 +170,8 @@ func (metadata *Metadata) VerifyPolicy(ctx context.Context, resourceID math.Uint
 	operator sdk.AccAddress, action permtypes.ActionType, opts *permtypes.VerifyOptions) (permtypes.Effect, error) {
 	var (
 		err                    error
-		effect                 permtypes.Effect
 		allowed                bool
+		effect                 permtypes.Effect
 		permission             *bsdb.Permission
 		permissions            []*bsdb.Permission
 		groups                 []*bsdb.Group
@@ -196,10 +195,12 @@ func (metadata *Metadata) VerifyPolicy(ctx context.Context, resourceID math.Uint
 		log.CtxErrorw(ctx, "failed to get statements by policy id", "error", err)
 		return permtypes.EFFECT_DENY, err
 	}
+
 	effect = permission.Eval(action, time.Now(), opts, statements)
 	if effect != permtypes.EFFECT_UNSPECIFIED {
 		return effect, nil
 	}
+
 	// verify policy which grant permission to group
 	permissions, err = metadata.bsDB.GetPermissionsByResourceAndPrincipleType(resourceType.String(), resourceID.String(), permtypes.PRINCIPAL_TYPE_GNFD_GROUP.String())
 	if err != nil || permissions == nil {
@@ -231,12 +232,12 @@ func (metadata *Metadata) VerifyPolicy(ctx context.Context, resourceID math.Uint
 		}
 	}
 
-	// statements
 	statements, err = metadata.bsDB.GetStatementsByPolicyID(policyIDList)
 	if err != nil || statements == nil {
 		log.CtxErrorw(ctx, "failed to get statements by policy id", "error", err)
 		return permtypes.EFFECT_DENY, err
 	}
+
 	for _, perm := range filteredPermissionList {
 		effect = perm.Eval(action, time.Now(), opts, statements)
 		if effect != permtypes.EFFECT_UNSPECIFIED {
@@ -247,6 +248,7 @@ func (metadata *Metadata) VerifyPolicy(ctx context.Context, resourceID math.Uint
 			}
 		}
 	}
+
 	if allowed {
 		return permtypes.EFFECT_ALLOW, nil
 	}
