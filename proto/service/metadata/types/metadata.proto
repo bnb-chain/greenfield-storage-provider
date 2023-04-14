@@ -4,8 +4,6 @@ package service.metadata.types;
 import "greenfield/storage/types.proto";
 import "greenfield/storage/query.proto";
 import "greenfield/payment/stream_record.proto";
-import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/metadata/types";
 
