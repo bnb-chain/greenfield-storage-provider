@@ -181,11 +181,6 @@ func (i *Impl) HandleTx(tx *types.Tx) {
 	log.Info("HandleTx")
 }
 
-// HandleMessage accepts the transaction and handles messages contained inside the transaction.
-func (i *Impl) HandleMessage(index int, msg sdk.Msg, tx *types.Tx) {
-	log.Info("HandleMessage")
-}
-
 // Processed tells whether the current Indexer has already processed the given height of Block
 // An error is returned if the operation fails.
 func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
@@ -199,4 +194,18 @@ func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
 		eventMap.Delete(height)
 	}
 	return ep.BlockHeight > int64(height), nil
+}
+
+func (i *Impl) HandleMessage(block *coretypes.ResultBlock, index int, msg sdk.Msg, tx *types.Tx) {
+	log.Info("HandleMessage")
+}
+
+func (i *Impl) GetBlockRecordNum(ctx context.Context) int64 {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i *Impl) GetLastBlockRecordHeight(ctx context.Context) (uint64, error) {
+	//TODO implement me
+	panic("implement me")
 }
