@@ -27,7 +27,7 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 			Select("*").
 			Where("update_at >= ? and update_at <= ? and removed = ?", startBlockNumber, endBlockNumber, true).
 			Limit(DeletedObjectsDefaultSize).
-			Order("update_at asc").
+			Order("update_at,object_id asc").
 			Find(&objects).Error
 		return objects, err
 	}
@@ -38,7 +38,7 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 			"(objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ')",
 			startBlockNumber, endBlockNumber, true).
 		Limit(DeletedObjectsDefaultSize).
-		Order("objects.update_at asc").
+		Order("objects.update_at, objects.object_id asc").
 		Find(&objects).Error
 	return objects, err
 }

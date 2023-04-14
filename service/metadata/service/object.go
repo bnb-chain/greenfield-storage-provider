@@ -40,6 +40,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 			},
 			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
+			UpdateAt:      object.UpdateAt,
 		})
 	}
 
@@ -88,6 +89,7 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 			},
 			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
+			UpdateAt:      object.UpdateAt,
 		})
 	}
 
