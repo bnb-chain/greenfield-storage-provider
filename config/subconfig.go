@@ -71,6 +71,15 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 	} else {
 		return nil, fmt.Errorf("missing metadata gPRC address configuration for gateway service")
 	}
+	gCfg.ApiLimiterConfig = &gateway.ApiLimiterConfig{
+		ApiLimits: map[string]gateway.MemoryLimiterConfig{
+			"/-get": {
+				Prefix:     "/",
+				RateLimit:  1,
+				RatePeriod: "S",
+			},
+		},
+	}
 	return gCfg, nil
 }
 
