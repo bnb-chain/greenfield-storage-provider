@@ -3,10 +3,10 @@ package gateway
 import (
 	"context"
 	"crypto/md5"
-	"encoding/hex"
 	"io"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -93,7 +93,6 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		RangeStart:  uint64(rangeStart),
 		RangeEnd:    uint64(rangeEnd),
 	}
-	// ctx := log.Context(context.Background(), req)
 	stream, err := gateway.downloader.GetObject(ctx, req)
 	if err != nil {
 		log.Errorf("failed to get object", "error", err)
@@ -133,6 +132,10 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		size = size + writeN
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+	w.Header().Set(model.ContentTypeHeader, reqContext.objectInfo.GetContentType())
+	if !isRange {
+		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(reqContext.objectInfo.GetPayloadSize()))
+	}
 }
 
 // putObjectHandler handles the put object request
@@ -244,5 +247,6 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
-	w.Header().Set(model.ETagHeader, hex.EncodeToString(md5Hash.Sum(nil)))
+	// Greenfield has an integrity hash, so there is no need for an etag
+	// w.Header().Set(model.ETagHeader, hex.EncodeToString(md5Hash.Sum(nil)))
 }

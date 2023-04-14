@@ -37,8 +37,8 @@ message QueryObjectPutStateRequest {
 
 // QueryObjectPutStateResponse is response type for the QueryObjectPutState RPC method.
 message QueryObjectPutStateResponse {
-  // job_state defines the state of put object.
-  service.types.JobState job_state = 1;
+  // state defines the state of put object.
+  service.types.JobState state = 1;
 }
 
 // UploaderService defines the gRPC service of uploading payload.

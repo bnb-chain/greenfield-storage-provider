@@ -71,5 +71,5 @@ func (client *UploaderClient) QueryObjectPutState(ctx context.Context, objectID 
 	if err != nil {
 		return servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED, err
 	}
-	return resp.GetJobState(), nil
+	return resp.GetState(), nil
 }

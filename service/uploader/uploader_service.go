@@ -24,6 +24,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 		isInited          bool
 		pieceChecksumList [][]byte
 		objectID          uint64
+		objectInfo        *storagetypes.ObjectInfo
 		params            *storagetypes.Params
 		req               *types.PutObjectRequest
 		resp              = &types.PutObjectResponse{}
@@ -42,10 +43,10 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			return
 		}
 		uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
-		if err = uploader.signIntegrityHash(ctx, objectID, req.GetObjectInfo().GetChecksums()[0], pieceChecksumList); err != nil {
+		if err = uploader.signIntegrityHash(ctx, objectID, objectInfo.GetChecksums()[0], pieceChecksumList); err != nil {
 			return
 		}
-		if err = uploader.taskNode.ReplicateObject(ctx, req.GetObjectInfo()); err != nil {
+		if err = uploader.taskNode.ReplicateObject(ctx, objectInfo); err != nil {
 			log.CtxErrorw(ctx, "failed to notify task node to replicate object", "error", err)
 			uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
 			return
@@ -78,19 +79,20 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 					errCh <- merrors.ErrDanglingPointer
 					return
 				}
+				objectInfo = req.GetObjectInfo()
 				if int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()+1) !=
-					len(req.GetObjectInfo().GetChecksums()) {
+					len(objectInfo.GetChecksums()) {
 					errCh <- merrors.ErrMismatchChecksumNum
 				}
-				objectID = req.GetObjectInfo().Id.Uint64()
-				ctx = log.WithValue(ctx, "object_id", req.GetObjectInfo().Id.String())
+				objectID = objectInfo.Id.Uint64()
+				ctx = log.WithValue(ctx, "object_id", objectInfo.Id.String())
 				pstream.InitAsyncPayloadStream(
 					objectID,
 					storagetypes.REDUNDANCY_REPLICA_TYPE,
 					params.GetMaxSegmentSize(),
 					math.MaxUint32, /*useless*/
 				)
-				uploader.spDB.CreateUploadJob(req.GetObjectInfo())
+				uploader.spDB.CreateUploadJob(objectInfo)
 				uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING)
 				isInited = true
 			}
@@ -159,7 +161,7 @@ func (uploader *Uploader) QueryObjectPutState(ctx context.Context, req *types.Qu
 		return nil, merrors.InnerErrorToGRPCError(err)
 	}
 	return &types.QueryObjectPutStateResponse{
-		JobState: job.JobState,
+		State: job.JobState,
 	}, nil
 }
 
