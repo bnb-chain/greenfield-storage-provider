@@ -15,6 +15,6 @@ type Epoch struct {
 }
 
 // TableName is used to set Epoch table name in database
-func (*Epoch) TableName() string {
+func (e *Epoch) TableName() string {
 	return EpochTableName
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/lib/pq"
 )
 
+// Statement defines the details content of the permission, include effect/actions/sub-resources
 type Statement struct {
 	// ID defines db auto_increment id of statement
 	ID uint64 `gorm:"id"`
@@ -29,6 +30,6 @@ type Statement struct {
 }
 
 // TableName is used to set Statements table name in database
-func (a *Statement) TableName() string {
+func (s *Statement) TableName() string {
 	return StatementTableName
 }

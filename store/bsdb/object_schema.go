@@ -52,6 +52,6 @@ type Object struct {
 }
 
 // TableName is used to set Object table name in database
-func (a *Object) TableName() string {
+func (o *Object) TableName() string {
 	return ObjectTableName
 }

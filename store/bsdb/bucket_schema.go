@@ -36,6 +36,6 @@ type Bucket struct {
 }
 
 // TableName is used to set Bucket table name in database
-func (a *Bucket) TableName() string {
+func (b *Bucket) TableName() string {
 	return BucketTableName
 }

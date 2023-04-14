@@ -30,6 +30,6 @@ type StreamRecord struct {
 }
 
 // TableName is used to set StreamRecord table name in database
-func (*StreamRecord) TableName() string {
+func (s *StreamRecord) TableName() string {
 	return "stream_records"
 }

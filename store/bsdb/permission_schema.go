@@ -2,6 +2,7 @@ package bsdb
 
 import "github.com/forbole/juno/v4/common"
 
+// Permission is the structure to verify action permission
 type Permission struct {
 	// ID defines db auto_increment id of permission
 	ID uint64 `gorm:"id"`
@@ -28,6 +29,6 @@ type Permission struct {
 }
 
 // TableName is used to set Permission table name in database
-func (a *Permission) TableName() string {
+func (p *Permission) TableName() string {
 	return PermissionTableName
 }
