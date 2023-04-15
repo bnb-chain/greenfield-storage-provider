@@ -1,4 +1,4 @@
-Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager"]
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager", "auth"]
 SpOperatorAddress = "677265656e6669656c642d73746f726167652d70726f7669646572"
 
 [Endpoint]
@@ -11,6 +11,7 @@ receiver = "localhost:9533"
 signer = "localhost:9633"
 tasknode = "localhost:9433"
 uploader = "localhost:9133"
+auth = "localhost:10033"
 
 [ListenAddress]
 challenge = "localhost:9333"
@@ -22,6 +23,7 @@ receiver = "localhost:9533"
 signer = "localhost:9633"
 tasknode = "localhost:9433"
 uploader = "localhost:9133"
+auth = "localhost:10033"
 
 [SpDBConfig]
 User = "root"
