@@ -286,7 +286,7 @@ func (g *Gateway) verifyOffChainSignature(reqContext *requestContext, requestSig
 		log.Errorf("failed to verifyOffChainSignature", "error", err)
 		return nil, err
 	}
-	if verifyOffChainSignatureResp.Result == true {
+	if verifyOffChainSignatureResp.Result {
 		userAddress, _ := sdk.AccAddressFromHexUnsafe(reqContext.request.Header.Get(model.GnfdUserAddressHeader))
 		return userAddress, nil
 	} else {

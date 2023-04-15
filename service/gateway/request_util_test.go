@@ -72,7 +72,7 @@ func Test_MakePersonalSignatureAndRecover(t *testing.T) {
 	unSignedContentHash := accounts.TextHash([]byte(unSignedContent))
 
 	// Account information.
-	privateKey, err := crypto.GenerateKey()
+	privateKey, _ := crypto.GenerateKey()
 
 	address := crypto.PubkeyToAddress(privateKey.PublicKey)
 	log.Infof("address is " + address.Hex())
@@ -106,7 +106,7 @@ func Test_verifyPersonalSignatureFromRequest(t *testing.T) {
 	log.Infof("unSignedContent is: %s", unSignedContent)
 	unSignedContentHash := accounts.TextHash([]byte(unSignedContent))
 	// Account information.
-	privateKey, err := crypto.GenerateKey()
+	privateKey, _ := crypto.GenerateKey()
 
 	address := crypto.PubkeyToAddress(privateKey.PublicKey)
 	log.Infof("address is: " + address.Hex())

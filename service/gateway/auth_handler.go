@@ -170,7 +170,11 @@ func (g *Gateway) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.Requ
 	requestSignature := reqContext.request.Header.Get(model.GnfdAuthorizationHeader)
 	personalSignSignaturePrefix := signaturePrefix(model.SignTypePersonal, model.SignAlgorithm)
 	signedMsg, _, err := parseSignedMsgAndSigFromRequest(requestSignature[len(personalSignSignaturePrefix):])
-
+	if err != nil {
+		log.Errorw("failed to updateUserPublicKey when parseSignedMsgAndSigFromRequest")
+		errDescription = makeErrorDescription(err)
+		return
+	}
 	errDescription = g.verifySignedContent(*signedMsg, domain, nonce, userPublicKey, expiryDateStr)
 	if errDescription != nil {
 		log.Errorw("failed to updateUserPublicKey due to bad signed content.")
@@ -219,17 +223,14 @@ func (g *Gateway) verifySignedContent(signedContent string, expectedDomain strin
 	spsRe := regexp.MustCompile(spsPattern)
 	spsMatch := spsRe.FindAllStringSubmatch(spsText, -1)
 
-	var spsAddresses, spsNames, spsNonces []string
 	var found = false
 	for _, match := range spsMatch {
-		spsAddresses = append(spsAddresses, match[1])
-
-		spsNames = append(spsNames, match[2])
-		spsNonces = append(spsNonces, match[3])
-
-		if match[1] == g.config.SpOperatorAddress {
+		spAddress := match[1]
+		// spName := match[2]  // keep this line here to indicate match[2] means spName
+		spNonce := match[3]
+		if spAddress == g.config.SpOperatorAddress {
 			found = true
-			if expectedNonce != match[3] { // nonce doesn't match
+			if expectedNonce != spNonce { // nonce doesn't match
 				return SignedMsgNotMatchHeaders
 			}
 		}

@@ -64,7 +64,7 @@ func TestUserOffChainAuthSignature(t *testing.T) {
 	hFunc := mimc.NewMiMC()
 	msg := "I want to get approval from sp before creating the bucket."
 	sig, err := userEddsaPrivateKey.Sign([]byte(msg), hFunc)
-
+	require.NoError(t, err)
 	// 4. use public key to verify
 	err = VerifyEddsaSignature(userEddsaPublicKeyStr, sig, []byte(msg))
 
@@ -97,7 +97,7 @@ func TestUseUserPublicKeyToVerifyUserOffChainAuthSignature(t *testing.T) {
 	hFunc := mimc.NewMiMC()
 	msg := "I want to get approval from sp before creating the bucket."
 	sig, err := userEddsaPrivateKey.Sign([]byte(msg), hFunc)
-
+	require.NoError(t, err)
 	// 4. use public key to verify
 	err = VerifyEddsaSignature(userEddsaPublicKeyStr, sig, []byte(msg))
 

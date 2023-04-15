@@ -3,7 +3,7 @@ package gateway
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -140,7 +140,7 @@ func TestRequestNonceHandler(t *testing.T) {
 			res := tt.args.w.Result()
 			defer res.Body.Close()
 
-			data, err := ioutil.ReadAll(res.Body)
+			data, err := io.ReadAll(res.Body)
 			if err != nil {
 				t.Errorf("expected error to be nil got %v", err)
 			}
@@ -161,7 +161,7 @@ func getSampleRequestWithAuthSig(domain string, nonce string, eddsaPublicKey str
 	log.Infof("unSignedContent is: %s", unSignedContent)
 	unSignedContentHash := accounts.TextHash([]byte(unSignedContent))
 	// Account information.
-	privateKey, err := crypto.GenerateKey()
+	privateKey, _ := crypto.GenerateKey()
 
 	address := crypto.PubkeyToAddress(privateKey.PublicKey)
 	log.Infof("address is: " + address.Hex())
@@ -719,7 +719,7 @@ func TestUpdateUserPublicKeyHandler(t *testing.T) {
 			res := tt.args.w.Result()
 			defer res.Body.Close()
 
-			data, err := ioutil.ReadAll(res.Body)
+			data, err := io.ReadAll(res.Body)
 			if err != nil {
 				t.Errorf("expected error to be nil got %v", err)
 			}
