@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	signer "github.com/bnb-chain/greenfield-go-sdk/keys/signer"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
@@ -17,7 +19,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -359,18 +360,14 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 	}
 
 	switch mux.CurrentRoute(reqContext.request).GetName() {
-	case putObjectRouterName:
+	case putObjectRouterName, queryUploadProgressRouterName:
 		if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
 			context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
 			log.Errorw("failed to query bucket info and object info on chain",
 				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
 			return err
 		}
-		if reqContext.objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-			log.Errorw("failed to auth due to object status is not created",
-				"object_status", reqContext.objectInfo.GetObjectStatus())
-			return errors.ErrCheckObjectCreated
-		}
+
 		if isAllow, err := g.chain.VerifyPutObjectPermission(context.Background(), addr.String(),
 			reqContext.bucketName, reqContext.objectName); !isAllow || err != nil {
 			log.Errorw("failed to auth due to verify permission",
