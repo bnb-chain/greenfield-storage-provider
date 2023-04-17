@@ -74,7 +74,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.AuthService:       model.AuthGRPCAddress,
 	},
 	Endpoint: map[string]string{
-		model.GatewayService:    "gnfd.nodereal.com",
+		model.GatewayService:    "gnfd.test-sp.com",
 		model.UploaderService:   model.UploaderGRPCAddress,
 		model.DownloaderService: model.DownloaderGRPCAddress,
 		model.ChallengeService:  model.ChallengeGRPCAddress,
