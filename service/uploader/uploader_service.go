@@ -42,7 +42,6 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			log.CtxErrorw(ctx, "failed to put object", "error", err)
 			return
 		}
-		uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
 		if err = uploader.signIntegrityHash(ctx, objectID, objectInfo.GetChecksums()[0], pieceChecksumList); err != nil {
 			return
 		}
@@ -149,8 +148,8 @@ func (uploader *Uploader) signIntegrityHash(ctx context.Context, objectID uint64
 	return
 }
 
-func (uploader *Uploader) QueryObjectPutState(ctx context.Context, req *types.QueryObjectPutStateRequest) (
-	resp *types.QueryObjectPutStateResponse, err error) {
+func (uploader *Uploader) QueryUploadProgress(ctx context.Context, req *types.QueryUploadProgressRequest) (
+	resp *types.QueryUploadProgressResponse, err error) {
 	ctx = log.Context(ctx, req)
 	defer func() {
 		log.CtxDebugw(ctx, "query object put state", "request", req, "response", resp, "error", err)
@@ -160,7 +159,7 @@ func (uploader *Uploader) QueryObjectPutState(ctx context.Context, req *types.Qu
 	if err != nil {
 		return nil, merrors.InnerErrorToGRPCError(err)
 	}
-	return &types.QueryObjectPutStateResponse{
+	return &types.QueryUploadProgressResponse{
 		State: job.JobState,
 	}, nil
 }

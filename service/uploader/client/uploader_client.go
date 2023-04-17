@@ -65,9 +65,9 @@ func (client *UploaderClient) PutObject(ctx context.Context, opts ...grpc.CallOp
 	return client.uploader.PutObject(ctx, opts...)
 }
 
-// QueryObjectPutState is used to query put object job state
-func (client *UploaderClient) QueryObjectPutState(ctx context.Context, objectID uint64, opts ...grpc.CallOption) (servicetypes.JobState, error) {
-	resp, err := client.uploader.QueryObjectPutState(ctx, &types.QueryObjectPutStateRequest{ObjectId: objectID}, opts...)
+// QueryUploadProgress is used to query upload object progress
+func (client *UploaderClient) QueryUploadProgress(ctx context.Context, objectID uint64, opts ...grpc.CallOption) (servicetypes.JobState, error) {
+	resp, err := client.uploader.QueryUploadProgress(ctx, &types.QueryUploadProgressRequest{ObjectId: objectID}, opts...)
 	if err != nil {
 		return servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED, err
 	}

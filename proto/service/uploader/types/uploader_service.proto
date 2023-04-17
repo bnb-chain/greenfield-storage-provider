@@ -29,14 +29,14 @@ message QueryPuttingObjectResponse {
   service.types.PieceInfo piece_info = 1;
 }
 
-// QueryObjectPutStateRequest is request type for the QueryObjectPutState RPC method.
-message QueryObjectPutStateRequest {
+// QueryUploadProgressRequest is request type for the QueryObjectPutState RPC method.
+message QueryUploadProgressRequest {
   // object_id defines the unique id of the object.
   uint64 object_id = 1;
 }
 
-// QueryObjectPutStateResponse is response type for the QueryObjectPutState RPC method.
-message QueryObjectPutStateResponse {
+// QueryUploadProgressResponse is response type for the QueryObjectPutState RPC method.
+message QueryUploadProgressResponse {
   // state defines the state of put object.
   service.types.JobState state = 1;
 }
@@ -45,8 +45,8 @@ message QueryObjectPutStateResponse {
 service UploaderService {
   // PutObject uploads the payload of the object.
   rpc PutObject(stream PutObjectRequest) returns (PutObjectResponse) {};
-  // QueryObjectPutState queries put state of the object.
-  rpc QueryObjectPutState(QueryObjectPutStateRequest) returns (QueryObjectPutStateResponse) {};
+  // QueryUploadProgress queries put state of the object.
+  rpc QueryUploadProgress(QueryUploadProgressRequest) returns (QueryUploadProgressResponse) {};
   // QueryPuttingObject queries an uploading object info with object id.
   rpc QueryPuttingObject(QueryPuttingObjectRequest) returns (QueryPuttingObjectResponse) {};
 }

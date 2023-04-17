@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +15,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // getObjectHandler handles the get object request

@@ -20,7 +20,7 @@ const (
 	listObjectsByBucketRouterName  = "ListObjectsByBucketName"
 	getBucketReadQuotaRouterName   = "GetBucketReadQuota"
 	listBucketReadRecordRouterName = "ListBucketReadRecord"
-	getObjectPutStateRouterName    = "GetObjectPutState"
+	queryUploadProgressRouterName  = "queryUploadProgress"
 )
 
 const (
@@ -49,11 +49,11 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Path("/{object:.+}").
 		HandlerFunc(g.putObjectHandler)
 	hostBucketRouter.NewRoute().
-		Name(getObjectPutStateRouterName).
+		Name(queryUploadProgressRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
-		Queries(model.GetObjectPutStateQuery, "").
-		HandlerFunc(g.getObjectPutStateHandler)
+		Queries(model.UploadProgressQuery, "").
+		HandlerFunc(g.queryUploadProgressHandler)
 	hostBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).
@@ -112,11 +112,11 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Path("/{object:.+}").
 		HandlerFunc(g.putObjectHandler)
 	pathBucketRouter.NewRoute().
-		Name(getObjectPutStateRouterName).
+		Name(queryUploadProgressRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
-		Queries(model.GetObjectPutStateQuery, "").
-		HandlerFunc(g.getObjectPutStateHandler)
+		Queries(model.UploadProgressQuery, "").
+		HandlerFunc(g.queryUploadProgressHandler)
 	pathBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).

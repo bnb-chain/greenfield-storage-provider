@@ -166,8 +166,8 @@ const (
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
 	ActionQuery = "action"
-	// GetObjectPutStateQuery defines object put-state query, which is used to route request
-	GetObjectPutStateQuery = "object-put-state"
+	// UploadProgressQuery defines upload progress query, which is used to route request
+	UploadProgressQuery = "upload-process"
 	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request
 	GetBucketReadQuotaQuery = "read-quota"
 	// GetBucketReadQuotaMonthQuery defines bucket read quota query month

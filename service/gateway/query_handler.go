@@ -5,13 +5,15 @@ import (
 	"encoding/xml"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model/job"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getBucketReadQuota handles the get bucket read quota request
@@ -200,15 +202,16 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 	log.Debugw("list bucket read records", "xml_info", xmlInfo)
 }
 
-// getObjectPutStateHandler handles the get put object state request
-func (g *Gateway) getObjectPutStateHandler(w http.ResponseWriter, r *http.Request) {
+// queryUploadProgressHandler handles the query upload object progress request
+func (g *Gateway) queryUploadProgressHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err            error
-		errDescription *errorDescription
-		reqContext     *requestContext
-		addr           sdktypes.AccAddress
-		jobState       servicetypes.JobState
-		jobStateStr    string
+		err                 error
+		errDescription      *errorDescription
+		reqContext          *requestContext
+		addr                sdktypes.AccAddress
+		jobState            servicetypes.JobState
+		jobStateStr         string
+		jobStateDescription string
 	)
 
 	reqContext = newRequestContext(r)
@@ -217,14 +220,14 @@ func (g *Gateway) getObjectPutStateHandler(w http.ResponseWriter, r *http.Reques
 			_ = errDescription.errorResponse(w, reqContext)
 		}
 		if errDescription != nil && errDescription.statusCode != http.StatusOK {
-			log.Errorf("action(%v) statusCode(%v) %v", getObjectPutStateRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+			log.Errorf("action(%v) statusCode(%v) %v", queryUploadProgressRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Infof("action(%v) statusCode(200) %v", getObjectPutStateRouterName, reqContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", queryUploadProgressRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
 	if g.uploader == nil {
-		log.Error("failed to get bucket read quota due to not config uploader")
+		log.Error("failed to query upload progress due to not config uploader")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -252,21 +255,25 @@ func (g *Gateway) getObjectPutStateHandler(w http.ResponseWriter, r *http.Reques
 	}
 	if reqContext.objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
 		jobStateStr = storagetypes.OBJECT_STATUS_SEALED.String()
+		jobStateDescription = "the object is succeed to upload"
 	} else {
-		if jobState, err = g.uploader.QueryObjectPutState(context.Background(), reqContext.objectInfo.Id.Uint64()); err != nil {
-			log.Errorw("failed to query object put state", "error", err)
+		if jobState, err = g.uploader.QueryUploadProgress(context.Background(), reqContext.objectInfo.Id.Uint64()); err != nil {
+			log.Errorw("failed to query upload progress", "error", err)
 			errDescription = makeErrorDescription(err)
 			return
 		}
 		jobStateStr = jobState.String()
+		jobStateDescription = job.JobStateToDescription(jobState)
 	}
 	var xmlInfo = struct {
-		XMLName xml.Name `xml:"GetObjectPutState"`
-		Version string   `xml:"version,attr"`
-		State   string   `xml:"State"`
+		XMLName     xml.Name `xml:"QueryUploadProgress"`
+		Version     string   `xml:"version,attr"`
+		State       string   `xml:"State"`
+		Description string   `xml:"Description"`
 	}{
-		Version: model.GnfdResponseXMLVersion,
-		State:   jobStateStr,
+		Version:     model.GnfdResponseXMLVersion,
+		State:       jobStateStr,
+		Description: jobStateDescription,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
@@ -281,5 +288,5 @@ func (g *Gateway) getObjectPutStateHandler(w http.ResponseWriter, r *http.Reques
 		errDescription = makeErrorDescription(err)
 		return
 	}
-	log.Debugw("get object put state", "xml_info", xmlInfo)
+	log.Debugw("query upload progress", "xml_info", xmlInfo)
 }
