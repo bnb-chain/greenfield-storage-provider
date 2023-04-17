@@ -22,10 +22,10 @@ func TestVerifySignatureV1(t *testing.T) {
 	urlmap := url.Values{}
 	urlmap.Add("greenfield", "storage-provider")
 	parms := io.NopCloser(strings.NewReader(urlmap.Encode()))
-	req, err := http.NewRequest("POST", "gnfd.nodereal.com", parms)
+	req, err := http.NewRequest("POST", "gnfd.test-sp.com", parms)
 	require.NoError(t, err)
 	req.Header.Set(model.ContentTypeHeader, "application/x-www-form-urlencoded")
-	req.Host = "testBucket.gnfd.nodereal.com"
+	req.Host = "testBucket.gnfd.test-sp.com"
 	// mock
 	privKey, _, addrInput := testdata.KeyEthSecp256k1TestPubAddr()
 	keyManager, err := keys.NewPrivateKeyManager(hex.EncodeToString(privKey.Bytes()))
@@ -52,7 +52,7 @@ func TestVerifySignatureV2(t *testing.T) {
 	req, err := http.NewRequest("POST", "example.com", parms)
 	require.NoError(t, err)
 	req.Header.Set(model.ContentTypeHeader, "application/x-www-form-urlencoded")
-	req.Host = "testBucket.gnfd.nodereal.com"
+	req.Host = "testBucket.gnfd.test-sp.com"
 	// mock pk
 	privKey, _, _ := testdata.KeyEthSecp256k1TestPubAddr()
 	keyManager, err := keys.NewPrivateKeyManager(hex.EncodeToString(privKey.Bytes()))
