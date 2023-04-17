@@ -47,7 +47,7 @@ type GreenfieldChainSignClient struct {
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
-func NewGreenfieldChainSignClient(gRPCAddr, chainID string, gasLimit uint64, operatorPrivateKey, fundingPrivateKey,
+func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, operatorPrivateKey, fundingPrivateKey,
 	sealPrivateKey, approvalPrivateKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
@@ -61,29 +61,35 @@ func NewGreenfieldChainSignClient(gRPCAddr, chainID string, gasLimit uint64, ope
 	}
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
-	operatorClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(operatorKM),
-		client.WithGrpcDialOption(options...))
+	operatorClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(operatorKM))
 
 	fundingKM, err := keys.NewPrivateKeyManager(fundingPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	fundingClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(fundingKM),
-		client.WithGrpcDialOption(options...))
+	fundingClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(fundingKM))
+	if err != nil {
+		return nil, err
+	}
 
 	sealKM, err := keys.NewPrivateKeyManager(sealPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	sealClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(sealKM),
-		client.WithGrpcDialOption(options...))
+	sealClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(sealKM))
+	if err != nil {
+		return nil, err
+	}
 
 	approvalKM, err := keys.NewPrivateKeyManager(approvalPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	approvalClient := client.NewGreenfieldClient(gRPCAddr, chainID, client.WithKeyManager(approvalKM),
-		client.WithGrpcDialOption(options...))
+	approvalClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(approvalKM))
+	if err != nil {
+		return nil, err
+	}
+
 	greenfieldClients := map[SignType]*client.GreenfieldClient{
 		SignOperator: operatorClient,
 		SignFunding:  fundingClient,
@@ -112,7 +118,7 @@ func (client *GreenfieldChainSignClient) Sign(scope SignType, msg []byte) ([]byt
 	if err != nil {
 		return nil, err
 	}
-	return km.GetPrivKey().Sign(msg)
+	return km.Sign(msg)
 }
 
 // VerifySignature verifies the signature.
@@ -154,8 +160,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		GasLimit: client.gasLimit,
 	}
 
-	resp, err := client.greenfieldClients[scope].BroadcastTx(
-		[]sdk.Msg{msgSealObject}, txOpt)
+	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgSealObject}, txOpt)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "seal_info", msgSealObject.String())
 		return nil, merrors.ErrSealObjectOnChain

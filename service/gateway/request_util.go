@@ -11,21 +11,21 @@ import (
 	"github.com/gorilla/mux"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	signer "github.com/bnb-chain/greenfield-go-sdk/keys/signer"
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	authtypes "github.com/bnb-chain/greenfield-storage-provider/service/auth/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/secp256k1"
+	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 )
 
 // requestContext is a request context.
@@ -42,6 +42,23 @@ type requestContext struct {
 	objectInfo *storagetypes.ObjectInfo
 	// accountID is used to provide authentication to the sp
 	accountID string
+}
+
+// RecoverAddr recovers the sender address from msg and signature
+// TODO: move it to greenfield-common
+func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, error) {
+	pubKeyByte, err := secp256k1.RecoverPubkey(msg, sig)
+	if err != nil {
+		return nil, ethsecp256k1.PubKey{}, err
+	}
+	pubKey, _ := ethcrypto.UnmarshalPubkey(pubKeyByte)
+	pk := ethsecp256k1.PubKey{
+		Key: ethcrypto.CompressPubkey(pubKey),
+	}
+
+	recoverAcc := sdk.AccAddress(pk.Address().Bytes())
+
+	return recoverAcc, pk, nil
 }
 
 // newRequestContext return a request context.
@@ -157,7 +174,7 @@ func (reqContext *requestContext) verifySignatureV1(requestSignature string) (sd
 	}
 
 	// check signature consistent
-	addr, pk, err := signer.RecoverAddr(realMsgToSign, signature)
+	addr, pk, err := RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.Errorw("failed to recover address")
 		return nil, errors.ErrSignatureConsistent
@@ -255,7 +272,7 @@ func (reqContext *requestContext) verifyPersonalSignature(requestSignature strin
 	}
 
 	// check signature consistent
-	addr, _, err := signer.RecoverAddr(realMsgToSign, signature)
+	addr, _, err := RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.Errorw("failed to recover address")
 		return nil, errors.ErrSignatureConsistent

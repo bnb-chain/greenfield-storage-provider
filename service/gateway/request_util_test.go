@@ -1,7 +1,6 @@
 package gateway
 
 import (
-	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,20 +9,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bnb-chain/greenfield-go-sdk/client/sp"
-	"github.com/bnb-chain/greenfield-go-sdk/keys"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 const (
@@ -32,6 +27,8 @@ const (
 	SamplePublicKey  = "a_sample_eddsa_public_key_for_off_chain_auth"
 )
 
+// TODO: Stop referencing SDK code for testing, If needed, move the mainly function to Greenfield Common
+/*
 func TestVerifySignatureV1(t *testing.T) {
 	// mock request
 	urlmap := url.Values{}
@@ -58,15 +55,16 @@ func TestVerifySignatureV1(t *testing.T) {
 	assert.Equal(t, nil, err)
 	assert.Equal(t, addrInput.String(), addrOutput.String())
 }
+*/
 
 func Test_MakePersonalSignatureAndRecover(t *testing.T) {
-	unSignedContent := `Register your identity of dapp http://dapp.io 
+	unSignedContent := `Register your identity of dapp http://dapp.io
     with your identity key 0x12345.
     In the following SPs:
     - SP 0X123450 (name: SP_DEV) -  Nonce: 7
     - SP 0X123451 (name: SP_QA) -  Nonce: 2
     - SP 0X123452 (name: SP_PROD) -  Nonce: 3
-      
+
     The expiry date is 2023-03-25 16:34:12 GMT+08:00`
 
 	unSignedContentHash := accounts.TextHash([]byte(unSignedContent))

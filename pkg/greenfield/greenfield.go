@@ -6,11 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-go-sdk/client/chain"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	chainClient "github.com/bnb-chain/greenfield/sdk/client"
 )
 
 const (
@@ -22,17 +19,15 @@ const (
 
 // GreenfieldClient the greenfield chain client, only use to query.
 type GreenfieldClient struct {
-	// TODO: polish it by new sdk version
-	gnfdCompositeClients *chain.GnfdCompositeClients
-	gnfdCompositeClient  *chain.GnfdCompositeClient
-	currentHeight        int64
-	updatedAt            time.Time
-	Provider             []string
+	chainClient   *chainClient.GreenfieldClient
+	currentHeight int64
+	updatedAt     time.Time
+	Provider      []string
 }
 
-// GnfdCompositeClient return the greenfield chain client
-func (client *GreenfieldClient) GnfdCompositeClient() *chain.GnfdCompositeClient {
-	return client.gnfdCompositeClient
+// GnfdClient return the greenfield chain client
+func (client *GreenfieldClient) GnfdClient() *chainClient.GreenfieldClient {
+	return client.chainClient
 }
 
 // Greenfield is an encapsulation of greenfield chain go sdk which supports for more query request
@@ -51,12 +46,17 @@ func NewGreenfield(cfg *GreenfieldChainConfig) (*Greenfield, error) {
 	}
 	var clients []*GreenfieldClient
 	for _, config := range cfg.NodeAddr {
-		client := &GreenfieldClient{
-			Provider: config.GreenfieldAddresses,
-			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddresses, config.TendermintAddresses,
-				cfg.ChainID, chain.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials()))),
+		cc, err := chainClient.NewGreenfieldClient(config.TendermintAddresses[0], cfg.ChainID)
+		if err != nil {
+			return nil, err
 		}
-		client.gnfdCompositeClient = client.gnfdCompositeClients.GetClient()
+		if err != nil {
+			return nil, err
+		}
+		client := &GreenfieldClient{
+			Provider:    config.GreenfieldAddresses,
+			chainClient: cc,
+		}
 		clients = append(clients, client)
 	}
 	greenfield := &Greenfield{
@@ -97,23 +97,20 @@ func (greenfield *Greenfield) updateClient() {
 		select {
 		case <-ticker.C:
 			var (
-				maxHeight       int64
+				maxHeight       uint64
 				maxHeightClient = greenfield.getCurrentClient()
 			)
 			for _, client := range greenfield.backUpClients {
-				gnfdCompositeClient := client.gnfdCompositeClients.GetClient()
-				status, err := gnfdCompositeClient.RpcClient.TmClient.Status(context.Background())
+				currentHeight, err := greenfield.GetCurrentHeight(context.Background())
 				if err != nil {
-					log.Errorw("get status failed", "node_addr", client.Provider, "error", err)
+					log.Errorw("get latest block height failed", "node_addr", client.Provider, "error", err)
 					continue
 				}
-				currentHeight := status.SyncInfo.LatestBlockHeight
 				if currentHeight > maxHeight {
 					maxHeight = currentHeight
 					maxHeightClient = client
-					client.gnfdCompositeClient = gnfdCompositeClient
 				}
-				client.currentHeight = currentHeight
+				client.currentHeight = (int64)(currentHeight)
 				client.updatedAt = time.Now()
 			}
 			if maxHeightClient != greenfield.getCurrentClient() {

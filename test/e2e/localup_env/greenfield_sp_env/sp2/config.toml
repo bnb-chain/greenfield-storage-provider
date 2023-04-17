@@ -1,5 +1,5 @@
 Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager", "p2p", "auth"]
-SpOperatorAddress = "0x4C1674C0504bad30e023D7B3991824bCC47E193d"
+SpOperatorAddress = "0x7404bF71c297eE7f389a7876f4716003a2BaD2d0"
 
 [Endpoint]
 auth = "localhost:12033"
@@ -54,10 +54,11 @@ GRPCAddress = "localhost:12633"
 APIKey = ""
 WhitelistCIDR = ["0.0.0.0/0"]
 GasLimit = 210000
-OperatorPrivateKey = "ea53196a45ffc018cb25e13f564cba5588cac66847863f3a006e8ccfffb1f00c"
-FundingPrivateKey = "b7a9d2b256c817428b8faf848278dcf969244940b1de7aaa7d1a2d1149bdec14"
-SealPrivateKey = "62ab3d4394b7b4f922db8c69f4c5ae71cb56b1042d7d9e3fb7ee6de7a48dc398"
-ApprovalPrivateKey = "31a493564a3581e942c7ce8201d4b20bdb3736e05c7cc7549dc272f850c9b0f0"
+OperatorPrivateKey = "b2ea01507bdb9a11b22a61e7905f9d2b8a9128753408e4b5a901dfebfe861908"
+FundingPrivateKey = "57be037d31bbfd3a1fa2d3394dd57382bb4d6993963f18889735285d05b1b365"
+SealPrivateKey = "124a8f803a7b07d831400da3ae97a863ecc468d99506165cc6445d59790b7017"
+ApprovalPrivateKey = "f439a2e2669801445ca2bf22b83134c27a061650326f9cad4c7308ba59b6b32f"
+GcPrivateKey = "d02b24ef1bed9eb96c8ed1bcce33e18675867b215d899db3466deb779ce36dc5"
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]
