@@ -8,6 +8,7 @@ import (
 	chaintypes "github.com/bnb-chain/greenfield/types"
 	"github.com/bnb-chain/greenfield/types/resource"
 	gnfdresource "github.com/bnb-chain/greenfield/types/resource"
+	"github.com/bnb-chain/greenfield/types/s3util"
 	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
 	"github.com/bnb-chain/greenfield/x/storage/keeper"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -37,18 +38,22 @@ func (metadata *Metadata) VerifyPermission(ctx context.Context, req *storagetype
 
 	operator, err = sdk.AccAddressFromHexUnsafe(req.Operator)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "error", err)
+		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "req.Operator", operator.String(), "error", err)
 		return nil, err
 	}
 
-	if req.BucketName == "" {
+	if err = s3util.CheckValidBucketName(req.BucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", req.BucketName, "error", err)
 		return nil, errors.ErrInvalidBucketName
 	}
 
 	bucketInfo, err = metadata.bsDB.GetBucketByName(req.BucketName, true)
-	if err != nil || bucketInfo == nil {
+	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket info", "error", err)
+		return nil, err
+	}
+	if bucketInfo == nil {
+		log.CtxError(ctx, "no such bucket")
 		return nil, errors.ErrNoSuchBucket
 	}
 
@@ -60,15 +65,23 @@ func (metadata *Metadata) VerifyPermission(ctx context.Context, req *storagetype
 		}
 	} else {
 		objectInfo, err = metadata.bsDB.GetObjectInfo(req.BucketName, req.ObjectName)
-		if err != nil || objectInfo == nil {
+		if err != nil {
 			log.CtxErrorw(ctx, "failed to get object info", "error", err)
+			return nil, err
+		}
+		if objectInfo == nil {
+			log.CtxError(ctx, "no such object")
 			return nil, errors.ErrNoSuchObject
 		}
-		effect = metadata.VerifyObjectPermission(ctx, bucketInfo, objectInfo, operator, req.ActionType)
+		effect, err = metadata.VerifyObjectPermission(ctx, bucketInfo, objectInfo, operator, req.ActionType)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to verify object permission", "error", err)
+			return nil, err
+		}
 	}
 
 	resp = &storagetypes.QueryVerifyPermissionResponse{Effect: effect}
-	log.CtxInfow(ctx, "succeed to get payment by bucket id")
+	log.CtxInfow(ctx, "succeed to verify permission")
 	return resp, nil
 }
 
@@ -88,7 +101,7 @@ func (metadata *Metadata) VerifyBucketPermission(ctx context.Context, bucketInfo
 
 	owner, err = sdk.AccAddressFromHexUnsafe(bucketInfo.Owner.String())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "error", err)
+		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "bucketInfo.Owner.String()", bucketInfo.Owner.String(), "error", err)
 		return permtypes.EFFECT_DENY, err
 	}
 
@@ -112,7 +125,7 @@ func (metadata *Metadata) VerifyBucketPermission(ctx context.Context, bucketInfo
 
 // VerifyObjectPermission verify object permission
 func (metadata *Metadata) VerifyObjectPermission(ctx context.Context, bucketInfo *bsdb.Bucket, objectInfo *bsdb.Object,
-	operator sdk.AccAddress, action permtypes.ActionType) permtypes.Effect {
+	operator sdk.AccAddress, action permtypes.ActionType) (permtypes.Effect, error) {
 	var (
 		visibility   bool
 		err          error
@@ -129,18 +142,18 @@ func (metadata *Metadata) VerifyObjectPermission(ctx context.Context, bucketInfo
 	}
 
 	if visibility && keeper.PublicReadObjectAllowedActions[action] {
-		return permtypes.EFFECT_ALLOW
+		return permtypes.EFFECT_ALLOW, nil
 	}
 
 	// the owner has full permissions
 	ownerAcc, err = sdk.AccAddressFromHexUnsafe(objectInfo.Owner.String())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "error", err)
-		return permtypes.EFFECT_DENY
+		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "objectInfo.Owner.String()", objectInfo.Owner.String(), "error", err)
+		return permtypes.EFFECT_DENY, err
 	}
 
 	if ownerAcc.Equals(operator) {
-		return permtypes.EFFECT_ALLOW
+		return permtypes.EFFECT_ALLOW, nil
 	}
 
 	// verify policy
@@ -150,20 +163,20 @@ func (metadata *Metadata) VerifyObjectPermission(ctx context.Context, bucketInfo
 	bucketEffect, err = metadata.VerifyPolicy(ctx, math.NewUintFromBigInt(bucketInfo.BucketID.Big()), gnfdresource.RESOURCE_TYPE_BUCKET, operator, action, opts)
 	if err != nil || bucketEffect == permtypes.EFFECT_DENY {
 		log.CtxErrorw(ctx, "failed to verify object policy", "error", err)
-		return permtypes.EFFECT_DENY
+		return permtypes.EFFECT_DENY, err
 	}
 
 	objectEffect, err = metadata.VerifyPolicy(ctx, math.NewUintFromBigInt(objectInfo.ObjectID.Big()), gnfdresource.RESOURCE_TYPE_OBJECT, operator, action,
 		nil)
 	if err != nil || objectEffect == permtypes.EFFECT_DENY {
 		log.CtxErrorw(ctx, "failed to verify object policy", "error", err)
-		return permtypes.EFFECT_DENY
+		return permtypes.EFFECT_DENY, err
 	}
 
 	if bucketEffect == permtypes.EFFECT_ALLOW || objectEffect == permtypes.EFFECT_ALLOW {
-		return permtypes.EFFECT_ALLOW
+		return permtypes.EFFECT_ALLOW, nil
 	}
-	return permtypes.EFFECT_DENY
+	return permtypes.EFFECT_DENY, nil
 }
 
 // VerifyPolicy verify policy of permission
