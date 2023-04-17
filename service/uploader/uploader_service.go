@@ -152,7 +152,7 @@ func (uploader *Uploader) QueryUploadProgress(ctx context.Context, req *types.Qu
 	resp *types.QueryUploadProgressResponse, err error) {
 	ctx = log.Context(ctx, req)
 	defer func() {
-		log.CtxDebugw(ctx, "query object put state", "request", req, "response", resp, "error", err)
+		log.CtxDebugw(ctx, "query upload progress", "request", req, "response", resp, "error", err)
 	}()
 
 	job, err := uploader.spDB.GetJobByObjectID(req.GetObjectId())

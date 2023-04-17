@@ -3,17 +3,18 @@ package gateway
 import (
 	"context"
 	"encoding/xml"
+	"errors"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model/job"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/model/job"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getBucketReadQuota handles the get bucket read quota request
@@ -210,7 +211,6 @@ func (g *Gateway) queryUploadProgressHandler(w http.ResponseWriter, r *http.Requ
 		reqContext          *requestContext
 		addr                sdktypes.AccAddress
 		jobState            servicetypes.JobState
-		jobStateStr         string
 		jobStateDescription string
 	)
 
@@ -254,26 +254,29 @@ func (g *Gateway) queryUploadProgressHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	if reqContext.objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
-		jobStateStr = storagetypes.OBJECT_STATUS_SEALED.String()
-		jobStateDescription = "the object is succeed to upload"
+		jobStateDescription = job.StateToDescription(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
 	} else {
-		if jobState, err = g.uploader.QueryUploadProgress(context.Background(), reqContext.objectInfo.Id.Uint64()); err != nil {
-			log.Errorw("failed to query upload progress", "error", err)
-			errDescription = makeErrorDescription(err)
-			return
+		jobState, err = g.uploader.QueryUploadProgress(context.Background(), reqContext.objectInfo.Id.Uint64())
+		if err != nil {
+			err = merrors.GRPCErrorToInnerError(err)
+			if errors.Is(err, merrors.ErrNoSuchObject) {
+				jobStateDescription = job.ToReadableDescription[job.UploadProgressMetaCreated]
+			} else {
+				log.Errorw("failed to query upload progress", "error", err)
+				errDescription = makeErrorDescription(err)
+				return
+			}
+		} else {
+			jobStateDescription = job.StateToDescription(jobState)
 		}
-		jobStateStr = jobState.String()
-		jobStateDescription = job.JobStateToDescription(jobState)
 	}
 	var xmlInfo = struct {
-		XMLName     xml.Name `xml:"QueryUploadProgress"`
-		Version     string   `xml:"version,attr"`
-		State       string   `xml:"State"`
-		Description string   `xml:"Description"`
+		XMLName             xml.Name `xml:"QueryUploadProgress"`
+		Version             string   `xml:"version,attr"`
+		ProgressDescription string   `xml:"ProgressDescription"`
 	}{
-		Version:     model.GnfdResponseXMLVersion,
-		State:       jobStateStr,
-		Description: jobStateDescription,
+		Version:             model.GnfdResponseXMLVersion,
+		ProgressDescription: jobStateDescription,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {

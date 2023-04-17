@@ -2,28 +2,54 @@ package job
 
 import servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 
-var stateToDescription = map[servicetypes.JobState]string{
-	servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED:       "the job is in the init state",
-	servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING:    "upload job is running in the foreground process",
-	servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE:     "upload job has been completed in the foreground process",
-	servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR:    "something is failed in the foreground upload process",
-	servicetypes.JobState_JOB_STATE_ALLOC_SECONDARY_DOING:  "allocate sp is running in the foreground process",
-	servicetypes.JobState_JOB_STATE_ALLOC_SECONDARY_DONE:   "allocate job has been completed in the foreground process",
-	servicetypes.JobState_JOB_STATE_ALLOC_SECONDARY_ERROR:  "something is failed in the foreground allocating process",
-	servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING: "replicate job is running in the background process",
-	servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DONE:  "replicate job has been completed in the background process",
-	servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR: "something is failed in the background replicating process",
-	servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING:      "sign is running in the background process",
-	servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DONE:       "sign has been completed in the background process",
-	servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR:      "something is failed in background signing process",
-	servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DOING:      "seal is running in the background process",
-	servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE:       "seal has been completed in the background process, the object is succeed to upload",
-	servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR:      "something is failed in the background sealing process",
+type readableUploadProgressType uint32
+
+const (
+	UploadProgressMetaCreated     readableUploadProgressType = 0
+	UploadProgressDataUploading   readableUploadProgressType = 1
+	UploadProgressDataReplicating readableUploadProgressType = 2
+	UploadProgressSealing         readableUploadProgressType = 3
+	UploadProgressCompleted       readableUploadProgressType = 4
+	UploadProgressFailed          readableUploadProgressType = 5
+)
+
+// ToReadableDescription convects readable type to the description string
+var ToReadableDescription = map[readableUploadProgressType]string{
+	UploadProgressMetaCreated:     "object meta is created in the chain, but the upload has been not started yet",
+	UploadProgressDataUploading:   "object payload is uploading to the primary SP",
+	UploadProgressDataReplicating: "object payload is replicating to the secondary SPs in the background",
+	UploadProgressSealing:         "object meta is sealing onto the chain in the background",
+	UploadProgressCompleted:       "object is succeed to upload",
+	UploadProgressFailed:          "something is wrong in the upload process",
 }
 
-// JobStateToDescription convents state to description.
-func JobStateToDescription(state servicetypes.JobState) string {
-	description, ok := stateToDescription[state]
+// StateToProgressType convents inner state to the readable type
+var StateToProgressType = map[servicetypes.JobState]readableUploadProgressType{
+	servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED:       UploadProgressDataUploading,
+	servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING:    UploadProgressDataUploading,
+	servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE:     UploadProgressDataReplicating,
+	servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR:    UploadProgressFailed,
+	servicetypes.JobState_JOB_STATE_ALLOC_SECONDARY_DOING:  UploadProgressDataReplicating,
+	servicetypes.JobState_JOB_STATE_ALLOC_SECONDARY_DONE:   UploadProgressDataReplicating,
+	servicetypes.JobState_JOB_STATE_ALLOC_SECONDARY_ERROR:  UploadProgressFailed,
+	servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING: UploadProgressDataReplicating,
+	servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DONE:  UploadProgressDataReplicating,
+	servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR: UploadProgressFailed,
+	servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING:      UploadProgressSealing,
+	servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DONE:       UploadProgressSealing,
+	servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR:      UploadProgressFailed,
+	servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DOING:      UploadProgressSealing,
+	servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE:       UploadProgressCompleted,
+	servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR:      UploadProgressFailed,
+}
+
+// StateToDescription convents state to description.
+func StateToDescription(state servicetypes.JobState) string {
+	uploadProgressType, ok := StateToProgressType[state]
+	if !ok {
+		return state.String()
+	}
+	description, ok := ToReadableDescription[uploadProgressType]
 	if !ok {
 		return state.String()
 	}
