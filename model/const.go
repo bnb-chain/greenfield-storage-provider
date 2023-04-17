@@ -136,6 +136,8 @@ const (
 const (
 	// ContentTypeHeader is used to indicate the media type of the resource
 	ContentTypeHeader = "Content-Type"
+	// ContentLengthHeader indicates the size of the message body, in bytes
+	ContentLengthHeader = "Content-Length"
 	// ETagHeader is an MD5 digest of the object data
 	ETagHeader = "ETag"
 	// RangeHeader asks the server to send only a portion of an HTTP message back to a client
@@ -164,6 +166,8 @@ const (
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
 	ActionQuery = "action"
+	// UploadProgressQuery defines upload progress query, which is used to route request
+	UploadProgressQuery = "upload-progress"
 	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request
 	GetBucketReadQuotaQuery = "read-quota"
 	// GetBucketReadQuotaMonthQuery defines bucket read quota query month
@@ -182,8 +186,6 @@ const (
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
-	// GnfdTransactionHashHeader defines blockchain tx-hash
-	GnfdTransactionHashHeader = "X-Gnfd-Txn-Hash"
 	// GnfdAuthorizationHeader defines authorization, verify signature and check authorization
 	GnfdAuthorizationHeader = "Authorization"
 	// GnfdObjectIDHeader defines object id
@@ -203,7 +205,7 @@ const (
 	// GnfdPieceSizeHeader defines piece size, which is used to split by receiver
 	GnfdPieceSizeHeader = "X-Gnfd-Piece-Size"
 	// GnfdReplicateApproval defines SP approval that allow to replicate piece data, which is used by receiver
-	GnfdReplicateApproval = "X-Gnfd-Replica-Approval"
+	GnfdReplicateApproval = "X-Gnfd-Replicate-Approval"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 	// GnfdUserAddressHeader defines the user address
