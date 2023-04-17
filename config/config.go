@@ -72,7 +72,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.P2PService:        model.P2PGRPCAddress,
 	},
 	Endpoint: map[string]string{
-		model.GatewayService:    "gnfd.nodereal.com",
+		model.GatewayService:    "gnfd.test-sp.com",
 		model.UploaderService:   model.UploaderGRPCAddress,
 		model.DownloaderService: model.DownloaderGRPCAddress,
 		model.ChallengeService:  model.ChallengeGRPCAddress,

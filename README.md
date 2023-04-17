@@ -73,7 +73,7 @@ SpOperatorAddress = ""
 [Endpoint]
 challenge = "localhost:9333"
 downloader = "localhost:9233"
-gateway = "gnfd.nodereal.com"
+gateway = "gnfd.test-sp.com"
 metadata = "localhost:9733"
 p2p = "localhost:9833"
 receiver = "localhost:9533"
