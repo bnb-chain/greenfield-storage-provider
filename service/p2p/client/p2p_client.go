@@ -9,9 +9,9 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/p2p/types"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 // P2PClient is a p2p server gRPC service client wrapper
@@ -21,12 +21,20 @@ type P2PClient struct {
 	p2p     types.P2PServiceClient
 }
 
+const p2pRPCServiceName = "service.p2p.types.P2PService"
+
 // NewP2PClient return a P2PClient instance
 func NewP2PClient(address string) (*P2PClient, error) {
 	options := []grpc.DialOption{}
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}
+	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(p2pRPCServiceName)
+	if err != nil {
+		log.Errorw("failed to get p2p client retry option", "error", err)
+		return nil, err
+	}
+	options = append(options, retryOption)
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {

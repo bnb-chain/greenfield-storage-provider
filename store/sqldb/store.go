@@ -3,11 +3,12 @@ package sqldb
 import (
 	"fmt"
 	"os"
+	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
@@ -22,6 +23,7 @@ type SpDBImpl struct {
 // NewSpDB return a database instance
 func NewSpDB(config *config.SQLDBConfig) (*SpDBImpl, error) {
 	LoadDBConfigFromEnv(config)
+	OverrideConfigVacancy(config)
 	db, err := InitDB(config)
 	if err != nil {
 		return nil, err
@@ -38,7 +40,15 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("gorm failed to open db", "error", err)
 		return nil, err
 	}
-
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Errorw("gorm failed to set db params", "error", err)
+		return nil, err
+	}
+	sqlDB.SetConnMaxLifetime(time.Duration(config.ConnMaxLifetime) * time.Second)
+	sqlDB.SetConnMaxIdleTime(time.Duration(config.ConnMaxIdleTime) * time.Second)
+	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
 	// create if not exist
 	if err := db.AutoMigrate(&JobTable{}); err != nil {
 		log.Errorw("failed to create job table", "error", err)
@@ -88,5 +98,21 @@ func LoadDBConfigFromEnv(config *config.SQLDBConfig) {
 	}
 	if val, ok := os.LookupEnv(model.SpDBDataBase); ok {
 		config.Database = val
+	}
+}
+
+// OverrideConfigVacancy override the SQLDB param zero value
+func OverrideConfigVacancy(config *config.SQLDBConfig) {
+	if config.ConnMaxLifetime == 0 {
+		config.ConnMaxLifetime = model.DefaultConnMaxLifetime
+	}
+	if config.ConnMaxIdleTime == 0 {
+		config.ConnMaxIdleTime = model.DefaultConnMaxIdleTime
+	}
+	if config.MaxIdleConns == 0 {
+		config.MaxIdleConns = model.DefaultMaxIdleConns
+	}
+	if config.MaxOpenConns == 0 {
+		config.MaxOpenConns = model.DefaultMaxOpenConns
 	}
 }

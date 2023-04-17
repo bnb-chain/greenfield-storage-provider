@@ -24,6 +24,10 @@ var (
 	ErrUnsupportedMethod = errors.New("unsupported method")
 	// ErrIntegerOverflow defines integer overflow
 	ErrIntegerOverflow = errors.New("integer overflow")
+	// ErrDanglingPointer defines the nil pointer error
+	ErrDanglingPointer = errors.New("pointer dangling")
+	// ErrInvalidParams defines invalid params
+	ErrInvalidParams = errors.New("invalid params")
 )
 
 // piece store errors
@@ -100,6 +104,16 @@ var (
 	ErrSPApprovalNumber = errors.New("failed to get sufficient approvals of SPs from p2p server")
 	// ErrSPNumber defines failed to get insufficient SPs from DB
 	ErrSPNumber = errors.New("failed to get sufficient SPs from DB")
+	// ErrExhaustedSP defines no backup SP to pick up error
+	ErrExhaustedSP = errors.New("backup storage providers exhausted")
+)
+
+// uploader service error
+var (
+	// ErrMismatchIntegrityHash defines integrity hash mismatch error
+	ErrMismatchIntegrityHash = errors.New("integrity hash mismatch")
+	// ErrMismatchChecksumNum defines checksum number mismatch error
+	ErrMismatchChecksumNum = errors.New("checksum number mismatch")
 )
 
 // InnerErrorToGRPCError convents inner error to grpc/status error
@@ -121,7 +135,7 @@ func GRPCErrorToInnerError(err error) error {
 		return ErrNoSuchObject
 	}
 	if codes.PermissionDenied == errStatus.Code() {
-		return ErrNoPermission
+		return ErrCheckQuotaEnough
 	}
 	return err
 }

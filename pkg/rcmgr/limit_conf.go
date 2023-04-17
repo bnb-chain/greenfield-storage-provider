@@ -19,7 +19,7 @@ type LimitConfig struct {
 }
 
 var DefaultLimitConfig = &LimitConfig{
-	SystemLimit: DynamicLimits(),
+	SystemLimit: &InfiniteBaseLimit,
 	Service:     make(map[string]*BaseLimit),
 }
 

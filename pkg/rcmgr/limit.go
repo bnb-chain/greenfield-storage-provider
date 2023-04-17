@@ -3,10 +3,6 @@ package rcmgr
 import (
 	"fmt"
 	"math"
-
-	"github.com/shirou/gopsutil/mem"
-
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
@@ -87,20 +83,20 @@ var InfiniteBaseLimit = BaseLimit{
 }
 
 // DynamicLimits generate limits by os resource
-func DynamicLimits() *BaseLimit {
-	availableMem := DefaultMemorySize
-	virtualMem, err := mem.VirtualMemory()
-	if err != nil {
-		log.Errorw("failed to get os memory states", "error", err)
-	} else {
-		availableMem = virtualMem.Available
-	}
-	limits := &BaseLimit{}
-	limits.Memory = int64(float64(availableMem) * LimitFactor)
-	// TODO:: get from os and compatible with a variety of os
-	limits.FD = math.MaxInt
-	limits.Conns = math.MaxInt
-	limits.ConnsInbound = math.MaxInt
-	limits.ConnsOutbound = math.MaxInt
-	return limits
-}
+//func DynamicLimits() *BaseLimit {
+//	availableMem := DefaultMemorySize
+//	virtualMem, err := mem.VirtualMemory()
+//	if err != nil {
+//		log.Errorw("failed to get os memory states", "error", err)
+//	} else {
+//		availableMem = virtualMem.Available
+//	}
+//	limits := &BaseLimit{}
+//	limits.Memory = int64(float64(availableMem) * LimitFactor)
+//	// TODO:: get from os and compatible with a variety of os
+//	limits.FD = math.MaxInt
+//	limits.Conns = math.MaxInt
+//	limits.ConnsInbound = math.MaxInt
+//	limits.ConnsOutbound = math.MaxInt
+//	return limits
+//}

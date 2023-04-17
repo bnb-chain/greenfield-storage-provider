@@ -3,15 +3,14 @@ package client
 import (
 	"context"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
 	servicetype "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // TaskNodeClient is a task node gRPC service client wrapper
@@ -21,11 +20,19 @@ type TaskNodeClient struct {
 	taskNode types.TaskNodeServiceClient
 }
 
+const taskNodeRPCServiceName = "service.tasknode.types.TaskNodeService"
+
 // NewTaskNodeClient return a TaskNodeClient instance
 func NewTaskNodeClient(address string) (*TaskNodeClient, error) {
 	options := utilgrpc.GetDefaultClientOptions()
+	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(taskNodeRPCServiceName)
+	if err != nil {
+		log.Errorw("failed to get task node client retry option", "error", err)
+		return nil, err
+	}
+	options = append(options, retryOption)
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
@@ -52,10 +59,10 @@ func (client *TaskNodeClient) ReplicateObject(ctx context.Context, object *stora
 }
 
 // QueryReplicatingObject query a replicating object payload information by object id
-func (client *TaskNodeClient) QueryReplicatingObject(ctx context.Context, objectID uint64) (*servicetype.ReplicateSegmentInfo, error) {
+func (client *TaskNodeClient) QueryReplicatingObject(ctx context.Context, objectID uint64) (*servicetype.ReplicatePieceInfo, error) {
 	resp, err := client.taskNode.QueryReplicatingObject(ctx, &types.QueryReplicatingObjectRequest{ObjectId: objectID})
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetReplicateSegmentInfo(), err
+	return resp.GetReplicatePieceInfo(), err
 }

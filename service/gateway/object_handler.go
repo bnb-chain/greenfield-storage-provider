@@ -30,10 +30,12 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		readN, writeN  int
 		size           int
 		statusCode     = http.StatusOK
+		ctx, cancel    = context.WithCancel(context.Background())
 	)
 
 	reqContext = newRequestContext(r)
 	defer func() {
+		cancel()
 		if errDescription != nil {
 			statusCode = errDescription.statusCode
 			_ = errDescription.errorResponse(w, reqContext)
@@ -90,7 +92,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		RangeStart:  uint64(rangeStart),
 		RangeEnd:    uint64(rangeEnd),
 	}
-	ctx := log.Context(context.Background(), req)
+	// ctx := log.Context(context.Background(), req)
 	stream, err := gateway.downloader.GetObject(ctx, req)
 	if err != nil {
 		log.Errorf("failed to get object", "error", err)
@@ -144,10 +146,12 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 		buf            = make([]byte, model.DefaultStreamBufSize)
 		hashBuf        = make([]byte, model.DefaultStreamBufSize)
 		md5Hash        = md5.New()
+		ctx, cancel    = context.WithCancel(context.Background())
 	)
 
 	reqContext = newRequestContext(r)
 	defer func() {
+		cancel()
 		if errDescription != nil {
 			_ = errDescription.errorResponse(w, reqContext)
 		}
@@ -188,7 +192,7 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	stream, err := gateway.uploader.PutObject(context.Background())
+	stream, err := gateway.uploader.PutObject(ctx)
 	if err != nil {
 		log.Errorf("failed to put object", "error", err)
 		errDescription = makeErrorDescription(err)
@@ -207,7 +211,7 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 				Payload:    buf[:readN],
 			}
 			if err := stream.Send(req); err != nil {
-				log.Errorw("failed to put object failed due to stream send error", "error", err)
+				log.Errorw("failed to put object due to stream send error", "error", err)
 				errDescription = InternalError
 				return
 			}

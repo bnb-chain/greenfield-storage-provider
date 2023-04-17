@@ -3,12 +3,15 @@ package blocksyncer
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/forbole/juno/v4/common"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/database"
 	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
@@ -77,17 +80,21 @@ func (i *Impl) Process(height uint64) error {
 			log.Errorf("failed to get block from node: %s", err)
 			return err
 		}
-
-		events, err = i.Node.BlockResults(int64(height))
-		if err != nil {
-			log.Errorf("failed to get block results from node: %s", err)
-			return err
-		}
 	}
 
-	err = i.ExportEvents(context.Background(), block, events)
+	block, err = i.Node.Block(int64(height))
 	if err != nil {
-		log.Errorf("failed to ExportEvents: %s", err)
+		log.Errorf("failed to get block from node: %s", err)
+		return err
+	}
+
+	txs, err := i.Node.Txs(block)
+	if err != nil {
+		return fmt.Errorf("failed to get transactions for block: %s", err)
+	}
+
+	err = i.ExportEventsByTxs(context.Background(), block, txs)
+	if err != nil {
 		return err
 	}
 
@@ -118,6 +125,8 @@ func (i *Impl) ExportEpoch(block *coretypes.ResultBlock) error {
 		log.Errorf("failed to persist block: %s", err)
 		return err
 	}
+
+	metrics.BlockHeightLagGauge.WithLabelValues("blocksyncer").Set(float64(block.Block.Height))
 
 	return nil
 }
@@ -159,6 +168,16 @@ func (i *Impl) ExportEvents(ctx context.Context, block *coretypes.ResultBlock, e
 	return nil
 }
 
+func (i *Impl) ExportEventsByTxs(ctx context.Context, block *coretypes.ResultBlock, txs []*types.Tx) error {
+	for _, tx := range txs {
+		txHash := common.HexToHash(tx.TxHash)
+		for _, event := range tx.Events {
+			i.HandleEvent(ctx, block, txHash, sdk.Event(event))
+		}
+	}
+	return nil
+}
+
 // HandleGenesis accepts a GenesisDoc and calls all the registered genesis handlers in the order in which they have been registered.
 func (i *Impl) HandleGenesis(genesisDoc *tmtypes.GenesisDoc, appState map[string]json.RawMessage) error {
 	return nil
@@ -181,6 +200,11 @@ func (i *Impl) HandleTx(tx *types.Tx) {
 	log.Info("HandleTx")
 }
 
+// HandleMessage accepts the transaction and handles messages contained inside the transaction.
+func (i *Impl) HandleMessage(block *coretypes.ResultBlock, index int, msg sdk.Msg, tx *types.Tx) {
+	log.Info("HandleMessage")
+}
+
 // Processed tells whether the current Indexer has already processed the given height of Block
 // An error is returned if the operation fails.
 func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
@@ -196,16 +220,19 @@ func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
 	return ep.BlockHeight > int64(height), nil
 }
 
-func (i *Impl) HandleMessage(block *coretypes.ResultBlock, index int, msg sdk.Msg, tx *types.Tx) {
-	log.Info("HandleMessage")
+// GetBlockRecordNum returns total number of blocks stored in database.
+func (i *Impl) GetBlockRecordNum(_ context.Context) int64 {
+	return 1
 }
 
-func (i *Impl) GetBlockRecordNum(ctx context.Context) int64 {
-	//TODO implement me
-	panic("implement me")
-}
-
+// GetLastBlockRecordHeight returns the last block height stored inside the database
 func (i *Impl) GetLastBlockRecordHeight(ctx context.Context) (uint64, error) {
-	//TODO implement me
-	panic("implement me")
+	var lastBlockRecordHeight uint64
+	currentEpoch, err := i.DB.GetEpoch(ctx)
+	if err == nil {
+		lastBlockRecordHeight = 0
+	} else {
+		lastBlockRecordHeight = uint64(currentEpoch.BlockHeight)
+	}
+	return lastBlockRecordHeight, err
 }

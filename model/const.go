@@ -120,6 +120,18 @@ const (
 	P2PPrivateKey = "P2P_PRIVATE_KEY"
 )
 
+// SQLDB default configuration parmas
+const (
+	// DefaultConnMaxLifetime defines the default max liveness time of connection
+	DefaultConnMaxLifetime = 60
+	// DefaultConnMaxIdleTime defines the default max idle time of connection
+	DefaultConnMaxIdleTime = 30
+	// DefaultMaxIdleConns defines the default max number of idle connections
+	DefaultMaxIdleConns = 16
+	// DefaultMaxOpenConns defines the default max number of open connections
+	DefaultMaxOpenConns = 32
+)
+
 // define all kinds of http constants
 const (
 	// ContentTypeHeader is used to indicate the media type of the resource
@@ -166,8 +178,8 @@ const (
 	EndTimestampUs = "end-timestamp"
 	// ChallengePath defines challenge path style suffix
 	ChallengePath = "/greenfield/admin/v1/challenge"
-	// SyncPath defines sync-object path style
-	SyncPath = "/greenfield/receiver/v1/sync-piece"
+	// ReplicateObjectPiecePath defines replicate-object path style
+	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
 	// GnfdTransactionHashHeader defines blockchain tx-hash
@@ -188,8 +200,6 @@ const (
 	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
 	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
-	// GnfdObjectInfoHeader define object info, which is used by receiver
-	GnfdObjectInfoHeader = "X-Gnfd-Object-Info"
 	// GnfdPieceSizeHeader defines piece size, which is used to split by receiver
 	GnfdPieceSizeHeader = "X-Gnfd-Piece-Size"
 	// GnfdReplicateApproval defines SP approval that allow to replicate piece data, which is used by receiver
@@ -222,4 +232,14 @@ const (
 	DefaultPartitionSize = 10_000
 	// DefaultMaxListLimit defines maximum number of the list request
 	DefaultMaxListLimit = 1000
+)
+
+// PieceType defines the object payload data type
+type PieceType int32
+
+const (
+	// SegmentPieceType defines the data type of segment piece
+	SegmentPieceType PieceType = 0
+	// ECPieceType defines the data type of ec piece
+	ECPieceType PieceType = 1
 )

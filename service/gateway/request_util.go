@@ -58,7 +58,7 @@ func (reqContext *requestContext) generateRequestDetail() string {
 	var headerToString = func(header http.Header) string {
 		var sb = strings.Builder{}
 		for k := range header {
-			if k == model.GnfdObjectInfoHeader || k == model.GnfdUnsignedApprovalMsgHeader {
+			if k == model.GnfdUnsignedApprovalMsgHeader {
 				continue
 			}
 			if sb.Len() != 0 {
@@ -229,11 +229,14 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 
 	// TODO: just for auth v2 js-sdk, will refine it in the future
 	if reqContext.skipAuth {
-		if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
-			context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
-			log.Errorw("failed to query bucket info and object info on chain",
-				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
-			return err
+		if mux.CurrentRoute(reqContext.request).GetName() == putObjectRouterName ||
+			mux.CurrentRoute(reqContext.request).GetName() == getObjectRouterName {
+			if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
+				context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
+				log.Errorw("failed to query bucket info and object info on chain",
+					"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
+				return err
+			}
 		}
 		return nil
 	}
@@ -318,6 +321,12 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 				"bucket_owner", reqContext.bucketInfo.GetOwner(),
 				"request_address", addr.String())
 			return errors.ErrNoPermission
+		}
+	case challengeRouterName:
+		objectID := reqContext.request.Header.Get(model.GnfdObjectIDHeader)
+		if reqContext.objectInfo, err = g.chain.QueryObjectInfoByID(context.Background(), objectID); err != nil {
+			log.Errorw("failed to query object info  on chain", "object_id", objectID, "error", err)
+			return err
 		}
 	}
 	return nil

@@ -6,13 +6,12 @@ import (
 	"sync"
 	"sync/atomic"
 
-	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
-	"github.com/forbole/juno/v4/types"
-
 	"github.com/forbole/juno/v4/cmd"
+	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
 	"github.com/forbole/juno/v4/modules/messages"
 	"github.com/forbole/juno/v4/modules/registrar"
+	"github.com/forbole/juno/v4/types"
 
 	"github.com/forbole/juno/v4/types/config"
 
@@ -50,7 +49,7 @@ func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
 		return nil, err
 	}
 	// init meta db
-	if err := s.initDB(); err != nil {
+	if err := s.initDB(cfg.RecreateTables); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -99,15 +98,29 @@ func (s *BlockSyncer) initClient() error {
 }
 
 // initDB create tables needed by block syncer. It depends on which modules are configured
-func (s *BlockSyncer) initDB() error {
-	// Prepare tables
+func (s *BlockSyncer) initDB(recreateTables bool) error {
+
 	var err error
-	for _, module := range s.parserCtx.Modules {
-		if module, ok := module.(modules.PrepareTablesModule); ok {
-			err = module.PrepareTables()
-			if err != nil {
-				log.Errorw("failed to prepare tables", "error", err)
-				return err
+	// drop tables if needed
+	if recreateTables {
+		for _, module := range s.parserCtx.Modules {
+			if module, ok := module.(modules.PrepareTablesModule); ok {
+				err = module.RecreateTables()
+				if err != nil {
+					log.Errorw("failed to recreate tables", "error", err)
+					return err
+				}
+			}
+		}
+	} else {
+		// Prepare tables without recreate
+		for _, module := range s.parserCtx.Modules {
+			if module, ok := module.(modules.PrepareTablesModule); ok {
+				err = module.PrepareTables()
+				if err != nil {
+					log.Errorw("failed to prepare tables", "error", err)
+					return err
+				}
 			}
 		}
 	}

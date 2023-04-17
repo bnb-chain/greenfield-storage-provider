@@ -1,9 +1,10 @@
 package grpc
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 // GetDefaultServerOptions returns default gRPC server options

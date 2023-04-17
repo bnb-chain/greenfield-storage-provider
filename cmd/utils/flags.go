@@ -69,7 +69,7 @@ var (
 		Name:     "rcmgr.disable",
 		Category: ResourceManagerCategory,
 		Usage:    "Disable resource manager",
-		Value:    false,
+		Value:    true,
 	}
 	ResourceManagerConfigFlag = &cli.StringFlag{
 		Name:     "rcmgr.config",

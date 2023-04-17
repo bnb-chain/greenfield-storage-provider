@@ -7,7 +7,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	mwgrpc "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/grpc"
 	"github.com/bnb-chain/greenfield-storage-provider/service/receiver/types"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
@@ -20,11 +19,19 @@ type ReceiverClient struct {
 	receiver types.ReceiverServiceClient
 }
 
+const receiverRPCServiceName = "service.receiver.types.ReceiverService"
+
 // NewReceiverClient return a ReceiverClient instance
 func NewReceiverClient(address string) (*ReceiverClient, error) {
 	options := utilgrpc.GetDefaultClientOptions()
+	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(receiverRPCServiceName)
+	if err != nil {
+		log.Errorw("failed to get receiver client retry option", "error", err)
+		return nil, err
+	}
+	options = append(options, retryOption)
 	if metrics.GetMetrics().Enabled() {
-		options = append(options, mwgrpc.GetDefaultClientInterceptor()...)
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
@@ -44,21 +51,20 @@ func (client *ReceiverClient) Close() error {
 	return client.conn.Close()
 }
 
-// SyncObject an object payload with object info
-func (client *ReceiverClient) SyncObject(
-	ctx context.Context,
-	opts ...grpc.CallOption) (types.ReceiverService_SyncObjectClient, error) {
-	return client.receiver.SyncObject(ctx, opts...)
+// ReceiveObjectPiece an object payload with object info
+func (client *ReceiverClient) ReceiveObjectPiece(ctx context.Context, opts ...grpc.CallOption) (
+	types.ReceiverService_ReceiveObjectPieceClient, error) {
+	return client.receiver.ReceiveObjectPiece(ctx, opts...)
 }
 
-// QuerySyncingObject a syncing object info by object id
-func (client *ReceiverClient) QuerySyncingObject(ctx context.Context, objectID uint64) (*servicetypes.SegmentInfo, error) {
-	req := &types.QuerySyncingObjectRequest{
+// QueryReceivingObject a syncing object info by object id
+func (client *ReceiverClient) QueryReceivingObject(ctx context.Context, objectID uint64) (*servicetypes.PieceInfo, error) {
+	req := &types.QueryReceivingObjectRequest{
 		ObjectId: objectID,
 	}
-	resp, err := client.receiver.QuerySyncingObject(ctx, req)
+	resp, err := client.receiver.QueryReceivingObject(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetSegmentInfo(), nil
+	return resp.GetPieceInfo(), nil
 }

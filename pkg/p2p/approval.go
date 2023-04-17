@@ -167,6 +167,6 @@ func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 		return
 	}
 	err = a.notifyApprovalResponse(resp)
-	log.Infof("%s received approval response to %s, and notify to hang request error: %s",
+	log.Infof("%s received approval response to %s, and notify to hang request error: %v",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), err)
 }
