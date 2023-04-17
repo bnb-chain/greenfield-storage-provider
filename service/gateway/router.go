@@ -116,7 +116,7 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Methods(http.MethodPost).
 		HandlerFunc(g.updateUserPublicKeyHandler)
 
-  // path style
+	// path style
 	pathBucketRouter := r.PathPrefix("/{bucket}").Subrouter()
 	pathBucketRouter.NewRoute().
 		Name(putObjectRouterName).

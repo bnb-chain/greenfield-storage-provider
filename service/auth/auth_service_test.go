@@ -45,7 +45,7 @@ func TestGetAuthNonce(t *testing.T) {
 		{
 			name: "case 1/getAuthNonce success",
 			f: func(t *testing.T, c *gomock.Controller) *Body {
-
+				//nolint:all
 				mockSPDB := sqldb.NewMockSPDB(c)
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
@@ -120,7 +120,7 @@ func TestUpdateUserPublicKey(t *testing.T) {
 		{
 			name: "case 1/UpdateUserPublicKey success",
 			f: func(t *testing.T, c *gomock.Controller) *Body {
-
+				//nolint:all
 				mockSPDB := sqldb.NewMockSPDB(c)
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
@@ -209,6 +209,7 @@ func TestVerifyOffChainSignature(t *testing.T) {
 		{
 			name: "case 1/VerifyOffChainSignature success",
 			f: func(t *testing.T, c *gomock.Controller) *Body {
+				//nolint:all
 				mockSPDB := sqldb.NewMockSPDB(c)
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
@@ -245,6 +246,7 @@ func TestVerifyOffChainSignature(t *testing.T) {
 		{
 			name: "case 2/wrong msg format",
 			f: func(t *testing.T, c *gomock.Controller) *Body {
+				//nolint:all
 				mockSPDB := sqldb.NewMockSPDB(c)
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
@@ -280,6 +282,7 @@ func TestVerifyOffChainSignature(t *testing.T) {
 		{
 			name: "case 3/expired msg ",
 			f: func(t *testing.T, c *gomock.Controller) *Body {
+				//nolint:all
 				mockSPDB := sqldb.NewMockSPDB(c)
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
@@ -315,6 +318,7 @@ func TestVerifyOffChainSignature(t *testing.T) {
 		{
 			name: "case 4/msg expiredTimestamp is set too far ",
 			f: func(t *testing.T, c *gomock.Controller) *Body {
+				//nolint:all
 				mockSPDB := sqldb.NewMockSPDB(c)
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
@@ -350,6 +354,7 @@ func TestVerifyOffChainSignature(t *testing.T) {
 		{
 			name: "case 5/wrong Timestamp format",
 			f: func(t *testing.T, c *gomock.Controller) *Body {
+				//nolint:all
 				mockSPDB := sqldb.NewMockSPDB(c)
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
@@ -384,6 +389,7 @@ func TestVerifyOffChainSignature(t *testing.T) {
 		{
 			name: "case 6/VerifyOffChainSignature failed",
 			f: func(t *testing.T, c *gomock.Controller) *Body {
+				//nolint:all
 				mockSPDB := sqldb.NewMockSPDB(c)
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
