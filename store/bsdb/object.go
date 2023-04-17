@@ -1,9 +1,5 @@
 package bsdb
 
-import (
-	"github.com/bnb-chain/greenfield/x/storage/types"
-)
-
 // ListObjectsByBucketName list objects info by a bucket name
 func (b *BsDBImpl) ListObjectsByBucketName(bucketName string) ([]*Object, error) {
 	var (
@@ -58,13 +54,16 @@ func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, isFullL
 		err = b.db.Table((&Object{}).TableName()).
 			Select("*").
 			Where("object_name = ? and bucket_name = ?", objectName, bucketName).
-			Find(&object).Error
+			Take(&object).Error
 		return object, err
 	}
 
-	err = b.db.Table((&Object{}).TableName()).
-		Select("*").
-		Where("object_name = ? and bucket_name = ? and visibility = ?", objectName, bucketName, types.VISIBILITY_TYPE_PUBLIC_READ.String()).
-		Find(&object).Error
+	err = b.db.Table((&Bucket{}).TableName()).
+		Select("objects.*").
+		Joins("left join objects on buckets.bucket_id = objects.bucket_id").
+		Where("objects.object_name = ? and objects.bucket_name = ? and "+
+			"(objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ')",
+			objectName, bucketName).
+		Take(&object).Error
 	return object, err
 }

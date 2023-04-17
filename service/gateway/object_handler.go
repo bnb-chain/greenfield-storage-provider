@@ -327,9 +327,11 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		return
 	}
 
+	// In first phase, do not provide universal endpoint for private object
 	getObjectInfoReq := &metatypes.GetObjectByObjectNameAndBucketNameRequest{
 		ObjectName: reqContext.objectName,
-		IsFullList: true,
+		BucketName: reqContext.bucketName,
+		IsFullList: false,
 	}
 
 	getObjectInfoRes, err := gateway.metadata.GetObjectByObjectNameAndBucketName(ctx, getObjectInfoReq)
@@ -347,6 +349,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 	if getObjectInfoRes.GetObject().GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.Errorw("object is not sealed",
 			"status", getObjectInfoRes.GetObject().GetObjectInfo().GetObjectStatus())
+		errDescription = InvalidObjectState
 		return
 	}
 
