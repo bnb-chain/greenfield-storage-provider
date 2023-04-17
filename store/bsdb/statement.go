@@ -35,6 +35,7 @@ func (s *Statement) Eval(action permtypes.ActionType, opts *permtypes.VerifyOpti
 		}
 	}
 
+	// convert action bitmap to action list
 	actions := make([]permtypes.ActionType, 0)
 	for _, v := range metadata.ActionTypeMap {
 		if s.ActionValue&(1<<v) == 1<<v {

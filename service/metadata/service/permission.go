@@ -19,7 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
-// VerifyPermission Verify the input items permission.
+// VerifyPermission Verify the input account’s permission to input items
 func (metadata *Metadata) VerifyPermission(ctx context.Context, req *storagetypes.QueryVerifyPermissionRequest) (resp *storagetypes.QueryVerifyPermissionResponse, err error) {
 	var (
 		operator   sdk.AccAddress
@@ -92,7 +92,7 @@ func (metadata *Metadata) VerifyBucketPermission(ctx context.Context, bucketInfo
 		return permtypes.EFFECT_DENY, err
 	}
 
-	// The owner has full permissions
+	// the owner has full permissions
 	if operator.Equals(owner) {
 		return permtypes.EFFECT_ALLOW, nil
 	}
@@ -122,6 +122,7 @@ func (metadata *Metadata) VerifyObjectPermission(ctx context.Context, bucketInfo
 		objectEffect permtypes.Effect
 	)
 
+	// check the permission of object and bucket
 	if objectInfo.Visibility == storagetypes.VISIBILITY_TYPE_PUBLIC_READ.String() ||
 		(objectInfo.Visibility == storagetypes.VISIBILITY_TYPE_INHERIT.String() && bucketInfo.Visibility == storagetypes.VISIBILITY_TYPE_PUBLIC_READ.String()) {
 		visibility = true
@@ -131,7 +132,7 @@ func (metadata *Metadata) VerifyObjectPermission(ctx context.Context, bucketInfo
 		return permtypes.EFFECT_ALLOW
 	}
 
-	// The owner has full permissions
+	// the owner has full permissions
 	ownerAcc, err = sdk.AccAddressFromHexUnsafe(objectInfo.Owner.String())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "error", err)
@@ -220,10 +221,12 @@ func (metadata *Metadata) VerifyPolicy(ctx context.Context, resourceID math.Uint
 		return permtypes.EFFECT_DENY, err
 	}
 
+	// store the group id into map
 	for _, group := range groups {
 		groupIDMap[group.GroupID] = true
 	}
 
+	// use group id map to filter the above permission list and get the permissions which related to the specific account
 	for _, perm := range permissions {
 		_, ok := groupIDMap[common.HexToHash(perm.PrincipalValue)]
 		if ok {
@@ -238,6 +241,7 @@ func (metadata *Metadata) VerifyPolicy(ctx context.Context, resourceID math.Uint
 		return permtypes.EFFECT_DENY, err
 	}
 
+	// eval permission and get effect result
 	for _, perm := range filteredPermissionList {
 		effect = perm.Eval(action, time.Now(), opts, statements)
 		if effect != permtypes.EFFECT_UNSPECIFIED {

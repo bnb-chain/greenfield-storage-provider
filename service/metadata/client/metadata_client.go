@@ -126,7 +126,7 @@ func (client *MetadataClient) GetPaymentByBucketID(ctx context.Context, in *meta
 	return resp, nil
 }
 
-// VerifyPermission Verify the input items permission.
+// VerifyPermission Verify the input account’s permission to input items
 func (client *MetadataClient) VerifyPermission(ctx context.Context, in *storagetypes.QueryVerifyPermissionRequest, opts ...grpc.CallOption) (*storagetypes.QueryVerifyPermissionResponse, error) {
 	resp, err := client.metadata.VerifyPermission(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
