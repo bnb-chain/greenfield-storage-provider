@@ -195,7 +195,7 @@ const (
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
 	// AuthRequestNoncePath defines path to request auth nonce
 	AuthRequestNoncePath = "/auth/request_nonce"
-	// AuthUpdateKeyPath defines path to request auth nonce
+	// AuthUpdateKeyPath defines path to update user public key
 	AuthUpdateKeyPath = "/auth/update_key"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
@@ -227,6 +227,7 @@ const (
 	GnfdResponseXMLVersion = "1.0"
 
 	// off-chain-auth headers
+
 	// GnfdOffChainAuthAppDomainHeader defines the app domain from where user is trying to do the EDDSA auth interactions
 	GnfdOffChainAuthAppDomainHeader = "X-Gnfd-App-Domain"
 	// GnfdOffChainAuthAppRegNonceHeader defines nonce for which user is trying to register his/her EDDSA public key

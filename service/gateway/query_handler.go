@@ -243,7 +243,7 @@ func (g *Gateway) queryUploadProgressHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if addr, err = reqContext.verifySignature(); err != nil {
+	if addr, err = g.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
