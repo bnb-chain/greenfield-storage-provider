@@ -10,4 +10,9 @@ type ManagerConfig struct {
 	SpOperatorAddress string
 	ChainConfig       *gnfd.GreenfieldChainConfig
 	SpDBConfig        *config.SQLDBConfig
+	UploadParallel    int
+	UploadQueueCap    int
+	ReplicateQueueCap int
+	SealQueueCap      int
+	GCObjectQueueCap  int
 }

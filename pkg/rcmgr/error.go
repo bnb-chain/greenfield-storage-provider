@@ -66,3 +66,31 @@ func logValuesConnLimit(scope, edge string, dir Direction, stat ScopeStat, err e
 	}
 	return append(logValues, "stat", stat, "error", err)
 }
+
+type ErrTaskLimitExceeded struct {
+	priority                  ReserveTaskPriority
+	current, attempted, limit int
+	err                       error
+}
+
+func (e *ErrTaskLimitExceeded) Error() string { return e.err.Error() }
+func (e *ErrTaskLimitExceeded) Unwrap() error { return e.err }
+
+// edge may be empty if this is not an edge error
+func logValuesTaskLimit(scope, edge string, stat ScopeStat, err error) []interface{} {
+	logValues := make([]interface{}, 0, 2*8)
+	logValues = append(logValues, "scope", scope)
+	if edge != "" {
+		logValues = append(logValues, "edge", edge)
+	}
+	var e *ErrTaskLimitExceeded
+	if errors.As(err, &e) {
+		logValues = append(logValues,
+			"priority", e.priority,
+			"current", e.current,
+			"attempted", e.attempted,
+			"limit", e.limit,
+		)
+	}
+	return append(logValues, "stat", stat, "error", err)
+}

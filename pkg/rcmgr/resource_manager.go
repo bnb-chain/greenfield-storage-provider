@@ -120,6 +120,17 @@ type ResourceScope interface {
 	ReserveMemory(size int, prio uint8) error
 	// ReleaseMemory explicitly releases memory previously reserved with ReserveMemory
 	ReleaseMemory(size int)
+	// AddTask reserves task by ReserveTaskPriority in the scope.
+	//
+	// If ReserveTask returns an error, then no task quota was reserved and the caller
+	// should handle the failure condition.
+	AddTask(num int, prio ReserveTaskPriority) error
+	// RemoveTask explicitly releases task reserved with AddTask.
+	RemoveTask(num int, prio ReserveTaskPriority)
+	// AddConn reserves connection by Direction in the scope.
+	AddConn(dir Direction) error
+	// RemoveConn explicitly releases connection reserved with AddConn.
+	RemoveConn(dir Direction)
 	// Stat retrieves current resource usage for the scope.
 	Stat() ScopeStat
 	// Name returns the name of this scope
@@ -160,18 +171,36 @@ const (
 	DirOutbound
 )
 
+// ReserveTaskPriority represents which priority in a reservation of task.
+type ReserveTaskPriority int
+
+const (
+	// ReserveTaskPriorityUnknown is the default task priority.
+	ReserveTaskPriorityUnknown ReserveTaskPriority = iota
+	// ReserveTaskPriorityHigh is a task reservation priority that indicates a reservation consume a high task limit.
+	ReserveTaskPriorityHigh
+	// ReserveTaskPriorityMedium is a task reservation priority that indicates a reservation consume a medium task limit.
+	ReserveTaskPriorityMedium
+	// ReserveTaskPriorityLow is a task reservation priority that indicates a reservation consume a low task limit.
+	ReserveTaskPriorityLow
+)
+
 // ScopeStat is a struct containing resource accounting information.
 type ScopeStat struct {
+	Memory           int64
+	NumTasksHigh     int
+	NumTasksMedium   int
+	NumTasksLow      int
 	NumConnsInbound  int
 	NumConnsOutbound int
 	NumFD            int
-	Memory           int64
 }
 
 // String returns the state string of ScopeStat
 // TODO:: supports connections and fd field
 func (s ScopeStat) String() string {
-	return fmt.Sprintf("memory reserved [%d]", s.Memory)
+	return fmt.Sprintf("memory reserved [%d], task reserved[h: %d, m: %d, l: %d]",
+		s.Memory, s.NumTasksHigh, s.NumTasksMedium, s.NumTasksLow)
 }
 
 // NullResourceManager is a stub for tests and initialization of default values
@@ -199,10 +228,14 @@ var _ ResourceScopeSpan = (*NullScope)(nil)
 // NullScope is a stub for tests and initialization of default values
 type NullScope struct{}
 
-func (n *NullScope) ReserveMemory(size int, prio uint8) error { return nil }
-func (n *NullScope) ReleaseMemory(size int)                   {}
-func (n *NullScope) Stat() ScopeStat                          { return ScopeStat{} }
-func (n *NullScope) BeginSpan() (ResourceScopeSpan, error)    { return &NullScope{}, nil }
-func (n *NullScope) Done()                                    {}
-func (n *NullScope) Name() string                             { return "" }
-func (n *NullScope) Release()                                 {}
+func (n *NullScope) ReserveMemory(size int, prio uint8) error        { return nil }
+func (n *NullScope) ReleaseMemory(size int)                          {}
+func (n *NullScope) AddTask(num int, prio ReserveTaskPriority) error { return nil }
+func (n *NullScope) RemoveTask(num int, prio ReserveTaskPriority)    {}
+func (n *NullScope) AddConn(dir Direction) error                     { return nil }
+func (n *NullScope) RemoveConn(dir Direction)                        {}
+func (n *NullScope) Stat() ScopeStat                                 { return ScopeStat{} }
+func (n *NullScope) BeginSpan() (ResourceScopeSpan, error)           { return &NullScope{}, nil }
+func (n *NullScope) Done()                                           {}
+func (n *NullScope) Name() string                                    { return "" }
+func (n *NullScope) Release()                                        {}

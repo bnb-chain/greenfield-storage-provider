@@ -1,0 +1,67 @@
+syntax = "proto3";
+package pkg.taskqueue.types;
+
+import "greenfield/storage/types.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/pkg/taskqueue/types";
+
+message Task {
+  int64 create_time = 1;
+  int64 update_time = 2;
+  int64 timeout = 3;
+  int32 task_priority = 4;
+  int64 retry = 5;
+  int64 retry_limit = 6;
+  string err_msg = 7;
+}
+
+message UploadObjectTask {
+  Task task = 1;
+  bnbchain.greenfield.storage.ObjectInfo object = 2;
+}
+
+message ReplicatePieceTask {
+  Task task = 1;
+  bnbchain.greenfield.storage.ObjectInfo object = 2;
+}
+
+message SealObjectTask {
+  Task task = 1;
+  bnbchain.greenfield.storage.ObjectInfo object = 2;
+}
+
+message ReceivePieceTask {
+  Task task = 1;
+  bnbchain.greenfield.storage.ObjectInfo object = 2;
+  uint32 replicate_idx = 3;
+}
+
+message DownloadObjectTask {
+  Task task = 1;
+  bnbchain.greenfield.storage.ObjectInfo object = 2;
+  uint64 low = 3;
+  uint64 high = 4;
+  bool need_integrity = 5;
+}
+
+message GCObjectTask {
+  Task task = 1;
+  uint64 start_block_number = 2;
+  uint64 end_block_number = 3;
+  uint64 current_block_number = 4;
+  uint64 object_id = 5;
+  bool running = 6;
+}
+
+message GCZombiePieceTask {
+  Task task = 1;
+  uint64 delete_count = 2;
+  bool running = 3;
+}
+
+message GCStoreTask {
+  Task task = 1;
+  uint64 current_idx = 2;
+  uint64 delete_count = 3;
+  bool running = 4;
+}

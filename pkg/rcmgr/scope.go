@@ -177,6 +177,90 @@ func (s *resourceScope) ReleaseMemoryForChild(size int64) {
 	s.rc.releaseMemory(size)
 }
 
+// AddTask reserves task in the scope.
+func (s *resourceScope) AddTask(num int, prio ReserveTaskPriority) error {
+	s.Lock()
+	defer s.Unlock()
+	if s.done {
+		return s.wrapError(ErrResourceScopeClosed)
+	}
+	if err := s.rc.addTask(num, prio); err != nil {
+		log.Debugw("blocked task", logValuesTaskLimit(s.name, "", s.rc.stat(), err)...)
+		return s.wrapError(err)
+	}
+	if err := s.addTaskForEdges(num, prio); err != nil {
+		s.rc.removeTask(num, prio)
+		return s.wrapError(err)
+	}
+	return nil
+}
+
+func (s *resourceScope) addTaskForEdges(num int, prio ReserveTaskPriority) error {
+	if s.owner != nil {
+		return s.owner.AddTask(num, prio)
+	}
+	var err error
+	var reserved int
+	for _, e := range s.edges {
+		var stat ScopeStat
+		stat, err = e.AddTaskForChild(num, prio)
+		if err != nil {
+			log.Debugw("blocked task from constraining edge", logValuesTaskLimit(s.name, e.name, stat, err)...)
+			break
+		}
+		reserved++
+	}
+	if err != nil {
+		for _, e := range s.edges[:reserved] {
+			e.RemoveTaskForChild(num, prio)
+		}
+	}
+	return err
+}
+
+// AddTaskForChild reserves task in the child scope.
+func (s *resourceScope) AddTaskForChild(num int, prio ReserveTaskPriority) (ScopeStat, error) {
+	s.Lock()
+	defer s.Unlock()
+	if s.done {
+		return s.rc.stat(), s.wrapError(ErrResourceScopeClosed)
+	}
+	if err := s.rc.addTask(num, prio); err != nil {
+		return s.rc.stat(), s.wrapError(err)
+	}
+	return ScopeStat{}, nil
+}
+
+// RemoveTask explicitly releases task in the scope.
+func (s *resourceScope) RemoveTask(num int, prio ReserveTaskPriority) {
+	s.Lock()
+	defer s.Unlock()
+	if s.done {
+		return
+	}
+	s.rc.removeTask(num, prio)
+	s.removeTaskForEdges(num, prio)
+}
+
+func (s *resourceScope) removeTaskForEdges(num int, prio ReserveTaskPriority) {
+	if s.owner != nil {
+		s.owner.RemoveTask(num, prio)
+	}
+	for _, e := range s.edges {
+		e.RemoveTaskForChild(num, prio)
+	}
+}
+
+// RemoveTaskForChild explicitly releases task in child the scope.
+func (s *resourceScope) RemoveTaskForChild(num int, prio ReserveTaskPriority) {
+	s.Lock()
+	defer s.Unlock()
+	if s.done {
+		return
+	}
+	s.rc.removeTask(num, prio)
+}
+
 // AddConn reserves connection in the scope.
 func (s *resourceScope) AddConn(dir Direction) error {
 	s.Lock()

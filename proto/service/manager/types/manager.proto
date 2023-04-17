@@ -1,0 +1,131 @@
+syntax = "proto3";
+package service.manager.types;
+
+import "pkg/taskqueue/types/task.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/manager/types";
+
+// AskUploadObjectRequest is request type for the AskUploadObject RPC method.
+message AskUploadObjectRequest {
+  // upload_object_task defines the upload object task.
+  pkg.taskqueue.types.UploadObjectTask upload_object_task = 1;
+}
+
+// AskUploadObjectResponse is response type for the AskUploadObject RPC method.
+message AskUploadObjectResponse {
+  // allow defines whether allow to upload object.
+  bool allow = 1;
+  // refuse_reason defines the reason of refusing upload object.
+  string refuse_reason = 2;
+}
+
+// CreateUploadObjectTaskRequest is request type for the CreateUploadObjectTask RPC method.
+message CreateUploadObjectTaskRequest {
+  // upload_object_task defines the upload object task that to upload.
+  pkg.taskqueue.types.UploadObjectTask upload_object_task = 1;
+}
+
+// CreateUploadObjectTaskResponse is response type for the CreateUploadObjectTask RPC method.
+message CreateUploadObjectTaskResponse{
+}
+
+// DoneUploadObjectTaskRequest is request type for the DoneUploadObjectTask RPC method.
+message DoneUploadObjectTaskRequest {
+  // upload_object_task defines the upload object task that has been done.
+  pkg.taskqueue.types.UploadObjectTask upload_object_task = 1;
+}
+
+// DoneUploadObjectTaskResponse is response type for the DoneUploadObjectTask RPC method.
+message DoneUploadObjectTaskResponse {
+}
+
+// DoneReplicatePieceTaskRequest is request type for the DoneReplicatePieceTask RPC method.
+message DoneReplicatePieceTaskRequest {
+  // replicate_piece_task defines the replicate piece task that to be replicated.
+  pkg.taskqueue.types.ReplicatePieceTask replicate_piece_task = 1;
+}
+
+// DoneReplicatePieceTaskResponse is response type for the DoneReplicatePieceTask RPC method.
+message DoneReplicatePieceTaskResponse {
+}
+
+// DoneSealObjectTaskRequest is request type for the DoneSealObjectTask RPC method.
+message DoneSealObjectTaskRequest {
+  // seal_object_task defines the seal object task that to be sealed.
+  pkg.taskqueue.types.SealObjectTask seal_object_task = 1;
+}
+
+// DoneSealObjectTaskResponse is response type for the DoneSealObjectTask RPC method.
+message DoneSealObjectTaskResponse {
+}
+
+// Limit defines the resource limits for executing task.
+message Limit {
+  // memory defines the limit of memory size.
+  int64 memory = 1;
+  // high_priority_task defines the limit of high priority task number.
+  int64 high_priority_task = 2;
+  // medium_priority_task defines the limit of medium priority task number.
+  int64 medium_priority_task = 3;
+  // low_priority_task defines the limit of low priority task number.
+  int64 low_priority_task = 4;
+}
+
+// AskTaskRequest is request type for the AskTask RPC method.
+message AskTaskRequest {
+  // limit defines the requester resource to run task.
+  Limit limit = 1;
+}
+
+// AskTaskResponse is response type for the AskTask RPC method.
+message AskTaskResponse {
+  // task defines the manager dispatches the task to execute.
+  oneof task {
+    // replicate_piece_task stands dispatch the replicate piece task.
+    pkg.taskqueue.types.ReplicatePieceTask replicate_piece_task = 1;
+    // seal_object_task stands dispatch the seal object task.
+    pkg.taskqueue.types.SealObjectTask seal_object_task = 2;
+    // gc_object_task stands dispatch the gc object task.
+    pkg.taskqueue.types.GCObjectTask gc_object_task = 3;
+  }
+  bool has_task = 4;
+}
+
+// AskTaskResponse is response type for the AskTask RPC method.
+message DoneGCObjectTaskRequest {
+  pkg.taskqueue.types.GCObjectTask gc_object_task = 1;
+}
+
+// DoneGCObjectTaskResponse is response type for the DoneGCObjectTas RPC method.
+message DoneGCObjectTaskResponse {
+}
+
+// ReportGCObjectProcessRequest is response type for the ReportGCObjectProcess RPC method.
+message ReportGCObjectProcessRequest {
+  pkg.taskqueue.types.GCObjectTask gc_object_task = 1;
+}
+
+// ReportGCObjectProcessResponse is response type for the ReportGCObjectProcess RPC method.
+message ReportGCObjectProcessResponse {
+  bool cancel = 1;
+}
+
+// ManagerService defines the service offer gRPC service for SP manager.
+service ManagerService {
+  // AskUploadObject asks to create object to SP manager.
+  rpc AskUploadObject(AskUploadObjectRequest) returns (AskUploadObjectResponse) {};
+  // CreateUploadObjectTask asks to upload object to SP manager.
+  rpc CreateUploadObjectTask(CreateUploadObjectTaskRequest) returns (CreateUploadObjectTaskResponse) {};
+  // DoneUploadTask notifies the manager the upload object task has been done.
+  rpc DoneUploadObjectTask(DoneUploadObjectTaskRequest) returns (DoneUploadObjectTaskResponse) {};
+  // DoneReplicatePieceTask notifies the manager the replicate piece task has been done.
+  rpc DoneReplicatePieceTask(DoneReplicatePieceTaskRequest) returns (DoneReplicatePieceTaskResponse) {};
+  // DoneSealObjectTask notifies the manager the seal object task has been done.
+  rpc DoneSealObjectTask(DoneSealObjectTaskRequest) returns (DoneSealObjectTaskResponse) {};
+  // AskTask asks the task to execute.
+  rpc AskTask(AskTaskRequest) returns (AskTaskResponse) {};
+  // DoneGCObjectTask notifies the manager the gc object task has been done.
+  rpc DoneGCObjectTask(DoneGCObjectTaskRequest) returns (DoneGCObjectTaskResponse) {};
+  // ReportGCObjectProcess notifies the manager the gc object task process.
+  rpc ReportGCObjectProcess(ReportGCObjectProcessRequest) returns (ReportGCObjectProcessResponse) {};
+}

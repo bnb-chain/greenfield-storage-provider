@@ -6,20 +6,28 @@ import (
 )
 
 const (
-	LimitFactor              = 0.85
-	DefaultMemorySize uint64 = 8 * 1024 * 1024
+	MaxLimitInt64 = math.MaxInt64
+	MaxLimitInt   = math.MaxInt
 )
 
 // Limit is an interface that that specifies basic resource limits.
 type Limit interface {
 	// GetMemoryLimit returns the (current) memory limit.
 	GetMemoryLimit() int64
+	// GetFDLimit returns the file descriptor limit.
+	GetFDLimit() int
 	// GetConnLimit returns the connection limit, for inbound or outbound connections.
 	GetConnLimit(Direction) int
 	// GetConnTotalLimit returns the total connection limit
 	GetConnTotalLimit() int
-	// GetFDLimit returns the file descriptor limit.
-	GetFDLimit() int
+	// GetTaskLimit returns the task limit, for high, medium and low priority tasks.
+	GetTaskLimit(ReserveTaskPriority) int
+	// GetTaskTotalLimit returns the total task limit
+	GetTaskTotalLimit() int
+	// Greater returns an indicator whether cover the param limit
+	Greater(Limit) bool
+	// Equal returns an indicator whether equal the param limit
+	Equal(Limit) bool
 	// String returns the Limit state string
 	String() string
 }
@@ -36,16 +44,25 @@ var _ Limit = &BaseLimit{}
 
 // BaseLimit is a mixin type for basic resource limits.
 type BaseLimit struct {
-	Conns         int   `json:",omitempty"`
-	ConnsInbound  int   `json:",omitempty"`
-	ConnsOutbound int   `json:",omitempty"`
-	FD            int   `json:",omitempty"`
-	Memory        int64 `json:",omitempty"`
+	Conns               int   `json:",omitempty"`
+	ConnsInbound        int   `json:",omitempty"`
+	ConnsOutbound       int   `json:",omitempty"`
+	Tasks               int   `json:",omitempty"`
+	TasksHighPriority   int   `json:",omitempty"`
+	TasksMediumPriority int   `json:",omitempty"`
+	TasksLowPriority    int   `json:",omitempty"`
+	FD                  int   `json:",omitempty"`
+	Memory              int64 `json:",omitempty"`
 }
 
 // GetMemoryLimit returns the (current) memory limit.
 func (limit *BaseLimit) GetMemoryLimit() int64 {
 	return limit.Memory
+}
+
+// GetFDLimit returns the file descriptor limit.
+func (limit *BaseLimit) GetFDLimit() int {
+	return limit.FD
 }
 
 // GetConnLimit returns the connection limit, for inbound or outbound connections.
@@ -61,42 +78,118 @@ func (limit *BaseLimit) GetConnTotalLimit() int {
 	return limit.Conns
 }
 
-// GetFDLimit returns the file descriptor limit.
-func (limit *BaseLimit) GetFDLimit() int {
-	return limit.FD
+// GetTaskTotalLimit returns the total task limit
+func (limit *BaseLimit) GetTaskTotalLimit() int {
+	return limit.Tasks
+}
+
+// GetTaskLimit returns the task limit, for high, medium and low priority tasks.
+func (limit *BaseLimit) GetTaskLimit(priority ReserveTaskPriority) int {
+	switch priority {
+	case ReserveTaskPriorityHigh:
+		return limit.TasksHighPriority
+	case ReserveTaskPriorityMedium:
+		return limit.TasksMediumPriority
+	case ReserveTaskPriorityLow:
+		return limit.TasksLowPriority
+	default:
+		return 0
+	}
+}
+
+// Greater returns an indicator whether cover the param limit
+func (limit *BaseLimit) Greater(x Limit) bool {
+	if x == nil {
+		return true
+	}
+	if limit.FD < x.GetFDLimit() {
+		return false
+	}
+	if limit.Memory < x.GetMemoryLimit() {
+		return false
+	}
+	if limit.Conns < x.GetConnTotalLimit() {
+		return false
+	}
+	if limit.ConnsInbound < x.GetConnLimit(DirInbound) {
+		return false
+	}
+	if limit.ConnsOutbound < x.GetConnLimit(DirOutbound) {
+		return false
+	}
+	if limit.Tasks < x.GetTaskTotalLimit() {
+		return false
+	}
+	if limit.TasksHighPriority < x.GetTaskLimit(ReserveTaskPriorityHigh) {
+		return false
+	}
+	if limit.TasksMediumPriority < x.GetTaskLimit(ReserveTaskPriorityMedium) {
+		return false
+	}
+	if limit.TasksLowPriority < x.GetTaskLimit(ReserveTaskPriorityLow) {
+		return false
+	}
+	return true
+}
+
+func (limit *BaseLimit) Equal(x Limit) bool {
+	if x == nil {
+		return false
+	}
+	if limit.FD != x.GetFDLimit() {
+		return false
+	}
+	if limit.Memory != x.GetMemoryLimit() {
+		return false
+	}
+	if limit.Conns != x.GetConnTotalLimit() {
+		return false
+	}
+	if limit.ConnsInbound != x.GetConnLimit(DirInbound) {
+		return false
+	}
+	if limit.ConnsOutbound != x.GetConnLimit(DirOutbound) {
+		return false
+	}
+	if limit.Tasks != x.GetTaskTotalLimit() {
+		return false
+	}
+	if limit.TasksHighPriority != x.GetTaskLimit(ReserveTaskPriorityHigh) {
+		return false
+	}
+	if limit.TasksMediumPriority != x.GetTaskLimit(ReserveTaskPriorityMedium) {
+		return false
+	}
+	if limit.TasksLowPriority != x.GetTaskLimit(ReserveTaskPriorityLow) {
+		return false
+	}
+	return true
 }
 
 // String returns the Limit state string
 // TODO:: supports connection and fd field
 func (limit *BaseLimit) String() string {
-	return fmt.Sprintf("memory limits %d", limit.Memory)
+	return fmt.Sprintf("memory limits %d, task limits [h: %d, m: %d, l: %d]",
+		limit.Memory, limit.TasksHighPriority, limit.TasksMediumPriority, limit.TasksLowPriority)
 }
 
-// InfiniteBaseLimit are a limiter configuration that uses unlimited limits, thus effectively not limiting anything.
+// InfiniteLimit returns a limiter that uses unlimited limits, thus effectively not limiting anything.
 // Keep in mind that the operating system limits the number of file descriptors that an application can use.
-var InfiniteBaseLimit = BaseLimit{
-	Conns:         math.MaxInt,
-	ConnsInbound:  math.MaxInt,
-	ConnsOutbound: math.MaxInt,
-	FD:            math.MaxInt,
-	Memory:        math.MaxInt64,
+func InfiniteLimit() Limit {
+	return &BaseLimit{
+		Memory:              MaxLimitInt64,
+		Tasks:               MaxLimitInt,
+		TasksHighPriority:   MaxLimitInt,
+		TasksMediumPriority: MaxLimitInt,
+		TasksLowPriority:    MaxLimitInt,
+		Conns:               MaxLimitInt,
+		ConnsInbound:        MaxLimitInt,
+		ConnsOutbound:       MaxLimitInt,
+		FD:                  MaxLimitInt,
+	}
 }
 
-// DynamicLimits generate limits by os resource
-//func DynamicLimits() *BaseLimit {
-//	availableMem := DefaultMemorySize
-//	virtualMem, err := mem.VirtualMemory()
-//	if err != nil {
-//		log.Errorw("failed to get os memory states", "error", err)
-//	} else {
-//		availableMem = virtualMem.Available
-//	}
-//	limits := &BaseLimit{}
-//	limits.Memory = int64(float64(availableMem) * LimitFactor)
-//	// TODO:: get from os and compatible with a variety of os
-//	limits.FD = math.MaxInt
-//	limits.Conns = math.MaxInt
-//	limits.ConnsInbound = math.MaxInt
-//	limits.ConnsOutbound = math.MaxInt
-//	return limits
-//}
+// InfinitesimalLimit returns a limiter that uses zero limits, thus effectively limiting anything.
+func InfinitesimalLimit() Limit {
+	return &BaseLimit{}
+}
