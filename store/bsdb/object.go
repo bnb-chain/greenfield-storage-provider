@@ -43,24 +43,13 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 	return objects, err
 }
 
-<<<<<<< HEAD
-// GetObjectInfo get object info by an object and a bucket name
-func (b *BsDBImpl) GetObjectInfo(objectName, bucketName string) (*Object, error) {
-=======
 // GetObjectByName get object info by an object name
 func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, isFullList bool) (*Object, error) {
->>>>>>> ad1f2984 (feat: download without auth)
 	var (
 		object *Object
 		err    error
 	)
 
-<<<<<<< HEAD
-	err = b.db.Table((&Object{}).TableName()).
-		Select("*").
-		Where("object_name = ? and bucket_name = ?", objectName, bucketName).
-		Find(&object).Error
-=======
 	if isFullList {
 		err = b.db.Table((&Object{}).TableName()).
 			Select("*").
@@ -76,6 +65,5 @@ func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, isFullL
 			"(objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ')",
 			objectName, bucketName).
 		Take(&object).Error
->>>>>>> ad1f2984 (feat: download without auth)
 	return object, err
 }

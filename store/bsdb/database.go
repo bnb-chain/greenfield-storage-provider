@@ -22,8 +22,6 @@ type Metadata interface {
 	GetPaymentByBucketID(bucketID int64, isFullList bool) (*StreamRecord, error)
 	// GetPaymentByPaymentAddress get bucket payment info by a payment address
 	GetPaymentByPaymentAddress(address common.Address) (*StreamRecord, error)
-	// GetObjectInfo get object info by an object and a bucket name
-	GetObjectInfo(objectName, bucketName string) (*Object, error)
 	// GetPermissionByResourceAndPrincipal get permission info by resource type & id, principal type & value
 	GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue string) (*Permission, error)
 	// GetStatementsByPolicyID get statements info by a policy id
