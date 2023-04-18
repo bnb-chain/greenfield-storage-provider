@@ -308,18 +308,15 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		log.Debugw("primary sp address not matched ",
 			"bucketPrimarySpAddress", bucketPrimarySpAddress, "gateway.config.SpOperatorAddress", gateway.config.SpOperatorAddress,
 		)
-		getSpByAddressReq := &types.GetSpByAddressRequest{
-			BucketName: bucketPrimarySpAddress,
-		}
 
-		getSpByAddressRes, err := gateway.downloader.GetSpByAddress(ctx, getSpByAddressReq)
+		endpoint, err := gateway.downloader.GetEndpointBySpAddress(ctx, bucketPrimarySpAddress)
 
-		if err != nil || getSpByAddressRes == nil {
-			log.Errorw("failed to get sp by address ", "sp_address", reqContext.bucketName, "error", err)
+		if err != nil || endpoint == "" {
+			log.Errorw("failed to get endpoint by address ", "sp_address", reqContext.bucketName, "error", err)
 			errDescription = InvalidAddress
 			return
 		}
-		redirectUrl := getSpByAddressRes.Endpoint + "/download/" + reqContext.bucketName + "/" + reqContext.objectName
+		redirectUrl := endpoint + "/download/" + reqContext.bucketName + "/" + reqContext.objectName
 
 		log.Debugw("getting redirect url:", "redirectUrl", redirectUrl)
 

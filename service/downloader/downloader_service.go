@@ -206,17 +206,17 @@ func (downloader *Downloader) ListBucketReadRecord(ctx context.Context, req *typ
 	return resp, nil
 }
 
-// GetSpByAddress get sp by sp address
-func (downloader *Downloader) GetSpByAddress(ctx context.Context, req *types.GetSpByAddressRequest) (resp *types.GetSpByAddressResponse, err error) {
+// GetEndpointBySpAddress get endpoint by sp address
+func (downloader *Downloader) GetEndpointBySpAddress(ctx context.Context, req *types.GetEndpointBySpAddressRequest) (resp *types.GetEndpointBySpAddressResponse, err error) {
 	ctx = log.Context(ctx, req)
 
-	sp, err := downloader.spDB.GetSpByAddress(req.BucketName, sqldb.OperatorAddressType)
+	sp, err := downloader.spDB.GetSpByAddress(req.SpAddress, sqldb.OperatorAddressType)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get sp", "error", err)
 		return
 	}
 
-	resp = &types.GetSpByAddressResponse{Endpoint: sp.Endpoint}
-	log.CtxInfow(ctx, "succeed to get sp by a sp address")
+	resp = &types.GetEndpointBySpAddressResponse{Endpoint: sp.Endpoint}
+	log.CtxInfow(ctx, "succeed to get endpoint by a sp address")
 	return resp, nil
 }
