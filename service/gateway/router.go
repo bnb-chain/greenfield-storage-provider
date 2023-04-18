@@ -11,15 +11,16 @@ import (
 )
 
 const (
-	approvalRouterName             = "GetApproval"
-	putObjectRouterName            = "PutObject"
-	getObjectRouterName            = "GetObject"
-	challengeRouterName            = "Challenge"
-	replicateObjectPieceRouterName = "ReplicateObjectPiece"
-	getUserBucketsRouterName       = "GetUserBuckets"
-	listObjectsByBucketRouterName  = "ListObjectsByBucketName"
-	getBucketReadQuotaRouterName   = "GetBucketReadQuota"
-	listBucketReadRecordRouterName = "ListBucketReadRecord"
+	approvalRouterName               = "GetApproval"
+	putObjectRouterName              = "PutObject"
+	getObjectRouterName              = "GetObject"
+	challengeRouterName              = "Challenge"
+	replicateObjectPieceRouterName   = "ReplicateObjectPiece"
+	getUserBucketsRouterName         = "GetUserBuckets"
+	listObjectsByBucketRouterName    = "ListObjectsByBucketName"
+	getBucketReadQuotaRouterName     = "GetBucketReadQuota"
+	listBucketReadRecordRouterName   = "ListBucketReadRecord"
+	getObjectByUniversalEndpointName = "GetObjectByUniversalEndpoint"
 )
 
 const (
@@ -95,5 +96,12 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Name(replicateObjectPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.replicatePieceHandler)
+	//universal endpoint
+	r.Path(model.UniversalEndpointPath).
+		Name(getObjectByUniversalEndpointName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.getObjectByUniversalEndpointHandler)
+	//redirect for universal endpoint
+	http.Handle("/", r)
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }

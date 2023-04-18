@@ -26,6 +26,8 @@ type Metadata interface {
 	ListObjectsByBucketName(bucketName string) ([]*Object, error)
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
 	ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, isFullList bool) ([]*Object, error)
+	// GetObjectByName get object info by an object name
+	GetObjectByName(objectName string, bucketName string, isFullList bool) (*Object, error)
 }
 
 // BSDB contains all the methods required by block syncer database

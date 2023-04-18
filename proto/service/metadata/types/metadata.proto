@@ -72,6 +72,16 @@ message GetUserBucketsCountRequest {
   string account_id = 1;
 }
 
+// GetObjectByObjectNameAndBucketNameRequest is request type for the GetObjectByObjectNameAndBucketName RPC method
+message GetObjectByObjectNameAndBucketNameRequest {
+  // object_name is the name of the object
+  string object_name = 1;
+  // bucket_name is the name of the bucket
+  string bucket_name = 2;
+  // is_full_list indicates whether this request can get the private objects information
+  bool is_full_list = 3;
+}
+
 // GetPaymentByBucketNameRequest is request type for the GetPaymentByBucketName RPC method
 message GetPaymentByBucketNameRequest {
   // bucket_name is the name of the bucket
@@ -100,7 +110,7 @@ message ListObjectsByBucketNameResponse {
   repeated Object objects = 1;
 }
 
-// MetadataServiceGetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.
+// GetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.
 message GetBucketByBucketNameResponse {
   // bucket defines the information of a bucket
   Bucket bucket = 1;
@@ -124,6 +134,12 @@ message ListDeletedObjectsByBlockNumberRangeResponse {
 message GetUserBucketsCountResponse {
   // count defines total count of user buckets
   int64 count = 1;
+}
+
+// GetObjectByObjectNameAndBucketNameResponse is response type for the GetObjectByObjectNameAndBucketName RPC method.
+message GetObjectByObjectNameAndBucketNameResponse {
+  // object defines the information of an object
+  Object object = 1;
 }
 
 // GetPaymentByBucketNameResponse is response type for the GetPaymentByBucketName RPC method.
@@ -152,6 +168,8 @@ service MetadataService {
   rpc ListDeletedObjectsByBlockNumberRange(ListDeletedObjectsByBlockNumberRangeRequest) returns (ListDeletedObjectsByBlockNumberRangeResponse) {};
   // GetUserBucketsCount GetUserBuckets get buckets count by a user address
   rpc GetUserBucketsCount(GetUserBucketsCountRequest) returns (GetUserBucketsCountResponse) {};
+  // GetObjectByObjectNameAndBucketName get bucket info by a bucket name and an object name
+  rpc GetObjectByObjectNameAndBucketName(GetObjectByObjectNameAndBucketNameRequest) returns (GetObjectByObjectNameAndBucketNameResponse) {};
   // GetPaymentByBucketName get bucket payment info by a bucket name
   rpc GetPaymentByBucketName(GetPaymentByBucketNameRequest) returns (GetPaymentByBucketNameResponse) {};
   // GetPaymentByBucketID get bucket payment info by a bucket id
