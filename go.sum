@@ -208,8 +208,8 @@ github.com/blakesmith/ar v0.0.0-20190502131153-809d4375e1fb/go.mod h1:PkYb9DJNAw
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
 github.com/bnb-chain/gnfd-tendermint v0.0.3 h1:RjEBQZJW7krM4DFxZbIasNNO7K2uohcmL9ULT84qllk=
 github.com/bnb-chain/gnfd-tendermint v0.0.3/go.mod h1:/v9z9F6cq0+f7EGG92lYSLBcPYQDILoK91X8YM28hWo=
-github.com/bnb-chain/greenfield v0.0.12-0.20230414044835-d8a0b1152570 h1:rX+JRX8AQsG1JRabBhgtSVmoX13NgVFmMBPbxGl/Utg=
-github.com/bnb-chain/greenfield v0.0.12-0.20230414044835-d8a0b1152570/go.mod h1:7344f+97RhnkZPOIE/uHdF5u6Awwyhfb/TgIA6nQhXA=
+github.com/bnb-chain/greenfield v0.0.12-0.20230418102232-efc0f221748f h1:H3b8rXUuYNZMyCxWqsP+g3NeoR19FXLYixWIXnehJUM=
+github.com/bnb-chain/greenfield v0.0.12-0.20230418102232-efc0f221748f/go.mod h1:iHqOyaOVmHg48syHW7AGVN5nzIGt2GZoNL+KmT4UoLY=
 github.com/bnb-chain/greenfield-common/go v0.0.0-20230407104542-ed19e3666522 h1:n3R7Ybzu9XlCHl63QT14XwqaSuGff9U+g3ZJic2frOM=
 github.com/bnb-chain/greenfield-common/go v0.0.0-20230407104542-ed19e3666522/go.mod h1:gGaPRDSjK1QH/lMjZ5wfhbP4SfrUUKX6Q72x/8uehxo=
 github.com/bnb-chain/greenfield-cosmos-sdk v0.0.13 h1:xm9qqrOjrGfX4imXxxruHIpuUUUAFbdtM/TXPXRc5zo=
@@ -218,8 +218,8 @@ github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b43
 github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b432c/go.mod h1:u/MXvf8wbUbCsAEyQSSYXXMsczAsFX48e2D6JI86T4o=
 github.com/bnb-chain/greenfield-go-sdk v0.0.9 h1:aj3nO0FkbHjtB6smc0vaqzbwCtiM+XuQ4SgeV4gmAeE=
 github.com/bnb-chain/greenfield-go-sdk v0.0.9/go.mod h1:Ube+KuFphi9q89WTuMK53hmRqfxq67sP+T/T4nC6Tsg=
-github.com/bnb-chain/juno/v4 v4.0.0-20230417113600-c85c0f7c11ea h1:OBFdKP4RlyleOHyRifmRAMw0hQefP2INYwkiK77j+8g=
-github.com/bnb-chain/juno/v4 v4.0.0-20230417113600-c85c0f7c11ea/go.mod h1:3z4aiyd+ajj1PFfkT137SyVmtDuWo/6aObYvr38Fj1U=
+github.com/bnb-chain/juno/v4 v4.0.0-20230418143603-3353e7389e24 h1:siM8Yp09aLn3FiY6WNVi9T7I3a0RFcasAeZWV1mj204=
+github.com/bnb-chain/juno/v4 v4.0.0-20230418143603-3353e7389e24/go.mod h1:f8+o/XzjbBGWcKqxDBSTi3BwLItanrMkI4fNJ7P7miU=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=
@@ -306,6 +306,8 @@ github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE
 github.com/coinbase/rosetta-sdk-go v0.7.9 h1:lqllBjMnazTjIqYrOGv8h8jxjg9+hJazIGZr9ZvoCcA=
 github.com/consensys/bavard v0.1.8-0.20210406032232-f3452dc9b572/go.mod h1:Bpd0/3mZuaj6Sj+PqrmIquiOKy397AKGThQPaGzNXAQ=
 github.com/consensys/gnark-crypto v0.4.1-0.20210426202927-39ac3d4b3f1f/go.mod h1:815PAHg3wvysy0SyIqanF8gZ0Y1wjk/hrDHD/iT88+Q=
+github.com/consensys/gnark-crypto v0.7.0 h1:rwdy8+ssmLYRqKp+ryRRgQJl/rCq2uv+n83cOydm5UE=
+github.com/consensys/gnark-crypto v0.7.0/go.mod h1:KPSuJzyxkJA8xZ/+CV47tyqkr9MmpZA3PXivK4VPrVg=
 github.com/containerd/cgroups v0.0.0-20201119153540-4cbc285b3327/go.mod h1:ZJeTFisyysqgcCdecO57Dj79RfL0LNeGiFUqLYQRYLE=
 github.com/containerd/cgroups v1.0.4 h1:jN/mbWBEaz+T1pi5OFtnkQ+8qnmEbAr1Oo1FRm5B0dA=
 github.com/containerd/cgroups v1.0.4/go.mod h1:nLNQtsF7Sl2HxNebu77i1R0oDlhiTG+kO4JTrUzo6IA=
@@ -1004,6 +1006,7 @@ github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0
 github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
 github.com/labstack/echo/v4 v4.2.1/go.mod h1:AA49e0DZ8kk5jTOOCKNuPR6oTnBS0dYiM4FW1e6jwpg=
 github.com/labstack/gommon v0.3.0/go.mod h1:MULnywXg0yavhxWKc+lOruYdAhDwPK9wf0OL7NoOu+k=
+github.com/leanovate/gopter v0.2.9 h1:fQjYxZaynp97ozCzfOyOuAGOU4aU/z37zf/tOujFk7c=
 github.com/leanovate/gopter v0.2.9/go.mod h1:U2L/78B+KVFIx2VmW6onHJQzXtFb+p5y3y2Sh+Jxxv8=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
 github.com/leodido/go-urn v1.2.1 h1:BqpAaACuzVSgi/VLzGZIobT2z4v53pjosyNd9Yv6n/w=
@@ -1256,6 +1259,7 @@ github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RR
 github.com/mitchellh/pointerstructure v1.2.0/go.mod h1:BRAsLI5zgXmw97Lf6s25bs8ohIXc3tViBH44KcwB2g4=
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/mitchellh/reflectwalk v1.0.1/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
+github.com/mmcloughlin/addchain v0.4.0 h1:SobOdjm2xLj1KkXN5/n0xTIWyZA2+s99UCY1iPfkHRY=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=

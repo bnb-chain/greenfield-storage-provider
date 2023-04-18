@@ -2,6 +2,7 @@ syntax = "proto3";
 package service.metadata.types;
 
 import "greenfield/storage/types.proto";
+import "greenfield/storage/query.proto";
 import "greenfield/payment/stream_record.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/metadata/types";
@@ -22,6 +23,8 @@ message Object {
   string locked_balance = 2;
   // removed defines the object is deleted or not
   bool removed = 3;
+  // update_at defines the block number when the object updated
+  int64 update_at = 4;
 }
 
 // GetUserBucketsRequest is request type for the GetUserBuckets RPC method.
@@ -156,4 +159,6 @@ service MetadataService {
   rpc GetPaymentByBucketName(GetPaymentByBucketNameRequest) returns (GetPaymentByBucketNameResponse) {};
   // GetPaymentByBucketID get bucket payment info by a bucket id
   rpc GetPaymentByBucketID(GetPaymentByBucketIDRequest) returns (GetPaymentByBucketIDResponse) {};
+  // VerifyPermission Verify the input items permission.
+  rpc VerifyPermission(bnbchain.greenfield.storage.QueryVerifyPermissionRequest) returns (bnbchain.greenfield.storage.QueryVerifyPermissionResponse) {};
 }

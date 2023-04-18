@@ -4,10 +4,10 @@ go 1.18
 
 replace (
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b432c
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.12-0.20230414044835-d8a0b1152570
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.12-0.20230418102232-efc0f221748f
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.13
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230417113600-c85c0f7c11ea
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230418143603-3353e7389e24
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.3
 )
@@ -20,6 +20,7 @@ require (
 	github.com/bnb-chain/greenfield-go-sdk v0.0.9
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
+	github.com/consensys/gnark-crypto v0.7.0
 	github.com/cosmos/cosmos-sdk v0.46.7
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/ethereum/go-ethereum v1.10.19
@@ -258,7 +259,7 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/dig v1.15.0 // indirect
 	go.uber.org/fx v1.18.2 // indirect
-	golang.org/x/crypto v0.4.0 // indirect
+	golang.org/x/crypto v0.4.0
 	golang.org/x/net v0.8.0 // indirect
 	//golang.org/x/mod v0.8.0 // indirect
 	//golang.org/x/net v0.6.0 // indirect

@@ -1,7 +1,7 @@
 package bsdb
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/forbole/juno/v4/common"
 )
 
 // Bucket is the structure for user bucket
@@ -36,6 +36,6 @@ type Bucket struct {
 }
 
 // TableName is used to set Bucket table name in database
-func (a *Bucket) TableName() string {
+func (b *Bucket) TableName() string {
 	return BucketTableName
 }

@@ -1,7 +1,7 @@
 package bsdb
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/forbole/juno/v4/common"
 	"github.com/lib/pq"
 )
 
@@ -52,6 +52,6 @@ type Object struct {
 }
 
 // TableName is used to set Object table name in database
-func (a *Object) TableName() string {
+func (o *Object) TableName() string {
 	return ObjectTableName
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/forbole/juno/v4/node"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -48,7 +49,6 @@ func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.Resul
 func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, txHash common.Hash, event sdk.Event) {
 	for _, module := range i.Modules {
 		if eventModule, ok := module.(modules.EventModule); ok {
-			log.Infof("module name :%s event type: %s, height: %d", module.Name(), event.Type, block.Block.Height)
 			err := eventModule.HandleEvent(ctx, block, txHash, event)
 			if err != nil {
 				log.Errorw("failed to handle event", "module", module.Name(), "event", event, "error", err)
@@ -62,20 +62,43 @@ func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, tx
 func (i *Impl) Process(height uint64) error {
 	log.Debugw("processing block", "height", height)
 
+	// get block info
 	block, err := i.Node.Block(int64(height))
 	if err != nil {
 		log.Errorf("failed to get block from node: %s", err)
 		return err
 	}
 
+	// get txs
 	txs, err := i.Node.Txs(block)
 	if err != nil {
 		return fmt.Errorf("failed to get transactions for block: %s", err)
 	}
 
-	err = i.ExportEventsByTxs(context.Background(), block, txs)
+	// get block results
+	events, err := i.Node.BlockResults(int64(height))
+	if err != nil {
+		log.Errorf("failed to get block results from node: %s", err)
+		return err
+	}
+	beginBlockEvents := events.BeginBlockEvents
+	endBlockEvents := events.EndBlockEvents
+
+	// 1. handle events in startBlock
+
+	if len(beginBlockEvents) > 0 {
+		i.ExportEventsWithoutTx(context.Background(), block, beginBlockEvents)
+	}
+
+	// 2. handle events in txs
+	err = i.ExportEventsInTxs(context.Background(), block, txs)
 	if err != nil {
 		return err
+	}
+
+	// 3. handle events in endBlock
+	if len(endBlockEvents) > 0 {
+		i.ExportEventsWithoutTx(context.Background(), block, endBlockEvents)
 	}
 
 	err = i.ExportEpoch(block)
@@ -143,12 +166,23 @@ func (i *Impl) ExportEvents(ctx context.Context, block *coretypes.ResultBlock, e
 	return nil
 }
 
-func (i *Impl) ExportEventsByTxs(ctx context.Context, block *coretypes.ResultBlock, txs []*types.Tx) error {
+// ExportEventsInTxs accepts a slice of events in tx in order to save in database.
+func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs []*types.Tx) error {
 	for _, tx := range txs {
 		txHash := common.HexToHash(tx.TxHash)
 		for _, event := range tx.Events {
 			i.HandleEvent(ctx, block, txHash, sdk.Event(event))
 		}
+	}
+	return nil
+}
+
+// ExportEventsWithoutTx accepts a slice of events not in tx in order to save in database.
+// events here don't have txHash
+func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.ResultBlock, events []abci.Event) error {
+	// call the event handlers
+	for _, event := range events {
+		i.HandleEvent(ctx, block, common.Hash{}, sdk.Event(event))
 	}
 	return nil
 }

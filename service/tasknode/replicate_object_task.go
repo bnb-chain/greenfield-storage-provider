@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"io"
 	"sync"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
@@ -13,6 +14,7 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	gatewayclient "github.com/bnb-chain/greenfield-storage-provider/service/gateway/client"
@@ -82,13 +84,13 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 		gotPieceSize := false
 
 		for segmentPieceIdx := 0; segmentPieceIdx < sg.task.segmentPieceNumber; segmentPieceIdx++ {
-			segmentPiecekey := piecestore.EncodeSegmentPieceKey(sg.task.objectInfo.Id.Uint64(), uint32(segmentPieceIdx))
-			segmentPieceData, err := sg.task.taskNode.pieceStore.GetPiece(context.Background(), segmentPiecekey, 0, 0)
+			segmentPieceKey := piecestore.EncodeSegmentPieceKey(sg.task.objectInfo.Id.Uint64(), uint32(segmentPieceIdx))
+			segmentPieceData, err := sg.task.taskNode.pieceStore.GetPiece(context.Background(), segmentPieceKey, 0, 0)
 			if err != nil {
 				for idx := range sg.streamReaderMap {
 					sg.streamReaderMap[idx].pWrite.CloseWithError(err)
 				}
-				log.Errorw("failed to get piece data", "piece_key", segmentPiecekey, "error", err)
+				log.Errorw("failed to get piece data", "piece_key", segmentPieceKey, "error", err)
 				return
 			}
 			if sg.task.objectInfo.GetRedundancyType() == types.REDUNDANCY_EC_TYPE {
@@ -245,39 +247,29 @@ func (t *replicateObjectTask) init() error {
 		return err
 	}
 	t.sortedSpEndpoints = maps.SortKeys(t.approvalResponseMap)
-	// reserve memory
+	// calculate the reserve memory, which is used in execute time
 	t.approximateMemSize = int(float64(t.storageParams.GetMaxSegmentSize()) *
 		(float64(t.redundancyNumber)/float64(t.storageParams.GetRedundantDataChunkNum()) + 1))
 	if t.objectInfo.GetPayloadSize() < t.storageParams.GetMaxSegmentSize() {
 		t.approximateMemSize = int(float64(t.objectInfo.GetPayloadSize()) *
 			(float64(t.redundancyNumber)/float64(t.storageParams.GetRedundantDataChunkNum()) + 1))
 	}
-	err = t.taskNode.rcScope.ReserveMemory(t.approximateMemSize, rcmgr.ReservationPriorityAlways)
-	if err != nil {
-		log.CtxErrorw(t.ctx, "failed to reserve memory from resource manager",
-			"reserve_size", t.approximateMemSize, "error", err)
-		return err
-	}
-	log.CtxDebugw(t.ctx, "reserve memory from resource manager",
-		"reserve_size", t.approximateMemSize, "resource_state", rcmgr.GetServiceState(model.TaskNodeService))
 	return nil
 }
 
-// execute is used to start the task.
-func (t *replicateObjectTask) execute() {
+// execute is used to start the task, and waitCh is used to wait runtime initialization.
+func (t *replicateObjectTask) execute(waitCh chan error) {
 	var (
-		sealMsg         *storagetypes.MsgSealObject
-		progressInfo    *servicetypes.ReplicatePieceInfo
-		succeedIndexMap map[int]bool
+		startTime            time.Time
+		succeedIndexMapMutex sync.RWMutex
+		succeedIndexMap      map[int]bool
+		err                  error
+		scopeSpan            rcmgr.ResourceScopeSpan
+		sealMsg              *storagetypes.MsgSealObject
+		progressInfo         *servicetypes.ReplicatePieceInfo
 	)
-	defer func() {
-		t.taskNode.rcScope.ReleaseMemory(t.approximateMemSize)
-		log.CtxDebugw(t.ctx, "release memory to resource manager",
-			"release_size", t.approximateMemSize, "resource_state", rcmgr.GetServiceState(model.TaskNodeService))
-	}()
-
-	t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
-
+	// runtime initialization
+	startTime = time.Now()
 	succeedIndexMap = make(map[int]bool, t.redundancyNumber)
 	isAllSucceed := func(inputIndexMap map[int]bool) bool {
 		for i := 0; i < t.redundancyNumber; i++ {
@@ -287,6 +279,48 @@ func (t *replicateObjectTask) execute() {
 		}
 		return true
 	}
+	metrics.ReplicateObjectTaskGauge.WithLabelValues(model.TaskNodeService).Inc()
+	t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
+
+	if scopeSpan, err = t.taskNode.rcScope.BeginSpan(); err != nil {
+		log.CtxErrorw(t.ctx, "failed to begin span", "error", err)
+		waitCh <- err
+		return
+	}
+	if err = scopeSpan.ReserveMemory(t.approximateMemSize, rcmgr.ReservationPriorityAlways); err != nil {
+		log.CtxErrorw(t.ctx, "failed to reserve memory from resource manager",
+			"reserve_size", t.approximateMemSize, "error", err)
+		waitCh <- err
+		return
+	}
+	log.CtxDebugw(t.ctx, "reserve memory from resource manager",
+		"reserve_size", t.approximateMemSize, "resource_state", rcmgr.GetServiceState(model.TaskNodeService))
+	waitCh <- nil
+
+	// defer func
+	defer func() {
+		close(waitCh)
+		metrics.ReplicateObjectTaskGauge.WithLabelValues(model.TaskNodeService).Dec()
+		observer := metrics.SealObjectTimeHistogram.WithLabelValues(model.TaskNodeService)
+		observer.Observe(time.Since(startTime).Seconds())
+
+		if isAllSucceed(succeedIndexMap) {
+			metrics.SealObjectTotalCounter.WithLabelValues("success").Inc()
+			log.CtxInfo(t.ctx, "succeed to seal object on chain")
+		} else {
+			t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
+			metrics.SealObjectTotalCounter.WithLabelValues("failure").Inc()
+			log.CtxErrorw(t.ctx, "failed to replicate object data to sp", "error", err, "succeed_index_map", succeedIndexMap)
+		}
+
+		if scopeSpan != nil {
+			scopeSpan.Done()
+			log.CtxDebugw(t.ctx, "release memory to resource manager",
+				"release_size", t.approximateMemSize, "resource_state", rcmgr.GetServiceState(model.TaskNodeService))
+		}
+	}()
+
+	// execution
 	pickSp := func() (sp *sptypes.StorageProvider, approval *p2ptypes.GetApprovalResponse, err error) {
 		t.mux.Lock()
 		defer t.mux.Unlock()
@@ -320,13 +354,15 @@ func (t *replicateObjectTask) execute() {
 			log.CtxInfo(t.ctx, "succeed to replicate object data")
 			break
 		}
-		sg, err := newStreamReaderGroup(t, succeedIndexMap)
+		var sg *streamReaderGroup
+		sg, err = newStreamReaderGroup(t, succeedIndexMap)
 		if err != nil {
 			log.CtxErrorw(t.ctx, "failed to new stream reader group", "error", err)
 			return
 		}
 		if len(sg.streamReaderMap) > len(t.sortedSpEndpoints) {
 			log.CtxError(t.ctx, "failed to replicate due to sp is not enough")
+			err = merrors.ErrExhaustedSP
 			return
 		}
 		sg.produceStreamPieceData()
@@ -357,7 +393,10 @@ func (t *replicateObjectTask) execute() {
 					return
 				}
 
+				succeedIndexMapMutex.Lock()
 				succeedIndexMap[rIdx] = true
+				succeedIndexMapMutex.Unlock()
+
 				sealMsg.GetSecondarySpAddresses()[rIdx] = sp.GetOperator().String()
 				sealMsg.GetSecondarySpSignatures()[rIdx] = signature
 				progressInfo.PieceInfos[rIdx] = &servicetypes.PieceInfo{
@@ -370,16 +409,15 @@ func (t *replicateObjectTask) execute() {
 				t.taskNode.cache.Add(t.objectInfo.Id.Uint64(), progressInfo)
 				log.CtxInfow(t.ctx, "succeed to replicate object piece stream to the target sp",
 					"sp", sp.GetOperator(), "endpoint", sp.GetEndpoint(), "redundancy_index", rIdx)
-
 			}(redundancyIdx)
 		}
 		wg.Wait()
 	}
 
-	// seal info
+	// seal onto the greenfield chain
 	if isAllSucceed(succeedIndexMap) {
 		t.updateTaskState(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING)
-		_, err := t.taskNode.signer.SealObjectOnChain(context.Background(), sealMsg)
+		_, err = t.taskNode.signer.SealObjectOnChain(context.Background(), sealMsg)
 		if err != nil {
 			t.taskNode.spDB.UpdateJobState(t.objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR)
 			log.CtxErrorw(t.ctx, "failed to sign object by signer", "error", err)
@@ -394,10 +432,5 @@ func (t *replicateObjectTask) execute() {
 			return
 		}
 		t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
-		log.CtxInfo(t.ctx, "succeed to seal object on chain")
-	} else {
-		err := t.updateTaskState(servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
-		log.CtxErrorw(t.ctx, "failed to replicate object data to sp", "error", err, "succeed_index_map", succeedIndexMap)
-		return
-	}
+	} // the else failed case is in defer func
 }
