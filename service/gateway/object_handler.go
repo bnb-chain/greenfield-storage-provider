@@ -302,7 +302,6 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 	}
 
 	bucketPrimarySpAddress := getBucketInfoRes.GetBucket().GetBucketInfo().GetPrimarySpAddress()
-	log.Debugw("getting bucketPrimarySpAddress:", "bucketPrimarySpAddress", bucketPrimarySpAddress)
 
 	//if bucket not in the current sp, 302 redirect to the sp that contains the bucket
 	if bucketPrimarySpAddress != gateway.config.SpOperatorAddress {
@@ -317,7 +316,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 
 		if err != nil || getSpByAddressRes == nil {
 			log.Errorw("failed to get sp by address ", "sp_address", reqContext.bucketName, "error", err)
-			errDescription = InvalidKey
+			errDescription = InvalidAddress
 			return
 		}
 		redirectUrl := getSpByAddressRes.Endpoint + "/download/" + reqContext.bucketName + "/" + reqContext.objectName
@@ -341,11 +340,6 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		errDescription = InvalidKey
 		return
 	}
-
-	log.Debugw("getting bucketInfo and objectInfo:",
-		"getBucketInfoRes.Bucket.BucketInfo.Id.Uint64()", getBucketInfoRes.GetBucket().GetBucketInfo().Id.Uint64(), "getBucketInfoRes.GetBucket().GetBucketInfo().GetChargedReadQuota()", getBucketInfoRes.GetBucket().GetBucketInfo().GetChargedReadQuota(),
-		"getObjectInfoRes.GetObject().GetObjectInfo().Id.Uint64()", getObjectInfoRes.GetObject().GetObjectInfo().Id.Uint64(), "getObjectInfoRes.GetObject().GetObjectInfo().GetPayloadSize()", getObjectInfoRes.GetObject().GetObjectInfo().GetPayloadSize(),
-	)
 
 	if getObjectInfoRes.GetObject().GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.Errorw("object is not sealed",

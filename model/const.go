@@ -162,8 +162,8 @@ const (
 
 	// GetApprovalPath defines get-approval path style suffix
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
-	// UniversalENdpointPath defines universal endpoint path style suffix
-	UniversalENdpointPath = "/download/{bucket:[^/]*}/{object:.+}"
+	// UniversalEndpointPath defines universal endpoint path style suffix
+	UniversalEndpointPath = "/download/{bucket:[^/]*}/{object:.+}"
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
 	ActionQuery = "action"
 	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request

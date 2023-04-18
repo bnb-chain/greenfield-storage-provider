@@ -142,6 +142,6 @@ func (metadata *Metadata) GetObjectByObjectNameAndBucketName(ctx context.Context
 		}
 	}
 	resp = &metatypes.GetObjectByObjectNameAndBucketNameResponse{Object: res}
-	log.CtxInfo(ctx, "succeed to get bucket by bucket name")
+	log.CtxInfo(ctx, "succeed to get object by object name and bucket name")
 	return resp, nil
 }

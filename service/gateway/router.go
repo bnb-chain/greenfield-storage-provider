@@ -96,7 +96,8 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Name(replicateObjectPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.replicatePieceHandler)
-	r.Path(model.UniversalENdpointPath).
+	//universal endpoint
+	r.Path(model.UniversalEndpointPath).
 		Name(getObjectByUniversalEndpointName).
 		Methods(http.MethodGet).
 		HandlerFunc(g.getObjectByUniversalEndpointHandler)
