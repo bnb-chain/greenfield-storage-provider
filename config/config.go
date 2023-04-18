@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"os"
 
@@ -34,6 +35,7 @@ type StorageProviderConfig struct {
 	P2PCfg            *p2p.NodeConfig
 	LogCfg            *LogConfig
 	MetricsCfg        *metrics.MetricsConfig
+	RateLimiter       *gateway.RateLimiterConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format

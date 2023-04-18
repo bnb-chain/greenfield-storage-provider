@@ -71,14 +71,33 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 	} else {
 		return nil, fmt.Errorf("missing metadata gPRC address configuration for gateway service")
 	}
-	gCfg.ApiLimiterConfig = &gateway.ApiLimiterConfig{
-		ApiLimits: map[string]gateway.MemoryLimiterConfig{
-			"/-get": {
-				Prefix:     "/",
-				RateLimit:  1,
-				RatePeriod: "S",
-			},
-		},
+	if cfg.RateLimiter != nil {
+		defaultMap := make(map[string]gateway.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.Default {
+			defaultMap[c.Key] = gateway.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		patternMap := make(map[string]gateway.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.Pattern {
+			patternMap[c.Key] = gateway.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		apiLimitsMap := make(map[string]gateway.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.ApiLimits {
+			apiLimitsMap[c.Key] = gateway.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		gCfg.ApiLimiterConfig = &gateway.ApiLimiterConfig{
+			Default:   defaultMap,
+			Pattern:   patternMap,
+			ApiLimits: apiLimitsMap,
+		}
 	}
 	return gCfg, nil
 }

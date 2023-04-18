@@ -5,6 +5,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	slimiter "github.com/ulule/limiter/v3"
 	smemory "github.com/ulule/limiter/v3/drivers/store/memory"
+	"regexp"
 	"time"
 
 	"fmt"
@@ -14,8 +15,19 @@ import (
 	"sync/atomic"
 )
 
+type RateLimiterCell struct {
+	Key        string
+	RateLimit  int
+	RatePeriod string
+}
+
+type RateLimiterConfig struct {
+	Default   []RateLimiterCell
+	Pattern   []RateLimiterCell
+	ApiLimits []RateLimiterCell
+}
+
 type MemoryLimiterConfig struct {
-	Prefix     string
 	RateLimit  int    // rate
 	RatePeriod string // per period
 }
@@ -23,6 +35,7 @@ type MemoryLimiterConfig struct {
 type ApiLimiterConfig struct {
 	Default   map[string]MemoryLimiterConfig
 	ApiLimits map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
+	Pattern   map[string]MemoryLimiterConfig
 }
 type apiLimiter struct {
 	store      slimiter.Store
@@ -42,37 +55,27 @@ func NewApiLimiter(cfg *ApiLimiterConfig) error {
 		cfg: ApiLimiterConfig{
 			ApiLimits: make(map[string]MemoryLimiterConfig),
 			Default:   make(map[string]MemoryLimiterConfig),
+			Pattern:   make(map[string]MemoryLimiterConfig),
 		},
 	}
 
 	var err error
 	var rate slimiter.Rate
-	cfgMap := make(map[string]slimiter.Rate)
-
-	//defer func() {
-	//	if err == nil {
-	//		metrics.ApiRateLimitValue.Reset()
-	//		metrics.ApiRateLimitPeriod.Reset()
-	//		for k, v := range cfgMap {
-	//			index := strings.LastIndex(k, "-")
-	//			if index == -1 {
-	//				continue
-	//			}
-	//			pkg := k[:index]
-	//			method := k[index+1:]
-	//			metrics.ApiRateLimitValue.WithLabelValues(pkg, method).Set(float64(v.Limit))
-	//			metrics.ApiRateLimitPeriod.WithLabelValues(pkg, method).Set(v.Period.Seconds())
-	//		}
-	//	}
-	//}()
 
 	for k, v := range cfg.Default {
 		rate, err = slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", v.RateLimit, v.RatePeriod))
 		if err != nil {
 			return err
 		}
-		cfgMap[fmt.Sprintf("%s-default", strings.ToLower(k))] = rate
 		limiter_.cfg.Default[strings.ToLower(k)] = v
+	}
+
+	for k, v := range cfg.Pattern {
+		rate, err = slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", v.RateLimit, v.RatePeriod))
+		if err != nil {
+			return err
+		}
+		limiter_.cfg.Pattern[strings.ToLower(k)] = v
 	}
 
 	for k, v := range cfg.ApiLimits {
@@ -80,7 +83,6 @@ func NewApiLimiter(cfg *ApiLimiterConfig) error {
 		if err != nil {
 			return err
 		}
-		cfgMap[k] = rate
 
 		limiter_.limiterMap.Store(strings.ToLower(k), slimiter.New(localStore, rate))
 	}
@@ -89,39 +91,51 @@ func NewApiLimiter(cfg *ApiLimiterConfig) error {
 	return nil
 }
 
-func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
+func (t *apiLimiter) findLimiter(host, prefix, key string) *slimiter.Limiter {
+	limiter_, ok := t.limiterMap.Load(key)
+	if ok {
+		return limiter_.(*slimiter.Limiter)
+	}
+	for p, l := range t.cfg.Pattern {
+		if regexp.MustCompile(p).MatchString(host) {
+			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
+			if err != nil {
+				log.Errorw("NewRateFromFormatted failed", "err", err)
+				continue
+			}
+			limiter_ = slimiter.New(t.store, rate)
+			return limiter_.(*slimiter.Limiter)
+		}
+	}
+	defaultCfg, exist := t.cfg.Default[prefix]
+	if !exist {
+		return nil
+	}
+	rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", defaultCfg.RateLimit, defaultCfg.RatePeriod))
+	if err != nil {
+		log.Errorw("NewRateFromFormatted failed", "err", err)
+		return nil
+	}
+	limiter_ = slimiter.New(t.store, rate)
+	t.limiterMap.Store(key, limiter_)
+	return limiter_.(*slimiter.Limiter)
+}
 
-	prefixKey := strings.ToLower(r.RequestURI)
-	method := r.Method
-	key := prefixKey + "-" + method
+func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
+	uri := strings.ToLower(r.RequestURI)
+	host := r.Host
+	key := host + "-" + uri
 
 	key = strings.ToLower(key)
-	log.Debugf("key: %s", key)
-	limiter_, ok := t.limiterMap.Load(key)
-	if !ok {
-		defaultCfg, exist := t.cfg.Default[prefixKey]
-		if !exist {
-			return true
-		}
-		rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", defaultCfg.RateLimit, defaultCfg.RatePeriod))
-		if err != nil {
-			//error_utils.HttpErrorResponseWithMessage(ctx, http.StatusInternalServerError, "internal error")
-			return false
-		}
-		limiter_ = slimiter.New(t.store, rate)
-		t.limiterMap.Store(key, limiter_)
+
+	l := t.findLimiter(host, uri, key)
+	if l == nil {
+		return true
 	}
-
-	l := limiter_.(*slimiter.Limiter)
-
-	//limiterCtx, err := limiter.Increment(ctx, key, 1)
 	limiterCtx, err := t.store.Increment(ctx, key, 1, l.Rate)
-	log.Debugf("limiterCtx: %d", limiterCtx.Limit)
 	if err != nil {
 		return true
 	}
-
-	log.Debugf("api limit %v, %v", key, limiterCtx.Remaining)
 
 	if limiterCtx.Reached {
 		//error_utils.HttpErrorResponseWithMessage(ctx, http.StatusTooManyRequests, "Reached the total limit of this api")
@@ -135,7 +149,7 @@ func limit(next http.Handler) http.Handler {
 		if !limiter.Load().Allow(context.Background(), r) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusTooManyRequests)
-			
+
 			return
 		}
 
