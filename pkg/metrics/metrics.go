@@ -97,7 +97,8 @@ func (m *Metrics) Enabled() bool {
 
 func (m *Metrics) registerMetricItems() {
 	m.registry.MustRegister(DefaultGRPCServerMetrics, DefaultGRPCClientMetrics, DefaultHTTPServerMetrics,
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}), PanicsTotal, BlockHeightLagGauge)
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}), PanicsTotal, BlockHeightLagGauge,
+		SealObjectTimeHistogram, SealObjectTotalCounter, ReplicateObjectTaskGauge)
 }
 
 func (m *Metrics) serve() {
