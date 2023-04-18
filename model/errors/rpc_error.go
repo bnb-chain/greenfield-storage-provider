@@ -98,15 +98,6 @@ var (
 	ErrInvalidAccountID = errors.New("invalid account id")
 )
 
-// auth service error
-var (
-	ErrInvalidRegNonce           = errors.New("invalid regNonce")
-	ErrSignedMsgNotMatch         = errors.New("signed msg does not match header")
-	ErrSignedMsgNotMatchSPAddr   = errors.New("invalid SP addr")
-	ErrSignedMsgNotMatchTemplate = errors.New("signed msg does not match the template")
-	ErrInvalidExpiryDateHeader   = errors.New("invalid expiry date header")
-)
-
 // task node service error
 var (
 	// ErrSPApprovalNumber defines failed to insufficient SPs' approvals from p2p server

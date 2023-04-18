@@ -44,7 +44,7 @@ var SpServiceDesc = map[string]string{
 	MetadataService:    "Provides the ability to query meta data",
 	BlockSyncerService: "Syncs block data to db",
 	P2PService:         "Communicates with SPs on p2p protocol",
-	AuthService:        "off chain auth server",
+	AuthService:        "Handles off-chain-auth requests",
 }
 
 // define storage provider service gRPC default address
