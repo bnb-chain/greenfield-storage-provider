@@ -65,7 +65,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if addr, err = reqContext.verifySignature(); err != nil {
+	if addr, err = gateway.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
@@ -183,7 +183,7 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if addr, err = reqContext.verifySignature(); err != nil {
+	if addr, err = gateway.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
 		errDescription = makeErrorDescription(err)
 		return

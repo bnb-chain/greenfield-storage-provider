@@ -28,6 +28,8 @@ var (
 	MetricsService = strings.ToLower("Metrics")
 	// P2PService defines the name of p2p service
 	P2PService = strings.ToLower("p2p")
+	// AuthService defines the name of auth service
+	AuthService = strings.ToLower("auth")
 )
 
 // SpServiceDesc defines the service description in storage provider
@@ -42,6 +44,7 @@ var SpServiceDesc = map[string]string{
 	MetadataService:    "Provides the ability to query meta data",
 	BlockSyncerService: "Syncs block data to db",
 	P2PService:         "Communicates with SPs on p2p protocol",
+	AuthService:        "Handles off-chain-auth requests",
 }
 
 // define storage provider service gRPC default address
@@ -68,6 +71,8 @@ const (
 	P2PGRPCAddress = "localhost:9833"
 	// P2PListenAddress default p2p protocol listen address of p2p node
 	P2PListenAddress = "127.0.0.1:9933"
+	// AuthGRPCAddress default gRPC address of auth service
+	AuthGRPCAddress = "localhost:10033"
 )
 
 // define greenfield chain default address
@@ -162,6 +167,10 @@ const (
 	// SignTypeV2 is an authentication algorithm, which is used by metamask
 	SignTypeV2 = "authTypeV2"
 
+	SignTypeOffChain   = "OffChainAuth" // sign type - off-chain-auth
+	SignTypePersonal   = "PersonalSign" // sign type -  PersonalSign
+	SignAlgorithmEddsa = "EDDSA"
+
 	// GetApprovalPath defines get-approval path style suffix
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
@@ -184,6 +193,10 @@ const (
 	ChallengePath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
+	// AuthRequestNoncePath defines path to request auth nonce
+	AuthRequestNoncePath = "/auth/request_nonce"
+	// AuthUpdateKeyPath defines path to update user public key
+	AuthUpdateKeyPath = "/auth/update_key"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
 	// GnfdAuthorizationHeader defines authorization, verify signature and check authorization
@@ -212,6 +225,17 @@ const (
 	GnfdUserAddressHeader = "X-Gnfd-User-Address"
 	// GnfdResponseXMLVersion defines the response xml version
 	GnfdResponseXMLVersion = "1.0"
+
+	// off-chain-auth headers
+
+	// GnfdOffChainAuthAppDomainHeader defines the app domain from where user is trying to do the EDDSA auth interactions
+	GnfdOffChainAuthAppDomainHeader = "X-Gnfd-App-Domain"
+	// GnfdOffChainAuthAppRegNonceHeader defines nonce for which user is trying to register his/her EDDSA public key
+	GnfdOffChainAuthAppRegNonceHeader = "X-Gnfd-App-Reg-Nonce"
+	// GnfdOffChainAuthAppRegPublicKeyHeader defines the EDDSA public key for which user is trying to register
+	GnfdOffChainAuthAppRegPublicKeyHeader = "X-Gnfd-App-Reg-Public-Key"
+	// GnfdOffChainAuthAppRegExpiryDateHeader defines the Expiry-Date formatted in '2006-01-02 15:04:05 GMT-07:00', used to register the EDDSA public key
+	GnfdOffChainAuthAppRegExpiryDateHeader = "X-Gnfd-App-Reg-Expiry-Date"
 )
 
 // define all kinds of size

@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
+
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
@@ -191,6 +193,16 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
+	case model.AuthService:
+		authCfg, err := cfg.MakeAuthServiceConfig()
+		if err != nil {
+			return nil, err
+		}
+		server, err = auth.NewAuthServer(authCfg)
+		if err != nil {
+			return nil, err
+		}
+
 	default:
 		log.Errorw("unknown service", "service", serviceName)
 		return nil, fmt.Errorf("unknown service: %s", serviceName)

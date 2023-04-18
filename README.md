@@ -66,7 +66,7 @@ Build   : go1.18.4 darwin amd64 2023-03-13 14:11
 
 ```toml
 # start service list
-Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager"]
+Service = ["auth", "gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager"]
 # sp operator address 
 SpOperatorAddress = ""
 # service endpoint for other to connect
@@ -80,6 +80,7 @@ receiver = "localhost:9533"
 signer = "localhost:9633"
 tasknode = "localhost:9433"
 uploader = "localhost:9133"
+auth = "localhost:10033"
 # service listen address
 [ListenAddress]
 challenge = "localhost:9333"
@@ -91,6 +92,7 @@ receiver = "localhost:9533"
 signer = "localhost:9633"
 tasknode = "localhost:9433"
 uploader = "localhost:9133"
+auth = "localhost:10033"
 # SQL configuration
 [SpDBConfig]
 User = "root"

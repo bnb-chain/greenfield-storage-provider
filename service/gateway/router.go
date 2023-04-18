@@ -20,6 +20,8 @@ const (
 	listObjectsByBucketRouterName  = "ListObjectsByBucketName"
 	getBucketReadQuotaRouterName   = "GetBucketReadQuota"
 	listBucketReadRecordRouterName = "ListBucketReadRecord"
+	requestNonceName               = "RequestNonce"
+	updateUserPublicKey            = "UpdateUserPublicKey"
 	queryUploadProgressRouterName  = "queryUploadProgress"
 )
 
@@ -103,6 +105,16 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Name(replicateObjectPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.replicatePieceHandler)
+
+	// off-chain-auth router
+	r.Path(model.AuthRequestNoncePath).
+		Name(requestNonceName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.requestNonceHandler)
+	r.Path(model.AuthUpdateKeyPath).
+		Name(updateUserPublicKey).
+		Methods(http.MethodPost).
+		HandlerFunc(g.updateUserPublicKeyHandler)
 
 	// path style
 	pathBucketRouter := r.PathPrefix("/{bucket}").Subrouter()

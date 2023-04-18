@@ -44,7 +44,7 @@ func (g *Gateway) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if addr, err = reqContext.verifySignature(); err != nil {
+	if addr, err = g.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
@@ -122,7 +122,7 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if addr, err = reqContext.verifySignature(); err != nil {
+	if addr, err = g.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
@@ -243,7 +243,7 @@ func (g *Gateway) queryUploadProgressHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if addr, err = reqContext.verifySignature(); err != nil {
+	if addr, err = g.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
