@@ -50,9 +50,6 @@ func NewGreenfield(cfg *GreenfieldChainConfig) (*Greenfield, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err != nil {
-			return nil, err
-		}
 		client := &GreenfieldClient{
 			Provider:    config.GreenfieldAddresses,
 			chainClient: cc,
