@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -120,6 +121,17 @@ func (client *MetadataClient) GetPaymentByBucketID(ctx context.Context, in *meta
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to send get payment by bucket id rpc", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// VerifyPermission Verify the input account’s permission to input items
+func (client *MetadataClient) VerifyPermission(ctx context.Context, in *storagetypes.QueryVerifyPermissionRequest, opts ...grpc.CallOption) (*storagetypes.QueryVerifyPermissionResponse, error) {
+	resp, err := client.metadata.VerifyPermission(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send verify permission rpc", "error", err)
 		return nil, err
 	}
 	return resp, nil
