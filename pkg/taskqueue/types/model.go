@@ -7,6 +7,7 @@ var (
 	ErrObjectDangling = errors.New("object pointer dangling")
 )
 
+// defines the task retry limits
 const (
 	DefaultReplicatePieceTaskRetryLimit  int64 = 3
 	DefaultReplicatePieceTaskMemoryLimit int64 = 40 * 1024 * 1024
@@ -18,18 +19,21 @@ const (
 )
 
 const (
-	DefaultUploadObjectRate = 200
+	// DefaultUploadObjectRate defines default upload object speed(MB/s)
+	DefaultUploadObjectRate = 50
 )
 
+// defines the task timeout
 const (
 	DefaultUploadMinTimeout     = 2
-	DefaultUploadMaxTimeout     = 10
+	DefaultUploadMaxTimeout     = 30
 	DefaultSealObjectTimeout    = 20
 	DefaultGCObjectTimeout      = 60
 	DefaultGCZombiePieceTimeout = 60
 	DefaultGCStoreTimeout       = 60
 )
 
+// ComputeTransferDataTime computes the upload object timeout.
 func ComputeTransferDataTime(size uint64) int64 {
 	mSize := size / 1024
 	timeout := int64(mSize / uint64(DefaultUploadObjectRate))

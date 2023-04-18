@@ -15,16 +15,24 @@ import (
 )
 
 const (
-	PriorityQueueManage    = "priority-queue-manager"
-	SubQueueUpload         = "sub-queue-upload"
+	// PriorityQueueManage defines the manager priority queue name
+	PriorityQueueManage = "priority-queue-manager"
+	// SubQueueUpload defines the upload object sub queue name
+	SubQueueUpload = "sub-queue-upload"
+	// SubQueueReplicatePiece defines the replicate piece sub queue name
 	SubQueueReplicatePiece = "sub-queue-replicate-piece"
-	SubQueueSealObject     = "sub-queue-seal-object"
-	SubQueueGCObject       = "sub-queue-gc-object"
-
+	// SubQueueSealObject defines the seal object sub queue name
+	SubQueueSealObject = "sub-queue-seal-object"
+	// SubQueueGCObject defines the gc object sub queue name
+	SubQueueGCObject = "sub-queue-gc-object"
+	// GCBlockDistance defines the distance of current height for gc
 	GCBlockDistance uint64 = 1800
-	GCBlockInternal uint64 = 1000
+	// GCBlockInterval defines the internal of blocks for gc object
+	GCBlockInterval uint64 = 1000
 )
 
+// MPQueue defines the manager priority queue, include upload, replicate, seal and gc task
+// sub queue, replicate, seal and gc supports scheduling to dispatch for task node execution.
 type MPQueue struct {
 	pqueue        tqueue.TPriorityQueueWithLimit
 	chain         *greenfield.Greenfield
@@ -33,6 +41,7 @@ type MPQueue struct {
 	mux           sync.RWMutex
 }
 
+// NewMPQueue returns an instance of MPQueue
 func NewMPQueue(chain *greenfield.Greenfield, uploadQueueSize, replicateQueueSize, sealQueueSize, gcObjectQueueSize int) *MPQueue {
 	mpq := &MPQueue{
 		chain: chain,
@@ -69,26 +78,32 @@ func NewMPQueue(chain *greenfield.Greenfield, uploadQueueSize, replicateQueueSiz
 	return mpq
 }
 
+// HasTask returns an indicator whether exists the task in priority queue.
 func (q *MPQueue) HasTask(key tqueue.TKey) bool {
 	return q.pqueue.Has(key)
 }
 
+// PopTask pops the task from priority queue by task key.
 func (q *MPQueue) PopTask(key tqueue.TKey) tqueue.Task {
 	return q.pqueue.PopByKey(key)
 }
 
+// PopTaskByLimit pops the task from priority queue by resource limits.
 func (q *MPQueue) PopTaskByLimit(limit rcmgr.Limit) tqueue.Task {
 	return q.pqueue.PopByLimit(limit)
 }
 
+// PushTask pushes the task to priority queue.
 func (q *MPQueue) PushTask(task tqueue.Task) error {
 	return q.pqueue.Push(task)
 }
 
+// PopPushTask pushes the task to priority queue, overrides the exists one.
 func (q *MPQueue) PopPushTask(task tqueue.Task) error {
 	return q.pqueue.PopPush(task)
 }
 
+// GCMQueueTask runs priority queue gc.
 func (q *MPQueue) GCMQueueTask() {
 	if q.gcRunning.Swap(1) == 1 {
 		log.Debugw("manager priority queue gc is running")
@@ -98,25 +113,30 @@ func (q *MPQueue) GCMQueueTask() {
 	q.pqueue.RunCollection()
 }
 
+// GetUploadingTasksCount returns the number task of uploading object.
 func (q *MPQueue) GetUploadingTasksCount() int {
 	return q.GetUploadPrimaryTasksCount() + q.GetReplicatePieceTasksCount() + q.GetSealObjectTasksCount()
 }
 
+// GetUploadPrimaryTasksCount returns the number task of uploading object to primary SP.
 func (q *MPQueue) GetUploadPrimaryTasksCount() int {
 	prio := tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskUpload)
 	return q.pqueue.SubQueueLen(prio)
 }
 
+// GetReplicatePieceTasksCount returns the number task of replicating pieces to secondary SP.
 func (q *MPQueue) GetReplicatePieceTasksCount() int {
 	prio := tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskReplicatePiece)
 	return q.pqueue.SubQueueLen(prio)
 }
 
+// GetSealObjectTasksCount returns the number task of sealing object.
 func (q *MPQueue) GetSealObjectTasksCount() int {
 	prio := tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskSealObject)
 	return q.pqueue.SubQueueLen(prio)
 }
 
+// GCObjectQueueCallBack implements the gc object sub queue.
 func (q *MPQueue) GCObjectQueueCallBack(queue tqueue.TQueueOnStrategy, keys []tqueue.TKey) {
 	for _, key := range keys {
 		if queue.Expired(key) {
@@ -133,9 +153,9 @@ func (q *MPQueue) GCObjectQueueCallBack(queue tqueue.TQueueOnStrategy, keys []tq
 		if err != nil {
 			return
 		}
-		for atomic.LoadUint64(&q.gcBlockNumber)+GCBlockInternal <= height-GCBlockDistance {
+		for atomic.LoadUint64(&q.gcBlockNumber)+GCBlockInterval <= height-GCBlockDistance {
 			task, err := tqueuetypes.NewGCObjectTask(atomic.LoadUint64(&q.gcBlockNumber)+1,
-				atomic.LoadUint64(&q.gcBlockNumber)+GCBlockInternal)
+				atomic.LoadUint64(&q.gcBlockNumber)+GCBlockInterval)
 			if err != nil {
 				break
 			}
@@ -143,7 +163,7 @@ func (q *MPQueue) GCObjectQueueCallBack(queue tqueue.TQueueOnStrategy, keys []tq
 			if err != nil {
 				break
 			}
-			atomic.AddUint64(&q.gcBlockNumber, GCBlockInternal)
+			atomic.AddUint64(&q.gcBlockNumber, GCBlockInterval)
 		}
 	}
 }
