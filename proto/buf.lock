@@ -4,7 +4,7 @@ deps:
   - remote: buf.build
     owner: bnb-chain
     repository: greenfield
-    commit: 0d5c0d2d6c4e46aebbe8794080aa07d2
+    commit: eea939f39b26426e95dd75fb781c41e7
   - remote: buf.build
     owner: cosmos
     repository: cosmos-proto

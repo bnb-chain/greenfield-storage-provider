@@ -7,9 +7,6 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-go-sdk/client/chain"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -54,7 +51,7 @@ func NewGreenfield(cfg *GreenfieldChainConfig) (*Greenfield, error) {
 		client := &GreenfieldClient{
 			Provider: config.GreenfieldAddresses,
 			gnfdCompositeClients: chain.NewGnfdCompositClients(config.GreenfieldAddresses, config.TendermintAddresses,
-				cfg.ChainID, chain.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials()))),
+				cfg.ChainID),
 		}
 		client.gnfdCompositeClient = client.gnfdCompositeClients.GetClient()
 		clients = append(clients, client)
