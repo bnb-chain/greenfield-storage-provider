@@ -30,17 +30,18 @@ import (
 
 // requestContext is a request context.
 type requestContext struct {
+	request     *http.Request
+	routerName  string
 	requestID   string
 	bucketName  string
 	objectName  string
-	request     *http.Request
-	startTime   time.Time
+	accountID   string // accountID is used to provide authentication to the sp
 	vars        map[string]string
+	startTime   time.Time
 	skipAuth    bool // TODO: for auth v2 test, remove it in the future
+	isAnonymous bool // It is anonymous when there is no GnfdAuthorizationHeader
 	bucketInfo  *storagetypes.BucketInfo
 	objectInfo  *storagetypes.ObjectInfo
-	accountID   string // accountID is used to provide authentication to the sp
-	isAnonymous bool
 }
 
 // RecoverAddr recovers the sender address from msg and signature
@@ -63,14 +64,19 @@ func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, e
 // newRequestContext return a request context.
 func newRequestContext(r *http.Request) *requestContext {
 	vars := mux.Vars(r)
+	routerName := ""
+	if mux.CurrentRoute(r) != nil {
+		routerName = mux.CurrentRoute(r).GetName()
+	}
 	return &requestContext{
+		request:    r,
+		routerName: routerName,
 		requestID:  util.GenerateRequestID(),
 		bucketName: vars["bucket"],
 		objectName: vars["object"],
 		accountID:  vars["account_id"],
-		request:    r,
-		startTime:  time.Now(),
 		vars:       vars,
+		startTime:  time.Now(),
 	}
 }
 
@@ -134,7 +140,7 @@ func (g *Gateway) verifySignature(reqContext *requestContext) (sdk.AccAddress, e
 		return g.verifyOffChainSignature(reqContext, requestSignature[len(OffChainSignaturePrefix):])
 	}
 	// Anonymous users can get public object.
-	if requestSignature == "" && mux.CurrentRoute(reqContext.request).GetName() == getObjectRouterName {
+	if requestSignature == "" && reqContext.routerName == getObjectRouterName {
 		reqContext.isAnonymous = true
 		return sdk.AccAddress{}, nil
 	}
@@ -382,7 +388,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		}
 	}
 
-	switch mux.CurrentRoute(reqContext.request).GetName() {
+	switch reqContext.routerName {
 	case putObjectRouterName, queryUploadProgressRouterName:
 		if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
 			context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
