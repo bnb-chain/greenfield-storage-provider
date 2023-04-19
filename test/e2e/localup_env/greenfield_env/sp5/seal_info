@@ -1,13 +1,13 @@
 
-- address: 0xF448053863ED90b52AE96a21acC936c84907Bc11
+- address: 0xDe3dac18Cf94cb8d088724dD8Ff3918d1a32184A
   name: sp5_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A86pZkCA2EFtKz/r9HeKu7cTaJFofD1Q1IK+y/N9apdN"}'
-  pubkey_hex: 03cea9664080d8416d2b3febf4778abbb7136891687c3d50d482becbf37d6a974d
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A8QDNYhUALfj/dah+aZvdUyDGKu7yW8a8XzOGcW5qJEw"}'
+  pubkey_hex: 03c40335885400b7e3fdd6a1f9a66f754c8318abbbc96f1af17cce19c5b9a89130
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-glide time pudding aware guess wrap dinosaur carbon oil coin verb bachelor employ rough gown steak giant spatial waste kingdom pretty boss wash voyage
+weather error video airport jelly brisk tribe space alien usual goat busy calm stage squirrel undo memory thrive vendor couch valid give begin used
 
