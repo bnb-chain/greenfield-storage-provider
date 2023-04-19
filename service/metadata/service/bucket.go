@@ -172,3 +172,41 @@ func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatype
 	log.CtxInfow(ctx, "succeed to get buckets count by a user address")
 	return resp, nil
 }
+
+func (metadata *Metadata) ListExpiredBucketsBySp(ctx context.Context, req *metatypes.ListExpiredBucketsBySpRequest) (resp *metatypes.ListExpiredBucketsBySpResponse, err error) {
+	ctx = log.Context(ctx, req)
+	buckets, err := metadata.bsDB.ListExpiredBucketsBySp(req.GetCreateAt(), req.GetPrimarySpAddress())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get user buckets", "error", err)
+		return
+	}
+
+	res := make([]*metatypes.Bucket, 0)
+	for _, bucket := range buckets {
+		res = append(res, &metatypes.Bucket{
+			BucketInfo: &types.BucketInfo{
+				Owner:            bucket.Owner.String(),
+				BucketName:       bucket.BucketName,
+				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
+				CreateAt:         bucket.CreateTime,
+				PaymentAddress:   bucket.PaymentAddress.String(),
+				PrimarySpAddress: bucket.PrimarySpAddress.String(),
+				ChargedReadQuota: bucket.ChargedReadQuota,
+				Visibility:       types.VisibilityType(types.VisibilityType_value[bucket.Visibility]),
+				BillingInfo: types.BillingInfo{
+					PriceTime:              0,
+					TotalChargeSize:        0,
+					SecondarySpObjectsSize: nil,
+				},
+				BucketStatus: types.BucketStatus(types.BucketStatus_value[bucket.Status]),
+			},
+			Removed:      bucket.Removed,
+			DeleteAt:     bucket.DeleteAt,
+			DeleteReason: bucket.DeleteReason,
+		})
+	}
+	resp = &metatypes.ListExpiredBucketsBySpResponse{Buckets: res}
+	log.CtxInfow(ctx, "succeed to get user buckets")
+	return resp, nil
+}

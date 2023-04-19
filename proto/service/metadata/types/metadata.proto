@@ -99,6 +99,13 @@ message GetUserBucketsCountRequest {
   string account_id = 1;
 }
 
+message ListExpiredBucketsBySpRequest {
+  // create_at defines the create timestamp of bucket
+  int64 create_at = 1;
+  // primary_sp_address defines the primary sp address of bucket
+  string primary_sp_address = 2;
+}
+
 // GetObjectByObjectNameAndBucketNameRequest is request type for the GetObjectByObjectNameAndBucketName RPC method
 message GetObjectByObjectNameAndBucketNameRequest {
   // object_name is the name of the object
@@ -163,6 +170,11 @@ message GetUserBucketsCountResponse {
   int64 count = 1;
 }
 
+message ListExpiredBucketsBySpResponse {
+  // buckets defines the list of expired bucket
+  repeated Bucket buckets = 1;
+}
+
 // GetObjectByObjectNameAndBucketNameResponse is response type for the GetObjectByObjectNameAndBucketName RPC method.
 message GetObjectByObjectNameAndBucketNameResponse {
   // object defines the information of an object
@@ -195,6 +207,8 @@ service MetadataService {
   rpc ListDeletedObjectsByBlockNumberRange(ListDeletedObjectsByBlockNumberRangeRequest) returns (ListDeletedObjectsByBlockNumberRangeResponse) {};
   // GetUserBucketsCount GetUserBuckets get buckets count by a user address
   rpc GetUserBucketsCount(GetUserBucketsCountRequest) returns (GetUserBucketsCountResponse) {};
+  // ListExpiredBucketsBySp list expired buckets by sp
+  rpc ListExpiredBucketsBySp(ListExpiredBucketsBySpRequest) returns (ListExpiredBucketsBySpResponse) {};
   // GetObjectByObjectNameAndBucketName get bucket info by a bucket name and an object name
   rpc GetObjectByObjectNameAndBucketName(GetObjectByObjectNameAndBucketNameRequest) returns (GetObjectByObjectNameAndBucketNameResponse) {};
   // GetPaymentByBucketName get bucket payment info by a bucket name

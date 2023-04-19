@@ -80,3 +80,19 @@ func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address) (int64, error) 
 	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
 	return count, err
 }
+
+// ListExpiredBucketsBySp lists expired buckets
+func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpAddress string) ([]*Bucket, error) {
+	var (
+		buckets []*Bucket
+		err     error
+	)
+
+	err = b.db.Table((&Bucket{}).TableName()).
+		Select("*").
+		Where("primary_sp_address = ? and status = 'BUCKET_STATUS_CREATED' and create_time < ? and removed = false", common.HexToAddress(primarySpAddress), createAt).
+		Order("create_at").
+		Find(&buckets).Error
+
+	return buckets, err
+}
