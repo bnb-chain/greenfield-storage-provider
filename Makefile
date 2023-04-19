@@ -41,3 +41,6 @@ test:
 
 clean:
 	rm -rf ./service/types/*.pb.go && rm -rf ./service/*/types/*.pb.go
+
+lint:
+	golangci-lint run --fix
