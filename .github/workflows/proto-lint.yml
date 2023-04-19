@@ -6,6 +6,8 @@ on:
       - master
       - develop
       - release*
+      - fix-release*
+
     paths:
       - 'proto/**'
 
@@ -14,6 +16,8 @@ on:
       - master
       - develop
       - release*
+      - fix-release*
+
     paths:
       - 'proto/**'
 
