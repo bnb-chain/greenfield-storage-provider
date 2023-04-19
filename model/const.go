@@ -236,7 +236,7 @@ const (
 	GnfdOffChainAuthAppRegNonceHeader = "X-Gnfd-App-Reg-Nonce"
 	// GnfdOffChainAuthAppRegPublicKeyHeader defines the EDDSA public key for which user is trying to register
 	GnfdOffChainAuthAppRegPublicKeyHeader = "X-Gnfd-App-Reg-Public-Key"
-	// GnfdOffChainAuthAppRegExpiryDateHeader defines the Expiry-Date formatted in '2006-01-02 15:04:05 GMT-07:00', used to register the EDDSA public key
+	// GnfdOffChainAuthAppRegExpiryDateHeader defines the Expiry-Date is the ISO 8601 datetime string (e.g. 2021-09-30T16:25:24Z), used to register the EDDSA public key
 	GnfdOffChainAuthAppRegExpiryDateHeader = "X-Gnfd-App-Reg-Expiry-Date"
 )
 

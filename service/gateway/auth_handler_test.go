@@ -29,14 +29,22 @@ import (
 var Now = time.Now
 
 const (
-	TestSpAddress           string = "0x1c62EF97a13654A759C7E706Adf9EB3bAb0F807A"
-	UnsignedContentTemplate string = `Register your identity of dapp %s
-with your identity key %s
-In the following SPs:
-- SP %s (name: SP_001) with nonce: %s
-- SP 0x20Bb76D063a6d2B18B6DaBb2aC985234a4B9eDe0 (name: SP_002) with nonce: 1
+	TestSpAddress string = "0x1c62EF97a13654A759C7E706Adf9EB3bAb0F807A"
+	TestUserAcct  string = "0xa64fdc3b4866cd2ac664998c7b180813fb9b06e6"
 
-The expiry date is %s`
+	UnsignedContentTemplate string = `%s wants you to sign in with your BNB Greenfield account:
+%s
+
+Register your identity public key %s
+
+URI: %s
+Version: 1
+Chain ID: 5600
+Issued At: %s
+Expiration Time: %s
+Resources:
+- SP %s (name: SP_001) with nonce: %s
+- SP 0x20Bb76D063a6d2B18B6DaBb2aC985234a4B9eDe0 (name: SP_002) with nonce: 1`
 )
 
 func TestRequestNonceHandler(t *testing.T) {
@@ -155,9 +163,8 @@ func TestRequestNonceHandler(t *testing.T) {
 }
 
 func getSampleRequestWithAuthSig(domain string, nonce string, eddsaPublicKey string, spAddr string, validExpiryDate string) *http.Request {
-	unSignedContent := UnsignedContentTemplate
+	unSignedContent := fmt.Sprintf(UnsignedContentTemplate, domain, TestUserAcct, eddsaPublicKey, domain, SampleIssueDate, validExpiryDate, TestSpAddress, nonce)
 
-	unSignedContent = fmt.Sprintf(unSignedContent, domain, eddsaPublicKey, spAddr, nonce, validExpiryDate)
 	log.Infof("unSignedContent is: %s", unSignedContent)
 	unSignedContentHash := accounts.TextHash([]byte(unSignedContent))
 	// Account information.
@@ -733,7 +740,7 @@ func TestUpdateUserPublicKeyHandler(t *testing.T) {
 	}
 }
 
-func TestAuthHandlerVerifySignedContent(t *testing.T) {
+func TestAuthHandlerVerifySignedContentInEip4361Template(t *testing.T) {
 	gateway := &Gateway{
 		config: &GatewayConfig{
 			SpOperatorAddress: TestSpAddress,
@@ -742,9 +749,10 @@ func TestAuthHandlerVerifySignedContent(t *testing.T) {
 	expectedDomain := SampleDAppDomain
 	expectedNonce := "123456"
 	expectedPublicKey := SamplePublicKey
-	expectedExpiryDate := "test_expiry_date"
-	unSignedContent := fmt.Sprintf(UnsignedContentTemplate, expectedDomain, expectedPublicKey, TestSpAddress, expectedNonce, expectedExpiryDate)
-
+	expectedExpiryDate := "2023-04-18T16:25:24Z"
+	expectedIssueDate := SampleIssueDate
+	unSignedContent := fmt.Sprintf(UnsignedContentTemplate, expectedDomain, TestUserAcct, expectedPublicKey, expectedDomain, expectedIssueDate, expectedExpiryDate, TestSpAddress, expectedNonce)
+	log.Infof(unSignedContent)
 	// Test case 1: all inputs are correct.
 	assert.Nil(t, gateway.verifySignedContent(unSignedContent, expectedDomain, expectedNonce, expectedPublicKey, expectedExpiryDate))
 

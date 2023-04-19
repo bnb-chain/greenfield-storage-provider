@@ -18,7 +18,7 @@ import (
 
 const (
 	MaxExpiryAgeInSec int32  = 3600 * 24 * 7 // 7 days
-	ExpiryDateFormat  string = "2006-01-02 15:04:05 GMT-07:00"
+	ExpiryDateFormat  string = time.RFC3339
 )
 
 // requestNonceHandler handle requestNonce request
@@ -208,7 +208,7 @@ func (g *Gateway) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (g *Gateway) verifySignedContent(signedContent string, expectedDomain string, expectedNonce string, expectedPublicKey string, expectedExpiryDate string) *errorDescription {
-	pattern := `Register your identity of dapp (.+)\n*with your identity key (.+)\nIn the following SPs:((?:\n- SP .+ \(name:.+\) with nonce: \d+)+)\n\nThe expiry date is (.+)`
+	pattern := `(.+) wants you to sign in with your BNB Greenfield account:\n*(.+)\n*Register your identity public key (.+)\n*URI: (.+)\n*Version: (.+)\n*Chain ID: (.+)\n*Issued At: (.+)\n*Expiration Time: (.+)\n*Resources:((?:\n- SP .+ \(name:.+\) with nonce: \d+)+)`
 
 	re := regexp.MustCompile(pattern)
 	match := re.FindStringSubmatch(signedContent)
@@ -217,8 +217,15 @@ func (g *Gateway) verifySignedContent(signedContent string, expectedDomain strin
 	}
 	// Extract variable values
 	dappDomain := match[1]
-	publicKey := match[2]
-	spsText := match[3]
+	// userAcct := match[2]  // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
+	publicKey := match[3]
+	// eip4361URI := match[4] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
+	// eip4361Version := match[5] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
+	// eip4361ChainId := match[6] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
+	// eip4361IssuedAt := match[7] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
+	eip4361ExpirationTime := match[8]
+
+	spsText := match[9]
 	spsPattern := `- SP (.+) \(name:(.+\S)\) with nonce: (\d+)`
 	spsRe := regexp.MustCompile(spsPattern)
 	spsMatch := spsRe.FindAllStringSubmatch(spsText, -1)
@@ -235,8 +242,6 @@ func (g *Gateway) verifySignedContent(signedContent string, expectedDomain strin
 			}
 		}
 	}
-
-	expiryDate := match[4]
 	if !found { // the signed content is not for this SP  (g.config.SpOperatorAddress)
 		return SignedMsgNotMatchSPAddr
 	}
@@ -246,7 +251,7 @@ func (g *Gateway) verifySignedContent(signedContent string, expectedDomain strin
 	if publicKey != expectedPublicKey {
 		return SignedMsgNotMatchHeaders
 	}
-	if expiryDate != expectedExpiryDate {
+	if eip4361ExpirationTime != expectedExpiryDate {
 		return SignedMsgNotMatchHeaders
 	}
 
