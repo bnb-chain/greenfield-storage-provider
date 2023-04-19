@@ -56,6 +56,7 @@ OperatorPrivateKey = ""
 FundingPrivateKey = ""
 SealPrivateKey = ""
 ApprovalPrivateKey = ""
+GcPrivateKey = ""
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]

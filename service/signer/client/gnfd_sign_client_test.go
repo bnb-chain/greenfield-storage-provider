@@ -38,6 +38,7 @@ func TestGreenfieldChainSignClient_Sign(t *testing.T) {
 		FundingPrivateKey  string
 		SealPrivateKey     string
 		ApprovalPrivateKey string
+		GcPrivateKey       string
 	}
 	type args struct {
 		scope SignType
@@ -59,6 +60,7 @@ func TestGreenfieldChainSignClient_Sign(t *testing.T) {
 				FundingPrivateKey:  "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
 				ApprovalPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
 				SealPrivateKey:     "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
+				GcPrivateKey:       "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
 			},
 			args: args{
 				scope: SignApproval,
@@ -69,7 +71,9 @@ func TestGreenfieldChainSignClient_Sign(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client, err := NewGreenfieldChainSignClient(tt.fields.GRPCAddr, tt.fields.ChainID, tt.fields.GasLimit, tt.fields.OperatorPrivateKey, tt.fields.FundingPrivateKey, tt.fields.SealPrivateKey, tt.fields.ApprovalPrivateKey)
+			client, err := NewGreenfieldChainSignClient(tt.fields.GRPCAddr, tt.fields.ChainID, tt.fields.GasLimit,
+				tt.fields.OperatorPrivateKey, tt.fields.FundingPrivateKey, tt.fields.SealPrivateKey,
+				tt.fields.ApprovalPrivateKey, tt.fields.GcPrivateKey)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewGreenfieldChainClient() error = %v, wantErr %v", err, tt.wantErr)
 				return
