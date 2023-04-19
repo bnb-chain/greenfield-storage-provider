@@ -1,13 +1,13 @@
 
-- address: 0xBa299BB46260bE2cd735988F469896662d279e2F
+- address: 0x8576429dA5685740cBD9A9B847C6C141D2141285
   name: sp3_fund
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AxuJmdqGSH7EzlaeafvF3cZQjSO0NJGE/hs4Q8KOCyVz"}'
-  pubkey_hex: 031b8999da86487ec4ce569e69fbc5ddc6508d23b4349184fe1b3843c28e0b2573
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AunJpB4+lk121hsWW5DH1OH1myjNXbLBSqoAa9+ssNee"}'
+  pubkey_hex: 02e9c9a41e3e964d76d61b165b90c7d4e1f59b28cd5db2c14aaa006bdfacb0d79e
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-infant example essay private mountain midnight during zero dune swing unhappy muffin special penalty equip enough flip year grab axis aisle common capable major
+occur flame brief lounge enhance alone recycle virus gate ozone soup eternal artwork napkin plunge half damp dune sister anger firm general man voice
 

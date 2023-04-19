@@ -1,0 +1,13 @@
+
+- address: 0xfa238a4B262e1dc35c4970A2296A2444B956c9Ca
+  name: sp0_gc
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AxYSHXFkOi/UcLqLPl9ea7dKFjKrvTW9DvsKQoRJCexO"}'
+  pubkey_hex: 0316121d71643a2fd470ba8b3e5f5e6bb74a1632abbd35bd0efb0a42844909ec4e
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+audit pigeon syrup easily loyal rifle hungry board suffer awkward clock still south online firm air fault shell toilet fever wedding accident canal market
+

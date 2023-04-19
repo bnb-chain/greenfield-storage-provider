@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"net/http"
+	"strconv"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -25,7 +26,7 @@ var (
 	InvalidBucketName  = &errorDescription{errorCode: "InvalidBucketName", errorMessage: "The specified bucket is not valid.", statusCode: http.StatusBadRequest}
 	InvalidKey         = &errorDescription{errorCode: "InvalidKey", errorMessage: "Object key is illegal", statusCode: http.StatusBadRequest}
 	InvalidPayload     = &errorDescription{errorCode: "InvalidPayload", errorMessage: "Payload is empty", statusCode: http.StatusBadRequest}
-	InvalidObjectState = &errorDescription{errorCode: "InvalidObjectState", errorMessage: "Object state is invalid", statusCode: http.StatusBadRequest}
+	InvalidObjectState = &errorDescription{errorCode: "InvalidObjectState", errorMessage: "Object state is invalid", statusCode: http.StatusForbidden}
 	InvalidRange       = &errorDescription{errorCode: "InvalidRange", errorMessage: "Range is invalid", statusCode: http.StatusBadRequest}
 	InvalidAddress     = &errorDescription{errorCode: "InvalidAddress", errorMessage: "Address is illegal", statusCode: http.StatusBadRequest}
 	SignatureNotMatch  = &errorDescription{errorCode: "SignatureDoesNotMatch", errorMessage: "SignatureDoesNotMatch", statusCode: http.StatusForbidden}
@@ -38,6 +39,19 @@ var (
 	InternalError          = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
 	NotImplementedError    = &errorDescription{errorCode: "NotImplementedError", errorMessage: "Not Implemented Error", statusCode: http.StatusNotImplemented}
 	NotExistComponentError = &errorDescription{errorCode: "NotExistComponentError", errorMessage: "Not Existed Component Error", statusCode: http.StatusNotImplemented}
+)
+
+// off-chain-auth errors
+var (
+	// 4xx
+	InvalidRegNonceHeader     = &errorDescription{errorCode: "InvalidRegNonceHeader", errorMessage: "The " + model.GnfdOffChainAuthAppRegNonceHeader + " header is incorrect.", statusCode: http.StatusBadRequest}
+	SignedMsgNotMatchHeaders  = &errorDescription{errorCode: "SigMsgNotMatchHeaders", errorMessage: "The signed message in " + model.GnfdAuthorizationHeader + " does not match the content in headers.", statusCode: http.StatusBadRequest}
+	SignedMsgNotMatchSPAddr   = &errorDescription{errorCode: "SignedMsgNotMatchSPAddr", errorMessage: "The signed message in " + model.GnfdAuthorizationHeader + " is not for the this SP.", statusCode: http.StatusBadRequest}
+	SignedMsgNotMatchTemplate = &errorDescription{errorCode: "SignedMsgNotMatchTemplate", errorMessage: "The signed message in " + model.GnfdAuthorizationHeader + " does not match the template.", statusCode: http.StatusBadRequest}
+	InvalidExpiryDateHeader   = &errorDescription{errorCode: "InvalidExpiryDateHeader",
+		errorMessage: "The " + model.GnfdOffChainAuthAppRegExpiryDateHeader + " header is incorrect. " +
+			"The expiry date is expected to be within " + strconv.Itoa(int(MaxExpiryAgeInSec)) + " seconds and formatted in YYYY-DD-MM HH:MM:SS 'GMT'Z, e.g. 2023-04-20 16:34:12 GMT+08:00 . ",
+		statusCode: http.StatusBadRequest}
 )
 
 // errorResponse is used to error response xml.

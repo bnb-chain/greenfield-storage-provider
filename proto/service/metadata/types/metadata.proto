@@ -2,6 +2,7 @@ syntax = "proto3";
 package service.metadata.types;
 
 import "greenfield/storage/types.proto";
+import "greenfield/storage/query.proto";
 import "greenfield/payment/stream_record.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/metadata/types";
@@ -22,6 +23,8 @@ message Object {
   string locked_balance = 2;
   // removed defines the object is deleted or not
   bool removed = 3;
+  // update_at defines the block number when the object updated
+  int64 update_at = 4;
 }
 
 // GetUserBucketsRequest is request type for the GetUserBuckets RPC method.
@@ -72,6 +75,16 @@ message GetUserBucketsCountRequest {
   string account_id = 1;
 }
 
+// GetObjectByObjectNameAndBucketNameRequest is request type for the GetObjectByObjectNameAndBucketName RPC method
+message GetObjectByObjectNameAndBucketNameRequest {
+  // object_name is the name of the object
+  string object_name = 1;
+  // bucket_name is the name of the bucket
+  string bucket_name = 2;
+  // is_full_list indicates whether this request can get the private objects information
+  bool is_full_list = 3;
+}
+
 // GetPaymentByBucketNameRequest is request type for the GetPaymentByBucketName RPC method
 message GetPaymentByBucketNameRequest {
   // bucket_name is the name of the bucket
@@ -100,7 +113,7 @@ message ListObjectsByBucketNameResponse {
   repeated Object objects = 1;
 }
 
-// MetadataServiceGetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.
+// GetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.
 message GetBucketByBucketNameResponse {
   // bucket defines the information of a bucket
   Bucket bucket = 1;
@@ -124,6 +137,12 @@ message ListDeletedObjectsByBlockNumberRangeResponse {
 message GetUserBucketsCountResponse {
   // count defines total count of user buckets
   int64 count = 1;
+}
+
+// GetObjectByObjectNameAndBucketNameResponse is response type for the GetObjectByObjectNameAndBucketName RPC method.
+message GetObjectByObjectNameAndBucketNameResponse {
+  // object defines the information of an object
+  Object object = 1;
 }
 
 // GetPaymentByBucketNameResponse is response type for the GetPaymentByBucketName RPC method.
@@ -152,8 +171,12 @@ service MetadataService {
   rpc ListDeletedObjectsByBlockNumberRange(ListDeletedObjectsByBlockNumberRangeRequest) returns (ListDeletedObjectsByBlockNumberRangeResponse) {};
   // GetUserBucketsCount GetUserBuckets get buckets count by a user address
   rpc GetUserBucketsCount(GetUserBucketsCountRequest) returns (GetUserBucketsCountResponse) {};
+  // GetObjectByObjectNameAndBucketName get bucket info by a bucket name and an object name
+  rpc GetObjectByObjectNameAndBucketName(GetObjectByObjectNameAndBucketNameRequest) returns (GetObjectByObjectNameAndBucketNameResponse) {};
   // GetPaymentByBucketName get bucket payment info by a bucket name
   rpc GetPaymentByBucketName(GetPaymentByBucketNameRequest) returns (GetPaymentByBucketNameResponse) {};
   // GetPaymentByBucketID get bucket payment info by a bucket id
   rpc GetPaymentByBucketID(GetPaymentByBucketIDRequest) returns (GetPaymentByBucketIDResponse) {};
+  // VerifyPermission Verify the input items permission.
+  rpc VerifyPermission(bnbchain.greenfield.storage.QueryVerifyPermissionRequest) returns (bnbchain.greenfield.storage.QueryVerifyPermissionResponse) {};
 }

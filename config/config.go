@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"encoding/hex"
 	"encoding/json"
+	"os"
+
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
-	"os"
 
 	"github.com/naoina/toml"
 
@@ -61,6 +62,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.MetadataService,
 		model.ManagerService,
 		model.P2PService,
+		model.AuthService,
 	},
 	ListenAddress: map[string]string{
 		model.GatewayService:    model.GatewayHTTPAddress,
@@ -72,9 +74,10 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SignerService:     model.SignerGRPCAddress,
 		model.MetadataService:   model.MetadataGRPCAddress,
 		model.P2PService:        model.P2PGRPCAddress,
+		model.AuthService:       model.AuthGRPCAddress,
 	},
 	Endpoint: map[string]string{
-		model.GatewayService:    "gnfd.nodereal.com",
+		model.GatewayService:    "gnfd.test-sp.com",
 		model.UploaderService:   model.UploaderGRPCAddress,
 		model.DownloaderService: model.DownloaderGRPCAddress,
 		model.ChallengeService:  model.ChallengeGRPCAddress,
@@ -83,6 +86,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SignerService:     model.SignerGRPCAddress,
 		model.MetadataService:   model.MetadataGRPCAddress,
 		model.P2PService:        model.P2PGRPCAddress,
+		model.AuthService:       model.AuthGRPCAddress,
 	},
 	SpOperatorAddress: hex.EncodeToString([]byte(model.SpOperatorAddress)),
 	SpDBConfig:        DefaultSQLDBConfig,

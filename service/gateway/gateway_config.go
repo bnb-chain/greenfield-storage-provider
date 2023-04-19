@@ -16,5 +16,6 @@ type GatewayConfig struct {
 	ChallengeServiceAddress  string
 	ReceiverServiceAddress   string
 	MetadataServiceAddress   string
+	AuthServiceAddress       string
 	ApiLimiterConfig         *ApiLimiterConfig
 }

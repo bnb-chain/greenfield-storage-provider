@@ -7,12 +7,13 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	receivertypes "github.com/bnb-chain/greenfield-storage-provider/service/receiver/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // syncPieceHandler handle sync piece data request
