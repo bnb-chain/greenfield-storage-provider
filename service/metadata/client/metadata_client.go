@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -103,6 +104,17 @@ func (client *MetadataClient) GetUserBucketsCount(ctx context.Context, in *metat
 	return resp, nil
 }
 
+// GetObjectByObjectNameAndBucketName get object info by an object name and a bucket name
+func (client *MetadataClient) GetObjectByObjectNameAndBucketName(ctx context.Context, in *metatypes.GetObjectByObjectNameAndBucketNameRequest, opts ...grpc.CallOption) (*metatypes.GetObjectByObjectNameAndBucketNameResponse, error) {
+	resp, err := client.metadata.GetObjectByObjectNameAndBucketName(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get object rpc by object name", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
 // GetPaymentByBucketName get bucket payment info by a bucket name
 func (client *MetadataClient) GetPaymentByBucketName(ctx context.Context, in *metatypes.GetPaymentByBucketNameRequest, opts ...grpc.CallOption) (*metatypes.GetPaymentByBucketNameResponse, error) {
 	resp, err := client.metadata.GetPaymentByBucketName(ctx, in, opts...)
@@ -120,6 +132,17 @@ func (client *MetadataClient) GetPaymentByBucketID(ctx context.Context, in *meta
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to send get payment by bucket id rpc", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// VerifyPermission Verify the input account’s permission to input items
+func (client *MetadataClient) VerifyPermission(ctx context.Context, in *storagetypes.QueryVerifyPermissionRequest, opts ...grpc.CallOption) (*storagetypes.QueryVerifyPermissionResponse, error) {
+	resp, err := client.metadata.VerifyPermission(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send verify permission rpc", "error", err)
 		return nil, err
 	}
 	return resp, nil

@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	"github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"

@@ -10,6 +10,7 @@ import (
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -19,21 +20,17 @@ import (
 
 // GetCurrentHeight the block height sub one as the stable height.
 func (greenfield *Greenfield) GetCurrentHeight(ctx context.Context) (uint64, error) {
-	status, err := greenfield.getCurrentClient().GnfdCompositeClient().RpcClient.TmClient.Status(ctx)
+	resp, err := greenfield.client.chainClient.TmClient.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
 	if err != nil {
-		log.Errorw("failed to query status", "error", err)
+		log.Errorw("get latest block height failed", "node_addr", greenfield.client.Provider, "error", err)
 		return 0, err
 	}
-	height := status.SyncInfo.LatestBlockHeight
-	if height > 0 {
-		height = height - 1
-	}
-	return uint64(height), nil
+	return (uint64)(resp.SdkBlock.Header.Height), nil
 }
 
 // HasAccount returns an indication of the existence of address.
 func (greenfield *Greenfield) HasAccount(ctx context.Context, address string) (bool, error) {
-	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdClient()
 	resp, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: address})
 	if err != nil {
 		log.Errorw("failed to query account", "address", address, "error", err)
@@ -44,7 +41,7 @@ func (greenfield *Greenfield) HasAccount(ctx context.Context, address string) (b
 
 // QuerySPInfo returns the list of storage provider info.
 func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.StorageProvider, error) {
-	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdClient()
 	var spInfos []*sptypes.StorageProvider
 	resp, err := client.StorageProviders(ctx, &sptypes.QueryStorageProvidersRequest{
 		Pagination: &query.PageRequest{
@@ -64,7 +61,7 @@ func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.Stora
 
 // QueryStorageParams returns storage params
 func (greenfield *Greenfield) QueryStorageParams(ctx context.Context) (params *storagetypes.Params, err error) {
-	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdClient()
 	resp, err := client.StorageQueryClient.Params(ctx, &storagetypes.QueryParamsRequest{})
 	if err != nil {
 		log.Errorw("failed to query storage params", "error", err)
@@ -75,7 +72,7 @@ func (greenfield *Greenfield) QueryStorageParams(ctx context.Context) (params *s
 
 // QueryBucketInfo return the bucket info by name.
 func (greenfield *Greenfield) QueryBucketInfo(ctx context.Context, bucket string) (*storagetypes.BucketInfo, error) {
-	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdClient()
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if errors.Is(err, storagetypes.ErrNoSuchBucket) {
 		return nil, merrors.ErrNoSuchBucket
@@ -89,7 +86,7 @@ func (greenfield *Greenfield) QueryBucketInfo(ctx context.Context, bucket string
 
 // QueryObjectInfo return the object info by name.
 func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.ObjectInfo, error) {
-	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdClient()
 	resp, err := client.HeadObject(ctx, &storagetypes.QueryHeadObjectRequest{
 		BucketName: bucket,
 		ObjectName: object,
@@ -103,7 +100,7 @@ func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, objec
 
 // QueryObjectInfoByID return the object info by name.
 func (greenfield *Greenfield) QueryObjectInfoByID(ctx context.Context, objectID string) (*storagetypes.ObjectInfo, error) {
-	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdClient()
 	resp, err := client.HeadObjectById(ctx, &storagetypes.QueryHeadObjectByIdRequest{
 		ObjectId: objectID,
 	})
@@ -158,7 +155,7 @@ func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, obje
 
 // QueryStreamRecord return the steam record info by account.
 func (greenfield *Greenfield) QueryStreamRecord(ctx context.Context, account string) (*paymenttypes.StreamRecord, error) {
-	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdClient()
 	resp, err := client.StreamRecord(ctx, &paymenttypes.QueryGetStreamRecordRequest{
 		Account: account,
 	})
@@ -171,7 +168,7 @@ func (greenfield *Greenfield) QueryStreamRecord(ctx context.Context, account str
 
 // VerifyGetObjectPermission verify get object permission.
 func (greenfield *Greenfield) VerifyGetObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
-	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdClient()
 	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{
 		Operator:   account,
 		BucketName: bucket,
@@ -191,7 +188,7 @@ func (greenfield *Greenfield) VerifyGetObjectPermission(ctx context.Context, acc
 // VerifyPutObjectPermission verify put object permission.
 func (greenfield *Greenfield) VerifyPutObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
 	_ = object
-	client := greenfield.getCurrentClient().GnfdCompositeClient()
+	client := greenfield.getCurrentClient().GnfdClient()
 	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{
 		Operator:   account,
 		BucketName: bucket,

@@ -59,6 +59,7 @@ Build   : go1.20.1 darwin amd64 2023-03-04 23:54
 ```shell
 # show services list
 ./gnfd-sp list
+auth                 Handle off chain auth requests
 blocksyncer          Syncs block data to db
 challenge            Provides the ability to query the integrity hash and piece data
 downloader           Downloads object from the backend and statistical read traffic

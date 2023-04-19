@@ -40,7 +40,7 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if addr, err = reqContext.verifySignature(); err != nil {
+	if addr, err = gateway.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
@@ -155,7 +155,7 @@ func (gateway *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if addr, err = reqContext.verifySignature(); err != nil {
+	if addr, err = gateway.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
@@ -184,7 +184,7 @@ func (gateway *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request)
 	}
 	integrityHash, pieceHash, pieceData, err := gateway.challenge.ChallengePiece(context.Background(), reqContext.objectInfo, redundancyIdx, segmentIdx)
 	if err != nil {
-		log.Errorf("failed to challenge piece", "error", err)
+		log.Errorw("failed to challenge piece", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}

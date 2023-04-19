@@ -101,11 +101,17 @@ func (s *SpDBImpl) GetJobByID(jobID uint64) (*servicetypes.JobContext, error) {
 func (s *SpDBImpl) GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error) {
 	queryReturn := &ObjectTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, result.Error
+	}
 	if result.Error != nil {
 		return nil, errorstypes.Error(merrors.DBQueryInObjectTableErrCode, result.Error.Error())
 	}
 	jobQueryReturn := &JobTable{}
 	result = s.db.First(jobQueryReturn, "job_id = ?", queryReturn.JobID)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, result.Error
+	}
 	if result.Error != nil {
 		return nil, errorstypes.Error(merrors.DBQueryInJobTableErrCode, result.Error.Error())
 	}

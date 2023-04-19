@@ -1,10 +1,11 @@
-Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager", "p2p"]
-SpOperatorAddress = "0xafe242857feB1ae49678C301Fb41571C16b99E7c"
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager", "p2p", "auth"]
+SpOperatorAddress = "0x5DCe7a56f0553d1B021DCAf5Bbd4a7d9cCbF1C5A"
 
 [Endpoint]
+auth = "localhost:15033"
 challenge = "localhost:15333"
 downloader = "localhost:15233"
-gateway = "gnfd.nodereal.com"
+gateway = "gnfd.test-sp.com"
 metadata = "localhost:15733"
 p2p = "localhost:15833"
 receiver = "localhost:15533"
@@ -13,6 +14,7 @@ tasknode = "localhost:15433"
 uploader = "localhost:15133"
 
 [ListenAddress]
+auth = "localhost:15033"
 challenge = "localhost:15333"
 downloader = "localhost:15233"
 gateway = "127.0.0.1:9038"
@@ -52,10 +54,11 @@ GRPCAddress = "localhost:15633"
 APIKey = ""
 WhitelistCIDR = ["0.0.0.0/0"]
 GasLimit = 210000
-OperatorPrivateKey = "dd8e805b2b7f936936052f2cc99f8c2cd5648e966e5f85509a89768f497e9665"
-FundingPrivateKey = "9c2211ba7f541c554c1b0afc63ecb0d1a98fcfeabc6563c216e461fd6809d759"
-SealPrivateKey = "e95cccf37499485129b6e7f35274c2e07f27d524c22e2e51ef5635efd7891179"
-ApprovalPrivateKey = "afad051d91cd105525d59fb6f359f47616469d0307ab00f0fe4bf79409723a0c"
+OperatorPrivateKey = "17ceab5e17e15dded8f8702455215b8cb353b5e40f0ce30bfffcf8118ac1ecf1"
+FundingPrivateKey = "15ef400059893f056107f0a91761219cab8f9b4fb557cdd6f77e153d6b4f278b"
+SealPrivateKey = "92fde7374198a10a5b10670c625ba0905168e48c04225f3026b4c73418c5445c"
+ApprovalPrivateKey = "aa742118e28a1f6b554337dd874ce423519eb2737614cae7be67fa84928dc295"
+GcPrivateKey = "19b568653a54d8f6faa6f634cb3419219ca9200d9dda63ed5ce45539f8423e75"
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]
