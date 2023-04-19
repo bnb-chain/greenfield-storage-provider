@@ -49,7 +49,7 @@ message Object {
   string create_tx_hash = 8;
   // update_tx_hash defines the update transaction hash of object
   string update_tx_hash = 9;
-  // // sealed_tx_hash defines the sealed transaction hash of object
+  // sealed_tx_hash defines the sealed transaction hash of object
   string sealed_tx_hash = 10;
 }
 
