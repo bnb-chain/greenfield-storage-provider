@@ -55,6 +55,10 @@ type Object struct {
 	DeleteAt int64 `gorm:"delete_at"`
 	// DeleteReason defines the deleted reason of object
 	DeleteReason string `gorm:"delete_reason"`
+	// CreateTxHash defines the creation transaction hash of object
+	CreateTxHash common.Hash `gorm:"create_tx_hash"`
+	// UpdateTxHash defines the update transaction hash of object
+	UpdateTxHash common.Hash `gorm:"update_tx_hash"`
 }
 
 // TableName is used to set Object table name in database

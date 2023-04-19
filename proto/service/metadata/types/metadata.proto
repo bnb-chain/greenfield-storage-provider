@@ -19,6 +19,14 @@ message Bucket {
   string delete_reason = 4;
   // operator defines the operator address of bucket
   string operator = 5;
+  // create_tx_hash defines the creation transaction hash of object
+  string create_tx_hash = 6;
+  // update_tx_hash defines the update transaction hash of object
+  string update_tx_hash = 7;
+  // update_at defines the block number when the object updated
+  int64 update_at = 8;
+  // update_time defines the block number when the object updated
+  int64 update_time = 9;
 }
 
 // Object is the structure for user object
@@ -37,6 +45,10 @@ message Object {
   string delete_reason = 6;
   // operator defines the operator address of object
   string operator = 7;
+  // create_tx_hash defines the creation transaction hash of object
+  string create_tx_hash = 8;
+  // update_tx_hash defines the update transaction hash of object
+  string update_tx_hash = 9;
 }
 
 // GetUserBucketsRequest is request type for the GetUserBuckets RPC method.

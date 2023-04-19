@@ -24,6 +24,8 @@ type Bucket struct {
 	CreateAt int64 `gorm:"create_at"`
 	// CreateTime defines the timestamp when the bucket created
 	CreateTime int64 `gorm:"create_time"`
+	// CreateTxHash defines the creation transaction hash of bucket
+	CreateTxHash common.Hash `gorm:"create_tx_hash"`
 	// PaymentAddress is the address of the payment account
 	PaymentAddress common.Address `gorm:"payment_address"`
 	// PrimarySpAddress is the address of the primary sp. Objects belong to this bucket will never
@@ -41,6 +43,12 @@ type Bucket struct {
 	DeleteAt int64 `gorm:"delete_at"`
 	// DeleteReason defines the deleted reason of bucket
 	DeleteReason string `gorm:"delete_reason"`
+	// UpdateAt defines the block number when the bucket update.
+	UpdateAt int64 `gorm:"column:update_at"`
+	// UpdateTxHash defines the update transaction hash of bucket
+	UpdateTxHash common.Hash `gorm:"update_tx_hash"`
+	// UpdateTime defines the timestamp when the bucket update.
+	UpdateTime int64 `gorm:"column:update_time"`
 }
 
 // TableName is used to set Bucket table name in database

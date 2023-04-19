@@ -46,6 +46,10 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Get
 			DeleteAt:     bucket.DeleteAt,
 			DeleteReason: bucket.DeleteReason,
 			Operator:     bucket.Operator.String(),
+			CreateTxHash: bucket.CreateTxHash.String(),
+			UpdateTxHash: bucket.UpdateTxHash.String(),
+			UpdateAt:     bucket.UpdateAt,
+			UpdateTime:   bucket.UpdateTime,
 		})
 	}
 	resp = &metatypes.GetUserBucketsResponse{Buckets: res}
@@ -95,6 +99,10 @@ func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metaty
 			DeleteAt:     bucket.DeleteAt,
 			DeleteReason: bucket.DeleteReason,
 			Operator:     bucket.Operator.String(),
+			CreateTxHash: bucket.CreateTxHash.String(),
+			UpdateTxHash: bucket.UpdateTxHash.String(),
+			UpdateAt:     bucket.UpdateAt,
+			UpdateTime:   bucket.UpdateTime,
 		}
 	}
 	resp = &metatypes.GetBucketByBucketNameResponse{Bucket: res}
@@ -139,6 +147,10 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 			DeleteAt:     bucket.DeleteAt,
 			DeleteReason: bucket.DeleteReason,
 			Operator:     bucket.Operator.String(),
+			CreateTxHash: bucket.CreateTxHash.String(),
+			UpdateTxHash: bucket.UpdateTxHash.String(),
+			UpdateAt:     bucket.UpdateAt,
+			UpdateTime:   bucket.UpdateTime,
 		}
 	}
 	resp = &metatypes.GetBucketByBucketIDResponse{Bucket: res}

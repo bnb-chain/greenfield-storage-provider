@@ -15,4 +15,5 @@ var ActionTypeMap = map[permtypes.ActionType]int{
 	permtypes.ACTION_LIST_OBJECT:         8,
 	permtypes.ACTION_UPDATE_GROUP_MEMBER: 9,
 	permtypes.ACTION_DELETE_GROUP:        10,
+	permtypes.ACTION_UPDATE_OBJECT_INFO:  11,
 }

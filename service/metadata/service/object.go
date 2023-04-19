@@ -46,6 +46,8 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 			DeleteAt:      object.DeleteAt,
 			DeleteReason:  object.DeleteReason,
 			Operator:      object.Operator.String(),
+			CreateTxHash:  object.CreateTxHash.String(),
+			UpdateTxHash:  object.UpdateTxHash.String(),
 		})
 	}
 
@@ -98,6 +100,8 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 			DeleteAt:      object.DeleteAt,
 			DeleteReason:  object.DeleteReason,
 			Operator:      object.Operator.String(),
+			CreateTxHash:  object.CreateTxHash.String(),
+			UpdateTxHash:  object.UpdateTxHash.String(),
 		})
 	}
 
@@ -150,6 +154,8 @@ func (metadata *Metadata) GetObjectByObjectNameAndBucketName(ctx context.Context
 			DeleteAt:      object.DeleteAt,
 			DeleteReason:  object.DeleteReason,
 			Operator:      object.Operator.String(),
+			CreateTxHash:  object.CreateTxHash.String(),
+			UpdateTxHash:  object.UpdateTxHash.String(),
 		}
 	}
 	resp = &metatypes.GetObjectByObjectNameAndBucketNameResponse{Object: res}
