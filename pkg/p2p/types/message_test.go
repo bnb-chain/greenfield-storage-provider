@@ -22,10 +22,10 @@ func Test_verifyPingMsgSignature(t *testing.T) {
 	pingMsg := &Ping{
 		SpOperatorAddress: km.GetAddr().String(),
 	}
-	sigs, err := km.GetPrivKey().Sign(pingMsg.GetSignBytes())
+	sigs, err := km.Sign(pingMsg.GetSignBytes())
 	assert.NoError(t, err)
 	pingMsg.Signature = sigs
-	valid := km.GetPrivKey().PubKey().VerifySignature(pingMsg.GetSignBytes(), sigs)
+	valid := km.PubKey().VerifySignature(pingMsg.GetSignBytes(), sigs)
 	assert.True(t, valid)
 	err = VerifySignature(pingMsg.GetSpOperatorAddress(), pingMsg.GetSignBytes(), pingMsg.GetSignature())
 	assert.NoError(t, err)
@@ -43,10 +43,10 @@ func Test_verifyPongMsgSignature(t *testing.T) {
 		},
 		SpOperatorAddress: km.GetAddr().String(),
 	}
-	sigs, err := km.GetPrivKey().Sign(pongMsg.GetSignBytes())
+	sigs, err := km.Sign(pongMsg.GetSignBytes())
 	assert.NoError(t, err)
 	pongMsg.Signature = sigs
-	valid := km.GetPrivKey().PubKey().VerifySignature(pongMsg.GetSignBytes(), sigs)
+	valid := km.PubKey().VerifySignature(pongMsg.GetSignBytes(), sigs)
 	assert.True(t, valid)
 	err = VerifySignature(pongMsg.GetSpOperatorAddress(), pongMsg.GetSignBytes(), pongMsg.GetSignature())
 	assert.NoError(t, err)
@@ -62,10 +62,10 @@ func Test_verifyGetApprovalRequestMsgSignature(t *testing.T) {
 		},
 		SpOperatorAddress: km.GetAddr().String(),
 	}
-	sigs, err := km.GetPrivKey().Sign(sdk.Keccak256(approvalReqMsg.GetSignBytes()))
+	sigs, err := km.Sign(sdk.Keccak256(approvalReqMsg.GetSignBytes()))
 	approvalReqMsg.Signature = sigs
 	assert.NoError(t, err)
-	valid := km.GetPrivKey().PubKey().VerifySignature(approvalReqMsg.GetSignBytes(), sigs)
+	valid := km.PubKey().VerifySignature(approvalReqMsg.GetSignBytes(), sigs)
 	assert.True(t, valid)
 	err = VerifySignature(approvalReqMsg.GetSpOperatorAddress(), approvalReqMsg.GetSignBytes(), approvalReqMsg.GetSignature())
 	assert.NoError(t, err)
@@ -81,10 +81,10 @@ func Test_verifyGetApprovalResponseMsgSignature(t *testing.T) {
 		},
 		SpOperatorAddress: km.GetAddr().String(),
 	}
-	sigs, err := km.GetPrivKey().Sign(approvalRspMsg.GetSignBytes())
+	sigs, err := km.Sign(approvalRspMsg.GetSignBytes())
 	approvalRspMsg.Signature = sigs
 	assert.NoError(t, err)
-	valid := km.GetPrivKey().PubKey().VerifySignature(approvalRspMsg.GetSignBytes(), sigs)
+	valid := km.PubKey().VerifySignature(approvalRspMsg.GetSignBytes(), sigs)
 	assert.True(t, valid)
 	err = VerifySignature(approvalRspMsg.GetSpOperatorAddress(), approvalRspMsg.GetSignBytes(), approvalRspMsg.GetSignature())
 	assert.NoError(t, err)

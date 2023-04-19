@@ -1,8 +1,13 @@
 package sqldb
 
 import (
+	"database/sql"
+	"errors"
+	"time"
+
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"gorm.io/gorm"
 
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 )
@@ -97,6 +102,12 @@ type ServiceConfig interface {
 	SetAllServiceConfigs(version, config string) error
 }
 
+type OffChainAuthKey interface {
+	GetAuthKey(userAddress string, domain string) (*OffChainAuthKeyTable, error)
+	UpdateAuthKey(userAddress string, domain string, oldNonce int32, newNonce int32, newPublicKey string, newExpiryDate time.Time) error
+	InsertAuthKey(newRecord *OffChainAuthKeyTable) error
+}
+
 // SPDB contains all the methods required by sql database
 type SPDB interface {
 	Job
@@ -105,4 +116,9 @@ type SPDB interface {
 	Traffic
 	SPInfo
 	StorageParam
+	OffChainAuthKey
+}
+
+func errIsNotFound(err error) bool {
+	return errors.Is(err, sql.ErrNoRows) || errors.Is(err, gorm.ErrRecordNotFound)
 }

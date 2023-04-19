@@ -18,4 +18,6 @@ const (
 	ReadRecordTableName = "read_record"
 	// ServiceConfigTableName defines the SP configuration table name
 	ServiceConfigTableName = "service_config"
+	// OffChainAuthKeyTableName defines the off chain auth key table name
+	OffChainAuthKeyTableName = "off_chain_auth_key"
 )
