@@ -25,18 +25,17 @@ import (
 
 // requestContext is a request context.
 type requestContext struct {
-	requestID  string
-	bucketName string
-	objectName string
-	request    *http.Request
-	startTime  time.Time
-	vars       map[string]string
-	// TODO: for auth v2 test, remove it in the future
-	skipAuth   bool
-	bucketInfo *storagetypes.BucketInfo
-	objectInfo *storagetypes.ObjectInfo
-	// accountID is used to provide authentication to the sp
-	accountID string
+	requestID   string
+	bucketName  string
+	objectName  string
+	request     *http.Request
+	startTime   time.Time
+	vars        map[string]string
+	skipAuth    bool // TODO: for auth v2 test, remove it in the future
+	bucketInfo  *storagetypes.BucketInfo
+	objectInfo  *storagetypes.ObjectInfo
+	accountID   string // accountID is used to provide authentication to the sp
+	isAnonymous bool
 }
 
 // newRequestContext return a request context.
@@ -102,6 +101,11 @@ func (reqContext *requestContext) verifySignature() (sdk.AccAddress, error) {
 	v2SignaturePrefix := signaturePrefix(model.SignTypeV2, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
 		return reqContext.verifySignatureV2(requestSignature[len(v2SignaturePrefix):])
+	}
+	// Anonymous users can get public object.
+	if requestSignature == "" && mux.CurrentRoute(reqContext.request).GetName() == getObjectRouterName {
+		reqContext.isAnonymous = true
+		return sdk.AccAddress{}, nil
 	}
 	return nil, errors.ErrUnsupportedSignType
 }
@@ -240,14 +244,16 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		}
 		return nil
 	}
-	accountExist, err = g.chain.HasAccount(context.Background(), addr.String())
-	if err != nil {
-		log.Errorw("failed to check account on chain", "address", addr.String(), "error", err)
-		return err
-	}
-	if !accountExist {
-		log.Errorw("account is not existed", "address", addr.String(), "error", err)
-		return errors.ErrNoPermission
+	if !reqContext.isAnonymous {
+		accountExist, err = g.chain.HasAccount(context.Background(), addr.String())
+		if err != nil {
+			log.Errorw("failed to check account on chain", "address", addr.String(), "error", err)
+			return err
+		}
+		if !accountExist {
+			log.Errorw("account is not existed", "address", addr.String(), "error", err)
+			return errors.ErrNoPermission
+		}
 	}
 
 	switch mux.CurrentRoute(reqContext.request).GetName() {
