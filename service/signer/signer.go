@@ -60,7 +60,8 @@ func NewSignerServer(config *SignerConfig, chainConfig *gnfd.GreenfieldChainConf
 		config.OperatorPrivateKey,
 		config.FundingPrivateKey,
 		config.SealPrivateKey,
-		config.ApprovalPrivateKey)
+		config.ApprovalPrivateKey,
+		config.GcPrivateKey)
 	if err != nil {
 		return nil, err
 	}
