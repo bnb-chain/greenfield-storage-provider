@@ -101,6 +101,7 @@ message GetUserBucketsCountRequest {
   string account_id = 1;
 }
 
+// ListExpiredBucketsBySpRequest is the request type for the ListExpiredBucketsBySp RPC method.
 message ListExpiredBucketsBySpRequest {
   // create_at defines the create timestamp of bucket
   int64 create_at = 1;
@@ -172,6 +173,7 @@ message GetUserBucketsCountResponse {
   int64 count = 1;
 }
 
+// ListExpiredBucketsBySpResponse is the response type for the ListExpiredBucketsBySp RPC method.
 message ListExpiredBucketsBySpResponse {
   // buckets defines the list of expired bucket
   repeated Bucket buckets = 1;
