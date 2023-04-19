@@ -94,9 +94,10 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 			}
 		}
 		gCfg.ApiLimiterConfig = &gateway.ApiLimiterConfig{
-			Default:   defaultMap,
-			Pattern:   patternMap,
-			ApiLimits: apiLimitsMap,
+			Default:         defaultMap,
+			Pattern:         patternMap,
+			ApiLimits:       apiLimitsMap,
+			HttpLimitConfig: cfg.RateLimiter.HttpLimitConfig,
 		}
 	}
 	return gCfg, nil

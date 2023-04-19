@@ -21,10 +21,17 @@ type RateLimiterCell struct {
 	RatePeriod string
 }
 
+type HTTPLimitConfig struct {
+	ON         bool
+	RateLimit  int
+	RatePeriod string
+}
+
 type RateLimiterConfig struct {
-	Default   []RateLimiterCell
-	Pattern   []RateLimiterCell
-	ApiLimits []RateLimiterCell
+	HttpLimitConfig HTTPLimitConfig
+	Default         []RateLimiterCell
+	Pattern         []RateLimiterCell
+	ApiLimits       []RateLimiterCell
 }
 
 type MemoryLimiterConfig struct {
@@ -33,9 +40,10 @@ type MemoryLimiterConfig struct {
 }
 
 type ApiLimiterConfig struct {
-	Default   map[string]MemoryLimiterConfig
-	ApiLimits map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
-	Pattern   map[string]MemoryLimiterConfig
+	HttpLimitConfig HTTPLimitConfig
+	Default         map[string]MemoryLimiterConfig
+	ApiLimits       map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
+	Pattern         map[string]MemoryLimiterConfig
 }
 type apiLimiter struct {
 	store      slimiter.Store
@@ -53,9 +61,10 @@ func NewApiLimiter(cfg *ApiLimiterConfig) error {
 	limiter_ := &apiLimiter{
 		store: localStore,
 		cfg: ApiLimiterConfig{
-			ApiLimits: make(map[string]MemoryLimiterConfig),
-			Default:   make(map[string]MemoryLimiterConfig),
-			Pattern:   make(map[string]MemoryLimiterConfig),
+			ApiLimits:       make(map[string]MemoryLimiterConfig),
+			Default:         make(map[string]MemoryLimiterConfig),
+			Pattern:         make(map[string]MemoryLimiterConfig),
+			HttpLimitConfig: cfg.HttpLimitConfig,
 		},
 	}
 
@@ -144,6 +153,26 @@ func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
 	return true
 }
 
+func (t *apiLimiter) HttpAllow(ctx context.Context, r *http.Request) bool {
+	if !t.cfg.HttpLimitConfig.ON {
+		return true
+	}
+	ipStr := GetIP(r)
+	key := "ip_" + ipStr
+
+	rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", t.cfg.HttpLimitConfig.RateLimit, t.cfg.HttpLimitConfig.RatePeriod))
+	limiterCtx, err := t.store.Increment(ctx, key, 1, rate)
+	if err != nil {
+		return true
+	}
+
+	if limiterCtx.Reached {
+		//error_utils.HttpErrorResponseWithMessage(ctx, http.StatusTooManyRequests, "Reached the total limit of this api")
+		return false
+	}
+	return true
+}
+
 func limit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !limiter.Load().Allow(context.Background(), r) {
@@ -153,6 +182,23 @@ func limit(next http.Handler) http.Handler {
 			return
 		}
 
+		if !limiter.Load().HttpAllow(context.Background(), r) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusTooManyRequests)
+
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
+}
+
+// GetIP gets a requests IP address by reading off the forwarded-for
+// header (for proxies) and falls back to use the remote address.
+func GetIP(r *http.Request) string {
+	forwarded := r.Header.Get("X-FORWARDED-FOR")
+	if forwarded != "" {
+		return forwarded
+	}
+	return r.RemoteAddr
 }

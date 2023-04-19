@@ -1,16 +1,17 @@
-Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "metadata", "manager"]
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager", "auth"]
 SpOperatorAddress = "677265656e6669656c642d73746f726167652d70726f7669646572"
 
 [Endpoint]
 challenge = "localhost:9333"
 downloader = "localhost:9233"
-gateway = "localhost:9033"
+gateway = "gnfd.sp.com"
 metadata = "localhost:9733"
 p2p = "localhost:9833"
 receiver = "localhost:9533"
 signer = "localhost:9633"
 tasknode = "localhost:9433"
 uploader = "localhost:9133"
+auth = "localhost:10033"
 
 [ListenAddress]
 challenge = "localhost:9333"
@@ -22,12 +23,13 @@ receiver = "localhost:9533"
 signer = "localhost:9633"
 tasknode = "localhost:9433"
 uploader = "localhost:9133"
+auth = "localhost:10033"
 
 [SpDBConfig]
 User = "root"
-Passwd = "1q2w3e4r*"
+Passwd = "test_pwd"
 Address = "localhost:3306"
-Database = "block_syncer"
+Database = "storage_provider_db"
 
 [PieceStoreConfig]
 Shards = 0
@@ -57,7 +59,7 @@ ApprovalPrivateKey = ""
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]
-Dsn = "localhost:3306"
+Dsn = "localhost:3308"
 
 [P2PCfg]
 ListenAddress = "127.0.0.1:9833"
@@ -74,6 +76,9 @@ Level = "debug"
 Path = "./gnfd-sp.log"
 
 [RateLimiter]
-Default = [{Key = "/", RateLimit = 1, RatePeriod = "S"},]
-Pattern = [{Key = "^[a-z0-9][a-z0-9\\.\\-]{1,61}[a-z0-9].localhost:9033$", RateLimit = 1, RatePeriod = "S"},]
-
+Default = [{Key = "/bucket", RateLimit = 1, RatePeriod = "S"},]
+Pattern = [{Key = "^[a-z0-9][a-z0-9\\.\\-]{1,61}[a-z0-9].localhost:9033$", RateLimit = 100, RatePeriod = "S"},]
+[RateLimiter.HttpLimitConfig]
+ON = true
+RateLimit = 100
+RatePeriod = "S"
