@@ -13,6 +13,12 @@ message Bucket {
   bnbchain.greenfield.storage.BucketInfo bucket_info = 1;
   // removed defines the bucket is deleted or not
   bool removed = 2;
+  // delete_at defines the block number when the bucket deleted.
+  int64 delete_at = 3;
+  // delete_reason defines the deleted reason of bucket
+  string delete_reason = 4;
+  // operator defines the operator address of bucket
+  string operator = 5;
 }
 
 // Object is the structure for user object
@@ -25,6 +31,12 @@ message Object {
   bool removed = 3;
   // update_at defines the block number when the object updated
   int64 update_at = 4;
+  // delete_at defines the block number when the object deleted
+  int64 delete_at = 5;
+  // delete_reason defines the deleted reason of object
+  string delete_reason = 6;
+  // operator defines the operator address of object
+  string operator = 7;
 }
 
 // GetUserBucketsRequest is request type for the GetUserBuckets RPC method.

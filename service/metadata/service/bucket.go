@@ -40,8 +40,12 @@ func (metadata *Metadata) GetUserBuckets(ctx context.Context, req *metatypes.Get
 					TotalChargeSize:        0,
 					SecondarySpObjectsSize: nil,
 				},
+				BucketStatus: types.BucketStatus(types.BucketStatus_value[bucket.Status]),
 			},
-			Removed: bucket.Removed,
+			Removed:      bucket.Removed,
+			DeleteAt:     bucket.DeleteAt,
+			DeleteReason: bucket.DeleteReason,
+			Operator:     bucket.Operator.String(),
 		})
 	}
 	resp = &metatypes.GetUserBucketsResponse{Buckets: res}
@@ -80,8 +84,17 @@ func (metadata *Metadata) GetBucketByBucketName(ctx context.Context, req *metaty
 				PrimarySpAddress: bucket.PrimarySpAddress.String(),
 				ChargedReadQuota: bucket.ChargedReadQuota,
 				Visibility:       types.VisibilityType(types.VisibilityType_value[bucket.Visibility]),
+				BillingInfo: types.BillingInfo{
+					PriceTime:              0,
+					TotalChargeSize:        0,
+					SecondarySpObjectsSize: nil,
+				},
+				BucketStatus: types.BucketStatus(types.BucketStatus_value[bucket.Status]),
 			},
-			Removed: bucket.Removed,
+			Removed:      bucket.Removed,
+			DeleteAt:     bucket.DeleteAt,
+			DeleteReason: bucket.DeleteReason,
+			Operator:     bucket.Operator.String(),
 		}
 	}
 	resp = &metatypes.GetBucketByBucketNameResponse{Bucket: res}
@@ -115,8 +128,17 @@ func (metadata *Metadata) GetBucketByBucketID(ctx context.Context, req *metatype
 				PrimarySpAddress: bucket.PrimarySpAddress.String(),
 				ChargedReadQuota: bucket.ChargedReadQuota,
 				Visibility:       types.VisibilityType(types.VisibilityType_value[bucket.Visibility]),
+				BillingInfo: types.BillingInfo{
+					PriceTime:              0,
+					TotalChargeSize:        0,
+					SecondarySpObjectsSize: nil,
+				},
+				BucketStatus: types.BucketStatus(types.BucketStatus_value[bucket.Status]),
 			},
-			Removed: bucket.Removed,
+			Removed:      bucket.Removed,
+			DeleteAt:     bucket.DeleteAt,
+			DeleteReason: bucket.DeleteReason,
+			Operator:     bucket.Operator.String(),
 		}
 	}
 	resp = &metatypes.GetBucketByBucketIDResponse{Bucket: res}

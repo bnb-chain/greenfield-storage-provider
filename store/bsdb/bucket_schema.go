@@ -9,7 +9,9 @@ type Bucket struct {
 	// ID defines db auto_increment id of bucket
 	ID uint64 `gorm:"id"`
 	// Owner is the account address of bucket creator, it is also the bucket owner.
-	Owner common.Address `gorm:"column:owner_address"`
+	Owner common.Address `gorm:"owner"`
+	// Operator defines the operator address of bucket
+	Operator common.Address `gorm:"operator"`
 	// BucketName is a globally unique name of bucket
 	BucketName string `gorm:"bucket_name"`
 	// Visibility defines the highest permissions for bucket. When a bucket is public, everyone can get storage obj
@@ -33,6 +35,12 @@ type Bucket struct {
 	PaymentPriceTime int64 `gorm:"payment_price_time"`
 	// Removed defines the bucket is deleted or not
 	Removed bool `gorm:"removed"`
+	// Status defines the status of bucket
+	Status string `gorm:"column:status"`
+	// DeleteAt defines the block number when the bucket deleted.
+	DeleteAt int64 `gorm:"delete_at"`
+	// DeleteReason defines the deleted reason of bucket
+	DeleteReason string `gorm:"delete_reason"`
 }
 
 // TableName is used to set Bucket table name in database

@@ -10,9 +10,11 @@ type Object struct {
 	// ID defines db auto_increment id of object
 	ID uint64 `gorm:"id"`
 	// Creator defines the account address of object creator
-	Creator common.Address `gorm:"creator_address"`
+	Creator common.Address `gorm:"creator"`
+	// Operator defines the operator address of object
+	Operator common.Address `gorm:"operator"`
 	// Owner defines the account address of object owner
-	Owner common.Address `gorm:"column:owner_address"`
+	Owner common.Address `gorm:"owner"`
 	// BucketName is the name of the bucket
 	BucketName string `gorm:"bucket_name"`
 	// ObjectName is the name of object
@@ -49,6 +51,10 @@ type Object struct {
 	UpdateTime int64 `gorm:"update_time"`
 	// UpdateAt defines the block number when the object updated
 	UpdateAt int64 `gorm:"update_at"`
+	// DeleteAt defines the block number when the object deleted
+	DeleteAt int64 `gorm:"delete_at"`
+	// DeleteReason defines the deleted reason of object
+	DeleteReason string `gorm:"delete_reason"`
 }
 
 // TableName is used to set Object table name in database

@@ -18,7 +18,7 @@ func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
 
 	err = b.db.Table((&Bucket{}).TableName()).
 		Select("*").
-		Where("owner_address = ?", accountID).
+		Where("owner = ?", accountID).
 		Order("create_at desc").
 		Find(&buckets).Error
 	return buckets, err
@@ -77,6 +77,6 @@ func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address) (int64, error) 
 		err   error
 	)
 
-	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner_address = ?", accountID).Error
+	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
 	return count, err
 }

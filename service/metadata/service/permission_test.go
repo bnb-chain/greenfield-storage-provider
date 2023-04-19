@@ -193,13 +193,13 @@ func TestVerifyPolicy(t *testing.T) {
 			common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
 		}, common.HexToHash(operator.String())).Return([]*bsdb.Group{
 			{
-				ID:              1,
-				Owner:           common.HexToAddress("0x5ca6d69Ac76B42f6035C6FfE719c0d1a460a1045"),
-				GroupID:         common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
-				GroupName:       "x9uahlb0",
-				AccountID:       common.Hash{},
-				OperatorAddress: common.HexToAddress(operator.String()),
-				Removed:         false,
+				ID:        1,
+				Owner:     common.HexToAddress("0x5ca6d69Ac76B42f6035C6FfE719c0d1a460a1045"),
+				GroupID:   common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
+				GroupName: "x9uahlb0",
+				AccountID: common.Hash{},
+				Operator:  common.HexToAddress(operator.String()),
+				Removed:   false,
 			},
 		}, nil).MaxTimes(100),
 		mockDB.EXPECT().GetStatementsByPolicyID([]common.Hash{
@@ -279,13 +279,13 @@ func TestVerifyPolicy(t *testing.T) {
 			common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
 		}, common.HexToHash(operator.String())).Return([]*bsdb.Group{
 			{
-				ID:              1,
-				Owner:           common.HexToAddress("0x5ca6d69Ac76B42f6035C6FfE719c0d1a460a1045"),
-				GroupID:         common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
-				GroupName:       "x9uahlb0",
-				AccountID:       common.Hash{},
-				OperatorAddress: common.HexToAddress(operator.String()),
-				Removed:         false,
+				ID:        1,
+				Owner:     common.HexToAddress("0x5ca6d69Ac76B42f6035C6FfE719c0d1a460a1045"),
+				GroupID:   common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
+				GroupName: "x9uahlb0",
+				AccountID: common.Hash{},
+				Operator:  common.HexToAddress(operator.String()),
+				Removed:   false,
 			},
 		}, nil).MaxTimes(100),
 		mockDB.EXPECT().GetStatementsByPolicyID([]common.Hash{
