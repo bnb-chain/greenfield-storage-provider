@@ -10,6 +10,10 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	"github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -21,10 +25,6 @@ import (
 	gatewayclient "github.com/bnb-chain/greenfield-storage-provider/service/gateway/client"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	"github.com/bnb-chain/greenfield/x/storage/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -91,7 +91,7 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 				for idx := range sg.streamReaderMap {
 					sg.streamReaderMap[idx].pWrite.CloseWithError(err)
 				}
-				log.Errorw("failed to get piece data", "piece_key", segmentPieceKey, "error", err)
+				log.Errorw("task node failed to get piece data from piece store", "piece_key", segmentPieceKey, "error", err)
 				return
 			}
 			if sg.task.objectInfo.GetRedundancyType() == types.REDUNDANCY_EC_TYPE {

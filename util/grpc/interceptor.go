@@ -46,7 +46,7 @@ func toStatusError(err error) error {
 	}
 	myErr, ok := err.(*errorstypes.ServiceError)
 	if ok {
-		st := status.New(codes.Internal, "service logic error")
+		st := status.New(codes.Unknown, "service logic error")
 		ds, e := st.WithDetails(&errorstypes.ServiceError{
 			Code:   myErr.GetCode(),
 			Reason: myErr.GetReason(),

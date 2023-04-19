@@ -12,18 +12,34 @@ const (
 )
 
 const (
+	SuccessCode    = 0
+	UnknownErrCode = 1
 	// deinfe common error code, from 10000 to 14999
-	MismatchIntegrityHashErrCode    = 11000
-	CacheMissedErrCode              = 11001
-	DanglingPointerErrCode          = 11002
-	PayloadStreamErrCode            = 11003
-	ResourceMgrBeginSpanErrCode     = 11004
-	ComputePieceSizeErrCode         = 11005
-	ResourceMgrReserveMemoryErrCode = 11006
-	ObjectNotFoundErrCode           = 11007
-	HexDecodeStringErrCode          = 11008
-	StringToByteSliceErrCode        = 11009
-	ParseStringToIntErrCode         = 11010
+	InternalErrCode                   = 10000
+	MismatchIntegrityHashErrCode      = 11000
+	CacheMissedErrCode                = 11001
+	DanglingPointerErrCode            = 11002
+	PayloadStreamErrCode              = 11003
+	ResourceMgrBeginSpanErrCode       = 11004
+	ComputePieceSizeErrCode           = 11005
+	ResourceMgrReserveMemoryErrCode   = 11006
+	NoSuchObjectErrCode               = 11007
+	NoSuchBucketErrCode               = 11008
+	HexDecodeStringErrCode            = 11009
+	StringToByteSliceErrCode          = 11010
+	ParseStringToIntErrCode           = 11011
+	RouterNotFoundErrCode             = 11012
+	InvalidHeaderErrCode              = 11013
+	InvalidQueryErrCode               = 11014
+	InvalidBucketNameErrCode          = 11015
+	InvalidObjectNameErrCode          = 11016
+	ZeroPayloadErrCode                = 11017
+	ObjectNotCreatedErrCode           = 11018
+	ObjectNotSealedErrCode            = 11019
+	InvalidRangeErrCode               = 11020
+	InvalidAddressErrCode             = 11021
+	InvalidAuthorizationFormatErrCode = 11022
+	InconsistentRequestErrCode        = 11023
 	// sp database error, from 15000 to 19999
 	DBRecordNotFoundErrCode             = 15000
 	DBUnknownAddressTypeErrCode         = 15001
@@ -54,24 +70,39 @@ const (
 	DBQueryInReadRecordTableErrCode     = 15126
 	DBInsertInReadRecordTableErrCode    = 15127
 
-	// uploader service error, from 20000 to 20999
-	UploaderMismatchChecksumNumErrCode = 20100
+	// gateway service error code, from 20000 to 20999
 
-	// challenge service error, from 21000 to 21999
+	// uploader service error, from 21000 to 21999
+	UploaderMismatchChecksumNumErrCode = 21100
 
-	// downloader service error, from 22000 to 22999
-	DownloaderInvalidPieceInfoParamsErrCode = 22100
+	// challenge service error, from 22000 to 22999
 
-	// signer service error, from 23000 to 23999
-	SignerSignIntegrityHashErrCode = 23100
+	// downloader service error, from 23000 to 23999
+	DownloaderInvalidPieceInfoParamsErrCode = 23100
 
-	// p2p service, from 24000 to 24999
+	// signer service error, from 24000 to 24999
+	SignerSignIntegrityHashErrCode = 24100
 
-	// receiver service error code, from 25000 to 25999
+	// p2p service, from 25000 to 25999
 
-	// task node service error, from 26000 to 26999
+	// receiver service error code, from 26000 to 26999
 
-	// piece store error code, from 27000 to 27999
-	PieceStorePutObjectError = 27100
-	PieceStoreGetObjectError = 27101
+	// task node service error, from 27000 to 27999
+
+	// piece store error code, from 28000 to 28999
+	PieceStorePutObjectError = 28100
+	PieceStoreGetObjectError = 28101
+
+	// Greenfield chain error code, from 29000 to 29999
+	ChainGetLatestBlockErrCode           = 29100
+	ChainQueryAccountErrCode             = 29101
+	ChainQuerySPListErrCode              = 29102
+	ChainQueryStorageParamsErrCode       = 29103
+	ChainHeadBucketErrCode               = 29104
+	ChainHeadObjectErrCode               = 29105
+	ChainHeadObjectByIDErrCode           = 29106
+	ChainSealObjectTimeoutErrCode        = 29107
+	ChainQueryStreamRecordErrCode        = 29108
+	ChainGetObjetVerifyPermissionErrCode = 29109
+	ChainPutObjetVerifyPermissionErrCode = 29110
 )

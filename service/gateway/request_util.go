@@ -8,15 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
-
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
-	authtypes "github.com/bnb-chain/greenfield-storage-provider/service/auth/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,6 +18,14 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
+	"github.com/gorilla/mux"
+
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
+	authtypes "github.com/bnb-chain/greenfield-storage-provider/service/auth/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // requestContext is a request context.

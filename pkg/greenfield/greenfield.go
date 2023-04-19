@@ -6,8 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	chainClient "github.com/bnb-chain/greenfield/sdk/client"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math"
+	"strings"
 	"time"
 
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
@@ -15,6 +16,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -23,7 +25,7 @@ func (greenfield *Greenfield) GetCurrentHeight(ctx context.Context) (uint64, err
 	resp, err := greenfield.client.chainClient.TmClient.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
 	if err != nil {
 		log.Errorw("get latest block height failed", "node_addr", greenfield.client.Provider, "error", err)
-		return 0, err
+		return 0, errorstypes.Error(merrors.ChainGetLatestBlockErrCode, err.Error())
 	}
 	return (uint64)(resp.SdkBlock.Header.Height), nil
 }
@@ -34,7 +36,7 @@ func (greenfield *Greenfield) HasAccount(ctx context.Context, address string) (b
 	resp, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: address})
 	if err != nil {
 		log.Errorw("failed to query account", "address", address, "error", err)
-		return false, err
+		return false, errorstypes.Error(merrors.ChainQueryAccountErrCode, err.Error())
 	}
 	return resp.GetAccount() != nil, nil
 }
@@ -51,7 +53,7 @@ func (greenfield *Greenfield) QuerySPInfo(ctx context.Context) ([]*sptypes.Stora
 	})
 	if err != nil {
 		log.Errorw("failed to query storage provider list", "error", err)
-		return spInfos, err
+		return spInfos, errorstypes.Error(merrors.ChainQuerySPListErrCode, err.Error())
 	}
 	for i := 0; i < len(resp.GetSps()); i++ {
 		spInfos = append(spInfos, resp.GetSps()[i])
@@ -65,7 +67,7 @@ func (greenfield *Greenfield) QueryStorageParams(ctx context.Context) (params *s
 	resp, err := client.StorageQueryClient.Params(ctx, &storagetypes.QueryParamsRequest{})
 	if err != nil {
 		log.Errorw("failed to query storage params", "error", err)
-		return nil, err
+		return nil, errorstypes.Error(merrors.ChainQueryStorageParamsErrCode, err.Error())
 	}
 	return &resp.Params, nil
 }
@@ -75,11 +77,11 @@ func (greenfield *Greenfield) QueryBucketInfo(ctx context.Context, bucket string
 	client := greenfield.getCurrentClient().GnfdClient()
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if errors.Is(err, storagetypes.ErrNoSuchBucket) {
-		return nil, merrors.ErrNoSuchBucket
+		return nil, errorstypes.Error(merrors.NoSuchBucketErrCode, merrors.ErrNoSuchBucket.Error())
 	}
 	if err != nil {
 		log.Errorw("failed to query bucket", "bucket_name", bucket, "error", err)
-		return nil, err
+		return nil, errorstypes.Error(merrors.ChainHeadBucketErrCode, err.Error())
 	}
 	return resp.GetBucketInfo(), nil
 }
@@ -91,9 +93,12 @@ func (greenfield *Greenfield) QueryObjectInfo(ctx context.Context, bucket, objec
 		BucketName: bucket,
 		ObjectName: object,
 	})
+	if strings.Contains(err.Error(), storagetypes.ErrNoSuchObject.Error()) {
+		return nil, errorstypes.Error(merrors.NoSuchObjectErrCode, merrors.ErrNoSuchObject.Error())
+	}
 	if err != nil {
 		log.Errorw("failed to query object", "bucket_name", bucket, "object_name", object, "error", err)
-		return nil, err
+		return nil, errorstypes.Error(merrors.ChainHeadObjectErrCode, err.Error())
 	}
 	return resp.GetObjectInfo(), nil
 }
@@ -105,11 +110,11 @@ func (greenfield *Greenfield) QueryObjectInfoByID(ctx context.Context, objectID 
 		ObjectId: objectID,
 	})
 	if errors.Is(err, storagetypes.ErrNoSuchObject) {
-		return nil, merrors.ErrNoSuchObject
+		return nil, errorstypes.Error(merrors.NoSuchObjectErrCode, merrors.ErrNoSuchObject.Error())
 	}
 	if err != nil {
 		log.Errorw("failed to query object", "object_id", objectID, "error", err)
-		return nil, err
+		return nil, errorstypes.Error(merrors.ChainHeadObjectByIDErrCode, err.Error())
 	}
 	return resp.GetObjectInfo(), nil
 }
@@ -117,16 +122,10 @@ func (greenfield *Greenfield) QueryObjectInfoByID(ctx context.Context, objectID 
 // QueryBucketInfoAndObjectInfo return bucket info and object info, if not found, return the corresponding error code
 func (greenfield *Greenfield) QueryBucketInfoAndObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.BucketInfo, *storagetypes.ObjectInfo, error) {
 	bucketInfo, err := greenfield.QueryBucketInfo(ctx, bucket)
-	if errors.Is(err, storagetypes.ErrNoSuchBucket) {
-		return nil, nil, merrors.ErrNoSuchBucket
-	}
 	if err != nil {
 		return nil, nil, err
 	}
 	objectInfo, err := greenfield.QueryObjectInfo(ctx, bucket, object)
-	if errors.Is(err, storagetypes.ErrNoSuchObject) {
-		return nil, nil, merrors.ErrNoSuchObject
-	}
 	if err != nil {
 		return nil, nil, err
 	}
@@ -135,22 +134,20 @@ func (greenfield *Greenfield) QueryBucketInfoAndObjectInfo(ctx context.Context, 
 
 // ListenObjectSeal return an indication of the object is sealed.
 // TODO:: retrieve service support seal event subscription
-func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, object string, timeOutHeight int) (err error) {
+func (greenfield *Greenfield) ListenObjectSeal(ctx context.Context, bucket, object string, timeoutHeight int) (err error) {
 	var objectInfo *storagetypes.ObjectInfo
-	for i := 0; i < timeOutHeight; i++ {
+	for i := 0; i < timeoutHeight; i++ {
 		time.Sleep(ExpectedOutputBlockInternal * time.Second)
 		objectInfo, err = greenfield.QueryObjectInfo(ctx, bucket, object)
 		if err != nil {
 			continue
 		}
 		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
-			err = nil
-			return
+			return nil
 		}
 	}
 	log.Errorw("seal object timeout", "bucket_name", bucket, "object_name", object)
-	err = merrors.ErrSealTimeout
-	return
+	return errorstypes.Error(merrors.ChainSealObjectTimeoutErrCode, merrors.ErrSealTimeout.Error())
 }
 
 // QueryStreamRecord return the steam record info by account.
@@ -161,7 +158,7 @@ func (greenfield *Greenfield) QueryStreamRecord(ctx context.Context, account str
 	})
 	if err != nil {
 		log.Errorw("failed to query stream record", "account", account, "error", err)
-		return nil, err
+		return nil, errorstypes.Error(merrors.ChainQueryStreamRecordErrCode, err.Error())
 	}
 	return &resp.StreamRecord, nil
 }
@@ -177,12 +174,12 @@ func (greenfield *Greenfield) VerifyGetObjectPermission(ctx context.Context, acc
 	})
 	if err != nil {
 		log.Errorw("failed to verify get object permission", "account", account, "error", err)
-		return false, err
+		return false, errorstypes.Error(merrors.ChainGetObjetVerifyPermissionErrCode, err.Error())
 	}
 	if resp.GetEffect() == permissiontypes.EFFECT_ALLOW {
-		return true, err
+		return true, nil
 	}
-	return false, err
+	return false, nil
 }
 
 // VerifyPutObjectPermission verify put object permission.
@@ -198,10 +195,10 @@ func (greenfield *Greenfield) VerifyPutObjectPermission(ctx context.Context, acc
 	})
 	if err != nil {
 		log.Errorw("failed to verify put object permission", "account", account, "error", err)
-		return false, err
+		return false, errorstypes.Error(merrors.ChainPutObjetVerifyPermissionErrCode, err.Error())
 	}
 	if resp.GetEffect() == permissiontypes.EFFECT_ALLOW {
-		return true, err
+		return true, nil
 	}
-	return false, err
+	return false, nil
 }

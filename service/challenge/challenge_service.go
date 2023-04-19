@@ -82,7 +82,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 	resp.PieceHash = integrity.Checksum
 	resp.PieceData, err = challenge.pieceStore.GetPiece(ctx, pieceKey, 0, -1)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
+		log.CtxErrorw(ctx, "challenge failed to get piece data from piece store", "error", err)
 		return resp, err
 	}
 	log.CtxInfow(ctx, "succeed to challenge piece", "piece_idx", req.GetSegmentIdx(),

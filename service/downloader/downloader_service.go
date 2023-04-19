@@ -82,7 +82,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 	for _, pInfo := range pieceInfos {
 		resp.Data, err = downloader.pieceStore.GetPiece(ctx, pInfo.segmentPieceKey, int64(pInfo.offset), int64(pInfo.length))
 		if err != nil {
-			log.Errorw("downloader failed to get piece", "error", err)
+			log.Errorw("downloader failed to get piece from piece store", "error", err)
 			return err
 		}
 		if err = stream.Send(resp); err != nil {

@@ -18,6 +18,7 @@ import (
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 )
 
 const (
@@ -354,19 +355,19 @@ func TestS3_CreateError(t *testing.T) {
 func TestS3_GetError(t *testing.T) {
 	store := setupS3Test(t)
 	cases := []struct {
-		name      string
-		key       string
-		offset    int64
-		limit     int64
-		resp      s3.GetObjectOutput
-		wantedErr error
+		name          string
+		key           string
+		offset        int64
+		limit         int64
+		resp          s3.GetObjectOutput
+		wantedErrCode int
 	}{
 		{
-			name:      "1",
-			key:       mockKey,
-			limit:     1,
-			resp:      s3.GetObjectOutput{},
-			wantedErr: errors.New("Get object error"),
+			name:          "1",
+			key:           mockKey,
+			limit:         1,
+			resp:          s3.GetObjectOutput{},
+			wantedErrCode: merrors.PieceStoreGetObjectError,
 		},
 	}
 	for _, tt := range cases {
@@ -374,7 +375,7 @@ func TestS3_GetError(t *testing.T) {
 			store.api = mockS3ClientError{}
 			data, err := store.GetObject(context.TODO(), mockKey, 0, 0)
 			assert.Equal(t, nil, data)
-			assert.Equal(t, tt.wantedErr, err)
+			assert.Equal(t, tt.wantedErrCode, errorstypes.Code(err))
 		})
 	}
 }
@@ -382,25 +383,25 @@ func TestS3_GetError(t *testing.T) {
 func TestS3_PutError(t *testing.T) {
 	store := setupS3Test(t)
 	cases := []struct {
-		name      string
-		key       string
-		reader    io.Reader
-		resp      s3.PutObjectOutput
-		wantedErr error
+		name          string
+		key           string
+		reader        io.Reader
+		resp          s3.PutObjectOutput
+		wantedErrCode int
 	}{
 		{
-			name:      "1",
-			key:       mockKey,
-			reader:    strings.NewReader("test"),
-			resp:      s3.PutObjectOutput{},
-			wantedErr: errors.New("Put object error"),
+			name:          "1",
+			key:           mockKey,
+			reader:        strings.NewReader("test"),
+			resp:          s3.PutObjectOutput{},
+			wantedErrCode: merrors.PieceStorePutObjectError,
 		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			store.api = mockS3ClientError{}
 			err := store.PutObject(context.TODO(), tt.key, tt.reader)
-			assert.Equal(t, tt.wantedErr, err)
+			assert.Equal(t, tt.wantedErrCode, errorstypes.Code(err))
 		})
 	}
 }

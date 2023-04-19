@@ -133,6 +133,7 @@ func (receiver *Receiver) ReceiveObjectPiece(stream types.ReceiverService_Receiv
 			receiver.cache.Add(entry.ObjectID(), traceInfo)
 			go func() {
 				if err = receiver.pieceStore.PutPiece(entry.PieceKey(), entry.Data()); err != nil {
+					log.Errorw("receiver failed to put piece to piece store", "error", err)
 					errCh <- err
 				}
 			}()

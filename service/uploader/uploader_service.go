@@ -116,6 +116,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			}
 			pieceChecksumList = append(pieceChecksumList, hash.GenerateChecksum(entry.Data()))
 			if err = uploader.pieceStore.PutPiece(entry.PieceKey(), entry.Data()); err != nil {
+				log.Errorw("uploader failed to put piece to piece store", "error", err)
 				return err
 			}
 		case err = <-errCh:
@@ -136,18 +137,18 @@ func (uploader *Uploader) signIntegrityHash(ctx context.Context, objectID uint64
 	}()
 
 	integrityMeta := &sqldb.IntegrityMeta{ObjectID: objectID, Checksum: pieceChecksumList}
-	if integrityMeta.IntegrityHash, integrityMeta.Signature, err =
-		uploader.signer.SignIntegrityHash(ctx, objectID, pieceChecksumList); err != nil {
-		return
+	if integrityMeta.IntegrityHash, integrityMeta.Signature, err = uploader.signer.SignIntegrityHash(ctx, objectID,
+		pieceChecksumList); err != nil {
+		return errorstypes.Error(merrors.SignerSignIntegrityHashErrCode, err.Error())
 	}
 	if !bytes.Equal(rootHash, integrityMeta.IntegrityHash) {
 		err = merrors.ErrMismatchIntegrityHash
-		return
+		return errorstypes.Error(merrors.MismatchIntegrityHashErrCode, merrors.ErrMismatchIntegrityHash.Error())
 	}
 	if err = uploader.spDB.SetObjectIntegrity(integrityMeta); err != nil {
-		return
+		return err
 	}
-	return
+	return nil
 }
 
 func (uploader *Uploader) QueryUploadProgress(ctx context.Context, req *types.QueryUploadProgressRequest) (
@@ -159,7 +160,7 @@ func (uploader *Uploader) QueryUploadProgress(ctx context.Context, req *types.Qu
 
 	job, err := uploader.spDB.GetJobByObjectID(req.GetObjectId())
 	if err != nil {
-		return nil, merrors.InnerErrorToGRPCError(err)
+		return nil, err
 	}
 	return &types.QueryUploadProgressResponse{
 		State: job.JobState,

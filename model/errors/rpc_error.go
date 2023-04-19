@@ -122,7 +122,7 @@ var (
 func InnerErrorToGRPCError(err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) ||
 		errors.Is(err, ErrNoSuchObject) {
-		return errorstypes.Error(ObjectNotFoundErrCode, "object is not found")
+		return errorstypes.Error(NoSuchObjectErrCode, "object is not found")
 	}
 	if errors.Is(err, ErrCheckQuotaEnough) {
 		return status.Errorf(codes.PermissionDenied, "quota is not enough")

@@ -110,7 +110,7 @@ func (s *s3Store) GetObject(ctx context.Context, key string, offset, limit int64
 func checkGetObjectErr(err error) error {
 	msg := err.Error()
 	if strings.Contains(msg, s3.ErrCodeNoSuchKey) {
-		return errorstypes.Error(merrors.ObjectNotFoundErrCode, "object is not found")
+		return errorstypes.Error(merrors.NoSuchObjectErrCode, merrors.ErrNoSuchObject.Error())
 	} else {
 		return errorstypes.Error(merrors.PieceStoreGetObjectError, err.Error())
 	}
@@ -137,7 +137,10 @@ func (s *s3Store) PutObject(ctx context.Context, key string, reader io.Reader) e
 		Metadata:    map[string]*string{mpiecestore.ChecksumAlgo: aws.String(checksum)},
 	}
 	_, err := s.api.PutObjectWithContext(ctx, params)
-	return errorstypes.Error(merrors.PieceStorePutObjectError, err.Error())
+	if err != nil {
+		return errorstypes.Error(merrors.PieceStorePutObjectError, err.Error())
+	}
+	return nil
 }
 
 func (s *s3Store) DeleteObject(ctx context.Context, key string) error {
