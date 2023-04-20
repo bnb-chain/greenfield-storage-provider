@@ -124,7 +124,7 @@ func (gateway *Gateway) serve() {
 	if metrics.GetMetrics().Enabled() {
 		router.Use(metrics.DefaultHTTPServerMetrics.InstrumentationHandler)
 	}
-	if err := NewApiLimiter(gateway.config.ApiLimiterConfig); err != nil {
+	if err := NewAPILimiter(gateway.config.ApiLimiterConfig); err != nil {
 		log.Errorw("failed to new api limiter", "err", err)
 		return
 	}

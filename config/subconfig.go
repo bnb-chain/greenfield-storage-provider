@@ -94,17 +94,17 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 			}
 		}
 		apiLimitsMap := make(map[string]gateway.MemoryLimiterConfig)
-		for _, c := range cfg.RateLimiter.ApiLimits {
+		for _, c := range cfg.RateLimiter.APILimits {
 			apiLimitsMap[c.Key] = gateway.MemoryLimiterConfig{
 				RateLimit:  c.RateLimit,
 				RatePeriod: c.RatePeriod,
 			}
 		}
 		gCfg.ApiLimiterConfig = &gateway.ApiLimiterConfig{
-			Default:         defaultMap,
-			Pattern:         patternMap,
-			ApiLimits:       apiLimitsMap,
-			HttpLimitConfig: cfg.RateLimiter.HttpLimitConfig,
+			Default:      defaultMap,
+			Pattern:      patternMap,
+			APILimits:    apiLimitsMap,
+			HTTPLimitCfg: cfg.RateLimiter.HTTPLimitCfg,
 		}
 	}
 	return gCfg, nil
