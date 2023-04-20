@@ -105,10 +105,11 @@ func (client *MetadataClient) GetUserBucketsCount(ctx context.Context, in *metat
 }
 
 // ListExpiredBucketsBySp list buckets that are expired by specific sp
-func (client *MetadataClient) ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpAddress string, opts ...grpc.CallOption) ([]*metatypes.Bucket, error) {
+func (client *MetadataClient) ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpAddress string, limit int64, opts ...grpc.CallOption) ([]*metatypes.Bucket, error) {
 	in := &metatypes.ListExpiredBucketsBySpRequest{
 		CreateAt:         createAt,
 		PrimarySpAddress: primarySpAddress,
+		Limit:            limit,
 	}
 
 	resp, err := client.metadata.ListExpiredBucketsBySp(ctx, in, opts...)

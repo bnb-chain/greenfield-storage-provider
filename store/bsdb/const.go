@@ -4,6 +4,8 @@ package bsdb
 const (
 	// DeletedObjectsDefaultSize defines the default size of ListDeletedObjectsByBlockNumberRange response
 	DeletedObjectsDefaultSize = 1000
+	// ExpiredBucketsDefaultSize defines the default size of ListExpiredBucketsBySp response
+	ExpiredBucketsDefaultSize = 1000
 )
 
 // define table name constant of block syncer db

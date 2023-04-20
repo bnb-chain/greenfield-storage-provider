@@ -107,6 +107,8 @@ message ListExpiredBucketsBySpRequest {
   int64 create_at = 1;
   // primary_sp_address defines the primary sp address of bucket
   string primary_sp_address = 2;
+  // limit defines the return number limit of bucket
+  int64 limit = 3;
 }
 
 // GetObjectByObjectNameAndBucketNameRequest is request type for the GetObjectByObjectNameAndBucketName RPC method

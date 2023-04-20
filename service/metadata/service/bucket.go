@@ -175,7 +175,7 @@ func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatype
 
 func (metadata *Metadata) ListExpiredBucketsBySp(ctx context.Context, req *metatypes.ListExpiredBucketsBySpRequest) (resp *metatypes.ListExpiredBucketsBySpResponse, err error) {
 	ctx = log.Context(ctx, req)
-	buckets, err := metadata.bsDB.ListExpiredBucketsBySp(req.GetCreateAt(), req.GetPrimarySpAddress())
+	buckets, err := metadata.bsDB.ListExpiredBucketsBySp(req.GetCreateAt(), req.GetPrimarySpAddress(), req.GetLimit())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get user buckets", "error", err)
 		return
