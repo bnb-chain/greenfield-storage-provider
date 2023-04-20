@@ -14,6 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stopserving"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
@@ -34,6 +35,7 @@ type StorageProviderConfig struct {
 	P2PCfg            *p2p.NodeConfig
 	LogCfg            *LogConfig
 	MetricsCfg        *metrics.MetricsConfig
+	DiscontinueCfg    *stopserving.DiscontinueConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -60,6 +62,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.ManagerService,
 		model.P2PService,
 		model.AuthService,
+		model.StopServingService,
 	},
 	ListenAddress: map[string]string{
 		model.GatewayService:    model.GatewayHTTPAddress,
@@ -94,6 +97,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	P2PCfg:            DefaultP2PConfig,
 	LogCfg:            DefaultLogConfig,
 	MetricsCfg:        DefaultMetricsConfig,
+	DiscontinueCfg:    stopserving.DefaultDiscontinueConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
