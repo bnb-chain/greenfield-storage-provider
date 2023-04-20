@@ -76,6 +76,7 @@ HTTPAddress = "localhost:24036"
 Level = "debug"
 Path = "./gnfd-sp.log"
 
+<<<<<<< HEAD
 [RateLimiter]
 APILimits = []
 HostPattern = []
@@ -85,3 +86,6 @@ PathPattern = []
 On = false
 RateLimit = 1
 RatePeriod = "S"
+
+[StopServingCfg]
+BucketKeepAliveDays = 7
