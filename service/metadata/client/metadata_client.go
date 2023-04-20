@@ -104,6 +104,23 @@ func (client *MetadataClient) GetUserBucketsCount(ctx context.Context, in *metat
 	return resp, nil
 }
 
+// ListExpiredBucketsBySp list buckets that are expired by specific sp
+func (client *MetadataClient) ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpAddress string, limit int64, opts ...grpc.CallOption) ([]*metatypes.Bucket, error) {
+	in := &metatypes.ListExpiredBucketsBySpRequest{
+		CreateAt:         createAt,
+		PrimarySpAddress: primarySpAddress,
+		Limit:            limit,
+	}
+
+	resp, err := client.metadata.ListExpiredBucketsBySp(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send list expired buckets by sp rpc", "error", err)
+		return nil, err
+	}
+	return resp.Buckets, nil
+}
+
 // GetObjectByObjectNameAndBucketName get object info by an object name and a bucket name
 func (client *MetadataClient) GetObjectByObjectNameAndBucketName(ctx context.Context, in *metatypes.GetObjectByObjectNameAndBucketNameRequest, opts ...grpc.CallOption) (*metatypes.GetObjectByObjectNameAndBucketNameResponse, error) {
 	resp, err := client.metadata.GetObjectByObjectNameAndBucketName(ctx, in, opts...)

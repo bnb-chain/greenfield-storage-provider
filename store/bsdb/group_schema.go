@@ -16,8 +16,8 @@ type Group struct {
 	SourceType string `gorm:"column:source_type"`
 	// AccountID defines the group user address
 	AccountID common.Hash `gorm:"column:account_id"`
-	// OperatorAddress defines operator address of group
-	OperatorAddress common.Address `gorm:"column:operator_address"`
+	// Operator defines operator address of group
+	Operator common.Address `gorm:"column:operator"`
 	// CreateAt defines the block number when the group created
 	CreateAt int64 `gorm:"column:create_at"`
 	// CreateTime defines the timestamp when the group created

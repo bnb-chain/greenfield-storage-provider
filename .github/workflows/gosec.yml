@@ -6,11 +6,15 @@ on:
       - main
       - develop
       - release*
+      - fix-release*
+
   pull_request:
     branches:
       - master
       - develop
       - release*
+      - fix-release*
+
 jobs:
   gosec:
     name: gosec
