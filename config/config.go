@@ -96,6 +96,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	P2PCfg:            DefaultP2PConfig,
 	LogCfg:            DefaultLogConfig,
 	MetricsCfg:        DefaultMetricsConfig,
+	RateLimiter:       DefaultRateLimiterConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -153,6 +154,14 @@ var DefaultLogConfig = &LogConfig{
 var DefaultP2PConfig = &p2p.NodeConfig{
 	ListenAddress: model.P2PListenAddress,
 	PingPeriod:    model.DefaultPingPeriod,
+}
+
+var DefaultRateLimiterConfig = &localhttp.RateLimiterConfig{
+	HTTPLimitCfg: localhttp.HTTPLimitConfig{
+		On:         false,
+		RateLimit:  100,
+		RatePeriod: "S",
+	},
 }
 
 // LoadConfig loads the config file from path
