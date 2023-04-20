@@ -5,14 +5,22 @@ import (
 	"fmt"
 	"time"
 
+	"gorm.io/gorm"
+
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"gorm.io/gorm"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 // CheckQuotaAndAddReadRecord check current quota, and add read record
 // TODO: Traffic statistics may be inaccurate in extreme cases, optimize it in the future
 func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
+	startTime := time.Now()
+	defer func() {
+		observer := metrics.SPDBTimeHistogram.WithLabelValues("checkQuotaAndAddReadRecord")
+		observer.Observe(time.Since(startTime).Seconds())
+	}()
+
 	yearMonth := TimeToYearMonth(TimestampUsToTime(record.ReadTimestampUs))
 	bucketTraffic, err := s.GetBucketTraffic(record.BucketID, yearMonth)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

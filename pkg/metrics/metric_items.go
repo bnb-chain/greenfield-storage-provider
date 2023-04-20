@@ -45,4 +45,20 @@ var (
 		Name: "task_node_replicate_object_task_number",
 		Help: "Track task node service replicate object task",
 	}, []string{serviceLabelName})
+	// PieceStoreTimeHistogram records piece store request time
+	PieceStoreTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "piece_store_handling_seconds",
+		Help:    "Track the latency for piece store requests",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"method_name"})
+	// PieceStoreRequestTotal records piece store total request
+	PieceStoreRequestTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "piece_store_total_requests",
+		Help: "Track piece store handles total request",
+	}, []string{"method_name"})
+	SPDBTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "sp_db_handling_seconds",
+		Help:    "Track the latency for spdb requests",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"method_name"})
 )

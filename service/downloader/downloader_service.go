@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"gorm.io/gorm"
+
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
@@ -12,7 +14,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
-	"gorm.io/gorm"
 )
 
 var _ types.DownloaderServiceServer = &Downloader{}
@@ -76,6 +77,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		log.CtxErrorw(ctx, "failed to check billing due to bucket quota", "error", err)
 		return merrors.InnerErrorToGRPCError(err)
 	}
+
 	pieceInfos, err := downloader.SplitToSegmentPieceInfos(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), startOffset, endOffset)
 	if err != nil {
 		return
