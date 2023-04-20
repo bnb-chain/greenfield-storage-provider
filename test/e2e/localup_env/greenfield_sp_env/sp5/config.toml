@@ -76,3 +76,13 @@ Path = "./gnfd-sp.log"
 
 [MetricsCfg]
 HTTPAddress = "localhost:19036"
+
+[RateLimiter]
+APILimits = []
+HostPattern = []
+PathPattern = []
+
+[RateLimiter.HTTPLimitCfg]
+On = false
+RateLimit = 1
+RatePeriod = "S"

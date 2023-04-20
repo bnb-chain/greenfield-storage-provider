@@ -12,6 +12,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -75,6 +76,35 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 		gCfg.AuthServiceAddress = cfg.Endpoint[model.AuthService]
 	} else {
 		return nil, fmt.Errorf("missing auth gPRC address configuration for gateway service")
+	}
+	if cfg.RateLimiter != nil {
+		defaultMap := make(map[string]localhttp.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.PathPattern {
+			defaultMap[c.Key] = localhttp.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		patternMap := make(map[string]localhttp.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.HostPattern {
+			patternMap[c.Key] = localhttp.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		apiLimitsMap := make(map[string]localhttp.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.APILimits {
+			apiLimitsMap[c.Key] = localhttp.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		gCfg.APILimiterCfg = &localhttp.APILimiterConfig{
+			PathPattern:  defaultMap,
+			HostPattern:  patternMap,
+			APILimits:    apiLimitsMap,
+			HTTPLimitCfg: cfg.RateLimiter.HTTPLimitCfg,
+		}
 	}
 	return gCfg, nil
 }
