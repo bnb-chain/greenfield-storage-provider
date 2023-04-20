@@ -76,13 +76,10 @@ Level = "debug"
 Path = "./gnfd-sp.log"
 
 [RateLimiter]
-APILimits = [{Key = "localhost:9033-/", RateLimit = 100, RatePeriod = "S"},]
-HostPattern = [
-    {Key = "^[a-z0-9][a-z0-9\\.\\-]{1,61}[a-z0-9].localhost:9033$", RateLimit = 100, RatePeriod = "S"},
-]
-PathPattern = [
-    {Key = "^/[^/]+/?$", RateLimit = 100, RatePeriod = "S"},
-]
+APILimits = []
+HostPattern = []
+PathPattern = []
+
 [RateLimiter.HTTPLimitCfg]
 On = false
 RateLimit = 1
