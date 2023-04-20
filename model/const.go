@@ -72,7 +72,7 @@ const (
 	// P2PListenAddress default p2p protocol listen address of p2p node
 	P2PListenAddress = "127.0.0.1:9933"
 	// AuthGRPCAddress default gRPC address of auth service
-	AuthGRPCAddress = "localhost:10033"
+	AuthGRPCAddress = "localhost:8933"
 )
 
 // define greenfield chain default address
