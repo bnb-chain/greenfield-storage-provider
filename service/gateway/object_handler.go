@@ -360,6 +360,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue)
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
