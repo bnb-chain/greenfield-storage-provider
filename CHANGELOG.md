@@ -3,32 +3,16 @@
 ## v0.1.2
 
 FEATURES
-* [\#279](https://github.com/bnb-chain/greenfield-storage-provider/pull/283) feat: grpc client adds retry function
-* [\#292](https://github.com/bnb-chain/greenfield-storage-provider/pull/292) feat: add table recreate func & block height metric for block sycner
-* [\#295](https://github.com/bnb-chain/greenfield-storage-provider/pull/295) feat: support https protocol
-* [\#296](https://github.com/bnb-chain/greenfield-storage-provider/pull/296) chore: change sqldb default config
-* [\#299](https://github.com/bnb-chain/greenfield-storage-provider/pull/299) feat: add nat manager for p2p
-* [\#304](https://github.com/bnb-chain/greenfield-storage-provider/pull/304) feat: support dns for p2p node
 * [\#308](https://github.com/bnb-chain/greenfield-storage-provider/pull/308) feat: adds seal object metrics and refine some codes
 * [\#313](https://github.com/bnb-chain/greenfield-storage-provider/pull/313) feat: verify permission api
 * [\#314](https://github.com/bnb-chain/greenfield-storage-provider/pull/314) feat: support path-style api and add query upload progress api
 * [\#318](https://github.com/bnb-chain/greenfield-storage-provider/pull/316) feat: update schema and order for list deleted objects
 * [\#319](https://github.com/bnb-chain/greenfield-storage-provider/pull/319) feat: implement off-chain-auth solution
 * [\#320](https://github.com/bnb-chain/greenfield-storage-provider/pull/320) chore: polish tests and docs
-* [\#325](https://github.com/bnb-chain/greenfield-storage-provider/pull/325) feat: add universal endpoint
 * [\#329](https://github.com/bnb-chain/greenfield-storage-provider/pull/329) feat: update greenfield to the latest version
-* [\#333](https://github.com/bnb-chain/greenfield-storage-provider/pull/333) fix: use EIP-4361 message template for off-chain-auth
-* [\#339](https://github.com/bnb-chain/greenfield-storage-provider/pull/339) fix: permit anonymous users to access public object
 * [\#338](https://github.com/bnb-chain/greenfield-storage-provider/pull/338) feat: block sycner add txhash when export events & juno version update
 * [\#340](https://github.com/bnb-chain/greenfield-storage-provider/pull/340) feat: update metadata block syncer schema and add ListExpiredBucketsBySp
-* [\#347](https://github.com/bnb-chain/greenfield-storage-provider/pull/347) fix: add spdb and piece store metrics for downloader
 * [\#349](https://github.com/bnb-chain/greenfield-storage-provider/pull/349) fix: keep retrying when any blocksycner event handles failure
-
-BUGFIX
-* [\#286](https://github.com/bnb-chain/greenfield-storage-provider/pull/286) fix: fix challenge memory is inaccurate
-* [\#288](https://github.com/bnb-chain/greenfield-storage-provider/pull/288) fix: fix auth type v2 query object bug
-* [\#306](https://github.com/bnb-chain/greenfield-storage-provider/pull/306) fix: fix multi update map bug and polish db error
-* [\#337](https://github.com/bnb-chain/greenfield-storage-provider/pull/337) fix: permit anonymous users to access public object
 
 
 ## v0.1.1
@@ -36,11 +20,25 @@ BUGFIX
 FEATURES
 * [\#274](https://github.com/bnb-chain/greenfield-storage-provider/pull/274) feat: update stream record column names
 * [\#275](https://github.com/bnb-chain/greenfield-storage-provider/pull/275) refactor: tasknode streaming process reduces memory usage
+* [\#279](https://github.com/bnb-chain/greenfield-storage-provider/pull/283) feat: grpc client adds retry function
+* [\#292](https://github.com/bnb-chain/greenfield-storage-provider/pull/292) feat: add table recreate func & block height metric for block sycner
+* [\#295](https://github.com/bnb-chain/greenfield-storage-provider/pull/295) feat: support https protocol
+* [\#296](https://github.com/bnb-chain/greenfield-storage-provider/pull/296) chore: change sqldb default config
+* [\#299](https://github.com/bnb-chain/greenfield-storage-provider/pull/299) feat: add nat manager for p2p
+* [\#304](https://github.com/bnb-chain/greenfield-storage-provider/pull/304) feat: support dns for p2p node
+* [\#325](https://github.com/bnb-chain/greenfield-storage-provider/pull/325) feat: add universal endpoint
+* [\#333](https://github.com/bnb-chain/greenfield-storage-provider/pull/333) fix: use EIP-4361 message template for off-chain-auth
+* [\#339](https://github.com/bnb-chain/greenfield-storage-provider/pull/339) fix: permit anonymous users to access public object
+* [\#347](https://github.com/bnb-chain/greenfield-storage-provider/pull/347) fix: add spdb and piece store metrics for downloader
 
 BUGFIX
 * [\#277](https://github.com/bnb-chain/greenfield-storage-provider/pull/277) fix: rcmgr leak for downloader service
 * [\#278](https://github.com/bnb-chain/greenfield-storage-provider/pull/278) fix: uploader panic under db access error
 * [\#279](https://github.com/bnb-chain/greenfield-storage-provider/pull/279) chore: change default rcmgr limit to no infinite
+* [\#286](https://github.com/bnb-chain/greenfield-storage-provider/pull/286) fix: fix challenge memory is inaccurate
+* [\#288](https://github.com/bnb-chain/greenfield-storage-provider/pull/288) fix: fix auth type v2 query object bug
+* [\#306](https://github.com/bnb-chain/greenfield-storage-provider/pull/306) fix: fix multi update map bug and polish db error
+* [\#337](https://github.com/bnb-chain/greenfield-storage-provider/pull/337) fix: permit anonymous users to access public objec
 
 
 ## v0.1.0
