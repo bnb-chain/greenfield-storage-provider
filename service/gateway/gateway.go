@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"net/http"
 	"sync/atomic"
 
@@ -124,7 +125,7 @@ func (gateway *Gateway) serve() {
 	if metrics.GetMetrics().Enabled() {
 		router.Use(metrics.DefaultHTTPServerMetrics.InstrumentationHandler)
 	}
-	if err := NewAPILimiter(gateway.config.ApiLimiterConfig); err != nil {
+	if err := localhttp.NewAPILimiter(gateway.config.APILimiterCfg); err != nil {
 		log.Errorw("failed to new api limiter", "err", err)
 		return
 	}

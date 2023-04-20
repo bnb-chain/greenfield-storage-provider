@@ -1,4 +1,4 @@
-package gateway
+package http
 
 import (
 	"context"
@@ -39,28 +39,29 @@ type MemoryLimiterConfig struct {
 	RatePeriod string // per period
 }
 
-type ApiLimiterConfig struct {
+type APILimiterConfig struct {
 	HTTPLimitCfg HTTPLimitConfig
 	Default      map[string]MemoryLimiterConfig
 	APILimits    map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
 	Pattern      map[string]MemoryLimiterConfig
 }
+
 type apiLimiter struct {
 	store      slimiter.Store
 	limiterMap sync.Map
-	cfg        ApiLimiterConfig
+	cfg        APILimiterConfig
 }
 
 var limiter *apiLimiter
 
-func NewAPILimiter(cfg *ApiLimiterConfig) error {
+func NewAPILimiter(cfg *APILimiterConfig) error {
 	localStore := smemory.NewStoreWithOptions(slimiter.StoreOptions{
 		Prefix:          "sp_api_rate_limiter",
 		CleanUpInterval: 5 * time.Second,
 	})
 	limiter_ := &apiLimiter{
 		store: localStore,
-		cfg: ApiLimiterConfig{
+		cfg: APILimiterConfig{
 			APILimits:    make(map[string]MemoryLimiterConfig),
 			Default:      make(map[string]MemoryLimiterConfig),
 			Pattern:      make(map[string]MemoryLimiterConfig),
@@ -100,7 +101,7 @@ func (a *apiLimiter) findLimiter(host, prefix, key string) *slimiter.Limiter {
 		if regexp.MustCompile(p).MatchString(host) {
 			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
 			if err != nil {
-				log.Errorw(" failed to new rate from formatted", "err", err)
+				log.Errorw("failed to new rate from formatted", "err", err)
 				continue
 			}
 			newLimiter = slimiter.New(a.store, rate)
@@ -113,7 +114,7 @@ func (a *apiLimiter) findLimiter(host, prefix, key string) *slimiter.Limiter {
 	}
 	rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", defaultCfg.RateLimit, defaultCfg.RatePeriod))
 	if err != nil {
-		log.Errorw("NewRateFromFormatted failed", "err", err)
+		log.Errorw("failed to new rate from formatted", "err", err)
 		return nil
 	}
 	newLimiter = slimiter.New(a.store, rate)
@@ -167,7 +168,7 @@ func (t *apiLimiter) HTTPAllow(ctx context.Context, r *http.Request) bool {
 	return true
 }
 
-func limit(next http.Handler) http.Handler {
+func Limit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !limiter.Allow(context.Background(), r) {
 			w.Header().Set("Content-Type", "application/json")

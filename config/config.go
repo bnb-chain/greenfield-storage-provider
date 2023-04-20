@@ -11,9 +11,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
-	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
@@ -35,7 +35,7 @@ type StorageProviderConfig struct {
 	P2PCfg            *p2p.NodeConfig
 	LogCfg            *LogConfig
 	MetricsCfg        *metrics.MetricsConfig
-	RateLimiter       *gateway.RateLimiterConfig
+	RateLimiter       *localhttp.RateLimiterConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
