@@ -1,20 +1,5 @@
 # Changelog
 
-## v0.1.3
-
-FEATURES
-* [\#308](https://github.com/bnb-chain/greenfield-storage-provider/pull/308) feat: adds seal object metrics and refine some codes
-* [\#313](https://github.com/bnb-chain/greenfield-storage-provider/pull/313) feat: verify permission api
-* [\#314](https://github.com/bnb-chain/greenfield-storage-provider/pull/314) feat: support path-style api and add query upload progress api
-* [\#318](https://github.com/bnb-chain/greenfield-storage-provider/pull/316) feat: update schema and order for list deleted objects
-* [\#319](https://github.com/bnb-chain/greenfield-storage-provider/pull/319) feat: implement off-chain-auth solution
-* [\#320](https://github.com/bnb-chain/greenfield-storage-provider/pull/320) chore: polish tests and docs
-* [\#329](https://github.com/bnb-chain/greenfield-storage-provider/pull/329) feat: update greenfield to the latest version
-* [\#338](https://github.com/bnb-chain/greenfield-storage-provider/pull/338) feat: block sycner add txhash when export events & juno version update
-* [\#340](https://github.com/bnb-chain/greenfield-storage-provider/pull/340) feat: update metadata block syncer schema and add ListExpiredBucketsBySp
-* [\#349](https://github.com/bnb-chain/greenfield-storage-provider/pull/349) fix: keep retrying when any blocksycner event handles failure
-
-
 ## v0.1.2
 
 FEATURES
@@ -24,10 +9,20 @@ FEATURES
 * [\#296](https://github.com/bnb-chain/greenfield-storage-provider/pull/296) chore: change sqldb default config
 * [\#299](https://github.com/bnb-chain/greenfield-storage-provider/pull/299) feat: add nat manager for p2p
 * [\#304](https://github.com/bnb-chain/greenfield-storage-provider/pull/304) feat: support dns for p2p node
+* [\#308](https://github.com/bnb-chain/greenfield-storage-provider/pull/308) feat: adds seal object metrics and refine some codes
+* [\#313](https://github.com/bnb-chain/greenfield-storage-provider/pull/313) feat: verify permission api
+* [\#314](https://github.com/bnb-chain/greenfield-storage-provider/pull/314) feat: support path-style api and add query upload progress api
+* [\#318](https://github.com/bnb-chain/greenfield-storage-provider/pull/316) feat: update schema and order for list deleted objects
+* [\#319](https://github.com/bnb-chain/greenfield-storage-provider/pull/319) feat: implement off-chain-auth solution
+* [\#320](https://github.com/bnb-chain/greenfield-storage-provider/pull/320) chore: polish tests and docs
 * [\#325](https://github.com/bnb-chain/greenfield-storage-provider/pull/325) feat: add universal endpoint
+* [\#329](https://github.com/bnb-chain/greenfield-storage-provider/pull/329) feat: update greenfield to the latest version
 * [\#333](https://github.com/bnb-chain/greenfield-storage-provider/pull/333) fix: use EIP-4361 message template for off-chain-auth
 * [\#339](https://github.com/bnb-chain/greenfield-storage-provider/pull/339) fix: permit anonymous users to access public object
+* [\#338](https://github.com/bnb-chain/greenfield-storage-provider/pull/338) feat: block sycner add txhash when export events & juno version update
+* [\#340](https://github.com/bnb-chain/greenfield-storage-provider/pull/340) feat: update metadata block syncer schema and add ListExpiredBucketsBySp
 * [\#347](https://github.com/bnb-chain/greenfield-storage-provider/pull/347) fix: add spdb and piece store metrics for downloader
+* [\#349](https://github.com/bnb-chain/greenfield-storage-provider/pull/349) fix: keep retrying when any blocksycner event handles failure
 
 BUGFIX
 * [\#286](https://github.com/bnb-chain/greenfield-storage-provider/pull/286) fix: fix challenge memory is inaccurate
