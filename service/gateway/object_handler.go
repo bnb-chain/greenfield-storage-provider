@@ -402,5 +402,6 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		}
 		size = size + writeN
 	}
+	w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue)
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 }
