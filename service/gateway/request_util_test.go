@@ -27,6 +27,18 @@ const (
 	SampleIssueDate  = "2023-04-17T16:25:24Z"
 )
 
+func TestVerifyEmptySignature(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, scheme+bucketName+"."+testDomain+"/"+objectName, nil)
+	require.NoError(t, err)
+	rc := &requestContext{
+		request:    req,
+		routerName: getObjectRouterName,
+	}
+	addrOutput, err := gw.verifySignature(rc)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "", addrOutput.String())
+}
+
 // TODO: Stop referencing SDK code for testing, If needed, move the mainly function to Greenfield Common
 /*
 func TestVerifySignatureV1(t *testing.T) {

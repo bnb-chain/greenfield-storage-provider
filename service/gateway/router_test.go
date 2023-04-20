@@ -11,23 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	testDomain = "www.route-test.com"
-	config     = &GatewayConfig{
-		Domain: testDomain,
-	}
-	gw = &Gateway{
-		config: config,
-	}
-	scheme     = "https://"
-	bucketName = "test-bucket-name"
-	objectName = "test-object-name"
-)
-
 func TestRouters(t *testing.T) {
-	gwRouter := mux.NewRouter().SkipClean(true)
-	gw.registerHandler(gwRouter)
-
+	gwRouter := setupRouter(t)
 	testCases := []struct {
 		name             string
 		router           *mux.Router // the router being tested

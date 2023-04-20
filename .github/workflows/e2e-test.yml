@@ -6,12 +6,14 @@ on:
       - master
       - develop
       - release*
+      - fix-release*
 
   pull_request:
     branches:
       - master
       - develop
       - release*
+      - fix-release*
 
 env:
   GreenfileldTag: 91d2e1d1d43c4ada622c44490e7a3cf758489aad
