@@ -110,14 +110,14 @@ func (metadata *Metadata) GetObjectByObjectNameAndBucketName(ctx context.Context
 	)
 
 	ctx = log.Context(ctx, req)
-	if err = s3util.CheckValidBucketName(req.ObjectName); err != nil {
+	if err = s3util.CheckValidObjectName(req.ObjectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", req.ObjectName, "error", err)
 		return nil, err
 	}
 
 	object, err = metadata.bsDB.GetObjectByName(req.ObjectName, req.BucketName, req.IsFullList)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get bucket by bucket name", "error", err)
+		log.CtxErrorw(ctx, "failed to get object by object name", "error", err)
 		return nil, err
 	}
 
