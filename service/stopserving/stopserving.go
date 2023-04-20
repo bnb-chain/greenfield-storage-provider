@@ -13,16 +13,17 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metadataclient "github.com/bnb-chain/greenfield-storage-provider/service/metadata/client"
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 )
 
 var _ lifecycle.Service = &StopServing{}
 
-var (
+const (
 	// DiscontinueReason defines the reason for stop serving
 	DiscontinueReason = "testnet cleanup"
 
+	// FetchBucketsLimit define the max buckets to fetch in a single request
+	FetchBucketsLimit = int64(500)
 	// FetchBucketsInterval define the interval to fetch buckets for stop serving
 	FetchBucketsInterval = 5 * time.Minute
 	// SubmitTransactionInterval defines the interval between two stop serving transaction submissions
@@ -101,17 +102,15 @@ func (s *StopServing) eventLoop() {
 
 // discontinueBuckets fetch buckets from metadata service and submit transactions to chain
 func (s *StopServing) discontinueBuckets() {
-	//TODO: replace with ListExpiredBucketsBySp after metadata is ready.
-	//TODO: parameters 1) sp address 2) creation time
-	req := &types.GetUserBucketsRequest{AccountId: s.config.SpOperatorAddress}
-	resp, err := s.metadata.GetUserBuckets(context.Background(), req)
+	createAt := time.Now().Unix() - int64(86400*s.config.DiscontinueConfig.BucketKeepAliveDays)
+	buckets, err := s.metadata.ListExpiredBucketsBySp(context.Background(), createAt, s.config.SpOperatorAddress, FetchBucketsLimit)
 	if err != nil {
-		log.Errorw("failed to query bucket info", "error", err)
+		log.Errorw("failed to query expired buckets", "error", err)
 		return
 	}
 
-	for _, bucket := range resp.Buckets {
-		bucketName := bucket.BucketInfo.BucketName
+	for _, bucket := range buckets {
+		bucketName := bucket.BucketInfo
 		if s.cache.Contains(bucketName) { // this bucket has been discontinued, however the metadata indexer did not handle it yet
 			continue
 		}

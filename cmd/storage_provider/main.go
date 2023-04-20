@@ -146,7 +146,6 @@ func storageProvider(ctx *cli.Context) error {
 		return err
 	}
 	slc := lifecycle.NewServiceLifecycle()
-	log.Debugw("services", "services", cfg.Service)
 	for _, serviceName := range cfg.Service {
 		// init service instance.
 		service, err := initService(serviceName, cfg)
