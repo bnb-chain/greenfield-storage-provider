@@ -14,7 +14,7 @@ on:
       - release*
 
 env:
-  GreenfileldTag: v0.0.10
+  GreenfileldTag: 91d2e1d1d43c4ada622c44490e7a3cf758489aad
   GreenfileldIntegrationTestBranch: fynn/new_sdk_test
   GOPRIVATE: github.com/bnb-chain
   GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
@@ -89,5 +89,5 @@ jobs:
           cd ..
           /bin/cp -rf test/e2e/localup_env/integration_config/config.yml greenfield-integration-test/config/config.yml
           cd greenfield-integration-test
-          go test tests/create_object_test.go
+          go test tests/smoke/new_sdk_test.go
           cd ..
