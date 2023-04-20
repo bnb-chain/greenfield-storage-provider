@@ -59,8 +59,8 @@ type Object struct {
 	CreateTxHash common.Hash `gorm:"create_tx_hash"`
 	// UpdateTxHash defines the update transaction hash of object
 	UpdateTxHash common.Hash `gorm:"update_tx_hash"`
-	// SealedTxHash defines the sealed transaction hash of object
-	SealedTxHash common.Hash `gorm:"sealed_tx_hash"`
+	// SealTxHash defines the sealed transaction hash of object
+	SealTxHash common.Hash `gorm:"column:sealed_tx_hash"`
 }
 
 // TableName is used to set Object table name in database
