@@ -44,6 +44,12 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
 			UpdateAt:      object.UpdateAt,
+			DeleteAt:      object.DeleteAt,
+			DeleteReason:  object.DeleteReason,
+			Operator:      object.Operator.String(),
+			CreateTxHash:  object.CreateTxHash.String(),
+			UpdateTxHash:  object.UpdateTxHash.String(),
+			SealTxHash:    object.SealTxHash.String(),
 		})
 	}
 
@@ -93,6 +99,12 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
 			UpdateAt:      object.UpdateAt,
+			DeleteAt:      object.DeleteAt,
+			DeleteReason:  object.DeleteReason,
+			Operator:      object.Operator.String(),
+			CreateTxHash:  object.CreateTxHash.String(),
+			UpdateTxHash:  object.UpdateTxHash.String(),
+			SealTxHash:    object.SealTxHash.String(),
 		})
 	}
 
@@ -142,6 +154,12 @@ func (metadata *Metadata) GetObjectByObjectNameAndBucketName(ctx context.Context
 			},
 			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
+			DeleteAt:      object.DeleteAt,
+			DeleteReason:  object.DeleteReason,
+			Operator:      object.Operator.String(),
+			CreateTxHash:  object.CreateTxHash.String(),
+			UpdateTxHash:  object.UpdateTxHash.String(),
+			SealTxHash:    object.SealTxHash.String(),
 		}
 	}
 	resp = &metatypes.GetObjectByObjectNameAndBucketNameResponse{Object: res}

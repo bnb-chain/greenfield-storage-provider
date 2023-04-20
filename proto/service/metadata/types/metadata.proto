@@ -13,6 +13,20 @@ message Bucket {
   bnbchain.greenfield.storage.BucketInfo bucket_info = 1;
   // removed defines the bucket is deleted or not
   bool removed = 2;
+  // delete_at defines the block number when the bucket deleted.
+  int64 delete_at = 3;
+  // delete_reason defines the deleted reason of bucket
+  string delete_reason = 4;
+  // operator defines the operator address of bucket
+  string operator = 5;
+  // create_tx_hash defines the creation transaction hash of object
+  string create_tx_hash = 6;
+  // update_tx_hash defines the update transaction hash of object
+  string update_tx_hash = 7;
+  // update_at defines the block number when the object updated
+  int64 update_at = 8;
+  // update_time defines the block number when the object updated
+  int64 update_time = 9;
 }
 
 // Object is the structure for user object
@@ -25,6 +39,18 @@ message Object {
   bool removed = 3;
   // update_at defines the block number when the object updated
   int64 update_at = 4;
+  // delete_at defines the block number when the object deleted
+  int64 delete_at = 5;
+  // delete_reason defines the deleted reason of object
+  string delete_reason = 6;
+  // operator defines the operator address of object
+  string operator = 7;
+  // create_tx_hash defines the creation transaction hash of object
+  string create_tx_hash = 8;
+  // update_tx_hash defines the update transaction hash of object
+  string update_tx_hash = 9;
+  // seal_tx_hash defines the sealed transaction hash of object
+  string seal_tx_hash = 10;
 }
 
 // GetUserBucketsRequest is request type for the GetUserBuckets RPC method.
@@ -73,6 +99,16 @@ message ListDeletedObjectsByBlockNumberRangeRequest {
 message GetUserBucketsCountRequest {
   // account_id is the account address of user
   string account_id = 1;
+}
+
+// ListExpiredBucketsBySpRequest is the request type for the ListExpiredBucketsBySp RPC method.
+message ListExpiredBucketsBySpRequest {
+  // create_at defines the create timestamp of bucket
+  int64 create_at = 1;
+  // primary_sp_address defines the primary sp address of bucket
+  string primary_sp_address = 2;
+  // limit defines the return number limit of bucket
+  int64 limit = 3;
 }
 
 // GetObjectByObjectNameAndBucketNameRequest is request type for the GetObjectByObjectNameAndBucketName RPC method
@@ -139,6 +175,12 @@ message GetUserBucketsCountResponse {
   int64 count = 1;
 }
 
+// ListExpiredBucketsBySpResponse is the response type for the ListExpiredBucketsBySp RPC method.
+message ListExpiredBucketsBySpResponse {
+  // buckets defines the list of expired bucket
+  repeated Bucket buckets = 1;
+}
+
 // GetObjectByObjectNameAndBucketNameResponse is response type for the GetObjectByObjectNameAndBucketName RPC method.
 message GetObjectByObjectNameAndBucketNameResponse {
   // object defines the information of an object
@@ -171,6 +213,8 @@ service MetadataService {
   rpc ListDeletedObjectsByBlockNumberRange(ListDeletedObjectsByBlockNumberRangeRequest) returns (ListDeletedObjectsByBlockNumberRangeResponse) {};
   // GetUserBucketsCount GetUserBuckets get buckets count by a user address
   rpc GetUserBucketsCount(GetUserBucketsCountRequest) returns (GetUserBucketsCountResponse) {};
+  // ListExpiredBucketsBySp list expired buckets by sp
+  rpc ListExpiredBucketsBySp(ListExpiredBucketsBySpRequest) returns (ListExpiredBucketsBySpResponse) {};
   // GetObjectByObjectNameAndBucketName get bucket info by a bucket name and an object name
   rpc GetObjectByObjectNameAndBucketName(GetObjectByObjectNameAndBucketNameRequest) returns (GetObjectByObjectNameAndBucketNameResponse) {};
   // GetPaymentByBucketName get bucket payment info by a bucket name

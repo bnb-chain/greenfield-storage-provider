@@ -208,8 +208,8 @@ github.com/blakesmith/ar v0.0.0-20190502131153-809d4375e1fb/go.mod h1:PkYb9DJNAw
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
 github.com/bnb-chain/gnfd-tendermint v0.0.3 h1:RjEBQZJW7krM4DFxZbIasNNO7K2uohcmL9ULT84qllk=
 github.com/bnb-chain/gnfd-tendermint v0.0.3/go.mod h1:/v9z9F6cq0+f7EGG92lYSLBcPYQDILoK91X8YM28hWo=
-github.com/bnb-chain/greenfield v0.0.12-0.20230417120203-7b2a32d58918 h1:moehHscmSGZXSeqUNoJZkU9rVv3FWGn9Q/EOFdwZQfk=
-github.com/bnb-chain/greenfield v0.0.12-0.20230417120203-7b2a32d58918/go.mod h1:7344f+97RhnkZPOIE/uHdF5u6Awwyhfb/TgIA6nQhXA=
+github.com/bnb-chain/greenfield v0.0.12-0.20230418102232-efc0f221748f h1:H3b8rXUuYNZMyCxWqsP+g3NeoR19FXLYixWIXnehJUM=
+github.com/bnb-chain/greenfield v0.0.12-0.20230418102232-efc0f221748f/go.mod h1:iHqOyaOVmHg48syHW7AGVN5nzIGt2GZoNL+KmT4UoLY=
 github.com/bnb-chain/greenfield-common/go v0.0.0-20230407104542-ed19e3666522 h1:n3R7Ybzu9XlCHl63QT14XwqaSuGff9U+g3ZJic2frOM=
 github.com/bnb-chain/greenfield-common/go v0.0.0-20230407104542-ed19e3666522/go.mod h1:gGaPRDSjK1QH/lMjZ5wfhbP4SfrUUKX6Q72x/8uehxo=
 github.com/bnb-chain/greenfield-cosmos-sdk v0.0.13 h1:xm9qqrOjrGfX4imXxxruHIpuUUUAFbdtM/TXPXRc5zo=

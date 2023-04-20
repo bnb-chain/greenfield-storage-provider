@@ -4,7 +4,7 @@ go 1.18
 
 replace (
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b432c
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.12-0.20230417120203-7b2a32d58918
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.12-0.20230418102232-efc0f221748f
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.13
 	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230418063138-cfe377950b33
