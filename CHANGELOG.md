@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.1.3
+## v0.1.2
 
 FEATURES
 * [\#308](https://github.com/bnb-chain/greenfield-storage-provider/pull/308) feat: adds seal object metrics and refine some codes
@@ -15,9 +15,11 @@ FEATURES
 * [\#349](https://github.com/bnb-chain/greenfield-storage-provider/pull/349) fix: keep retrying when any blocksycner event handles failure
 
 
-## v0.1.2
+## v0.1.1
 
 FEATURES
+* [\#274](https://github.com/bnb-chain/greenfield-storage-provider/pull/274) feat: update stream record column names
+* [\#275](https://github.com/bnb-chain/greenfield-storage-provider/pull/275) refactor: tasknode streaming process reduces memory usage
 * [\#279](https://github.com/bnb-chain/greenfield-storage-provider/pull/283) feat: grpc client adds retry function
 * [\#292](https://github.com/bnb-chain/greenfield-storage-provider/pull/292) feat: add table recreate func & block height metric for block sycner
 * [\#295](https://github.com/bnb-chain/greenfield-storage-provider/pull/295) feat: support https protocol
@@ -30,22 +32,13 @@ FEATURES
 * [\#347](https://github.com/bnb-chain/greenfield-storage-provider/pull/347) fix: add spdb and piece store metrics for downloader
 
 BUGFIX
-* [\#286](https://github.com/bnb-chain/greenfield-storage-provider/pull/286) fix: fix challenge memory is inaccurate
-* [\#288](https://github.com/bnb-chain/greenfield-storage-provider/pull/288) fix: fix auth type v2 query object bug
-* [\#306](https://github.com/bnb-chain/greenfield-storage-provider/pull/306) fix: fix multi update map bug and polish db error
-* [\#337](https://github.com/bnb-chain/greenfield-storage-provider/pull/337) fix: permit anonymous users to access public object
-
-
-## v0.1.1
-
-FEATURES
-* [\#274](https://github.com/bnb-chain/greenfield-storage-provider/pull/274) feat: update stream record column names
-* [\#275](https://github.com/bnb-chain/greenfield-storage-provider/pull/275) refactor: tasknode streaming process reduces memory usage
-
-BUGFIX
 * [\#277](https://github.com/bnb-chain/greenfield-storage-provider/pull/277) fix: rcmgr leak for downloader service
 * [\#278](https://github.com/bnb-chain/greenfield-storage-provider/pull/278) fix: uploader panic under db access error
 * [\#279](https://github.com/bnb-chain/greenfield-storage-provider/pull/279) chore: change default rcmgr limit to no infinite
+* [\#286](https://github.com/bnb-chain/greenfield-storage-provider/pull/286) fix: fix challenge memory is inaccurate
+* [\#288](https://github.com/bnb-chain/greenfield-storage-provider/pull/288) fix: fix auth type v2 query object bug
+* [\#306](https://github.com/bnb-chain/greenfield-storage-provider/pull/306) fix: fix multi update map bug and polish db error
+* [\#337](https://github.com/bnb-chain/greenfield-storage-provider/pull/337) fix: permit anonymous users to access public objec
 
 
 ## v0.1.0
