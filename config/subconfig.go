@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -81,14 +81,14 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 
 	if cfg.RateLimiter != nil {
 		defaultMap := make(map[string]localhttp.MemoryLimiterConfig)
-		for _, c := range cfg.RateLimiter.Default {
+		for _, c := range cfg.RateLimiter.PathPattern {
 			defaultMap[c.Key] = localhttp.MemoryLimiterConfig{
 				RateLimit:  c.RateLimit,
 				RatePeriod: c.RatePeriod,
 			}
 		}
 		patternMap := make(map[string]localhttp.MemoryLimiterConfig)
-		for _, c := range cfg.RateLimiter.Pattern {
+		for _, c := range cfg.RateLimiter.HostPattern {
 			patternMap[c.Key] = localhttp.MemoryLimiterConfig{
 				RateLimit:  c.RateLimit,
 				RatePeriod: c.RatePeriod,
@@ -102,8 +102,8 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 			}
 		}
 		gCfg.APILimiterCfg = &localhttp.APILimiterConfig{
-			Default:      defaultMap,
-			Pattern:      patternMap,
+			PathPattern:  defaultMap,
+			HostPattern:  patternMap,
 			APILimits:    apiLimitsMap,
 			HTTPLimitCfg: cfg.RateLimiter.HTTPLimitCfg,
 		}

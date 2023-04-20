@@ -29,8 +29,8 @@ type HTTPLimitConfig struct {
 
 type RateLimiterConfig struct {
 	HTTPLimitCfg HTTPLimitConfig
-	Default      []RateLimiterCell
-	Pattern      []RateLimiterCell
+	PathPattern  []RateLimiterCell
+	HostPattern  []RateLimiterCell
 	APILimits    []RateLimiterCell
 }
 
@@ -41,9 +41,9 @@ type MemoryLimiterConfig struct {
 
 type APILimiterConfig struct {
 	HTTPLimitCfg HTTPLimitConfig
-	Default      map[string]MemoryLimiterConfig
+	PathPattern  map[string]MemoryLimiterConfig
 	APILimits    map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
-	Pattern      map[string]MemoryLimiterConfig
+	HostPattern  map[string]MemoryLimiterConfig
 }
 
 type apiLimiter struct {
@@ -59,12 +59,12 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 		Prefix:          "sp_api_rate_limiter",
 		CleanUpInterval: 5 * time.Second,
 	})
-	limiter_ := &apiLimiter{
+	limiter = &apiLimiter{
 		store: localStore,
 		cfg: APILimiterConfig{
 			APILimits:    make(map[string]MemoryLimiterConfig),
-			Default:      make(map[string]MemoryLimiterConfig),
-			Pattern:      make(map[string]MemoryLimiterConfig),
+			PathPattern:  make(map[string]MemoryLimiterConfig),
+			HostPattern:  make(map[string]MemoryLimiterConfig),
 			HTTPLimitCfg: cfg.HTTPLimitCfg,
 		},
 	}
@@ -72,12 +72,12 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 	var err error
 	var rate slimiter.Rate
 
-	for k, v := range cfg.Default {
-		limiter_.cfg.Default[strings.ToLower(k)] = v
+	for k, v := range cfg.PathPattern {
+		limiter.cfg.PathPattern[strings.ToLower(k)] = v
 	}
 
-	for k, v := range cfg.Pattern {
-		limiter_.cfg.Pattern[strings.ToLower(k)] = v
+	for k, v := range cfg.HostPattern {
+		limiter.cfg.HostPattern[strings.ToLower(k)] = v
 	}
 
 	for k, v := range cfg.APILimits {
@@ -86,18 +86,19 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 			return err
 		}
 
-		limiter_.limiterMap.Store(strings.ToLower(k), slimiter.New(localStore, rate))
+		limiter.limiterMap.Store(strings.ToLower(k), slimiter.New(localStore, rate))
 	}
 
 	return nil
 }
 
-func (a *apiLimiter) findLimiter(host, prefix, key string) *slimiter.Limiter {
+func (a *apiLimiter) findLimiter(host, path, key string) *slimiter.Limiter {
 	newLimiter, ok := a.limiterMap.Load(key)
 	if ok {
 		return newLimiter.(*slimiter.Limiter)
 	}
-	for p, l := range a.cfg.Pattern {
+
+	for p, l := range a.cfg.HostPattern {
 		if regexp.MustCompile(p).MatchString(host) {
 			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
 			if err != nil {
@@ -108,31 +109,33 @@ func (a *apiLimiter) findLimiter(host, prefix, key string) *slimiter.Limiter {
 			return newLimiter.(*slimiter.Limiter)
 		}
 	}
-	defaultCfg, exist := a.cfg.Default[prefix]
-	if !exist {
-		return nil
+
+	for p, l := range a.cfg.PathPattern {
+		if regexp.MustCompile(p).MatchString(path) {
+			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
+			if err != nil {
+				log.Errorw("failed to new rate from formatted", "err", err)
+				continue
+			}
+			newLimiter = slimiter.New(a.store, rate)
+			return newLimiter.(*slimiter.Limiter)
+		}
 	}
-	rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", defaultCfg.RateLimit, defaultCfg.RatePeriod))
-	if err != nil {
-		log.Errorw("failed to new rate from formatted", "err", err)
-		return nil
-	}
-	newLimiter = slimiter.New(a.store, rate)
-	a.limiterMap.Store(key, newLimiter)
-	return newLimiter.(*slimiter.Limiter)
+
+	return nil
 }
 
 func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
-	uri := strings.ToLower(r.RequestURI)
+	path := strings.ToLower(r.RequestURI)
 	host := r.Host
-	key := host + "-" + uri
-
+	key := host + "-" + path
 	key = strings.ToLower(key)
 
-	l := t.findLimiter(host, uri, key)
+	l := t.findLimiter(host, path, key)
 	if l == nil {
 		return true
 	}
+
 	limiterCtx, err := t.store.Increment(ctx, key, 1, l.Rate)
 	if err != nil {
 		return true
@@ -162,7 +165,6 @@ func (t *apiLimiter) HTTPAllow(ctx context.Context, r *http.Request) bool {
 	}
 
 	if limiterCtx.Reached {
-		//error_utils.HttpErrorResponseWithMessage(ctx, http.StatusTooManyRequests, "Reached the total limit of this api")
 		return false
 	}
 	return true
