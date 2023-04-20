@@ -279,7 +279,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		return
 	}
 
-	escapedObjectName, err := url.QueryUnescape(reqContext.objectName)
+	escapedObjectName, err := url.PathUnescape(reqContext.objectName)
 	if err != nil {
 		log.Errorw("failed to unescape object name ", "object_name", reqContext.objectName, "error", err)
 		errDescription = InvalidKey
