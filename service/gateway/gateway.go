@@ -14,7 +14,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	authclient "github.com/bnb-chain/greenfield-storage-provider/service/auth/client"
 	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
 	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
@@ -125,10 +124,10 @@ func (gateway *Gateway) serve() {
 	if metrics.GetMetrics().Enabled() {
 		router.Use(metrics.DefaultHTTPServerMetrics.InstrumentationHandler)
 	}
-	if err := localhttp.NewAPILimiter(gateway.config.APILimiterCfg); err != nil {
-		log.Errorw("failed to new api limiter", "err", err)
-		return
-	}
+	//if err := localhttp.NewAPILimiter(gateway.config.APILimiterCfg); err != nil {
+	//	log.Errorw("failed to new api limiter", "err", err)
+	//	return
+	//}
 	gateway.registerHandler(router)
 	server := &http.Server{
 		Addr:    gateway.config.HTTPAddress,

@@ -93,3 +93,5 @@ jobs:
           cd greenfield-integration-test
           go test tests/smoke/new_sdk_test.go
           cd ..
+          tail -n 1000 deployment/localup/local_env/sp0/gnfd-sp.log
+          ps -ef | grep gnfd-sp | wc -l
