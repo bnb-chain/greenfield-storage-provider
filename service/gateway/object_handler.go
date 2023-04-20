@@ -370,6 +370,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue)
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -402,6 +403,5 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		}
 		size = size + writeN
 	}
-	w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue)
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 }
