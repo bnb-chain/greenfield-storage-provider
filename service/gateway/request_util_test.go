@@ -17,15 +17,27 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
+func TestVerifyEmptySignature(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, scheme+bucketName+"."+testDomain+"/"+objectName, nil)
+	require.NoError(t, err)
+	rc := &requestContext{
+		request:    req,
+		routerName: getObjectRouterName,
+	}
+	addrOutput, err := rc.verifySignature()
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "", addrOutput.String())
+}
+
 func TestVerifySignatureV1(t *testing.T) {
 	// mock request
 	urlmap := url.Values{}
 	urlmap.Add("greenfield", "storage-provider")
 	parms := io.NopCloser(strings.NewReader(urlmap.Encode()))
-	req, err := http.NewRequest("POST", "gnfd.nodereal.com", parms)
+	req, err := http.NewRequest("POST", "gnfd.test-sp.com", parms)
 	require.NoError(t, err)
 	req.Header.Set(model.ContentTypeHeader, "application/x-www-form-urlencoded")
-	req.Host = "testBucket.gnfd.nodereal.com"
+	req.Host = "testBucket.gnfd.test-sp.com"
 	// mock
 	privKey, _, addrInput := testdata.KeyEthSecp256k1TestPubAddr()
 	keyManager, err := keys.NewPrivateKeyManager(hex.EncodeToString(privKey.Bytes()))
@@ -52,7 +64,7 @@ func TestVerifySignatureV2(t *testing.T) {
 	req, err := http.NewRequest("POST", "example.com", parms)
 	require.NoError(t, err)
 	req.Header.Set(model.ContentTypeHeader, "application/x-www-form-urlencoded")
-	req.Host = "testBucket.gnfd.nodereal.com"
+	req.Host = "testBucket.gnfd.test-sp.com"
 	// mock pk
 	privKey, _, _ := testdata.KeyEthSecp256k1TestPubAddr()
 	keyManager, err := keys.NewPrivateKeyManager(hex.EncodeToString(privKey.Bytes()))
