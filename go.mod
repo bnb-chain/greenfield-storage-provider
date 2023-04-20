@@ -41,6 +41,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.35.9
+	github.com/ulule/limiter/v3 v3.11.1
 	github.com/urfave/cli/v2 v2.25.0
 	github.com/viki-org/dnscache v0.0.0-20130720023526-c70c1f23c5d8
 	go.opentelemetry.io/otel/trace v1.11.0
@@ -258,7 +259,7 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/dig v1.15.0 // indirect
 	go.uber.org/fx v1.18.2 // indirect
-	golang.org/x/crypto v0.4.0
+	golang.org/x/crypto v0.7.0
 	golang.org/x/net v0.8.0 // indirect
 	//golang.org/x/mod v0.8.0 // indirect
 	//golang.org/x/net v0.6.0 // indirect

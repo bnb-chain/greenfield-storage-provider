@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"io"
 	"net/http"
 
@@ -162,6 +163,6 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Path("/").
 		HandlerFunc(g.listObjectsByBucketNameHandler)
 	pathBucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
-
+	r.Use(localhttp.Limit)
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 }
