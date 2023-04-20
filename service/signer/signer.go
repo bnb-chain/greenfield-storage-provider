@@ -54,7 +54,7 @@ func NewSignerServer(config *SignerConfig, chainConfig *gnfd.GreenfieldChainConf
 
 	client, err := client.NewGreenfieldChainSignClient(
 		// TODO: greenfield SDK may support multiple endpoints.
-		chainConfig.NodeAddr[0].GreenfieldAddresses[0],
+		chainConfig.NodeAddr[0].TendermintAddresses[0],
 		chainConfig.ChainID,
 		config.GasLimit,
 		config.OperatorPrivateKey,

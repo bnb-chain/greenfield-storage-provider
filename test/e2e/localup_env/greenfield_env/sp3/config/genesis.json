@@ -1,5 +1,5 @@
 {
-  "genesis_time": "2023-03-29T04:46:01.714935Z",
+  "genesis_time": "2023-04-17T12:33:17.622492Z",
   "chain_id": "greenfield_9000-121",
   "initial_height": "1",
   "consensus_params": {
@@ -34,217 +34,266 @@
       "accounts": [
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xCc2bf933b403bE6f09f37fb00684EC886E5eE704",
+          "address": "0x349Bd22F569A29c7D23fA389c7242115363A3235",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x110e77eDd818ba2Afc4906275AA2b98A01db053F",
+          "address": "0x5f388CDAA20a3a1449cF5140DB11c361739D29a5",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xd768BbaC2C148C77C7CbD743880732BEA5f4fc29",
+          "address": "0xEfA3ab3916af138ea2D227C2F2Bb52aa08c53350",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x84646D1d4AD147a6C1E1B67F771F39e89593aF4B",
+          "address": "0x14539343413EB47899B0935287ab1111Df891d04",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xdD2E420f94D1debd40dc56e66B7706E0cD8b3A29",
+          "address": "0x21c6ff21DD7012DE1CCf9055f2eB234A44a1d3fB",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x350FF7A2bad0bBf7237b460656B9631704674040",
+          "address": "0x8e424c6Db42Ad9A5d91b24e20b5f603eC70abbA3",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xDd222B611e5d0A31e1Ed34f8d4e681942d8606B8",
+          "address": "0x7Aa5C8B50696f1D15B3A60d6629f7318c605bb4C",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x2cf731DB95681B799FA0054276C7Ca44def450f8",
+          "address": "0xfa238a4B262e1dc35c4970A2296A2444B956c9Ca",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xbbDFe0Da142940d3e29c7B52Eb95aEb3fdF80666",
+          "address": "0x47210Cf7a7f06Ff95096421c4Ff93D106b30d69D",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x989D170F21fE66604044Ff1C82A443F172dd6667",
+          "address": "0xDe3788ea199aa22CadDf88D39a16cf3D6a79C405",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x334eaDBb056Ff645a6cc116D7Db019eA03f12b0C",
+          "address": "0x47f847B834B4Da140B84BeF803Ff486318d914D1",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x4C1674C0504bad30e023D7B3991824bCC47E193d",
+          "address": "0x326c2b6345e66f5a62eb36A152272Fe39400ffdb",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x9579ac21386353E45A0c43965991297aF4915a21",
+          "address": "0x2aB46967d0B0Ffae2d9605EC8010B0110EB6Ee81",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x8f0144062E16B9291A28ed8b81e7DA9A09d21499",
+          "address": "0x7404bF71c297eE7f389a7876f4716003a2BaD2d0",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x1A0454a4569B26926082d812B8E12d11f766D85C",
+          "address": "0xE3F63f5405Aba8320e7293455ae9BC792a519D9E",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xe620C05870A2392E4987676b345026E6C6228388",
+          "address": "0x6E177FB137E608049b16F9365871368104a6A1a0",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xBa299BB46260bE2cd735988F469896662d279e2F",
+          "address": "0xA8386B61654B1284b0e19728626Da0915E0D33a8",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xc6219c1E5ee3adB7b4335E2082201B777c7F72DC",
+          "address": "0x1750861b3f3489303f62bF68dF0A8F5f18402088",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x6907300e63712a6da9aEE7ffb112b1b1529fB933",
+          "address": "0x038c464091e2a2F9CA5270020B1483e77662581d",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x1ee57886094E9A7E08Cc8e740C1F8A51DDf40c63",
+          "address": "0x8576429dA5685740cBD9A9B847C6C141D2141285",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xc91D1896c2d0056B7c233D31F1A673ad5846DC08",
+          "address": "0x766429DA21C001216f04e10aC4a4B5c29813DC8a",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xf7e5f5c6562DFbF6C0BF176125F14CBB4c618180",
+          "address": "0xF8be86A97AdD03d95b2D154dbb059D5F92088649",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x7ceecB2d5A3B92d12b68e6846B6686B2817B466F",
+          "address": "0xEdF9C4BeAD2448d05cbD99906f569139eD05bb1A",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xafe242857feB1ae49678C301Fb41571C16b99E7c",
+          "address": "0x5ade65168E3606f1d49ED805627c818937804273",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xb97b0ec1537B2F58d5619B11F7f276c7cB7c7C57",
+          "address": "0xD3CCED2df7F0FEEB8C3bf0316fe47b762e9D2333",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xF448053863ED90b52AE96a21acC936c84907Bc11",
+          "address": "0xbb09F37b6BBaEc3dcC2D26746a0e7826717e11A9",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xC3fe7faaFac49dCc9b883db1E1d669AcD368B10b",
+          "address": "0x962EBb5F6Cf7F67E1451D215E680Cee1a25DC10a",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x193ae94602232A0600854D26eF322617aDDB2A44",
+          "address": "0x0f6d55e1cD1E979b5368A79b903DE9Ee0902cCe0",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xDB6B207dd6c700955C25Ba03C83C60E5d1CE6348",
+          "address": "0x5DCe7a56f0553d1B021DCAf5Bbd4a7d9cCbF1C5A",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0x73B3725eB1B19D0878c79096D943986bF5F69461",
+          "address": "0x39560Bf4301cBba6b2A95CB7dB9De6e0Ab186e5d",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "0xbcEd2F15CdB17f8F4E5A55c79F52CA5F15188d28",
+          "address": "0xDe3dac18Cf94cb8d088724dD8Ff3918d1a32184A",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "0x9457eEb1a02F6C7575DAaee8b203363c116c1cC7",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "0x54e66Bf2e1d3d422F96b4Fd55eCf2CaF6C01cA2a",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "0x59b6926612a9740c325Ce6a2442012465fa0d48C",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "0xe9eF00e3EE51E74B8C8a81c2254a2DBA89258fBc",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "0xA9054Ce4BA78961731EF31FCfF3A0b27bA5fe7f3",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "0x79541c6faaa5317B498744364cC4FF25478F1509",
+          "pub_key": null,
+          "account_number": "0",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "0x2322d76d80092c79E3Bd19099E6DA88Bc7d1C56F",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
@@ -261,7 +310,7 @@
       },
       "balances": [
         {
-          "address": "0x110e77eDd818ba2Afc4906275AA2b98A01db053F",
+          "address": "0x038c464091e2a2F9CA5270020B1483e77662581d",
           "coins": [
             {
               "denom": "BNB",
@@ -270,7 +319,7 @@
           ]
         },
         {
-          "address": "0x193ae94602232A0600854D26eF322617aDDB2A44",
+          "address": "0x0f6d55e1cD1E979b5368A79b903DE9Ee0902cCe0",
           "coins": [
             {
               "denom": "BNB",
@@ -279,7 +328,7 @@
           ]
         },
         {
-          "address": "0x1A0454a4569B26926082d812B8E12d11f766D85C",
+          "address": "0x14539343413EB47899B0935287ab1111Df891d04",
           "coins": [
             {
               "denom": "BNB",
@@ -288,7 +337,7 @@
           ]
         },
         {
-          "address": "0x1ee57886094E9A7E08Cc8e740C1F8A51DDf40c63",
+          "address": "0x1750861b3f3489303f62bF68dF0A8F5f18402088",
           "coins": [
             {
               "denom": "BNB",
@@ -297,7 +346,7 @@
           ]
         },
         {
-          "address": "0x2cf731DB95681B799FA0054276C7Ca44def450f8",
+          "address": "0x21c6ff21DD7012DE1CCf9055f2eB234A44a1d3fB",
           "coins": [
             {
               "denom": "BNB",
@@ -306,7 +355,7 @@
           ]
         },
         {
-          "address": "0x334eaDBb056Ff645a6cc116D7Db019eA03f12b0C",
+          "address": "0x2322d76d80092c79E3Bd19099E6DA88Bc7d1C56F",
           "coins": [
             {
               "denom": "BNB",
@@ -315,7 +364,7 @@
           ]
         },
         {
-          "address": "0x350FF7A2bad0bBf7237b460656B9631704674040",
+          "address": "0x2aB46967d0B0Ffae2d9605EC8010B0110EB6Ee81",
           "coins": [
             {
               "denom": "BNB",
@@ -324,7 +373,7 @@
           ]
         },
         {
-          "address": "0x4C1674C0504bad30e023D7B3991824bCC47E193d",
+          "address": "0x326c2b6345e66f5a62eb36A152272Fe39400ffdb",
           "coins": [
             {
               "denom": "BNB",
@@ -333,7 +382,7 @@
           ]
         },
         {
-          "address": "0x6907300e63712a6da9aEE7ffb112b1b1529fB933",
+          "address": "0x349Bd22F569A29c7D23fA389c7242115363A3235",
           "coins": [
             {
               "denom": "BNB",
@@ -342,7 +391,7 @@
           ]
         },
         {
-          "address": "0x73B3725eB1B19D0878c79096D943986bF5F69461",
+          "address": "0x39560Bf4301cBba6b2A95CB7dB9De6e0Ab186e5d",
           "coins": [
             {
               "denom": "BNB",
@@ -351,7 +400,7 @@
           ]
         },
         {
-          "address": "0x7ceecB2d5A3B92d12b68e6846B6686B2817B466F",
+          "address": "0x47210Cf7a7f06Ff95096421c4Ff93D106b30d69D",
           "coins": [
             {
               "denom": "BNB",
@@ -360,7 +409,7 @@
           ]
         },
         {
-          "address": "0x84646D1d4AD147a6C1E1B67F771F39e89593aF4B",
+          "address": "0x47f847B834B4Da140B84BeF803Ff486318d914D1",
           "coins": [
             {
               "denom": "BNB",
@@ -369,7 +418,7 @@
           ]
         },
         {
-          "address": "0x8f0144062E16B9291A28ed8b81e7DA9A09d21499",
+          "address": "0x54e66Bf2e1d3d422F96b4Fd55eCf2CaF6C01cA2a",
           "coins": [
             {
               "denom": "BNB",
@@ -378,7 +427,7 @@
           ]
         },
         {
-          "address": "0x9579ac21386353E45A0c43965991297aF4915a21",
+          "address": "0x59b6926612a9740c325Ce6a2442012465fa0d48C",
           "coins": [
             {
               "denom": "BNB",
@@ -387,7 +436,7 @@
           ]
         },
         {
-          "address": "0x989D170F21fE66604044Ff1C82A443F172dd6667",
+          "address": "0x5ade65168E3606f1d49ED805627c818937804273",
           "coins": [
             {
               "denom": "BNB",
@@ -396,7 +445,7 @@
           ]
         },
         {
-          "address": "0xafe242857feB1ae49678C301Fb41571C16b99E7c",
+          "address": "0x5DCe7a56f0553d1B021DCAf5Bbd4a7d9cCbF1C5A",
           "coins": [
             {
               "denom": "BNB",
@@ -405,7 +454,7 @@
           ]
         },
         {
-          "address": "0xb97b0ec1537B2F58d5619B11F7f276c7cB7c7C57",
+          "address": "0x5f388CDAA20a3a1449cF5140DB11c361739D29a5",
           "coins": [
             {
               "denom": "BNB",
@@ -414,7 +463,7 @@
           ]
         },
         {
-          "address": "0xBa299BB46260bE2cd735988F469896662d279e2F",
+          "address": "0x6E177FB137E608049b16F9365871368104a6A1a0",
           "coins": [
             {
               "denom": "BNB",
@@ -423,7 +472,7 @@
           ]
         },
         {
-          "address": "0xbbDFe0Da142940d3e29c7B52Eb95aEb3fdF80666",
+          "address": "0x7404bF71c297eE7f389a7876f4716003a2BaD2d0",
           "coins": [
             {
               "denom": "BNB",
@@ -432,7 +481,7 @@
           ]
         },
         {
-          "address": "0xbcEd2F15CdB17f8F4E5A55c79F52CA5F15188d28",
+          "address": "0x766429DA21C001216f04e10aC4a4B5c29813DC8a",
           "coins": [
             {
               "denom": "BNB",
@@ -441,7 +490,7 @@
           ]
         },
         {
-          "address": "0xC3fe7faaFac49dCc9b883db1E1d669AcD368B10b",
+          "address": "0x79541c6faaa5317B498744364cC4FF25478F1509",
           "coins": [
             {
               "denom": "BNB",
@@ -450,7 +499,7 @@
           ]
         },
         {
-          "address": "0xc6219c1E5ee3adB7b4335E2082201B777c7F72DC",
+          "address": "0x7Aa5C8B50696f1D15B3A60d6629f7318c605bb4C",
           "coins": [
             {
               "denom": "BNB",
@@ -459,7 +508,7 @@
           ]
         },
         {
-          "address": "0xc91D1896c2d0056B7c233D31F1A673ad5846DC08",
+          "address": "0x8576429dA5685740cBD9A9B847C6C141D2141285",
           "coins": [
             {
               "denom": "BNB",
@@ -468,7 +517,7 @@
           ]
         },
         {
-          "address": "0xCc2bf933b403bE6f09f37fb00684EC886E5eE704",
+          "address": "0x8e424c6Db42Ad9A5d91b24e20b5f603eC70abbA3",
           "coins": [
             {
               "denom": "BNB",
@@ -477,7 +526,7 @@
           ]
         },
         {
-          "address": "0xd768BbaC2C148C77C7CbD743880732BEA5f4fc29",
+          "address": "0x9457eEb1a02F6C7575DAaee8b203363c116c1cC7",
           "coins": [
             {
               "denom": "BNB",
@@ -486,7 +535,7 @@
           ]
         },
         {
-          "address": "0xDB6B207dd6c700955C25Ba03C83C60E5d1CE6348",
+          "address": "0x962EBb5F6Cf7F67E1451D215E680Cee1a25DC10a",
           "coins": [
             {
               "denom": "BNB",
@@ -495,7 +544,7 @@
           ]
         },
         {
-          "address": "0xDd222B611e5d0A31e1Ed34f8d4e681942d8606B8",
+          "address": "0xA8386B61654B1284b0e19728626Da0915E0D33a8",
           "coins": [
             {
               "denom": "BNB",
@@ -504,7 +553,7 @@
           ]
         },
         {
-          "address": "0xdD2E420f94D1debd40dc56e66B7706E0cD8b3A29",
+          "address": "0xA9054Ce4BA78961731EF31FCfF3A0b27bA5fe7f3",
           "coins": [
             {
               "denom": "BNB",
@@ -513,7 +562,7 @@
           ]
         },
         {
-          "address": "0xe620C05870A2392E4987676b345026E6C6228388",
+          "address": "0xbb09F37b6BBaEc3dcC2D26746a0e7826717e11A9",
           "coins": [
             {
               "denom": "BNB",
@@ -522,7 +571,7 @@
           ]
         },
         {
-          "address": "0xF448053863ED90b52AE96a21acC936c84907Bc11",
+          "address": "0xD3CCED2df7F0FEEB8C3bf0316fe47b762e9D2333",
           "coins": [
             {
               "denom": "BNB",
@@ -531,7 +580,70 @@
           ]
         },
         {
-          "address": "0xf7e5f5c6562DFbF6C0BF176125F14CBB4c618180",
+          "address": "0xDe3788ea199aa22CadDf88D39a16cf3D6a79C405",
+          "coins": [
+            {
+              "denom": "BNB",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0xDe3dac18Cf94cb8d088724dD8Ff3918d1a32184A",
+          "coins": [
+            {
+              "denom": "BNB",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0xE3F63f5405Aba8320e7293455ae9BC792a519D9E",
+          "coins": [
+            {
+              "denom": "BNB",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0xe9eF00e3EE51E74B8C8a81c2254a2DBA89258fBc",
+          "coins": [
+            {
+              "denom": "BNB",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0xEdF9C4BeAD2448d05cbD99906f569139eD05bb1A",
+          "coins": [
+            {
+              "denom": "BNB",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0xEfA3ab3916af138ea2D227C2F2Bb52aa08c53350",
+          "coins": [
+            {
+              "denom": "BNB",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0xF8be86A97AdD03d95b2D154dbb059D5F92088649",
+          "coins": [
+            {
+              "denom": "BNB",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0xfa238a4B262e1dc35c4970A2296A2444B956c9Ca",
           "coins": [
             {
               "denom": "BNB",
@@ -545,7 +657,7 @@
     },
     "bridge": {
       "params": {
-        "transfer_out_relayer_fee": "1000000000000000",
+        "transfer_out_relayer_fee": "250000000000000",
         "transfer_out_ack_relayer_fee": "0"
       }
     },
@@ -592,7 +704,7 @@
     },
     "gashub": {
       "params": {
-        "max_tx_size": "32768",
+        "max_tx_size": "65536",
         "min_gas_per_byte": "5",
         "msg_gas_params_set": [
           {
@@ -806,6 +918,18 @@
             }
           },
           {
+            "msg_type_url": "/bnbchain.greenfield.storage.MsgDiscontinueObject",
+            "fixed_type": {
+              "fixed_gas": "2400"
+            }
+          },
+          {
+            "msg_type_url": "/bnbchain.greenfield.storage.MsgDiscontinueBucket",
+            "fixed_type": {
+              "fixed_gas": "2400"
+            }
+          },
+          {
             "msg_type_url": "/bnbchain.greenfield.storage.MsgCreateGroup",
             "fixed_type": {
               "fixed_gas": "2400"
@@ -930,20 +1054,20 @@
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "0xCc2bf933b403bE6f09f37fb00684EC886E5eE704",
-                "validator_address": "0xCc2bf933b403bE6f09f37fb00684EC886E5eE704",
+                "delegator_address": "0x349Bd22F569A29c7D23fA389c7242115363A3235",
+                "validator_address": "0x349Bd22F569A29c7D23fA389c7242115363A3235",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
-                  "key": "cD+n+07cIP+9elSOpT3XDwdz9lbj/0Hu7D7ra5K7MwI="
+                  "key": "B9TjB796pMwnK3XWO0zvO2dyXaFeMQCIJcppYUgqmas="
                 },
                 "value": {
                   "denom": "BNB",
                   "amount": "10000000000000000000000000"
                 },
-                "from": "0xCc2bf933b403bE6f09f37fb00684EC886E5eE704",
-                "relayer_address": "0x110e77eDd818ba2Afc4906275AA2b98A01db053F",
-                "challenger_address": "0xd768BbaC2C148C77C7CbD743880732BEA5f4fc29",
-                "bls_key": "a283b0cb426b6906271e44b76daaa89569e6ff8f70d5e22a3a39fae468f6033a60565f53dadbe0ddc8d60102f026ec14"
+                "from": "0x349Bd22F569A29c7D23fA389c7242115363A3235",
+                "relayer_address": "0x5f388CDAA20a3a1449cF5140DB11c361739D29a5",
+                "challenger_address": "0xEfA3ab3916af138ea2D227C2F2Bb52aa08c53350",
+                "bls_key": "897d424983d48f0daefd674c08dace88b045d1b903cad7c212b2c7ad6cee9c98b01053b927f0e9fc7dd86ba32838d553"
               }
             ],
             "memo": "validator0@127.0.0.1:26656",
@@ -956,7 +1080,7 @@
               {
                 "public_key": {
                   "@type": "/ethermint.crypto.v1.ethsecp256k1.PubKey",
-                  "key": "A9yGZ+1La6tP7JJA464OAfJAVJU4qbYYpxB16e0hbXth"
+                  "key": "Aqh0anjOE5HZR9RwRARqxNx+M1HEe9gTaXpmRbQOuNNS"
                 },
                 "mode_info": {
                   "single": {
@@ -975,7 +1099,7 @@
             "tip": null
           },
           "signatures": [
-            "OPew1xGZO/gy+GvzC3NY4jnYIjESfRX4LomPcL2kCylix7ex5tz7zDJ4O+1rvCRCHPLpliMvKW516jCV0ZUvvgE="
+            "V/q6Ke5s4AjfDNz5BKmt5kWe+J9AUGUovndIgym1zF1Tb4Hx/4meDXpvJahU+QsjSU8Z0FBJl60GSrI8YFWhNwA="
           ]
         }
       ]
@@ -1046,7 +1170,7 @@
       "params": {
         "deposit_denom": "BNB",
         "min_deposit": "10000000000000000000000",
-        "secondary_sp_store_price_ratio": "0.800000000000000000"
+        "secondary_sp_store_price_ratio": "0.650000000000000000"
       },
       "storage_providers": [],
       "sp_storage_price_list": []
@@ -1076,13 +1200,18 @@
         "redundant_parity_chunk_num": 2,
         "max_payload_size": "2147483648",
         "min_charge_size": "1048576",
-        "mirror_bucket_relayer_fee": "1000000000000000",
-        "mirror_bucket_ack_relayer_fee": "0",
-        "mirror_object_relayer_fee": "1000000000000000",
-        "mirror_object_ack_relayer_fee": "0",
-        "mirror_group_relayer_fee": "1000000000000000",
-        "mirror_group_ack_relayer_fee": "0",
-        "max_buckets_per_account": 100
+        "mirror_bucket_relayer_fee": "250000000000000",
+        "mirror_bucket_ack_relayer_fee": "250000000000000",
+        "mirror_object_relayer_fee": "250000000000000",
+        "mirror_object_ack_relayer_fee": "250000000000000",
+        "mirror_group_relayer_fee": "250000000000000",
+        "mirror_group_ack_relayer_fee": "250000000000000",
+        "max_buckets_per_account": 100,
+        "discontinue_counting_window": "10000",
+        "discontinue_object_max": "18446744073709551615",
+        "discontinue_bucket_max": "18446744073709551615",
+        "discontinue_confirm_period": "604800",
+        "discontinue_deletion_max": "10000"
       }
     },
     "upgrade": {}

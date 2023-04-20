@@ -4,10 +4,10 @@ go 1.18
 
 replace (
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230228075616-68ac309b432c
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.1.0
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.12-0.20230418102232-efc0f221748f
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.13
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230407031340-bda71c92f7e2
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230420110331-03f0d6934e45
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.3
 )
@@ -16,10 +16,10 @@ require (
 	cosmossdk.io/math v1.0.0-beta.6
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.1.0
-	github.com/bnb-chain/greenfield-common/go v0.0.0-20230327055559-264d5271f271
-	github.com/bnb-chain/greenfield-go-sdk v0.0.8
+	github.com/bnb-chain/greenfield-common/go v0.0.0-20230407104542-ed19e3666522
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
+	github.com/consensys/gnark-crypto v0.7.0
 	github.com/cosmos/cosmos-sdk v0.46.7
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/ethereum/go-ethereum v1.10.19
@@ -41,6 +41,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.35.9
+	github.com/ulule/limiter/v3 v3.11.1
 	github.com/urfave/cli/v2 v2.25.0
 	github.com/viki-org/dnscache v0.0.0-20130720023526-c70c1f23c5d8
 	go.opentelemetry.io/otel/trace v1.11.0
@@ -100,7 +101,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1-0.20200219035652-afde56e7acac // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
 	github.com/elastic/gosigar v0.14.2 // indirect
-	github.com/evmos/ethermint v0.6.1-0.20220919141022-34226aa7b1fa // indirect
+	github.com/evmos/ethermint v0.6.1-0.20220919141022-34226aa7b1fa
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/ferranbt/fastssz v0.0.0-20210905181407-59cf6761a7d5 // indirect
 	github.com/flynn/noise v1.0.0 // indirect
@@ -258,7 +259,7 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/dig v1.15.0 // indirect
 	go.uber.org/fx v1.18.2 // indirect
-	golang.org/x/crypto v0.4.0 // indirect
+	golang.org/x/crypto v0.7.0
 	golang.org/x/net v0.8.0 // indirect
 	//golang.org/x/mod v0.8.0 // indirect
 	//golang.org/x/net v0.6.0 // indirect

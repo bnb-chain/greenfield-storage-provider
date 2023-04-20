@@ -1,0 +1,13 @@
+
+- address: 0x0f6d55e1cD1E979b5368A79b903DE9Ee0902cCe0
+  name: sp4_gc
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Aui4p/VeEVMuEnu0ZjRIZu3lGXMRnqe1xLcTGz1kScuN"}'
+  pubkey_hex: 02e8b8a7f55e11532e127bb466344866ede51973119ea7b5c4b7131b3d6449cb8d
+  type: local
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+exclude six panther flavor century drift ethics helmet clog extend lesson like shell angry elephant cliff ribbon beach magic symbol edge manage punch thunder
+

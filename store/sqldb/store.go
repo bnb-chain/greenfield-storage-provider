@@ -45,8 +45,8 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("gorm failed to set db params", "error", err)
 		return nil, err
 	}
-	sqlDB.SetConnMaxLifetime(time.Duration(config.ConnMaxLifetime))
-	sqlDB.SetConnMaxIdleTime(time.Duration(config.ConnMaxIdleTime))
+	sqlDB.SetConnMaxLifetime(time.Duration(config.ConnMaxLifetime) * time.Second)
+	sqlDB.SetConnMaxIdleTime(time.Duration(config.ConnMaxIdleTime) * time.Second)
 	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
 	// create if not exist
@@ -80,6 +80,10 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 	}
 	if err := db.AutoMigrate(&ServiceConfigTable{}); err != nil {
 		log.Errorw("failed to create service config table", "error", err)
+		return nil, err
+	}
+	if err := db.AutoMigrate(&OffChainAuthKeyTable{}); err != nil {
+		log.Errorw("failed to create off-chain authKey table", "error", err)
 		return nil, err
 	}
 	return db, nil

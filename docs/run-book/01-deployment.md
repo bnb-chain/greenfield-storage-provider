@@ -1,18 +1,22 @@
 ## Dependence
+
 * SQL: no requirements for the SQL DB version
+
 > MariaDB - 5.5.68 and Aurora(MySQL 5.7) 2.10.3 has been practiced.
-* Payload Store: [AWS S3](https://aws.amazon.com/cn/s3/), [MinIO](https://min.io/)(Beta)
+
+* Payload Store: [AWS S3](https://aws.amazon.com/s3), [MinIO](https://min.io)(Beta)
 
 ## Compile
+
 ```shell
 # clone source
 git clone https://github.com/bnb-chain/greenfield-storage-provider.git
 
-# install complie tools
+# install compile tools
 cd greenfield-storage-provider
 make install-tools 
 
-# complie
+# compile
 bash build.sh
 
 # show the gnfd-sp version information
@@ -55,6 +59,7 @@ Build   : go1.20.1 darwin amd64 2023-03-04 23:54
 ```shell
 # show services list
 ./gnfd-sp list
+auth                 Handle off chain auth requests
 blocksyncer          Syncs block data to db
 challenge            Provides the ability to query the integrity hash and piece data
 downloader           Downloads object from the backend and statistical read traffic
@@ -89,11 +94,9 @@ SIGNER_APPROVAL_PRIV_KEY
 SIGNER_SEAL_PRIV_KEY
 ```
 
-
-
 ## Start with remote mode
 
-  ```shell
+```shell
   export SP_DB_USER=${SP_DB_USER}
   export SP_DB_PASSWORD=${SP_DB_PASSWORD}
   export SP_DB_ADDRESS=${SP_DB_ADDRESS}
@@ -109,5 +112,4 @@ SIGNER_SEAL_PRIV_KEY
   nohup ./gnfd-sp config.remote -server ${service_name_list} 2>&1 &
   or 
   nohup ./gnfd-sp config.remote -server ${service_name_list} -db.user ${db_user} -db.password ${db_password} -db.address ${db_address} -db.database ${db_database} 2>&1 &
-  
-  ```
+```

@@ -11,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
@@ -34,6 +35,7 @@ type StorageProviderConfig struct {
 	P2PCfg            *p2p.NodeConfig
 	LogCfg            *LogConfig
 	MetricsCfg        *metrics.MetricsConfig
+	RateLimiter       *localhttp.RateLimiterConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -59,6 +61,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.MetadataService,
 		model.ManagerService,
 		model.P2PService,
+		model.AuthService,
 	},
 	ListenAddress: map[string]string{
 		model.GatewayService:    model.GatewayHTTPAddress,
@@ -70,9 +73,10 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SignerService:     model.SignerGRPCAddress,
 		model.MetadataService:   model.MetadataGRPCAddress,
 		model.P2PService:        model.P2PGRPCAddress,
+		model.AuthService:       model.AuthGRPCAddress,
 	},
 	Endpoint: map[string]string{
-		model.GatewayService:    "gnfd.nodereal.com",
+		model.GatewayService:    "gnfd.test-sp.com",
 		model.UploaderService:   model.UploaderGRPCAddress,
 		model.DownloaderService: model.DownloaderGRPCAddress,
 		model.ChallengeService:  model.ChallengeGRPCAddress,
@@ -81,6 +85,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.SignerService:     model.SignerGRPCAddress,
 		model.MetadataService:   model.MetadataGRPCAddress,
 		model.P2PService:        model.P2PGRPCAddress,
+		model.AuthService:       model.AuthGRPCAddress,
 	},
 	SpOperatorAddress: hex.EncodeToString([]byte(model.SpOperatorAddress)),
 	SpDBConfig:        DefaultSQLDBConfig,
@@ -91,6 +96,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	P2PCfg:            DefaultP2PConfig,
 	LogCfg:            DefaultLogConfig,
 	MetricsCfg:        DefaultMetricsConfig,
+	RateLimiter:       DefaultRateLimiterConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -148,6 +154,14 @@ var DefaultLogConfig = &LogConfig{
 var DefaultP2PConfig = &p2p.NodeConfig{
 	ListenAddress: model.P2PListenAddress,
 	PingPeriod:    model.DefaultPingPeriod,
+}
+
+var DefaultRateLimiterConfig = &localhttp.RateLimiterConfig{
+	HTTPLimitCfg: localhttp.HTTPLimitConfig{
+		On:         false,
+		RateLimit:  100,
+		RatePeriod: "S",
+	},
 }
 
 // LoadConfig loads the config file from path

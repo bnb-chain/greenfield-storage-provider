@@ -8,48 +8,75 @@ import (
 	"strings"
 	"time"
 
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	signer "github.com/bnb-chain/greenfield-go-sdk/keys/signer"
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
+	authtypes "github.com/bnb-chain/greenfield-storage-provider/service/auth/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/secp256k1"
+	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 )
 
 // requestContext is a request context.
 type requestContext struct {
-	requestID  string
-	bucketName string
-	objectName string
-	request    *http.Request
-	startTime  time.Time
-	vars       map[string]string
-	// TODO: for auth v2 test, remove it in the future
-	skipAuth   bool
-	bucketInfo *storagetypes.BucketInfo
-	objectInfo *storagetypes.ObjectInfo
-	// accountID is used to provide authentication to the sp
-	accountID string
+	request     *http.Request
+	routerName  string
+	requestID   string
+	bucketName  string
+	objectName  string
+	accountID   string // accountID is used to provide authentication to the sp
+	vars        map[string]string
+	startTime   time.Time
+	skipAuth    bool // TODO: for auth v2 test, remove it in the future
+	isAnonymous bool // It is anonymous when there is no GnfdAuthorizationHeader
+	bucketInfo  *storagetypes.BucketInfo
+	objectInfo  *storagetypes.ObjectInfo
+}
+
+// RecoverAddr recovers the sender address from msg and signature
+// TODO: move it to greenfield-common
+func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, error) {
+	pubKeyByte, err := secp256k1.RecoverPubkey(msg, sig)
+	if err != nil {
+		return nil, ethsecp256k1.PubKey{}, err
+	}
+	pubKey, _ := ethcrypto.UnmarshalPubkey(pubKeyByte)
+	pk := ethsecp256k1.PubKey{
+		Key: ethcrypto.CompressPubkey(pubKey),
+	}
+
+	recoverAcc := sdk.AccAddress(pk.Address().Bytes())
+
+	return recoverAcc, pk, nil
 }
 
 // newRequestContext return a request context.
 func newRequestContext(r *http.Request) *requestContext {
 	vars := mux.Vars(r)
+	routerName := ""
+	if mux.CurrentRoute(r) != nil {
+		routerName = mux.CurrentRoute(r).GetName()
+	}
 	return &requestContext{
+		request:    r,
+		routerName: routerName,
 		requestID:  util.GenerateRequestID(),
 		bucketName: vars["bucket"],
 		objectName: vars["object"],
 		accountID:  vars["account_id"],
-		request:    r,
-		startTime:  time.Now(),
 		vars:       vars,
+		startTime:  time.Now(),
 	}
 }
 
@@ -93,15 +120,29 @@ func signaturePrefix(version, algorithm string) string {
 }
 
 // verifySign used to verify request signature, return nil if check succeed
-func (reqContext *requestContext) verifySignature() (sdk.AccAddress, error) {
+func (g *Gateway) verifySignature(reqContext *requestContext) (sdk.AccAddress, error) {
 	requestSignature := reqContext.request.Header.Get(model.GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
 		return reqContext.verifySignatureV1(requestSignature[len(v1SignaturePrefix):])
 	}
+	// v2 auth should be removed once we have confirmed those clients (like dapp) are working well with off chain auth solutions below
 	v2SignaturePrefix := signaturePrefix(model.SignTypeV2, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
 		return reqContext.verifySignatureV2(requestSignature[len(v2SignaturePrefix):])
+	}
+	personalSignSignaturePrefix := signaturePrefix(model.SignTypePersonal, model.SignAlgorithm)
+	if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
+		return reqContext.verifyPersonalSignature(requestSignature[len(personalSignSignaturePrefix):])
+	}
+	OffChainSignaturePrefix := signaturePrefix(model.SignTypeOffChain, model.SignAlgorithmEddsa)
+	if strings.HasPrefix(requestSignature, OffChainSignaturePrefix) {
+		return g.verifyOffChainSignature(reqContext, requestSignature[len(OffChainSignaturePrefix):])
+	}
+	// Anonymous users can get public object.
+	if requestSignature == "" && reqContext.routerName == getObjectRouterName {
+		reqContext.isAnonymous = true
+		return sdk.AccAddress{}, nil
 	}
 	return nil, errors.ErrUnsupportedSignType
 }
@@ -143,7 +184,7 @@ func (reqContext *requestContext) verifySignatureV1(requestSignature string) (sd
 	}
 
 	// check signature consistent
-	addr, pk, err := signer.RecoverAddr(realMsgToSign, signature)
+	addr, pk, err := RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.Errorw("failed to recover address")
 		return nil, errors.ErrSignatureConsistent
@@ -156,6 +197,7 @@ func (reqContext *requestContext) verifySignatureV1(requestSignature string) (sd
 }
 
 // verifySignatureV2 used to verify request type v2 signature, return (address, nil) if check succeed
+// todo to be removed after off-chain-auth is used in real case
 func (reqContext *requestContext) verifySignatureV2(requestSignature string) (sdk.AccAddress, error) {
 	var (
 		signature []byte
@@ -184,6 +226,100 @@ func (reqContext *requestContext) verifySignatureV2(requestSignature string) (sd
 	// TODO: parse metamask signature and check timeout
 	reqContext.skipAuth = true
 	return sdk.AccAddress{}, nil
+}
+
+func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string, error) {
+	var (
+		signedMsg string
+		signature string
+	)
+	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
+	signatureItems := strings.Split(requestSignature, ",")
+	if len(signatureItems) != 2 {
+		return nil, nil, errors.ErrAuthorizationFormat
+	}
+	for _, item := range signatureItems {
+		pair := strings.Split(item, "=")
+		if len(pair) != 2 {
+			return nil, nil, errors.ErrAuthorizationFormat
+		}
+		switch pair[0] {
+		case model.SignedMsg:
+			signedMsg = pair[1]
+		case model.Signature:
+			signature = pair[1]
+		default:
+			return nil, nil, errors.ErrAuthorizationFormat
+		}
+	}
+
+	return &signedMsg, &signature, nil
+}
+
+func (reqContext *requestContext) verifyPersonalSignature(requestSignature string) (sdk.AccAddress, error) {
+	var (
+		signedMsg *string
+		signature []byte
+		err       error
+	)
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	if err != nil {
+		return nil, err
+	}
+	signature, err = hexutil.Decode(*sigString)
+	if err != nil {
+		return nil, err
+	}
+
+	realMsgToSign := accounts.TextHash([]byte(*signedMsg))
+
+	if len(signature) != crypto.SignatureLength {
+		log.Errorw("signature length (actual: %d) doesn't match typical [R||S||V] signature 65 bytes")
+		return nil, errors.ErrSignatureConsistent
+	}
+	if signature[crypto.RecoveryIDOffset] == 27 || signature[crypto.RecoveryIDOffset] == 28 {
+		signature[crypto.RecoveryIDOffset] -= 27
+	}
+
+	// check signature consistent
+	addr, _, err := RecoverAddr(realMsgToSign, signature)
+	if err != nil {
+		log.Errorw("failed to recover address")
+		return nil, errors.ErrSignatureConsistent
+	}
+
+	return addr, nil
+}
+
+// verifyOffChainSignature used to verify request type v2 signature, return (address, nil) if check succeed
+func (g *Gateway) verifyOffChainSignature(reqContext *requestContext, requestSignature string) (sdk.AccAddress, error) {
+	var (
+		signedMsg *string
+		err       error
+	)
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	if err != nil {
+		return nil, err
+	}
+
+	req := &authtypes.VerifyOffChainSignatureRequest{
+		AccountId:     reqContext.request.Header.Get(model.GnfdUserAddressHeader),
+		Domain:        reqContext.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader),
+		OffChainSig:   *sigString,
+		RealMsgToSign: *signedMsg,
+	}
+	ctx := log.Context(context.Background(), req)
+	verifyOffChainSignatureResp, err := g.auth.VerifyOffChainSignature(ctx, req)
+	if err != nil {
+		log.Errorf("failed to verifyOffChainSignature", "error", err)
+		return nil, err
+	}
+	if verifyOffChainSignatureResp.Result {
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(reqContext.request.Header.Get(model.GnfdUserAddressHeader))
+		return userAddress, nil
+	} else {
+		return nil, errors.ErrSignatureConsistent
+	}
 }
 
 func parseRange(rangeStr string) (bool, int64, int64) {
@@ -240,29 +376,27 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		}
 		return nil
 	}
-	accountExist, err = g.chain.HasAccount(context.Background(), addr.String())
-	if err != nil {
-		log.Errorw("failed to check account on chain", "address", addr.String(), "error", err)
-		return err
-	}
-	if !accountExist {
-		log.Errorw("account is not existed", "address", addr.String(), "error", err)
-		return errors.ErrNoPermission
+	if !reqContext.isAnonymous {
+		accountExist, err = g.chain.HasAccount(context.Background(), addr.String())
+		if err != nil {
+			log.Errorw("failed to check account on chain", "address", addr.String(), "error", err)
+			return err
+		}
+		if !accountExist {
+			log.Errorw("account is not existed", "address", addr.String(), "error", err)
+			return errors.ErrNoPermission
+		}
 	}
 
-	switch mux.CurrentRoute(reqContext.request).GetName() {
-	case putObjectRouterName:
+	switch reqContext.routerName {
+	case putObjectRouterName, queryUploadProgressRouterName:
 		if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
 			context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
 			log.Errorw("failed to query bucket info and object info on chain",
 				"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
 			return err
 		}
-		if reqContext.objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-			log.Errorw("failed to auth due to object status is not created",
-				"object_status", reqContext.objectInfo.GetObjectStatus())
-			return errors.ErrCheckObjectCreated
-		}
+
 		if isAllow, err := g.chain.VerifyPutObjectPermission(context.Background(), addr.String(),
 			reqContext.bucketName, reqContext.objectName); !isAllow || err != nil {
 			log.Errorw("failed to auth due to verify permission",
