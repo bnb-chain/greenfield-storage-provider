@@ -44,15 +44,17 @@ func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.Resul
 }
 
 // HandleEvent accepts the transaction and handles events contained inside the transaction.
-func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, txHash common.Hash, event sdk.Event) {
+func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
 	for _, module := range i.Modules {
 		if eventModule, ok := module.(modules.EventModule); ok {
 			err := eventModule.HandleEvent(ctx, block, txHash, event)
 			if err != nil {
 				log.Errorw("failed to handle event", "module", module.Name(), "event", event, "error", err)
+				return err
 			}
 		}
 	}
+	return nil
 }
 
 // Process fetches a block for a given height and associated metadata and export it to a database.
@@ -86,24 +88,32 @@ func (i *Impl) Process(height uint64) error {
 	// 1. handle events in startBlock
 
 	if len(beginBlockEvents) > 0 {
-		i.ExportEventsWithoutTx(context.Background(), block, beginBlockEvents)
+		err = i.ExportEventsWithoutTx(context.Background(), block, beginBlockEvents)
+		if err != nil {
+			log.Errorf("failed to export events without tx: %s", err)
+			return err
+		}
 	}
 
 	// 2. handle events in txs
 	err = i.ExportEventsInTxs(context.Background(), block, txs)
 	if err != nil {
-		log.Errorf("failed to ExportEvents: %s", err)
+		log.Errorf("failed to export events in txs: %s", err)
 		return err
 	}
 
 	// 3. handle events in endBlock
 	if len(endBlockEvents) > 0 {
-		i.ExportEventsWithoutTx(context.Background(), block, endBlockEvents)
+		err = i.ExportEventsWithoutTx(context.Background(), block, endBlockEvents)
+		if err != nil {
+			log.Errorf("failed to export events without tx: %s", err)
+			return err
+		}
 	}
 
 	err = i.ExportEpoch(block)
 	if err != nil {
-		log.Errorf("failed to ExportEpoch: %s", err)
+		log.Errorf("failed to export epoch: %s", err)
 		return err
 	}
 
@@ -160,7 +170,9 @@ func (i *Impl) ExportEvents(ctx context.Context, block *coretypes.ResultBlock, e
 		// handle all events contained inside the transaction
 		// call the event handlers
 		for _, event := range tx.Events {
-			i.HandleEvent(ctx, block, common.Hash{}, sdk.Event(event))
+			if err := i.HandleEvent(ctx, block, common.Hash{}, sdk.Event(event)); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -171,7 +183,9 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 	for _, tx := range txs {
 		txHash := common.HexToHash(tx.TxHash)
 		for _, event := range tx.Events {
-			i.HandleEvent(ctx, block, txHash, sdk.Event(event))
+			if err := i.HandleEvent(ctx, block, txHash, sdk.Event(event)); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -182,7 +196,9 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.ResultBlock, events []abci.Event) error {
 	// call the event handlers
 	for _, event := range events {
-		i.HandleEvent(ctx, block, common.Hash{}, sdk.Event(event))
+		if err := i.HandleEvent(ctx, block, common.Hash{}, sdk.Event(event)); err != nil {
+			return err
+		}
 	}
 	return nil
 }
