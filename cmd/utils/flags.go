@@ -13,6 +13,7 @@ const (
 	MetricsCategory         = "METRICS AND STATS"
 	DatabaseCategory        = "DATABASE"
 	ResourceManagerCategory = "RESOURCE MANAGER"
+	PerfCategory            = "PERFORMANCE TUNING"
 )
 
 var (
@@ -107,8 +108,22 @@ var (
 	MetricsHTTPFlag = &cli.StringFlag{
 		Name:     "metrics.addr",
 		Category: MetricsCategory,
-		Usage:    "Enable stand-alone metrics HTTP server listening address",
+		Usage:    "Specify stand-alone metrics HTTP server listening address",
 		Value:    config.DefaultMetricsConfig.HTTPAddress,
+	}
+
+	// Pprof flags
+	PProfEnabledFlag = &cli.BoolFlag{
+		Name:     "pprof",
+		Category: PerfCategory,
+		Usage:    "Enable the pprof HTTP server",
+		Value:    config.DefaultPprofConfig.Enabled,
+	}
+	PProfHTTPFlag = &cli.StringFlag{
+		Name:     "pprof.addr",
+		Category: PerfCategory,
+		Usage:    "Specify pprof HTTP server listening address",
+		Value:    config.DefaultPprofConfig.HTTPAddress,
 	}
 )
 

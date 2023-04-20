@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -34,6 +35,7 @@ type StorageProviderConfig struct {
 	P2PCfg            *p2p.NodeConfig
 	LogCfg            *LogConfig
 	MetricsCfg        *metrics.MetricsConfig
+	PprofCfg          *pprof.PprofConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -94,6 +96,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	P2PCfg:            DefaultP2PConfig,
 	LogCfg:            DefaultLogConfig,
 	MetricsCfg:        DefaultMetricsConfig,
+	PprofCfg:          DefaultPprofConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -130,7 +133,7 @@ var DefaultBlockSyncerConfig = &blocksyncer.Config{
 	RecreateTables: true,
 }
 
-// DefaultMetricsConfig defines the default config of Metrics service
+// DefaultMetricsConfig defines the default configuration of metrics service
 var DefaultMetricsConfig = &metrics.MetricsConfig{
 	Enabled:     false,
 	HTTPAddress: model.MetricsHTTPAddress,
@@ -148,9 +151,16 @@ var DefaultLogConfig = &LogConfig{
 	Path:  "./gnfd-sp.log",
 }
 
+// DefaultP2PConfig defines the default configuration of p2p
 var DefaultP2PConfig = &p2p.NodeConfig{
 	ListenAddress: model.P2PListenAddress,
 	PingPeriod:    model.DefaultPingPeriod,
+}
+
+// DefaultPprofConfig defines the default configuration of pprof service
+var DefaultPprofConfig = &pprof.PprofConfig{
+	Enabled:     false,
+	HTTPAddress: model.PprofHTTPAddress,
 }
 
 // LoadConfig loads the config file from path

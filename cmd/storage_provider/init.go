@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
-
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
@@ -13,7 +11,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -88,6 +88,23 @@ func initResourceManager(ctx *cli.Context) error {
 		return err
 	}
 	log.Infow("init resource manager", "limits", limits.String(), "error", err)
+	return nil
+}
+
+func initPprof(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
+	if cfg.PprofCfg == nil {
+		cfg.PprofCfg = config.DefaultPprofConfig
+	}
+	if ctx.IsSet(utils.PProfEnabledFlag.Name) {
+		cfg.PprofCfg.Enabled = ctx.Bool(utils.PProfEnabledFlag.Name)
+	}
+	if ctx.IsSet(utils.MetricsHTTPFlag.Name) {
+		cfg.PprofCfg.HTTPAddress = ctx.String(utils.PProfHTTPFlag.Name)
+	}
+	if cfg.PprofCfg.Enabled {
+		slc := lifecycle.NewServiceLifecycle()
+		slc.RegisterServices(pprof.NewPprof(cfg.PprofCfg))
+	}
 	return nil
 }
 
@@ -202,7 +219,6 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-
 	default:
 		log.Errorw("unknown service", "service", serviceName)
 		return nil, fmt.Errorf("unknown service: %s", serviceName)

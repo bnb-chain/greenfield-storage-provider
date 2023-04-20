@@ -30,6 +30,8 @@ var (
 	P2PService = strings.ToLower("p2p")
 	// AuthService defines the name of auth service
 	AuthService = strings.ToLower("auth")
+	// PprofService defines the name of metrics service
+	PprofService = strings.ToLower("pprof")
 )
 
 // SpServiceDesc defines the service description in storage provider
@@ -47,7 +49,7 @@ var SpServiceDesc = map[string]string{
 	AuthService:        "Handles off-chain-auth requests",
 }
 
-// define storage provider service gRPC default address
+// define storage provider service default listening address
 const (
 	// GatewayHTTPAddress default HTTP address of gateway
 	GatewayHTTPAddress = "localhost:9033"
@@ -73,6 +75,8 @@ const (
 	P2PListenAddress = "127.0.0.1:9933"
 	// AuthGRPCAddress default gRPC address of auth service
 	AuthGRPCAddress = "localhost:8933"
+	// PprofHTTPAddress default HTTP address of pprof service
+	PprofHTTPAddress = "localhost:25341"
 )
 
 // define greenfield chain default address
@@ -155,9 +159,9 @@ const (
 	ContentTypeJSONHeaderValue = "application/json"
 	// ContentTypeXMLHeaderValue is used to indicate xml
 	ContentTypeXMLHeaderValue = "application/xml"
-	//ContentDispositionHeader is used to indicate the media disposition of the resource
+	// ContentDispositionHeader is used to indicate the media disposition of the resource
 	ContentDispositionHeader = "Content-Disposition"
-	//ContentDispositionAttachmentValue is used to indicate attachment
+	// ContentDispositionAttachmentValue is used to indicate attachment
 	ContentDispositionAttachmentValue = "attachment"
 
 	// SignAlgorithm uses secp256k1 with the ECDSA algorithm
