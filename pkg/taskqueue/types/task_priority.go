@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	"math"
 	"sync"
 
 	tqueue "github.com/bnb-chain/greenfield-storage-provider/pkg/taskqueue"
@@ -40,7 +39,7 @@ func getTaskPriority() *TaskPriority {
 		tqueue.TypeTaskUnknown:        tqueue.UnSchedulingPriority,
 		tqueue.TypeTaskReceivePiece:   tqueue.UnSchedulingPriority,
 		tqueue.TypeTaskDownloadObject: tqueue.UnSchedulingPriority,
-		tqueue.TypeTaskUpload:         tqueue.UnSchedulingPriority,
+		tqueue.TypeTaskUploadObject:   tqueue.UnSchedulingPriority,
 		tqueue.TypeTaskGCStore:        tqueue.DefaultSmallerPriority / 4,
 		tqueue.TypeTaskGCZombiePiece:  tqueue.DefaultSmallerPriority / 2,
 		tqueue.TypeTaskGCObject:       tqueue.DefaultSmallerPriority,
@@ -119,9 +118,6 @@ func (t *TaskPriority) GetLowLevelPriority() tqueue.TPriority {
 func (t *TaskPriority) SetLowLevelPriority(lvl tqueue.TPriority) error {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	if lvl < 0 || lvl > math.MaxUint8 {
-		return ErrTaskPriorityLvlOutOfBound
-	}
 	if uint8(lvl) > uint8(t.priorityLevel[tqueue.THighPriorityLevel]) {
 		return ErrLowLvlExceedHigh
 	}
@@ -138,9 +134,6 @@ func (t *TaskPriority) GetHighLevelPriority() tqueue.TPriority {
 func (t *TaskPriority) SetHighLevelPriority(lvl tqueue.TPriority) error {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	if lvl < 0 || lvl > math.MaxUint8 {
-		return ErrTaskPriorityLvlOutOfBound
-	}
 	if uint8(lvl) < uint8(t.priorityLevel[tqueue.TLowPriorityLevel]) {
 		return ErrHighLvlExceedLow
 	}

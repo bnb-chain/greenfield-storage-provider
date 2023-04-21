@@ -11,13 +11,13 @@ import (
 // resources tracks the current state of resource consumption
 type resources struct {
 	limit        Limit
+	memory       int64
+	nfd          int
 	nconnsIn     int
 	nconnsOut    int
-	nfd          int
 	ntasksHigh   int
 	ntasksMedium int
 	ntasksLow    int
-	memory       int64
 }
 
 func addInt64WithOverflow(a int64, b int64) (c int64, ok bool) {
@@ -91,84 +91,6 @@ func (rc *resources) releaseMemory(size int64) {
 	if rc.memory < 0 {
 		log.Warn("BUG: too much memory released")
 		rc.memory = 0
-	}
-}
-
-func (rc *resources) addTask(num int, prio ReserveTaskPriority) error {
-	if prio == ReserveTaskPriorityHigh {
-		return rc.addTasks(num, 0, 0)
-	} else if prio == ReserveTaskPriorityMedium {
-		return rc.addTasks(0, num, 0)
-	} else {
-		return rc.addTasks(0, 0, num)
-	}
-}
-
-func (rc *resources) addTasks(high, medium, low int) error {
-	if rc.ntasksHigh+rc.ntasksMedium+rc.ntasksLow+high+medium+low > rc.limit.GetTaskTotalLimit() {
-		return &ErrTaskLimitExceeded{
-			current:   rc.ntasksHigh + rc.ntasksMedium + rc.ntasksLow,
-			attempted: high + medium + low,
-			limit:     rc.limit.GetTaskTotalLimit(),
-			err:       fmt.Errorf("total task limit exceeded: %w", ErrResourceLimitExceeded),
-		}
-	}
-	if high+rc.ntasksHigh > rc.limit.GetTaskLimit(ReserveTaskPriorityHigh) {
-		return &ErrTaskLimitExceeded{
-			current:   rc.ntasksHigh,
-			attempted: high,
-			limit:     rc.limit.GetTaskLimit(ReserveTaskPriorityHigh),
-			err:       fmt.Errorf("high priority task limit exceeded: %w", ErrResourceLimitExceeded),
-		}
-	}
-	if medium+rc.ntasksMedium > rc.limit.GetTaskLimit(ReserveTaskPriorityMedium) {
-		return &ErrTaskLimitExceeded{
-			current:   rc.ntasksMedium,
-			attempted: medium,
-			limit:     rc.limit.GetTaskLimit(ReserveTaskPriorityMedium),
-			err:       fmt.Errorf("medium priority task limit exceeded: %w", ErrResourceLimitExceeded),
-		}
-	}
-	if low+rc.ntasksLow > rc.limit.GetTaskLimit(ReserveTaskPriorityLow) {
-		return &ErrTaskLimitExceeded{
-			current:   rc.ntasksLow,
-			attempted: low,
-			limit:     rc.limit.GetTaskLimit(ReserveTaskPriorityLow),
-			err:       fmt.Errorf("low priority task limit exceeded: %w", ErrResourceLimitExceeded),
-		}
-	}
-	rc.ntasksHigh += high
-	rc.ntasksMedium += medium
-	rc.ntasksLow += low
-	return nil
-}
-
-func (rc *resources) removeTask(num int, prio ReserveTaskPriority) {
-	if prio == ReserveTaskPriorityHigh {
-		rc.removeTasks(num, 0, 0)
-	} else if prio == ReserveTaskPriorityMedium {
-		rc.removeTasks(0, num, 0)
-	} else if prio == ReserveTaskPriorityLow {
-		rc.removeTasks(0, 0, num)
-	}
-}
-
-func (rc *resources) removeTasks(high, medium, low int) {
-	rc.ntasksHigh -= high
-	rc.ntasksMedium -= medium
-	rc.ntasksLow -= low
-
-	if rc.ntasksHigh < 0 {
-		log.Error("BUG: too many high priority task released")
-		rc.ntasksHigh = 0
-	}
-	if rc.ntasksMedium < 0 {
-		log.Error("BUG: too many medium priority task released")
-		rc.ntasksMedium = 0
-	}
-	if rc.ntasksLow < 0 {
-		log.Error("BUG:  too many low priority task released")
-		rc.ntasksLow = 0
 	}
 }
 
@@ -254,14 +176,92 @@ func (rc *resources) removeConns(incount, outcount, fdcount int) {
 	}
 }
 
+func (rc *resources) addTask(num int, prio ReserveTaskPriority) error {
+	if prio == ReserveTaskPriorityHigh {
+		return rc.addTasks(num, 0, 0)
+	} else if prio == ReserveTaskPriorityMedium {
+		return rc.addTasks(0, num, 0)
+	} else {
+		return rc.addTasks(0, 0, num)
+	}
+}
+
+func (rc *resources) addTasks(high, medium, low int) error {
+	if rc.ntasksHigh+rc.ntasksMedium+rc.ntasksLow+high+medium+low > rc.limit.GetTaskTotalLimit() {
+		return &ErrTaskLimitExceeded{
+			current:   rc.ntasksHigh + rc.ntasksMedium + rc.ntasksLow,
+			attempted: high + medium + low,
+			limit:     rc.limit.GetTaskTotalLimit(),
+			err:       fmt.Errorf("total task limit exceeded: %w", ErrResourceLimitExceeded),
+		}
+	}
+	if high+rc.ntasksHigh > rc.limit.GetTaskLimit(ReserveTaskPriorityHigh) {
+		return &ErrTaskLimitExceeded{
+			current:   rc.ntasksHigh,
+			attempted: high,
+			limit:     rc.limit.GetTaskLimit(ReserveTaskPriorityHigh),
+			err:       fmt.Errorf("high priority task limit exceeded: %w", ErrResourceLimitExceeded),
+		}
+	}
+	if medium+rc.ntasksMedium > rc.limit.GetTaskLimit(ReserveTaskPriorityMedium) {
+		return &ErrTaskLimitExceeded{
+			current:   rc.ntasksMedium,
+			attempted: medium,
+			limit:     rc.limit.GetTaskLimit(ReserveTaskPriorityMedium),
+			err:       fmt.Errorf("medium priority task limit exceeded: %w", ErrResourceLimitExceeded),
+		}
+	}
+	if low+rc.ntasksLow > rc.limit.GetTaskLimit(ReserveTaskPriorityLow) {
+		return &ErrTaskLimitExceeded{
+			current:   rc.ntasksLow,
+			attempted: low,
+			limit:     rc.limit.GetTaskLimit(ReserveTaskPriorityLow),
+			err:       fmt.Errorf("low priority task limit exceeded: %w", ErrResourceLimitExceeded),
+		}
+	}
+	rc.ntasksHigh += high
+	rc.ntasksMedium += medium
+	rc.ntasksLow += low
+	return nil
+}
+
+func (rc *resources) removeTask(num int, prio ReserveTaskPriority) {
+	if prio == ReserveTaskPriorityHigh {
+		rc.removeTasks(num, 0, 0)
+	} else if prio == ReserveTaskPriorityMedium {
+		rc.removeTasks(0, num, 0)
+	} else if prio == ReserveTaskPriorityLow {
+		rc.removeTasks(0, 0, num)
+	}
+}
+
+func (rc *resources) removeTasks(high, medium, low int) {
+	rc.ntasksHigh -= high
+	rc.ntasksMedium -= medium
+	rc.ntasksLow -= low
+
+	if rc.ntasksHigh < 0 {
+		log.Error("BUG: too many high priority task released")
+		rc.ntasksHigh = 0
+	}
+	if rc.ntasksMedium < 0 {
+		log.Error("BUG: too many medium priority task released")
+		rc.ntasksMedium = 0
+	}
+	if rc.ntasksLow < 0 {
+		log.Error("BUG:  too many low priority task released")
+		rc.ntasksLow = 0
+	}
+}
+
 func (rc *resources) stat() ScopeStat {
 	return ScopeStat{
 		Memory:           rc.memory,
+		NumFD:            rc.nfd,
+		NumConnsInbound:  rc.nconnsIn,
+		NumConnsOutbound: rc.nconnsOut,
 		NumTasksHigh:     rc.ntasksHigh,
 		NumTasksMedium:   rc.ntasksMedium,
 		NumTasksLow:      rc.ntasksLow,
-		NumConnsInbound:  rc.nconnsIn,
-		NumConnsOutbound: rc.nconnsOut,
-		NumFD:            rc.nfd,
 	}
 }

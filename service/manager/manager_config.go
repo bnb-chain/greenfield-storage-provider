@@ -7,12 +7,12 @@ import (
 
 // ManagerConfig defines manager service config
 type ManagerConfig struct {
-	SpOperatorAddress string
-	ChainConfig       *gnfd.GreenfieldChainConfig
-	SpDBConfig        *config.SQLDBConfig
-	UploadParallel    int
-	UploadQueueCap    int
-	ReplicateQueueCap int
-	SealQueueCap      int
-	GCObjectQueueCap  int
+	SpOperatorAddress   string
+	ChainConfig         *gnfd.GreenfieldChainConfig
+	SpDBConfig          *config.SQLDBConfig
+	MaxUploadConcurrent int // include upload, replicate and seal.
+	UploadQueueCap      int
+	ReplicateQueueCap   int
+	SealQueueCap        int
+	GCObjectQueueCap    int
 }

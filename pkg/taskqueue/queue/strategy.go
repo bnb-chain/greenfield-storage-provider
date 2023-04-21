@@ -19,10 +19,7 @@ type Strategy struct {
 }
 
 func NewStrategy() tqueue.TQueueStrategy {
-	return &Strategy{
-		pick: nil,
-		gc:   nil,
-	}
+	return &Strategy{}
 }
 
 func (s *Strategy) SetPickUpCallback(pick func([]tqueue.Task) tqueue.Task) {
@@ -77,9 +74,9 @@ func DefaultPickUpFilterTaskByRetry(task tqueue.Task) bool {
 		return false
 	}
 	if task.Expired() {
-		return true
+		return false
 	}
-	return false
+	return true
 }
 
 func DefaultPickUpFilterTaskByTimeout(task tqueue.Task) bool {
@@ -88,7 +85,7 @@ func DefaultPickUpFilterTaskByTimeout(task tqueue.Task) bool {
 
 func DefaultGCTasksByRetry(queue tqueue.TQueueOnStrategy, keys []tqueue.TKey) {
 	for _, key := range keys {
-		if queue.IsActiveTask(key) {
+		if !queue.IsActiveTask(key) {
 			queue.PopByKey(key)
 		}
 	}

@@ -132,7 +132,7 @@ func (m *ReceivePieceTask) IncRetry() bool {
 	if m.GetTask() == nil {
 		return false
 	}
-	return m.GetTask().GetRetry() <= m.GetTask().GetRetryLimit()
+	return m.GetTask().IncRetry()
 }
 
 func (m *ReceivePieceTask) GetRetry() int64 {
@@ -152,7 +152,7 @@ func (m *ReceivePieceTask) Expired() bool {
 	if m.GetTask() == nil {
 		return true
 	}
-	return m.GetTask().GetUpdateTime()+m.GetTask().GetTimeout() < time.Now().Unix()
+	return m.GetTask().GetUpdateTime()+m.GetTask().GetTimeout() > time.Now().Unix()
 }
 
 func (m *ReceivePieceTask) GetRetryLimit() int64 {

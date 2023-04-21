@@ -19,7 +19,6 @@ func (m *Manager) AskUploadObject(ctx context.Context, req *types.AskUploadObjec
 	if task == nil {
 		return nil, merrors.ErrDanglingTaskPointer
 	}
-	ctx = log.WithValue(ctx, "object_id", string(task.Key()))
 	resp := &types.AskUploadObjectResponse{}
 	if m.pqueue.HasTask(task.Key()) {
 		resp.Allow = false
@@ -27,7 +26,7 @@ func (m *Manager) AskUploadObject(ctx context.Context, req *types.AskUploadObjec
 		return resp, merrors.ErrRepeatedTask
 	}
 	uploading := m.pqueue.GetUploadingTasksCount()
-	if uploading >= m.config.UploadParallel {
+	if uploading >= m.config.MaxUploadConcurrent {
 		resp.Allow = false
 		resp.RefuseReason = merrors.ErrExceedUploadParallel.Error()
 		return resp, merrors.ErrRepeatedTask
@@ -60,7 +59,7 @@ func (m *Manager) CreateUploadObjectTask(ctx context.Context, req *types.CreateU
 		return resp, err
 	}
 	log.CtxDebugw(ctx, "succeed to push upload object task to queue")
-	return resp, err
+	return resp, nil
 }
 
 // DoneUploadObjectTask notifies the manager the upload object task has been done.
@@ -203,10 +202,10 @@ func (m *Manager) DoneGCObjectTask(ctx context.Context, req *types.DoneGCObjectT
 	return resp, nil
 }
 
-// ReportGCObjectProcess notifies the manager the gc object task process.
-func (m *Manager) ReportGCObjectProcess(ctx context.Context, req *types.ReportGCObjectProcessRequest) (
-	*types.ReportGCObjectProcessResponse, error) {
-	resp := &types.ReportGCObjectProcessResponse{}
+// ReportGCObjectProgress notifies the manager the gc object task progress.
+func (m *Manager) ReportGCObjectProgress(ctx context.Context, req *types.ReportGCObjectProgressRequest) (
+	*types.ReportGCObjectProgressResponse, error) {
+	resp := &types.ReportGCObjectProgressResponse{}
 	task := req.GetGcObjectTask()
 	if task == nil {
 		return resp, merrors.ErrDanglingTaskPointer

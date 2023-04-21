@@ -14,16 +14,16 @@ import (
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
-// ManagerClient is a challenge gRPC service client wrapper
+// ManagerClient is a manager gRPC service client wrapper
 type ManagerClient struct {
 	address string
-	manager types.ManagerServiceClient
 	conn    *grpc.ClientConn
+	manager types.ManagerServiceClient
 }
 
 const managerRPCServiceName = "service.manager.types.ManagerService"
 
-// NewManagerClient return a manager client instance
+// NewManagerClient returns a manager client instance
 func NewManagerClient(address string) (*ManagerClient, error) {
 	options := utilgrpc.GetDefaultClientOptions()
 	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(managerRPCServiceName)
@@ -138,13 +138,13 @@ func (client *ManagerClient) DoneGCObjectTask(ctx context.Context,
 	return err
 }
 
-// ReportGCObjectProcess notifies the manager the gc object task process.
-func (client *ManagerClient) ReportGCObjectProcess(ctx context.Context,
+// ReportGCObjectProgress notifies the manager the gc object task process.
+func (client *ManagerClient) ReportGCObjectProgress(ctx context.Context,
 	task *tqueuetypes.GCObjectTask, opts ...grpc.CallOption) (bool, error) {
-	req := &types.ReportGCObjectProcessRequest{
+	req := &types.ReportGCObjectProgressRequest{
 		GcObjectTask: task,
 	}
-	resp, err := client.manager.ReportGCObjectProcess(ctx, req, opts...)
+	resp, err := client.manager.ReportGCObjectProgress(ctx, req, opts...)
 	if err != nil {
 		return false, err
 	}

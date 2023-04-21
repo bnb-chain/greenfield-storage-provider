@@ -16,14 +16,14 @@ import (
 var _ lifecycle.Service = &Manager{}
 
 var (
-	// RefreshSPInfoAndStorageParamsTimer defines the period of refresh sp info and storage params
+	// RefreshSPInfoAndStorageParamsTimer defines the period of refresh sp info and storage params.
 	RefreshSPInfoAndStorageParamsTimer = 5 * 60
-	// GCManagerPriorityQueueTimer defines the period of gc manager priority queue
+	// GCManagerPriorityQueueTimer defines the period of gc manager priority queue.
 	GCManagerPriorityQueueTimer = 60
 )
 
 // Manager module is responsible for implementing internal management functions.
-// Currently, it supports periodic update of sp info list and storage params information in spdb.
+// Currently, it supports periodic update of sp info list and storage params information in sp db.
 // TODO::support gc and configuration management, etc.
 type Manager struct {
 	config  *ManagerConfig
@@ -85,7 +85,7 @@ func (m *Manager) eventLoop() {
 		case <-refreshSPInfoAndStorageParamsTicker.C:
 			go m.refreshSPInfoAndStorageParams()
 		case <-gcMPQueueTicker.C:
-			go m.pqueue.GCMQueueTask()
+			go m.pqueue.GCMPQueueTask()
 		case <-m.stopCh:
 			return
 		}

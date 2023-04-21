@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -22,12 +23,12 @@ func NewTaskPriorityQueue(
 	name string,
 	pqueue map[tqueue.TPriority]tqueue.TQueueWithLimit,
 	strategy tqueue.TQueueStrategy,
-	limit bool) tqueue.TPriorityQueueWithLimit {
+	supportLimit bool) tqueue.TPriorityQueueWithLimit {
 	return &TaskPriorityQueue{
 		name:         name,
 		pqueue:       pqueue,
 		strategy:     strategy,
-		supportLimit: limit,
+		supportLimit: supportLimit,
 	}
 }
 
@@ -57,6 +58,7 @@ func (p *TaskPriorityQueue) Cap() int {
 	return capacity
 }
 
+// Top accesses the first element.
 func (p *TaskPriorityQueue) Top() tqueue.Task {
 	p.mux.RLock()
 	defer p.mux.RUnlock()
@@ -71,6 +73,7 @@ func (p *TaskPriorityQueue) Top() tqueue.Task {
 	return queue.Top()
 }
 
+// Pop pops the first element.
 func (p *TaskPriorityQueue) Pop() tqueue.Task {
 	p.mux.Lock()
 	defer p.mux.Unlock()
@@ -97,6 +100,7 @@ func (p *TaskPriorityQueue) Push(task tqueue.Task) error {
 	return queue.Push(task)
 }
 
+// PopPush pops task by task key, and pushes task again.
 func (p *TaskPriorityQueue) PopPush(task tqueue.Task) error {
 	p.mux.Lock()
 	defer p.mux.Unlock()
@@ -135,7 +139,7 @@ func (p *TaskPriorityQueue) GetPriorities() []tqueue.TPriority {
 	p.mux.RLock()
 	defer p.mux.RUnlock()
 	var prios []tqueue.TPriority
-	for prio, _ := range p.pqueue {
+	for prio := range p.pqueue {
 		prios = append(prios, prio)
 	}
 	return prios
@@ -145,7 +149,7 @@ func (p *TaskPriorityQueue) SetPriorityQueue(prio tqueue.TPriority, queue tqueue
 	p.mux.Lock()
 	defer p.mux.Unlock()
 	if _, ok := p.pqueue[prio]; ok {
-		return nil
+		return fmt.Errorf("priority queue has existed")
 	}
 	p.pqueue[prio] = queue
 	return nil
@@ -165,6 +169,7 @@ func (p *TaskPriorityQueue) PopByLimit(limit rcmgr.Limit) tqueue.Task {
 		}
 		tasks = append(tasks, task)
 	}
+	// TODO: refine it
 	task := p.strategy.RunPickUpStrategy(tasks)
 	for _, t := range tasks {
 		if task.GetPriority() == t.GetPriority() {
@@ -213,7 +218,11 @@ func (q *TaskPriorityQueue) SetSupportPickUpByLimit(support bool) {
 func (p *TaskPriorityQueue) SubQueueLen(prio tqueue.TPriority) int {
 	p.mux.RLock()
 	defer p.mux.RUnlock()
-	return p.pqueue[prio].Len()
+	if q, ok := p.pqueue[prio]; !ok {
+		return 0
+	} else {
+		return q.Len()
+	}
 }
 
 func (p *TaskPriorityQueue) RunCollection() {
@@ -225,6 +234,7 @@ func (p *TaskPriorityQueue) RunCollection() {
 	}
 }
 
+// getMaxPriority gets max priority, which the caller need hold mux lock.
 func (p *TaskPriorityQueue) getMaxPriority() tqueue.TPriority {
 	var maxPrio tqueue.TPriority
 	for prio, queue := range p.pqueue {

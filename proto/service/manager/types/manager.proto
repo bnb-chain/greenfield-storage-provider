@@ -100,13 +100,13 @@ message DoneGCObjectTaskRequest {
 message DoneGCObjectTaskResponse {
 }
 
-// ReportGCObjectProcessRequest is response type for the ReportGCObjectProcess RPC method.
-message ReportGCObjectProcessRequest {
+// ReportGCObjectProgressRequest is response type for the ReportGCObjectProgress RPC method.
+message ReportGCObjectProgressRequest {
   pkg.taskqueue.types.GCObjectTask gc_object_task = 1;
 }
 
-// ReportGCObjectProcessResponse is response type for the ReportGCObjectProcess RPC method.
-message ReportGCObjectProcessResponse {
+// ReportGCObjectProcessResponse is response type for the ReportGCObjectProgress RPC method.
+message ReportGCObjectProgressResponse {
   bool cancel = 1;
 }
 
@@ -126,6 +126,6 @@ service ManagerService {
   rpc AskTask(AskTaskRequest) returns (AskTaskResponse) {};
   // DoneGCObjectTask notifies the manager the gc object task has been done.
   rpc DoneGCObjectTask(DoneGCObjectTaskRequest) returns (DoneGCObjectTaskResponse) {};
-  // ReportGCObjectProcess notifies the manager the gc object task process.
-  rpc ReportGCObjectProcess(ReportGCObjectProcessRequest) returns (ReportGCObjectProcessResponse) {};
+  // ReportGCObjectProgress notifies the manager the gc object task progress.
+  rpc ReportGCObjectProgress(ReportGCObjectProgressRequest) returns (ReportGCObjectProgressResponse) {};
 }

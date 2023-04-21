@@ -138,7 +138,7 @@ func (m *GCObjectTask) IncRetry() bool {
 	if m.GetTask() == nil {
 		return false
 	}
-	return m.GetTask().GetRetry() <= m.GetTask().GetRetryLimit()
+	return m.GetTask().IncRetry()
 }
 
 func (m *GCObjectTask) GetRetry() int64 {
@@ -158,7 +158,7 @@ func (m *GCObjectTask) Expired() bool {
 	if m.GetTask() == nil {
 		return true
 	}
-	return m.GetTask().GetUpdateTime()+m.GetTask().GetTimeout() < time.Now().Unix()
+	return m.GetTask().GetUpdateTime()+m.GetTask().GetTimeout() > time.Now().Unix()
 }
 
 func (m *GCObjectTask) GetRetryLimit() int64 {
@@ -225,14 +225,14 @@ func (m *GCObjectTask) SetEndBlockNumber(num uint64) {
 	m.EndBlockNumber = num
 }
 
-func (m *GCObjectTask) GetGCObjectProcess() (uint64, uint64) {
+func (m *GCObjectTask) GetGCObjectProgress() (uint64, uint64) {
 	if m == nil {
 		return 0, 0
 	}
 	return m.GetCurrentBlockNumber(), m.GetObjectId()
 }
 
-func (m *GCObjectTask) SetGCObjectProcess(block, object uint64) {
+func (m *GCObjectTask) SetGCObjectProgress(block, object uint64) {
 	if m == nil {
 		return
 	}

@@ -21,14 +21,14 @@ type TaskQueue struct {
 	mux          sync.RWMutex
 }
 
-func NewTaskQueue(name string, cap int, strategy tqueue.TQueueStrategy, limit bool) tqueue.TQueueWithLimit {
+func NewTaskQueue(name string, cap int, strategy tqueue.TQueueStrategy, supportLimit bool) tqueue.TQueueWithLimit {
 	queue := &TaskQueue{
 		name:         name,
 		tasks:        make([]tqueue.Task, 0),
 		indexer:      make(map[tqueue.TKey]int),
 		cap:          cap,
 		strategy:     strategy,
-		supportLimit: limit,
+		supportLimit: supportLimit,
 	}
 	return queue
 }
@@ -45,6 +45,7 @@ func (q *TaskQueue) Cap() int {
 	return q.cap
 }
 
+// TODO: maybe return front element is better
 func (q *TaskQueue) Top() tqueue.Task {
 	q.mux.RLock()
 	defer q.mux.RUnlock()
@@ -54,6 +55,7 @@ func (q *TaskQueue) Top() tqueue.Task {
 	return q.tasks[len(q.tasks)-1]
 }
 
+// TODO: maybe rename to popback is better
 func (q *TaskQueue) Pop() tqueue.Task {
 	q.mux.Lock()
 	defer q.mux.Unlock()
@@ -82,6 +84,7 @@ func (q *TaskQueue) Push(task tqueue.Task) error {
 	return nil
 }
 
+// TODO: polish name??
 func (q *TaskQueue) PopPush(task tqueue.Task) error {
 	q.mux.Lock()
 	defer q.mux.Unlock()
@@ -132,7 +135,8 @@ func (q *TaskQueue) PopByLimit(limit rcmgr.Limit) tqueue.Task {
 		if !q.strategy.RunPickUpFilterStrategy(task) {
 			continue
 		}
-		if task.LimitEstimate().Greater(limit) {
+
+		if limit.Greater(task.LimitEstimate()) {
 			index = idx
 			break
 		}
@@ -161,9 +165,10 @@ func (q *TaskQueue) IsActiveTask(key tqueue.TKey) bool {
 		return false
 	}
 	task := q.tasks[idx]
-	return task.RetryExceed() && task.Expired()
+	return !task.RetryExceed() && !task.Expired()
 }
 
+// TODO: refine func
 func (q *TaskQueue) Expired(key tqueue.TKey) bool {
 	q.mux.RLock()
 	defer q.mux.RUnlock()
@@ -193,11 +198,11 @@ func (q *TaskQueue) SetSupportPickUpByLimit(support bool) {
 
 func (q *TaskQueue) RunCollection() {
 	q.mux.RLock()
+	defer q.mux.RUnlock()
 	var keys []tqueue.TKey
-	for key, _ := range q.indexer {
+	for key := range q.indexer {
 		keys = append(keys, key)
 	}
-	q.mux.RUnlock()
 	go q.strategy.RunCollectionStrategy(q, keys)
 }
 

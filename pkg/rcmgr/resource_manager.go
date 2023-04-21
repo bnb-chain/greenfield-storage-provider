@@ -24,7 +24,7 @@ import "fmt"
 //			   	   +--->  Connection--- . ----------+    .
 //
 // The basic resources accounted by the ResourceManager include memory, connections,
-// and file  descriptors. These account for both space and time used by the stack,
+// and file descriptors. These account for both space and time used by the stack,
 // as each resource has a direct effect on the system availability and performance.
 //
 // The modus operandi of the resource manager is to restrict resource usage at the
@@ -118,8 +118,12 @@ type ResourceScope interface {
 	// There are 4 predefined priority levels, Low, Medium, High and Always, capturing common
 	// patterns, but the user is free to use any granularity applicable to his case.
 	ReserveMemory(size int, prio uint8) error
-	// ReleaseMemory explicitly releases memory previously reserved with ReserveMemory
+	// ReleaseMemory explicitly releases memory previously reserved with ReserveMemory.
 	ReleaseMemory(size int)
+	// AddConn reserves connection by Direction in the scope.
+	AddConn(dir Direction) error
+	// RemoveConn explicitly releases connection reserved with AddConn.
+	RemoveConn(dir Direction)
 	// AddTask reserves task by ReserveTaskPriority in the scope.
 	//
 	// If ReserveTask returns an error, then no task quota was reserved and the caller
@@ -127,10 +131,6 @@ type ResourceScope interface {
 	AddTask(num int, prio ReserveTaskPriority) error
 	// RemoveTask explicitly releases task reserved with AddTask.
 	RemoveTask(num int, prio ReserveTaskPriority)
-	// AddConn reserves connection by Direction in the scope.
-	AddConn(dir Direction) error
-	// RemoveConn explicitly releases connection reserved with AddConn.
-	RemoveConn(dir Direction)
 	// Stat retrieves current resource usage for the scope.
 	Stat() ScopeStat
 	// Name returns the name of this scope
@@ -188,22 +188,22 @@ const (
 // ScopeStat is a struct containing resource accounting information.
 type ScopeStat struct {
 	Memory           int64
+	NumFD            int
+	NumConnsInbound  int
+	NumConnsOutbound int
 	NumTasksHigh     int
 	NumTasksMedium   int
 	NumTasksLow      int
-	NumConnsInbound  int
-	NumConnsOutbound int
-	NumFD            int
 }
 
-// String returns the state string of ScopeStat
+// String returns the state string of ScopeStat.
 // TODO:: supports connections and fd field
 func (s ScopeStat) String() string {
-	return fmt.Sprintf("memory reserved [%d], task reserved[h: %d, m: %d, l: %d]",
+	return fmt.Sprintf("memory reserved [%d], task reserved [h: %d, m: %d, l: %d]",
 		s.Memory, s.NumTasksHigh, s.NumTasksMedium, s.NumTasksLow)
 }
 
-// NullResourceManager is a stub for tests and initialization of default values
+// NullResourceManager is a stub for tests and initialization of default values.
 type NullResourceManager struct{}
 
 func (n *NullResourceManager) ViewTransient(f func(ResourceScope) error) error {
@@ -225,15 +225,15 @@ func (n *NullResourceManager) Close() error {
 var _ ResourceScope = (*NullScope)(nil)
 var _ ResourceScopeSpan = (*NullScope)(nil)
 
-// NullScope is a stub for tests and initialization of default values
+// NullScope is a stub for tests and initialization of default values.
 type NullScope struct{}
 
 func (n *NullScope) ReserveMemory(size int, prio uint8) error        { return nil }
 func (n *NullScope) ReleaseMemory(size int)                          {}
-func (n *NullScope) AddTask(num int, prio ReserveTaskPriority) error { return nil }
-func (n *NullScope) RemoveTask(num int, prio ReserveTaskPriority)    {}
 func (n *NullScope) AddConn(dir Direction) error                     { return nil }
 func (n *NullScope) RemoveConn(dir Direction)                        {}
+func (n *NullScope) AddTask(num int, prio ReserveTaskPriority) error { return nil }
+func (n *NullScope) RemoveTask(num int, prio ReserveTaskPriority)    {}
 func (n *NullScope) Stat() ScopeStat                                 { return ScopeStat{} }
 func (n *NullScope) BeginSpan() (ResourceScopeSpan, error)           { return &NullScope{}, nil }
 func (n *NullScope) Done()                                           {}

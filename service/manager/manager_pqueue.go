@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -15,10 +14,10 @@ import (
 )
 
 const (
-	// PriorityQueueManage defines the manager priority queue name
-	PriorityQueueManage = "priority-queue-manager"
-	// SubQueueUpload defines the upload object sub queue name
-	SubQueueUpload = "sub-queue-upload"
+	// PriorityQueueManager defines the manager priority queue name
+	PriorityQueueManager = "priority-queue-manager"
+	// SubQueueUploadObject defines the upload object sub queue name
+	SubQueueUploadObject = "sub-queue-upload-object"
 	// SubQueueReplicatePiece defines the replicate piece sub queue name
 	SubQueueReplicatePiece = "sub-queue-replicate-piece"
 	// SubQueueSealObject defines the seal object sub queue name
@@ -37,8 +36,7 @@ type MPQueue struct {
 	pqueue        tqueue.TPriorityQueueWithLimit
 	chain         *greenfield.Greenfield
 	gcBlockNumber uint64
-	gcRunning     atomic.Int32
-	mux           sync.RWMutex
+	gcRunning     atomic.Value
 }
 
 // NewMPQueue returns an instance of MPQueue
@@ -48,7 +46,7 @@ func NewMPQueue(chain *greenfield.Greenfield, uploadQueueSize, replicateQueueSiz
 	}
 	uploadStrategy := queue.NewStrategy()
 	uploadStrategy.SetCollectionCallback(queue.DefaultGCTasksByTimeout)
-	uploadQueue := queue.NewTaskQueue(SubQueueUpload, uploadQueueSize, uploadStrategy, false)
+	uploadQueue := queue.NewTaskQueue(SubQueueUploadObject, uploadQueueSize, uploadStrategy, false)
 
 	replicateStrategy := queue.NewStrategy()
 	replicateStrategy.SetCollectionCallback(queue.DefaultGCTasksByRetry)
@@ -65,7 +63,7 @@ func NewMPQueue(chain *greenfield.Greenfield, uploadQueueSize, replicateQueueSiz
 	gcObjectQueue := queue.NewTaskQueue(SubQueueGCObject, gcObjectQueueSize, gcObjectStrategy, true)
 
 	subQueues := map[tqueue.TPriority]tqueue.TQueueWithLimit{
-		tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskUpload):         uploadQueue,
+		tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskUploadObject):   uploadQueue,
 		tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskReplicatePiece): replicateQueue,
 		tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskSealObject):     sealQueue,
 		tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskGCObject):       gcObjectQueue,
@@ -73,8 +71,7 @@ func NewMPQueue(chain *greenfield.Greenfield, uploadQueueSize, replicateQueueSiz
 
 	mstrategy := queue.NewStrategy()
 	mstrategy.SetPickUpCallback(queue.DefaultPickUpTaskByPriority)
-	pqueue := queue.NewTaskPriorityQueue(PriorityQueueManage, subQueues, mstrategy, true)
-	mpq.pqueue = pqueue
+	mpq.pqueue = queue.NewTaskPriorityQueue(PriorityQueueManager, subQueues, mstrategy, true)
 	return mpq
 }
 
@@ -103,13 +100,13 @@ func (q *MPQueue) PopPushTask(task tqueue.Task) error {
 	return q.pqueue.PopPush(task)
 }
 
-// GCMQueueTask runs priority queue gc.
-func (q *MPQueue) GCMQueueTask() {
-	if q.gcRunning.Swap(1) == 1 {
+// GCMPQueueTask runs priority queue gc.
+func (q *MPQueue) GCMPQueueTask() {
+	if q.gcRunning.Swap(true) == true {
 		log.Debugw("manager priority queue gc is running")
 		return
 	}
-	defer q.gcRunning.Swap(0)
+	defer q.gcRunning.Swap(false)
 	q.pqueue.RunCollection()
 }
 
@@ -120,7 +117,7 @@ func (q *MPQueue) GetUploadingTasksCount() int {
 
 // GetUploadPrimaryTasksCount returns the number task of uploading object to primary SP.
 func (q *MPQueue) GetUploadPrimaryTasksCount() int {
-	prio := tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskUpload)
+	prio := tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskUploadObject)
 	return q.pqueue.SubQueueLen(prio)
 }
 

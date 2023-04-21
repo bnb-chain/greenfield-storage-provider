@@ -18,17 +18,17 @@ type Limit interface {
 	GetFDLimit() int
 	// GetConnLimit returns the connection limit, for inbound or outbound connections.
 	GetConnLimit(Direction) int
-	// GetConnTotalLimit returns the total connection limit
+	// GetConnTotalLimit returns the total connection limit.
 	GetConnTotalLimit() int
 	// GetTaskLimit returns the task limit, for high, medium and low priority tasks.
 	GetTaskLimit(ReserveTaskPriority) int
-	// GetTaskTotalLimit returns the total task limit
+	// GetTaskTotalLimit returns the total task limit.
 	GetTaskTotalLimit() int
-	// Greater returns an indicator whether cover the param limit
+	// Greater returns an indicator whether cover the param limit.
 	Greater(Limit) bool
-	// Equal returns an indicator whether equal the param limit
+	// Equal returns an indicator whether equal the param limit.
 	Equal(Limit) bool
-	// String returns the Limit state string
+	// String returns the Limit state string.
 	String() string
 }
 
@@ -44,6 +44,8 @@ var _ Limit = &BaseLimit{}
 
 // BaseLimit is a mixin type for basic resource limits.
 type BaseLimit struct {
+	Memory              int64 `json:",omitempty"`
+	FD                  int   `json:",omitempty"`
 	Conns               int   `json:",omitempty"`
 	ConnsInbound        int   `json:",omitempty"`
 	ConnsOutbound       int   `json:",omitempty"`
@@ -51,8 +53,6 @@ type BaseLimit struct {
 	TasksHighPriority   int   `json:",omitempty"`
 	TasksMediumPriority int   `json:",omitempty"`
 	TasksLowPriority    int   `json:",omitempty"`
-	FD                  int   `json:",omitempty"`
-	Memory              int64 `json:",omitempty"`
 }
 
 // GetMemoryLimit returns the (current) memory limit.
@@ -73,12 +73,12 @@ func (limit *BaseLimit) GetConnLimit(direction Direction) int {
 	return limit.ConnsOutbound
 }
 
-// GetConnTotalLimit returns the total connection limit
+// GetConnTotalLimit returns the total connection limit.
 func (limit *BaseLimit) GetConnTotalLimit() int {
 	return limit.Conns
 }
 
-// GetTaskTotalLimit returns the total task limit
+// GetTaskTotalLimit returns the total task limit.
 func (limit *BaseLimit) GetTaskTotalLimit() int {
 	return limit.Tasks
 }
@@ -97,15 +97,15 @@ func (limit *BaseLimit) GetTaskLimit(priority ReserveTaskPriority) int {
 	}
 }
 
-// Greater returns an indicator whether cover the param limit
+// Greater returns an indicator whether cover the param limit.
 func (limit *BaseLimit) Greater(x Limit) bool {
 	if x == nil {
 		return true
 	}
-	if limit.FD < x.GetFDLimit() {
+	if limit.Memory < x.GetMemoryLimit() {
 		return false
 	}
-	if limit.Memory < x.GetMemoryLimit() {
+	if limit.FD < x.GetFDLimit() {
 		return false
 	}
 	if limit.Conns < x.GetConnTotalLimit() {
@@ -132,14 +132,15 @@ func (limit *BaseLimit) Greater(x Limit) bool {
 	return true
 }
 
+// Equal returns true iff limit is the same with x.
 func (limit *BaseLimit) Equal(x Limit) bool {
 	if x == nil {
 		return false
 	}
-	if limit.FD != x.GetFDLimit() {
+	if limit.Memory != x.GetMemoryLimit() {
 		return false
 	}
-	if limit.Memory != x.GetMemoryLimit() {
+	if limit.FD != x.GetFDLimit() {
 		return false
 	}
 	if limit.Conns != x.GetConnTotalLimit() {
@@ -166,7 +167,7 @@ func (limit *BaseLimit) Equal(x Limit) bool {
 	return true
 }
 
-// String returns the Limit state string
+// String returns the Limit state string.
 // TODO:: supports connection and fd field
 func (limit *BaseLimit) String() string {
 	return fmt.Sprintf("memory limits %d, task limits [h: %d, m: %d, l: %d]",
@@ -178,14 +179,14 @@ func (limit *BaseLimit) String() string {
 func InfiniteLimit() Limit {
 	return &BaseLimit{
 		Memory:              MaxLimitInt64,
+		FD:                  MaxLimitInt,
+		Conns:               MaxLimitInt,
+		ConnsInbound:        MaxLimitInt,
+		ConnsOutbound:       MaxLimitInt,
 		Tasks:               MaxLimitInt,
 		TasksHighPriority:   MaxLimitInt,
 		TasksMediumPriority: MaxLimitInt,
 		TasksLowPriority:    MaxLimitInt,
-		Conns:               MaxLimitInt,
-		ConnsInbound:        MaxLimitInt,
-		ConnsOutbound:       MaxLimitInt,
-		FD:                  MaxLimitInt,
 	}
 }
 

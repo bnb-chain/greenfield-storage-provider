@@ -61,7 +61,7 @@ func (m *Task) Expired() bool {
 	if m == nil {
 		return true
 	}
-	return m.GetUpdateTime()+m.GetTimeout() < time.Now().Unix()
+	return m.GetUpdateTime()+m.GetTimeout() > time.Now().Unix()
 }
 
 func (m *Task) IncRetry() bool {

@@ -21,7 +21,7 @@ import (
 type Task interface {
 	// Key returns the uniquely identify of task.
 	Key() TKey
-	// Type returns the type of task, such as TypeTaskUpload etc.
+	// Type returns the type of task, such as TypeTaskUploadObject etc.
 	Type() TType
 	// GetCreateTime returns the creation time of task.
 	GetCreateTime() int64
@@ -31,8 +31,8 @@ type Task interface {
 	GetUpdateTime() int64
 	// SetUpdateTime sets last updated time of task.
 	SetUpdateTime(int64)
-	// GetTimeout returns the timeout of task
-	// notice: the timeout is a duration, not the end timestamp .
+	// GetTimeout returns the timeout of task.
+	// notice: the timeout is a duration, not the end timestamp.
 	GetTimeout() int64
 	// SetTimeout sets timeout duration of task.
 	SetTimeout(int64)
@@ -69,8 +69,8 @@ type TType int32
 const (
 	// TypeTaskUnknown defines the default task type.
 	TypeTaskUnknown TType = iota
-	// TypeTaskUpload defines the type of uploading object to primary SP task.
-	TypeTaskUpload
+	// TypeTaskUploadObject defines the type of uploading object to primary SP task.
+	TypeTaskUploadObject
 	// TypeTaskReplicatePiece defines the type of replicating pieces to secondary SPs task.
 	TypeTaskReplicatePiece
 	// TypeTaskSealObject defines the type of sealing object to the chain task.
@@ -116,7 +116,7 @@ const (
 //			[TasksHighPriority: 10, TasksMediumPriority: 20, TasksLowPriority: 2]
 //		the executor of the task can run 10 high level task at the same time that the
 //			task priority >= DefaultLargerTaskPriority
-//	 the executor of the task can run 20 medium level task at the same time that the
+//	    the executor of the task can run 20 medium level task at the same time that the
 //			task priority between (DefaultLargerTaskPriority, DefaultSmallerPriority]
 //		the executor of the task can run 2 medium level task at the same time that the
 //			task priority < DefaultSmallerPriority
@@ -162,6 +162,7 @@ type ReceivePieceTask interface {
 }
 
 // DownloadObjectTask defines the task that download object.
+// TODO: refine interface.
 type DownloadObjectTask interface {
 	ObjectTask
 	// GetNeedIntegrity returns an indicator whether needs integrity information.
@@ -195,12 +196,12 @@ type GCObjectTask interface {
 	SetEndBlockNumber(uint64)
 	// GetEndBlockNumber returns end block number.
 	GetEndBlockNumber() uint64
-	// GetGCObjectProcess returns the process of collection object.
+	// GetGCObjectProgress returns the process of collection object.
 	// returns the deleting block number and the last deleted object id.
-	GetGCObjectProcess() (uint64, uint64)
-	// SetGCObjectProcess sets the process of collection object.
+	GetGCObjectProgress() (uint64, uint64)
+	// SetGCObjectProgress sets the process of collection object.
 	// params stand the deleting block number and the last deleted object id.
-	SetGCObjectProcess(uint64, uint64)
+	SetGCObjectProgress(uint64, uint64)
 }
 
 // GCZombiePieceTask defines the collection of zombie piece data task.
@@ -255,7 +256,7 @@ type TTaskPriority interface {
 type TQueueStrategy interface {
 	// SetPickUpCallback sets the callback func for picking up task.
 	SetPickUpCallback(func([]Task) Task)
-	// RunPickUpStrategy calls the pick up callback to pick up task on backup task.
+	// RunPickUpStrategy calls the pickup callback to pick up task on backup task.
 	RunPickUpStrategy([]Task) Task
 	// SetCollectionCallback sets the callback func for gc task.
 	SetCollectionCallback(func(TQueueOnStrategy, []TKey))
@@ -263,13 +264,13 @@ type TQueueStrategy interface {
 	RunCollectionStrategy(TQueueOnStrategy, []TKey)
 	// SetPickUpFilterCallback sets the callback func for picking up filter task.
 	SetPickUpFilterCallback(func(Task) bool)
-	// RunPickUpFilterStrategy calls the pick up filter callback to pick up filter task.
+	// RunPickUpFilterStrategy calls the pickup filter callback to pick up filter task.
 	RunPickUpFilterStrategy(Task) bool
 }
 
 // TQueue defines the task queue operator.
 type TQueue interface {
-	// Top return the top task in queue.
+	// Top returns the top task in queue.
 	Top() Task
 	// Pop pops the top task in queue.
 	Pop() Task
