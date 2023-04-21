@@ -137,7 +137,7 @@ func makeEnv(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 		return err
 	}
 	// init pprof
-	if err := initPprof(ctx, cfg); err != nil {
+	if err := initPProf(ctx, cfg); err != nil {
 		return err
 	}
 	return nil

@@ -30,8 +30,8 @@ var (
 	P2PService = strings.ToLower("p2p")
 	// AuthService defines the name of auth service
 	AuthService = strings.ToLower("auth")
-	// PprofService defines the name of metrics service
-	PprofService = strings.ToLower("pprof")
+	// PProfService defines the name of pprof service
+	PProfService = strings.ToLower("pprof")
 )
 
 // SpServiceDesc defines the service description in storage provider
@@ -75,8 +75,8 @@ const (
 	P2PListenAddress = "127.0.0.1:9933"
 	// AuthGRPCAddress default gRPC address of auth service
 	AuthGRPCAddress = "localhost:8933"
-	// PprofHTTPAddress default HTTP address of pprof service
-	PprofHTTPAddress = "localhost:25341"
+	// PProfHTTPAddress default HTTP address of pprof service
+	PProfHTTPAddress = "localhost:25341"
 )
 
 // define greenfield chain default address

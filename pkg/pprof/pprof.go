@@ -13,24 +13,24 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-// Pprof is used to analyse the performance sp service
-type Pprof struct {
-	config     *PprofConfig
+// PProf is used to analyse the performance sp service
+type PProf struct {
+	config     *PProfConfig
 	httpServer *http.Server
 }
 
-// NewPprof returns an instance of pprof
-func NewPprof(cfg *PprofConfig) *Pprof {
-	return &Pprof{config: cfg}
+// NewPProf returns an instance of pprof
+func NewPProf(cfg *PProfConfig) *PProf {
+	return &PProf{config: cfg}
 }
 
 // Name describes pprof service name
-func (p *Pprof) Name() string {
-	return model.PprofService
+func (p *PProf) Name() string {
+	return model.PProfService
 }
 
 // Start HTTP server
-func (p *Pprof) Start(ctx context.Context) error {
+func (p *PProf) Start(ctx context.Context) error {
 	if p.config.Enabled {
 		go p.serve()
 	}
@@ -38,7 +38,7 @@ func (p *Pprof) Start(ctx context.Context) error {
 }
 
 // Stop HTTP server
-func (p *Pprof) Stop(ctx context.Context) error {
+func (p *PProf) Stop(ctx context.Context) error {
 	var errs []error
 	if err := p.httpServer.Shutdown(ctx); err != nil {
 		errs = append(errs, err)
@@ -49,7 +49,7 @@ func (p *Pprof) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (p *Pprof) serve() {
+func (p *PProf) serve() {
 	router := mux.NewRouter()
 	p.registerProfiler(router)
 	p.httpServer = &http.Server{
@@ -62,7 +62,7 @@ func (p *Pprof) serve() {
 	}
 }
 
-func (p *Pprof) registerProfiler(r *mux.Router) {
+func (p *PProf) registerProfiler(r *mux.Router) {
 	r.HandleFunc("/debug/pprof/", pprof.Index)
 	r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	r.HandleFunc("/debug/pprof/profile", pprof.Profile)

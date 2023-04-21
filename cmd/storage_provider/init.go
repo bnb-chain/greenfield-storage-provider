@@ -91,19 +91,20 @@ func initResourceManager(ctx *cli.Context) error {
 	return nil
 }
 
-func initPprof(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
-	if cfg.PprofCfg == nil {
-		cfg.PprofCfg = config.DefaultPprofConfig
+// initPProf initializes global pprof service for performance monitoring.
+func initPProf(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
+	if cfg.PProfCfg == nil {
+		cfg.PProfCfg = config.DefaultPProfConfig
 	}
 	if ctx.IsSet(utils.PProfEnabledFlag.Name) {
-		cfg.PprofCfg.Enabled = ctx.Bool(utils.PProfEnabledFlag.Name)
+		cfg.PProfCfg.Enabled = ctx.Bool(utils.PProfEnabledFlag.Name)
 	}
-	if ctx.IsSet(utils.MetricsHTTPFlag.Name) {
-		cfg.PprofCfg.HTTPAddress = ctx.String(utils.PProfHTTPFlag.Name)
+	if ctx.IsSet(utils.PProfHTTPFlag.Name) {
+		cfg.PProfCfg.HTTPAddress = ctx.String(utils.PProfHTTPFlag.Name)
 	}
-	if cfg.PprofCfg.Enabled {
+	if cfg.PProfCfg.Enabled {
 		slc := lifecycle.NewServiceLifecycle()
-		slc.RegisterServices(pprof.NewPprof(cfg.PprofCfg))
+		slc.RegisterServices(pprof.NewPProf(cfg.PProfCfg))
 	}
 	return nil
 }

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -14,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
@@ -36,7 +36,7 @@ type StorageProviderConfig struct {
 	P2PCfg            *p2p.NodeConfig
 	LogCfg            *LogConfig
 	MetricsCfg        *metrics.MetricsConfig
-	PprofCfg          *pprof.PprofConfig
+	PProfCfg          *pprof.PProfConfig
 	RateLimiter       *localhttp.RateLimiterConfig
 }
 
@@ -98,7 +98,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	P2PCfg:            DefaultP2PConfig,
 	LogCfg:            DefaultLogConfig,
 	MetricsCfg:        DefaultMetricsConfig,
-	PprofCfg:          DefaultPprofConfig,
+	PProfCfg:          DefaultPProfConfig,
 	RateLimiter:       DefaultRateLimiterConfig,
 }
 
@@ -160,10 +160,10 @@ var DefaultP2PConfig = &p2p.NodeConfig{
 	PingPeriod:    model.DefaultPingPeriod,
 }
 
-// DefaultPprofConfig defines the default configuration of pprof service
-var DefaultPprofConfig = &pprof.PprofConfig{
+// DefaultPProfConfig defines the default configuration of pprof service
+var DefaultPProfConfig = &pprof.PProfConfig{
 	Enabled:     false,
-	HTTPAddress: model.PprofHTTPAddress,
+	HTTPAddress: model.PProfHTTPAddress,
 }
 
 // DefaultRateLimiterConfig defines the default configuration of rate limiter

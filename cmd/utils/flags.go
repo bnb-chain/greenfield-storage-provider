@@ -112,18 +112,18 @@ var (
 		Value:    config.DefaultMetricsConfig.HTTPAddress,
 	}
 
-	// Pprof flags
+	// PProf flags
 	PProfEnabledFlag = &cli.BoolFlag{
 		Name:     "pprof",
 		Category: PerfCategory,
 		Usage:    "Enable the pprof HTTP server",
-		Value:    config.DefaultPprofConfig.Enabled,
+		Value:    config.DefaultPProfConfig.Enabled,
 	}
 	PProfHTTPFlag = &cli.StringFlag{
 		Name:     "pprof.addr",
 		Category: PerfCategory,
 		Usage:    "Specify pprof HTTP server listening address",
-		Value:    config.DefaultPprofConfig.HTTPAddress,
+		Value:    config.DefaultPProfConfig.HTTPAddress,
 	}
 )
 
