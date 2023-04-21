@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
@@ -36,6 +37,7 @@ type StorageProviderConfig struct {
 	LogCfg            *LogConfig
 	MetricsCfg        *metrics.MetricsConfig
 	PprofCfg          *pprof.PprofConfig
+	RateLimiter       *localhttp.RateLimiterConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -97,6 +99,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	LogCfg:            DefaultLogConfig,
 	MetricsCfg:        DefaultMetricsConfig,
 	PprofCfg:          DefaultPprofConfig,
+	RateLimiter:       DefaultRateLimiterConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -161,6 +164,15 @@ var DefaultP2PConfig = &p2p.NodeConfig{
 var DefaultPprofConfig = &pprof.PprofConfig{
 	Enabled:     false,
 	HTTPAddress: model.PprofHTTPAddress,
+}
+
+// DefaultRateLimiterConfig defines the default configuration of rate limiter
+var DefaultRateLimiterConfig = &localhttp.RateLimiterConfig{
+	HTTPLimitCfg: localhttp.HTTPLimitConfig{
+		On:         false,
+		RateLimit:  100,
+		RatePeriod: "S",
+	},
 }
 
 // LoadConfig loads the config file from path

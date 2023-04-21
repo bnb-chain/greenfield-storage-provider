@@ -74,3 +74,13 @@ HTTPAddress = "localhost:24036"
 [LogCfg]
 Level = "debug"
 Path = "./gnfd-sp.log"
+
+[RateLimiter]
+APILimits = []
+HostPattern = []
+PathPattern = []
+
+[RateLimiter.HTTPLimitCfg]
+On = false
+RateLimit = 1
+RatePeriod = "S"
