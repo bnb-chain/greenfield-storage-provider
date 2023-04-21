@@ -26,8 +26,6 @@ const (
 	FetchBucketsLimit = int64(500)
 	// FetchBucketsInterval define the interval to fetch buckets for stop serving
 	FetchBucketsInterval = 5 * time.Minute
-	// SubmitTransactionInterval defines the interval between two stop serving transaction submissions
-	SubmitTransactionInterval = 500 * time.Millisecond
 )
 
 // StopServing module is responsible for stop serving buckets on testnet.
@@ -102,16 +100,17 @@ func (s *StopServing) eventLoop() {
 
 // discontinueBuckets fetch buckets from metadata service and submit transactions to chain
 func (s *StopServing) discontinueBuckets() {
-	createAt := time.Now().Unix() - int64(86400*s.config.DiscontinueConfig.BucketKeepAliveDays)
-	buckets, err := s.metadata.ListExpiredBucketsBySp(context.Background(), createAt, s.config.SpOperatorAddress, FetchBucketsLimit)
+	createAt := time.Now().AddDate(0, 0, -s.config.DiscontinueConfig.BucketKeepAliveDays)
+	buckets, err := s.metadata.ListExpiredBucketsBySp(context.Background(), createAt.Unix(), s.config.SpOperatorAddress, FetchBucketsLimit)
 	if err != nil {
 		log.Errorw("failed to query expired buckets", "error", err)
 		return
 	}
 
 	for _, bucket := range buckets {
-		bucketName := bucket.BucketInfo
-		if s.cache.Contains(bucketName) { // this bucket has been discontinued, however the metadata indexer did not handle it yet
+		cacheKey := []byte{'b'}
+		cacheKey = append(cacheKey, bucket.BucketInfo.Id.Bytes()...)
+		if s.cache.Contains(cacheKey) { // this bucket has been discontinued, however the metadata indexer did not handle it yet
 			continue
 		}
 
@@ -124,10 +123,9 @@ func (s *StopServing) discontinueBuckets() {
 			log.Errorw("failed to discontinue bucket on chain", "error", err)
 			return
 		} else {
-			s.cache.Add(bucket.BucketInfo.BucketName, struct{}{})
+			s.cache.Add(cacheKey, struct{}{})
 			log.Infow("succeed to discontinue bucket", "bucket_name", discontinueBucket.BucketName, "tx_hash", txHash)
 		}
-		time.Sleep(SubmitTransactionInterval)
 	}
 }
 
