@@ -35,7 +35,7 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 		Select("objects.*").
 		Joins("left join objects on buckets.bucket_id = objects.bucket_id").
 		Where("objects.update_at >= ? and objects.update_at <= ? and objects.removed = ? and "+
-			"(objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ')",
+			"((objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
 			startBlockNumber, endBlockNumber, true).
 		Limit(DeletedObjectsDefaultSize).
 		Order("objects.update_at asc").
@@ -62,7 +62,7 @@ func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, isFullL
 		Select("objects.*").
 		Joins("left join objects on buckets.bucket_id = objects.bucket_id").
 		Where("objects.object_name = ? and objects.bucket_name = ? and "+
-			"(objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ')",
+			"((objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
 			objectName, bucketName).
 		Take(&object).Error
 	return object, err
