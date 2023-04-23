@@ -204,8 +204,11 @@ func (r *streamPieceDataReplicator) replicate() (integrityHash []byte, signature
 			"sp_endpoint", r.sp.GetEndpoint(), "error", err)
 		return
 	}
+	startReplicateTime := time.Now()
 	integrityHash, signature, err = gwClient.ReplicateObjectPieceStream(r.task.objectInfo.Id.Uint64(), r.pieceSize,
 		r.redundancyIndex, r.approval, r.streamReader)
+	log.Errorw("replicate cost", "object_id", r.task.objectInfo.Id.Uint64(),
+		"close_stream_cost_ms", time.Since(startReplicateTime).Milliseconds())
 	if err != nil {
 		log.Errorw("failed to replicate object piece stream",
 			"endpoint", r.sp.GetEndpoint(), "error", err)
