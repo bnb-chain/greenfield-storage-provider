@@ -78,75 +78,77 @@ func newStreamReaderGroup(t *replicateObjectTask, excludeIndexMap map[int]bool) 
 
 // produceStreamPieceData produce stream piece data
 func (sg *streamReaderGroup) produceStreamPieceData() {
-	ch := make(chan int)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func(pieceSizeCh chan int) {
-		defer wg.Done()
-		defer close(pieceSizeCh)
-		gotPieceSize := false
+	//ch := make(chan int)
+	//var wg sync.WaitGroup
+	//wg.Add(1)
+	//go func() {
+	//defer wg.Done()
+	//defer close(pieceSizeCh)
+	gotPieceSize := false
 
-		log.CtxErrorw(sg.task.ctx, "start to produce piece data", "piece_number", sg.task.segmentPieceNumber)
-		for segmentPieceIdx := 0; segmentPieceIdx < sg.task.segmentPieceNumber; segmentPieceIdx++ {
-			segmentPieceKey := piecestore.EncodeSegmentPieceKey(sg.task.objectInfo.Id.Uint64(), uint32(segmentPieceIdx))
-			startGetPieceTime := time.Now()
-			segmentPieceData, err := sg.task.taskNode.pieceStore.GetPiece(context.Background(), segmentPieceKey, 0, 0)
-			log.CtxDebugw(sg.task.ctx, "get a piece from piece store",
-				"get_piece_cost_ms", time.Since(startGetPieceTime).Milliseconds(), "segment_piece_index", segmentPieceIdx,
-				"piece_size", len(segmentPieceData))
+	log.CtxErrorw(sg.task.ctx, "start to produce piece data", "piece_number", sg.task.segmentPieceNumber)
+	for segmentPieceIdx := 0; segmentPieceIdx < sg.task.segmentPieceNumber; segmentPieceIdx++ {
+		segmentPieceKey := piecestore.EncodeSegmentPieceKey(sg.task.objectInfo.Id.Uint64(), uint32(segmentPieceIdx))
+		startGetPieceTime := time.Now()
+		segmentPieceData, err := sg.task.taskNode.pieceStore.GetPiece(context.Background(), segmentPieceKey, 0, 0)
+		log.CtxDebugw(sg.task.ctx, "get a piece from piece store",
+			"get_piece_cost_ms", time.Since(startGetPieceTime).Milliseconds(), "segment_piece_index", segmentPieceIdx,
+			"piece_size", len(segmentPieceData))
+		if err != nil {
+			for idx := range sg.streamReaderMap {
+				sg.streamReaderMap[idx].pWrite.CloseWithError(err)
+			}
+			log.CtxErrorw(sg.task.ctx, "failed to get piece data", "piece_key", segmentPieceKey, "error", err)
+			return
+		}
+		if sg.task.objectInfo.GetRedundancyType() == types.REDUNDANCY_EC_TYPE {
+			startECTime := time.Now()
+			ecPieceData, err := redundancy.EncodeRawSegment(segmentPieceData,
+				int(sg.task.storageParams.GetRedundantDataChunkNum()),
+				int(sg.task.storageParams.GetRedundantParityChunkNum()))
+			log.CtxDebugw(sg.task.ctx, "produce ec piece from segment piece",
+				"ec_cost_ms", time.Since(startECTime).Milliseconds())
 			if err != nil {
 				for idx := range sg.streamReaderMap {
 					sg.streamReaderMap[idx].pWrite.CloseWithError(err)
 				}
-				log.CtxErrorw(sg.task.ctx, "failed to get piece data", "piece_key", segmentPieceKey, "error", err)
+				log.CtxErrorw(sg.task.ctx, "failed to encode ec piece data", "error", err)
 				return
 			}
-			if sg.task.objectInfo.GetRedundancyType() == types.REDUNDANCY_EC_TYPE {
-				startECTime := time.Now()
-				ecPieceData, err := redundancy.EncodeRawSegment(segmentPieceData,
-					int(sg.task.storageParams.GetRedundantDataChunkNum()),
-					int(sg.task.storageParams.GetRedundantParityChunkNum()))
-				log.CtxDebugw(sg.task.ctx, "produce ec piece from segment piece",
-					"ec_cost_ms", time.Since(startECTime).Milliseconds())
-				if err != nil {
-					for idx := range sg.streamReaderMap {
-						sg.streamReaderMap[idx].pWrite.CloseWithError(err)
-					}
-					log.CtxErrorw(sg.task.ctx, "failed to encode ec piece data", "error", err)
-					return
-				}
-				if !gotPieceSize {
-					pieceSizeCh <- len(ecPieceData[0])
-					gotPieceSize = true
-				}
-				for idx := range sg.streamReaderMap {
-					startWriteSteamTime := time.Now()
-					sg.streamReaderMap[idx].pWrite.Write(ecPieceData[idx])
-					log.CtxDebugw(sg.task.ctx, "succeed to produce an ec piece data",
-						"piece_len", len(ecPieceData[idx]), "redundancy_index", idx,
-						"write_stream_cost_ms", time.Since(startWriteSteamTime).Milliseconds())
-				}
-			} else {
-				if !gotPieceSize {
-					pieceSizeCh <- len(segmentPieceData)
-					gotPieceSize = true
-				}
-				for idx := range sg.streamReaderMap {
-					sg.streamReaderMap[idx].pWrite.Write(segmentPieceData)
-					log.CtxDebugw(sg.task.ctx, "succeed to produce an segment piece data", "piece_len", len(segmentPieceData), "redundancy_index", idx)
-				}
+			if !gotPieceSize {
+				//pieceSizeCh <- len(ecPieceData[0])
+				sg.pieceSize = len(ecPieceData[0])
+				gotPieceSize = true
+			}
+			for idx := range sg.streamReaderMap {
+				startWriteSteamTime := time.Now()
+				sg.streamReaderMap[idx].pWrite.Write(ecPieceData[idx])
+				log.CtxDebugw(sg.task.ctx, "succeed to produce an ec piece data",
+					"piece_len", len(ecPieceData[idx]), "redundancy_index", idx,
+					"write_stream_cost_ms", time.Since(startWriteSteamTime).Milliseconds())
+			}
+		} else {
+			if !gotPieceSize {
+				//pieceSizeCh <- len(segmentPieceData)
+				sg.pieceSize = len(segmentPieceData)
+				gotPieceSize = true
+			}
+			for idx := range sg.streamReaderMap {
+				sg.streamReaderMap[idx].pWrite.Write(segmentPieceData)
+				log.CtxDebugw(sg.task.ctx, "succeed to produce an segment piece data", "piece_len", len(segmentPieceData), "redundancy_index", idx)
 			}
 		}
-		for idx := range sg.streamReaderMap {
-			startCloseSteamTime := time.Now()
-			sg.streamReaderMap[idx].pWrite.Close()
-			log.CtxDebugw(sg.task.ctx, "succeed to finish a piece stream",
-				"redundancy_index", idx, "redundancy_type", sg.task.objectInfo.GetRedundancyType(),
-				"close_stream_cost_ms", time.Since(startCloseSteamTime).Milliseconds())
-		}
-	}(ch)
-	sg.pieceSize = <-ch
-	wg.Wait()
+	}
+	for idx := range sg.streamReaderMap {
+		startCloseSteamTime := time.Now()
+		sg.streamReaderMap[idx].pWrite.Close()
+		log.CtxDebugw(sg.task.ctx, "succeed to finish a piece stream",
+			"redundancy_index", idx, "redundancy_type", sg.task.objectInfo.GetRedundancyType(),
+			"close_stream_cost_ms", time.Since(startCloseSteamTime).Milliseconds())
+	}
+	//}()
+	//sg.pieceSize = <-ch
+	//wg.Wait()
 }
 
 // streamPieceDataReplicator replicates a piece stream to the target sp
