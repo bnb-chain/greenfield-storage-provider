@@ -79,7 +79,10 @@ func newStreamReaderGroup(t *replicateObjectTask, excludeIndexMap map[int]bool) 
 // produceStreamPieceData produce stream piece data
 func (sg *streamReaderGroup) produceStreamPieceData() {
 	ch := make(chan int)
+	var wg sync.WaitGroup
 	go func(pieceSizeCh chan int) {
+		wg.Add(1)
+		defer wg.Done()
 		defer close(pieceSizeCh)
 		gotPieceSize := false
 
@@ -129,6 +132,7 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 				"redundancy_index", idx, "redundancy_type", sg.task.objectInfo.GetRedundancyType())
 		}
 	}(ch)
+	wg.Wait()
 	sg.pieceSize = <-ch
 }
 
