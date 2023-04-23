@@ -16,7 +16,7 @@ on:
       - fix-release*
 
 env:
-  GreenfileldTag: 91d2e1d1d43c4ada622c44490e7a3cf758489aad
+  GreenfileldTag: v0.1.2
   GreenfileldIntegrationTestBranch: fynn/new_sdk_test
   GOPRIVATE: github.com/bnb-chain
   GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
