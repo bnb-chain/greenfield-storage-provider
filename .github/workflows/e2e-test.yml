@@ -17,7 +17,7 @@ on:
 
 env:
   GreenfileldTag: v0.1.2
-  GreenfileldIntegrationTestBranch: develop
+  GreenfileldIntegrationTestBranch: fynn/new_sdk_test
   GOPRIVATE: github.com/bnb-chain
   GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   MYSQL_USER: root
