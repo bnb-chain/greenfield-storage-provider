@@ -62,6 +62,7 @@ func (client *GatewayClient) ReplicateObjectPieceStream(objectID uint64, pieceSi
 	req.Header.Add(model.GnfdPieceSizeHeader, util.Uint32ToString(pieceSize))
 	req.Header.Add(model.GnfdReplicateApproval, string(marshalApproval))
 	req.Header.Add(model.ContentTypeHeader, model.OctetStream)
+	req.Header.Set("Transfer-Encoding", "chunked")
 
 	resp, err := client.httpClient.Do(req)
 	if err != nil {
