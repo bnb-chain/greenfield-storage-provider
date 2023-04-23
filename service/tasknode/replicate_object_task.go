@@ -60,19 +60,19 @@ func newStreamReaderGroup(t *replicateObjectTask, excludeIndexMap map[int]bool) 
 		task:            t,
 		streamReaderMap: make(map[int]*streamReader),
 	}
-	for segmentPieceIdx := 0; segmentPieceIdx < t.segmentPieceNumber; segmentPieceIdx++ {
-		for idx := 0; idx < t.redundancyNumber; idx++ {
-			if excludeIndexMap[idx] {
-				continue
-			}
-			sg.streamReaderMap[idx] = &streamReader{}
-			sg.streamReaderMap[idx].pRead, sg.streamReaderMap[idx].pWrite = io.Pipe()
-			atLeastHasOne = true
+	for idx := 0; idx < t.redundancyNumber; idx++ {
+		if excludeIndexMap[idx] {
+			continue
 		}
+		sg.streamReaderMap[idx] = &streamReader{}
+		sg.streamReaderMap[idx].pRead, sg.streamReaderMap[idx].pWrite = io.Pipe()
+		atLeastHasOne = true
 	}
+
 	if !atLeastHasOne {
 		return nil, merrors.ErrInvalidParams
 	}
+	log.CtxDebugw(t.ctx, "new stream reader group", "redundancy_number", t.redundancyNumber)
 	return sg, nil
 }
 
@@ -83,25 +83,33 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 		defer close(pieceSizeCh)
 		gotPieceSize := false
 
+		log.CtxErrorw(sg.task.ctx, "start to produce piece data", "piece_number", sg.task.segmentPieceNumber)
 		for segmentPieceIdx := 0; segmentPieceIdx < sg.task.segmentPieceNumber; segmentPieceIdx++ {
 			segmentPieceKey := piecestore.EncodeSegmentPieceKey(sg.task.objectInfo.Id.Uint64(), uint32(segmentPieceIdx))
+			startGetPieceTime := time.Now()
 			segmentPieceData, err := sg.task.taskNode.pieceStore.GetPiece(context.Background(), segmentPieceKey, 0, 0)
+			log.CtxDebugw(sg.task.ctx, "get a piece from piece store",
+				"get_piece_cost_ms", time.Since(startGetPieceTime).Milliseconds(), "segment_piece_index", segmentPieceIdx,
+				"piece_size", len(segmentPieceData))
 			if err != nil {
 				for idx := range sg.streamReaderMap {
 					sg.streamReaderMap[idx].pWrite.CloseWithError(err)
 				}
-				log.Errorw("failed to get piece data", "piece_key", segmentPieceKey, "error", err)
+				log.CtxErrorw(sg.task.ctx, "failed to get piece data", "piece_key", segmentPieceKey, "error", err)
 				return
 			}
 			if sg.task.objectInfo.GetRedundancyType() == types.REDUNDANCY_EC_TYPE {
+				startECTime := time.Now()
 				ecPieceData, err := redundancy.EncodeRawSegment(segmentPieceData,
 					int(sg.task.storageParams.GetRedundantDataChunkNum()),
 					int(sg.task.storageParams.GetRedundantParityChunkNum()))
+				log.CtxDebugw(sg.task.ctx, "produce ec piece from segment piece",
+					"ec_cost_ms", time.Since(startECTime).Milliseconds())
 				if err != nil {
 					for idx := range sg.streamReaderMap {
 						sg.streamReaderMap[idx].pWrite.CloseWithError(err)
 					}
-					log.Errorw("failed to encode ec piece data", "error", err)
+					log.CtxErrorw(sg.task.ctx, "failed to encode ec piece data", "error", err)
 					return
 				}
 				if !gotPieceSize {
@@ -109,8 +117,11 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 					gotPieceSize = true
 				}
 				for idx := range sg.streamReaderMap {
+					startWriteSteamTime := time.Now()
 					sg.streamReaderMap[idx].pWrite.Write(ecPieceData[idx])
-					log.Debugw("succeed to produce an ec piece data", "piece_len", len(ecPieceData[idx]), "redundancy_index", idx)
+					log.CtxDebugw(sg.task.ctx, "succeed to produce an ec piece data",
+						"piece_len", len(ecPieceData[idx]), "redundancy_index", idx,
+						"write_stream_cost_ms", time.Since(startWriteSteamTime).Milliseconds())
 				}
 			} else {
 				if !gotPieceSize {
@@ -119,14 +130,16 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 				}
 				for idx := range sg.streamReaderMap {
 					sg.streamReaderMap[idx].pWrite.Write(segmentPieceData)
-					log.Debugw("succeed to produce an segment piece data", "piece_len", len(segmentPieceData), "redundancy_index", idx)
+					log.CtxDebugw(sg.task.ctx, "succeed to produce an segment piece data", "piece_len", len(segmentPieceData), "redundancy_index", idx)
 				}
 			}
 		}
 		for idx := range sg.streamReaderMap {
+			startCloseSteamTime := time.Now()
 			sg.streamReaderMap[idx].pWrite.Close()
-			log.Debugw("succeed to finish a piece stream",
-				"redundancy_index", idx, "redundancy_type", sg.task.objectInfo.GetRedundancyType())
+			log.CtxDebugw(sg.task.ctx, "succeed to finish a piece stream",
+				"redundancy_index", idx, "redundancy_type", sg.task.objectInfo.GetRedundancyType(),
+				"close_stream_cost_ms", time.Since(startCloseSteamTime).Milliseconds())
 		}
 	}(ch)
 	sg.pieceSize = <-ch
@@ -387,9 +400,14 @@ func (t *replicateObjectTask) execute(waitCh chan error) {
 					sp:                    sp,
 					approval:              approval,
 				}
+				startReplicateTime := time.Now()
 				integrityHash, signature, innerErr := r.replicate()
 				if innerErr != nil {
-					log.CtxErrorw(t.ctx, "failed to replicate piece stream", "redundancy_index", rIdx, "error", innerErr)
+					log.CtxErrorw(t.ctx, "failed to replicate piece stream",
+						"endpoint", sp.GetEndpoint(),
+						"redundancy_index", rIdx,
+						"replicate_cost_ms", time.Since(startReplicateTime).Milliseconds(),
+						"error", innerErr)
 					return
 				}
 
@@ -408,7 +426,9 @@ func (t *replicateObjectTask) execute(waitCh chan error) {
 				t.taskNode.spDB.SetObjectInfo(t.objectInfo.Id.Uint64(), t.objectInfo)
 				t.taskNode.cache.Add(t.objectInfo.Id.Uint64(), progressInfo)
 				log.CtxInfow(t.ctx, "succeed to replicate object piece stream to the target sp",
-					"sp", sp.GetOperator(), "endpoint", sp.GetEndpoint(), "redundancy_index", rIdx)
+					"sp", sp.GetOperator(), "endpoint", sp.GetEndpoint(), "redundancy_index", rIdx,
+					"replicate_cost_ms", time.Since(startReplicateTime).Milliseconds(),
+				)
 			}(redundancyIdx)
 		}
 		wg.Wait()
