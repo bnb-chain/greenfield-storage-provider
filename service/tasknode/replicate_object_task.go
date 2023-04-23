@@ -79,6 +79,8 @@ func newStreamReaderGroup(t *replicateObjectTask, excludeIndexMap map[int]bool) 
 // produceStreamPieceData produce stream piece data
 func (sg *streamReaderGroup) produceStreamPieceData() {
 	ch := make(chan int)
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func(pieceSizeCh chan int) {
 		defer close(pieceSizeCh)
 		gotPieceSize := false
@@ -143,6 +145,7 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 		}
 	}(ch)
 	sg.pieceSize = <-ch
+	wg.Wait()
 }
 
 // streamPieceDataReplicator replicates a piece stream to the target sp
