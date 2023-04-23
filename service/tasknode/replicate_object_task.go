@@ -82,6 +82,7 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func(pieceSizeCh chan int) {
+		defer wg.Done()
 		defer close(pieceSizeCh)
 		gotPieceSize := false
 
