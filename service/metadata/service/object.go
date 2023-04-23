@@ -3,11 +3,11 @@ package service
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield/types/s3util"
-
-	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
@@ -15,9 +15,15 @@ import (
 
 // ListObjectsByBucketName list objects info by a bucket name
 func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *metatypes.ListObjectsByBucketNameRequest) (resp *metatypes.ListObjectsByBucketNameResponse, err error) {
-	ctx = log.Context(ctx, req)
+	var (
+		objects               []*model.Object
+		keyCount              int64
+		isTruncated           bool
+		nextContinuationToken string
+	)
 
-	objects, err := metadata.bsDB.ListObjectsByBucketName(req.BucketName)
+	ctx = log.Context(ctx, req)
+	objects, err = metadata.bsDB.ListObjectsByBucketName(req.BucketName, int(req.MaxKeys), common.HexToHash(req.StartAfter))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by bucket name", "error", err)
 		return
@@ -53,8 +59,25 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		})
 	}
 
-	resp = &metatypes.ListObjectsByBucketNameResponse{Objects: res}
-	log.CtxInfow(ctx, "succeed to list objects by bucket name")
+	keyCount = int64(len(objects))
+	// if keyCount is equal to req.MaxKeys+1 which means that we additionally return NextContinuationToken, and it is not counted in the keyCount
+	// isTruncated set to false if all the results were returned, set to true if more keys are available to return
+	// remove the returned NextContinuationToken object and separately return its object ID to the user for the next API call
+	if keyCount == req.MaxKeys+1 {
+		isTruncated = true
+		keyCount -= 1
+		nextContinuationToken = objects[len(objects)-1].ObjectID.String()
+		res = res[:len(res)-1]
+	}
+
+	resp = &metatypes.ListObjectsByBucketNameResponse{
+		Objects:               res,
+		KeyCount:              keyCount,
+		MaxKeys:               req.MaxKeys,
+		IsTruncated:           isTruncated,
+		NextContinuationToken: nextContinuationToken,
+	}
+	log.CtxInfo(ctx, "succeed to list objects by bucket name")
 	return resp, nil
 }
 

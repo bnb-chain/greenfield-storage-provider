@@ -65,6 +65,10 @@ message ListObjectsByBucketNameRequest {
   string bucket_name = 1;
   // account_id is the account address of user
   string account_id = 2;
+  // max_keys sets the maximum number of keys returned in the response
+  int64 max_keys = 3;
+  // start_after is where you want to start listing from
+  string start_after = 4;
 }
 
 // GetBucketByBucketNameRequest is request type for the GetBucketByBucketName RPC method
@@ -147,6 +151,14 @@ message GetUserBucketsResponse {
 message ListObjectsByBucketNameResponse {
   // objects defines the list of object
   repeated Object objects = 1;
+  // key_count is the number of keys returned with this request
+  int64 key_count = 2;
+  // max_keys sets the maximum number of keys returned in the response
+  int64 max_keys = 3;
+  // is_truncated set to false if all of the results were returned. set to true if more keys are available to return
+  bool is_truncated = 4;
+  // next_continuation_token is sent when is_truncated is true, which means there are more keys in the bucket that can be listed
+  string  next_continuation_token = 5;
 }
 
 // GetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.
