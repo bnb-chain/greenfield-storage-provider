@@ -36,6 +36,8 @@ type requestContext struct {
 	bucketName  string
 	objectName  string
 	accountID   string // accountID is used to provide authentication to the sp
+	maxKeys     string
+	startAfter  string
 	vars        map[string]string
 	startTime   time.Time
 	skipAuth    bool // TODO: for auth v2 test, remove it in the future
@@ -75,6 +77,8 @@ func newRequestContext(r *http.Request) *requestContext {
 		bucketName: vars["bucket"],
 		objectName: vars["object"],
 		accountID:  vars["account_id"],
+		maxKeys:    r.URL.Query().Get("max_keys"),
+		startAfter: r.URL.Query().Get("start_after"),
 		vars:       vars,
 		startTime:  time.Now(),
 	}
