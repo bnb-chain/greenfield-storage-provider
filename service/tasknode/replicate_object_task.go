@@ -80,8 +80,8 @@ func newStreamReaderGroup(t *replicateObjectTask, excludeIndexMap map[int]bool) 
 func (sg *streamReaderGroup) produceStreamPieceData() {
 	ch := make(chan int)
 	var wg sync.WaitGroup
+	wg.Add(1)
 	go func(pieceSizeCh chan int) {
-		wg.Add(1)
 		defer wg.Done()
 		defer close(pieceSizeCh)
 		gotPieceSize := false
