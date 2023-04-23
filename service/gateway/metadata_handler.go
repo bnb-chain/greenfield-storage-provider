@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/bnb-chain/greenfield/types/s3util"
 	"github.com/ethereum/go-ethereum/common"
@@ -74,8 +75,10 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	var (
 		err            error
 		b              bytes.Buffer
+		maxKeys        uint64
 		errDescription *errorDescription
 		reqContext     *requestContext
+		ok             bool
 	)
 
 	reqContext = newRequestContext(r)
@@ -102,8 +105,32 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		return
 	}
 
+	if reqContext.maxKeys != "" {
+		maxKeys, err = strconv.ParseUint(reqContext.maxKeys, 10, 64)
+		if err != nil {
+			log.Errorw("failed to parse maxKeys", "max_keys", reqContext.maxKeys, "error", err)
+			errDescription = InvalidMaxKeys
+			return
+		}
+		// maxKeys should > 0
+		if maxKeys <= 0 {
+			log.Errorw("failed to check maxKeys", "max_keys", reqContext.maxKeys, "error", err)
+			errDescription = InvalidMaxKeys
+			return
+		}
+	}
+
+	// startAfter is an optional input, we only check its format when user input the value
+	if ok = IsHexHash(reqContext.startAfter); !ok && reqContext.startAfter != "" {
+		log.Errorw("failed to check startAfter", "start_after", reqContext.startAfter, "error", err)
+		errDescription = InvalidStartAfter
+		return
+	}
+
 	req := &metatypes.ListObjectsByBucketNameRequest{
 		BucketName: reqContext.bucketName,
+		MaxKeys:    maxKeys,
+		StartAfter: reqContext.startAfter,
 	}
 
 	ctx := log.Context(context.Background(), req)
