@@ -132,8 +132,8 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 				"redundancy_index", idx, "redundancy_type", sg.task.objectInfo.GetRedundancyType())
 		}
 	}(ch)
-	wg.Wait()
 	sg.pieceSize = <-ch
+	wg.Wait()
 }
 
 // streamPieceDataReplicator replicates a piece stream to the target sp
