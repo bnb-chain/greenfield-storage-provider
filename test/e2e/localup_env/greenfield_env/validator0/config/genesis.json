@@ -672,7 +672,9 @@
         "reward_validator_ratio": "0.900000000000000000",
         "reward_submitter_ratio": "0.001000000000000000",
         "reward_submitter_threshold": "1000000000000000",
-        "heartbeat_interval": "100"
+        "heartbeat_interval": "100",
+        "attestation_inturn_interval": "10",
+        "attestation_kept_count": "300"
       }
     },
     "crosschain": {
