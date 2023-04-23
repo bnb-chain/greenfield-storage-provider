@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/bnb-chain/greenfield/types/s3util"
 	"github.com/ethereum/go-ethereum/common"
@@ -74,10 +75,10 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	var (
 		err            error
 		b              bytes.Buffer
+		maxKeys        int64
 		errDescription *errorDescription
 		reqContext     *requestContext
 	)
-
 	reqContext = newRequestContext(r)
 	defer func() {
 		if errDescription != nil {
@@ -102,8 +103,17 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		return
 	}
 
+	maxKeys, err = strconv.ParseInt(reqContext.maxKeys, 10, 64)
+	if err != nil {
+		log.Errorw("failed to parse maxKeys", "max_keys", reqContext.maxKeys, "error", err)
+		errDescription = InvalidMaxKeys
+		return
+	}
+
 	req := &metatypes.ListObjectsByBucketNameRequest{
 		BucketName: reqContext.bucketName,
+		MaxKeys:    maxKeys,
+		StartAfter: reqContext.startAfter,
 	}
 
 	ctx := log.Context(context.Background(), req)

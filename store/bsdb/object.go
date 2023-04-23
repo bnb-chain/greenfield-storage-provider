@@ -1,16 +1,37 @@
 package bsdb
 
+import "github.com/forbole/juno/v4/common"
+
 // ListObjectsByBucketName list objects info by a bucket name
-func (b *BsDBImpl) ListObjectsByBucketName(bucketName string) ([]*Object, error) {
+// sorts the objects by object ID in descending order by default, which is equivalent to sorting by create_at in descending order
+func (b *BsDBImpl) ListObjectsByBucketName(bucketName string, maxKeys int, startAfter common.Hash) ([]*Object, error) {
 	var (
 		objects []*Object
 		err     error
+		limit   int
 	)
-
+	// sets the default max keys value when user didn't input maxKeys
+	if maxKeys == 0 {
+		maxKeys = ListObjectsDefaultMaxKeys
+	}
+	// return NextContinuationToken by adding 1 additionally
+	limit = maxKeys + 1
+	// select latest objects when user didn't input startAfter
+	if startAfter == common.HexToHash("") {
+		err = b.db.Table((&Object{}).TableName()).
+			Select("*").
+			Where("bucket_name = ?", bucketName).
+			Order("object_id desc").
+			Limit(limit).
+			Find(&objects).Error
+		return objects, err
+	}
+	// select objects after a specific key.
 	err = b.db.Table((&Object{}).TableName()).
 		Select("*").
-		Where("bucket_name = ?", bucketName).
-		Order("create_at desc").
+		Where("bucket_name = ? and object_id <= ?", bucketName, startAfter).
+		Order("object_id desc").
+		Limit(limit).
 		Find(&objects).Error
 	return objects, err
 }
