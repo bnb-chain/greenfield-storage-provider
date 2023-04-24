@@ -157,6 +157,8 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	worker := parser.NewWorker(s.parserCtx, exportQueue, 0, config.Cfg.Parser.ConcurrentSync)
 	worker.SetIndexer(s.parserCtx.Indexer)
 
+	latestBlockHeight := mustGetLatestHeight(s.parserCtx)
+	LatestBlockHeight.Store(int64(latestBlockHeight))
 	go s.getLatestBlockHeight()
 
 	lastDbBlockHeight := uint64(0)
@@ -173,11 +175,12 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	// fetch block data
 	go s.quickFetchBlockData(lastDbBlockHeight + 1)
 
+	go enqueueNewBlocks(exportQueue, s.parserCtx, lastDbBlockHeight+1)
+
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	// off of the export queue.
+	time.Sleep(time.Second)
 	go worker.Start()
-
-	go enqueueNewBlocks(exportQueue, s.parserCtx, lastDbBlockHeight+1)
 }
 
 func (s *BlockSyncer) getLatestBlockHeight() {
@@ -198,11 +201,16 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 	count := uint64(s.config.Parser.Workers)
 	for cycle := uint64(0); ; cycle++ {
 		latestBlockHeight := LatestBlockHeight.Load()
+		log.Debugf("latestBlockHeight: %d", latestBlockHeight)
 		if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
+			log.Debugf("quick fetch ended latestBlockHeight: %d", latestBlockHeight)
 			break
 		}
+		wg := &sync.WaitGroup{}
+		wg.Add(int(count))
 		for i := uint64(0); i < count; i++ {
 			go func(idx, c uint64) {
+				defer wg.Done()
 				height := idx + count*c + startHeight
 				if height > uint64(latestBlockHeight) {
 					return
@@ -227,9 +235,11 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 					blockMap.Store(height, block)
 					eventMap.Store(height, events)
 					txMap.Store(height, txs)
+					log.Debugf("put height: %d into map", height)
 					break
 				}
 			}(i, cycle)
 		}
+		wg.Wait()
 	}
 }
