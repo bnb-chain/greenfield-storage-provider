@@ -105,11 +105,13 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	maxKeys, err = strconv.ParseUint(reqContext.maxKeys, 10, 64)
-	if err != nil {
-		log.Errorw("failed to parse maxKeys", "max_keys", reqContext.maxKeys, "error", err)
-		errDescription = InvalidMaxKeys
-		return
+	if reqContext.maxKeys != "" {
+		maxKeys, err = strconv.ParseUint(reqContext.maxKeys, 10, 64)
+		if err != nil {
+			log.Errorw("failed to parse maxKeys", "max_keys", reqContext.maxKeys, "error", err)
+			errDescription = InvalidMaxKeys
+			return
+		}
 	}
 
 	// startAfter is an optional input, we only check its format when user input the value
