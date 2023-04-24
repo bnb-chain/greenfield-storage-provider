@@ -20,6 +20,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		keyCount              uint64
 		isTruncated           bool
 		nextContinuationToken string
+		maxKeys               uint64
 	)
 
 	ctx = log.Context(ctx, req)
@@ -59,6 +60,12 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		})
 	}
 
+	maxKeys = req.MaxKeys
+	// if the user does not provide any input parameters, default values will be used
+	if req.MaxKeys == 0 {
+		maxKeys = model.ListObjectsDefaultMaxKeys
+	}
+
 	keyCount = uint64(len(objects))
 	// if keyCount is equal to req.MaxKeys+1 which means that we additionally return NextContinuationToken, and it is not counted in the keyCount
 	// isTruncated set to false if all the results were returned, set to true if more keys are available to return
@@ -73,7 +80,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 	resp = &metatypes.ListObjectsByBucketNameResponse{
 		Objects:               res,
 		KeyCount:              keyCount,
-		MaxKeys:               req.MaxKeys,
+		MaxKeys:               maxKeys,
 		IsTruncated:           isTruncated,
 		NextContinuationToken: nextContinuationToken,
 	}
