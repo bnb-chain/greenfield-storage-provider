@@ -263,7 +263,7 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 			},
 		},
 		Parser: parserconfig.Config{
-			Workers: 1,
+			Workers: int64(cfg.BlockSyncerCfg.Workers),
 		},
 		Database: databaseconfig.Config{
 			Type:               "mysql",
