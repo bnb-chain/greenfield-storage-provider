@@ -106,15 +106,15 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	}
 
 	if reqContext.maxKeys != "" {
-		// maxKeys should > 0
-		if reqContext.maxKeys == "0" {
-			log.Errorw("failed to check maxKeys", "max_keys", reqContext.maxKeys, "error", err)
-			errDescription = InvalidMaxKeys
-			return
-		}
 		maxKeys, err = strconv.ParseUint(reqContext.maxKeys, 10, 64)
 		if err != nil {
 			log.Errorw("failed to parse maxKeys", "max_keys", reqContext.maxKeys, "error", err)
+			errDescription = InvalidMaxKeys
+			return
+		}
+		// maxKeys should > 0
+		if maxKeys <= 0 {
+			log.Errorw("failed to check maxKeys", "max_keys", reqContext.maxKeys, "error", err)
 			errDescription = InvalidMaxKeys
 			return
 		}
