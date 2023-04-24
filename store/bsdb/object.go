@@ -1,6 +1,6 @@
 package bsdb
 
-import "github.com/forbole/juno/v4/common"
+import "github.com/ethereum/go-ethereum/common"
 
 // ListObjectsByBucketName list objects info by a bucket name
 // sorts the objects by object ID in descending order by default, which is equivalent to sorting by create_at in descending order
