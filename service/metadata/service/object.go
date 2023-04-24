@@ -23,8 +23,14 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		maxKeys               uint64
 	)
 
+	maxKeys = req.MaxKeys
+	// if the user does not provide any input parameters, default values will be used
+	if req.MaxKeys == 0 {
+		maxKeys = model.ListObjectsDefaultMaxKeys
+	}
+
 	ctx = log.Context(ctx, req)
-	objects, err = metadata.bsDB.ListObjectsByBucketName(req.BucketName, int(req.MaxKeys), common.HexToHash(req.StartAfter))
+	objects, err = metadata.bsDB.ListObjectsByBucketName(req.BucketName, int(maxKeys), common.HexToHash(req.StartAfter))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by bucket name", "error", err)
 		return
@@ -51,12 +57,6 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
 		})
-	}
-
-	maxKeys = req.MaxKeys
-	// if the user does not provide any input parameters, default values will be used
-	if req.MaxKeys == 0 {
-		maxKeys = model.ListObjectsDefaultMaxKeys
 	}
 
 	keyCount = uint64(len(objects))
