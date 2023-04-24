@@ -12,29 +12,13 @@ import (
 	"github.com/forbole/juno/v4/types/config"
 )
 
-// enqueueMissingBlocks enqueues jobs (block heights) for missed blocks starting
-// at the startHeight up until the latest known height.
-func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context, lastDbBlockHeight uint64) (uint64, error) {
-	// Get the latest height
-	latestBlockHeight := mustGetLatestHeight(ctx)
-
-	log.Infow("syncing missing blocks...", "latest_block_height", latestBlockHeight)
-	for i := lastDbBlockHeight + 1; i <= latestBlockHeight; i++ {
-		log.Debugw("enqueueing missing block", "height", i)
-		exportQueue <- i
-	}
-
-	return latestBlockHeight + 1, nil
-}
-
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
 func enqueueNewBlocks(exportQueue types.HeightQueue, ctx *parser.Context, currHeight uint64) {
 	// Enqueue upcoming heights
 	for {
-		latestBlockHeight := mustGetLatestHeight(ctx)
-
+		latestBlockHeight := LatestBlockHeight.Load()
 		// Enqueue all heights from the current height up to the latest height
-		for ; currHeight <= latestBlockHeight; currHeight++ {
+		for ; currHeight <= uint64(latestBlockHeight); currHeight++ {
 			log.Debugw("enqueueing new block", "height", currHeight)
 			exportQueue <- currHeight
 		}

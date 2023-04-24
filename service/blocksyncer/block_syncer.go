@@ -5,36 +5,36 @@ import (
 	"errors"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/forbole/juno/v4/cmd"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
+	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/messages"
 	"github.com/forbole/juno/v4/modules/registrar"
+	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
-
 	"github.com/forbole/juno/v4/types/config"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-
-	"github.com/forbole/juno/v4/modules"
-	"github.com/forbole/juno/v4/parser"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // BlockSyncer synchronizes storage,payment,permission data to db by handling related events
 type BlockSyncer struct {
-	config            *tomlconfig.TomlConfig
-	name              string
-	parserCtx         *parser.Context
-	running           atomic.Value
-	latestBlockHeight uint64
+	config    *tomlconfig.TomlConfig
+	name      string
+	parserCtx *parser.Context
+	running   atomic.Value
 }
 
 var (
 	blockMap *sync.Map
 	eventMap *sync.Map
+	txMap    *sync.Map
+
+	LatestBlockHeight atomic.Int64
 )
 
 // NewBlockSyncerService create a BlockSyncer service to index block events data to db
@@ -45,6 +45,7 @@ func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
 	}
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
+	txMap = new(sync.Map)
 	if err := s.initClient(); err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (s *BlockSyncer) initClient() error {
 		)
 	cmdCfg := junoConfig.GetParseConfig()
 	cmdCfg.WithTomlConfig(s.config)
-	log.Infof("cmd cfg: %+v", cmdCfg)
+
 	if readErr := parsecmdtypes.ReadConfigPreRunE(cmdCfg)(nil, nil); readErr != nil {
 		log.Infof("readErr: %v", readErr)
 		return readErr
@@ -88,12 +89,10 @@ func (s *BlockSyncer) initClient() error {
 		return err
 	}
 	s.parserCtx = ctx
-	latestBlockHeight := mustGetLatestHeight(s.parserCtx)
-	s.latestBlockHeight = latestBlockHeight
 	s.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
 		ctx.Node,
 		ctx.Database,
-		ctx.Modules, s.latestBlockHeight)
+		ctx.Modules)
 	return nil
 }
 
@@ -158,6 +157,8 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	worker := parser.NewWorker(s.parserCtx, exportQueue, 0, config.Cfg.Parser.ConcurrentSync)
 	worker.SetIndexer(s.parserCtx.Indexer)
 
+	go s.getLatestBlockHeight()
+
 	lastDbBlockHeight := uint64(0)
 	for {
 		epoch, err := s.parserCtx.Database.GetEpoch(context.TODO())
@@ -170,42 +171,65 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	}
 
 	// fetch block data
-	go s.quickFetchBlockData(lastDbBlockHeight+1, s.latestBlockHeight)
+	go s.quickFetchBlockData(lastDbBlockHeight + 1)
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	// off of the export queue.
 	go worker.Start()
 
-	latestBlockHeight, err := enqueueMissingBlocks(exportQueue, s.parserCtx, lastDbBlockHeight)
-	if err != nil {
-		log.Errorf("failed to enqueue missing blocks error: %v", err)
-	}
-	go enqueueNewBlocks(exportQueue, s.parserCtx, latestBlockHeight)
+	go enqueueNewBlocks(exportQueue, s.parserCtx, lastDbBlockHeight+1)
 }
 
-func (s *BlockSyncer) quickFetchBlockData(startHeight, endHeight uint64) {
+func (s *BlockSyncer) getLatestBlockHeight() {
+	for {
+		latestBlockHeight, err := s.parserCtx.Node.LatestHeight()
+		if err != nil {
+			log.Errorw("failed to get last block from RPCConfig client",
+				"err", err,
+				"retry interval", config.GetAvgBlockTime())
+		}
+		LatestBlockHeight.Store(latestBlockHeight)
+
+		time.Sleep(config.GetAvgBlockTime())
+	}
+}
+
+func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 	count := uint64(s.config.Parser.Workers)
-	for i := uint64(0); i < count; i++ {
-		go func(idx uint64) {
-			for cycle := uint64(0); ; cycle++ {
-				height := idx + count*cycle + startHeight
-				if height > endHeight {
+	for cycle := uint64(0); ; cycle++ {
+		latestBlockHeight := LatestBlockHeight.Load()
+		if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
+			break
+		}
+		for i := uint64(0); i < count; i++ {
+			go func(idx, c uint64) {
+				height := idx + count*c + startHeight
+				if height > uint64(latestBlockHeight) {
 					return
 				}
-				block, err := s.parserCtx.Node.Block(int64(height))
-				if err != nil {
-					log.Warnf("failed to get block from node: %s", err)
-					continue
-				}
+				for {
+					block, err := s.parserCtx.Node.Block(int64(height))
+					if err != nil {
+						log.Warnf("failed to get block from node: %s", err)
+						continue
+					}
 
-				events, err := s.parserCtx.Node.BlockResults(int64(height))
-				if err != nil {
-					log.Warnf("failed to get block results from node: %s", err)
-					continue
+					events, err := s.parserCtx.Node.BlockResults(int64(height))
+					if err != nil {
+						log.Warnf("failed to get block results from node: %s", err)
+						continue
+					}
+					txs, err := s.parserCtx.Node.Txs(block)
+					if err != nil {
+						log.Warnf("failed to get block results from node: %s", err)
+						continue
+					}
+					blockMap.Store(height, block)
+					eventMap.Store(height, events)
+					txMap.Store(height, txs)
+					break
 				}
-				blockMap.Store(height, block)
-				eventMap.Store(height, events)
-			}
-		}(i)
+			}(i, cycle)
+		}
 	}
 }

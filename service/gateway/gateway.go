@@ -14,6 +14,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
+	authclient "github.com/bnb-chain/greenfield-storage-provider/service/auth/client"
 	challengeclient "github.com/bnb-chain/greenfield-storage-provider/service/challenge/client"
 	downloaderclient "github.com/bnb-chain/greenfield-storage-provider/service/downloader/client"
 	metadataclient "github.com/bnb-chain/greenfield-storage-provider/service/metadata/client"
@@ -40,6 +42,7 @@ type Gateway struct {
 	receiver   *receiverclient.ReceiverClient
 	signer     *signerclient.SignerClient
 	metadata   *metadataclient.MetadataClient
+	auth       *authclient.AuthClient
 }
 
 // NewGatewayService return the gateway instance
@@ -92,6 +95,12 @@ func NewGatewayService(cfg *GatewayConfig) (*Gateway, error) {
 			return nil, err
 		}
 	}
+	if cfg.AuthServiceAddress != "" {
+		if gateway.auth, err = authclient.NewAuthClient(cfg.AuthServiceAddress); err != nil {
+			log.Errorw("failed to create auth client", "error", err)
+			return nil, err
+		}
+	}
 
 	return gateway, nil
 }
@@ -115,6 +124,10 @@ func (gateway *Gateway) serve() {
 	router := mux.NewRouter().SkipClean(true)
 	if metrics.GetMetrics().Enabled() {
 		router.Use(metrics.DefaultHTTPServerMetrics.InstrumentationHandler)
+	}
+	if err := localhttp.NewAPILimiter(gateway.config.APILimiterCfg); err != nil {
+		log.Errorw("failed to new api limiter", "err", err)
+		return
 	}
 	gateway.registerHandler(router)
 	server := &http.Server{

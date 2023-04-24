@@ -10,15 +10,16 @@ import (
 	parserconfig "github.com/forbole/juno/v4/parser/config"
 	"github.com/forbole/juno/v4/types/config"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
+	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/service/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
@@ -70,6 +71,40 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 		gCfg.MetadataServiceAddress = cfg.Endpoint[model.MetadataService]
 	} else {
 		return nil, fmt.Errorf("missing metadata gPRC address configuration for gateway service")
+	}
+	if _, ok := cfg.Endpoint[model.AuthService]; ok {
+		gCfg.AuthServiceAddress = cfg.Endpoint[model.AuthService]
+	} else {
+		return nil, fmt.Errorf("missing auth gPRC address configuration for gateway service")
+	}
+	if cfg.RateLimiter != nil {
+		defaultMap := make(map[string]localhttp.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.PathPattern {
+			defaultMap[c.Key] = localhttp.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		patternMap := make(map[string]localhttp.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.HostPattern {
+			patternMap[c.Key] = localhttp.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		apiLimitsMap := make(map[string]localhttp.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.APILimits {
+			apiLimitsMap[c.Key] = localhttp.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		gCfg.APILimiterCfg = &localhttp.APILimiterConfig{
+			PathPattern:  defaultMap,
+			HostPattern:  patternMap,
+			APILimits:    apiLimitsMap,
+			HTTPLimitCfg: cfg.RateLimiter.HTTPLimitCfg,
+		}
 	}
 	return gCfg, nil
 }
@@ -262,4 +297,18 @@ func (cfg *StorageProviderConfig) MakeP2PServiceConfig() (*p2p.P2PConfig, error)
 		return nil, fmt.Errorf("missing signer gRPC address configuration for p2p service")
 	}
 	return pCfg, nil
+}
+
+// MakeAuthServiceConfig make auth service config from StorageProviderConfig
+func (cfg *StorageProviderConfig) MakeAuthServiceConfig() (*auth.AuthConfig, error) {
+	aCfg := &auth.AuthConfig{
+		SpDBConfig:        cfg.SpDBConfig,
+		SpOperatorAddress: cfg.SpOperatorAddress,
+	}
+	if _, ok := cfg.ListenAddress[model.AuthService]; ok {
+		aCfg.GRPCAddress = cfg.ListenAddress[model.AuthService]
+	} else {
+		return nil, fmt.Errorf("missing auth gRPC address configuration for auth service")
+	}
+	return aCfg, nil
 }

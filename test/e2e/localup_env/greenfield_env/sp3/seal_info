@@ -1,13 +1,13 @@
 
-- address: 0xc6219c1E5ee3adB7b4335E2082201B777c7F72DC
+- address: 0x766429DA21C001216f04e10aC4a4B5c29813DC8a
   name: sp3_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A7eYyGiGXI0+lrPCyaQWp/LC12hMEvB0CVODankacPYL"}'
-  pubkey_hex: 03b798c868865c8d3e96b3c2c9a416a7f2c2d7684c12f0740953836a791a70f60b
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A8elmDZq/wuXEO0VIKAkTtQxriXmRFxazKPZYKe0kyp3"}'
+  pubkey_hex: 03c7a598366aff0b9710ed1520a0244ed431ae25e6445c5acca3d960a7b4932a77
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-fan final salute vivid regret jeans force vote north borrow auto cave response door steak neutral dash bitter boat very asthma vehicle jazz buzz
+distance east extra program disagree devote rely finish glide profit blouse subway offer upper deliver chef orphan universe idle deliver amazing control bright typical
 

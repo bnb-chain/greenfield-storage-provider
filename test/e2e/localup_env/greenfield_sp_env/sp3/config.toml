@@ -1,10 +1,11 @@
-Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager", "p2p"]
-SpOperatorAddress = "0xe620C05870A2392E4987676b345026E6C6228388"
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "metadata", "manager", "p2p", "auth"]
+SpOperatorAddress = "0x038c464091e2a2F9CA5270020B1483e77662581d"
 
 [Endpoint]
+auth = "localhost:13033"
 challenge = "localhost:13333"
 downloader = "localhost:13233"
-gateway = "gnfd.nodereal.com"
+gateway = "gnfd.test-sp.com"
 metadata = "localhost:13733"
 p2p = "localhost:13833"
 receiver = "localhost:13533"
@@ -13,6 +14,7 @@ tasknode = "localhost:13433"
 uploader = "localhost:13133"
 
 [ListenAddress]
+auth = "localhost:13033"
 challenge = "localhost:13333"
 downloader = "localhost:13233"
 gateway = "127.0.0.1:9036"
@@ -52,10 +54,11 @@ GRPCAddress = "localhost:13633"
 APIKey = ""
 WhitelistCIDR = ["0.0.0.0/0"]
 GasLimit = 210000
-OperatorPrivateKey = "96c8a7d57937d2e1131c883a62d3ea660c92eba233378c470fd14765dd9f32db"
-FundingPrivateKey = "ad42e0d4f6bfc83319ce75b2e94fe12f6e5263ba4f7cbf141b9827aca802238a"
-SealPrivateKey = "18f169ad84b6f149e9dd8f9f14e574272cb296bcaf17d60a9e42097c1d768420"
-ApprovalPrivateKey = "0165c481ac4e901bc768f1a94ccf8f9192a887c90f8dde8b249ea5f8925052b7"
+OperatorPrivateKey = "3a49425864a8a4ad6bc71c5f40890e1bd6f3bbedcf80c2b4be331b701bfe766c"
+FundingPrivateKey = "8d41abb0e7801fee47064f0fa657f1ce0be5e0fe0a9e98bf55d5da1c0ab0b12e"
+SealPrivateKey = "697fcda2cb14ed99f9a6c6b5a3b2cf2bb88f44835e5a8b8118ce34305ebfedcd"
+ApprovalPrivateKey = "64ccc27cb1be649061059834e20a8de29fa3f23202060bb26bc0243e51ac801f"
+GcPrivateKey = "86f56c937e4bb3abb0435e83112742b76de7b0a6b00caf742b221b2c18546bd1"
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment"]
@@ -73,3 +76,13 @@ Path = "./gnfd-sp.log"
 
 [MetricsCfg]
 HTTPAddress = "localhost:17036"
+
+[RateLimiter]
+APILimits = []
+HostPattern = []
+PathPattern = []
+
+[RateLimiter.HTTPLimitCfg]
+On = false
+RateLimit = 1
+RatePeriod = "S"

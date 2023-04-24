@@ -1,13 +1,11 @@
-GreenfieldEndpoint: "localhost:26750"
+GreenfieldEndpoint: "http://localhost:26750"
 GreenfieldGRPC: "localhost:9090"
 GreenfieldChainId: "greenfield_9000-1741"
-GreenfieldRoot: "bean when combine like joke wet actress ginger rural dutch metal razor draft nothing almost idle poem company hour health desert come save embody"
+GreenfieldRoot: "e881daa9e23d5e1d14de6d6bfc6dbf1e61d1e6472a06f860ad6396104840cc01"
 GreenfieldValSecret:
-  - "bean when combine like joke wet actress ginger rural dutch metal razor draft nothing almost idle poem company hour health desert come save embody"
+  - "e881daa9e23d5e1d14de6d6bfc6dbf1e61d1e6472a06f860ad6396104840cc01"
 GreenfieldNodeIP:
   - ""
-GreenfieldAccSecret:
-  - "snow glove dish frost question protect wet estate recipe sample amazing once robot author blame conduct claw admit market adapt earth elegant power ahead"
 SPEndpoint:
   - "127.0.0.1:9033"
 SPs:

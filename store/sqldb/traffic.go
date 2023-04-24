@@ -5,12 +5,22 @@ import (
 	"fmt"
 	"time"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"gorm.io/gorm"
+
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 // CheckQuotaAndAddReadRecord check current quota, and add read record
+// TODO: Traffic statistics may be inaccurate in extreme cases, optimize it in the future
 func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
+	startTime := time.Now()
+	defer func() {
+		observer := metrics.SPDBTimeHistogram.WithLabelValues("checkQuotaAndAddReadRecord")
+		observer.Observe(time.Since(startTime).Seconds())
+	}()
+
 	yearMonth := TimeToYearMonth(TimestampUsToTime(record.ReadTimestampUs))
 	bucketTraffic, err := s.GetBucketTraffic(record.BucketID, yearMonth)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -27,8 +37,11 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 			ModifiedTime:     time.Now(),
 		}
 		result := s.db.Create(insertBucketTraffic)
-		if result.Error != nil || result.RowsAffected != 1 {
+		if result.Error != nil {
 			return fmt.Errorf("failed to insert bucket traffic table: %s", result.Error)
+		}
+		if result.RowsAffected != 1 {
+			log.Infow("insert traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 		}
 		bucketTraffic = &BucketTraffic{
 			BucketID:         insertBucketTraffic.BucketID,
@@ -46,8 +59,11 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 				ReadQuotaSize: quota.ReadQuotaSize,
 				ModifiedTime:  time.Now(),
 			})
-		if result.Error != nil || result.RowsAffected != 1 {
+		if result.Error != nil {
 			return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
+		}
+		if result.RowsAffected != 1 {
+			log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 		}
 		bucketTraffic.ReadQuotaSize = quota.ReadQuotaSize
 	}
@@ -64,8 +80,11 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 			ReadConsumedSize: bucketTraffic.ReadConsumedSize + record.ReadSize,
 			ModifiedTime:     time.Now(),
 		})
-	if result.Error != nil || result.RowsAffected != 1 {
+	if result.Error != nil {
 		return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
+	}
+	if result.RowsAffected != 1 {
+		log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 	}
 
 	// add read record
