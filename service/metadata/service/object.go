@@ -17,7 +17,7 @@ import (
 func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *metatypes.ListObjectsByBucketNameRequest) (resp *metatypes.ListObjectsByBucketNameResponse, err error) {
 	var (
 		objects               []*model.Object
-		keyCount              int64
+		keyCount              uint64
 		isTruncated           bool
 		nextContinuationToken string
 	)
@@ -52,7 +52,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		})
 	}
 
-	keyCount = int64(len(objects))
+	keyCount = uint64(len(objects))
 	// if keyCount is equal to req.MaxKeys+1 which means that we additionally return NextContinuationToken, and it is not counted in the keyCount
 	// isTruncated set to false if all the results were returned, set to true if more keys are available to return
 	// remove the returned NextContinuationToken object and separately return its object ID to the user for the next API call

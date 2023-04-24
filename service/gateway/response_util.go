@@ -29,6 +29,7 @@ var (
 	InvalidRange       = &errorDescription{errorCode: "InvalidRange", errorMessage: "Range is invalid", statusCode: http.StatusBadRequest}
 	InvalidAddress     = &errorDescription{errorCode: "InvalidAddress", errorMessage: "Address is illegal", statusCode: http.StatusBadRequest}
 	InvalidMaxKeys     = &errorDescription{errorCode: "InvalidMaxKeys", errorMessage: "MaxKeys is illegal", statusCode: http.StatusBadRequest}
+	InvalidStartAfter  = &errorDescription{errorCode: "InvalidStartAfter", errorMessage: "StartAfter is illegal", statusCode: http.StatusBadRequest}
 	SignatureNotMatch  = &errorDescription{errorCode: "SignatureDoesNotMatch", errorMessage: "SignatureDoesNotMatch", statusCode: http.StatusForbidden}
 	AccessDenied       = &errorDescription{errorCode: "AccessDenied", errorMessage: "Access Denied", statusCode: http.StatusForbidden}
 	OutOfQuota         = &errorDescription{errorCode: "AccessDenied", errorMessage: "Out of Quota", statusCode: http.StatusForbidden}
