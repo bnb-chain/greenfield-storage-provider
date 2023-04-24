@@ -1,7 +1,6 @@
 package blocksyncer
 
 import (
-	"context"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -13,36 +12,14 @@ import (
 	"github.com/forbole/juno/v4/types/config"
 )
 
-// enqueueMissingBlocks enqueues jobs (block heights) for missed blocks starting
-// at the startHeight up until the latest known height.
-func enqueueMissingBlocks(exportQueue types.HeightQueue, ctx *parser.Context) (uint64, error) {
-	// Get the latest height
-	latestBlockHeight := mustGetLatestHeight(ctx)
-
-	epoch, err := ctx.Database.GetEpoch(context.TODO())
-	if err != nil {
-		log.Errorw("failed to get last block height from database", "error", err)
-		return 0, err
-	}
-	lastDbBlockHeight := uint64(epoch.BlockHeight)
-
-	log.Infow("syncing missing blocks...", "latest_block_height", latestBlockHeight)
-	for i := lastDbBlockHeight + 1; i <= latestBlockHeight; i++ {
-		log.Debugw("enqueueing missing block", "height", i)
-		exportQueue <- i
-	}
-
-	return latestBlockHeight + 1, nil
-}
-
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
 func enqueueNewBlocks(exportQueue types.HeightQueue, ctx *parser.Context, currHeight uint64) {
 	// Enqueue upcoming heights
 	for {
-		latestBlockHeight := mustGetLatestHeight(ctx)
-
+		latestBlockHeightAny := LatestBlockHeight.Load()
+		latestBlockHeight := latestBlockHeightAny.(int64)
 		// Enqueue all heights from the current height up to the latest height
-		for ; currHeight <= latestBlockHeight; currHeight++ {
+		for ; currHeight <= uint64(latestBlockHeight); currHeight++ {
 			log.Debugw("enqueueing new block", "height", currHeight)
 			exportQueue <- currHeight
 		}

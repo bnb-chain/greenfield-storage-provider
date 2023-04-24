@@ -61,27 +61,39 @@ func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, tx
 // It returns an error if any export process fails.
 func (i *Impl) Process(height uint64) error {
 	log.Debugw("processing block", "height", height)
+	var block *coretypes.ResultBlock
+	var events *coretypes.ResultBlockResults
+	var txs []*types.Tx
+	var err error
+	blockAny, okb := blockMap.Load(height)
+	eventsAny, oke := eventMap.Load(height)
+	txsAny, okt := txMap.Load(height)
+	block, _ = blockAny.(*coretypes.ResultBlock)
+	events, _ = eventsAny.(*coretypes.ResultBlockResults)
+	txs, _ = txsAny.([]*types.Tx)
+	if !okb || !oke || !okt {
+		// get block info
+		block, err = i.Node.Block(int64(height))
+		if err != nil {
+			log.Errorf("failed to get block from node: %s", err)
+			return err
+		}
 
-	// get block info
-	block, err := i.Node.Block(int64(height))
-	if err != nil {
-		log.Errorf("failed to get block from node: %s", err)
-		return err
+		// get txs
+		txs, err = i.Node.Txs(block)
+		if err != nil {
+			log.Errorf("failed to get transactions for block: %s", err)
+			return err
+		}
+
+		// get block results
+		events, err = i.Node.BlockResults(int64(height))
+		if err != nil {
+			log.Errorf("failed to get block results from node: %s", err)
+			return err
+		}
 	}
 
-	// get txs
-	txs, err := i.Node.Txs(block)
-	if err != nil {
-		log.Errorf("failed to get block results from node: %s", err)
-		return err
-	}
-
-	// get block results
-	events, err := i.Node.BlockResults(int64(height))
-	if err != nil {
-		log.Errorf("failed to get block results from node: %s", err)
-		return err
-	}
 	beginBlockEvents := events.BeginBlockEvents
 	endBlockEvents := events.EndBlockEvents
 
@@ -116,6 +128,10 @@ func (i *Impl) Process(height uint64) error {
 		log.Errorf("failed to export epoch: %s", err)
 		return err
 	}
+
+	blockMap.Delete(height)
+	eventMap.Delete(height)
+	txMap.Delete(height)
 
 	return nil
 }
@@ -238,6 +254,11 @@ func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
 		return false, err
 	}
 	log.Infof("epoch height:%d, cur height: %d", ep.BlockHeight, height)
+	if ep.BlockHeight > int64(height) {
+		blockMap.Delete(height)
+		eventMap.Delete(height)
+		txMap.Delete(height)
+	}
 	return ep.BlockHeight > int64(height), nil
 }
 
