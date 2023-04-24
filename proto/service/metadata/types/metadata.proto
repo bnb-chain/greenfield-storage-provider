@@ -158,7 +158,7 @@ message ListObjectsByBucketNameResponse {
   // is_truncated set to false if all of the results were returned. set to true if more keys are available to return
   bool is_truncated = 4;
   // next_continuation_token is sent when is_truncated is true, which means there are more keys in the bucket that can be listed
-  string  next_continuation_token = 5;
+  string next_continuation_token = 5;
 }
 
 // GetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.
