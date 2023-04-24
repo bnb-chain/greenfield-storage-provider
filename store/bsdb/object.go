@@ -10,10 +10,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName string, maxKeys int, start
 		err     error
 		limit   int
 	)
-	// sets the default max keys value when user didn't input maxKeys
-	if maxKeys == 0 {
-		maxKeys = ListObjectsDefaultMaxKeys
-	}
+
 	// return NextContinuationToken by adding 1 additionally
 	limit = maxKeys + 1
 	// select latest objects when user didn't input startAfter
