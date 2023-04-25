@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"net/http"
-	"strconv"
 
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gogo/protobuf/jsonpb"
@@ -73,12 +73,15 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 // listObjectsByBucketNameHandler handle list objects by bucket name request
 func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err            error
-		b              bytes.Buffer
-		maxKeys        uint64
-		errDescription *errorDescription
-		reqContext     *requestContext
-		ok             bool
+		err               error
+		b                 bytes.Buffer
+		maxKeys           uint64
+		errDescription    *errorDescription
+		reqContext        *requestContext
+		ok                bool
+		requestBucketName string
+		requestMaxKeys    string
+		requestStartAfter string
 	)
 
 	reqContext = newRequestContext(r)
@@ -99,38 +102,42 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
-		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
+	requestBucketName = reqContext.bucketName
+	requestMaxKeys = reqContext.request.URL.Query().Get("max_keys")
+	requestStartAfter = reqContext.request.URL.Query().Get("start_after")
+
+	if err = s3util.CheckValidBucketName(requestBucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", requestBucketName, "error", err)
 		errDescription = InvalidBucketName
 		return
 	}
 
-	if reqContext.maxKeys != "" {
-		maxKeys, err = strconv.ParseUint(reqContext.maxKeys, 10, 64)
+	if requestMaxKeys != "" {
+		maxKeys, err = util.StringToUint64(requestMaxKeys)
 		if err != nil {
-			log.Errorw("failed to parse maxKeys", "max_keys", reqContext.maxKeys, "error", err)
+			log.Errorw("failed to parse maxKeys", "max_keys", requestMaxKeys, "error", err)
 			errDescription = InvalidMaxKeys
 			return
 		}
 		// maxKeys should > 0
-		if maxKeys <= 0 {
-			log.Errorw("failed to check maxKeys", "max_keys", reqContext.maxKeys, "error", err)
+		if maxKeys == 0 {
+			log.Errorw("failed to check maxKeys", "max_keys", requestMaxKeys, "error", err)
 			errDescription = InvalidMaxKeys
 			return
 		}
 	}
 
 	// startAfter is an optional input, we only check its format when user input the value
-	if ok = IsHexHash(reqContext.startAfter); !ok && reqContext.startAfter != "" {
-		log.Errorw("failed to check startAfter", "start_after", reqContext.startAfter, "error", err)
+	if ok = IsHexHash(requestStartAfter); !ok && requestStartAfter != "" {
+		log.Errorw("failed to check startAfter", "start_after", requestStartAfter, "error", err)
 		errDescription = InvalidStartAfter
 		return
 	}
 
 	req := &metatypes.ListObjectsByBucketNameRequest{
-		BucketName: reqContext.bucketName,
+		BucketName: requestBucketName,
 		MaxKeys:    maxKeys,
-		StartAfter: reqContext.startAfter,
+		StartAfter: requestStartAfter,
 	}
 
 	ctx := log.Context(context.Background(), req)

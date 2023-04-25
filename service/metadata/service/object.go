@@ -29,6 +29,11 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		maxKeys = model.ListObjectsDefaultMaxKeys
 	}
 
+	// returns some or all (up to 1000) of the objects in a bucket with each request
+	if req.MaxKeys > model.ListObjectsLimitSize {
+		maxKeys = model.ListObjectsLimitSize
+	}
+
 	ctx = log.Context(ctx, req)
 	objects, err = metadata.bsDB.ListObjectsByBucketName(req.BucketName, int(maxKeys), common.HexToHash(req.StartAfter))
 	if err != nil {
