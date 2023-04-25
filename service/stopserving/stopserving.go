@@ -88,6 +88,8 @@ func (s *StopServing) Start(ctx context.Context) error {
 func (s *StopServing) eventLoop() {
 	s.discontinueBuckets()
 	ticker := time.NewTicker(FetchBucketsInterval)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ticker.C:
@@ -108,8 +110,7 @@ func (s *StopServing) discontinueBuckets() {
 	}
 
 	for _, bucket := range buckets {
-		cacheKey := []byte{'b'}
-		cacheKey = append(cacheKey, bucket.BucketInfo.Id.Bytes()...)
+		cacheKey := bucket.GetCacheKey()
 		if s.cache.Contains(cacheKey) { // this bucket has been discontinued, however the metadata indexer did not handle it yet
 			continue
 		}
