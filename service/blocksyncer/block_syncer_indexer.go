@@ -17,6 +17,7 @@ import (
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
@@ -65,13 +66,20 @@ func (i *Impl) Process(height uint64) error {
 	var events *coretypes.ResultBlockResults
 	var txs []*types.Tx
 	var err error
-	blockAny, okb := blockMap.Load(height)
-	eventsAny, oke := eventMap.Load(height)
-	txsAny, okt := txMap.Load(height)
-	block, _ = blockAny.(*coretypes.ResultBlock)
-	events, _ = eventsAny.(*coretypes.ResultBlockResults)
-	txs, _ = txsAny.([]*types.Tx)
-	if !okb || !oke || !okt {
+	flagAny := CatchUpFlag.Load()
+	flag := flagAny.(bool)
+	if !flag {
+		blockAny, okb := blockMap.Load(height)
+		eventsAny, oke := eventMap.Load(height)
+		txsAny, okt := txMap.Load(height)
+		block, _ = blockAny.(*coretypes.ResultBlock)
+		events, _ = eventsAny.(*coretypes.ResultBlockResults)
+		txs, _ = txsAny.([]*types.Tx)
+		if !okb || !oke || !okt {
+			log.Warnf("failed to get map data height: %d", height)
+			return errors.ErrBlockNotFound
+		}
+	} else {
 		// get block info
 		block, err = i.Node.Block(int64(height))
 		if err != nil {

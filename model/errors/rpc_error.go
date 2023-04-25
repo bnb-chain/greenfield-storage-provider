@@ -142,7 +142,6 @@ func GRPCErrorToInnerError(err error) error {
 
 // block_syncer service error
 var (
-	// ErrInvalidAccountID defines invalid account id
+	// ErrBlockNotFound defines not found block data
 	ErrBlockNotFound = errors.New("failed to get block from map need retry")
-	ErrEventNotFound = errors.New("failed to get event from map need retry")
 )

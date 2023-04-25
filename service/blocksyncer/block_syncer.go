@@ -29,12 +29,14 @@ type BlockSyncer struct {
 	running   atomic.Value
 }
 
+// Read concurrency required global variables
 var (
 	blockMap *sync.Map
 	eventMap *sync.Map
 	txMap    *sync.Map
 
 	LatestBlockHeight atomic.Value
+	CatchUpFlag       atomic.Value
 )
 
 // NewBlockSyncerService create a BlockSyncer service to index block events data to db
@@ -159,6 +161,7 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 
 	latestBlockHeight := mustGetLatestHeight(s.parserCtx)
 	LatestBlockHeight.Store(int64(latestBlockHeight))
+	CatchUpFlag.Store(false)
 	go s.getLatestBlockHeight()
 
 	lastDbBlockHeight := uint64(0)
@@ -202,9 +205,9 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 	for cycle := uint64(0); ; cycle++ {
 		latestBlockHeightAny := LatestBlockHeight.Load()
 		latestBlockHeight := latestBlockHeightAny.(int64)
-		log.Debugf("latestBlockHeight: %d", latestBlockHeight)
 		if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
-			log.Debugf("quick fetch ended latestBlockHeight: %d", latestBlockHeight)
+			log.Infof("quick fetch ended latestBlockHeight: %d", latestBlockHeight)
+			CatchUpFlag.Store(true)
 			break
 		}
 		wg := &sync.WaitGroup{}
@@ -236,7 +239,6 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 					blockMap.Store(height, block)
 					eventMap.Store(height, events)
 					txMap.Store(height, txs)
-					log.Debugf("put height: %d into map", height)
 					break
 				}
 			}(i, cycle)
