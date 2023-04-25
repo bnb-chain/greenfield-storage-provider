@@ -7,6 +7,7 @@ import (
 
 // ManagerConfig defines manager service config
 type ManagerConfig struct {
+	GRPCAddress         string
 	SpOperatorAddress   string
 	ChainConfig         *gnfd.GreenfieldChainConfig
 	SpDBConfig          *config.SQLDBConfig
@@ -15,4 +16,13 @@ type ManagerConfig struct {
 	ReplicateQueueCap   int
 	SealQueueCap        int
 	GCObjectQueueCap    int
+}
+
+// DefaultManagerConfig is the default config.
+var DefaultManagerConfig = &ManagerConfig{
+	MaxUploadConcurrent: 10000,
+	UploadQueueCap:      5000,
+	ReplicateQueueCap:   5000,
+	SealQueueCap:        5000,
+	GCObjectQueueCap:    5000,
 }

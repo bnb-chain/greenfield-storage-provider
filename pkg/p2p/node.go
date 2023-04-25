@@ -42,7 +42,7 @@ func NewNode(config *NodeConfig, SPAddr string, signer *signerclient.SignerClien
 	if config.PingPeriod < PingPeriodMin {
 		config.PingPeriod = PingPeriodMin
 	}
-	privKey, localAddr, bootstrapIDs, bootstrapAddrs, err := config.ParseConfing()
+	privKey, localAddr, bootstrapIDs, bootstrapAddrs, err := config.ParseConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (n *Node) sendToPeer(peerID peer.ID, pc protocol.ID, data proto.Message) er
 		n.peers.DeletePeer(peerID)
 		return err
 	}
-	// log.Debugw("success to send msg", "peer_id", peerID, "protocol", pc, "msg", data.String())
+	// log.Debugw("succeed to send msg", "peer_id", peerID, "protocol", pc, "msg", data.String())
 	s.Close()
 	return err
 }

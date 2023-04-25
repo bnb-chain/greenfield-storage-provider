@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"errors"
+	"net"
 	"sync/atomic"
 	"time"
 
@@ -10,7 +11,12 @@ import (
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/service/manager/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 var _ lifecycle.Service = &Manager{}
@@ -26,12 +32,13 @@ var (
 // Currently, it supports periodic update of sp info list and storage params information in sp db.
 // TODO::support gc and configuration management, etc.
 type Manager struct {
-	config  *ManagerConfig
-	pqueue  *MPQueue
-	running atomic.Value
-	stopCh  chan struct{}
-	chain   *gnfd.Greenfield
-	spDB    sqldb.SPDB
+	config     *ManagerConfig
+	pqueue     *MPQueue
+	running    atomic.Value
+	stopCh     chan struct{}
+	chain      *gnfd.Greenfield
+	spDB       sqldb.SPDB
+	grpcServer *grpc.Server
 }
 
 // NewManagerService returns an instance of manager
@@ -72,7 +79,32 @@ func (m *Manager) Start(ctx context.Context) error {
 
 	// start background task
 	go m.eventLoop()
-	return nil
+	errCh := make(chan error)
+	go m.serve(errCh)
+	err := <-errCh
+	return err
+}
+
+// serve start the manager gRPC service
+func (m *Manager) serve(errCh chan error) {
+	lis, err := net.Listen("tcp", m.config.GRPCAddress)
+	errCh <- err
+	if err != nil {
+		log.Errorw("failed to listen", "error", err)
+		return
+	}
+
+	options := utilgrpc.GetDefaultServerOptions()
+	if metrics.GetMetrics().Enabled() {
+		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
+	}
+	m.grpcServer = grpc.NewServer(options...)
+	types.RegisterManagerServiceServer(m.grpcServer, m)
+	reflection.Register(m.grpcServer)
+	if err := m.grpcServer.Serve(lis); err != nil {
+		log.Errorw("failed to start grpc server", "error", err)
+		return
+	}
 }
 
 // eventLoop background goroutine, responsible for refreshing sp info and storage params

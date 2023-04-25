@@ -45,6 +45,11 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 		if err = uploader.signIntegrityHash(ctx, objectID, objectInfo.GetChecksums()[0], pieceChecksumList); err != nil {
 			return
 		}
+		// TODO: report upload state
+		if err = uploader.manager.DoneUploadObjectTask(ctx, objectInfo); err != nil {
+			log.CtxErrorw(ctx, "failed to done upload object task", "error", err)
+			return
+		}
 		if err = uploader.taskNode.ReplicateObject(ctx, objectInfo); err != nil {
 			log.CtxErrorw(ctx, "failed to notify task node to replicate object", "error", err)
 			uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
@@ -82,6 +87,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 				if int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()+1) !=
 					len(objectInfo.GetChecksums()) {
 					errCh <- merrors.ErrMismatchChecksumNum
+					return
 				}
 				objectID = objectInfo.Id.Uint64()
 				ctx = log.WithValue(ctx, "object_id", objectInfo.Id.String())
@@ -94,6 +100,15 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 				uploader.spDB.CreateUploadJob(objectInfo)
 				uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DOING)
 				isInited = true
+
+				// TODO: register put object task to manager
+				log.CtxDebugw(ctx, "begin to create upload object task")
+				if err = uploader.manager.CreateUploadObjectTask(ctx, objectInfo); err != nil {
+					log.CtxErrorw(ctx, "failed to create upload object task", "error", err)
+					errCh <- err
+					return
+				}
+				log.CtxDebugw(ctx, "finish to create upload object task")
 			}
 			pstream.StreamWrite(req.GetPayload())
 		}

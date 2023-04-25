@@ -111,6 +111,7 @@ message ReportGCObjectProgressResponse {
 }
 
 // ManagerService defines the service offer gRPC service for SP manager.
+// TODO: refine it, begin/report.
 service ManagerService {
   // AskUploadObject asks to create object to SP manager.
   rpc AskUploadObject(AskUploadObjectRequest) returns (AskUploadObjectResponse) {};

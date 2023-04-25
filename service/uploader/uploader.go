@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	managerclient "github.com/bnb-chain/greenfield-storage-provider/service/manager/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	tasknodeclient "github.com/bnb-chain/greenfield-storage-provider/service/tasknode/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
@@ -31,6 +32,7 @@ type Uploader struct {
 	pieceStore *psclient.StoreClient
 	signer     *signerclient.SignerClient
 	taskNode   *tasknodeclient.TaskNodeClient
+	manager    *managerclient.ManagerClient
 	grpcServer *grpc.Server
 }
 
@@ -56,6 +58,10 @@ func NewUploaderService(cfg *UploaderConfig) (*Uploader, error) {
 	}
 	if uploader.taskNode, err = tasknodeclient.NewTaskNodeClient(cfg.TaskNodeGrpcAddress); err != nil {
 		log.Errorw("failed to create task node client", "error", err)
+		return nil, err
+	}
+	if uploader.manager, err = managerclient.NewManagerClient(cfg.ManagerGrpcAddress); err != nil {
+		log.Errorw("failed to create manager client", "error", err)
 		return nil, err
 	}
 	if uploader.pieceStore, err = psclient.NewStoreClient(cfg.PieceStoreConfig); err != nil {

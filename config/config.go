@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/service/manager"
 	"github.com/naoina/toml"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -36,6 +37,7 @@ type StorageProviderConfig struct {
 	LogCfg            *LogConfig
 	MetricsCfg        *metrics.MetricsConfig
 	RateLimiter       *localhttp.RateLimiterConfig
+	ManagerCfg        *manager.ManagerConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -74,6 +76,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.MetadataService:   model.MetadataGRPCAddress,
 		model.P2PService:        model.P2PGRPCAddress,
 		model.AuthService:       model.AuthGRPCAddress,
+		model.ManagerService:    model.ManagerGRPCAddress,
 	},
 	Endpoint: map[string]string{
 		model.GatewayService:    "gnfd.test-sp.com",
@@ -86,6 +89,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.MetadataService:   model.MetadataGRPCAddress,
 		model.P2PService:        model.P2PGRPCAddress,
 		model.AuthService:       model.AuthGRPCAddress,
+		model.ManagerService:    model.ManagerGRPCAddress,
 	},
 	SpOperatorAddress: hex.EncodeToString([]byte(model.SpOperatorAddress)),
 	SpDBConfig:        DefaultSQLDBConfig,
@@ -97,6 +101,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	LogCfg:            DefaultLogConfig,
 	MetricsCfg:        DefaultMetricsConfig,
 	RateLimiter:       DefaultRateLimiterConfig,
+	ManagerCfg:        manager.DefaultManagerConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB

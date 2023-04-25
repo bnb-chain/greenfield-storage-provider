@@ -151,9 +151,10 @@ func storageProvider(ctx *cli.Context) error {
 		service, err := initService(serviceName, cfg)
 		if err != nil {
 			log.Errorw("failed to init service", "service", serviceName, "error", err)
+			fmt.Println("failed to init service", "service", serviceName, "error", err)
 			os.Exit(1)
 		}
-		log.Debugw("succeed to init service ", "service", serviceName)
+		log.Debugw("succeed to init service", "service", serviceName)
 		// register service to lifecycle.
 		slc.RegisterServices(service)
 	}

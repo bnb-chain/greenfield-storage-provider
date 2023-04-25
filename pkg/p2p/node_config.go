@@ -29,7 +29,7 @@ const (
 
 // NodeConfig defines the p2p node config
 type NodeConfig struct {
-	// ListenAddress defines the p2p listen address, used to make multiaddr
+	// ListenAddress defines the p2p listen address, used to make multi-addr
 	ListenAddress string
 	// P2PPrivateKey defines the p2p node private key, only support Secp256k1
 	// if default value, creates random private-public key pairs
@@ -49,8 +49,8 @@ func (cfg *NodeConfig) overrideConfigFromEnv() {
 	}
 }
 
-// ParseConfing parsers the configuration into a format that go-libp2p can use
-func (cfg *NodeConfig) ParseConfing() (privKey crypto.PrivKey, hostAddr ma.Multiaddr, bootstrapIDs []peer.ID, bootstrapAddrs []ma.Multiaddr, err error) {
+// ParseConfig parsers the configuration into a format that go-libp2p can use
+func (cfg *NodeConfig) ParseConfig() (privKey crypto.PrivKey, hostAddr ma.Multiaddr, bootstrapIDs []peer.ID, bootstrapAddrs []ma.Multiaddr, err error) {
 	cfg.overrideConfigFromEnv()
 	if len(cfg.P2PPrivateKey) > 0 {
 		priKeyBytes, err := hex.DecodeString(cfg.P2PPrivateKey)
@@ -83,7 +83,7 @@ func (cfg *NodeConfig) ParseConfing() (privKey crypto.PrivKey, hostAddr ma.Multi
 	}
 	hostAddr, err = MakeMultiaddr(host, port)
 	if err != nil {
-		log.Errorw("failed to make local mulit addr", "address", cfg.ListenAddress, "error", err)
+		log.Errorw("failed to make local multi addr", "address", cfg.ListenAddress, "error", err)
 		return privKey, hostAddr, bootstrapIDs, bootstrapAddrs, err
 	}
 	bootstrapIDs, bootstrapAddrs, err = MakeBootstrapMultiaddr(cfg.Bootstrap)

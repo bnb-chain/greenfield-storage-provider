@@ -130,6 +130,11 @@ func (cfg *StorageProviderConfig) MakeUploaderConfig() (*uploader.UploaderConfig
 	} else {
 		return nil, fmt.Errorf("missing task node gRPC address configuration for uploader service")
 	}
+	if _, ok := cfg.Endpoint[model.ManagerService]; ok {
+		uCfg.ManagerGrpcAddress = cfg.Endpoint[model.ManagerService]
+	} else {
+		return nil, fmt.Errorf("missing manager gRPC address configuration for uploader service")
+	}
 	return uCfg, nil
 }
 
@@ -232,11 +237,16 @@ func (cfg *StorageProviderConfig) MakeMetadataServiceConfig() (*metadata.Metadat
 }
 
 // MakeManagerServiceConfig make manager service config from StorageProviderConfig
+// TODO: refine it
 func (cfg *StorageProviderConfig) MakeManagerServiceConfig() (*manager.ManagerConfig, error) {
-	managerConfig := &manager.ManagerConfig{
-		SpOperatorAddress: cfg.SpOperatorAddress,
-		ChainConfig:       cfg.ChainConfig,
-		SpDBConfig:        cfg.SpDBConfig,
+	managerConfig := manager.DefaultManagerConfig
+	managerConfig.SpOperatorAddress = cfg.SpOperatorAddress
+	managerConfig.ChainConfig = cfg.ChainConfig
+	managerConfig.SpDBConfig = cfg.SpDBConfig
+	if _, ok := cfg.ListenAddress[model.ManagerService]; ok {
+		managerConfig.GRPCAddress = cfg.ListenAddress[model.ManagerService]
+	} else {
+		return nil, fmt.Errorf("missing manager gRPC address configuration for manager service")
 	}
 	return managerConfig, nil
 }

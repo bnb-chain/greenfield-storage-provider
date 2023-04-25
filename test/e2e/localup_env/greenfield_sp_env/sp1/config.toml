@@ -12,6 +12,7 @@ receiver = "localhost:11533"
 signer = "localhost:11633"
 tasknode = "localhost:11433"
 uploader = "localhost:11133"
+manager = "localhost:11935"
 
 [ListenAddress]
 auth = "localhost:11033"
@@ -24,6 +25,8 @@ receiver = "localhost:11533"
 signer = "localhost:11633"
 tasknode = "localhost:11433"
 uploader = "localhost:11133"
+manager = "localhost:11935"
+
 
 [SpDBConfig]
 User = "root"
