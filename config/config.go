@@ -23,19 +23,21 @@ import (
 
 // StorageProviderConfig defines the configuration of storage provider
 type StorageProviderConfig struct {
-	Service           []string
-	SpOperatorAddress string
-	Endpoint          map[string]string
-	ListenAddress     map[string]string
-	SpDBConfig        *config.SQLDBConfig
-	PieceStoreConfig  *storage.PieceStoreConfig
-	ChainConfig       *gnfd.GreenfieldChainConfig
-	SignerCfg         *signer.SignerConfig
-	BlockSyncerCfg    *blocksyncer.Config
-	P2PCfg            *p2p.NodeConfig
-	LogCfg            *LogConfig
-	MetricsCfg        *metrics.MetricsConfig
-	RateLimiter       *localhttp.RateLimiterConfig
+	Service            []string
+	SpOperatorAddress  string
+	Endpoint           map[string]string
+	ListenAddress      map[string]string
+	SpDBConfig         *config.SQLDBConfig
+	BsDBConfig         *config.SQLDBConfig
+	BsDBSwitchedConfig *config.SQLDBConfig
+	PieceStoreConfig   *storage.PieceStoreConfig
+	ChainConfig        *gnfd.GreenfieldChainConfig
+	SignerCfg          *signer.SignerConfig
+	BlockSyncerCfg     *blocksyncer.Config
+	P2PCfg             *p2p.NodeConfig
+	LogCfg             *LogConfig
+	MetricsCfg         *metrics.MetricsConfig
+	RateLimiter        *localhttp.RateLimiterConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -56,12 +58,12 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.DownloaderService,
 		model.ChallengeService,
 		model.TaskNodeService,
-		model.ReceiverService,
-		model.SignerService,
+		//model.ReceiverService,
+		//model.SignerService,
 		model.MetadataService,
-		model.ManagerService,
-		model.P2PService,
-		model.AuthService,
+		//model.ManagerService,
+		//model.P2PService,
+		//model.AuthService,
 	},
 	ListenAddress: map[string]string{
 		model.GatewayService:    model.GatewayHTTPAddress,
@@ -76,7 +78,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.AuthService:       model.AuthGRPCAddress,
 	},
 	Endpoint: map[string]string{
-		model.GatewayService:    "gnfd.test-sp.com",
+		model.GatewayService:    "localhost:9033",
 		model.UploaderService:   model.UploaderGRPCAddress,
 		model.DownloaderService: model.DownloaderGRPCAddress,
 		model.ChallengeService:  model.ChallengeGRPCAddress,
@@ -87,16 +89,18 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.P2PService:        model.P2PGRPCAddress,
 		model.AuthService:       model.AuthGRPCAddress,
 	},
-	SpOperatorAddress: hex.EncodeToString([]byte(model.SpOperatorAddress)),
-	SpDBConfig:        DefaultSQLDBConfig,
-	PieceStoreConfig:  DefaultPieceStoreConfig,
-	ChainConfig:       DefaultGreenfieldChainConfig,
-	SignerCfg:         signer.DefaultSignerChainConfig,
-	BlockSyncerCfg:    DefaultBlockSyncerConfig,
-	P2PCfg:            DefaultP2PConfig,
-	LogCfg:            DefaultLogConfig,
-	MetricsCfg:        DefaultMetricsConfig,
-	RateLimiter:       DefaultRateLimiterConfig,
+	SpOperatorAddress:  hex.EncodeToString([]byte(model.SpOperatorAddress)),
+	SpDBConfig:         DefaultSQLDBConfig,
+	BsDBConfig:         DefaultBsDBConfig,
+	BsDBSwitchedConfig: DefaultBsDBSwitchedConfig,
+	PieceStoreConfig:   DefaultPieceStoreConfig,
+	ChainConfig:        DefaultGreenfieldChainConfig,
+	SignerCfg:          signer.DefaultSignerChainConfig,
+	BlockSyncerCfg:     DefaultBlockSyncerConfig,
+	P2PCfg:             DefaultP2PConfig,
+	LogCfg:             DefaultLogConfig,
+	MetricsCfg:         DefaultMetricsConfig,
+	RateLimiter:        DefaultRateLimiterConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -105,6 +109,22 @@ var DefaultSQLDBConfig = &storeconfig.SQLDBConfig{
 	Passwd:   "test_pwd",
 	Address:  "localhost:3306",
 	Database: "storage_provider_db",
+}
+
+// DefaultBsDBConfig defines the default configuration of SQL DB
+var DefaultBsDBConfig = &storeconfig.SQLDBConfig{
+	User:     "root",
+	Passwd:   "test_pwd",
+	Address:  "localhost:3306",
+	Database: "block_syncer",
+}
+
+// DefaultBsDBSwitchedConfig defines the default configuration of SQL DB
+var DefaultBsDBSwitchedConfig = &storeconfig.SQLDBConfig{
+	User:     "root",
+	Passwd:   "test_pwd",
+	Address:  "localhost:3306",
+	Database: "block_syncer_backup",
 }
 
 // DefaultPieceStoreConfig defines the default configuration of piece store

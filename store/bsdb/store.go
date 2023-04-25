@@ -9,6 +9,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
 
@@ -20,13 +21,20 @@ type BsDBImpl struct {
 }
 
 // NewBsDB return a block syncer db instance
-func NewBsDB(config *config.SQLDBConfig) (*BsDBImpl, error) {
+func NewBsDB(config *metadata.MetadataConfig) (*BsDBImpl, error) {
 	LoadDBConfigFromEnv(config)
-	db, err := InitDB(config)
+
+	dbConfig := config.BsDBConfig
+	if config.BSDBFlag {
+		dbConfig = config.BsDBSwitchedConfig
+	}
+
+	db, err := InitDB(dbConfig)
 	if err != nil {
 		return nil, err
 	}
-	return &BsDBImpl{db: db}, err
+
+	return &BsDBImpl{db: db}, nil
 }
 
 // InitDB init a block syncer db instance
@@ -43,17 +51,23 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 }
 
 // LoadDBConfigFromEnv load block syncer db user and password from env vars
-func LoadDBConfigFromEnv(config *config.SQLDBConfig) {
+func LoadDBConfigFromEnv(config *metadata.MetadataConfig) {
 	if val, ok := os.LookupEnv(model.BsDBUser); ok {
-		config.User = val
+		config.BsDBConfig.User = val
+		config.BsDBSwitchedConfig.User = val
 	}
 	if val, ok := os.LookupEnv(model.BsDBPasswd); ok {
-		config.Passwd = val
+		config.BsDBConfig.Passwd = val
+		config.BsDBSwitchedConfig.Passwd = val
 	}
 	if val, ok := os.LookupEnv(model.BsDBAddress); ok {
-		config.Address = val
+		config.BsDBConfig.Address = val
+		config.BsDBSwitchedConfig.Address = val
 	}
 	if val, ok := os.LookupEnv(model.BsDBDataBase); ok {
-		config.Database = val
+		config.BsDBConfig.Database = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedDataBase); ok {
+		config.BsDBSwitchedConfig.Database = val
 	}
 }

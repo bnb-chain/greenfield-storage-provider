@@ -221,7 +221,8 @@ func (cfg *StorageProviderConfig) MakeTaskNodeConfig() (*tasknode.TaskNodeConfig
 // MakeMetadataServiceConfig make meta data service config from StorageProviderConfig
 func (cfg *StorageProviderConfig) MakeMetadataServiceConfig() (*metadata.MetadataConfig, error) {
 	mCfg := &metadata.MetadataConfig{
-		SpDBConfig: cfg.SpDBConfig,
+		BsDBConfig:         cfg.BsDBConfig,
+		BsDBSwitchedConfig: cfg.BsDBSwitchedConfig,
 	}
 	if _, ok := cfg.ListenAddress[model.MetadataService]; ok {
 		mCfg.GRPCAddress = cfg.ListenAddress[model.MetadataService]

@@ -38,6 +38,8 @@ type Metadata interface {
 	ListExpiredBucketsBySp(createAt int64, primarySpAddress string, limit int64) ([]*Bucket, error)
 	// GetObjectByName get object info by an object name
 	GetObjectByName(objectName string, bucketName string, isFullList bool) (*Object, error)
+	// GetSwitchDBSignal check if there is a signal to switch the database
+	GetSwitchDBSignal() (bool, error)
 }
 
 // BSDB contains all the methods required by block syncer database

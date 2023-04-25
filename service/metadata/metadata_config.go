@@ -6,6 +6,9 @@ import (
 
 // MetadataConfig is the metadata service config
 type MetadataConfig struct {
-	GRPCAddress string
-	SpDBConfig  *config.SQLDBConfig
+	GRPCAddress        string
+	BsDBConfig         *config.SQLDBConfig
+	BsDBSwitchedConfig *config.SQLDBConfig
+	// BSDBFlag is used to determine which DB is currently being used
+	BSDBFlag bool
 }

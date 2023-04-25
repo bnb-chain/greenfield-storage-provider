@@ -106,6 +106,8 @@ const (
 	BsDBAddress = "BS_DB_ADDRESS"
 	// BsDBDataBase defines env variable name for block syncer db database
 	BsDBDataBase = "BS_DB_DATABASE"
+	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database
+	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
 
 	// SpOperatorAddress defines env variable name for sp operator address
 	SpOperatorAddress = "greenfield-storage-provider"
