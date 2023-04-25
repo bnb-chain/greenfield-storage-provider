@@ -197,7 +197,7 @@ func (n *Node) eventLoop() {
 // broadcast sends request to all p2p nodes
 func (n *Node) broadcast(pc protocol.ID, data proto.Message) {
 	for _, peerID := range n.node.Peerstore().PeersWithAddrs() {
-		log.Debugw("broadcast msg to peer", "peer_id", peerID, "protocol", pc)
+		// log.Debugw("broadcast msg to peer", "peer_id", peerID, "protocol", pc)
 		if strings.Compare(n.node.ID().String(), peerID.String()) == 0 {
 			continue
 		}
@@ -222,7 +222,7 @@ func (n *Node) sendToPeer(peerID peer.ID, pc protocol.ID, data proto.Message) er
 		n.peers.DeletePeer(peerID)
 		return err
 	}
-	log.Debugw("success to send msg", "peer_id", peerID, "protocol", pc, "msg", data.String())
+	// log.Debugw("success to send msg", "peer_id", peerID, "protocol", pc, "msg", data.String())
 	s.Close()
 	return err
 }
