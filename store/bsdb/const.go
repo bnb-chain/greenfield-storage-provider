@@ -10,6 +10,8 @@ const (
 	ListObjectsDefaultMaxKeys = 50
 	// GetUserBucketsLimitSize defines the default limit for the number of buckets in any given account is 100
 	GetUserBucketsLimitSize = 100
+	// ListObjectsLimitSize defines the default limit of ListObjectsByBucketName response
+	ListObjectsLimitSize = 1000
 )
 
 // define table name constant of block syncer db
