@@ -45,9 +45,12 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 		uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_UPLOAD_OBJECT_DONE)
 		err = uploader.signIntegrityHash(ctx, objectID, objectInfo.GetChecksums()[0], checksum)
 		if err != nil {
+			log.CtxErrorw(ctx, "failed signIntegrityHash", "error", err)
 			return
 		}
+		log.CtxErrorw(ctx, "start to ReplicateObject")
 		err = uploader.taskNode.ReplicateObject(ctx, objectInfo)
+		log.CtxErrorw(ctx, "end to  ReplicateObject")
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to notify task node to replicate object", "error", err)
 			uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)

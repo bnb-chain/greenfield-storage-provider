@@ -62,7 +62,9 @@ func (client *TaskNodeClient) Close() error {
 
 // ReplicateObject async replicate an object payload to other storage provider and seal object
 func (client *TaskNodeClient) ReplicateObject(ctx context.Context, object *storagetypes.ObjectInfo, opts ...grpc.CallOption) error {
+	log.CtxErrorw(ctx, "begin client ReplicateObject")
 	_, err := client.taskNode.ReplicateObject(ctx, &types.ReplicateObjectRequest{ObjectInfo: object}, opts...)
+	log.CtxErrorw(ctx, "end client ReplicateObject")
 	return err
 }
 
