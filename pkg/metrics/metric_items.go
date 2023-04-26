@@ -19,11 +19,6 @@ var (
 	// DefaultHTTPServerMetrics create default HTTP server metrics
 	DefaultHTTPServerMetrics = metricshttp.NewServerMetrics()
 
-	// PanicsTotal records the number of rpc panics
-	PanicsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "grpc_req_panics_recovered_total",
-		Help: "Total number of gRPC requests recovered from internal panic.",
-	}, []string{"grpc_type", "grpc_service", "grpc_method"})
 	// BlockHeightLagGauge records the current block height of block syncer service
 	BlockHeightLagGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "block_syncer_height",
