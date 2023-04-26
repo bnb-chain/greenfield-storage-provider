@@ -346,10 +346,8 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 
 		if isDownload {
 			redirectUrl = endpoint + "/download/" + reqContext.bucketName + "/" + reqContext.objectName
-			w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
 		} else {
 			redirectUrl = endpoint + "/view/" + reqContext.bucketName + "/" + reqContext.objectName
-			w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionInlineValue)
 		}
 
 		log.Debugw("getting redirect url:", "redirectUrl", redirectUrl)
@@ -393,6 +391,12 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		log.Errorf("failed to get object", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
+	}
+
+	if isDownload {
+		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
+	} else {
+		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionInlineValue)
 	}
 
 	for {
