@@ -155,11 +155,11 @@ const (
 	ContentTypeJSONHeaderValue = "application/json"
 	// ContentTypeXMLHeaderValue is used to indicate xml
 	ContentTypeXMLHeaderValue = "application/xml"
-	//ContentDispositionHeader is used to indicate the media disposition of the resource
+	// ContentDispositionHeader is used to indicate the media disposition of the resource
 	ContentDispositionHeader = "Content-Disposition"
-	//ContentDispositionAttachmentValue is used to indicate attachment
+	// ContentDispositionAttachmentValue is used to indicate attachment
 	ContentDispositionAttachmentValue = "attachment"
-	//ContentDispositionInlineValue is used to indicate inline
+	// ContentDispositionInlineValue is used to indicate inline
 	ContentDispositionInlineValue = "inline"
 
 	// SignAlgorithm uses secp256k1 with the ECDSA algorithm
