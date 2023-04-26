@@ -3,7 +3,9 @@ package tasknode
 import (
 	"context"
 	"net"
+	"time"
 
+	managerclient "github.com/bnb-chain/greenfield-storage-provider/service/manager/client"
 	lru "github.com/hashicorp/golang-lru"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -14,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
+	managertypes "github.com/bnb-chain/greenfield-storage-provider/service/manager/types"
 	p2pclient "github.com/bnb-chain/greenfield-storage-provider/service/p2p/client"
 	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode/types"
@@ -22,16 +25,20 @@ import (
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
+const (
+	fetchTaskPeriod = time.Second * 1
+)
+
 var _ lifecycle.Service = &TaskNode{}
 
-// TaskNode as background min execution unit, execute storage provider's background tasks
-// implements the gRPC of TaskNodeService,
-// TODO :: TaskNode support more task types, such as gc etc.
+// TaskNode as background min execution unit, execute storage provider's background tasks.
+// implements the gRPC of TaskNodeService.
 type TaskNode struct {
 	config     *TaskNodeConfig
 	cache      *lru.Cache
 	signer     *signerclient.SignerClient
 	p2p        *p2pclient.P2PClient
+	manager    *managerclient.ManagerClient
 	spDB       sqldb.SPDB
 	chain      *greenfield.Greenfield
 	rcScope    rcmgr.ResourceScope
@@ -65,6 +72,10 @@ func NewTaskNodeService(cfg *TaskNodeConfig) (*TaskNode, error) {
 		log.Errorw("failed to create p2p server client", "error", err)
 		return nil, err
 	}
+	if taskNode.manager, err = managerclient.NewManagerClient(cfg.ManagerGrpcAddress); err != nil {
+		log.Errorw("failed to create manager client", "error", err)
+		return nil, err
+	}
 	if taskNode.chain, err = greenfield.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Errorw("failed to create chain client", "error", err)
 		return nil, err
@@ -82,31 +93,35 @@ func NewTaskNodeService(cfg *TaskNodeConfig) (*TaskNode, error) {
 }
 
 // Name return the task node service name, for the lifecycle management
-func (taskNode *TaskNode) Name() string {
+func (t *TaskNode) Name() string {
 	return model.TaskNodeService
 }
 
 // Start the task node gRPC service and background tasks
-func (taskNode *TaskNode) Start(ctx context.Context) error {
+func (t *TaskNode) Start(ctx context.Context) error {
 	errCh := make(chan error)
-	go taskNode.serve(errCh)
-	err := <-errCh
-	return err
+	go t.serve(errCh)
+	if err := <-errCh; err != nil {
+		return err
+	}
+	go t.loopFetchTask()
+	return nil
 }
 
 // Stop the task node gRPC service and recycle the resources
-func (taskNode *TaskNode) Stop(ctx context.Context) error {
-	taskNode.grpcServer.GracefulStop()
-	taskNode.signer.Close()
-	taskNode.p2p.Close()
-	taskNode.chain.Close()
-	taskNode.rcScope.Release()
+func (t *TaskNode) Stop(ctx context.Context) error {
+	t.grpcServer.GracefulStop()
+	t.signer.Close()
+	t.p2p.Close()
+	t.manager.Close()
+	t.chain.Close()
+	t.rcScope.Release()
 	return nil
 }
 
 // serve start the task node gRPC service
-func (taskNode *TaskNode) serve(errCh chan error) {
-	lis, err := net.Listen("tcp", taskNode.config.GRPCAddress)
+func (t *TaskNode) serve(errCh chan error) {
+	lis, err := net.Listen("tcp", t.config.GRPCAddress)
 	errCh <- err
 	if err != nil {
 		log.Errorw("failed to listen", "error", err)
@@ -117,11 +132,61 @@ func (taskNode *TaskNode) serve(errCh chan error) {
 	if metrics.GetMetrics().Enabled() {
 		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
 	}
-	taskNode.grpcServer = grpc.NewServer(options...)
-	types.RegisterTaskNodeServiceServer(taskNode.grpcServer, taskNode)
-	reflection.Register(taskNode.grpcServer)
-	if err := taskNode.grpcServer.Serve(lis); err != nil {
+	t.grpcServer = grpc.NewServer(options...)
+	types.RegisterTaskNodeServiceServer(t.grpcServer, t)
+	reflection.Register(t.grpcServer)
+	if err := t.grpcServer.Serve(lis); err != nil {
 		log.Errorw("failed to start grpc server", "error", err)
 		return
+	}
+}
+
+// loopFetchTask fetches tasks from the manager.
+func (t *TaskNode) loopFetchTask() {
+	fetchTaskTicker := time.NewTicker(fetchTaskPeriod)
+	for range fetchTaskTicker.C {
+		// 1.fetch
+		// 2.run
+		// 3.report progress
+		go func() {
+			// TODO: refine limits
+			resp, err := t.manager.AllocTask(context.Background(), rcmgr.InfiniteLimit())
+			if err != nil {
+				log.Errorw("failed to alloc task", "error", err)
+				return
+			}
+			if resp.GetTask() == nil {
+				log.Infow("alloc nil task")
+				return
+			}
+			switch (resp.GetTask()).(type) {
+			// TODO: refine it, split to seal task.
+			case *managertypes.AllocTaskResponse_ReplicatePieceTask:
+				log.Infow("alloc a replicate task", "response", resp)
+				allocTask := (resp.GetTask()).(*managertypes.AllocTaskResponse_ReplicatePieceTask)
+				objectInfo := allocTask.ReplicatePieceTask.ObjectInfo
+
+				ctx := log.WithValue(context.Background(), "object_id", objectInfo.Id.String())
+				task, err := newReplicateObjectTask(ctx, t, objectInfo)
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to new replicate object task", "error", err)
+					return
+				}
+				if err = task.init(); err != nil {
+					log.CtxErrorw(ctx, "failed to init replicate object task", "error", err)
+					return
+				}
+				waitCh := make(chan error)
+				go task.execute(waitCh)
+				if err = <-waitCh; err != nil {
+					log.CtxErrorw(ctx, "failed to execute replicate object task", "error", err)
+					return
+				}
+
+			default:
+				log.Infow("alloc unknown task", "response", resp)
+				return
+			}
+		}()
 	}
 }

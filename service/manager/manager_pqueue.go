@@ -46,7 +46,7 @@ func NewMPQueue(chain *greenfield.Greenfield, uploadQueueSize, replicateQueueSiz
 	}
 	uploadStrategy := queue.NewStrategy()
 	uploadStrategy.SetCollectionCallback(queue.DefaultGCTasksByTimeout)
-	uploadQueue := queue.NewTaskQueue(SubQueueUploadObject, uploadQueueSize, uploadStrategy, false)
+	uploadQueue := queue.NewTaskQueue(SubQueueUploadObject, uploadQueueSize, uploadStrategy, true)
 
 	replicateStrategy := queue.NewStrategy()
 	replicateStrategy.SetCollectionCallback(queue.DefaultGCTasksByRetry)
@@ -60,7 +60,7 @@ func NewMPQueue(chain *greenfield.Greenfield, uploadQueueSize, replicateQueueSiz
 
 	gcObjectStrategy := queue.NewStrategy()
 	gcObjectStrategy.SetCollectionCallback(mpq.GCObjectQueueCallBack)
-	gcObjectQueue := queue.NewTaskQueue(SubQueueGCObject, gcObjectQueueSize, gcObjectStrategy, true)
+	gcObjectQueue := queue.NewTaskQueue(SubQueueGCObject, gcObjectQueueSize, gcObjectStrategy, false)
 
 	subQueues := map[tqueue.TPriority]tqueue.TQueueWithLimit{
 		tqueuetypes.GetTaskPriorityMap().GetPriority(tqueue.TypeTaskUploadObject):   uploadQueue,
@@ -72,6 +72,8 @@ func NewMPQueue(chain *greenfield.Greenfield, uploadQueueSize, replicateQueueSiz
 	mstrategy := queue.NewStrategy()
 	mstrategy.SetPickUpCallback(queue.DefaultPickUpTaskByPriority)
 	mpq.pqueue = queue.NewTaskPriorityQueue(PriorityQueueManager, subQueues, mstrategy, true)
+	log.Infow("succeed to new manager pqueue", "upload_queue_size", uploadQueueSize,
+		"replicate_queue_size", replicateQueueSize, "seal_queue_size", sealQueueSize, "gc_queue_size", gcObjectQueueSize)
 	return mpq
 }
 

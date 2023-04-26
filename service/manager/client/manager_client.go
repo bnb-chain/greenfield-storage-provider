@@ -118,13 +118,13 @@ func (client *ManagerClient) DoneSealObjectTask(ctx context.Context,
 	return err
 }
 
-// AskTask asks the task to execute
-func (client *ManagerClient) AskTask(ctx context.Context,
-	rclimit rcmgr.Limit, opts ...grpc.CallOption) (*types.AskTaskResponse, error) {
-	req := &types.AskTaskRequest{
+// AllocTask alloc the task to execute
+func (client *ManagerClient) AllocTask(ctx context.Context,
+	rclimit rcmgr.Limit, opts ...grpc.CallOption) (*types.AllocTaskResponse, error) {
+	req := &types.AllocTaskRequest{
 		Limit: types.NewLimits(rclimit),
 	}
-	resp, err := client.manager.AskTask(ctx, req, opts...)
+	resp, err := client.manager.AllocTask(ctx, req, opts...)
 	return resp, err
 }
 

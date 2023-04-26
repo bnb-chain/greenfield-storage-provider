@@ -59,11 +59,14 @@ func (s *Strategy) SetPickUpFilterCallback(filter func(tqueue.Task) bool) {
 	s.pickFilter = filter
 }
 
-// RunPickUpFilterStrategy calls the pick up filter callback to pick up filter task.
+// RunPickUpFilterStrategy calls the pickup filter callback to pick up filter task.
 func (s *Strategy) RunPickUpFilterStrategy(task tqueue.Task) bool {
 	s.mux.RLock()
 	defer s.mux.RUnlock()
 	if s.gc == nil {
+		return true
+	}
+	if s.pickFilter == nil {
 		return true
 	}
 	return s.pickFilter(task)

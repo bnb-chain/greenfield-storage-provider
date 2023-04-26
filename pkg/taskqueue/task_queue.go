@@ -133,8 +133,8 @@ const (
 // records the information of different stages of the object.
 type ObjectTask interface {
 	Task
-	// GetObject returns the associated object.
-	GetObject() *storagetypes.ObjectInfo
+	// GetObjectInfo returns the associated object.
+	GetObjectInfo() *storagetypes.ObjectInfo
 }
 
 // UploadObjectTask defines the task that uploads object payload data to primary SP.

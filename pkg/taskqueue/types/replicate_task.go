@@ -10,20 +10,20 @@ import (
 
 var _ tqueue.ReplicatePieceTask = &ReplicatePieceTask{}
 
-func NewReplicatePieceTask(object *storagetypes.ObjectInfo) (*ReplicatePieceTask, error) {
-	if object == nil {
+func NewReplicatePieceTask(objectInfo *storagetypes.ObjectInfo) (*ReplicatePieceTask, error) {
+	if objectInfo == nil {
 		return nil, ErrObjectDangling
 	}
 	task := &Task{
 		CreateTime:   time.Now().Unix(),
 		UpdateTime:   time.Now().Unix(),
 		RetryLimit:   DefaultReplicatePieceTaskRetryLimit,
-		Timeout:      ComputeTransferDataTime(object.GetPayloadSize()) * 3,
+		Timeout:      ComputeTransferDataTime(objectInfo.GetPayloadSize()) * 3,
 		TaskPriority: int32(GetTaskPriorityMap().GetPriority(tqueue.TypeTaskReplicatePiece)),
 	}
 	return &ReplicatePieceTask{
-		Object: object,
-		Task:   task,
+		ObjectInfo: objectInfo,
+		Task:       task,
 	}, nil
 }
 
@@ -31,10 +31,10 @@ func (m *ReplicatePieceTask) Key() tqueue.TKey {
 	if m == nil {
 		return ""
 	}
-	if m.GetObject() == nil {
+	if m.GetObjectInfo() == nil {
 		return ""
 	}
-	return tqueue.TKey(m.GetObject().Id.String())
+	return tqueue.TKey(m.GetObjectInfo().Id.String())
 }
 
 func (m *ReplicatePieceTask) Type() tqueue.TType {

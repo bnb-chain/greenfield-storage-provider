@@ -10,19 +10,19 @@ import (
 
 var _ tqueue.UploadObjectTask = &UploadObjectTask{}
 
-func NewUploadObjectTask(object *storagetypes.ObjectInfo) (*UploadObjectTask, error) {
-	if object == nil {
+func NewUploadObjectTask(objectInfo *storagetypes.ObjectInfo) (*UploadObjectTask, error) {
+	if objectInfo == nil {
 		return nil, ErrObjectDangling
 	}
 	task := &Task{
 		CreateTime:   time.Now().Unix(),
 		UpdateTime:   time.Now().Unix(),
-		Timeout:      ComputeTransferDataTime(object.GetPayloadSize()),
+		Timeout:      ComputeTransferDataTime(objectInfo.GetPayloadSize()),
 		TaskPriority: int32(GetTaskPriorityMap().GetPriority(tqueue.TypeTaskUploadObject)),
 	}
 	return &UploadObjectTask{
-		Object: object,
-		Task:   task,
+		ObjectInfo: objectInfo,
+		Task:       task,
 	}, nil
 }
 
@@ -30,10 +30,10 @@ func (m *UploadObjectTask) Key() tqueue.TKey {
 	if m == nil {
 		return ""
 	}
-	if m.GetObject() == nil {
+	if m.GetObjectInfo() == nil {
 		return ""
 	}
-	return tqueue.TKey(m.GetObject().Id.String())
+	return tqueue.TKey(m.GetObjectInfo().Id.String())
 }
 
 func (m *UploadObjectTask) Type() tqueue.TType {

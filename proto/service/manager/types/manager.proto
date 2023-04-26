@@ -71,14 +71,14 @@ message Limit {
   int64 low_priority_task = 4;
 }
 
-// AskTaskRequest is request type for the AskTask RPC method.
-message AskTaskRequest {
+// AllocTaskRequest is request type for the AllocTask RPC method.
+message AllocTaskRequest {
   // limit defines the requester resource to run task.
   Limit limit = 1;
 }
 
-// AskTaskResponse is response type for the AskTask RPC method.
-message AskTaskResponse {
+// AllocTaskResponse is response type for the AllocTask RPC method.
+message AllocTaskResponse {
   // task defines the manager dispatches the task to execute.
   oneof task {
     // replicate_piece_task stands dispatch the replicate piece task.
@@ -88,7 +88,7 @@ message AskTaskResponse {
     // gc_object_task stands dispatch the gc object task.
     pkg.taskqueue.types.GCObjectTask gc_object_task = 3;
   }
-  bool has_task = 4;
+  // bool has_task = 4;
 }
 
 // AskTaskResponse is response type for the AskTask RPC method.
@@ -123,8 +123,8 @@ service ManagerService {
   rpc DoneReplicatePieceTask(DoneReplicatePieceTaskRequest) returns (DoneReplicatePieceTaskResponse) {};
   // DoneSealObjectTask notifies the manager the seal object task has been done.
   rpc DoneSealObjectTask(DoneSealObjectTaskRequest) returns (DoneSealObjectTaskResponse) {};
-  // AskTask asks the task to execute.
-  rpc AskTask(AskTaskRequest) returns (AskTaskResponse) {};
+  // AllocTask alloc the task to execute.
+  rpc AllocTask(AllocTaskRequest) returns (AllocTaskResponse) {};
   // DoneGCObjectTask notifies the manager the gc object task has been done.
   rpc DoneGCObjectTask(DoneGCObjectTaskRequest) returns (DoneGCObjectTaskResponse) {};
   // ReportGCObjectProgress notifies the manager the gc object task progress.

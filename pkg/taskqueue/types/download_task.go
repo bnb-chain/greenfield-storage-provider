@@ -11,8 +11,8 @@ import (
 
 var _ tqueue.DownloadObjectTask = &DownloadObjectTask{}
 
-func NewDownloadObjectTask(object *storagetypes.ObjectInfo) (*DownloadObjectTask, error) {
-	if object == nil {
+func NewDownloadObjectTask(objectInfo *storagetypes.ObjectInfo) (*DownloadObjectTask, error) {
+	if objectInfo == nil {
 		return nil, ErrObjectDangling
 	}
 	task := &Task{
@@ -21,8 +21,8 @@ func NewDownloadObjectTask(object *storagetypes.ObjectInfo) (*DownloadObjectTask
 		TaskPriority: int32(GetTaskPriorityMap().GetPriority(tqueue.TypeTaskDownloadObject)),
 	}
 	return &DownloadObjectTask{
-		Object: object,
-		Task:   task,
+		ObjectInfo: objectInfo,
+		Task:       task,
 	}, nil
 }
 
@@ -30,10 +30,10 @@ func (m *DownloadObjectTask) Key() tqueue.TKey {
 	if m == nil {
 		return ""
 	}
-	if m.GetObject() == nil {
+	if m.GetObjectInfo() == nil {
 		return ""
 	}
-	return tqueue.TKey("DownloadObject" + m.GetObject().Id.String() +
+	return tqueue.TKey("DownloadObject" + m.GetObjectInfo().Id.String() +
 		"-" + strconv.FormatUint(m.GetLow(), 10) +
 		"-" + strconv.FormatUint(m.GetHigh(), 10))
 }

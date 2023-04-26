@@ -72,7 +72,7 @@ func (m *Manager) DoneUploadObjectTask(ctx context.Context, req *types.DoneUploa
 	}
 	ctx = log.WithValue(ctx, "object_id", string(task.Key()))
 	m.pqueue.PopTask(task.Key())
-	replicateTask, err := tqueuetypes.NewReplicatePieceTask(task.GetObject())
+	replicateTask, err := tqueuetypes.NewReplicatePieceTask(task.GetObjectInfo())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to make replicate piece task", "error", err)
 		return resp, err
@@ -108,7 +108,7 @@ func (m *Manager) DoneReplicatePieceTask(ctx context.Context, req *types.DoneRep
 		return resp, nil
 	}
 	m.pqueue.PopTask(task.Key())
-	sealTask, err := tqueuetypes.NewSealObjectTask(task.GetObject())
+	sealTask, err := tqueuetypes.NewSealObjectTask(task.GetObjectInfo())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to make seal task", "error", err)
 		return resp, err
@@ -148,9 +148,9 @@ func (m *Manager) DoneSealObjectTask(ctx context.Context, req *types.DoneSealObj
 	return resp, nil
 }
 
-// AskTask asks the task to execute
-func (m *Manager) AskTask(ctx context.Context, req *types.AskTaskRequest) (*types.AskTaskResponse, error) {
-	resp := &types.AskTaskResponse{}
+// AllocTask alloc the task to execute
+func (m *Manager) AllocTask(ctx context.Context, req *types.AllocTaskRequest) (*types.AllocTaskResponse, error) {
+	resp := &types.AllocTaskResponse{}
 	limit := req.GetLimit().TransferRcmgrLimits()
 	task := m.pqueue.PopTaskByLimit(limit)
 	if task == nil {
@@ -163,22 +163,22 @@ func (m *Manager) AskTask(ctx context.Context, req *types.AskTaskRequest) (*type
 	}()
 	switch t := (task).(type) {
 	case *tqueuetypes.ReplicatePieceTask:
-		resp.Task = &types.AskTaskResponse_ReplicatePieceTask{
+		resp.Task = &types.AllocTaskResponse_ReplicatePieceTask{
 			ReplicatePieceTask: t,
 		}
 	case *tqueuetypes.SealObjectTask:
-		resp.Task = &types.AskTaskResponse_SealObjectTask{
+		resp.Task = &types.AllocTaskResponse_SealObjectTask{
 			SealObjectTask: t,
 		}
 	case *tqueuetypes.GCObjectTask:
-		resp.Task = &types.AskTaskResponse_GcObjectTask{
+		resp.Task = &types.AllocTaskResponse_GcObjectTask{
 			GcObjectTask: t,
 		}
 	default:
 		log.CtxErrorw(ctx, "task node does not support task type", "task_type", task.Type())
 		return resp, merrors.ErrUnsupportedDispatchTaskType
 	}
-	resp.HasTask = true
+	// resp.HasTask = true
 	return resp, nil
 }
 

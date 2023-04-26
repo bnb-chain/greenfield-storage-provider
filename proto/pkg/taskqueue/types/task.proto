@@ -17,28 +17,28 @@ message Task {
 
 message UploadObjectTask {
   Task task = 1;
-  bnbchain.greenfield.storage.ObjectInfo object = 2;
+  bnbchain.greenfield.storage.ObjectInfo object_info = 2;
 }
 
 message ReplicatePieceTask {
   Task task = 1;
-  bnbchain.greenfield.storage.ObjectInfo object = 2;
+  bnbchain.greenfield.storage.ObjectInfo object_info = 2;
 }
 
 message SealObjectTask {
   Task task = 1;
-  bnbchain.greenfield.storage.ObjectInfo object = 2;
+  bnbchain.greenfield.storage.ObjectInfo object_info = 2;
 }
 
 message ReceivePieceTask {
   Task task = 1;
-  bnbchain.greenfield.storage.ObjectInfo object = 2;
+  bnbchain.greenfield.storage.ObjectInfo object_info = 2;
   uint32 replicate_idx = 3;
 }
 
 message DownloadObjectTask {
   Task task = 1;
-  bnbchain.greenfield.storage.ObjectInfo object = 2;
+  bnbchain.greenfield.storage.ObjectInfo object_info = 2;
   uint64 low = 3;
   uint64 high = 4;
   bool need_integrity = 5;

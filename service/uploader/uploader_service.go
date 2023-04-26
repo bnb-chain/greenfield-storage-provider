@@ -46,15 +46,19 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			return
 		}
 		// TODO: report upload state
+		log.CtxDebugw(ctx, "begin to done upload object task")
 		if err = uploader.manager.DoneUploadObjectTask(ctx, objectInfo); err != nil {
 			log.CtxErrorw(ctx, "failed to done upload object task", "error", err)
 			return
 		}
-		if err = uploader.taskNode.ReplicateObject(ctx, objectInfo); err != nil {
-			log.CtxErrorw(ctx, "failed to notify task node to replicate object", "error", err)
-			uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
-			return
-		}
+		log.CtxDebugw(ctx, "begin to done upload object task")
+		/*
+			if err = uploader.taskNode.ReplicateObject(ctx, objectInfo); err != nil {
+				log.CtxErrorw(ctx, "failed to notify task node to replicate object", "error", err)
+				uploader.spDB.UpdateJobState(objectID, servicetypes.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
+				return
+			}
+		*/
 		err = stream.SendAndClose(resp)
 		pstream.Close()
 		log.CtxInfow(ctx, "succeed to put object", "error", err)

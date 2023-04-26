@@ -16,7 +16,7 @@ import (
 var _ types.TaskNodeServiceServer = &TaskNode{}
 
 // ReplicateObject call AsyncReplicateObject non-blocking upstream services
-func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.ReplicateObjectRequest) (
+func (t *TaskNode) ReplicateObject(ctx context.Context, req *types.ReplicateObjectRequest) (
 	*types.ReplicateObjectResponse, error) {
 	if req.GetObjectInfo() == nil {
 		return nil, merrors.ErrDanglingPointer
@@ -30,7 +30,7 @@ func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.Replic
 	)
 
 	ctx = log.WithValue(ctx, "object_id", req.GetObjectInfo().Id.String())
-	if task, err = newReplicateObjectTask(ctx, taskNode, req.GetObjectInfo()); err != nil {
+	if task, err = newReplicateObjectTask(ctx, t, req.GetObjectInfo()); err != nil {
 		log.CtxErrorw(ctx, "failed to new replicate object task", "error", err)
 		return nil, err
 	}
@@ -51,12 +51,12 @@ func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.Replic
 }
 
 // QueryReplicatingObject query a replicating object information by object id
-func (taskNode *TaskNode) QueryReplicatingObject(ctx context.Context, req *types.QueryReplicatingObjectRequest) (
+func (t *TaskNode) QueryReplicatingObject(ctx context.Context, req *types.QueryReplicatingObjectRequest) (
 	resp *types.QueryReplicatingObjectResponse, err error) {
 	ctx = log.Context(ctx, req)
 	objectID := req.GetObjectId()
 	log.CtxDebugw(ctx, "query replicating object", "objectID", objectID)
-	val, ok := taskNode.cache.Get(objectID)
+	val, ok := t.cache.Get(objectID)
 	if !ok {
 		err = merrors.ErrCacheMiss
 		return
@@ -65,14 +65,14 @@ func (taskNode *TaskNode) QueryReplicatingObject(ctx context.Context, req *types
 	return
 }
 
-func (taskNode *TaskNode) getApproval(
+func (t *TaskNode) getApproval(
 	objectInfo *storagetypes.ObjectInfo, low, high int, timeout int64) (
 	map[string]*sptypes.StorageProvider, map[string]*p2ptypes.GetApprovalResponse, error) {
 	var (
 		spList       = make(map[string]*sptypes.StorageProvider)
 		approvalList = make(map[string]*p2ptypes.GetApprovalResponse)
 	)
-	approvals, _, err := taskNode.p2p.GetApproval(context.Background(), objectInfo, int64(high), timeout)
+	approvals, _, err := t.p2p.GetApproval(context.Background(), objectInfo, int64(high), timeout)
 	if err != nil {
 		return spList, approvalList, err
 	}
@@ -80,7 +80,7 @@ func (taskNode *TaskNode) getApproval(
 		return spList, approvalList, merrors.ErrSPApprovalNumber
 	}
 	for spOpAddr, approval := range approvals {
-		sp, err := taskNode.spDB.GetSpByAddress(spOpAddr, sqldb.OperatorAddressType)
+		sp, err := t.spDB.GetSpByAddress(spOpAddr, sqldb.OperatorAddressType)
 		if err != nil {
 			continue
 		}

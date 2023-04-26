@@ -220,6 +220,11 @@ func (cfg *StorageProviderConfig) MakeTaskNodeConfig() (*tasknode.TaskNodeConfig
 	} else {
 		return nil, fmt.Errorf("missing p2p server gRPC address configuration for task node service")
 	}
+	if _, ok := cfg.Endpoint[model.ManagerService]; ok {
+		snCfg.ManagerGrpcAddress = cfg.Endpoint[model.ManagerService]
+	} else {
+		return nil, fmt.Errorf("missing manager server gRPC address configuration for task node service")
+	}
 	return snCfg, nil
 }
 

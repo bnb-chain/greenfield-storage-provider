@@ -10,8 +10,8 @@ import (
 
 var _ tqueue.ReceivePieceTask = &ReceivePieceTask{}
 
-func NewReceivePieceTask(object *storagetypes.ObjectInfo) (*ReceivePieceTask, error) {
-	if object == nil {
+func NewReceivePieceTask(objectInfo *storagetypes.ObjectInfo) (*ReceivePieceTask, error) {
+	if objectInfo == nil {
 		return nil, ErrObjectDangling
 	}
 	task := &Task{
@@ -22,8 +22,8 @@ func NewReceivePieceTask(object *storagetypes.ObjectInfo) (*ReceivePieceTask, er
 		TaskPriority: int32(GetTaskPriorityMap().GetPriority(tqueue.TypeTaskReceivePiece)),
 	}
 	return &ReceivePieceTask{
-		Object: object,
-		Task:   task,
+		ObjectInfo: objectInfo,
+		Task:       task,
 	}, nil
 }
 
@@ -31,10 +31,10 @@ func (m *ReceivePieceTask) Key() tqueue.TKey {
 	if m == nil {
 		return ""
 	}
-	if m.GetObject() == nil {
+	if m.GetObjectInfo() == nil {
 		return ""
 	}
-	return tqueue.TKey(m.GetObject().Id.String())
+	return tqueue.TKey(m.GetObjectInfo().Id.String())
 }
 
 func (m *ReceivePieceTask) Type() tqueue.TType {
