@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"strings"
 
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
@@ -25,13 +24,6 @@ const taskNodeRPCServiceName = "service.tasknode.types.TaskNodeService"
 
 // NewTaskNodeClient return a TaskNodeClient instance
 func NewTaskNodeClient(address string) (*TaskNodeClient, error) {
-	if !strings.HasPrefix(address, "http://") && !strings.HasPrefix(address, "https://") {
-		address = "http://" + address
-	}
-	// TODO: currently only support http
-	if strings.HasPrefix(address, "https://") {
-		address = "http://" + address[8:]
-	}
 	options := utilgrpc.GetDefaultClientOptions()
 	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(taskNodeRPCServiceName)
 	if err != nil {
