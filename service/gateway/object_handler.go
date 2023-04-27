@@ -244,7 +244,7 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 }
 
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
-func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
+func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request, isDownload bool) {
 	var (
 		err            error
 		errDescription *errorDescription
@@ -257,6 +257,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		size           int
 		statusCode     = http.StatusOK
 		ctx, cancel    = context.WithCancel(context.Background())
+		redirectUrl    string
 	)
 
 	reqContext = newRequestContext(r)
@@ -266,6 +267,14 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 			statusCode = errDescription.statusCode
 			_ = errDescription.errorResponse(w, reqContext)
 		}
+
+		var getObjectByUniversalEndpointName string
+		if isDownload {
+			getObjectByUniversalEndpointName = downloadObjectByUniversalEndpointName
+		} else {
+			getObjectByUniversalEndpointName = viewObjectByUniversalEndpointName
+		}
+
 		if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
 			log.Infof("action(%v) statusCode(%v) %v", getObjectByUniversalEndpointName, statusCode, reqContext.generateRequestDetail())
 		} else {
@@ -324,7 +333,12 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 			errDescription = InvalidAddress
 			return
 		}
-		redirectUrl := endpoint + "/download/" + reqContext.bucketName + "/" + reqContext.objectName
+
+		if isDownload {
+			redirectUrl = endpoint + "/download/" + reqContext.bucketName + "/" + reqContext.objectName
+		} else {
+			redirectUrl = endpoint + "/view/" + reqContext.bucketName + "/" + reqContext.objectName
+		}
 
 		log.Debugw("getting redirect url:", "redirectUrl", redirectUrl)
 
@@ -368,7 +382,13 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		errDescription = makeErrorDescription(err)
 		return
 	}
-	w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue)
+
+	if isDownload {
+		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
+	} else {
+		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionInlineValue)
+	}
+
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -402,4 +422,14 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		size = size + writeN
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+}
+
+// downloadObjectByUniversalEndpointHandler handles the download object request sent by universal endpoint
+func (gateway *Gateway) downloadObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
+	gateway.getObjectByUniversalEndpointHandler(w, r, true)
+}
+
+// viewObjectByUniversalEndpointHandler handles the view object request sent by universal endpoint
+func (gateway *Gateway) viewObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
+	gateway.getObjectByUniversalEndpointHandler(w, r, false)
 }
