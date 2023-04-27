@@ -1,47 +1,19 @@
 package client
 
 import (
-	"net"
 	"testing"
 
+	"github.com/bnb-chain/greenfield/sdk/keys"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"google.golang.org/grpc"
 )
 
-func MockGrpcServer() error {
-	l, err := net.Listen("tcp", ":9090")
-	if err != nil {
-		return err
-	}
-	server := grpc.NewServer()
-	return server.Serve(l)
-}
-
 func TestGreenfieldChainSignClient_Sign(t *testing.T) {
-	stop := make(chan error, 1)
-	go func() {
-		if err := MockGrpcServer(); err != nil {
-			stop <- err
-		}
-	}()
-	select {
-	case err := <-stop:
-		t.Fatal(err)
-	default:
-	}
 	type fields struct {
-		GRPCAddr           string
-		ChainID            string
-		GasLimit           uint64
-		OperatorPrivateKey string
-		FundingPrivateKey  string
-		SealPrivateKey     string
 		ApprovalPrivateKey string
 	}
 	type args struct {
-		scope SignType
-		msg   []byte
+		msg []byte
 	}
 	tests := []struct {
 		name    string
@@ -52,36 +24,23 @@ func TestGreenfieldChainSignClient_Sign(t *testing.T) {
 		{
 			name: "Test TestGreenfieldChainSignClient_Sign Case 1",
 			fields: fields{
-				ChainID:            "greenfield_9000-121",
-				GasLimit:           210000,
-				GRPCAddr:           "localhost:9090",
-				OperatorPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
-				FundingPrivateKey:  "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
 				ApprovalPrivateKey: "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
-				SealPrivateKey:     "d710d9e03466d6236d1ac2e70712b1e2ed7324b1d7f233f8887d3a703626fb9f",
 			},
 			args: args{
-				scope: SignApproval,
-				msg:   []byte("hello world"),
+				msg: []byte("hello world"),
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client, err := NewGreenfieldChainSignClient(tt.fields.GRPCAddr, tt.fields.ChainID, tt.fields.GasLimit, tt.fields.OperatorPrivateKey, tt.fields.FundingPrivateKey, tt.fields.SealPrivateKey, tt.fields.ApprovalPrivateKey)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewGreenfieldChainClient() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			km, err := client.greenfieldClients[tt.args.scope].GetKeyManager()
+			km, err := keys.NewPrivateKeyManager(tt.fields.ApprovalPrivateKey)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetKeyManager() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			sig, err := client.Sign(tt.args.scope, tt.args.msg)
+			sig, err := km.Sign(tt.args.msg)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GreenfieldChainClient.Sign() error = %v, wantErr %v", err, tt.wantErr)
 				return
