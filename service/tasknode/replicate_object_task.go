@@ -83,7 +83,8 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 		defer close(pieceSizeCh)
 		gotPieceSize := false
 
-		for segmentPieceIdx := 0; segmentPieceIdx < sg.task.segmentPieceNumber; segmentPieceIdx++ {
+		//for segmentPieceIdx := 0; segmentPieceIdx < sg.task.segmentPieceNumber; segmentPieceIdx++ {
+		for segmentPieceIdx := 0; segmentPieceIdx < 4; segmentPieceIdx++ {
 			segmentPieceKey := piecestore.EncodeSegmentPieceKey(sg.task.objectInfo.Id.Uint64(), uint32(segmentPieceIdx))
 			segmentPieceData, err := sg.task.taskNode.pieceStore.GetPiece(context.Background(), segmentPieceKey, 0, 0)
 			if err != nil {

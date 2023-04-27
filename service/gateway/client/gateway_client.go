@@ -33,10 +33,6 @@ func NewGatewayClient(address string) (*GatewayClient, error) {
 	if !strings.HasPrefix(address, "http://") && !strings.HasPrefix(address, "https://") {
 		address = "https://" + address
 	}
-	// TODO: currently only support http
-	if strings.HasPrefix(address, "https://") {
-		address = "http://" + address[8:]
-	}
 	client := &GatewayClient{
 		address: address,
 		httpClient: &http.Client{
@@ -52,6 +48,7 @@ func NewGatewayClient(address string) (*GatewayClient, error) {
 func (client *GatewayClient) ReplicateObjectPieceStream(objectID uint64, pieceSize uint32, redundancyIdx uint32,
 	approval *p2ptypes.GetApprovalResponse, objectDataReader io.Reader) (integrityHash []byte, signature []byte, err error) {
 	req, err := http.NewRequest(http.MethodPut, client.address+model.ReplicateObjectPiecePath, objectDataReader)
+	req.ContentLength = int64(pieceSize * 4)
 	if err != nil {
 		log.Errorw("failed to replicate piece stream due to new request error", "error", err)
 		return nil, nil, err
