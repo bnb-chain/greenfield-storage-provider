@@ -1,14 +1,11 @@
 package types
 
-var (
-	BucketKeyPrefix = []byte{0x11}
-	ObjectKeyPrefix = []byte{0x12}
-)
+import "fmt"
 
-func (m *Bucket) GetCacheKey() []byte {
-	return append(BucketKeyPrefix, m.BucketInfo.Id.Bytes()...)
+func (m *Bucket) GetCacheKey() string {
+	return fmt.Sprintf("b%s", m.BucketInfo.Id.String())
 }
 
-func (m *Object) GetCacheKey() []byte {
-	return append(ObjectKeyPrefix, m.ObjectInfo.Id.Bytes()...)
+func (m *Object) GetCacheKey() string {
+	return fmt.Sprintf("o%s", m.ObjectInfo.Id.String())
 }

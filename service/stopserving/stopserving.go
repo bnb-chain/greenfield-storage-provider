@@ -76,7 +76,7 @@ func (s *StopServing) Start(ctx context.Context) error {
 		return errors.New("stop serving has already started")
 	}
 
-	if s.config.DiscontinueConfig.BucketKeepAliveDays > 0 {
+	if s.config.DiscontinueConfig.BucketKeepAliveDays >= 0 {
 		// start background task
 		go s.eventLoop()
 	}
@@ -115,6 +115,7 @@ func (s *StopServing) discontinueBuckets() {
 			continue
 		}
 
+		log.Infow("start to discontinue bucket", "bucket_name", bucket.BucketInfo.BucketName)
 		discontinueBucket := &storagetypes.MsgDiscontinueBucket{
 			BucketName: bucket.BucketInfo.BucketName,
 			Reason:     DiscontinueReason,
