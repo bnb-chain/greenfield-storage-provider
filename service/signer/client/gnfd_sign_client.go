@@ -172,6 +172,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 			nonce, err := client.greenfieldClients[scope].GetNonce()
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to get seal account nonce", "err", err, "seal_info", msgSealObject.String())
+				return nil, merrors.ErrSealObjectOnChain
 			}
 			client.sealAccNonce = nonce - 1
 		}
