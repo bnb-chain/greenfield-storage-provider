@@ -98,7 +98,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	return &GreenfieldChainSignClient{
 		gasLimit:          gasLimit,
 		greenfieldClients: greenfieldClients,
-		sealAccNonce:      sealAccNonce - 1, // Cut one first when encountering it, and add one when sending a transaction
+		sealAccNonce:      sealAccNonce - 1, // Decrease one first when initialize it, and add one when sending a transaction
 	}, nil
 }
 
