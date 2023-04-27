@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"sync"
 	"time"
@@ -37,7 +36,7 @@ const (
 
 // streamReader is used to stream produce/consume piece data stream.
 type streamReader struct {
-	pieceData [][]byte
+	pieceData []byte
 	outerIdx  int
 	innerIdx  int
 
@@ -45,32 +44,32 @@ type streamReader struct {
 	pWrite *io.PipeWriter
 }
 
-// Read populates the given byte slice with data and returns the number of bytes populated and an error value.
-// It returns an io.EOF error when the stream ends.
-func (s *streamReader) Read(buf []byte) (n int, err error) {
-	if len(buf) == 0 {
-		return 0, fmt.Errorf("failed to read due to invalid args")
-	}
-
-	readLen := 0
-	for s.outerIdx < len(s.pieceData) {
-		curReadLen := copy(buf[readLen:], s.pieceData[s.outerIdx][s.innerIdx:])
-		s.innerIdx += curReadLen
-		if s.innerIdx == len(s.pieceData[s.outerIdx]) {
-			s.outerIdx += 1
-			s.innerIdx = 0
-		}
-		readLen = readLen + curReadLen
-		if readLen == len(buf) {
-			break
-		}
-	}
-	if readLen != 0 {
-		return readLen, nil
-	}
-	return 0, io.EOF
-	//return s.pRead.Read(buf)
-}
+//// Read populates the given byte slice with data and returns the number of bytes populated and an error value.
+//// It returns an io.EOF error when the stream ends.
+//func (s *streamReader) Read(buf []byte) (n int, err error) {
+//	if len(buf) == 0 {
+//		return 0, fmt.Errorf("failed to read due to invalid args")
+//	}
+//
+//	readLen := 0
+//	for s.outerIdx < len(s.pieceData) {
+//		curReadLen := copy(buf[readLen:], s.pieceData[s.outerIdx][s.innerIdx:])
+//		s.innerIdx += curReadLen
+//		if s.innerIdx == len(s.pieceData[s.outerIdx]) {
+//			s.outerIdx += 1
+//			s.innerIdx = 0
+//		}
+//		readLen = readLen + curReadLen
+//		if readLen == len(buf) {
+//			break
+//		}
+//	}
+//	if readLen != 0 {
+//		return readLen, nil
+//	}
+//	return 0, io.EOF
+//	//return s.pRead.Read(buf)
+//}
 
 // streamReaderGroup is used to the primary sp replicate object piece data to other secondary sps.
 type streamReaderGroup struct {
@@ -149,7 +148,7 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 			for idx := range sg.streamReaderMap {
 				startWriteSteamTime := time.Now()
 				//sg.streamReaderMap[idx].pWrite.Write(ecPieceData[idx])
-				sg.streamReaderMap[idx].pieceData = append(sg.streamReaderMap[idx].pieceData, ecPieceData[idx])
+				sg.streamReaderMap[idx].pieceData = append(sg.streamReaderMap[idx].pieceData, ecPieceData[idx]...)
 				log.CtxDebugw(sg.task.ctx, "succeed to produce an ec piece data",
 					"piece_len", len(ecPieceData[idx]), "redundancy_index", idx,
 					"write_stream_cost_ms", time.Since(startWriteSteamTime).Milliseconds())
@@ -162,7 +161,7 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 			}
 			for idx := range sg.streamReaderMap {
 				//sg.streamReaderMap[idx].pWrite.Write(segmentPieceData)
-				sg.streamReaderMap[idx].pieceData = append(sg.streamReaderMap[idx].pieceData, segmentPieceData)
+				sg.streamReaderMap[idx].pieceData = append(sg.streamReaderMap[idx].pieceData, segmentPieceData...)
 				log.CtxDebugw(sg.task.ctx, "succeed to produce an segment piece data", "piece_len", len(segmentPieceData), "redundancy_index", idx)
 			}
 		}
@@ -206,7 +205,7 @@ func (r *streamPieceDataReplicator) replicate() (integrityHash []byte, signature
 	}
 	startReplicateTime := time.Now()
 	integrityHash, signature, err = gwClient.ReplicateObjectPieceStream(r.task.objectInfo.Id.Uint64(), r.pieceSize,
-		r.redundancyIndex, r.approval, r.streamReader)
+		r.redundancyIndex, r.approval, bytes.NewReader(r.streamReader.pieceData))
 	log.Errorw("replicate cost", "object_id", r.task.objectInfo.Id.Uint64(),
 		"close_stream_cost_ms", time.Since(startReplicateTime).Milliseconds())
 	if err != nil {
