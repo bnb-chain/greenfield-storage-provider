@@ -10,5 +10,6 @@ type MetadataConfig struct {
 	BsDBConfig         *config.SQLDBConfig
 	BsDBSwitchedConfig *config.SQLDBConfig
 	// BSDBFlag is used to determine which DB is currently being used
-	BSDBFlag bool
+	BsDBFlag                   bool
+	BsDBSwitchCheckIntervalSec int64
 }

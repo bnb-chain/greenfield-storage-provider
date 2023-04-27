@@ -14,6 +14,7 @@ import (
 	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
@@ -34,6 +35,7 @@ type StorageProviderConfig struct {
 	ChainConfig        *gnfd.GreenfieldChainConfig
 	SignerCfg          *signer.SignerConfig
 	BlockSyncerCfg     *blocksyncer.Config
+	MetadataCfg        *metadata.MetadataConfig
 	P2PCfg             *p2p.NodeConfig
 	LogCfg             *LogConfig
 	MetricsCfg         *metrics.MetricsConfig
@@ -58,12 +60,12 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.DownloaderService,
 		model.ChallengeService,
 		model.TaskNodeService,
-		//model.ReceiverService,
-		//model.SignerService,
+		model.ReceiverService,
+		model.SignerService,
 		model.MetadataService,
-		//model.ManagerService,
-		//model.P2PService,
-		//model.AuthService,
+		model.ManagerService,
+		model.P2PService,
+		model.AuthService,
 	},
 	ListenAddress: map[string]string{
 		model.GatewayService:    model.GatewayHTTPAddress,
@@ -78,7 +80,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.AuthService:       model.AuthGRPCAddress,
 	},
 	Endpoint: map[string]string{
-		model.GatewayService:    "localhost:9033",
+		model.GatewayService:    "gnfd.test-sp.com",
 		model.UploaderService:   model.UploaderGRPCAddress,
 		model.DownloaderService: model.DownloaderGRPCAddress,
 		model.ChallengeService:  model.ChallengeGRPCAddress,
@@ -97,6 +99,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	ChainConfig:        DefaultGreenfieldChainConfig,
 	SignerCfg:          signer.DefaultSignerChainConfig,
 	BlockSyncerCfg:     DefaultBlockSyncerConfig,
+	MetadataCfg:        DefaultMetadataConfig,
 	P2PCfg:             DefaultP2PConfig,
 	LogCfg:             DefaultLogConfig,
 	MetricsCfg:         DefaultMetricsConfig,
@@ -111,7 +114,7 @@ var DefaultSQLDBConfig = &storeconfig.SQLDBConfig{
 	Database: "storage_provider_db",
 }
 
-// DefaultBsDBConfig defines the default configuration of SQL DB
+// DefaultBsDBConfig defines the default configuration of Bs DB
 var DefaultBsDBConfig = &storeconfig.SQLDBConfig{
 	User:     "root",
 	Passwd:   "test_pwd",
@@ -119,7 +122,7 @@ var DefaultBsDBConfig = &storeconfig.SQLDBConfig{
 	Database: "block_syncer",
 }
 
-// DefaultBsDBSwitchedConfig defines the default configuration of SQL DB
+// DefaultBsDBSwitchedConfig defines the default configuration for the switched Bs DB.
 var DefaultBsDBSwitchedConfig = &storeconfig.SQLDBConfig{
 	User:     "root",
 	Passwd:   "test_pwd",
@@ -157,6 +160,12 @@ var DefaultBlockSyncerConfig = &blocksyncer.Config{
 var DefaultMetricsConfig = &metrics.MetricsConfig{
 	Enabled:     false,
 	HTTPAddress: model.MetricsHTTPAddress,
+}
+
+// DefaultMetadataConfig defines the default configuration of Metadata service
+var DefaultMetadataConfig = &metadata.MetadataConfig{
+	BsDBFlag:                   false,
+	BsDBSwitchCheckIntervalSec: 5,
 }
 
 type LogConfig struct {

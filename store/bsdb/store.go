@@ -25,7 +25,7 @@ func NewBsDB(config *metadata.MetadataConfig) (*BsDBImpl, error) {
 	LoadDBConfigFromEnv(config)
 
 	dbConfig := config.BsDBConfig
-	if config.BSDBFlag {
+	if config.BsDBFlag {
 		dbConfig = config.BsDBSwitchedConfig
 	}
 
