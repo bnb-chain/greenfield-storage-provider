@@ -59,8 +59,8 @@ ApprovalPrivateKey = ""
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment", "permission", "group"]
-Dsn = "root:1q2w3e4r*@tcp(localhost:3306)/block_syncer?parseTime=true&multiStatements=true&loc=Local"
-RecreateTables = true
+Dsn = "root:passwd@tcp(localhost:3306)/block_syncer?parseTime=true&multiStatements=true&loc=Local"
+RecreateTables = false
 Workers = 10
 
 [P2PCfg]

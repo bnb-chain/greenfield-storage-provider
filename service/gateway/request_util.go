@@ -363,13 +363,22 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		accountExist bool
 	)
 
-	// TODO: just for auth v2 js-sdk, will refine it in the future
+	// TODO: just for auth v2 js-sdk, will be deleted in the future
 	if reqContext.skipAuth {
 		if mux.CurrentRoute(reqContext.request).GetName() == putObjectRouterName ||
 			mux.CurrentRoute(reqContext.request).GetName() == getObjectRouterName {
 			if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
 				context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {
 				log.Errorw("failed to query bucket info and object info on chain",
+					"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
+				return err
+			}
+		}
+		if mux.CurrentRoute(reqContext.request).GetName() == getBucketReadQuotaRouterName ||
+			mux.CurrentRoute(reqContext.request).GetName() == listBucketReadRecordRouterName {
+			if reqContext.bucketInfo, err = g.chain.QueryBucketInfo(
+				context.Background(), reqContext.bucketName); err != nil {
+				log.Errorw("failed to query bucket info on chain",
 					"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
 				return err
 			}
