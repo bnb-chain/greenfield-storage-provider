@@ -10,56 +10,77 @@ sp_bin=${workspace}/../../build/${sp_bin_name}
 # the command line help #
 #########################
 display_help() {
-    echo "Usage: $0 [option...] {help|reset|start|stop|print}" >&2
+    echo "Usage: $0 [option...] {help|generate|reset|start|stop|print}" >&2
     echo
-    echo "   --help                           display help info"
-    echo "   --reset \$GEN_CONFIG_TEMPLATE     reset env, \$GEN_CONFIG_TEMPLATE=0 or =1"
-    echo "   --start                          start storage providers"
-    echo "   --stop                           stop storage providers"
-    echo "   --print                          print sp local env work directory"
+    echo "   --help           display help info"
+    echo "   --generate       generate sp.info and db.info that accepts four args: the first arg is json file path, the second arg is db username, the third arg is db password and the fourth arg is db address"
+    echo "   --reset          reset env"
+    echo "   --start          start storage providers"
+    echo "   --stop           stop storage providers"
+    echo "   --print          print sp local env work directory"
     echo
     exit 0
 }
 
 ################################
-# generate sp config templates #
+# generate sp.info and db.info #
 ################################
-generate_env() {
-  gen_config_template=$1
+function generate_sp_db_info() {
+  if [ $# != 4 ] ; then
+    echo "failed to generate sp.info and db.info, please check args by help info"
+    exit 1
+  fi
   bash ${workspace}/../../build.sh
   mkdir -p ${workspace}/${SP_DEPLOY_DIR}
 
+  sp_json_file=$1
+  db_user=$2
+  db_password=$3
+  db_address=$4
   for ((i=0;i<${SP_NUM};i++));do
     mkdir -p ${workspace}/${SP_DEPLOY_DIR}/sp${i}
     cp -rf ${sp_bin} ${workspace}/${SP_DEPLOY_DIR}/sp${i}/${sp_bin_name}${i}
-    if [ ${gen_config_template} -eq 1 ]
-    then
-      cd ${workspace}/${SP_DEPLOY_DIR}/sp${i}/
-      ./${sp_bin_name}${i}  config.dump
-      {
-        echo '#!/usr/bin/env bash'
-        echo 'USER=""'
-        echo 'PWD=""'
-        echo 'ADDRESS=""'
-        echo 'DATABASE=""'
-      } > db.info
-      {
-        echo '#!/usr/bin/env bash'
-        echo 'SP_ENDPOINT=""'
-        echo 'OPERATOR_ADDRESS=""'
-        echo 'OPERATOR_PRIVATE_KEY=""'
-        echo 'FUNDING_PRIVATE_KEY=""'
-        echo 'SEAL_PRIVATE_KEY=""'
-        echo 'APPROVAL_PRIVATE_KEY=""'
-      } > sp.info
-      cd - >/dev/null
-    fi
+    cd ${workspace}/${SP_DEPLOY_DIR}/sp${i}/
+    ./${sp_bin_name}${i}  config.dump
+
+    # generate sp info
+    i_port=`expr ${SP_START_ENDPOINT_PORT} + $i`
+    endpoint="127.0.0.1:${i_port}"
+    {
+      echo "#!/usr/bin/env bash"
+      echo "SP_ENDPOINT=\"${endpoint}\""
+    } > sp.info
+    op_address=$(jq -r ".sp${i}.OperatorAddress" ${sp_json_file})
+    echo "OPERATOR_ADDRESS=\"${op_address}\"" >> sp.info
+    opk=$(jq -r ".sp${i}.OperatorPrivateKey" ${sp_json_file})
+    echo "OPERATOR_PRIVATE_KEY=\"${opk}\"" >> sp.info
+    fpk=$(jq -r ".sp${i}.FundingPrivateKey" ${sp_json_file})
+    echo "FUNDING_PRIVATE_KEY=\"${fpk}\"" >> sp.info
+    spk=$(jq -r ".sp${i}.SealPrivateKey" ${sp_json_file})
+    echo "SEAL_PRIVATE_KEY=\"${spk}\"" >> sp.info
+    apk=$(jq -r ".sp${i}.ApprovalPrivateKey" ${sp_json_file})
+    echo "APPROVAL_PRIVATE_KEY=\"${apk}\"" >> sp.info
+    gpk=$(jq -r ".sp${i}.GcPrivateKey" ${sp_json_file})
+    echo "GC_PRIVATE_KEY=\"${gpk}\"" >> sp.info
+
+    # generate db info
+    {
+      echo '#!/usr/bin/env bash'
+      echo "USER=\"${db_user}\""
+      echo "PWD=\"${db_password}\""
+      echo "ADDRESS=\"${db_address}\""
+      echo "DATABASE=sp_${i}"
+    } > db.info
+    cd - >/dev/null
   done
+  print_work_dir
+  echo "succeed to generate sp.info and db.info"
+  echo
 }
 
-##################################################################
-# make sp config.toml real according to env.info/db.info/sp.info #
-##################################################################
+#############################################################
+# make sp config.toml according to env.info/db.info/sp.info #
+#############################################################
 make_config() {
   index=0
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
@@ -90,6 +111,7 @@ make_config() {
         sed -i -e "s/FundingPrivateKey = \".*\"/FundingPrivateKey = \"${FUNDING_PRIVATE_KEY}\"/g" config.toml
         sed -i -e "s/SealPrivateKey = \".*\"/SealPrivateKey = \"${SEAL_PRIVATE_KEY}\"/g" config.toml
         sed -i -e "s/ApprovalPrivateKey = \".*\"/ApprovalPrivateKey = \"${APPROVAL_PRIVATE_KEY}\"/g" config.toml
+        sed -i -e "s/GcPrivateKey = \".*\"/GcPrivateKey = \"${GC_PRIVATE_KEY}\"/g" config.toml
         # chain
         sed -i -e "s/greenfield_9000-1741/${CHAIN_ID}/g" config.toml
         sed -i -e "s/localhost\:9090/${CHAIN_GRPC_ENDPOINT}/g" config.toml
@@ -125,7 +147,7 @@ start_sp() {
 ############
 stop_sp() {
   kill -9 $(pgrep -f ${sp_bin_name}) >/dev/null 2>&1
-  echo "succeed to finish storage providers"
+  echo "succeed to stop storage providers"
 }
 
 #############################################
@@ -147,39 +169,13 @@ reset_db() {
 ##########################
 # clean piece-store data #
 ##########################
-reset_store() {
+reset_piece_store() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
       cd ${sp_dir}
       rm -rf ./data
-      echo "succeed to reset store in "${sp_dir}
+      echo "succeed to reset piece store in "${sp_dir}
       cd - >/dev/null
     done
-}
-
-#############
-# reset sps #
-#############
-reset_sp() {
-  if [ $# != 1 ] ; then
-    echo "failed to reset sp, please check args by help info"
-    exit 1
-  fi
-  stop_sp
-  gen_config_template=$1
-  if [ ${gen_config_template} -eq 1 ]
-  then
-    generate_env ${gen_config_template}
-    echo
-    echo "succeed to generate templates, and need to overwrite db.info and sp.info in the following working directory:"
-    print_work_dir
-    echo "after overwrite, reset again with FIRST_TIME=0"
-    echo
-  else
-    reset_db
-    reset_store
-    generate_env 0
-    make_config
-  fi
 }
 
 ##################
@@ -191,11 +187,37 @@ print_work_dir() {
   done
 }
 
+##############
+# rebuild sp #
+##############
+function rebuild() {
+  bash ${workspace}/../../build.sh
+  mkdir -p ${workspace}/${SP_DEPLOY_DIR}
+  for ((i=0;i<${SP_NUM};i++));do
+    mkdir -p ${workspace}/${SP_DEPLOY_DIR}/sp${i}
+    cp -rf ${sp_bin} ${workspace}/${SP_DEPLOY_DIR}/sp${i}/${sp_bin_name}${i}
+  done
+}
+
+#############
+# reset sps #
+#############
+reset_sp() {
+  stop_sp
+  reset_db
+  reset_piece_store
+  rebuild
+  make_config
+}
+
 main() {
   CMD=$1
   case ${CMD} in
+  --generate)
+    generate_sp_db_info $2 $3 $4 $5
+    ;;
   --reset)
-    reset_sp $2
+    reset_sp
     ;;
   --start)
     stop_sp
