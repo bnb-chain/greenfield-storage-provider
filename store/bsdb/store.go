@@ -20,12 +20,11 @@ type BsDBImpl struct {
 	db *gorm.DB
 }
 
-// NewBsDB return a block syncer db instance
-func NewBsDB(config *metadata.MetadataConfig) (*BsDBImpl, error) {
+// NewBsDB return a block syncer db instance or a block syncer db backup instance based on the isBackup flag
+func NewBsDB(config *metadata.MetadataConfig, isBackup bool) (*BsDBImpl, error) {
 	LoadDBConfigFromEnv(config)
-
 	dbConfig := config.BsDBConfig
-	if config.BsDBFlag {
+	if isBackup {
 		dbConfig = config.BsDBSwitchedConfig
 	}
 

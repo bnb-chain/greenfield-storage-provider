@@ -18,24 +18,34 @@ import (
 // Metadata implements the gRPC of MetadataService,
 // responsible for interact with SP for complex query service.
 type Metadata struct {
-	config         *metadata.MetadataConfig
-	name           string
-	bsDB           bsdb.BSDB
-	grpcServer     *grpc.Server
-	dbSwitchTicker *time.Ticker
+	config                *metadata.MetadataConfig
+	name                  string
+	bsDB                  bsdb.BSDB
+	bsDBBlockSyncer       bsdb.BSDB
+	bsDBBlockSyncerBackUp bsdb.BSDB
+	grpcServer            *grpc.Server
+	dbSwitchTicker        *time.Ticker
 }
 
 // NewMetadataService returns an instance of Metadata that
 // supply query service for Inscription network
 func NewMetadataService(config *metadata.MetadataConfig) (metadata *Metadata, err error) {
-	bsDB, err := bsdb.NewBsDB(config)
+	bsDBBlockSyncer, err := bsdb.NewBsDB(config, false)
 	if err != nil {
 		return nil, err
 	}
+
+	bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(config, true)
+	if err != nil {
+		return nil, err
+	}
+
 	metadata = &Metadata{
-		config: config,
-		name:   model.MetadataService,
-		bsDB:   bsDB,
+		config:                config,
+		name:                  model.MetadataService,
+		bsDB:                  bsDBBlockSyncer,
+		bsDBBlockSyncer:       bsDBBlockSyncer,
+		bsDBBlockSyncerBackUp: bsDBBlockSyncerBackUp,
 	}
 	return
 }
@@ -92,8 +102,8 @@ func (metadata *Metadata) startDBSwitchListener(switchInterval time.Duration) {
 	go func() {
 		// loop until the context is canceled (e.g., when the Metadata service is stopped)
 		for range metadata.dbSwitchTicker.C {
-			// check if there is a signal to switch the database
-			signal, err := metadata.bsDB.GetSwitchDBSignal()
+			// check if there is a signal from block syncer database to switch the database
+			signal, err := metadata.bsDBBlockSyncer.GetSwitchDBSignal()
 			// TODO REMOVE BARRY
 			log.Debugf("switchDB check: signal: %t", signal)
 			// TODO REMOVE BARRY
@@ -111,23 +121,20 @@ func (metadata *Metadata) startDBSwitchListener(switchInterval time.Duration) {
 	}()
 }
 
-// switchDB is a method that switches the Metadata service's underlying database
-// to a new one based on the updated configuration. It updates the metadata.bsDB
-// with the new database instance.
+// switchDB is responsible for switching between the primary and backup Block Syncer databases.
+// Depending on the current value of the BsDBFlag in the Metadata configuration, it switches
+// the active Block Syncer database to the backup or the primary database.
+// After switching, it toggles the value of the BsDBFlag to indicate the active database.
 func (metadata *Metadata) switchDB() error {
-	// update metadata.bsDB with the new database instance
-	metadata.config.BsDBFlag = !metadata.config.BsDBFlag
-
-	// create a new database instance with the updated configuration
-	bsDB, err := bsdb.NewBsDB(metadata.config)
-	if err != nil {
-		log.Errorw("failed to switch db", "err", err)
-		return err
+	if metadata.config.BsDBFlag {
+		metadata.bsDB = metadata.bsDBBlockSyncer
+	} else {
+		metadata.bsDB = metadata.bsDBBlockSyncerBackUp
 	}
-	// update the Metadata service's underlying database instance
-	metadata.bsDB = bsDB
+
+	metadata.config.BsDBFlag = !metadata.config.BsDBFlag
 	// TODO REMOVE BARRY
-	signal, err := metadata.bsDB.GetSwitchDBSignal()
+	signal, _ := metadata.bsDB.GetSwitchDBSignal()
 	log.Debugf("switchDB successfully, signal: %t", signal)
 	// TODO REMOVE BARRY
 	return nil
