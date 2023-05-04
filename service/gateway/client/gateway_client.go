@@ -45,13 +45,14 @@ func NewGatewayClient(address string) (*GatewayClient, error) {
 }
 
 // ReplicateObjectPieceStream replicates object piece stream to the target storage-provider.
-func (client *GatewayClient) ReplicateObjectPieceStream(objectID uint64, pieceSize uint32, redundancyIdx uint32,
+func (client *GatewayClient) ReplicateObjectPieceStream(objectID uint64, pieceSize uint32, contentLength int64, redundancyIdx uint32,
 	approval *p2ptypes.GetApprovalResponse, objectDataReader io.Reader) (integrityHash []byte, signature []byte, err error) {
 	req, err := http.NewRequest(http.MethodPut, client.address+model.ReplicateObjectPiecePath, objectDataReader)
 	if err != nil {
 		log.Errorw("failed to replicate piece stream due to new request error", "error", err)
 		return nil, nil, err
 	}
+	req.ContentLength = contentLength
 	marshalApproval, err := json.Marshal(approval)
 	if err != nil {
 		log.Errorw("failed to proto marshal approval", "error", err)
