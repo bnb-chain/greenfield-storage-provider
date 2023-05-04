@@ -106,9 +106,12 @@ func (i *Impl) Process(height uint64) error {
 	endBlockEvents := events.EndBlockEvents
 
 	// 1. handle events in startBlock
+	ctx := context.Background()
+	dbTx := i.DB.Begin(ctx)
+	ctx = context.WithValue(ctx, "use_transaction", dbTx)
 
 	if len(beginBlockEvents) > 0 {
-		err = i.ExportEventsWithoutTx(context.Background(), block, beginBlockEvents)
+		err = i.ExportEventsWithoutTx(ctx, block, beginBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
 			return err
@@ -116,7 +119,7 @@ func (i *Impl) Process(height uint64) error {
 	}
 
 	// 2. handle events in txs
-	err = i.ExportEventsInTxs(context.Background(), block, txs)
+	err = i.ExportEventsInTxs(ctx, block, txs)
 	if err != nil {
 		log.Errorf("failed to export events in txs: %s", err)
 		return err
@@ -124,14 +127,14 @@ func (i *Impl) Process(height uint64) error {
 
 	// 3. handle events in endBlock
 	if len(endBlockEvents) > 0 {
-		err = i.ExportEventsWithoutTx(context.Background(), block, endBlockEvents)
+		err = i.ExportEventsWithoutTx(ctx, block, endBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
 			return err
 		}
 	}
 
-	err = i.ExportEpoch(block)
+	err = i.ExportEpoch(ctx, block)
 	if err != nil {
 		log.Errorf("failed to export epoch: %s", err)
 		return err
@@ -145,9 +148,9 @@ func (i *Impl) Process(height uint64) error {
 }
 
 // ExportEpoch accept a block result data and persist basic info into db to record current sync progress
-func (i *Impl) ExportEpoch(block *coretypes.ResultBlock) error {
+func (i *Impl) ExportEpoch(ctx context.Context, block *coretypes.ResultBlock) error {
 	// Save the block
-	err := i.DB.SaveEpoch(context.Background(), &models.Epoch{
+	err := i.DB.SaveEpoch(ctx, &models.Epoch{
 		OneRowId:    true,
 		BlockHeight: block.Block.Height,
 		BlockHash:   common.HexToHash(block.BlockID.Hash.String()),
