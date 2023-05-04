@@ -114,6 +114,7 @@ func (i *Impl) Process(height uint64) error {
 		err = i.ExportEventsWithoutTx(ctx, block, beginBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
+			dbTx.Rollback()
 			return err
 		}
 	}
@@ -122,6 +123,7 @@ func (i *Impl) Process(height uint64) error {
 	err = i.ExportEventsInTxs(ctx, block, txs)
 	if err != nil {
 		log.Errorf("failed to export events in txs: %s", err)
+		dbTx.Rollback()
 		return err
 	}
 
@@ -130,6 +132,7 @@ func (i *Impl) Process(height uint64) error {
 		err = i.ExportEventsWithoutTx(ctx, block, endBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
+			dbTx.Rollback()
 			return err
 		}
 	}
@@ -137,6 +140,13 @@ func (i *Impl) Process(height uint64) error {
 	err = i.ExportEpoch(ctx, block)
 	if err != nil {
 		log.Errorf("failed to export epoch: %s", err)
+		dbTx.Rollback()
+		return err
+	}
+	err = dbTx.Commit()
+	if err != nil {
+		log.Errorf("failed to tx commit: %s", err)
+		dbTx.Rollback()
 		return err
 	}
 
