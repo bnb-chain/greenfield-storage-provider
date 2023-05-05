@@ -3,7 +3,6 @@ package blocksyncer
 import (
 	"context"
 	"encoding/json"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/forbole/juno/v4/common"
@@ -67,8 +66,9 @@ func (i *Impl) Process(height uint64) error {
 	var txs []*types.Tx
 	var err error
 	flagAny := CatchUpFlag.Load()
-	flag := flagAny.(bool)
-	if !flag {
+	flag := flagAny.(int64)
+	if flag == -1 || flag >= int64(height) {
+		log.Infow("get data from map", "flag", flag, "height", height)
 		blockAny, okb := blockMap.Load(height)
 		eventsAny, oke := eventMap.Load(height)
 		txsAny, okt := txMap.Load(height)

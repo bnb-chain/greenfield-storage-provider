@@ -1,0 +1,10 @@
+{"t":"2023-05-05T16:04:22.410+0800","l":"info","caller":"storage_provider/init.go:90","msg":"init resource manager","limits":"system limits [memory limits 9223372036854775807]","error":null}
+{"t":"2023-05-05T16:04:22.413+0800","l":"debug","caller":"storage_provider/main.go:156","msg":"succeed to init service ","service":"gateway"}
+{"t":"2023-05-05T16:04:22.413+0800","l":"debug","caller":"storage/object_storage.go:17","msg":"created file storage at endpoint /Users/constbh/gocode/greenfield-storage-provider/data/"}
+{"t":"2023-05-05T16:04:22.413+0800","l":"debug","caller":"piece/piece_store.go:100","msg":"succeed to head bucket in file:///Users/constbh/gocode/greenfield-storage-provider/data/"}
+{"t":"2023-05-05T16:04:22.413+0800","l":"debug","caller":"piece/piece_store.go:26","msg":"piece store is running","storage type":"file","shards":0}
+{"t":"2023-05-05T16:04:22.415+0800","l":"error","caller":"sqldb/store.go:40","msg":"gorm failed to open db","error":"Error 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)"}
+{"t":"2023-05-05T16:04:22.415+0800","l":"error","caller":"uploader/uploader.go:66","msg":"failed to create sp db client","error":"Error 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)"}
+{"t":"2023-05-05T16:04:22.415+0800","l":"error","caller":"storage_provider/main.go:153","msg":"failed to init service","service":"uploader","error":"Error 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)"}
+{"t":"2023-05-05T16:08:09.345+0800","l":"info","caller":"storage_provider/init.go:90","msg":"init resource manager","limits":"system limits [memory limits 9223372036854775807]","error":null}
+{"t":"2023-05-05T16:08:09.345+0800","l":"info","caller":"blocksyncer/block_syncer.go:80","msg":"failed to get db config from env, use db config from config file"}

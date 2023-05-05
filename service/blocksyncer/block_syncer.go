@@ -161,7 +161,7 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 
 	latestBlockHeight := mustGetLatestHeight(s.parserCtx)
 	LatestBlockHeight.Store(int64(latestBlockHeight))
-	CatchUpFlag.Store(false)
+	CatchUpFlag.Store(int64(-1))
 	go s.getLatestBlockHeight()
 
 	lastDbBlockHeight := uint64(0)
@@ -207,7 +207,7 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 		latestBlockHeight := latestBlockHeightAny.(int64)
 		if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
 			log.Infof("quick fetch ended latestBlockHeight: %d", latestBlockHeight)
-			CatchUpFlag.Store(true)
+			CatchUpFlag.Store(int64(count*cycle + startHeight - 1))
 			break
 		}
 		wg := &sync.WaitGroup{}
@@ -216,6 +216,7 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 			go func(idx, c uint64) {
 				defer wg.Done()
 				height := idx + count*c + startHeight
+				log.Infof("fetching block height:%d", height)
 				if height > uint64(latestBlockHeight) {
 					return
 				}
@@ -236,6 +237,7 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 						log.Warnf("failed to get block results from node: %s", err)
 						continue
 					}
+					log.Infof("put height: %d in map", height)
 					blockMap.Store(height, block)
 					eventMap.Store(height, events)
 					txMap.Store(height, txs)
