@@ -2,33 +2,65 @@ package bsdb
 
 // ListObjectsByBucketName list objects info by a bucket name
 // sorts the objects by object ID in descending order by default, which is equivalent to sorting by create_at in descending order
-func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*Object, []string, error) {
+func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*ListObjectsResult, error) {
 	var (
-		objects            []*Object
-		err                error
-		limit              int
-		commonPrefixes     []string
-		listObjectsResults []ListObjectsResult
+		//objects []*Object
+		err     error
+		limit   int
+		results []*ListObjectsResult
 	)
 
 	// return NextContinuationToken by adding 1 additionally
 	limit = maxKeys + 1
-	err = b.db.Raw(
-		"SELECT object_name, 'object' as result_type "+
-			"FROM objects "+
-			"WHERE bucket_name = ? AND object_name LIKE CONCAT(?, '%') AND object_name > IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) = 0 "+
-			"UNION "+
-			"SELECT DISTINCT CONCAT(SUBSTRING(object_name, 1, LENGTH(?) + LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) - 1), ?) as object_name, 'common_prefix' as result_type "+
-			"FROM objects "+
-			"WHERE bucket_name = ? AND object_name LIKE CONCAT(?, '%') AND object_name > IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) > 0 "+
-			"ORDER BY object_name "+
-			"LIMIT ?",
-		bucketName, prefix, continuationToken, continuationToken, delimiter, prefix,
-		prefix, delimiter, prefix, delimiter, bucketName, prefix, continuationToken, continuationToken, delimiter, prefix,
-		limit,
-	).Scan(&listObjectsResults).Error
+	if delimiter != "" {
+		//err = b.db.Raw(
+		//	`SELECT path_name, result_type, o.*
+		//		FROM (
+		//			SELECT DISTINCT object_name as path_name, 'object' as result_type, id
+		//			FROM objects
+		//			WHERE bucket_name = ? AND object_name LIKE ? AND object_name > IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) = 0
+		//			UNION
+		//			SELECT CONCAT(SUBSTRING(object_name, 1, LENGTH(?) + LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) - 1), ?) as path_name, 'common_prefix' as result_type, MIN(id)
+		//			FROM objects
+		//			WHERE bucket_name = ? AND object_name LIKE ? AND object_name > IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) > 0
+		//			GROUP BY path_name
+		//		) AS subquery
+		//	JOIN objects o ON subquery.id = o.id
+		//	ORDER BY path_name
+		//	LIMIT ?;`,
+		//	bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix,
+		//	prefix, delimiter, prefix, delimiter,
+		//	bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix, limit).
+		//	Scan(&results).Error
+		err = b.db.Raw(`
+SELECT path_name, result_type, o.*
+FROM (
+    SELECT DISTINCT object_name as path_name, 'object' as result_type, id
+    FROM objects
+    WHERE bucket_name = ? AND object_name LIKE CONVERT(? USING utf8mb4) AND object_name > IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) = 0
+    UNION
+    SELECT CONCAT(SUBSTRING(object_name, 1, LENGTH(?) + LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) - 1), CONVERT(? USING utf8mb4)) as path_name, 'common_prefix' as result_type, MIN(id)
+    FROM objects
+    WHERE bucket_name = ? AND object_name LIKE CONVERT(? USING utf8mb4) AND object_name > IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) > 0
+    GROUP BY path_name
+) AS subquery
+JOIN objects o ON subquery.id = o.id
+ORDER BY path_name
+LIMIT ?;
+`, bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix,
+			prefix, delimiter, prefix, delimiter,
+			bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix,
+			maxKeys+1).Scan(&results).Error
 
-	return objects, commonPrefixes, err
+		return results, err
+	}
+	err = b.db.Table((&Object{}).TableName()).
+		Select("*").
+		Where("bucket_name = ?", bucketName).
+		Limit(limit).
+		Order("object_name asc").
+		Find(&results).Error
+	return results, err
 }
 
 // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
