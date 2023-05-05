@@ -104,13 +104,17 @@ func (metadata *Metadata) startDBSwitchListener(switchInterval time.Duration) {
 		for range metadata.dbSwitchTicker.C {
 			// check if there is a signal from block syncer database to switch the database
 			signal, err := metadata.bsDBBlockSyncer.GetSwitchDBSignal()
+			if err != nil || signal == nil {
+				log.Errorw("failed to get switch db signal", "err", err)
+			}
 			// TODO REMOVE BARRY
-			log.Debugf("switchDB check: signal: %t", signal)
+			num, _ := metadata.bsDB.GetLatestBlockNumber()
+			log.Debugf("switchDB check: signal: %t and metadata.config.BsDBFlag: %t and currently block number is : %d", signal, metadata.config.BsDBFlag, num)
 			// TODO REMOVE BARRY
 
-			// If a signal is detected, attempt to switch the database
-			if signal == true {
-				err = metadata.switchDB()
+			// if a signal db is not equal to current metadata db, attempt to switch the database
+			if signal.IsMaster != metadata.config.BsDBFlag {
+				err = metadata.switchDB(signal.IsMaster)
 				if err != nil {
 					log.Errorw("failed to switch db", "err", err)
 				} else {
@@ -125,16 +129,16 @@ func (metadata *Metadata) startDBSwitchListener(switchInterval time.Duration) {
 // Depending on the current value of the BsDBFlag in the Metadata configuration, it switches
 // the active Block Syncer database to the backup or the primary database.
 // After switching, it toggles the value of the BsDBFlag to indicate the active database.
-func (metadata *Metadata) switchDB() error {
-	if metadata.config.BsDBFlag {
+func (metadata *Metadata) switchDB(flag bool) error {
+	if flag {
 		metadata.bsDB = metadata.bsDBBlockSyncer
 	} else {
 		metadata.bsDB = metadata.bsDBBlockSyncerBackUp
 	}
 
-	metadata.config.BsDBFlag = !metadata.config.BsDBFlag
+	metadata.config.BsDBFlag = flag
 	// TODO REMOVE BARRY
-	signal, _ := metadata.bsDB.GetSwitchDBSignal()
+	signal, _ := metadata.bsDBBlockSyncer.GetSwitchDBSignal()
 	log.Debugf("switchDB successfully, signal: %t", signal)
 	// TODO REMOVE BARRY
 	return nil
