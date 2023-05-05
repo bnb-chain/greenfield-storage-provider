@@ -73,7 +73,7 @@ message SignIntegrityHashResponse {
 // SealObjectOnChainRequest is request type for the SealObjectOnChain RPC method.
 message SealObjectOnChainRequest {
   // seal_object defines the information of the seal object action.
-  bnbchain.greenfield.storage.MsgSealObject seal_object= 1;
+  bnbchain.greenfield.storage.MsgSealObject seal_object = 1;
 }
 
 // SealObjectOnChainResponse is response type for the SealObjectOnChain RPC method.

@@ -164,7 +164,7 @@ func (t *TaskNode) loopFetchTask() {
 			case *managertypes.AllocTaskResponse_ReplicatePieceTask:
 				log.Infow("alloc a replicate task", "response", resp)
 				allocTask := (resp.GetTask()).(*managertypes.AllocTaskResponse_ReplicatePieceTask)
-				objectInfo := allocTask.ReplicatePieceTask.ObjectInfo
+				objectInfo := allocTask.ReplicatePieceTask.GetObjectInfo()
 
 				ctx := log.WithValue(context.Background(), "object_id", objectInfo.Id.String())
 				task, err := newReplicateObjectTask(ctx, t, objectInfo)
@@ -180,6 +180,28 @@ func (t *TaskNode) loopFetchTask() {
 				go task.execute(waitCh)
 				if err = <-waitCh; err != nil {
 					log.CtxErrorw(ctx, "failed to execute replicate object task", "error", err)
+					return
+				}
+			case *managertypes.AllocTaskResponse_SealObjectTask:
+				log.Infow("alloc a seal task", "response", resp)
+				allocTask := (resp.GetTask()).(*managertypes.AllocTaskResponse_SealObjectTask)
+				objectInfo := allocTask.SealObjectTask.GetObjectInfo()
+				sealObjectInfo := allocTask.SealObjectTask.GetSealObject()
+
+				ctx := log.WithValue(context.Background(), "object_id", objectInfo.Id.String())
+				task, err := newSealObjectTask(ctx, t, objectInfo, sealObjectInfo)
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to new seal object task", "error", err)
+					return
+				}
+				if err = task.init(); err != nil {
+					log.CtxErrorw(ctx, "failed to init seal object task", "error", err)
+					return
+				}
+				waitCh := make(chan error)
+				go task.execute(waitCh)
+				if err = <-waitCh; err != nil {
+					log.CtxErrorw(ctx, "failed to execute seal object task", "error", err)
 					return
 				}
 

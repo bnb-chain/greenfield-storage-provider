@@ -100,21 +100,29 @@ func (client *ManagerClient) DoneUploadObjectTask(ctx context.Context,
 
 // DoneReplicatePieceTask notifies the manager the replicate piece task has been done.
 func (client *ManagerClient) DoneReplicatePieceTask(ctx context.Context,
-	task *tqueuetypes.ReplicatePieceTask, opts ...grpc.CallOption) error {
+	objectInfo *storagetypes.ObjectInfo, sealObjectInfo *storagetypes.MsgSealObject, opts ...grpc.CallOption) error {
+	task, err := tqueuetypes.NewReplicatePieceTask(objectInfo, sealObjectInfo)
+	if err != nil {
+		return err
+	}
 	req := &types.DoneReplicatePieceTaskRequest{
 		ReplicatePieceTask: task,
 	}
-	_, err := client.manager.DoneReplicatePieceTask(ctx, req, opts...)
+	_, err = client.manager.DoneReplicatePieceTask(ctx, req, opts...)
 	return err
 }
 
 // DoneSealObjectTask notifies the manager the seal object task has been done.
 func (client *ManagerClient) DoneSealObjectTask(ctx context.Context,
-	task *tqueuetypes.SealObjectTask, opts ...grpc.CallOption) error {
+	objectInfo *storagetypes.ObjectInfo, opts ...grpc.CallOption) error {
+	task, err := tqueuetypes.NewSealObjectTask(objectInfo, nil)
+	if err != nil {
+		return err
+	}
 	req := &types.DoneSealObjectTaskRequest{
 		SealObjectTask: task,
 	}
-	_, err := client.manager.DoneSealObjectTask(ctx, req, opts...)
+	_, err = client.manager.DoneSealObjectTask(ctx, req, opts...)
 	return err
 }
 

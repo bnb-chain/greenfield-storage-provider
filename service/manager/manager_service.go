@@ -72,7 +72,7 @@ func (m *Manager) DoneUploadObjectTask(ctx context.Context, req *types.DoneUploa
 	}
 	ctx = log.WithValue(ctx, "object_id", string(task.Key()))
 	m.pqueue.PopTask(task.Key())
-	replicateTask, err := tqueuetypes.NewReplicatePieceTask(task.GetObjectInfo())
+	replicateTask, err := tqueuetypes.NewReplicatePieceTask(task.GetObjectInfo(), nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to make replicate piece task", "error", err)
 		return resp, err
@@ -108,7 +108,7 @@ func (m *Manager) DoneReplicatePieceTask(ctx context.Context, req *types.DoneRep
 		return resp, nil
 	}
 	m.pqueue.PopTask(task.Key())
-	sealTask, err := tqueuetypes.NewSealObjectTask(task.GetObjectInfo())
+	sealTask, err := tqueuetypes.NewSealObjectTask(task.GetObjectInfo(), task.GetSealObject())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to make seal task", "error", err)
 		return resp, err

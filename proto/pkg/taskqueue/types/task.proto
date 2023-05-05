@@ -2,6 +2,7 @@ syntax = "proto3";
 package pkg.taskqueue.types;
 
 import "greenfield/storage/types.proto";
+import "greenfield/storage/tx.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/pkg/taskqueue/types";
 
@@ -23,11 +24,13 @@ message UploadObjectTask {
 message ReplicatePieceTask {
   Task task = 1;
   bnbchain.greenfield.storage.ObjectInfo object_info = 2;
+  bnbchain.greenfield.storage.MsgSealObject seal_object = 3;
 }
 
 message SealObjectTask {
   Task task = 1;
   bnbchain.greenfield.storage.ObjectInfo object_info = 2;
+  bnbchain.greenfield.storage.MsgSealObject seal_object = 3;
 }
 
 message ReceivePieceTask {

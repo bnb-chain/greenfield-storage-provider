@@ -10,7 +10,7 @@ import (
 
 var _ tqueue.SealObjectTask = &SealObjectTask{}
 
-func NewSealObjectTask(objectInfo *storagetypes.ObjectInfo) (*SealObjectTask, error) {
+func NewSealObjectTask(objectInfo *storagetypes.ObjectInfo, sealObject *storagetypes.MsgSealObject) (*SealObjectTask, error) {
 	if objectInfo == nil {
 		return nil, ErrObjectDangling
 	}
@@ -22,8 +22,9 @@ func NewSealObjectTask(objectInfo *storagetypes.ObjectInfo) (*SealObjectTask, er
 		TaskPriority: int32(GetTaskPriorityMap().GetPriority(tqueue.TypeTaskSealObject)),
 	}
 	return &SealObjectTask{
-		ObjectInfo: objectInfo,
 		Task:       task,
+		ObjectInfo: objectInfo,
+		SealObject: sealObject,
 	}, nil
 }
 

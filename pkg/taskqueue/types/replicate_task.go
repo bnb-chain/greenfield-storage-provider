@@ -10,7 +10,7 @@ import (
 
 var _ tqueue.ReplicatePieceTask = &ReplicatePieceTask{}
 
-func NewReplicatePieceTask(objectInfo *storagetypes.ObjectInfo) (*ReplicatePieceTask, error) {
+func NewReplicatePieceTask(objectInfo *storagetypes.ObjectInfo, sealObject *storagetypes.MsgSealObject) (*ReplicatePieceTask, error) {
 	if objectInfo == nil {
 		return nil, ErrObjectDangling
 	}
@@ -22,8 +22,9 @@ func NewReplicatePieceTask(objectInfo *storagetypes.ObjectInfo) (*ReplicatePiece
 		TaskPriority: int32(GetTaskPriorityMap().GetPriority(tqueue.TypeTaskReplicatePiece)),
 	}
 	return &ReplicatePieceTask{
-		ObjectInfo: objectInfo,
 		Task:       task,
+		ObjectInfo: objectInfo,
+		SealObject: sealObject,
 	}, nil
 }
 

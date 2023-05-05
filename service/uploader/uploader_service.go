@@ -51,7 +51,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 			log.CtxErrorw(ctx, "failed to done upload object task", "error", err)
 			return
 		}
-		log.CtxDebugw(ctx, "begin to done upload object task")
+		log.CtxDebugw(ctx, "finish to done upload object task")
 		/*
 			if err = uploader.taskNode.ReplicateObject(ctx, objectInfo); err != nil {
 				log.CtxErrorw(ctx, "failed to notify task node to replicate object", "error", err)
