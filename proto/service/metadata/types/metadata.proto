@@ -66,9 +66,15 @@ message ListObjectsByBucketNameRequest {
   // account_id is the account address of user
   string account_id = 2;
   // max_keys sets the maximum number of keys returned in the response
-  uint64  max_keys = 3;
+  uint64 max_keys = 3;
   // start_after is where you want to start listing from
   string start_after = 4;
+  // continuation_token indicates that the list is being continued on this bucket with a token
+  string continuation_token = 5;
+  // delimiter is a character you use to group keys
+  string delimiter = 6;
+  // prefix limits the response to keys that begin with the specified prefix
+  string prefix = 7;
 }
 
 // GetBucketByBucketNameRequest is request type for the GetBucketByBucketName RPC method
@@ -159,6 +165,16 @@ message ListObjectsByBucketNameResponse {
   bool is_truncated = 4;
   // next_continuation_token is sent when is_truncated is true, which means there are more keys in the bucket that can be listed
   string next_continuation_token = 5;
+  // name of the bucket
+  string name = 6;
+  // prefix is the prefix used during the query.
+  string prefix = 7;
+  // delimiter is the delimiter used during the query
+  string delimiter = 8;
+  // common_prefixes a list of strings representing common prefixes. common_prefixes are those parts of object key names that fall between the specified delimiters
+  repeated string common_prefixes = 9;
+  // continuationToken is the continuation token used during the query
+  string continuationToken = 10;
 }
 
 // GetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.

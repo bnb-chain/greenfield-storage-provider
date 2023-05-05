@@ -2,15 +2,14 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 
 	"cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	"github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/forbole/juno/v4/common"
-
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	"github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // ListObjectsByBucketName list objects info by a bucket name
@@ -21,6 +20,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		isTruncated           bool
 		nextContinuationToken string
 		maxKeys               uint64
+		commonPrefixes        []string
 	)
 
 	maxKeys = req.MaxKeys
@@ -35,7 +35,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 	}
 
 	ctx = log.Context(ctx, req)
-	objects, err = metadata.bsDB.ListObjectsByBucketName(req.BucketName, int(maxKeys), common.HexToHash(req.StartAfter))
+	objects, commonPrefixes, err = metadata.bsDB.ListObjectsByBucketName(req.BucketName, req.ContinuationToken, req.Prefix, req.Delimiter, int(maxKeys))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by bucket name", "error", err)
 		return
@@ -78,7 +78,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 	if keyCount == req.MaxKeys+1 {
 		isTruncated = true
 		keyCount -= 1
-		nextContinuationToken = objects[len(objects)-1].ObjectID.String()
+		nextContinuationToken = objects[len(objects)-1].ObjectName
 		res = res[:len(res)-1]
 	}
 
@@ -87,7 +87,12 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		KeyCount:              keyCount,
 		MaxKeys:               maxKeys,
 		IsTruncated:           isTruncated,
-		NextContinuationToken: nextContinuationToken,
+		NextContinuationToken: base64.StdEncoding.EncodeToString([]byte(nextContinuationToken)),
+		Name:                  req.BucketName,
+		Prefix:                req.Prefix,
+		Delimiter:             req.Delimiter,
+		CommonPrefixes:        commonPrefixes,
+		ContinuationToken:     req.ContinuationToken,
 	}
 	log.CtxInfo(ctx, "succeed to list objects by bucket name")
 	return resp, nil

@@ -21,22 +21,24 @@ type errorDescription struct {
 // refer: https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
 var (
 	// 4xx
-	InvalidHeader      = &errorDescription{errorCode: "InvalidHeader", errorMessage: "The headers are invalid.", statusCode: http.StatusBadRequest}
-	InvalidQuery       = &errorDescription{errorCode: "InvalidQuery", errorMessage: "The queries are invalid.", statusCode: http.StatusBadRequest}
-	InvalidBucketName  = &errorDescription{errorCode: "InvalidBucketName", errorMessage: "The specified bucket is not valid.", statusCode: http.StatusBadRequest}
-	InvalidKey         = &errorDescription{errorCode: "InvalidKey", errorMessage: "Object key is illegal", statusCode: http.StatusBadRequest}
-	InvalidPayload     = &errorDescription{errorCode: "InvalidPayload", errorMessage: "Payload is empty", statusCode: http.StatusBadRequest}
-	InvalidObjectState = &errorDescription{errorCode: "InvalidObjectState", errorMessage: "Object state is invalid", statusCode: http.StatusForbidden}
-	InvalidRange       = &errorDescription{errorCode: "InvalidRange", errorMessage: "Range is invalid", statusCode: http.StatusBadRequest}
-	InvalidAddress     = &errorDescription{errorCode: "InvalidAddress", errorMessage: "Address is illegal", statusCode: http.StatusBadRequest}
-	InvalidMaxKeys     = &errorDescription{errorCode: "InvalidMaxKeys", errorMessage: "MaxKeys is illegal", statusCode: http.StatusBadRequest}
-	InvalidStartAfter  = &errorDescription{errorCode: "InvalidStartAfter", errorMessage: "StartAfter is illegal", statusCode: http.StatusBadRequest}
-	SignatureNotMatch  = &errorDescription{errorCode: "SignatureDoesNotMatch", errorMessage: "SignatureDoesNotMatch", statusCode: http.StatusForbidden}
-	AccessDenied       = &errorDescription{errorCode: "AccessDenied", errorMessage: "Access Denied", statusCode: http.StatusForbidden}
-	OutOfQuota         = &errorDescription{errorCode: "AccessDenied", errorMessage: "Out of Quota", statusCode: http.StatusForbidden}
-	NoSuchKey          = &errorDescription{errorCode: "NoSuchKey", errorMessage: "The specified key does not exist.", statusCode: http.StatusNotFound}
-	NoSuchBucket       = &errorDescription{errorCode: "NoSuchBucket", errorMessage: "The specified bucket does not exist.", statusCode: http.StatusNotFound}
-	NoRouter           = &errorDescription{errorCode: "NoRouter", errorMessage: "The request can not route any handlers", statusCode: http.StatusNotFound}
+	InvalidHeader            = &errorDescription{errorCode: "InvalidHeader", errorMessage: "The headers are invalid.", statusCode: http.StatusBadRequest}
+	InvalidQuery             = &errorDescription{errorCode: "InvalidQuery", errorMessage: "The queries are invalid.", statusCode: http.StatusBadRequest}
+	InvalidBucketName        = &errorDescription{errorCode: "InvalidBucketName", errorMessage: "The specified bucket is not valid.", statusCode: http.StatusBadRequest}
+	InvalidKey               = &errorDescription{errorCode: "InvalidKey", errorMessage: "Object key is illegal", statusCode: http.StatusBadRequest}
+	InvalidPayload           = &errorDescription{errorCode: "InvalidPayload", errorMessage: "Payload is empty", statusCode: http.StatusBadRequest}
+	InvalidObjectState       = &errorDescription{errorCode: "InvalidObjectState", errorMessage: "Object state is invalid", statusCode: http.StatusForbidden}
+	InvalidRange             = &errorDescription{errorCode: "InvalidRange", errorMessage: "Range is invalid", statusCode: http.StatusBadRequest}
+	InvalidAddress           = &errorDescription{errorCode: "InvalidAddress", errorMessage: "Address is illegal", statusCode: http.StatusBadRequest}
+	InvalidMaxKeys           = &errorDescription{errorCode: "InvalidMaxKeys", errorMessage: "MaxKeys is illegal", statusCode: http.StatusBadRequest}
+	InvalidStartAfter        = &errorDescription{errorCode: "InvalidStartAfter", errorMessage: "StartAfter is illegal", statusCode: http.StatusBadRequest}
+	InvalidContinuationToken = &errorDescription{errorCode: "InvalidContinuationToken", errorMessage: "ContinuationToken is illegal", statusCode: http.StatusBadRequest}
+	InvalidPrefix            = &errorDescription{errorCode: "InvalidPrefix", errorMessage: "Prefix is illegal", statusCode: http.StatusBadRequest}
+	SignatureNotMatch        = &errorDescription{errorCode: "SignatureDoesNotMatch", errorMessage: "SignatureDoesNotMatch", statusCode: http.StatusForbidden}
+	AccessDenied             = &errorDescription{errorCode: "AccessDenied", errorMessage: "Access Denied", statusCode: http.StatusForbidden}
+	OutOfQuota               = &errorDescription{errorCode: "AccessDenied", errorMessage: "Out of Quota", statusCode: http.StatusForbidden}
+	NoSuchKey                = &errorDescription{errorCode: "NoSuchKey", errorMessage: "The specified key does not exist.", statusCode: http.StatusNotFound}
+	NoSuchBucket             = &errorDescription{errorCode: "NoSuchBucket", errorMessage: "The specified bucket does not exist.", statusCode: http.StatusNotFound}
+	NoRouter                 = &errorDescription{errorCode: "NoRouter", errorMessage: "The request can not route any handlers", statusCode: http.StatusNotFound}
 	// 5xx
 	InternalError          = &errorDescription{errorCode: "InternalError", errorMessage: "Internal Server Error", statusCode: http.StatusInternalServerError}
 	NotImplementedError    = &errorDescription{errorCode: "NotImplementedError", errorMessage: "Not Implemented Error", statusCode: http.StatusNotImplemented}

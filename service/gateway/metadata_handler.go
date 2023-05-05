@@ -3,7 +3,9 @@ package gateway
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"net/http"
+	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
@@ -73,15 +75,20 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 // listObjectsByBucketNameHandler handle list objects by bucket name request
 func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err               error
-		b                 bytes.Buffer
-		maxKeys           uint64
-		errDescription    *errorDescription
-		reqContext        *requestContext
-		ok                bool
-		requestBucketName string
-		requestMaxKeys    string
-		requestStartAfter string
+		err                      error
+		b                        bytes.Buffer
+		maxKeys                  uint64
+		errDescription           *errorDescription
+		reqContext               *requestContext
+		ok                       bool
+		requestBucketName        string
+		requestMaxKeys           string
+		requestStartAfter        string
+		requestContinuationToken string
+		requestDelimiter         string
+		requestPrefix            string
+		continuationToken        string
+		decodedContinuationToken []byte
 	)
 
 	reqContext = newRequestContext(r)
@@ -105,6 +112,9 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	requestBucketName = reqContext.bucketName
 	requestMaxKeys = reqContext.request.URL.Query().Get("max_keys")
 	requestStartAfter = reqContext.request.URL.Query().Get("start_after")
+	requestContinuationToken = reqContext.request.URL.Query().Get("continuation_token")
+	requestDelimiter = reqContext.request.URL.Query().Get("delimiter")
+	requestPrefix = reqContext.request.URL.Query().Get("prefix")
 
 	if err = s3util.CheckValidBucketName(requestBucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", requestBucketName, "error", err)
@@ -127,17 +137,53 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		}
 	}
 
-	// startAfter is an optional input, we only check its format when user input the value
-	if ok = IsHexHash(requestStartAfter); !ok && requestStartAfter != "" {
-		log.Errorw("failed to check startAfter", "start_after", requestStartAfter, "error", err)
-		errDescription = InvalidStartAfter
+	if requestStartAfter != "" {
+		if err = s3util.CheckValidObjectName(requestStartAfter); err != nil {
+			log.Errorw("failed to check startAfter", "start_after", requestStartAfter, "error", err)
+			errDescription = InvalidStartAfter
+			return
+		}
+	}
+
+	if requestContinuationToken != "" {
+		decodedContinuationToken, err = base64.StdEncoding.DecodeString(requestContinuationToken)
+		if err != nil {
+			log.Errorw("failed to check requestContinuationToken", "continuation_token", requestContinuationToken, "error", err)
+			errDescription = InvalidContinuationToken
+			return
+		}
+		continuationToken = string(decodedContinuationToken)
+
+		if err = s3util.CheckValidObjectName(continuationToken); err != nil {
+			log.Errorw("failed to check requestContinuationToken", "continuation_token", continuationToken, "error", err)
+			errDescription = InvalidContinuationToken
+			return
+		}
+
+		if continuationToken != "" && !strings.HasPrefix(continuationToken, requestPrefix) {
+			log.Errorw("failed to check requestContinuationToken", "continuation_token", continuationToken, "prefix", requestPrefix, "error", err)
+			errDescription = InvalidContinuationToken
+			return
+		}
+	}
+
+	if ok = isValidObjectPrefix(requestPrefix); !ok {
+		log.Errorw("failed to check requestPrefix", "prefix", requestPrefix, "error", err)
+		errDescription = InvalidPrefix
 		return
 	}
 
+	if requestContinuationToken == "" {
+		continuationToken = requestStartAfter
+	}
+
 	req := &metatypes.ListObjectsByBucketNameRequest{
-		BucketName: requestBucketName,
-		MaxKeys:    maxKeys,
-		StartAfter: requestStartAfter,
+		BucketName:        requestBucketName,
+		MaxKeys:           maxKeys,
+		StartAfter:        requestStartAfter,
+		ContinuationToken: continuationToken,
+		Delimiter:         requestDelimiter,
+		Prefix:            requestPrefix,
 	}
 
 	ctx := log.Context(context.Background(), req)

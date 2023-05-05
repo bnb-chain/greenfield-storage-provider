@@ -1,36 +1,34 @@
 package bsdb
 
-import "github.com/forbole/juno/v4/common"
-
 // ListObjectsByBucketName list objects info by a bucket name
 // sorts the objects by object ID in descending order by default, which is equivalent to sorting by create_at in descending order
-func (b *BsDBImpl) ListObjectsByBucketName(bucketName string, maxKeys int, startAfter common.Hash) ([]*Object, error) {
+func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*Object, []string, error) {
 	var (
-		objects []*Object
-		err     error
-		limit   int
+		objects            []*Object
+		err                error
+		limit              int
+		commonPrefixes     []string
+		listObjectsResults []ListObjectsResult
 	)
 
 	// return NextContinuationToken by adding 1 additionally
 	limit = maxKeys + 1
-	// select latest objects when user didn't input startAfter
-	if startAfter == common.HexToHash("") {
-		err = b.db.Table((&Object{}).TableName()).
-			Select("*").
-			Where("bucket_name = ?", bucketName).
-			Order("object_id desc").
-			Limit(limit).
-			Find(&objects).Error
-		return objects, err
-	}
-	// select objects after a specific key.
-	err = b.db.Table((&Object{}).TableName()).
-		Select("*").
-		Where("bucket_name = ? and object_id <= ?", bucketName, startAfter).
-		Order("object_id desc").
-		Limit(limit).
-		Find(&objects).Error
-	return objects, err
+	err = b.db.Raw(
+		"SELECT object_name, 'object' as result_type "+
+			"FROM objects "+
+			"WHERE bucket_name = ? AND object_name LIKE CONCAT(?, '%') AND object_name > IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) = 0 "+
+			"UNION "+
+			"SELECT DISTINCT CONCAT(SUBSTRING(object_name, 1, LENGTH(?) + LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) - 1), ?) as object_name, 'common_prefix' as result_type "+
+			"FROM objects "+
+			"WHERE bucket_name = ? AND object_name LIKE CONCAT(?, '%') AND object_name > IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) > 0 "+
+			"ORDER BY object_name "+
+			"LIMIT ?",
+		bucketName, prefix, continuationToken, continuationToken, delimiter, prefix,
+		prefix, delimiter, prefix, delimiter, bucketName, prefix, continuationToken, continuationToken, delimiter, prefix,
+		limit,
+	).Scan(&listObjectsResults).Error
+
+	return objects, commonPrefixes, err
 }
 
 // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
