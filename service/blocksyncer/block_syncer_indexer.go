@@ -3,6 +3,7 @@ package blocksyncer
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/forbole/juno/v4/common"
@@ -108,7 +109,7 @@ func (i *Impl) Process(height uint64) error {
 	// 1. handle events in startBlock
 	ctx := context.Background()
 	dbTx := i.DB.Begin(ctx)
-	ctx = context.WithValue(ctx, "use_transaction", dbTx)
+	ctx = context.WithValue(ctx, common.UseTx(database.UseTransaction), dbTx)
 
 	if len(beginBlockEvents) > 0 {
 		err = i.ExportEventsWithoutTx(ctx, block, beginBlockEvents)
