@@ -1,2 +1,0 @@
-{"t":"2023-05-04T16:46:36.187+0800","l":"info","caller":"storage_provider/init.go:90","msg":"init resource manager","limits":"system limits [memory limits 9223372036854775807]","error":null}
-{"t":"2023-05-04T16:46:36.187+0800","l":"info","caller":"blocksyncer/block_syncer.go:80","msg":"failed to get db config from env, use db config from config file"}
