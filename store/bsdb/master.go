@@ -1,15 +1,15 @@
 package bsdb
 
 // GetSwitchDBSignal get signal to switch db
-func (b *BsDBImpl) GetSwitchDBSignal() (*Master, error) {
+func (b *BsDBImpl) GetSwitchDBSignal() (*MasterDB, error) {
 	var (
-		master *Master
+		signal *MasterDB
 		err    error
 	)
 
-	err = b.db.Table((&Master{}).TableName()).
+	err = b.db.Table((&MasterDB{}).TableName()).
 		Select("*").
-		Take(&master).Error
+		Take(&signal).Error
 
-	return master, err
+	return signal, err
 }
