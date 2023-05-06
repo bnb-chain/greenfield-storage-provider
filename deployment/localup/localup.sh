@@ -153,7 +153,7 @@ stop_sp() {
 #############################################
 # drop databases and recreate new databases #
 #############################################
-reset_db() {
+reset_sql_db() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
     cd ${sp_dir}
     source db.info
@@ -161,7 +161,7 @@ reset_db() {
     port=$(echo ${ADDRESS} | cut -d : -f 2)
     mysql -u ${USER} -h ${hostname} -P ${port} -p${PWD} -e "drop database if exists ${DATABASE}"
     mysql -u ${USER} -h ${hostname} -P ${port} -p${PWD} -e "create database ${DATABASE}"
-    echo "succeed to reset db in "${sp_dir}
+    echo "succeed to reset sql db in "${sp_dir}
     cd - >/dev/null
   done
 }
@@ -204,7 +204,7 @@ function rebuild() {
 #############
 reset_sp() {
   stop_sp
-  reset_db
+  reset_sql_db
   reset_piece_store
   rebuild
   make_config
