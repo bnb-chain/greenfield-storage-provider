@@ -10,6 +10,7 @@ type Config struct {
 	Modules        []string
 	Dsn            string
 	RecreateTables bool
+	Workers        uint
 }
 
 func getDBConfigFromEnv(dsn string) (string, error) {

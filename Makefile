@@ -20,6 +20,7 @@ generate:
 install-tools:
 	go install github.com/golang/mock/mockgen@v1.6.0
 	go install github.com/bufbuild/buf/cmd/buf@v1.13.1
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
 
 buf-gen:

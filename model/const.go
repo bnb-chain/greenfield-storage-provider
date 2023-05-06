@@ -32,6 +32,8 @@ var (
 	AuthService = strings.ToLower("auth")
 	// PProfService defines the name of pprof service
 	PProfService = strings.ToLower("pprof")
+	// StopServingService defines the name of stop serving service
+	StopServingService = strings.ToLower("StopServing")
 )
 
 // SpServiceDesc defines the service description in storage provider
@@ -47,6 +49,7 @@ var SpServiceDesc = map[string]string{
 	BlockSyncerService: "Syncs block data to db",
 	P2PService:         "Communicates with SPs on p2p protocol",
 	AuthService:        "Handles off-chain-auth requests",
+	StopServingService: "Discontinue buckets for greenfield testnet",
 }
 
 // define storage provider service default listening address
@@ -123,6 +126,8 @@ const (
 	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
 	// SpSealPrivKey defines env variable name for sp seal priv key
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
+	// SpGcPrivKey defines env variable name for sp gc priv key
+	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
 	// DsnBlockSyncer defines env variable name for block syncer dsn
 	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
 	// P2PPrivateKey defines env variable for p2p protocol private key
@@ -163,6 +168,8 @@ const (
 	ContentDispositionHeader = "Content-Disposition"
 	// ContentDispositionAttachmentValue is used to indicate attachment
 	ContentDispositionAttachmentValue = "attachment"
+	// ContentDispositionInlineValue is used to indicate inline
+	ContentDispositionInlineValue = "inline"
 
 	// SignAlgorithm uses secp256k1 with the ECDSA algorithm
 	SignAlgorithm = "ECDSA-secp256k1"
@@ -181,8 +188,6 @@ const (
 
 	// GetApprovalPath defines get-approval path style suffix
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
-	// UniversalEndpointPath defines universal endpoint path style suffix
-	UniversalEndpointPath = "/download/{bucket:[^/]*}/{object:.+}"
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
 	ActionQuery = "action"
 	// UploadProgressQuery defines upload progress query, which is used to route request
