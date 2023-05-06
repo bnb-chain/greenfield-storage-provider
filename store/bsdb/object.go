@@ -9,8 +9,6 @@ package bsdb
 // - maxKeys: The maximum number of objects to return in the result.
 //
 // The function returns a slice of ListObjectsResult, which contains information about the objects and their types (object or common_prefix).
-// The objects are sorted by object ID in descending order by default, which is equivalent to sorting by create_at in descending order.
-//
 // If there is a delimiter specified, the function will group objects that share a common prefix and return them as common_prefix in the result.
 // If the delimiter is empty, the function will return all objects without grouping them by a common prefix.
 func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*ListObjectsResult, error) {
