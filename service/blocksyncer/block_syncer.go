@@ -1,7 +1,9 @@
 package blocksyncer
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"errors"
 	"sync"
 	"sync/atomic"
@@ -10,12 +12,15 @@ import (
 	"github.com/forbole/juno/v4/cmd"
 	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
+	"github.com/forbole/juno/v4/database"
+	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/messages"
 	"github.com/forbole/juno/v4/modules/registrar"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
+	"gorm.io/gorm/schema"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -35,27 +40,98 @@ var (
 	eventMap *sync.Map
 	txMap    *sync.Map
 
-	LatestBlockHeight atomic.Value
-	CatchUpFlag       atomic.Value
+	MainService   *BlockSyncer
+	BackupService *BlockSyncer
+
+	FlagDB database.Database
+
+	NeedBackup bool
 )
 
 // NewBlockSyncerService create a BlockSyncer service to index block events data to db
 func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
-	s := &BlockSyncer{
+	MainService = &BlockSyncer{
 		config: cfg,
 		name:   model.BlockSyncerService,
 	}
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
 	txMap = new(sync.Map)
-	if err := s.initClient(); err != nil {
+	NeedBackup = cfg.Backup
+	if err := MainService.initClient(); err != nil {
 		return nil, err
 	}
-	// init meta db
-	if err := s.initDB(cfg.RecreateTables); err != nil {
+
+	//prepare master table
+	FlagDB = MainService.parserCtx.Database
+	MainService.prepareMasterFlagTable()
+	mainServiceDB, _ := FlagDB.GetMasterDB(context.TODO())
+	mainDBIsMaster := mainServiceDB.IsMaster
+
+	// init main service db, if main service DB is not current master then recreate tables
+	if err := MainService.initDB(!mainDBIsMaster || cfg.RecreateTables); err != nil {
 		return nil, err
 	}
-	return s, nil
+
+	// when NeedBackup config true Or backup db is current master DB, init backup service
+	if NeedBackup || !mainServiceDB.IsMaster {
+		//create backup block syncer
+		if blockSyncerBackup, err := newBackupBlockSyncerService(cfg, mainDBIsMaster); err != nil {
+			return nil, err
+		} else {
+			BackupService = blockSyncerBackup
+		}
+	}
+
+	return MainService, nil
+}
+
+func newBackupBlockSyncerService(cfg *tomlconfig.TomlConfig, mainDBIsMaster bool) (*BlockSyncer, error) {
+	backUpConfig, err := generateConfigForBackup(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	BackupService = &BlockSyncer{
+		config: backUpConfig,
+		name:   model.BlockSyncerServiceBackup,
+	}
+
+	if err = BackupService.initClient(); err != nil {
+		return nil, err
+	}
+	// init meta db, if mainService db is not current master, backup is master, don't recreate
+	if err = BackupService.initDB(mainDBIsMaster || cfg.RecreateTables); err != nil {
+		return nil, err
+	}
+	return BackupService, nil
+}
+
+func generateConfigForBackup(cfg *tomlconfig.TomlConfig) (*tomlconfig.TomlConfig, error) {
+	configBackup := new(tomlconfig.TomlConfig)
+	if err := DeepCopyByGob(cfg, configBackup); err != nil {
+		return nil, err
+	}
+	configBackup.RecreateTables = true
+	dsnBk, envErr := getDBConfigFromEnv(model.DsnBlockSyncerBackup)
+	if envErr != nil {
+		configBackup.Database.DSN = cfg.DsnBackup
+		log.Info("failed to get backup db config from env, use backup db config from config file")
+	}
+	if dsnBk != "" {
+		log.Info("use backup db config from env")
+		config.Cfg.Database.DSN = dsnBk
+	}
+
+	return configBackup, nil
+}
+
+func DeepCopyByGob(src, dst interface{}) error {
+	var buffer bytes.Buffer
+	if err := gob.NewEncoder(&buffer).Encode(src); err != nil {
+		return err
+	}
+	return gob.NewDecoder(&buffer).Decode(dst)
 }
 
 // initClient initialize a juno client using given configs
@@ -74,8 +150,16 @@ func (s *BlockSyncer) initClient() error {
 		log.Infof("readErr: %v", readErr)
 		return readErr
 	}
+
 	// get DSN from env first
-	dsn, envErr := getDBConfigFromEnv(model.DsnBlockSyncer)
+	var dbEnv string
+	if s.Name() == model.BlockSyncerService {
+		dbEnv = model.DsnBlockSyncer
+	} else {
+		dbEnv = model.DsnBlockSyncerBackup
+	}
+
+	dsn, envErr := getDBConfigFromEnv(dbEnv)
 	if envErr != nil {
 		log.Info("failed to get db config from env, use db config from config file")
 	}
@@ -138,14 +222,24 @@ func (s *BlockSyncer) Start(ctx context.Context) error {
 	if s.running.Swap(true) == true {
 		return errors.New("block syncer hub has already started")
 	}
-	go s.serve(ctx)
+
+	determineMainService()
+
+	go MainService.serve(ctx)
+
+	//create backup blocksyncer
+	if NeedBackup {
+		go BackupService.serve(ctx)
+		go CheckProgress()
+	}
+
 	return nil
 }
 
 // Stop running BlockSyncer service
 func (s *BlockSyncer) Stop(ctx context.Context) error {
 	if s.running.Swap(false) == false {
-		return nil
+		return errors.New("block syncer has already stopped")
 	}
 	return nil
 }
@@ -160,8 +254,8 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	worker.SetIndexer(s.parserCtx.Indexer)
 
 	latestBlockHeight := mustGetLatestHeight(s.parserCtx)
-	LatestBlockHeight.Store(int64(latestBlockHeight))
-	CatchUpFlag.Store(false)
+	Cast(s.parserCtx.Indexer).GetLatestBlockHeight().Store(int64(latestBlockHeight))
+	Cast(s.parserCtx.Indexer).GetCatchUpFlag().Store(int64(-1))
 	go s.getLatestBlockHeight()
 
 	lastDbBlockHeight := uint64(0)
@@ -178,7 +272,7 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	// fetch block data
 	go s.quickFetchBlockData(lastDbBlockHeight + 1)
 
-	go enqueueNewBlocks(exportQueue, s.parserCtx, lastDbBlockHeight+1)
+	go s.enqueueNewBlocks(exportQueue, s.parserCtx, lastDbBlockHeight+1)
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	// off of the export queue.
@@ -193,8 +287,9 @@ func (s *BlockSyncer) getLatestBlockHeight() {
 			log.Errorw("failed to get last block from RPCConfig client",
 				"err", err,
 				"retry interval", config.GetAvgBlockTime())
+			continue
 		}
-		LatestBlockHeight.Store(latestBlockHeight)
+		Cast(s.parserCtx.Indexer).GetLatestBlockHeight().Store(latestBlockHeight)
 
 		time.Sleep(config.GetAvgBlockTime())
 	}
@@ -203,11 +298,11 @@ func (s *BlockSyncer) getLatestBlockHeight() {
 func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 	count := uint64(s.config.Parser.Workers)
 	for cycle := uint64(0); ; cycle++ {
-		latestBlockHeightAny := LatestBlockHeight.Load()
+		latestBlockHeightAny := Cast(s.parserCtx.Indexer).GetLatestBlockHeight().Load()
 		latestBlockHeight := latestBlockHeightAny.(int64)
 		if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
 			log.Infof("quick fetch ended latestBlockHeight: %d", latestBlockHeight)
-			CatchUpFlag.Store(true)
+			Cast(s.parserCtx.Indexer).GetCatchUpFlag().Store(int64(count*cycle + startHeight - 1))
 			break
 		}
 		wg := &sync.WaitGroup{}
@@ -245,4 +340,25 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 		}
 		wg.Wait()
 	}
+}
+
+func (s *BlockSyncer) prepareMasterFlagTable() error {
+	if err := s.parserCtx.Database.
+		PrepareTables(context.TODO(), []schema.Tabler{&models.MasterDB{}}); err != nil {
+		return err
+	}
+	masterRecord, err := s.parserCtx.Database.GetMasterDB(context.TODO())
+	if err != nil {
+		return err
+	}
+	//not exist
+	if masterRecord.OneRowId == false {
+		if err = s.parserCtx.Database.SetMasterDB(context.TODO(), &models.MasterDB{
+			OneRowId: true,
+			IsMaster: true,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }

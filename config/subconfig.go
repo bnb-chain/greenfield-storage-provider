@@ -269,13 +269,15 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 			Type:               "mysql",
 			DSN:                cfg.BlockSyncerCfg.Dsn,
 			PartitionBatchSize: model.DefaultPartitionSize,
-			MaxIdleConnections: 1,
-			MaxOpenConnections: 1,
+			MaxIdleConnections: 10,
+			MaxOpenConnections: 30,
 		},
 		Logging: loggingconfig.Config{
 			Level: "debug",
 		},
 		RecreateTables: cfg.BlockSyncerCfg.RecreateTables,
+		Backup:         cfg.BlockSyncerCfg.Backup,
+		DsnBackup:      cfg.BlockSyncerCfg.DsnBackup,
 	}, nil
 }
 

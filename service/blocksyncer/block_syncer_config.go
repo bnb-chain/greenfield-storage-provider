@@ -9,8 +9,10 @@ import (
 type Config struct {
 	Modules        []string
 	Dsn            string
+	DsnBackup      string
 	RecreateTables bool
 	Workers        uint
+	Backup         bool
 }
 
 func getDBConfigFromEnv(dsn string) (string, error) {

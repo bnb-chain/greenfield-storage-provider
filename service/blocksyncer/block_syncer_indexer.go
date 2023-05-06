@@ -3,6 +3,7 @@ package blocksyncer
 import (
 	"context"
 	"encoding/json"
+	"sync/atomic"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,6 +37,9 @@ type Impl struct {
 	codec   codec.Codec
 	Node    node.Node
 	DB      database.Database
+
+	LatestBlockHeight atomic.Value
+	CatchUpFlag       atomic.Value
 }
 
 // ExportBlock accepts a finalized block and persists then inside the database.
@@ -66,9 +70,9 @@ func (i *Impl) Process(height uint64) error {
 	var events *coretypes.ResultBlockResults
 	var txs []*types.Tx
 	var err error
-	flagAny := CatchUpFlag.Load()
-	flag := flagAny.(bool)
-	if !flag {
+	flagAny := i.GetCatchUpFlag().Load()
+	flag := flagAny.(int64)
+	if flag == -1 || flag >= int64(height) {
 		blockAny, okb := blockMap.Load(height)
 		eventsAny, oke := eventMap.Load(height)
 		txsAny, okt := txMap.Load(height)
@@ -285,4 +289,18 @@ func (i *Impl) GetLastBlockRecordHeight(ctx context.Context) (uint64, error) {
 		lastBlockRecordHeight = uint64(currentEpoch.BlockHeight)
 	}
 	return lastBlockRecordHeight, err
+}
+
+func (i *Impl) GetLatestBlockHeight() *atomic.Value {
+	return &(i.LatestBlockHeight)
+
+}
+
+func (i *Impl) GetCatchUpFlag() *atomic.Value {
+	return &(i.CatchUpFlag)
+}
+
+func (i *Impl) CreateMasterTable() error {
+
+	return nil
 }
