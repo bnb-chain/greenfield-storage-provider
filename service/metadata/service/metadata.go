@@ -40,10 +40,18 @@ func NewMetadataService(config *metadata.MetadataConfig) (metadata *Metadata, er
 		return nil, err
 	}
 
+	var initialBsDB bsdb.BSDB
+	if config.BsDBFlag {
+		initialBsDB = bsDBBlockSyncer
+	} else {
+		initialBsDB = bsDBBlockSyncerBackUp
+	}
+	log.Debugf("current bs db flag is %t", config.BsDBFlag)
+
 	metadata = &Metadata{
 		config:                config,
 		name:                  model.MetadataService,
-		bsDB:                  bsDBBlockSyncer,
+		bsDB:                  initialBsDB,
 		bsDBBlockSyncer:       bsDBBlockSyncer,
 		bsDBBlockSyncerBackUp: bsDBBlockSyncerBackUp,
 	}
