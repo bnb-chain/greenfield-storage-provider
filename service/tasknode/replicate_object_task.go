@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"errors"
 	"io"
 	"sync"
 	"time"
@@ -32,6 +33,8 @@ const (
 	ReplicateFactor = 1
 	// GetApprovalTimeout defines the timeout of getting secondary sp approval
 	GetApprovalTimeout = 10
+	// MaxSealRetryNumber defines max number of retrying seal object
+	MaxSealRetryNumber = 3
 )
 
 // streamReader is used to stream produce/consume piece data stream.
@@ -135,6 +138,7 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 // streamPieceDataReplicator replicates a piece stream to the target sp
 type streamPieceDataReplicator struct {
 	task                  *replicateObjectTask
+	dataSize              int64
 	pieceSize             uint32
 	redundancyIndex       uint32
 	expectedIntegrityHash []byte
@@ -157,8 +161,8 @@ func (r *streamPieceDataReplicator) replicate() (integrityHash []byte, signature
 			"sp_endpoint", r.sp.GetEndpoint(), "error", err)
 		return
 	}
-	integrityHash, signature, err = gwClient.ReplicateObjectPieceStream(r.task.objectInfo.Id.Uint64(), r.pieceSize,
-		r.redundancyIndex, r.approval, r.streamReader)
+	integrityHash, signature, err = gwClient.ReplicateObjectPieceStream(r.task.objectInfo.Id.Uint64(),
+		r.pieceSize, r.dataSize, r.redundancyIndex, r.approval, r.streamReader)
 	if err != nil {
 		log.Errorw("failed to replicate object piece stream",
 			"endpoint", r.sp.GetEndpoint(), "error", err)
@@ -200,6 +204,7 @@ type replicateObjectTask struct {
 	storageParams       *storagetypes.Params
 	segmentPieceNumber  int
 	redundancyNumber    int
+	replicateDataSize   int64
 	mux                 sync.Mutex
 	spMap               map[string]*sptypes.StorageProvider
 	approvalResponseMap map[string]*p2ptypes.GetApprovalResponse
@@ -253,6 +258,11 @@ func (t *replicateObjectTask) init() error {
 	if t.objectInfo.GetPayloadSize() < t.storageParams.GetMaxSegmentSize() {
 		t.approximateMemSize = int(float64(t.objectInfo.GetPayloadSize()) *
 			(float64(t.redundancyNumber)/float64(t.storageParams.GetRedundantDataChunkNum()) + 1))
+	}
+	err = t.ComputeReplicatePiecesSizeForOneSP()
+	if err != nil {
+		log.CtxErrorw(t.ctx, "failed to compute replicate pieces data size per sp", "error", err)
+		return err
 	}
 	return nil
 }
@@ -380,6 +390,7 @@ func (t *replicateObjectTask) execute(waitCh chan error) {
 				}
 				r := &streamPieceDataReplicator{
 					task:                  t,
+					dataSize:              t.replicateDataSize,
 					pieceSize:             uint32(sg.pieceSize),
 					redundancyIndex:       uint32(rIdx),
 					expectedIntegrityHash: sg.task.objectInfo.GetChecksums()[rIdx+1],
@@ -416,21 +427,70 @@ func (t *replicateObjectTask) execute(waitCh chan error) {
 
 	// seal onto the greenfield chain
 	if isAllSucceed(succeedIndexMap) {
-		t.updateTaskState(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING)
-		_, err = t.taskNode.signer.SealObjectOnChain(context.Background(), sealMsg)
-		if err != nil {
-			t.taskNode.spDB.UpdateJobState(t.objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR)
-			log.CtxErrorw(t.ctx, "failed to sign object by signer", "error", err)
-			return
+		retry := 0
+		for {
+			if retry >= MaxSealRetryNumber {
+				log.CtxErrorw(t.ctx, "failed to seal object", "error", err, "retry", retry)
+				break
+			}
+			retry++
+			t.updateTaskState(servicetypes.JobState_JOB_STATE_SIGN_OBJECT_DOING)
+			_, err = t.taskNode.signer.SealObjectOnChain(context.Background(), sealMsg)
+			if err != nil {
+				t.taskNode.spDB.UpdateJobState(t.objectInfo.Id.Uint64(), servicetypes.JobState_JOB_STATE_SIGN_OBJECT_ERROR)
+				log.CtxErrorw(t.ctx, "failed to sign object by signer", "error", err, "retry", retry)
+				continue
+			}
+			t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DOING)
+			err = t.taskNode.chain.ListenObjectSeal(context.Background(), t.objectInfo.GetBucketName(),
+				t.objectInfo.GetObjectName(), 10)
+			if err != nil {
+				t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
+				log.CtxErrorw(t.ctx, "failed to seal object on chain", "error", err, "retry", retry)
+				continue
+			}
+			t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
+			break
 		}
-		t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DOING)
-		err = t.taskNode.chain.ListenObjectSeal(context.Background(), t.objectInfo.GetBucketName(),
-			t.objectInfo.GetObjectName(), 10)
-		if err != nil {
-			t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
-			log.CtxErrorw(t.ctx, "failed to seal object on chain", "error", err)
-			return
-		}
-		t.updateTaskState(servicetypes.JobState_JOB_STATE_SEAL_OBJECT_DONE)
 	} // the else failed case is in defer func
+}
+
+func (t *replicateObjectTask) ComputeReplicatePiecesSizeForOneSP() error {
+	if t.segmentPieceNumber <= 0 {
+		return errors.New("segment piece number invalid")
+	}
+
+	pieceSize := func(idx int) (int, error) {
+		segmentPieceKey := piecestore.EncodeSegmentPieceKey(t.objectInfo.Id.Uint64(), uint32(idx))
+		segmentPieceData, err := t.taskNode.pieceStore.GetPiece(context.Background(), segmentPieceKey, 0, 0)
+		if err != nil {
+			return 0, err
+		}
+		if t.objectInfo.GetRedundancyType() == types.REDUNDANCY_EC_TYPE {
+			ecPieceData, err := redundancy.EncodeRawSegment(segmentPieceData,
+				int(t.storageParams.GetRedundantDataChunkNum()),
+				int(t.storageParams.GetRedundantParityChunkNum()))
+			if err != nil {
+				return 0, err
+			}
+			return len(ecPieceData[0]), nil
+		} else {
+			return len(segmentPieceData), nil
+		}
+	}
+	tailIdx := t.segmentPieceNumber - 1
+	tailSize, err := pieceSize(tailIdx)
+	if err != nil {
+		return err
+	}
+	integralSize := 0
+	if t.segmentPieceNumber > 1 {
+		size, err := pieceSize(1)
+		if err != nil {
+			return err
+		}
+		integralSize = size * (t.segmentPieceNumber - 1)
+	}
+	t.replicateDataSize = int64(tailSize + integralSize)
+	return nil
 }
