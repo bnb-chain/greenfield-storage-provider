@@ -25,23 +25,23 @@ import (
 
 // StorageProviderConfig defines the configuration of storage provider
 type StorageProviderConfig struct {
-	Service           []string
-	SpOperatorAddress string
-	Endpoint          map[string]string
-	ListenAddress     map[string]string
-	SpDBConfig        *config.SQLDBConfig
-  BsDBConfig         *config.SQLDBConfig
+	Service            []string
+	SpOperatorAddress  string
+	Endpoint           map[string]string
+	ListenAddress      map[string]string
+	SpDBConfig         *config.SQLDBConfig
+	BsDBConfig         *config.SQLDBConfig
 	BsDBSwitchedConfig *config.SQLDBConfig
-	PieceStoreConfig  *storage.PieceStoreConfig
-	ChainConfig       *gnfd.GreenfieldChainConfig
-	SignerCfg         *signer.SignerConfig
-	BlockSyncerCfg    *blocksyncer.Config
-	P2PCfg            *p2p.NodeConfig
-	LogCfg            *LogConfig
-	MetricsCfg        *metrics.MetricsConfig
-	RateLimiter       *localhttp.RateLimiterConfig
-	DiscontinueCfg    *stopserving.DiscontinueConfig
-  MetadataCfg        *metadata.MetadataConfig
+	PieceStoreConfig   *storage.PieceStoreConfig
+	ChainConfig        *gnfd.GreenfieldChainConfig
+	SignerCfg          *signer.SignerConfig
+	BlockSyncerCfg     *blocksyncer.Config
+	P2PCfg             *p2p.NodeConfig
+	LogCfg             *LogConfig
+	MetricsCfg         *metrics.MetricsConfig
+	RateLimiter        *localhttp.RateLimiterConfig
+	DiscontinueCfg     *stopserving.DiscontinueConfig
+	MetadataCfg        *metadata.MetadataConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -94,20 +94,20 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.P2PService:        model.P2PGRPCAddress,
 		model.AuthService:       model.AuthGRPCAddress,
 	},
-	SpOperatorAddress: hex.EncodeToString([]byte(model.SpOperatorAddress)),
-	SpDBConfig:        DefaultSQLDBConfig,
-  BsDBConfig:         DefaultBsDBConfig,
+	SpOperatorAddress:  hex.EncodeToString([]byte(model.SpOperatorAddress)),
+	SpDBConfig:         DefaultSQLDBConfig,
+	BsDBConfig:         DefaultBsDBConfig,
 	BsDBSwitchedConfig: DefaultBsDBSwitchedConfig,
-	PieceStoreConfig:  DefaultPieceStoreConfig,
-	ChainConfig:       DefaultGreenfieldChainConfig,
-	SignerCfg:         signer.DefaultSignerChainConfig,
-	BlockSyncerCfg:    DefaultBlockSyncerConfig,
-	P2PCfg:            DefaultP2PConfig,
-	LogCfg:            DefaultLogConfig,
-	MetricsCfg:        DefaultMetricsConfig,
-	RateLimiter:       DefaultRateLimiterConfig,
-	DiscontinueCfg:    stopserving.DefaultDiscontinueConfig,
-  MetadataCfg:        DefaultMetadataConfig,
+	PieceStoreConfig:   DefaultPieceStoreConfig,
+	ChainConfig:        DefaultGreenfieldChainConfig,
+	SignerCfg:          signer.DefaultSignerChainConfig,
+	BlockSyncerCfg:     DefaultBlockSyncerConfig,
+	P2PCfg:             DefaultP2PConfig,
+	LogCfg:             DefaultLogConfig,
+	MetricsCfg:         DefaultMetricsConfig,
+	RateLimiter:        DefaultRateLimiterConfig,
+	DiscontinueCfg:     stopserving.DefaultDiscontinueConfig,
+	MetadataCfg:        DefaultMetadataConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -169,7 +169,7 @@ var DefaultMetricsConfig = &metrics.MetricsConfig{
 // DefaultMetadataConfig defines the default configuration of Metadata service
 var DefaultMetadataConfig = &metadata.MetadataConfig{
 	BsDBFlag:                   true,
-	BsDBSwitchCheckIntervalSec: 5,
+	BsDBSwitchCheckIntervalSec: 3600,
 }
 
 type LogConfig struct {

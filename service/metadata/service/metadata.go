@@ -107,10 +107,6 @@ func (metadata *Metadata) startDBSwitchListener(switchInterval time.Duration) {
 			if err != nil || signal == nil {
 				log.Errorw("failed to get switch db signal", "err", err)
 			}
-			// TODO REMOVE BARRY
-			num, _ := metadata.bsDB.GetLatestBlockNumber()
-			log.Debugf("switchDB check: signal: %t and metadata.config.BsDBFlag: %t and currently block number is : %d", signal, metadata.config.BsDBFlag, num)
-			// TODO REMOVE BARRY
 
 			// if a signal db is not equal to current metadata db, attempt to switch the database
 			if signal.IsMaster != metadata.config.BsDBFlag {
@@ -137,9 +133,5 @@ func (metadata *Metadata) switchDB(flag bool) error {
 	}
 
 	metadata.config.BsDBFlag = flag
-	// TODO REMOVE BARRY
-	signal, _ := metadata.bsDBBlockSyncer.GetSwitchDBSignal()
-	log.Debugf("switchDB successfully, signal: %t", signal)
-	// TODO REMOVE BARRY
 	return nil
 }
