@@ -9,5 +9,5 @@ type MasterDB struct {
 
 // TableName is used to set Master table name in database
 func (m *MasterDB) TableName() string {
-	return "master_db"
+	return MasterDBTableName
 }
