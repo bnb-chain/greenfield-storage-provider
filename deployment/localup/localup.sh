@@ -51,6 +51,7 @@ generate_env() {
         echo 'FUNDING_PRIVATE_KEY=""'
         echo 'SEAL_PRIVATE_KEY=""'
         echo 'APPROVAL_PRIVATE_KEY=""'
+        echo 'GC_PRIVATE_KEY=""'
       } > sp.info
       cd - >/dev/null
     fi
@@ -90,6 +91,7 @@ make_config() {
         sed -i -e "s/FundingPrivateKey = \".*\"/FundingPrivateKey = \"${FUNDING_PRIVATE_KEY}\"/g" config.toml
         sed -i -e "s/SealPrivateKey = \".*\"/SealPrivateKey = \"${SEAL_PRIVATE_KEY}\"/g" config.toml
         sed -i -e "s/ApprovalPrivateKey = \".*\"/ApprovalPrivateKey = \"${APPROVAL_PRIVATE_KEY}\"/g" config.toml
+        sed -i -e "s/GcPrivateKey = \".*\"/GcPrivateKey = \"${GC_PRIVATE_KEY}\"/g" config.toml
         # chain
         sed -i -e "s/greenfield_9000-1741/${CHAIN_ID}/g" config.toml
         sed -i -e "s/localhost\:9090/${CHAIN_GRPC_ENDPOINT}/g" config.toml

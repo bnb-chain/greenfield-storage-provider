@@ -56,6 +56,7 @@ OperatorPrivateKey = ""
 FundingPrivateKey = ""
 SealPrivateKey = ""
 ApprovalPrivateKey = ""
+GcPrivateKey = ""
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment", "permission", "group"]
@@ -86,3 +87,6 @@ PathPattern = []
 On = false
 RateLimit = 1
 RatePeriod = "S"
+
+[StopServingCfg]
+BucketKeepAliveDays = 7

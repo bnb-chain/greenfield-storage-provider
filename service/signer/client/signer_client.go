@@ -113,6 +113,16 @@ func (client *SignerClient) SealObjectOnChain(ctx context.Context,
 	return resp.GetTxHash(), nil
 }
 
+func (client *SignerClient) DiscontinueBucketOnChain(ctx context.Context,
+	discontinueBucket *storagetypes.MsgDiscontinueBucket, opts ...grpc.CallOption) ([]byte, error) {
+	resp, err := client.signer.DiscontinueBucketOnChain(ctx,
+		&types.DiscontinueBucketOnChainRequest{DiscontinueBucket: discontinueBucket}, opts...)
+	if err != nil {
+		return []byte{}, err
+	}
+	return resp.GetTxHash(), nil
+}
+
 func (client *SignerClient) SignPingMsg(ctx context.Context, ping *p2ptpyes.Ping, opts ...grpc.CallOption) (*p2ptpyes.Ping, error) {
 	req := &types.SignPingMsgRequest{
 		Ping: ping,

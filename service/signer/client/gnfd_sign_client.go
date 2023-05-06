@@ -32,6 +32,9 @@ const (
 
 	// SignApproval is the type of signature signed by the approval account
 	SignApproval SignType = "approval"
+
+	// SignGc is the type of signature signed by the gc account
+	SignGc SignType = "gc"
 )
 
 // GreenfieldChainSignClient the greenfield chain client
@@ -45,7 +48,7 @@ type GreenfieldChainSignClient struct {
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
 func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, operatorPrivateKey, fundingPrivateKey,
-	sealPrivateKey, approvalPrivateKey string) (*GreenfieldChainSignClient, error) {
+	sealPrivateKey, approvalPrivateKey string, gcPrivateKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
@@ -88,11 +91,21 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 		return nil, err
 	}
 
+	gcKM, err := keys.NewPrivateKeyManager(gcPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	gcClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(gcKM))
+	if err != nil {
+		return nil, err
+	}
+
 	greenfieldClients := map[SignType]*client.GreenfieldClient{
 		SignOperator: operatorClient,
 		SignFunding:  fundingClient,
 		SignSeal:     sealClient,
 		SignApproval: approvalClient,
+		SignGc:       gcClient,
 	}
 
 	return &GreenfieldChainSignClient{
@@ -188,5 +201,43 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 
 	// update nonce when tx is successful submitted
 	client.sealAccNonce = nonce
+	return txHash, nil
+}
+
+// DiscontinueBucket stops serving the bucket on the greenfield chain.
+func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, scope SignType, discontinueBucket *storagetypes.MsgDiscontinueBucket) ([]byte, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "err", err)
+		return nil, merrors.ErrSignMsg
+	}
+
+	msgSealObject := storagetypes.NewMsgDiscontinueBucket(km.GetAddr(),
+		discontinueBucket.BucketName, discontinueBucket.Reason)
+	mode := tx.BroadcastMode_BROADCAST_MODE_BLOCK
+	txOpt := &ctypes.TxOption{
+		Mode:     &mode,
+		GasLimit: client.gasLimit,
+	}
+
+	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgSealObject}, txOpt)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "discontinue_bucket", msgSealObject.String())
+		return nil, merrors.ErrSealObjectOnChain
+	}
+
+	if resp.TxResponse.Code != 0 {
+		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "discontinue_bucket", msgSealObject.String())
+		return nil, merrors.ErrSealObjectOnChain
+	}
+	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "discontinue_bucket", msgSealObject.String())
+		return nil, merrors.ErrSealObjectOnChain
+	}
+
 	return txHash, nil
 }

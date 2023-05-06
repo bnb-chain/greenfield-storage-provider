@@ -110,6 +110,18 @@ func (signer *SignerServer) SealObjectOnChain(ctx context.Context, req *types.Se
 
 }
 
+// DiscontinueBucketOnChain implements v1.SignerServiceServer
+func (signer *SignerServer) DiscontinueBucketOnChain(ctx context.Context, req *types.DiscontinueBucketOnChainRequest) (*types.DiscontinueBucketOnChainResponse, error) {
+	txHash, err := signer.client.DiscontinueBucket(ctx, client.SignGc, req.DiscontinueBucket)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.DiscontinueBucketOnChainResponse{
+		TxHash: txHash,
+	}, nil
+}
+
 // SignPingMsg signs the ping msg for p2p node
 func (signer *SignerServer) SignPingMsg(ctx context.Context, req *types.SignPingMsgRequest) (*types.SignPingMsgResponse, error) {
 	msg := req.GetPing()
