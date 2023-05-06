@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
-
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
@@ -14,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -23,6 +22,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stopserving"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
@@ -199,6 +199,15 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 			return nil, err
 		}
 		server, err = auth.NewAuthServer(authCfg)
+		if err != nil {
+			return nil, err
+		}
+	case model.StopServingService:
+		ssCfg, err := cfg.MakeStopServingServiceConfig()
+		if err != nil {
+			return nil, err
+		}
+		server, err = stopserving.NewStopServingService(ssCfg)
 		if err != nil {
 			return nil, err
 		}

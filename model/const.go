@@ -30,6 +30,8 @@ var (
 	P2PService = strings.ToLower("p2p")
 	// AuthService defines the name of auth service
 	AuthService = strings.ToLower("auth")
+	// StopServingService defines the name of stop serving service
+	StopServingService = strings.ToLower("StopServing")
 )
 
 // SpServiceDesc defines the service description in storage provider
@@ -45,6 +47,7 @@ var SpServiceDesc = map[string]string{
 	BlockSyncerService: "Syncs block data to db",
 	P2PService:         "Communicates with SPs on p2p protocol",
 	AuthService:        "Handles off-chain-auth requests",
+	StopServingService: "Discontinue buckets for greenfield testnet",
 }
 
 // define storage provider service gRPC default address
@@ -119,6 +122,8 @@ const (
 	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
 	// SpSealPrivKey defines env variable name for sp seal priv key
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
+	// SpGcPrivKey defines env variable name for sp gc priv key
+	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
 	// DsnBlockSyncer defines env variable name for block syncer dsn
 	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
 	// P2PPrivateKey defines env variable for p2p protocol private key

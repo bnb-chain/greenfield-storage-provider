@@ -73,12 +73,24 @@ message SignIntegrityHashResponse {
 // SealObjectOnChainRequest is request type for the SealObjectOnChain RPC method.
 message SealObjectOnChainRequest {
   // seal_object defines the information of the seal object action.
-  bnbchain.greenfield.storage.MsgSealObject seal_object= 1;
+  bnbchain.greenfield.storage.MsgSealObject seal_object = 1;
 }
 
 // SealObjectOnChainResponse is response type for the SealObjectOnChain RPC method.
 message SealObjectOnChainResponse {
   // tx_hash defines the transaction hash of the sealing object on chain.
+  bytes tx_hash = 1;
+}
+
+// DiscontinueBucketOnChainRequest is request type for the DiscontinueBucketOnChain RPC method.
+message DiscontinueBucketOnChainRequest {
+  // discontinue_bucket defines the information of the discontinue bucket action.
+  bnbchain.greenfield.storage.MsgDiscontinueBucket discontinue_bucket = 1;
+}
+
+// DiscontinueBucketOnChainResponse is response type for the DiscontinueBucketOnChain RPC method.
+message DiscontinueBucketOnChainResponse {
+  // tx_hash defines the transaction hash of the discontinue bucket on chain.
   bytes tx_hash = 1;
 }
 
@@ -136,6 +148,8 @@ service SignerService {
   rpc SignIntegrityHash(SignIntegrityHashRequest) returns (SignIntegrityHashResponse) {};
   // SealObjectOnChain seals the storage object on the blockchain.
   rpc SealObjectOnChain(SealObjectOnChainRequest) returns (SealObjectOnChainResponse) {};
+  // DiscontinueBucketOnChain discontinues the storage bucket on the blockchain.
+  rpc DiscontinueBucketOnChain(DiscontinueBucketOnChainRequest) returns (DiscontinueBucketOnChainResponse) {};
   // SignPingMsg signs the ping msg for p2p node
   rpc SignPingMsg(SignPingMsgRequest) returns (SignPingMsgResponse){}
   // SignPongMsg signs the pong msg for p2p node
