@@ -368,9 +368,9 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 			return
 		}
 		if expires.Before(time.Now()) {
-			log.Warnw("private object universal endpoint signature expired", "bucket_name", reqContext.bucketName,
+			log.Errorw("private object universal endpoint signature expired", "bucket_name", reqContext.bucketName,
 				"object_name", reqContext.objectName, "expire_time", reqContext.expireTime)
-			errDescription = AccessDenied
+			errDescription = SignatureExpired
 			return
 		}
 
@@ -382,8 +382,12 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		}
 
 		//check if addr is same as bucket owner address, currently bucket owner and object owner has to be the same
-		if strings.ToLower(addr.String()) == strings.ToLower(getBucketInfoRes.GetBucket().GetBucketInfo().GetOwner()) {
+		if strings.EqualFold(addr.String(), getBucketInfoRes.GetBucket().GetBucketInfo().GetOwner()) {
 			isFullList = true
+		} else {
+			log.Errorw("failed to verify signature")
+			errDescription = SignatureNotMatch
+			return
 		}
 	}
 

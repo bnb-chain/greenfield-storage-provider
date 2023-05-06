@@ -30,6 +30,7 @@ var (
 	InvalidRange       = &errorDescription{errorCode: "InvalidRange", errorMessage: "Range is invalid", statusCode: http.StatusBadRequest}
 	InvalidAddress     = &errorDescription{errorCode: "InvalidAddress", errorMessage: "Address is illegal", statusCode: http.StatusBadRequest}
 	SignatureNotMatch  = &errorDescription{errorCode: "SignatureDoesNotMatch", errorMessage: "SignatureDoesNotMatch", statusCode: http.StatusForbidden}
+	SignatureExpired   = &errorDescription{errorCode: "SignatureExpired", errorMessage: "SignatureExpired", statusCode: http.StatusForbidden}
 	AccessDenied       = &errorDescription{errorCode: "AccessDenied", errorMessage: "Access Denied", statusCode: http.StatusForbidden}
 	OutOfQuota         = &errorDescription{errorCode: "AccessDenied", errorMessage: "Out of Quota", statusCode: http.StatusForbidden}
 	NoSuchKey          = &errorDescription{errorCode: "NoSuchKey", errorMessage: "The specified key does not exist.", statusCode: http.StatusNotFound}
