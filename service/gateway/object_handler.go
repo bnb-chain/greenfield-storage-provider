@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
+	"time"
 
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -268,6 +270,8 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		statusCode     = http.StatusOK
 		ctx, cancel    = context.WithCancel(context.Background())
 		redirectUrl    string
+		isFullList     bool
+		expires        time.Time
 	)
 
 	reqContext = newRequestContext(r)
@@ -356,11 +360,37 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		return
 	}
 
-	// In first phase, do not provide universal endpoint for private object
+	// check when trying to access private object. Object name, bucket name, expire time, signature must all match
+	if reqContext.expireTime != "" && reqContext.signature != "" {
+		if expires, err = time.Parse(time.RFC3339, reqContext.expireTime); err != nil {
+			log.Errorw("failed to parse expire time", "error", err)
+			errDescription = makeErrorDescription(err)
+			return
+		}
+		if expires.Before(time.Now()) {
+			log.Warnw("private object universal endpoint signature expired", "bucket_name", reqContext.bucketName,
+				"object_name", reqContext.objectName, "expire_time", reqContext.expireTime)
+			errDescription = AccessDenied
+			return
+		}
+
+		reqContext.objectName = escapedObjectName
+		if addr, err = gateway.verifySignature(reqContext); err != nil {
+			log.Errorw("failed to verify signature", "error", err)
+			errDescription = makeErrorDescription(err)
+			return
+		}
+
+		//check if addr is same as bucket owner address, currently bucket owner and object owner has to be the same
+		if strings.ToLower(addr.String()) == strings.ToLower(getBucketInfoRes.GetBucket().GetBucketInfo().GetOwner()) {
+			isFullList = true
+		}
+	}
+
 	getObjectInfoReq := &metatypes.GetObjectByObjectNameAndBucketNameRequest{
 		ObjectName: escapedObjectName,
 		BucketName: reqContext.bucketName,
-		IsFullList: false,
+		IsFullList: isFullList,
 	}
 
 	getObjectInfoRes, err := gateway.metadata.GetObjectByObjectNameAndBucketName(ctx, getObjectInfoReq)
