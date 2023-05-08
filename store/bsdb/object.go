@@ -13,7 +13,6 @@ package bsdb
 // If the delimiter is empty, the function will return all objects without grouping them by a common prefix.
 func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*ListObjectsResult, error) {
 	var (
-		//objects []*Object
 		err     error
 		limit   int
 		results []*ListObjectsResult
@@ -22,7 +21,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 	// return NextContinuationToken by adding 1 additionally
 	limit = maxKeys + 1
 
-	// Execute a raw SQL query to:
+	// If delimiter is specified, execute a raw SQL query to:
 	// 1. Retrieve objects from the given bucket with matching prefix and continuationToken
 	// 2. Find common prefixes based on the delimiter
 	// 3. Limit results
@@ -46,15 +45,16 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 			prefix, delimiter, prefix, delimiter,
 			bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix,
 			limit).Scan(&results).Error
-
-		return results, err
+	} else {
+		// If delimiter is not specified, retrieve objects directly
+		err = b.db.Table((&Object{}).TableName()).
+			Select("*").
+			Where("bucket_name = ? AND object_name >= IF(? = '', '', ?)", bucketName, continuationToken, continuationToken).
+			Where("object_name LIKE ?", prefix+"%").
+			Limit(limit).
+			Order("object_name asc").
+			Find(&results).Error
 	}
-	err = b.db.Table((&Object{}).TableName()).
-		Select("*").
-		Where("bucket_name = ?", bucketName).
-		Limit(limit).
-		Order("object_name asc").
-		Find(&results).Error
 	return results, err
 }
 

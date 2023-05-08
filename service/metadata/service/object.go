@@ -5,11 +5,12 @@ import (
 	"encoding/base64"
 
 	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	"github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	"github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // ListObjectsByBucketName list objects info by a bucket name
@@ -21,7 +22,7 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		nextContinuationToken string
 		maxKeys               uint64
 		commonPrefixes        []string
-		res                   = make([]*metatypes.Object, 0)
+		res                   []*metatypes.Object
 	)
 
 	maxKeys = req.MaxKeys
@@ -83,6 +84,9 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		isTruncated = true
 		keyCount -= 1
 		nextContinuationToken = results[len(results)-1].PathName
+		if req.Delimiter == "" {
+			nextContinuationToken = results[len(results)-1].ObjectName
+		}
 		res = res[:len(res)-1]
 	}
 

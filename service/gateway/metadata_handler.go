@@ -5,9 +5,9 @@ import (
 	"context"
 	"encoding/base64"
 	"net/http"
+	"net/url"
 	"strings"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gogo/protobuf/jsonpb"
@@ -15,6 +15,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // getUserBucketsHandler handle get object request
@@ -89,6 +90,7 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		requestPrefix            string
 		continuationToken        string
 		decodedContinuationToken []byte
+		queryParams              url.Values
 	)
 
 	reqContext = newRequestContext(r)
@@ -109,12 +111,13 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		return
 	}
 
+	queryParams = reqContext.request.URL.Query()
 	requestBucketName = reqContext.bucketName
-	requestMaxKeys = reqContext.request.URL.Query().Get("max_keys")
-	requestStartAfter = reqContext.request.URL.Query().Get("start_after")
-	requestContinuationToken = reqContext.request.URL.Query().Get("continuation_token")
-	requestDelimiter = reqContext.request.URL.Query().Get("delimiter")
-	requestPrefix = reqContext.request.URL.Query().Get("prefix")
+	requestMaxKeys = queryParams.Get("max_keys")
+	requestStartAfter = queryParams.Get("start_after")
+	requestContinuationToken = queryParams.Get("continuation_token")
+	requestDelimiter = queryParams.Get("delimiter")
+	requestPrefix = queryParams.Get("prefix")
 
 	if err = s3util.CheckValidBucketName(requestBucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", requestBucketName, "error", err)
@@ -123,15 +126,8 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	}
 
 	if requestMaxKeys != "" {
-		maxKeys, err = util.StringToUint64(requestMaxKeys)
-		if err != nil {
-			log.Errorw("failed to parse maxKeys", "max_keys", requestMaxKeys, "error", err)
-			errDescription = InvalidMaxKeys
-			return
-		}
-		// maxKeys should > 0
-		if maxKeys == 0 {
-			log.Errorw("failed to check maxKeys", "max_keys", requestMaxKeys, "error", err)
+		if maxKeys, err = util.StringToUint64(requestMaxKeys); err != nil || maxKeys == 0 {
+			log.Errorw("failed to parse or check maxKeys", "max_keys", requestMaxKeys, "error", err)
 			errDescription = InvalidMaxKeys
 			return
 		}
@@ -160,7 +156,7 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 			return
 		}
 
-		if continuationToken != "" && !strings.HasPrefix(continuationToken, requestPrefix) {
+		if !strings.HasPrefix(continuationToken, requestPrefix) {
 			log.Errorw("failed to check requestContinuationToken", "continuation_token", continuationToken, "prefix", requestPrefix, "error", err)
 			errDescription = InvalidContinuationToken
 			return
