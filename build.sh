@@ -11,7 +11,7 @@ fi
 
 buf generate
 
-go build -ldflags "\
+go build -v -ldflags "\
   -X 'main.Version=${Version}' \
   -X 'main.CommitID=${CommitID}' \
   -X 'main.BranchName=${BranchName}' \
