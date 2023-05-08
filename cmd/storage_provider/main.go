@@ -54,6 +54,11 @@ var (
 		utils.MetricsEnabledFlag,
 		utils.MetricsHTTPFlag,
 	}
+
+	pprofFlags = []cli.Flag{
+		utils.PProfEnabledFlag,
+		utils.PProfHTTPFlag,
+	}
 )
 
 func init() {
@@ -68,6 +73,7 @@ func init() {
 		rcmgrFlags,
 		logFlags,
 		metricsFlags,
+		pprofFlags,
 	)
 	app.Commands = []*cli.Command{
 		// config category commands
@@ -128,6 +134,10 @@ func makeEnv(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
 	}
 	// init resource manager
 	if err := initResourceManager(ctx); err != nil {
+		return err
+	}
+	// init pprof
+	if err := initPProf(ctx, cfg); err != nil {
 		return err
 	}
 	return nil

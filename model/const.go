@@ -30,6 +30,8 @@ var (
 	P2PService = strings.ToLower("p2p")
 	// AuthService defines the name of auth service
 	AuthService = strings.ToLower("auth")
+	// PProfService defines the name of pprof service
+	PProfService = strings.ToLower("pprof")
 	// StopServingService defines the name of stop serving service
 	StopServingService = strings.ToLower("StopServing")
 )
@@ -50,7 +52,7 @@ var SpServiceDesc = map[string]string{
 	StopServingService: "Discontinue buckets for greenfield testnet",
 }
 
-// define storage provider service gRPC default address
+// define storage provider service default listening address
 const (
 	// GatewayHTTPAddress default HTTP address of gateway
 	GatewayHTTPAddress = "localhost:9033"
@@ -76,6 +78,8 @@ const (
 	P2PListenAddress = "127.0.0.1:9933"
 	// AuthGRPCAddress default gRPC address of auth service
 	AuthGRPCAddress = "localhost:8933"
+	// PProfHTTPAddress default HTTP address of pprof service
+	PProfHTTPAddress = "localhost:25341"
 )
 
 // define greenfield chain default address

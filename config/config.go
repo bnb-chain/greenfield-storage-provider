@@ -13,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
@@ -39,6 +40,7 @@ type StorageProviderConfig struct {
 	P2PCfg             *p2p.NodeConfig
 	LogCfg             *LogConfig
 	MetricsCfg         *metrics.MetricsConfig
+	PProfCfg          *pprof.PProfConfig
 	RateLimiter        *localhttp.RateLimiterConfig
 	DiscontinueCfg     *stopserving.DiscontinueConfig
 	MetadataCfg        *metadata.MetadataConfig
@@ -105,6 +107,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	P2PCfg:             DefaultP2PConfig,
 	LogCfg:             DefaultLogConfig,
 	MetricsCfg:         DefaultMetricsConfig,
+	PProfCfg:           DefaultPProfConfig,
 	RateLimiter:        DefaultRateLimiterConfig,
 	DiscontinueCfg:     stopserving.DefaultDiscontinueConfig,
 	MetadataCfg:        DefaultMetadataConfig,
@@ -160,7 +163,7 @@ var DefaultBlockSyncerConfig = &blocksyncer.Config{
 	RecreateTables: true,
 }
 
-// DefaultMetricsConfig defines the default config of Metrics service
+// DefaultMetricsConfig defines the default configuration of metrics service
 var DefaultMetricsConfig = &metrics.MetricsConfig{
 	Enabled:     false,
 	HTTPAddress: model.MetricsHTTPAddress,
@@ -184,11 +187,19 @@ var DefaultLogConfig = &LogConfig{
 	Path:  "./gnfd-sp.log",
 }
 
+// DefaultP2PConfig defines the default configuration of p2p
 var DefaultP2PConfig = &p2p.NodeConfig{
 	ListenAddress: model.P2PListenAddress,
 	PingPeriod:    model.DefaultPingPeriod,
 }
 
+// DefaultPProfConfig defines the default configuration of pprof service
+var DefaultPProfConfig = &pprof.PProfConfig{
+	Enabled:     false,
+	HTTPAddress: model.PProfHTTPAddress,
+}
+
+// DefaultRateLimiterConfig defines the default configuration of rate limiter
 var DefaultRateLimiterConfig = &localhttp.RateLimiterConfig{
 	HTTPLimitCfg: localhttp.HTTPLimitConfig{
 		On:         false,
