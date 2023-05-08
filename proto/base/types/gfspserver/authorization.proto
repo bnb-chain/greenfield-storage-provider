@@ -1,0 +1,22 @@
+syntax = "proto3";
+package base.types.gfspserver;
+
+import "base/types/gfsperrors/error.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
+
+message GfSpAuthorizeRequest {
+  int32 auth_type = 1;
+  string user_account = 2;
+  string bucket_name = 3;
+  string object_name = 4;
+}
+
+message GfSpAuthorizeResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  bool allowed = 2;
+}
+
+service GfSpAuthorizationService {
+  rpc GfSpVerifyAuthorize(GfSpAuthorizeRequest) returns (GfSpAuthorizeResponse) {}
+}

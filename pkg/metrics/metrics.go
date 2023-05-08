@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -69,7 +68,7 @@ func (m *Metrics) Name() string {
 
 // Start HTTP server
 func (m *Metrics) Start(ctx context.Context) error {
-	m.registerMetricItems()
+	m.RegisterMetricItems(MetricsItems...)
 	go m.serve()
 	return nil
 }
@@ -95,11 +94,8 @@ func (m *Metrics) Enabled() bool {
 	}
 }
 
-func (m *Metrics) registerMetricItems() {
-	m.registry.MustRegister(DefaultGRPCServerMetrics, DefaultGRPCClientMetrics, DefaultHTTPServerMetrics,
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}), BlockHeightLagGauge,
-		SealObjectTimeHistogram, SealObjectTotalCounter, ReplicateObjectTaskGauge, PieceStoreTimeHistogram,
-		PieceStoreRequestTotal, SPDBTimeHistogram)
+func (m *Metrics) RegisterMetricItems(cs ...prometheus.Collector) {
+	m.registry.MustRegister(cs...)
 }
 
 func (m *Metrics) serve() {

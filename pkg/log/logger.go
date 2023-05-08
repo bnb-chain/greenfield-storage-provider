@@ -341,6 +341,13 @@ func Context(ctx context.Context, opts ...interface{}) context.Context {
 	return ctx
 }
 
+const (
+	CtxKeyBucketName = "bucket_name"
+	CtxKeyObjectName = "object_name"
+	CtxKeyObjectID   = "object_id"
+	CtxKeyTask       = "task_key"
+)
+
 func WithValue(ctx context.Context, k, v string) context.Context {
 	return metainfo.WithValue(ctx, k, v)
 }

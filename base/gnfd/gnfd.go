@@ -1,0 +1,104 @@
+package gnfd
+
+import (
+	"context"
+	"net/http"
+	"sync"
+	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	chainClient "github.com/bnb-chain/greenfield/sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+)
+
+const (
+	GreenFieldChain = "GreenfieldChain"
+	// UpdateClientInternal defines the period of updating the best chain client
+	UpdateClientInternal = 60
+	// ExpectedOutputBlockInternal defines the time of estimating output block time
+	ExpectedOutputBlockInternal = 2
+)
+
+var (
+	ErrNoSuchBucket = gfsperrors.Register(GreenFieldChain, http.StatusInternalServerError, 50001, "no such bucket")
+	ErrSealTimeout  = gfsperrors.Register(GreenFieldChain, http.StatusInternalServerError, 50002, "seal failed")
+)
+
+// GreenfieldClient the greenfield chain client, only use to query.
+type GreenfieldClient struct {
+	chainClient   *chainClient.GreenfieldClient
+	currentHeight int64
+	updatedAt     time.Time
+	Provider      []string
+}
+
+// GnfdClient return the greenfield chain client
+func (client *GreenfieldClient) GnfdClient() *chainClient.GreenfieldClient {
+	return client.chainClient
+}
+
+var _ consensus.Consensus = &Gnfd{}
+
+type Gnfd struct {
+	client        *GreenfieldClient
+	backUpClients []*GreenfieldClient
+	stopCh        chan struct{}
+	mutex         sync.RWMutex
+}
+
+// Close the Greenfield instance.
+func (g *Gnfd) Close() error {
+	close(g.stopCh)
+	return nil
+}
+
+// getCurrentClient return the current client to use.
+func (g *Gnfd) getCurrentClient() *GreenfieldClient {
+	g.mutex.RLock()
+	defer g.mutex.RUnlock()
+	return g.client
+}
+
+// setCurrentClient set client to current client for using.
+func (g *Gnfd) setCurrentClient(client *GreenfieldClient) {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+	g.client = client
+}
+
+// updateClient select the client that block height is the largest and set to current client.
+func (g *Gnfd) updateClient() {
+	ticker := time.NewTicker(UpdateClientInternal * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			var (
+				maxHeight, _    = g.CurrentHeight(context.Background())
+				maxHeightClient = g.getCurrentClient()
+			)
+			for _, client := range g.backUpClients {
+				resp, err := client.GnfdClient().TmClient.GetLatestBlock(
+					context.Background(),
+					&tmservice.GetLatestBlockRequest{})
+				if err != nil {
+					log.Errorw("get latest block height failed", "node_addr", client.Provider, "error", err)
+					continue
+				}
+				currentHeight := (uint64)(resp.SdkBlock.Header.Height)
+				if currentHeight > maxHeight {
+					maxHeight = currentHeight
+					maxHeightClient = client
+				}
+				client.currentHeight = (int64)(currentHeight)
+				client.updatedAt = time.Now()
+			}
+			if maxHeightClient != g.getCurrentClient() {
+				g.setCurrentClient(maxHeightClient)
+			}
+		case <-g.stopCh:
+			return
+		}
+	}
+}

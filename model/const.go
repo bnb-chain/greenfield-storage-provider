@@ -242,6 +242,10 @@ const (
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
 	// GnfdAuthorizationHeader defines authorization, verify signature and check authorization
 	GnfdAuthorizationHeader = "Authorization"
+	// GnfdReceiveMsgHeader defines receive piece data meta
+	GnfdReceiveMsgHeader = "X-Gnfd-Receive-Msg"
+	// GnfdReplicatePieceApprovalHeader defines secondary approved msg for replicating piece
+	GnfdReplicatePieceApprovalHeader = "X-Gnfd-Replicate-Piece-Approval-Msg"
 	// GnfdObjectIDHeader defines object id
 	GnfdObjectIDHeader = "X-Gnfd-Object-ID"
 	// GnfdPieceIndexHeader defines piece idx, which is used by challenge
@@ -296,7 +300,7 @@ const (
 	// DefaultSpFreeReadQuotaSize defines sp bucket's default free quota size, the SP can modify it by itself
 	DefaultSpFreeReadQuotaSize = 10 * 1024 * 1024 * 1024
 	// DefaultStreamBufSize defines gateway stream forward payload buf size
-	DefaultStreamBufSize = 64 * 1024
+	DefaultStreamBufSize = 16 * 1024
 	// DefaultTimeoutHeight defines approval timeout height
 	DefaultTimeoutHeight = 100
 	// DefaultPartitionSize defines partition size

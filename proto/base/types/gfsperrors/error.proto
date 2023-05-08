@@ -1,0 +1,11 @@
+syntax = "proto3";
+package base.types.gfsperrors;
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors";
+
+message GfSpError {
+  string code_space = 1;
+  int32 http_status_code = 2;
+  int32 inner_code = 3;
+  string description = 4;
+}

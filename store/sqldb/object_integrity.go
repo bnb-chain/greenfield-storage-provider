@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -42,6 +43,18 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 	return meta, nil
 }
 
+func MysqlErrCode(err error) int {
+	mysqlErr, ok := err.(*mysql.MySQLError)
+	if !ok {
+		return 0
+	}
+	return int(mysqlErr.Number)
+}
+
+var (
+	ErrDuplicateEntryCode = 1062
+)
+
 // SetObjectIntegrity put(overwrite) integrity hash info to db
 func (s *SpDBImpl) SetObjectIntegrity(meta *IntegrityMeta) error {
 	insertIntegrityMetaRecord := &IntegrityMetaTable{
@@ -51,6 +64,9 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *IntegrityMeta) error {
 		Signature:     hex.EncodeToString(meta.Signature),
 	}
 	result := s.db.Create(insertIntegrityMetaRecord)
+	if result.Error != nil || MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
+		return nil
+	}
 	if result.Error != nil || result.RowsAffected != 1 {
 		return fmt.Errorf("failed to insert integrity meta record: %s", result.Error)
 	}

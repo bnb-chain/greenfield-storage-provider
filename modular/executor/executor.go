@@ -1,0 +1,210 @@
+package executor
+
+import (
+	"context"
+	"sync/atomic"
+	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+)
+
+const (
+	ExecuteModularName        = "executor"
+	ExecuteModularDescription = "task execute modular executes task"
+)
+
+var _ module.TaskExecutor = &ExecuteModular{}
+
+type ExecuteModular struct {
+	endpoint string
+	baseApp  *gfspapp.GfSpBaseApp
+	scope    corercmgr.ResourceScope
+
+	maxExecuteNum uint64
+	executingNum  uint64
+
+	askTaskInterval int
+
+	askReplicateApprovalTimeout  int64
+	askReplicateApprovalExFactor float64
+
+	listenSealTimeoutHeight int
+	listenSealRetryTimeout  int
+	maxListenSealRetry      int
+}
+
+func (e *ExecuteModular) Name() string {
+	return ExecuteModularName
+}
+
+func (e *ExecuteModular) Start(ctx context.Context) error {
+	scope, err := e.baseApp.ResourceManager().OpenService(e.Name())
+	if err != nil {
+		return err
+	}
+	e.scope = scope
+	go e.eventLoop(ctx)
+	return nil
+}
+
+func (e *ExecuteModular) eventLoop(ctx context.Context) {
+	ticker := time.NewTicker(time.Duration(e.askTaskInterval))
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			maxExecuteNum := atomic.LoadUint64(&e.maxExecuteNum)
+			executingNum := atomic.LoadUint64(&e.executingNum)
+			metrics.MaxTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(maxExecuteNum))
+			metrics.RunningTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(executingNum))
+
+			if executingNum >= maxExecuteNum {
+				log.CtxErrorw(ctx, "failed to start ask task, executing task exceed",
+					"executing_num", executingNum, "max_execute_num", maxExecuteNum)
+				continue
+			}
+			log.CtxDebugw(ctx, "start to ask task", "executing_num", executingNum,
+				"max_execute_num", maxExecuteNum)
+			atomic.AddUint64(&e.executingNum, 1)
+			go func() {
+				defer atomic.AddUint64(&e.executingNum, -1)
+				e.askTask(ctx)
+			}()
+		}
+	}
+}
+
+func (e *ExecuteModular) askTask(ctx context.Context) {
+	limit, err := e.scope.RemainingResource()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get remaining resource", "error", err)
+		return
+	}
+	metrics.RemainingMemoryGauge.WithLabelValues(e.endpoint).Set(float64(limit.GetMemoryLimit()))
+	metrics.RemainingTaskGauge.WithLabelValues(e.endpoint).Set(float64(limit.GetTaskTotalLimit()))
+	metrics.RemainingHighPriorityTaskGauge.WithLabelValues(e.endpoint).Set(
+		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityHigh)))
+	metrics.RemainingMediumPriorityTaskGauge.WithLabelValues(e.endpoint).Set(
+		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityMedium)))
+	metrics.RemainingLowTaskGauge.WithLabelValues(e.endpoint).Set(
+		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityLow)))
+
+	askTask, err := e.baseApp.GfSpClient().AskTask(ctx, limit)
+	if err != nil {
+		log.CtxWarnw(ctx, "failed to ask task", "remaining", limit.String(), "error", err)
+		return
+	}
+	if askTask == nil {
+		log.CtxWarnw(ctx, "failed to ask task, dangling pointer",
+			"remaining", limit.String(), "error", err)
+		return
+	}
+	span, err := e.ReserveResource(ctx, askTask.EstimateLimit().ScopeStat())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reserve resource", "task_require",
+			askTask.EstimateLimit().String(), "remaining", limit.String(), "error", err)
+	}
+	defer e.ReleaseResource(ctx, span)
+	defer e.ReportTask(ctx, askTask)
+	ctx = log.WithValue(ctx, log.CtxKeyTask, askTask.Key().String())
+	switch t := askTask.(type) {
+	case *gfsptask.GfSpReplicatePieceTask:
+		e.HandleReplicatePieceTask(ctx, t)
+	case *gfsptask.GfSpSealObjectTask:
+		e.HandleSealObjectTask(ctx, t)
+	case *gfsptask.GfSpReceivePieceTask:
+		e.HandleReceivePieceTask(ctx, t)
+	case *gfsptask.GfSpGCObjectTask:
+		e.HandleGCObjectTask(ctx, t)
+	case *gfsptask.GfSpGCZombiePieceTask:
+		e.HandleGCZombiePieceTask(ctx, t)
+	case *gfsptask.GfSpGCMetaTask:
+		e.HandleGCMetaTask(ctx, t)
+	default:
+		log.CtxErrorw(ctx, "unsupported task type")
+	}
+	log.CtxDebugw(ctx, "finish to handle task")
+	return
+}
+
+func (e *ExecuteModular) ReportTask(
+	ctx context.Context,
+	task coretask.Task) error {
+	err := e.baseApp.GfSpClient().ReportTask(ctx, task)
+	log.CtxDebugw(ctx, "finish to report task", "error", err)
+	return err
+}
+
+func (e *ExecuteModular) Stop(ctx context.Context) error {
+	e.scope.Release()
+	return nil
+}
+
+func (e *ExecuteModular) Description() string {
+	return ExecuteModularDescription
+}
+
+func (e *ExecuteModular) Endpoint() string {
+	return e.endpoint
+}
+
+func (e *ExecuteModular) ReserveResource(
+	ctx context.Context,
+	st *corercmgr.ScopeStat) (
+	corercmgr.ResourceScopeSpan, error) {
+	span, err := e.scope.BeginSpan()
+	if err != nil {
+		return nil, err
+	}
+	err = span.ReserveResources(st)
+	if err != nil {
+		return nil, err
+	}
+	return span, nil
+}
+
+func (e *ExecuteModular) ReleaseResource(
+	ctx context.Context,
+	span corercmgr.ResourceScopeSpan) {
+	span.Done()
+}
+
+func (e *ExecuteModular) AskReplicatePieceApproval(
+	ctx context.Context,
+	task coretask.ApprovalReplicatePieceTask,
+	low, high int, timeout int64) (
+	[]*gfsptask.GfSpReplicatePieceApprovalTask,
+	error) {
+	approvals, err := e.baseApp.GfSpClient().AskSecondaryReplicatePieceApproval(ctx, task, low, high, timeout)
+	if err != nil {
+		return nil, err
+	}
+	if len(approvals) < low {
+		log.CtxErrorw(ctx, "failed to get sufficient sp approval from p2p protocol")
+		return nil, ErrInsufficientApproval
+	}
+	for _, approval := range approvals {
+		spInfo, err := e.baseApp.GfSpDB().GetSpByAddress(
+			approval.GetApprovedSpOperatorAddress(),
+			spdb.OperatorAddressType)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get sp info from db", "error", err)
+			continue
+		}
+		approval.SetApprovedSpEndpoint(spInfo.GetEndpoint())
+		approval.SetApprovedSpApprovalAddress(spInfo.GetApprovalAddress())
+	}
+	if len(approvals) < low {
+		log.CtxErrorw(ctx, "failed to get sufficient sp info from db")
+		return nil, ErrGfSp
+	}
+	return approvals, nil
+}
