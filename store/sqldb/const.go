@@ -6,6 +6,8 @@ const (
 	JobTableName = "job"
 	// ObjectTableName defines the object table name
 	ObjectTableName = "object"
+	// PieceHashTableName defines the piece hash table name
+	PieceHashTableName = "piece_hash"
 	// IntegrityMetaTableName defines the integrity meta table name
 	IntegrityMetaTableName = "integrity_meta"
 	// SpInfoTableName defines the SP info table name

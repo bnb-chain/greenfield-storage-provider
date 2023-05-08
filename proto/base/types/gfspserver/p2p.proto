@@ -1,0 +1,32 @@
+syntax = "proto3";
+package base.types.gfspserver;
+
+import "base/types/gfsperrors/error.proto";
+import "base/types/gfsptask/task.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
+
+message GfSpQueryP2PNodeRequest {
+}
+
+message GfSpQueryP2PNodeResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  repeated string nodes = 2;
+}
+
+message GfSpAskSecondaryReplicatePieceApprovalRequest {
+  base.types.gfsptask.GfSpReplicatePieceApprovalTask replicate_piece_approval_task = 1;
+  int32 min = 2;
+  int32 max = 3;
+  int64 timeout = 4;
+}
+
+message GfSpAskSecondaryReplicatePieceApprovalResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  repeated base.types.gfsptask.GfSpReplicatePieceApprovalTask approved_tasks = 2;
+}
+
+service GfSpP2PService {
+  rpc GfSpAskSecondaryReplicatePieceApproval(GfSpAskSecondaryReplicatePieceApprovalRequest) returns (GfSpAskSecondaryReplicatePieceApprovalResponse) {}
+  rpc GfSpQueryP2PBootstrap(GfSpQueryP2PNodeRequest) returns (GfSpQueryP2PNodeResponse) {}
+}

@@ -6,6 +6,7 @@ import (
 	"io"
 	"time"
 
+	corepiecestore "github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
@@ -21,31 +22,28 @@ type PieceStoreAPI interface {
 	PutPiece(key string, value []byte) error
 }
 
-type StoreClient struct {
-	ps *piece.PieceStore
-}
+var _ corepiecestore.PieceStore = &StoreClient{}
 
-const (
-	getPieceMethodName    = "getPiece"
-	putPieceMethodName    = "putPiece"
-	deletePieceMethodName = "deletePiece"
-)
+type StoreClient struct {
+	name string
+	ps   *piece.PieceStore
+}
 
 func NewStoreClient(pieceConfig *storage.PieceStoreConfig) (*StoreClient, error) {
 	ps, err := piece.NewPieceStore(pieceConfig)
 	if err != nil {
 		return nil, err
 	}
-	return &StoreClient{ps: ps}, nil
+	return &StoreClient{ps: ps, name: pieceConfig.Store.Storage}, nil
 }
 
 // GetPiece gets piece data from piece store.
 func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, limit int64) ([]byte, error) {
 	startTime := time.Now()
 	defer func() {
-		observer := metrics.PieceStoreTimeHistogram.WithLabelValues(getPieceMethodName)
-		observer.Observe(time.Since(startTime).Seconds())
-		metrics.PieceStoreRequestTotal.WithLabelValues(getPieceMethodName)
+		metrics.GetPieceTimeHistogram.WithLabelValues(client.name).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GetPieceTimeCounter.WithLabelValues(client.name).Inc()
 	}()
 
 	rc, err := client.ps.Get(ctx, key, offset, limit)
@@ -63,25 +61,43 @@ func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, lim
 }
 
 // PutPiece puts piece to piece store.
-func (client *StoreClient) PutPiece(key string, value []byte) error {
-	startTime := time.Now()
+func (client *StoreClient) PutPiece(ctx context.Context, key string, value []byte) error {
+	var (
+		startTime = time.Now()
+		err       error
+	)
 	defer func() {
-		observer := metrics.PieceStoreTimeHistogram.WithLabelValues(putPieceMethodName)
-		observer.Observe(time.Since(startTime).Seconds())
-		metrics.PieceStoreRequestTotal.WithLabelValues(putPieceMethodName)
+		metrics.PutPieceTimeHistogram.WithLabelValues(client.name).Observe(
+			time.Since(startTime).Seconds())
+		metrics.PutPieceTimeCounter.WithLabelValues(client.name).Inc()
+		if err != nil {
+			metrics.PieceWriteSizeGauge.WithLabelValues(client.name).Add(float64(len(value)))
+		}
 	}()
-
-	return client.ps.Put(context.Background(), key, bytes.NewReader(value))
+	err = client.ps.Put(ctx, key, bytes.NewReader(value))
+	return err
 }
 
 // DeletePiece deletes piece from piece store.
-func (client *StoreClient) DeletePiece(key string) error {
-	startTime := time.Now()
+func (client *StoreClient) DeletePiece(ctx context.Context, key string) error {
+	var (
+		startTime = time.Now()
+		err       error
+		valSize   int
+	)
 	defer func() {
-		observer := metrics.PieceStoreTimeHistogram.WithLabelValues(deletePieceMethodName)
-		observer.Observe(time.Since(startTime).Seconds())
-		metrics.PieceStoreRequestTotal.WithLabelValues(deletePieceMethodName)
+		metrics.DeletePieceTimeHistogram.WithLabelValues(client.name).Observe(
+			time.Since(startTime).Seconds())
+		metrics.DeletePieceTimeCounter.WithLabelValues(client.name).Inc()
+		if err != nil {
+			metrics.PieceWriteSizeGauge.WithLabelValues(client.name).Add(0 - float64(valSize))
+		}
 	}()
-
-	return client.ps.Delete(context.Background(), key)
+	val, err := client.GetPiece(ctx, key, 0, -1)
+	if err != nil {
+		return err
+	}
+	valSize = len(val)
+	err = client.ps.Delete(ctx, key)
+	return err
 }

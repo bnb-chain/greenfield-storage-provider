@@ -1,0 +1,30 @@
+syntax = "proto3";
+package base.types.gfspp2p;
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p";
+
+// Ping defines the heartbeat request between p2p nodes
+message GfSpPing {
+  // sp_operator_address define sp operator public key
+  string sp_operator_address = 1;
+  // signature define the signature of sp sign the msg
+  bytes signature = 2;
+}
+
+// Node defines the p2p node info
+message GfSpNode {
+  // node_id defines the node id
+  string node_id = 1;
+  // multi_addr define the node multi addr
+  repeated string multi_addr = 2;
+}
+
+// Pong defines the heartbeat response between p2p nodes
+message GfSpPong {
+  // nodes define the
+  repeated GfSpNode nodes = 1;
+  // sp_operator_address define sp operator public key
+  string sp_operator_address = 2;
+  // signature define the signature of sp sign the msg
+  bytes signature = 3;
+}

@@ -252,8 +252,17 @@ func (zl *logger) getMetaInfo(ctx context.Context) []zap.Field {
 	if traceID, ok := metadata.GetValue(ctx, "trace_id"); ok {
 		fields = append(fields, zap.String("trace_id", traceID))
 	}
+	if bucketName, ok := metadata.GetValue(ctx, "bucket_name"); ok {
+		fields = append(fields, zap.String("bucket_name", bucketName))
+	}
 	if objectID, ok := metadata.GetValue(ctx, "object_id"); ok {
 		fields = append(fields, zap.String("object_id", objectID))
+	}
+	if objectName, ok := metadata.GetValue(ctx, "object_name"); ok {
+		fields = append(fields, zap.String("object_id", objectName))
+	}
+	if taskKey, ok := metadata.GetValue(ctx, "task_key"); ok {
+		fields = append(fields, zap.String("task_key", taskKey))
 	}
 	return fields
 }

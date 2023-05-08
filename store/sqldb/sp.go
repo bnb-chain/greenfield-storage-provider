@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"gorm.io/gorm"
@@ -157,7 +158,7 @@ func (s *SpDBImpl) FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.
 }
 
 // GetSpByAddress query sp info in db by address and address type
-func (s *SpDBImpl) GetSpByAddress(address string, addressType SpAddressType) (*sptypes.StorageProvider, error) {
+func (s *SpDBImpl) GetSpByAddress(address string, addressType corespdb.SpAddressType) (*sptypes.StorageProvider, error) {
 	condition, err := getAddressCondition(addressType)
 	if err != nil {
 		return nil, err
@@ -190,16 +191,16 @@ func (s *SpDBImpl) GetSpByAddress(address string, addressType SpAddressType) (*s
 }
 
 // getAddressCondition return different condition by address type
-func getAddressCondition(addressType SpAddressType) (string, error) {
+func getAddressCondition(addressType corespdb.SpAddressType) (string, error) {
 	var condition string
 	switch addressType {
-	case OperatorAddressType:
+	case corespdb.OperatorAddressType:
 		condition = "operator_address = ? and is_own = false"
-	case FundingAddressType:
+	case corespdb.FundingAddressType:
 		condition = "funding_address = ? and is_own = false"
-	case SealAddressType:
+	case corespdb.SealAddressType:
 		condition = "seal_address = ? and is_own = false"
-	case ApprovalAddressType:
+	case corespdb.ApprovalAddressType:
 		condition = "approval_address = ? and is_own = false"
 	default:
 		return "", fmt.Errorf("unknown address type")
