@@ -1,12 +1,12 @@
 
-- address: 0x74B5c0dD012ffD286258e9BC6A6f362c55223Fa1
+- address: 0x8bd14d75532310a627e86BaBbcb87c60f112FF91
   name: sp3_fund
-  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A3aoyQOF6TSzYFHUTh0BhL/LIdg+5QSjUP2IHv+5VT5x"}'
-  pubkey_hex: 0376a8c90385e934b36051d44e1d0184bfcb21d83ee504a350fd881effb9553e71
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AmGWg79UX+mT9LWT1/h7sg44+tF1qS4QQ1iBlLjD2DpP"}'
+  pubkey_hex: 02619683bf545fe993f4b593d7f87bb20e38fad175a92e1043588194b8c3d83a4f
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-federal trust head kitchen settle duck manage provide just rocket north merge divorce novel virus rebuild hobby warrior razor drop smoke math divorce jazz
+shield scatter hedgehog lamp sport follow evil armed glow drama sound gate inside scissors they amount weapon merry slab dose piece uniform fork movie

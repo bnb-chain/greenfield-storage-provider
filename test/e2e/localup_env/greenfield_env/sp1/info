@@ -1,12 +1,12 @@
 
-- address: 0x45121B830fD87F7Fa8fcb0C0FD5FbbA243e26F80
+- address: 0xd81c18DD0deA2CdAC6280d15d03B4779f4041ff7
   name: sp1
-  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"ApmfHs0+DXtWZTQx4g8Er1iB/6XrHZxLtX/ec7tDv5jw"}'
-  pubkey_hex: 02999f1ecd3e0d7b56653431e20f04af5881ffa5eb1d9c4bb57fde73bb43bf98f0
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AsiTCxTSSarZm1vLY8koDIdkQGF043UCIzvXWQ4hDT83"}'
+  pubkey_hex: 02c8930b14d249aad99b5bcb63c9280c8764406174e37502233bd7590e210d3f37
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-vital truly trouble burden fold floor trophy arrest siege thumb harsh truly alert layer please divert group world pave apple zone stool laptop spray
+fox furnace wild faculty number anchor ski gain orchard autumn venue hole comfort hunt mountain page clinic disagree run grid opera antique off prepare

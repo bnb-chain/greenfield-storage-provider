@@ -1,12 +1,12 @@
 
-- address: 0x44DcEa7c0B28eeb3E43125BcE6fbE3136434ad82
+- address: 0xD126a35491DBDac2A01bB0E6d4b6951379C8607f
   name: validator_bls0
-  pubkey: '{"@type":"/cosmos.crypto.eth.bls.PubKey","key":"qpF80Y0Ha0dXplzTiWQgyOYD58mgnQDiMXsDLETc6nwLKO6z5DElvOb74xNkNK2C"}'
-  pubkey_hex: aa917cd18d076b4757a65cd3896420c8e603e7c9a09d00e2317b032c44dcea7c0b28eeb3e43125bce6fbe3136434ad82
+  pubkey: '{"@type":"/cosmos.crypto.eth.bls.PubKey","key":"tIO9aa6MMC6etYu2kAV7hUMnNe40c607IrAMoNEmo1SR29rCoBuw5tS2lRN5yGB/"}'
+  pubkey_hex: b483bd69ae8c302e9eb58bb690057b85432735ee3473ad3b22b00ca0d126a35491dbdac2a01bb0e6d4b6951379c8607f
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-panel blood timber stage card garlic april scissors fruit sugar dolphin rib atom series hill modify quit famous recall jaguar midnight evoke history diary
+item auction fiscal current equal cup heavy urban rate degree sniff youth remember laugh alley monster loyal arrange general yard impose world simple actor

@@ -1,12 +1,12 @@
 
-- address: 0x4e267cc82769a07Ab0b2a00c77BD6B71a3B87Be3
+- address: 0xAAF911Eb3411Dd2080c9F0B7B3CB633cBC190388
   name: sp1_seal
-  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AxNOyWcO9Ue1GJif2gke/CHcFVbWEm5JiK7vqqQLBU16"}'
-  pubkey_hex: 03134ec9670ef547b518989fda091efc21dc1556d6126e4988aeefaaa40b054d7a
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A/W4ssTPHvsyvwwpXdyVkc4xeRlYYszsNR0JdGQxHoKz"}'
+  pubkey_hex: 03f5b8b2c4cf1efb32bf0c295ddc9591ce3179195862ccec351d097464311e82b3
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-travel chapter envelope theme solid cute runway naive slush equal parrot acoustic gap present clock snap wool about hat now pepper lounge true wide
+piano cloud sorry glide turkey such test perfect rule satoshi couch reject occur program cruise hazard must earn enjoy clinic current monkey fine goddess

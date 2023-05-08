@@ -1,12 +1,12 @@
 
-- address: 0x42317E5d6122FFDcDaC76C996ef2e940723920c5
+- address: 0xE0AE8a0616f32dC71fb0C5A258EF93488B558fCf
   name: sp0_seal
-  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A7Sczgh5LMoow7cTThk0CJ6dVyiaOCnjIgF5jjlhgUP+"}'
-  pubkey_hex: 03b49cce08792cca28c3b7134e1934089e9d57289a3829e32201798e39618143fe
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"Agxx75ceLdQ9aFfI4DD3VXXOJpFCyg39jF96RyyNbuwB"}'
+  pubkey_hex: 020c71ef971e2dd43d6857c8e030f75575ce269142ca0dfd8c5f7a472c8d6eec01
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-bamboo balcony modify fat helmet valve range quarter lamp slush beef danger invite region grain yellow unaware street remember crane inquiry panel pulse pride
+curious front burst churn weather afford wait fabric coin oven latin equip aisle stem urge category chat scare october enrich inside announce beach place

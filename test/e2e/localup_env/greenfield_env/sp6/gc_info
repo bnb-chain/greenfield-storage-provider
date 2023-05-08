@@ -1,12 +1,12 @@
 
-- address: 0xeBb18AAF3Dfe5A68381C0Fe7b229537082C0F311
+- address: 0xB43a9dcB0FDe42d38475be0174FECD14c9E1F57E
   name: sp6_gc
-  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A5sIaUwcb6oBo7+gLMoE2K5IUPV/E+7pDmhvJBEJW/e7"}'
-  pubkey_hex: 039b08694c1c6faa01a3bfa02cca04d8ae4850f57f13eee90e686f2411095bf7bb
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A79qLdDNeavT851NcmOMAARt2So5ec0FteK5CquAnGfH"}'
+  pubkey_hex: 03bf6a2dd0cd79abd3f39d4d72638c00046dd92a3979cd05b5e2b90aab809c67c7
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-clean plastic abandon gossip idle hope danger earth merge south oxygen slab local hole novel allow bar arena kite narrow thought angry salmon extend
+draft clog human model inspire unaware neck salon milk weekend alone find seek silent zone wisdom increase install rug drip code mango elite across

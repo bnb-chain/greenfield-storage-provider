@@ -23,6 +23,8 @@ env:
   MYSQL_USER: root
   MYSQL_PASSWORD: root
   MYSQL_ROOT_PASSWORD: root
+  MYSQL_IP: 127.0.0.1
+  MYSQL_PORT: 3306
 
 jobs:
   e2e-test:
@@ -59,25 +61,19 @@ jobs:
       - name: Run MySQL
         run: |
           sudo /etc/init.d/mysql start
-          mysql -h 127.0.0.1 -P 3306 -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
+          mysql -h${{ env.MYSQL_IP }} -P${{ env.MYSQL_PORT }} -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
       # Run Greenfield
       - name: Run Greenfield
         run: |
-          /bin/cp -rf test/e2e/localup_env/greenfield_env greenfield/deployment/localup/.local
           cd greenfield
-          bash ./deployment/localup/localup.sh start 1
+          bash ./deployment/localup/localup.sh all 1 7
+          bash ./deployment/localup/localup.sh export_sps 1 7 > sp.json
           cd ..
       # Run Greenfield-SPs
       - name: Run Greenfield-SPs
         run: |
-          /bin/cp -rf test/e2e/localup_env/greenfield_sp_env deployment/localup/local_env
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp0/gnfd-sp0
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp1/gnfd-sp1
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp2/gnfd-sp2
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp3/gnfd-sp3
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp4/gnfd-sp4
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp5/gnfd-sp5
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp6/gnfd-sp6
+          bash ./deployment/localup/localup.sh --generate $GITHUB_WORKSPACE/../greenfield/sp.json ${{ env.MYSQL_USER }} ${{ env.MYSQL_PASSWORD }} ${{ env.MYSQL_IP }}:${{ env.MYSQL_PORT }}
+          bash ./deployment/localup/localup.sh --reset
           bash ./deployment/localup/localup.sh --start
           sleep 5
           tail -n 1000 deployment/localup/local_env/sp0/gnfd-sp.log

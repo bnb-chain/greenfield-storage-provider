@@ -1,12 +1,12 @@
 
-- address: 0x7d7f89633cb532A25287da9D958ca70D0Ef9e2C1
+- address: 0x3809D95CdcC476344C27Ab420742b111cC222e7c
   name: relayer0
-  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A6DvfkV4wecznP9nkZnBJseQAp5MHcVRdHeYvNPAMZjA"}'
-  pubkey_hex: 03a0ef7e4578c1e7339cff679199c126c790029e4c1dc551747798bcd3c03198c0
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AgW7GGiAYmkz8K7H4Mfs0tVxewmcyhnWKucYxenxJXA2"}'
+  pubkey_hex: 0205bb186880626933f0aec7e0c7ecd2d5717b099cca19d62ae718c5e9f1257036
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-chest card avocado victory tell wrist open inject talent gun modify gentle sentence machine fossil razor basket celery mountain toward hybrid task bamboo about
+salad divide brown motor notable intact reveal cost spray pizza crisp lobster just win similar mosquito head neutral dynamic kick hub stereo puzzle lottery

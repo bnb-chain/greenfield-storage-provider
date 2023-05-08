@@ -130,10 +130,10 @@ global-labels = [
 [api]
 
 # Enable defines if the API server should be enabled.
-enable = true
+enable = false
 
 # Swagger defines if swagger documentation should automatically be registered.
-swagger = true
+swagger = false
 
 # Address defines the API server to listen on.
 address = "tcp://localhost:1317"
@@ -187,7 +187,7 @@ gas-to-suggest = 200000
 
 # DenomToSuggest defines the defult denom for fee suggestion.
 # Price must be in minimum-gas-prices.
-denom-to-suggest = "BNB"
+denom-to-suggest = "uatom"
 
 ###############################################################################
 ###                           gRPC Configuration                            ###
@@ -235,10 +235,10 @@ enable-unsafe-cors = false
 
 # snapshot-interval specifies the block interval at which local state sync snapshots are
 # taken (0 to disable).
-snapshot-interval = 10
+snapshot-interval = 0
 
 # snapshot-keep-recent specifies the number of recent snapshots to keep and serve (0 to keep all).
-snapshot-keep-recent = 0
+snapshot-keep-recent = 2
 
 ###############################################################################
 ###                         Store / State Streaming                         ###
@@ -281,6 +281,6 @@ max-txs = "5000"
 ###############################################################################
 [cross-chain]
 # chain-id for current chain
-src-chain-id = 18
+src-chain-id = 1
 # chain-id for destination chain(bsc)
-dest-chain-id = 714
+dest-chain-id = 2
