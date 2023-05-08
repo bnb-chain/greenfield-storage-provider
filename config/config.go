@@ -40,7 +40,7 @@ type StorageProviderConfig struct {
 	P2PCfg             *p2p.NodeConfig
 	LogCfg             *LogConfig
 	MetricsCfg         *metrics.MetricsConfig
-	PProfCfg          *pprof.PProfConfig
+	PProfCfg           *pprof.PProfConfig
 	RateLimiter        *localhttp.RateLimiterConfig
 	DiscontinueCfg     *stopserving.DiscontinueConfig
 	MetadataCfg        *metadata.MetadataConfig
