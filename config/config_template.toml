@@ -56,10 +56,13 @@ OperatorPrivateKey = ""
 FundingPrivateKey = ""
 SealPrivateKey = ""
 ApprovalPrivateKey = ""
+GcPrivateKey = ""
 
 [BlockSyncerCfg]
-Modules = ["epoch", "bucket", "object", "payment"]
-Dsn = "localhost:3308"
+Modules = ["epoch", "bucket", "object", "payment", "permission", "group"]
+Dsn = "root:passwd@tcp(localhost:3306)/block_syncer?parseTime=true&multiStatements=true&loc=Local"
+RecreateTables = false
+Workers = 10
 
 [P2PCfg]
 ListenAddress = "127.0.0.1:9833"
@@ -67,13 +70,17 @@ P2PPrivateKey = ""
 Bootstrap = []
 PingPeriod = 2
 
+[LogCfg]
+Level = "debug"
+Path = "./gnfd-sp.log"
+
 [MetricsCfg]
 Enabled = false
 HTTPAddress = "localhost:24036"
 
-[LogCfg]
-Level = "debug"
-Path = "./gnfd-sp.log"
+[PProfCfg]
+Enabled = false
+HTTPAddress = "localhost:25341"
 
 [RateLimiter]
 APILimits = []
@@ -84,3 +91,6 @@ PathPattern = []
 On = false
 RateLimit = 1
 RatePeriod = "S"
+
+[StopServingCfg]
+BucketKeepAliveDays = 7

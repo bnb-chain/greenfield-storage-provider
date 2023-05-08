@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
-
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
@@ -13,7 +11,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -23,6 +23,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stopserving"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
@@ -88,6 +89,24 @@ func initResourceManager(ctx *cli.Context) error {
 		return err
 	}
 	log.Infow("init resource manager", "limits", limits.String(), "error", err)
+	return nil
+}
+
+// initPProf initializes global pprof service for performance monitoring.
+func initPProf(ctx *cli.Context, cfg *config.StorageProviderConfig) error {
+	if cfg.PProfCfg == nil {
+		cfg.PProfCfg = config.DefaultPProfConfig
+	}
+	if ctx.IsSet(utils.PProfEnabledFlag.Name) {
+		cfg.PProfCfg.Enabled = ctx.Bool(utils.PProfEnabledFlag.Name)
+	}
+	if ctx.IsSet(utils.PProfHTTPFlag.Name) {
+		cfg.PProfCfg.HTTPAddress = ctx.String(utils.PProfHTTPFlag.Name)
+	}
+	if cfg.PProfCfg.Enabled {
+		slc := lifecycle.NewServiceLifecycle()
+		slc.RegisterServices(pprof.NewPProf(cfg.PProfCfg))
+	}
 	return nil
 }
 
@@ -202,7 +221,15 @@ func initService(serviceName string, cfg *config.StorageProviderConfig) (server 
 		if err != nil {
 			return nil, err
 		}
-
+	case model.StopServingService:
+		ssCfg, err := cfg.MakeStopServingServiceConfig()
+		if err != nil {
+			return nil, err
+		}
+		server, err = stopserving.NewStopServingService(ssCfg)
+		if err != nil {
+			return nil, err
+		}
 	default:
 		log.Errorw("unknown service", "service", serviceName)
 		return nil, fmt.Errorf("unknown service: %s", serviceName)

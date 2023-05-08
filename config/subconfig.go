@@ -22,6 +22,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stopserving"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
@@ -263,7 +264,7 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 			},
 		},
 		Parser: parserconfig.Config{
-			Workers: 1,
+			Workers: int64(cfg.BlockSyncerCfg.Workers),
 		},
 		Database: databaseconfig.Config{
 			Type:               "mysql",
@@ -311,4 +312,23 @@ func (cfg *StorageProviderConfig) MakeAuthServiceConfig() (*auth.AuthConfig, err
 		return nil, fmt.Errorf("missing auth gRPC address configuration for auth service")
 	}
 	return aCfg, nil
+}
+
+// MakeStopServingServiceConfig make stop serving service config from StorageProviderConfig
+func (cfg *StorageProviderConfig) MakeStopServingServiceConfig() (*stopserving.StopServingConfig, error) {
+	ssCfg := &stopserving.StopServingConfig{
+		SpOperatorAddress: cfg.SpOperatorAddress,
+		DiscontinueConfig: cfg.DiscontinueCfg,
+	}
+	if _, ok := cfg.ListenAddress[model.SignerService]; ok {
+		ssCfg.SignerGrpcAddress = cfg.ListenAddress[model.SignerService]
+	} else {
+		return nil, fmt.Errorf("missing signer gRPC address configuration for stop serving service")
+	}
+	if _, ok := cfg.Endpoint[model.MetadataService]; ok {
+		ssCfg.MetadataGrpcAddress = cfg.Endpoint[model.MetadataService]
+	} else {
+		return nil, fmt.Errorf("missing metadata gRPC address configuration for stop serving service")
+	}
+	return ssCfg, nil
 }

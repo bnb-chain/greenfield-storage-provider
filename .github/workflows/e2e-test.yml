@@ -16,8 +16,8 @@ on:
       - fix-release*
 
 env:
-  GreenfileldTag: 91d2e1d1d43c4ada622c44490e7a3cf758489aad
-  GreenfileldIntegrationTestBranch: fynn/new_sdk_test
+  GreenfieldTag: v0.1.2
+  GreenfieldIntegrationTestBranch: fynn/new_sdk_test
   GOPRIVATE: github.com/bnb-chain
   GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   MYSQL_USER: root
@@ -52,7 +52,7 @@ jobs:
         run: |
           git clone https://github.com/bnb-chain/greenfield.git
           cd greenfield
-          git checkout ${{ env.GreenfileldTag }}
+          git checkout ${{ env.GreenfieldTag }}
           make proto-gen & make build
           cd ..
       # Run MySQL
@@ -67,7 +67,7 @@ jobs:
           cd greenfield
           bash ./deployment/localup/localup.sh start 1
           cd ..
-      # Run Greenfield-SP
+      # Run Greenfield-SPs
       - name: Run Greenfield-SPs
         run: |
           /bin/cp -rf test/e2e/localup_env/greenfield_sp_env deployment/localup/local_env
@@ -87,7 +87,7 @@ jobs:
         run: |
           git clone https://github.com/bnb-chain/greenfield-integration-test.git
           cd greenfield-integration-test
-          git checkout ${{ env.GreenfileldIntegrationTestBranch }}
+          git checkout ${{ env.GreenfieldIntegrationTestBranch }}
           cd ..
           /bin/cp -rf test/e2e/localup_env/integration_config/config.yml greenfield-integration-test/config/config.yml
           cd greenfield-integration-test

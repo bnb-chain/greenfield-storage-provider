@@ -72,8 +72,8 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 			msg               = types.MsgCreateBucket{}
 			approvalSignature []byte
 		)
-		if types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg) != nil {
-			log.Errorw("failed to unmarshal approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+		if err = types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg); err != nil {
+			log.Errorw("failed to unmarshal approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader), "error", err)
 			errDescription = InvalidHeader
 			return
 		}
@@ -97,8 +97,8 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 			msg               = types.MsgCreateObject{}
 			approvalSignature []byte
 		)
-		if types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg) != nil {
-			log.Errorw("failed to unmarshal approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+		if err = types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg); err != nil {
+			log.Errorw("failed to unmarshal approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader), "error", err)
 			errDescription = InvalidHeader
 			return
 		}
