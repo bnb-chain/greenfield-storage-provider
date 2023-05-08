@@ -53,18 +53,24 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 func LoadDBConfigFromEnv(config *metadata.MetadataConfig) {
 	if val, ok := os.LookupEnv(model.BsDBUser); ok {
 		config.BsDBConfig.User = val
-		config.BsDBSwitchedConfig.User = val
 	}
 	if val, ok := os.LookupEnv(model.BsDBPasswd); ok {
 		config.BsDBConfig.Passwd = val
-		config.BsDBSwitchedConfig.Passwd = val
 	}
 	if val, ok := os.LookupEnv(model.BsDBAddress); ok {
 		config.BsDBConfig.Address = val
-		config.BsDBSwitchedConfig.Address = val
 	}
 	if val, ok := os.LookupEnv(model.BsDBDataBase); ok {
 		config.BsDBConfig.Database = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedUser); ok {
+		config.BsDBSwitchedConfig.User = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedPasswd); ok {
+		config.BsDBSwitchedConfig.Passwd = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedAddress); ok {
+		config.BsDBSwitchedConfig.Address = val
 	}
 	if val, ok := os.LookupEnv(model.BsDBSwitchedDataBase); ok {
 		config.BsDBSwitchedConfig.Database = val

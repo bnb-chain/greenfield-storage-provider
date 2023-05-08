@@ -135,5 +135,5 @@ func (metadata *Metadata) switchDB(flag bool) {
 		metadata.bsDB = metadata.bsDBBlockSyncerBackUp
 	}
 	metadata.config.BsDBFlag = flag
-	log.Infow("db switched successfully")
+	log.Info("db switched successfully")
 }

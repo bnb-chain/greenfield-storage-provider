@@ -113,6 +113,12 @@ const (
 	BsDBAddress = "BS_DB_ADDRESS"
 	// BsDBDataBase defines env variable name for block syncer db database
 	BsDBDataBase = "BS_DB_DATABASE"
+	// BsDBSwitchedUser defines env variable name for switched block syncer db user name
+	BsDBSwitchedUser = "BS_DB_SWITCHED_USER"
+	// BsDBSwitchedPasswd defines env variable name for switched block syncer db user passwd
+	BsDBSwitchedPasswd = "BS_DB_SWITCHED_PASSWORD"
+	// BsDBSwitchedAddress defines env variable name for switched block syncer db address
+	BsDBSwitchedAddress = "BS_DB_SWITCHED_ADDRESS"
 	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database
 	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
 
