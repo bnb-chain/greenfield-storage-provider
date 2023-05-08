@@ -1,13 +1,12 @@
 
-- address: 0xD3CCED2df7F0FEEB8C3bf0316fe47b762e9D2333
+- address: 0x118edf511A32DEA0016d90fCD6083a9a6ad07966
   name: sp4_fund
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AtFrXxlSkODvajYg58n9VBYE9fXTI9o0j74fP/6vXB9L"}'
-  pubkey_hex: 02d16b5f195290e0ef6a3620e7c9fd541604f5f5d323da348fbe1f3ffeaf5c1f4b
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AggfGTznBUjzJjmWHXw/w2fcjogfIByceekJDi3XCABg"}'
+  pubkey_hex: 02081f193ce70548f32639961d7c3fc367dc8e881f201c9c79e9090e2dd7080060
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-cry clap steak clip exile split chat divert auction radar address acquire exist crop version kite peanut chapter cabbage usual zone net border wrestle
-
+pull tone speak squirrel real pipe neglect trigger caught attend vivid impose adjust pizza aware cloud certain language prosper express dumb social hip action

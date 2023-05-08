@@ -1,13 +1,12 @@
 
-- address: 0xDe3dac18Cf94cb8d088724dD8Ff3918d1a32184A
+- address: 0x4B628d97750C1D172813c3e88D1135fb95ea27fc
   name: sp5_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A8QDNYhUALfj/dah+aZvdUyDGKu7yW8a8XzOGcW5qJEw"}'
-  pubkey_hex: 03c40335885400b7e3fdd6a1f9a66f754c8318abbbc96f1af17cce19c5b9a89130
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"ArgiXcRrvQMJv/W4EXMTKFNilrifhnm6Fd0mkpC3iGqB"}'
+  pubkey_hex: 02b8225dc46bbd0309bff5b811731328536296b89f8679ba15dd269290b7886a81
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-weather error video airport jelly brisk tribe space alien usual goat busy calm stage squirrel undo memory thrive vendor couch valid give begin used
-
+mom flush acquire toy code broken speak all embody cannon easy mystery short razor anchor tattoo frequent episode report expire lion virtual unfold orphan

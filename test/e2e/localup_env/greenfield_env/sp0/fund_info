@@ -1,13 +1,12 @@
 
-- address: 0x21c6ff21DD7012DE1CCf9055f2eB234A44a1d3fB
+- address: 0x88a34167d2aFaB5E089c9cEBB8Cf8E9927335998
   name: sp0_fund
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Atn68pBPD/EuGddp5S7X12q49I+lhjUYS1B4pdiXbQS0"}'
-  pubkey_hex: 02d9faf2904f0ff12e19d769e52ed7d76ab8f48fa58635184b5078a5d8976d04b4
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AmCedMdsgj6DWl2Mrcwh7ImNcb0/NPrSLRLEC5uc6Q9o"}'
+  pubkey_hex: 02609e74c76c823e835a5d8cadcc21ec898d71bd3f34fad22d12c40b9b9ce90f68
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-cousin deal public off glide safe worry toy confirm drama dove tape alpha flower nation airport quality harbor live school evil hobby buddy alarm
-
+venture eager foster spread cruel lamp pupil ridge trial response sight champion dose vanish gaze smoke over act video liar help hub response cinnamon

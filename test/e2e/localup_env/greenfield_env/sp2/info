@@ -1,13 +1,12 @@
 
-- address: 0x7404bF71c297eE7f389a7876f4716003a2BaD2d0
+- address: 0x86b1C8e74eA1A119541d0B8f8c00ee647B6FCf8c
   name: sp2
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AunBRFIpcP3Zqv3sfh4HetL1b0l3FR2CKneVB1NKDg4Y"}'
-  pubkey_hex: 02e9c144522970fdd9aafdec7e1e077ad2f56f4977151d822a779507534a0e0e18
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A63ItinDjvjMzy/sWvXVWehcTwpdOq0X7swjiWe42ZEj"}'
+  pubkey_hex: 03adc8b629c38ef8cccf2fec5af5d559e85c4f0a5d3aad17eecc238967b8d99123
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-leaf beauty dutch enable dwarf bachelor panic broom frost urban fatal virtual radar hip old size voyage maximum lounge claw bleak accuse latin gate
-
+slight daring impose design embrace where beach catch glad subject list jacket chunk call evil steel unusual kitchen fix ill coast broom frost predict

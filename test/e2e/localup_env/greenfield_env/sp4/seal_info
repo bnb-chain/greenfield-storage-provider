@@ -1,13 +1,12 @@
 
-- address: 0xbb09F37b6BBaEc3dcC2D26746a0e7826717e11A9
+- address: 0x777c2FA1Ce50106a484A5452A59b5e3AD30E22F4
   name: sp4_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A1IpVNte9xbn5JpM2bGXtZ77nhqZbXZxRbrQpYmYxWox"}'
-  pubkey_hex: 03522954db5ef716e7e49a4cd9b197b59efb9e1a996d767145bad0a58998c56a31
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A4x5r3LFy4EaFdK8wKH6cbMckRcBodTNAJOO47RcbweP"}'
+  pubkey_hex: 038c79af72c5cb811a15d2bcc0a1fa71b31c911701a1d4cd00938ee3b45c6f078f
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-rural desert sniff chief crucial raise nest mountain hold term judge behave emerge summer license jewel roof deliver clerk rather match october whisper arrow
-
+tilt auto target stock river hurdle voice since grief help year assist fabric dignity pill sibling sudden hawk ball dance joy tilt federal casual

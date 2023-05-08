@@ -166,8 +166,8 @@ func (t *replicateObjectTask) init() error {
 		return err
 	}
 	t.segmentPieceNumber = int(piecestore.ComputeSegmentCount(t.objectInfo.GetPayloadSize(),
-		t.storageParams.GetMaxSegmentSize()))
-	t.redundancyNumber = int(t.storageParams.GetRedundantDataChunkNum() + t.storageParams.GetRedundantParityChunkNum())
+		t.storageParams.VersionedParams.GetMaxSegmentSize()))
+	t.redundancyNumber = int(t.storageParams.VersionedParams.GetRedundantDataChunkNum() + t.storageParams.VersionedParams.GetRedundantParityChunkNum())
 	if t.redundancyNumber+1 != len(t.objectInfo.GetChecksums()) {
 		log.CtxError(t.ctx, "failed to init due to redundancy number is not equal to checksums")
 		return merrors.ErrInvalidParams
@@ -182,13 +182,13 @@ func (t *replicateObjectTask) init() error {
 
 	// calculate the reserve memory, which is used in execute time
 	if t.objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
-		t.approximateMemSize = (int(t.storageParams.GetRedundantDataChunkNum()) +
-			int(t.storageParams.GetRedundantParityChunkNum())) *
+		t.approximateMemSize = (int(t.storageParams.VersionedParams.GetRedundantDataChunkNum()) +
+			int(t.storageParams.VersionedParams.GetRedundantParityChunkNum())) *
 			int(t.objectInfo.GetPayloadSize())
 	} else {
 		t.approximateMemSize = int(math.Ceil(
-			((float64(t.storageParams.GetRedundantDataChunkNum())+float64(t.storageParams.GetRedundantParityChunkNum()))/
-				float64(t.storageParams.GetRedundantDataChunkNum()) + 1) *
+			((float64(t.storageParams.VersionedParams.GetRedundantDataChunkNum())+float64(t.storageParams.GetRedundantParityChunkNum()))/
+				float64(t.storageParams.VersionedParams.GetRedundantDataChunkNum()) + 1) *
 				float64(t.objectInfo.GetPayloadSize())))
 	}
 

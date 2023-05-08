@@ -1,13 +1,12 @@
 
-- address: 0x1750861b3f3489303f62bF68dF0A8F5f18402088
+- address: 0x69256324A40dA2CF1b4B20E8073CA00d1D3Cd0cD
   name: sp2_gc
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A2c+AYB6meod/y8ZAx1lftZyK1M2oKtvWe7ySvExV0a7"}'
-  pubkey_hex: 03673e01807a99ea1dff2f19031d657ed6722b5336a0ab6f59eef24af1315746bb
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"Ay+euqcfd9Iseb8L9F1uBchOTrxogs/7gyBlGSKAz4BJ"}'
+  pubkey_hex: 032f9ebaa71f77d22c79bf0bf45d6e05c84e4ebc6882cffb832065192280cf8049
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-master stereo wine shoe volume project faith sight problem link angry relax balance adjust sunset question laugh return toilet aerobic pride cry fuel hope
-
+elephant gas pepper trust order prevent outdoor squirrel plug wear expire wrap curve romance denial guilt fog bench poem obtain ivory ostrich disagree toy

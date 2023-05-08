@@ -1,13 +1,12 @@
 
-- address: 0x8e424c6Db42Ad9A5d91b24e20b5f603eC70abbA3
+- address: 0x42317E5d6122FFDcDaC76C996ef2e940723920c5
   name: sp0_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AkLe97b4sZDIY7GbbfAqGC4uDYyEu627OOYBja53+OPY"}'
-  pubkey_hex: 0242def7b6f8b190c863b19b6df02a182e2e0d8c84bbadbb38e6018dae77f8e3d8
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A7Sczgh5LMoow7cTThk0CJ6dVyiaOCnjIgF5jjlhgUP+"}'
+  pubkey_hex: 03b49cce08792cca28c3b7134e1934089e9d57289a3829e32201798e39618143fe
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-rich friend wrong ignore learn vessel say keep science correct share certain obtain impose note panel mesh tonight spy term penalty deny abstract sun
-
+bamboo balcony modify fat helmet valve range quarter lamp slush beef danger invite region grain yellow unaware street remember crane inquiry panel pulse pride

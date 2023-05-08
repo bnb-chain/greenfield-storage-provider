@@ -1,13 +1,12 @@
 
-- address: 0x2322d76d80092c79E3Bd19099E6DA88Bc7d1C56F
+- address: 0xeBb18AAF3Dfe5A68381C0Fe7b229537082C0F311
   name: sp6_gc
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Aj0hx00z0zSKBtNh5XcI/b0PR13dgRMT8SFgR3DqyqOD"}'
-  pubkey_hex: 023d21c74d33d3348a06d361e57708fdbd0f475ddd811313f121604770eacaa383
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A5sIaUwcb6oBo7+gLMoE2K5IUPV/E+7pDmhvJBEJW/e7"}'
+  pubkey_hex: 039b08694c1c6faa01a3bfa02cca04d8ae4850f57f13eee90e686f2411095bf7bb
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-scare chase cereal shift hurdle brisk ice artist decide moral tattoo hospital pact unhappy alcohol dust mouse shrug version ocean best market also away
-
+clean plastic abandon gossip idle hope danger earth merge south oxygen slab local hole novel allow bar arena kite narrow thought angry salmon extend

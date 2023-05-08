@@ -1,13 +1,12 @@
 
-- address: 0x8576429dA5685740cBD9A9B847C6C141D2141285
+- address: 0x74B5c0dD012ffD286258e9BC6A6f362c55223Fa1
   name: sp3_fund
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AunJpB4+lk121hsWW5DH1OH1myjNXbLBSqoAa9+ssNee"}'
-  pubkey_hex: 02e9c9a41e3e964d76d61b165b90c7d4e1f59b28cd5db2c14aaa006bdfacb0d79e
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A3aoyQOF6TSzYFHUTh0BhL/LIdg+5QSjUP2IHv+5VT5x"}'
+  pubkey_hex: 0376a8c90385e934b36051d44e1d0184bfcb21d83ee504a350fd881effb9553e71
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-occur flame brief lounge enhance alone recycle virus gate ozone soup eternal artwork napkin plunge half damp dune sister anger firm general man voice
-
+federal trust head kitchen settle duck manage provide just rocket north merge divorce novel virus rebuild hobby warrior razor drop smoke math divorce jazz

@@ -1,13 +1,12 @@
 
-- address: 0xE3F63f5405Aba8320e7293455ae9BC792a519D9E
+- address: 0x82544274D141C59171DF681de8Ac3AbC65B578D5
   name: sp2_fund
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A+4LiyEKSqEnzVxTn3aLlMbZOr5F28ccTGMFqwUwdQCu"}'
-  pubkey_hex: 03ee0b8b210a4aa127cd5c539f768b94c6d93abe45dbc71c4c6305ab05307500ae
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AhaBMNmFVx+LI6Ad+oLdAscPwxiIG1ntsqDVGzGDq8y2"}'
+  pubkey_hex: 02168130d985571f8b23a01dfa82dd02c70fc318881b59edb2a0d51b3183abccb6
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-stable slush biology pond flight pave very captain absurd antenna stone runway glimpse sweet same hurdle until where quarter face book assume gate fire
-
+another weasel column blind tragic brief detect execute absent dynamic champion control online label asset chimney basic where fortune diamond artwork finger change injury

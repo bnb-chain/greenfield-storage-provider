@@ -1,13 +1,12 @@
 
-- address: 0xfa238a4B262e1dc35c4970A2296A2444B956c9Ca
+- address: 0xf9E6E44fF67cc26eFEd4F636EfFe5a1b167069e1
   name: sp0_gc
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AxYSHXFkOi/UcLqLPl9ea7dKFjKrvTW9DvsKQoRJCexO"}'
-  pubkey_hex: 0316121d71643a2fd470ba8b3e5f5e6bb74a1632abbd35bd0efb0a42844909ec4e
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AwzYorbKFf7GXr/9H/PUzhZZo/SIJIKjStmwh7kDaqdS"}'
+  pubkey_hex: 030cd8a2b6ca15fec65ebffd1ff3d4ce1659a3f4882482a34ad9b087b9036aa752
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-audit pigeon syrup easily loyal rifle hungry board suffer awkward clock still south online firm air fault shell toilet fever wedding accident canal market
-
+obtain candy spare never valid stomach spend sleep wear input pudding public cotton away range crime few drastic alert mandate group boil lift aisle

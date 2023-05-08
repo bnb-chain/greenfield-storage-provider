@@ -1,13 +1,12 @@
 
-- address: 0x47f847B834B4Da140B84BeF803Ff486318d914D1
+- address: 0x4e267cc82769a07Ab0b2a00c77BD6B71a3B87Be3
   name: sp1_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AiGmBYx+6pgojSSGVzp143+jvvq1OEFDM5xGuLcq/eZs"}'
-  pubkey_hex: 0221a6058c7eea98288d2486573a75e37fa3befab5384143339c46b8b72afde66c
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AxNOyWcO9Ue1GJif2gke/CHcFVbWEm5JiK7vqqQLBU16"}'
+  pubkey_hex: 03134ec9670ef547b518989fda091efc21dc1556d6126e4988aeefaaa40b054d7a
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-together recall deputy tissue purse funny juice horn name chicken square cradle change govern deposit observe river humble stadium panda thunder question thrive volcano
-
+travel chapter envelope theme solid cute runway naive slush equal parrot acoustic gap present clock snap wool about hat now pepper lounge true wide

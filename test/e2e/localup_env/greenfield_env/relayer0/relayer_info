@@ -1,13 +1,12 @@
 
-- address: 0x5f388CDAA20a3a1449cF5140DB11c361739D29a5
+- address: 0x7d7f89633cb532A25287da9D958ca70D0Ef9e2C1
   name: relayer0
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A22zR3mhMs1C/L5h/oFu20SK52pJTQkIfqusAdSip1Kc"}'
-  pubkey_hex: 036db34779a132cd42fcbe61fe816edb448ae76a494d09087eabac01d4a2a7529c
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A6DvfkV4wecznP9nkZnBJseQAp5MHcVRdHeYvNPAMZjA"}'
+  pubkey_hex: 03a0ef7e4578c1e7339cff679199c126c790029e4c1dc551747798bcd3c03198c0
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-cash swap toward bitter program search team distance head piece radar current miracle tribe club between devote people life brick raven spatial nose frame
-
+chest card avocado victory tell wrist open inject talent gun modify gentle sentence machine fossil razor basket celery mountain toward hybrid task bamboo about

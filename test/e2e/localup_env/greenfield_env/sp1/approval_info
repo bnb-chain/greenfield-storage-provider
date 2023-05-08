@@ -1,13 +1,12 @@
 
-- address: 0x326c2b6345e66f5a62eb36A152272Fe39400ffdb
+- address: 0xC5293d17aCDE7A769cff08E863145D707e7211F0
   name: sp1_approval
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AuaJ+Af+YWUdeX0Gv7Fy/1i4k0WMfCQX5dqw5uaVtc5E"}'
-  pubkey_hex: 02e689f807fe61651d797d06bfb172ff58b893458c7c2417e5dab0e6e695b5ce44
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A4dyt5NMfba9JtENIfIjmgIicOnepfPQKHDGdDONKlSN"}'
+  pubkey_hex: 038772b7934c7db6bd26d10d21f2239a022270e9dea5f3d02870c674338d2a548d
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-patrol walnut flee burst please bullet side choose situate coral cream february message rural run unaware express shallow hope ask myth fashion make ladder
-
+venue draft zoo cry return animal snake palm warrior chaos become squirrel wrestle limb brief again fossil tattoo metal nuclear wire toast reject awesome

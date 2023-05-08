@@ -1,13 +1,12 @@
 
-- address: 0xe9eF00e3EE51E74B8C8a81c2254a2DBA89258fBc
+- address: 0xCa3CBD2929fB528048c1093C8277A81ba42c1721
   name: sp6_fund
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Aq4IkCR6aPU6BFii+HLBDqt5XcAFIbhBrdl/8/ujZuME"}'
-  pubkey_hex: 02ae0890247a68f53a0458a2f872c10eab795dc00521b841add97ff3fba366e304
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AixEbSkfyq5qjbW2hfMHxHOGRJj2IQLp1Ph2DcwMR6SN"}'
+  pubkey_hex: 022c446d291fcaae6a8db5b685f307c473864498f62102e9d4f8760dcc0c47a48d
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-govern burden visit reject beyond ordinary velvet add wonder viable topple visit course response aerobic adult luggage loud muffin afraid duty sustain idea board
-
+decorate total cool hawk nest announce demise real spoil shuffle visit one sword swarm train online raccoon hotel believe clip decide wash seminar canoe

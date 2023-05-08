@@ -1,13 +1,12 @@
 
-- address: 0x349Bd22F569A29c7D23fA389c7242115363A3235
+- address: 0xADFfF93F38D7B712c3f9219c1b4D927DEdc72b29
   name: validator0
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Aqh0anjOE5HZR9RwRARqxNx+M1HEe9gTaXpmRbQOuNNS"}'
-  pubkey_hex: 02a8746a78ce1391d947d47044046ac4dc7e3351c47bd813697a6645b40eb8d352
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"Ay6f0lTk8p4jOnpXcqpPQs+7gWm7daJu637x8f4kBeiB"}'
+  pubkey_hex: 032e9fd254e4f29e233a7a5772aa4f42cfbb8169bb75a26eeb7ef1f1fe2405e881
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-genre kitten noodle symbol remove message vote search toddler bullet rent settle card ticket east alter bundle raw diamond under setup riot problem employ
-
+biology duty keen ghost jealous shock analyst attack toy sort inner defy chapter unfair until unfold grocery uniform upset fat purity cancel column walnut

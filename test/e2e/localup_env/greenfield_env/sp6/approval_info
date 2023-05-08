@@ -1,13 +1,12 @@
 
-- address: 0x79541c6faaa5317B498744364cC4FF25478F1509
+- address: 0xcBBd47968ba7680aCced51918214D79C301eD776
   name: sp6_approval
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AnfkCkhkYKwyUi/4y8CylZZc9PAA/nbBQuqVLt7txI0Z"}'
-  pubkey_hex: 0277e40a486460ac32522ff8cbc0b295965cf4f000fe76c142ea952edeedc48d19
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AokEo52MW/r1hhhFr0XPwCKfrsMvgWGKJzNkLKfaulL9"}'
+  pubkey_hex: 028904a39d8c5bfaf5861845af45cfc0229faec32f81618a2733642ca7daba52fd
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-false follow orange mansion scorpion wagon always yellow nose eager humor code gain behind urge stool load decrease clock seminar whisper quiz area help
-
+little kidney tiny museum uncle harsh squirrel mutual canvas plastic water uncover sand permit always industry acquire away green energy color manual index all

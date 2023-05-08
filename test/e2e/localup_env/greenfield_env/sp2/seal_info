@@ -1,13 +1,12 @@
 
-- address: 0x6E177FB137E608049b16F9365871368104a6A1a0
+- address: 0x710DD2862AD49009Fa436B73D162E8a4Cb3b568c
   name: sp2_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Avp6lK5CHnLTjYF48dTXOFSjgCq+t8ddXwF7P/jPit7g"}'
-  pubkey_hex: 02fa7a94ae421e72d38d8178f1d4d73854a3802abeb7c75d5f017b3ff8cf8adee0
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A00B8clhtVj8XvRPkBhxTpqkkHfCoIUQwjEfuFk4jha3"}'
+  pubkey_hex: 034d01f1c961b558fc5ef44f9018714e9aa49077c2a08510c2311fb859388e16b7
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-laptop soda aerobic neither buffalo where pumpkin trouble power cruel original grunt good sea mass reduce awake earn chimney input kiwi prosper kind scale
-
+faculty meat narrow silver special unknown gym move clip interest pony attend aim office pluck report tray sight coin reason phrase turtle vicious point

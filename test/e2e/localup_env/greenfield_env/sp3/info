@@ -1,13 +1,12 @@
 
-- address: 0x038c464091e2a2F9CA5270020B1483e77662581d
+- address: 0xf382CB035dF080C8Ce7eB58B94FfA08968642563
   name: sp3
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AlI1zdH9S23eNxL3l0ApP5Ptkhpd2e9jnMjb2vP1WnH7"}'
-  pubkey_hex: 025235cdd1fd4b6dde3712f79740293f93ed921a5dd9ef639cc8dbdaf3f55a71fb
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AzIYqdHRCTHCCOPg7vQRKE0XlCjFf9FhV8SfG9MhMtVz"}'
+  pubkey_hex: 033218a9d1d10931c208e3e0eef411284d179428c57fd16157c49f1bd32132d573
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-cherry betray ritual noble tone film fiscal zebra cook provide canoe dial armor science adapt almost permit loyal second culture impact response canyon anxiety
-
+laugh vessel picture run visual latin fun judge rigid tuna salmon tomorrow hand innocent vacuum ring verify salon bind suit stadium damage sight faith

@@ -1,13 +1,12 @@
 
-- address: 0xDe3788ea199aa22CadDf88D39a16cf3D6a79C405
+- address: 0x3F11Bd574db0B78169E21a34A8263c1a04806cDC
   name: sp1_fund
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A2oKbISBSFWtHn15CSIfELSarGy+KiafFMgckUQyHphe"}'
-  pubkey_hex: 036a0a6c84814855ad1e7d7909221f10b49aac6cbe2a269f14c81c9144321e985e
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A304Hj0M9BrEq3SLe4MWdLnKWsFg/BiNHhL9OcmDwukU"}'
+  pubkey_hex: 037d381e3d0cf41ac4ab748b7b831674b9ca5ac160fc188d1e12fd39c983c2e914
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-level dumb girl remove dinner office peanut ladder pattern butter dumb gaze cupboard myself fiber tiny march antique income black six trophy bright story
-
+scrap aim legend business miss fiscal mule fit audit toddler match near twin post furnace across plastic ginger alone smart allow desert gorilla hover

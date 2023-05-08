@@ -19,7 +19,9 @@ func TestSplitToSegmentPieceInfos(t *testing.T) {
 		spDB: mockDB,
 	}
 	mockDB.EXPECT().GetStorageParams().Return(&storagetypes.Params{
-		MaxSegmentSize: 16 * 1024 * 1024,
+		VersionedParams: storagetypes.VersionedParams{
+			MaxSegmentSize: 16 * 1024 * 1024,
+		},
 	}, nil).MaxTimes(100)
 
 	testCases := []struct {

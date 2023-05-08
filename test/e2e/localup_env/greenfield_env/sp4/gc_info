@@ -1,13 +1,12 @@
 
-- address: 0x0f6d55e1cD1E979b5368A79b903DE9Ee0902cCe0
+- address: 0xf20e3B63BC5aB7b53f3ee12aDd3DABA1A9746FB1
   name: sp4_gc
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Aui4p/VeEVMuEnu0ZjRIZu3lGXMRnqe1xLcTGz1kScuN"}'
-  pubkey_hex: 02e8b8a7f55e11532e127bb466344866ede51973119ea7b5c4b7131b3d6449cb8d
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AsfrYgjZsOPAaRpgUOFLf++akFFEf3UHdCa5d1XMqsXg"}'
+  pubkey_hex: 02c7eb6208d9b0e3c0691a6050e14b7fef9a9051447f75077426b97755ccaac5e0
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-exclude six panther flavor century drift ethics helmet clog extend lesson like shell angry elephant cliff ribbon beach magic symbol edge manage punch thunder
-
+list confirm describe exchange floor noise physical coyote budget learn improve scrap trim way size fabric correct worry whip opinion point rug trial want

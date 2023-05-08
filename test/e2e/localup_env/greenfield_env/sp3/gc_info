@@ -1,13 +1,12 @@
 
-- address: 0xEdF9C4BeAD2448d05cbD99906f569139eD05bb1A
+- address: 0x1287894578f8d2A32CB8AF71d139D8e030ae4174
   name: sp3_gc
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"ApjSD6hOFQi+1h+luq/pMcUDI3kNq6Qeah0qVsiPlWe0"}'
-  pubkey_hex: 0298d20fa84e1508bed61fa5baafe931c50323790daba41e6a1d2a56c88f9567b4
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AorVK+45hEvM7GVKyNgM5E4rFZQq5XPozt4eu8RcEJmx"}'
+  pubkey_hex: 028ad52bee39844bccec654ac8d80ce44e2b15942ae573e8cede1ebbc45c1099b1
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-symptom logic soul test coach slender silver holiday joke plunge civil resource grocery first swift visa genius teach surface humble hospital glove loop second
-
+front tube august fat cost theory sweet rely rely crystal entire exit ketchup oblige task snap practice clay naive broccoli fence biology noise paper

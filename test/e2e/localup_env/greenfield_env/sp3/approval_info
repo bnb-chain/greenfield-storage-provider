@@ -1,13 +1,12 @@
 
-- address: 0xF8be86A97AdD03d95b2D154dbb059D5F92088649
+- address: 0xE6ED9a2Df7b912DE4eA885A174Cdce3C85Aa7920
   name: sp3_approval
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"Akpxtf6AXvp6EZjLBl4VC4rkqhEaNoEBgMugvKyodwV0"}'
-  pubkey_hex: 024a71b5fe805efa7a1198cb065e150b8ae4aa111a36810180cba0bcaca8770574
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AnT+Rb5nymau09UrXNB3d7ao2kSGgtVJANAoAZ1Od6k0"}'
+  pubkey_hex: 0274fe45be67ca66aed3d52b5cd07777b6a8da448682d54900d028019d4e77a934
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-infant satoshi easy silly earn pelican slow decade table practice memory else width common wrong hire copper polar base nose furnace slim corn idle
-
+excess response valley sell razor vanish mouse cricket hair mouse catch type unfold amount salmon fox steak stable dilemma lab quarter cannon enlist tumble

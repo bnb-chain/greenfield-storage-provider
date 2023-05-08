@@ -1,13 +1,12 @@
 
-- address: 0xA9054Ce4BA78961731EF31FCfF3A0b27bA5fe7f3
+- address: 0x07A80DEe61640704e81372539a98CaABAfEfAe30
   name: sp6_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"An4j/LA7dt05vZW4nQhG++ndq/rYf/FqrDLHBFOsrudV"}'
-  pubkey_hex: 027e23fcb03b76dd39bd95b89d0846fbe9ddabfad87ff16aac32c70453acaee755
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A4vXPEN7g/8CI0DObV1bajmxc7YFG0LGZhV+yC7gN25Y"}'
+  pubkey_hex: 038bd73c437b83ff022340ce6d5d5b6a39b173b6051b42c666157ec82ee0376e58
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-soul appear siege visa glide pause type train world laugh lunar comfort top normal car glimpse word crater member lottery turkey junk step direct
-
+find bleak junior genre door priority blade amazing elder vocal vintage essence swallow way scout knife chalk patient aware elegant brand tool just debris

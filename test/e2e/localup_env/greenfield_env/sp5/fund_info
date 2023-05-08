@@ -1,13 +1,12 @@
 
-- address: 0x39560Bf4301cBba6b2A95CB7dB9De6e0Ab186e5d
+- address: 0x7c8d66769Aa2756038f1e0c2dB884cC0D4d38f4f
   name: sp5_fund
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A+ev38ZowlgEQDE68OSBCQEmFVEoK+TNiYCmUKQQEkRu"}'
-  pubkey_hex: 03e7afdfc668c2580440313af0e4810901261551282be4cd8980a650a41012446e
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AtAiYqbYQ8yidQ5+dL4sWDjAT+YHBcb3VfJPtzx8+H0m"}'
+  pubkey_hex: 02d02262a6d843cca2750e7e74be2c5838c04fe60705c6f755f24fb73c7cf87d26
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-holiday amount conduct behave crack coin same sheriff short egg blast song ahead charge topple multiply bulk rain lion essence canal evil doll avoid
-
+mouse poverty uncover fit century heavy online endorse noodle dignity chaos around lucky matrix warrior country cattle mix patrol echo enlist right parent enroll

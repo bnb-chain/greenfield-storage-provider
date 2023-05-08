@@ -1,13 +1,12 @@
 
-- address: 0x766429DA21C001216f04e10aC4a4B5c29813DC8a
+- address: 0x306130BafAdDBe9e456e6441f8A005148e6eE425
   name: sp3_seal
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A8elmDZq/wuXEO0VIKAkTtQxriXmRFxazKPZYKe0kyp3"}'
-  pubkey_hex: 03c7a598366aff0b9710ed1520a0244ed431ae25e6445c5acca3d960a7b4932a77
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A2Y/n30lN/yD0D3ziZfyqmI4UFIN9iy5nA4YVXnPJeb1"}'
+  pubkey_hex: 03663f9f7d2537fc83d03df38997f2aa623850520df62cb99c0e185579cf25e6f5
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-distance east extra program disagree devote rely finish glide profit blouse subway offer upper deliver chef orphan universe idle deliver amazing control bright typical
-
+possible negative pyramid blood news swear auto ill finger napkin cliff answer flag burger when choice permit old virtual labor simple truck legal fly

@@ -1,13 +1,12 @@
 
-- address: 0xA8386B61654B1284b0e19728626Da0915E0D33a8
+- address: 0xC38E2d500F9a6a5bc0A27813777e5eA807dD6a2D
   name: sp2_approval
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A2dCpf7xOyJTrssozByjR6PLhFaKK9U7dNmV4N8YlxP5"}'
-  pubkey_hex: 036742a5fef13b2253aecb28cc1ca347a3cb84568a2bd53b74d995e0df189713f9
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"Asgcyx8gZ/ak0o//PvVMrvtnU9czsTq670WIIeyi0X+K"}'
+  pubkey_hex: 02c81ccb1f2067f6a4d28fff3ef54caefb6753d733b13abaef458821eca2d17f8a
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-banner width jelly program churn reason pudding mule unknown erode middle tomato survey select easy glad robust concert gym travel treat utility rule able
-
+afford fringe mango bracket edge pioneer during video box wrap kite account boss attack lizard obvious morning lab all divorce miss front fat acid

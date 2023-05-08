@@ -1,13 +1,12 @@
 
-- address: 0xEfA3ab3916af138ea2D227C2F2Bb52aa08c53350
+- address: 0x0fBBc44f743AF0347dF10F726849D661a6Bd4666
   name: challenger0
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"AoKgOU4gNelKAz7e8GU+71j1zPVcKJ3c0bZPN/z2HsDM"}'
-  pubkey_hex: 0282a0394e2035e94a033edef0653eef58f5ccf55c289ddcd1b64f37fcf61ec0cc
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"A/QBpqdXeViCk81wgM+BgC2+3Fy1ETxsqZFIaIzd//wG"}'
+  pubkey_hex: 03f401a6a75779588293cd7080cf81802dbedc5cb5113c6ca99148688cddfffc06
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-monster uniform antique inject obvious wealth will detect relax keen marriage road draft clarify trip seminar family tuition sustain under ocean kingdom afraid later
-
+write ready zero pink right decade else garage price dust six hard demise announce code piece mom web pony inmate practice brother can brain

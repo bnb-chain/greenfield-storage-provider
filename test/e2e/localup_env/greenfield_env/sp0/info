@@ -1,13 +1,12 @@
 
-- address: 0x14539343413EB47899B0935287ab1111Df891d04
+- address: 0xe431a158B94f62135A2Dce248f283b8fdd6338E5
   name: sp0
-  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A+/qAw5NCZSofeWY5uwMIrPlhnud6kLgmOprUUVoSAOa"}'
-  pubkey_hex: 03efea030e4d0994a87de598e6ec0c22b3e5867b9dea42e098ea6b51456848039a
+  pubkey: '{"@type":"/cosmos.crypto.eth.ethsecp256k1.PubKey","key":"AyIvEbMboPBqD1lXs5bqsROr5JpnqNRCBXyMhtPdAr7m"}'
+  pubkey_hex: 03222f11b31ba0f06a0f5957b396eab113abe49a67a8d442057c8c86d3dd02bee6
   type: local
 
 
 **Important** write this mnemonic phrase in a safe place.
 It is the only way to recover your account if you ever forget your password.
 
-genius divert universe main dismiss rare worry tenant barrel blush carpet mind chuckle tip parent tide awful arrive casual cancel retreat curtain absent song
-
+earn logic blast brand bar weird chunk order remember devote device version seat safe write lady muscle manual alley wrong target clog blush book
