@@ -15,6 +15,13 @@ import (
 
 var _ types.TaskNodeServiceServer = &TaskNode{}
 
+const enableStreamReplicate = false
+
+type replicateTask interface {
+	init() error
+	execute(waitCh chan error)
+}
+
 // ReplicateObject call AsyncReplicateObject non-blocking upstream services
 func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.ReplicateObjectRequest) (
 	*types.ReplicateObjectResponse, error) {
@@ -25,14 +32,22 @@ func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.Replic
 	var (
 		resp   *types.ReplicateObjectResponse
 		err    error
-		task   *replicateObjectTask
+		task   replicateTask
 		waitCh chan error
 	)
 
 	ctx = log.WithValue(ctx, "object_id", req.GetObjectInfo().Id.String())
-	if task, err = newReplicateObjectTask(ctx, taskNode, req.GetObjectInfo()); err != nil {
-		log.CtxErrorw(ctx, "failed to new replicate object task", "error", err)
-		return nil, err
+	if enableStreamReplicate {
+		if task, err = newStreamReplicateObjectTask(ctx, taskNode, req.GetObjectInfo()); err != nil {
+			log.CtxErrorw(ctx, "failed to new replicate object task", "error", err)
+			return nil, err
+		}
+	} else {
+		if task, err = newReplicateObjectTask(ctx, taskNode, req.GetObjectInfo()); err != nil {
+			log.CtxErrorw(ctx, "failed to new replicate object task", "error", err)
+			return nil, err
+		}
+
 	}
 	if err = task.init(); err != nil {
 		log.CtxErrorw(ctx, "failed to init replicate object task", "error", err)
@@ -47,7 +62,6 @@ func (taskNode *TaskNode) ReplicateObject(ctx context.Context, req *types.Replic
 
 	resp = &types.ReplicateObjectResponse{}
 	return resp, nil
-
 }
 
 // QueryReplicatingObject query a replicating object information by object id
