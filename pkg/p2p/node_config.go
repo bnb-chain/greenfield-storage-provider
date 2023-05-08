@@ -49,8 +49,8 @@ func (cfg *NodeConfig) overrideConfigFromEnv() {
 	}
 }
 
-// ParseConfing parsers the configuration into a format that go-libp2p can use
-func (cfg *NodeConfig) ParseConfing() (privKey crypto.PrivKey, hostAddr ma.Multiaddr, bootstrapIDs []peer.ID, bootstrapAddrs []ma.Multiaddr, err error) {
+// ParseConfig parsers the configuration into a format that go-libp2p can use
+func (cfg *NodeConfig) ParseConfig() (privKey crypto.PrivKey, hostAddr ma.Multiaddr, bootstrapIDs []peer.ID, bootstrapAddrs []ma.Multiaddr, err error) {
 	cfg.overrideConfigFromEnv()
 	if len(cfg.P2PPrivateKey) > 0 {
 		priKeyBytes, err := hex.DecodeString(cfg.P2PPrivateKey)
