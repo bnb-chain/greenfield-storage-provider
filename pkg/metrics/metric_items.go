@@ -1,59 +1,321 @@
 package metrics
 
 import (
+	metricshttp "github.com/bnb-chain/greenfield-storage-provider/pkg/metrics/http"
 	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	"github.com/prometheus/client_golang/prometheus"
-
-	metricshttp "github.com/bnb-chain/greenfield-storage-provider/pkg/metrics/http"
 )
 
 const serviceLabelName = "service"
 
-// this file is used to write metric items in sp service
+var MetricsItems = []prometheus.Collector{
+	// Grpc metrics category
+	DefaultGRPCServerMetrics,
+	DefaultGRPCClientMetrics,
+	// Http metrics category
+	DefaultHTTPServerMetrics,
+	// TaskQueue metrics category
+	QueueSizeGauge,
+	QueueCapGauge,
+	TaskInQueueTimeHistogram,
+	// PieceStore metrics category
+	PutPieceTimeHistogram,
+	PutPieceTimeCounter,
+	GetPieceTimeHistogram,
+	GetPieceTimeCounter,
+	DeletePieceTimeHistogram,
+	DeletePieceTimeCounter,
+	PieceUsageAmountGauge,
+	// Front module metrics category
+	UploadObjectSizeHistogram,
+	DownloadObjectSizeHistogram,
+	ChallengePieceSizeHistogram,
+	ReceivePieceSizeHistogram,
+	// TaskExecutor metrics category
+	MaxTaskNumberGauge,
+	RunningTaskNumberGauge,
+	RemainingMemoryGauge,
+	RemainingTaskGauge,
+	RemainingHighPriorityTaskGauge,
+	RemainingMediumPriorityTaskGauge,
+	RemainingLowTaskGauge,
+	SealObjectSucceedCounter,
+	SealObjectFailedCounter,
+	GCObjectCounter,
+	ReplicatePieceSizeCounter,
+	ReplicateSucceedCounter,
+	ReplicateFailedCounter,
+	ReplicatePieceTimeHistogram,
+	ExecutorReplicatePieceTaskCounter,
+	ExecutorSealObjectTaskCounter,
+	ExecutorReceiveTaskCounter,
+	ExecutorGCObjectTaskCounter,
+	ExecutorGCZombieTaskCounter,
+	ExecutorGCMetaTaskCounter,
+	// Manager metrics category
+	UploadObjectTaskTimeHistogram,
+	ReplicateAndSealTaskTimeHistogram,
+	ReceiveTaskTimeHistogram,
+	SealObjectTaskTimeHistogram,
+	GCBlockNumberGauge,
+	UploadObjectTaskFailedCounter,
+	ReplicatePieceTaskFailedCounter,
+	ReceivePieceTaskFailedCounter,
+	SealObjectTaskFailedCounter,
+	ReplicateCombineSealTaskFailedCounter,
+	DispatchReplicatePieceTaskCounter,
+	DispatchSealObjectTaskCounter,
+	DispatchReceivePieceTaskCounter,
+	DispatchGcObjectTaskCounter,
+	// Signer metrics category
+	SealObjectTimeHistogram,
+	// Spdb metrics category
+	SPDBTimeHistogram,
+	// BlockSyncer metrics category
+	BlockHeightLagGauge,
+}
+
 var (
-	// DefaultGRPCServerMetrics create default gRPC server metrics
+	// DefaultGRPCServerMetrics defines default gRPC server metrics
 	DefaultGRPCServerMetrics = openmetrics.NewServerMetrics(openmetrics.WithServerHandlingTimeHistogram())
-	// DefaultGRPCClientMetrics create default gRPC client metrics
+	// DefaultGRPCClientMetrics defines default gRPC client metrics
 	DefaultGRPCClientMetrics = openmetrics.NewClientMetrics(openmetrics.WithClientHandlingTimeHistogram(),
 		openmetrics.WithClientStreamSendHistogram(), openmetrics.WithClientStreamRecvHistogram())
-	// DefaultHTTPServerMetrics create default HTTP server metrics
+	// DefaultHTTPServerMetrics defines default HTTP server metrics
 	DefaultHTTPServerMetrics = metricshttp.NewServerMetrics()
 
-	// BlockHeightLagGauge records the current block height of block syncer service
-	BlockHeightLagGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "block_syncer_height",
-		Help: "Current block number of block syncer progress.",
-	}, []string{serviceLabelName})
-	// SealObjectTimeHistogram records sealing object time of task node service
+	// task queue metrics
+	QueueSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "queue_size",
+		Help: "Track the task queue using size.",
+	}, []string{"queue_size"})
+	QueueCapGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "queue_capacity",
+		Help: "Track the task queue capacity.",
+	}, []string{"queue_capacity"})
+	TaskInQueueTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "task_active_time",
+		Help:    "Track the task of alive time duration in queue from task is created.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"task_in_queue_time"})
+
+	// piece store metrices
+	PutPieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "put_piece_store_time",
+		Help:    "Track the time of putting piece data to piece store.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"put_piece_store_time"})
+	PutPieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "put_piece_store_number",
+		Help: "Track the total number of putting piece data to piece store.",
+	}, []string{"put_piece_store_number"})
+	GetPieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "get_piece_store_time",
+		Help:    "Track the time of getting piece data to piece store.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"get_piece_store_time"})
+	GetPieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "get_piece_store_number",
+		Help: "Track the total number of getting piece data to piece store.",
+	}, []string{"get_piece_store_number"})
+	DeletePieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "delete_piece_store_time",
+		Help:    "Track the time of deleting piece data to piece store.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"delete_piece_store_time"})
+	DeletePieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "delete_piece_store_number",
+		Help: "Track the total number of deleting piece data to piece store.",
+	}, []string{"delete_piece_store_number"})
+	PieceUsageAmountGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "usage_amount_piece_store",
+		Help: "Track usage amount of piece store.",
+	}, []string{"usage_amount_piece_store"})
+
+	// front module metrics
+	UploadObjectSizeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "upload_object_size",
+		Help:    "Track the object payload size of uploading.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"upload_object_size"})
+	DownloadObjectSizeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "download_object_size",
+		Help:    "Track the object payload size of downloading.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"download_object_size"})
+	ChallengePieceSizeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "challenge_piece_size",
+		Help:    "Track the piece size of challenging.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"challenge_piece_size"})
+	ReceivePieceSizeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "receive_piece_size",
+		Help:    "Track the piece size of receiving from primary.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"receive_piece_size"})
+
+	// task executor mertics
+	MaxTaskNumberGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "max_task_num",
+		Help: "Track the max task number of task executor.",
+	}, []string{"max_task_num"})
+	RunningTaskNumberGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "running_task_num",
+		Help: "Track the running task number of task executor.",
+	}, []string{"running_task_num"})
+	RemainingMemoryGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "remaining_memory_resource",
+		Help: "Track remaining memory size of task executor.",
+	}, []string{"remaining_memory_resource"})
+	RemainingTaskGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "remaining_task_resource",
+		Help: "Track remaining resource of total task number.",
+	}, []string{"remaining_task_resource"})
+	RemainingHighPriorityTaskGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "remaining_high_task_resource",
+		Help: "Track remaining resource of high priority task number.",
+	}, []string{"remaining_high_task_resource"})
+	RemainingMediumPriorityTaskGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "remaining_medium_task_resource",
+		Help: "Track remaining resource of medium task number.",
+	}, []string{"remaining_medium_task_resource"})
+	RemainingLowTaskGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "remaining_low_task_resource",
+		Help: "Track remaining resource of low task number.",
+	}, []string{"remaining_task_resource"})
+	SealObjectSucceedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "seal_object_success",
+		Help: "Track seal object success total number",
+	}, []string{"seal_object_success"})
+	SealObjectFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "seal_object_failure",
+		Help: "Track seal object failure total number",
+	}, []string{"seal_object_failure"})
+	GCObjectCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "delete_object_number",
+		Help: "Track deleted object number.",
+	}, []string{"delete_object_number"})
+	ReplicatePieceSizeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "replicate_piece_size",
+		Help: "Track replicate piece data size.",
+	}, []string{"replicate_piece_size"})
+	ReplicateSucceedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "replicate_secondary_success",
+		Help: "Track replicate secondary success number.",
+	}, []string{"replicate_secondary_success"})
+	ReplicateFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "replicate_secondary_failure",
+		Help: "Track replicate secondary failure number.",
+	}, []string{"replicate_secondary_failure"})
+	ReplicatePieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "replicate_piece_time",
+		Help:    "Track the time of replicate piece to secondary.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"replicate_piece_time"})
+	ExecutorReplicatePieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "replicate_task_count",
+		Help: "Track replicate task number.",
+	}, []string{"replicate_task_count"})
+	ExecutorSealObjectTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "seal_task_count",
+		Help: "Track seal task number.",
+	}, []string{"seal_task_count"})
+	ExecutorReceiveTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "receive_task_count",
+		Help: "Track receive task number.",
+	}, []string{"receive_task_count"})
+	ExecutorGCObjectTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "gc_object_task_count",
+		Help: "Track gc object task number.",
+	}, []string{"gc_object_task_count"})
+	ExecutorGCZombieTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "gc_zombie_task_count",
+		Help: "Track gc zombie task number.",
+	}, []string{"gc_zombie_task_count"})
+	ExecutorGCMetaTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "gc_meta_task_count",
+		Help: "Track gc meta task number.",
+	}, []string{"gc_meta_task_count"})
+
+	// manager mertics
+	UploadObjectTaskTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "upload_primary_time",
+		Help:    "Track the time of upload payload to primary.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"upload_primary_time"})
+	ReplicateAndSealTaskTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "replicate_and_seal_time",
+		Help:    "Track the time of replicate to secondary and seal on chain.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"replicate_and_seal_time"})
+	ReceiveTaskTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "confirm_secondary_piece_seal_on_chain_time",
+		Help:    "Track the time of confirm secondary piece seal on chain.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"confirm_secondary_piece_on_chain_time"})
+	SealObjectTaskTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "seal_object_task_time",
+		Help:    "Track the time of seal object time on chain.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"seal_object_task_time"})
+	GCBlockNumberGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "gc_block_number",
+		Help: "Track the next gc block number.",
+	}, []string{"gc_block_number"})
+	UploadObjectTaskFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "upload_object_task_failure",
+		Help: "Track upload object task failure total number",
+	}, []string{"seal_object_task_failure"})
+	ReplicatePieceTaskFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "replicate_object_task_failure",
+		Help: "Track replicate object task failure total number",
+	}, []string{"replicate_object_task_failure"})
+	ReceivePieceTaskFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "receive_piece_task_failure",
+		Help: "Track receive piece task failure total number",
+	}, []string{"receive_object_task_failure"})
+	SealObjectTaskFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "seal_object_task_failure",
+		Help: "Track seal object task failure total number",
+	}, []string{"seal_object_task_failure"})
+	ReplicateCombineSealTaskFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "replicate_combine_seal_task_failure",
+		Help: "Track combine replicate and seal object failure total number",
+	}, []string{"replicate_combine_seal_task_failure"})
+	DispatchReplicatePieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "dispatch_replicate_task",
+		Help: "Track replicate object task total number",
+	}, []string{"dispatch_replicate_task"})
+	DispatchSealObjectTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "dispatch_seal_task",
+		Help: "Track seal object task total number",
+	}, []string{"dispatch_seal_task"})
+	DispatchReceivePieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "dispatch_confirm_receive_task",
+		Help: "Track confirm receive task total number",
+	}, []string{"dispatch_confirm_receive_task"})
+	DispatchGcObjectTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "dispatch_gc_object_task",
+		Help: "Track gc object task total number",
+	}, []string{"dispatch_gc_object_task"})
+
+	// singer metrics
 	SealObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "task_node_seal_object_time",
-		Help:    "Track task node service the time of sealing object on chain.",
+		Name:    "seal_object_time",
+		Help:    "Track the time of seal object time to chain.",
 		Buckets: prometheus.DefBuckets,
-	}, []string{serviceLabelName})
-	// SealObjectTotalCounter records total seal object number
-	SealObjectTotalCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "task_node_seal_object_total",
-		Help: "Track task node service handles total seal object number",
-	}, []string{"success_or_failure"})
-	// ReplicateObjectTaskGauge records total replicate object number
-	ReplicateObjectTaskGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "task_node_replicate_object_task_number",
-		Help: "Track task node service replicate object task",
-	}, []string{serviceLabelName})
-	// PieceStoreTimeHistogram records piece store request time
-	PieceStoreTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "piece_store_handling_seconds",
-		Help:    "Track the latency for piece store requests",
-		Buckets: prometheus.DefBuckets,
-	}, []string{"method_name"})
-	// PieceStoreRequestTotal records piece store total request
-	PieceStoreRequestTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "piece_store_total_requests",
-		Help: "Track piece store handles total request",
-	}, []string{"method_name"})
+	}, []string{"seal_object_time"})
+
+	// spdb metrics
 	SPDBTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "sp_db_handling_seconds",
 		Help:    "Track the latency for spdb requests",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"method_name"})
+
+	// BlockHeightLagGauge records the current block height of block syncer service
+	BlockHeightLagGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "block_syncer_height",
+		Help: "Current block number of block syncer progress.",
+	}, []string{"service"})
 )

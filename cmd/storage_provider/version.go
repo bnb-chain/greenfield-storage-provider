@@ -43,14 +43,12 @@ func DumpVersion() string {
 }
 
 var VersionCmd = &cli.Command{
-	Action:   versionAction,
-	Name:     "version",
-	Aliases:  []string{"v"},
-	Usage:    "Print version information",
-	Category: "MISCELLANEOUS COMMANDS",
-	Description: `
-The output of this command is supposed to be machine-readable.
-`,
+	Action:      versionAction,
+	Name:        "version",
+	Aliases:     []string{"v"},
+	Usage:       "Print version information",
+	Category:    "MISCELLANEOUS COMMANDS",
+	Description: `The output of this command is supposed to be machine-readable.`,
 }
 
 func versionAction(ctx *cli.Context) error {

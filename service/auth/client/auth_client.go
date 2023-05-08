@@ -7,10 +7,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/service/auth/types"
 	authtypes "github.com/bnb-chain/greenfield-storage-provider/service/auth/types"
-	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 // AuthClient is an auth server gRPC service client wrapper
@@ -23,9 +21,9 @@ type AuthClient struct {
 // NewAuthClient return a AuthClient instance
 func NewAuthClient(address string) (*AuthClient, error) {
 	options := []grpc.DialOption{}
-	if metrics.GetMetrics().Enabled() {
-		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
-	}
+	//if metrics.GetMetrics().Enabled() {
+	//	options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	//}
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {

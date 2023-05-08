@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"gorm.io/gorm"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -14,7 +15,7 @@ import (
 
 // CheckQuotaAndAddReadRecord check current quota, and add read record
 // TODO: Traffic statistics may be inaccurate in extreme cases, optimize it in the future
-func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
+func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) error {
 	startTime := time.Now()
 	defer func() {
 		observer := metrics.SPDBTimeHistogram.WithLabelValues("checkQuotaAndAddReadRecord")
@@ -43,7 +44,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 		if result.RowsAffected != 1 {
 			log.Infow("insert traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 		}
-		bucketTraffic = &BucketTraffic{
+		bucketTraffic = &corespdb.BucketTraffic{
 			BucketID:         insertBucketTraffic.BucketID,
 			YearMonth:        insertBucketTraffic.Month,
 			BucketName:       insertBucketTraffic.BucketName,
@@ -62,6 +63,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 		if result.Error != nil {
 			return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
 		}
+		// TODO:: change the transaction way to update
 		if result.RowsAffected != 1 {
 			log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 		}
@@ -105,7 +107,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQ
 }
 
 // GetBucketTraffic return bucket traffic info
-func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
+func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (*corespdb.BucketTraffic, error) {
 	var (
 		result      *gorm.DB
 		queryReturn BucketTrafficTable
@@ -118,7 +120,7 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketT
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query bucket traffic table: %s", result.Error)
 	}
-	return &BucketTraffic{
+	return &corespdb.BucketTraffic{
 		BucketID:         queryReturn.BucketID,
 		YearMonth:        queryReturn.Month,
 		BucketName:       queryReturn.BucketName,
@@ -129,10 +131,10 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketT
 }
 
 // GetReadRecord return record list by time range
-func (s *SpDBImpl) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SpDBImpl) GetReadRecord(timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	var (
 		result       *gorm.DB
-		records      []*ReadRecord
+		records      []*corespdb.ReadRecord
 		queryReturns []ReadRecordTable
 	)
 
@@ -150,7 +152,7 @@ func (s *SpDBImpl) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, er
 		return records, fmt.Errorf("failed to read record table: %s", result.Error)
 	}
 	for _, record := range queryReturns {
-		records = append(records, &ReadRecord{
+		records = append(records, &corespdb.ReadRecord{
 			BucketID:        record.BucketID,
 			ObjectID:        record.ObjectID,
 			UserAddress:     record.UserAddress,
@@ -164,10 +166,10 @@ func (s *SpDBImpl) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, er
 }
 
 // GetBucketReadRecord return bucket record list by time range
-func (s *SpDBImpl) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SpDBImpl) GetBucketReadRecord(bucketID uint64, timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	var (
 		result       *gorm.DB
-		records      []*ReadRecord
+		records      []*corespdb.ReadRecord
 		queryReturns []ReadRecordTable
 	)
 
@@ -184,7 +186,7 @@ func (s *SpDBImpl) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRa
 		return records, fmt.Errorf("failed to query read record table: %s", result.Error)
 	}
 	for _, record := range queryReturns {
-		records = append(records, &ReadRecord{
+		records = append(records, &corespdb.ReadRecord{
 			BucketID:        record.BucketID,
 			ObjectID:        record.ObjectID,
 			UserAddress:     record.UserAddress,
@@ -198,10 +200,10 @@ func (s *SpDBImpl) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRa
 }
 
 // GetObjectReadRecord return object record list by time range
-func (s *SpDBImpl) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SpDBImpl) GetObjectReadRecord(objectID uint64, timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	var (
 		result       *gorm.DB
-		records      []*ReadRecord
+		records      []*corespdb.ReadRecord
 		queryReturns []ReadRecordTable
 	)
 
@@ -218,7 +220,7 @@ func (s *SpDBImpl) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRa
 		return records, fmt.Errorf("failed to query read record table: %s", result.Error)
 	}
 	for _, record := range queryReturns {
-		records = append(records, &ReadRecord{
+		records = append(records, &corespdb.ReadRecord{
 			BucketID:        record.BucketID,
 			ObjectID:        record.ObjectID,
 			UserAddress:     record.UserAddress,
@@ -232,10 +234,10 @@ func (s *SpDBImpl) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRa
 }
 
 // GetUserReadRecord return user record list by time range
-func (s *SpDBImpl) GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (s *SpDBImpl) GetUserReadRecord(userAddress string, timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	var (
 		result       *gorm.DB
-		records      []*ReadRecord
+		records      []*corespdb.ReadRecord
 		queryReturns []ReadRecordTable
 	)
 
@@ -252,7 +254,7 @@ func (s *SpDBImpl) GetUserReadRecord(userAddress string, timeRange *TrafficTimeR
 		return records, fmt.Errorf("failed to query read record table: %s", result.Error)
 	}
 	for _, record := range queryReturns {
-		records = append(records, &ReadRecord{
+		records = append(records, &corespdb.ReadRecord{
 			BucketID:        record.BucketID,
 			ObjectID:        record.ObjectID,
 			UserAddress:     record.UserAddress,

@@ -22,8 +22,7 @@ var P2PCreateKeysCmd = &cli.Command{
 		number,
 	},
 	Category: "P2P COMMANDS",
-	Description: `
-The p2p.create.key creates 'n' sets of Secp256k1 key pairs, each key pair contains a private key 
+	Description: `The p2p.create.key creates 'n' sets of Secp256k1 key pairs, each key pair contains a private key 
 and a node id, the private key is used to encrypt p2p protocol msg, and the node id is use to public
 to other p2p nodes for communication by p2p protocol.`,
 }

@@ -1,0 +1,30 @@
+syntax = "proto3";
+package base.types.gfspserver;
+
+import "base/types/gfsperrors/error.proto";
+import "base/types/gfsplimit/limit.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
+
+message GfSpQueryResourceLimitRequest {
+  repeated string module = 1;
+}
+
+message GfSpQueryResourceLimitResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  map<string, base.types.gfsplimit.GfSpLimit> limits = 2;
+}
+
+message GfSpSetResourceLimitRequest {
+  map<string, base.types.gfsplimit.GfSpLimit> limits = 1;
+}
+
+message GfSpSetResourceLimitResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  repeated string success_lists = 2;
+}
+
+service GfSpResourceService {
+  rpc GfSpSetResourceLimit(GfSpSetResourceLimitRequest) returns (GfSpSetResourceLimitResponse) {}
+  rpc GfSpQueryResourceLimit(GfSpQueryResourceLimitRequest) returns (GfSpQueryResourceLimitResponse) {}
+}
