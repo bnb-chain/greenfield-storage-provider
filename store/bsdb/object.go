@@ -21,17 +21,22 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 
 	// return NextContinuationToken by adding 1 additionally
 	limit = maxKeys + 1
+
+	// Execute a raw SQL query to:
+	// 1. Retrieve objects from the given bucket with matching prefix and continuationToken
+	// 2. Find common prefixes based on the delimiter
+	// 3. Limit results
 	if delimiter != "" {
 		err = b.db.Raw(
 			`SELECT path_name, result_type, o.*
 				FROM (
 					SELECT DISTINCT object_name as path_name, 'object' as result_type, id
 					FROM objects
-					WHERE bucket_name = ? AND object_name LIKE CONVERT(? USING utf8mb4) AND object_name > IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) = 0
+					WHERE bucket_name = ? AND object_name LIKE CONVERT(? USING utf8mb4) AND object_name >= IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) = 0
 					UNION
 					SELECT CONCAT(SUBSTRING(object_name, 1, LENGTH(?) + LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) - 1), CONVERT(? USING utf8mb4)) as path_name, 'common_prefix' as result_type, MIN(id)
 					FROM objects
-					WHERE bucket_name = ? AND object_name LIKE CONVERT(? USING utf8mb4) AND object_name > IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) > 0
+					WHERE bucket_name = ? AND object_name LIKE CONVERT(? USING utf8mb4) AND object_name >= IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) > 0
 					GROUP BY path_name
 				) AS subquery
 				JOIN objects o ON subquery.id = o.id
@@ -40,7 +45,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 			bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix,
 			prefix, delimiter, prefix, delimiter,
 			bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix,
-			maxKeys+1).Scan(&results).Error
+			limit).Scan(&results).Error
 
 		return results, err
 	}

@@ -174,7 +174,7 @@ message ListObjectsByBucketNameResponse {
   // common_prefixes a list of strings representing common prefixes. common_prefixes are those parts of object key names that fall between the specified delimiters
   repeated string common_prefixes = 9;
   // continuationToken is the continuation token used during the query
-  string continuationToken = 10;
+  string continuation_token = 10;
 }
 
 // GetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.
