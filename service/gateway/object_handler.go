@@ -95,6 +95,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		RangeStart:  uint64(rangeStart),
 		RangeEnd:    uint64(rangeEnd),
 	}
+
 	stream, err := gateway.downloader.GetObject(ctx, req)
 	if err != nil {
 		log.Errorf("failed to get object", "error", err)

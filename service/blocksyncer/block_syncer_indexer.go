@@ -108,14 +108,13 @@ func (i *Impl) Process(height uint64) error {
 
 	// 1. handle events in startBlock
 	ctx := context.Background()
-	dbTx := i.DB.Begin(ctx)
-	ctx = context.WithValue(ctx, common.UseTx(database.UseTransaction), dbTx)
-
+	i.DB = i.DB.Begin(ctx)
+	context.WithValue(context.Background(), common.UseTx(database.UseTransaction), true)
 	if len(beginBlockEvents) > 0 {
 		err = i.ExportEventsWithoutTx(ctx, block, beginBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
-			dbTx.Rollback()
+			i.DB.Rollback()
 			return err
 		}
 	}
@@ -124,7 +123,7 @@ func (i *Impl) Process(height uint64) error {
 	err = i.ExportEventsInTxs(ctx, block, txs)
 	if err != nil {
 		log.Errorf("failed to export events in txs: %s", err)
-		dbTx.Rollback()
+		i.DB.Rollback()
 		return err
 	}
 
@@ -133,7 +132,7 @@ func (i *Impl) Process(height uint64) error {
 		err = i.ExportEventsWithoutTx(ctx, block, endBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
-			dbTx.Rollback()
+			i.DB.Rollback()
 			return err
 		}
 	}
@@ -141,13 +140,13 @@ func (i *Impl) Process(height uint64) error {
 	err = i.ExportEpoch(ctx, block)
 	if err != nil {
 		log.Errorf("failed to export epoch: %s", err)
-		dbTx.Rollback()
+		i.DB.Rollback()
 		return err
 	}
-	err = dbTx.Commit()
+	err = i.DB.Commit()
 	if err != nil {
 		log.Errorf("failed to tx commit: %s", err)
-		dbTx.Rollback()
+		i.DB.Rollback()
 		return err
 	}
 
