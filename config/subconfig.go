@@ -276,8 +276,8 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 			Level: "debug",
 		},
 		RecreateTables: cfg.BlockSyncerCfg.RecreateTables,
-		Backup:         cfg.BlockSyncerCfg.Backup,
-		DsnBackup:      cfg.BlockSyncerCfg.DsnBackup,
+		EnableDualDB:   cfg.BlockSyncerCfg.EnableDualDB,
+		DsnSwitched:    cfg.BlockSyncerCfg.DsnSwitched,
 	}, nil
 }
 

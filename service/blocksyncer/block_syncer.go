@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -32,6 +33,7 @@ type BlockSyncer struct {
 	name      string
 	parserCtx *parser.Context
 	running   atomic.Value
+	context   context.Context
 }
 
 // Read concurrency required global variables
@@ -46,6 +48,9 @@ var (
 	FlagDB database.Database
 
 	NeedBackup bool
+
+	CancelMain func()
+	CtxMain    context.Context
 )
 
 // NewBlockSyncerService create a BlockSyncer service to index block events data to db
@@ -57,7 +62,7 @@ func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
 	txMap = new(sync.Map)
-	NeedBackup = cfg.Backup
+	NeedBackup = cfg.EnableDualDB
 	if err := MainService.initClient(); err != nil {
 		return nil, err
 	}
@@ -100,8 +105,9 @@ func newBackupBlockSyncerService(cfg *tomlconfig.TomlConfig, mainDBIsMaster bool
 	if err = BackupService.initClient(); err != nil {
 		return nil, err
 	}
+
 	// init meta db, if mainService db is not current master, backup is master, don't recreate
-	if err = BackupService.initDB(mainDBIsMaster || cfg.RecreateTables); err != nil {
+	if err = BackupService.initDB(mainDBIsMaster || backUpConfig.RecreateTables); err != nil {
 		return nil, err
 	}
 	return BackupService, nil
@@ -112,16 +118,8 @@ func generateConfigForBackup(cfg *tomlconfig.TomlConfig) (*tomlconfig.TomlConfig
 	if err := DeepCopyByGob(cfg, configBackup); err != nil {
 		return nil, err
 	}
-	configBackup.RecreateTables = true
-	dsnBk, envErr := getDBConfigFromEnv(model.DsnBlockSyncerBackup)
-	if envErr != nil {
-		configBackup.Database.DSN = cfg.DsnBackup
-		log.Info("failed to get backup db config from env, use backup db config from config file")
-	}
-	if dsnBk != "" {
-		log.Info("use backup db config from env")
-		config.Cfg.Database.DSN = dsnBk
-	}
+
+	configBackup.Database.DSN = configBackup.DsnSwitched
 
 	return configBackup, nil
 }
@@ -146,6 +144,7 @@ func (s *BlockSyncer) initClient() error {
 	cmdCfg := junoConfig.GetParseConfig()
 	cmdCfg.WithTomlConfig(s.config)
 
+	//set toml config to juno config
 	if readErr := parsecmdtypes.ReadConfigPreRunE(cmdCfg)(nil, nil); readErr != nil {
 		log.Infof("readErr: %v", readErr)
 		return readErr
@@ -156,12 +155,13 @@ func (s *BlockSyncer) initClient() error {
 	if s.Name() == model.BlockSyncerService {
 		dbEnv = model.DsnBlockSyncer
 	} else {
-		dbEnv = model.DsnBlockSyncerBackup
+		dbEnv = model.DsnBlockSyncerSwitched
 	}
 
 	dsn, envErr := getDBConfigFromEnv(dbEnv)
 	if envErr != nil {
 		log.Info("failed to get db config from env, use db config from config file")
+		config.Cfg.Database.DSN = s.config.Database.DSN
 	}
 	if dsn != "" {
 		log.Info("use db config from env")
@@ -178,7 +178,8 @@ func (s *BlockSyncer) initClient() error {
 	s.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
 		ctx.Node,
 		ctx.Database,
-		ctx.Modules)
+		ctx.Modules,
+		s.Name())
 	return nil
 }
 
@@ -225,14 +226,23 @@ func (s *BlockSyncer) Start(ctx context.Context) error {
 
 	determineMainService()
 
-	go MainService.serve(ctx)
+	CtxMain, CancelMain = context.WithCancel(context.Background())
+	ctxBackup := context.Background()
+	BackupService.context = ctxBackup
+
+	go MainService.serve(CtxMain)
 
 	//create backup blocksyncer
 	if NeedBackup {
-		go BackupService.serve(ctx)
+		go BackupService.serve(ctxBackup)
 		go CheckProgress()
 	}
 
+	return nil
+}
+
+func StopMainService() error {
+	CancelMain()
 	return nil
 }
 
@@ -256,7 +266,7 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	latestBlockHeight := mustGetLatestHeight(s.parserCtx)
 	Cast(s.parserCtx.Indexer).GetLatestBlockHeight().Store(int64(latestBlockHeight))
 	Cast(s.parserCtx.Indexer).GetCatchUpFlag().Store(int64(-1))
-	go s.getLatestBlockHeight()
+	go s.getLatestBlockHeight(ctx)
 
 	lastDbBlockHeight := uint64(0)
 	for {
@@ -272,26 +282,34 @@ func (s *BlockSyncer) serve(ctx context.Context) {
 	// fetch block data
 	go s.quickFetchBlockData(lastDbBlockHeight + 1)
 
-	go s.enqueueNewBlocks(exportQueue, s.parserCtx, lastDbBlockHeight+1)
+	go s.enqueueNewBlocks(ctx, exportQueue, lastDbBlockHeight+1)
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	// off of the export queue.
 	time.Sleep(time.Second)
-	go worker.Start()
+	go worker.Start(ctx)
 }
 
-func (s *BlockSyncer) getLatestBlockHeight() {
+func (s *BlockSyncer) getLatestBlockHeight(ctx context.Context) {
 	for {
-		latestBlockHeight, err := s.parserCtx.Node.LatestHeight()
-		if err != nil {
-			log.Errorw("failed to get last block from RPCConfig client",
-				"err", err,
-				"retry interval", config.GetAvgBlockTime())
-			continue
-		}
-		Cast(s.parserCtx.Indexer).GetLatestBlockHeight().Store(latestBlockHeight)
+		select {
+		case <-ctx.Done():
+			log.Infof("Receive cancel signal, getLatestBlockHeight routine will stop")
+			return
+		default:
+			{
+				latestBlockHeight, err := s.parserCtx.Node.LatestHeight()
+				if err != nil {
+					log.Errorw("failed to get last block from RPCConfig client",
+						"error", err,
+						"retry interval", config.GetAvgBlockTime())
+					continue
+				}
+				Cast(s.parserCtx.Indexer).GetLatestBlockHeight().Store(latestBlockHeight)
 
-		time.Sleep(config.GetAvgBlockTime())
+				time.Sleep(config.GetAvgBlockTime())
+			}
+		}
 	}
 }
 
@@ -331,9 +349,10 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 						log.Warnf("failed to get block results from node: %s", err)
 						continue
 					}
-					blockMap.Store(height, block)
-					eventMap.Store(height, events)
-					txMap.Store(height, txs)
+					heightKey := fmt.Sprintf("%s-%d", s.Name(), height)
+					blockMap.Store(heightKey, block)
+					eventMap.Store(heightKey, events)
+					txMap.Store(heightKey, txs)
 					break
 				}
 			}(i, cycle)
@@ -352,7 +371,7 @@ func (s *BlockSyncer) prepareMasterFlagTable() error {
 		return err
 	}
 	//not exist
-	if masterRecord.OneRowId == false {
+	if !masterRecord.OneRowId {
 		if err = s.parserCtx.Database.SetMasterDB(context.TODO(), &models.MasterDB{
 			OneRowId: true,
 			IsMaster: true,

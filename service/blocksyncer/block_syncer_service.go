@@ -14,17 +14,27 @@ import (
 )
 
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
-func (s *BlockSyncer) enqueueNewBlocks(exportQueue types.HeightQueue, ctx *parser.Context, currHeight uint64) {
+func (s *BlockSyncer) enqueueNewBlocks(context context.Context, exportQueue types.HeightQueue, currHeight uint64) {
 	// Enqueue upcoming heights
 	for {
-		latestBlockHeightAny := Cast(s.parserCtx.Indexer).GetLatestBlockHeight().Load()
-		latestBlockHeight := latestBlockHeightAny.(int64)
-		// Enqueue all heights from the current height up to the latest height
-		for ; currHeight <= uint64(latestBlockHeight); currHeight++ {
-			log.Debugw("enqueueing new block", "height", currHeight)
-			exportQueue <- currHeight
+		select {
+		case <-context.Done():
+			log.Infof("Receive cancel signal, enqueueNewBlocks routine will stop")
+			//close channel
+			close(exportQueue)
+			return
+		default:
+			{
+				latestBlockHeightAny := Cast(s.parserCtx.Indexer).GetLatestBlockHeight().Load()
+				latestBlockHeight := latestBlockHeightAny.(int64)
+				// Enqueue all heights from the current height up to the latest height
+				for ; currHeight <= uint64(latestBlockHeight); currHeight++ {
+					log.Debugw("enqueueing new block", "height", currHeight)
+					exportQueue <- currHeight
+				}
+				time.Sleep(config.GetAvgBlockTime())
+			}
 		}
-		time.Sleep(config.GetAvgBlockTime())
 	}
 }
 
@@ -65,7 +75,7 @@ func CheckProgress() {
 		}
 		if epochMaster.BlockHeight-epochSlave.BlockHeight < model.DefaultBlockHeightDiff {
 			SwitchMasterDBFlag()
-			MainService.Stop(context.Background())
+			StopMainService()
 			break
 		}
 		time.Sleep(time.Minute * model.DefaultCheckDiffPeriod)
@@ -79,7 +89,7 @@ func SwitchMasterDBFlag() error {
 	}
 
 	//switch flag
-	masterFlag.IsMaster = masterFlag.IsMaster != true
+	masterFlag.IsMaster = !masterFlag.IsMaster
 	if err = FlagDB.SetMasterDB(context.TODO(), masterFlag); err != nil {
 		return err
 	}
