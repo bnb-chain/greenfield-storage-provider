@@ -26,8 +26,9 @@ type StoreClient struct {
 }
 
 const (
-	getPieceMethodName = "getPiece"
-	putPieceMethodName = "putPiece"
+	getPieceMethodName    = "getPiece"
+	putPieceMethodName    = "putPiece"
+	deletePieceMethodName = "deletePiece"
 )
 
 func NewStoreClient(pieceConfig *storage.PieceStoreConfig) (*StoreClient, error) {
@@ -38,7 +39,7 @@ func NewStoreClient(pieceConfig *storage.PieceStoreConfig) (*StoreClient, error)
 	return &StoreClient{ps: ps}, nil
 }
 
-// GetPiece gets piece data from piece store
+// GetPiece gets piece data from piece store.
 func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, limit int64) ([]byte, error) {
 	startTime := time.Now()
 	defer func() {
@@ -61,7 +62,7 @@ func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, lim
 	return buf.Bytes(), nil
 }
 
-// PutPiece puts piece to piece store
+// PutPiece puts piece to piece store.
 func (client *StoreClient) PutPiece(key string, value []byte) error {
 	startTime := time.Now()
 	defer func() {
@@ -71,4 +72,16 @@ func (client *StoreClient) PutPiece(key string, value []byte) error {
 	}()
 
 	return client.ps.Put(context.Background(), key, bytes.NewReader(value))
+}
+
+// DeletePiece deletes piece from piece store.
+func (client *StoreClient) DeletePiece(key string) error {
+	startTime := time.Now()
+	defer func() {
+		observer := metrics.PieceStoreTimeHistogram.WithLabelValues(deletePieceMethodName)
+		observer.Observe(time.Since(startTime).Seconds())
+		metrics.PieceStoreRequestTotal.WithLabelValues(deletePieceMethodName)
+	}()
+
+	return client.ps.Delete(context.Background(), key)
 }

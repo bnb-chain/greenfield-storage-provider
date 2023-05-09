@@ -95,3 +95,35 @@ func ComputeSegmentCount(size uint64, spiltSize uint64) uint32 {
 	}
 	return segmentCount
 }
+
+// GenerateObjectSegmentKeyList generate object's segment piece key list.
+func GenerateObjectSegmentKeyList(objectID, objectSize, segmentSize uint64) []string {
+	var (
+		segmentCount uint32
+		segmentIndex uint32
+		pieceKeyList = make([]string, 0)
+	)
+
+	segmentCount = ComputeSegmentCount(objectSize, segmentSize)
+	for segmentIndex < segmentCount {
+		pieceKeyList = append(pieceKeyList, EncodeSegmentPieceKey(objectID, segmentIndex))
+		segmentIndex++
+	}
+	return pieceKeyList
+}
+
+// GenerateObjectECKeyList generate object's ec piece key list.
+func GenerateObjectECKeyList(objectID, objectSize, segmentSize, redundancyIndex uint64) []string {
+	var (
+		segmentCount uint32
+		segmentIndex uint32
+		pieceKeyList = make([]string, 0)
+	)
+
+	segmentCount = ComputeSegmentCount(objectSize, segmentSize)
+	for segmentIndex < segmentCount {
+		pieceKeyList = append(pieceKeyList, EncodeECPieceKey(objectID, segmentIndex, uint32(redundancyIndex)))
+		segmentIndex++
+	}
+	return pieceKeyList
+}
