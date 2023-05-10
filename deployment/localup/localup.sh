@@ -5,8 +5,8 @@ workspace=${basedir}
 source ${workspace}/env.info
 sp_bin_name=gnfd-sp
 sp_bin=${workspace}/../../build/${sp_bin_name}
-gnfd_bin=${workspace}/../../../greenfield/build/bin/gnfd
-gnfd_workspace=${workspace}/../../../greenfield/deployment/localup/
+gnfd_bin=${workspace}/../../greenfield/build/bin/gnfd
+gnfd_workspace=${workspace}/../../greenfield/deployment/localup/
 
 #########################
 # the command line help #
