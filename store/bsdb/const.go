@@ -22,4 +22,6 @@ const (
 	StatementTableName = "statements"
 	// GroupTableName defines the name of group table
 	GroupTableName = "groups"
+	// MasterDBTableName defines the name of master db table
+	MasterDBTableName = "master_db"
 )
