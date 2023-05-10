@@ -238,6 +238,12 @@ func (cfg *StorageProviderConfig) MakeManagerServiceConfig() (*manager.ManagerCo
 		SpOperatorAddress: cfg.SpOperatorAddress,
 		ChainConfig:       cfg.ChainConfig,
 		SpDBConfig:        cfg.SpDBConfig,
+		PieceStoreConfig:  cfg.PieceStoreConfig,
+	}
+	if _, ok := cfg.Endpoint[model.MetadataService]; ok {
+		managerConfig.MetadataGrpcAddress = cfg.Endpoint[model.MetadataService]
+	} else {
+		return nil, fmt.Errorf("missing metadata server gRPC address configuration for manager service")
 	}
 	return managerConfig, nil
 }
