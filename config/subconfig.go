@@ -106,6 +106,11 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 			APILimits:    apiLimitsMap,
 			HTTPLimitCfg: cfg.RateLimiter.HTTPLimitCfg,
 		}
+		gCfg.BandWidthLimitCfg = &localhttp.BandWidthLimiterConfig{
+			Enable: true,
+			R:      0.1,
+			B:      1,
+		}
 	}
 	return gCfg, nil
 }

@@ -7,17 +7,18 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bnb-chain/greenfield/types/s3util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	localHttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+
+	"github.com/bnb-chain/greenfield/types/s3util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getObjectHandler handles the get object request
@@ -101,6 +102,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -111,7 +113,10 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 			errDescription = makeErrorDescription(merrors.GRPCErrorToInnerError(err))
 			return
 		}
-
+		// If it is limited, it will block
+		if err := localHttp.BandWidthLimit.Limiter.Wait(ctx); err != nil {
+			log.Errorw("failed to Wait bandwidth limiter", "err", err)
+		}
 		if readN = len(resp.Data); readN == 0 {
 			log.Errorw("failed to get object due to return empty data", "response", resp)
 			continue
@@ -218,6 +223,10 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if readN > 0 {
+			// If it is limited, it will block
+			if err := localHttp.BandWidthLimit.Limiter.Wait(ctx); err != nil {
+				log.Errorw("failed to Wait bandwidth limiter", "err", err)
+			}
 			req := &uploadertypes.PutObjectRequest{
 				ObjectInfo: reqContext.objectInfo,
 				Payload:    buf[:readN],

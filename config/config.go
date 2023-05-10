@@ -39,6 +39,7 @@ type StorageProviderConfig struct {
 	MetricsCfg        *metrics.MetricsConfig
 	PProfCfg          *pprof.PProfConfig
 	RateLimiter       *localhttp.RateLimiterConfig
+	BandwidthLimiter  *localhttp.BandWidthLimiterConfig
 	DiscontinueCfg    *stopserving.DiscontinueConfig
 }
 
@@ -103,6 +104,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	MetricsCfg:        DefaultMetricsConfig,
 	PProfCfg:          DefaultPProfConfig,
 	RateLimiter:       DefaultRateLimiterConfig,
+	BandwidthLimiter:  DefaultBandwidthLimiterConfig,
 	DiscontinueCfg:    stopserving.DefaultDiscontinueConfig,
 }
 
@@ -177,6 +179,10 @@ var DefaultRateLimiterConfig = &localhttp.RateLimiterConfig{
 		RateLimit:  100,
 		RatePeriod: "S",
 	},
+}
+
+var DefaultBandwidthLimiterConfig = &localhttp.BandWidthLimiterConfig{
+	Enable: false,
 }
 
 // LoadConfig loads the config file from path

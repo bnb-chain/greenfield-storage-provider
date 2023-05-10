@@ -129,6 +129,9 @@ func (gateway *Gateway) serve() {
 		log.Errorw("failed to new api limiter", "err", err)
 		return
 	}
+	if gateway.config.BandWidthLimitCfg.Enable {
+		localhttp.NewBandWidthLimiter(gateway.config.BandWidthLimitCfg.R, gateway.config.BandWidthLimitCfg.B)
+	}
 	gateway.registerHandler(router)
 	server := &http.Server{
 		Addr:    gateway.config.HTTPAddress,
