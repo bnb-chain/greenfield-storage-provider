@@ -231,6 +231,8 @@ github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05f
 github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05fe9/go.mod h1:Ygz4wBHrgc7g0N+8+MrnTfS9LLn9aaTGa9hKopuym5k=
 github.com/bnb-chain/greenfield-tendermint v0.0.0-20230505031757-bb05128f3794 h1:ddvDrjb146Sm9bJN2PcRy9al17YtK1hHcB2vKJgnUcA=
 github.com/bnb-chain/greenfield-tendermint v0.0.0-20230505031757-bb05128f3794/go.mod h1:9q11eHNRY9FDwFH+4pompzPNGv//Z3VcfvkELaHJPMs=
+github.com/bnb-chain/juno/v4 v4.0.0-20230510081821-bbfa4211eae9 h1:v6gcDKN0o0QX3gFMdcqRwbRfJCqUjvXCEOw2/lO3mPo=
+github.com/bnb-chain/juno/v4 v4.0.0-20230510081821-bbfa4211eae9/go.mod h1:QdB5DWp714kOdRQU5JMiQ3ji6WoHHKLxKKa02EJNAxU=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=
@@ -1851,8 +1853,6 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-github.com/yutianwu/juno/v4 v4.0.0-20230508071527-d16521308c02 h1:u59I7lgMdH4rRK6HFDRQ5NYGq7lC84gIhOLrUGQbh/g=
-github.com/yutianwu/juno/v4 v4.0.0-20230508071527-d16521308c02/go.mod h1:QdB5DWp714kOdRQU5JMiQ3ji6WoHHKLxKKa02EJNAxU=
 github.com/ziutek/mymysql v1.5.4/go.mod h1:LMSpPZ6DbqWFxNCHW77HeMg9I646SAhApZ/wKdgO/C0=
 github.com/zmap/rc2 v0.0.0-20131011165748-24b9757f5521/go.mod h1:3YZ9o3WnatTIZhuOtot4IcUfzoKVjUHqu6WALIyI0nE=
 github.com/zmap/zcertificate v0.0.0-20180516150559-0e3d58b1bac4/go.mod h1:5iU54tB79AMBcySS0R2XIyZBAVmeHranShAFELYx7is=
