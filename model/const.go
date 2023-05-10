@@ -201,11 +201,11 @@ const (
 	// ListBucketReadRecordMaxRecordsQuery defines list read record max num
 	ListBucketReadRecordMaxRecordsQuery = "max-records"
 	// ListObjectsMaxKeysQuery defines the maximum number of keys returned to the response
-	ListObjectsMaxKeysQuery = "max_keys"
+	ListObjectsMaxKeysQuery = "max-keys"
 	// ListObjectsStartAfterQuery defines where you want to start listing from
-	ListObjectsStartAfterQuery = "start_after"
+	ListObjectsStartAfterQuery = "start-after"
 	// ListObjectsContinuationTokenQuery indicates that the list is being continued on this bucket with a token
-	ListObjectsContinuationTokenQuery = "continuation_token"
+	ListObjectsContinuationTokenQuery = "continuation-token"
 	// ListObjectsDelimiterQuery defines a character you use to group keys
 	ListObjectsDelimiterQuery = "delimiter"
 	// ListObjectsPrefixQuery defines limits the response to keys that begin with the specified prefix
