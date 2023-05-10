@@ -1,5 +1,7 @@
 package bsdb
 
+import "gorm.io/gorm"
+
 // ListObjectsByBucketName lists objects information by a bucket name.
 // The function takes the following parameters:
 // - bucketName: The name of the bucket to search for objects.
@@ -16,6 +18,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 		err     error
 		limit   int
 		results []*ListObjectsResult
+		filters []func(*gorm.DB) *gorm.DB
 	)
 
 	// return NextContinuationToken by adding 1 additionally
@@ -47,10 +50,18 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 			limit).Scan(&results).Error
 	} else {
 		// If delimiter is not specified, retrieve objects directly
+
+		if continuationToken != "" {
+			filters = append(filters, ContinuationTokenFilter(continuationToken))
+		}
+		if prefix != "" {
+			filters = append(filters, PrefixFilter(prefix))
+		}
+
 		err = b.db.Table((&Object{}).TableName()).
 			Select("*").
-			Where("bucket_name = ? AND object_name >= IF(? = '', '', ?)", bucketName, continuationToken, continuationToken).
-			Where("object_name LIKE ?", prefix+"%").
+			Where("bucket_name = ?", bucketName).
+			Scopes(filters...).
 			Limit(limit).
 			Order("object_name asc").
 			Find(&results).Error
