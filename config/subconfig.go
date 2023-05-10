@@ -225,7 +225,7 @@ func (cfg *StorageProviderConfig) MakeMetadataServiceConfig() (*metadata.Metadat
 		BsDBConfig:                 cfg.BsDBConfig,
 		BsDBSwitchedConfig:         cfg.BsDBSwitchedConfig,
 		BsDBSwitchCheckIntervalSec: cfg.MetadataCfg.BsDBSwitchCheckIntervalSec,
-		BsDBFlag:                   cfg.MetadataCfg.BsDBFlag,
+		IsMasterDB:                 cfg.MetadataCfg.IsMasterDB,
 	}
 	if _, ok := cfg.ListenAddress[model.MetadataService]; ok {
 		mCfg.GRPCAddress = cfg.ListenAddress[model.MetadataService]

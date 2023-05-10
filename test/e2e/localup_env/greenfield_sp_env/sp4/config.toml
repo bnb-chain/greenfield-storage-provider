@@ -100,5 +100,5 @@ RateLimit = 1
 RatePeriod = "S"
 
 [MetadataCfg]
-BsDBFlag = true
+IsMasterDB = true
 BsDBSwitchCheckIntervalSec = 3600

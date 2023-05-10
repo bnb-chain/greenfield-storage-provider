@@ -41,12 +41,12 @@ func NewMetadataService(config *metadata.MetadataConfig) (metadata *Metadata, er
 	}
 
 	var initialBsDB bsdb.BSDB
-	if config.BsDBFlag {
+	if config.IsMasterDB {
 		initialBsDB = bsDBBlockSyncer
 	} else {
 		initialBsDB = bsDBBlockSyncerBackUp
 	}
-	log.Debugf("current bs db flag is %t", config.BsDBFlag)
+	log.Debugf("current bs db flag is %t", config.IsMasterDB)
 
 	metadata = &Metadata{
 		config:                config,
@@ -115,9 +115,9 @@ func (metadata *Metadata) startDBSwitchListener(switchInterval time.Duration) {
 			if err != nil || signal == nil {
 				log.Errorw("failed to get switch db signal", "err", err)
 			}
-			log.Debugf("switchDB check: signal: %t and BsDBFlag: %t", signal.IsMaster, metadata.config.BsDBFlag)
+			log.Debugf("switchDB check: signal: %t and IsMasterDB: %t", signal.IsMaster, metadata.config.IsMasterDB)
 			// if a signal db is not equal to current metadata db, attempt to switch the database
-			if signal.IsMaster != metadata.config.BsDBFlag {
+			if signal.IsMaster != metadata.config.IsMasterDB {
 				metadata.switchDB(signal.IsMaster)
 			}
 		}
@@ -125,15 +125,15 @@ func (metadata *Metadata) startDBSwitchListener(switchInterval time.Duration) {
 }
 
 // switchDB is responsible for switching between the primary and backup Block Syncer databases.
-// Depending on the current value of the BsDBFlag in the Metadata configuration, it switches
+// Depending on the current value of the IsMasterDB in the Metadata configuration, it switches
 // the active Block Syncer database to the backup or the primary database.
-// After switching, it toggles the value of the BsDBFlag to indicate the active database.
+// After switching, it toggles the value of the IsMasterDB to indicate the active database.
 func (metadata *Metadata) switchDB(flag bool) {
 	if flag {
 		metadata.bsDB = metadata.bsDBBlockSyncer
 	} else {
 		metadata.bsDB = metadata.bsDBBlockSyncerBackUp
 	}
-	metadata.config.BsDBFlag = flag
+	metadata.config.IsMasterDB = flag
 	log.Info("db switched successfully")
 }

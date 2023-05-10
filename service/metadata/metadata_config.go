@@ -9,7 +9,7 @@ type MetadataConfig struct {
 	GRPCAddress        string
 	BsDBConfig         *config.SQLDBConfig
 	BsDBSwitchedConfig *config.SQLDBConfig
-	// BSDBFlag is used to determine which DB is currently being used
-	BsDBFlag                   bool
+	// IsMasterDB is used to determine if the master database (BsDBConfig) is currently being used.
+	IsMasterDB                 bool
 	BsDBSwitchCheckIntervalSec int64
 }
