@@ -147,16 +147,16 @@ message GetPaymentByBucketIDRequest {
   bool is_full_list = 2;
 }
 
-// GetBucketWithPaymentRequest is request type for the GetBucketWithPayment RPC method
-message GetBucketWithPaymentRequest {
+// GetBucketMetaByNameRequest is request type for the GetBucketMetaByName RPC method
+message GetBucketMetaByNameRequest {
   // bucket_name is the name of the bucket
   string bucket_name = 1;
   // is_full_list indicates whether this request can get the private buckets information
   bool is_full_list = 2;
 }
 
-// GetBucketWithPaymentResponse is response type for the GetBucketWithPayment RPC method
-message GetBucketWithPaymentResponse {
+// GetBucketMetaByNameResponse is response type for the GetBucketMetaByName RPC method
+message GetBucketMetaByNameResponse {
   // bucket defines the information of a bucket
   Bucket bucket = 1;
   // stream_record defines stream payment record of a stream account
@@ -267,6 +267,6 @@ service MetadataService {
   rpc GetPaymentByBucketID(GetPaymentByBucketIDRequest) returns (GetPaymentByBucketIDResponse) {};
   // VerifyPermission Verify the input items permission.
   rpc VerifyPermission(bnbchain.greenfield.storage.QueryVerifyPermissionRequest) returns (bnbchain.greenfield.storage.QueryVerifyPermissionResponse) {};
-  // GetBucketWithPayment get bucket info with payment info by a bucket name
-  rpc GetBucketWithPayment(GetBucketWithPaymentRequest) returns (GetBucketWithPaymentResponse) {};
+  // GetBucketMetaByName get bucket info with related info such as payment by name
+  rpc GetBucketMetaByName(GetBucketMetaByNameRequest) returns (GetBucketMetaByNameResponse) {};
 }

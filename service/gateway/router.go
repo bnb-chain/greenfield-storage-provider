@@ -26,8 +26,8 @@ const (
 	queryUploadProgressRouterName         = "queryUploadProgress"
 	downloadObjectByUniversalEndpointName = "DownloadObjectByUniversalEndpoint"
 	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
-	getObjectByNameRouterName             = "getObjectByName"
-	getBucketAndPaymentRouterName         = "getBucketAndPayment"
+	getObjectMetaByNameRouterName         = "getObjectMetaByName"
+	getBucketMetaByNameRouterName         = "getBucketMetaByName"
 )
 
 const (
@@ -62,15 +62,16 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Queries(model.UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
 	hostBucketRouter.NewRoute().
-		Name(getBucketAndPaymentRouterName).
+		Name(getBucketMetaByNameRouterName).
 		Methods(http.MethodGet).
-		Path("/bucket/payment").
-		HandlerFunc(g.getBucketWithPaymentHandler)
+		Queries(model.GetBucketMetaByNameQuery, "").
+		HandlerFunc(g.getBucketMetaByNameHandler)
 	hostBucketRouter.NewRoute().
-		Name(getObjectByNameRouterName).
+		Name(getObjectMetaByNameRouterName).
 		Methods(http.MethodGet).
-		Path("/{object:.+}/metadata").
-		HandlerFunc(g.getObjectByNameHandler)
+		Path("/{object:.+}").
+		Queries(model.GetObjectMetaByNameQuery, "").
+		HandlerFunc(g.getObjectMetaByNameHandler)
 	hostBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).
@@ -98,11 +99,9 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 	hostBucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	// bucket list router, path style
-	bucketListRouter := r.Host(g.config.Domain).Subrouter()
-	bucketListRouter.NewRoute().
+	r.Path("/").
 		Name(getUserBucketsRouterName).
 		Methods(http.MethodGet).
-		Path("/").
 		HandlerFunc(g.getUserBucketsHandler)
 
 	// admin router, path style
@@ -157,15 +156,16 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Queries(model.UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
 	pathBucketRouter.NewRoute().
-		Name(getBucketAndPaymentRouterName).
+		Name(getBucketMetaByNameRouterName).
 		Methods(http.MethodGet).
-		Path("/bucket/payment").
-		HandlerFunc(g.getBucketWithPaymentHandler)
+		Queries(model.GetBucketMetaByNameQuery, "").
+		HandlerFunc(g.getBucketMetaByNameHandler)
 	pathBucketRouter.NewRoute().
-		Name(getObjectByNameRouterName).
+		Name(getObjectMetaByNameRouterName).
 		Methods(http.MethodGet).
-		Path("/{object:.+}/metadata").
-		HandlerFunc(g.getObjectByNameHandler)
+		Path("/{object:.+}").
+		Queries(model.GetObjectMetaByNameQuery, "").
+		HandlerFunc(g.getObjectMetaByNameHandler)
 	pathBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).

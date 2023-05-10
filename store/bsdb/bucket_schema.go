@@ -56,8 +56,8 @@ func (b *Bucket) TableName() string {
 	return BucketTableName
 }
 
-// BucketWithPayment is the structure for user bucket with its related payment info
-type BucketWithPayment struct {
+// BucketFullMeta is the structure for user bucket with its related info
+type BucketFullMeta struct {
 	Bucket
 	StreamRecord
 }

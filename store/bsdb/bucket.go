@@ -103,10 +103,10 @@ func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpAddress strin
 	return buckets, err
 }
 
-func (b *BsDBImpl) GetBucketWithPayment(bucketName string, isFullList bool) (*Bucket, *StreamRecord, error) {
+func (b *BsDBImpl) GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error) {
 	var (
-		bucketWithPayment *BucketWithPayment
-		err               error
+		bucketFullMeta *BucketFullMeta
+		err            error
 	)
 
 	if isFullList {
@@ -114,15 +114,15 @@ func (b *BsDBImpl) GetBucketWithPayment(bucketName string, isFullList bool) (*Bu
 			Select("*").
 			Joins("left join stream_records on buckets.payment_address = stream_records.account").
 			Where("buckets.bucket_name = ?", bucketName).
-			Take(&bucketWithPayment).Error
+			Take(&bucketFullMeta).Error
 	} else {
 		err = b.db.Table((&Bucket{}).TableName()).
 			Select("*").
 			Joins("left join stream_records on buckets.payment_address = stream_records.account").
 			Where("buckets.bucket_name = ? and "+
 				"buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'", bucketName).
-			Take(&bucketWithPayment).Error
+			Take(&bucketFullMeta).Error
 	}
 
-	return &bucketWithPayment.Bucket, &bucketWithPayment.StreamRecord, err
+	return bucketFullMeta, err
 }

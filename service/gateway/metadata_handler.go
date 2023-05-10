@@ -201,8 +201,8 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	w.Write(b.Bytes())
 }
 
-// getObjectMetaByNameHandler handle get object info by name request
-func (gateway *Gateway) getObjectByNameHandler(w http.ResponseWriter, r *http.Request) {
+// getObjectMetaByNameHandler handle get object metadata by name request
+func (gateway *Gateway) getObjectMetaByNameHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
 		b              bytes.Buffer
@@ -216,9 +216,9 @@ func (gateway *Gateway) getObjectByNameHandler(w http.ResponseWriter, r *http.Re
 			_ = errDescription.errorJSONResponse(w, reqContext)
 		}
 		if errDescription != nil && errDescription.statusCode != http.StatusOK {
-			log.Errorf("action(%v) statusCode(%v) %v", getObjectByNameRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+			log.Errorf("action(%v) statusCode(%v) %v", getObjectMetaByNameRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Infof("action(%v) statusCode(200) %v", getObjectByNameRouterName, reqContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", getObjectMetaByNameRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
@@ -265,8 +265,8 @@ func (gateway *Gateway) getObjectByNameHandler(w http.ResponseWriter, r *http.Re
 	w.Write(b.Bytes())
 }
 
-// getBucketWithPaymentHandler handle get bucket info with payment request
-func (gateway *Gateway) getBucketWithPaymentHandler(w http.ResponseWriter, r *http.Request) {
+// getBucketMetaByNameHandler handle get bucket metadata by name request
+func (gateway *Gateway) getBucketMetaByNameHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
 		b              bytes.Buffer
@@ -280,14 +280,14 @@ func (gateway *Gateway) getBucketWithPaymentHandler(w http.ResponseWriter, r *ht
 			_ = errDescription.errorJSONResponse(w, reqContext)
 		}
 		if errDescription != nil && errDescription.statusCode != http.StatusOK {
-			log.Errorf("action(%v) statusCode(%v) %v", getBucketAndPaymentRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+			log.Errorf("action(%v) statusCode(%v) %v", getBucketMetaByNameRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Infof("action(%v) statusCode(200) %v", getBucketAndPaymentRouterName, reqContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", getBucketMetaByNameRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
 	if gateway.metadata == nil {
-		log.Error("failed to get bucket and payment info due to not config metadata")
+		log.Error("failed to get bucket info due to not config metadata")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -298,22 +298,22 @@ func (gateway *Gateway) getBucketWithPaymentHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	req := &metatypes.GetBucketWithPaymentRequest{
+	req := &metatypes.GetBucketMetaByNameRequest{
 		BucketName: reqContext.bucketName,
 		IsFullList: true,
 	}
 
 	ctx := log.Context(context.Background(), req)
-	resp, err := gateway.metadata.GetBucketWithPayment(ctx, req)
+	resp, err := gateway.metadata.GetBucketMetaByName(ctx, req)
 	if err != nil {
-		log.Errorf("failed to get bucket with payment", "error", err)
+		log.Errorf("failed to get bucket metadata", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}
 
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, resp); err != nil {
-		log.Errorf("failed to get bucket with payment", "error", err)
+		log.Errorf("failed to get bucket metadata", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}

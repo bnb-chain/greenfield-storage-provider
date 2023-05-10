@@ -218,6 +218,10 @@ const (
 	ListObjectsDelimiterQuery = "delimiter"
 	// ListObjectsPrefixQuery defines limits the response to keys that begin with the specified prefix
 	ListObjectsPrefixQuery = "prefix"
+	// GetBucketMetaByNameQuery defines get bucket metadata query, which is used to route request
+	GetBucketMetaByNameQuery = "bucket-meta"
+	// GetObjectMetaByNameQuery defines get object metadata query, which is used to route request
+	GetObjectMetaByNameQuery = "object-meta"
 	// StartTimestampUs defines start timestamp in microsecond, which is used by list read record, [start_ts,end_ts)
 	StartTimestampUs = "start-timestamp"
 	// EndTimestampUs defines end timestamp in microsecond, which is used by list read record, [start_ts,end_ts)

@@ -213,7 +213,7 @@ func (metadata *Metadata) ListExpiredBucketsBySp(ctx context.Context, req *metat
 	return resp, nil
 }
 
-func (metadata *Metadata) GetBucketWithPayment(ctx context.Context, req *metatypes.GetBucketWithPaymentRequest) (resp *metatypes.GetBucketWithPaymentResponse, err error) {
+func (metadata *Metadata) GetBucketMetaByName(ctx context.Context, req *metatypes.GetBucketMetaByNameRequest) (resp *metatypes.GetBucketMetaByNameResponse, err error) {
 	var (
 		bucket          *model.Bucket
 		bucketRes       *metatypes.Bucket
@@ -223,11 +223,13 @@ func (metadata *Metadata) GetBucketWithPayment(ctx context.Context, req *metatyp
 	)
 
 	ctx = log.Context(ctx, req)
-	bucket, streamRecord, err = metadata.bsDB.GetBucketWithPayment(req.GetBucketName(), req.GetIsFullList())
+	bucketFullMeta, err := metadata.bsDB.GetBucketMetaByName(req.GetBucketName(), req.GetIsFullList())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get bucket info with payment info", "error", err)
+		log.CtxErrorw(ctx, "failed to get bucket meta by name", "error", err)
 		return
 	}
+	bucket = &bucketFullMeta.Bucket
+	streamRecord = &bucketFullMeta.StreamRecord
 
 	if bucket != nil {
 		bucketRes = &metatypes.Bucket{
@@ -278,7 +280,7 @@ func (metadata *Metadata) GetBucketWithPayment(ctx context.Context, req *metatyp
 		}
 	}
 
-	resp = &metatypes.GetBucketWithPaymentResponse{Bucket: bucketRes, StreamRecord: streamRecordRes}
-	log.CtxInfow(ctx, "succeed to get bucket info with payment info")
+	resp = &metatypes.GetBucketMetaByNameResponse{Bucket: bucketRes, StreamRecord: streamRecordRes}
+	log.CtxInfow(ctx, "succeed to get bucket meta by name")
 	return resp, nil
 }
