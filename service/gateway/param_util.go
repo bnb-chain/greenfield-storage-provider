@@ -22,11 +22,11 @@ func hasInvalidPath(path string) bool {
 	return false
 }
 
-// isValidObjectPrefix checks if the given object prefix is valid:
+// checkValidObjectPrefix checks if the given object prefix is valid:
 // - does not have invalid path segments
 // - is a valid UTF-8 string
 // - does not contain double slashes "//"
-func isValidObjectPrefix(prefix string) bool {
+func checkValidObjectPrefix(prefix string) bool {
 	if hasInvalidPath(prefix) {
 		return false
 	}

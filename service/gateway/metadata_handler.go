@@ -113,11 +113,11 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 
 	queryParams = reqContext.request.URL.Query()
 	requestBucketName = reqContext.bucketName
-	requestMaxKeys = queryParams.Get("max_keys")
-	requestStartAfter = queryParams.Get("start_after")
-	requestContinuationToken = queryParams.Get("continuation_token")
-	requestDelimiter = queryParams.Get("delimiter")
-	requestPrefix = queryParams.Get("prefix")
+	requestMaxKeys = queryParams.Get(model.ListObjectsMaxKeysQuery)
+	requestStartAfter = queryParams.Get(model.ListObjectsStartAfterQuery)
+	requestContinuationToken = queryParams.Get(model.ListObjectsContinuationTokenQuery)
+	requestDelimiter = queryParams.Get(model.ListObjectsDelimiterQuery)
+	requestPrefix = queryParams.Get(model.ListObjectsPrefixQuery)
 
 	if err = s3util.CheckValidBucketName(requestBucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", requestBucketName, "error", err)
@@ -163,7 +163,7 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		}
 	}
 
-	if ok = isValidObjectPrefix(requestPrefix); !ok {
+	if ok = checkValidObjectPrefix(requestPrefix); !ok {
 		log.Errorw("failed to check requestPrefix", "prefix", requestPrefix, "error", err)
 		errDescription = InvalidPrefix
 		return
