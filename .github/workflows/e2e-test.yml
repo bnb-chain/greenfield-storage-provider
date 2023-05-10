@@ -44,11 +44,6 @@ jobs:
       # Checkout Greenfield-SP
       - name: Checkout Greenfield-SP
         uses: actions/checkout@v3
-      # Build Greenfield-SP
-      - name: Build Greenfield-SP
-        run: |
-          make install-tools
-          make build
       # Build Greenfield
       - name: Build Greenfield
         run: |
@@ -57,6 +52,11 @@ jobs:
           git checkout ${{ env.GreenfileldTag }}
           make proto-gen & make build
           cd ..
+      # Build Greenfield-SP
+      - name: Build Greenfield-SP
+        run: |
+          make install-tools
+          make build
       # Run MySQL
       - name: Run MySQL
         run: |
