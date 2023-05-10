@@ -164,3 +164,14 @@ func (client *MetadataClient) VerifyPermission(ctx context.Context, in *storaget
 	}
 	return resp, nil
 }
+
+// GetBucketWithPayment get bucket info with its related payment info
+func (client *MetadataClient) GetBucketWithPayment(ctx context.Context, in *metatypes.GetBucketWithPaymentRequest, opts ...grpc.CallOption) (*metatypes.GetBucketWithPaymentResponse, error) {
+	resp, err := client.metadata.GetBucketWithPayment(ctx, in, opts...)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get bucket with payment rpc by bucket name", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}

@@ -7,10 +7,12 @@ import (
 	"github.com/bnb-chain/greenfield/types/s3util"
 	"github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 )
 
 // GetUserBuckets get buckets info by a user address
@@ -208,5 +210,75 @@ func (metadata *Metadata) ListExpiredBucketsBySp(ctx context.Context, req *metat
 	}
 	resp = &metatypes.ListExpiredBucketsBySpResponse{Buckets: res}
 	log.CtxInfow(ctx, "succeed to get user buckets")
+	return resp, nil
+}
+
+func (metadata *Metadata) GetBucketWithPayment(ctx context.Context, req *metatypes.GetBucketWithPaymentRequest) (resp *metatypes.GetBucketWithPaymentResponse, err error) {
+	var (
+		bucket          *model.Bucket
+		bucketRes       *metatypes.Bucket
+		streamRecord    *model.StreamRecord
+		streamRecordRes *paymenttypes.StreamRecord
+		outflows        []paymenttypes.OutFlow
+	)
+
+	ctx = log.Context(ctx, req)
+	bucket, streamRecord, err = metadata.bsDB.GetBucketWithPayment(req.GetBucketName(), req.GetIsFullList())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get bucket info with payment info", "error", err)
+		return
+	}
+
+	if bucket != nil {
+		bucketRes = &metatypes.Bucket{
+			BucketInfo: &types.BucketInfo{
+				Owner:            bucket.Owner.String(),
+				BucketName:       bucket.BucketName,
+				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:       types.SourceType(types.SourceType_value[bucket.SourceType]),
+				CreateAt:         bucket.CreateTime,
+				PaymentAddress:   bucket.PaymentAddress.String(),
+				PrimarySpAddress: bucket.PrimarySpAddress.String(),
+				ChargedReadQuota: bucket.ChargedReadQuota,
+				Visibility:       types.VisibilityType(types.VisibilityType_value[bucket.Visibility]),
+				BillingInfo: types.BillingInfo{
+					PriceTime:              0,
+					TotalChargeSize:        0,
+					SecondarySpObjectsSize: nil,
+				},
+				BucketStatus: types.BucketStatus(types.BucketStatus_value[bucket.Status]),
+			},
+			Removed:      bucket.Removed,
+			DeleteAt:     bucket.DeleteAt,
+			DeleteReason: bucket.DeleteReason,
+			Operator:     bucket.Operator.String(),
+			CreateTxHash: bucket.CreateTxHash.String(),
+			UpdateTxHash: bucket.UpdateTxHash.String(),
+			UpdateAt:     bucket.UpdateAt,
+			UpdateTime:   bucket.UpdateTime,
+		}
+	}
+
+	if streamRecord != nil {
+		err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to unmarshal out flows", "error", err)
+			return
+		}
+		streamRecordRes = &paymenttypes.StreamRecord{
+			Account:         streamRecord.Account.String(),
+			CrudTimestamp:   streamRecord.CrudTimestamp,
+			NetflowRate:     math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
+			StaticBalance:   math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
+			BufferBalance:   math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
+			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
+			Status:          paymenttypes.StreamAccountStatus(paymenttypes.StreamAccountStatus_value[streamRecord.Status]),
+			SettleTimestamp: streamRecord.SettleTimestamp,
+			OutFlows:        outflows,
+		}
+	}
+
+	resp = &metatypes.GetBucketWithPaymentResponse{Bucket: bucketRes, StreamRecord: streamRecordRes}
+	log.CtxInfow(ctx, "succeed to get bucket info with payment info")
 	return resp, nil
 }

@@ -55,3 +55,9 @@ type Bucket struct {
 func (b *Bucket) TableName() string {
 	return BucketTableName
 }
+
+// BucketWithPayment is the structure for user bucket with its related payment info
+type BucketWithPayment struct {
+	Bucket
+	StreamRecord
+}

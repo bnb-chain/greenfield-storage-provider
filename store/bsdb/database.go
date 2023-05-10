@@ -40,6 +40,8 @@ type Metadata interface {
 	GetObjectByName(objectName string, bucketName string, isFullList bool) (*Object, error)
 	// GetSwitchDBSignal check if there is a signal to switch the database
 	GetSwitchDBSignal() (*MasterDB, error)
+	// GetBucketWithPayment get bucket info with its related payment info
+	GetBucketWithPayment(bucketName string, isFullList bool) (*Bucket, *StreamRecord, error)
 }
 
 // BSDB contains all the methods required by block syncer database

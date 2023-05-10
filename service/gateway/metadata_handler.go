@@ -200,3 +200,124 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
 	w.Write(b.Bytes())
 }
+
+// getObjectMetaByNameHandler handle get object info by name request
+func (gateway *Gateway) getObjectByNameHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err            error
+		b              bytes.Buffer
+		errDescription *errorDescription
+		reqContext     *requestContext
+	)
+
+	reqContext = newRequestContext(r)
+	defer func() {
+		if errDescription != nil {
+			_ = errDescription.errorJSONResponse(w, reqContext)
+		}
+		if errDescription != nil && errDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", getObjectByNameRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+		} else {
+			log.Infof("action(%v) statusCode(200) %v", getObjectByNameRouterName, reqContext.generateRequestDetail())
+		}
+	}()
+
+	if gateway.metadata == nil {
+		log.Error("failed to get object by name due to not config metadata")
+		errDescription = NotExistComponentError
+		return
+	}
+
+	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
+		errDescription = InvalidBucketName
+		return
+	}
+
+	if err = s3util.CheckValidObjectName(reqContext.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqContext.objectName, "error", err)
+		errDescription = InvalidKey
+		return
+	}
+
+	req := &metatypes.GetObjectByObjectNameAndBucketNameRequest{
+		BucketName: reqContext.bucketName,
+		ObjectName: reqContext.objectName,
+		IsFullList: true,
+	}
+
+	ctx := log.Context(context.Background(), req)
+	resp, err := gateway.metadata.GetObjectByObjectNameAndBucketName(ctx, req)
+	if err != nil {
+		log.Errorf("failed to get object by object name and bucket name", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, resp); err != nil {
+		log.Errorf("failed to get object by object name and bucket name", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getBucketWithPaymentHandler handle get bucket info with payment request
+func (gateway *Gateway) getBucketWithPaymentHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err            error
+		b              bytes.Buffer
+		errDescription *errorDescription
+		reqContext     *requestContext
+	)
+
+	reqContext = newRequestContext(r)
+	defer func() {
+		if errDescription != nil {
+			_ = errDescription.errorJSONResponse(w, reqContext)
+		}
+		if errDescription != nil && errDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", getBucketAndPaymentRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+		} else {
+			log.Infof("action(%v) statusCode(200) %v", getBucketAndPaymentRouterName, reqContext.generateRequestDetail())
+		}
+	}()
+
+	if gateway.metadata == nil {
+		log.Error("failed to get bucket and payment info due to not config metadata")
+		errDescription = NotExistComponentError
+		return
+	}
+
+	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
+		errDescription = InvalidBucketName
+		return
+	}
+
+	req := &metatypes.GetBucketWithPaymentRequest{
+		BucketName: reqContext.bucketName,
+		IsFullList: true,
+	}
+
+	ctx := log.Context(context.Background(), req)
+	resp, err := gateway.metadata.GetBucketWithPayment(ctx, req)
+	if err != nil {
+		log.Errorf("failed to get bucket with payment", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, resp); err != nil {
+		log.Errorf("failed to get bucket with payment", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}

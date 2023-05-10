@@ -26,6 +26,8 @@ const (
 	queryUploadProgressRouterName         = "queryUploadProgress"
 	downloadObjectByUniversalEndpointName = "DownloadObjectByUniversalEndpoint"
 	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
+	getObjectByNameRouterName             = "getObjectByName"
+	getBucketAndPaymentRouterName         = "getBucketAndPayment"
 )
 
 const (
@@ -60,6 +62,16 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Queries(model.UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
 	hostBucketRouter.NewRoute().
+		Name(getBucketAndPaymentRouterName).
+		Methods(http.MethodGet).
+		Path("/bucket/payment").
+		HandlerFunc(g.getBucketWithPaymentHandler)
+	hostBucketRouter.NewRoute().
+		Name(getObjectByNameRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}/metadata").
+		HandlerFunc(g.getObjectByNameHandler)
+	hostBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
@@ -85,7 +97,7 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		HandlerFunc(g.listObjectsByBucketNameHandler)
 	hostBucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
-	// bucket list router, virtual-hosted style
+	// bucket list router, path style
 	bucketListRouter := r.Host(g.config.Domain).Subrouter()
 	bucketListRouter.NewRoute().
 		Name(getUserBucketsRouterName).
@@ -144,6 +156,16 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Path("/{object:.+}").
 		Queries(model.UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
+	pathBucketRouter.NewRoute().
+		Name(getBucketAndPaymentRouterName).
+		Methods(http.MethodGet).
+		Path("/bucket/payment").
+		HandlerFunc(g.getBucketWithPaymentHandler)
+	pathBucketRouter.NewRoute().
+		Name(getObjectByNameRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}/metadata").
+		HandlerFunc(g.getObjectByNameHandler)
 	pathBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).

@@ -164,7 +164,7 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 	return resp, nil
 }
 
-// GetObjectByObjectNameAndBucketName get object info by an object name
+// GetObjectByObjectNameAndBucketName get object info by an object name and bucket name
 func (metadata *Metadata) GetObjectByObjectNameAndBucketName(ctx context.Context, req *metatypes.GetObjectByObjectNameAndBucketNameRequest) (resp *metatypes.GetObjectByObjectNameAndBucketNameResponse, err error) {
 	var (
 		object *model.Object
