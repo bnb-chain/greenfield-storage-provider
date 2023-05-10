@@ -98,8 +98,8 @@ func (sg *streamReaderGroup) produceStreamPieceData() {
 			}
 			if sg.task.objectInfo.GetRedundancyType() == types.REDUNDANCY_EC_TYPE {
 				ecPieceData, err := redundancy.EncodeRawSegment(segmentPieceData,
-					int(sg.task.storageParams.GetRedundantDataChunkNum()),
-					int(sg.task.storageParams.GetRedundantParityChunkNum()))
+					int(sg.task.storageParams.VersionedParams.GetRedundantDataChunkNum()),
+					int(sg.task.storageParams.VersionedParams.GetRedundantParityChunkNum()))
 				if err != nil {
 					for idx := range sg.streamReaderMap {
 						sg.streamReaderMap[idx].pWrite.CloseWithError(err)
@@ -241,8 +241,8 @@ func (t *streamReplicateObjectTask) init() error {
 		return err
 	}
 	t.segmentPieceNumber = int(piecestore.ComputeSegmentCount(t.objectInfo.GetPayloadSize(),
-		t.storageParams.GetMaxSegmentSize()))
-	t.redundancyNumber = int(t.storageParams.GetRedundantDataChunkNum() + t.storageParams.GetRedundantParityChunkNum())
+		t.storageParams.VersionedParams.GetMaxSegmentSize()))
+	t.redundancyNumber = int(t.storageParams.VersionedParams.GetRedundantDataChunkNum() + t.storageParams.VersionedParams.GetRedundantParityChunkNum())
 	if t.redundancyNumber+1 != len(t.objectInfo.GetChecksums()) {
 		log.CtxError(t.ctx, "failed to init due to redundancy number is not equal to checksums")
 		return merrors.ErrInvalidParams
@@ -255,11 +255,11 @@ func (t *streamReplicateObjectTask) init() error {
 	}
 	t.sortedSpEndpoints = maps.SortKeys(t.approvalResponseMap)
 	// calculate the reserve memory, which is used in execute time
-	t.approximateMemSize = int(float64(t.storageParams.GetMaxSegmentSize()) *
-		(float64(t.redundancyNumber)/float64(t.storageParams.GetRedundantDataChunkNum()) + 1))
-	if t.objectInfo.GetPayloadSize() < t.storageParams.GetMaxSegmentSize() {
+	t.approximateMemSize = int(float64(t.storageParams.VersionedParams.GetMaxSegmentSize()) *
+		(float64(t.redundancyNumber)/float64(t.storageParams.VersionedParams.GetRedundantDataChunkNum()) + 1))
+	if t.objectInfo.GetPayloadSize() < t.storageParams.VersionedParams.GetMaxSegmentSize() {
 		t.approximateMemSize = int(float64(t.objectInfo.GetPayloadSize()) *
-			(float64(t.redundancyNumber)/float64(t.storageParams.GetRedundantDataChunkNum()) + 1))
+			(float64(t.redundancyNumber)/float64(t.storageParams.VersionedParams.GetRedundantDataChunkNum()) + 1))
 	}
 	err = t.ComputeReplicatePiecesSizeForOneSP()
 	if err != nil {
@@ -470,8 +470,8 @@ func (t *streamReplicateObjectTask) ComputeReplicatePiecesSizeForOneSP() error {
 		}
 		if t.objectInfo.GetRedundancyType() == types.REDUNDANCY_EC_TYPE {
 			ecPieceData, err := redundancy.EncodeRawSegment(segmentPieceData,
-				int(t.storageParams.GetRedundantDataChunkNum()),
-				int(t.storageParams.GetRedundantParityChunkNum()))
+				int(t.storageParams.VersionedParams.GetRedundantDataChunkNum()),
+				int(t.storageParams.VersionedParams.GetRedundantParityChunkNum()))
 			if err != nil {
 				return 0, err
 			}

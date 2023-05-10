@@ -187,7 +187,7 @@ func (t *replicateObjectTask) init() error {
 			int(t.objectInfo.GetPayloadSize())
 	} else {
 		t.approximateMemSize = int(math.Ceil(
-			((float64(t.storageParams.VersionedParams.GetRedundantDataChunkNum())+float64(t.storageParams.GetRedundantParityChunkNum()))/
+			((float64(t.storageParams.VersionedParams.GetRedundantDataChunkNum())+float64(t.storageParams.VersionedParams.GetRedundantParityChunkNum()))/
 				float64(t.storageParams.VersionedParams.GetRedundantDataChunkNum()) + 1) *
 				float64(t.objectInfo.GetPayloadSize())))
 	}
@@ -420,8 +420,8 @@ func (t *replicateObjectTask) encodeReplicateData() (data [][][]byte, err error)
 			}
 			if t.objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
 				encodeData, innerErr := redundancy.EncodeRawSegment(segmentPieceData,
-					int(t.storageParams.GetRedundantDataChunkNum()),
-					int(t.storageParams.GetRedundantParityChunkNum()))
+					int(t.storageParams.VersionedParams.GetRedundantDataChunkNum()),
+					int(t.storageParams.VersionedParams.GetRedundantParityChunkNum()))
 				if innerErr != nil {
 					log.CtxErrorw(t.ctx, "failed to encode ec data", "key", key)
 					return
