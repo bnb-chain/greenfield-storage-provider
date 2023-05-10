@@ -75,7 +75,7 @@ jobs:
           bash ./deployment/localup/localup.sh --generate $GITHUB_WORKSPACE/greenfield/sp.json ${{ env.MYSQL_USER }} ${{ env.MYSQL_PASSWORD }} ${{ env.MYSQL_IP }}:${{ env.MYSQL_PORT }}
           bash ./deployment/localup/localup.sh --reset
           bash ./deployment/localup/localup.sh --start
-          sleep 5
+          sleep 10
           tail -n 1000 deployment/localup/local_env/sp0/gnfd-sp.log
           ps -ef | grep gnfd-sp | wc -l
       # Run E2E Test
