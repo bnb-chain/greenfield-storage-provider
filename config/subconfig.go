@@ -106,10 +106,10 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 			APILimits:    apiLimitsMap,
 			HTTPLimitCfg: cfg.RateLimiter.HTTPLimitCfg,
 		}
-		gCfg.BandWidthLimitCfg = &localhttp.BandWidthLimiterConfig{
-			Enable: true,
-			R:      0.1,
-			B:      1,
+		gCfg.BandwidthLimitCfg = &localhttp.BandwidthLimiterConfig{
+			Enable: false,
+			R:      100,
+			B:      1000,
 		}
 	}
 	return gCfg, nil
@@ -227,7 +227,10 @@ func (cfg *StorageProviderConfig) MakeTaskNodeConfig() (*tasknode.TaskNodeConfig
 // MakeMetadataServiceConfig make meta data service config from StorageProviderConfig
 func (cfg *StorageProviderConfig) MakeMetadataServiceConfig() (*metadata.MetadataConfig, error) {
 	mCfg := &metadata.MetadataConfig{
-		SpDBConfig: cfg.SpDBConfig,
+		BsDBConfig:                 cfg.BsDBConfig,
+		BsDBSwitchedConfig:         cfg.BsDBSwitchedConfig,
+		BsDBSwitchCheckIntervalSec: cfg.MetadataCfg.BsDBSwitchCheckIntervalSec,
+		IsMasterDB:                 cfg.MetadataCfg.IsMasterDB,
 	}
 	if _, ok := cfg.ListenAddress[model.MetadataService]; ok {
 		mCfg.GRPCAddress = cfg.ListenAddress[model.MetadataService]
@@ -243,6 +246,12 @@ func (cfg *StorageProviderConfig) MakeManagerServiceConfig() (*manager.ManagerCo
 		SpOperatorAddress: cfg.SpOperatorAddress,
 		ChainConfig:       cfg.ChainConfig,
 		SpDBConfig:        cfg.SpDBConfig,
+		PieceStoreConfig:  cfg.PieceStoreConfig,
+	}
+	if _, ok := cfg.Endpoint[model.MetadataService]; ok {
+		managerConfig.MetadataGrpcAddress = cfg.Endpoint[model.MetadataService]
+	} else {
+		return nil, fmt.Errorf("missing metadata server gRPC address configuration for manager service")
 	}
 	return managerConfig, nil
 }

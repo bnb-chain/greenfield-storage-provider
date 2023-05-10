@@ -19,5 +19,5 @@ type GatewayConfig struct {
 	MetadataServiceAddress   string
 	AuthServiceAddress       string
 	APILimiterCfg            *localhttp.APILimiterConfig
-	BandWidthLimitCfg        *localhttp.BandWidthLimiterConfig
+	BandwidthLimitCfg        *localhttp.BandwidthLimiterConfig
 }

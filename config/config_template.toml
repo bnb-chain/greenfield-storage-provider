@@ -31,6 +31,18 @@ Passwd = "test_pwd"
 Address = "localhost:3306"
 Database = "storage_provider_db"
 
+[BsDBConfig]
+User = "root"
+Passwd = "root"
+Address = "localhost:3306"
+Database = "sp_0"
+
+[BsDBSwitchedConfig]
+User = "root"
+Passwd = "root"
+Address = "localhost:3306"
+Database = "sp_0"
+
 [PieceStoreConfig]
 Shards = 0
 
@@ -92,5 +104,16 @@ On = false
 RateLimit = 1
 RatePeriod = "S"
 
+[BandwidthLimiter]
+Enable = false
+R = 100
+B = 1000
+
 [StopServingCfg]
 BucketKeepAliveDays = 7
+
+[MetadataCfg]
+IsMasterDB = true
+BsDBSwitchCheckIntervalSec = 3600
+
+

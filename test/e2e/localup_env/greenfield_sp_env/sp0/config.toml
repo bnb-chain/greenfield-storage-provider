@@ -31,6 +31,18 @@ Passwd = "root"
 Address = "localhost:3306"
 Database = "sp_0"
 
+[BsDBConfig]
+User = "root"
+Passwd = "root"
+Address = "localhost:3306"
+Database = "sp_0"
+
+[BsDBSwitchedConfig]
+User = "root"
+Passwd = "root"
+Address = "localhost:3306"
+Database = "sp_0"
+
 [PieceStoreConfig]
 Shards = 0
 
@@ -86,3 +98,7 @@ PathPattern = []
 On = false
 RateLimit = 1
 RatePeriod = "S"
+
+[MetadataCfg]
+IsMasterDB = true
+BsDBSwitchCheckIntervalSec = 3600

@@ -10,6 +10,8 @@ import (
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	metadataclient "github.com/bnb-chain/greenfield-storage-provider/service/metadata/client"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
@@ -21,14 +23,17 @@ var (
 )
 
 // Manager module is responsible for implementing internal management functions.
-// Currently, it supports periodic update of sp info list and storage params information in spdb.
-// TODO::support gc and configuration management, etc.
+// Currently, it supports periodic update of sp info list and storage params information in sp-db.
+// TODO: support gc and configuration management, etc.
 type Manager struct {
-	config  *ManagerConfig
-	running atomic.Value
-	stopCh  chan struct{}
-	chain   *gnfd.Greenfield
-	spDB    sqldb.SPDB
+	config     *ManagerConfig
+	running    atomic.Value
+	stopCh     chan struct{}
+	chain      *gnfd.Greenfield
+	spDB       sqldb.SPDB
+	metadata   *metadataclient.MetadataClient
+	pieceStore *psclient.StoreClient
+	gcWorker   *GCWorker
 }
 
 // NewManagerService returns an instance of manager
@@ -39,15 +44,24 @@ func NewManagerService(cfg *ManagerConfig) (*Manager, error) {
 	)
 
 	manager = &Manager{
-		config: cfg,
-		stopCh: make(chan struct{}),
+		config:   cfg,
+		stopCh:   make(chan struct{}),
+		gcWorker: &GCWorker{},
 	}
 	if manager.chain, err = gnfd.NewGreenfield(cfg.ChainConfig); err != nil {
 		log.Errorw("failed to create chain client", "error", err)
 		return nil, err
 	}
 	if manager.spDB, err = sqldb.NewSpDB(cfg.SpDBConfig); err != nil {
-		log.Errorw("failed to create spdb client", "error", err)
+		log.Errorw("failed to create sp-db client", "error", err)
+		return nil, err
+	}
+	if manager.metadata, err = metadataclient.NewMetadataClient(cfg.MetadataGrpcAddress); err != nil {
+		log.Errorw("failed to create metadata client", "error", err)
+		return nil, err
+	}
+	if manager.pieceStore, err = psclient.NewStoreClient(cfg.PieceStoreConfig); err != nil {
+		log.Errorw("failed to create piece store client", "error", err)
 		return nil, err
 	}
 
@@ -65,7 +79,9 @@ func (m *Manager) Start(ctx context.Context) error {
 		return errors.New("manager has already started")
 	}
 
-	// start background task
+	m.gcWorker.manager = m
+	m.gcWorker.Start()
+
 	go m.eventLoop()
 	return nil
 }
@@ -121,6 +137,7 @@ func (m *Manager) Stop(ctx context.Context) error {
 	if m.running.Swap(false) == false {
 		return errors.New("manager has already stop")
 	}
+	m.gcWorker.Stop()
 	close(m.stopCh)
 	return nil
 }
