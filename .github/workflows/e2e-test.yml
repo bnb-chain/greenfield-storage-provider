@@ -87,6 +87,6 @@ jobs:
           cd ..
           /bin/cp -rf test/e2e/localup_env/integration_config/config.yml greenfield-integration-test/config/config.yml
           cd greenfield-integration-test
-          cat greenfield-integration-test/config/config.yml
+          cat config/config.yml
           go test -v  tests/storage/new_sdk_test.go
           cd ..
