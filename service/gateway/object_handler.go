@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +18,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // getObjectHandler handles the get object request
@@ -101,6 +101,12 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+	w.Header().Set(model.ContentTypeHeader, reqContext.objectInfo.GetContentType())
+	if !isRange {
+		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(reqContext.objectInfo.GetPayloadSize()))
+	}
+
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -132,11 +138,6 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		size = size + writeN
-	}
-	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
-	w.Header().Set(model.ContentTypeHeader, reqContext.objectInfo.GetContentType())
-	if !isRange {
-		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(reqContext.objectInfo.GetPayloadSize()))
 	}
 }
 
@@ -210,6 +211,10 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+	// Greenfield has an integrity hash, so there is no need for an etag
+	// w.Header().Set(model.ETagHeader, hex.EncodeToString(md5Hash.Sum(nil)))
+
 	for {
 		readN, err = r.Body.Read(buf)
 		if err != nil && err != io.EOF {
@@ -247,10 +252,6 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 			break
 		}
 	}
-
-	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
-	// Greenfield has an integrity hash, so there is no need for an etag
-	// w.Header().Set(model.ETagHeader, hex.EncodeToString(md5Hash.Sum(nil)))
 }
 
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
@@ -398,6 +399,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 	} else {
 		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionInlineValue)
 	}
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 
 	for {
 		resp, err := stream.Recv()
@@ -431,7 +433,6 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		}
 		size = size + writeN
 	}
-	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 }
 
 // downloadObjectByUniversalEndpointHandler handles the download object request sent by universal endpoint
