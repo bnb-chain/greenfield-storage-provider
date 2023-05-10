@@ -20,6 +20,7 @@ func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
 		Select("*").
 		Where("owner = ?", accountID).
 		Order("create_at desc").
+		Limit(GetUserBucketsLimitSize).
 		Find(&buckets).Error
 	return buckets, err
 }

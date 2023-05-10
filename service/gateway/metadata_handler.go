@@ -3,7 +3,10 @@ package gateway
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/bnb-chain/greenfield/types/s3util"
 	"github.com/ethereum/go-ethereum/common"
@@ -12,6 +15,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // getUserBucketsHandler handle get object request
@@ -72,10 +76,21 @@ func (gateway *Gateway) getUserBucketsHandler(w http.ResponseWriter, r *http.Req
 // listObjectsByBucketNameHandler handle list objects by bucket name request
 func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err            error
-		b              bytes.Buffer
-		errDescription *errorDescription
-		reqContext     *requestContext
+		err                      error
+		b                        bytes.Buffer
+		maxKeys                  uint64
+		errDescription           *errorDescription
+		reqContext               *requestContext
+		ok                       bool
+		requestBucketName        string
+		requestMaxKeys           string
+		requestStartAfter        string
+		requestContinuationToken string
+		requestDelimiter         string
+		requestPrefix            string
+		continuationToken        string
+		decodedContinuationToken []byte
+		queryParams              url.Values
 	)
 
 	reqContext = newRequestContext(r)
@@ -96,14 +111,75 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
-		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
+	queryParams = reqContext.request.URL.Query()
+	requestBucketName = reqContext.bucketName
+	requestMaxKeys = queryParams.Get(model.ListObjectsMaxKeysQuery)
+	requestStartAfter = queryParams.Get(model.ListObjectsStartAfterQuery)
+	requestContinuationToken = queryParams.Get(model.ListObjectsContinuationTokenQuery)
+	requestDelimiter = queryParams.Get(model.ListObjectsDelimiterQuery)
+	requestPrefix = queryParams.Get(model.ListObjectsPrefixQuery)
+
+	if err = s3util.CheckValidBucketName(requestBucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", requestBucketName, "error", err)
 		errDescription = InvalidBucketName
 		return
 	}
 
+	if requestMaxKeys != "" {
+		if maxKeys, err = util.StringToUint64(requestMaxKeys); err != nil || maxKeys == 0 {
+			log.Errorw("failed to parse or check maxKeys", "max_keys", requestMaxKeys, "error", err)
+			errDescription = InvalidMaxKeys
+			return
+		}
+	}
+
+	if requestStartAfter != "" {
+		if err = s3util.CheckValidObjectName(requestStartAfter); err != nil {
+			log.Errorw("failed to check startAfter", "start_after", requestStartAfter, "error", err)
+			errDescription = InvalidStartAfter
+			return
+		}
+	}
+
+	if requestContinuationToken != "" {
+		decodedContinuationToken, err = base64.StdEncoding.DecodeString(requestContinuationToken)
+		if err != nil {
+			log.Errorw("failed to check requestContinuationToken", "continuation_token", requestContinuationToken, "error", err)
+			errDescription = InvalidContinuationToken
+			return
+		}
+		continuationToken = string(decodedContinuationToken)
+
+		if err = s3util.CheckValidObjectName(continuationToken); err != nil {
+			log.Errorw("failed to check requestContinuationToken", "continuation_token", continuationToken, "error", err)
+			errDescription = InvalidContinuationToken
+			return
+		}
+
+		if !strings.HasPrefix(continuationToken, requestPrefix) {
+			log.Errorw("failed to check requestContinuationToken", "continuation_token", continuationToken, "prefix", requestPrefix, "error", err)
+			errDescription = InvalidContinuationToken
+			return
+		}
+	}
+
+	if ok = checkValidObjectPrefix(requestPrefix); !ok {
+		log.Errorw("failed to check requestPrefix", "prefix", requestPrefix, "error", err)
+		errDescription = InvalidPrefix
+		return
+	}
+
+	if requestContinuationToken == "" {
+		continuationToken = requestStartAfter
+	}
+
 	req := &metatypes.ListObjectsByBucketNameRequest{
-		BucketName: reqContext.bucketName,
+		BucketName:        requestBucketName,
+		MaxKeys:           maxKeys,
+		StartAfter:        requestStartAfter,
+		ContinuationToken: continuationToken,
+		Delimiter:         requestDelimiter,
+		Prefix:            requestPrefix,
 	}
 
 	ctx := log.Context(context.Background(), req)

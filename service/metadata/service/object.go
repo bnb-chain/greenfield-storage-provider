@@ -2,59 +2,107 @@ package service
 
 import (
 	"context"
-
-	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	"github.com/bnb-chain/greenfield/types/s3util"
+	"encoding/base64"
 
 	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield/types/s3util"
 	"github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
+	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 // ListObjectsByBucketName list objects info by a bucket name
 func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *metatypes.ListObjectsByBucketNameRequest) (resp *metatypes.ListObjectsByBucketNameResponse, err error) {
-	ctx = log.Context(ctx, req)
+	var (
+		results               []*model.ListObjectsResult
+		keyCount              uint64
+		isTruncated           bool
+		nextContinuationToken string
+		maxKeys               uint64
+		commonPrefixes        []string
+		res                   []*metatypes.Object
+	)
 
-	objects, err := metadata.bsDB.ListObjectsByBucketName(req.BucketName)
+	maxKeys = req.MaxKeys
+	// if the user does not provide any input parameters, default values will be used
+	if req.MaxKeys == 0 {
+		maxKeys = model.ListObjectsDefaultMaxKeys
+	}
+
+	// returns some or all (up to 1000) of the objects in a bucket with each request
+	if req.MaxKeys > model.ListObjectsLimitSize {
+		maxKeys = model.ListObjectsLimitSize
+	}
+
+	ctx = log.Context(ctx, req)
+	results, err = metadata.bsDB.ListObjectsByBucketName(req.BucketName, req.ContinuationToken, req.Prefix, req.Delimiter, int(maxKeys))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by bucket name", "error", err)
 		return
 	}
 
-	res := make([]*metatypes.Object, 0)
-	for _, object := range objects {
-		res = append(res, &metatypes.Object{
-			ObjectInfo: &types.ObjectInfo{
-				Owner:                object.Owner.String(),
-				BucketName:           object.BucketName,
-				ObjectName:           object.ObjectName,
-				Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
-				PayloadSize:          object.PayloadSize,
-				ContentType:          object.ContentType,
-				CreateAt:             object.CreateTime,
-				ObjectStatus:         types.ObjectStatus(types.ObjectStatus_value[object.ObjectStatus]),
-				RedundancyType:       types.RedundancyType(types.RedundancyType_value[object.RedundancyType]),
-				SourceType:           types.SourceType(types.SourceType_value[object.SourceType]),
-				Checksums:            object.Checksums,
-				SecondarySpAddresses: object.SecondarySpAddresses,
-				Visibility:           types.VisibilityType(types.VisibilityType_value[object.Visibility]),
-			},
-			LockedBalance: object.LockedBalance.String(),
-			Removed:       object.Removed,
-			UpdateAt:      object.UpdateAt,
-			DeleteAt:      object.DeleteAt,
-			DeleteReason:  object.DeleteReason,
-			Operator:      object.Operator.String(),
-			CreateTxHash:  object.CreateTxHash.String(),
-			UpdateTxHash:  object.UpdateTxHash.String(),
-			SealTxHash:    object.SealTxHash.String(),
-		})
+	for _, object := range results {
+		if object.ResultType == "common_prefix" {
+			commonPrefixes = append(commonPrefixes, object.PathName)
+		} else {
+			res = append(res, &metatypes.Object{
+				ObjectInfo: &types.ObjectInfo{
+					Owner:                object.Owner.String(),
+					BucketName:           object.BucketName,
+					ObjectName:           object.ObjectName,
+					Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
+					PayloadSize:          object.PayloadSize,
+					ContentType:          object.ContentType,
+					CreateAt:             object.CreateTime,
+					ObjectStatus:         types.ObjectStatus(types.ObjectStatus_value[object.ObjectStatus]),
+					RedundancyType:       types.RedundancyType(types.RedundancyType_value[object.RedundancyType]),
+					SourceType:           types.SourceType(types.SourceType_value[object.SourceType]),
+					Checksums:            object.Checksums,
+					SecondarySpAddresses: object.SecondarySpAddresses,
+					Visibility:           types.VisibilityType(types.VisibilityType_value[object.Visibility]),
+				},
+				LockedBalance: object.LockedBalance.String(),
+				Removed:       object.Removed,
+				UpdateAt:      object.UpdateAt,
+				DeleteAt:      object.DeleteAt,
+				DeleteReason:  object.DeleteReason,
+				Operator:      object.Operator.String(),
+				CreateTxHash:  object.CreateTxHash.String(),
+				UpdateTxHash:  object.UpdateTxHash.String(),
+				SealTxHash:    object.SealTxHash.String(),
+			})
+		}
 	}
 
-	resp = &metatypes.ListObjectsByBucketNameResponse{Objects: res}
-	log.CtxInfow(ctx, "succeed to list objects by bucket name")
+	keyCount = uint64(len(results))
+	// if keyCount is equal to req.MaxKeys+1 which means that we additionally return NextContinuationToken, and it is not counted in the keyCount
+	// isTruncated set to false if all the results were returned, set to true if more keys are available to return
+	// remove the returned NextContinuationToken object and separately return its object ID to the user for the next API call
+	if keyCount == req.MaxKeys+1 {
+		isTruncated = true
+		keyCount -= 1
+		nextContinuationToken = results[len(results)-1].PathName
+		if req.Delimiter == "" {
+			nextContinuationToken = results[len(results)-1].ObjectName
+		}
+		res = res[:len(res)-1]
+	}
+
+	resp = &metatypes.ListObjectsByBucketNameResponse{
+		Objects:               res,
+		KeyCount:              keyCount,
+		MaxKeys:               maxKeys,
+		IsTruncated:           isTruncated,
+		NextContinuationToken: base64.StdEncoding.EncodeToString([]byte(nextContinuationToken)),
+		Name:                  req.BucketName,
+		Prefix:                req.Prefix,
+		Delimiter:             req.Delimiter,
+		CommonPrefixes:        commonPrefixes,
+		ContinuationToken:     base64.StdEncoding.EncodeToString([]byte(req.ContinuationToken)),
+	}
+	log.CtxInfo(ctx, "succeed to list objects by bucket name")
 	return resp, nil
 }
 
