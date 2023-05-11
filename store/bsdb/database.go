@@ -31,7 +31,7 @@ type Metadata interface {
 	// GetGroupsByGroupIDAndAccount get groups info by group id list and account id
 	GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Hash) ([]*Group, error)
 	// ListObjectsByBucketName list objects info by a bucket name
-	ListObjectsByBucketName(bucketName string) ([]*Object, error)
+	ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*ListObjectsResult, error)
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
 	ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, isFullList bool) ([]*Object, error)
 	// ListExpiredBucketsBySp list expired buckets by sp
@@ -40,6 +40,8 @@ type Metadata interface {
 	GetObjectByName(objectName string, bucketName string, isFullList bool) (*Object, error)
 	// GetSwitchDBSignal check if there is a signal to switch the database
 	GetSwitchDBSignal() (*MasterDB, error)
+	// GetBucketMetaByName get bucket info with its related info
+	GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error)
 }
 
 // BSDB contains all the methods required by block syncer database
