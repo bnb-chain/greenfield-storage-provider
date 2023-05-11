@@ -64,6 +64,21 @@ func (mr *MockMetadataMockRecorder) GetBucketByName(bucketName, isFullList inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByName", reflect.TypeOf((*MockMetadata)(nil).GetBucketByName), bucketName, isFullList)
 }
 
+// GetBucketMetaByName mocks base method.
+func (m *MockMetadata) GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketMetaByName", bucketName, isFullList)
+	ret0, _ := ret[0].(*BucketFullMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketMetaByName indicates an expected call of GetBucketMetaByName.
+func (mr *MockMetadataMockRecorder) GetBucketMetaByName(bucketName, isFullList interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMetaByName", reflect.TypeOf((*MockMetadata)(nil).GetBucketMetaByName), bucketName, isFullList)
+}
+
 // GetGroupsByGroupIDAndAccount mocks base method.
 func (m *MockMetadata) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Hash) ([]*Group, error) {
 	m.ctrl.T.Helper()
@@ -340,6 +355,21 @@ func (m *MockBSDB) GetBucketByName(bucketName string, isFullList bool) (*Bucket,
 func (mr *MockBSDBMockRecorder) GetBucketByName(bucketName, isFullList interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByName", reflect.TypeOf((*MockBSDB)(nil).GetBucketByName), bucketName, isFullList)
+}
+
+// GetBucketMetaByName mocks base method.
+func (m *MockBSDB) GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketMetaByName", bucketName, isFullList)
+	ret0, _ := ret[0].(*BucketFullMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketMetaByName indicates an expected call of GetBucketMetaByName.
+func (mr *MockBSDBMockRecorder) GetBucketMetaByName(bucketName, isFullList interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMetaByName", reflect.TypeOf((*MockBSDB)(nil).GetBucketMetaByName), bucketName, isFullList)
 }
 
 // GetGroupsByGroupIDAndAccount mocks base method.
