@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 type SignerConfig struct {
@@ -29,18 +30,23 @@ func overrideConfigFromEnv(config *SignerConfig) {
 		config.APIKey = val
 	}
 	if val, ok := os.LookupEnv(model.SpOperatorPrivKey); ok {
+		log.Infow("signer", "SpOperatorPrivKey", val)
 		config.OperatorPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(model.SpFundingPrivKey); ok {
+		log.Infow("signer", "SpFundingPrivKey", val)
 		config.FundingPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(model.SpSealPrivKey); ok {
+		log.Infow("signer", "SpSealPrivKey", val)
 		config.SealPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(model.SpApprovalPrivKey); ok {
+		log.Infow("signer", "SpApprovalPrivKey", val)
 		config.ApprovalPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(model.SpGcPrivKey); ok {
+		log.Infow("signer", "SpGcPrivKey", val)
 		config.GcPrivateKey = val
 	}
 }
