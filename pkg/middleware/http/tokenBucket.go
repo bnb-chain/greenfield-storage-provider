@@ -8,9 +8,9 @@ import (
 )
 
 type BandwidthLimiterConfig struct {
-	Enable bool       //Enable Whether to enable bandwidth limiting
-	R      rate.Limit //R The speed at which tokens are generated R per second
-	B      int        //B The size of the token bucket
+	Enable bool   //Enable Whether to enable bandwidth limiting
+	R      string //R The speed at which tokens are generated R per second
+	B      int    //B The size of the token bucket
 }
 
 type BandwidthLimiter struct {

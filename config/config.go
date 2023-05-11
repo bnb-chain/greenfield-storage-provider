@@ -214,7 +214,7 @@ var DefaultRateLimiterConfig = &localhttp.RateLimiterConfig{
 
 var DefaultBandwidthLimiterConfig = &localhttp.BandwidthLimiterConfig{
 	Enable: false,
-	R:      100,
+	R:      "100",
 	B:      1000,
 }
 

@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"golang.org/x/time/rate"
 	"net/http"
+	"strconv"
 	"sync/atomic"
 
 	"github.com/gorilla/mux"
@@ -130,7 +132,12 @@ func (gateway *Gateway) serve() {
 		return
 	}
 	if gateway.config.BandwidthLimitCfg.Enable {
-		localhttp.NewBandwidthLimiter(gateway.config.BandwidthLimitCfg.R, gateway.config.BandwidthLimitCfg.B)
+		floatR, err := strconv.ParseFloat(gateway.config.BandwidthLimitCfg.R, 64)
+		if err != nil {
+			log.Errorw("failed to ParseFloat", "error", err)
+			return
+		}
+		localhttp.NewBandwidthLimiter(rate.Limit(floatR), gateway.config.BandwidthLimitCfg.B)
 	}
 	gateway.registerHandler(router)
 	server := &http.Server{
