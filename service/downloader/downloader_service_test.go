@@ -14,7 +14,7 @@ func TestSplitToSegmentPieceInfos(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	//nolint:all
-	mockDB := sqldb.NewMockSPDB(ctrl)
+	mockDB := sqldb.NewMockSPDB(ctrl) //nolint:all
 	d := &Downloader{
 		spDB: mockDB,
 	}
