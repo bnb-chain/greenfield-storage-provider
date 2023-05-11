@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"encoding/xml"
+	"fmt"
 	"net/http"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -20,28 +21,98 @@ type APIError struct {
 // descriptions and http status code for all the error responses.
 var errCodeMap = map[int]APIError{
 	merrors.InternalErrCode: {
-		Code:           "",
-		Description:    "",
+		Code:           "InternalError",
+		Description:    "We encountered an internal error, please try again.",
 		HTTPStatusCode: http.StatusInternalServerError,
 	},
 	merrors.NoSuchBucketErrCode: {
-		Code:           "",
+		Code:           "NoSuchBucket",
 		Description:    "The specified bucket does not exist.",
 		HTTPStatusCode: http.StatusNotFound,
 	},
 	merrors.NoSuchObjectErrCode: {
-		Code:           "",
+		Code:           "NoSuchKey",
 		Description:    "The specified key does not exist.",
 		HTTPStatusCode: http.StatusNotFound,
 	},
 	merrors.RouterNotFoundErrCode: {
-		Code:           "",
+		Code:           "NoSuchRouter",
 		Description:    "The request can not route any handlers.",
 		HTTPStatusCode: http.StatusNotFound,
 	},
 	merrors.DBQuotaNotEnoughErrCode: {
-		Code:           "",
+		Code:           "AccessDenied",
 		Description:    "Out of quota.",
+		HTTPStatusCode: http.StatusForbidden,
+	},
+	merrors.InvalidHeaderErrCode: {
+		Code:           "InvalidHeader",
+		Description:    "The headers are invalid.",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	merrors.StringToInt64ErrCode: {
+		Code:           "InvalidRequest",
+		Description:    "The query parameter in HTTP request is invalid.",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	merrors.InvalidBucketNameErrCode: {
+		Code:           "InvalidBucketName",
+		Description:    "The specified bucket is not valid.",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	merrors.InvalidObjectNameErrCode: {
+		Code:           "InvalidKey",
+		Description:    "Object key is illegal.",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	merrors.ZeroPayloadErrCode: {
+		Code:           "InvalidPayload",
+		Description:    "Payload is empty.",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	merrors.ObjectNotCreatedErrCode: {
+		Code:           "InvalidObjectState",
+		Description:    "Object is not created.",
+		HTTPStatusCode: http.StatusForbidden,
+	},
+	merrors.ObjectNotSealedErrCode: {
+		Code:           "InvalidObjectState",
+		Description:    "Object is not sealed.",
+		HTTPStatusCode: http.StatusForbidden,
+	},
+	merrors.InvalidRangeErrCode: {
+		Code:           "InvalidRequest",
+		Description:    "Range is invalid.",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	merrors.InvalidAddressErrCode: {
+		Code:           "InvalidAddress",
+		Description:    "Address is illegal.",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	merrors.AuthorizationFormatErrCode: {
+		Code:           "InvalidRequest",
+		Description:    "Authorization format is invalid.",
+		HTTPStatusCode: http.StatusForbidden,
+	},
+	merrors.InconsistentCanonicalRequestErrCode: {
+		Code:           "SignatureDoesNotMatch",
+		Description:    "Inconsistent canonical request.",
+		HTTPStatusCode: http.StatusForbidden,
+	},
+	merrors.SignatureConsistentErrCode: {
+		Code:           "SignatureDoesNotMatch",
+		Description:    "Authorization format is invalid.",
+		HTTPStatusCode: http.StatusForbidden,
+	},
+	merrors.UnsupportedSignTypeErrCode: {
+		Code:           "InvalidRequest",
+		Description:    "Unsupported signature type.",
+		HTTPStatusCode: http.StatusForbidden,
+	},
+	merrors.NoPermissionErrCode: {
+		Code:           "InvalidRequest",
+		Description:    "Unsupported signature type.",
 		HTTPStatusCode: http.StatusForbidden,
 	},
 }
@@ -58,7 +129,7 @@ func makeXMLHTPPResponse(w http.ResponseWriter, errorCode int, requestID string)
 		RequestID string   `xml:"RequestId"`
 	}{
 		Code:      apiErr.Code,
-		Message:   apiErr.Description,
+		Message:   fmt.Sprintf("%s ErrorCode: %d.", apiErr.Description, errorCode),
 		RequestID: requestID,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)

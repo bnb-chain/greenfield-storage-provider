@@ -30,12 +30,10 @@ const (
 	ParseStringToIntErrCode           = 11011
 	RouterNotFoundErrCode             = 11012
 	InvalidHeaderErrCode              = 11013
-	InvalidQueryErrCode               = 11014
+	StringToInt64ErrCode              = 11014
 	InvalidBucketNameErrCode          = 11015
 	InvalidObjectNameErrCode          = 11016
 	ZeroPayloadErrCode                = 11017
-	ObjectNotCreatedErrCode           = 11018
-	ObjectNotSealedErrCode            = 11019
 	InvalidRangeErrCode               = 11020
 	InvalidAddressErrCode             = 11021
 	InvalidAuthorizationFormatErrCode = 11022
@@ -71,6 +69,14 @@ const (
 	DBInsertInReadRecordTableErrCode    = 15127
 
 	// gateway service error code, from 20000 to 20999
+	AuthorizationFormatErrCode          = 20100
+	InconsistentCanonicalRequestErrCode = 20101
+	SignatureConsistentErrCode          = 20102
+	UnsupportedSignTypeErrCode          = 20103
+	NoPermissionErrCode                 = 20104
+	ObjectNotCreatedErrCode             = 20105
+	ObjectNotSealedErrCode              = 20106
+	CheckPaymentAccountActiveErrCode    = 20107
 
 	// uploader service error, from 21000 to 21999
 	UploaderMismatchChecksumNumErrCode = 21100
