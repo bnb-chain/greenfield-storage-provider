@@ -49,7 +49,7 @@ jobs:
         run: |
           git clone https://github.com/bnb-chain/greenfield.git
           cd greenfield
-          git checkout ${{ env.GreenfileldTag }}
+          git checkout ${{ env.GreenfieldTag }}
           make proto-gen & make build
           cd ..
       # Build Greenfield-SP
