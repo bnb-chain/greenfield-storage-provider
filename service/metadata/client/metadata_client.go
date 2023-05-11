@@ -121,12 +121,12 @@ func (client *MetadataClient) ListExpiredBucketsBySp(ctx context.Context, create
 	return resp.Buckets, nil
 }
 
-// GetObjectByObjectNameAndBucketName get object info by an object name and a bucket name
-func (client *MetadataClient) GetObjectByObjectNameAndBucketName(ctx context.Context, in *metatypes.GetObjectByObjectNameAndBucketNameRequest, opts ...grpc.CallOption) (*metatypes.GetObjectByObjectNameAndBucketNameResponse, error) {
-	resp, err := client.metadata.GetObjectByObjectNameAndBucketName(ctx, in, opts...)
+// GetObjectMeta get object metadata
+func (client *MetadataClient) GetObjectMeta(ctx context.Context, in *metatypes.GetObjectMetaRequest, opts ...grpc.CallOption) (*metatypes.GetObjectMetaResponse, error) {
+	resp, err := client.metadata.GetObjectMeta(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to send get object rpc by object name", "error", err)
+		log.CtxErrorw(ctx, "failed to send get object meta rpc", "error", err)
 		return nil, err
 	}
 	return resp, nil
@@ -165,12 +165,12 @@ func (client *MetadataClient) VerifyPermission(ctx context.Context, in *storaget
 	return resp, nil
 }
 
-// GetBucketMetaByName get bucket info along with its related info such as payment
-func (client *MetadataClient) GetBucketMetaByName(ctx context.Context, in *metatypes.GetBucketMetaByNameRequest, opts ...grpc.CallOption) (*metatypes.GetBucketMetaByNameResponse, error) {
-	resp, err := client.metadata.GetBucketMetaByName(ctx, in, opts...)
+// GetBucketMeta get bucket info along with its related info such as payment
+func (client *MetadataClient) GetBucketMeta(ctx context.Context, in *metatypes.GetBucketMetaRequest, opts ...grpc.CallOption) (*metatypes.GetBucketMetaResponse, error) {
+	resp, err := client.metadata.GetBucketMeta(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to send get bucket meta rpc by bucket name", "error", err)
+		log.CtxErrorw(ctx, "failed to send get bucket meta rpc", "error", err)
 		return nil, err
 	}
 	return resp, nil

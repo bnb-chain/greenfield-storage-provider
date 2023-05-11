@@ -26,8 +26,8 @@ const (
 	queryUploadProgressRouterName         = "queryUploadProgress"
 	downloadObjectByUniversalEndpointName = "DownloadObjectByUniversalEndpoint"
 	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
-	getObjectMetaByNameRouterName         = "getObjectMetaByName"
-	getBucketMetaByNameRouterName         = "getBucketMetaByName"
+	getObjectMetaRouterName               = "getObjectMeta"
+	getBucketMetaRouterName               = "getBucketMeta"
 )
 
 const (
@@ -62,16 +62,16 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Queries(model.UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
 	hostBucketRouter.NewRoute().
-		Name(getBucketMetaByNameRouterName).
+		Name(getBucketMetaRouterName).
 		Methods(http.MethodGet).
-		Queries(model.GetBucketMetaByNameQuery, "").
-		HandlerFunc(g.getBucketMetaByNameHandler)
+		Queries(model.GetBucketMetaQuery, "").
+		HandlerFunc(g.getBucketMetaHandler)
 	hostBucketRouter.NewRoute().
-		Name(getObjectMetaByNameRouterName).
+		Name(getObjectMetaRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
-		Queries(model.GetObjectMetaByNameQuery, "").
-		HandlerFunc(g.getObjectMetaByNameHandler)
+		Queries(model.GetObjectMetaQuery, "").
+		HandlerFunc(g.getObjectMetaHandler)
 	hostBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).
@@ -156,16 +156,16 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Queries(model.UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
 	pathBucketRouter.NewRoute().
-		Name(getBucketMetaByNameRouterName).
+		Name(getBucketMetaRouterName).
 		Methods(http.MethodGet).
-		Queries(model.GetBucketMetaByNameQuery, "").
-		HandlerFunc(g.getBucketMetaByNameHandler)
+		Queries(model.GetBucketMetaQuery, "").
+		HandlerFunc(g.getBucketMetaHandler)
 	pathBucketRouter.NewRoute().
-		Name(getObjectMetaByNameRouterName).
+		Name(getObjectMetaRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
-		Queries(model.GetObjectMetaByNameQuery, "").
-		HandlerFunc(g.getObjectMetaByNameHandler)
+		Queries(model.GetObjectMetaQuery, "").
+		HandlerFunc(g.getObjectMetaHandler)
 	pathBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).

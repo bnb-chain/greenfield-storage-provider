@@ -358,15 +358,15 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 	}
 
 	// In first phase, do not provide universal endpoint for private object
-	getObjectInfoReq := &metatypes.GetObjectByObjectNameAndBucketNameRequest{
+	getObjectInfoReq := &metatypes.GetObjectMetaRequest{
 		ObjectName: escapedObjectName,
 		BucketName: reqContext.bucketName,
 		IsFullList: false,
 	}
 
-	getObjectInfoRes, err := gateway.metadata.GetObjectByObjectNameAndBucketName(ctx, getObjectInfoReq)
+	getObjectInfoRes, err := gateway.metadata.GetObjectMeta(ctx, getObjectInfoReq)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObject() == nil || getObjectInfoRes.GetObject().GetObjectInfo() == nil {
-		log.Errorw("failed to check object info", "object_name", escapedObjectName, "error", err)
+		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
 		errDescription = InvalidKey
 		return
 	}

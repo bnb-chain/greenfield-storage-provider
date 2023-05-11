@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/types/s3util"
+	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	"github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
 	jsoniter "github.com/json-iterator/go"
@@ -12,7 +13,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 )
 
 // GetUserBuckets get buckets info by a user address
@@ -175,6 +175,7 @@ func (metadata *Metadata) GetUserBucketsCount(ctx context.Context, req *metatype
 	return resp, nil
 }
 
+// ListExpiredBucketsBySp list expired bucket by sp
 func (metadata *Metadata) ListExpiredBucketsBySp(ctx context.Context, req *metatypes.ListExpiredBucketsBySpRequest) (resp *metatypes.ListExpiredBucketsBySpResponse, err error) {
 	ctx = log.Context(ctx, req)
 	buckets, err := metadata.bsDB.ListExpiredBucketsBySp(req.GetCreateAt(), req.GetPrimarySpAddress(), req.GetLimit())
@@ -213,7 +214,8 @@ func (metadata *Metadata) ListExpiredBucketsBySp(ctx context.Context, req *metat
 	return resp, nil
 }
 
-func (metadata *Metadata) GetBucketMetaByName(ctx context.Context, req *metatypes.GetBucketMetaByNameRequest) (resp *metatypes.GetBucketMetaByNameResponse, err error) {
+// GetBucketMeta get bucket metadata
+func (metadata *Metadata) GetBucketMeta(ctx context.Context, req *metatypes.GetBucketMetaRequest) (resp *metatypes.GetBucketMetaResponse, err error) {
 	var (
 		bucket          *model.Bucket
 		bucketRes       *metatypes.Bucket
@@ -280,7 +282,7 @@ func (metadata *Metadata) GetBucketMetaByName(ctx context.Context, req *metatype
 		}
 	}
 
-	resp = &metatypes.GetBucketMetaByNameResponse{Bucket: bucketRes, StreamRecord: streamRecordRes}
+	resp = &metatypes.GetBucketMetaResponse{Bucket: bucketRes, StreamRecord: streamRecordRes}
 	log.CtxInfow(ctx, "succeed to get bucket meta by name")
 	return resp, nil
 }

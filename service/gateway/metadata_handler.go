@@ -201,8 +201,8 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	w.Write(b.Bytes())
 }
 
-// getObjectMetaByNameHandler handle get object metadata by name request
-func (gateway *Gateway) getObjectMetaByNameHandler(w http.ResponseWriter, r *http.Request) {
+// getObjectMetaHandler handle get object metadata request
+func (gateway *Gateway) getObjectMetaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
 		b              bytes.Buffer
@@ -216,14 +216,14 @@ func (gateway *Gateway) getObjectMetaByNameHandler(w http.ResponseWriter, r *htt
 			_ = errDescription.errorJSONResponse(w, reqContext)
 		}
 		if errDescription != nil && errDescription.statusCode != http.StatusOK {
-			log.Errorf("action(%v) statusCode(%v) %v", getObjectMetaByNameRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+			log.Errorf("action(%v) statusCode(%v) %v", getObjectMetaRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Infof("action(%v) statusCode(200) %v", getObjectMetaByNameRouterName, reqContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", getObjectMetaRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
 	if gateway.metadata == nil {
-		log.Error("failed to get object by name due to not config metadata")
+		log.Error("failed to get object meta by name due to not config metadata")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -240,23 +240,23 @@ func (gateway *Gateway) getObjectMetaByNameHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	req := &metatypes.GetObjectByObjectNameAndBucketNameRequest{
+	req := &metatypes.GetObjectMetaRequest{
 		BucketName: reqContext.bucketName,
 		ObjectName: reqContext.objectName,
 		IsFullList: true,
 	}
 
 	ctx := log.Context(context.Background(), req)
-	resp, err := gateway.metadata.GetObjectByObjectNameAndBucketName(ctx, req)
+	resp, err := gateway.metadata.GetObjectMeta(ctx, req)
 	if err != nil {
-		log.Errorf("failed to get object by object name and bucket name", "error", err)
+		log.Errorf("failed to get object meta", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}
 
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, resp); err != nil {
-		log.Errorf("failed to get object by object name and bucket name", "error", err)
+		log.Errorf("failed to get object meta", "error", err)
 		errDescription = makeErrorDescription(err)
 		return
 	}
@@ -265,8 +265,8 @@ func (gateway *Gateway) getObjectMetaByNameHandler(w http.ResponseWriter, r *htt
 	w.Write(b.Bytes())
 }
 
-// getBucketMetaByNameHandler handle get bucket metadata by name request
-func (gateway *Gateway) getBucketMetaByNameHandler(w http.ResponseWriter, r *http.Request) {
+// getBucketMetaHandler handle get bucket metadata request
+func (gateway *Gateway) getBucketMetaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
 		b              bytes.Buffer
@@ -280,14 +280,14 @@ func (gateway *Gateway) getBucketMetaByNameHandler(w http.ResponseWriter, r *htt
 			_ = errDescription.errorJSONResponse(w, reqContext)
 		}
 		if errDescription != nil && errDescription.statusCode != http.StatusOK {
-			log.Errorf("action(%v) statusCode(%v) %v", getBucketMetaByNameRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+			log.Errorf("action(%v) statusCode(%v) %v", getBucketMetaRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
 		} else {
-			log.Infof("action(%v) statusCode(200) %v", getBucketMetaByNameRouterName, reqContext.generateRequestDetail())
+			log.Infof("action(%v) statusCode(200) %v", getBucketMetaRouterName, reqContext.generateRequestDetail())
 		}
 	}()
 
 	if gateway.metadata == nil {
-		log.Error("failed to get bucket info due to not config metadata")
+		log.Error("failed to get bucket meta due to not config metadata")
 		errDescription = NotExistComponentError
 		return
 	}
@@ -298,13 +298,13 @@ func (gateway *Gateway) getBucketMetaByNameHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	req := &metatypes.GetBucketMetaByNameRequest{
+	req := &metatypes.GetBucketMetaRequest{
 		BucketName: reqContext.bucketName,
 		IsFullList: true,
 	}
 
 	ctx := log.Context(context.Background(), req)
-	resp, err := gateway.metadata.GetBucketMetaByName(ctx, req)
+	resp, err := gateway.metadata.GetBucketMeta(ctx, req)
 	if err != nil {
 		log.Errorf("failed to get bucket metadata", "error", err)
 		errDescription = makeErrorDescription(err)
