@@ -289,7 +289,6 @@ main() {
   --help|*)
     display_help
     ;;
-
   esac
 }
 
