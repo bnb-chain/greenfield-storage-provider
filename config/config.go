@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"os"
 
 	"github.com/naoina/toml"
@@ -232,6 +233,7 @@ func LoadConfig(path string) *StorageProviderConfig {
 	if _, ok := err.(*toml.LineError); ok {
 		panic(err)
 	}
+	log.Infof("cfg: %+v", cfg.BandwidthLimiter)
 	return &cfg
 }
 
