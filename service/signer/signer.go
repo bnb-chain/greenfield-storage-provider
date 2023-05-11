@@ -52,7 +52,6 @@ func NewSignerServer(config *SignerConfig, chainConfig *gnfd.GreenfieldChainConf
 		return nil, errors.New("greenfield endpoints missing")
 	}
 
-	log.Infow("print signer config", "config", config)
 	client, err := client.NewGreenfieldChainSignClient(
 		// TODO: greenfield SDK may support multiple endpoints.
 		chainConfig.NodeAddr[0].TendermintAddresses[0],
