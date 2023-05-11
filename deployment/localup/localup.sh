@@ -95,6 +95,9 @@ make_config() {
         sed -i -e "s/test_pwd/${PWD}/g" config.toml
         sed -i -e "s/localhost\:3306/${ADDRESS}/g" config.toml
         sed -i -e "s/storage_provider_db/${DATABASE}/g" config.toml
+        sed -i -e "s/block_syncer_backup/${DATABASE}/g" config.toml
+        sed -i -e "s/block_syncer/${DATABASE}/g" config.toml
+
         # sp
         sed -i -e "s/localhost\:9033/${SP_ENDPOINT}/g" config.toml
         sed -i -e "s/8933/$(($cur_port+33))/g" config.toml

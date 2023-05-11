@@ -61,7 +61,6 @@ jobs:
       - name: Run MySQL
         run: |
           sudo /etc/init.d/mysql start
-          mysql -h ${{ env.MYSQL_IP }} -P ${{ env.MYSQL_PORT }} -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
       # Run Greenfield
       - name: Run Greenfield
         run: |
