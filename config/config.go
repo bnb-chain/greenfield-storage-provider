@@ -171,6 +171,8 @@ var DefaultMetricsConfig = &metrics.MetricsConfig{
 
 // DefaultMetadataConfig defines the default configuration of Metadata service
 var DefaultMetadataConfig = &metadata.MetadataConfig{
+	BsDBConfig:                 DefaultBsDBConfig,
+	BsDBSwitchedConfig:         DefaultBsDBSwitchedConfig,
 	IsMasterDB:                 true,
 	BsDBSwitchCheckIntervalSec: 3600,
 }
