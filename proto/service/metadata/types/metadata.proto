@@ -121,8 +121,8 @@ message ListExpiredBucketsBySpRequest {
   int64 limit = 3;
 }
 
-// GetObjectByObjectNameAndBucketNameRequest is request type for the GetObjectByObjectNameAndBucketName RPC method
-message GetObjectByObjectNameAndBucketNameRequest {
+// GetObjectMetaRequest is request type for the GetObjectMeta RPC method
+message GetObjectMetaRequest {
   // object_name is the name of the object
   string object_name = 1;
   // bucket_name is the name of the bucket
@@ -145,6 +145,22 @@ message GetPaymentByBucketIDRequest {
   int64 bucket_id = 1;
   // is_full_list indicates whether this request can get the private buckets information
   bool is_full_list = 2;
+}
+
+// GetBucketMetaRequest is request type for the GetBucketMeta RPC method
+message GetBucketMetaRequest {
+  // bucket_name is the name of the bucket
+  string bucket_name = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
+// GetBucketMetaResponse is response type for the GetBucketMeta RPC method
+message GetBucketMetaResponse {
+  // bucket defines the information of a bucket
+  Bucket bucket = 1;
+  // stream_record defines stream payment record of a stream account
+  bnbchain.greenfield.payment.StreamRecord stream_record = 2;
 }
 
 // GetUserBucketsResponse is response type for the GetUserBuckets RPC method.
@@ -209,8 +225,8 @@ message ListExpiredBucketsBySpResponse {
   repeated Bucket buckets = 1;
 }
 
-// GetObjectByObjectNameAndBucketNameResponse is response type for the GetObjectByObjectNameAndBucketName RPC method.
-message GetObjectByObjectNameAndBucketNameResponse {
+// GetObjectMetaResponse is response type for the GetObjectMeta RPC method.
+message GetObjectMetaResponse {
   // object defines the information of an object
   Object object = 1;
 }
@@ -243,12 +259,14 @@ service MetadataService {
   rpc GetUserBucketsCount(GetUserBucketsCountRequest) returns (GetUserBucketsCountResponse) {};
   // ListExpiredBucketsBySp list expired buckets by sp
   rpc ListExpiredBucketsBySp(ListExpiredBucketsBySpRequest) returns (ListExpiredBucketsBySpResponse) {};
-  // GetObjectByObjectNameAndBucketName get bucket info by a bucket name and an object name
-  rpc GetObjectByObjectNameAndBucketName(GetObjectByObjectNameAndBucketNameRequest) returns (GetObjectByObjectNameAndBucketNameResponse) {};
+  // GetObjectMeta get object metadata
+  rpc GetObjectMeta(GetObjectMetaRequest) returns (GetObjectMetaResponse) {};
   // GetPaymentByBucketName get bucket payment info by a bucket name
   rpc GetPaymentByBucketName(GetPaymentByBucketNameRequest) returns (GetPaymentByBucketNameResponse) {};
   // GetPaymentByBucketID get bucket payment info by a bucket id
   rpc GetPaymentByBucketID(GetPaymentByBucketIDRequest) returns (GetPaymentByBucketIDResponse) {};
   // VerifyPermission Verify the input items permission.
   rpc VerifyPermission(bnbchain.greenfield.storage.QueryVerifyPermissionRequest) returns (bnbchain.greenfield.storage.QueryVerifyPermissionResponse) {};
+  // GetBucketMeta get bucket metadata with related info such as payment
+  rpc GetBucketMeta(GetBucketMetaRequest) returns (GetBucketMetaResponse) {};
 }

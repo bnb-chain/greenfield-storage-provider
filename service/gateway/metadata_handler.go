@@ -200,3 +200,124 @@ func (gateway *Gateway) listObjectsByBucketNameHandler(w http.ResponseWriter, r 
 	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
 	w.Write(b.Bytes())
 }
+
+// getObjectMetaHandler handle get object metadata request
+func (gateway *Gateway) getObjectMetaHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err            error
+		b              bytes.Buffer
+		errDescription *errorDescription
+		reqContext     *requestContext
+	)
+
+	reqContext = newRequestContext(r)
+	defer func() {
+		if errDescription != nil {
+			_ = errDescription.errorJSONResponse(w, reqContext)
+		}
+		if errDescription != nil && errDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", getObjectMetaRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+		} else {
+			log.Infof("action(%v) statusCode(200) %v", getObjectMetaRouterName, reqContext.generateRequestDetail())
+		}
+	}()
+
+	if gateway.metadata == nil {
+		log.Error("failed to get object meta by name due to not config metadata")
+		errDescription = NotExistComponentError
+		return
+	}
+
+	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
+		errDescription = InvalidBucketName
+		return
+	}
+
+	if err = s3util.CheckValidObjectName(reqContext.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqContext.objectName, "error", err)
+		errDescription = InvalidKey
+		return
+	}
+
+	req := &metatypes.GetObjectMetaRequest{
+		BucketName: reqContext.bucketName,
+		ObjectName: reqContext.objectName,
+		IsFullList: true,
+	}
+
+	ctx := log.Context(context.Background(), req)
+	resp, err := gateway.metadata.GetObjectMeta(ctx, req)
+	if err != nil {
+		log.Errorf("failed to get object meta", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, resp); err != nil {
+		log.Errorf("failed to get object meta", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getBucketMetaHandler handle get bucket metadata request
+func (gateway *Gateway) getBucketMetaHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err            error
+		b              bytes.Buffer
+		errDescription *errorDescription
+		reqContext     *requestContext
+	)
+
+	reqContext = newRequestContext(r)
+	defer func() {
+		if errDescription != nil {
+			_ = errDescription.errorJSONResponse(w, reqContext)
+		}
+		if errDescription != nil && errDescription.statusCode != http.StatusOK {
+			log.Errorf("action(%v) statusCode(%v) %v", getBucketMetaRouterName, errDescription.statusCode, reqContext.generateRequestDetail())
+		} else {
+			log.Infof("action(%v) statusCode(200) %v", getBucketMetaRouterName, reqContext.generateRequestDetail())
+		}
+	}()
+
+	if gateway.metadata == nil {
+		log.Error("failed to get bucket meta due to not config metadata")
+		errDescription = NotExistComponentError
+		return
+	}
+
+	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
+		errDescription = InvalidBucketName
+		return
+	}
+
+	req := &metatypes.GetBucketMetaRequest{
+		BucketName: reqContext.bucketName,
+		IsFullList: true,
+	}
+
+	ctx := log.Context(context.Background(), req)
+	resp, err := gateway.metadata.GetBucketMeta(ctx, req)
+	if err != nil {
+		log.Errorf("failed to get bucket metadata", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, resp); err != nil {
+		log.Errorf("failed to get bucket metadata", "error", err)
+		errDescription = makeErrorDescription(err)
+		return
+	}
+
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}

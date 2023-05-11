@@ -164,8 +164,8 @@ func (metadata *Metadata) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 	return resp, nil
 }
 
-// GetObjectByObjectNameAndBucketName get object info by an object name
-func (metadata *Metadata) GetObjectByObjectNameAndBucketName(ctx context.Context, req *metatypes.GetObjectByObjectNameAndBucketNameRequest) (resp *metatypes.GetObjectByObjectNameAndBucketNameResponse, err error) {
+// GetObjectMeta get object metadata
+func (metadata *Metadata) GetObjectMeta(ctx context.Context, req *metatypes.GetObjectMetaRequest) (resp *metatypes.GetObjectMetaResponse, err error) {
 	var (
 		object *model.Object
 		res    *metatypes.Object
@@ -210,7 +210,7 @@ func (metadata *Metadata) GetObjectByObjectNameAndBucketName(ctx context.Context
 			SealTxHash:    object.SealTxHash.String(),
 		}
 	}
-	resp = &metatypes.GetObjectByObjectNameAndBucketNameResponse{Object: res}
-	log.CtxInfo(ctx, "succeed to get object by object name and bucket name")
+	resp = &metatypes.GetObjectMetaResponse{Object: res}
+	log.CtxInfo(ctx, "succeed to get object meta")
 	return resp, nil
 }
