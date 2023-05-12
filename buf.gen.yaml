@@ -7,6 +7,3 @@ plugins:
       - Mgoogle/protobuf/duration.proto=github.com/golang/protobuf/ptypes/duration
       - plugins=grpc
       - paths=source_relative
-  - name: grpc-gateway
-    out: .
-    opt: logtostderr=true,allow_colon_final_segments=true
