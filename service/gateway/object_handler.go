@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -13,6 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	localHttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
@@ -100,6 +102,12 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+	w.Header().Set(model.ContentTypeHeader, reqContext.objectInfo.GetContentType())
+	if !isRange {
+		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(reqContext.objectInfo.GetPayloadSize()))
+	}
+
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -110,7 +118,12 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 			errDescription = makeErrorDescription(merrors.GRPCErrorToInnerError(err))
 			return
 		}
-
+		// If it is limited, it will block
+		if localHttp.BandwidthLimit != nil {
+			if err := localHttp.BandwidthLimit.Limiter.Wait(ctx); err != nil {
+				log.Errorw("failed to wait bandwidth limiter", "error", err)
+			}
+		}
 		if readN = len(resp.Data); readN == 0 {
 			log.Errorw("failed to get object due to return empty data", "response", resp)
 			continue
@@ -131,11 +144,6 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		size = size + writeN
-	}
-	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
-	w.Header().Set(model.ContentTypeHeader, reqContext.objectInfo.GetContentType())
-	if !isRange {
-		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(reqContext.objectInfo.GetPayloadSize()))
 	}
 }
 
@@ -209,6 +217,10 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+	// Greenfield has an integrity hash, so there is no need for an etag
+	// w.Header().Set(model.ETagHeader, hex.EncodeToString(md5Hash.Sum(nil)))
+
 	for {
 		readN, err = r.Body.Read(buf)
 		if err != nil && err != io.EOF {
@@ -217,6 +229,12 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if readN > 0 {
+			// If it is limited, it will block
+			if localHttp.BandwidthLimit != nil {
+				if err := localHttp.BandwidthLimit.Limiter.Wait(ctx); err != nil {
+					log.Errorw("failed to wait bandwidth limiter", "error", err)
+				}
+			}
 			req := &uploadertypes.PutObjectRequest{
 				ObjectInfo: reqContext.objectInfo,
 				Payload:    buf[:readN],
@@ -246,14 +264,10 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 			break
 		}
 	}
-
-	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
-	// Greenfield has an integrity hash, so there is no need for an etag
-	// w.Header().Set(model.ETagHeader, hex.EncodeToString(md5Hash.Sum(nil)))
 }
 
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
-func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
+func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request, isDownload bool) {
 	var (
 		err            error
 		errDescription *errorDescription
@@ -266,6 +280,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		size           int
 		statusCode     = http.StatusOK
 		ctx, cancel    = context.WithCancel(context.Background())
+		redirectUrl    string
 	)
 
 	reqContext = newRequestContext(r)
@@ -275,6 +290,14 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 			statusCode = errDescription.statusCode
 			_ = errDescription.errorResponse(w, reqContext)
 		}
+
+		var getObjectByUniversalEndpointName string
+		if isDownload {
+			getObjectByUniversalEndpointName = downloadObjectByUniversalEndpointName
+		} else {
+			getObjectByUniversalEndpointName = viewObjectByUniversalEndpointName
+		}
+
 		if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
 			log.Infof("action(%v) statusCode(%v) %v", getObjectByUniversalEndpointName, statusCode, reqContext.generateRequestDetail())
 		} else {
@@ -288,13 +311,20 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		return
 	}
 
+	escapedObjectName, err := url.PathUnescape(reqContext.objectName)
+	if err != nil {
+		log.Errorw("failed to unescape object name ", "object_name", reqContext.objectName, "error", err)
+		errDescription = InvalidKey
+		return
+	}
+
 	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
 		errDescription = InvalidBucketName
 		return
 	}
-	if err = s3util.CheckValidObjectName(reqContext.objectName); err != nil {
-		log.Errorw("failed to check object name", "object_name", reqContext.objectName, "error", err)
+	if err = s3util.CheckValidObjectName(escapedObjectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", escapedObjectName, "error", err)
 		errDescription = InvalidKey
 		return
 	}
@@ -313,7 +343,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 
 	bucketPrimarySpAddress := getBucketInfoRes.GetBucket().GetBucketInfo().GetPrimarySpAddress()
 
-	//if bucket not in the current sp, 302 redirect to the sp that contains the bucket
+	// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
 	if bucketPrimarySpAddress != gateway.config.SpOperatorAddress {
 		log.Debugw("primary sp address not matched ",
 			"bucketPrimarySpAddress", bucketPrimarySpAddress, "gateway.config.SpOperatorAddress", gateway.config.SpOperatorAddress,
@@ -326,7 +356,12 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 			errDescription = InvalidAddress
 			return
 		}
-		redirectUrl := endpoint + "/download/" + reqContext.bucketName + "/" + reqContext.objectName
+
+		if isDownload {
+			redirectUrl = endpoint + "/download/" + reqContext.bucketName + "/" + reqContext.objectName
+		} else {
+			redirectUrl = endpoint + "/view/" + reqContext.bucketName + "/" + reqContext.objectName
+		}
 
 		log.Debugw("getting redirect url:", "redirectUrl", redirectUrl)
 
@@ -335,15 +370,15 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 	}
 
 	// In first phase, do not provide universal endpoint for private object
-	getObjectInfoReq := &metatypes.GetObjectByObjectNameAndBucketNameRequest{
-		ObjectName: reqContext.objectName,
+	getObjectInfoReq := &metatypes.GetObjectMetaRequest{
+		ObjectName: escapedObjectName,
 		BucketName: reqContext.bucketName,
 		IsFullList: false,
 	}
 
-	getObjectInfoRes, err := gateway.metadata.GetObjectByObjectNameAndBucketName(ctx, getObjectInfoReq)
+	getObjectInfoRes, err := gateway.metadata.GetObjectMeta(ctx, getObjectInfoReq)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObject() == nil || getObjectInfoRes.GetObject().GetObjectInfo() == nil {
-		log.Errorw("failed to check object info", "object_name", reqContext.objectName, "error", err)
+		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
 		errDescription = InvalidKey
 		return
 	}
@@ -370,6 +405,14 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		errDescription = makeErrorDescription(err)
 		return
 	}
+
+	if isDownload {
+		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
+	} else {
+		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionInlineValue)
+	}
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -402,5 +445,14 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		}
 		size = size + writeN
 	}
-	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+}
+
+// downloadObjectByUniversalEndpointHandler handles the download object request sent by universal endpoint
+func (gateway *Gateway) downloadObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
+	gateway.getObjectByUniversalEndpointHandler(w, r, true)
+}
+
+// viewObjectByUniversalEndpointHandler handles the view object request sent by universal endpoint
+func (gateway *Gateway) viewObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
+	gateway.getObjectByUniversalEndpointHandler(w, r, false)
 }

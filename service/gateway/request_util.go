@@ -11,13 +11,13 @@ import (
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/eth/ethsecp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -30,18 +30,18 @@ import (
 
 // requestContext is a request context.
 type requestContext struct {
-	requestID  string
-	bucketName string
-	objectName string
-	request    *http.Request
-	startTime  time.Time
-	vars       map[string]string
-	// TODO: for auth v2 test, remove it in the future
-	skipAuth   bool
-	bucketInfo *storagetypes.BucketInfo
-	objectInfo *storagetypes.ObjectInfo
-	// accountID is used to provide authentication to the sp
-	accountID string
+	request     *http.Request
+	routerName  string
+	requestID   string
+	bucketName  string
+	objectName  string
+	accountID   string // accountID is used to provide authentication to the sp
+	vars        map[string]string
+	startTime   time.Time
+	skipAuth    bool // TODO: for auth v2 test, remove it in the future
+	isAnonymous bool // It is anonymous when there is no GnfdAuthorizationHeader
+	bucketInfo  *storagetypes.BucketInfo
+	objectInfo  *storagetypes.ObjectInfo
 }
 
 // RecoverAddr recovers the sender address from msg and signature
@@ -64,14 +64,19 @@ func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, e
 // newRequestContext return a request context.
 func newRequestContext(r *http.Request) *requestContext {
 	vars := mux.Vars(r)
+	routerName := ""
+	if mux.CurrentRoute(r) != nil {
+		routerName = mux.CurrentRoute(r).GetName()
+	}
 	return &requestContext{
+		request:    r,
+		routerName: routerName,
 		requestID:  util.GenerateRequestID(),
 		bucketName: vars["bucket"],
 		objectName: vars["object"],
 		accountID:  vars["account_id"],
-		request:    r,
-		startTime:  time.Now(),
 		vars:       vars,
+		startTime:  time.Now(),
 	}
 }
 
@@ -133,6 +138,11 @@ func (g *Gateway) verifySignature(reqContext *requestContext) (sdk.AccAddress, e
 	OffChainSignaturePrefix := signaturePrefix(model.SignTypeOffChain, model.SignAlgorithmEddsa)
 	if strings.HasPrefix(requestSignature, OffChainSignaturePrefix) {
 		return g.verifyOffChainSignature(reqContext, requestSignature[len(OffChainSignaturePrefix):])
+	}
+	// Anonymous users can get public object.
+	if requestSignature == "" && reqContext.routerName == getObjectRouterName {
+		reqContext.isAnonymous = true
+		return sdk.AccAddress{}, nil
 	}
 	return nil, errors.ErrUnsupportedSignType
 }
@@ -353,7 +363,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		accountExist bool
 	)
 
-	// TODO: just for auth v2 js-sdk, will refine it in the future
+	// TODO: just for auth v2 js-sdk, will be deleted in the future
 	if reqContext.skipAuth {
 		if mux.CurrentRoute(reqContext.request).GetName() == putObjectRouterName ||
 			mux.CurrentRoute(reqContext.request).GetName() == getObjectRouterName {
@@ -364,19 +374,30 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 				return err
 			}
 		}
+		if mux.CurrentRoute(reqContext.request).GetName() == getBucketReadQuotaRouterName ||
+			mux.CurrentRoute(reqContext.request).GetName() == listBucketReadRecordRouterName {
+			if reqContext.bucketInfo, err = g.chain.QueryBucketInfo(
+				context.Background(), reqContext.bucketName); err != nil {
+				log.Errorw("failed to query bucket info on chain",
+					"bucket_name", reqContext.bucketName, "object_name", reqContext.objectName, "error", err)
+				return err
+			}
+		}
 		return nil
 	}
-	accountExist, err = g.chain.HasAccount(context.Background(), addr.String())
-	if err != nil {
-		log.Errorw("failed to check account on chain", "address", addr.String(), "error", err)
-		return err
-	}
-	if !accountExist {
-		log.Errorw("account is not existed", "address", addr.String(), "error", err)
-		return errors.ErrNoPermission
+	if !reqContext.isAnonymous {
+		accountExist, err = g.chain.HasAccount(context.Background(), addr.String())
+		if err != nil {
+			log.Errorw("failed to check account on chain", "address", addr.String(), "error", err)
+			return err
+		}
+		if !accountExist {
+			log.Errorw("account is not existed", "address", addr.String(), "error", err)
+			return errors.ErrNoPermission
+		}
 	}
 
-	switch mux.CurrentRoute(reqContext.request).GetName() {
+	switch reqContext.routerName {
 	case putObjectRouterName, queryUploadProgressRouterName:
 		if reqContext.bucketInfo, reqContext.objectInfo, err = g.chain.QueryBucketInfoAndObjectInfo(
 			context.Background(), reqContext.bucketName, reqContext.objectName); err != nil {

@@ -112,11 +112,10 @@ func GetDefaultGRPCRetryPolicy(service string) (grpc.DialOption, error) {
 			{
 				Name:         []Name{{Service: service}},
 				WaitForReady: true,
-				Timeout:      "30s",
 				RetryPolicy: &RetryPolicy{
 					MaxAttempts:          3,
 					InitialBackoff:       ".2s",
-					MaxBackoff:           "20s",
+					MaxBackoff:           "60s",
 					BackoffMultiplier:    2,
 					RetryableStatusCodes: GetGRPCErrorCodes(),
 				},

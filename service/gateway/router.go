@@ -8,22 +8,26 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 )
 
 const (
-	approvalRouterName               = "GetApproval"
-	putObjectRouterName              = "PutObject"
-	getObjectRouterName              = "GetObject"
-	challengeRouterName              = "Challenge"
-	replicateObjectPieceRouterName   = "ReplicateObjectPiece"
-	getUserBucketsRouterName         = "GetUserBuckets"
-	listObjectsByBucketRouterName    = "ListObjectsByBucketName"
-	getBucketReadQuotaRouterName     = "GetBucketReadQuota"
-	listBucketReadRecordRouterName   = "ListBucketReadRecord"
-	requestNonceName                 = "RequestNonce"
-	updateUserPublicKey              = "UpdateUserPublicKey"
-	queryUploadProgressRouterName    = "queryUploadProgress"
-	getObjectByUniversalEndpointName = "GetObjectByUniversalEndpoint"
+	approvalRouterName                    = "GetApproval"
+	putObjectRouterName                   = "PutObject"
+	getObjectRouterName                   = "GetObject"
+	challengeRouterName                   = "Challenge"
+	replicateObjectPieceRouterName        = "ReplicateObjectPiece"
+	getUserBucketsRouterName              = "GetUserBuckets"
+	listObjectsByBucketRouterName         = "ListObjectsByBucketName"
+	getBucketReadQuotaRouterName          = "GetBucketReadQuota"
+	listBucketReadRecordRouterName        = "ListBucketReadRecord"
+	requestNonceName                      = "RequestNonce"
+	updateUserPublicKey                   = "UpdateUserPublicKey"
+	queryUploadProgressRouterName         = "queryUploadProgress"
+	downloadObjectByUniversalEndpointName = "DownloadObjectByUniversalEndpoint"
+	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
+	getObjectMetaRouterName               = "getObjectMeta"
+	getBucketMetaRouterName               = "getBucketMeta"
 )
 
 const (
@@ -58,6 +62,17 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Queries(model.UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
 	hostBucketRouter.NewRoute().
+		Name(getBucketMetaRouterName).
+		Methods(http.MethodGet).
+		Queries(model.GetBucketMetaQuery, "").
+		HandlerFunc(g.getBucketMetaHandler)
+	hostBucketRouter.NewRoute().
+		Name(getObjectMetaRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}").
+		Queries(model.GetObjectMetaQuery, "").
+		HandlerFunc(g.getObjectMetaHandler)
+	hostBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
@@ -83,12 +98,10 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		HandlerFunc(g.listObjectsByBucketNameHandler)
 	hostBucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
-	// bucket list router, virtual-hosted style
-	bucketListRouter := r.Host(g.config.Domain).Subrouter()
-	bucketListRouter.NewRoute().
+	// bucket list router, path style
+	r.Path("/").
 		Name(getUserBucketsRouterName).
 		Methods(http.MethodGet).
-		Path("/").
 		HandlerFunc(g.getUserBucketsHandler)
 
 	// admin router, path style
@@ -106,12 +119,17 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Name(replicateObjectPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.replicatePieceHandler)
-	//universal endpoint
-	r.Path(model.UniversalEndpointPath).
-		Name(getObjectByUniversalEndpointName).
+	// universal endpoint download
+	r.Path("/download/{bucket:[^/]*}/{object:.+}").
+		Name(downloadObjectByUniversalEndpointName).
 		Methods(http.MethodGet).
-		HandlerFunc(g.getObjectByUniversalEndpointHandler)
-	//redirect for universal endpoint
+		HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
+	// universal endpoint view
+	r.Path("/view/{bucket:[^/]*}/{object:.+}").
+		Name(viewObjectByUniversalEndpointName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.viewObjectByUniversalEndpointHandler)
+	// redirect for universal endpoint
 	http.Handle("/", r)
 
 	// off-chain-auth router
@@ -137,6 +155,17 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 		Path("/{object:.+}").
 		Queries(model.UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
+	pathBucketRouter.NewRoute().
+		Name(getBucketMetaRouterName).
+		Methods(http.MethodGet).
+		Queries(model.GetBucketMetaQuery, "").
+		HandlerFunc(g.getBucketMetaHandler)
+	pathBucketRouter.NewRoute().
+		Name(getObjectMetaRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}").
+		Queries(model.GetObjectMetaQuery, "").
+		HandlerFunc(g.getObjectMetaHandler)
 	pathBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).
@@ -164,4 +193,5 @@ func (g *Gateway) registerHandler(r *mux.Router) {
 	pathBucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
+	r.Use(localhttp.Limit)
 }

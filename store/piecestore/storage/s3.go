@@ -388,7 +388,7 @@ func parseRegion(endpoint string) string {
 
 func getHTTPClient(tlsInsecureSkipVerify bool) *http.Client {
 	resolver := dnscache.New(time.Minute)
-	rand.Seed(time.Now().Unix())
+	rand.New(rand.NewSource(time.Now().Unix()))
 
 	return &http.Client{
 		Transport: &http.Transport{
@@ -398,7 +398,7 @@ func getHTTPClient(tlsInsecureSkipVerify bool) *http.Client {
 			TLSHandshakeTimeout:   time.Second * 20,
 			ResponseHeaderTimeout: time.Second * 30,
 			IdleConnTimeout:       time.Second * 300,
-			MaxIdleConnsPerHost:   500,
+			MaxIdleConnsPerHost:   5000,
 			DialContext: func(ctx context.Context, network string, address string) (net.Conn, error) {
 				separator := strings.LastIndex(address, ":")
 				host := address[:separator]

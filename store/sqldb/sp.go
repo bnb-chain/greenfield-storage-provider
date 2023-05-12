@@ -314,10 +314,13 @@ func (s *SpDBImpl) GetStorageParams() (*storagetypes.Params, error) {
 		return nil, errorstypes.Error(merrors.DBQueryInStorageParamsTableErrCode, result.Error.Error())
 	}
 	return &storagetypes.Params{
-		MaxSegmentSize:          queryReturn.MaxSegmentSize,
-		RedundantDataChunkNum:   queryReturn.RedundantDataChunkNum,
-		RedundantParityChunkNum: queryReturn.RedundantParityChunkNum,
-		MaxPayloadSize:          queryReturn.MaxPayloadSize,
+		VersionedParams: storagetypes.VersionedParams{
+			MaxSegmentSize:          queryReturn.MaxSegmentSize,
+			RedundantDataChunkNum:   queryReturn.RedundantDataChunkNum,
+			RedundantParityChunkNum: queryReturn.RedundantParityChunkNum,
+		},
+
+		MaxPayloadSize: queryReturn.MaxPayloadSize,
 	}, nil
 }
 
@@ -331,9 +334,9 @@ func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
 	}
 
 	insertParamsRecord := &StorageParamsTable{
-		MaxSegmentSize:          params.GetMaxSegmentSize(),
-		RedundantDataChunkNum:   params.GetRedundantDataChunkNum(),
-		RedundantParityChunkNum: params.GetRedundantParityChunkNum(),
+		MaxSegmentSize:          params.VersionedParams.GetMaxSegmentSize(),
+		RedundantDataChunkNum:   params.VersionedParams.GetRedundantDataChunkNum(),
+		RedundantParityChunkNum: params.VersionedParams.GetRedundantParityChunkNum(),
 		MaxPayloadSize:          params.GetMaxPayloadSize(),
 	}
 	// if there is no records in StorageParamsTable, insert a new record

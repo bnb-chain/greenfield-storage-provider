@@ -141,3 +141,9 @@ func GRPCErrorToInnerError(err error) error {
 	}
 	return err
 }
+
+// block_syncer service error
+var (
+	// ErrBlockNotFound defines not found block data
+	ErrBlockNotFound = errors.New("failed to get block from map need retry")
+)

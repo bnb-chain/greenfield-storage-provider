@@ -18,8 +18,9 @@ func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
 
 	err = b.db.Table((&Bucket{}).TableName()).
 		Select("*").
-		Where("owner_address = ?", accountID).
+		Where("owner = ?", accountID).
 		Order("create_at desc").
+		Limit(GetUserBucketsLimitSize).
 		Find(&buckets).Error
 	return buckets, err
 }
@@ -77,6 +78,51 @@ func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address) (int64, error) 
 		err   error
 	)
 
-	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner_address = ?", accountID).Error
+	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
 	return count, err
+}
+
+// ListExpiredBucketsBySp lists expired buckets
+func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpAddress string, limit int64) ([]*Bucket, error) {
+	var (
+		buckets []*Bucket
+		err     error
+	)
+
+	if limit < 1 || limit > ExpiredBucketsDefaultSize {
+		limit = ExpiredBucketsDefaultSize
+	}
+
+	err = b.db.Table((&Bucket{}).TableName()).
+		Select("*").
+		Where("primary_sp_address = ? and status = 'BUCKET_STATUS_CREATED' and create_time < ? and removed = false", common.HexToAddress(primarySpAddress), createAt).
+		Limit(int(limit)).
+		Order("create_at").
+		Find(&buckets).Error
+
+	return buckets, err
+}
+
+func (b *BsDBImpl) GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error) {
+	var (
+		bucketFullMeta *BucketFullMeta
+		err            error
+	)
+
+	if isFullList {
+		err = b.db.Table((&Bucket{}).TableName()).
+			Select("*").
+			Joins("left join stream_records on buckets.payment_address = stream_records.account").
+			Where("buckets.bucket_name = ?", bucketName).
+			Take(&bucketFullMeta).Error
+	} else {
+		err = b.db.Table((&Bucket{}).TableName()).
+			Select("*").
+			Joins("left join stream_records on buckets.payment_address = stream_records.account").
+			Where("buckets.bucket_name = ? and "+
+				"buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'", bucketName).
+			Take(&bucketFullMeta).Error
+	}
+
+	return bucketFullMeta, err
 }

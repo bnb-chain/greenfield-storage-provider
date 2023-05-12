@@ -16,4 +16,4 @@ This section dives into the internals of the Greenfield Storage Provider impleme
   - [Challenge Piece](workflow/04-challenge_piece_data.md)
 - Run SP
   - [Deployment](run-book/01-deployment.md)
-  - [Setup Local for Test](run-book/03-localup.md) 
+  - [Setup Local for Test](run-book/02-localup.md) 

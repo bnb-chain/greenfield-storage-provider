@@ -9,6 +9,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
 
@@ -19,14 +20,20 @@ type BsDBImpl struct {
 	db *gorm.DB
 }
 
-// NewBsDB return a block syncer db instance
-func NewBsDB(config *config.SQLDBConfig) (*BsDBImpl, error) {
+// NewBsDB return a block syncer db instance or a block syncer db backup instance based on the isBackup flag
+func NewBsDB(config *metadata.MetadataConfig, isBackup bool) (*BsDBImpl, error) {
 	LoadDBConfigFromEnv(config)
-	db, err := InitDB(config)
+	dbConfig := config.BsDBConfig
+	if isBackup {
+		dbConfig = config.BsDBSwitchedConfig
+	}
+
+	db, err := InitDB(dbConfig)
 	if err != nil {
 		return nil, err
 	}
-	return &BsDBImpl{db: db}, err
+
+	return &BsDBImpl{db: db}, nil
 }
 
 // InitDB init a block syncer db instance
@@ -43,17 +50,29 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 }
 
 // LoadDBConfigFromEnv load block syncer db user and password from env vars
-func LoadDBConfigFromEnv(config *config.SQLDBConfig) {
+func LoadDBConfigFromEnv(config *metadata.MetadataConfig) {
 	if val, ok := os.LookupEnv(model.BsDBUser); ok {
-		config.User = val
+		config.BsDBConfig.User = val
 	}
 	if val, ok := os.LookupEnv(model.BsDBPasswd); ok {
-		config.Passwd = val
+		config.BsDBConfig.Passwd = val
 	}
 	if val, ok := os.LookupEnv(model.BsDBAddress); ok {
-		config.Address = val
+		config.BsDBConfig.Address = val
 	}
 	if val, ok := os.LookupEnv(model.BsDBDataBase); ok {
-		config.Database = val
+		config.BsDBConfig.Database = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedUser); ok {
+		config.BsDBSwitchedConfig.User = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedPasswd); ok {
+		config.BsDBSwitchedConfig.Passwd = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedAddress); ok {
+		config.BsDBSwitchedConfig.Address = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedDataBase); ok {
+		config.BsDBSwitchedConfig.Database = val
 	}
 }

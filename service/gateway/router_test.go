@@ -11,23 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	testDomain = "www.route-test.com"
-	config     = &GatewayConfig{
-		Domain: testDomain,
-	}
-	gw = &Gateway{
-		config: config,
-	}
-	scheme     = "https://"
-	bucketName = "test-bucket-name"
-	objectName = "test-object-name"
-)
-
 func TestRouters(t *testing.T) {
-	gwRouter := mux.NewRouter().SkipClean(true)
-	gw.registerHandler(gwRouter)
-
+	gwRouter := setupRouter(t)
 	testCases := []struct {
 		name             string
 		router           *mux.Router // the router being tested
@@ -160,6 +145,38 @@ func TestRouters(t *testing.T) {
 			url:              scheme + testDomain + "/",
 			shouldMatch:      true,
 			wantedRouterName: getUserBucketsRouterName,
+		},
+		{
+			name:             "Get object metadata router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "/" + objectName + "?" + model.GetObjectMetaQuery,
+			shouldMatch:      true,
+			wantedRouterName: getObjectMetaRouterName,
+		},
+		{
+			name:             "Get object metadata router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/" + bucketName + "/" + objectName + "?" + model.GetObjectMetaQuery,
+			shouldMatch:      true,
+			wantedRouterName: getObjectMetaRouterName,
+		},
+		{
+			name:             "Get bucket metadata router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "?" + model.GetBucketMetaQuery,
+			shouldMatch:      true,
+			wantedRouterName: getBucketMetaRouterName,
+		},
+		{
+			name:             "Get bucket metadata router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/" + bucketName + "?" + model.GetBucketMetaQuery,
+			shouldMatch:      true,
+			wantedRouterName: getBucketMetaRouterName,
 		},
 		{
 			name:             "Challenge router",

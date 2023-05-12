@@ -12,6 +12,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	gnfd "github.com/bnb-chain/greenfield-storage-provider/pkg/greenfield"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/service/auth"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader"
@@ -21,6 +22,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/service/receiver"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stopserving"
 	"github.com/bnb-chain/greenfield-storage-provider/service/tasknode"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader"
 )
@@ -75,6 +77,40 @@ func (cfg *StorageProviderConfig) MakeGatewayConfig() (*gateway.GatewayConfig, e
 		gCfg.AuthServiceAddress = cfg.Endpoint[model.AuthService]
 	} else {
 		return nil, fmt.Errorf("missing auth gPRC address configuration for gateway service")
+	}
+	if cfg.RateLimiter != nil {
+		defaultMap := make(map[string]localhttp.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.PathPattern {
+			defaultMap[c.Key] = localhttp.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		patternMap := make(map[string]localhttp.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.HostPattern {
+			patternMap[c.Key] = localhttp.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		apiLimitsMap := make(map[string]localhttp.MemoryLimiterConfig)
+		for _, c := range cfg.RateLimiter.APILimits {
+			apiLimitsMap[c.Key] = localhttp.MemoryLimiterConfig{
+				RateLimit:  c.RateLimit,
+				RatePeriod: c.RatePeriod,
+			}
+		}
+		gCfg.APILimiterCfg = &localhttp.APILimiterConfig{
+			PathPattern:  defaultMap,
+			HostPattern:  patternMap,
+			APILimits:    apiLimitsMap,
+			HTTPLimitCfg: cfg.RateLimiter.HTTPLimitCfg,
+		}
+		gCfg.BandwidthLimitCfg = &localhttp.BandwidthLimiterConfig{
+			Enable: false,
+			R:      100,
+			B:      1000,
+		}
 	}
 	return gCfg, nil
 }
@@ -191,7 +227,10 @@ func (cfg *StorageProviderConfig) MakeTaskNodeConfig() (*tasknode.TaskNodeConfig
 // MakeMetadataServiceConfig make meta data service config from StorageProviderConfig
 func (cfg *StorageProviderConfig) MakeMetadataServiceConfig() (*metadata.MetadataConfig, error) {
 	mCfg := &metadata.MetadataConfig{
-		SpDBConfig: cfg.SpDBConfig,
+		BsDBConfig:                 cfg.BsDBConfig,
+		BsDBSwitchedConfig:         cfg.BsDBSwitchedConfig,
+		BsDBSwitchCheckIntervalSec: cfg.MetadataCfg.BsDBSwitchCheckIntervalSec,
+		IsMasterDB:                 cfg.MetadataCfg.IsMasterDB,
 	}
 	if _, ok := cfg.ListenAddress[model.MetadataService]; ok {
 		mCfg.GRPCAddress = cfg.ListenAddress[model.MetadataService]
@@ -207,6 +246,12 @@ func (cfg *StorageProviderConfig) MakeManagerServiceConfig() (*manager.ManagerCo
 		SpOperatorAddress: cfg.SpOperatorAddress,
 		ChainConfig:       cfg.ChainConfig,
 		SpDBConfig:        cfg.SpDBConfig,
+		PieceStoreConfig:  cfg.PieceStoreConfig,
+	}
+	if _, ok := cfg.Endpoint[model.MetadataService]; ok {
+		managerConfig.MetadataGrpcAddress = cfg.Endpoint[model.MetadataService]
+	} else {
+		return nil, fmt.Errorf("missing metadata server gRPC address configuration for manager service")
 	}
 	return managerConfig, nil
 }
@@ -233,7 +278,7 @@ func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfi
 			},
 		},
 		Parser: parserconfig.Config{
-			Workers: 1,
+			Workers: int64(cfg.BlockSyncerCfg.Workers),
 		},
 		Database: databaseconfig.Config{
 			Type:               "mysql",
@@ -281,4 +326,23 @@ func (cfg *StorageProviderConfig) MakeAuthServiceConfig() (*auth.AuthConfig, err
 		return nil, fmt.Errorf("missing auth gRPC address configuration for auth service")
 	}
 	return aCfg, nil
+}
+
+// MakeStopServingServiceConfig make stop serving service config from StorageProviderConfig
+func (cfg *StorageProviderConfig) MakeStopServingServiceConfig() (*stopserving.StopServingConfig, error) {
+	ssCfg := &stopserving.StopServingConfig{
+		SpOperatorAddress: cfg.SpOperatorAddress,
+		DiscontinueConfig: cfg.DiscontinueCfg,
+	}
+	if _, ok := cfg.ListenAddress[model.SignerService]; ok {
+		ssCfg.SignerGrpcAddress = cfg.ListenAddress[model.SignerService]
+	} else {
+		return nil, fmt.Errorf("missing signer gRPC address configuration for stop serving service")
+	}
+	if _, ok := cfg.Endpoint[model.MetadataService]; ok {
+		ssCfg.MetadataGrpcAddress = cfg.Endpoint[model.MetadataService]
+	} else {
+		return nil, fmt.Errorf("missing metadata gRPC address configuration for stop serving service")
+	}
+	return ssCfg, nil
 }

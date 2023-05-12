@@ -81,7 +81,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 					return
 				}
 				objectInfo = req.GetObjectInfo()
-				if int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()+1) !=
+				if int(params.VersionedParams.GetRedundantDataChunkNum()+params.VersionedParams.GetRedundantParityChunkNum()+1) !=
 					len(objectInfo.GetChecksums()) {
 					errCh <- errorstypes.Error(merrors.UploaderMismatchChecksumNumErrCode, merrors.ErrMismatchChecksumNum.Error())
 				}
@@ -90,7 +90,7 @@ func (uploader *Uploader) PutObject(stream types.UploaderService_PutObjectServer
 				pstream.InitAsyncPayloadStream(
 					objectID,
 					storagetypes.REDUNDANCY_REPLICA_TYPE,
-					params.GetMaxSegmentSize(),
+					params.VersionedParams.GetMaxSegmentSize(),
 					math.MaxUint32, /*useless*/
 				)
 				uploader.spDB.CreateUploadJob(objectInfo)

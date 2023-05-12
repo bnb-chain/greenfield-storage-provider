@@ -15,6 +15,7 @@ type SignerConfig struct {
 	FundingPrivateKey  string
 	SealPrivateKey     string
 	ApprovalPrivateKey string
+	GcPrivateKey       string
 }
 
 var DefaultSignerChainConfig = &SignerConfig{
@@ -33,10 +34,13 @@ func overrideConfigFromEnv(config *SignerConfig) {
 	if val, ok := os.LookupEnv(model.SpFundingPrivKey); ok {
 		config.FundingPrivateKey = val
 	}
+	if val, ok := os.LookupEnv(model.SpSealPrivKey); ok {
+		config.SealPrivateKey = val
+	}
 	if val, ok := os.LookupEnv(model.SpApprovalPrivKey); ok {
 		config.ApprovalPrivateKey = val
 	}
-	if val, ok := os.LookupEnv(model.SpSealPrivKey); ok {
-		config.SealPrivateKey = val
+	if val, ok := os.LookupEnv(model.SpGcPrivKey); ok {
+		config.GcPrivateKey = val
 	}
 }

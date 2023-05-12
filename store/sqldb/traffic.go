@@ -9,11 +9,18 @@ import (
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 // CheckQuotaAndAddReadRecord check current quota, and add read record
 // TODO: Traffic statistics may be inaccurate in extreme cases, optimize it in the future
 func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
+	startTime := time.Now()
+	defer func() {
+		observer := metrics.SPDBTimeHistogram.WithLabelValues("checkQuotaAndAddReadRecord")
+		observer.Observe(time.Since(startTime).Seconds())
+	}()
+
 	yearMonth := TimeToYearMonth(TimestampUsToTime(record.ReadTimestampUs))
 	bucketTraffic, err := s.GetBucketTraffic(record.BucketID, yearMonth)
 	if err != nil && errorstypes.Code(err) != merrors.DBRecordNotFoundErrCode {

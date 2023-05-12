@@ -30,6 +30,10 @@ var (
 	P2PService = strings.ToLower("p2p")
 	// AuthService defines the name of auth service
 	AuthService = strings.ToLower("auth")
+	// PProfService defines the name of pprof service
+	PProfService = strings.ToLower("pprof")
+	// StopServingService defines the name of stop serving service
+	StopServingService = strings.ToLower("StopServing")
 )
 
 // SpServiceDesc defines the service description in storage provider
@@ -45,9 +49,10 @@ var SpServiceDesc = map[string]string{
 	BlockSyncerService: "Syncs block data to db",
 	P2PService:         "Communicates with SPs on p2p protocol",
 	AuthService:        "Handles off-chain-auth requests",
+	StopServingService: "Discontinue buckets for greenfield testnet",
 }
 
-// define storage provider service gRPC default address
+// define storage provider service default listening address
 const (
 	// GatewayHTTPAddress default HTTP address of gateway
 	GatewayHTTPAddress = "localhost:9033"
@@ -72,7 +77,9 @@ const (
 	// P2PListenAddress default p2p protocol listen address of p2p node
 	P2PListenAddress = "127.0.0.1:9933"
 	// AuthGRPCAddress default gRPC address of auth service
-	AuthGRPCAddress = "localhost:10033"
+	AuthGRPCAddress = "localhost:8933"
+	// PProfHTTPAddress default HTTP address of pprof service
+	PProfHTTPAddress = "localhost:25341"
 )
 
 // define greenfield chain default address
@@ -106,6 +113,14 @@ const (
 	BsDBAddress = "BS_DB_ADDRESS"
 	// BsDBDataBase defines env variable name for block syncer db database
 	BsDBDataBase = "BS_DB_DATABASE"
+	// BsDBSwitchedUser defines env variable name for switched block syncer db user name
+	BsDBSwitchedUser = "BS_DB_SWITCHED_USER"
+	// BsDBSwitchedPasswd defines env variable name for switched block syncer db user passwd
+	BsDBSwitchedPasswd = "BS_DB_SWITCHED_PASSWORD"
+	// BsDBSwitchedAddress defines env variable name for switched block syncer db address
+	BsDBSwitchedAddress = "BS_DB_SWITCHED_ADDRESS"
+	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database
+	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
 
 	// SpOperatorAddress defines env variable name for sp operator address
 	SpOperatorAddress = "greenfield-storage-provider"
@@ -119,6 +134,8 @@ const (
 	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
 	// SpSealPrivKey defines env variable name for sp seal priv key
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
+	// SpGcPrivKey defines env variable name for sp gc priv key
+	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
 	// DsnBlockSyncer defines env variable name for block syncer dsn
 	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
 	// P2PPrivateKey defines env variable for p2p protocol private key
@@ -155,6 +172,12 @@ const (
 	ContentTypeJSONHeaderValue = "application/json"
 	// ContentTypeXMLHeaderValue is used to indicate xml
 	ContentTypeXMLHeaderValue = "application/xml"
+	// ContentDispositionHeader is used to indicate the media disposition of the resource
+	ContentDispositionHeader = "Content-Disposition"
+	// ContentDispositionAttachmentValue is used to indicate attachment
+	ContentDispositionAttachmentValue = "attachment"
+	// ContentDispositionInlineValue is used to indicate inline
+	ContentDispositionInlineValue = "inline"
 
 	// SignAlgorithm uses secp256k1 with the ECDSA algorithm
 	SignAlgorithm = "ECDSA-secp256k1"
@@ -173,8 +196,6 @@ const (
 
 	// GetApprovalPath defines get-approval path style suffix
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
-	// UniversalEndpointPath defines universal endpoint path style suffix
-	UniversalEndpointPath = "/download/{bucket:[^/]*}/{object:.+}"
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
 	ActionQuery = "action"
 	// UploadProgressQuery defines upload progress query, which is used to route request
@@ -187,6 +208,20 @@ const (
 	ListBucketReadRecordQuery = "list-read-record"
 	// ListBucketReadRecordMaxRecordsQuery defines list read record max num
 	ListBucketReadRecordMaxRecordsQuery = "max-records"
+	// ListObjectsMaxKeysQuery defines the maximum number of keys returned to the response
+	ListObjectsMaxKeysQuery = "max-keys"
+	// ListObjectsStartAfterQuery defines where you want to start listing from
+	ListObjectsStartAfterQuery = "start-after"
+	// ListObjectsContinuationTokenQuery indicates that the list is being continued on this bucket with a token
+	ListObjectsContinuationTokenQuery = "continuation-token"
+	// ListObjectsDelimiterQuery defines a character you use to group keys
+	ListObjectsDelimiterQuery = "delimiter"
+	// ListObjectsPrefixQuery defines limits the response to keys that begin with the specified prefix
+	ListObjectsPrefixQuery = "prefix"
+	// GetBucketMetaQuery defines get bucket metadata query, which is used to route request
+	GetBucketMetaQuery = "bucket-meta"
+	// GetObjectMetaQuery defines get object metadata query, which is used to route request
+	GetObjectMetaQuery = "object-meta"
 	// StartTimestampUs defines start timestamp in microsecond, which is used by list read record, [start_ts,end_ts)
 	StartTimestampUs = "start-timestamp"
 	// EndTimestampUs defines end timestamp in microsecond, which is used by list read record, [start_ts,end_ts)
@@ -236,7 +271,7 @@ const (
 	GnfdOffChainAuthAppRegNonceHeader = "X-Gnfd-App-Reg-Nonce"
 	// GnfdOffChainAuthAppRegPublicKeyHeader defines the EDDSA public key for which user is trying to register
 	GnfdOffChainAuthAppRegPublicKeyHeader = "X-Gnfd-App-Reg-Public-Key"
-	// GnfdOffChainAuthAppRegExpiryDateHeader defines the Expiry-Date formatted in '2006-01-02 15:04:05 GMT-07:00', used to register the EDDSA public key
+	// GnfdOffChainAuthAppRegExpiryDateHeader defines the Expiry-Date is the ISO 8601 datetime string (e.g. 2021-09-30T16:25:24Z), used to register the EDDSA public key
 	GnfdOffChainAuthAppRegExpiryDateHeader = "X-Gnfd-App-Reg-Expiry-Date"
 )
 

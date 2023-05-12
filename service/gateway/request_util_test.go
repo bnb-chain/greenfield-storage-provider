@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -25,7 +24,20 @@ const (
 	AuthStrFormat    = "PersonalSign ECDSA-secp256k1,SignedMsg=%s,Signature=%s"
 	SampleDAppDomain = "https://greenfield.dapp.sample.io"
 	SamplePublicKey  = "a_sample_eddsa_public_key_for_off_chain_auth"
+	SampleIssueDate  = "2023-04-17T16:25:24Z"
 )
+
+func TestVerifyEmptySignature(t *testing.T) {
+	req, err := http.NewRequest(http.MethodGet, scheme+bucketName+"."+testDomain+"/"+objectName, nil)
+	require.NoError(t, err)
+	rc := &requestContext{
+		request:    req,
+		routerName: getObjectRouterName,
+	}
+	addrOutput, err := gw.verifySignature(rc)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "", addrOutput.String())
+}
 
 // TODO: Stop referencing SDK code for testing, If needed, move the mainly function to Greenfield Common
 /*
@@ -95,12 +107,13 @@ func Test_verifyPersonalSignatureFromWallet(t *testing.T) {
 }
 
 func Test_verifyPersonalSignatureFromRequest(t *testing.T) {
-	nonce := "123456"
-	spAddr := "0x1234567"
-	unSignedContent := UnsignedContentTemplate
+	expectedDomain := SampleDAppDomain
+	expectedNonce := "123456"
+	expectedPublicKey := SamplePublicKey
+	expectedExpiryDate := "2023-04-18T16:25:24Z"
+	expectedIssueDate := SampleIssueDate
+	unSignedContent := fmt.Sprintf(UnsignedContentTemplate, expectedDomain, TestUserAcct, expectedPublicKey, expectedDomain, expectedIssueDate, expectedExpiryDate, TestSpAddress, expectedNonce)
 
-	validExpiryDate := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-	unSignedContent = fmt.Sprintf(unSignedContent, SampleDAppDomain, SamplePublicKey, spAddr, nonce, validExpiryDate)
 	log.Infof("unSignedContent is: %s", unSignedContent)
 	unSignedContentHash := accounts.TextHash([]byte(unSignedContent))
 	// Account information.

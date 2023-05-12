@@ -74,6 +74,7 @@ func (downloader *Downloader) GetObject(req *types.GetObjectRequest,
 		log.CtxErrorw(ctx, "failed to check billing due to bucket quota", "error", err)
 		return err
 	}
+
 	pieceInfos, err := downloader.SplitToSegmentPieceInfos(objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(), startOffset, endOffset)
 	if err != nil {
 		log.Errorw("failed to split to segment piece infos", "error", err)
@@ -112,7 +113,7 @@ func (downloader *Downloader) SplitToSegmentPieceInfos(objectID, objectSize, sta
 		return pieceInfos, err
 	}
 
-	segmentSize := params.GetMaxSegmentSize()
+	segmentSize := params.VersionedParams.GetMaxSegmentSize()
 	segmentCount := objectSize / segmentSize
 	if objectSize%segmentSize != 0 {
 		segmentCount++
@@ -154,6 +155,9 @@ func (downloader *Downloader) SplitToSegmentPieceInfos(objectID, objectSize, sta
 
 // GetBucketReadQuota get the quota info of the specified month.
 func (downloader *Downloader) GetBucketReadQuota(ctx context.Context, req *types.GetBucketReadQuotaRequest) (*types.GetBucketReadQuotaResponse, error) {
+	if req.GetBucketInfo() == nil {
+		return nil, merrors.ErrDanglingPointer
+	}
 	bucketTraffic, err := downloader.spDB.GetBucketTraffic(req.GetBucketInfo().Id.Uint64(), req.GetYearMonth())
 	if errorstypes.Code(err) == merrors.DBRecordNotFoundErrCode {
 		return &types.GetBucketReadQuotaResponse{
@@ -175,6 +179,9 @@ func (downloader *Downloader) GetBucketReadQuota(ctx context.Context, req *types
 
 // ListBucketReadRecord get read record list of the specified time range.
 func (downloader *Downloader) ListBucketReadRecord(ctx context.Context, req *types.ListBucketReadRecordRequest) (*types.ListBucketReadRecordResponse, error) {
+	if req.GetBucketInfo() == nil {
+		return nil, merrors.ErrDanglingPointer
+	}
 	records, err := downloader.spDB.GetBucketReadRecord(req.GetBucketInfo().Id.Uint64(), &sqldb.TrafficTimeRange{
 		StartTimestampUs: req.StartTimestampUs,
 		EndTimestampUs:   req.EndTimestampUs,

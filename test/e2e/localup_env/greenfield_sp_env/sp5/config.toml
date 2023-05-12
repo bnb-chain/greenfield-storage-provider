@@ -31,6 +31,18 @@ Passwd = "root"
 Address = "localhost:3306"
 Database = "sp_5"
 
+[BsDBConfig]
+User = "root"
+Passwd = "root"
+Address = "localhost:3306"
+Database = "sp_0"
+
+[BsDBSwitchedConfig]
+User = "root"
+Passwd = "root"
+Address = "localhost:3306"
+Database = "sp_0"
+
 [PieceStoreConfig]
 Shards = 0
 
@@ -76,3 +88,17 @@ Path = "./gnfd-sp.log"
 
 [MetricsCfg]
 HTTPAddress = "localhost:19036"
+
+[RateLimiter]
+APILimits = []
+HostPattern = []
+PathPattern = []
+
+[RateLimiter.HTTPLimitCfg]
+On = false
+RateLimit = 1
+RatePeriod = "S"
+
+[MetadataCfg]
+IsMasterDB = true
+BsDBSwitchCheckIntervalSec = 3600
