@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.2.0
+
+FEATURES
+* [\#358](https://github.com/bnb-chain/greenfield-storage-provider/pull/358) feat: sp services add pprof
+* [\#379](https://github.com/bnb-chain/greenfield-storage-provider/pull/379) feat:block syncer add read concurrency support
+* [\#383](https://github.com/bnb-chain/greenfield-storage-provider/pull/383) feat: add universal endpoint view option
+* [\#389](https://github.com/bnb-chain/greenfield-storage-provider/pull/389) feat: signer async send sealObject tx
+* [\#402](https://github.com/bnb-chain/greenfield-storage-provider/pull/402) feat: bsdb switch
+* [\#404](https://github.com/bnb-chain/greenfield-storage-provider/pull/404) feat: list objects pagination & folder path
+* [\#406](https://github.com/bnb-chain/greenfield-storage-provider/pull/406) feat: adapt greenfield v0.47
+* [\#408](https://github.com/bnb-chain/greenfield-storage-provider/pull/408) feat: add gc worker
+* [\#410](https://github.com/bnb-chain/greenfield-storage-provider/pull/410) feat: support full-memory replicate task
+* [\#411](https://github.com/bnb-chain/greenfield-storage-provider/pull/411) feat:add upload download add bandwidth limit
+* [\#412](https://github.com/bnb-chain/greenfield-storage-provider/pull/412) feat: add get object meta and get bucket meta apis
+
+BUGFIX
+* [\#355](https://github.com/bnb-chain/greenfield-storage-provider/pull/355) fix: universal endpoint spaces
+* [\#360](https://github.com/bnb-chain/greenfield-storage-provider/pull/360) fix: sql parenthesis handling
+* [\#378](https://github.com/bnb-chain/greenfield-storage-provider/pull/378) fix: support authv2 bucket-quota api
+* [\#413](https://github.com/bnb-chain/greenfield-storage-provider/pull/413) fix: fix nil pointer and update db config
+
+
 ## v0.1.2
 
 FEATURES
