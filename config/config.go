@@ -44,6 +44,7 @@ type StorageProviderConfig struct {
 	RateLimiter        *localhttp.RateLimiterConfig
 	DiscontinueCfg     *stopserving.DiscontinueConfig
 	MetadataCfg        *metadata.MetadataConfig
+	BandwidthLimiter   *localhttp.BandwidthLimiterConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -111,6 +112,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 	RateLimiter:        DefaultRateLimiterConfig,
 	DiscontinueCfg:     stopserving.DefaultDiscontinueConfig,
 	MetadataCfg:        DefaultMetadataConfig,
+	BandwidthLimiter:   DefaultBandwidthLimiterConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -208,6 +210,12 @@ var DefaultRateLimiterConfig = &localhttp.RateLimiterConfig{
 		RateLimit:  100,
 		RatePeriod: "S",
 	},
+}
+
+var DefaultBandwidthLimiterConfig = &localhttp.BandwidthLimiterConfig{
+	Enable: false,
+	R:      100,
+	B:      1000,
 }
 
 // LoadConfig loads the config file from path

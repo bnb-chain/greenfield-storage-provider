@@ -15,6 +15,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	localHttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
@@ -117,7 +118,12 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 			errDescription = makeErrorDescription(merrors.GRPCErrorToInnerError(err))
 			return
 		}
-
+		// If it is limited, it will block
+		if localHttp.BandwidthLimit != nil {
+			if err := localHttp.BandwidthLimit.Limiter.Wait(ctx); err != nil {
+				log.Errorw("failed to wait bandwidth limiter", "error", err)
+			}
+		}
 		if readN = len(resp.Data); readN == 0 {
 			log.Errorw("failed to get object due to return empty data", "response", resp)
 			continue
@@ -223,6 +229,12 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if readN > 0 {
+			// If it is limited, it will block
+			if localHttp.BandwidthLimit != nil {
+				if err := localHttp.BandwidthLimit.Limiter.Wait(ctx); err != nil {
+					log.Errorw("failed to wait bandwidth limiter", "error", err)
+				}
+			}
 			req := &uploadertypes.PutObjectRequest{
 				ObjectInfo: reqContext.objectInfo,
 				Payload:    buf[:readN],
