@@ -5,7 +5,7 @@ go 1.20
 replace (
 	cosmossdk.io/api => github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230425074444-eb5869b05fe9
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05fe9
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.12-0.20230506102855-44baf619ebef
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.2.0
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.23.0
 	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-tendermint v0.0.0-20230505031757-bb05128f3794
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
@@ -18,7 +18,7 @@ replace (
 require (
 	cosmossdk.io/math v1.0.0
 	github.com/aws/aws-sdk-go v1.44.159
-	github.com/bnb-chain/greenfield v0.0.12-0.20230506102855-44baf619ebef
+	github.com/bnb-chain/greenfield v0.2.0
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230407104542-ed19e3666522
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
@@ -56,7 +56,10 @@ require (
 	gorm.io/gorm v1.24.5
 )
 
-require github.com/cometbft/cometbft v0.37.1
+require (
+	github.com/cometbft/cometbft v0.37.1
+	golang.org/x/time v0.3.0
+)
 
 require (
 	cosmossdk.io/api v0.4.0 // indirect
@@ -73,7 +76,6 @@ require (
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/tklauser/numcpus v0.4.0 // indirect
 	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 )
