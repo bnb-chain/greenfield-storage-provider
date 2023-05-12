@@ -114,7 +114,7 @@ func (w *GCWorker) startGC() {
 // gcSegmentPiece is used to gc segment piece.
 func (w *GCWorker) gcSegmentPiece(objectInfo *storagetypes.ObjectInfo, storageParams *storagetypes.Params) {
 	keyList := piecestore.GenerateObjectSegmentKeyList(objectInfo.Id.Uint64(),
-		objectInfo.GetPayloadSize(), storageParams.GetMaxSegmentSize())
+		objectInfo.GetPayloadSize(), storageParams.VersionedParams.GetMaxSegmentSize())
 	for _, key := range keyList {
 		w.manager.pieceStore.DeletePiece(key)
 	}
@@ -129,7 +129,7 @@ func (w *GCWorker) gcECPiece(objectInfo *storagetypes.ObjectInfo, storageParams 
 		if strings.Compare(w.manager.config.SpOperatorAddress, address) == 0 {
 			keyList := piecestore.GenerateObjectECKeyList(
 				objectInfo.Id.Uint64(), objectInfo.GetPayloadSize(),
-				storageParams.GetMaxSegmentSize(), uint64(redundancyIndex))
+				storageParams.VersionedParams.GetMaxSegmentSize(), uint64(redundancyIndex))
 			for _, key := range keyList {
 				w.manager.pieceStore.DeletePiece(key)
 			}

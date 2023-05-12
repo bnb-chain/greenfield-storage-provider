@@ -5,6 +5,8 @@ workspace=${basedir}
 source ${workspace}/env.info
 sp_bin_name=gnfd-sp
 sp_bin=${workspace}/../../build/${sp_bin_name}
+gnfd_bin=${workspace}/../../greenfield/build/bin/gnfd
+gnfd_workspace=${workspace}/../../greenfield/deployment/localup/
 
 #########################
 # the command line help #
@@ -93,6 +95,9 @@ make_config() {
         sed -i -e "s/test_pwd/${PWD}/g" config.toml
         sed -i -e "s/localhost\:3306/${ADDRESS}/g" config.toml
         sed -i -e "s/storage_provider_db/${DATABASE}/g" config.toml
+        sed -i -e "s/block_syncer_backup/${DATABASE}/g" config.toml
+        sed -i -e "s/block_syncer/${DATABASE}/g" config.toml
+
         # sp
         sed -i -e "s/localhost\:9033/${SP_ENDPOINT}/g" config.toml
         sed -i -e "s/8933/$(($cur_port+33))/g" config.toml
@@ -126,6 +131,56 @@ make_config() {
       cd - >/dev/null
       index=$(($index+1))
   done
+}
+
+#############################################################
+# make intergation test config.toml according sp.json       #
+#############################################################
+make_intergation_test_config() {
+  index=0
+  sp_json_file=$1
+  file='test/e2e/localup_env/integration_config/config.yml'
+
+  validator_priv_key=("$(echo "y" | $gnfd_bin keys export validator0 --unarmored-hex --unsafe --keyring-backend test --home ${gnfd_workspace}/.local/validator0)")
+  echo "validator0 private key $validator_priv_key"
+  sed -i -e "s/20f92afe113b90e1faa241969e957ac091d80b920f84ffda80fc9d0588f62906/${validator_priv_key}/g" $file
+
+  echo "SPs:" >> $file
+  sp0_opk=$(jq -r ".sp0.OperatorPrivateKey" ${sp_json_file})
+  sp0_fpk=$(jq -r ".sp0.FundingPrivateKey" ${sp_json_file})
+  sp0_spk=$(jq -r ".sp0.SealPrivateKey" ${sp_json_file})
+  sp0_apk=$(jq -r ".sp0.ApprovalPrivateKey" ${sp_json_file})
+  sp1_opk=$(jq -r ".sp1.OperatorPrivateKey" ${sp_json_file})
+  sp1_fpk=$(jq -r ".sp1.FundingPrivateKey" ${sp_json_file})
+  sp1_spk=$(jq -r ".sp1.SealPrivateKey" ${sp_json_file})
+  sp1_apk=$(jq -r ".sp1.ApprovalPrivateKey" ${sp_json_file})
+
+  sp0_opaddr=$(jq -r ".sp0.OperatorAddress" ${sp_json_file})
+  sp1_opaddr=$(jq -r ".sp1.OperatorAddress" ${sp_json_file})
+  sp2_opaddr=$(jq -r ".sp2.OperatorAddress" ${sp_json_file})
+  sp3_opaddr=$(jq -r ".sp3.OperatorAddress" ${sp_json_file})
+  sp4_opaddr=$(jq -r ".sp4.OperatorAddress" ${sp_json_file})
+  sp5_opaddr=$(jq -r ".sp5.OperatorAddress" ${sp_json_file})
+  sp6_opaddr=$(jq -r ".sp6.OperatorAddress" ${sp_json_file})
+
+
+  echo "  - OperatorSecret: "${sp0_opk}"" >> $file
+  echo "    FundingSecret: "${sp0_fpk}"" >> $file
+  echo "    ApprovalSecret: "${sp0_spk}"" >> $file
+  echo "    SealSecret: "${sp0_apk}"" >> $file
+  echo "  - OperatorSecret: "${sp1_opk}"" >> $file
+  echo "    FundingSecret: "${sp1_fpk}"" >> $file
+  echo "    ApprovalSecret: "${sp1_spk}"" >> $file
+  echo "    SealSecret: "${sp1_apk}"" >> $file
+  echo "SPAddr:" >> $file
+  echo "  - $sp0_opaddr" >> $file
+  echo "  - $sp1_opaddr" >> $file
+  echo "  - $sp2_opaddr" >> $file
+  echo "  - $sp3_opaddr" >> $file
+  echo "  - $sp4_opaddr" >> $file
+  echo "  - $sp5_opaddr" >> $file
+  echo "  - $sp6_opaddr" >> $file
+  cat $file
 }
 
 #############
@@ -216,6 +271,7 @@ main() {
   case ${CMD} in
   --generate)
     generate_sp_db_info $2 $3 $4 $5
+    make_intergation_test_config $2
     ;;
   --reset)
     reset_sp

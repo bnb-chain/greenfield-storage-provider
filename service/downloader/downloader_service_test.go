@@ -1,3 +1,4 @@
+//nolint:all
 package downloader
 
 import (
@@ -13,13 +14,15 @@ import (
 func TestSplitToSegmentPieceInfos(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	//nolint:all
-	mockDB := sqldb.NewMockSPDB(ctrl)
+	//nolint:typecheck
+	mockDB := sqldb.NewMockSPDB(ctrl) //nolint:NewMockSPDB
 	d := &Downloader{
 		spDB: mockDB,
 	}
 	mockDB.EXPECT().GetStorageParams().Return(&storagetypes.Params{
-		MaxSegmentSize: 16 * 1024 * 1024,
+		VersionedParams: storagetypes.VersionedParams{
+			MaxSegmentSize: 16 * 1024 * 1024,
+		},
 	}, nil).MaxTimes(100)
 
 	testCases := []struct {
