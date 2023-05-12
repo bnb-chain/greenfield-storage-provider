@@ -9,7 +9,7 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/ta
 // ReplicateObjectRequest is request type for the ReplicateObject RPC method.
 message ReplicateObjectRequest {
   // object_info defines the information of the object.
-  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  greenfield.storage.ObjectInfo object_info = 1;
 }
 
 // ReplicateObjectResponse is response type for the ReplicateObject RPC method.

@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/libp2p/go-libp2p/core/network"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"

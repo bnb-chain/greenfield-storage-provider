@@ -6,8 +6,8 @@ import (
 	"time"
 
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	ggio "github.com/gogo/protobuf/io"
-	"github.com/gogo/protobuf/proto"
+	ggio "github.com/cosmos/gogoproto/io"
+	"github.com/cosmos/gogoproto/proto"
 	ds "github.com/ipfs/go-datastore"
 	leveldb "github.com/ipfs/go-ds-leveldb"
 	"github.com/libp2p/go-libp2p"
