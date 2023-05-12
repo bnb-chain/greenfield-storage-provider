@@ -8,7 +8,7 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/ch
 // ChallengePieceRequest is request type for the ChallengePiece RPC method.
 message ChallengePieceRequest {
   // object_info defines the information of the object
-  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  greenfield.storage.ObjectInfo object_info = 1;
   // segment_idx defines the challenge segment idx
   uint32 segment_idx = 2;
   // redundancy_idx defines the challenge redundancy idx
