@@ -227,13 +227,14 @@ func (s *BlockSyncer) Start(ctx context.Context) error {
 	determineMainService()
 
 	CtxMain, CancelMain = context.WithCancel(context.Background())
-	ctxBackup := context.Background()
-	BackupService.context = ctxBackup
 
 	go MainService.serve(CtxMain)
 
 	//create backup blocksyncer
 	if NeedBackup {
+		ctxBackup := context.Background()
+		BackupService.context = ctxBackup
+
 		go BackupService.serve(ctxBackup)
 		go CheckProgress()
 	}
