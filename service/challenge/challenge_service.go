@@ -58,7 +58,7 @@ func (challenge *Challenge) ChallengePiece(ctx context.Context, req *types.Chall
 			req.GetSegmentIdx(), uint32(req.GetRedundancyIdx()))
 	}
 	approximatePieceSize, err = piecestore.ComputeApproximatePieceSize(objectInfo,
-		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum(), pieceType, req.GetSegmentIdx())
+		params.VersionedParams.GetMaxSegmentSize(), params.VersionedParams.GetRedundantDataChunkNum(), pieceType, req.GetSegmentIdx())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to compute Approximate piece size",
 			"reserve_size", approximatePieceSize, "error", err)

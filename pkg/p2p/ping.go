@@ -31,7 +31,7 @@ func (n *Node) onPing(s network.Stream) {
 			log.Warnw("failed to response ping", "peer_id", peerID, "error", err)
 			return
 		}
-		log.Debugw("success to response ping", "peer_id", peerID)
+		// log.Debugw("succeed to response ping", "peer_id", peerID)
 	}()
 	ping := &types.Ping{}
 	buf, err := io.ReadAll(s)
@@ -46,7 +46,7 @@ func (n *Node) onPing(s network.Stream) {
 		log.Errorw("failed to unmarshal ping msg", "error", err)
 		return
 	}
-	log.Debugf("%s received ping request from %s. Message: %s", s.Conn().LocalPeer(), s.Conn().RemotePeer(), ping.String())
+	// log.Debugf("%s received ping request from %s. Message: %s", s.Conn().LocalPeer(), s.Conn().RemotePeer(), ping.String())
 
 	err = types.VerifySignature(ping.GetSpOperatorAddress(), ping.GetSignBytes(), ping.GetSignature())
 	if err != nil {
@@ -66,7 +66,7 @@ func (n *Node) onPing(s network.Stream) {
 			nodeInfo.MultiAddr = append(nodeInfo.MultiAddr, addr.String())
 		}
 		pong.Nodes = append(pong.Nodes, nodeInfo)
-		log.Debugw("send node to remote", "node_id", pID.String(), "remote_node", s.Conn().RemotePeer())
+		// log.Debugw("send node to remote", "node_id", pID.String(), "remote_node", s.Conn().RemotePeer())
 	}
 	pong.SpOperatorAddress = n.SpOperatorAddress
 	pong, err = n.signer.SignPongMsg(context.Background(), pong)
@@ -89,7 +89,7 @@ func (n *Node) onPong(s network.Stream) {
 			log.Warnw("failed to receive pong", "peer_id", peerID, "error", err)
 			return
 		}
-		log.Debugw("success to receive pong", "peer_id", peerID)
+		// log.Debugw("succeed to receive pong", "peer_id", peerID)
 	}()
 	pong := &types.Pong{}
 	buf, err := io.ReadAll(s)
@@ -104,7 +104,7 @@ func (n *Node) onPong(s network.Stream) {
 		log.Errorw("failed to unmarshal ping msg", "error", err)
 		return
 	}
-	log.Debugf("%s received pong request from %s.", s.Conn().LocalPeer(), s.Conn().RemotePeer())
+	// log.Debugf("%s received pong request from %s.", s.Conn().LocalPeer(), s.Conn().RemotePeer())
 
 	err = types.VerifySignature(pong.GetSpOperatorAddress(), pong.GetSignBytes(), pong.GetSignature())
 	if err != nil {
@@ -127,6 +127,6 @@ func (n *Node) onPong(s network.Stream) {
 			addrs = append(addrs, addr)
 		}
 		n.node.Peerstore().AddAddrs(pID, addrs, peerstore.PermanentAddrTTL)
-		log.Debugw("receive node from remote and permanent", "remote_node", s.Conn().RemotePeer(), "node_id", pID)
+		// log.Debugw("receive node from remote and permanent", "remote_node", s.Conn().RemotePeer(), "node_id", pID)
 	}
 }

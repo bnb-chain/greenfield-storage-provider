@@ -111,7 +111,7 @@ func (downloader *Downloader) SplitToSegmentPieceInfos(objectID, objectSize, sta
 		return pieceInfos, err
 	}
 
-	segmentSize := params.GetMaxSegmentSize()
+	segmentSize := params.VersionedParams.GetMaxSegmentSize()
 	segmentCount := objectSize / segmentSize
 	if objectSize%segmentSize != 0 {
 		segmentCount++

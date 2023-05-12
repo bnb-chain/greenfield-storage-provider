@@ -31,6 +31,18 @@ Passwd = "test_pwd"
 Address = "localhost:3306"
 Database = "storage_provider_db"
 
+[BsDBConfig]
+User = "root"
+Passwd = "root"
+Address = "localhost:3306"
+Database = "sp_0"
+
+[BsDBSwitchedConfig]
+User = "root"
+Passwd = "root"
+Address = "localhost:3306"
+Database = "sp_0"
+
 [PieceStoreConfig]
 Shards = 0
 
@@ -56,6 +68,7 @@ OperatorPrivateKey = ""
 FundingPrivateKey = ""
 SealPrivateKey = ""
 ApprovalPrivateKey = ""
+GcPrivateKey = ""
 
 [BlockSyncerCfg]
 Modules = ["epoch", "bucket", "object", "payment", "permission", "group"]
@@ -71,13 +84,17 @@ P2PPrivateKey = ""
 Bootstrap = []
 PingPeriod = 2
 
+[LogCfg]
+Level = "debug"
+Path = "./gnfd-sp.log"
+
 [MetricsCfg]
 Enabled = false
 HTTPAddress = "localhost:24036"
 
-[LogCfg]
-Level = "debug"
-Path = "./gnfd-sp.log"
+[PProfCfg]
+Enabled = false
+HTTPAddress = "localhost:25341"
 
 [RateLimiter]
 APILimits = []
@@ -88,3 +105,17 @@ PathPattern = []
 On = false
 RateLimit = 1
 RatePeriod = "S"
+
+[BandwidthLimiter]
+Enable = false
+R = 100
+B = 1000
+
+[StopServingCfg]
+BucketKeepAliveDays = 7
+
+[MetadataCfg]
+IsMasterDB = true
+BsDBSwitchCheckIntervalSec = 3600
+
+

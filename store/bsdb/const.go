@@ -6,6 +6,12 @@ const (
 	DeletedObjectsDefaultSize = 1000
 	// ExpiredBucketsDefaultSize defines the default size of ListExpiredBucketsBySp response
 	ExpiredBucketsDefaultSize = 1000
+	// ListObjectsDefaultMaxKeys defines the default size of ListObjectsByBucketName response
+	ListObjectsDefaultMaxKeys = 50
+	// GetUserBucketsLimitSize defines the default limit for the number of buckets in any given account is 100
+	GetUserBucketsLimitSize = 100
+	// ListObjectsLimitSize defines the default limit of ListObjectsByBucketName response
+	ListObjectsLimitSize = 1000
 )
 
 // define table name constant of block syncer db
@@ -22,4 +28,6 @@ const (
 	StatementTableName = "statements"
 	// GroupTableName defines the name of group table
 	GroupTableName = "groups"
+	// MasterDBTableName defines the name of master db table
+	MasterDBTableName = "master_db"
 )

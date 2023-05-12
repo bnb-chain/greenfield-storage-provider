@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,10 +15,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	localHttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // getObjectHandler handles the get object request
@@ -101,6 +102,12 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+	w.Header().Set(model.ContentTypeHeader, reqContext.objectInfo.GetContentType())
+	if !isRange {
+		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(reqContext.objectInfo.GetPayloadSize()))
+	}
+
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -111,7 +118,12 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 			errDescription = makeErrorDescription(merrors.GRPCErrorToInnerError(err))
 			return
 		}
-
+		// If it is limited, it will block
+		if localHttp.BandwidthLimit != nil {
+			if err := localHttp.BandwidthLimit.Limiter.Wait(ctx); err != nil {
+				log.Errorw("failed to wait bandwidth limiter", "error", err)
+			}
+		}
 		if readN = len(resp.Data); readN == 0 {
 			log.Errorw("failed to get object due to return empty data", "response", resp)
 			continue
@@ -132,11 +144,6 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		size = size + writeN
-	}
-	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
-	w.Header().Set(model.ContentTypeHeader, reqContext.objectInfo.GetContentType())
-	if !isRange {
-		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(reqContext.objectInfo.GetPayloadSize()))
 	}
 }
 
@@ -210,6 +217,10 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 		errDescription = makeErrorDescription(err)
 		return
 	}
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
+	// Greenfield has an integrity hash, so there is no need for an etag
+	// w.Header().Set(model.ETagHeader, hex.EncodeToString(md5Hash.Sum(nil)))
+
 	for {
 		readN, err = r.Body.Read(buf)
 		if err != nil && err != io.EOF {
@@ -218,6 +229,12 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if readN > 0 {
+			// If it is limited, it will block
+			if localHttp.BandwidthLimit != nil {
+				if err := localHttp.BandwidthLimit.Limiter.Wait(ctx); err != nil {
+					log.Errorw("failed to wait bandwidth limiter", "error", err)
+				}
+			}
 			req := &uploadertypes.PutObjectRequest{
 				ObjectInfo: reqContext.objectInfo,
 				Payload:    buf[:readN],
@@ -247,10 +264,6 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 			break
 		}
 	}
-
-	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
-	// Greenfield has an integrity hash, so there is no need for an etag
-	// w.Header().Set(model.ETagHeader, hex.EncodeToString(md5Hash.Sum(nil)))
 }
 
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
@@ -357,15 +370,15 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 	}
 
 	// In first phase, do not provide universal endpoint for private object
-	getObjectInfoReq := &metatypes.GetObjectByObjectNameAndBucketNameRequest{
+	getObjectInfoReq := &metatypes.GetObjectMetaRequest{
 		ObjectName: escapedObjectName,
 		BucketName: reqContext.bucketName,
 		IsFullList: false,
 	}
 
-	getObjectInfoRes, err := gateway.metadata.GetObjectByObjectNameAndBucketName(ctx, getObjectInfoReq)
+	getObjectInfoRes, err := gateway.metadata.GetObjectMeta(ctx, getObjectInfoReq)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObject() == nil || getObjectInfoRes.GetObject().GetObjectInfo() == nil {
-		log.Errorw("failed to check object info", "object_name", escapedObjectName, "error", err)
+		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
 		errDescription = InvalidKey
 		return
 	}
@@ -398,6 +411,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 	} else {
 		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionInlineValue)
 	}
+	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 
 	for {
 		resp, err := stream.Recv()
@@ -431,7 +445,6 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		}
 		size = size + writeN
 	}
-	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 }
 
 // downloadObjectByUniversalEndpointHandler handles the download object request sent by universal endpoint

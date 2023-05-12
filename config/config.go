@@ -13,8 +13,11 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/p2p"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
 	"github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer"
+	"github.com/bnb-chain/greenfield-storage-provider/service/stopserving"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
@@ -23,19 +26,25 @@ import (
 
 // StorageProviderConfig defines the configuration of storage provider
 type StorageProviderConfig struct {
-	Service           []string
-	SpOperatorAddress string
-	Endpoint          map[string]string
-	ListenAddress     map[string]string
-	SpDBConfig        *config.SQLDBConfig
-	PieceStoreConfig  *storage.PieceStoreConfig
-	ChainConfig       *gnfd.GreenfieldChainConfig
-	SignerCfg         *signer.SignerConfig
-	BlockSyncerCfg    *blocksyncer.Config
-	P2PCfg            *p2p.NodeConfig
-	LogCfg            *LogConfig
-	MetricsCfg        *metrics.MetricsConfig
-	RateLimiter       *localhttp.RateLimiterConfig
+	Service            []string
+	SpOperatorAddress  string
+	Endpoint           map[string]string
+	ListenAddress      map[string]string
+	SpDBConfig         *config.SQLDBConfig
+	BsDBConfig         *config.SQLDBConfig
+	BsDBSwitchedConfig *config.SQLDBConfig
+	PieceStoreConfig   *storage.PieceStoreConfig
+	ChainConfig        *gnfd.GreenfieldChainConfig
+	SignerCfg          *signer.SignerConfig
+	BlockSyncerCfg     *blocksyncer.Config
+	P2PCfg             *p2p.NodeConfig
+	LogCfg             *LogConfig
+	MetricsCfg         *metrics.MetricsConfig
+	PProfCfg           *pprof.PProfConfig
+	RateLimiter        *localhttp.RateLimiterConfig
+	DiscontinueCfg     *stopserving.DiscontinueConfig
+	MetadataCfg        *metadata.MetadataConfig
+	BandwidthLimiter   *localhttp.BandwidthLimiterConfig
 }
 
 // JSONMarshal marshal the StorageProviderConfig to json format
@@ -62,6 +71,7 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.ManagerService,
 		model.P2PService,
 		model.AuthService,
+		model.StopServingService,
 	},
 	ListenAddress: map[string]string{
 		model.GatewayService:    model.GatewayHTTPAddress,
@@ -87,16 +97,22 @@ var DefaultStorageProviderConfig = &StorageProviderConfig{
 		model.P2PService:        model.P2PGRPCAddress,
 		model.AuthService:       model.AuthGRPCAddress,
 	},
-	SpOperatorAddress: hex.EncodeToString([]byte(model.SpOperatorAddress)),
-	SpDBConfig:        DefaultSQLDBConfig,
-	PieceStoreConfig:  DefaultPieceStoreConfig,
-	ChainConfig:       DefaultGreenfieldChainConfig,
-	SignerCfg:         signer.DefaultSignerChainConfig,
-	BlockSyncerCfg:    DefaultBlockSyncerConfig,
-	P2PCfg:            DefaultP2PConfig,
-	LogCfg:            DefaultLogConfig,
-	MetricsCfg:        DefaultMetricsConfig,
-	RateLimiter:       DefaultRateLimiterConfig,
+	SpOperatorAddress:  hex.EncodeToString([]byte(model.SpOperatorAddress)),
+	SpDBConfig:         DefaultSQLDBConfig,
+	BsDBConfig:         DefaultBsDBConfig,
+	BsDBSwitchedConfig: DefaultBsDBSwitchedConfig,
+	PieceStoreConfig:   DefaultPieceStoreConfig,
+	ChainConfig:        DefaultGreenfieldChainConfig,
+	SignerCfg:          signer.DefaultSignerChainConfig,
+	BlockSyncerCfg:     DefaultBlockSyncerConfig,
+	P2PCfg:             DefaultP2PConfig,
+	LogCfg:             DefaultLogConfig,
+	MetricsCfg:         DefaultMetricsConfig,
+	PProfCfg:           DefaultPProfConfig,
+	RateLimiter:        DefaultRateLimiterConfig,
+	DiscontinueCfg:     stopserving.DefaultDiscontinueConfig,
+	MetadataCfg:        DefaultMetadataConfig,
+	BandwidthLimiter:   DefaultBandwidthLimiterConfig,
 }
 
 // DefaultSQLDBConfig defines the default configuration of SQL DB
@@ -105,6 +121,22 @@ var DefaultSQLDBConfig = &storeconfig.SQLDBConfig{
 	Passwd:   "test_pwd",
 	Address:  "localhost:3306",
 	Database: "storage_provider_db",
+}
+
+// DefaultBsDBConfig defines the default configuration of Bs DB
+var DefaultBsDBConfig = &storeconfig.SQLDBConfig{
+	User:     "root",
+	Passwd:   "test_pwd",
+	Address:  "localhost:3306",
+	Database: "block_syncer",
+}
+
+// DefaultBsDBSwitchedConfig defines the default configuration for the switched Bs DB.
+var DefaultBsDBSwitchedConfig = &storeconfig.SQLDBConfig{
+	User:     "root",
+	Passwd:   "test_pwd",
+	Address:  "localhost:3306",
+	Database: "block_syncer_backup",
 }
 
 // DefaultPieceStoreConfig defines the default configuration of piece store
@@ -135,10 +167,18 @@ var DefaultBlockSyncerConfig = &blocksyncer.Config{
 	EnableDualDB:   false,
 }
 
-// DefaultMetricsConfig defines the default config of Metrics service
+// DefaultMetricsConfig defines the default configuration of metrics service
 var DefaultMetricsConfig = &metrics.MetricsConfig{
 	Enabled:     false,
 	HTTPAddress: model.MetricsHTTPAddress,
+}
+
+// DefaultMetadataConfig defines the default configuration of Metadata service
+var DefaultMetadataConfig = &metadata.MetadataConfig{
+	BsDBConfig:                 DefaultBsDBConfig,
+	BsDBSwitchedConfig:         DefaultBsDBSwitchedConfig,
+	IsMasterDB:                 true,
+	BsDBSwitchCheckIntervalSec: 3600,
 }
 
 type LogConfig struct {
@@ -153,17 +193,31 @@ var DefaultLogConfig = &LogConfig{
 	Path:  "./gnfd-sp.log",
 }
 
+// DefaultP2PConfig defines the default configuration of p2p
 var DefaultP2PConfig = &p2p.NodeConfig{
 	ListenAddress: model.P2PListenAddress,
 	PingPeriod:    model.DefaultPingPeriod,
 }
 
+// DefaultPProfConfig defines the default configuration of pprof service
+var DefaultPProfConfig = &pprof.PProfConfig{
+	Enabled:     false,
+	HTTPAddress: model.PProfHTTPAddress,
+}
+
+// DefaultRateLimiterConfig defines the default configuration of rate limiter
 var DefaultRateLimiterConfig = &localhttp.RateLimiterConfig{
 	HTTPLimitCfg: localhttp.HTTPLimitConfig{
 		On:         false,
 		RateLimit:  100,
 		RatePeriod: "S",
 	},
+}
+
+var DefaultBandwidthLimiterConfig = &localhttp.BandwidthLimiterConfig{
+	Enable: false,
+	R:      100,
+	B:      1000,
 }
 
 // LoadConfig loads the config file from path

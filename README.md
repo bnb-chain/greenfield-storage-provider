@@ -20,7 +20,7 @@ When users want to write an object into Greenfield, they or the client software 
 
 ## Quick Started
 
-*Note*: Requires [Go 1.18+](https://go.dev/dl/)
+*Note*: Requires [Go 1.20+](https://go.dev/dl/)
 
 ### Compile SP
 

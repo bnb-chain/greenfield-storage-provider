@@ -55,3 +55,9 @@ type Bucket struct {
 func (b *Bucket) TableName() string {
 	return BucketTableName
 }
+
+// BucketFullMeta is the structure for user bucket with its related info
+type BucketFullMeta struct {
+	Bucket
+	StreamRecord
+}
