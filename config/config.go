@@ -162,7 +162,9 @@ var DefaultGreenfieldChainConfig = &gnfd.GreenfieldChainConfig{
 var DefaultBlockSyncerConfig = &blocksyncer.Config{
 	Modules:        []string{"epoch", "bucket", "object", "payment"},
 	Dsn:            "localhost:3308",
-	RecreateTables: true,
+	DsnSwitched:    "localhost:3308",
+	RecreateTables: false,
+	EnableDualDB:   false,
 }
 
 // DefaultMetricsConfig defines the default configuration of metrics service

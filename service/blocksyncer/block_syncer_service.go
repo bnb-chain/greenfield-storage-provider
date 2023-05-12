@@ -1,6 +1,7 @@
 package blocksyncer
 
 import (
+	"context"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
@@ -13,17 +14,27 @@ import (
 )
 
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
-func enqueueNewBlocks(exportQueue types.HeightQueue, ctx *parser.Context, currHeight uint64) {
+func (s *BlockSyncer) enqueueNewBlocks(context context.Context, exportQueue types.HeightQueue, currHeight uint64) {
 	// Enqueue upcoming heights
 	for {
-		latestBlockHeightAny := LatestBlockHeight.Load()
-		latestBlockHeight := latestBlockHeightAny.(int64)
-		// Enqueue all heights from the current height up to the latest height
-		for ; currHeight <= uint64(latestBlockHeight); currHeight++ {
-			log.Debugw("enqueueing new block", "height", currHeight)
-			exportQueue <- currHeight
+		select {
+		case <-context.Done():
+			log.Infof("Receive cancel signal, enqueueNewBlocks routine will stop")
+			//close channel
+			close(exportQueue)
+			return
+		default:
+			{
+				latestBlockHeightAny := Cast(s.parserCtx.Indexer).GetLatestBlockHeight().Load()
+				latestBlockHeight := latestBlockHeightAny.(int64)
+				// Enqueue all heights from the current height up to the latest height
+				for ; currHeight <= uint64(latestBlockHeight); currHeight++ {
+					log.Debugw("enqueueing new block", "height", currHeight)
+					exportQueue <- currHeight
+				}
+				time.Sleep(config.GetAvgBlockTime())
+			}
 		}
-		time.Sleep(config.GetAvgBlockTime())
 	}
 }
 
@@ -42,4 +53,62 @@ func mustGetLatestHeight(ctx *parser.Context) uint64 {
 	}
 
 	return 0
+}
+
+func Cast(indexer parser.Indexer) *Impl {
+	s, ok := indexer.(*Impl)
+	if !ok {
+		panic("cannot cast")
+	}
+	return s
+}
+
+func CheckProgress() {
+	for {
+		epochMaster, err := MainService.parserCtx.Database.GetEpoch(context.TODO())
+		if err != nil {
+			continue
+		}
+		epochSlave, err := BackupService.parserCtx.Database.GetEpoch(context.TODO())
+		if err != nil {
+			continue
+		}
+		if epochMaster.BlockHeight-epochSlave.BlockHeight < model.DefaultBlockHeightDiff {
+			SwitchMasterDBFlag()
+			StopMainService()
+			break
+		}
+		time.Sleep(time.Minute * model.DefaultCheckDiffPeriod)
+	}
+}
+
+func SwitchMasterDBFlag() error {
+	masterFlag, err := FlagDB.GetMasterDB(context.TODO())
+	if err != nil {
+		return err
+	}
+
+	//switch flag
+	masterFlag.IsMaster = !masterFlag.IsMaster
+	if err = FlagDB.SetMasterDB(context.TODO(), masterFlag); err != nil {
+		return err
+	}
+	log.Infof("DB switched")
+	return nil
+}
+
+func determineMainService() error {
+	masterFlag, err := FlagDB.GetMasterDB(context.TODO())
+	if err != nil {
+		return err
+	}
+	if masterFlag.IsMaster {
+		return nil
+	} else {
+		//switch role
+		temp := MainService
+		MainService = BackupService
+		BackupService = temp
+	}
+	return nil
 }

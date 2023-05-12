@@ -22,6 +22,8 @@ var (
 	MetadataService = strings.ToLower("Metadata")
 	// BlockSyncerService defines the name of block sync service
 	BlockSyncerService = strings.ToLower("BlockSyncer")
+	// BlockSyncerServiceBackup defines the name of block sync service
+	BlockSyncerServiceBackup = strings.ToLower("BlockSyncerBackup")
 	// ManagerService defines the name of manager service
 	ManagerService = strings.ToLower("Manager")
 	// MetricsService defines the name of metrics service
@@ -138,6 +140,8 @@ const (
 	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
 	// DsnBlockSyncer defines env variable name for block syncer dsn
 	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
+	// DsnBlockSyncerSwitched defines env variable name for block syncer backup dsn
+	DsnBlockSyncerSwitched = "BLOCK_SYNCER_DSN_SWITCHED"
 	// P2PPrivateKey defines env variable for p2p protocol private key
 	P2PPrivateKey = "P2P_PRIVATE_KEY"
 )
@@ -283,6 +287,10 @@ const (
 	MaxCallMsgSize = 25 * 1024 * 1024
 	// MaxRetryCount defines getting the latest height from the RPC client max retry count
 	MaxRetryCount = 50
+	// DefaultBlockHeightDiff defines default block height diff of main and backup service
+	DefaultBlockHeightDiff = 100
+	// DefaultCheckDiffPeriod defines check interval of block height diff
+	DefaultCheckDiffPeriod = 1
 	// DefaultPingPeriod defines p2p node ping period
 	DefaultPingPeriod = 1
 	// DefaultSpFreeReadQuotaSize defines sp bucket's default free quota size, the SP can modify it by itself
