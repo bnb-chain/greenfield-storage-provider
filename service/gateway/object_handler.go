@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,6 +18,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	uploadertypes "github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // getObjectHandler handles the get object request
@@ -343,7 +343,7 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 
 	bucketPrimarySpAddress := getBucketInfoRes.GetBucket().GetBucketInfo().GetPrimarySpAddress()
 
-	//if bucket not in the current sp, 302 redirect to the sp that contains the bucket
+	// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
 	if bucketPrimarySpAddress != gateway.config.SpOperatorAddress {
 		log.Debugw("primary sp address not matched ",
 			"bucketPrimarySpAddress", bucketPrimarySpAddress, "gateway.config.SpOperatorAddress", gateway.config.SpOperatorAddress,
