@@ -7,6 +7,7 @@ FEATURES
 * [\#379](https://github.com/bnb-chain/greenfield-storage-provider/pull/379) feat:block syncer add read concurrency support
 * [\#383](https://github.com/bnb-chain/greenfield-storage-provider/pull/383) feat: add universal endpoint view option
 * [\#389](https://github.com/bnb-chain/greenfield-storage-provider/pull/389) feat: signer async send sealObject tx
+* [\#398](https://github.com/bnb-chain/greenfield-storage-provider/pull/398) feat: localup shell adds generate sp.info and db.info function
 * [\#401](https://github.com/bnb-chain/greenfield-storage-provider/pull/401) feat: add dual db warm up support for blocksyncer
 * [\#402](https://github.com/bnb-chain/greenfield-storage-provider/pull/402) feat: bsdb switch
 * [\#404](https://github.com/bnb-chain/greenfield-storage-provider/pull/404) feat: list objects pagination & folder path
