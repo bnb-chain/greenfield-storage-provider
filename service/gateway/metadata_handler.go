@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/bnb-chain/greenfield/types/s3util"
+	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/gogo/protobuf/jsonpb"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
