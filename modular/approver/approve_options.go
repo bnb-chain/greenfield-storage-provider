@@ -3,7 +3,6 @@ package approver
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspmdmgr"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 )
 
@@ -18,13 +17,13 @@ const (
 )
 
 func init() {
-	gfspmdmgr.RegisterModularInfo(ApprovalModularName, ApprovalModularDescription, NewApprovalModular)
+	gfspapp.RegisterModularInfo(ApprovalModularName, ApprovalModularDescription, NewApprovalModular)
 }
 
 func NewApprovalModular(
 	app *gfspapp.GfSpBaseApp,
 	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspconfig.Option) (
+	opts ...gfspapp.Option) (
 	coremodule.Modular, error) {
 	if cfg.Approver != nil {
 		app.SetApprover(cfg.Approver)

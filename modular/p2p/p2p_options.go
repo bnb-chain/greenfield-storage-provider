@@ -5,7 +5,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspmdmgr"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/p2p/p2pnode"
 )
@@ -18,13 +17,13 @@ const (
 )
 
 func init() {
-	gfspmdmgr.RegisterModularInfo(P2PModularName, P2PModularDescription, NewP2PModular)
+	gfspapp.RegisterModularInfo(P2PModularName, P2PModularDescription, NewP2PModular)
 }
 
 func NewP2PModular(
 	app *gfspapp.GfSpBaseApp,
 	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspconfig.Option) (
+	opts ...gfspapp.Option) (
 	coremodule.Modular, error) {
 	if cfg.P2P != nil {
 		app.SetP2P(cfg.P2P)

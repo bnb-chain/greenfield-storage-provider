@@ -2,10 +2,15 @@ package gater
 
 import (
 	"context"
+	"net/http"
+
+	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 const (
@@ -20,6 +25,7 @@ type GateModular struct {
 	httpAddress string
 	baseApp     *gfspapp.GfSpBaseApp
 	scope       rcmgr.ResourceScope
+	httpServer  *http.Server
 
 	maxListReadQuota int64
 }
@@ -34,11 +40,30 @@ func (g *GateModular) Start(ctx context.Context) error {
 		return err
 	}
 	g.scope = scope
+	go g.server(ctx)
 	return nil
+}
+
+func (g *GateModular) server(ctx context.Context) {
+	router := mux.NewRouter().SkipClean(true)
+	if g.baseApp.EnableMetrics() {
+		router.Use(metrics.DefaultHTTPServerMetrics.InstrumentationHandler)
+	}
+	g.RegisterHandler(router)
+	server := &http.Server{
+		Addr:    g.httpAddress,
+		Handler: router,
+	}
+	g.httpServer = server
+	if err := server.ListenAndServe(); err != nil {
+		log.Errorw("failed to listen", "error", err)
+		return
+	}
 }
 
 func (g *GateModular) Stop(ctx context.Context) error {
 	g.scope.Release()
+	g.httpServer.Shutdown(ctx)
 	return nil
 }
 

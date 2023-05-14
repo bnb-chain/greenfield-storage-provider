@@ -1,17 +1,17 @@
-package gfspmdmgr
+package gfspapp
 
 import (
 	"fmt"
 	"strconv"
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-type NewModularFunc = func(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig, opts ...gfspconfig.Option) (coremodule.Modular, error)
+type Option func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
+type NewModularFunc = func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig, opts ...Option) (coremodule.Modular, error)
 
 type ModularManager struct {
 	modulus        []string
@@ -83,4 +83,14 @@ func GetNewModularFunc(name string) NewModularFunc {
 		log.Panicf("not register [%s] modular info", name)
 	}
 	return mdmgr.newModularFunc[name]
+}
+
+func GetRegisterModulusInstances() []coremodule.Modular {
+	mdmgr.mux.RLock()
+	defer mdmgr.mux.RUnlock()
+	var modulus []coremodule.Modular
+	for _, modular := range mdmgr.instances {
+		modulus = append(modulus, modular)
+	}
+	return modulus
 }

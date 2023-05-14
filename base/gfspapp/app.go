@@ -2,16 +2,18 @@ package gfspapp
 
 import (
 	"context"
+	"syscall"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
+	corelifecycle "github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
@@ -23,7 +25,6 @@ type GfSpBaseApp struct {
 	grpcAddress    string
 	operateAddress string
 
-	appCtx context.Context
 	server *grpc.Server
 	client *gfspclient.GfSpClient
 
@@ -43,9 +44,12 @@ type GfSpBaseApp struct {
 	receiver   module.Receiver
 	signer     module.Signer
 	uploader   module.Uploader
+	metrics    module.Modular
+	pprof      module.Modular
 
-	metrics module.Modular
-	pprof   module.Modular
+	appCtx    context.Context
+	appCancel context.CancelFunc
+	services  []corelifecycle.Service
 
 	uploadSpeed    int64
 	downloadSpeed  int64
@@ -99,6 +103,29 @@ func (g *GfSpBaseApp) ServerForRegister() *grpc.Server {
 
 func (g *GfSpBaseApp) ResourceManager() corercmgr.ResourceManager {
 	return g.rcmgr
+}
+
+func (g *GfSpBaseApp) Start(ctx context.Context) error {
+	err := g.StartRpcServer(ctx)
+	if err != nil {
+		return err
+	}
+	g.RegisterServices()
+	g.Signals(syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP).StartServices(ctx).Wait(ctx)
+	g.close(ctx)
+	return nil
+}
+
+func (g *GfSpBaseApp) close(ctx context.Context) error {
+	g.StopRpcServer(ctx)
+	g.GfSpClient().Close()
+	g.rcmgr.Close()
+	g.chain.Close()
+	return nil
+}
+
+func (g *GfSpBaseApp) EnableMetrics() bool {
+	return g.metrics != nil
 }
 
 func (g *GfSpBaseApp) SetApprover(approver module.Approver) error {

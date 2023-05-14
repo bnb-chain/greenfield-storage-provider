@@ -8,7 +8,6 @@ import (
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/service/challenge/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
@@ -31,9 +30,9 @@ func NewChallengeClient(address string) (*ChallengeClient, error) {
 		return nil, err
 	}
 	options = append(options, retryOption)
-	if metrics.GetMetrics().Enabled() {
-		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
-	}
+	//if metrics.GetMetrics().Enabled() {
+	//	options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	//}
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
 		log.Errorw("failed to dial challenge", "error", err)

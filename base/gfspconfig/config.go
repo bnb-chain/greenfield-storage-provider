@@ -1,7 +1,6 @@
 package gfspconfig
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -11,14 +10,76 @@ import (
 	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 )
 
-type Option func(app *gfspapp.GfSpBaseApp, cfg *GfSpConfig) error
+/*
+	Local set up necessary configuration:
+
+	SpOperateAddress   string
+	User               string
+	Passwd             string
+	Address            string
+	Database           string
+	StorageType        string // backend storage type (e.g. s3, file, memory)
+	BucketURL          string // the bucket URL of object storage to store data
+	ChainID            string
+	ChainAddress       []string
+	P2PPrivateKey      string
+	P2PBootstrap       []string
+	OperatorPrivateKey string
+	FundingPrivateKey  string
+	SealPrivateKey     string
+	ApprovalPrivateKey string
+	GcPrivateKey       string
+*/
+
+/*
+	k8s cluster set up need add the following necessary configuration:
+
+	StorageType 	   string
+	ApproverEndpoint   string
+	ManagerEndpoint    string
+	DownloaderEndpoint string
+	ReceiverEndpoint   string
+	MetadataEndpoint   string
+	RetrieverEndpoint  string
+	UploaderEndpoint   string
+	P2PEndpoint        string
+	SingerEndpoint     string
+	AuthorizerEndpoint string
+*/
+
+/*
+	Customizable configuration by implementing the interface
+
+ 	GfSpDB                         spdb.SPDB
+	PieceStore                     piecestore.PieceStore
+	PieceOp                        piecestore.PieceOp
+	Rcmgr                          corercmgr.ResourceManager
+	RcmgrLimiter                   corercmgr.Limiter
+	GfSpLimiter                    *gfsplimit.GfSpLimiter
+	Chain                          consensus.Consensus
+	Metrics                        module.Modular
+	PProf                          module.Modular
+	Approver                       module.Approver
+	Authorizer                     module.Authorizer
+	Downloader                     module.Downloader
+	TaskExecutor                   module.TaskExecutor
+	Gater                          module.Modular
+	Manager                        module.Manager
+	P2P                            module.P2P
+	Receiver                       module.Receiver
+	Retriever                      module.Modular
+	Signer                         module.Signer
+	Uploader                       module.Uploader
+	NewStrategyTQueueFunc          coretaskqueue.NewTQueueOnStrategy
+	NewStrategyTQueueWithLimitFunc coretaskqueue.NewTQueueOnStrategyWithLimit
+*/
 
 type GfSpConfig struct {
 	// gfsp base app configuration
 	AppID               string
+	SpOperateAddress    string
 	Server              []string
 	GrpcAddress         string
-	SpOperateAddress    string
 	UploadSpeed         int64
 	DownloadSpeed       int64
 	ReplicateSpeed      int64
@@ -33,6 +94,7 @@ type GfSpConfig struct {
 	GcObjectRetry       int64
 	GcZombieRetry       int64
 	GcMetaRetry         int64
+
 	// gfsp app client configuration
 	ApproverEndpoint   string
 	ManagerEndpoint    string
@@ -44,6 +106,7 @@ type GfSpConfig struct {
 	P2PEndpoint        string
 	SingerEndpoint     string
 	AuthorizerEndpoint string
+
 	// gfsp app db configuration
 	GfSpDB          spdb.SPDB
 	User            string
@@ -54,6 +117,7 @@ type GfSpConfig struct {
 	ConnMaxIdleTime int
 	MaxIdleConns    int
 	MaxOpenConns    int
+
 	// gfsp piece store configuration
 	PieceStore            piecestore.PieceStore
 	PieceOp               piecestore.PieceOp
@@ -63,15 +127,18 @@ type GfSpConfig struct {
 	MinRetryDelay         int64  // the minimum retry delay after which retry will be performed
 	TLSInsecureSkipVerify bool   // whether skip the certificate verification of HTTPS requests
 	IAMType               string // IAMType is identity and access management type which contains two
+
 	// gfsp resource manager subsystem configuration
 	Rcmgr        corercmgr.ResourceManager
 	DisableRcmgr bool
 	RcmgrLimiter corercmgr.Limiter
 	GfSpLimiter  *gfsplimit.GfSpLimiter
-	// greenfield chain
+
+	// greenfield chain configuration
 	Chain        consensus.Consensus
 	ChainID      string
 	ChainAddress []string
+
 	// gfsp metrics and pprof configuration
 	Metrics            module.Modular
 	PProf              module.Modular

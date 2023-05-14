@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 )
@@ -22,6 +23,9 @@ func DefaultGrpcServerOptions() []grpc.ServerOption {
 
 func (g *GfSpBaseApp) newRpcServer(options ...grpc.ServerOption) {
 	options = append(options, DefaultGrpcServerOptions()...)
+	if g.EnableMetrics() {
+		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
+	}
 	g.server = grpc.NewServer(options...)
 }
 

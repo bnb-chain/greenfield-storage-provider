@@ -3,12 +3,9 @@ package retriver
 import (
 	"context"
 
-	"google.golang.org/grpc/reflection"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
 )
 
 const (
@@ -31,8 +28,6 @@ func (r *RetrieveModular) Name() string {
 }
 
 func (r *RetrieveModular) Start(ctx context.Context) error {
-	types.RegisterGfSpRetrieverServiceServer(r.baseApp.ServerForRegister(), r)
-	reflection.Register(r.baseApp.ServerForRegister())
 	return nil
 }
 

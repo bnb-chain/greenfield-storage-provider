@@ -3,7 +3,6 @@ package receiver
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspmdmgr"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 )
 
@@ -12,13 +11,13 @@ const (
 )
 
 func init() {
-	gfspmdmgr.RegisterModularInfo(ReceiveModularName, ReceiveModularDescription, NewReceiveModular)
+	gfspapp.RegisterModularInfo(ReceiveModularName, ReceiveModularDescription, NewReceiveModular)
 }
 
 func NewReceiveModular(
 	app *gfspapp.GfSpBaseApp,
 	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspconfig.Option) (
+	opts ...gfspapp.Option) (
 	coremodule.Modular, error) {
 	if cfg.Receiver != nil {
 		app.SetReceiver(cfg.Receiver)

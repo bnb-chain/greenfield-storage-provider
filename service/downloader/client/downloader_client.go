@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
@@ -30,9 +29,9 @@ func NewDownloaderClient(address string) (*DownloaderClient, error) {
 		return nil, err
 	}
 	options = append(options, retryOption)
-	if metrics.GetMetrics().Enabled() {
-		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
-	}
+	//if metrics.GetMetrics().Enabled() {
+	//	options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	//}
 	conn, err := grpc.DialContext(context.Background(), address, options...)
 	if err != nil {
 		log.Errorw("failed to dial downloader", "error", err)

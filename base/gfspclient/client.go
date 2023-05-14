@@ -8,6 +8,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -45,6 +46,7 @@ type GfSpClient struct {
 	p2pConn      *grpc.ClientConn
 	singerConn   *grpc.ClientConn
 	httpClient   *http.Client
+	metrics      bool
 }
 
 func NewGfSpClient(
@@ -57,7 +59,8 @@ func NewGfSpClient(
 	uploaderEndpoint string,
 	p2pEndpoint string,
 	singerEndpoint string,
-	authorizerEndpoint string) *GfSpClient {
+	authorizerEndpoint string,
+	metrics bool) *GfSpClient {
 	return &GfSpClient{
 		approverEndpoint:   approverEndpoint,
 		managerEndpoint:    managerEndpoint,
@@ -69,6 +72,7 @@ func NewGfSpClient(
 		p2pEndpoint:        p2pEndpoint,
 		singerEndpoint:     singerEndpoint,
 		authorizerEndpoint: authorizerEndpoint,
+		metrics:            metrics,
 	}
 }
 
@@ -88,6 +92,9 @@ func (s *GfSpClient) ManagerConn(
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
+	if s.metrics {
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	}
 	if s.managerConn == nil {
 		conn, err := s.Connection(ctx, s.managerEndpoint, options...)
 		if err != nil {
@@ -106,6 +113,9 @@ func (s *GfSpClient) ApproverConn(
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
+	if s.metrics {
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	}
 	if s.approverConn == nil {
 		conn, err := s.Connection(ctx, s.approverEndpoint, options...)
 		if err != nil {
@@ -124,6 +134,9 @@ func (s *GfSpClient) P2PConn(
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
+	if s.metrics {
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	}
 	if s.p2pConn == nil {
 		conn, err := s.Connection(ctx, s.p2pEndpoint, options...)
 		if err != nil {
@@ -142,6 +155,9 @@ func (s *GfSpClient) SingerConn(
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
+	if s.metrics {
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	}
 	if s.singerConn == nil {
 		conn, err := s.Connection(ctx, s.singerEndpoint, options...)
 		if err != nil {

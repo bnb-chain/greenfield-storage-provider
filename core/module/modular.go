@@ -5,15 +5,14 @@ import (
 	"io"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
+	"github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 type Modular interface {
-	Name() string
-	Start(ctx context.Context) error
-	Stop(ctx context.Context) error
+	lifecycle.Service
 	ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error)
 	ReleaseResource(ctx context.Context, scope rcmgr.ResourceScopeSpan)
 }

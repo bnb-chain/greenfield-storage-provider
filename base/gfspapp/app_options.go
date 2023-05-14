@@ -7,7 +7,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspmdmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsppieceop"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsprcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
@@ -57,7 +56,7 @@ const (
 
 func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if len(cfg.Server) == 0 {
-		cfg.Server = gfspmdmgr.GetRegisterModulus()
+		cfg.Server = GetRegisterModulus()
 	}
 	if cfg.AppID == "" {
 		servers := strings.Join(cfg.Server, `-`)
@@ -128,7 +127,8 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		cfg.UploaderEndpoint,
 		cfg.P2PEndpoint,
 		cfg.SingerEndpoint,
-		cfg.AuthorizerEndpoint)
+		cfg.AuthorizerEndpoint,
+		!cfg.DisableMetrics)
 	return nil
 }
 
@@ -292,12 +292,12 @@ func DefaultGfSpConsensusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) er
 
 func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	for _, modular := range cfg.Server {
-		newFunc := gfspmdmgr.GetNewModularFunc(modular)
+		newFunc := GetNewModularFunc(modular)
 		module, err := newFunc(app, cfg)
 		if err != nil {
 			log.Errorw("failed to new modular instance", "name", modular)
 		}
-		gfspmdmgr.RegisterModularInstance(module)
+		RegisterModularInstance(module)
 	}
 	return nil
 }
@@ -314,7 +314,7 @@ func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		}
 		app.metrics = metrics.NewMetrics(cfg.MetricsHttpAddress)
 	}
-	gfspmdmgr.RegisterModularInstance(app.metrics)
+	RegisterModularInstance(app.metrics)
 	return nil
 }
 
@@ -330,11 +330,11 @@ func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error 
 		}
 		app.pprof = pprof.NewPProf(cfg.PProfHttpAddress)
 	}
-	gfspmdmgr.RegisterModularInstance(app.pprof)
+	RegisterModularInstance(app.pprof)
 	return nil
 }
 
-var gfspBaseAppDefaultOptions = []gfspconfig.Option{
+var gfspBaseAppDefaultOptions = []Option{
 	DefaultStaticOption,
 	DefaultGfSpClientOption,
 	DefaultGfSpDBOption,
@@ -348,7 +348,7 @@ var gfspBaseAppDefaultOptions = []gfspconfig.Option{
 	DefaultGfSpPprofOption,
 }
 
-func NewGfSpBaseApp(cfg *gfspconfig.GfSpConfig, opts ...gfspconfig.Option) (*GfSpBaseApp, error) {
+func NewGfSpBaseApp(cfg *gfspconfig.GfSpConfig, opts ...Option) (*GfSpBaseApp, error) {
 	app := &GfSpBaseApp{}
 	opts = append(opts, gfspBaseAppDefaultOptions...)
 	for _, opt := range opts {

@@ -3,7 +3,6 @@ package uploader
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspmdmgr"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 )
 
@@ -12,13 +11,13 @@ const (
 )
 
 func init() {
-	gfspmdmgr.RegisterModularInfo(UploadModularName, UploadModularDescription, NewUploadModular)
+	gfspapp.RegisterModularInfo(UploadModularName, UploadModularDescription, NewUploadModular)
 }
 
 func NewUploadModular(
 	app *gfspapp.GfSpBaseApp,
 	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspconfig.Option) (
+	opts ...gfspapp.Option) (
 	coremodule.Modular, error) {
 	if cfg.Uploader != nil {
 		app.SetUploader(cfg.Uploader)

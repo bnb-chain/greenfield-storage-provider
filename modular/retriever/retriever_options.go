@@ -1,10 +1,12 @@
 package retriver
 
 import (
+	"google.golang.org/grpc/reflection"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspmdmgr"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
 )
 
 const (
@@ -12,13 +14,13 @@ const (
 )
 
 func init() {
-	gfspmdmgr.RegisterModularInfo(RetrieveModularName, RetrieveModularDescription, NewRetrieveModular)
+	gfspapp.RegisterModularInfo(RetrieveModularName, RetrieveModularDescription, NewRetrieveModular)
 }
 
 func NewRetrieveModular(
 	app *gfspapp.GfSpBaseApp,
 	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspconfig.Option) (
+	opts ...gfspapp.Option) (
 	coremodule.Modular, error) {
 	if cfg.Retriever != nil {
 		return cfg.Retriever, nil
@@ -40,5 +42,8 @@ func (r *RetrieveModular) DefaultRetrieverOptions(
 		cfg.QuerySPParallelPerNode = DefaultQuerySPParallelPerNode
 	}
 	r.retrievingRequest = cfg.QuerySPParallelPerNode
+
+	types.RegisterGfSpRetrieverServiceServer(r.baseApp.ServerForRegister(), r)
+	reflection.Register(r.baseApp.ServerForRegister())
 	return nil
 }

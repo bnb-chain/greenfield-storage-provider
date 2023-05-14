@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 	time "time"
 
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	types "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	types0 "github.com/bnb-chain/greenfield/x/sp/types"
 	types1 "github.com/bnb-chain/greenfield/x/storage/types"
@@ -172,10 +173,10 @@ func (m *MockObjectIntegrity) EXPECT() *MockObjectIntegrityMockRecorder {
 }
 
 // GetObjectIntegrity mocks base method.
-func (m *MockObjectIntegrity) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
+func (m *MockObjectIntegrity) GetObjectIntegrity(objectID uint64) (*corespdb.IntegrityMeta, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObjectIntegrity", objectID)
-	ret0, _ := ret[0].(*IntegrityMeta)
+	ret0, _ := ret[0].(*corespdb.IntegrityMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -187,7 +188,7 @@ func (mr *MockObjectIntegrityMockRecorder) GetObjectIntegrity(objectID interface
 }
 
 // SetObjectIntegrity mocks base method.
-func (m *MockObjectIntegrity) SetObjectIntegrity(integrity *IntegrityMeta) error {
+func (m *MockObjectIntegrity) SetObjectIntegrity(integrity *corespdb.IntegrityMeta) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetObjectIntegrity", integrity)
 	ret0, _ := ret[0].(error)
@@ -277,7 +278,7 @@ func (mr *MockSPInfoMockRecorder) GetOwnSpInfo() *gomock.Call {
 }
 
 // GetSpByAddress mocks base method.
-func (m *MockSPInfo) GetSpByAddress(address string, addressType SpAddressType) (*types0.StorageProvider, error) {
+func (m *MockSPInfo) GetSpByAddress(address string, addressType corespdb.SpAddressType) (*types0.StorageProvider, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSpByAddress", address, addressType)
 	ret0, _ := ret[0].(*types0.StorageProvider)
@@ -410,7 +411,7 @@ func (m *MockTraffic) EXPECT() *MockTrafficMockRecorder {
 }
 
 // CheckQuotaAndAddReadRecord mocks base method.
-func (m *MockTraffic) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
+func (m *MockTraffic) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckQuotaAndAddReadRecord", record, quota)
 	ret0, _ := ret[0].(error)
@@ -424,10 +425,10 @@ func (mr *MockTrafficMockRecorder) CheckQuotaAndAddReadRecord(record, quota inte
 }
 
 // GetBucketReadRecord mocks base method.
-func (m *MockTraffic) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (m *MockTraffic) GetBucketReadRecord(bucketID uint64, timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBucketReadRecord", bucketID, timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
+	ret0, _ := ret[0].([]*corespdb.ReadRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -439,10 +440,10 @@ func (mr *MockTrafficMockRecorder) GetBucketReadRecord(bucketID, timeRange inter
 }
 
 // GetBucketTraffic mocks base method.
-func (m *MockTraffic) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
+func (m *MockTraffic) GetBucketTraffic(bucketID uint64, yearMonth string) (*corespdb.BucketTraffic, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID, yearMonth)
-	ret0, _ := ret[0].(*BucketTraffic)
+	ret0, _ := ret[0].(*corespdb.BucketTraffic)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -454,10 +455,10 @@ func (mr *MockTrafficMockRecorder) GetBucketTraffic(bucketID, yearMonth interfac
 }
 
 // GetObjectReadRecord mocks base method.
-func (m *MockTraffic) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (m *MockTraffic) GetObjectReadRecord(objectID uint64, timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObjectReadRecord", objectID, timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
+	ret0, _ := ret[0].([]*corespdb.ReadRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -469,10 +470,10 @@ func (mr *MockTrafficMockRecorder) GetObjectReadRecord(objectID, timeRange inter
 }
 
 // GetReadRecord mocks base method.
-func (m *MockTraffic) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (m *MockTraffic) GetReadRecord(timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetReadRecord", timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
+	ret0, _ := ret[0].([]*corespdb.ReadRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -484,10 +485,10 @@ func (mr *MockTrafficMockRecorder) GetReadRecord(timeRange interface{}) *gomock.
 }
 
 // GetUserReadRecord mocks base method.
-func (m *MockTraffic) GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (m *MockTraffic) GetUserReadRecord(userAddress string, timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserReadRecord", userAddress, timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
+	ret0, _ := ret[0].([]*corespdb.ReadRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -641,7 +642,7 @@ func (m *MockSPDB) EXPECT() *MockSPDBMockRecorder {
 }
 
 // CheckQuotaAndAddReadRecord mocks base method.
-func (m *MockSPDB) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
+func (m *MockSPDB) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckQuotaAndAddReadRecord", record, quota)
 	ret0, _ := ret[0].(error)
@@ -723,10 +724,10 @@ func (mr *MockSPDBMockRecorder) GetAuthKey(userAddress, domain interface{}) *gom
 }
 
 // GetBucketReadRecord mocks base method.
-func (m *MockSPDB) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (m *MockSPDB) GetBucketReadRecord(bucketID uint64, timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBucketReadRecord", bucketID, timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
+	ret0, _ := ret[0].([]*corespdb.ReadRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -738,10 +739,10 @@ func (mr *MockSPDBMockRecorder) GetBucketReadRecord(bucketID, timeRange interfac
 }
 
 // GetBucketTraffic mocks base method.
-func (m *MockSPDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
+func (m *MockSPDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*corespdb.BucketTraffic, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID, yearMonth)
-	ret0, _ := ret[0].(*BucketTraffic)
+	ret0, _ := ret[0].(*corespdb.BucketTraffic)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -798,10 +799,10 @@ func (mr *MockSPDBMockRecorder) GetObjectInfo(objectID interface{}) *gomock.Call
 }
 
 // GetObjectIntegrity mocks base method.
-func (m *MockSPDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
+func (m *MockSPDB) GetObjectIntegrity(objectID uint64) (*corespdb.IntegrityMeta, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObjectIntegrity", objectID)
-	ret0, _ := ret[0].(*IntegrityMeta)
+	ret0, _ := ret[0].(*corespdb.IntegrityMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -813,10 +814,10 @@ func (mr *MockSPDBMockRecorder) GetObjectIntegrity(objectID interface{}) *gomock
 }
 
 // GetObjectReadRecord mocks base method.
-func (m *MockSPDB) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (m *MockSPDB) GetObjectReadRecord(objectID uint64, timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObjectReadRecord", objectID, timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
+	ret0, _ := ret[0].([]*corespdb.ReadRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -843,10 +844,10 @@ func (mr *MockSPDBMockRecorder) GetOwnSpInfo() *gomock.Call {
 }
 
 // GetReadRecord mocks base method.
-func (m *MockSPDB) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (m *MockSPDB) GetReadRecord(timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetReadRecord", timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
+	ret0, _ := ret[0].([]*corespdb.ReadRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -858,7 +859,7 @@ func (mr *MockSPDBMockRecorder) GetReadRecord(timeRange interface{}) *gomock.Cal
 }
 
 // GetSpByAddress mocks base method.
-func (m *MockSPDB) GetSpByAddress(address string, addressType SpAddressType) (*types0.StorageProvider, error) {
+func (m *MockSPDB) GetSpByAddress(address string, addressType corespdb.SpAddressType) (*types0.StorageProvider, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSpByAddress", address, addressType)
 	ret0, _ := ret[0].(*types0.StorageProvider)
@@ -903,10 +904,10 @@ func (mr *MockSPDBMockRecorder) GetStorageParams() *gomock.Call {
 }
 
 // GetUserReadRecord mocks base method.
-func (m *MockSPDB) GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+func (m *MockSPDB) GetUserReadRecord(userAddress string, timeRange *corespdb.TrafficTimeRange) ([]*corespdb.ReadRecord, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserReadRecord", userAddress, timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
+	ret0, _ := ret[0].([]*corespdb.ReadRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -946,7 +947,7 @@ func (mr *MockSPDBMockRecorder) SetObjectInfo(objectID, objectInfo interface{}) 
 }
 
 // SetObjectIntegrity mocks base method.
-func (m *MockSPDB) SetObjectIntegrity(integrity *IntegrityMeta) error {
+func (m *MockSPDB) SetObjectIntegrity(integrity *corespdb.IntegrityMeta) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetObjectIntegrity", integrity)
 	ret0, _ := ret[0].(error)

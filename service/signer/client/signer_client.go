@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	p2ptpyes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/signer/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
@@ -24,9 +23,9 @@ const signerRPCServiceName = "service.signer.types.SignerService"
 
 func NewSignerClient(address string) (*SignerClient, error) {
 	options := []grpc.DialOption{}
-	if metrics.GetMetrics().Enabled() {
-		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
-	}
+	//if metrics.GetMetrics().Enabled() {
+	//	options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	//}
 	retryOption, err := utilgrpc.GetDefaultGRPCRetryPolicy(signerRPCServiceName)
 	if err != nil {
 		log.Errorw("failed to get signer client retry option", "error", err)
