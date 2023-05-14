@@ -36,9 +36,8 @@ var (
 var _ module.Authorizer = &AuthorizeModular{}
 
 type AuthorizeModular struct {
-	endpoint string
-	baseApp  *gfspapp.GfSpBaseApp
-	scope    rcmgr.ResourceScope
+	baseApp *gfspapp.GfSpBaseApp
+	scope   rcmgr.ResourceScope
 }
 
 func (a *AuthorizeModular) Name() string {
@@ -57,14 +56,6 @@ func (a *AuthorizeModular) Start(ctx context.Context) error {
 func (a *AuthorizeModular) Stop(ctx context.Context) error {
 	a.scope.Release()
 	return nil
-}
-
-func (a *AuthorizeModular) Description() string {
-	return AuthorizationModularDescription
-}
-
-func (a *AuthorizeModular) Endpoint() string {
-	return a.endpoint
 }
 
 func (a *AuthorizeModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {

@@ -19,8 +19,6 @@ var _ Authorizer = (*NullModular)(nil)
 type NullModular struct{}
 
 func (*NullModular) Name() string                { return "" }
-func (*NullModular) Description() string         { return "" }
-func (*NullModular) Endpoint() string            { return "" }
 func (*NullModular) Start(context.Context) error { return nil }
 func (*NullModular) Stop(context.Context) error  { return nil }
 func (*NullModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
@@ -93,8 +91,6 @@ var _ Downloader = (*NilModular)(nil)
 type NilModular struct{}
 
 func (*NilModular) Name() string                { return "" }
-func (*NilModular) Description() string         { return "" }
-func (*NilModular) Endpoint() string            { return "" }
 func (*NilModular) Start(context.Context) error { return nil }
 func (*NilModular) Stop(context.Context) error  { return nil }
 func (*NilModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
@@ -151,8 +147,6 @@ var _ Receiver = (*NullReceiveModular)(nil)
 type NullReceiveModular struct{}
 
 func (*NullReceiveModular) Name() string                { return "" }
-func (*NullReceiveModular) Description() string         { return "" }
-func (*NullReceiveModular) Endpoint() string            { return "" }
 func (*NullReceiveModular) Start(context.Context) error { return nil }
 func (*NullReceiveModular) Stop(context.Context) error  { return nil }
 func (*NullReceiveModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {

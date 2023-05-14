@@ -20,7 +20,7 @@ func DefaultGrpcServerOptions() []grpc.ServerOption {
 	return options
 }
 
-func (g *GfSpBaseApp) newRpcServer(options []grpc.ServerOption) {
+func (g *GfSpBaseApp) newRpcServer(options ...grpc.ServerOption) {
 	options = append(options, DefaultGrpcServerOptions()...)
 	g.server = grpc.NewServer(options...)
 }

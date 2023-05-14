@@ -9,7 +9,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
@@ -23,9 +22,8 @@ const (
 var _ module.TaskExecutor = &ExecuteModular{}
 
 type ExecuteModular struct {
-	endpoint string
-	baseApp  *gfspapp.GfSpBaseApp
-	scope    corercmgr.ResourceScope
+	baseApp *gfspapp.GfSpBaseApp
+	scope   corercmgr.ResourceScope
 
 	maxExecuteNum uint64
 	executingNum  uint64
@@ -88,13 +86,13 @@ func (e *ExecuteModular) askTask(ctx context.Context) {
 		log.CtxErrorw(ctx, "failed to get remaining resource", "error", err)
 		return
 	}
-	metrics.RemainingMemoryGauge.WithLabelValues(e.endpoint).Set(float64(limit.GetMemoryLimit()))
-	metrics.RemainingTaskGauge.WithLabelValues(e.endpoint).Set(float64(limit.GetTaskTotalLimit()))
-	metrics.RemainingHighPriorityTaskGauge.WithLabelValues(e.endpoint).Set(
+	metrics.RemainingMemoryGauge.WithLabelValues(e.Name()).Set(float64(limit.GetMemoryLimit()))
+	metrics.RemainingTaskGauge.WithLabelValues(e.Name()).Set(float64(limit.GetTaskTotalLimit()))
+	metrics.RemainingHighPriorityTaskGauge.WithLabelValues(e.Name()).Set(
 		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityHigh)))
-	metrics.RemainingMediumPriorityTaskGauge.WithLabelValues(e.endpoint).Set(
+	metrics.RemainingMediumPriorityTaskGauge.WithLabelValues(e.Name()).Set(
 		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityMedium)))
-	metrics.RemainingLowTaskGauge.WithLabelValues(e.endpoint).Set(
+	metrics.RemainingLowTaskGauge.WithLabelValues(e.Name()).Set(
 		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityLow)))
 
 	askTask, err := e.baseApp.GfSpClient().AskTask(ctx, limit)
@@ -148,14 +146,6 @@ func (e *ExecuteModular) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (e *ExecuteModular) Description() string {
-	return ExecuteModularDescription
-}
-
-func (e *ExecuteModular) Endpoint() string {
-	return e.endpoint
-}
-
 func (e *ExecuteModular) ReserveResource(
 	ctx context.Context,
 	st *corercmgr.ScopeStat) (
@@ -175,36 +165,4 @@ func (e *ExecuteModular) ReleaseResource(
 	ctx context.Context,
 	span corercmgr.ResourceScopeSpan) {
 	span.Done()
-}
-
-func (e *ExecuteModular) AskReplicatePieceApproval(
-	ctx context.Context,
-	task coretask.ApprovalReplicatePieceTask,
-	low, high int, timeout int64) (
-	[]*gfsptask.GfSpReplicatePieceApprovalTask,
-	error) {
-	approvals, err := e.baseApp.GfSpClient().AskSecondaryReplicatePieceApproval(ctx, task, low, high, timeout)
-	if err != nil {
-		return nil, err
-	}
-	if len(approvals) < low {
-		log.CtxErrorw(ctx, "failed to get sufficient sp approval from p2p protocol")
-		return nil, ErrInsufficientApproval
-	}
-	for _, approval := range approvals {
-		spInfo, err := e.baseApp.GfSpDB().GetSpByAddress(
-			approval.GetApprovedSpOperatorAddress(),
-			spdb.OperatorAddressType)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get sp info from db", "error", err)
-			continue
-		}
-		approval.SetApprovedSpEndpoint(spInfo.GetEndpoint())
-		approval.SetApprovedSpApprovalAddress(spInfo.GetApprovalAddress())
-	}
-	if len(approvals) < low {
-		log.CtxErrorw(ctx, "failed to get sufficient sp info from db")
-		return nil, ErrGfSp
-	}
-	return approvals, nil
 }

@@ -8,4 +8,5 @@ type SPDB interface {
 	SPInfoDB
 	GCObjectInfoDB
 	StorageParamDB
+	//OffChainAuthKey
 }

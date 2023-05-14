@@ -2,9 +2,8 @@ package gfspapp
 
 import (
 	"context"
-	"errors"
-	"sync"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
@@ -22,8 +21,6 @@ const (
 type GfSpBaseApp struct {
 	appID          string
 	grpcAddress    string
-	httpAddress    string
-	domain         string // external domain name is used for virtual-hosted style url
 	operateAddress string
 
 	appCtx context.Context
@@ -32,22 +29,23 @@ type GfSpBaseApp struct {
 
 	gfSpDB     spdb.SPDB
 	pieceStore piecestore.PieceStore
-	pieceKey   piecestore.PieceOp
+	pieceOp    piecestore.PieceOp
 	rcmgr      corercmgr.ResourceManager
 	chain      consensus.Consensus
 
 	approver   module.Approver
+	authorizer module.Authorizer
 	downloader module.Downloader
+	executor   module.TaskExecutor
+	gater      module.Modular
 	manager    module.Manager
 	p2p        module.P2P
 	receiver   module.Receiver
-	taskNode   module.TaskExecutor
-	uploader   module.Uploader
 	signer     module.Signer
-	authorizer module.Authorizer
+	uploader   module.Uploader
 
-	modulars map[string]module.Modular
-	mux      sync.RWMutex
+	metrics module.Modular
+	pprof   module.Modular
 
 	uploadSpeed    int64
 	downloadSpeed  int64
@@ -65,11 +63,6 @@ type GfSpBaseApp struct {
 	gcObjectRetry       int64
 	gcZombieRetry       int64
 	gcMetaRetry         int64
-
-	pprofEnable    bool
-	metricsEnable  bool
-	pprofAddress   string
-	metricsAddress string
 }
 
 func (g *GfSpBaseApp) AppID() string {
@@ -85,7 +78,7 @@ func (g *GfSpBaseApp) PieceStore() piecestore.PieceStore {
 }
 
 func (g *GfSpBaseApp) PieceOp() piecestore.PieceOp {
-	return g.pieceKey
+	return g.pieceOp
 }
 
 func (g *GfSpBaseApp) Consensus() consensus.Consensus {
@@ -100,20 +93,90 @@ func (g *GfSpBaseApp) GfSpDB() spdb.SPDB {
 	return g.gfSpDB
 }
 
-func (g *GfSpBaseApp) RegisterModular(m module.Modular) error {
-	g.mux.Lock()
-	defer g.mux.Unlock()
-	if _, ok := g.modulars[m.Name()]; ok {
-		return errors.New("module name repeated")
-	}
-	g.modulars[m.Name()] = m
-	return nil
-}
-
 func (g *GfSpBaseApp) ServerForRegister() *grpc.Server {
 	return g.server
 }
 
 func (g *GfSpBaseApp) ResourceManager() corercmgr.ResourceManager {
 	return g.rcmgr
+}
+
+func (g *GfSpBaseApp) SetApprover(approver module.Approver) error {
+	if g.approver != nil {
+		log.Panic("repeated set approver to base app")
+	}
+	g.approver = approver
+	return nil
+}
+
+func (g *GfSpBaseApp) SetAuthorizer(authorizer module.Authorizer) error {
+	if g.authorizer != nil {
+		log.Panic("repeated set authorizer to base app")
+	}
+	g.authorizer = authorizer
+	return nil
+}
+
+func (g *GfSpBaseApp) SetDownloader(downloader module.Downloader) error {
+	if g.downloader != nil {
+		log.Panic("repeated set downloader to base app")
+	}
+	g.downloader = downloader
+	return nil
+}
+
+func (g *GfSpBaseApp) SetTaskExecutor(executor module.TaskExecutor) error {
+	if g.executor != nil {
+		log.Panic("repeated set executor to base app")
+	}
+	g.executor = executor
+	return nil
+}
+
+func (g *GfSpBaseApp) SetGater(gater module.Modular) error {
+	if g.gater != nil {
+		log.Panic("repeated set gater to base app")
+	}
+	g.gater = gater
+	return nil
+}
+
+func (g *GfSpBaseApp) SetManager(manager module.Manager) error {
+	if g.manager != nil {
+		log.Panic("repeated set manager to base app")
+	}
+	g.manager = manager
+	return nil
+}
+
+func (g *GfSpBaseApp) SetP2P(p2p module.P2P) error {
+	if g.p2p != nil {
+		log.Panic("repeated set p2p to base app")
+	}
+	g.p2p = p2p
+	return nil
+}
+
+func (g *GfSpBaseApp) SetReceiver(receiver module.Receiver) error {
+	if g.receiver != nil {
+		log.Panic("repeated set receiver to base app")
+	}
+	g.receiver = receiver
+	return nil
+}
+
+func (g *GfSpBaseApp) SetSigner(signer module.Signer) error {
+	if g.signer != nil {
+		log.Panic("repeated set signer to base app")
+	}
+	g.signer = signer
+	return nil
+}
+
+func (g *GfSpBaseApp) SetUploader(uploader module.Uploader) error {
+	if g.uploader != nil {
+		log.Panic("repeated set uploader to base app")
+	}
+	g.uploader = uploader
+	return nil
 }

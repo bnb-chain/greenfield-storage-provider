@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"sync"
 
+	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -26,39 +28,20 @@ type MetricsMonitor interface {
 	Enabled() bool
 }
 
+var _ coremodule.Modular = &Metrics{}
+
 // Metrics is used to monitor sp services
 type Metrics struct {
-	config     *MetricsConfig
-	registry   *prometheus.Registry
-	httpServer *http.Server
+	httpAddress string
+	registry    *prometheus.Registry
+	httpServer  *http.Server
 }
 
-// NewMetrics returns a singleton instance of Metrics.
-// Note: enable metrics should call NewMetrics with MetricsConfig and MetricsConfig.Enabled is set true.
-// GetMetrics will return the singleton instance of Metrics to use at anywhere. If NewMetrics is not called,
-// then the metrics is disabled when calls GetMetrics.
-func NewMetrics(cfg *MetricsConfig) MetricsMonitor {
-	return initMetrics(cfg)
-}
-
-// GetMetrics gets an instance of MetricsMonitor
-func GetMetrics() MetricsMonitor {
-	return initMetrics(nil)
-}
-
-// initMetrics is used to init metrics according to MetricsConfig
-func initMetrics(cfg *MetricsConfig) MetricsMonitor {
-	once.Do(func() {
-		if cfg == nil || !cfg.Enabled {
-			mMonitor = NilMetrics{}
-		} else {
-			mMonitor = &Metrics{
-				config:   cfg,
-				registry: prometheus.NewRegistry(),
-			}
-		}
-	})
-	return mMonitor
+func NewMetrics(address string) *Metrics {
+	return &Metrics{
+		httpAddress: address,
+		registry:    prometheus.NewRegistry(),
+	}
 }
 
 // Name describes metrics service name
@@ -87,11 +70,7 @@ func (m *Metrics) Stop(ctx context.Context) error {
 
 // Enabled returns whether starts prometheus metrics
 func (m *Metrics) Enabled() bool {
-	if m.config != nil {
-		return m.config.Enabled
-	} else {
-		return false
-	}
+	return false
 }
 
 func (m *Metrics) RegisterMetricItems(cs ...prometheus.Collector) {
@@ -102,13 +81,26 @@ func (m *Metrics) serve() {
 	router := mux.NewRouter()
 	router.Path("/metrics").Handler(promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{}))
 	m.httpServer = &http.Server{
-		Addr:    m.config.HTTPAddress,
+		Addr:    m.httpAddress,
 		Handler: router,
 	}
 	if err := m.httpServer.ListenAndServe(); err != nil {
 		log.Errorw("failed to listen and serve", "error", err)
 		return
 	}
+}
+
+func (m *Metrics) ReserveResource(
+	ctx context.Context,
+	state *corercmgr.ScopeStat) (
+	corercmgr.ResourceScopeSpan, error) {
+	return &corercmgr.NullScope{}, nil
+}
+func (m *Metrics) ReleaseResource(
+	ctx context.Context,
+	scope corercmgr.ResourceScopeSpan) {
+	scope.Done()
+	return
 }
 
 // NilMetrics is a no-op Metrics

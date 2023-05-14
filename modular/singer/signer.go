@@ -23,9 +23,8 @@ const (
 var _ module.Signer = &SingModular{}
 
 type SingModular struct {
-	endpoint string
-	baseApp  *gfspapp.GfSpBaseApp
-	client   *GreenfieldChainSignClient
+	baseApp *gfspapp.GfSpBaseApp
+	client  *GreenfieldChainSignClient
 }
 
 func (s *SingModular) Name() string {
@@ -40,19 +39,16 @@ func (s *SingModular) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *SingModular) Description() string {
-	return SignerModularDescription
-}
-
-func (s *SingModular) Endpoint() string {
-	return s.endpoint
-}
-
-func (s *SingModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
+func (s *SingModular) ReserveResource(
+	ctx context.Context,
+	state *rcmgr.ScopeStat) (
+	rcmgr.ResourceScopeSpan, error) {
 	return &rcmgr.NullScope{}, nil
 }
 
-func (s *SingModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
+func (s *SingModular) ReleaseResource(
+	ctx context.Context,
+	span rcmgr.ResourceScopeSpan) {
 	span.Done()
 	return
 }

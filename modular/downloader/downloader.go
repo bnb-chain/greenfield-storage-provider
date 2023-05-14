@@ -17,7 +17,6 @@ const (
 var _ module.Downloader = &DownloadModular{}
 
 type DownloadModular struct {
-	endpoint       string
 	baseApp        *gfspapp.GfSpBaseApp
 	scope          rcmgr.ResourceScope
 	downloadQueue  taskqueue.TQueue
@@ -42,14 +41,6 @@ func (d *DownloadModular) Start(ctx context.Context) error {
 func (d *DownloadModular) Stop(ctx context.Context) error {
 	d.scope.Release()
 	return nil
-}
-
-func (d *DownloadModular) Description() string {
-	return DownloadModularDescription
-}
-
-func (d *DownloadModular) Endpoint() string {
-	return d.endpoint
 }
 
 func (d *DownloadModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {

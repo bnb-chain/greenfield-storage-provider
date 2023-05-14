@@ -17,7 +17,6 @@ const (
 var _ module.Receiver = &ReceiveModular{}
 
 type ReceiveModular struct {
-	endpoint     string
 	baseApp      *gfspapp.GfSpBaseApp
 	scope        rcmgr.ResourceScope
 	receiveQueue taskqueue.TQueue
@@ -41,15 +40,10 @@ func (r *ReceiveModular) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (r *ReceiveModular) Description() string {
-	return ReceiveModularDescription
-}
-
-func (r *ReceiveModular) Endpoint() string {
-	return r.endpoint
-}
-
-func (r *ReceiveModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
+func (r *ReceiveModular) ReserveResource(
+	ctx context.Context,
+	state *rcmgr.ScopeStat) (
+	rcmgr.ResourceScopeSpan, error) {
 	span, err := r.scope.BeginSpan()
 	if err != nil {
 		return nil, err
@@ -61,6 +55,8 @@ func (r *ReceiveModular) ReserveResource(ctx context.Context, state *rcmgr.Scope
 	return span, nil
 }
 
-func (r *ReceiveModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
+func (r *ReceiveModular) ReleaseResource(
+	ctx context.Context,
+	span rcmgr.ResourceScopeSpan) {
 	span.Done()
 }

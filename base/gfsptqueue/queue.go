@@ -25,6 +25,15 @@ type GfSpTQueue struct {
 	filterFunc func(task2 coretask.Task) bool
 }
 
+func NewGfSpTQueue(name string, cap int) taskqueue.TQueueOnStrategy {
+	return &GfSpTQueue{
+		name:    name,
+		cap:     cap,
+		tasks:   make([]coretask.Task, 0),
+		indexer: make(map[coretask.TKey]int),
+	}
+}
+
 // Len returns the length of queue.
 func (t *GfSpTQueue) Len() int {
 	t.mux.RLock()

@@ -7,17 +7,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/service/types"
-	lru "github.com/hashicorp/golang-lru"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/service/types"
 )
 
 const (
@@ -28,9 +26,8 @@ const (
 var _ module.Manager = &ManageModular{}
 
 type ManageModular struct {
-	endpoint string
-	baseApp  *gfspapp.GfSpBaseApp
-	scope    rcmgr.ResourceScope
+	baseApp *gfspapp.GfSpBaseApp
+	scope   rcmgr.ResourceScope
 
 	uploadQueue    taskqueue.TQueueOnStrategy
 	replicateQueue taskqueue.TQueueOnStrategyWithLimit
@@ -39,12 +36,10 @@ type ManageModular struct {
 	gcObjectQueue  taskqueue.TQueueOnStrategyWithLimit
 	gcZombieQueue  taskqueue.TQueueOnStrategyWithLimit
 	gcMetaQueue    taskqueue.TQueueOnStrategyWithLimit
-	downloadCache  *lru.Cache
-	challengeCache *lru.Cache
+	downloadQueue  taskqueue.TQueueOnStrategy
+	challengeQueue taskqueue.TQueueOnStrategy
 
-	maxUploadObjectNumber  int
-	downloadTaskCacheSize  int
-	challengeTaskCacheSize int
+	maxUploadObjectNumber int
 
 	gcObjectTimeInterval  int
 	gcBlockHeight         uint64
@@ -68,16 +63,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.receiveQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.gcObjectQueue.SetRetireTaskStrategy(m.ResetGCObjectTask)
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
-	downloadCache, err := lru.New(m.downloadTaskCacheSize)
-	if err != nil {
-		return err
-	}
-	m.downloadCache = downloadCache
-	challengeCache, err := lru.New(m.challengeTaskCacheSize)
-	if err != nil {
-		return err
-	}
-	m.challengeCache = challengeCache
+	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
+	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
 		return err
@@ -137,14 +124,6 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 func (m *ManageModular) Stop(ctx context.Context) error {
 	m.scope.Release()
 	return nil
-}
-
-func (m *ManageModular) Description() string {
-	return ManageModularDescription
-}
-
-func (m *ManageModular) Endpoint() string {
-	return m.endpoint
 }
 
 func (m *ManageModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
@@ -237,6 +216,10 @@ func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
 		log.Errorw("reset gc object task", "new_task_key", task.Key().String())
 	}
 	return false
+}
+
+func (m *ManageModular) GCCacheQueue(qTask task.Task) bool {
+	return true
 }
 
 func (m *ManageModular) FilterGCTask(qTask task.Task) bool {

@@ -2,6 +2,7 @@ package gnfd
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"sync"
 	"time"
@@ -31,7 +32,7 @@ type GreenfieldClient struct {
 	chainClient   *chainClient.GreenfieldClient
 	currentHeight int64
 	updatedAt     time.Time
-	Provider      []string
+	Provider      string
 }
 
 // GnfdClient return the greenfield chain client
@@ -41,11 +42,43 @@ func (client *GreenfieldClient) GnfdClient() *chainClient.GreenfieldClient {
 
 var _ consensus.Consensus = &Gnfd{}
 
+type GnfdChainConfig struct {
+	ChainID      string
+	ChainAddress []string
+}
+
 type Gnfd struct {
 	client        *GreenfieldClient
 	backUpClients []*GreenfieldClient
 	stopCh        chan struct{}
 	mutex         sync.RWMutex
+}
+
+// NewGnfd return the Greenfield instance.
+func NewGnfd(cfg *GnfdChainConfig) (*Gnfd, error) {
+	if len(cfg.ChainAddress) == 0 {
+		return nil, errors.New("greenfield nodes missing")
+	}
+	var clients []*GreenfieldClient
+	for _, address := range cfg.ChainAddress {
+		cc, err := chainClient.NewGreenfieldClient(address, cfg.ChainID)
+		if err != nil {
+			return nil, err
+		}
+		client := &GreenfieldClient{
+			Provider:    address,
+			chainClient: cc,
+		}
+		clients = append(clients, client)
+	}
+	greenfield := &Gnfd{
+		client:        clients[0],
+		backUpClients: clients,
+		stopCh:        make(chan struct{}),
+	}
+
+	go greenfield.updateClient()
+	return greenfield, nil
 }
 
 // Close the Greenfield instance.

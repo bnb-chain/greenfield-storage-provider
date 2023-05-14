@@ -17,7 +17,6 @@ const (
 var _ module.Uploader = &UploadModular{}
 
 type UploadModular struct {
-	endpoint    string
 	baseApp     *gfspapp.GfSpBaseApp
 	scope       rcmgr.ResourceScope
 	uploadQueue taskqueue.TQueue
@@ -41,15 +40,10 @@ func (u *UploadModular) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (u *UploadModular) Description() string {
-	return UploadModularDescription
-}
-
-func (u *UploadModular) Endpoint() string {
-	return u.endpoint
-}
-
-func (u *UploadModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
+func (u *UploadModular) ReserveResource(
+	ctx context.Context,
+	state *rcmgr.ScopeStat) (
+	rcmgr.ResourceScopeSpan, error) {
 	span, err := u.scope.BeginSpan()
 	if err != nil {
 		return nil, err
@@ -61,7 +55,9 @@ func (u *UploadModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeS
 	return span, nil
 }
 
-func (u *UploadModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
+func (u *UploadModular) ReleaseResource(
+	ctx context.Context,
+	span rcmgr.ResourceScopeSpan) {
 	span.Done()
 	return
 }

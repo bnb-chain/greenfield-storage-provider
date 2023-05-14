@@ -14,21 +14,19 @@ func (s *GfSpClient) GetObject(
 	task coretask.DownloadObjectTask,
 	opts ...grpc.DialOption) (
 	[]byte, error) {
-	//conn, err := s.Connection(ctx, s.downloaderEndpoint, opts...)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//defer conn.Close()
-	//req := &gfspserver.GfSpDownloadObjectRequest{
-	//	Request: &gfspserver.GfSpDownloadObjectRequest_DownLoadTask{
-	//		DownLoadTask: task.(*gfsptask.GfSpDownloadObjectTask),
-	//	},
-	//}
-	//resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadObject(ctx, req)
-	//if err != nil {
-	//	return nil, ErrRpcUnknown
-	//}
-	//return resp.GetData(), resp.GetErr()
+	conn, err := s.Connection(ctx, s.downloaderEndpoint, opts...)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	req := &gfspserver.GfSpDownloadObjectRequest{
+		DownLoadTask: task.(*gfsptask.GfSpDownloadObjectTask),
+	}
+	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadObject(ctx, req)
+	if err != nil {
+		return nil, ErrRpcUnknown
+	}
+	return resp.GetData(), resp.GetErr()
 	return nil, nil
 }
 

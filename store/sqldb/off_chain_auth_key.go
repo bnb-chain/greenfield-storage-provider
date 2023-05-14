@@ -1,8 +1,11 @@
 package sqldb
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // InsertAuthKey insert a new record into OffChainAuthKeyTable
@@ -38,6 +41,10 @@ func (s *SpDBImpl) UpdateAuthKey(userAddress string, domain string, oldNonce int
 		return fmt.Errorf("failed to update OffChainAuthKeyTable record's state: %s", result.Error)
 	}
 	return nil
+}
+
+func errIsNotFound(err error) bool {
+	return errors.Is(err, sql.ErrNoRows) || errors.Is(err, gorm.ErrRecordNotFound)
 }
 
 // GetAuthKey get OffChainAuthKey from OffChainAuthKeyTable

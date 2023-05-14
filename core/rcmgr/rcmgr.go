@@ -214,16 +214,18 @@ func (s ScopeStat) String() string {
 		s.Memory, s.NumTasksHigh, s.NumTasksMedium, s.NumTasksLow)
 }
 
+var _ ResourceManager = &NullResourceManager{}
+
 // NullResourceManager is a stub for tests and initialization of default values
 type NullResourceManager struct{}
 
+func (n *NullResourceManager) ViewSystem(f func(ResourceScope) error) error {
+	return f(&NullScope{})
+}
 func (n *NullResourceManager) ViewTransient(f func(ResourceScope) error) error {
 	return f(&NullScope{})
 }
 func (n *NullResourceManager) ViewService(svc string, f func(ResourceScope) error) error {
-	return f(&NullScope{})
-}
-func (n *NullResourceManager) ViewSystem(f func(ResourceScope) error) error {
 	return f(&NullScope{})
 }
 func (n *NullResourceManager) SystemLimitString(func(ResourceScope) string) string {
@@ -235,6 +237,9 @@ func (n *NullResourceManager) TransientLimitString(func(ResourceScope) string) s
 func (n *NullResourceManager) ServiceLimitString(string, func(ResourceScope) string) string {
 	return ""
 }
+func (n *NullResourceManager) SystemState() string        { return "" }
+func (n *NullResourceManager) TransientState() string     { return "" }
+func (n *NullResourceManager) ServiceState(string) string { return "" }
 func (n *NullResourceManager) OpenService(svc string) (ResourceScope, error) {
 	return &NullScope{}, nil
 }
@@ -248,7 +253,7 @@ var _ ResourceScopeSpan = (*NullScope)(nil)
 // NullScope is a stub for tests and initialization of default values
 type NullScope struct{}
 
-func (n *NullScope) RemainingResource() (Limit, error)               { return nil, nil }
+func (n *NullScope) RemainingResource() (Limit, error)               { return &Unlimited{}, nil }
 func (n *NullScope) ReserveResources(st *ScopeStat) error            { return nil }
 func (n *NullScope) ReserveMemory(size int64, prio uint8) error      { return nil }
 func (n *NullScope) ReleaseMemory(size int64)                        {}

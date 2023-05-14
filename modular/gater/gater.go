@@ -16,10 +16,10 @@ const (
 var _ module.Modular = &GateModular{}
 
 type GateModular struct {
-	endpoint string
-	domain   string
-	baseApp  *gfspapp.GfSpBaseApp
-	scope    rcmgr.ResourceScope
+	domain      string
+	httpAddress string
+	baseApp     *gfspapp.GfSpBaseApp
+	scope       rcmgr.ResourceScope
 
 	maxListReadQuota int64
 }
@@ -42,15 +42,10 @@ func (g *GateModular) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (g *GateModular) Description() string {
-	return GateModularDescription
-}
-
-func (g *GateModular) Endpoint() string {
-	return g.endpoint
-}
-
-func (g *GateModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
+func (g *GateModular) ReserveResource(
+	ctx context.Context,
+	state *rcmgr.ScopeStat) (
+	rcmgr.ResourceScopeSpan, error) {
 	span, err := g.scope.BeginSpan()
 	if err != nil {
 		return nil, err
@@ -62,7 +57,9 @@ func (g *GateModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeSta
 	return span, nil
 }
 
-func (g *GateModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
+func (g *GateModular) ReleaseResource(
+	ctx context.Context,
+	span rcmgr.ResourceScopeSpan) {
 	span.Done()
 	return
 }

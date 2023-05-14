@@ -5,6 +5,11 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 )
 
+type NewTQueue = func(name string, cap int) TQueue
+type NewTQueueWithLimit = func(name string, cap int) TQueueWithLimit
+type NewTQueueOnStrategy = func(name string, cap int) TQueueOnStrategy
+type NewTQueueOnStrategyWithLimit = func(name string, cap int) TQueueOnStrategyWithLimit
+
 // TQueue is the interface to task queue. The task queue is mainly used to maintain tasks are running.
 // In addition to supporting conventional FIFO operations, task queue also has some customized operations
 // for task. For example, Has, PopByKey, PopPush.

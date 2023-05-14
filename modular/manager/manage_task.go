@@ -107,12 +107,10 @@ func (m *ManageModular) QueryTask(
 	if qTask = m.gcMetaQueue.PopByKey(key); qTask != nil {
 		return qTask, nil
 	}
-	if val, ok := m.downloadCache.Get(key); ok {
-		qTask = val.(task.Task)
+	if qTask = m.downloadQueue.PopByKey(key); qTask != nil {
 		return qTask, nil
 	}
-	if val, ok := m.challengeCache.Get(key); ok {
-		qTask = val.(task.Task)
+	if qTask = m.challengeQueue.PopByKey(key); qTask != nil {
 		return qTask, nil
 	}
 	return nil, nil
@@ -388,15 +386,15 @@ func (m *ManageModular) HandleGCMetaTask(
 func (m *ManageModular) HandleDownloadObjectTask(
 	ctx context.Context,
 	task task.DownloadObjectTask) error {
-	m.downloadCache.Add(task.Key(), task)
-	log.CtxDebugw(ctx, "add download object task to cache")
+	m.downloadQueue.Push(task)
+	log.CtxDebugw(ctx, "add download object task to queue")
 	return nil
 }
 
 func (m *ManageModular) HandleChallengePieceTask(
 	ctx context.Context,
 	task task.ChallengePieceTask) error {
-	m.challengeCache.Add(task.Key(), task)
-	log.CtxDebugw(ctx, "add challenge piece task to cache")
+	m.challengeQueue.Push(task)
+	log.CtxDebugw(ctx, "add challenge piece task to queue")
 	return nil
 }

@@ -18,7 +18,6 @@ const (
 var _ module.P2P = &P2PModular{}
 
 type P2PModular struct {
-	endpoint               string
 	baseApp                *gfspapp.GfSpBaseApp
 	node                   *p2pnode.Node
 	scope                  rcmgr.ResourceScope
@@ -41,14 +40,6 @@ func (p *P2PModular) Start(ctx context.Context) error {
 func (p *P2PModular) Stop(ctx context.Context) error {
 	p.scope.Release()
 	return nil
-}
-
-func (p *P2PModular) Description() string {
-	return P2PModularDescription
-}
-
-func (p *P2PModular) Endpoint() string {
-	return p.endpoint
 }
 
 func (p *P2PModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {

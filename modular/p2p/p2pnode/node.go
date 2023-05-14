@@ -2,23 +2,29 @@ package p2pnode
 
 import (
 	"context"
+	"encoding/hex"
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	ggio "github.com/gogo/protobuf/io"
 	"github.com/gogo/protobuf/proto"
 	ds "github.com/ipfs/go-datastore"
+	leveldb "github.com/ipfs/go-ds-leveldb"
+	"github.com/libp2p/go-libp2p"
+	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/libp2p/go-libp2p/core/protocol"
+	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoreds"
+	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	ma "github.com/multiformats/go-multiaddr"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/libp2p/go-libp2p/core/crypto"
 )
 
 // Node defines the p2p protocol node, encapsulates the go-lib.p2p
@@ -36,14 +42,97 @@ type Node struct {
 	p2pProtocolAddress             ma.Multiaddr
 	p2pPingPeriod                  int
 	secondaryApprovalExpiredHeight uint64
-
-	dnPath       string
-	p2pBootstrap []string
+	p2pBootstrap                   []string
 }
 
 // NewNode return an instance of Node
-func NewNode() (*Node, error) {
+func NewNode(baseApp *gfspapp.GfSpBaseApp, privateKey string, address string,
+	bootstrap []string, pingPeriod int, secondaryApprovalExpiredHeight uint64) (*Node, error) {
+	if pingPeriod < PingPeriodMin {
+		pingPeriod = PingPeriodMin
+	}
+	if secondaryApprovalExpiredHeight <= MinSecondaryApprovalExpiredHeight {
+		secondaryApprovalExpiredHeight = MinSecondaryApprovalExpiredHeight
+	}
+	var privKey crypto.PrivKey
+	if len(privateKey) > 0 {
+		priKeyBytes, err := hex.DecodeString(privateKey)
+		if err != nil {
+			log.Errorw("failed to hex decode private key",
+				"priv_key", privateKey, "error", err)
+			return nil, err
+		}
+		privKey, err = crypto.UnmarshalSecp256k1PrivateKey(priKeyBytes)
+		if err != nil {
+			log.Errorw("failed to unmarshal secp256k1 private key",
+				"priv_key", privateKey, "error", err)
+			return nil, err
+		}
+	} else {
+		newPrivKey, _, err := crypto.GenerateKeyPair(crypto.Secp256k1, 256)
+		if err != nil {
+			log.Errorw("failed to generate secp256k1 key pair", "error", err)
+			return nil, err
+		}
+		privKey = newPrivKey
+	}
+	hostAddr, err := MakeMultiaddr(address)
+	if err != nil {
+		log.Errorw("failed to parser p2p protocol address", "error", err)
+		return nil, err
+	}
+	bootstrapIDs, bootstrapAddrs, err := MakeBootstrapMultiaddr(bootstrap)
+	if err != nil {
+		log.Errorw("failed to parser bootstrap address", "error", err)
+		return nil, err
+	}
+	// init store for storing peers addr
+	ds, err := leveldb.NewDatastore(DefaultDataPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	store, err := pstoreds.NewPeerstore(context.Background(), ds, pstoreds.DefaultOpts())
+	if err != nil {
+		return nil, err
+	}
+	host, err := libp2p.New(
+		libp2p.ListenAddrs(hostAddr),
+		libp2p.Identity(privKey),
+		libp2p.Peerstore(store),
+		// Customized ping service, it implemented dynamic update of permanent nodes. As usual, permanent nodes
+		// should cover as many storage providers as possible, which is more decentralized, and also meets sp
+		// requirements, eg: get approval request needs at least 6 or more replies from different storage providers
+		// but p2p node are offline and replacement, which is an inevitable problem, If permanent nodes belonging
+		// to the same sp all fail and are replaced, then the sp will be unable to communicate, this requires
+		// dynamic updates permanent nodes
+		libp2p.Ping(false),
+		libp2p.NATPortMap(),
+		// support noise connections
+		libp2p.Security(noise.ID, noise.New),
+		libp2p.WithDialTimeout(time.Duration(DailTimeout)*time.Second),
+	)
+	if err != nil {
+		return nil, err
+	}
+	for i, addr := range bootstrapAddrs {
+		host.Peerstore().AddAddr(bootstrapIDs[i], addr, peerstore.PermanentAddrTTL)
+	}
 
+	n := &Node{
+		baseApp:                        baseApp,
+		node:                           host,
+		peers:                          NewPeerProvider(store),
+		persistentDB:                   ds,
+		p2pPrivateKey:                  privKey,
+		p2pProtocolAddress:             hostAddr,
+		p2pPingPeriod:                  pingPeriod,
+		p2pBootstrap:                   bootstrap,
+		secondaryApprovalExpiredHeight: secondaryApprovalExpiredHeight,
+		stopCh:                         make(chan struct{}),
+	}
+	n.initProtocol()
+	log.Infow("succeed to init p2p node", "node_id", n.node.ID())
+	n.initProtocol()
 	return nil, nil
 }
 

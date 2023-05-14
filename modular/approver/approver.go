@@ -19,16 +19,14 @@ const (
 var _ module.Approver = &ApprovalModular{}
 
 type ApprovalModular struct {
-	endpoint    string
 	baseApp     *gfspapp.GfSpBaseApp
 	scope       rcmgr.ResourceScope
 	bucketQueue taskqueue.TQueueOnStrategy
 	objectQueue taskqueue.TQueueOnStrategy
 
-	accountBucketNumber            int64
-	bucketApprovalTimeoutHeight    uint64
-	objectApprovalTimeoutHeight    uint64
-	replicateApprovalTimeoutHeight uint64
+	accountBucketNumber         int64
+	bucketApprovalTimeoutHeight uint64
+	objectApprovalTimeoutHeight uint64
 }
 
 func (a *ApprovalModular) Name() string {
@@ -49,14 +47,6 @@ func (a *ApprovalModular) Start(ctx context.Context) error {
 func (a *ApprovalModular) Stop(ctx context.Context) error {
 	a.scope.Release()
 	return nil
-}
-
-func (a *ApprovalModular) Description() string {
-	return ApprovalModularDescription
-}
-
-func (a *ApprovalModular) Endpoint() string {
-	return a.endpoint
 }
 
 func (a *ApprovalModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {

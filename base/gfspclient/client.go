@@ -47,6 +47,31 @@ type GfSpClient struct {
 	httpClient   *http.Client
 }
 
+func NewGfSpClient(
+	approverEndpoint string,
+	managerEndpoint string,
+	downloaderEndpoint string,
+	receiverEndpoint string,
+	metadataEndpoint string,
+	retrieverEndpoint string,
+	uploaderEndpoint string,
+	p2pEndpoint string,
+	singerEndpoint string,
+	authorizerEndpoint string) *GfSpClient {
+	return &GfSpClient{
+		approverEndpoint:   approverEndpoint,
+		managerEndpoint:    managerEndpoint,
+		downloaderEndpoint: downloaderEndpoint,
+		receiverEndpoint:   receiverEndpoint,
+		metadataEndpoint:   metadataEndpoint,
+		retrieverEndpoint:  retrieverEndpoint,
+		uploaderEndpoint:   uploaderEndpoint,
+		p2pEndpoint:        p2pEndpoint,
+		singerEndpoint:     singerEndpoint,
+		authorizerEndpoint: authorizerEndpoint,
+	}
+}
+
 func (s *GfSpClient) Connection(
 	ctx context.Context,
 	address string,
@@ -139,6 +164,25 @@ func (s *GfSpClient) HttpClient(ctx context.Context) *http.Client {
 			}}
 	}
 	return s.httpClient
+}
+
+func (s *GfSpClient) Close() error {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.httpClient.CloseIdleConnections()
+	if s.managerConn != nil {
+		s.managerConn.Close()
+	}
+	if s.approverConn != nil {
+		s.approverConn.Close()
+	}
+	if s.p2pConn != nil {
+		s.p2pConn.Close()
+	}
+	if s.singerConn != nil {
+		s.singerConn.Close()
+	}
+	return nil
 }
 
 func DefaultClientOptions() []grpc.DialOption {

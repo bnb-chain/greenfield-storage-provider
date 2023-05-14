@@ -12,8 +12,6 @@ import (
 
 type Modular interface {
 	Name() string
-	Description() string
-	Endpoint() string
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
 	ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error)
@@ -90,6 +88,7 @@ type P2P interface {
 }
 
 type Signer interface {
+	Modular
 	SignCreateBucketApproval(ctx context.Context, bucket *storagetypes.MsgCreateBucket) ([]byte, error)
 	SignCreateObjectApproval(ctx context.Context, task *storagetypes.MsgCreateObject) ([]byte, error)
 	SignReplicatePieceApproval(ctx context.Context, task task.ApprovalReplicatePieceTask) ([]byte, error)

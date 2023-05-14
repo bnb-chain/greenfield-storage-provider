@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/felixge/fgprof"
 	"github.com/gorilla/mux"
 
@@ -15,13 +16,13 @@ import (
 
 // PProf is used to analyse the performance sp service
 type PProf struct {
-	config     *PProfConfig
-	httpServer *http.Server
+	httpAddress string
+	httpServer  *http.Server
 }
 
 // NewPProf returns an instance of pprof
-func NewPProf(cfg *PProfConfig) *PProf {
-	return &PProf{config: cfg}
+func NewPProf(address string) *PProf {
+	return &PProf{httpAddress: address}
 }
 
 // Name describes pprof service name
@@ -31,9 +32,7 @@ func (p *PProf) Name() string {
 
 // Start HTTP server
 func (p *PProf) Start(ctx context.Context) error {
-	if p.config.Enabled {
-		go p.serve()
-	}
+	go p.serve()
 	return nil
 }
 
@@ -53,13 +52,26 @@ func (p *PProf) serve() {
 	router := mux.NewRouter()
 	p.registerProfiler(router)
 	p.httpServer = &http.Server{
-		Addr:    p.config.HTTPAddress,
+		Addr:    p.httpAddress,
 		Handler: router,
 	}
 	if err := p.httpServer.ListenAndServe(); err != nil {
 		log.Errorw("failed to listen and serve", "error", err)
 		return
 	}
+}
+
+func (p *PProf) ReserveResource(
+	ctx context.Context,
+	state *corercmgr.ScopeStat) (
+	corercmgr.ResourceScopeSpan, error) {
+	return &corercmgr.NullScope{}, nil
+}
+func (p *PProf) ReleaseResource(
+	ctx context.Context,
+	scope corercmgr.ResourceScopeSpan) {
+	scope.Done()
+	return
 }
 
 func (p *PProf) registerProfiler(r *mux.Router) {

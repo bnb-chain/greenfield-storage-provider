@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
 
-var _ SPDB = &SpDBImpl{}
+var _ corespdb.SPDB = &SpDBImpl{}
 
 // SpDBImpl storage provider database, implements SPDB interface
 type SpDBImpl struct {

@@ -19,6 +19,17 @@ type resourceManager struct {
 
 var _ corercmgr.ResourceManager = &resourceManager{}
 
+func NewResourceManager(limits corercmgr.Limiter) corercmgr.ResourceManager {
+	r := &resourceManager{
+		limits: limits,
+		svc:    make(map[string]*resourceScope),
+	}
+	r.system = newResourceScope(limits.GetSystemLimits(), nil, "system")
+	// TODO:: support transient resource scope
+	r.transient = r.system
+	return r
+}
+
 // OpenService creates a new service resource scope associated with system resource scope
 func (r *resourceManager) OpenService(name string) (corercmgr.ResourceScope, error) {
 	r.mux.Lock()

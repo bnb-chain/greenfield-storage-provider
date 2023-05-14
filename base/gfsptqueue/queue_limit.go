@@ -24,6 +24,15 @@ type GfSpTQueueWithLimit struct {
 	filterFunc func(task2 coretask.Task) bool
 }
 
+func NewGfSpTQueueWithLimit(name string, cap int) taskqueue.TQueueOnStrategyWithLimit {
+	return &GfSpTQueueWithLimit{
+		name:    name,
+		cap:     cap,
+		tasks:   make([]coretask.Task, 0),
+		indexer: make(map[coretask.TKey]int),
+	}
+}
+
 // Len returns the length of queue.
 func (t *GfSpTQueueWithLimit) Len() int {
 	t.mux.RLock()

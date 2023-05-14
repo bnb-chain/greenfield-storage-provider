@@ -67,3 +67,24 @@ func (n *NullLimit) Add(Limit)                            { return }
 func (n *NullLimit) Sub(Limit) bool                       { return false }
 func (n *NullLimit) Equal(Limit) bool                     { return false }
 func (n *NullLimit) ScopeStat() *ScopeStat                { return nil }
+
+type Unlimited struct{}
+
+var _ Limiter = &Unlimited{}
+var _ Limit = &Unlimited{}
+
+func (n *Unlimited) GetSystemLimits() Limit               { return &Unlimited{} }
+func (n *Unlimited) GetTransientLimits() Limit            { return &Unlimited{} }
+func (n *Unlimited) GetServiceLimits(svc string) Limit    { return &Unlimited{} }
+func (n *Unlimited) String() string                       { return "unlimited" }
+func (n *Unlimited) GetMemoryLimit() int64                { return math.MaxInt64 }
+func (n *Unlimited) GetFDLimit() int                      { return math.MaxInt }
+func (n *Unlimited) GetConnLimit(Direction) int           { return math.MaxInt }
+func (n *Unlimited) GetConnTotalLimit() int               { return math.MaxInt }
+func (n *Unlimited) GetTaskLimit(ReserveTaskPriority) int { return math.MaxInt }
+func (n *Unlimited) GetTaskTotalLimit() int               { return math.MaxInt }
+func (n *Unlimited) NotLess(Limit) bool                   { return true }
+func (n *Unlimited) Add(Limit)                            { return }
+func (n *Unlimited) Sub(Limit) bool                       { return true }
+func (n *Unlimited) Equal(Limit) bool                     { return true }
+func (n *Unlimited) ScopeStat() *ScopeStat                { return nil }

@@ -42,7 +42,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 		return timeout
 	case coretask.TypeTaskReplicatePiece:
 		replicateTask := task.(coretask.ReplicatePieceTask)
-		timeout := int64(replicateTask.GetObjectInfo().GetPayloadSize()) / g.replicateSpeed
+		timeout := int64(replicateTask.GetObjectInfo().GetPayloadSize()) / (g.replicateSpeed + 1)
 		if timeout < MinReplicateTime {
 			return MinReplicateTime
 		}
@@ -52,7 +52,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 		return timeout
 	case coretask.TypeTaskReceivePiece:
 		receiveTask := task.(coretask.ReceivePieceTask)
-		timeout := receiveTask.GetPieceSize() / g.replicateSpeed
+		timeout := receiveTask.GetPieceSize() / (g.replicateSpeed + 1)
 		if timeout < MinReceiveTime {
 			return MinReceiveTime
 		}
@@ -80,7 +80,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 		return timeout
 	case coretask.TypeTaskChallengePiece:
 		challengTask := task.(coretask.ChallengePieceTask)
-		timeout := challengTask.GetPieceDataSize() / g.downloadSpeed
+		timeout := challengTask.GetPieceDataSize() / (g.downloadSpeed + 1)
 		if timeout < MinDownloadTime {
 			return MinDownloadTime
 		}

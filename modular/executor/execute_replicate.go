@@ -12,17 +12,18 @@ import (
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func (e *ExecuteModular) HandleReplicatePieceTask(
 	ctx context.Context,
-	task task.ReplicatePieceTask) {
+	task coretask.ReplicatePieceTask) {
 	var err error
 	defer func() {
 		task.SetError(err)
@@ -65,9 +66,41 @@ func (e *ExecuteModular) HandleReplicatePieceTask(
 	return
 }
 
+func (e *ExecuteModular) AskReplicatePieceApproval(
+	ctx context.Context,
+	task coretask.ApprovalReplicatePieceTask,
+	low, high int, timeout int64) (
+	[]*gfsptask.GfSpReplicatePieceApprovalTask,
+	error) {
+	approvals, err := e.baseApp.GfSpClient().AskSecondaryReplicatePieceApproval(ctx, task, low, high, timeout)
+	if err != nil {
+		return nil, err
+	}
+	if len(approvals) < low {
+		log.CtxErrorw(ctx, "failed to get sufficient sp approval from p2p protocol")
+		return nil, ErrInsufficientApproval
+	}
+	for _, approval := range approvals {
+		spInfo, err := e.baseApp.GfSpDB().GetSpByAddress(
+			approval.GetApprovedSpOperatorAddress(),
+			spdb.OperatorAddressType)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get sp info from db", "error", err)
+			continue
+		}
+		approval.SetApprovedSpEndpoint(spInfo.GetEndpoint())
+		approval.SetApprovedSpApprovalAddress(spInfo.GetApprovalAddress())
+	}
+	if len(approvals) < low {
+		log.CtxErrorw(ctx, "failed to get sufficient sp info from db")
+		return nil, ErrGfSp
+	}
+	return approvals, nil
+}
+
 func (e *ExecuteModular) handleReplicatePiece(
 	ctx context.Context,
-	rTask task.ReplicatePieceTask,
+	rTask coretask.ReplicatePieceTask,
 	backUpApprovals []*gfsptask.GfSpReplicatePieceApprovalTask,
 ) (err error) {
 	var (
@@ -81,7 +114,7 @@ func (e *ExecuteModular) handleReplicatePiece(
 		record             = make([]bool, replCount)
 		secondaryOpAddress = make([]string, replCount)
 		secondarySignature = make([][]byte, replCount)
-		approvals          = make([]task.ApprovalReplicatePieceTask, replCount)
+		approvals          = make([]coretask.ApprovalReplicatePieceTask, replCount)
 	)
 	resetApprovals := func() (bool, error) {
 		finish := true
@@ -170,8 +203,8 @@ func (e *ExecuteModular) handleReplicatePiece(
 func (e *ExecuteModular) doReplicatePiece(
 	ctx context.Context,
 	waitGroup *sync.WaitGroup,
-	rTask task.ReplicatePieceTask,
-	approval task.ApprovalReplicatePieceTask,
+	rTask coretask.ReplicatePieceTask,
+	approval coretask.ApprovalReplicatePieceTask,
 	replicateIdx uint32,
 	pieceIdx uint32,
 	data []byte,
@@ -208,8 +241,8 @@ func (e *ExecuteModular) doReplicatePiece(
 
 func (e *ExecuteModular) doneReplicatePiece(
 	ctx context.Context,
-	rTask task.ReplicatePieceTask,
-	approval task.ApprovalReplicatePieceTask,
+	rTask coretask.ReplicatePieceTask,
+	approval coretask.ApprovalReplicatePieceTask,
 	replicateIdx uint32,
 ) ([]byte, []byte, error) {
 	receive := &gfsptask.GfSpReceivePieceTask{}
