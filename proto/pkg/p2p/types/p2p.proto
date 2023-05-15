@@ -34,7 +34,7 @@ message Pong {
 // GetApprovalRequest defines the request of getting approval
 message GetApprovalRequest {
   // object_info define the object info for getting approval
-  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  greenfield.storage.ObjectInfo object_info = 1;
   // sp_operator_address define sp operator public key
   string sp_operator_address = 2;
   // signature define the signature of sp sign the msg
@@ -44,7 +44,7 @@ message GetApprovalRequest {
 // GetApprovalResponse defines the response of getting approval
 message GetApprovalResponse {
   // object_info define the object info for getting approval
-  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  greenfield.storage.ObjectInfo object_info = 1;
   // sp_operator_address define sp operator public key
   string sp_operator_address = 2;
   // expired_time defines the approval valid deadline

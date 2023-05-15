@@ -10,7 +10,7 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/metadata/t
 // Bucket is the structure for user bucket
 message Bucket {
   // bucket_info defines the information of the bucket.
-  bnbchain.greenfield.storage.BucketInfo bucket_info = 1;
+  greenfield.storage.BucketInfo bucket_info = 1;
   // removed defines the bucket is deleted or not
   bool removed = 2;
   // delete_at defines the block number when the bucket deleted.
@@ -32,7 +32,7 @@ message Bucket {
 // Object is the structure for user object
 message Object {
   // object_info defines the information of the object.
-  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  greenfield.storage.ObjectInfo object_info = 1;
   // locked_balance defines locked balance of object
   string locked_balance = 2;
   // removed defines the object is deleted or not
@@ -65,6 +65,16 @@ message ListObjectsByBucketNameRequest {
   string bucket_name = 1;
   // account_id is the account address of user
   string account_id = 2;
+  // max_keys sets the maximum number of keys returned in the response
+  uint64 max_keys = 3;
+  // start_after is where you want to start listing from
+  string start_after = 4;
+  // continuation_token indicates that the list is being continued on this bucket with a token
+  string continuation_token = 5;
+  // delimiter is a character you use to group keys
+  string delimiter = 6;
+  // prefix limits the response to keys that begin with the specified prefix
+  string prefix = 7;
 }
 
 // GetBucketByBucketNameRequest is request type for the GetBucketByBucketName RPC method
@@ -111,8 +121,8 @@ message ListExpiredBucketsBySpRequest {
   int64 limit = 3;
 }
 
-// GetObjectByObjectNameAndBucketNameRequest is request type for the GetObjectByObjectNameAndBucketName RPC method
-message GetObjectByObjectNameAndBucketNameRequest {
+// GetObjectMetaRequest is request type for the GetObjectMeta RPC method
+message GetObjectMetaRequest {
   // object_name is the name of the object
   string object_name = 1;
   // bucket_name is the name of the bucket
@@ -137,6 +147,22 @@ message GetPaymentByBucketIDRequest {
   bool is_full_list = 2;
 }
 
+// GetBucketMetaRequest is request type for the GetBucketMeta RPC method
+message GetBucketMetaRequest {
+  // bucket_name is the name of the bucket
+  string bucket_name = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
+// GetBucketMetaResponse is response type for the GetBucketMeta RPC method
+message GetBucketMetaResponse {
+  // bucket defines the information of a bucket
+  Bucket bucket = 1;
+  // stream_record defines stream payment record of a stream account
+  greenfield.payment.StreamRecord stream_record = 2;
+}
+
 // GetUserBucketsResponse is response type for the GetUserBuckets RPC method.
 message GetUserBucketsResponse {
   // buckets defines the list of bucket
@@ -147,6 +173,24 @@ message GetUserBucketsResponse {
 message ListObjectsByBucketNameResponse {
   // objects defines the list of object
   repeated Object objects = 1;
+  // key_count is the number of keys returned with this request
+  uint64 key_count = 2;
+  // max_keys sets the maximum number of keys returned in the response
+  uint64 max_keys = 3;
+  // is_truncated set to false if all of the results were returned. set to true if more keys are available to return
+  bool is_truncated = 4;
+  // next_continuation_token is sent when is_truncated is true, which means there are more keys in the bucket that can be listed
+  string next_continuation_token = 5;
+  // name of the bucket
+  string name = 6;
+  // prefix is the prefix used during the query.
+  string prefix = 7;
+  // delimiter is the delimiter used during the query
+  string delimiter = 8;
+  // common_prefixes a list of strings representing common prefixes. common_prefixes are those parts of object key names that fall between the specified delimiters
+  repeated string common_prefixes = 9;
+  // continuationToken is the continuation token used during the query
+  string continuation_token = 10;
 }
 
 // GetBucketByBucketNameResponse is response type for the GetBucketByBucketName RPC method.
@@ -181,8 +225,8 @@ message ListExpiredBucketsBySpResponse {
   repeated Bucket buckets = 1;
 }
 
-// GetObjectByObjectNameAndBucketNameResponse is response type for the GetObjectByObjectNameAndBucketName RPC method.
-message GetObjectByObjectNameAndBucketNameResponse {
+// GetObjectMetaResponse is response type for the GetObjectMeta RPC method.
+message GetObjectMetaResponse {
   // object defines the information of an object
   Object object = 1;
 }
@@ -190,13 +234,13 @@ message GetObjectByObjectNameAndBucketNameResponse {
 // GetPaymentByBucketNameResponse is response type for the GetPaymentByBucketName RPC method.
 message GetPaymentByBucketNameResponse {
   // stream_record defines stream payment record of a stream account
-  bnbchain.greenfield.payment.StreamRecord stream_record = 1;
+  greenfield.payment.StreamRecord stream_record = 1;
 }
 
 // GetPaymentByBucketIDResponse is response type for the GetPaymentByBucketID RPC method.
 message GetPaymentByBucketIDResponse {
   // stream_record defines stream payment record of a stream account
-  bnbchain.greenfield.payment.StreamRecord stream_record = 1;
+  greenfield.payment.StreamRecord stream_record = 1;
 }
 
 // MetadataService defines the gRPC service of metadata
@@ -215,12 +259,14 @@ service MetadataService {
   rpc GetUserBucketsCount(GetUserBucketsCountRequest) returns (GetUserBucketsCountResponse) {};
   // ListExpiredBucketsBySp list expired buckets by sp
   rpc ListExpiredBucketsBySp(ListExpiredBucketsBySpRequest) returns (ListExpiredBucketsBySpResponse) {};
-  // GetObjectByObjectNameAndBucketName get bucket info by a bucket name and an object name
-  rpc GetObjectByObjectNameAndBucketName(GetObjectByObjectNameAndBucketNameRequest) returns (GetObjectByObjectNameAndBucketNameResponse) {};
+  // GetObjectMeta get object metadata
+  rpc GetObjectMeta(GetObjectMetaRequest) returns (GetObjectMetaResponse) {};
   // GetPaymentByBucketName get bucket payment info by a bucket name
   rpc GetPaymentByBucketName(GetPaymentByBucketNameRequest) returns (GetPaymentByBucketNameResponse) {};
   // GetPaymentByBucketID get bucket payment info by a bucket id
   rpc GetPaymentByBucketID(GetPaymentByBucketIDRequest) returns (GetPaymentByBucketIDResponse) {};
   // VerifyPermission Verify the input items permission.
-  rpc VerifyPermission(bnbchain.greenfield.storage.QueryVerifyPermissionRequest) returns (bnbchain.greenfield.storage.QueryVerifyPermissionResponse) {};
+  rpc VerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {};
+  // GetBucketMeta get bucket metadata with related info such as payment
+  rpc GetBucketMeta(GetBucketMetaRequest) returns (GetBucketMetaResponse) {};
 }

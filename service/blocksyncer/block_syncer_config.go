@@ -9,7 +9,10 @@ import (
 type Config struct {
 	Modules        []string
 	Dsn            string
+	DsnSwitched    string
 	RecreateTables bool
+	Workers        uint
+	EnableDualDB   bool
 }
 
 func getDBConfigFromEnv(dsn string) (string, error) {

@@ -9,7 +9,7 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/re
 // ReceiveObjectPieceRequest is request type for the ReceiveObjectPiece RPC method.
 message ReceiveObjectPieceRequest {
   // object_info defines the information of the object.
-  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  greenfield.storage.ObjectInfo object_info = 1;
   // piece_size defines the spilt size of replicate data.
   uint64 piece_size = 2;
   // redundancy_idx defines the ec piece idx iff >= 0

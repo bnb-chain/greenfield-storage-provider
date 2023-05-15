@@ -375,7 +375,7 @@ func parseRegion(endpoint string) string {
 
 func getHTTPClient(tlsInsecureSkipVerify bool) *http.Client {
 	resolver := dnscache.New(time.Minute)
-	rand.Seed(time.Now().Unix())
+	rand.New(rand.NewSource(time.Now().Unix()))
 
 	return &http.Client{
 		Transport: &http.Transport{

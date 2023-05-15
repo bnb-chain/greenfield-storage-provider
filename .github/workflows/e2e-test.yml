@@ -16,19 +16,21 @@ on:
       - fix-release*
 
 env:
-  GreenfileldTag: v0.1.2
-  GreenfileldIntegrationTestBranch: fynn/new_sdk_test
+  GreenfieldTag: v0.2.0
+  GreenfieldIntegrationTestBranch: adapt-greenfield-develop_v0.47_latest-develop
   GOPRIVATE: github.com/bnb-chain
   GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   MYSQL_USER: root
   MYSQL_PASSWORD: root
   MYSQL_ROOT_PASSWORD: root
+  MYSQL_IP: 127.0.0.1
+  MYSQL_PORT: 3306
 
 jobs:
   e2e-test:
     strategy:
       matrix:
-        go-version: [ 1.18.x ]
+        go-version: [ 1.20.x ]
         os: [ ubuntu-latest ]
     runs-on: ubuntu-latest
 
@@ -42,44 +44,37 @@ jobs:
       # Checkout Greenfield-SP
       - name: Checkout Greenfield-SP
         uses: actions/checkout@v3
-      # Build Greenfield-SP
-      - name: Build Greenfield-SP
-        run: |
-          make install-tools
-          make build
       # Build Greenfield
       - name: Build Greenfield
         run: |
           git clone https://github.com/bnb-chain/greenfield.git
           cd greenfield
-          git checkout ${{ env.GreenfileldTag }}
+          git checkout ${{ env.GreenfieldTag }}
           make proto-gen & make build
           cd ..
+      # Build Greenfield-SP
+      - name: Build Greenfield-SP
+        run: |
+          make install-tools
+          make build
       # Run MySQL
       - name: Run MySQL
         run: |
           sudo /etc/init.d/mysql start
-          mysql -h 127.0.0.1 -P 3306 -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
       # Run Greenfield
       - name: Run Greenfield
         run: |
-          /bin/cp -rf test/e2e/localup_env/greenfield_env greenfield/deployment/localup/.local
           cd greenfield
-          bash ./deployment/localup/localup.sh start 1
+          bash ./deployment/localup/localup.sh all 1 7
+          bash ./deployment/localup/localup.sh export_sps 1 7 > sp.json
           cd ..
-      # Run Greenfield-SP
+      # Run Greenfield-SPs
       - name: Run Greenfield-SPs
         run: |
-          /bin/cp -rf test/e2e/localup_env/greenfield_sp_env deployment/localup/local_env
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp0/gnfd-sp0
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp1/gnfd-sp1
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp2/gnfd-sp2
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp3/gnfd-sp3
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp4/gnfd-sp4
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp5/gnfd-sp5
-          /bin/cp build/gnfd-sp deployment/localup/local_env/sp6/gnfd-sp6
+          bash ./deployment/localup/localup.sh --generate $GITHUB_WORKSPACE/greenfield/sp.json ${{ env.MYSQL_USER }} ${{ env.MYSQL_PASSWORD }} ${{ env.MYSQL_IP }}:${{ env.MYSQL_PORT }}
+          bash ./deployment/localup/localup.sh --reset
           bash ./deployment/localup/localup.sh --start
-          sleep 5
+          sleep 10
           tail -n 1000 deployment/localup/local_env/sp0/gnfd-sp.log
           ps -ef | grep gnfd-sp | wc -l
       # Run E2E Test
@@ -87,9 +82,10 @@ jobs:
         run: |
           git clone https://github.com/bnb-chain/greenfield-integration-test.git
           cd greenfield-integration-test
-          git checkout ${{ env.GreenfileldIntegrationTestBranch }}
+          git checkout ${{ env.GreenfieldIntegrationTestBranch }}
           cd ..
           /bin/cp -rf test/e2e/localup_env/integration_config/config.yml greenfield-integration-test/config/config.yml
           cd greenfield-integration-test
-          go test tests/smoke/new_sdk_test.go
+          cat config/config.yml
+          go test -v  tests/storage/new_sdk_test.go
           cd ..

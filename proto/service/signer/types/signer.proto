@@ -9,7 +9,7 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/si
 // SignBucketApprovalRequest is request type for the SignBucketApproval RPC method.
 message SignBucketApprovalRequest {
   // create_bucket_msg defines the information of the bucket creation.
-  bnbchain.greenfield.storage.MsgCreateBucket create_bucket_msg = 1;
+  greenfield.storage.MsgCreateBucket create_bucket_msg = 1;
 }
 
 // SignBucketApprovalResponse is response type for the SignBucketApproval RPC method.
@@ -21,7 +21,7 @@ message SignBucketApprovalResponse {
 // VerifyBucketApprovalRequest is request type for the VerifyBucketApproval RPC method.
 message VerifyBucketApprovalRequest {
   // create_bucket_msg defines the information of the bucket creation.
-  bnbchain.greenfield.storage.MsgCreateBucket create_bucket_msg = 1;
+  greenfield.storage.MsgCreateBucket create_bucket_msg = 1;
 }
 
 // VerifyBucketApprovalResponse is response type for the VerifyBucketApproval RPC method.
@@ -33,7 +33,7 @@ message VerifyBucketApprovalResponse {
 // SignObjectApprovalRequest is request type for the SignObjectApproval RPC method.
 message SignObjectApprovalRequest {
   // create_object_msg defines the information of the object creation.
-  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 1;
+  greenfield.storage.MsgCreateObject create_object_msg = 1;
 }
 
 // SignObjectApprovalResponse is response type for the SignObjectApproval RPC method.
@@ -45,7 +45,7 @@ message SignObjectApprovalResponse {
 // VerifyObjectApprovalRequest is request type for the VerifyObjectApproval RPC method.
 message VerifyObjectApprovalRequest {
   // result defines the result of verifying signature from the Primary approval address.
-  bnbchain.greenfield.storage.MsgCreateObject create_object_msg = 1;
+  greenfield.storage.MsgCreateObject create_object_msg = 1;
 }
 
 // VerifyObjectApprovalResponse is response type for the VerifyObjectApproval RPC method.
@@ -73,12 +73,24 @@ message SignIntegrityHashResponse {
 // SealObjectOnChainRequest is request type for the SealObjectOnChain RPC method.
 message SealObjectOnChainRequest {
   // seal_object defines the information of the seal object action.
-  bnbchain.greenfield.storage.MsgSealObject seal_object= 1;
+  greenfield.storage.MsgSealObject seal_object = 1;
 }
 
 // SealObjectOnChainResponse is response type for the SealObjectOnChain RPC method.
 message SealObjectOnChainResponse {
   // tx_hash defines the transaction hash of the sealing object on chain.
+  bytes tx_hash = 1;
+}
+
+// DiscontinueBucketOnChainRequest is request type for the DiscontinueBucketOnChain RPC method.
+message DiscontinueBucketOnChainRequest {
+  // discontinue_bucket defines the information of the discontinue bucket action.
+  greenfield.storage.MsgDiscontinueBucket discontinue_bucket = 1;
+}
+
+// DiscontinueBucketOnChainResponse is response type for the DiscontinueBucketOnChain RPC method.
+message DiscontinueBucketOnChainResponse {
+  // tx_hash defines the transaction hash of the discontinue bucket on chain.
   bytes tx_hash = 1;
 }
 
@@ -136,6 +148,8 @@ service SignerService {
   rpc SignIntegrityHash(SignIntegrityHashRequest) returns (SignIntegrityHashResponse) {};
   // SealObjectOnChain seals the storage object on the blockchain.
   rpc SealObjectOnChain(SealObjectOnChainRequest) returns (SealObjectOnChainResponse) {};
+  // DiscontinueBucketOnChain discontinues the storage bucket on the blockchain.
+  rpc DiscontinueBucketOnChain(DiscontinueBucketOnChainRequest) returns (DiscontinueBucketOnChainResponse) {};
   // SignPingMsg signs the ping msg for p2p node
   rpc SignPingMsg(SignPingMsgRequest) returns (SignPingMsgResponse){}
   // SignPongMsg signs the pong msg for p2p node

@@ -20,22 +20,21 @@ When users want to write an object into Greenfield, they or the client software 
 
 ## Quick Started
 
-*Note*: Requires [Go 1.18+](https://go.dev/dl/)
+*Note*: Requires [Go 1.20+](https://go.dev/dl/)
 
-### Install-Tools
+### Compile SP
+
+For detailed information about compiling SP, you can refer this doc to [Compile SP](https://greenfield.bnbchain.org/docs/guide/storage-provider/run-book/compile-dependences.html#compile-sp).
 
 ```shell
+# install tools
 make install-tools
-```
 
-### Build
-
-```shell
 # build gnfd-sp
 make build && cd build 
-
 # show version
 ./gnfd-sp version
+
 Greenfield Storage Provider
     __                                                       _     __
     _____/ /_____  _________ _____ ____     ____  _________ _   __(_)___/ /__  _____
@@ -43,11 +42,10 @@ Greenfield Storage Provider
     (__  ) /_/ /_/ / /  / /_/ / /_/ /  __/  / /_/ / /  / /_/ / |/ / / /_/ /  __/ /
     /____/\__/\____/_/   \__,_/\__, /\___/  / .___/_/   \____/|___/_/\__,_/\___/_/
     /____/       /_/
-
-Version : v0.0.3
+Version : v0.1.3
 Branch  : master
-Commit  : e332362ec59724e143725dc5a5a0dacae3be73be
-Build   : go1.18.4 darwin amd64 2023-03-13 14:11
+Commit  : bfc32b9748c11d74493f93c420744ade4dbc18ac
+Build   : go1.20.3 darwin arm64 2023-05-12 13:37
 
 # show help
 ./gnfd-sp help
@@ -145,6 +143,10 @@ Bootstrap = []
 [LogCfg]
 Level = "info"
 Path = "./gnfd-sp.log"
+# metrics configuration
+[MetricsCfg]
+Enabled = false
+HTTPAddress = "localhost:24036"
 ```
 
 ### Start
@@ -161,21 +163,22 @@ Path = "./gnfd-sp.log"
 ## Document
 
 * [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): The official Greenfield Whitepaper.
-* [Greenfield](https://github.com/bnb-chain/greenfield#readme): The Greenfield documents.
-* [SP Introduction](https://github.com/bnb-chain/greenfield-docs/blob/master/src/guide/storage-provider/introduction/overview.md): The Greenfield Storage Provider documents.
-* [Storage Metadata](https://github.com/bnb-chain/greenfield-docs/blob/master/src/guide/greenfield-blockchain/modules/storage-provider.md): The storage metadata on Greenfield Chain.
-* [SP Module on Greenfield](https://github.com/bnb-chain/greenfield-docs/blob/master/src/guide/greenfield-blockchain/modules/storage-module.md): The SP module on Greenfield Chain.
-* [Data Availability Challenge](https://github.com/bnb-chain/greenfield-docs/blob/master/src/guide/greenfield-blockchain/modules/data-availability-challenge.md): The correctness of payload be stored in SP.
-* [SP Deployment](https://github.com/bnb-chain/greenfield-docs/blob/master/src/guide/storage-provider/run-book/deployment.md): The detailed introduction to deploying sp.
-* [SP Local Setup](https://github.com/bnb-chain/greenfield-docs/blob/master/src/guide/storage-provider/run-book/run-local-SP-network.md): The introduction to set up local SP env for testing.
+* [Greenfield](https://greenfield.bnbchain.org/docs/guide/greenfield-blockchain/overview.html): The Greenfield documents.
+* [Storage Module on Greenfield](https://greenfield.bnbchain.org/docs/guide/greenfield-blockchain/modules/storage-module.html): The storage module on Greenfield Chain.
+* [Storage Provider on Greenfield](https://greenfield.bnbchain.org/docs/guide/greenfield-blockchain/modules/storage-provider.html): The storage provider on Greenfield Chain.
+* [Data Availability Challenge](https://greenfield.bnbchain.org/docs/guide/greenfield-blockchain/modules/data-availability-challenge.html): The correctness of payload be stored in SP.
+* [SP Introduction](https://greenfield.bnbchain.org/docs/guide/storage-provider/introduction/overview.html): The Greenfield Storage Provider documents.
+* [SP Compiling and Dependencies](https://greenfield.bnbchain.org/docs/guide/storage-provider/run-book/compile-dependences.html): The detailed introduction to sp compiling and dependencies.
+* [Run Local SP Network](https://greenfield.bnbchain.org/docs/guide/storage-provider/run-book/run-local-SP-network.html): The introduction to run local SP env for testing.
+* [Run Testnet SP Node](https://greenfield.bnbchain.org/docs/guide/storage-provider/run-book/run-testnet-SP-node.html): The introduction to run testnet SP node.
 
 ## Related Projects
 
 * [Greenfield](https://github.com/bnb-chain/greenfield): The Golang implementation of the Greenfield Blockchain.
+* [Greenfield-Go-SDK](https://github.com/bnb-chain/greenfield-go-sdk): The Greenfield SDK, interact with SP, Greenfield and Tendermint.
 * [Greenfield-Common](https://github.com/bnb-chain/greenfield-common): The Greenfield common package.
 * [Reed-Solomon](https://github.com/klauspost/reedsolomon): The Reed-Solomon Erasure package in prue Go, with speeds exceeding 1GB/s/cpu core.
 * [Juno](https://github.com/bnb-chain/juno): The Cosmos Hub blockchain data aggregator and exporter package.
-* [Greenfield-Go-SDK](https://github.com/bnb-chain/greenfield-go-sdk): The Greenfield SDK, interact with SP, Greenfield and Tendermint.
 
 ## Contribution
 

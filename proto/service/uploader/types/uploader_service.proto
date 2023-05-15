@@ -9,7 +9,7 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/up
 // PutObjectRequest is request type for the UploadObject RPC method.
 message PutObjectRequest {
   // object_info defines the information of the object.
-  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  greenfield.storage.ObjectInfo object_info = 1;
   // payload defines the data of the object.
   bytes payload = 2;
 }
