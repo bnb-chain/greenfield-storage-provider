@@ -3,6 +3,7 @@ package task
 // TKey defines the type of task key that is the uniquely identify.
 type TKey string
 
+// String transfer TKey to string type.
 func (k TKey) String() string {
 	return string(k)
 }
@@ -13,12 +14,19 @@ type TType int32
 const (
 	// TypeTaskUnknown defines the default task type.
 	TypeTaskUnknown TType = iota
+	// TypeTaskCreateBucketApproval defines the type of asking create bucket approval
+	// to primary SP task
 	TypeTaskCreateBucketApproval
+	// TypeTaskCreateObjectApproval defines the type of asking create object approval
+	// to primary SP task
 	TypeTaskCreateObjectApproval
+	// TypeTaskReplicatePieceApproval defines the type of asking create object approval
+	// to secondary SP task
 	TypeTaskReplicatePieceApproval
 	// TypeTaskUpload defines the type of uploading object to primary SP task.
 	TypeTaskUpload
-	// TypeTaskReplicatePiece defines the type of replicating pieces to secondary SPs task.
+	// TypeTaskReplicatePiece defines the type of replicating pieces to secondary SPs
+	// task.
 	TypeTaskReplicatePiece
 	// TypeTaskSealObject defines the type of sealing object to the chain task.
 	TypeTaskSealObject
