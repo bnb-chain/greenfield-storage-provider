@@ -28,55 +28,47 @@ func init() {
 	gfspapp.RegisterModularInfo(SignerModularName, SignerModularDescription, NewSingModular)
 }
 
-func NewSingModular(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspapp.Option) (
-	coremodule.Modular, error) {
-	if cfg.Signer != nil {
-		app.SetSigner(cfg.Signer)
-		return cfg.Signer, nil
+func NewSingModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	if cfg.Customize.Signer != nil {
+		app.SetSigner(cfg.Customize.Signer)
+		return cfg.Customize.Signer, nil
 	}
 	signer := &SingModular{baseApp: app}
-	opts = append(opts, signer.DefaultSingerOptions)
-	for _, opt := range opts {
-		if err := opt(app, cfg); err != nil {
-			return nil, err
-		}
+	if err := DefaultSingerOptions(signer, cfg); err != nil {
+		return nil, err
 	}
 	app.SetSigner(signer)
 	return signer, nil
 }
 
-func (s *SingModular) DefaultSingerOptions(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig) error {
-	if len(cfg.ChainAddress) == 0 {
+func DefaultSingerOptions(signer *SingModular, cfg *gfspconfig.GfSpConfig) error {
+	if len(cfg.Chain.ChainAddress) == 0 {
 		return fmt.Errorf("chain address missing")
 	}
-	if cfg.GasLimit == 0 {
-		cfg.GasLimit = DefaultGasLimit
+	if cfg.Chain.GasLimit == 0 {
+		cfg.Chain.GasLimit = DefaultGasLimit
 	}
 	if val, ok := os.LookupEnv(SpOperatorPrivKey); ok {
-		cfg.OperatorPrivateKey = val
+		cfg.SpAccount.OperatorPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(SpFundingPrivKey); ok {
-		cfg.FundingPrivateKey = val
+		cfg.SpAccount.FundingPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(SpSealPrivKey); ok {
-		cfg.SealPrivateKey = val
+		cfg.SpAccount.SealPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(SpApprovalPrivKey); ok {
-		cfg.ApprovalPrivateKey = val
+		cfg.SpAccount.ApprovalPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(SpGcPrivKey); ok {
-		cfg.GcPrivateKey = val
+		cfg.SpAccount.GcPrivateKey = val
 	}
-	client, err := NewGreenfieldChainSignClient(cfg.ChainAddress[0], cfg.ChainID, cfg.GasLimit,
-		cfg.OperatorPrivateKey, cfg.FundingPrivateKey, cfg.SealPrivateKey, cfg.ApprovalPrivateKey)
+	client, err := NewGreenfieldChainSignClient(cfg.Chain.ChainAddress[0], cfg.Chain.ChainID,
+		cfg.Chain.GasLimit, cfg.SpAccount.OperatorPrivateKey, cfg.SpAccount.FundingPrivateKey,
+		cfg.SpAccount.SealPrivateKey, cfg.SpAccount.ApprovalPrivateKey)
 	if err != nil {
 		return err
 	}
-	s.client = client
+	signer.client = client
 	return nil
 }

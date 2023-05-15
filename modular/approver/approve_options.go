@@ -20,50 +20,43 @@ func init() {
 	gfspapp.RegisterModularInfo(ApprovalModularName, ApprovalModularDescription, NewApprovalModular)
 }
 
-func NewApprovalModular(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspapp.Option) (
-	coremodule.Modular, error) {
-	if cfg.Approver != nil {
-		app.SetApprover(cfg.Approver)
-		return cfg.Approver, nil
+func NewApprovalModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	if cfg.Customize.Approver != nil {
+		app.SetApprover(cfg.Customize.Approver)
+		return cfg.Customize.Approver, nil
 	}
 	approver := &ApprovalModular{baseApp: app}
-	opts = append(opts, approver.DefaultApprovalOptions)
-	for _, opt := range opts {
-		if err := opt(app, cfg); err != nil {
-			return nil, err
-		}
+	if err := DefaultApprovalOptions(cfg, approver); err != nil {
+		return nil, err
 	}
 	app.SetApprover(approver)
 	return approver, nil
 }
 
-func (a *ApprovalModular) DefaultApprovalOptions(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig) error {
-	if cfg.AccountBucketNumber == 0 {
-		cfg.AccountBucketNumber = DefaultAccountBucketNumber
+func DefaultApprovalOptions(cfg *gfspconfig.GfSpConfig, approver *ApprovalModular) error {
+	if cfg.Bucket.AccountBucketNumber == 0 {
+		cfg.Bucket.AccountBucketNumber = DefaultAccountBucketNumber
 	}
-	a.accountBucketNumber = cfg.AccountBucketNumber
-	if cfg.BucketApprovalTimeoutHeight == uint64(0) {
-		cfg.BucketApprovalTimeoutHeight = DefaultBucketApprovalTimeoutHeight
+	approver.accountBucketNumber = cfg.Bucket.AccountBucketNumber
+	if cfg.Approval.BucketApprovalTimeoutHeight == uint64(0) {
+		cfg.Approval.BucketApprovalTimeoutHeight = DefaultBucketApprovalTimeoutHeight
 	}
-	a.bucketApprovalTimeoutHeight = cfg.BucketApprovalTimeoutHeight
-	if cfg.ObjectApprovalTimeoutHeight == uint64(0) {
-		cfg.ObjectApprovalTimeoutHeight = DefaultObjectApprovalTimeoutHeight
+	approver.bucketApprovalTimeoutHeight = cfg.Approval.BucketApprovalTimeoutHeight
+	if cfg.Approval.ObjectApprovalTimeoutHeight == uint64(0) {
+		cfg.Approval.ObjectApprovalTimeoutHeight = DefaultObjectApprovalTimeoutHeight
 	}
-	a.objectApprovalTimeoutHeight = cfg.ObjectApprovalTimeoutHeight
-	if cfg.CreateBucketApprovalParallel == 0 {
-		cfg.CreateBucketApprovalParallel = DefaultCreateBucketApprovalParallel
+	approver.objectApprovalTimeoutHeight = cfg.Approval.ObjectApprovalTimeoutHeight
+	if cfg.Parallel.GlobalCreateBucketApprovalParallel == 0 {
+		cfg.Parallel.GlobalCreateBucketApprovalParallel = DefaultCreateBucketApprovalParallel
 	}
-	if cfg.CreateObjectApprovalParallel == 0 {
-		cfg.CreateObjectApprovalParallel = DefaultCreateObjectApprovalParallel
+	if cfg.Parallel.GlobalCreateObjectApprovalParallel == 0 {
+		cfg.Parallel.GlobalCreateObjectApprovalParallel = DefaultCreateObjectApprovalParallel
 	}
-	a.bucketQueue = cfg.NewStrategyTQueueFunc(a.Name()+CreateBucketApprovalQueueSuffix,
-		cfg.CreateBucketApprovalParallel)
-	a.objectQueue = cfg.NewStrategyTQueueFunc(a.Name()+CreateObjectApprovalQueueSuffix,
-		cfg.CreateObjectApprovalParallel)
+	approver.bucketQueue = cfg.Customize.NewStrategyTQueueFunc(
+		approver.Name()+CreateBucketApprovalQueueSuffix,
+		cfg.Parallel.GlobalCreateBucketApprovalParallel)
+	approver.objectQueue = cfg.Customize.NewStrategyTQueueFunc(
+		approver.Name()+CreateObjectApprovalQueueSuffix,
+		cfg.Parallel.GlobalCreateObjectApprovalParallel)
 	return nil
 }

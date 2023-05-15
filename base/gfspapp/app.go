@@ -128,82 +128,72 @@ func (g *GfSpBaseApp) EnableMetrics() bool {
 	return g.metrics != nil
 }
 
-func (g *GfSpBaseApp) SetApprover(approver module.Approver) error {
+func (g *GfSpBaseApp) SetApprover(approver module.Approver) {
 	if g.approver != nil {
 		log.Panic("repeated set approver to base app")
 	}
 	g.approver = approver
-	return nil
 }
 
-func (g *GfSpBaseApp) SetAuthorizer(authorizer module.Authorizer) error {
+func (g *GfSpBaseApp) SetAuthorizer(authorizer module.Authorizer) {
 	if g.authorizer != nil {
 		log.Panic("repeated set authorizer to base app")
 	}
 	g.authorizer = authorizer
-	return nil
 }
 
-func (g *GfSpBaseApp) SetDownloader(downloader module.Downloader) error {
+func (g *GfSpBaseApp) SetDownloader(downloader module.Downloader) {
 	if g.downloader != nil {
 		log.Panic("repeated set downloader to base app")
 	}
 	g.downloader = downloader
-	return nil
 }
 
-func (g *GfSpBaseApp) SetTaskExecutor(executor module.TaskExecutor) error {
+func (g *GfSpBaseApp) SetTaskExecutor(executor module.TaskExecutor) {
 	if g.executor != nil {
 		log.Panic("repeated set executor to base app")
 	}
 	g.executor = executor
-	return nil
 }
 
-func (g *GfSpBaseApp) SetGater(gater module.Modular) error {
+func (g *GfSpBaseApp) SetGater(gater module.Modular) {
 	if g.gater != nil {
 		log.Panic("repeated set gater to base app")
 	}
 	g.gater = gater
-	return nil
 }
 
-func (g *GfSpBaseApp) SetManager(manager module.Manager) error {
+func (g *GfSpBaseApp) SetManager(manager module.Manager) {
 	if g.manager != nil {
 		log.Panic("repeated set manager to base app")
 	}
 	g.manager = manager
-	return nil
 }
 
-func (g *GfSpBaseApp) SetP2P(p2p module.P2P) error {
+func (g *GfSpBaseApp) SetP2P(p2p module.P2P) {
 	if g.p2p != nil {
 		log.Panic("repeated set p2p to base app")
 	}
 	g.p2p = p2p
-	return nil
 }
 
-func (g *GfSpBaseApp) SetReceiver(receiver module.Receiver) error {
+func (g *GfSpBaseApp) SetReceiver(receiver module.Receiver) {
 	if g.receiver != nil {
 		log.Panic("repeated set receiver to base app")
 	}
 	g.receiver = receiver
-	return nil
 }
 
-func (g *GfSpBaseApp) SetSigner(signer module.Signer) error {
+func (g *GfSpBaseApp) SetSigner(signer module.Signer) {
 	if g.signer != nil {
 		log.Panic("repeated set signer to base app")
 	}
 	g.signer = signer
-	return nil
 }
 
-func (g *GfSpBaseApp) SetUploader(uploader module.Uploader) error {
+func (g *GfSpBaseApp) SetUploader(uploader module.Uploader) {
 	if g.uploader != nil {
 		log.Panic("repeated set uploader to base app")
 	}
 	g.uploader = uploader
-	return nil
 }

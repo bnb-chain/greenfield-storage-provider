@@ -18,44 +18,35 @@ func init() {
 	gfspapp.RegisterModularInfo(DownloadModularName, DownloadModularDescription, NewDownloadModular)
 }
 
-func NewDownloadModular(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspapp.Option) (
-	coremodule.Modular, error) {
-	if cfg.Downloader != nil {
-		app.SetDownloader(cfg.Downloader)
-		return cfg.Downloader, nil
+func NewDownloadModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	if cfg.Customize.Downloader != nil {
+		app.SetDownloader(cfg.Customize.Downloader)
+		return cfg.Customize.Downloader, nil
 	}
 	downloader := &DownloadModular{baseApp: app}
-	opts = append(opts, downloader.DefaultDownloaderOptions)
-	for _, opt := range opts {
-		if err := opt(app, cfg); err != nil {
-			return nil, err
-		}
+	if err := DefaultDownloaderOptions(downloader, cfg); err != nil {
+		return nil, nil
 	}
 	app.SetDownloader(downloader)
 	return downloader, nil
 }
 
-func (d *DownloadModular) DefaultDownloaderOptions(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig) error {
-	if cfg.DownloadObjectParallelPerNode == 0 {
-		cfg.DownloadObjectParallelPerNode = DefaultDownloadObjectParallelPerNode
+func DefaultDownloaderOptions(downloader *DownloadModular, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Parallel.DownloadObjectParallelPerNode == 0 {
+		cfg.Parallel.DownloadObjectParallelPerNode = DefaultDownloadObjectParallelPerNode
 	}
-	if cfg.ChallengePieceParallelPerNode == 0 {
-		cfg.ChallengePieceParallelPerNode = DefaultChallengePieceParallelPerNode
+	if cfg.Parallel.ChallengePieceParallelPerNode == 0 {
+		cfg.Parallel.ChallengePieceParallelPerNode = DefaultChallengePieceParallelPerNode
 	}
-	if cfg.BucketFreeQuota == 0 {
-		cfg.BucketFreeQuota = DefaultBucketFreeQuota
+	if cfg.Bucket.FreeQuotaPerBucket == 0 {
+		cfg.Bucket.FreeQuotaPerBucket = DefaultBucketFreeQuota
 	}
-	d.downloadQueue = cfg.NewStrategyTQueueFunc(
-		d.Name()+DefaultDownloadObjectQueueSuffix,
-		cfg.DownloadObjectParallelPerNode)
-	d.challengeQueue = cfg.NewStrategyTQueueFunc(
-		d.Name()+DefaultChallengePieceQueueSuffix,
-		cfg.ChallengePieceParallelPerNode)
-	d.bucketFreeQuota = cfg.BucketFreeQuota
+	downloader.downloadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		downloader.Name()+DefaultDownloadObjectQueueSuffix,
+		cfg.Parallel.DownloadObjectParallelPerNode)
+	downloader.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
+		downloader.Name()+DefaultChallengePieceQueueSuffix,
+		cfg.Parallel.ChallengePieceParallelPerNode)
+	downloader.bucketFreeQuota = cfg.Bucket.FreeQuotaPerBucket
 	return nil
 }

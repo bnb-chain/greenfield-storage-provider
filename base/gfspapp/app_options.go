@@ -13,13 +13,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
-	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	piecestoreclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
@@ -67,111 +64,102 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		cfg.GrpcAddress = DefaultGrpcAddress
 	}
 	app.grpcAddress = cfg.GrpcAddress
-	app.operateAddress = cfg.SpOperateAddress
-	app.uploadSpeed = cfg.UploadSpeed
-	app.downloadSpeed = cfg.DownloadSpeed
-	app.replicateSpeed = cfg.ReplicateSpeed
-	app.receiveSpeed = cfg.ReceiveSpeed
-	app.sealObjectTimeout = cfg.SealObjectTimeout
-	app.gcObjectTimeout = cfg.GcObjectTimeout
-	app.gcZombieTimeout = cfg.GcZombieTimeout
-	app.gcMetaTimeout = cfg.GcMetaTimeout
-	app.sealObjectRetry = cfg.SealObjectRetry
-	app.replicateRetry = cfg.ReplicateRetry
-	app.receiveConfirmRetry = cfg.ReceiveConfirmRetry
-	app.gcObjectRetry = cfg.GcObjectRetry
-	app.gcZombieRetry = cfg.GcZombieRetry
-	app.gcMetaRetry = cfg.GcMetaRetry
+	app.operateAddress = cfg.SpAccount.SpOperateAddress
+	app.uploadSpeed = cfg.Task.UploadTaskSpeed
+	app.downloadSpeed = cfg.Task.DownloadTaskSpeed
+	app.replicateSpeed = cfg.Task.ReplicateTaskSpeed
+	app.receiveSpeed = cfg.Task.ReceiveTaskSpeed
+	app.sealObjectTimeout = cfg.Task.SealObjectTaskTimeout
+	app.gcObjectTimeout = cfg.Task.GcObjectTaskTimeout
+	app.gcZombieTimeout = cfg.Task.GcZombieTaskTimeout
+	app.gcMetaTimeout = cfg.Task.GcMetaTaskTimeout
+	app.sealObjectRetry = cfg.Task.SealObjectTaskRetry
+	app.replicateRetry = cfg.Task.ReplicateTaskRetry
+	app.receiveConfirmRetry = cfg.Task.ReceiveConfirmTaskRetry
+	app.gcObjectRetry = cfg.Task.GcObjectTaskRetry
+	app.gcZombieRetry = cfg.Task.GcZombieTaskRetry
+	app.gcMetaRetry = cfg.Task.GcMetaTaskRetry
 	app.newRpcServer()
 	return nil
 }
 
 func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if cfg.ApproverEndpoint == "" {
-		cfg.ApproverEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.ApproverEndpoint == "" {
+		cfg.Endpoint.ApproverEndpoint = DefaultGrpcAddress
 	}
-	if cfg.ManagerEndpoint == "" {
-		cfg.ManagerEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.ManagerEndpoint == "" {
+		cfg.Endpoint.ManagerEndpoint = DefaultGrpcAddress
 	}
-	if cfg.DownloaderEndpoint == "" {
-		cfg.DownloaderEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.DownloaderEndpoint == "" {
+		cfg.Endpoint.DownloaderEndpoint = DefaultGrpcAddress
 	}
-	if cfg.ReceiverEndpoint == "" {
-		cfg.ReceiverEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.ReceiverEndpoint == "" {
+		cfg.Endpoint.ReceiverEndpoint = DefaultGrpcAddress
 	}
-	if cfg.MetadataEndpoint == "" {
-		cfg.MetadataEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.MetadataEndpoint == "" {
+		cfg.Endpoint.MetadataEndpoint = DefaultGrpcAddress
 	}
-	if cfg.RetrieverEndpoint == "" {
-		cfg.RetrieverEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.RetrieverEndpoint == "" {
+		cfg.Endpoint.RetrieverEndpoint = DefaultGrpcAddress
 	}
-	if cfg.UploaderEndpoint == "" {
-		cfg.UploaderEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.UploaderEndpoint == "" {
+		cfg.Endpoint.UploaderEndpoint = DefaultGrpcAddress
 	}
-	if cfg.P2PEndpoint == "" {
-		cfg.P2PEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.P2PEndpoint == "" {
+		cfg.Endpoint.P2PEndpoint = DefaultGrpcAddress
 	}
-	if cfg.SingerEndpoint == "" {
-		cfg.SingerEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.SingerEndpoint == "" {
+		cfg.Endpoint.SingerEndpoint = DefaultGrpcAddress
 	}
-	if cfg.AuthorizerEndpoint == "" {
-		cfg.AuthorizerEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.AuthorizerEndpoint == "" {
+		cfg.Endpoint.AuthorizerEndpoint = DefaultGrpcAddress
 	}
 	app.client = gfspclient.NewGfSpClient(
-		cfg.ApproverEndpoint,
-		cfg.ManagerEndpoint,
-		cfg.DownloaderEndpoint,
-		cfg.ReceiverEndpoint,
-		cfg.MetadataEndpoint,
-		cfg.RetrieverEndpoint,
-		cfg.UploaderEndpoint,
-		cfg.P2PEndpoint,
-		cfg.SingerEndpoint,
-		cfg.AuthorizerEndpoint,
-		!cfg.DisableMetrics)
+		cfg.Endpoint.ApproverEndpoint,
+		cfg.Endpoint.ManagerEndpoint,
+		cfg.Endpoint.DownloaderEndpoint,
+		cfg.Endpoint.ReceiverEndpoint,
+		cfg.Endpoint.MetadataEndpoint,
+		cfg.Endpoint.RetrieverEndpoint,
+		cfg.Endpoint.UploaderEndpoint,
+		cfg.Endpoint.P2PEndpoint,
+		cfg.Endpoint.SingerEndpoint,
+		cfg.Endpoint.AuthorizerEndpoint,
+		!cfg.Monitor.DisableMetrics)
 	return nil
 }
 
 func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if cfg.GfSpDB != nil {
-		app.gfSpDB = cfg.GfSpDB
+	if cfg.Customize.GfSpDB != nil {
+		app.gfSpDB = cfg.Customize.GfSpDB
 		return nil
 	}
 	if val, ok := os.LookupEnv(SpDBUser); ok {
-		cfg.User = val
+		cfg.SpDB.User = val
 	}
 	if val, ok := os.LookupEnv(SpDBPasswd); ok {
-		cfg.Passwd = val
+		cfg.SpDB.Passwd = val
 	}
 	if val, ok := os.LookupEnv(SpDBAddress); ok {
-		cfg.Address = val
+		cfg.SpDB.Address = val
 	}
 	if val, ok := os.LookupEnv(SpDBDataBase); ok {
-		cfg.Database = val
+		cfg.SpDB.Database = val
 	}
-	if cfg.ConnMaxLifetime == 0 {
-		cfg.ConnMaxLifetime = DefaultConnMaxLifetime
+	if cfg.SpDB.ConnMaxLifetime == 0 {
+		cfg.SpDB.ConnMaxLifetime = DefaultConnMaxLifetime
 	}
-	if cfg.ConnMaxIdleTime == 0 {
-		cfg.ConnMaxIdleTime = DefaultConnMaxIdleTime
+	if cfg.SpDB.ConnMaxIdleTime == 0 {
+		cfg.SpDB.ConnMaxIdleTime = DefaultConnMaxIdleTime
 	}
-	if cfg.MaxIdleConns == 0 {
-		cfg.MaxIdleConns = DefaultMaxIdleConns
+	if cfg.SpDB.MaxIdleConns == 0 {
+		cfg.SpDB.MaxIdleConns = DefaultMaxIdleConns
 	}
-	if cfg.MaxOpenConns == 0 {
-		cfg.MaxOpenConns = DefaultMaxOpenConns
+	if cfg.SpDB.MaxOpenConns == 0 {
+		cfg.SpDB.MaxOpenConns = DefaultMaxOpenConns
 	}
-	spdbCfg := &config.SQLDBConfig{
-		User:            cfg.User,
-		Passwd:          cfg.Passwd,
-		Address:         cfg.Address,
-		Database:        cfg.Database,
-		ConnMaxLifetime: cfg.ConnMaxLifetime,
-		ConnMaxIdleTime: cfg.ConnMaxIdleTime,
-		MaxIdleConns:    cfg.MaxIdleConns,
-		MaxOpenConns:    cfg.MaxOpenConns,
-	}
-	db, err := sqldb.NewSpDB(spdbCfg)
+	dbCfg := &cfg.SpDB
+	db, err := sqldb.NewSpDB(dbCfg)
 	if err != nil {
 		return err
 	}
@@ -180,37 +168,26 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 }
 
 func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if cfg.PieceStore != nil {
-		app.pieceStore = cfg.PieceStore
+	if cfg.Customize.PieceStore != nil {
+		app.pieceStore = cfg.Customize.PieceStore
 		return nil
 	}
-	if cfg.StorageType == "" {
-		cfg.StorageType = "file"
+	if cfg.PieceStore.Store.Storage == "" {
+		cfg.PieceStore.Store.Storage = "file"
 	}
-	if cfg.BucketURL == "" {
-		cfg.BucketURL = "./data"
+	if cfg.PieceStore.Store.BucketURL == "" {
+		cfg.PieceStore.Store.BucketURL = "./data"
 	}
-	if cfg.MaxRetries == 0 {
-		cfg.MaxRetries = 5
+	if cfg.PieceStore.Store.MaxRetries == 0 {
+		cfg.PieceStore.Store.MaxRetries = 5
 	}
-	if cfg.MinRetryDelay == 0 {
-		cfg.MinRetryDelay = 1
+	if cfg.PieceStore.Store.MinRetryDelay == 0 {
+		cfg.PieceStore.Store.MinRetryDelay = 1
 	}
-	if cfg.IAMType == "" {
-		cfg.IAMType = "SA"
+	if cfg.PieceStore.Store.IAMType == "" {
+		cfg.PieceStore.Store.IAMType = "SA"
 	}
-	pieceStoreCfg := &storage.PieceStoreConfig{
-		Shards: 0,
-		Store: storage.ObjectStorageConfig{
-			Storage:               cfg.StorageType,
-			BucketURL:             cfg.BucketURL,
-			MaxRetries:            cfg.MaxRetries,
-			MinRetryDelay:         cfg.MinRetryDelay,
-			TLSInsecureSkipVerify: cfg.TLSInsecureSkipVerify,
-			IAMType:               cfg.IAMType,
-		},
-	}
-	pieceStore, err := piecestoreclient.NewStoreClient(pieceStoreCfg)
+	pieceStore, err := piecestoreclient.NewStoreClient(&cfg.PieceStore)
 	if err != nil {
 		return err
 	}
@@ -219,8 +196,8 @@ func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) e
 }
 
 func DefaultGfSpPieceOpOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if cfg.PieceOp != nil {
-		app.pieceOp = cfg.PieceOp
+	if cfg.Customize.PieceOp != nil {
+		app.pieceOp = cfg.Customize.PieceOp
 		return nil
 	}
 	app.pieceOp = &gfsppieceop.GfSpPieceOp{}
@@ -228,59 +205,52 @@ func DefaultGfSpPieceOpOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 }
 
 func DefaultGfSpTQueueOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if cfg.NewStrategyTQueueFunc == nil {
-		cfg.NewStrategyTQueueFunc = gfsptqueue.NewGfSpTQueue
+	if cfg.Customize.NewStrategyTQueueFunc == nil {
+		cfg.Customize.NewStrategyTQueueFunc = gfsptqueue.NewGfSpTQueue
 		return nil
 	}
-	if cfg.NewStrategyTQueueWithLimitFunc == nil {
-		cfg.NewStrategyTQueueWithLimitFunc = gfsptqueue.NewGfSpTQueueWithLimit
+	if cfg.Customize.NewStrategyTQueueWithLimitFunc == nil {
+		cfg.Customize.NewStrategyTQueueWithLimitFunc = gfsptqueue.NewGfSpTQueueWithLimit
 		return nil
 	}
 	return nil
 }
 
 func DefaultGfSpResourceManagerOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if cfg.Rcmgr != nil {
-		app.rcmgr = cfg.Rcmgr
-		return nil
+	if cfg.Customize.RcLimiter == nil {
+		if cfg.Rcmgr.GfSpLimiter != nil {
+			cfg.Customize.RcLimiter = cfg.Rcmgr.GfSpLimiter
+		} else {
+			cfg.Customize.RcLimiter = &gfsplimit.GfSpLimiter{
+				System: &gfsplimit.GfSpLimit{
+					Memory:              int64(0.9 * float32(DefaultMemoryLimit)),
+					Tasks:               DefaultTaskTotalLimit,
+					TasksHighPriority:   DefaultHighTaskLimit,
+					TasksMediumPriority: DefaultMediumTaskLimit,
+					TasksLowPriority:    DefaultLowTaskLimit,
+					Fd:                  math.MaxInt32,
+					Conns:               math.MaxInt32,
+					ConnsInbound:        math.MaxInt32,
+					ConnsOutbound:       math.MaxInt32,
+				},
+			}
+		}
 	}
-	if cfg.DisableRcmgr {
-		app.rcmgr = &corercmgr.NullResourceManager{}
-		return nil
+	if cfg.Customize.Rcmgr == nil {
+		cfg.Customize.Rcmgr = gfsprcmgr.NewResourceManager(cfg.Customize.RcLimiter)
 	}
-	if cfg.RcmgrLimiter != nil {
-		app.rcmgr = gfsprcmgr.NewResourceManager(cfg.RcmgrLimiter)
-		return nil
-	}
-	if cfg.GfSpLimiter != nil {
-		app.rcmgr = gfsprcmgr.NewResourceManager(cfg.GfSpLimiter)
-		return nil
-	}
-	cfg.RcmgrLimiter = &gfsplimit.GfSpLimiter{
-		System: &gfsplimit.GfSpLimit{
-			Memory:              int64(0.9 * float32(DefaultMemoryLimit)),
-			Tasks:               DefaultTaskTotalLimit,
-			TasksHighPriority:   DefaultHighTaskLimit,
-			TasksMediumPriority: DefaultMediumTaskLimit,
-			TasksLowPriority:    DefaultLowTaskLimit,
-			Fd:                  math.MaxInt32,
-			Conns:               math.MaxInt32,
-			ConnsInbound:        math.MaxInt32,
-			ConnsOutbound:       math.MaxInt32,
-		},
-	}
-	app.rcmgr = gfsprcmgr.NewResourceManager(cfg.RcmgrLimiter)
+	app.rcmgr = cfg.Customize.Rcmgr
 	return nil
 }
 
 func DefaultGfSpConsensusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if cfg.Chain != nil {
-		app.chain = cfg.Chain
+	if cfg.Customize.Consensus != nil {
+		app.chain = cfg.Customize.Consensus
 		return nil
 	}
 	gnfdCfg := &gnfd.GnfdChainConfig{
-		ChainID:      cfg.ChainID,
-		ChainAddress: cfg.ChainAddress,
+		ChainID:      cfg.Chain.ChainID,
+		ChainAddress: cfg.Chain.ChainAddress,
 	}
 	chain, err := gnfd.NewGnfd(gnfdCfg)
 	if err != nil {
@@ -303,32 +273,32 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 }
 
 func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if cfg.DisableMetrics {
+	if cfg.Monitor.DisableMetrics {
 		app.metrics = &coremodule.NullModular{}
 	}
-	if cfg.Metrics != nil {
-		app.metrics = cfg.Metrics
+	if cfg.Customize.Metrics != nil {
+		app.metrics = cfg.Customize.Metrics
 	} else {
-		if cfg.MetricsHttpAddress == "" {
-			cfg.MetricsHttpAddress = DefaultPprofAddress
+		if cfg.Monitor.MetricsHttpAddress == "" {
+			cfg.Monitor.MetricsHttpAddress = DefaultPprofAddress
 		}
-		app.metrics = metrics.NewMetrics(cfg.MetricsHttpAddress)
+		app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHttpAddress)
 	}
 	RegisterModularInstance(app.metrics)
 	return nil
 }
 
 func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if cfg.DisablePProf {
-		app.metrics = &coremodule.NullModular{}
+	if cfg.Monitor.DisablePProf {
+		app.pprof = &coremodule.NullModular{}
 	}
-	if cfg.PProf != nil {
-		app.pprof = cfg.PProf
+	if cfg.Customize.PProf != nil {
+		app.pprof = cfg.Customize.PProf
 	} else {
-		if cfg.PProfHttpAddress == "" {
-			cfg.PProfHttpAddress = DefaultMetricsAddress
+		if cfg.Monitor.PProfHttpAddress == "" {
+			cfg.Monitor.PProfHttpAddress = DefaultMetricsAddress
 		}
-		app.pprof = pprof.NewPProf(cfg.PProfHttpAddress)
+		app.pprof = pprof.NewPProf(cfg.Monitor.PProfHttpAddress)
 	}
 	RegisterModularInstance(app.pprof)
 	return nil
@@ -348,10 +318,15 @@ var gfspBaseAppDefaultOptions = []Option{
 	DefaultGfSpPprofOption,
 }
 
-func NewGfSpBaseApp(cfg *gfspconfig.GfSpConfig, opts ...Option) (*GfSpBaseApp, error) {
+func NewGfSpBaseApp(cfg *gfspconfig.GfSpConfig, opts ...gfspconfig.Option) (*GfSpBaseApp, error) {
+	if cfg.Customize == nil {
+		cfg.Customize = &gfspconfig.Customize{}
+	}
+	if err := cfg.Apply(opts...); err != nil {
+		return nil, err
+	}
 	app := &GfSpBaseApp{}
-	opts = append(opts, gfspBaseAppDefaultOptions...)
-	for _, opt := range opts {
+	for _, opt := range gfspBaseAppDefaultOptions {
 		err := opt(app, cfg)
 		if err != nil {
 			return nil, err

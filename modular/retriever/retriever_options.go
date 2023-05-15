@@ -17,33 +17,23 @@ func init() {
 	gfspapp.RegisterModularInfo(RetrieveModularName, RetrieveModularDescription, NewRetrieveModular)
 }
 
-func NewRetrieveModular(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspapp.Option) (
-	coremodule.Modular, error) {
-	if cfg.Retriever != nil {
-		return cfg.Retriever, nil
+func NewRetrieveModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	if cfg.Customize.Retriever != nil {
+		return cfg.Customize.Retriever, nil
 	}
 	receiver := &RetrieveModular{baseApp: app}
-	opts = append(opts, receiver.DefaultRetrieverOptions)
-	for _, opt := range opts {
-		if err := opt(app, cfg); err != nil {
-			return nil, err
-		}
+	if err := DefaultRetrieverOptions(receiver, cfg); err != nil {
+		return nil, err
 	}
+	types.RegisterGfSpRetrieverServiceServer(receiver.baseApp.ServerForRegister(), receiver)
+	reflection.Register(receiver.baseApp.ServerForRegister())
 	return receiver, nil
 }
 
-func (r *RetrieveModular) DefaultRetrieverOptions(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig) error {
-	if cfg.QuerySPParallelPerNode == 0 {
-		cfg.QuerySPParallelPerNode = DefaultQuerySPParallelPerNode
+func DefaultRetrieverOptions(receiver *RetrieveModular, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Parallel.QuerySPParallelPerNode == 0 {
+		cfg.Parallel.QuerySPParallelPerNode = DefaultQuerySPParallelPerNode
 	}
-	r.retrievingRequest = cfg.QuerySPParallelPerNode
-
-	types.RegisterGfSpRetrieverServiceServer(r.baseApp.ServerForRegister(), r)
-	reflection.Register(r.baseApp.ServerForRegister())
+	receiver.retrievingRequest = cfg.Parallel.QuerySPParallelPerNode
 	return nil
 }

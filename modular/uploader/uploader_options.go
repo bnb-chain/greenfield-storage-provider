@@ -14,33 +14,24 @@ func init() {
 	gfspapp.RegisterModularInfo(UploadModularName, UploadModularDescription, NewUploadModular)
 }
 
-func NewUploadModular(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspapp.Option) (
-	coremodule.Modular, error) {
-	if cfg.Uploader != nil {
-		app.SetUploader(cfg.Uploader)
-		return cfg.Uploader, nil
+func NewUploadModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	if cfg.Customize.Uploader != nil {
+		app.SetUploader(cfg.Customize.Uploader)
+		return cfg.Customize.Uploader, nil
 	}
 	uploader := &UploadModular{baseApp: app}
-	opts = append(opts, uploader.DefaultUploaderOptions)
-	for _, opt := range opts {
-		if err := opt(app, cfg); err != nil {
-			return nil, err
-		}
+	if err := DefaultUploaderOptions(uploader, cfg); err != nil {
+		return nil, err
 	}
 	app.SetUploader(uploader)
 	return uploader, nil
 }
 
-func (u *UploadModular) DefaultUploaderOptions(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig) error {
-	if cfg.UploadObjectParallelPerNode == 0 {
-		cfg.UploadObjectParallelPerNode = DefaultUploadObjectParallelPerNode
+func DefaultUploaderOptions(uploader *UploadModular, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Parallel.UploadObjectParallelPerNode == 0 {
+		cfg.Parallel.UploadObjectParallelPerNode = DefaultUploadObjectParallelPerNode
 	}
-	u.uploadQueue = cfg.NewStrategyTQueueFunc(u.Name()+"-upload-object",
-		cfg.UploadObjectParallelPerNode)
+	uploader.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		uploader.Name()+"-upload-object", cfg.Parallel.UploadObjectParallelPerNode)
 	return nil
 }

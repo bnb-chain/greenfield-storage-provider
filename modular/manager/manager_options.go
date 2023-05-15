@@ -27,94 +27,84 @@ func init() {
 	gfspapp.RegisterModularInfo(ManageModularName, ManageModularDescription, NewManageModular)
 }
 
-func NewManageModular(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspapp.Option) (
-	coremodule.Modular, error) {
-	if cfg.Manager != nil {
-		app.SetManager(cfg.Manager)
-		return cfg.Manager, nil
+func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	if cfg.Customize.Manager != nil {
+		app.SetManager(cfg.Customize.Manager)
+		return cfg.Customize.Manager, nil
 	}
 	manager := &ManageModular{baseApp: app}
-	opts = append(opts, manager.DefaultManagerOptions)
-	for _, opt := range opts {
-		if err := opt(app, cfg); err != nil {
-			return nil, err
-		}
+	if err := DefaultManagerOptions(manager, cfg); err != nil {
+		return nil, err
 	}
 	app.SetManager(manager)
 	return manager, nil
 }
 
-func (m *ManageModular) DefaultManagerOptions(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig) error {
-	if cfg.GlobalMaxUploadingNumber == 0 {
-		cfg.GlobalMaxUploadingNumber = DefaultGlobalMaxUploadingNumber
+func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Parallel.GlobalMaxUploadingParallel == 0 {
+		cfg.Parallel.GlobalMaxUploadingParallel = DefaultGlobalMaxUploadingNumber
 	}
-	if cfg.GlobalUploadObjectParallel == 0 {
-		cfg.GlobalUploadObjectParallel = DefaultGlobalUploadObjectParallel
+	if cfg.Parallel.GlobalUploadObjectParallel == 0 {
+		cfg.Parallel.GlobalUploadObjectParallel = DefaultGlobalUploadObjectParallel
 	}
-	if cfg.GlobalReplicatePieceParallel == 0 {
-		cfg.GlobalReplicatePieceParallel = DefaultGlobalReplicatePieceParallel
+	if cfg.Parallel.GlobalReplicatePieceParallel == 0 {
+		cfg.Parallel.GlobalReplicatePieceParallel = DefaultGlobalReplicatePieceParallel
 	}
-	if cfg.GlobalSealObjectParallel == 0 {
-		cfg.GlobalSealObjectParallel = DefaultGlobalSealObjectParallel
+	if cfg.Parallel.GlobalSealObjectParallel == 0 {
+		cfg.Parallel.GlobalSealObjectParallel = DefaultGlobalSealObjectParallel
 	}
-	if cfg.GlobalReceiveObjectParallel == 0 {
-		cfg.GlobalReceiveObjectParallel = DefaultGlobalReceiveObjectParallel
+	if cfg.Parallel.GlobalReceiveObjectParallel == 0 {
+		cfg.Parallel.GlobalReceiveObjectParallel = DefaultGlobalReceiveObjectParallel
 	}
-	if cfg.GlobalGCObjectParallel == 0 {
-		cfg.GlobalGCObjectParallel = DefaultGlobalGCObjectParallel
+	if cfg.Parallel.GlobalGCObjectParallel == 0 {
+		cfg.Parallel.GlobalGCObjectParallel = DefaultGlobalGCObjectParallel
 	}
-	if cfg.GlobalGCZombieParallel == 0 {
-		cfg.GlobalGCZombieParallel = DefaultGlobalGCZombieParallel
+	if cfg.Parallel.GlobalGCZombieParallel == 0 {
+		cfg.Parallel.GlobalGCZombieParallel = DefaultGlobalGCZombieParallel
 	}
-	if cfg.GlobalGCMetaParallel == 0 {
-		cfg.GlobalGCMetaParallel = DefaultGlobalGCMetaParallel
+	if cfg.Parallel.GlobalGCMetaParallel == 0 {
+		cfg.Parallel.GlobalGCMetaParallel = DefaultGlobalGCMetaParallel
 	}
-	if cfg.GlobalDownloadObjectTaskCacheSize == 0 {
-		cfg.GlobalDownloadObjectTaskCacheSize = DefaultGlobalDownloadObjectTaskCacheSize
+	if cfg.Parallel.GlobalDownloadObjectTaskCacheSize == 0 {
+		cfg.Parallel.GlobalDownloadObjectTaskCacheSize = DefaultGlobalDownloadObjectTaskCacheSize
 	}
-	if cfg.GlobalChallengePieceTaskCacheSize == 0 {
-		cfg.GlobalChallengePieceTaskCacheSize = DefaultGlobalChallengePieceTaskCacheSize
+	if cfg.Parallel.GlobalChallengePieceTaskCacheSize == 0 {
+		cfg.Parallel.GlobalChallengePieceTaskCacheSize = DefaultGlobalChallengePieceTaskCacheSize
 	}
-	if cfg.GlobalBatchGcObjectTimeInterval == 0 {
-		cfg.GlobalBatchGcObjectTimeInterval = DefaultGlobalBatchGcObjectTimeInterval
+	if cfg.Parallel.GlobalBatchGcObjectTimeInterval == 0 {
+		cfg.Parallel.GlobalBatchGcObjectTimeInterval = DefaultGlobalBatchGcObjectTimeInterval
 	}
-	if cfg.GlobalGcObjectBlockInterval == 0 {
-		cfg.GlobalGcObjectBlockInterval = DefaultGlobalGcObjectBlockInterval
+	if cfg.Parallel.GlobalGcObjectBlockInterval == 0 {
+		cfg.Parallel.GlobalGcObjectBlockInterval = DefaultGlobalGcObjectBlockInterval
 	}
-	if cfg.GlobalGcObjectSafeBlockDistance == 0 {
-		cfg.GlobalGcObjectSafeBlockDistance = DefaultGlobalGcObjectSafeBlockDistance
+	if cfg.Parallel.GlobalGcObjectSafeBlockDistance == 0 {
+		cfg.Parallel.GlobalGcObjectSafeBlockDistance = DefaultGlobalGcObjectSafeBlockDistance
 	}
-	if cfg.GlobalSyncConsensusInfoInterval == 0 {
-		cfg.GlobalSyncConsensusInfoInterval = DefaultGlobalSyncConsensusInfoInterval
+	if cfg.Parallel.GlobalSyncConsensusInfoInterval == 0 {
+		cfg.Parallel.GlobalSyncConsensusInfoInterval = DefaultGlobalSyncConsensusInfoInterval
 	}
-	m.maxUploadObjectNumber = cfg.GlobalMaxUploadingNumber
-	m.gcObjectTimeInterval = cfg.GlobalBatchGcObjectTimeInterval
-	m.gcObjectBlockInterval = cfg.GlobalGcObjectBlockInterval
-	m.gcSafeBlockDistance = cfg.GlobalGcObjectSafeBlockDistance
-	m.syncConsensusInfoInterval = cfg.GlobalSyncConsensusInfoInterval
-	m.uploadQueue = cfg.NewStrategyTQueueFunc(
-		m.Name()+"-upload-object", cfg.GlobalUploadObjectParallel)
-	m.replicateQueue = cfg.NewStrategyTQueueWithLimitFunc(
-		m.Name()+"-replicate-piece", cfg.GlobalReplicatePieceParallel)
-	m.sealQueue = cfg.NewStrategyTQueueWithLimitFunc(
-		m.Name()+"-seal-object", cfg.GlobalSealObjectParallel)
-	m.receiveQueue = cfg.NewStrategyTQueueWithLimitFunc(
-		m.Name()+"-confirm-receive-piece", cfg.GlobalReceiveObjectParallel)
-	m.gcObjectQueue = cfg.NewStrategyTQueueWithLimitFunc(
-		m.Name()+"-gc-object", cfg.GlobalGCObjectParallel)
-	m.gcZombieQueue = cfg.NewStrategyTQueueWithLimitFunc(
-		m.Name()+"-gc-zombie", cfg.GlobalGCZombieParallel)
-	m.gcMetaQueue = cfg.NewStrategyTQueueWithLimitFunc(
-		m.Name()+"-gc-meta", cfg.GlobalGCMetaParallel)
-
-	m.downloadQueue = cfg.NewStrategyTQueueFunc(
-		m.Name()+"-cache-download-object", cfg.GlobalDownloadObjectTaskCacheSize)
-	m.challengeQueue = cfg.NewStrategyTQueueFunc(
-		m.Name()+"-cache-challenge-piece", cfg.GlobalChallengePieceTaskCacheSize)
+	manager.maxUploadObjectNumber = cfg.Parallel.GlobalMaxUploadingParallel
+	manager.gcObjectTimeInterval = cfg.Parallel.GlobalBatchGcObjectTimeInterval
+	manager.gcObjectBlockInterval = cfg.Parallel.GlobalGcObjectBlockInterval
+	manager.gcSafeBlockDistance = cfg.Parallel.GlobalGcObjectSafeBlockDistance
+	manager.syncConsensusInfoInterval = cfg.Parallel.GlobalSyncConsensusInfoInterval
+	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
+	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-replicate-piece", cfg.Parallel.GlobalReplicatePieceParallel)
+	manager.sealQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-seal-object", cfg.Parallel.GlobalSealObjectParallel)
+	manager.receiveQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-confirm-receive-piece", cfg.Parallel.GlobalReceiveObjectParallel)
+	manager.gcObjectQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-gc-object", cfg.Parallel.GlobalGCObjectParallel)
+	manager.gcZombieQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-gc-zombie", cfg.Parallel.GlobalGCZombieParallel)
+	manager.gcMetaQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-gc-meta", cfg.Parallel.GlobalGCMetaParallel)
+	manager.downloadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		manager.Name()+"-cache-download-object", cfg.Parallel.GlobalDownloadObjectTaskCacheSize)
+	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
+		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
 	return nil
 }

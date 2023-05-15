@@ -20,49 +20,47 @@ func init() {
 	gfspapp.RegisterModularInfo(ExecuteModularName, ExecuteModularDescription, NewExecuteModular)
 }
 
-func NewExecuteModular(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspapp.Option) (
-	coremodule.Modular, error) {
-	if cfg.TaskExecutor != nil {
-		app.SetTaskExecutor(cfg.TaskExecutor)
-		return cfg.TaskExecutor, nil
+func NewExecuteModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	if cfg.Customize.TaskExecutor != nil {
+		app.SetTaskExecutor(cfg.Customize.TaskExecutor)
+		return cfg.Customize.TaskExecutor, nil
 	}
 	executor := &ExecuteModular{baseApp: app}
-	opts = append(opts, executor.DefaultExecutorOptions)
-	for _, opt := range opts {
-		if err := opt(app, cfg); err != nil {
-			return nil, err
-		}
+	if err := DefaultExecutorOptions(executor, cfg); err != nil {
+		return nil, err
 	}
 	app.SetTaskExecutor(executor)
 	return executor, nil
 }
 
-func (e *ExecuteModular) DefaultExecutorOptions(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig) error {
-	if cfg.ExecutorMaxExecuteNum == 0 {
-		cfg.ExecutorMaxExecuteNum = DefaultExecutorMaxExecuteNum
+func DefaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Executor.MaxExecuteNumber == 0 {
+		cfg.Executor.MaxExecuteNumber = DefaultExecutorMaxExecuteNum
 	}
-	if cfg.ExecutorAskTaskInterval == 0 {
-		cfg.ExecutorAskTaskInterval = DefaultExecutorAskTaskInterval
+	executor.maxExecuteNum = cfg.Executor.MaxExecuteNumber
+	if cfg.Executor.AskTaskInterval == 0 {
+		cfg.Executor.AskTaskInterval = DefaultExecutorAskTaskInterval
 	}
-	if cfg.ExecutorAskReplicateApprovalTimeout == 0 {
-		cfg.ExecutorAskReplicateApprovalTimeout = DefaultExecutorAskReplicateApprovalTimeout
+	executor.askTaskInterval = cfg.Executor.AskTaskInterval
+	if cfg.Executor.AskReplicateApprovalTimeout == 0 {
+		cfg.Executor.AskReplicateApprovalTimeout = DefaultExecutorAskReplicateApprovalTimeout
 	}
-	if cfg.ExecutorAskReplicateApprovalExFactor == 0 {
-		cfg.ExecutorAskReplicateApprovalExFactor = DefaultExecutorAskReplicateApprovalExFactor
+	executor.askReplicateApprovalTimeout = cfg.Executor.AskReplicateApprovalTimeout
+	if cfg.Executor.AskReplicateApprovalExFactor == 0 {
+		cfg.Executor.AskReplicateApprovalExFactor = DefaultExecutorAskReplicateApprovalExFactor
 	}
-	if cfg.ExecutorListenSealTimeoutHeight == 0 {
-		cfg.ExecutorListenSealTimeoutHeight = DefaultExecutorListenSealTimeoutHeight
+	executor.askReplicateApprovalExFactor = cfg.Executor.AskReplicateApprovalExFactor
+	if cfg.Executor.ListenSealTimeoutHeight == 0 {
+		cfg.Executor.ListenSealTimeoutHeight = DefaultExecutorListenSealTimeoutHeight
 	}
-	if cfg.ExecutorListenSealRetryTimeout == 0 {
-		cfg.ExecutorListenSealRetryTimeout = DefaultExecutorListenSealRetryTimeout
+	executor.listenSealTimeoutHeight = cfg.Executor.ListenSealTimeoutHeight
+	if cfg.Executor.ListenSealRetryTimeout == 0 {
+		cfg.Executor.ListenSealRetryTimeout = DefaultExecutorListenSealRetryTimeout
 	}
-	if cfg.ExecutorMaxListenSealRetry == 0 {
-		cfg.ExecutorMaxListenSealRetry = DefaultExecutorMaxListenSealRetry
+	executor.listenSealRetryTimeout = cfg.Executor.ListenSealRetryTimeout
+	if cfg.Executor.MaxListenSealRetry == 0 {
+		cfg.Executor.MaxListenSealRetry = DefaultExecutorMaxListenSealRetry
 	}
+	executor.maxListenSealRetry = cfg.Executor.MaxListenSealRetry
 	return nil
 }

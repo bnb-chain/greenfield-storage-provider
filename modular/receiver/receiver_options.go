@@ -14,33 +14,24 @@ func init() {
 	gfspapp.RegisterModularInfo(ReceiveModularName, ReceiveModularDescription, NewReceiveModular)
 }
 
-func NewReceiveModular(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspapp.Option) (
-	coremodule.Modular, error) {
-	if cfg.Receiver != nil {
-		app.SetReceiver(cfg.Receiver)
-		return cfg.Receiver, nil
+func NewReceiveModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	if cfg.Customize.Receiver != nil {
+		app.SetReceiver(cfg.Customize.Receiver)
+		return cfg.Customize.Receiver, nil
 	}
 	receiver := &ReceiveModular{baseApp: app}
-	opts = append(opts, receiver.DefaultReceiverOptions)
-	for _, opt := range opts {
-		if err := opt(app, cfg); err != nil {
-			return nil, err
-		}
+	if err := DefaultReceiverOptions(receiver, cfg); err != nil {
+		return nil, err
 	}
 	app.SetReceiver(receiver)
 	return receiver, nil
 }
 
-func (r *ReceiveModular) DefaultReceiverOptions(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig) error {
-	if cfg.ReceivePieceParallelPerNode == 0 {
-		cfg.ReceivePieceParallelPerNode = DefaultReceivePieceParallelPerNode
+func DefaultReceiverOptions(receiver *ReceiveModular, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Parallel.ReceivePieceParallelPerNode == 0 {
+		cfg.Parallel.ReceivePieceParallelPerNode = DefaultReceivePieceParallelPerNode
 	}
-	r.receiveQueue = cfg.NewStrategyTQueueFunc(r.Name()+"-receive-piece",
-		cfg.ReceivePieceParallelPerNode)
+	receiver.receiveQueue = cfg.Customize.NewStrategyTQueueFunc(
+		receiver.Name()+"-receive-piece", cfg.Parallel.ReceivePieceParallelPerNode)
 	return nil
 }

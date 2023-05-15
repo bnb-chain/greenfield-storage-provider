@@ -10,22 +10,12 @@ func init() {
 	gfspapp.RegisterModularInfo(AuthorizationModularName, AuthorizationModularDescription, NewAuthorizeModular)
 }
 
-func NewAuthorizeModular(
-	app *gfspapp.GfSpBaseApp,
-	cfg *gfspconfig.GfSpConfig,
-	opts ...gfspapp.Option) (
-	coremodule.Modular, error) {
-	if cfg.Authorizer != nil {
-		app.SetAuthorizer(cfg.Authorizer)
-		return cfg.Authorizer, nil
+func NewAuthorizeModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	if cfg.Customize.Authorizer != nil {
+		app.SetAuthorizer(cfg.Customize.Authorizer)
+		return cfg.Customize.Authorizer, nil
 	}
 	authorize := &AuthorizeModular{baseApp: app}
-	for _, opt := range opts {
-		err := opt(app, cfg)
-		if err != nil {
-			return nil, err
-		}
-	}
 	app.SetAuthorizer(authorize)
 	return authorize, nil
 }

@@ -4,10 +4,13 @@ import (
 	"context"
 	"net"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/reflection"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 const (
@@ -27,6 +30,16 @@ func (g *GfSpBaseApp) newRpcServer(options ...grpc.ServerOption) {
 		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
 	}
 	g.server = grpc.NewServer(options...)
+	gfspserver.RegisterGfSpApprovalServiceServer(g.server, g)
+	gfspserver.RegisterGfSpAuthorizationServiceServer(g.server, g)
+	gfspserver.RegisterGfSpDownloadServiceServer(g.server, g)
+	gfspserver.RegisterGfSpManageServiceServer(g.server, g)
+	gfspserver.RegisterGfSpP2PServiceServer(g.server, g)
+	gfspserver.RegisterGfSpResourceServiceServer(g.server, g)
+	gfspserver.RegisterGfSpReceiveServiceServer(g.server, g)
+	gfspserver.RegisterGfSpSignServiceServer(g.server, g)
+	gfspserver.RegisterGfSpUploadServiceServer(g.server, g)
+	reflection.Register(g.server)
 }
 
 func (g *GfSpBaseApp) StartRpcServer(ctx context.Context) error {
