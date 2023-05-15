@@ -128,7 +128,7 @@ func makeConfig(ctx *cli.Context) (*gfspconfig.GfSpConfig, error) {
 func makeEnv(ctx *cli.Context, cfg *gfspconfig.GfSpConfig) error {
 	var (
 		logLevel = "debug"
-		logPath  = "./"
+		logPath  = "./log"
 	)
 	if ctx.IsSet(utils.LogLevelFlag.Name) {
 		logLevel = ctx.String(utils.LogLevelFlag.Name)
