@@ -21,7 +21,8 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	p2ptypes "github.com/bnb-chain/greenfield-storage-provider/pkg/p2p/types"
 	authtypes "github.com/bnb-chain/greenfield-storage-provider/service/auth/types"
@@ -57,7 +58,6 @@ func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, e
 	}
 
 	recoverAcc := sdk.AccAddress(pk.Address().Bytes())
-
 	return recoverAcc, pk, nil
 }
 
@@ -144,7 +144,7 @@ func (g *Gateway) verifySignature(reqContext *requestContext) (sdk.AccAddress, e
 		reqContext.isAnonymous = true
 		return sdk.AccAddress{}, nil
 	}
-	return nil, errors.ErrUnsupportedSignType
+	return nil, errorstypes.Error(merrors.UnsupportedSignTypeErrCode, merrors.ErrUnsupportedSignType.Error())
 }
 
 // verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed
@@ -157,22 +157,22 @@ func (reqContext *requestContext) verifySignatureV1(requestSignature string) (sd
 	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
 	signatureItems := strings.Split(requestSignature, ",")
 	if len(signatureItems) < 2 {
-		return nil, errors.ErrAuthorizationFormat
+		return nil, errorstypes.Error(merrors.AuthorizationFormatErrCode, merrors.ErrAuthorizationFormat.Error())
 	}
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
-			return nil, errors.ErrAuthorizationFormat
+			return nil, errorstypes.Error(merrors.AuthorizationFormatErrCode, merrors.ErrAuthorizationFormat.Error())
 		}
 		switch pair[0] {
 		case model.SignedMsg:
 			signedMsg = pair[1]
 		case model.Signature:
 			if signature, err = hex.DecodeString(pair[1]); err != nil {
-				return nil, err
+				return nil, errorstypes.Error(merrors.HexDecodeStringErrCode, err.Error())
 			}
 		default:
-			return nil, errors.ErrAuthorizationFormat
+			return nil, errorstypes.Error(merrors.AuthorizationFormatErrCode, merrors.ErrAuthorizationFormat.Error())
 		}
 	}
 
@@ -180,18 +180,18 @@ func (reqContext *requestContext) verifySignatureV1(requestSignature string) (sd
 	realMsgToSign := commonhttp.GetMsgToSign(reqContext.request)
 	if hex.EncodeToString(realMsgToSign) != signedMsg {
 		log.Errorw("failed to check signed msg")
-		return nil, errors.ErrRequestConsistent
+		return nil, errorstypes.Error(merrors.InconsistentCanonicalRequestErrCode, merrors.ErrRequestConsistent.Error())
 	}
 
 	// check signature consistent
 	addr, pk, err := RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.Errorw("failed to recover address")
-		return nil, errors.ErrSignatureConsistent
+		return nil, errorstypes.Error(merrors.SignatureInconsistentErrCode, merrors.ErrSignatureInconsistent.Error())
 	}
 	if !secp256k1.VerifySignature(pk.Bytes(), realMsgToSign, signature[:len(signature)-1]) {
 		log.Errorw("failed to verify signature")
-		return nil, errors.ErrSignatureConsistent
+		return nil, errorstypes.Error(merrors.SignatureInconsistentErrCode, merrors.ErrSignatureInconsistent.Error())
 	}
 	return addr, nil
 }
@@ -206,20 +206,20 @@ func (reqContext *requestContext) verifySignatureV2(requestSignature string) (sd
 	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
 	signatureItems := strings.Split(requestSignature, ",")
 	if len(signatureItems) < 1 {
-		return nil, errors.ErrAuthorizationFormat
+		return nil, errorstypes.Error(merrors.AuthorizationFormatErrCode, merrors.ErrAuthorizationFormat.Error())
 	}
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
-			return nil, errors.ErrAuthorizationFormat
+			return nil, errorstypes.Error(merrors.AuthorizationFormatErrCode, merrors.ErrAuthorizationFormat.Error())
 		}
 		switch pair[0] {
 		case model.Signature:
 			if signature, err = hex.DecodeString(pair[1]); err != nil {
-				return sdk.AccAddress{}, err
+				return sdk.AccAddress{}, errorstypes.Error(merrors.HexDecodeStringErrCode, err.Error())
 			}
 		default:
-			return nil, errors.ErrAuthorizationFormat
+			return nil, errorstypes.Error(merrors.AuthorizationFormatErrCode, merrors.ErrAuthorizationFormat.Error())
 		}
 	}
 	_ = signature
@@ -236,12 +236,12 @@ func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string,
 	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
 	signatureItems := strings.Split(requestSignature, ",")
 	if len(signatureItems) != 2 {
-		return nil, nil, errors.ErrAuthorizationFormat
+		return nil, nil, errorstypes.Error(merrors.AuthorizationFormatErrCode, merrors.ErrAuthorizationFormat.Error())
 	}
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
-			return nil, nil, errors.ErrAuthorizationFormat
+			return nil, nil, errorstypes.Error(merrors.AuthorizationFormatErrCode, merrors.ErrAuthorizationFormat.Error())
 		}
 		switch pair[0] {
 		case model.SignedMsg:
@@ -249,7 +249,7 @@ func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string,
 		case model.Signature:
 			signature = pair[1]
 		default:
-			return nil, nil, errors.ErrAuthorizationFormat
+			return nil, nil, errorstypes.Error(merrors.AuthorizationFormatErrCode, merrors.ErrAuthorizationFormat.Error())
 		}
 	}
 
@@ -268,24 +268,23 @@ func (reqContext *requestContext) verifyPersonalSignature(requestSignature strin
 	}
 	signature, err = hexutil.Decode(*sigString)
 	if err != nil {
-		return nil, err
+		return nil, errorstypes.Error(merrors.HexDecodeStringErrCode, err.Error())
 	}
-
-	realMsgToSign := accounts.TextHash([]byte(*signedMsg))
 
 	if len(signature) != crypto.SignatureLength {
 		log.Errorw("signature length (actual: %d) doesn't match typical [R||S||V] signature 65 bytes")
-		return nil, errors.ErrSignatureConsistent
+		return nil, errorstypes.Error(merrors.SignatureInconsistentErrCode, merrors.ErrSignatureInconsistent.Error())
 	}
 	if signature[crypto.RecoveryIDOffset] == 27 || signature[crypto.RecoveryIDOffset] == 28 {
 		signature[crypto.RecoveryIDOffset] -= 27
 	}
 
 	// check signature consistent
+	realMsgToSign := accounts.TextHash([]byte(*signedMsg))
 	addr, _, err := RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.Errorw("failed to recover address")
-		return nil, errors.ErrSignatureConsistent
+		return nil, errorstypes.Error(merrors.SignatureInconsistentErrCode, merrors.ErrSignatureInconsistent.Error())
 	}
 
 	return addr, nil
@@ -318,7 +317,7 @@ func (g *Gateway) verifyOffChainSignature(reqContext *requestContext, requestSig
 		userAddress, _ := sdk.AccAddressFromHexUnsafe(reqContext.request.Header.Get(model.GnfdUserAddressHeader))
 		return userAddress, nil
 	} else {
-		return nil, errors.ErrSignatureConsistent
+		return nil, errorstypes.Error(merrors.SignatureInconsistentErrCode, merrors.ErrSignatureInconsistent.Error())
 	}
 }
 
@@ -393,7 +392,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		}
 		if !accountExist {
 			log.Errorw("account is not existed", "address", addr.String(), "error", err)
-			return errors.ErrNoPermission
+			return errorstypes.Error(merrors.NoPermissionErrCode, merrors.ErrNoPermission.Error())
 		}
 	}
 
@@ -410,13 +409,13 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 			reqContext.bucketName, reqContext.objectName); !isAllow || err != nil {
 			log.Errorw("failed to auth due to verify permission",
 				"is_allow", isAllow, "error", err)
-			return errors.ErrNoPermission
+			return errorstypes.Error(merrors.NoPermissionErrCode, merrors.ErrNoPermission.Error())
 		}
 		if reqContext.bucketInfo.GetPrimarySpAddress() != g.config.SpOperatorAddress {
 			log.Errorw("failed to auth due to bucket primary sp is not equal to current sp",
 				"bucket_primary_sp", reqContext.bucketInfo.GetPrimarySpAddress(),
 				"current_sp", g.config.SpOperatorAddress)
-			return errors.ErrNoPermission
+			return errorstypes.Error(merrors.NoPermissionErrCode, merrors.ErrNoPermission.Error())
 		}
 
 	case getObjectRouterName:
@@ -429,19 +428,19 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		if reqContext.objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 			log.Errorw("object is not sealed",
 				"status", reqContext.objectInfo.GetObjectStatus())
-			return errors.ErrCheckObjectSealed
+			return errorstypes.Error(merrors.ObjectNotSealedErrCode, merrors.ErrCheckObjectSealed.Error())
 		}
 		if isAllow, err := g.chain.VerifyGetObjectPermission(context.Background(), addr.String(),
 			reqContext.bucketName, reqContext.objectName); !isAllow || err != nil {
 			log.Errorw("failed to auth due to verify permission",
 				"is_allow", isAllow, "error", err)
-			return errors.ErrNoPermission
+			return errorstypes.Error(merrors.NoPermissionErrCode, merrors.ErrNoPermission.Error())
 		}
 		if reqContext.bucketInfo.GetPrimarySpAddress() != g.config.SpOperatorAddress {
 			log.Errorw("failed to auth due to bucket primary sp is not equal to current sp",
 				"bucket_primary_sp", reqContext.bucketInfo.GetPrimarySpAddress(),
 				"current_sp", g.config.SpOperatorAddress)
-			return errors.ErrNoPermission
+			return errorstypes.Error(merrors.NoPermissionErrCode, merrors.ErrNoPermission.Error())
 		}
 		streamRecord, err := g.chain.QueryStreamRecord(context.Background(), reqContext.bucketInfo.PaymentAddress)
 		if err != nil {
@@ -450,7 +449,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 		}
 		if streamRecord.Status != paymenttypes.STREAM_ACCOUNT_STATUS_ACTIVE {
 			log.Errorw("failed to check payment due to account status is not active", "status", streamRecord.Status)
-			return errors.ErrCheckPaymentAccountActive
+			return errorstypes.Error(merrors.CheckPaymentAccountActiveErrCode, merrors.ErrCheckPaymentAccountActive.Error())
 		}
 	case getBucketReadQuotaRouterName, listBucketReadRecordRouterName:
 		if reqContext.bucketInfo, err = g.chain.QueryBucketInfo(
@@ -463,7 +462,7 @@ func (g *Gateway) checkAuthorization(reqContext *requestContext, addr sdk.AccAdd
 			log.Errorw("failed to auth due to account is not equal to bucket owner",
 				"bucket_owner", reqContext.bucketInfo.GetOwner(),
 				"request_address", addr.String())
-			return errors.ErrNoPermission
+			return errorstypes.Error(merrors.NoPermissionErrCode, merrors.ErrNoPermission.Error())
 		}
 	case challengeRouterName:
 		objectID := reqContext.request.Header.Get(model.GnfdObjectIDHeader)
@@ -480,16 +479,16 @@ func (g *Gateway) verifyReplicateApproval(approval *p2ptypes.GetApprovalResponse
 	err := p2ptypes.VerifySignature(approval.GetSpOperatorAddress(), approval.GetSignBytes(), approval.GetSignature())
 	if err != nil {
 		log.Errorw("failed to verify approval signature", "error", err)
-		return errors.ErrSignatureInvalid
+		return errorstypes.Error(merrors.InvalidReplicateApprovalSigErrCode, merrors.ErrInvalidReplicateApprovalSig.Error())
 	}
 	if strings.Compare(g.config.SpOperatorAddress, approval.GetSpOperatorAddress()) != 0 {
 		log.Errorw("failed to verify replicate approval's SP operate address",
 			"approval_operate_address", approval.GetSpOperatorAddress(),
 			"own_operate_address", g.config.SpOperatorAddress)
-		return errors.ErrSPMismatch
+		return errorstypes.Error(merrors.MismatchedSPOperatorAddressErrCode, merrors.ErrMismatchedOperatorAddress.Error())
 	}
 	if time.Now().Unix() > approval.GetExpiredTime() {
-		return errors.ErrApprovalExpire
+		return errorstypes.Error(merrors.ApprovalExpiredErrCode, merrors.ErrApprovalExpired.Error())
 	}
 	return nil
 }

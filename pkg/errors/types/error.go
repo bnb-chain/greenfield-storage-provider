@@ -4,13 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 )
 
 const (
 	success = "success"
 	unknown = "unknown error"
+
+	successCode    = 0
+	unknownErrCode = 1
 )
 
 // Error returns an error with code and reason
@@ -62,14 +63,14 @@ func (se *ServiceError) Format(s fmt.State, verb rune) {
 // Code gets error code from an error
 func Code(e error) int {
 	if e == nil {
-		return merrors.SuccessCode
+		return successCode
 	}
 	err, ok := e.(*ServiceError)
 	if !ok && !errors.As(e, &err) {
-		return merrors.UnknownErrCode
+		return unknownErrCode
 	}
 	if err == nil {
-		return merrors.SuccessCode
+		return successCode
 	}
 	return err.ErrCode()
 }

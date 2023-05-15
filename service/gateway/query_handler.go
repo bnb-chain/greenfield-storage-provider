@@ -3,18 +3,19 @@ package gateway
 import (
 	"context"
 	"encoding/xml"
-	"errors"
 	"net/http"
+
+	"github.com/bnb-chain/greenfield/types/s3util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/model/job"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getBucketReadQuota handles the get bucket read quota request
@@ -40,24 +41,24 @@ func (g *Gateway) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Reque
 
 	if g.downloader == nil {
 		log.Error("failed to get bucket read quota due to not config downloader")
-		errDescription = NotExistComponentError
+		_ = makeXMLHTPPResponse(w, merrors.NotExistedComponentErrCode, reqContext.requestID)
 		return
 	}
 
 	if addr, err = g.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	resp, err := g.downloader.GetBucketReadQuota(context.Background(), reqContext.bucketInfo, reqContext.vars["year_month"])
 	if err != nil {
 		log.Errorw("failed to get bucket read quota", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	var xmlInfo = struct {
@@ -79,14 +80,14 @@ func (g *Gateway) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Reque
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
 		log.Errorw("failed to marshal xml", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, merrors.XMLMarshalErrCode, reqContext.requestID)
 		return
 	}
 	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, merrors.InternalErrCode, reqContext.requestID)
 		return
 	}
 	log.Debugw("get bucket quota", "xml_info", xmlInfo)
@@ -118,34 +119,35 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 
 	if g.downloader == nil {
 		log.Error("failed to list bucket read record due to not config downloader")
-		errDescription = NotExistComponentError
+		_ = makeXMLHTPPResponse(w, merrors.NotExistedComponentErrCode, reqContext.requestID)
 		return
 	}
 
 	if addr, err = g.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 
 	if startTimestampUs, err = util.StringToInt64(reqContext.vars["start_ts"]); err != nil {
 		log.Errorw("failed to parse start_ts query", "error", err)
+		_ = makeXMLHTPPResponse(w, merrors.InvalidQueryParamErrCode, reqContext.requestID)
 		errDescription = InvalidQuery
 		return
 	}
 	if endTimestampUs, err = util.StringToInt64(reqContext.vars["end_ts"]); err != nil {
 		log.Errorw("failed to parse end_ts query", "error", err)
-		errDescription = InvalidQuery
+		_ = makeXMLHTPPResponse(w, merrors.InvalidQueryParamErrCode, reqContext.requestID)
 		return
 	}
 	if maxRecordNum, err = util.StringToInt64(reqContext.vars["max_records"]); err != nil {
 		log.Errorw("failed to parse max record num query", "error", err)
-		errDescription = InvalidQuery
+		_ = makeXMLHTPPResponse(w, merrors.InvalidQueryParamErrCode, reqContext.requestID)
 		return
 	}
 	if maxRecordNum > model.DefaultMaxListLimit || maxRecordNum < 0 {
@@ -154,7 +156,7 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 	resp, err := g.downloader.ListBucketReadRecord(context.Background(), reqContext.bucketInfo, startTimestampUs, endTimestampUs, maxRecordNum)
 	if err != nil {
 		log.Errorw("failed to list bucket read record", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 
@@ -189,7 +191,7 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
 		log.Errorw("failed to marshal xml", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, merrors.XMLMarshalErrCode, reqContext.requestID)
 		return
 	}
 
@@ -197,7 +199,7 @@ func (g *Gateway) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Req
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, merrors.InternalErrCode, reqContext.requestID)
 		return
 	}
 	log.Debugw("list bucket read records", "xml_info", xmlInfo)
@@ -228,29 +230,29 @@ func (g *Gateway) queryUploadProgressHandler(w http.ResponseWriter, r *http.Requ
 
 	if g.uploader == nil {
 		log.Error("failed to query upload progress due to not config uploader")
-		errDescription = NotExistComponentError
+		_ = makeXMLHTPPResponse(w, merrors.NotExistedComponentErrCode, reqContext.requestID)
 		return
 	}
 
 	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
-		errDescription = InvalidBucketName
+		_ = makeXMLHTPPResponse(w, merrors.InvalidBucketNameErrCode, reqContext.requestID)
 		return
 	}
 	if err = s3util.CheckValidObjectName(reqContext.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqContext.objectName, "error", err)
-		errDescription = InvalidKey
+		_ = makeXMLHTPPResponse(w, merrors.InvalidObjectNameErrCode, reqContext.requestID)
 		return
 	}
 
 	if addr, err = g.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	if err = g.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	if reqContext.objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
@@ -258,12 +260,12 @@ func (g *Gateway) queryUploadProgressHandler(w http.ResponseWriter, r *http.Requ
 	} else {
 		jobState, err = g.uploader.QueryUploadProgress(context.Background(), reqContext.objectInfo.Id.Uint64())
 		if err != nil {
-			err = merrors.GRPCErrorToInnerError(err)
-			if errors.Is(err, merrors.ErrNoSuchObject) {
+			errCode := errorstypes.Code(err)
+			if errCode == merrors.DBRecordNotFoundErrCode {
 				jobStateDescription = job.ToReadableDescription[job.UploadProgressMetaCreated]
 			} else {
 				log.Errorw("failed to query upload progress", "error", err)
-				errDescription = makeErrorDescription(err)
+				_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 				return
 			}
 		} else {
@@ -281,14 +283,14 @@ func (g *Gateway) queryUploadProgressHandler(w http.ResponseWriter, r *http.Requ
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
 		log.Errorw("failed to marshal xml", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, merrors.XMLMarshalErrCode, reqContext.requestID)
 		return
 	}
 	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, merrors.InternalErrCode, reqContext.requestID)
 		return
 	}
 	log.Debugw("query upload progress", "xml_info", xmlInfo)

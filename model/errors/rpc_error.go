@@ -5,9 +5,6 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"gorm.io/gorm"
-
-	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 )
 
 // common error
@@ -56,8 +53,8 @@ var (
 	ErrAuthorizationFormat = errors.New("authorization format error")
 	// ErrRequestConsistent defines the invalid request checksum error
 	ErrRequestConsistent = errors.New("request is tampered")
-	// ErrSignatureConsistent defines the invalid signature error
-	ErrSignatureConsistent = errors.New("signature is not consistent")
+	// ErrSignatureInconsistent defines the invalid signature error
+	ErrSignatureInconsistent = errors.New("signature is not consistent")
 	// ErrUnsupportedSignType defines the unsupported signature type error
 	ErrUnsupportedSignType = errors.New("unsupported signature type")
 	// ErrEmptyReqHeader defines the empty header error
@@ -74,12 +71,12 @@ var (
 	ErrCheckPaymentAccountActive = errors.New("payment account is not active")
 	// ErrCheckQuotaEnough defines check quota is enough
 	ErrCheckQuotaEnough = errors.New("quota is not enough")
-	// ErrSPMismatch defines the SP's operate address mismatch error
-	ErrSPMismatch = errors.New("the operator address of SP is a mismatch")
-	// ErrApprovalExpire defines the SP's operate address mismatch error
-	ErrApprovalExpire = errors.New("approval expired")
-	// ErrSignatureInvalid defines the replicate approval signature invalid
-	ErrSignatureInvalid = errors.New("invalid replicate approval signature")
+	// ErrMismatchedOperatorAddress defines the mismatched operator address of SP
+	ErrMismatchedOperatorAddress = errors.New("the operator address of SP is a mismatch")
+	// ErrApprovalExpired defines the approval signature of SP is expired
+	ErrApprovalExpired = errors.New("approval expired")
+	// ErrInvalidReplicateApprovalSig defines the replicate approval signature invalid
+	ErrInvalidReplicateApprovalSig = errors.New("invalid replicate approval signature")
 )
 
 // signer service error
@@ -117,18 +114,6 @@ var (
 	// ErrMismatchChecksumNum defines checksum number mismatch error
 	ErrMismatchChecksumNum = errors.New("checksum number mismatch")
 )
-
-// InnerErrorToGRPCError convents inner error to grpc/status error
-func InnerErrorToGRPCError(err error) error {
-	if errors.Is(err, gorm.ErrRecordNotFound) ||
-		errors.Is(err, ErrNoSuchObject) {
-		return errorstypes.Error(NoSuchObjectErrCode, "object is not found")
-	}
-	if errors.Is(err, ErrCheckQuotaEnough) {
-		return status.Errorf(codes.PermissionDenied, "quota is not enough")
-	}
-	return err
-}
 
 // GRPCErrorToInnerError convents grpc/status error to inner error
 func GRPCErrorToInnerError(err error) error {

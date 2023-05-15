@@ -9,6 +9,8 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
@@ -36,18 +38,18 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 
 	if gateway.signer == nil {
 		log.Error("failed to get approval due to not config signer")
-		errDescription = NotExistComponentError
+		_ = makeXMLHTPPResponse(w, merrors.NotExistedComponentErrCode, reqContext.requestID)
 		return
 	}
 
 	if addr, err = gateway.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	if err = gateway.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 
@@ -55,14 +57,14 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 	approvalMsg, err := hex.DecodeString(r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 	if err != nil {
 		log.Errorw("failed to parse approval header", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
-		errDescription = InvalidHeader
+		_ = makeXMLHTPPResponse(w, merrors.HexDecodeStringErrCode, reqContext.requestID)
 		return
 	}
 
 	currentHeight, err := gateway.chain.GetCurrentHeight(context.Background())
 	if err != nil {
 		log.Errorw("failed to query current height", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 
@@ -74,19 +76,19 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 		)
 		if err = types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg); err != nil {
 			log.Errorw("failed to unmarshal approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader), "error", err)
-			errDescription = InvalidHeader
+			_ = makeXMLHTPPResponse(w, merrors.UnmarshalGetApprovalMsgJSONErrCode, reqContext.requestID)
 			return
 		}
 		if err = msg.ValidateBasic(); err != nil {
 			log.Errorw("failed to basic check", "bucket_msg", msg, "error", err)
-			errDescription = InvalidHeader
+			_ = makeXMLHTPPResponse(w, merrors.InvalidGetApprovalMsgErrCode, reqContext.requestID)
 			return
 		}
 		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: currentHeight + model.DefaultTimeoutHeight}
 		approvalSignature, err = gateway.signer.SignBucketApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create bucket approval", "error", err)
-			errDescription = makeErrorDescription(err)
+			_ = makeXMLHTPPResponse(w, merrors.SignBucketApprovalErrCode, reqContext.requestID)
 			return
 		}
 		msg.PrimarySpApproval.Sig = approvalSignature
@@ -99,19 +101,20 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 		)
 		if err = types.ModuleCdc.UnmarshalJSON(approvalMsg, &msg); err != nil {
 			log.Errorw("failed to unmarshal approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader), "error", err)
-			errDescription = InvalidHeader
+			_ = makeXMLHTPPResponse(w, merrors.UnmarshalGetApprovalMsgJSONErrCode, reqContext.requestID)
 			return
 		}
 		if err = msg.ValidateBasic(); err != nil {
 			log.Errorw("failed to basic check", "object_msg", msg, "error", err)
-			errDescription = InvalidHeader
+			_ = makeXMLHTPPResponse(w, merrors.InvalidGetApprovalMsgErrCode, reqContext.requestID)
+			// errDescription = InvalidHeader
 			return
 		}
 		msg.PrimarySpApproval = &types.Approval{ExpiredHeight: currentHeight + model.DefaultTimeoutHeight}
 		approvalSignature, err = gateway.signer.SignObjectApproval(context.Background(), &msg)
 		if err != nil {
 			log.Errorw("failed to sign create object approval", "error", err)
-			errDescription = makeErrorDescription(err)
+			_ = makeXMLHTPPResponse(w, merrors.SignObjectApprovalErrCode, reqContext.requestID)
 			return
 		}
 		msg.PrimarySpApproval.Sig = approvalSignature
@@ -119,7 +122,7 @@ func (gateway *Gateway) getApprovalHandler(w http.ResponseWriter, r *http.Reques
 		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	default:
 		log.Errorw("failed to get approval due to unimplemented approval type", "action", actionName)
-		errDescription = NotImplementedError
+		_ = makeXMLHTPPResponse(w, merrors.NotImplementedErrCode, reqContext.requestID)
 		return
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
@@ -151,41 +154,41 @@ func (gateway *Gateway) challengeHandler(w http.ResponseWriter, r *http.Request)
 
 	if gateway.challenge == nil {
 		log.Errorw("failed to get challenge due to not config challenge")
-		errDescription = NotExistComponentError
+		_ = makeXMLHTPPResponse(w, merrors.NotExistedComponentErrCode, reqContext.requestID)
 		return
 	}
 
 	if addr, err = gateway.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	if err = gateway.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 
 	if objectID, err = util.StringToUint64(reqContext.request.Header.Get(model.GnfdObjectIDHeader)); err != nil {
 		log.Errorw("failed to parse object_id", "object_id", reqContext.request.Header.Get(model.GnfdObjectIDHeader))
-		errDescription = InvalidHeader
+		_ = makeXMLHTPPResponse(w, merrors.ParseStringToNumberErrCode, reqContext.requestID)
 		return
 	}
 
 	if redundancyIdx, err = util.StringToInt32(reqContext.request.Header.Get(model.GnfdRedundancyIndexHeader)); err != nil {
 		log.Errorw("failed to parse redundancy_idx", "redundancy_idx", reqContext.request.Header.Get(model.GnfdRedundancyIndexHeader))
-		errDescription = InvalidHeader
+		_ = makeXMLHTPPResponse(w, merrors.ParseStringToNumberErrCode, reqContext.requestID)
 		return
 	}
 	if segmentIdx, err = util.StringToUint32(reqContext.request.Header.Get(model.GnfdPieceIndexHeader)); err != nil {
 		log.Errorw("failed to parse segment_idx", "segment_idx", reqContext.request.Header.Get(model.GnfdPieceIndexHeader))
-		errDescription = InvalidHeader
+		_ = makeXMLHTPPResponse(w, merrors.ParseStringToNumberErrCode, reqContext.requestID)
 		return
 	}
 	integrityHash, pieceHash, pieceData, err := gateway.challenge.ChallengePiece(context.Background(), reqContext.objectInfo, redundancyIdx, segmentIdx)
 	if err != nil {
 		log.Errorw("failed to challenge piece", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)

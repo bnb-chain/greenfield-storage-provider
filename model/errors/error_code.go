@@ -12,32 +12,29 @@ const (
 )
 
 const (
-	SuccessCode    = 0
-	UnknownErrCode = 1
 	// deinfe common error code, from 10000 to 14999
-	InternalErrCode                   = 10000
-	MismatchIntegrityHashErrCode      = 11000
-	CacheMissedErrCode                = 11001
-	DanglingPointerErrCode            = 11002
-	PayloadStreamErrCode              = 11003
-	ResourceMgrBeginSpanErrCode       = 11004
-	ComputePieceSizeErrCode           = 11005
-	ResourceMgrReserveMemoryErrCode   = 11006
-	NoSuchObjectErrCode               = 11007
-	NoSuchBucketErrCode               = 11008
-	HexDecodeStringErrCode            = 11009
-	StringToByteSliceErrCode          = 11010
-	ParseStringToIntErrCode           = 11011
-	RouterNotFoundErrCode             = 11012
-	InvalidHeaderErrCode              = 11013
-	StringToInt64ErrCode              = 11014
-	InvalidBucketNameErrCode          = 11015
-	InvalidObjectNameErrCode          = 11016
-	ZeroPayloadErrCode                = 11017
-	InvalidRangeErrCode               = 11020
-	InvalidAddressErrCode             = 11021
-	InvalidAuthorizationFormatErrCode = 11022
-	InconsistentRequestErrCode        = 11023
+	InternalErrCode                 = 10000
+	NotImplementedErrCode           = 10001
+	NotExistedComponentErrCode      = 10002
+	MismatchIntegrityHashErrCode    = 11000
+	CacheMissedErrCode              = 11001
+	DanglingPointerErrCode          = 11002
+	PayloadStreamErrCode            = 11003
+	ResourceMgrBeginSpanErrCode     = 11004
+	ComputePieceSizeErrCode         = 11005
+	ResourceMgrReserveMemoryErrCode = 11006
+	NoSuchObjectErrCode             = 11007
+	NoSuchBucketErrCode             = 11008
+	HexDecodeStringErrCode          = 11009
+	StringToByteSliceErrCode        = 11010
+	RouterNotFoundErrCode           = 11011
+	InvalidHeaderErrCode            = 11012
+	StringToInt64ErrCode            = 11013
+	InvalidBucketNameErrCode        = 11014
+	InvalidObjectNameErrCode        = 11015
+	ZeroPayloadErrCode              = 11016
+	InvalidRangeErrCode             = 11017
+	InvalidAddressErrCode           = 11018
 	// sp database error, from 15000 to 19999
 	DBRecordNotFoundErrCode             = 15000
 	DBUnknownAddressTypeErrCode         = 15001
@@ -71,12 +68,21 @@ const (
 	// gateway service error code, from 20000 to 20999
 	AuthorizationFormatErrCode          = 20100
 	InconsistentCanonicalRequestErrCode = 20101
-	SignatureConsistentErrCode          = 20102
+	SignatureInconsistentErrCode        = 20102
 	UnsupportedSignTypeErrCode          = 20103
 	NoPermissionErrCode                 = 20104
 	ObjectNotCreatedErrCode             = 20105
 	ObjectNotSealedErrCode              = 20106
 	CheckPaymentAccountActiveErrCode    = 20107
+	InvalidReplicateApprovalSigErrCode  = 20108
+	MismatchedSPOperatorAddressErrCode  = 20109
+	ApprovalExpiredErrCode              = 20110
+	UnmarshalGetApprovalMsgJSONErrCode  = 20111
+	InvalidGetApprovalMsgErrCode        = 20112
+	ParseStringToNumberErrCode          = 20113
+	UnmarshalReplicateApprovalErrCode   = 20114
+	XMLMarshalErrCode                   = 20115
+	InvalidQueryParamErrCode            = 20116
 
 	// uploader service error, from 21000 to 21999
 	UploaderMismatchChecksumNumErrCode = 21100
@@ -88,6 +94,8 @@ const (
 
 	// signer service error, from 24000 to 24999
 	SignerSignIntegrityHashErrCode = 24100
+	SignBucketApprovalErrCode      = 24101
+	SignObjectApprovalErrCode      = 24102
 
 	// p2p service, from 25000 to 25999
 

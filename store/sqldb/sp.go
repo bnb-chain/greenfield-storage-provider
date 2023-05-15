@@ -87,7 +87,7 @@ func (s *SpDBImpl) FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvi
 	for _, value := range queryReturn {
 		totalDeposit, ok := sdkmath.NewIntFromString(value.TotalDeposit)
 		if !ok {
-			return records, errorstypes.Error(merrors.ParseStringToIntErrCode, "failed to parse string to int")
+			return records, errorstypes.Error(merrors.ParseStringToNumberErrCode, "failed to parse string to int")
 		}
 		records = append(records, &sptypes.StorageProvider{
 			OperatorAddress: value.OperatorAddress,
@@ -136,7 +136,7 @@ func (s *SpDBImpl) FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.
 	for _, value := range queryReturn {
 		totalDeposit, ok := sdkmath.NewIntFromString(value.TotalDeposit)
 		if !ok {
-			return records, errorstypes.Error(merrors.ParseStringToIntErrCode, "failed to parse string to int")
+			return records, errorstypes.Error(merrors.ParseStringToNumberErrCode, "failed to parse string to int")
 		}
 		records = append(records, &sptypes.StorageProvider{
 			OperatorAddress: value.OperatorAddress,
@@ -171,7 +171,7 @@ func (s *SpDBImpl) GetSpByAddress(address string, addressType SpAddressType) (*s
 	}
 	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
 	if !ok {
-		return nil, errorstypes.Error(merrors.ParseStringToIntErrCode, "failed to parse string to int")
+		return nil, errorstypes.Error(merrors.ParseStringToNumberErrCode, "failed to parse string to int")
 	}
 	return &sptypes.StorageProvider{
 		OperatorAddress: queryReturn.OperatorAddress,
@@ -218,7 +218,7 @@ func (s *SpDBImpl) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, e
 	}
 	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
 	if !ok {
-		return nil, errorstypes.Error(merrors.ParseStringToIntErrCode, "failed to parse string to int")
+		return nil, errorstypes.Error(merrors.ParseStringToNumberErrCode, "failed to parse string to int")
 	}
 	return &sptypes.StorageProvider{
 		OperatorAddress: queryReturn.OperatorAddress,
@@ -247,7 +247,7 @@ func (s *SpDBImpl) GetOwnSpInfo() (*sptypes.StorageProvider, error) {
 	}
 	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
 	if !ok {
-		return nil, errorstypes.Error(merrors.ParseStringToIntErrCode, "failed to parse string to int")
+		return nil, errorstypes.Error(merrors.ParseStringToNumberErrCode, "failed to parse string to int")
 	}
 	return &sptypes.StorageProvider{
 		OperatorAddress: queryReturn.OperatorAddress,

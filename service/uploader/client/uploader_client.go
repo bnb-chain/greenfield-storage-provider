@@ -3,15 +3,13 @@ package client
 import (
 	"context"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"google.golang.org/grpc"
+
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/service/uploader/types"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // UploaderClient is an uploader gRPC service client wrapper
@@ -71,10 +69,6 @@ func (client *UploaderClient) PutObject(ctx context.Context, opts ...grpc.CallOp
 func (client *UploaderClient) QueryUploadProgress(ctx context.Context, objectID uint64, opts ...grpc.CallOption) (servicetypes.JobState, error) {
 	resp, err := client.uploader.QueryUploadProgress(ctx, &types.QueryUploadProgressRequest{ObjectId: objectID}, opts...)
 	if err != nil {
-		errStatus, _ := status.FromError(err)
-		if codes.NotFound == errStatus.Code() {
-			return servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED, merrors.ErrNoSuchObject
-		}
 		return servicetypes.JobState_JOB_STATE_INIT_UNSPECIFIED, err
 	}
 	return resp.GetState(), nil

@@ -13,6 +13,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	errorstypes "github.com/bnb-chain/greenfield-storage-provider/pkg/errors/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	localHttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/bnb-chain/greenfield-storage-provider/service/downloader/types"
@@ -53,29 +54,29 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 
 	if gateway.downloader == nil {
 		log.Error("failed to get object due to not config downloader")
-		errDescription = NotExistComponentError
+		_ = makeXMLHTPPResponse(w, merrors.NotExistedComponentErrCode, reqContext.requestID)
 		return
 	}
 
 	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
-		errDescription = InvalidBucketName
+		_ = makeXMLHTPPResponse(w, merrors.InvalidBucketNameErrCode, reqContext.requestID)
 		return
 	}
 	if err = s3util.CheckValidObjectName(reqContext.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqContext.objectName, "error", err)
-		errDescription = InvalidKey
+		_ = makeXMLHTPPResponse(w, merrors.InvalidObjectNameErrCode, reqContext.requestID)
 		return
 	}
 
 	if addr, err = gateway.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	if err = gateway.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 
@@ -84,7 +85,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		rangeEnd = int64(reqContext.objectInfo.GetPayloadSize()) - 1
 	}
 	if isRange && (rangeStart < 0 || rangeEnd < 0 || rangeStart > rangeEnd) {
-		errDescription = InvalidRange
+		_ = makeXMLHTPPResponse(w, merrors.InvalidRangeErrCode, reqContext.requestID)
 		return
 	}
 
@@ -99,7 +100,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 	stream, err := gateway.downloader.GetObject(ctx, req)
 	if err != nil {
 		log.Errorf("failed to get object", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
@@ -115,7 +116,7 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		}
 		if err != nil {
 			log.Errorw("failed to read stream", "error", err)
-			errDescription = makeErrorDescription(merrors.GRPCErrorToInnerError(err))
+			_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 			return
 		}
 		// If it is limited, it will block
@@ -135,12 +136,12 @@ func (gateway *Gateway) getObjectHandler(w http.ResponseWriter, r *http.Request)
 		}
 		if writeN, err = w.Write(resp.Data); err != nil {
 			log.Errorw("failed to read stream", "error", err)
-			errDescription = makeErrorDescription(err)
+			_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 			return
 		}
 		if readN != writeN {
 			log.Errorw("failed to read stream", "error", err)
-			errDescription = InternalError
+			_ = makeXMLHTPPResponse(w, merrors.InternalErrCode, reqContext.requestID)
 			return
 		}
 		size = size + writeN
@@ -177,29 +178,29 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 
 	if gateway.uploader == nil {
 		log.Error("failed to put object due to not config uploader")
-		errDescription = NotExistComponentError
+		_ = makeXMLHTPPResponse(w, merrors.NotExistedComponentErrCode, reqContext.requestID)
 		return
 	}
 
 	if err = s3util.CheckValidBucketName(reqContext.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqContext.bucketName, "error", err)
-		errDescription = InvalidBucketName
+		_ = makeXMLHTPPResponse(w, merrors.InvalidBucketNameErrCode, reqContext.requestID)
 		return
 	}
 	if err = s3util.CheckValidObjectName(reqContext.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqContext.objectName, "error", err)
-		errDescription = InvalidKey
+		_ = makeXMLHTPPResponse(w, merrors.InvalidObjectNameErrCode, reqContext.requestID)
 		return
 	}
 
 	if addr, err = gateway.verifySignature(reqContext); err != nil {
 		log.Errorw("failed to verify signature", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	if err = gateway.checkAuthorization(reqContext, addr); err != nil {
 		log.Errorw("failed to check authorization", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 
@@ -207,14 +208,14 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 		log.Errorw("failed to auth due to object status is not created",
 			"object_status", reqContext.objectInfo.GetObjectStatus())
 		err = merrors.ErrCheckObjectCreated
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, merrors.ObjectNotCreatedErrCode, reqContext.requestID)
 		return
 	}
 
 	stream, err := gateway.uploader.PutObject(ctx)
 	if err != nil {
 		log.Errorf("failed to put object", "error", err)
-		errDescription = makeErrorDescription(err)
+		_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 		return
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
@@ -225,7 +226,7 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 		readN, err = r.Body.Read(buf)
 		if err != nil && err != io.EOF {
 			log.Errorw("failed to put object due to reader error", "error", err)
-			errDescription = InternalError
+			_ = makeXMLHTPPResponse(w, merrors.InternalErrCode, reqContext.requestID)
 			return
 		}
 		if readN > 0 {
@@ -241,7 +242,7 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 			}
 			if err := stream.Send(req); err != nil {
 				log.Errorw("failed to put object due to stream send error", "error", err)
-				errDescription = InternalError
+				_ = makeXMLHTPPResponse(w, merrors.InternalErrCode, reqContext.requestID)
 				return
 			}
 			size += readN
@@ -251,13 +252,13 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 		if err == io.EOF {
 			if size == 0 {
 				log.Errorw("failed to put object due to payload is empty")
-				errDescription = InvalidPayload
+				_ = makeXMLHTPPResponse(w, merrors.ZeroPayloadErrCode, reqContext.requestID)
 				return
 			}
 			_, err = stream.CloseAndRecv()
 			if err != nil {
 				log.Errorw("failed to put object due to stream close", "error", err)
-				errDescription = makeErrorDescription(err)
+				_ = makeXMLHTPPResponse(w, errorstypes.Code(err), reqContext.requestID)
 				return
 			}
 			// succeed to put object

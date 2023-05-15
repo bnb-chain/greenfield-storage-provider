@@ -20,11 +20,7 @@ type APIError struct {
 // map error code to APIError structure, these fields carry respective
 // descriptions and http status code for all the error responses.
 var errCodeMap = map[int]APIError{
-	merrors.InternalErrCode: {
-		Code:           "InternalError",
-		Description:    "We encountered an internal error, please try again.",
-		HTTPStatusCode: http.StatusInternalServerError,
-	},
+	// HTTP status code 4xx
 	merrors.NoSuchBucketErrCode: {
 		Code:           "NoSuchBucket",
 		Description:    "The specified bucket does not exist.",
@@ -100,9 +96,9 @@ var errCodeMap = map[int]APIError{
 		Description:    "Inconsistent canonical request.",
 		HTTPStatusCode: http.StatusForbidden,
 	},
-	merrors.SignatureConsistentErrCode: {
+	merrors.SignatureInconsistentErrCode: {
 		Code:           "SignatureDoesNotMatch",
-		Description:    "Authorization format is invalid.",
+		Description:    "Inconsistent signature header.",
 		HTTPStatusCode: http.StatusForbidden,
 	},
 	merrors.UnsupportedSignTypeErrCode: {
@@ -111,9 +107,45 @@ var errCodeMap = map[int]APIError{
 		HTTPStatusCode: http.StatusForbidden,
 	},
 	merrors.NoPermissionErrCode: {
-		Code:           "InvalidRequest",
-		Description:    "Unsupported signature type.",
+		Code:           "AccessDenied",
+		Description:    "User has no permission.",
 		HTTPStatusCode: http.StatusForbidden,
+	},
+	merrors.CheckPaymentAccountActiveErrCode: {
+		Code:           "AccessDenied",
+		Description:    "Payment account is not active.",
+		HTTPStatusCode: http.StatusForbidden,
+	},
+	merrors.HexDecodeStringErrCode: {
+		Code:           "InvalidRequest",
+		Description:    "Invalid hex encoded string.",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	merrors.UnmarshalGetApprovalMsgJSONErrCode: {
+		Code:           "InvalidRequest",
+		Description:    "Can't unmarshal get approval json msg, please check.",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	merrors.InvalidGetApprovalMsgErrCode: {
+		Code:           "InvalidRequest",
+		Description:    "Get approval json msg contains invalid field.",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	// HTTP status code: 5xx
+	merrors.InternalErrCode: {
+		Code:           "InternalError",
+		Description:    "We encountered an internal error, please try again.",
+		HTTPStatusCode: http.StatusInternalServerError,
+	},
+	merrors.NotImplementedErrCode: {
+		Code:           "NotImplemented",
+		Description:    "Not implemented API.",
+		HTTPStatusCode: http.StatusNotImplemented,
+	},
+	merrors.NotExistedComponentErrCode: {
+		Code:           "NotExistComponent",
+		Description:    "Not Existed Component.",
+		HTTPStatusCode: http.StatusNotImplemented,
 	},
 }
 
