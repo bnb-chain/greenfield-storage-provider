@@ -67,6 +67,10 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to storage params table", "error", err)
 		return nil, err
 	}
+	if err := db.AutoMigrate(&PieceHashTable{}); err != nil {
+		log.Errorw("failed to create piece hash table", "error", err)
+		return nil, err
+	}
 	if err := db.AutoMigrate(&IntegrityMetaTable{}); err != nil {
 		log.Errorw("failed to create integrity meta table", "error", err)
 		return nil, err

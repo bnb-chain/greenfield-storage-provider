@@ -90,10 +90,10 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 		return nil, nil, ErrSinger
 	}
 	integrityMeta := &corespdb.IntegrityMeta{
-		ObjectID:      task.GetObjectInfo().Id.Uint64(),
-		Checksum:      checksums,
-		IntegrityHash: integrity,
-		Signature:     signature,
+		ObjectID:          task.GetObjectInfo().Id.Uint64(),
+		IntegrityChecksum: integrity,
+		PieceChecksumList: checksums,
+		Signature:         signature,
 	}
 	err = r.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 	if err != nil {
@@ -101,7 +101,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 		return nil, nil, ErrGfSpDB
 	}
 	if err = r.baseApp.GfSpDB().DeleteAllReplicatePieceChecksum(
-		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx()); err != nil {
+		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx(), segmentCount); err != nil {
 		log.CtxErrorw(ctx, "failed to delete all replicate piece checksum", "error", err)
 	}
 	if err = r.baseApp.GfSpClient().ReportTask(ctx, task); err != nil {
