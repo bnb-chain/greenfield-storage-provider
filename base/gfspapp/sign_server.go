@@ -19,7 +19,7 @@ func (g *GfSpBaseApp) GfSpSign(
 	ctx context.Context,
 	req *gfspserver.GfSpSignRequest) (
 	*gfspserver.GfSpSignResponse, error) {
-	if req.Request == nil {
+	if req.GetRequest() == nil {
 		log.Error("failed to sign msg, msg pointer dangling")
 		return &gfspserver.GfSpSignResponse{Err: ErrSingTaskDangling}, nil
 	}
@@ -28,7 +28,7 @@ func (g *GfSpBaseApp) GfSpSign(
 		integrity []byte
 		err       error
 	)
-	switch t := req.Request.(type) {
+	switch t := req.GetRequest().(type) {
 	case *gfspserver.GfSpSignRequest_CreateBucketInfo:
 		signature, err = g.signer.SignCreateBucketApproval(ctx, t.CreateBucketInfo)
 		if err != nil {

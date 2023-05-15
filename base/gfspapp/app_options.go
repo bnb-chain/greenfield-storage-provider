@@ -108,8 +108,8 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Endpoint.P2PEndpoint == "" {
 		cfg.Endpoint.P2PEndpoint = DefaultGrpcAddress
 	}
-	if cfg.Endpoint.SingerEndpoint == "" {
-		cfg.Endpoint.SingerEndpoint = DefaultGrpcAddress
+	if cfg.Endpoint.SignerEndpoint == "" {
+		cfg.Endpoint.SignerEndpoint = DefaultGrpcAddress
 	}
 	if cfg.Endpoint.AuthorizerEndpoint == "" {
 		cfg.Endpoint.AuthorizerEndpoint = DefaultGrpcAddress
@@ -123,7 +123,7 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		cfg.Endpoint.RetrieverEndpoint,
 		cfg.Endpoint.UploaderEndpoint,
 		cfg.Endpoint.P2PEndpoint,
-		cfg.Endpoint.SingerEndpoint,
+		cfg.Endpoint.SignerEndpoint,
 		cfg.Endpoint.AuthorizerEndpoint,
 		!cfg.Monitor.DisableMetrics)
 	return nil

@@ -15,7 +15,7 @@ func (s *GfSpClient) SignCreateBucketApproval(
 	ctx context.Context,
 	bucket *storagetypes.MsgCreateBucket) (
 	[]byte, error) {
-	conn, err := s.SingerConn(ctx)
+	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (s *GfSpClient) SignCreateObjectApproval(
 	ctx context.Context,
 	object *storagetypes.MsgCreateObject) (
 	[]byte, error) {
-	conn, err := s.SingerConn(ctx)
+	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (s *GfSpClient) SignCreateObjectApproval(
 func (s *GfSpClient) SealObject(
 	ctx context.Context,
 	object *storagetypes.MsgSealObject) error {
-	conn, err := s.SingerConn(ctx)
+	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (s *GfSpClient) SignReplicatePieceApproval(
 	ctx context.Context,
 	task coretask.ApprovalReplicatePieceTask) (
 	[]byte, error) {
-	conn, err := s.SingerConn(ctx)
+	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (s *GfSpClient) SignIntegrityHash(
 	objectID uint64,
 	checksums [][]byte) (
 	[]byte, []byte, error) {
-	conn, err := s.SingerConn(ctx)
+	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -118,7 +118,7 @@ func (s *GfSpClient) SignReceiveTask(
 	ctx context.Context,
 	receiveTask coretask.ReceivePieceTask) (
 	[]byte, error) {
-	conn, err := s.SingerConn(ctx)
+	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (s *GfSpClient) SignP2PPingMsg(
 	ctx context.Context,
 	ping *gfspp2p.GfSpPing) (
 	[]byte, error) {
-	conn, err := s.SingerConn(ctx)
+	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func (s *GfSpClient) SignP2PPongMsg(
 	ctx context.Context,
 	pong *gfspp2p.GfSpPong) (
 	[]byte, error) {
-	conn, err := s.SingerConn(ctx)
+	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		return nil, err
 	}

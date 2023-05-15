@@ -92,7 +92,7 @@ type EndpointConfig struct {
 	RetrieverEndpoint  string
 	UploaderEndpoint   string
 	P2PEndpoint        string
-	SingerEndpoint     string
+	SignerEndpoint     string
 	AuthorizerEndpoint string
 }
 

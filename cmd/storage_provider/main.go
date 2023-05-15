@@ -19,7 +19,7 @@ import (
 
 var (
 	appName  = "gnfd-sp"
-	appUsage = "the gnfd-sp command line interface"
+	appUsage = "the Greenfield Storage Provider command line interface"
 )
 
 var app *cli.App
@@ -103,8 +103,7 @@ func makeConfig(ctx *cli.Context) (*gfspconfig.GfSpConfig, error) {
 		}
 	}
 	if ctx.IsSet(utils.ServerFlag.Name) {
-		servers := util.SplitByComma(ctx.String(utils.ServerFlag.Name))
-		cfg.Server = servers
+		cfg.Server = util.SplitByComma(ctx.String(utils.ServerFlag.Name))
 	}
 	if ctx.IsSet(utils.MetricsDisableFlag.Name) {
 		cfg.Monitor.DisableMetrics = ctx.Bool(utils.MetricsDisableFlag.Name)
@@ -124,7 +123,7 @@ func makeConfig(ctx *cli.Context) (*gfspconfig.GfSpConfig, error) {
 	return cfg, nil
 }
 
-// makeEnv init storage provider runtime environment
+// makeEnv inits storage provider runtime environment.
 func makeEnv(ctx *cli.Context, cfg *gfspconfig.GfSpConfig) error {
 	var (
 		logLevel = "debug"
@@ -148,23 +147,23 @@ func makeEnv(ctx *cli.Context, cfg *gfspconfig.GfSpConfig) error {
 }
 
 // storageProvider is the main entry point into the system if no special subcommand
-// is ran. It uses default config to  run storage provider services based  on the
+// is run. It uses default config to  run storage provider services based  on the
 // command line arguments and runs it in blocking mode, waiting for it to be shut
 // down.
 func storageProvider(ctx *cli.Context) error {
 	cfg, err := makeConfig(ctx)
 	if err != nil {
-		log.Errorw("failed to make gfsp config", "error", err)
+		log.Errorw("failed to make gf-sp config", "error", err)
 		return nil
 	}
 	err = makeEnv(ctx, cfg)
 	if err != nil {
-		log.Errorw("failed to make gfsp env", "error", err)
+		log.Errorw("failed to make gf-sp env", "error", err)
 		return nil
 	}
 	gfsp, err := gfspapp.NewGfSpBaseApp(cfg)
 	if err != nil {
-		log.Errorw("failed to init gfsp app", "error", err)
+		log.Errorw("failed to init gf-sp app", "error", err)
 		return err
 	}
 	return gfsp.Start(context.Background())

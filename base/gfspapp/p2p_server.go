@@ -22,7 +22,7 @@ func (g *GfSpBaseApp) GfSpAskSecondaryReplicatePieceApproval(
 	error) {
 	task := req.GetReplicatePieceApprovalTask()
 	if task == nil {
-		log.Error("failed to ask replicate piece approval, task pointer dangling")
+		log.CtxError(ctx, "failed to ask replicate piece approval, task pointer dangling")
 		return nil, ErrReplicatePieceApprovalTaskDangling
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())

@@ -37,14 +37,14 @@ type GfSpClient struct {
 	retrieverEndpoint  string
 	uploaderEndpoint   string
 	p2pEndpoint        string
-	singerEndpoint     string
+	signerEndpoint     string
 	authorizerEndpoint string
 
 	mux          sync.RWMutex
 	managerConn  *grpc.ClientConn
 	approverConn *grpc.ClientConn
 	p2pConn      *grpc.ClientConn
-	singerConn   *grpc.ClientConn
+	signerConn   *grpc.ClientConn
 	httpClient   *http.Client
 	metrics      bool
 }
@@ -58,7 +58,7 @@ func NewGfSpClient(
 	retrieverEndpoint string,
 	uploaderEndpoint string,
 	p2pEndpoint string,
-	singerEndpoint string,
+	signerEndpoint string,
 	authorizerEndpoint string,
 	metrics bool) *GfSpClient {
 	return &GfSpClient{
@@ -70,7 +70,7 @@ func NewGfSpClient(
 		retrieverEndpoint:  retrieverEndpoint,
 		uploaderEndpoint:   uploaderEndpoint,
 		p2pEndpoint:        p2pEndpoint,
-		singerEndpoint:     singerEndpoint,
+		signerEndpoint:     signerEndpoint,
 		authorizerEndpoint: authorizerEndpoint,
 		metrics:            metrics,
 	}
@@ -148,7 +148,7 @@ func (s *GfSpClient) P2PConn(
 	return s.p2pConn, nil
 }
 
-func (s *GfSpClient) SingerConn(
+func (s *GfSpClient) SignerConn(
 	ctx context.Context,
 	opts ...grpc.DialOption) (
 	*grpc.ClientConn, error) {
@@ -158,15 +158,15 @@ func (s *GfSpClient) SingerConn(
 	if s.metrics {
 		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
 	}
-	if s.singerConn == nil {
-		conn, err := s.Connection(ctx, s.singerEndpoint, options...)
+	if s.signerConn == nil {
+		conn, err := s.Connection(ctx, s.signerEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
 			return nil, ErrRpcUnknown
 		}
-		s.singerConn = conn
+		s.signerConn = conn
 	}
-	return s.singerConn, nil
+	return s.signerConn, nil
 }
 
 func (s *GfSpClient) HttpClient(ctx context.Context) *http.Client {
@@ -195,8 +195,8 @@ func (s *GfSpClient) Close() error {
 	if s.p2pConn != nil {
 		s.p2pConn.Close()
 	}
-	if s.singerConn != nil {
-		s.singerConn.Close()
+	if s.signerConn != nil {
+		s.signerConn.Close()
 	}
 	return nil
 }

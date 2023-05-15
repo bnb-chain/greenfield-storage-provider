@@ -27,7 +27,7 @@ func (g *GfSpBaseApp) GfSpBeginTask(
 	ctx context.Context,
 	req *gfspserver.GfSpBeginTaskRequest) (
 	*gfspserver.GfSpBeginTaskResponse, error) {
-	if req.Request == nil {
+	if req.GetRequest() == nil {
 		log.Error("failed to begin task, task pointer dangling")
 		return &gfspserver.GfSpBeginTaskResponse{Err: ErrUploadTaskDangling}, nil
 	}
@@ -44,7 +44,7 @@ func (g *GfSpBaseApp) OnBeginUploadObjectTask(
 	ctx context.Context,
 	task coretask.UploadObjectTask) error {
 	if task == nil || task.GetObjectInfo() == nil {
-		log.Error("failed to begin upload object task, object info pointer dangling")
+		log.CtxError(ctx, "failed to begin upload object task, object info pointer dangling")
 		return ErrUploadTaskDangling
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
@@ -132,12 +132,12 @@ func (g *GfSpBaseApp) GfSpReportTask(
 	req *gfspserver.GfSpReportTaskRequest) (
 	*gfspserver.GfSpReportTaskResponse, error) {
 	var (
-		reportTask = req.Request
+		reportTask = req.GetRequest()
 		shadowTask coretask.Task
 		err        error
 	)
 	if reportTask == nil {
-		log.Error("failed to begin upload object task, object info pointer dangling")
+		log.CtxError(ctx, "failed to begin upload object task, object info pointer dangling")
 		return &gfspserver.GfSpReportTaskResponse{Err: ErrUploadTaskDangling}, nil
 	}
 	shadowTask = reportTask.(coretask.Task)

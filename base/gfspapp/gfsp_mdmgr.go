@@ -31,6 +31,7 @@ func init() {
 			instances:      make(map[string]coremodule.Modular),
 			newModularFunc: make(map[string]NewModularFunc),
 		}
+		// TODO: add modular
 	})
 }
 
