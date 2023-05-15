@@ -74,6 +74,8 @@ GcPrivateKey = ""
 Modules = ["epoch", "bucket", "object", "payment", "permission", "group"]
 Dsn = "root:passwd@tcp(localhost:3306)/block_syncer?parseTime=true&multiStatements=true&loc=Local"
 RecreateTables = false
+EnableDualDB = false
+DsnSwitched = "root:passwd@tcp(localhost:3306)/block_syncer_backup?parseTime=true&multiStatements=true&loc=Local"
 Workers = 10
 
 [P2PCfg]

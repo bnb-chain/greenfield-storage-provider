@@ -5,12 +5,12 @@ go 1.20
 replace (
 	cosmossdk.io/api => github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230425074444-eb5869b05fe9
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05fe9
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.12-0.20230506102855-44baf619ebef
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.2.0
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.23.0
-	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-tendermint v0.0.0-20230505031757-bb05128f3794
+	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v0.0.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.0.0-20230505075208-b889f9645259
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230510081821-bbfa4211eae9
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.2.0
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230512013713-9fd131d5b4d6
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
@@ -18,18 +18,17 @@ replace (
 require (
 	cosmossdk.io/math v1.0.0
 	github.com/aws/aws-sdk-go v1.44.159
-	github.com/bnb-chain/greenfield v0.0.12-0.20230506102855-44baf619ebef
-	github.com/bnb-chain/greenfield-common/go v0.0.0-20230407104542-ed19e3666522
+	github.com/bnb-chain/greenfield v0.2.0
+	github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cloudflare/cfssl v1.6.3
 	github.com/consensys/gnark-crypto v0.7.0
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230220103612-f094a0c33410
-	github.com/cosmos/gogoproto v1.4.9
+	github.com/cosmos/gogoproto v1.4.8
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/felixge/fgprof v0.9.3
 	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.8.2
-	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -59,6 +58,11 @@ require (
 require github.com/cometbft/cometbft v0.37.1
 
 require (
+	github.com/cometbft/cometbft v0.37.1
+	golang.org/x/time v0.3.0
+)
+
+require (
 	cosmossdk.io/api v0.4.0 // indirect
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
@@ -68,10 +72,10 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
+	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
-	github.com/tklauser/numcpus v0.4.0 // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect

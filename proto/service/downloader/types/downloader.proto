@@ -9,9 +9,9 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/service/do
 // GetObjectRequest is request type for the GetObject RPC method.
 message GetObjectRequest {
   // bucket_info defines the information of the bucket.
-  bnbchain.greenfield.storage.BucketInfo bucket_info = 1;
+  greenfield.storage.BucketInfo bucket_info = 1;
   // object_info defines the information of the object.
-  bnbchain.greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.ObjectInfo object_info = 2;
   // user_address defines the request user address.
   string user_address = 3;
   // is_range indicate whether it is ranged get, compatible aws s3
@@ -33,7 +33,7 @@ message GetObjectResponse {
 // GetBucketReadQuotaRequest is request type for the GetBucketReadQuota RPC method.
 message GetBucketReadQuotaRequest {
   // bucket info from the greenfield chain
-  bnbchain.greenfield.storage.BucketInfo bucket_info = 1;
+  greenfield.storage.BucketInfo bucket_info = 1;
   // year_month is the query bucket quota's month, like "2023-03"
   string year_month = 2;
 }
@@ -51,7 +51,7 @@ message GetBucketReadQuotaResponse {
 // ListBucketReadRecordRequest is request type for the ListBucketReadRecord RPC method.
 message ListBucketReadRecordRequest {
   // bucket info from the greenfield chain
-  bnbchain.greenfield.storage.BucketInfo bucket_info = 1;
+  greenfield.storage.BucketInfo bucket_info = 1;
   // start_timestamp_us is the list request's left side, like [start_timestamp_us, end_timestamp_us)
   int64 start_timestamp_us = 2;
   // start_timestamp_us is the list request's right side, like [start_timestamp_us, end_timestamp_us)

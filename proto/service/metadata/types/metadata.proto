@@ -10,7 +10,7 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/metadata/t
 // Bucket is the structure for user bucket
 message Bucket {
   // bucket_info defines the information of the bucket.
-  bnbchain.greenfield.storage.BucketInfo bucket_info = 1;
+  greenfield.storage.BucketInfo bucket_info = 1;
   // removed defines the bucket is deleted or not
   bool removed = 2;
   // delete_at defines the block number when the bucket deleted.
@@ -32,7 +32,7 @@ message Bucket {
 // Object is the structure for user object
 message Object {
   // object_info defines the information of the object.
-  bnbchain.greenfield.storage.ObjectInfo object_info = 1;
+  greenfield.storage.ObjectInfo object_info = 1;
   // locked_balance defines locked balance of object
   string locked_balance = 2;
   // removed defines the object is deleted or not
@@ -160,7 +160,7 @@ message GetBucketMetaResponse {
   // bucket defines the information of a bucket
   Bucket bucket = 1;
   // stream_record defines stream payment record of a stream account
-  bnbchain.greenfield.payment.StreamRecord stream_record = 2;
+  greenfield.payment.StreamRecord stream_record = 2;
 }
 
 // GetUserBucketsResponse is response type for the GetUserBuckets RPC method.
@@ -234,13 +234,13 @@ message GetObjectMetaResponse {
 // GetPaymentByBucketNameResponse is response type for the GetPaymentByBucketName RPC method.
 message GetPaymentByBucketNameResponse {
   // stream_record defines stream payment record of a stream account
-  bnbchain.greenfield.payment.StreamRecord stream_record = 1;
+  greenfield.payment.StreamRecord stream_record = 1;
 }
 
 // GetPaymentByBucketIDResponse is response type for the GetPaymentByBucketID RPC method.
 message GetPaymentByBucketIDResponse {
   // stream_record defines stream payment record of a stream account
-  bnbchain.greenfield.payment.StreamRecord stream_record = 1;
+  greenfield.payment.StreamRecord stream_record = 1;
 }
 
 // MetadataService defines the gRPC service of metadata
@@ -266,7 +266,11 @@ service MetadataService {
   // GetPaymentByBucketID get bucket payment info by a bucket id
   rpc GetPaymentByBucketID(GetPaymentByBucketIDRequest) returns (GetPaymentByBucketIDResponse) {};
   // VerifyPermission Verify the input items permission.
+<<<<<<< HEAD
   rpc VerifyPermission(bnbchain.greenfield.storage.QueryVerifyPermissionRequest) returns (bnbchain.greenfield.storage.QueryVerifyPermissionResponse) {};
+=======
+  rpc VerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {};
+>>>>>>> develop
   // GetBucketMeta get bucket metadata with related info such as payment
   rpc GetBucketMeta(GetBucketMetaRequest) returns (GetBucketMetaResponse) {};
 }

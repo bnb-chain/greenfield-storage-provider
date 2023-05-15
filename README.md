@@ -42,10 +42,10 @@ Greenfield Storage Provider
     (__  ) /_/ /_/ / /  / /_/ / /_/ /  __/  / /_/ / /  / /_/ / |/ / / /_/ /  __/ /
     /____/\__/\____/_/   \__,_/\__, /\___/  / .___/_/   \____/|___/_/\__,_/\___/_/
     /____/       /_/
-Version : v0.0.3
+Version : v0.1.3
 Branch  : master
-Commit  : e332362ec59724e143725dc5a5a0dacae3be73be
-Build   : go1.18.4 darwin amd64 2023-03-13 14:11
+Commit  : bfc32b9748c11d74493f93c420744ade4dbc18ac
+Build   : go1.20.3 darwin arm64 2023-05-12 13:37
 
 # show help
 ./gnfd-sp help
