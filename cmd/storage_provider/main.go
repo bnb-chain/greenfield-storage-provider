@@ -142,12 +142,12 @@ func main() {
 // and runs it in blocking mode, waiting for it to be shut down.
 func storageProvider(ctx *cli.Context) error {
 	cfg := gfspconfig.GfSpConfig{}
-	gfspApp, err := gfspapp.NewGfSpBaseApp(&cfg)
+	gfsp, err := gfspapp.NewGfSpBaseApp(&cfg)
 	if err != nil {
 		log.Errorw("failed to init gfsp app", "error", err)
 		return err
 	}
-	return gfspApp.Start(context.Background())
+	return gfsp.Start(context.Background())
 	//cfg, err := makeConfig(ctx)
 	//if err != nil {
 	//	return err

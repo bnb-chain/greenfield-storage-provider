@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
 
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -13,20 +12,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
-
-var (
-	mMonitor MetricsMonitor
-	once     sync.Once
-)
-
-// MetricsMonitor defines abstract method
-type MetricsMonitor interface {
-	lifecycle.Service
-	Enabled() bool
-}
 
 var _ coremodule.Modular = &Metrics{}
 

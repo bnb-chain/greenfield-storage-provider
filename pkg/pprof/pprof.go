@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 
+	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/felixge/fgprof"
 	"github.com/gorilla/mux"
@@ -13,6 +14,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
+
+var _ coremodule.Modular = &PProf{}
 
 // PProf is used to analyse the performance sp service
 type PProf struct {
