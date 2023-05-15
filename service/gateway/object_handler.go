@@ -207,7 +207,6 @@ func (gateway *Gateway) putObjectHandler(w http.ResponseWriter, r *http.Request)
 	if reqContext.objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 		log.Errorw("failed to auth due to object status is not created",
 			"object_status", reqContext.objectInfo.GetObjectStatus())
-		err = merrors.ErrCheckObjectCreated
 		_ = makeXMLHTPPResponse(w, merrors.ObjectNotCreatedErrCode, reqContext.requestID)
 		return
 	}

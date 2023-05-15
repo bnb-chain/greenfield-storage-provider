@@ -266,11 +266,7 @@ service MetadataService {
   // GetPaymentByBucketID get bucket payment info by a bucket id
   rpc GetPaymentByBucketID(GetPaymentByBucketIDRequest) returns (GetPaymentByBucketIDResponse) {};
   // VerifyPermission Verify the input items permission.
-<<<<<<< HEAD
-  rpc VerifyPermission(bnbchain.greenfield.storage.QueryVerifyPermissionRequest) returns (bnbchain.greenfield.storage.QueryVerifyPermissionResponse) {};
-=======
   rpc VerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {};
->>>>>>> develop
   // GetBucketMeta get bucket metadata with related info such as payment
   rpc GetBucketMeta(GetBucketMetaRequest) returns (GetBucketMetaResponse) {};
 }

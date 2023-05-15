@@ -131,7 +131,7 @@ func makeErrorDescription(err error) *errorDescription {
 		return NoSuchKey
 	case merrors.ErrNoSuchBucket:
 		return NoSuchBucket
-	case merrors.ErrAuthorizationFormat, merrors.ErrRequestConsistent, merrors.ErrSignatureConsistent, merrors.ErrUnsupportedSignType:
+	case merrors.ErrAuthorizationFormat, merrors.ErrRequestConsistent, merrors.ErrSignatureInconsistent, merrors.ErrUnsupportedSignType:
 		return SignatureNotMatch
 	case merrors.ErrNoPermission, merrors.ErrCheckPaymentAccountActive:
 		return AccessDenied

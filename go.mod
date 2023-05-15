@@ -55,8 +55,6 @@ require (
 	gorm.io/gorm v1.24.5
 )
 
-require github.com/cometbft/cometbft v0.37.1
-
 require (
 	github.com/cometbft/cometbft v0.37.1
 	golang.org/x/time v0.3.0
@@ -77,7 +75,6 @@ require (
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 )

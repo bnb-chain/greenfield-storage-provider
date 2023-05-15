@@ -219,7 +219,7 @@ func Test_verifyPersonalSignatureFromRequest_Error(t *testing.T) {
 		request: req,
 	}
 	_, err = gw.verifySignature(rc)
-	assert.Equal(t, errors.ErrSignatureConsistent, err)
+	assert.Equal(t, errors.ErrSignatureInconsistent, err)
 
 	invalidETHSig := "0x04a181416075908cf580d93222dbaa9b32cb73428ab88c6722e849005ca5cb301a860aa7fd6325645cc9e1e58e4dc279ce43cfd3220e54f7fbec37194127b0201b"
 	// wrong recovery id offset
@@ -230,7 +230,7 @@ func Test_verifyPersonalSignatureFromRequest_Error(t *testing.T) {
 		request: req,
 	}
 	_, err = gw.verifySignature(rc)
-	assert.Equal(t, errors.ErrSignatureConsistent, err)
+	assert.Equal(t, errors.ErrSignatureInconsistent, err)
 }
 
 func TestParseRangeHeader(t *testing.T) {
