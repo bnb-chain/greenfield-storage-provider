@@ -28,7 +28,7 @@ different, the `Task Queue Strategy` is an interface that supports custom strate
 
 TQueue is the interface to task queue. The task queue is mainly used to maintain tasks 
 are running. In addition to supporting conventional FIFO operations, task queue also 
-has some customized operations for task. For example, Has, PopByKey, PopPush.
+has some customized operations for task. For example, Has, PopByKey.
 
 ## TQueueWithLimit
 
@@ -46,26 +46,3 @@ retiring task.
 TQueueOnStrategyWithLimit is a combination of TQueueWithLimit and TQueueStrategy，it is 
 the interface to task queue that takes resources into account, and the queue supports 
 customize strategies to filter task for popping and retiring task.
-
-## TPriorityQueue
-
-TPriorityQueue is the interface to task priority queue. The priority queue has multi sub 
-TQueue. Tasks of the same sub TQueue have the same priority.
-
-## TPriorityQueueWithLimit
-
-TPriorityQueueWithLimit is the interface to task priority queue that sub queue is 
-TQueueWithLimit. Tasks of the same sub TQueueWithLimit have the same priority.
-
-## TPriorityQueueOnStrategy
-
-TPriorityQueueOnStrategy is a combination of TPriorityQueue and TPriorityQueueStrategy, 
-it is the interface to task priority queue and the queue supports customize strategy to 
-pick up task between sub queues.
-
-## TPriorityQueueWithLimitOnStrategy
-
-TPriorityQueueWithLimitOnStrategy is a combination of TPriorityQueueWithLimit and 
-TPriorityQueueStrategy, it is the interface to task priority queue and the queue supports 
-customize strategy to pick up task between sub queues. The sub queue is TQueueWithLimit
-type.

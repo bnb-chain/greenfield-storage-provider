@@ -26,7 +26,6 @@ type SPInfoDB interface {
 	GetSpByAddress(address string, addressType SpAddressType) (*sptypes.StorageProvider, error)
 	// GetSpByEndpoint return sp info by endpoint
 	GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error)
-
 	// GetOwnSpInfo return own sp info
 	GetOwnSpInfo() (*sptypes.StorageProvider, error)
 	// SetOwnSpInfo set(maybe overwrite) own sp info

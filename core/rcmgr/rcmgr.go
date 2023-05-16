@@ -137,7 +137,10 @@ type ResourceScope interface {
 	AddConn(dir Direction) error
 	// RemoveConn explicitly releases connection reserved with AddConn.
 	RemoveConn(dir Direction)
+	// ReserveResources reserves the resource by ScopeStat, it will reserve all kinds
+	// of resources atomic
 	ReserveResources(st *ScopeStat) error
+	// RemainingResource returns the remaining resource that have not be reserved
 	RemainingResource() (Limit, error)
 	// Stat retrieves current resource usage for the scope.
 	Stat() ScopeStat

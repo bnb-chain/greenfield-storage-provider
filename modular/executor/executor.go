@@ -73,28 +73,27 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 				"max_execute_num", maxExecuteNum)
 			atomic.AddUint64(&e.executingNum, 1)
 			go func() {
+				limit, err := e.scope.RemainingResource()
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to get remaining resource", "error", err)
+					return
+				}
 				defer atomic.AddUint64(&e.executingNum, -1)
-				e.askTask(ctx)
+				metrics.RemainingMemoryGauge.WithLabelValues(e.Name()).Set(float64(limit.GetMemoryLimit()))
+				metrics.RemainingTaskGauge.WithLabelValues(e.Name()).Set(float64(limit.GetTaskTotalLimit()))
+				metrics.RemainingHighPriorityTaskGauge.WithLabelValues(e.Name()).Set(
+					float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityHigh)))
+				metrics.RemainingMediumPriorityTaskGauge.WithLabelValues(e.Name()).Set(
+					float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityMedium)))
+				metrics.RemainingLowTaskGauge.WithLabelValues(e.Name()).Set(
+					float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityLow)))
+				e.AskTask(ctx, limit)
 			}()
 		}
 	}
 }
 
-func (e *ExecuteModular) askTask(ctx context.Context) {
-	limit, err := e.scope.RemainingResource()
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to get remaining resource", "error", err)
-		return
-	}
-	metrics.RemainingMemoryGauge.WithLabelValues(e.Name()).Set(float64(limit.GetMemoryLimit()))
-	metrics.RemainingTaskGauge.WithLabelValues(e.Name()).Set(float64(limit.GetTaskTotalLimit()))
-	metrics.RemainingHighPriorityTaskGauge.WithLabelValues(e.Name()).Set(
-		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityHigh)))
-	metrics.RemainingMediumPriorityTaskGauge.WithLabelValues(e.Name()).Set(
-		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityMedium)))
-	metrics.RemainingLowTaskGauge.WithLabelValues(e.Name()).Set(
-		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityLow)))
-
+func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
 	askTask, err := e.baseApp.GfSpClient().AskTask(ctx, limit)
 	if err != nil {
 		log.CtxWarnw(ctx, "failed to ask task", "remaining", limit.String(), "error", err)

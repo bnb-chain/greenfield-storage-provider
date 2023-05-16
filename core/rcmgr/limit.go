@@ -26,7 +26,9 @@ type Limit interface {
 	ScopeStat() *ScopeStat
 	// NotLess returns an indicator whether cover the param limit fields.
 	NotLess(Limit) bool
+	// Add params limits fields value to self.
 	Add(Limit)
+	// Sub params limits fields value to self.
 	Sub(Limit) bool
 	// Equal returns an indicator whether equal the param limit.
 	Equal(Limit) bool
