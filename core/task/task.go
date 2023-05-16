@@ -197,7 +197,7 @@ type ApprovalCreateObjectTask interface {
 
 // ApprovalReplicatePieceTask is the interface to record the ask replicate pieces
 // to other SPs(as secondary SP for the object). It is initiated by the primary SP
-// in the replicate pieces phase.  Before the primary SP sends it to other SPs, the
+// in the replicate pieces phase. Before the primary SP sends it to other SPs, the
 // primary SP will sign the task, other SPs will verify it is sent by a legitimate
 // SP. If other SPs approved the approval, they will SetExpiredHeight and signs the
 // ApprovalReplicatePieceTask.
@@ -298,7 +298,7 @@ type ReplicatePieceTask interface {
 	// GetSecondarySignature returns the secondary SP's signatures. It is used to
 	// generate MsgSealObject.
 	GetSecondarySignature() [][]byte
-	// SetSecondarySignature sets the the secondary SP's signatures.
+	// SetSecondarySignature sets the secondary SP's signatures.
 	SetSecondarySignature([][]byte)
 }
 
@@ -383,7 +383,7 @@ type DownloadObjectTask interface {
 	// It is used to Query and calculate bucket read quota.
 	GetBucketInfo() *storagetypes.BucketInfo
 	// GetUserAddress returns the user account of downloading object.
-	// It is used to records the read bucket information.
+	// It is used to record the read bucket information.
 	GetUserAddress() string
 	// SetUserAddress sets the user account of downloading object.
 	SetUserAddress(string)
@@ -412,10 +412,10 @@ type ChallengePieceTask interface {
 		retry int64)
 	// GetBucketInfo returns the BucketInfo of challenging piece
 	GetBucketInfo() *storagetypes.BucketInfo
-	// SetBucketInfo sets the the BucketInfo of challenging piece
+	// SetBucketInfo sets the BucketInfo of challenging piece
 	SetBucketInfo(*storagetypes.BucketInfo)
 	// GetUserAddress returns the user account of challenging object.
-	// It is used to records the read bucket information.
+	// It is used to record the read bucket information.
 	GetUserAddress() string
 	// SetUserAddress sets the user account of challenging object.
 	SetUserAddress(string)
@@ -465,16 +465,16 @@ type GCObjectTask interface {
 	SetCurrentBlockNumber(uint64)
 	// GetCurrentBlockNumber returns the collecting block number.
 	GetCurrentBlockNumber() uint64
-	// GetDeletingObjectId returns the lasted deleting ObjectID.
-	GetDeletingObjectId() uint64
-	// SetDeletingObjectId sets the lasted deleting ObjectID.
-	SetDeletingObjectId(uint64)
-	// GetGCObjectProcess returns the process of collecting object, returns the
+	// GetLastDeletedObjectId returns the last deleted ObjectID.
+	GetLastDeletedObjectId() uint64
+	// SetLastDeletedObjectId sets the last deleted ObjectID.
+	SetLastDeletedObjectId(uint64)
+	// GetGCObjectProgress returns the progress of collecting object, returns the
 	// deleting block number and the last deleted object id.
-	GetGCObjectProcess() (uint64, uint64)
-	// SetGCObjectProcess sets the process of collecting object, params stand
+	GetGCObjectProgress() (uint64, uint64)
+	// SetGCObjectProgress sets the progress of collecting object, params stand
 	// the deleting block number and the last deleted object id.
-	SetGCObjectProcess(uint64, uint64)
+	SetGCObjectProgress(uint64, uint64)
 }
 
 // The GCZombiePieceTask is the interface to record the information for collecting

@@ -103,7 +103,7 @@ message GfSpGCObjectTask {
   uint64 start_block_number = 2;
   uint64 end_block_number = 3;
   uint64 current_block_number = 4;
-  uint64 deleting_object_id = 5;
+  uint64 last_deleted_object_id = 5;
   bool running = 6;
 }
 

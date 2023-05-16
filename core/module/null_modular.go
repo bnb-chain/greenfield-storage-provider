@@ -63,6 +63,7 @@ func (*NullModular) HandleCreateUploadObjectTask(context.Context, task.UploadObj
 func (*NullModular) HandleDoneUploadObjectTask(context.Context, task.UploadObjectTask) error {
 	return nil
 }
+
 func (*NullModular) HandleReplicatePieceTask(context.Context, task.ReplicatePieceTask) error {
 	return nil
 }

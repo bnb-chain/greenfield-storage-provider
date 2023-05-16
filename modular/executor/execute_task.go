@@ -172,7 +172,7 @@ func (e *ExecuteModular) HandleGCObjectTask(
 					"piece_key", pieceKey, "error", err)
 				return
 			}
-			log.CtxDebugw(ctx, "success to delete primary payload", "piece_key", pieceKey)
+			log.CtxDebugw(ctx, "succeed to delete primary payload", "piece_key", pieceKey)
 		}
 		for rIdx, address := range objectInfo.GetSecondarySpAddresses() {
 			if strings.Compare(e.baseApp.OperateAddress(), address) != 0 {
@@ -191,7 +191,7 @@ func (e *ExecuteModular) HandleGCObjectTask(
 						"piece_key", pieceKey, "error", err)
 					return
 				}
-				log.CtxDebugw(ctx, "success to delete secondary piece", "piece_key", pieceKey)
+				log.CtxDebugw(ctx, "succeed to delete secondary piece", "piece_key", pieceKey)
 			}
 			break
 		}

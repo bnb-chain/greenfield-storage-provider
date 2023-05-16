@@ -349,14 +349,14 @@ func (m *ManageModular) HandleGCObjectTask(
 	ctx context.Context,
 	task task.GCObjectTask) error {
 	if task == nil {
-		log.CtxErrorw(ctx, "failed to handle gc object, task pointer dangling")
+		log.CtxErrorw(ctx, "failed to handle gc object due to task pointer dangling")
 		return ErrDanglingTask
 	}
 	if !m.gcObjectQueue.Has(task.Key()) {
 		return ErrCanceledTask
 	}
 	if task.GetEndBlockNumber() < task.GetCurrentBlockNumber() {
-		log.CtxInfow(ctx, "success to gc object task", "end_block_number",
+		log.CtxInfow(ctx, "succeed to gc object task", "end_block_number",
 			task.GetEndBlockNumber(), "last_delete_objectId", task.GetDeletingObjectId())
 		m.gcObjectQueue.PopByKey(task.Key())
 		return nil
@@ -364,8 +364,8 @@ func (m *ManageModular) HandleGCObjectTask(
 	task.SetUpdateTime(time.Now().Unix())
 	m.gcObjectQueue.PopByKey(task.Key())
 	m.gcObjectQueue.Push(task)
-	block, object := task.GetGCObjectProcess()
-	err := m.baseApp.GfSpDB().SetGCObjectProcess(task.Key().String(), block, object)
+	block, object := task.GetGCObjectProgress()
+	err := m.baseApp.GfSpDB().SetGCObjectProgress(task.Key().String(), block, object)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to update gc object status", "error", err)
 	}

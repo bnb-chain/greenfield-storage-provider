@@ -90,44 +90,40 @@ make_config() {
       cd ${sp_dir}
         source db.info
         source sp.info
-        # db
-        sed -i -e "s/root/${USER}/g" config.toml
-        sed -i -e "s/test_pwd/${PWD}/g" config.toml
-        sed -i -e "s/localhost\:3306/${ADDRESS}/g" config.toml
-        sed -i -e "s/storage_provider_db/${DATABASE}/g" config.toml
-        sed -i -e "s/block_syncer_backup/${DATABASE}/g" config.toml
-        sed -i -e "s/block_syncer/${DATABASE}/g" config.toml
+        # app
+        sed -i -e "s/AppID = \'.*\'/SpOperatorAddress = \'sp-${index}\'/g" config.toml
+        sed -i -e "s/Server = \[\]/Server = \[\"uploader\"\]/g" config.toml
+        sed -i -e "s/GrpcAddress = \'.*\'/GrpcAddress = \'127.0.0.1:${cur_port}\'/g" config.toml
 
-        # sp
-        sed -i -e "s/localhost\:9033/${SP_ENDPOINT}/g" config.toml
-        sed -i -e "s/8933/$(($cur_port+33))/g" config.toml
-        sed -i -e "s/9133/$(($cur_port+133))/g" config.toml
-        sed -i -e "s/9233/$(($cur_port+233))/g" config.toml
-        sed -i -e "s/9333/$(($cur_port+333))/g" config.toml
-        sed -i -e "s/9433/$(($cur_port+433))/g" config.toml
-        sed -i -e "s/9533/$(($cur_port+533))/g" config.toml
-        sed -i -e "s/9633/$(($cur_port+633))/g" config.toml
-        sed -i -e "s/9733/$(($cur_port+733))/g" config.toml
-        sed -i -e "s/9833/$(($cur_port+833))/g" config.toml
-        sed -i -e "s/9933/$(($cur_port+933))/g" config.toml
-        sed -i -e "s/24036/$(($cur_port+4036))/g" config.toml
-        sed -i -e "s/25341/$(($cur_port+5341))/g" config.toml
-        sed -i -e "s/SpOperatorAddress = \".*\"/SpOperatorAddress = \"${OPERATOR_ADDRESS}\"/g" config.toml
-        sed -i -e "s/OperatorPrivateKey = \".*\"/OperatorPrivateKey = \"${OPERATOR_PRIVATE_KEY}\"/g" config.toml
-        sed -i -e "s/FundingPrivateKey = \".*\"/FundingPrivateKey = \"${FUNDING_PRIVATE_KEY}\"/g" config.toml
-        sed -i -e "s/SealPrivateKey = \".*\"/SealPrivateKey = \"${SEAL_PRIVATE_KEY}\"/g" config.toml
-        sed -i -e "s/ApprovalPrivateKey = \".*\"/ApprovalPrivateKey = \"${APPROVAL_PRIVATE_KEY}\"/g" config.toml
-        sed -i -e "s/GcPrivateKey = \".*\"/GcPrivateKey = \"${GC_PRIVATE_KEY}\"/g" config.toml
+        # db
+        sed -i -e "s/User = \'.*\'/User = \'${USER}\'/g" config.toml
+        sed -i -e "s/Passwd = \'.*\'/Passwd = \'${PWD}\'/g" config.toml
+        sed -i -e "s/Address = \'.*\'/Address = \'${ADDRESS}\'/g" config.toml
+        sed -i -e "s/Database = \'.*\'/Database = \'${DATABASE}\'/g" config.toml
+
         # chain
-        sed -i -e "s/greenfield_9000-1741/${CHAIN_ID}/g" config.toml
-        sed -i -e "s/localhost\:9090/${CHAIN_GRPC_ENDPOINT}/g" config.toml
-        sed -i -e "s/localhost\:26750/${CHAIN_HTTP_ENDPOINT}/g" config.toml
-        echo "succeed to generate config.toml in "${sp_dir}
+        sed -i -e "s/ChainID = \'.*\'/ChainID = \'${CHAIN_ID}\'/g" config.toml
+        sed -i -e "s/ChainAddress = \[.*\]/ChainAddress = \[\"${CHAIN_HTTP_ENDPOINT}\"\]/g" config.toml
+
+        # sp account
+        sed -i -e "s/SpOperateAddress = \'.*\'/SpOperateAddress = \'${OPERATOR_ADDRESS}\'/g" config.toml
+        sed -i -e "s/OperatorPrivateKey = \'.*\'/OperatorPrivateKey = \'${OPERATOR_PRIVATE_KEY}\'/g" config.toml
+        sed -i -e "s/FundingPrivateKey = \'.*\'/FundingPrivateKey = \'${FUNDING_PRIVATE_KEY}\'/g" config.toml
+        sed -i -e "s/SealPrivateKey = \'.*\'/SealPrivateKey = \'${SEAL_PRIVATE_KEY}\'/g" config.toml
+        sed -i -e "s/ApprovalPrivateKey = \'.*\'/ApprovalPrivateKey = \'${APPROVAL_PRIVATE_KEY}\'/g" config.toml
+        sed -i -e "s/GcPrivateKey = \'.*\'/GcPrivateKey = \'${GC_PRIVATE_KEY}\'/g" config.toml
+
+        # gateway
+        sed -i -e "s/Domain = \'.*\'/Domain = \'gnfd.test-sp.com\'/g" config.toml
+        sed -i -e "s/HttpAddress = \'.*\'/HttpAddress = \'${SP_ENDPOINT}\'/g" config.toml
+
         # p2p
         node=NODE${index}
         boot=BOOT${index}
-        sed -i -e "s/P2PPrivateKey = \".*\"/P2PPrivateKey = \"${!node}\"/g" config.toml
+        sed -i -e "s/P2PPrivateKey = \'.*\'/P2PPrivateKey = \'${!node}\'/g" config.toml
         sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\"${!boot}\"\]/g" config.toml
+
+        echo "succeed to generate config.toml in "${sp_dir}
       cd - >/dev/null
       index=$(($index+1))
   done
