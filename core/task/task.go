@@ -465,16 +465,16 @@ type GCObjectTask interface {
 	SetCurrentBlockNumber(uint64)
 	// GetCurrentBlockNumber returns the collecting block number.
 	GetCurrentBlockNumber() uint64
-	// GetDeletingObjectId returns the lasted deleting ObjectID.
-	GetDeletingObjectId() uint64
-	// SetDeletingObjectId sets the lasted deleting ObjectID.
-	SetDeletingObjectId(uint64)
-	// GetGCObjectProcess returns the process of collecting object, returns the
+	// GetLastDeletedObjectId returns the last deleted ObjectID.
+	GetLastDeletedObjectId() uint64
+	// SetLastDeletedObjectId sets the last deleted ObjectID.
+	SetLastDeletedObjectId(uint64)
+	// GetGCObjectProgress returns the progress of collecting object, returns the
 	// deleting block number and the last deleted object id.
-	GetGCObjectProcess() (uint64, uint64)
-	// SetGCObjectProcess sets the process of collecting object, params stand
+	GetGCObjectProgress() (uint64, uint64)
+	// SetGCObjectProgress sets the progress of collecting object, params stand
 	// the deleting block number and the last deleted object id.
-	SetGCObjectProcess(uint64, uint64)
+	SetGCObjectProgress(uint64, uint64)
 }
 
 // The GCZombiePieceTask is the interface to record the information for collecting

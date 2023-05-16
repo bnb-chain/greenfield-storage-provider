@@ -59,6 +59,10 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to create object table", "error", err)
 		return nil, err
 	}
+	if err := db.AutoMigrate(&GCObjectTaskTable{}); err != nil {
+		log.Errorw("failed to gc object task table", "error", err)
+		return nil, err
+	}
 	if err := db.AutoMigrate(&SpInfoTable{}); err != nil {
 		log.Errorw("failed to create sp info table", "error", err)
 		return nil, err

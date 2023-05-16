@@ -128,21 +128,21 @@ func (m *GfSpGCObjectTask) SetEndBlockNumber(block uint64) {
 	m.EndBlockNumber = block
 }
 
-func (m *GfSpGCObjectTask) GetGCObjectProcess() (uint64, uint64) {
-	return m.GetCurrentBlockNumber(), m.GetDeletingObjectId()
+func (m *GfSpGCObjectTask) GetGCObjectProgress() (uint64, uint64) {
+	return m.GetCurrentBlockNumber(), m.GetLastDeletedObjectId()
 }
 
-func (m *GfSpGCObjectTask) SetGCObjectProcess(block uint64, object uint64) {
+func (m *GfSpGCObjectTask) SetGCObjectProgress(block uint64, object uint64) {
 	m.CurrentBlockNumber = block
-	m.DeletingObjectId = object
+	m.LastDeletedObjectId = object
 }
 
 func (m *GfSpGCObjectTask) SetCurrentBlockNumber(block uint64) {
 	m.CurrentBlockNumber = block
 }
 
-func (m *GfSpGCObjectTask) SetDeletingObjectId(object uint64) {
-	m.DeletingObjectId = object
+func (m *GfSpGCObjectTask) SetLastDeletedObjectId(object uint64) {
+	m.LastDeletedObjectId = object
 }
 
 func (m *GfSpGCZombiePieceTask) Key() coretask.TKey {

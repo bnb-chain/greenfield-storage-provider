@@ -6,6 +6,8 @@ const (
 	JobTableName = "job"
 	// ObjectTableName defines the object table name
 	ObjectTableName = "object"
+	// GCObjectTaskTableName defines the gc object task table name
+	GCObjectTaskTableName = "gc_object_task"
 	// PieceHashTableName defines the piece hash table name
 	PieceHashTableName = "piece_hash"
 	// IntegrityMetaTableName defines the integrity meta table name

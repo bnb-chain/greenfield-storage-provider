@@ -110,7 +110,6 @@ func (*NilModular) HandleChallengePiece(context.Context, task.ChallengePieceTask
 func (*NilModular) AskTask(context.Context, rcmgr.Limit)                              {}
 func (*NilModular) PostChallengePiece(context.Context, task.ChallengePieceTask)       {}
 func (*NilModular) ReportTask(context.Context, task.Task) error                       { return nil }
-func (*NilModular) AskTask(context.Context, rcmgr.Limit)                              {}
 func (*NilModular) HandleReplicatePieceTask(context.Context, task.ReplicatePieceTask) {}
 func (*NilModular) HandleSealObjectTask(context.Context, task.SealObjectTask)         {}
 func (*NilModular) HandleReceivePieceTask(context.Context, task.ReceivePieceTask)     {}
