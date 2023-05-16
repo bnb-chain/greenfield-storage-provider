@@ -95,9 +95,10 @@ gfsp.Start(ctx)
 // new your own CustomizedApprover instance that implement the Approver interface
 //  NewCustomizedApprover must be func type: 
 //      func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error)
-//  and NewCustomizedApprover inner will call app.SetApprover() to register 
-//  CustomizedApprover to GfSp framework
 approver := NewCustomizedApprover(GfSpBaseApp, GfSpConfig)
+
+// the Special Modular name is Predefined
+gfspapp.RegisterModularInfo(model.ApprovalModularName, model.ApprovalModularDescription, approver)
 
 // new GfSp framework app
 gfsp, err := NewGfSpBaseApp(GfSpConfig, CustomizeApprover(approver))
@@ -116,9 +117,9 @@ gfsp.Start(ctx)
 // retriever should implement Modular interface
 
 // register retriever modular to GfSp framework
-func init() {
-    gfspapp.RegisterModularInfo(RetrieveModularName, RetrieveModularDescription, NewRetrieveModular)
-}
+
+gfspapp.RegisterModularInfo(RetrieveModularName, RetrieveModularDescription, NewRetrieveModular)
+
 
 // NewRetrieveModular must be func type: 
 //  func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error)
