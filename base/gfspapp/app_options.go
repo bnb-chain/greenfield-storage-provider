@@ -159,6 +159,18 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.SpDB.MaxOpenConns == 0 {
 		cfg.SpDB.MaxOpenConns = DefaultMaxOpenConns
 	}
+	if cfg.SpDB.User == "" {
+		cfg.SpDB.User = "root"
+	}
+	if cfg.SpDB.Passwd == "" {
+		cfg.SpDB.User = "test"
+	}
+	if cfg.SpDB.Address == "" {
+		cfg.SpDB.User = "127.0.0.1:3306"
+	}
+	if cfg.SpDB.Database == "" {
+		cfg.SpDB.Database = "storage_provider_db"
+	}
 	dbCfg := &cfg.SpDB
 	db, err := sqldb.NewSpDB(dbCfg)
 	if err != nil {
@@ -248,6 +260,12 @@ func DefaultGfSpConsensusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) er
 	if cfg.Customize.Consensus != nil {
 		app.chain = cfg.Customize.Consensus
 		return nil
+	}
+	if cfg.Chain.ChainID == "" {
+		cfg.Chain.ChainID = "greenfield_9000-1741"
+	}
+	if len(cfg.Chain.ChainAddress) == 0 {
+		cfg.Chain.ChainAddress = []string{"http://localhost:26750"}
 	}
 	gnfdCfg := &gnfd.GnfdChainConfig{
 		ChainID:      cfg.Chain.ChainID,
