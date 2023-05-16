@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/pelletier/go-toml/v2"
@@ -66,6 +67,8 @@ func init() {
 		pprofFlags,
 	)
 	app.Commands = []*cli.Command{
+		// config category commands
+		conf.ConfigDumpCmd,
 		// p2p category commands
 		p2p.P2PCreateKeysCmd,
 		// miscellaneous category commands
