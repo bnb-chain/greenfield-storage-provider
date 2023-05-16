@@ -23,7 +23,7 @@ func dumpConfigAction(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if err = os.WriteFile("./config.tomal", bz, os.ModePerm); err != nil {
+	if err = os.WriteFile("./config.toml", bz, os.ModePerm); err != nil {
 		return err
 	}
 	return nil
