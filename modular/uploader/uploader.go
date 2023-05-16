@@ -7,11 +7,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
-const (
-	UploadModularName        = "ploader"
-	UploadModularDescription = "upload modular supports uploads object payload data to primary sp"
+var (
+	UploadModularName        = model.UploadModular
+	UploadModularDescription = model.SpServiceDesc[model.UploadModular]
 )
 
 var _ module.Uploader = &UploadModular{}

@@ -9,14 +9,15 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-const (
-	AuthorizationModularName        = "authorizer"
-	AuthorizationModularDescription = "authorizer modular supports authorization verification"
+var (
+	AuthorizationModularName        = model.AuthorizeModular
+	AuthorizationModularDescription = model.SpServiceDesc[model.AuthorizeModular]
 )
 
 var (

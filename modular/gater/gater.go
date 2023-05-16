@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -13,9 +14,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-const (
-	GateModularName        = "gateway"
-	GateModularDescription = "approval modular supports receives the user requests"
+var (
+	GateModularName        = model.GaterModular
+	GateModularDescription = model.SpServiceDesc[GateModularName]
 )
 
 var _ module.Modular = &GateModular{}

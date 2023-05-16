@@ -7,11 +7,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
-const (
-	DownloadModularName        = "downloader"
-	DownloadModularDescription = "download modular supports download object and get challenge info"
+var (
+	DownloadModularName        = model.DownloadModular
+	DownloadModularDescription = model.SpServiceDesc[model.DownloadModular]
 )
 
 var _ module.Downloader = &DownloadModular{}

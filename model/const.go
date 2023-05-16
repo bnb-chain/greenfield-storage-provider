@@ -2,99 +2,61 @@ package model
 
 import "strings"
 
-// define storage provider include service
+// define storage provider include modular
 var (
-	// GatewayService defines the name of gateway service
-	GatewayService = strings.ToLower("Gateway")
-	// UploaderService defines the name of uploader service
-	UploaderService = strings.ToLower("Uploader")
-	// DownloaderService defines the name of downloader service
-	DownloaderService = strings.ToLower("Downloader")
-	// ChallengeService defines the name of challenge service
-	ChallengeService = strings.ToLower("Challenge")
-	// TaskNodeService defines the name of task node service
-	TaskNodeService = strings.ToLower("TaskNode")
-	// ReceiverService defines the name of receiver service
-	ReceiverService = strings.ToLower("Receiver")
-	// SignerService defines the name of signer service
-	SignerService = strings.ToLower("Signer")
-	// MetadataService defines the name of metadata service
-	MetadataService = strings.ToLower("Metadata")
-	// BlockSyncerService defines the name of block sync service
-	BlockSyncerService = strings.ToLower("BlockSyncer")
-	// BlockSyncerServiceBackup defines the name of block sync service
-	BlockSyncerServiceBackup = strings.ToLower("BlockSyncerBackup")
-	// ManagerService defines the name of manager service
-	ManagerService = strings.ToLower("Manager")
-	// MetricsService defines the name of metrics service
-	MetricsService = strings.ToLower("Metrics")
-	// P2PService defines the name of p2p service
-	P2PService = strings.ToLower("p2p")
-	// AuthService defines the name of auth service
-	AuthService = strings.ToLower("auth")
-	// PProfService defines the name of pprof service
-	PProfService = strings.ToLower("pprof")
-	// StopServingService defines the name of stop serving service
-	StopServingService = strings.ToLower("StopServing")
+	// GaterModular defines the name of gateway modular
+	GaterModular = strings.ToLower("Gateway")
+	// ApproveModular defines the name of gateway approval modular
+	ApproveModular = strings.ToLower("Approval")
+	// UploadModular defines the name of uploader modular
+	UploadModular = strings.ToLower("Uploader")
+	// DownloadModular defines the name of downloader modular
+	DownloadModular = strings.ToLower("Downloader")
+	// TaskExecuteModular defines the name of task node modular
+	TaskExecuteModular = strings.ToLower("TaskNode")
+	// ReceiveModular defines the name of receiver modular
+	ReceiveModular = strings.ToLower("Receiver")
+	// RetrieveModular defines the name of retrive modular
+	RetrieveModular = strings.ToLower("Retriver")
+	// SignerModular defines the name of signer modular
+	SignerModular = strings.ToLower("Signer")
+	// MetadataModular defines the name of metadata modular
+	MetadataModular = strings.ToLower("Metadata")
+	// BlockSyncerModular defines the name of block sync modular
+	BlockSyncerModular = strings.ToLower("BlockSyncer")
+	// BlockSyncerModularBackup defines the name of block sync modular
+	BlockSyncerModularBackup = strings.ToLower("BlockSyncerBackup")
+	// ManageModular defines the name of manager modular
+	ManageModular = strings.ToLower("Manager")
+	// P2PModular defines the name of p2p modular
+	P2PModular = strings.ToLower("p2p")
+	// AuthorizeModular defines the name of auth modular
+	AuthorizeModular = strings.ToLower("auth")
+	// PProfModular defines the name of pprof modular
+	PProfModular = strings.ToLower("pprof")
+	// MetricsModular defines the name of metrics modular
+	MetricsModular = strings.ToLower("metrics")
+	// StopServingModular defines the name of stop serving modular
+	StopServingModular = strings.ToLower("StopServing")
 )
 
 // SpServiceDesc defines the service description in storage provider
 var SpServiceDesc = map[string]string{
-	GatewayService:     "Receives the sdk request",
-	UploaderService:    "Uploads object payload to greenfield",
-	DownloaderService:  "Downloads object from the backend and statistical read traffic",
-	ChallengeService:   "Provides the ability to query the integrity hash and piece data",
-	TaskNodeService:    "Executes background task",
-	ReceiverService:    "Receives data pieces of an object from other storage provider and store",
-	SignerService:      "Sign the transaction and broadcast to chain",
-	MetadataService:    "Provides the ability to query meta data",
-	BlockSyncerService: "Syncs block data to db",
-	P2PService:         "Communicates with SPs on p2p protocol",
-	AuthService:        "Handles off-chain-auth requests",
-	StopServingService: "Discontinue buckets for greenfield testnet",
+	GaterModular:       "Receives the user request and route to the responding service",
+	ApproveModular:     "Handles the ask crate bucket/object and replicate piece approval request",
+	UploadModular:      "Uploads object payload to primary SP",
+	DownloadModular:    "Downloads object and get challenge info from the backend and statistical read traffic",
+	TaskExecuteModular: "Executes background task",
+	ReceiveModular:     "Receives data pieces of an object from other storage provider and store",
+	RetrieveModular:    "Retrieves sp metadatd and info.",
+	SignerModular:      "Sign the transaction and broadcast to chain",
+	MetadataModular:    "Provides the ability to query meta data",
+	BlockSyncerModular: "Syncs block data to db",
+	ManageModular:      "SP management and task scheduling",
+	P2PModular:         "Communicates with SPs on p2p protocol",
+	AuthorizeModular:   "Handles off-chain-auth requests",
+	StopServingModular: "Discontinue buckets for greenfield testnet",
 }
-
-// define storage provider service default listening address
-const (
-	// GatewayHTTPAddress default HTTP address of gateway
-	GatewayHTTPAddress = "localhost:9033"
-	// UploaderGRPCAddress default gRPC address of uploader
-	UploaderGRPCAddress = "localhost:9133"
-	// DownloaderGRPCAddress default gRPC address of downloader
-	DownloaderGRPCAddress = "localhost:9233"
-	// ChallengeGRPCAddress default gRPC address of challenge
-	ChallengeGRPCAddress = "localhost:9333"
-	// TaskNodeGRPCAddress default gRPC address of task node
-	TaskNodeGRPCAddress = "localhost:9433"
-	// ReceiverGRPCAddress default gRPC address of receiver
-	ReceiverGRPCAddress = "localhost:9533"
-	// SignerGRPCAddress default gRPC address of signer
-	SignerGRPCAddress = "localhost:9633"
-	// MetadataGRPCAddress default gRPC address of meta data service
-	MetadataGRPCAddress = "localhost:9733"
-	// MetricsHTTPAddress default HTTP address of metrics service
-	MetricsHTTPAddress = "localhost:24036"
-	// P2PGRPCAddress default gRPC address of p2p service
-	P2PGRPCAddress = "localhost:9833"
-	// P2PListenAddress default p2p protocol listen address of p2p node
-	P2PListenAddress = "127.0.0.1:9933"
-	// AuthGRPCAddress default gRPC address of auth service
-	AuthGRPCAddress = "localhost:8933"
-	// PProfHTTPAddress default HTTP address of pprof service
-	PProfHTTPAddress = "localhost:25341"
-)
-
-// define greenfield chain default address
-const (
-	// GreenfieldAddress default greenfield chain address
-	GreenfieldAddress = "localhost:9090"
-	// TendermintAddress default Tendermint address
-	TendermintAddress = "http://localhost:26750"
-	// GreenfieldChainID default greenfield chainID
-	GreenfieldChainID = "greenfield_9000-1741"
-	// WhiteListCIDR default whitelist CIDR
-	WhiteListCIDR = "0.0.0.0/0"
-)
 
 // environment constants
 const (
@@ -126,24 +88,10 @@ const (
 
 	// SpOperatorAddress defines env variable name for sp operator address
 	SpOperatorAddress = "greenfield-storage-provider"
-	// SpSignerAPIKey defines env variable for signer api key
-	SpSignerAPIKey = "SIGNER_API_KEY"
-	// SpOperatorPrivKey defines env variable name for sp operator priv key
-	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
-	// SpFundingPrivKey defines env variable name for sp funding priv key
-	SpFundingPrivKey = "SIGNER_FUNDING_PRIV_KEY"
-	// SpApprovalPrivKey defines env variable name for sp approval priv key
-	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
-	// SpSealPrivKey defines env variable name for sp seal priv key
-	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
-	// SpGcPrivKey defines env variable name for sp gc priv key
-	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
 	// DsnBlockSyncer defines env variable name for block syncer dsn
 	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
 	// DsnBlockSyncerSwitched defines env variable name for block syncer backup dsn
 	DsnBlockSyncerSwitched = "BLOCK_SYNCER_DSN_SWITCHED"
-	// P2PPrivateKey defines env variable for p2p protocol private key
-	P2PPrivateKey = "P2P_PRIVATE_KEY"
 )
 
 // SQLDB default configuration parmas
@@ -283,38 +231,10 @@ const (
 	GnfdOffChainAuthAppRegExpiryDateHeader = "X-Gnfd-App-Reg-Expiry-Date"
 )
 
-// define all kinds of size
+// // define all kinds of size
 const (
-	// LruCacheLimit defines maximum number of cached items in service trace queue
-	LruCacheLimit = 8192
 	// MaxCallMsgSize defines gPRC max send or receive msg size
 	MaxCallMsgSize = 25 * 1024 * 1024
-	// MaxRetryCount defines getting the latest height from the RPC client max retry count
-	MaxRetryCount = 50
-	// DefaultBlockHeightDiff defines default block height diff of main and backup service
-	DefaultBlockHeightDiff = 100
-	// DefaultCheckDiffPeriod defines check interval of block height diff
-	DefaultCheckDiffPeriod = 1
-	// DefaultPingPeriod defines p2p node ping period
-	DefaultPingPeriod = 1
-	// DefaultSpFreeReadQuotaSize defines sp bucket's default free quota size, the SP can modify it by itself
-	DefaultSpFreeReadQuotaSize = 10 * 1024 * 1024 * 1024
 	// DefaultStreamBufSize defines gateway stream forward payload buf size
 	DefaultStreamBufSize = 16 * 1024
-	// DefaultTimeoutHeight defines approval timeout height
-	DefaultTimeoutHeight = 100
-	// DefaultPartitionSize defines partition size
-	DefaultPartitionSize = 10_000
-	// DefaultMaxListLimit defines maximum number of the list request
-	DefaultMaxListLimit = 1000
-)
-
-// PieceType defines the object payload data type
-type PieceType int32
-
-const (
-	// SegmentPieceType defines the data type of segment piece
-	SegmentPieceType PieceType = 0
-	// ECPieceType defines the data type of ec piece
-	ECPieceType PieceType = 1
 )

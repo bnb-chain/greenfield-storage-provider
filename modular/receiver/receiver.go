@@ -7,11 +7,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
-const (
-	ReceiveModularName        = "receiver"
-	ReceiveModularDescription = "receive modular supports receive the replicate pieces from primary sp"
+var (
+	ReceiveModularName        = model.ReceiveModular
+	ReceiveModularDescription = model.SpServiceDesc[model.ReceiveModular]
 )
 
 var _ module.Receiver = &ReceiveModular{}

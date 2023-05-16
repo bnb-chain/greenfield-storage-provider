@@ -10,13 +10,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-const (
-	ExecuteModularName        = "executor"
-	ExecuteModularDescription = "task execute modular executes task"
+var (
+	ExecuteModularName        = model.TaskExecuteModular
+	ExecuteModularDescription = model.SpServiceDesc[model.TaskExecuteModular]
 )
 
 var _ module.TaskExecutor = &ExecuteModular{}

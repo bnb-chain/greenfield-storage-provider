@@ -7,12 +7,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/p2p/p2pnode"
 )
 
-const (
-	P2PModularName        = "p2p"
-	P2PModularDescription = "p2p modular supports communicates between SPs on p2p protocol"
+var (
+	P2PModularName        = model.P2PModular
+	P2PModularDescription = model.SpServiceDesc[model.P2PModular]
 )
 
 var _ module.P2P = &P2PModular{}

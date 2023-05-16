@@ -73,7 +73,7 @@ func init() {
 		p2p.P2PCreateKeysCmd,
 		// miscellaneous category commands
 		VersionCmd,
-		utils.ListServiceCmd,
+		utils.ListModularCmd,
 	}
 }
 

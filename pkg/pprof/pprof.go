@@ -30,7 +30,7 @@ func NewPProf(address string) *PProf {
 
 // Name describes pprof service name
 func (p *PProf) Name() string {
-	return model.PProfService
+	return model.PProfModular
 }
 
 // Start HTTP server

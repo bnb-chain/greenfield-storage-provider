@@ -8,12 +8,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-const (
-	ApprovalModularName        = "approver"
-	ApprovalModularDescription = "approval modular supports create bucket, object and replicate piece approval"
+var (
+	ApprovalModularName        = model.ApproveModular
+	ApprovalModularDescription = model.SpServiceDesc[model.ApproveModular]
 )
 
 var _ module.Approver = &ApprovalModular{}

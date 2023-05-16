@@ -13,14 +13,15 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/service/types"
 )
 
-const (
-	ManageModularName        = "manager"
-	ManageModularDescription = "manage modular supports background task scheduling and management"
+var (
+	ManageModularName        = model.ManageModular
+	ManageModularDescription = model.SpServiceDesc[model.ManageModular]
 )
 
 var _ module.Manager = &ManageModular{}

@@ -11,13 +11,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-const (
-	SignerModularName        = "signer"
-	SignerModularDescription = "signer modular supports sing msg by sp private key"
+var (
+	SignerModularName        = model.SignerModular
+	SignerModularDescription = model.SpServiceDesc[model.SignerModular]
 )
 
 var _ module.Signer = &SingModular{}

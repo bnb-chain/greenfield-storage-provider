@@ -33,7 +33,7 @@ func NewMetrics(address string) *Metrics {
 
 // Name describes metrics service name
 func (m *Metrics) Name() string {
-	return model.MetricsService
+	return model.MetricsModular
 }
 
 // Start HTTP server

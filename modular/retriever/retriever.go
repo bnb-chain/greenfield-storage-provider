@@ -6,11 +6,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
-const (
-	RetrieveModularName        = "retriever"
-	RetrieveModularDescription = "retrieve modular supports retrieve sp meta "
+var (
+	RetrieveModularName        = model.RetrieveModular
+	RetrieveModularDescription = model.SpServiceDesc[model.RetrieveModular]
 )
 
 var _ module.Modular = &RetrieveModular{}
