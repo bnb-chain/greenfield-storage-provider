@@ -6,16 +6,16 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/p2p"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/pelletier/go-toml/v2"
+	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/urfave/cli/v2"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 var (

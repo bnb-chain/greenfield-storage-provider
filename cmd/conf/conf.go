@@ -1,6 +1,12 @@
 package conf
 
-import "github.com/urfave/cli/v2"
+import (
+	"os"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
+	"github.com/pelletier/go-toml/v2"
+	"github.com/urfave/cli/v2"
+)
 
 var ConfigDumpCmd = &cli.Command{
 	Action:   dumpConfigAction,
@@ -13,7 +19,12 @@ values to ./config.toml file for editing.`,
 
 // dumpConfigAction is the dump.config command.
 func dumpConfigAction(ctx *cli.Context) error {
-	// return config.SaveConfig("./config.toml", config.DefaultStorageProviderConfig)
-	// TODO: add dump config
+	bz, err := toml.Marshal(&gfspconfig.GfSpConfig{})
+	if err != nil {
+		return err
+	}
+	if err = os.WriteFile("./config.tomal", bz, os.ModePerm); err != nil {
+		return err
+	}
 	return nil
 }
