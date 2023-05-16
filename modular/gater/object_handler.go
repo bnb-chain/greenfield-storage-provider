@@ -171,8 +171,8 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	task := &gfsptask.GfSpDownloadObjectTask{}
-	task.InitDownloadObjectTask(objectInfo, params, g.baseApp.TaskPriority(task), low, high,
-		g.baseApp.TaskTimeout(task), g.baseApp.TaskMaxRetry(task))
+	task.InitDownloadObjectTask(objectInfo, params, g.baseApp.TaskPriority(task), account,
+		low, high, g.baseApp.TaskTimeout(task), g.baseApp.TaskMaxRetry(task))
 	data, err := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)

@@ -17,6 +17,7 @@ func (m *GfSpDownloadObjectTask) InitDownloadObjectTask(
 	object *storagetypes.ObjectInfo,
 	params *storagetypes.Params,
 	priority coretask.TPriority,
+	userAddress string,
 	low int64,
 	high int64,
 	timeout int64,
@@ -27,6 +28,7 @@ func (m *GfSpDownloadObjectTask) InitDownloadObjectTask(
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)
+	m.SetUserAddress(userAddress)
 	m.Low = low
 	m.High = high
 	m.SetPriority(priority)
@@ -144,6 +146,10 @@ func (m *GfSpDownloadObjectTask) SetObjectInfo(object *storagetypes.ObjectInfo) 
 	m.ObjectInfo = object
 }
 
+func (m *GfSpDownloadObjectTask) SetUserAddress(address string) {
+	m.UserAddress = address
+}
+
 func (m *GfSpDownloadObjectTask) SetStorageParams(params *storagetypes.Params) {
 	m.StorageParams = params
 }
@@ -152,6 +158,7 @@ func (m *GfSpChallengePieceTask) InitChallengePieceTask(
 	object *storagetypes.ObjectInfo,
 	bucket *storagetypes.BucketInfo,
 	priority coretask.TPriority,
+	userAddress string,
 	replicateIdx int32,
 	segmentIdx uint32,
 	timeout int64,
@@ -162,6 +169,7 @@ func (m *GfSpChallengePieceTask) InitChallengePieceTask(
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetBucketInfo(bucket)
 	m.SetObjectInfo(object)
+	m.SetUserAddress(userAddress)
 	m.SetRedundancyIdx(replicateIdx)
 	m.SetSegmentIdx(segmentIdx)
 	m.SetPriority(priority)

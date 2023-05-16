@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
+type Option func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 type NewModularFunc = func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error)
 
 type ModularManager struct {

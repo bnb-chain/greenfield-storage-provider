@@ -105,7 +105,7 @@ func (*NullTask) SetPieceChecksum([]byte)  { return }
 func (*NullTask) GetPieceChecksum() []byte { return nil }
 func (*NullTask) GetSignature() []byte     { return nil }
 func (*NullTask) SetSignature([]byte)      { return }
-func (*NullTask) InitDownloadObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, int64, int64, int64, int64) {
+func (*NullTask) InitDownloadObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, string, int64, int64, int64, int64) {
 	return
 }
 func (*NullTask) GetBucketInfo() *storagetypes.BucketInfo { return nil }
@@ -113,7 +113,7 @@ func (*NullTask) GetUserAddress() string                  { return "" }
 func (*NullTask) GetSize() int64                          { return 0 }
 func (*NullTask) GetLow() int64                           { return 0 }
 func (*NullTask) GetHigh() int64                          { return 0 }
-func (*NullTask) InitChallengePieceTask(*storagetypes.ObjectInfo, *storagetypes.BucketInfo, TPriority, int32, uint32, int64, int64) {
+func (*NullTask) InitChallengePieceTask(*storagetypes.ObjectInfo, *storagetypes.BucketInfo, TPriority, string, int32, uint32, int64, int64) {
 	return
 }
 func (*NullTask) SetBucketInfo(*storagetypes.BucketInfo) { return }

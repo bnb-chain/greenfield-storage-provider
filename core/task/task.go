@@ -374,6 +374,7 @@ type DownloadObjectTask interface {
 	InitDownloadObjectTask(object *storagetypes.ObjectInfo,
 		params *storagetypes.Params,
 		priority TPriority,
+		userAddress string,
 		low int64,
 		high int64,
 		timeout int64,
@@ -384,6 +385,8 @@ type DownloadObjectTask interface {
 	// GetUserAddress returns the user account of downloading object.
 	// It is used to records the read bucket information.
 	GetUserAddress() string
+	// SetUserAddress sets the user account of downloading object.
+	SetUserAddress(string)
 	// GetSize returns the download payload data size, high - low + 1.
 	GetSize() int64
 	// GetLow returns the start offset of download payload data.
@@ -402,6 +405,7 @@ type ChallengePieceTask interface {
 		object *storagetypes.ObjectInfo,
 		bucket *storagetypes.BucketInfo,
 		priority TPriority,
+		userAddress string,
 		replicateIdx int32,
 		segmentIdx uint32,
 		timeout int64,

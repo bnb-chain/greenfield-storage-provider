@@ -207,8 +207,8 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	task := &gfsptask.GfSpChallengePieceTask{}
-	task.InitChallengePieceTask(objectInfo, bucketInfo, g.baseApp.TaskPriority(task), redundancyIdx,
-		segmentIdx, g.baseApp.TaskTimeout(task), g.baseApp.TaskMaxRetry(task))
+	task.InitChallengePieceTask(objectInfo, bucketInfo, g.baseApp.TaskPriority(task), account,
+		redundancyIdx, segmentIdx, g.baseApp.TaskTimeout(task), g.baseApp.TaskMaxRetry(task))
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
 	integrity, checksums, data, err := g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
 	if err != nil {
