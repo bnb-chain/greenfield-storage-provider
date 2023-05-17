@@ -14,7 +14,7 @@ func (s *GfSpClient) GetAccountBucketNumber(
 	ctx context.Context,
 	account string,
 	opts ...grpc.DialOption) (int64, error) {
-	return 100, nil
+	return 0, nil
 	//conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	//if err != nil {
 	//	return 0, err
