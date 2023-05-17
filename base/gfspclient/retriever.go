@@ -14,19 +14,20 @@ func (s *GfSpClient) GetAccountBucketNumber(
 	ctx context.Context,
 	account string,
 	opts ...grpc.DialOption) (int64, error) {
-	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
-	if err != nil {
-		return 0, err
-	}
-	defer conn.Close()
-	req := &metatypes.GetUserBucketsCountRequest{
-		AccountId: account,
-	}
-	resp, err := metatypes.NewMetadataServiceClient(conn).GetUserBucketsCount(ctx, req)
-	if err != nil {
-		return 0, ErrRpcUnknown
-	}
-	return resp.GetCount(), nil
+	return 100, nil
+	//conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
+	//if err != nil {
+	//	return 0, err
+	//}
+	//defer conn.Close()
+	//req := &metatypes.GetUserBucketsCountRequest{
+	//	AccountId: account,
+	//}
+	//resp, err := metatypes.NewMetadataServiceClient(conn).GetUserBucketsCount(ctx, req)
+	//if err != nil {
+	//	return 0, ErrRpcUnknown
+	//}
+	//return resp.GetCount(), nil
 }
 
 func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(
@@ -36,21 +37,22 @@ func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(
 	endBlockNumber uint64,
 	includePrivate bool,
 	opts ...grpc.DialOption) ([]*metatypes.Object, uint64, error) {
-	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
-	if err != nil {
-		return nil, uint64(0), err
-	}
-	defer conn.Close()
-	req := &metatypes.ListDeletedObjectsByBlockNumberRangeRequest{
-		StartBlockNumber: int64(startBlockNumber),
-		EndBlockNumber:   int64(endBlockNumber),
-		IsFullList:       includePrivate,
-	}
-	resp, err := metatypes.NewMetadataServiceClient(conn).ListDeletedObjectsByBlockNumberRange(ctx, req)
-	if err != nil {
-		return nil, uint64(0), ErrRpcUnknown
-	}
-	return resp.GetObjects(), uint64(resp.GetEndBlockNumber()), nil
+	return nil, endBlockNumber, nil
+	//conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
+	//if err != nil {
+	//	return nil, uint64(0), err
+	//}
+	//defer conn.Close()
+	//req := &metatypes.ListDeletedObjectsByBlockNumberRangeRequest{
+	//	StartBlockNumber: int64(startBlockNumber),
+	//	EndBlockNumber:   int64(endBlockNumber),
+	//	IsFullList:       includePrivate,
+	//}
+	//resp, err := metatypes.NewMetadataServiceClient(conn).ListDeletedObjectsByBlockNumberRange(ctx, req)
+	//if err != nil {
+	//	return nil, uint64(0), ErrRpcUnknown
+	//}
+	//return resp.GetObjects(), uint64(resp.GetEndBlockNumber()), nil
 }
 
 func (s *GfSpClient) GetBucketReadQuota(
@@ -72,7 +74,10 @@ func (s *GfSpClient) GetBucketReadQuota(
 	if err != nil {
 		return uint64(0), uint64(0), uint64(0), ErrRpcUnknown
 	}
-	return resp.GetChargedQuotaSize(), resp.GetSpFreeQuotaSize(), resp.GetConsumedSize(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return uint64(0), uint64(0), uint64(0), resp.GetErr()
+	}
+	return resp.GetChargedQuotaSize(), resp.GetSpFreeQuotaSize(), resp.GetConsumedSize(), nil
 }
 
 func (s *GfSpClient) ListBucketReadRecord(
@@ -96,7 +101,10 @@ func (s *GfSpClient) ListBucketReadRecord(
 	if err != nil {
 		return nil, 0, ErrRpcUnknown
 	}
-	return resp.GetReadRecords(), resp.GetNextStartTimestampUs(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, 0, resp.GetErr()
+	}
+	return resp.GetReadRecords(), resp.GetNextStartTimestampUs(), nil
 }
 
 func (s *GfSpClient) GetUploadObjectState(
@@ -115,5 +123,8 @@ func (s *GfSpClient) GetUploadObjectState(
 	if err != nil {
 		return 0, ErrRpcUnknown
 	}
-	return int32(resp.GetState()), err
+	if resp.GetErr() != nil {
+		return 0, resp.GetErr()
+	}
+	return int32(resp.GetState()), nil
 }
