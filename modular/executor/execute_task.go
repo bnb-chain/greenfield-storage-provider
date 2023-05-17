@@ -201,7 +201,7 @@ func (e *ExecuteModular) HandleGCObjectTask(
 			return
 		}
 		task.SetCurrentBlockNumber(deletingBlock)
-		task.SetDeletingObjectId(deletingObjectID)
+		task.SetLastDeletedObjectId(deletingObjectID)
 		metrics.GCObjectCounter.WithLabelValues(e.Name()).Inc()
 	}
 }

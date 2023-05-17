@@ -357,7 +357,7 @@ func (m *ManageModular) HandleGCObjectTask(
 	}
 	if task.GetEndBlockNumber() < task.GetCurrentBlockNumber() {
 		log.CtxInfow(ctx, "succeed to gc object task", "end_block_number",
-			task.GetEndBlockNumber(), "last_delete_objectId", task.GetDeletingObjectId())
+			task.GetEndBlockNumber(), "last_delete_objectId", task.GetLastDeletedObjectId())
 		m.gcObjectQueue.PopByKey(task.Key())
 		return nil
 	}

@@ -100,7 +100,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			}
 			task := &gfsptask.GfSpGCObjectTask{}
 			task.InitGCObjectTask(m.baseApp.TaskPriority(task), start, end, m.baseApp.TaskTimeout(task))
-			err = m.baseApp.GfSpDB().SetGCObjectProcess(task.Key().String(), start, end)
+			err = m.baseApp.GfSpDB().SetGCObjectProgress(task.Key().String(), start, end)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to update gc object status", "error", err)
 				continue
