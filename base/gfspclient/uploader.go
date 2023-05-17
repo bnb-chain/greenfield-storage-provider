@@ -21,7 +21,14 @@ func (s *GfSpClient) UploadObject(
 		return err
 	}
 	var sendSize = 0
-	defer conn.Close()
+	defer func() {
+		defer conn.Close()
+		if task != nil {
+			log.CtxDebugw(ctx, "succeed to send payload data", "send_size", sendSize,
+				"object_size", task.GetObjectInfo().GetPayloadSize())
+		}
+		log.CtxDebugw(ctx, "succeed to send payload data", "send_size", sendSize)
+	}()
 	client, err := gfspserver.NewGfSpUploadServiceClient(conn).GfSpUploadObject(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to new uploader stream client", "error", err)
@@ -33,8 +40,6 @@ func (s *GfSpClient) UploadObject(
 	for {
 		n, err := stream.Read(buf)
 		sendSize += n
-		log.CtxDebugw(ctx, "succeed to send payload data", "send_size", sendSize,
-			"object_size", task.GetObjectInfo().GetPayloadSize())
 		if err == io.EOF {
 			if n != 0 {
 				req := &gfspserver.GfSpUploadObjectRequest{

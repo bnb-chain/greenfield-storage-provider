@@ -27,7 +27,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			MakeErrorResponse(w, err)
 		}
-		log.CtxDebugw(reqCtx.Context(), "failed to challenge piece", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), "put object handler", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -116,7 +116,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			MakeErrorResponse(w, err)
 		}
-		log.CtxDebugw(reqCtx.Context(), "failed to challenge piece", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), "get object handler", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -198,9 +198,9 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to challenge piece", "req_info", reqCtx.String())
 			MakeErrorResponse(w, err)
 		}
+		log.CtxErrorw(reqCtx.Context(), "query upload progress handler", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()

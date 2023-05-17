@@ -45,7 +45,7 @@ func (u *UploadModular) PreUploadObject(
 	}
 	if err := u.baseApp.GfSpClient().CreateUploadObject(ctx, task); err != nil {
 		log.CtxErrorw(ctx, "failed to begin upload object task")
-		return ErrExceedTask
+		return err
 	}
 	return nil
 }
@@ -83,11 +83,11 @@ func (u *UploadModular) HandleUploadObjectTask(
 		default:
 		}
 		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
+		segIdx++
 		n, err := StreamReadAt(stream, data)
 		readSize += n
 		log.CtxDebugw(ctx, "succeed to read data from stream", "read_size", readSize,
 			"object_size", task.GetObjectInfo().GetPayloadSize())
-		segIdx++
 		if err == io.EOF {
 			if n != 0 {
 				data = data[:n]
@@ -148,16 +148,23 @@ func (u *UploadModular) HandleUploadObjectTask(
 	}
 }
 
-func StreamReadAt(stream io.Reader, b []byte) (n int, err error) {
+func StreamReadAt(stream io.Reader, b []byte) (int, error) {
 	if len(b) == 0 {
 		return 0, fmt.Errorf("failed to read due to invalid args")
 	}
-	var cur int
+
+	var (
+		totalReadLen int
+		curReadLen   int
+		err          error
+	)
+
 	for {
-		cur, err = stream.Read(b[n:])
-		n += cur
-		if err != nil || n == len(b) {
-			return n, err
+		curReadLen, err = stream.Read(b[totalReadLen:])
+		log.Debugw("succeed to read data from stream", "total_size", totalReadLen)
+		totalReadLen += curReadLen
+		if err != nil || totalReadLen == len(b) {
+			return totalReadLen, err
 		}
 	}
 }

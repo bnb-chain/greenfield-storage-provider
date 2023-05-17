@@ -32,7 +32,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 		return NotUseTimeout
 	case coretask.TypeTaskUpload:
 		uploadTask := task.(coretask.UploadObjectTask)
-		timeout := int64(uploadTask.GetObjectInfo().GetPayloadSize()) / g.uploadSpeed
+		timeout := int64(uploadTask.GetObjectInfo().GetPayloadSize()) / (g.uploadSpeed + 1)
 		if timeout < MinUploadTime {
 			return MinUploadTime
 		}
@@ -70,7 +70,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 		return g.sealObjectTimeout
 	case coretask.TypeTaskDownloadObject:
 		downloadTask := task.(coretask.DownloadObjectTask)
-		timeout := downloadTask.GetSize() / g.downloadSpeed
+		timeout := downloadTask.GetSize() / (g.downloadSpeed + 1)
 		if timeout < MinDownloadTime {
 			return MinDownloadTime
 		}

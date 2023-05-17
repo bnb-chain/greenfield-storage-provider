@@ -30,7 +30,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		}
-		log.CtxDebugw(reqCtx.Context(), "failed to ask approval", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), "ask approval handler", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -148,7 +148,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			MakeErrorResponse(w, err)
 		}
-		log.CtxDebugw(reqCtx.Context(), "failed to challenge piece", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), "challenge handler", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -233,7 +233,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			MakeErrorResponse(w, err)
 		}
-		log.CtxDebugw(reqCtx.Context(), "failed to challenge piece", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), "replicate handler", "req_info", reqCtx.String())
 	}()
 
 	approvalMsg, err := hex.DecodeString(r.Header.Get(model.GnfdReplicatePieceApprovalHeader))

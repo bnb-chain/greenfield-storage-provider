@@ -41,11 +41,14 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 			metrics.UploadObjectSizeHistogram.WithLabelValues(g.uploader.Name()).Observe(
 				float64(task.GetObjectInfo().GetPayloadSize()))
 			g.uploader.PostUploadObject(ctx, task)
+			log.CtxDebugw(ctx, "finish to receive object stream data", "receive_size", receiveSize,
+				"object_size", task.GetObjectInfo().GetPayloadSize(), "error", err)
 		}
 		if err != nil {
 			resp.Err = gfsperrors.MakeGfSpError(err)
 		}
-		log.CtxDebugw(ctx, "finish to receive object stream data", "error", err)
+		log.CtxDebugw(ctx, "finish to receive object stream data",
+			"receive_size", receiveSize, "error", err)
 		err = stream.SendAndClose(resp)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to close upload object stream", "error", err)
@@ -97,8 +100,6 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				initCh <- struct{}{}
 			}
 			receiveSize += len(req.GetPayload())
-			log.CtxDebugw(ctx, "succeed to receive payload data", "receive_size", receiveSize,
-				"object_size", task.GetObjectInfo().GetPayloadSize())
 			pWrite.Write(req.GetPayload())
 		}
 	}()
@@ -116,6 +117,5 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		return err
 	}
 	log.CtxDebugw(ctx, "succeed to upload object")
-	pWrite.Close()
 	return nil
 }
