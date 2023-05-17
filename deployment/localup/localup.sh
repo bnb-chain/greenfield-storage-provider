@@ -2,6 +2,7 @@
 
 basedir=$(cd `dirname $0`; pwd)
 workspace=${basedir}
+SP_DEPLOY_DIR=${./deployment/localup/local_env/}
 source ${workspace}/env.info
 sp_bin_name=gnfd-sp
 sp_bin=${workspace}/../../build/${sp_bin_name}
@@ -91,8 +92,6 @@ make_config() {
         source db.info
         source sp.info
         # app
-        sed -i -e "s/AppID = \'.*\'/SpOperatorAddress = \'sp-${index}\'/g" config.toml
-        sed -i -e "s/Server = \[\]/Server = \[\"uploader\"\]/g" config.toml
         sed -i -e "s/GrpcAddress = \'.*\'/GrpcAddress = \'127.0.0.1:${cur_port}\'/g" config.toml
 
         # db
@@ -118,10 +117,17 @@ make_config() {
         sed -i -e "s/HttpAddress = \'.*\'/HttpAddress = \'${SP_ENDPOINT}\'/g" config.toml
 
         # p2p
-        node=NODE${index}
-        boot=BOOT${index}
-        sed -i -e "s/P2PPrivateKey = \'.*\'/P2PPrivateKey = \'${!node}\'/g" config.toml
-        sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\"${!boot}\"\]/g" config.toml
+        if [ ${index} -eq 0 ];
+          then
+            sed -i -e "s/P2PAddress = \'.*\'/P2PAddress = \'127.0.0.1:9633\'/g" config.toml
+            nodeid="0710be1c04dfa07bd84bfc68f8b663071885a85031066bbb3b6bbed421cf9511"
+            sed -i -e "s/P2PPrivateKey = \'.*\'/P2PPrivateKey = \'${!nodeid}\'/g" config.toml
+        else
+          p2pport = "127.0.0.1:"$((SP_START_PORT+1000*$index + 1))
+          sed -i -e "s/P2PAddress = \'.*\'/P2PAddress = \'${p2pport}\'/g" config.toml
+          sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[16Uiu2HAmG4KTyFsK71BVwjY4z6WwcNBVb6vAiuuL9ASWdqiTzNZH@127.0.0.1:9633\]/g" config.toml
+        fi
+
 
         echo "succeed to generate config.toml in "${sp_dir}
       cd - >/dev/null

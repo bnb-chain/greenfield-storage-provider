@@ -227,7 +227,6 @@ func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
 
 func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) task.Task {
 	if len(tasks) == 0 {
-		log.CtxErrorw(ctx, "candidate task set is empty")
 		return nil
 	}
 	if len(tasks) == 1 {

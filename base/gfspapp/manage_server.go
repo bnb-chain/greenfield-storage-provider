@@ -116,11 +116,6 @@ func (g *GfSpBaseApp) OnAskTask(
 	if err != nil {
 		return nil, gfsperrors.MakeGfSpError(err)
 	}
-	if gfspTask == nil {
-		log.CtxErrorw(ctx, "failed to dispatch task, no task to dispatch below the limit ",
-			"node_limit", limit.String())
-		return nil, ErrNoTaskMatchLimit
-	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, gfspTask.Key().String())
 	gfspTask.IncRetry()
 	gfspTask.SetError(nil)
