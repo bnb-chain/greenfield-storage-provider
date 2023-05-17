@@ -116,6 +116,9 @@ func (g *GfSpBaseApp) OnAskTask(
 	if err != nil {
 		return nil, gfsperrors.MakeGfSpError(err)
 	}
+	if gfspTask == nil {
+		return gfspTask, nil
+	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, gfspTask.Key().String())
 	gfspTask.IncRetry()
 	gfspTask.SetError(nil)
