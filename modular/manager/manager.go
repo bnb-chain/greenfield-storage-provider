@@ -75,8 +75,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 }
 
 func (m *ManageModular) eventLoop(ctx context.Context) {
-	gcObjectTicker := time.NewTicker(time.Duration(m.gcObjectTimeInterval))
-	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval))
+	gcObjectTicker := time.NewTicker(time.Duration(m.gcObjectTimeInterval) * time.Second)
+	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():

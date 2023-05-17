@@ -49,7 +49,7 @@ func (e *ExecuteModular) Start(ctx context.Context) error {
 }
 
 func (e *ExecuteModular) eventLoop(ctx context.Context) {
-	ticker := time.NewTicker(time.Duration(e.askTaskInterval))
+	ticker := time.NewTicker(time.Duration(e.askTaskInterval) * time.Second)
 	logCnt := 0
 	for {
 		select {
