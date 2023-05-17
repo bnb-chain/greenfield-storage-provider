@@ -80,6 +80,11 @@ func (m *GfSpTask) EstimateLimit() rcmgr.Limit {
 }
 
 func (m *GfSpTask) Error() error {
+	if m.GetErr() == nil {
+		return nil
+	} else if m.GetErr().GetInnerCode() == 0 {
+		return nil
+	}
 	return m.GetErr()
 }
 

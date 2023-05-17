@@ -25,9 +25,9 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to challenge piece", "req_info", reqCtx.String())
 			MakeErrorResponse(w, err)
 		}
+		log.CtxDebugw(reqCtx.Context(), "failed to challenge piece", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -114,9 +114,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to challenge piece", "req_info", reqCtx.String())
 			MakeErrorResponse(w, err)
 		}
+		log.CtxDebugw(reqCtx.Context(), "failed to challenge piece", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()

@@ -30,6 +30,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		pRead, pWrite = io.Pipe()
 		ctx, cancel   = context.WithCancel(context.Background())
 		err           error
+		receiveSize   int
 	)
 	defer func() {
 		defer cancel()
@@ -95,6 +96,9 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				}
 				initCh <- struct{}{}
 			}
+			receiveSize += len(req.GetPayload())
+			log.CtxDebugw(ctx, "succeed to receive payload data", "receive_size", receiveSize,
+				"object_size", task.GetObjectInfo().GetPayloadSize())
 			pWrite.Write(req.GetPayload())
 		}
 	}()

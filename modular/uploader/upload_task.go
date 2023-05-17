@@ -65,6 +65,7 @@ func (u *UploadModular) HandleUploadObjectTask(
 		segIdx                uint32
 		pieceKey              string
 		checksums             [][]byte
+		readSize              int
 		data                  = make([]byte, segmentSize)
 		storeCtx, storeCancel = context.WithCancel(ctx)
 	)
@@ -83,6 +84,9 @@ func (u *UploadModular) HandleUploadObjectTask(
 		}
 		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 		n, err := StreamReadAt(stream, data)
+		readSize += n
+		log.CtxDebugw(ctx, "succeed to read data from stream", "read_size", readSize,
+			"object_size", task.GetObjectInfo().GetPayloadSize())
 		segIdx++
 		if err == io.EOF {
 			if n != 0 {

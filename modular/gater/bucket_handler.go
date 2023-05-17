@@ -21,9 +21,9 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "req_info", reqCtx.String())
 			MakeErrorResponse(w, err)
 		}
+		log.CtxDebugw(reqCtx.Context(), "failed to get bucket read quota", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -99,9 +99,9 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list bucket read quota", "req_info", reqCtx.String())
 			MakeErrorResponse(w, err)
 		}
+		log.CtxDebugw(reqCtx.Context(), "failed to list bucket read quota", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
