@@ -14,7 +14,7 @@ var _ module.Uploader = &UploadModular{}
 type UploadModular struct {
 	baseApp     *gfspapp.GfSpBaseApp
 	scope       rcmgr.ResourceScope
-	uploadQueue taskqueue.TQueue
+	uploadQueue taskqueue.TQueueOnStrategy
 }
 
 func (u *UploadModular) Name() string {

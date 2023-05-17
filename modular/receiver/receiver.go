@@ -14,7 +14,7 @@ var _ module.Receiver = &ReceiveModular{}
 type ReceiveModular struct {
 	baseApp      *gfspapp.GfSpBaseApp
 	scope        rcmgr.ResourceScope
-	receiveQueue taskqueue.TQueue
+	receiveQueue taskqueue.TQueueOnStrategy
 }
 
 func (r *ReceiveModular) Name() string {

@@ -1,7 +1,6 @@
 package gfspapp
 
 import (
-	"encoding/json"
 	"math"
 	"os"
 	"strings"
@@ -220,11 +219,9 @@ func DefaultGfSpPieceOpOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 func DefaultGfSpTQueueOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Customize.NewStrategyTQueueFunc == nil {
 		cfg.Customize.NewStrategyTQueueFunc = gfsptqueue.NewGfSpTQueue
-		return nil
 	}
 	if cfg.Customize.NewStrategyTQueueWithLimitFunc == nil {
 		cfg.Customize.NewStrategyTQueueWithLimitFunc = gfsptqueue.NewGfSpTQueueWithLimit
-		return nil
 	}
 	return nil
 }
@@ -363,13 +360,10 @@ func NewGfSpBaseApp(cfg *gfspconfig.GfSpConfig, opts ...gfspconfig.Option) (*GfS
 	for _, opt := range gfspBaseAppDefaultOptions {
 		err := opt(app, cfg)
 		if err != nil {
+			log.Errorw("failed to apply base app opt", "error", err)
 			return nil, err
 		}
 	}
-	bz, err := json.Marshal(cfg)
-	if err != nil {
-		return nil, err
-	}
-	log.Infow("succeed to init base app", "config", string(bz))
+	log.Infof("succeed to init base app, config info: %s", cfg.String())
 	return app, nil
 }

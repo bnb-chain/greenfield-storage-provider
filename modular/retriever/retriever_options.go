@@ -1,12 +1,10 @@
 package retriever
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
-	"google.golang.org/grpc/reflection"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
 )
 
@@ -20,7 +18,6 @@ func NewRetrieveModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (c
 		return nil, err
 	}
 	types.RegisterGfSpRetrieverServiceServer(receiver.baseApp.ServerForRegister(), receiver)
-	reflection.Register(receiver.baseApp.ServerForRegister())
 	return receiver, nil
 }
 

@@ -88,6 +88,32 @@ func CustomizeConsensus(consensus consensus.Consensus) Option {
 	}
 }
 
+func CustomizeTQueue(newFunc coretaskqueue.NewTQueue) Option {
+	return func(cfg *GfSpConfig) error {
+		if cfg.Customize == nil {
+			cfg.Customize = &Customize{}
+		}
+		if cfg.Customize.NewTQueueFunc != nil {
+			return errors.New("repeated set task queue")
+		}
+		cfg.Customize.NewTQueueFunc = newFunc
+		return nil
+	}
+}
+
+func CustomizeTQueueWithLimit(newFunc coretaskqueue.NewTQueueWithLimit) Option {
+	return func(cfg *GfSpConfig) error {
+		if cfg.Customize == nil {
+			cfg.Customize = &Customize{}
+		}
+		if cfg.Customize.NewTQueueWithLimit != nil {
+			return errors.New("repeated set strategy task queue with limit")
+		}
+		cfg.Customize.NewTQueueWithLimit = newFunc
+		return nil
+	}
+}
+
 func CustomizeStrategyTQueue(newFunc coretaskqueue.NewTQueueOnStrategy) Option {
 	return func(cfg *GfSpConfig) error {
 		if cfg.Customize == nil {

@@ -206,10 +206,10 @@ var (
 		Buckets: prometheus.DefBuckets,
 	}, []string{"confirm_secondary_piece_on_chain_time"})
 	SealObjectTaskTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "seal_object_time",
-		Help:    "Track the time of confirm secondary piece seal on chain.",
+		Name:    "seal_object_task_time",
+		Help:    "Track the time of seal object time on chain.",
 		Buckets: prometheus.DefBuckets,
-	}, []string{"confirm_secondary_piece_on_chain_time"})
+	}, []string{"seal_object_task_time"})
 	GCBlockNumberGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "gc_block_number",
 		Help: "Track the next gc block number.",

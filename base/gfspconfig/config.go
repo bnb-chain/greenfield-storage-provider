@@ -1,6 +1,8 @@
 package gfspconfig
 
 import (
+	"github.com/pelletier/go-toml/v2"
+	
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
@@ -20,6 +22,8 @@ type Customize struct {
 	Rcmgr                          corercmgr.ResourceManager
 	RcLimiter                      corercmgr.Limiter
 	Consensus                      consensus.Consensus
+	NewTQueueFunc                  coretaskqueue.NewTQueue
+	NewTQueueWithLimit             coretaskqueue.NewTQueueWithLimit
 	NewStrategyTQueueFunc          coretaskqueue.NewTQueueOnStrategy
 	NewStrategyTQueueWithLimitFunc coretaskqueue.NewTQueueOnStrategyWithLimit
 }
@@ -52,6 +56,17 @@ func (cfg *GfSpConfig) Apply(opts ...Option) error {
 		}
 	}
 	return nil
+}
+
+func (cfg *GfSpConfig) String() string {
+	customize := cfg.Customize
+	cfg.Customize = nil
+	bz, err := toml.Marshal(cfg)
+	if err != nil {
+		return ""
+	}
+	cfg.Customize = customize
+	return string(bz)
 }
 
 type ChainConfig struct {

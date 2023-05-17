@@ -185,7 +185,6 @@ func (s *GfSpClient) HttpClient(ctx context.Context) *http.Client {
 func (s *GfSpClient) Close() error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	s.httpClient.CloseIdleConnections()
 	if s.managerConn != nil {
 		s.managerConn.Close()
 	}

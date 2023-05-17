@@ -14,8 +14,8 @@ var _ module.Downloader = &DownloadModular{}
 type DownloadModular struct {
 	baseApp        *gfspapp.GfSpBaseApp
 	scope          rcmgr.ResourceScope
-	downloadQueue  taskqueue.TQueue
-	challengeQueue taskqueue.TQueue
+	downloadQueue  taskqueue.TQueueOnStrategy
+	challengeQueue taskqueue.TQueueOnStrategy
 
 	bucketFreeQuota uint64
 }

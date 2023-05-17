@@ -30,6 +30,11 @@ func (r *RetrieveModular) Name() string {
 }
 
 func (r *RetrieveModular) Start(ctx context.Context) error {
+	scope, err := r.baseApp.ResourceManager().OpenService(r.Name())
+	if err != nil {
+		return err
+	}
+	r.scope = scope
 	return nil
 }
 
