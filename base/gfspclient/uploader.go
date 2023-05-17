@@ -22,7 +22,7 @@ func (s *GfSpClient) UploadObject(
 	}
 	var sendSize = 0
 	defer func() {
-		//defer conn.Close()
+		defer conn.Close()
 		if task != nil {
 			log.CtxDebugw(ctx, "succeed to send payload data", "send_size", sendSize,
 				"object_size", task.GetObjectInfo().GetPayloadSize())
@@ -53,10 +53,13 @@ func (s *GfSpClient) UploadObject(
 					return ErrRpcUnknown
 				}
 			}
-			err = client.CloseSend()
+			resp, err := client.CloseAndRecv()
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to close upload stream", "error", err)
 				return ErrRpcUnknown
+			}
+			if resp.GetErr() != nil {
+				return resp.GetErr()
 			}
 			return nil
 		}
