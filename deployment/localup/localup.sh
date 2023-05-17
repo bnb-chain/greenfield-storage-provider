@@ -91,39 +91,39 @@ make_config() {
         source db.info
         source sp.info
         # app
-        sed -i -e "s/GrpcAddress = \'.*\'/GrpcAddress = \'127.0.0.1:${cur_port}\'/g" config.toml
+        sed -i -e "s/GrpcAddress = '.*'/GrpcAddress = '127.0.0.1:${cur_port}'/g" config.toml
 
         # db
-        sed -i -e "s/User = \'.*\'/User = \'${USER}\'/g" config.toml
-        sed -i -e "s/Passwd = \'.*\'/Passwd = \'${PWD}\'/g" config.toml
-        sed -i -e "s/^Address = \'.*\'/Address = \'${ADDRESS}\'/g" config.toml
-        sed -i -e "s/Database = \'.*\'/Database = \'${DATABASE}\'/g" config.toml
+        sed -i -e "s/User = '.*'/User = '${USER}'/g" config.toml
+        sed -i -e "s/Passwd = '.*'/Passwd = '${PWD}'/g" config.toml
+        sed -i -e "s/^Address = '.*'/Address = '${ADDRESS}'/g" config.toml
+        sed -i -e "s/Database = '.*'/Database = '${DATABASE}'/g" config.toml
 
         # chain
-        sed -i -e "s/ChainID = \'.*\'/ChainID = \'${CHAIN_ID}\'/g" config.toml
-        sed -i -e "s/ChainAddress = \[.*\]/ChainAddress = \[\"http:\/\/${CHAIN_HTTP_ENDPOINT}\"\]/g" config.toml
+        sed -i -e "s/ChainID = '.*'/ChainID = '${CHAIN_ID}'/g" config.toml
+        sed -i -e "s/ChainAddress = \[.*\]/ChainAddress = \['http:\/\/${CHAIN_HTTP_ENDPOINT}'\]/g" config.toml
 
         # sp account
-        sed -i -e "s/SpOperateAddress = \'.*\'/SpOperateAddress = \'${OPERATOR_ADDRESS}\'/g" config.toml
-        sed -i -e "s/OperatorPrivateKey = \'.*\'/OperatorPrivateKey = \'${OPERATOR_PRIVATE_KEY}\'/g" config.toml
-        sed -i -e "s/FundingPrivateKey = \'.*\'/FundingPrivateKey = \'${FUNDING_PRIVATE_KEY}\'/g" config.toml
-        sed -i -e "s/SealPrivateKey = \'.*\'/SealPrivateKey = \'${SEAL_PRIVATE_KEY}\'/g" config.toml
-        sed -i -e "s/ApprovalPrivateKey = \'.*\'/ApprovalPrivateKey = \'${APPROVAL_PRIVATE_KEY}\'/g" config.toml
-        sed -i -e "s/GcPrivateKey = \'.*\'/GcPrivateKey = \'${GC_PRIVATE_KEY}\'/g" config.toml
+        sed -i -e "s/SpOperateAddress = '.*'/SpOperateAddress = '${OPERATOR_ADDRESS}'/g" config.toml
+        sed -i -e "s/OperatorPrivateKey = '.*'/OperatorPrivateKey = '${OPERATOR_PRIVATE_KEY}'/g" config.toml
+        sed -i -e "s/FundingPrivateKey = '.*'/FundingPrivateKey = '${FUNDING_PRIVATE_KEY}'/g" config.toml
+        sed -i -e "s/SealPrivateKey = '.*'/SealPrivateKey = '${SEAL_PRIVATE_KEY}'/g" config.toml
+        sed -i -e "s/ApprovalPrivateKey = '.*'/ApprovalPrivateKey = '${APPROVAL_PRIVATE_KEY}'/g" config.toml
+        sed -i -e "s/GcPrivateKey = '.*'/GcPrivateKey = '${GC_PRIVATE_KEY}'/g" config.toml
 
         # gateway
-        sed -i -e "s/Domain = \'.*\'/Domain = \'gnfd.test-sp.com\'/g" config.toml
-        sed -i -e "s/^HttpAddress = \'.*\'/HttpAddress = \'${SP_ENDPOINT}\'/g" config.toml
+        sed -i -e "s/Domain = '.*'/Domain = 'gnfd.test-sp.com'/g" config.toml
+        sed -i -e "s/^HttpAddress = '.*'/HttpAddress = '${SP_ENDPOINT}'/g" config.toml
 
         # p2p
         if [ ${index} -eq 0 ];
           then
-            sed -i -e "s/P2PAddress = \'.*\'/P2PAddress = \'127.0.0.1:9633\'/g" config.toml
+            sed -i -e "s/P2PAddress = '.*'/P2PAddress = '127.0.0.1:9633'/g" config.toml
             nodeid="0710be1c04dfa07bd84bfc68f8b663071885a85031066bbb3b6bbed421cf9511"
-            sed -i -e "s/P2PPrivateKey = \'.*\'/P2PPrivateKey = \'${!nodeid}\'/g" config.toml
+            sed -i -e "s/P2PPrivateKey = '.*'/P2PPrivateKey = '${!nodeid}'/g" config.toml
         else
           p2pport="127.0.0.1:"$((SP_START_PORT+1000*$index + 1))
-          sed -i -e "s/P2PAddress = \'.*\'/P2PAddress = \'${p2pport}\'/g" config.toml
+          sed -i -e "s/P2PAddress = '.*'/P2PAddress = '${p2pport}'/g" config.toml
           sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\'16Uiu2HAmG4KTyFsK71BVwjY4z6WwcNBVb6vAiuuL9ASWdqiTzNZH@127.0.0.1:9633\'\]/g" config.toml
         fi
 
