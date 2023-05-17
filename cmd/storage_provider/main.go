@@ -156,7 +156,7 @@ func registerModular() {
 func initLog(ctx *cli.Context, cfg *gfspconfig.GfSpConfig) error {
 	var (
 		logLevel = "debug"
-		logPath  = "./log"
+		logPath  = "./gfsp.log"
 	)
 	if ctx.IsSet(utils.LogLevelFlag.Name) {
 		logLevel = ctx.String(utils.LogLevelFlag.Name)

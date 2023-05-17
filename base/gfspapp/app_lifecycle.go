@@ -18,10 +18,6 @@ var _ corelifecycle.Lifecycle = &GfSpBaseApp{}
 
 // RegisterServices register services of an application
 func (g *GfSpBaseApp) RegisterServices(services ...corelifecycle.Service) {
-	registerModulus := GetRegisterModulusInstances()
-	for _, modulus := range registerModulus {
-		services = append(services, modulus)
-	}
 	g.services = append(g.services, services...)
 }
 

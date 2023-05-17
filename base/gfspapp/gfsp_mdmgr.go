@@ -18,7 +18,6 @@ type ModularManager struct {
 	modulus        []string
 	descriptions   map[string]string
 	newModularFunc map[string]NewModularFunc
-	instances      map[string]coremodule.Modular
 	mux            sync.RWMutex
 }
 
@@ -29,7 +28,6 @@ func init() {
 	once.Do(func() {
 		mdmgr = &ModularManager{
 			descriptions:   make(map[string]string),
-			instances:      make(map[string]coremodule.Modular),
 			newModularFunc: make(map[string]NewModularFunc),
 		}
 		// TODO: add modular
@@ -50,16 +48,6 @@ func RegisterModular(name string, description string, newFunc NewModularFunc) {
 		mdmgr.descriptions[name] = description
 	}
 	mdmgr.newModularFunc[name] = newFunc
-}
-
-func RegisterModularInstance(modular coremodule.Modular) {
-	mdmgr.mux.RLock()
-	defer mdmgr.mux.RUnlock()
-	if _, ok := mdmgr.instances[modular.Name()]; ok {
-		log.Panicf("[%s] modular repeated", modular.Name())
-	}
-	mdmgr.instances[modular.Name()] = modular
-	return
 }
 
 func GetRegisterModulus() []string {
@@ -87,14 +75,4 @@ func GetNewModularFunc(name string) NewModularFunc {
 		log.Panicf("not register [%s] modular info", name)
 	}
 	return mdmgr.newModularFunc[name]
-}
-
-func GetRegisterModulusInstances() []coremodule.Modular {
-	mdmgr.mux.RLock()
-	defer mdmgr.mux.RUnlock()
-	var modulus []coremodule.Modular
-	for _, modular := range mdmgr.instances {
-		modulus = append(modulus, modular)
-	}
-	return modulus
 }

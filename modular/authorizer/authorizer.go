@@ -83,11 +83,7 @@ func (a *AuthorizeModular) VerifyAuthorize(ctx context.Context,
 	}
 	switch auth {
 	case coremodule.AuthOpAskCreateBucketApproval:
-		bucketInfo, err := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
-			return false, ErrConsensus
-		}
+		bucketInfo, _ := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
 		if bucketInfo != nil {
 			log.CtxErrorw(ctx, "failed to ask create bucket approval, bucket repeated",
 				"bucket", bucket, "object", object)
@@ -95,11 +91,7 @@ func (a *AuthorizeModular) VerifyAuthorize(ctx context.Context,
 		}
 		return true, nil
 	case coremodule.AuthOpAskCreateObjectApproval:
-		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
-			return false, ErrConsensus
-		}
+		bucketInfo, objectInfo, _ := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if bucketInfo == nil {
 			log.CtxErrorw(ctx, "failed to ask create object approval, no such bucket to ask create object approval",
 				"bucket", bucket, "object", object)

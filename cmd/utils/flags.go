@@ -24,7 +24,7 @@ var (
 	ServerFlag = &cli.StringFlag{
 		Name:     "server",
 		Category: ConfigCategory,
-		Aliases:  []string{"service", "svc"},
+		Aliases:  []string{"service", "svc", "s"},
 		Usage:    "Services to be started list, e.g. -server gateway, uploader, receiver...",
 	}
 

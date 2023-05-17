@@ -51,6 +51,9 @@ const (
 )
 
 func MakeGfSpError(err error) *GfSpError {
+	if err == nil {
+		return nil
+	}
 	switch e := err.(type) {
 	case *GfSpError:
 		return e

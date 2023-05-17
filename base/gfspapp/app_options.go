@@ -284,7 +284,7 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 			log.Errorw("failed to new modular instance", "name", modular)
 			return err
 		}
-		RegisterModularInstance(module)
+		app.RegisterServices(module)
 		switch module.Name() {
 		case coremodule.ApprovalModularName:
 			app.approver = module.(coremodule.Approver)
@@ -319,7 +319,7 @@ func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		cfg.Monitor.MetricsHttpAddress = DefaultPprofAddress
 	}
 	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHttpAddress)
-	RegisterModularInstance(app.metrics)
+	app.RegisterServices(app.metrics)
 	return nil
 }
 
@@ -331,7 +331,7 @@ func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error 
 		cfg.Monitor.PProfHttpAddress = DefaultMetricsAddress
 	}
 	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHttpAddress)
-	RegisterModularInstance(app.pprof)
+	app.RegisterServices(app.pprof)
 	return nil
 }
 

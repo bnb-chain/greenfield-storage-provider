@@ -20,9 +20,10 @@ import (
 
 func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err     error
-		reqCtx  = NewRequestContext(r)
-		account string
+		err      error
+		verified = true
+		reqCtx   = NewRequestContext(r)
+		account  string
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -61,7 +62,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if reqCtx.NeedVerifySignature() {
-			verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+			verified, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 				coremodule.AuthOpAskCreateBucketApproval, account, createBucketApproval.GetBucketName(), "")
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
@@ -102,7 +103,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if reqCtx.NeedVerifySignature() {
-			verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+			verified, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 				coremodule.AuthOpAskCreateObjectApproval, account, createObjectApproval.GetBucketName(),
 				createObjectApproval.GetObjectName())
 			if err != nil {

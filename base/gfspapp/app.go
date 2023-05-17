@@ -109,7 +109,6 @@ func (g *GfSpBaseApp) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	g.RegisterServices()
 	g.Signals(syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP).
 		StartServices(ctx).
 		Wait(ctx)
