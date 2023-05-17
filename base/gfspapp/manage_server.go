@@ -62,8 +62,11 @@ func (g *GfSpBaseApp) GfSpAskTask(
 	req *gfspserver.GfSpAskTaskRequest) (
 	*gfspserver.GfSpAskTaskResponse, error) {
 	gfspTask, err := g.OnAskTask(ctx, req.GetNodeLimit())
-	if err != nil || gfspTask == nil {
+	if err != nil {
 		log.CtxErrorw(ctx, "failed to dispatch task", "error", err)
+		return &gfspserver.GfSpAskTaskResponse{Err: ErrNoTaskMatchLimit}, nil
+	}
+	if gfspTask == nil {
 		return &gfspserver.GfSpAskTaskResponse{Err: ErrNoTaskMatchLimit}, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, gfspTask.Key().String())
@@ -111,7 +114,6 @@ func (g *GfSpBaseApp) OnAskTask(
 ) (coretask.Task, error) {
 	gfspTask, err := g.manager.DispatchTask(ctx, limit)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to dispatch task", "error", err)
 		return nil, gfsperrors.MakeGfSpError(err)
 	}
 	if gfspTask == nil {

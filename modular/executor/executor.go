@@ -49,11 +49,13 @@ func (e *ExecuteModular) Start(ctx context.Context) error {
 
 func (e *ExecuteModular) eventLoop(ctx context.Context) {
 	ticker := time.NewTicker(time.Duration(e.askTaskInterval))
+	logCnt := 0
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			logCnt++
 			maxExecuteNum := atomic.LoadInt64(&e.maxExecuteNum)
 			executingNum := atomic.LoadInt64(&e.executingNum)
 			metrics.MaxTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(maxExecuteNum))
@@ -64,8 +66,10 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 					"executing_num", executingNum, "max_execute_num", maxExecuteNum)
 				continue
 			}
-			log.CtxDebugw(ctx, "start to ask task", "executing_num", executingNum,
-				"max_execute_num", maxExecuteNum)
+			if logCnt%1000 == 0 {
+				log.CtxDebugw(ctx, "start to ask task", "executing_num", executingNum,
+					"max_execute_num", maxExecuteNum)
+			}
 			atomic.AddInt64(&e.executingNum, 1)
 			go func() {
 				limit, err := e.scope.RemainingResource()

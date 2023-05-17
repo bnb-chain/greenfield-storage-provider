@@ -73,7 +73,6 @@ func (m *ManageModular) DispatchTask(
 	}
 	task = m.PickUpTask(ctx, backUpTasks)
 	if task == nil {
-		log.CtxWarnw(ctx, "no task is picked", "required_limit", limit.String())
 		return nil, ErrNoTaskMatchLimit
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
