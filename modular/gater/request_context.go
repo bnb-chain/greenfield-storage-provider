@@ -91,9 +91,9 @@ func (r *RequestContext) String() string {
 		}
 		return IPAddress
 	}
-	return fmt.Sprintf("action(%s) host(%v) method(%v) url(%v) header(%v) remote(%v) cost(%v) error(%s)",
+	return fmt.Sprintf("action(%s) host(%v) method(%v) url(%v) header(%v) remote(%v) cost(%v) error(%v)",
 		r.routerName, r.request.Host, r.request.Method, r.request.URL.String(), headerToString(r.request.Header),
-		getRequestIP(r.request), time.Since(r.startTime), r.err.Error())
+		getRequestIP(r.request), time.Since(r.startTime), r.err)
 }
 
 func (r *RequestContext) NeedVerifySignature() bool {
