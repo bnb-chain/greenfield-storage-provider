@@ -315,10 +315,10 @@ func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Monitor.DisableMetrics {
 		app.metrics = &coremodule.NullModular{}
 	}
-	if cfg.Monitor.MetricsHttpAddress == "" {
-		cfg.Monitor.MetricsHttpAddress = DefaultPprofAddress
+	if cfg.Monitor.MetricsHTTPAddress == "" {
+		cfg.Monitor.MetricsHTTPAddress = DefaultPprofAddress
 	}
-	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHttpAddress)
+	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHTTPAddress)
 	RegisterModularInstance(app.metrics)
 	return nil
 }
@@ -327,10 +327,10 @@ func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error 
 	if cfg.Monitor.DisablePProf {
 		app.pprof = &coremodule.NullModular{}
 	}
-	if cfg.Monitor.PProfHttpAddress == "" {
-		cfg.Monitor.PProfHttpAddress = DefaultMetricsAddress
+	if cfg.Monitor.PProfHTTPAddress == "" {
+		cfg.Monitor.PProfHTTPAddress = DefaultMetricsAddress
 	}
-	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHttpAddress)
+	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHTTPAddress)
 	RegisterModularInstance(app.pprof)
 	return nil
 }

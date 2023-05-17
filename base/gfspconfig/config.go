@@ -2,7 +2,7 @@ package gfspconfig
 
 import (
 	"github.com/pelletier/go-toml/v2"
-	
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
@@ -111,7 +111,7 @@ type BucketConfig struct {
 
 type GatewayConfig struct {
 	Domain      string
-	HttpAddress string
+	HTTPAddress string
 }
 
 type ExecutorConfig struct {
@@ -177,8 +177,8 @@ type TaskConfig struct {
 type MonitorConfig struct {
 	DisableMetrics     bool
 	DisablePProf       bool
-	MetricsHttpAddress string
-	PProfHttpAddress   string
+	MetricsHTTPAddress string
+	PProfHTTPAddress   string
 }
 
 type RcmgrConfig struct {

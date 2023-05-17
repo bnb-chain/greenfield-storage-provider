@@ -2,7 +2,6 @@
 
 basedir=$(cd `dirname $0`; pwd)
 workspace=${basedir}
-SP_DEPLOY_DIR=${./deployment/localup/local_env/}
 source ${workspace}/env.info
 sp_bin_name=gnfd-sp
 sp_bin=${workspace}/../../build/${sp_bin_name}
@@ -114,20 +113,19 @@ make_config() {
 
         # gateway
         sed -i -e "s/Domain = \'.*\'/Domain = \'gnfd.test-sp.com\'/g" config.toml
-        sed -i -e "s/HttpAddress = \'.*\'/HttpAddress = \'${SP_ENDPOINT}\'/g" config.toml
+        sed -i -e "s/HTTPAddress = \'.*\'/HTTPAddress = \'${SP_ENDPOINT}\'/g" config.toml
 
         # p2p
         if [ ${index} -eq 0 ];
           then
             sed -i -e "s/P2PAddress = \'.*\'/P2PAddress = \'127.0.0.1:9633\'/g" config.toml
-            nodeid="0710be1c04dfa07bd84bfc68f8b663071885a85031066bbb3b6bbed421cf9511"
-            sed -i -e "s/P2PPrivateKey = \'.*\'/P2PPrivateKey = \'${!nodeid}\'/g" config.toml
+            node_id="0710be1c04dfa07bd84bfc68f8b663071885a85031066bbb3b6bbed421cf9511"
+            sed -i -e "s/P2PPrivateKey = \'.*\'/P2PPrivateKey = \'${!node_id}\'/g" config.toml
         else
-          p2pport = "127.0.0.1:"$((SP_START_PORT+1000*$index + 1))
-          sed -i -e "s/P2PAddress = \'.*\'/P2PAddress = \'${p2pport}\'/g" config.toml
+          p2p_port = "127.0.0.1:$((SP_START_PORT+1000*$index+1))"
+          sed -i -e "s/P2PAddress = \'.*\'/P2PAddress = \'${p2p_port}\'/g" config.toml
           sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[16Uiu2HAmG4KTyFsK71BVwjY4z6WwcNBVb6vAiuuL9ASWdqiTzNZH@127.0.0.1:9633\]/g" config.toml
         fi
-
 
         echo "succeed to generate config.toml in "${sp_dir}
       cd - >/dev/null
@@ -136,15 +134,15 @@ make_config() {
 }
 
 #############################################################
-# make intergation test config.toml according sp.json       #
+# make integration test config.toml according sp.json       #
 #############################################################
-make_intergation_test_config() {
+make_integration_test_config() {
   index=0
   sp_json_file=$1
   file='test/e2e/localup_env/integration_config/config.yml'
 
-  validator_priv_key=("$(echo "y" | $gnfd_bin keys export validator0 --unarmored-hex --unsafe --keyring-backend test --home ${gnfd_workspace}/.local/validator0)")
-  echo "validator0 private key $validator_priv_key"
+  validator_private_key=("$(echo "y" | $gnfd_bin keys export validator0 --unarmored-hex --unsafe --keyring-backend test --home ${gnfd_workspace}/.local/validator0)")
+  echo "validator0 private key $validator_private_key"
   sed -i -e "s/20f92afe113b90e1faa241969e957ac091d80b920f84ffda80fc9d0588f62906/${validator_priv_key}/g" $file
 
   echo "SPs:" >> $file
@@ -157,13 +155,13 @@ make_intergation_test_config() {
   sp1_spk=$(jq -r ".sp1.SealPrivateKey" ${sp_json_file})
   sp1_apk=$(jq -r ".sp1.ApprovalPrivateKey" ${sp_json_file})
 
-  sp0_opaddr=$(jq -r ".sp0.OperatorAddress" ${sp_json_file})
-  sp1_opaddr=$(jq -r ".sp1.OperatorAddress" ${sp_json_file})
-  sp2_opaddr=$(jq -r ".sp2.OperatorAddress" ${sp_json_file})
-  sp3_opaddr=$(jq -r ".sp3.OperatorAddress" ${sp_json_file})
-  sp4_opaddr=$(jq -r ".sp4.OperatorAddress" ${sp_json_file})
-  sp5_opaddr=$(jq -r ".sp5.OperatorAddress" ${sp_json_file})
-  sp6_opaddr=$(jq -r ".sp6.OperatorAddress" ${sp_json_file})
+  sp0_op_addr=$(jq -r ".sp0.OperatorAddress" ${sp_json_file})
+  sp1_op_addr=$(jq -r ".sp1.OperatorAddress" ${sp_json_file})
+  sp2_op_addr=$(jq -r ".sp2.OperatorAddress" ${sp_json_file})
+  sp3_op_addr=$(jq -r ".sp3.OperatorAddress" ${sp_json_file})
+  sp4_op_addr=$(jq -r ".sp4.OperatorAddress" ${sp_json_file})
+  sp5_op_addr=$(jq -r ".sp5.OperatorAddress" ${sp_json_file})
+  sp6_op_addr=$(jq -r ".sp6.OperatorAddress" ${sp_json_file})
 
 
   echo "  - OperatorSecret: "${sp0_opk}"" >> $file
@@ -175,13 +173,13 @@ make_intergation_test_config() {
   echo "    ApprovalSecret: "${sp1_spk}"" >> $file
   echo "    SealSecret: "${sp1_apk}"" >> $file
   echo "SPAddr:" >> $file
-  echo "  - $sp0_opaddr" >> $file
-  echo "  - $sp1_opaddr" >> $file
-  echo "  - $sp2_opaddr" >> $file
-  echo "  - $sp3_opaddr" >> $file
-  echo "  - $sp4_opaddr" >> $file
-  echo "  - $sp5_opaddr" >> $file
-  echo "  - $sp6_opaddr" >> $file
+  echo "  - $sp0_op_addr" >> $file
+  echo "  - $sp1_op_addr" >> $file
+  echo "  - $sp2_op_addr" >> $file
+  echo "  - $sp3_op_addr" >> $file
+  echo "  - $sp4_op_addr" >> $file
+  echo "  - $sp5_op_addr" >> $file
+  echo "  - $sp6_op_addr" >> $file
   cat $file
 }
 
@@ -225,7 +223,7 @@ reset_sql_db() {
 }
 
 ##########################
-# clean piece-store data #
+# clean piece store data #
 ##########################
 reset_piece_store() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
@@ -273,7 +271,7 @@ main() {
   case ${CMD} in
   --generate)
     generate_sp_db_info $2 $3 $4 $5
-    make_intergation_test_config $2
+    make_integration_test_config $2
     ;;
   --reset)
     reset_sp

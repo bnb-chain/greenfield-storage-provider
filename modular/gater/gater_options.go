@@ -23,14 +23,14 @@ func DefaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Gateway.Domain == "" {
 		cfg.Gateway.Domain = DefaultGatewayDomain
 	}
-	if cfg.Gateway.HttpAddress == "" {
-		cfg.Gateway.HttpAddress = DefaultGatewayDomain
+	if cfg.Gateway.HTTPAddress == "" {
+		cfg.Gateway.HTTPAddress = DefaultGatewayDomain
 	}
 	if cfg.Bucket.MaxListReadQuotaNumber == 0 {
 		cfg.Bucket.MaxListReadQuotaNumber = DefaultMaxListReadQuota
 	}
 	gater.domain = cfg.Gateway.Domain
-	gater.httpAddress = cfg.Gateway.HttpAddress
+	gater.httpAddress = cfg.Gateway.HTTPAddress
 	gater.maxListReadQuota = cfg.Bucket.MaxListReadQuotaNumber
 	return nil
 }
