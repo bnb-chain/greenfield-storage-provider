@@ -73,8 +73,11 @@ func (u *UploadModular) HandleUploadObjectTask(
 		defer u.uploadQueue.PopByKey(task.Key())
 		err := u.baseApp.GfSpClient().ReportTask(ctx, task)
 		if err != nil {
-			log.CtxErrorw(ctx, "report done upload task error", err)
+			log.CtxDebugw(ctx, "failed to read data from stream", "read_size", readSize,
+				"object_size", task.GetObjectInfo().GetPayloadSize(), "error", err)
 		}
+		log.CtxDebugw(ctx, "succeed to read data from stream", "read_size", readSize,
+			"object_size", task.GetObjectInfo().GetPayloadSize())
 	}()
 	for {
 		select {
@@ -86,8 +89,6 @@ func (u *UploadModular) HandleUploadObjectTask(
 		segIdx++
 		n, err := StreamReadAt(stream, data)
 		readSize += n
-		log.CtxDebugw(ctx, "succeed to read data from stream", "read_size", readSize,
-			"object_size", task.GetObjectInfo().GetPayloadSize())
 		if err == io.EOF {
 			if n != 0 {
 				data = data[:n]
@@ -99,7 +100,6 @@ func (u *UploadModular) HandleUploadObjectTask(
 					return ErrPieceStore
 				}
 			}
-			integrity := hash.GenerateIntegrityHash(checksums)
 			signature, integrity, err := u.baseApp.GfSpClient().SignIntegrityHash(ctx,
 				task.GetObjectInfo().Id.Uint64(), checksums)
 			if err != nil {
