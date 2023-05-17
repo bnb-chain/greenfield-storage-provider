@@ -34,7 +34,6 @@ const (
 	SpDBAddress = "SP_DB_ADDRESS"
 	// SpDBDataBase defines env variable name for sp db database
 	SpDBDataBase = "SP_DB_DATABASE"
-
 	// DefaultConnMaxLifetime defines the default max liveness time of connection
 	DefaultConnMaxLifetime = 60
 	// DefaultConnMaxIdleTime defines the default max idle time of connection
@@ -44,6 +43,8 @@ const (
 	// DefaultMaxOpenConns defines the default max number of open connections
 	DefaultMaxOpenConns = 32
 
+	DefaultChainID         = "greenfield_9000-1741"
+	DefaultChainAddress    = "http://localhost:26750"
 	DefaultMemoryLimit     = 8 * 1024 * 1024 * 1024
 	DefaultTaskTotalLimit  = 10240
 	DefaultHighTaskLimit   = 128
@@ -259,10 +260,10 @@ func DefaultGfSpConsensusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) er
 		return nil
 	}
 	if cfg.Chain.ChainID == "" {
-		cfg.Chain.ChainID = "greenfield_9000-1741"
+		cfg.Chain.ChainID = DefaultChainID
 	}
 	if len(cfg.Chain.ChainAddress) == 0 {
-		cfg.Chain.ChainAddress = []string{"http://localhost:26750"}
+		cfg.Chain.ChainAddress = []string{DefaultChainAddress}
 	}
 	gnfdCfg := &gnfd.GnfdChainConfig{
 		ChainID:      cfg.Chain.ChainID,

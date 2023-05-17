@@ -146,10 +146,10 @@ func (g *Gnfd) QueryBucketInfoAndObjectInfo(
 	}
 	objectInfo, err := g.QueryObjectInfo(ctx, bucket, object)
 	if errors.Is(err, storagetypes.ErrNoSuchObject) {
-		return nil, nil, merrors.ErrNoSuchObject
+		return bucketInfo, nil, merrors.ErrNoSuchObject
 	}
 	if err != nil {
-		return nil, nil, err
+		return bucketInfo, nil, err
 	}
 	return bucketInfo, objectInfo, nil
 }
