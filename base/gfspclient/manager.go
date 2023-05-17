@@ -8,6 +8,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func (s *GfSpClient) CreateUploadObject(
@@ -15,6 +16,7 @@ func (s *GfSpClient) CreateUploadObject(
 	task coretask.UploadObjectTask) error {
 	conn, err := s.ManagerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", err)
 		return err
 	}
 	req := &gfspserver.GfSpBeginTaskRequest{
@@ -24,6 +26,7 @@ func (s *GfSpClient) CreateUploadObject(
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpBeginTask(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to create upload object task", "error", err)
 		return err
 	}
 	if resp.GetErr() != nil {
@@ -38,6 +41,7 @@ func (s *GfSpClient) AskTask(
 	coretask.Task, error) {
 	conn, err := s.ManagerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", err)
 		return nil, err
 	}
 	req := &gfspserver.GfSpAskTaskRequest{
@@ -45,6 +49,7 @@ func (s *GfSpClient) AskTask(
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpAskTask(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to ask task", "error", err)
 		return nil, err
 	}
 	if resp.GetErr() != nil {
@@ -73,6 +78,7 @@ func (s *GfSpClient) ReportTask(
 	report coretask.Task) error {
 	conn, err := s.ManagerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", err)
 		return err
 	}
 	req := &gfspserver.GfSpReportTaskRequest{}
@@ -116,6 +122,7 @@ func (s *GfSpClient) ReportTask(
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpReportTask(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to report task", "error", err)
 		return err
 	}
 	if resp.GetErr() != nil {
@@ -130,11 +137,13 @@ func (s *GfSpClient) QueryTask(
 	coretask.Task, error) {
 	conn, err := s.ManagerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", err)
 		return nil, err
 	}
 	req := &gfspserver.GfSpQueryTaskRequest{TaskKey: key}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryTask(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to query task", "error", err)
 		return nil, err
 	}
 	if resp.GetErr() != nil {

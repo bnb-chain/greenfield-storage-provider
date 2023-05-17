@@ -3,10 +3,12 @@ package gfspclient
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"google.golang.org/grpc"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func (s *GfSpClient) ReplicatePiece(
@@ -16,6 +18,7 @@ func (s *GfSpClient) ReplicatePiece(
 	opts ...grpc.DialOption) error {
 	conn, err := s.Connection(ctx, s.receiverEndpoint, opts...)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect receiver", "error", err)
 		return err
 	}
 	defer conn.Close()
@@ -25,6 +28,7 @@ func (s *GfSpClient) ReplicatePiece(
 	}
 	resp, err := gfspserver.NewGfSpReceiveServiceClient(conn).GfSpReplicatePiece(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to replicate piece", "error", err)
 		return err
 	}
 	if resp.GetErr() != nil {
@@ -40,6 +44,7 @@ func (s *GfSpClient) DoneReplicatePiece(
 	[]byte, []byte, error) {
 	conn, err := s.Connection(ctx, s.receiverEndpoint, opts...)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect receiver", "error", err)
 		return nil, nil, err
 	}
 	defer conn.Close()
@@ -48,6 +53,7 @@ func (s *GfSpClient) DoneReplicatePiece(
 	}
 	resp, err := gfspserver.NewGfSpReceiveServiceClient(conn).GfSpDoneReplicatePiece(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to done replicate piece", "error", err)
 		return nil, nil, err
 	}
 	if resp.GetErr() != nil {

@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/golang/protobuf/proto"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(
@@ -22,6 +23,7 @@ func (s *GfSpClient) ReplicatePieceToSecondary(
 	data []byte) error {
 	req, err := http.NewRequest(http.MethodPut, endpoint+model.ReplicateObjectPiecePath, bytes.NewReader(data))
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
 		return err
 	}
 	approvalTask := approval.(*gfsptask.GfSpReplicatePieceApprovalTask)
@@ -58,6 +60,7 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(
 ) ([]byte, []byte, error) {
 	req, err := http.NewRequest(http.MethodPut, endpoint+model.ReplicateObjectPiecePath, nil)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
 		return nil, nil, err
 	}
 	approvalTask := approval.(*gfsptask.GfSpReplicatePieceApprovalTask)

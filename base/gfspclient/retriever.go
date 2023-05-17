@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 
 	retrievertypes "github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metatypes "github.com/bnb-chain/greenfield-storage-provider/service/metadata/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -63,6 +64,7 @@ func (s *GfSpClient) GetBucketReadQuota(
 	uint64, uint64, uint64, error) {
 	conn, err := s.Connection(ctx, s.retrieverEndpoint, opts...)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect retriever", "error", err)
 		return uint64(0), uint64(0), uint64(0), err
 	}
 	defer conn.Close()
@@ -72,6 +74,7 @@ func (s *GfSpClient) GetBucketReadQuota(
 	}
 	resp, err := retrievertypes.NewGfSpRetrieverServiceClient(conn).GfSpGetBucketReadQuota(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get bucket read quota", "error", err)
 		return uint64(0), uint64(0), uint64(0), ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
@@ -88,6 +91,7 @@ func (s *GfSpClient) ListBucketReadRecord(
 	[]*retrievertypes.ReadRecord, int64, error) {
 	conn, err := s.Connection(ctx, s.retrieverEndpoint, opts...)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect retriever", "error", err)
 		return nil, 0, err
 	}
 	defer conn.Close()
@@ -99,6 +103,7 @@ func (s *GfSpClient) ListBucketReadRecord(
 	}
 	resp, err := retrievertypes.NewGfSpRetrieverServiceClient(conn).GfSpListBucketReadRecord(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list bucket read record", "error", err)
 		return nil, 0, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
@@ -113,6 +118,7 @@ func (s *GfSpClient) GetUploadObjectState(
 	opts ...grpc.DialOption) (int32, error) {
 	conn, err := s.Connection(ctx, s.retrieverEndpoint, opts...)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect retriever", "error", err)
 		return 0, err
 	}
 	defer conn.Close()
@@ -121,6 +127,7 @@ func (s *GfSpClient) GetUploadObjectState(
 	}
 	resp, err := retrievertypes.NewGfSpRetrieverServiceClient(conn).GfSpQueryUploadProgress(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get uploading object state", "error", err)
 		return 0, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {

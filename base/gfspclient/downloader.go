@@ -3,10 +3,12 @@ package gfspclient
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"google.golang.org/grpc"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func (s *GfSpClient) GetObject(
@@ -16,6 +18,7 @@ func (s *GfSpClient) GetObject(
 	[]byte, error) {
 	conn, err := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect downloader", "error", err)
 		return nil, err
 	}
 	defer conn.Close()
@@ -24,6 +27,7 @@ func (s *GfSpClient) GetObject(
 	}
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadObject(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to download object", "error", err)
 		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
@@ -39,6 +43,7 @@ func (s *GfSpClient) GetChallengeInfo(
 	[]byte, [][]byte, []byte, error) {
 	conn, err := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect downloader", "error", err)
 		return nil, nil, nil, err
 	}
 	defer conn.Close()
@@ -47,6 +52,7 @@ func (s *GfSpClient) GetChallengeInfo(
 	}
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpGetChallengeInfo(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get challenge piece info", "error", err)
 		return nil, nil, nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {

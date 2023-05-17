@@ -17,6 +17,7 @@ func (s *GfSpClient) UploadObject(
 	stream io.Reader) error {
 	conn, err := s.Connection(ctx, s.uploaderEndpoint)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect uploader", "error", err)
 		return err
 	}
 	defer conn.Close()

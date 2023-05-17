@@ -3,12 +3,13 @@ package gfspclient
 import (
 	"context"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func (s *GfSpClient) SignCreateBucketApproval(
@@ -17,6 +18,7 @@ func (s *GfSpClient) SignCreateBucketApproval(
 	[]byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", err)
 		return nil, err
 	}
 	req := &gfspserver.GfSpSignRequest{
@@ -26,6 +28,7 @@ func (s *GfSpClient) SignCreateBucketApproval(
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign create bucket approval", "error", err)
 		return nil, err
 	}
 	if resp.GetErr() != nil {
@@ -40,6 +43,7 @@ func (s *GfSpClient) SignCreateObjectApproval(
 	[]byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", err)
 		return nil, err
 	}
 	req := &gfspserver.GfSpSignRequest{
@@ -49,6 +53,7 @@ func (s *GfSpClient) SignCreateObjectApproval(
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign create object approval", "error", err)
 		return nil, err
 	}
 	if resp.GetErr() != nil {
@@ -62,6 +67,7 @@ func (s *GfSpClient) SealObject(
 	object *storagetypes.MsgSealObject) error {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", err)
 		return err
 	}
 	req := &gfspserver.GfSpSignRequest{
@@ -71,6 +77,7 @@ func (s *GfSpClient) SealObject(
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to seal object approval", "error", err)
 		return err
 	}
 	if resp.GetErr() != nil {
@@ -85,6 +92,7 @@ func (s *GfSpClient) SignReplicatePieceApproval(
 	[]byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", err)
 		return nil, err
 	}
 	req := &gfspserver.GfSpSignRequest{
@@ -94,6 +102,7 @@ func (s *GfSpClient) SignReplicatePieceApproval(
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign replicate piece approval", "error", err)
 		return nil, err
 	}
 	if resp.GetErr() != nil {
@@ -109,6 +118,7 @@ func (s *GfSpClient) SignIntegrityHash(
 	[]byte, []byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", err)
 		return nil, nil, err
 	}
 	req := &gfspserver.GfSpSignRequest{
@@ -121,6 +131,7 @@ func (s *GfSpClient) SignIntegrityHash(
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign integrity hash", "error", err)
 		return nil, nil, err
 	}
 	if resp.GetErr() != nil {
@@ -135,6 +146,7 @@ func (s *GfSpClient) SignReceiveTask(
 	[]byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", err)
 		return nil, err
 	}
 	req := &gfspserver.GfSpSignRequest{
@@ -144,6 +156,7 @@ func (s *GfSpClient) SignReceiveTask(
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign receive task", "error", err)
 		return nil, err
 	}
 	if resp.GetErr() != nil {
@@ -158,6 +171,7 @@ func (s *GfSpClient) SignP2PPingMsg(
 	[]byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", err)
 		return nil, err
 	}
 	req := &gfspserver.GfSpSignRequest{
@@ -167,6 +181,7 @@ func (s *GfSpClient) SignP2PPingMsg(
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign p2p ping msg", "error", err)
 		return nil, err
 	}
 	if resp.GetErr() != nil {
@@ -181,6 +196,7 @@ func (s *GfSpClient) SignP2PPongMsg(
 	[]byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", err)
 		return nil, err
 	}
 	req := &gfspserver.GfSpSignRequest{
@@ -190,6 +206,7 @@ func (s *GfSpClient) SignP2PPongMsg(
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign p2p pong msg", "error", err)
 		return nil, err
 	}
 	if resp.GetErr() != nil {
