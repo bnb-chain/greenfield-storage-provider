@@ -19,7 +19,6 @@ var (
 	ErrExceedTask          = gfsperrors.Register(module.ReceiveModularName, http.StatusServiceUnavailable, 80003, "OoooH... request exceed, try again later")
 	ErrUnfinishedTask      = gfsperrors.Register(module.ReceiveModularName, http.StatusForbidden, 80004, "replicate piece unfinished")
 	ErrInvalidDataChecksum = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80005, "verify data checksum failed")
-	ErrSinger              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 81001, "server slipped away, try again later")
 	ErrPieceStore          = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85101, "server slipped away, try again later")
 	ErrGfSpDB              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85201, "server slipped away, try again later")
 )
@@ -88,7 +87,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 		task.GetObjectInfo().Id.Uint64(), checksums)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
-		return nil, nil, ErrSinger
+		return nil, nil, err
 	}
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),

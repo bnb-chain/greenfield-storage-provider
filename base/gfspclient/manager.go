@@ -27,7 +27,7 @@ func (s *GfSpClient) CreateUploadObject(
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpBeginTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to create upload object task", "error", err)
-		return err
+		return ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
 		resp.GetErr()
@@ -50,7 +50,7 @@ func (s *GfSpClient) AskTask(
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpAskTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask task", "error", err)
-		return nil, err
+		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
@@ -79,7 +79,7 @@ func (s *GfSpClient) ReportTask(
 	conn, err := s.ManagerConn(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", err)
-		return err
+		return ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpReportTaskRequest{}
 	switch t := report.(type) {
@@ -144,7 +144,7 @@ func (s *GfSpClient) QueryTask(
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to query task", "error", err)
-		return nil, err
+		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()

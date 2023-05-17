@@ -29,7 +29,7 @@ func (s *GfSpClient) ReplicatePiece(
 	resp, err := gfspserver.NewGfSpReceiveServiceClient(conn).GfSpReplicatePiece(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to replicate piece", "error", err)
-		return err
+		return ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -54,7 +54,7 @@ func (s *GfSpClient) DoneReplicatePiece(
 	resp, err := gfspserver.NewGfSpReceiveServiceClient(conn).GfSpDoneReplicatePiece(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to done replicate piece", "error", err)
-		return nil, nil, err
+		return nil, nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
 		return nil, nil, resp.GetErr()

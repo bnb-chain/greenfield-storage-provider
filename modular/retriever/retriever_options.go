@@ -29,6 +29,6 @@ func DefaultRetrieverOptions(receiver *RetrieveModular, cfg *gfspconfig.GfSpConf
 		cfg.Bucket.FreeQuotaPerBucket = downloader.DefaultBucketFreeQuota
 	}
 	receiver.freeQuotaPerBucket = cfg.Bucket.FreeQuotaPerBucket
-	receiver.retrievingRequest = cfg.Parallel.QuerySPParallelPerNode
+	receiver.maxRetrieveRequest = cfg.Parallel.QuerySPParallelPerNode
 	return nil
 }

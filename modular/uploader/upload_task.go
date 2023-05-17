@@ -24,7 +24,6 @@ var (
 	ErrExceedTask           = gfsperrors.Register(module.UploadModularName, http.StatusServiceUnavailable, 110004, "OoooH... request exceed, try again later")
 	ErrInvalidIntegrity     = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110005, "invalid payload data integrity hash")
 	ErrClosedStream         = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 110006, "upload payload data stream exception")
-	ErrSinger               = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 111001, "server slipped away, try again later")
 	ErrPieceStore           = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 115101, "server slipped away, try again later")
 	ErrGfSpDB               = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 115001, "server slipped away, try again later")
 )
@@ -101,7 +100,7 @@ func (u *UploadModular) HandleUploadObjectTask(
 				task.GetObjectInfo().Id.Uint64(), checksums)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
-				return ErrSinger
+				return err
 			}
 			if !bytes.Equal(integrity, task.GetObjectInfo().GetChecksums()[0]) {
 				log.CtxErrorw(ctx, "invalid integrity hash", "integrity", hex.EncodeToString(integrity),

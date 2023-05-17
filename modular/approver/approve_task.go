@@ -17,7 +17,6 @@ var (
 	ErrExceedQueue        = gfsperrors.Register(module.ApprovalModularName, http.StatusServiceUnavailable, 10004, "ask approval request exceed the limit, try again later")
 	ErrConsensus          = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 15001, "server slipped away, try again later")
 	ErrRetriever          = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 10901, "server slipped away, try again later")
-	ErrSigner             = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 11001, "server slipped away, try again later")
 )
 
 func (a *ApprovalModular) PreCreateBucketApproval(
@@ -55,7 +54,7 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(
 	signature, err := a.baseApp.GfSpClient().SignCreateBucketApproval(ctx, task.GetCreateBucketInfo())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the create bucket approval", "error", err)
-		return false, ErrSigner
+		return false, err
 	}
 	task.GetCreateBucketInfo().GetPrimarySpApproval().Sig = signature
 	if err = a.bucketQueue.Push(task); err != nil {
@@ -96,7 +95,7 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(
 	signature, err := a.baseApp.GfSpClient().SignCreateObjectApproval(ctx, task.GetCreateObjectInfo())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the create object approval", "error", err)
-		return false, ErrSigner
+		return false, err
 	}
 	task.GetCreateObjectInfo().GetPrimarySpApproval().Sig = signature
 	if err = a.objectQueue.Push(task); err != nil {

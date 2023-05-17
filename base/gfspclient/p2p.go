@@ -29,7 +29,7 @@ func (s *GfSpClient) AskSecondaryReplicatePieceApproval(
 	resp, err := gfspserver.NewGfSpP2PServiceClient(conn).GfSpAskSecondaryReplicatePieceApproval(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask replicate piece approval", "error", err)
-		return nil, err
+		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
@@ -46,7 +46,7 @@ func (s *GfSpClient) QueryP2PBootstrap(ctx context.Context) ([]string, error) {
 	resp, err := gfspserver.NewGfSpP2PServiceClient(conn).GfSpQueryP2PBootstrap(ctx, &gfspserver.GfSpQueryP2PNodeRequest{})
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to query p2p bootstrap", "error", err)
-		return nil, err
+		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
