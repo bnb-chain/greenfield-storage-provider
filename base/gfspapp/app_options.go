@@ -85,34 +85,34 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 
 func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Endpoint.ApproverEndpoint == "" {
-		cfg.Endpoint.ApproverEndpoint = DefaultGrpcAddress
+		cfg.Endpoint.ApproverEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.ManagerEndpoint == "" {
-		cfg.Endpoint.ManagerEndpoint = DefaultGrpcAddress
+		cfg.Endpoint.ManagerEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.DownloaderEndpoint == "" {
-		cfg.Endpoint.DownloaderEndpoint = DefaultGrpcAddress
+		cfg.Endpoint.DownloaderEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.ReceiverEndpoint == "" {
-		cfg.Endpoint.ReceiverEndpoint = DefaultGrpcAddress
+		cfg.Endpoint.ReceiverEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.MetadataEndpoint == "" {
-		cfg.Endpoint.MetadataEndpoint = DefaultGrpcAddress
+		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.RetrieverEndpoint == "" {
-		cfg.Endpoint.RetrieverEndpoint = DefaultGrpcAddress
+		cfg.Endpoint.RetrieverEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.UploaderEndpoint == "" {
-		cfg.Endpoint.UploaderEndpoint = DefaultGrpcAddress
+		cfg.Endpoint.UploaderEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.P2PEndpoint == "" {
-		cfg.Endpoint.P2PEndpoint = DefaultGrpcAddress
+		cfg.Endpoint.P2PEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.SignerEndpoint == "" {
-		cfg.Endpoint.SignerEndpoint = DefaultGrpcAddress
+		cfg.Endpoint.SignerEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.AuthorizerEndpoint == "" {
-		cfg.Endpoint.AuthorizerEndpoint = DefaultGrpcAddress
+		cfg.Endpoint.AuthorizerEndpoint = cfg.GrpcAddress
 	}
 	app.client = gfspclient.NewGfSpClient(
 		cfg.Endpoint.ApproverEndpoint,
