@@ -78,7 +78,6 @@ function generate_sp_db_info() {
   done
   print_work_dir
   echo "succeed to generate sp.info and db.info"
-  echo
 }
 
 #############################################################
@@ -120,13 +119,20 @@ make_config() {
     if [ ${index} -eq 0 ];
       then
         sed -i -e "s/P2PAddress = '.*'/P2PAddress = '127.0.0.1:9633'/g" config.toml
-        node_id="0710be1c04dfa07bd84bfc68f8b663071885a85031066bbb3b6bbed421cf9511"
-        sed -i -e "s/P2PPrivateKey = '.*'/P2PPrivateKey = '${node_id}'/g" config.toml
+        sed -i -e "s/P2PPrivateKey = '.*'/P2PPrivateKey = '${SP0_P2P_PRIVATE_KEY}'/g" config.toml
     else
       p2p_port="127.0.0.1:"$((SP_START_PORT+1000*$index + 1))
       sed -i -e "s/P2PAddress = '.*'/P2PAddress = '${p2p_port}'/g" config.toml
       sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\'16Uiu2HAmG4KTyFsK71BVwjY4z6WwcNBVb6vAiuuL9ASWdqiTzNZH@127.0.0.1:9633\'\]/g" config.toml
     fi
+
+    # metrics and pprof
+    sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
+    sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
+    metrics_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 367))
+    sed -i -e "s/MetricsHttpAddress = '.*'/MetricsHttpAddress = '${metrics_address}'/g" config.toml
+    pprof_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 368))
+    sed -i -e "s/PProfHttpAddress = '.*'/PProfHttpAddress = '${pprof_address}'/g" config.toml
 
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null
@@ -278,7 +284,6 @@ main() {
   case ${CMD} in
   --generate)
     generate_sp_db_info $2 $3 $4 $5
-    make_integration_test_config $2
     ;;
   --reset)
     reset_sp
@@ -295,6 +300,9 @@ main() {
     ;;
   --print)
     print_work_dir
+    ;;
+  --gene2e)
+    make_integration_test_config $2
     ;;
   --help|*)
     display_help

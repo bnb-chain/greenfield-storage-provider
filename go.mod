@@ -21,7 +21,6 @@ require (
 	github.com/bnb-chain/greenfield v0.2.0
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
-	github.com/cloudflare/cfssl v1.6.3
 	github.com/consensys/gnark-crypto v0.7.0
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230220103612-f094a0c33410
 	github.com/cosmos/gogoproto v1.4.8
@@ -57,7 +56,6 @@ require (
 
 require (
 	github.com/cometbft/cometbft v0.37.1
-	github.com/evmos/ethermint v0.6.1-0.20220919141022-34226aa7b1fa
 	golang.org/x/time v0.3.0
 )
 
@@ -66,6 +64,8 @@ require (
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
+	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
+    github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
@@ -268,8 +268,6 @@ require (
 	go.uber.org/fx v1.18.2 // indirect
 	golang.org/x/crypto v0.8.0
 	golang.org/x/net v0.9.0 // indirect
-	//golang.org/x/mod v0.8.0 // indirect
-	//golang.org/x/net v0.6.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/term v0.7.0 // indirect
