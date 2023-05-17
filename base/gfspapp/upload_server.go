@@ -33,7 +33,6 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		receiveSize   int
 	)
 	defer func() {
-		defer close(errCh)
 		if span != nil {
 			span.Done()
 		}
@@ -114,12 +113,16 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		return err
 	}
 
-	err = g.uploader.HandleUploadObjectTask(ctx, task, pRead)
+	go func() {
+		errCh <- g.uploader.HandleUploadObjectTask(ctx, task, pRead)
+	}()
+	err = <-errCh
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload object data", "error", err)
 		pWrite.CloseWithError(err)
 		return err
+	} else {
+		log.CtxDebugw(ctx, "succeed to upload object")
 	}
-	log.CtxDebugw(ctx, "succeed to upload object")
 	return nil
 }
