@@ -63,8 +63,10 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 			metrics.RunningTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(executingNum))
 
 			if executingNum >= maxExecuteNum {
-				log.CtxErrorw(ctx, "failed to start ask task, executing task exceed",
-					"executing_num", executingNum, "max_execute_num", maxExecuteNum)
+				if logCnt%1000 == 0 {
+					log.CtxErrorw(ctx, "failed to start ask task, executing task exceed",
+						"executing_num", executingNum, "max_execute_num", maxExecuteNum)
+				}
 				continue
 			}
 			if logCnt%1000 == 0 {
@@ -73,12 +75,12 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 			}
 			atomic.AddInt64(&e.executingNum, 1)
 			go func() {
+				defer atomic.AddInt64(&e.executingNum, -1)
 				limit, err := e.scope.RemainingResource()
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to get remaining resource", "error", err)
 					return
 				}
-				defer atomic.AddInt64(&e.executingNum, -1)
 				metrics.RemainingMemoryGauge.WithLabelValues(e.Name()).Set(float64(limit.GetMemoryLimit()))
 				metrics.RemainingTaskGauge.WithLabelValues(e.Name()).Set(float64(limit.GetTaskTotalLimit()))
 				metrics.RemainingHighPriorityTaskGauge.WithLabelValues(e.Name()).Set(
@@ -98,7 +100,7 @@ func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
 	if err != nil {
 		switch e := err.(type) {
 		case *gfsperrors.GfSpError:
-			if e.GetInnerCode() == 60005 {
+			if e.GetInnerCode() == 60005 || e.GetInnerCode() == 990603 {
 				return
 			}
 		default:
