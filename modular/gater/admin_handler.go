@@ -5,8 +5,6 @@ import (
 	"io"
 	"net/http"
 
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/protobuf/proto"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -22,13 +20,9 @@ import (
 
 func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err                  error
-		authVerified         = true
-		allowApproval        = true
-		accAddress           sdk.AccAddress
-		approvalCreateBucket coretask.ApprovalCreateBucketTask
-		approvalCreateObject coretask.ApprovalCreateObjectTask
-		reqCtx               = NewRequestContext(r)
+		err     error
+		reqCtx  = NewRequestContext(r)
+		account string
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -39,11 +33,12 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		}
 	}()
 	if reqCtx.NeedVerifySignature() {
-		accAddress, err = reqCtx.VerifySignature()
+		accAddress, err := reqCtx.VerifySignature()
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
 			return
 		}
+		account = accAddress.String()
 	}
 	actionName := reqCtx.vars["action"]
 	approvalMsg, err := hex.DecodeString(r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
@@ -66,14 +61,14 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if reqCtx.NeedVerifySignature() {
-			authVerified, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-				coremodule.AuthOpAskCreateBucketApproval, accAddress.String(),
+			verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+				coremodule.AuthOpAskCreateBucketApproval, account,
 				createBucketApproval.GetBucketName(), "")
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 				return
 			}
-			if !authVerified {
+			if !verified {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operator")
 				err = ErrNoPermission
 				return
@@ -81,17 +76,17 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		}
 		task := &gfsptask.GfSpCreateBucketApprovalTask{}
 		task.InitApprovalCreateBucketTask(&createBucketApproval, g.baseApp.TaskPriority(task))
-		allowApproval, approvalCreateBucket, err = g.baseApp.GfSpClient().AskCreateBucketApproval(r.Context(), task)
+		allow, res, err := g.baseApp.GfSpClient().AskCreateBucketApproval(r.Context(), task)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask create bucket approval", "error", err)
 			return
 		}
-		if !allowApproval {
+		if !allow {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask create bucket approval")
 			err = ErrRefuseApproval
 			return
 		}
-		bz := storagetypes.ModuleCdc.MustMarshalJSON(approvalCreateBucket.GetCreateBucketInfo())
+		bz := storagetypes.ModuleCdc.MustMarshalJSON(res.GetCreateBucketInfo())
 		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	case createObjectApprovalAction:
 		createObjectApproval := storagetypes.MsgCreateObject{}
@@ -108,14 +103,14 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if reqCtx.NeedVerifySignature() {
-			authVerified, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-				coremodule.AuthOpAskCreateObjectApproval, accAddress.String(),
+			verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+				coremodule.AuthOpAskCreateObjectApproval, account,
 				createObjectApproval.GetBucketName(), createObjectApproval.GetObjectName())
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 				return
 			}
-			if !authVerified {
+			if !verified {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operator")
 				err = ErrNoPermission
 				return
@@ -123,17 +118,17 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		}
 		task := &gfsptask.GfSpCreateObjectApprovalTask{}
 		task.InitApprovalCreateObjectTask(&createObjectApproval, g.baseApp.TaskPriority(task))
-		allowApproval, approvalCreateObject, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
+		allow, res, err := g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
 			return
 		}
-		if !allowApproval {
+		if !allow {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
 			err = ErrRefuseApproval
 			return
 		}
-		bz := storagetypes.ModuleCdc.MustMarshalJSON(approvalCreateObject.GetCreateObjectInfo())
+		bz := storagetypes.ModuleCdc.MustMarshalJSON(res.GetCreateObjectInfo())
 		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	default:
 		err = ErrUnsupportedRequestType
@@ -143,9 +138,9 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 
 func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		accAddress sdk.AccAddress
-		reqCtx     = NewRequestContext(r)
+		err     error
+		reqCtx  = NewRequestContext(r)
+		account string
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -156,11 +151,12 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	if reqCtx.NeedVerifySignature() {
-		accAddress, err = reqCtx.VerifySignature()
+		accAddress, err := reqCtx.VerifySignature()
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
 			return
 		}
+		account = accAddress.String()
 	}
 	objectID, err := util.StringToUint64(reqCtx.request.Header.Get(model.GnfdObjectIDHeader))
 	if err != nil {
@@ -178,7 +174,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if reqCtx.NeedVerifySignature() {
 		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-			coremodule.AuthOpTypeChallengePiece, accAddress.String(), objectInfo.GetBucketName(),
+			coremodule.AuthOpTypeChallengePiece, account, objectInfo.GetBucketName(),
 			objectInfo.GetObjectName())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
@@ -212,7 +208,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	task := &gfsptask.GfSpChallengePieceTask{}
-	task.InitChallengePieceTask(objectInfo, bucketInfo, g.baseApp.TaskPriority(task), accAddress.String(),
+	task.InitChallengePieceTask(objectInfo, bucketInfo, g.baseApp.TaskPriority(task), account,
 		redundancyIdx, segmentIdx, g.baseApp.TaskTimeout(task), g.baseApp.TaskMaxRetry(task))
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
 	integrity, checksums, data, err := g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
@@ -228,10 +224,8 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err       error
-		integrity []byte
-		signature []byte
-		reqCtx    = NewRequestContext(r)
+		err    error
+		reqCtx = NewRequestContext(r)
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -297,7 +291,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		integrity, signature, err = g.baseApp.GfSpClient().DoneReplicatePiece(reqCtx.Context(), &receiveTask)
+		integrity, signature, err := g.baseApp.GfSpClient().DoneReplicatePiece(reqCtx.Context(), &receiveTask)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to done receive piece", "error", err)
 			return

@@ -28,7 +28,10 @@ func (s *GfSpClient) SignCreateBucketApproval(
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetSignature(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
 }
 
 func (s *GfSpClient) SignCreateObjectApproval(
@@ -48,7 +51,10 @@ func (s *GfSpClient) SignCreateObjectApproval(
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetSignature(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
 }
 
 func (s *GfSpClient) SealObject(
@@ -67,7 +73,10 @@ func (s *GfSpClient) SealObject(
 	if err != nil {
 		return err
 	}
-	return resp.GetErr()
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
 }
 
 func (s *GfSpClient) SignReplicatePieceApproval(
@@ -87,7 +96,10 @@ func (s *GfSpClient) SignReplicatePieceApproval(
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetSignature(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
 }
 
 func (s *GfSpClient) SignIntegrityHash(
@@ -111,7 +123,10 @@ func (s *GfSpClient) SignIntegrityHash(
 	if err != nil {
 		return nil, nil, err
 	}
-	return resp.GetSignature(), resp.GetIntegrityHash(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, nil, resp.GetErr()
+	}
+	return resp.GetSignature(), resp.GetIntegrityHash(), nil
 }
 
 func (s *GfSpClient) SignReceiveTask(
@@ -131,7 +146,10 @@ func (s *GfSpClient) SignReceiveTask(
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetSignature(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
 }
 
 func (s *GfSpClient) SignP2PPingMsg(
@@ -151,7 +169,10 @@ func (s *GfSpClient) SignP2PPingMsg(
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetSignature(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
 }
 
 func (s *GfSpClient) SignP2PPongMsg(
@@ -171,5 +192,8 @@ func (s *GfSpClient) SignP2PPongMsg(
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetSignature(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
 }

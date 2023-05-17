@@ -47,6 +47,7 @@ func (s *GfSpClient) UploadObject(
 				log.CtxErrorw(ctx, "failed to close upload stream", "error", err)
 				return ErrRpcUnknown
 			}
+			return nil
 		}
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to close upload stream", "error", err)

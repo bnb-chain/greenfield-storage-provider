@@ -26,7 +26,10 @@ func (s *GfSpClient) GetObject(
 	if err != nil {
 		return nil, ErrRpcUnknown
 	}
-	return resp.GetData(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetData(), nil
 }
 
 func (s *GfSpClient) GetChallengeInfo(
@@ -46,5 +49,8 @@ func (s *GfSpClient) GetChallengeInfo(
 	if err != nil {
 		return nil, nil, nil, ErrRpcUnknown
 	}
-	return resp.GetIntegrityHash(), resp.GetChecksums(), resp.GetData(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, nil, nil, resp.GetErr()
+	}
+	return resp.GetIntegrityHash(), resp.GetChecksums(), resp.GetData(), nil
 }

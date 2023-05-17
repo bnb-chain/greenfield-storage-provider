@@ -24,13 +24,16 @@ func (s *GfSpClient) AskCreateBucketApproval(
 	if err != nil {
 		return false, nil, ErrRpcUnknown
 	}
+	if resp.GetErr() != nil {
+		return false, nil, resp.GetErr()
+	}
 	switch t := resp.Response.(type) {
 	case *gfspserver.GfSpAskApprovalResponse_CreateBucketApprovalTask:
 		task = t.CreateBucketApprovalTask
 	default:
 		return false, nil, ErrTypeMismatch
 	}
-	return resp.GetAllowed(), task, resp.GetErr()
+	return resp.GetAllowed(), task, nil
 }
 
 func (s *GfSpClient) AskCreateObjectApproval(
@@ -49,11 +52,14 @@ func (s *GfSpClient) AskCreateObjectApproval(
 	if err != nil {
 		return false, nil, ErrRpcUnknown
 	}
+	if resp.GetErr() != nil {
+		return false, nil, resp.GetErr()
+	}
 	switch t := resp.Response.(type) {
 	case *gfspserver.GfSpAskApprovalResponse_CreateObjectApprovalTask:
 		task = t.CreateObjectApprovalTask
 	default:
 		return false, nil, ErrTypeMismatch
 	}
-	return resp.GetAllowed(), task, resp.GetErr()
+	return resp.GetAllowed(), task, nil
 }

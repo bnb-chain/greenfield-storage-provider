@@ -27,7 +27,10 @@ func (s *GfSpClient) ReplicatePiece(
 	if err != nil {
 		return err
 	}
-	return resp.GetErr()
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
 }
 
 func (s *GfSpClient) DoneReplicatePiece(
@@ -47,5 +50,8 @@ func (s *GfSpClient) DoneReplicatePiece(
 	if err != nil {
 		return nil, nil, err
 	}
-	return resp.GetIntegrityHash(), resp.GetSignature(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, nil, resp.GetErr()
+	}
+	return resp.GetIntegrityHash(), resp.GetSignature(), nil
 }

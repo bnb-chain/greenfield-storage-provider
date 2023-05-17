@@ -26,7 +26,10 @@ func (s *GfSpClient) CreateUploadObject(
 	if err != nil {
 		return err
 	}
-	return resp.GetErr()
+	if resp.GetErr() != nil {
+		resp.GetErr()
+	}
+	return nil
 }
 
 func (s *GfSpClient) AskTask(
@@ -49,17 +52,17 @@ func (s *GfSpClient) AskTask(
 	}
 	switch t := resp.GetResponse().(type) {
 	case *gfspserver.GfSpAskTaskResponse_ReplicatePieceTask:
-		return t.ReplicatePieceTask, resp.GetErr()
+		return t.ReplicatePieceTask, nil
 	case *gfspserver.GfSpAskTaskResponse_SealObjectTask:
-		return t.SealObjectTask, resp.GetErr()
+		return t.SealObjectTask, nil
 	case *gfspserver.GfSpAskTaskResponse_ReceivePieceTask:
-		return t.ReceivePieceTask, resp.GetErr()
+		return t.ReceivePieceTask, nil
 	case *gfspserver.GfSpAskTaskResponse_GcObjectTask:
-		return t.GcObjectTask, resp.GetErr()
+		return t.GcObjectTask, nil
 	case *gfspserver.GfSpAskTaskResponse_GcZombiePieceTask:
-		return t.GcZombiePieceTask, resp.GetErr()
+		return t.GcZombiePieceTask, nil
 	case *gfspserver.GfSpAskTaskResponse_GcMetaTask:
-		return t.GcMetaTask, resp.GetErr()
+		return t.GcMetaTask, nil
 	default:
 		return nil, ErrTypeMismatch
 	}
@@ -115,7 +118,10 @@ func (s *GfSpClient) ReportTask(
 	if err != nil {
 		return err
 	}
-	return resp.GetErr()
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
 }
 
 func (s *GfSpClient) QueryTask(
@@ -136,17 +142,17 @@ func (s *GfSpClient) QueryTask(
 	}
 	switch t := resp.GetResponse().(type) {
 	case *gfspserver.GfSpQueryTaskResponse_ReplicatePieceTask:
-		return t.ReplicatePieceTask, resp.GetErr()
+		return t.ReplicatePieceTask, nil
 	case *gfspserver.GfSpQueryTaskResponse_SealObjectTask:
-		return t.SealObjectTask, resp.GetErr()
+		return t.SealObjectTask, nil
 	case *gfspserver.GfSpQueryTaskResponse_ReceivePieceTask:
-		return t.ReceivePieceTask, resp.GetErr()
+		return t.ReceivePieceTask, nil
 	case *gfspserver.GfSpQueryTaskResponse_GcObjectTask:
-		return t.GcObjectTask, resp.GetErr()
+		return t.GcObjectTask, nil
 	case *gfspserver.GfSpQueryTaskResponse_GcZombiePieceTask:
-		return t.GcZombiePieceTask, resp.GetErr()
+		return t.GcZombiePieceTask, nil
 	case *gfspserver.GfSpQueryTaskResponse_GcMetaTask:
-		return t.GcMetaTask, resp.GetErr()
+		return t.GcMetaTask, nil
 	default:
 		return nil, ErrTypeMismatch
 	}

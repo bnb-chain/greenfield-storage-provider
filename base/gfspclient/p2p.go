@@ -28,7 +28,10 @@ func (s *GfSpClient) AskSecondaryReplicatePieceApproval(
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetApprovedTasks(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetApprovedTasks(), nil
 }
 
 func (s *GfSpClient) QueryP2PBootstrap(ctx context.Context) ([]string, error) {
@@ -40,5 +43,8 @@ func (s *GfSpClient) QueryP2PBootstrap(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return resp.GetNodes(), resp.GetErr()
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetNodes(), nil
 }
