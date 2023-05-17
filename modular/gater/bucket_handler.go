@@ -21,7 +21,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", reqCtx.String())
+			log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "req_info", reqCtx.String())
 			MakeErrorResponse(w, err)
 		}
 	}()
@@ -99,7 +99,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list bucket read quota", reqCtx.String())
+			log.CtxErrorw(reqCtx.Context(), "failed to list bucket read quota", "req_info", reqCtx.String())
 			MakeErrorResponse(w, err)
 		}
 	}()

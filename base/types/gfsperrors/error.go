@@ -56,6 +56,9 @@ func MakeGfSpError(err error) *GfSpError {
 	}
 	switch e := err.(type) {
 	case *GfSpError:
+		if e.GetInnerCode() == 0 {
+			return nil
+		}
 		return e
 	default:
 		return &GfSpError{
