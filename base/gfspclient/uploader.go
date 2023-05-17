@@ -22,12 +22,13 @@ func (s *GfSpClient) UploadObject(
 	}
 	var sendSize = 0
 	defer func() {
-		defer conn.Close()
+		//defer conn.Close()
 		if task != nil {
 			log.CtxDebugw(ctx, "succeed to send payload data", "send_size", sendSize,
 				"object_size", task.GetObjectInfo().GetPayloadSize())
+		} else {
+			log.CtxDebugw(ctx, "succeed to send payload data", "send_size", sendSize)
 		}
-		log.CtxDebugw(ctx, "succeed to send payload data", "send_size", sendSize)
 	}()
 	client, err := gfspserver.NewGfSpUploadServiceClient(conn).GfSpUploadObject(ctx)
 	if err != nil {

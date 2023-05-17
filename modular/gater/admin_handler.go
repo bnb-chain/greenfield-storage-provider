@@ -33,7 +33,6 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
-
 		log.CtxDebugw(reqCtx.Context(), "ask approval handler", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
