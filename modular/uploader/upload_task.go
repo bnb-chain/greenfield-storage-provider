@@ -92,6 +92,7 @@ func (u *UploadModular) HandleUploadObjectTask(
 		if err == io.EOF {
 			if n != 0 {
 				data = data[:n]
+				log.CtxDebugw(ctx, "spilt segment data", "size", len(data))
 				checksums = append(checksums, hash.GenerateChecksum(data))
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {

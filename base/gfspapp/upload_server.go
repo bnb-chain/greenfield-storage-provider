@@ -121,7 +121,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload object data", "error", err)
 		pWrite.CloseWithError(err)
-		return err
+		return nil
 	}
 	log.CtxDebugw(ctx, "succeed to upload object")
 	return nil
