@@ -16,6 +16,7 @@ import (
 var (
 	ErrUploadObjectDangling  = gfsperrors.Register(BaseCodeSpace, http.StatusInternalServerError, 991101, "OoooH... request lost")
 	ErrUploadExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusServiceUnavailable, 991102, "server overload, try again later")
+	ErrExceptionsStream      = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 991103, "stream closed abnormally")
 )
 
 var _ gfspserver.GfSpUploadServiceServer = &GfSpBaseApp{}
@@ -27,12 +28,13 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		req           *gfspserver.GfSpUploadObjectRequest
 		resp          = &gfspserver.GfSpUploadObjectResponse{}
 		pRead, pWrite = io.Pipe()
-		ctx           = context.Background()
-		errCh         = make(chan error)
+		initCh        = make(chan struct{})
+		ctx, cancel   = context.WithCancel(context.Background())
 		err           error
 		receiveSize   int
 	)
 	defer func() {
+		defer cancel()
 		if span != nil {
 			span.Done()
 		}
@@ -63,7 +65,6 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				return
 			default:
 			}
-
 			req, err = stream.Recv()
 			if err == io.EOF {
 				if len(req.GetPayload()) != 0 {
@@ -76,8 +77,8 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 			}
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to receive object ", "error", err)
+				err = ErrExceptionsStream
 				pWrite.CloseWithError(err)
-				errCh <- err
 				return
 			}
 			if !init {
@@ -86,7 +87,6 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				if task == nil {
 					log.CtxErrorw(ctx, "[BUG] failed to receive object, upload object task pointer dangling !!!")
 					err = ErrUploadObjectDangling
-					errCh <- err
 					pWrite.CloseWithError(err)
 					return
 				}
@@ -95,32 +95,30 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to reserve resource", "error", err)
 					err = ErrUploadExhaustResource
-					errCh <- err
 					pWrite.CloseWithError(err)
 					return
 				}
 				err = g.uploader.PreUploadObject(ctx, task)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to pre upload object", "error", err)
-					errCh <- err
 					pWrite.CloseWithError(err)
 					return
 				}
-				errCh <- nil
+				initCh <- struct{}{}
 			}
 			receiveSize += len(req.GetPayload())
 			pWrite.Write(req.GetPayload())
 		}
 	}()
 
-	if err = <-errCh; err != nil {
-		log.CtxErrorw(ctx, "failed to begin upload object data", "error", err)
+	select {
+	case <-ctx.Done():
 		return nil
+	case <-initCh:
+		log.CtxDebugw(ctx, "received the first upload stream data")
 	}
-	go func() {
-		errCh <- g.uploader.HandleUploadObjectTask(ctx, task, pRead)
-	}()
-	if err = <-errCh; err != nil {
+	err = g.uploader.HandleUploadObjectTask(ctx, task, pRead)
+	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload object data", "error", err)
 		pWrite.CloseWithError(err)
 		return err
