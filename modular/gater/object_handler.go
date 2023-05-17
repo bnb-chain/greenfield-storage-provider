@@ -72,6 +72,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
+	log.CtxDebugw(ctx, "succeed to upload payload data")
 }
 
 func parseRange(rangeStr string) (bool, int64, int64) {

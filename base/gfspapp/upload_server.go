@@ -66,6 +66,9 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 
 			req, err = stream.Recv()
 			if err == io.EOF {
+				if len(req.GetPayload()) != 0 {
+					pWrite.Write(req.GetPayload())
+				}
 				log.CtxDebugw(ctx, "received last upload stream data")
 				err = nil
 				pWrite.Close()
@@ -121,8 +124,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		log.CtxErrorw(ctx, "failed to upload object data", "error", err)
 		pWrite.CloseWithError(err)
 		return err
-	} else {
-		log.CtxDebugw(ctx, "succeed to upload object")
 	}
+	log.CtxDebugw(ctx, "succeed to upload object")
 	return nil
 }

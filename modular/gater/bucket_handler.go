@@ -89,7 +89,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		err = ErrEncodeResponse
 		return
 	}
-	log.CtxDebugw(reqCtx.Context(), "get bucket quota", "xml_info", xmlInfo)
+	log.CtxDebugw(reqCtx.Context(), "succeed to get bucket quota", "xml_info", xmlInfo)
 }
 
 func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Request) {
@@ -207,5 +207,5 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		err = ErrEncodeResponse
 		return
 	}
-	log.Debugw("list bucket read records", "xml_info", xmlInfo)
+	log.Debugw("succeed to list bucket read records", "xml_info", xmlInfo)
 }

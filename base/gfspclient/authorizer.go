@@ -28,7 +28,7 @@ func (s *GfSpClient) VerifyAuthorize(ctx context.Context,
 		return false, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
-		return resp.GetAllowed(), resp.GetErr()
+		return false, resp.GetErr()
 	}
 	return resp.GetAllowed(), nil
 }
