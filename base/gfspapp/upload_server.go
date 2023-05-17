@@ -110,11 +110,14 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		}
 	}()
 
+	if err = <-errCh; err != nil {
+		log.CtxErrorw(ctx, "failed to begin upload object data", "error", err)
+		return nil
+	}
 	go func() {
 		errCh <- g.uploader.HandleUploadObjectTask(ctx, task, pRead)
 	}()
-	err = <-errCh
-	if err != nil {
+	if err = <-errCh; err != nil {
 		log.CtxErrorw(ctx, "failed to upload object data", "error", err)
 		pWrite.CloseWithError(err)
 		return err
