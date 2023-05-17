@@ -259,7 +259,7 @@ func (zl *logger) getMetaInfo(ctx context.Context) []zap.Field {
 		fields = append(fields, zap.String("object_id", objectID))
 	}
 	if objectName, ok := metadata.GetValue(ctx, "object_name"); ok {
-		fields = append(fields, zap.String("object_id", objectName))
+		fields = append(fields, zap.String("object_name", objectName))
 	}
 	if taskKey, ok := metadata.GetValue(ctx, "task_key"); ok {
 		fields = append(fields, zap.String("task_key", taskKey))

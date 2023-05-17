@@ -51,13 +51,6 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		}
 	}()
 
-	span, err = g.uploader.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to reserve resource", "error", err)
-		err = ErrUploadExhaustResource
-		return nil
-	}
-
 	go func() {
 		init := false
 		for {
@@ -88,6 +81,12 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 					return
 				}
 				ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
+				span, err = g.uploader.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to reserve resource", "error", err)
+					err = ErrUploadExhaustResource
+					return
+				}
 				err = g.uploader.PreUploadObject(ctx, task)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to pre upload object", "error", err)
