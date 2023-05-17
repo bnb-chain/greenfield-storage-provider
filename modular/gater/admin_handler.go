@@ -28,8 +28,12 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
 		}
+
 		log.CtxDebugw(reqCtx.Context(), "ask approval handler", "req_info", reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
@@ -146,7 +150,10 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			MakeErrorResponse(w, err)
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), "challenge handler", "req_info", reqCtx.String())
 	}()
@@ -231,7 +238,10 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			MakeErrorResponse(w, err)
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), "replicate handler", "req_info", reqCtx.String())
 	}()

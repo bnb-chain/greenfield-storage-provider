@@ -26,14 +26,14 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		task          *gfsptask.GfSpUploadObjectTask
 		req           *gfspserver.GfSpUploadObjectRequest
 		resp          = &gfspserver.GfSpUploadObjectResponse{}
-		initCh        = make(chan struct{})
 		pRead, pWrite = io.Pipe()
-		ctx, cancel   = context.WithCancel(context.Background())
+		ctx           = context.Background()
+		errCh         = make(chan error)
 		err           error
 		receiveSize   int
 	)
 	defer func() {
-		defer cancel()
+		defer close(errCh)
 		if span != nil {
 			span.Done()
 		}
@@ -67,12 +67,14 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 			req, err = stream.Recv()
 			if err == io.EOF {
 				log.CtxDebugw(ctx, "received last upload stream data")
+				err = nil
 				pWrite.Close()
 				return
 			}
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to receive object ", "error", err)
 				pWrite.CloseWithError(err)
+				errCh <- err
 				return
 			}
 			if !init {
@@ -81,6 +83,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				if task == nil {
 					log.CtxErrorw(ctx, "[BUG] failed to receive object, upload object task pointer dangling !!!")
 					err = ErrUploadObjectDangling
+					errCh <- err
 					pWrite.CloseWithError(err)
 					return
 				}
@@ -89,27 +92,28 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to reserve resource", "error", err)
 					err = ErrUploadExhaustResource
+					errCh <- err
+					pWrite.CloseWithError(err)
 					return
 				}
 				err = g.uploader.PreUploadObject(ctx, task)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to pre upload object", "error", err)
+					errCh <- err
 					pWrite.CloseWithError(err)
 					return
 				}
-				initCh <- struct{}{}
+				errCh <- nil
 			}
 			receiveSize += len(req.GetPayload())
 			pWrite.Write(req.GetPayload())
 		}
 	}()
 
-	select {
-	case <-ctx.Done():
-		return nil
-	case <-initCh:
-		log.CtxDebugw(ctx, "received first upload stream data")
+	if err = <-errCh; err != nil {
+		return err
 	}
+
 	err = g.uploader.HandleUploadObjectTask(ctx, task, pRead)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload object data", "error", err)

@@ -161,7 +161,6 @@ func StreamReadAt(stream io.Reader, b []byte) (int, error) {
 
 	for {
 		curReadLen, err = stream.Read(b[totalReadLen:])
-		log.Debugw("succeed to read data from stream", "total_size", totalReadLen)
 		totalReadLen += curReadLen
 		if err != nil || totalReadLen == len(b) {
 			return totalReadLen, err

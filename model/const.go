@@ -178,5 +178,5 @@ const (
 	// MaxCallMsgSize defines gPRC max send or receive msg size
 	MaxCallMsgSize = 25 * 1024 * 1024
 	// DefaultStreamBufSize defines gateway stream forward payload buf size
-	DefaultStreamBufSize = 16 * 1024
+	DefaultStreamBufSize = 16 * 1024 * 1024
 )

@@ -25,6 +25,7 @@ type RequestContext struct {
 	objectName string
 	account    string // account is used to provide authentication to the sp
 	vars       map[string]string
+	httpCode   int
 
 	ctx       context.Context
 	cancel    func()
@@ -60,6 +61,10 @@ func (r *RequestContext) Cancel() {
 	r.cancel()
 }
 
+func (r *RequestContext) SetHttpCode(code int) {
+	r.httpCode = code
+}
+
 func (r *RequestContext) SetError(err error) {
 	r.err = err
 }
@@ -91,8 +96,8 @@ func (r *RequestContext) String() string {
 		}
 		return IPAddress
 	}
-	return fmt.Sprintf("action(%s) host(%v) method(%v) url(%v) header(%v) remote(%v) cost(%v) error(%v)",
-		r.routerName, r.request.Host, r.request.Method, r.request.URL.String(), headerToString(r.request.Header),
+	return fmt.Sprintf("HttpStatusCode[%d] action[%s] host[%v] method[%v] url[%v] header[%v] remote[%v] cost[%v] error[%v]",
+		r.httpCode, r.routerName, r.request.Host, r.request.Method, r.request.URL.String(), headerToString(r.request.Header),
 		getRequestIP(r.request), time.Since(r.startTime), r.err)
 }
 
