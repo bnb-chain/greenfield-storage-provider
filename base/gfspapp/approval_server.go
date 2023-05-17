@@ -25,30 +25,38 @@ func (g *GfSpBaseApp) GfSpAskApproval(
 		log.Error("failed to ask approval, approval task pointer dangling")
 		return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalTaskDangling}, nil
 	}
-	shadowTask := req.GetRequest().(task.Task)
-	ctx = log.WithValue(ctx, log.CtxKeyTask, shadowTask.Key().String())
-	span, err := g.receiver.ReserveResource(ctx, shadowTask.EstimateLimit().ScopeStat())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to reserve approval resource", "error", err)
-		return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalExhaustResource}, nil
-	}
-	defer span.Done()
 	switch task := req.GetRequest().(type) {
 	case *gfspserver.GfSpAskApprovalRequest_CreateBucketApprovalTask:
-		allow, err := g.OnAskCreateBucketApproval(ctx, task.CreateBucketApprovalTask)
+		approvalTask := task.CreateBucketApprovalTask
+		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
+		span, err := g.receiver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reserve approval resource", "error", err)
+			return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalExhaustResource}, nil
+		}
+		defer span.Done()
+		allow, err := g.OnAskCreateBucketApproval(ctx, approvalTask)
 		return &gfspserver.GfSpAskApprovalResponse{
 			Err:     gfsperrors.MakeGfSpError(err),
 			Allowed: allow,
 			Response: &gfspserver.GfSpAskApprovalResponse_CreateBucketApprovalTask{
-				CreateBucketApprovalTask: task.CreateBucketApprovalTask,
+				CreateBucketApprovalTask: approvalTask,
 			}}, nil
 	case *gfspserver.GfSpAskApprovalRequest_CreateObjectApprovalTask:
-		allow, err := g.OnAskCreateObjectApproval(ctx, task.CreateObjectApprovalTask)
+		approvalTask := task.CreateObjectApprovalTask
+		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
+		span, err := g.receiver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reserve approval resource", "error", err)
+			return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalExhaustResource}, nil
+		}
+		defer span.Done()
+		allow, err := g.OnAskCreateObjectApproval(ctx, approvalTask)
 		return &gfspserver.GfSpAskApprovalResponse{
 			Err:     gfsperrors.MakeGfSpError(err),
 			Allowed: allow,
 			Response: &gfspserver.GfSpAskApprovalResponse_CreateObjectApprovalTask{
-				CreateObjectApprovalTask: task.CreateObjectApprovalTask,
+				CreateObjectApprovalTask: approvalTask,
 			},
 		}, nil
 	default:
