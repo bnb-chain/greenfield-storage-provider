@@ -275,6 +275,7 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 				return
 			}
 		}
+		//log.CtxDebugw(ctx, "fetch sp info", "sp", spInfo.String())
 	}
 }
 
