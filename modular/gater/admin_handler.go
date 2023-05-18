@@ -214,7 +214,10 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidHeader
 		return
 	}
-	task := &gfsptask.GfSpChallengePieceTask{}
+	task := &gfsptask.GfSpChallengePieceTask{
+		ObjectInfo: objectInfo,
+		BucketInfo: bucketInfo,
+	}
 	task.InitChallengePieceTask(objectInfo, bucketInfo, g.baseApp.TaskPriority(task), account,
 		redundancyIdx, segmentIdx, g.baseApp.TaskTimeout(task), g.baseApp.TaskMaxRetry(task))
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())

@@ -65,7 +65,10 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
-	task := &gfsptask.GfSpUploadObjectTask{}
+	task := &gfsptask.GfSpUploadObjectTask{
+		ObjectInfo:    objectInfo,
+		StorageParams: params,
+	}
 	task.InitUploadObjectTask(objectInfo, params)
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
 	err = g.baseApp.GfSpClient().UploadObject(ctx, task, r.Body)
@@ -177,7 +180,10 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		high = int64(objectInfo.GetPayloadSize())
 	}
 
-	task := &gfsptask.GfSpDownloadObjectTask{}
+	task := &gfsptask.GfSpDownloadObjectTask{
+		ObjectInfo:    objectInfo,
+		StorageParams: params,
+	}
 	task.InitDownloadObjectTask(objectInfo, params, g.baseApp.TaskPriority(task), account,
 		low, high, g.baseApp.TaskTimeout(task), g.baseApp.TaskMaxRetry(task))
 	data, err := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)

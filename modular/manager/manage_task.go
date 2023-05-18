@@ -166,7 +166,10 @@ func (m *ManageModular) HandleDoneUploadObjectTask(
 		log.CtxErrorw(ctx, "reports failed update object task", "error", task.Error())
 		return nil
 	}
-	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
+	replicateTask := &gfsptask.GfSpReplicatePieceTask{
+		ObjectInfo:    task.GetObjectInfo(),
+		StorageParams: task.GetStorageParams(),
+	}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask), m.baseApp.TaskTimeout(replicateTask),
 		m.baseApp.TaskMaxRetry(replicateTask))
@@ -208,7 +211,10 @@ func (m *ManageModular) HandleReplicatePieceTask(
 		return nil
 	}
 	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task")
-	sealObject := &gfsptask.GfSpSealObjectTask{}
+	sealObject := &gfsptask.GfSpSealObjectTask{
+		ObjectInfo:    task.GetObjectInfo(),
+		StorageParams: task.GetStorageParams(),
+	}
 	sealObject.InitSealObjectTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(sealObject), task.GetSecondarySignature(),
 		m.baseApp.TaskTimeout(sealObject), m.baseApp.TaskMaxRetry(sealObject))
