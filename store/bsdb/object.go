@@ -34,11 +34,11 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 				FROM (
 					SELECT DISTINCT object_name as path_name, 'object' as result_type, id
 					FROM objects
-					WHERE bucket_name = ? AND object_name LIKE CONVERT(? USING utf8mb4) AND object_name >= IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) = 0
+					WHERE bucket_name = ? AND object_name LIKE ? AND object_name >= IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) = 0
 					UNION
-					SELECT CONCAT(SUBSTRING(object_name, 1, LENGTH(?) + LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) - 1), CONVERT(? USING utf8mb4)) as path_name, 'common_prefix' as result_type, MIN(id)
+					SELECT CONCAT(SUBSTRING(object_name, 1, LENGTH(?) + LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) - 1), ?) as path_name, 'common_prefix' as result_type, MIN(id)
 					FROM objects
-					WHERE bucket_name = ? AND object_name LIKE CONVERT(? USING utf8mb4) AND object_name >= IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) > 0
+					WHERE bucket_name = ? AND object_name LIKE ? AND object_name >= IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) > 0
 					GROUP BY path_name
 				) AS subquery
 				JOIN objects o ON subquery.id = o.id
