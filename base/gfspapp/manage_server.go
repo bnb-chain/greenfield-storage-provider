@@ -124,10 +124,7 @@ func (g *GfSpBaseApp) OnAskTask(
 	gfspTask.SetError(nil)
 	gfspTask.SetUpdateTime(time.Now().Unix())
 	gfspTask.SetAddress(RpcRemoteAddress(ctx))
-	log.CtxDebugw(ctx, "dispatch task info", "task_retry", gfspTask.GetRetry(),
-		"task_max_retry", gfspTask.GetMaxRetry(), "task_runner", gfspTask.GetAddress(),
-		"task_create_time", gfspTask.GetCreateTime(), "task_update_time", gfspTask.GetUpdateTime(),
-		"task_timeout", gfspTask.GetTimeout())
+	log.CtxDebugw(ctx, "dispatch task", "info", gfspTask.Info())
 	return gfspTask, nil
 }
 

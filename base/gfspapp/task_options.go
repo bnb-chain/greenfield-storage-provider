@@ -1,6 +1,8 @@
 package gfspapp
 
-import coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+import (
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+)
 
 const (
 	NotUseTimeout     int64 = 0
@@ -118,13 +120,13 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 
 const (
 	NotUseRetry            int64 = 0
-	MinReplicateRetry            = 2
+	MinReplicateRetry            = 3
 	MaxReplicateRetry            = 6
 	MinReceiveConfirmRetry       = 2
 	MaxReceiveConfirmRetry       = 6
 	MinSealObjectRetry           = 3
 	MaxSealObjectRetry           = 10
-	MinGCObjectRetry             = 2
+	MinGCObjectRetry             = 3
 	MaxGCObjectRetry             = 5
 )
 

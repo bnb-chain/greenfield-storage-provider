@@ -1,6 +1,7 @@
 package gfsptask
 
 import (
+	"fmt"
 	"time"
 
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -47,6 +48,12 @@ func (m *GfSpDownloadObjectTask) Key() coretask.TKey {
 
 func (m *GfSpDownloadObjectTask) Type() coretask.TType {
 	return coretask.TypeTaskDownloadObject
+}
+
+func (m *GfSpDownloadObjectTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetObjectInfo().String(), m.GetTask().Info())
 }
 
 func (m *GfSpDownloadObjectTask) GetAddress() string {
@@ -189,6 +196,12 @@ func (m *GfSpChallengePieceTask) Key() coretask.TKey {
 
 func (m *GfSpChallengePieceTask) Type() coretask.TType {
 	return coretask.TypeTaskChallengePiece
+}
+
+func (m *GfSpChallengePieceTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s] rIdx[%d], sIdx[%d], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetObjectInfo().String(), m.GetRedundancyIdx(), m.GetSegmentIdx(), m.GetTask().Info())
 }
 
 func (m *GfSpChallengePieceTask) GetAddress() string {

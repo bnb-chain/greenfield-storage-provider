@@ -140,6 +140,8 @@ type Task interface {
 	// application resources to the rcmgr and decide whether it can be executed
 	// immediately.
 	EstimateLimit() rcmgr.Limit
+	// Info returns the task detail info for log and debug.
+	Info() string
 	// Error returns the task error. if the task is normal, returns nil.
 	Error() error
 	// SetError sets the error to task. Any errors that occur during task execution

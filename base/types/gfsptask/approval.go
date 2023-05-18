@@ -1,6 +1,7 @@
 package gfsptask
 
 import (
+	"fmt"
 	"time"
 
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -32,6 +33,12 @@ func (m *GfSpCreateBucketApprovalTask) Key() coretask.TKey {
 
 func (m *GfSpCreateBucketApprovalTask) Type() coretask.TType {
 	return coretask.TypeTaskCreateBucketApproval
+}
+
+func (m *GfSpCreateBucketApprovalTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], bucket[%s] expiredHeight[%d], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetCreateBucketInfo().String(), m.GetExpiredHeight(), m.GetTask().Info())
 }
 
 func (m *GfSpCreateBucketApprovalTask) GetAddress() string {
@@ -151,6 +158,12 @@ func (m *GfSpCreateObjectApprovalTask) Key() coretask.TKey {
 
 func (m *GfSpCreateObjectApprovalTask) Type() coretask.TType {
 	return coretask.TypeTaskCreateObjectApproval
+}
+
+func (m *GfSpCreateObjectApprovalTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s] expiedHeight[%d], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetCreateObjectInfo().String(), m.GetExpiredHeight(), m.GetTask().Info())
 }
 
 func (m *GfSpCreateObjectApprovalTask) GetAddress() string {
@@ -286,6 +299,12 @@ func (m *GfSpReplicatePieceApprovalTask) Key() coretask.TKey {
 
 func (m *GfSpReplicatePieceApprovalTask) Type() coretask.TType {
 	return coretask.TypeTaskReplicatePieceApproval
+}
+
+func (m *GfSpReplicatePieceApprovalTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s] expiedHeight[%d], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetObjectInfo().String(), m.GetExpiredHeight(), m.GetTask().Info())
 }
 
 func (m *GfSpReplicatePieceApprovalTask) GetAddress() string {

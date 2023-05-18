@@ -25,6 +25,7 @@ type NullTask struct{}
 
 func (*NullTask) Key() TKey                                { return "" }
 func (*NullTask) Type() TType                              { return 0 }
+func (*NullTask) Info() string                             { return "" }
 func (*NullTask) GetAddress() string                       { return "" }
 func (*NullTask) SetAddress(string)                        { return }
 func (*NullTask) GetCreateTime() int64                     { return 0 }

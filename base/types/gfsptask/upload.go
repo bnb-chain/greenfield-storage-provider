@@ -1,6 +1,7 @@
 package gfsptask
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -36,6 +37,12 @@ func (m *GfSpUploadObjectTask) Key() coretask.TKey {
 
 func (m *GfSpUploadObjectTask) Type() coretask.TType {
 	return coretask.TypeTaskUpload
+}
+
+func (m *GfSpUploadObjectTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetObjectInfo().String(), m.GetTask().Info())
 }
 
 func (m *GfSpUploadObjectTask) GetAddress() string {
@@ -163,6 +170,12 @@ func (m *GfSpReplicatePieceTask) Key() coretask.TKey {
 
 func (m *GfSpReplicatePieceTask) Type() coretask.TType {
 	return coretask.TypeTaskReplicatePiece
+}
+
+func (m *GfSpReplicatePieceTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetObjectInfo().String(), m.GetTask().Info())
 }
 
 func (m *GfSpReplicatePieceTask) GetAddress() string {
@@ -319,6 +332,12 @@ func (m *GfSpSealObjectTask) Type() coretask.TType {
 	return coretask.TypeTaskSealObject
 }
 
+func (m *GfSpSealObjectTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetObjectInfo().String(), m.GetTask().Info())
+}
+
 func (m *GfSpSealObjectTask) GetAddress() string {
 	return m.GetTask().GetAddress()
 }
@@ -461,6 +480,12 @@ func (m *GfSpReceivePieceTask) Key() coretask.TKey {
 
 func (m *GfSpReceivePieceTask) Type() coretask.TType {
 	return coretask.TypeTaskReceivePiece
+}
+
+func (m *GfSpReceivePieceTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s] rIdx[%d], pIdx[%s], size[%d], checksum[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(), m.GetObjectInfo().String(),
+		m.GetReplicateIdx(), m.GetPieceIdx(), m.GetPieceSize(), m.GetPieceChecksum(), m.GetTask().Info())
 }
 
 func (m *GfSpReceivePieceTask) GetAddress() string {

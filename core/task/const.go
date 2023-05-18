@@ -44,6 +44,29 @@ const (
 	TypeTaskGCMeta
 )
 
+var TypeTaskMap = map[TType]string{
+	TypeTaskUnknown:                "UnknownTask",
+	TypeTaskCreateBucketApproval:   "CreateBucketApprovalTask",
+	TypeTaskCreateObjectApproval:   "CreateObjectApprovalTask",
+	TypeTaskReplicatePieceApproval: "ReplicatePieceApprovalTask",
+	TypeTaskUpload:                 "UploadObjectTask",
+	TypeTaskReplicatePiece:         "ReplicatePieceTask",
+	TypeTaskSealObject:             "SealObjectTask",
+	TypeTaskReceivePiece:           "ReceivePieceTask",
+	TypeTaskDownloadObject:         "DownloadObjectTask",
+	TypeTaskChallengePiece:         "ChallengePieceTask",
+	TypeTaskGCObject:               "GCObjectTask",
+	TypeTaskGCZombiePiece:          "GCZombiePieceTask",
+	TypeTaskGCMeta:                 "GCMetaTask",
+}
+
+func TaskTypeName(taskType TType) string {
+	if _, ok := TypeTaskMap[taskType]; !ok {
+		return TypeTaskMap[TypeTaskUnknown]
+	}
+	return TypeTaskMap[taskType]
+}
+
 // TPriority defines the type of task priority, the priority can be used as an important
 // basis for task scheduling within the SP. The higher the priority, the faster it is
 // expected to be executed, and the resources will be assigned priority for execution.

@@ -1,6 +1,7 @@
 package gfsptask
 
 import (
+	"fmt"
 	"time"
 
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -34,6 +35,13 @@ func (m *GfSpGCObjectTask) Key() coretask.TKey {
 
 func (m *GfSpGCObjectTask) Type() coretask.TType {
 	return coretask.TypeTaskGCObject
+}
+
+func (m *GfSpGCObjectTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], start[%d], end[%d], curr[%d], object[%d],å %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetStartBlockNumber(), m.GetEndBlockNumber(), m.GetCurrentBlockNumber(),
+		m.GetLastDeletedObjectId(), m.GetTask().Info())
 }
 
 func (m *GfSpGCObjectTask) GetAddress() string {
@@ -153,6 +161,12 @@ func (m *GfSpGCZombiePieceTask) Type() coretask.TType {
 	return coretask.TypeTaskGCZombiePiece
 }
 
+func (m *GfSpGCZombiePieceTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
+		m.EstimateLimit().String(), m.GetTask().Info())
+}
+
 func (m *GfSpGCZombiePieceTask) GetAddress() string {
 	return m.GetTask().GetAddress()
 }
@@ -252,6 +266,12 @@ func (m *GfSpGCMetaTask) Key() coretask.TKey {
 
 func (m *GfSpGCMetaTask) Type() coretask.TType {
 	return coretask.TypeTaskGCMeta
+}
+
+func (m *GfSpGCMetaTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
+		m.EstimateLimit().String(), m.GetTask().Info())
 }
 
 func (m *GfSpGCMetaTask) GetAddress() string {

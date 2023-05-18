@@ -1,6 +1,7 @@
 package gfsptask
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -20,6 +21,10 @@ func (m *GfSpTask) Type() coretask.TType {
 	return coretask.TypeTaskUnknown
 }
 
+func (m *GfSpTask) Info() string {
+	return fmt.Sprintf("create[%d], updata[%d], timeout[%d], retry[%d], max_retry[%d], runner[%s], error[%v]",
+		m.GetCreateTime(), m.GetUpdateTime(), m.GetTimeout(), m.GetRetry(), m.GetMaxRetry(), m.GetAddress(), m.GetErr())
+}
 func (m *GfSpTask) SetAddress(address string) {
 	m.Address = address
 }
@@ -53,7 +58,7 @@ func (m *GfSpTask) SetRetry(retry int) {
 }
 
 func (m *GfSpTask) ExceedRetry() bool {
-	return m.GetRetry() > m.GetMaxRetry()
+	return m.GetRetry() >= m.GetMaxRetry()
 }
 
 func (m *GfSpTask) Expired() bool {

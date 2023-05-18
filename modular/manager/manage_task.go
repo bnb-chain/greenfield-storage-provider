@@ -241,14 +241,13 @@ func (m *ManageModular) handleFailedReplicatePieceTask(
 	if !handleTask.Expired() {
 		handleTask.SetUpdateTime(time.Now().Unix())
 		m.replicateQueue.Push(handleTask)
-		log.CtxDebugw(ctx, "push task again to retry")
+		log.CtxDebugw(ctx, "push task again to retry", "info", handleTask.Info())
 	} else {
 		err := m.baseApp.GfSpDB().UpdateJobState(handleTask.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
-		log.CtxWarnw(ctx, "delete expired replicate piece task", "max_retry", handleTask.GetMaxRetry(),
-			"retry", handleTask.GetRetry(), "time_out", handleTask.GetTimeout())
+		log.CtxWarnw(ctx, "delete expired replicate piece task", "info", handleTask.Info())
 	}
 	return nil
 }
