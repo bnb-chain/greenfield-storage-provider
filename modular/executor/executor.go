@@ -199,7 +199,7 @@ func (e *ExecuteModular) ReleaseResource(
 
 func (e *ExecuteModular) Statistics() string {
 	return fmt.Sprintf(
-		"max[%d], doing[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d]",
+		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d]",
 		atomic.LoadInt64(&e.maxExecuteNum), atomic.LoadInt64(&e.executingNum),
 		atomic.LoadInt64(&e.doingReplicatePieceTaskCnt),
 		atomic.LoadInt64(&e.doingSpSealObjectTaskCnt),

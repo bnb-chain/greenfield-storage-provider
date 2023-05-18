@@ -34,6 +34,7 @@ const (
 	TypeTaskReceivePiece
 	// TypeTaskDownloadObject defines the type of downloading object task.
 	TypeTaskDownloadObject
+	// TypeTaskChallengePiece defines the type of challenging piece task.
 	TypeTaskChallengePiece
 	// TypeTaskGCObject defines the type of collecting object payload data task.
 	TypeTaskGCObject

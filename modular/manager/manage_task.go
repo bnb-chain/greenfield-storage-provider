@@ -37,7 +37,7 @@ func (m *ManageModular) DispatchTask(
 	task = m.replicateQueue.TopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add replicate piece task to backup set", "task_key", task.Key().String(),
-			"task_limit", "task_limit", task.EstimateLimit().String())
+			"task_limit", task.EstimateLimit().String())
 		backUpTasks = append(backUpTasks, task)
 	}
 	task = m.sealQueue.TopByLimit(limit)
@@ -75,8 +75,8 @@ func (m *ManageModular) DispatchTask(
 		return nil, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-	log.CtxDebugw(ctx, "success to dispatch task", "require_limit", limit.String(),
-		"task_limit", task.EstimateLimit().String())
+	log.CtxDebugw(ctx, "success to dispatch task", "node_reserve_resource", limit.String(),
+		"task_consume_resource", task.EstimateLimit().String())
 	return task, nil
 }
 
@@ -168,7 +168,8 @@ func (m *ManageModular) HandleDoneUploadObjectTask(
 	}
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
-		m.baseApp.TaskPriority(task), m.baseApp.TaskTimeout(task), m.baseApp.TaskMaxRetry(task))
+		m.baseApp.TaskPriority(replicateTask), m.baseApp.TaskTimeout(replicateTask),
+		m.baseApp.TaskMaxRetry(replicateTask))
 	err := m.replicateQueue.Push(replicateTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
@@ -208,8 +209,9 @@ func (m *ManageModular) HandleReplicatePieceTask(
 	}
 	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task")
 	sealObject := &gfsptask.GfSpSealObjectTask{}
-	sealObject.InitSealObjectTask(task.GetObjectInfo(), task.GetStorageParams(), m.baseApp.TaskPriority(task),
-		task.GetSecondarySignature(), m.baseApp.TaskTimeout(task), m.baseApp.TaskMaxRetry(task))
+	sealObject.InitSealObjectTask(task.GetObjectInfo(), task.GetStorageParams(),
+		m.baseApp.TaskPriority(sealObject), task.GetSecondarySignature(),
+		m.baseApp.TaskTimeout(sealObject), m.baseApp.TaskMaxRetry(sealObject))
 	err := m.sealQueue.Push(sealObject)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push seal object task to queue", "error", err)

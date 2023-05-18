@@ -93,12 +93,12 @@ func (m *GfSpTask) SetError(err error) {
 }
 
 func LimitEstimateByPriority(priority coretask.TPriority) rcmgr.Limit {
-	if priority <= coretask.DefaultSmallerPriority {
-		return &gfsplimit.GfSpLimit{TasksLowPriority: 1}
+	if priority < coretask.DefaultSmallerPriority {
+		return &gfsplimit.GfSpLimit{Tasks: 1, TasksLowPriority: 1}
 	} else if priority >= coretask.DefaultLargerTaskPriority {
-		return &gfsplimit.GfSpLimit{TasksHighPriority: 1}
+		return &gfsplimit.GfSpLimit{Tasks: 1, TasksHighPriority: 1}
 	}
-	return &gfsplimit.GfSpLimit{TasksMediumPriority: 1}
+	return &gfsplimit.GfSpLimit{Tasks: 1, TasksMediumPriority: 1}
 }
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
