@@ -37,7 +37,6 @@ type GfSpClient struct {
 	downloaderEndpoint string
 	receiverEndpoint   string
 	metadataEndpoint   string
-	retrieverEndpoint  string
 	uploaderEndpoint   string
 	p2pEndpoint        string
 	signerEndpoint     string
@@ -58,7 +57,6 @@ func NewGfSpClient(
 	downloaderEndpoint string,
 	receiverEndpoint string,
 	metadataEndpoint string,
-	retrieverEndpoint string,
 	uploaderEndpoint string,
 	p2pEndpoint string,
 	signerEndpoint string,
@@ -70,7 +68,6 @@ func NewGfSpClient(
 		downloaderEndpoint: downloaderEndpoint,
 		receiverEndpoint:   receiverEndpoint,
 		metadataEndpoint:   metadataEndpoint,
-		retrieverEndpoint:  retrieverEndpoint,
 		uploaderEndpoint:   uploaderEndpoint,
 		p2pEndpoint:        p2pEndpoint,
 		signerEndpoint:     signerEndpoint,

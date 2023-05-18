@@ -1,8 +1,6 @@
 package gfspconfig
 
 import (
-	"github.com/pelletier/go-toml/v2"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
@@ -11,6 +9,7 @@ import (
 	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	"github.com/pelletier/go-toml/v2"
 )
 
 type Option = func(cfg *GfSpConfig) error
@@ -37,6 +36,8 @@ type GfSpConfig struct {
 	GrpcAddress string
 	Customize   *Customize
 	SpDB        storeconfig.SQLDBConfig
+	BsDB        storeconfig.SQLDBConfig
+	BsDBBackup  storeconfig.SQLDBConfig
 	PieceStore  storage.PieceStoreConfig
 	Chain       ChainConfig
 	SpAccount   SpAccountConfig
@@ -51,6 +52,7 @@ type GfSpConfig struct {
 	Monitor     MonitorConfig
 	Rcmgr       RcmgrConfig
 	Log         LogConfig
+	Metadata    MetadataConfig
 }
 
 // Apply sets the customized implement to the GfSp configuration, it will be called
@@ -97,7 +99,6 @@ type EndpointConfig struct {
 	DownloaderEndpoint string
 	ReceiverEndpoint   string
 	MetadataEndpoint   string
-	RetrieverEndpoint  string
 	UploaderEndpoint   string
 	P2PEndpoint        string
 	SignerEndpoint     string
@@ -198,4 +199,10 @@ type RcmgrConfig struct {
 type LogConfig struct {
 	Level string
 	Path  string
+}
+
+type MetadataConfig struct {
+	// IsMasterDB is used to determine if the master database (BsDBConfig) is currently being used.
+	IsMasterDB                 bool
+	BsDBSwitchCheckIntervalSec int64
 }

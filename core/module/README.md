@@ -27,7 +27,7 @@ have one interface`HandleXXXTask`. Background Modular includes: `Authorizer`,
 
 The GfSp framework specifies the following modular: `Gater`, `Approver`, 
 `Authorizer`, `Uploader`, `Downloader`, `Manager`, `P2P`, `Receiver`, 
-`Signer`and `Retriever`. The GfSp framework also supports extending more 
+`Signer`and `Metadata`. The GfSp framework also supports extending more 
 customized mudolar as needed. As long as it is registered in GfSp framework 
 and executes the modular interface, it will be initialized and scheduled.
 

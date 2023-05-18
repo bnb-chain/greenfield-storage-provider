@@ -114,14 +114,14 @@ gfsp.Start(ctx)
 
 ```go
 
-// retriever should implement Modular interface
+// metadata should implement Modular interface
 
-// register retriever modular to GfSp framework
+// register metadata modular to GfSp framework
 
-gfspapp.RegisterModularInfo(RetrieveModularName, RetrieveModularDescription, NewRetrieveModular)
+gfspapp.RegisterModularInfo(MetadataModularName, MetadataModularDescription, NewMetadataModular)
 
 
-// NewRetrieveModular must be func type: 
+// NewMetadataModular must be func type: 
 //  func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error)
 
 // new GfSp framework app
@@ -131,6 +131,6 @@ if err != nil {
 }
 
 gfsp.Start(ctx)
-// the GfSp framework will call the NewRetrieveModular and start the retriever
+// the GfSp framework will call the NewMetadataModular and start the metadata
 
 ```

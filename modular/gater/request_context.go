@@ -60,11 +60,11 @@ func NewRequestContext(r *http.Request) (*RequestContext, error) {
 		vars:       vars,
 		startTime:  time.Now(),
 	}
-	account, err := reqCtx.VerifySignature()
-	if err != nil {
-		return reqCtx, err
-	}
-	reqCtx.account = account
+	//account, err := reqCtx.VerifySignature()
+	//if err != nil {
+	//	return reqCtx, err
+	//}
+	//reqCtx.account = account
 	return reqCtx, nil
 }
 
