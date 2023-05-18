@@ -14,9 +14,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	piecestoreclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
@@ -55,7 +58,24 @@ const (
 	SpDBAddress = "SP_DB_ADDRESS"
 	// SpDBDataBase defines env variable name for sp db database.
 	SpDBDataBase = "SP_DB_DATABASE"
-	// DefaultConnMaxLifetime defines the default max liveliness time of connection.
+	// BsDBUser defines env variable name for block syncer db user name
+	BsDBUser = "BS_DB_USER"
+	// BsDBPasswd defines env variable name for block syncer db user passwd
+	BsDBPasswd = "BS_DB_PASSWORD"
+	// BsDBAddress defines env variable name for block syncer db address
+	BsDBAddress = "BS_DB_ADDRESS"
+	// BsDBDataBase defines env variable name for block syncer db database
+	BsDBDataBase = "BS_DB_DATABASE"
+	// BsDBSwitchedUser defines env variable name for switched block syncer db user name
+	BsDBSwitchedUser = "BS_DB_SWITCHED_USER"
+	// BsDBSwitchedPasswd defines env variable name for switched block syncer db user passwd
+	BsDBSwitchedPasswd = "BS_DB_SWITCHED_PASSWORD"
+	// BsDBSwitchedAddress defines env variable name for switched block syncer db address
+	BsDBSwitchedAddress = "BS_DB_SWITCHED_ADDRESS"
+	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database
+	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
+
+	// DefaultConnMaxLifetime defines the default max liveness time of connection
 	DefaultConnMaxLifetime = 60
 	// DefaultConnMaxIdleTime defines the default max idle time of connection.
 	DefaultConnMaxIdleTime = 30
@@ -124,8 +144,8 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Endpoint.MetadataEndpoint == "" {
 		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
 	}
-	if cfg.Endpoint.RetrieverEndpoint == "" {
-		cfg.Endpoint.RetrieverEndpoint = cfg.GrpcAddress
+	if cfg.Endpoint.MetadataEndpoint == "" {
+		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.UploaderEndpoint == "" {
 		cfg.Endpoint.UploaderEndpoint = cfg.GrpcAddress
@@ -145,7 +165,6 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		cfg.Endpoint.DownloaderEndpoint,
 		cfg.Endpoint.ReceiverEndpoint,
 		cfg.Endpoint.MetadataEndpoint,
-		cfg.Endpoint.RetrieverEndpoint,
 		cfg.Endpoint.UploaderEndpoint,
 		cfg.Endpoint.P2PEndpoint,
 		cfg.Endpoint.SignerEndpoint,
@@ -203,6 +222,80 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	}
 	app.gfSpDB = db
 	return nil
+}
+
+func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+	if val, ok := os.LookupEnv(BsDBUser); ok {
+		cfg.BsDB.User = val
+	}
+	if val, ok := os.LookupEnv(BsDBPasswd); ok {
+		cfg.BsDB.Passwd = val
+	}
+	if val, ok := os.LookupEnv(BsDBAddress); ok {
+		cfg.BsDB.Address = val
+	}
+	if val, ok := os.LookupEnv(BsDBDataBase); ok {
+		cfg.BsDB.Database = val
+	}
+	if val, ok := os.LookupEnv(BsDBSwitchedUser); ok {
+		cfg.BsDBBackup.User = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedPasswd); ok {
+		cfg.BsDBBackup.Passwd = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedAddress); ok {
+		cfg.BsDBBackup.Address = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedDataBase); ok {
+		cfg.BsDBBackup.Database = val
+	}
+
+	DefaultGfBsDB(&cfg.BsDB)
+	DefaultGfBsDB(&cfg.BsDBBackup)
+
+	bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
+	if err != nil {
+		return err
+	}
+
+	bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
+	if err != nil {
+		return err
+	}
+
+	app.gfBsDBMaster = bsDBBlockSyncerMaster
+	app.gfBsDBBackup = bsDBBlockSyncerBackUp
+
+	return nil
+}
+
+// DefaultGfBsDB cast block syncer db connections, user and password if not loaded from env vars
+func DefaultGfBsDB(config *config.SQLDBConfig) {
+
+	if config.ConnMaxLifetime == 0 {
+		config.ConnMaxLifetime = DefaultConnMaxLifetime
+	}
+	if config.ConnMaxIdleTime == 0 {
+		config.ConnMaxIdleTime = DefaultConnMaxIdleTime
+	}
+	if config.MaxIdleConns == 0 {
+		config.MaxIdleConns = DefaultMaxIdleConns
+	}
+	if config.MaxOpenConns == 0 {
+		config.MaxOpenConns = DefaultMaxOpenConns
+	}
+	if config.User == "" {
+		config.User = "root"
+	}
+	if config.Passwd == "" {
+		config.User = "test"
+	}
+	if config.Address == "" {
+		config.User = "127.0.0.1:3306"
+	}
+	if config.Database == "" {
+		config.Database = "block_syncer_db"
+	}
 }
 
 func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
@@ -370,6 +463,7 @@ var gfspBaseAppDefaultOptions = []Option{
 	DefaultStaticOption,
 	DefaultGfSpClientOption,
 	DefaultGfSpDBOption,
+	DefaultGfBsDBOption,
 	DefaultGfSpPieceStoreOption,
 	DefaultGfSpPieceOpOption,
 	DefaultGfSpResourceManagerOption,

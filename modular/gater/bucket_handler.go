@@ -7,7 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	retrievertypes "github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
+	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -104,7 +104,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		startTimestampUs int64
 		endTimestampUs   int64
 		maxRecordNum     int64
-		records          []*retrievertypes.ReadRecord
+		records          []*metadatatypes.ReadRecord
 		nextTimestampUs  int64
 	)
 	defer func() {

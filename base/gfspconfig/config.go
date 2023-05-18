@@ -38,6 +38,8 @@ type GfSpConfig struct {
 	GrpcAddress    string
 	Customize      *Customize
 	SpDB           storeconfig.SQLDBConfig
+	BsDB           storeconfig.SQLDBConfig
+	BsDBBackup     storeconfig.SQLDBConfig
 	PieceStore     storage.PieceStoreConfig
 	Chain          ChainConfig
 	SpAccount      SpAccountConfig
@@ -52,6 +54,7 @@ type GfSpConfig struct {
 	Monitor        MonitorConfig
 	Rcmgr          RcmgrConfig
 	Log            LogConfig
+	Metadata       MetadataConfig
 	BlockSyncer    BlockSyncerConfig
 	APIRateLimiter localhttp.RateLimiterConfig
 }
@@ -100,7 +103,6 @@ type EndpointConfig struct {
 	DownloaderEndpoint string
 	ReceiverEndpoint   string
 	MetadataEndpoint   string
-	RetrieverEndpoint  string
 	UploaderEndpoint   string
 	P2PEndpoint        string
 	SignerEndpoint     string
@@ -210,4 +212,10 @@ type BlockSyncerConfig struct {
 	RecreateTables bool
 	Workers        uint
 	EnableDualDB   bool
+}
+
+type MetadataConfig struct {
+	// IsMasterDB is used to determine if the master database (BsDBConfig) is currently being used.
+	IsMasterDB                 bool
+	BsDBSwitchCheckIntervalSec int64
 }
