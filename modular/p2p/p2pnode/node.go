@@ -132,8 +132,7 @@ func NewNode(baseApp *gfspapp.GfSpBaseApp, privateKey string, address string,
 	}
 	n.initProtocol()
 	log.Infow("succeed to init p2p node", "node_id", n.node.ID())
-	n.initProtocol()
-	return nil, nil
+	return n, nil
 }
 
 func (n *Node) initProtocol() {

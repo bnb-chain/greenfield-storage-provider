@@ -95,7 +95,7 @@ func (m *GfSpTask) SetError(err error) {
 func LimitEstimateByPriority(priority coretask.TPriority) rcmgr.Limit {
 	if priority < coretask.DefaultSmallerPriority {
 		return &gfsplimit.GfSpLimit{Tasks: 1, TasksLowPriority: 1}
-	} else if priority >= coretask.DefaultLargerTaskPriority {
+	} else if priority > coretask.DefaultLargerTaskPriority {
 		return &gfsplimit.GfSpLimit{Tasks: 1, TasksHighPriority: 1}
 	}
 	return &gfsplimit.GfSpLimit{Tasks: 1, TasksMediumPriority: 1}
