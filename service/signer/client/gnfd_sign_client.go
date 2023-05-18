@@ -206,37 +206,36 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 
 // DiscontinueBucket stops serving the bucket on the greenfield chain.
 func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, scope SignType, discontinueBucket *storagetypes.MsgDiscontinueBucket) ([]byte, error) {
-	client.mu.Lock()
-	defer client.mu.Unlock()
-
+	log.Infow("signer start to discontinue bucket", "scope", scope)
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "err", err)
 		return nil, merrors.ErrSignMsg
 	}
+	log.Infow("succeed loaded km", "scope", scope)
 
-	msgSealObject := storagetypes.NewMsgDiscontinueBucket(km.GetAddr(),
+	msgDiscontinueBucket := storagetypes.NewMsgDiscontinueBucket(km.GetAddr(),
 		discontinueBucket.BucketName, discontinueBucket.Reason)
-	mode := tx.BroadcastMode_BROADCAST_MODE_BLOCK
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
 		Mode:     &mode,
 		GasLimit: client.gasLimit,
 	}
 
-	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgSealObject}, txOpt)
+	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgDiscontinueBucket}, txOpt)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "discontinue_bucket", msgSealObject.String())
-		return nil, merrors.ErrSealObjectOnChain
+		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "discontinue_bucket", msgDiscontinueBucket.String())
+		return nil, merrors.ErrDiscontinueBucketOnChain
 	}
 
 	if resp.TxResponse.Code != 0 {
-		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "discontinue_bucket", msgSealObject.String())
-		return nil, merrors.ErrSealObjectOnChain
+		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "discontinue_bucket", msgDiscontinueBucket.String())
+		return nil, merrors.ErrDiscontinueBucketOnChain
 	}
 	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "discontinue_bucket", msgSealObject.String())
-		return nil, merrors.ErrSealObjectOnChain
+		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "discontinue_bucket", msgDiscontinueBucket.String())
+		return nil, merrors.ErrDiscontinueBucketOnChain
 	}
 
 	return txHash, nil

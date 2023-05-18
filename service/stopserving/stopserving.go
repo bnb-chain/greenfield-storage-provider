@@ -120,7 +120,10 @@ func (s *StopServing) discontinueBuckets() {
 			BucketName: bucket.BucketInfo.BucketName,
 			Reason:     DiscontinueReason,
 		}
-		txHash, err := s.signer.DiscontinueBucketOnChain(context.Background(), discontinueBucket)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer cancel()
+		txHash, err := s.signer.DiscontinueBucketOnChain(ctx, discontinueBucket)
+		log.Infow("discontinue bucket result", "txHash", txHash, "err", err)
 		if err != nil {
 			log.Errorw("failed to discontinue bucket on chain", "error", err)
 			return
