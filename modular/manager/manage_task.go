@@ -351,25 +351,36 @@ func (m *ManageModular) handleFailedReceivePieceTask(
 
 func (m *ManageModular) HandleGCObjectTask(
 	ctx context.Context,
-	task task.GCObjectTask) error {
-	if task == nil {
+	gcTask task.GCObjectTask) error {
+	if gcTask == nil {
 		log.CtxErrorw(ctx, "failed to handle gc object due to task pointer dangling")
 		return ErrDanglingTask
 	}
-	if !m.gcObjectQueue.Has(task.Key()) {
+	if !m.gcObjectQueue.Has(gcTask.Key()) {
 		return ErrCanceledTask
 	}
-	if task.GetEndBlockNumber() < task.GetCurrentBlockNumber() {
-		log.CtxInfow(ctx, "succeed to gc object task", "end_block_number",
-			task.GetEndBlockNumber(), "last_delete_objectId", task.GetLastDeletedObjectId())
-		m.gcObjectQueue.PopByKey(task.Key())
+	if gcTask.GetEndBlockNumber() < gcTask.GetCurrentBlockNumber() {
+		log.CtxInfow(ctx, "succeed to gc object task", "info", gcTask.Info())
+		m.gcObjectQueue.PopByKey(gcTask.Key())
 		return nil
 	}
-	task.SetUpdateTime(time.Now().Unix())
-	m.gcObjectQueue.PopByKey(task.Key())
-	m.gcObjectQueue.Push(task)
-	block, object := task.GetGCObjectProgress()
-	err := m.baseApp.GfSpDB().SetGCObjectProgress(task.Key().String(), block, object)
+	gcTask.SetUpdateTime(time.Now().Unix())
+	oldTask := m.gcObjectQueue.PopByKey(gcTask.Key())
+	if oldTask != nil {
+		if oldTask.(task.GCObjectTask).GetCurrentBlockNumber() > gcTask.GetCurrentBlockNumber() ||
+			(oldTask.(task.GCObjectTask).GetCurrentBlockNumber() == gcTask.GetCurrentBlockNumber() &&
+				oldTask.(task.GCObjectTask).GetLastDeletedObjectId() >= gcTask.GetLastDeletedObjectId()) {
+			log.CtxErrorw(ctx, "report gc object task is expired", "report_info", gcTask.Info(),
+				"current_info", oldTask.Info())
+			return ErrCanceledTask
+		}
+	} else {
+		log.CtxErrorw(ctx, "report gc object task is clear", "report_info", gcTask.Info())
+		return ErrCanceledTask
+	}
+	m.gcObjectQueue.Push(gcTask)
+	block, object := gcTask.GetGCObjectProgress()
+	err := m.baseApp.GfSpDB().SetGCObjectProgress(gcTask.Key().String(), block, object)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to update gc object status", "error", err)
 	}

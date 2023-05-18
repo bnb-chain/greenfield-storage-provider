@@ -22,6 +22,7 @@ var (
 	ErrUnsealed             = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 40003, "seal object on chain failed")
 	ErrExhaustedApproval    = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40004, "approvals exhausted")
 	ErrInvalidIntegrity     = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40005, "secondary integrity hash verification failed")
+	ErrSecondaryMismatch    = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40006, "secondary sp mismatch")
 	ErrGfSpDB               = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45201, "server slipped away, try again later")
 )
 
@@ -74,6 +75,39 @@ func (e *ExecuteModular) HandleReceivePieceTask(
 	}
 	err := e.listenSealObject(ctx, task.GetObjectInfo())
 	if err == nil {
+		onChainObject, err := e.baseApp.Consensus().QueryObjectInfo(ctx, task.GetObjectInfo().GetBucketName(),
+			task.GetObjectInfo().GetObjectName())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get object info", "error", err)
+			task.SetError(err)
+			return
+		}
+		if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperateAddress() {
+			err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to delete integrity")
+			}
+			var pieceKey string
+			segmentCount := e.baseApp.PieceOp().SegmentCount(task.GetObjectInfo().GetPayloadSize(),
+				task.GetStorageParams().GetMaxPayloadSize())
+			for i := uint32(0); i < segmentCount; i++ {
+				if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
+					pieceKey = e.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(),
+						i, task.GetReplicateIdx())
+				} else {
+					pieceKey = e.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), i)
+				}
+				err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to delete piece data", "piece_key", pieceKey)
+				}
+			}
+			log.CtxWarn(ctx, "failed to confirm receive task, secondary sp mismatch",
+				"expect", onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())],
+				"current", e.baseApp.OperateAddress())
+			task.SetError(ErrSecondaryMismatch)
+			return
+		}
 		task.SetSealed(true)
 	}
 	task.SetError(err)

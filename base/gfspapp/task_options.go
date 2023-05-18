@@ -7,15 +7,15 @@ import (
 const (
 	NotUseTimeout     int64 = 0
 	MinUploadTime     int64 = 2
-	MaxUploadTime     int64 = 30
+	MaxUploadTime     int64 = 300
 	MinReplicateTime  int64 = 12
-	MaxReplicateTime  int64 = 72
+	MaxReplicateTime  int64 = 500
 	MinReceiveTime    int64 = 2
 	MaxReceiveTime    int64 = 10
 	MinSealObjectTime int64 = 2
 	MaxSealObjectTime int64 = 5
 	MinDownloadTime   int64 = 2
-	MaxDownloadTime   int64 = 60
+	MaxDownloadTime   int64 = 300
 	MinGcObjectTime   int64 = 300
 	MaxGcObjectTime   int64 = 600
 	MinGcZombieTime   int64 = 300

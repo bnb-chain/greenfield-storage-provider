@@ -104,6 +104,8 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx(), segmentCount); err != nil {
 		log.CtxErrorw(ctx, "failed to delete all replicate piece checksum", "error", err)
 	}
+	// the manager dispatch the reset task to confirm whether seal on chain as secondary sp.
+	task.SetError(nil)
 	if err = r.baseApp.GfSpClient().ReportTask(ctx, task); err != nil {
 		log.CtxErrorw(ctx, "failed to report receive task for confirming seal", "error", err)
 	}
