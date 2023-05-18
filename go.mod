@@ -69,9 +69,12 @@ require (
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
+	github.com/frankban/quicktest v1.14.4 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	golang.org/x/mod v0.9.0 // indirect
@@ -239,7 +242,7 @@ require (
 	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/sirupsen/logrus v1.9.2 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
@@ -270,7 +273,7 @@ require (
 	//golang.org/x/mod v0.8.0 // indirect
 	//golang.org/x/net v0.6.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/term v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/genproto v0.0.0-20230320184635-7606e756e683 // indirect
