@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"sort"
 	"strings"
@@ -77,10 +78,13 @@ func (m *ManageModular) Start(ctx context.Context) error {
 func (m *ManageModular) eventLoop(ctx context.Context) {
 	gcObjectTicker := time.NewTicker(time.Duration(m.gcObjectTimeInterval) * time.Second)
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
+	statisticsTicker := time.NewTicker(time.Duration(60) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-statisticsTicker.C:
+			log.CtxDebugw(ctx, m.State())
 		case <-syncConsensusInfoTicker.C:
 			m.syncConsensusInfo(ctx)
 		case <-gcObjectTicker.C:
@@ -271,4 +275,13 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 			}
 		}
 	}
+}
+
+func (m *ManageModular) State() string {
+	return fmt.Sprintf(
+		"upload[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlock[%d], gcSafeDistanc[%d]",
+		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
+		m.receiveQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
+		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(),
+		m.gcBlockHeight, m.gcSafeBlockDistance)
 }

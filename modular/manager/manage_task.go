@@ -16,12 +16,11 @@ import (
 )
 
 var (
-	ErrDanglingTask     = gfsperrors.Register(module.ManageModularName, http.StatusInternalServerError, 60001, "OoooH... request lost")
-	ErrRepeatedTask     = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60002, "request repeated")
-	ErrExceedTask       = gfsperrors.Register(module.ManageModularName, http.StatusServiceUnavailable, 60003, "OoooH... request exceed, try again later")
-	ErrCanceledTask     = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60004, "task canceled")
-	ErrNoTaskMatchLimit = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60005, "no task to dispatch below the require limits")
-	ErrFutureSupport    = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60006, "future support")
+	ErrDanglingTask  = gfsperrors.Register(module.ManageModularName, http.StatusInternalServerError, 60001, "OoooH... request lost")
+	ErrRepeatedTask  = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60002, "request repeated")
+	ErrExceedTask    = gfsperrors.Register(module.ManageModularName, http.StatusServiceUnavailable, 60003, "OoooH... request exceed, try again later")
+	ErrCanceledTask  = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60004, "task canceled")
+	ErrFutureSupport = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60006, "future support")
 )
 
 func (m *ManageModular) DispatchTask(

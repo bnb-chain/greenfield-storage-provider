@@ -115,7 +115,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 	case <-ctx.Done():
 		return nil
 	case <-initCh:
-		log.CtxDebugw(ctx, "received the first upload stream data")
+		log.CtxDebugw(ctx, "received first upload stream data")
 	}
 	err = g.uploader.HandleUploadObjectTask(ctx, task, pRead)
 	if err != nil {
