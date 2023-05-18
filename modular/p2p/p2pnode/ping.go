@@ -106,7 +106,7 @@ func (n *Node) onPong(s network.Stream) {
 		return
 	}
 
-	log.Debugf("%s received pong request from %s.", s.Conn().LocalPeer(), s.Conn().RemotePeer())
+	//log.Debugf("%s received pong request from %s.", s.Conn().LocalPeer(), s.Conn().RemotePeer())
 
 	err = VerifySignature(pong.GetSpOperatorAddress(), pong.GetSignBytes(), pong.GetSignature())
 	if err != nil {

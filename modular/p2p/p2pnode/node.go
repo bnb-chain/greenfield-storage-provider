@@ -154,6 +154,7 @@ func (n *Node) Name() string {
 
 // Start runs background task that trigger broadcast ping request
 func (n *Node) Start(ctx context.Context) error {
+	log.CtxErrorw(ctx, "start p2p protocol")
 	go n.eventLoop()
 	return nil
 }
