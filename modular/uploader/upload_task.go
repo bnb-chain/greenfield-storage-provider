@@ -63,13 +63,12 @@ func (u *UploadModular) HandleUploadObjectTask(
 		task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 	var (
-		segIdx                uint32 = 0
-		pieceKey              string
-		checksums             [][]byte
-		readSize              int
-		space                 = make([]byte, segmentSize)
-		storeCtx, storeCancel = context.WithCancel(ctx)
-		wg                    sync.WaitGroup
+		segIdx    uint32 = 0
+		pieceKey  string
+		checksums [][]byte
+		readSize  int
+		data      = make([]byte, segmentSize)
+		wg        sync.WaitGroup
 	)
 	defer func() {
 		wg.Wait()
@@ -83,15 +82,11 @@ func (u *UploadModular) HandleUploadObjectTask(
 			"object_size", task.GetObjectInfo().GetPayloadSize())
 	}()
 	for {
-		select {
-		case <-storeCtx.Done():
-			return ErrPieceStore
-		default:
-		}
 		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 		segIdx++
-		n, err := StreamReadAt(stream, space)
-		data := space[0:n]
+		data = data[0:segmentSize]
+		n, err := StreamReadAt(stream, data)
+		data = data[0:n]
 		readSize += n
 		if len(data) != 0 {
 			checksums = append(checksums, hash.GenerateChecksum(data))
@@ -136,21 +131,11 @@ func (u *UploadModular) HandleUploadObjectTask(
 			log.CtxErrorw(ctx, "stream closed abnormally", "piece_key", pieceKey, "error", err)
 			return ErrClosedStream
 		}
-		wg.Add(1)
-		go func(key string, pieceData []byte) {
-			defer wg.Done()
-			select {
-			case <-storeCtx.Done():
-				return
-			default:
-			}
-			err = u.baseApp.PieceStore().PutPiece(ctx, key, pieceData)
-			if err != nil {
-				log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
-				task.SetError(ErrPieceStore)
-				storeCancel()
-			}
-		}(pieceKey, data)
+		err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
+		if err != nil {
+			log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
+			task.SetError(ErrPieceStore)
+		}
 	}
 }
 
