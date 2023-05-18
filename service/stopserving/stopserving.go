@@ -110,23 +110,20 @@ func (s *StopServing) discontinueBuckets() {
 	}
 
 	for _, bucket := range buckets {
+		time.Sleep(1 * time.Second)
 		cacheKey := bucket.GetCacheKey()
 		if s.cache.Contains(cacheKey) { // this bucket has been discontinued, however the metadata indexer did not handle it yet
 			continue
 		}
-
 		log.Infow("start to discontinue bucket", "bucket_name", bucket.BucketInfo.BucketName)
 		discontinueBucket := &storagetypes.MsgDiscontinueBucket{
 			BucketName: bucket.BucketInfo.BucketName,
 			Reason:     DiscontinueReason,
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-		defer cancel()
-		txHash, err := s.signer.DiscontinueBucketOnChain(ctx, discontinueBucket)
-		log.Infow("discontinue bucket result", "txHash", txHash, "err", err)
+		txHash, err := s.signer.DiscontinueBucketOnChain(context.Background(), discontinueBucket)
 		if err != nil {
 			log.Errorw("failed to discontinue bucket on chain", "error", err)
-			return
+			continue
 		} else {
 			s.cache.Add(cacheKey, struct{}{})
 			log.Infow("succeed to discontinue bucket", "bucket_name", discontinueBucket.BucketName, "tx_hash", txHash)
