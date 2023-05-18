@@ -44,6 +44,7 @@ type GreenfieldChainSignClient struct {
 	gasLimit          uint64
 	greenfieldClients map[SignType]*client.GreenfieldClient
 	sealAccNonce      uint64
+	gcAccNonce        uint64
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
@@ -99,6 +100,10 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	if err != nil {
 		return nil, err
 	}
+	gcAccNonce, err := gcClient.GetNonce()
+	if err != nil {
+		return nil, err
+	}
 
 	greenfieldClients := map[SignType]*client.GreenfieldClient{
 		SignOperator: operatorClient,
@@ -112,6 +117,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 		gasLimit:          gasLimit,
 		greenfieldClients: greenfieldClients,
 		sealAccNonce:      sealAccNonce - 1, // Decrease one first when initialize it, and add one when sending a transaction
+		gcAccNonce:        gcAccNonce - 1,   // Decrease one first when initialize it, and add one when sending a transaction
 	}, nil
 }
 
@@ -212,7 +218,10 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 		log.CtxErrorw(ctx, "failed to get private key", "err", err)
 		return nil, merrors.ErrSignMsg
 	}
-	log.Infow("succeed loaded km", "scope", scope)
+
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	nonce := client.gcAccNonce + 1
 
 	msgDiscontinueBucket := storagetypes.NewMsgDiscontinueBucket(km.GetAddr(),
 		discontinueBucket.BucketName, discontinueBucket.Reason)
@@ -220,11 +229,21 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 	txOpt := &ctypes.TxOption{
 		Mode:     &mode,
 		GasLimit: client.gasLimit,
+		Nonce:    nonce,
 	}
 
 	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgDiscontinueBucket}, txOpt)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "discontinue_bucket", msgDiscontinueBucket.String())
+		if strings.Contains(err.Error(), "account sequence mismatch") {
+			// if nonce mismatch, reset nonce by querying the nonce on chain
+			nonce, err := client.greenfieldClients[scope].GetNonce()
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to get gc account nonce", "err", err)
+				return nil, merrors.ErrDiscontinueBucketOnChain
+			}
+			client.gcAccNonce = nonce - 1
+		}
 		return nil, merrors.ErrDiscontinueBucketOnChain
 	}
 
@@ -238,5 +257,7 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 		return nil, merrors.ErrDiscontinueBucketOnChain
 	}
 
+	// update nonce when tx is successful submitted
+	client.gcAccNonce = nonce
 	return txHash, nil
 }
