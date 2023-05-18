@@ -123,7 +123,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
-		log.CtxDebugw(reqCtx.Context(), "get object handler", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -193,6 +193,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(objectInfo.GetPayloadSize()))
 	}
+	log.CtxDebugw(reqCtx.Context(), "succeed to download object")
 }
 
 func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.Request) {
@@ -210,7 +211,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
-		log.CtxErrorw(reqCtx.Context(), "query upload progress handler", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -267,5 +268,5 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		err = ErrEncodeResponse
 		return
 	}
-	log.Debugw("query upload progress", "xml_info", xmlInfo)
+	log.Debugw("succeed to query upload progress", "xml_info", xmlInfo)
 }

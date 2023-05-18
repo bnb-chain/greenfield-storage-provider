@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"fmt"
 	"sync/atomic"
 	"time"
 
@@ -32,6 +33,14 @@ type ExecuteModular struct {
 	listenSealTimeoutHeight int
 	listenSealRetryTimeout  int
 	maxListenSealRetry      int
+
+	statisticsOutputInterval   int
+	doingReplicatePieceTaskCnt int64
+	doingSpSealObjectTaskCnt   int64
+	doingReceivePieceTaskCnt   int64
+	doingGCObjectTaskCnt       int64
+	doingGCZombiePieceTaskCnt  int64
+	doingGCGCMetaTaskCnt       int64
 }
 
 func (e *ExecuteModular) Name() string {
@@ -49,13 +58,16 @@ func (e *ExecuteModular) Start(ctx context.Context) error {
 }
 
 func (e *ExecuteModular) eventLoop(ctx context.Context) {
-	ticker := time.NewTicker(time.Duration(e.askTaskInterval) * time.Second)
+	askTaskTicker := time.NewTicker(time.Duration(e.askTaskInterval) * time.Second)
+	statisticsTicker := time.NewTicker(time.Duration(e.statisticsOutputInterval) * time.Second)
 	logCnt := 0
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
+		case <-statisticsTicker.C:
+			log.CtxInfow(ctx, e.Statistics())
+		case <-askTaskTicker.C:
 			logCnt++
 			maxExecuteNum := atomic.LoadInt64(&e.maxExecuteNum)
 			executingNum := atomic.LoadInt64(&e.executingNum)
@@ -63,15 +75,7 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 			metrics.RunningTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(executingNum))
 
 			if executingNum >= maxExecuteNum {
-				if logCnt%1000 == 0 {
-					log.CtxErrorw(ctx, "failed to start ask task, executing task exceed",
-						"executing_num", executingNum, "max_execute_num", maxExecuteNum)
-				}
 				continue
-			}
-			if logCnt%1000 == 0 {
-				log.CtxDebugw(ctx, "start to ask task", "executing_num", executingNum,
-					"max_execute_num", maxExecuteNum)
 			}
 			atomic.AddInt64(&e.executingNum, 1)
 			go func() {
@@ -123,16 +127,34 @@ func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
 	ctx = log.WithValue(ctx, log.CtxKeyTask, askTask.Key().String())
 	switch t := askTask.(type) {
 	case *gfsptask.GfSpReplicatePieceTask:
+		metrics.ExecutorReplicatePieceTaskCounter.WithLabelValues(e.Name()).Inc()
+		atomic.AddInt64(&e.doingReplicatePieceTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingReplicatePieceTaskCnt, -1)
 		e.HandleReplicatePieceTask(ctx, t)
 	case *gfsptask.GfSpSealObjectTask:
+		metrics.ExecutorSealObjectTaskCounter.WithLabelValues(e.Name()).Inc()
+		atomic.AddInt64(&e.doingSpSealObjectTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingSpSealObjectTaskCnt, -1)
 		e.HandleSealObjectTask(ctx, t)
 	case *gfsptask.GfSpReceivePieceTask:
+		metrics.ExecutorReceiveTaskCounter.WithLabelValues(e.Name()).Inc()
+		atomic.AddInt64(&e.doingReceivePieceTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingReceivePieceTaskCnt, -1)
 		e.HandleReceivePieceTask(ctx, t)
 	case *gfsptask.GfSpGCObjectTask:
+		metrics.ExecutorGCObjectTaskCounter.WithLabelValues(e.Name()).Inc()
+		atomic.AddInt64(&e.doingGCObjectTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingGCObjectTaskCnt, -1)
 		e.HandleGCObjectTask(ctx, t)
 	case *gfsptask.GfSpGCZombiePieceTask:
+		metrics.ExecutorGCZombieTaskCounter.WithLabelValues(e.Name()).Inc()
+		atomic.AddInt64(&e.doingGCZombiePieceTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingGCZombiePieceTaskCnt, -1)
 		e.HandleGCZombiePieceTask(ctx, t)
 	case *gfsptask.GfSpGCMetaTask:
+		metrics.ExecutorGCMetaTaskCounter.WithLabelValues(e.Name()).Inc()
+		atomic.AddInt64(&e.doingGCGCMetaTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingGCGCMetaTaskCnt, -1)
 		e.HandleGCMetaTask(ctx, t)
 	default:
 		log.CtxErrorw(ctx, "unsupported task type")
@@ -173,4 +195,16 @@ func (e *ExecuteModular) ReleaseResource(
 	ctx context.Context,
 	span corercmgr.ResourceScopeSpan) {
 	span.Done()
+}
+
+func (e *ExecuteModular) Statistics() string {
+	return fmt.Sprintf(
+		"max[%d], doing[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d]",
+		atomic.LoadInt64(&e.maxExecuteNum), atomic.LoadInt64(&e.executingNum),
+		atomic.LoadInt64(&e.doingReplicatePieceTaskCnt),
+		atomic.LoadInt64(&e.doingSpSealObjectTaskCnt),
+		atomic.LoadInt64(&e.doingReceivePieceTaskCnt),
+		atomic.LoadInt64(&e.doingGCObjectTaskCnt),
+		atomic.LoadInt64(&e.doingGCZombiePieceTaskCnt),
+		atomic.LoadInt64(&e.doingGCGCMetaTaskCnt))
 }

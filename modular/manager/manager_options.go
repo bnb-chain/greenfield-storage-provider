@@ -21,6 +21,7 @@ const (
 	DefaultGlobalGcObjectBlockInterval       uint64 = 500
 	DefaultGlobalGcObjectSafeBlockDistance   uint64 = 1000
 	DefaultGlobalSyncConsensusInfoInterval   uint64 = 2
+	DefaultStatisticsOutputInterval          int    = 60
 )
 
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -74,6 +75,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	if cfg.Parallel.GlobalSyncConsensusInfoInterval == 0 {
 		cfg.Parallel.GlobalSyncConsensusInfoInterval = DefaultGlobalSyncConsensusInfoInterval
 	}
+	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	manager.maxUploadObjectNumber = cfg.Parallel.GlobalMaxUploadingParallel
 	manager.gcObjectTimeInterval = cfg.Parallel.GlobalBatchGcObjectTimeInterval
 	manager.gcObjectBlockInterval = cfg.Parallel.GlobalGcObjectBlockInterval

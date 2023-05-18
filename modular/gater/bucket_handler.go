@@ -26,7 +26,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
-		log.CtxDebugw(reqCtx.Context(), "get bucket read quota handler", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -107,7 +107,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
-		log.CtxDebugw(reqCtx.Context(), "list bucket read record handler", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()

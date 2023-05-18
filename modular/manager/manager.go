@@ -43,6 +43,7 @@ type ManageModular struct {
 	gcSafeBlockDistance   uint64
 
 	syncConsensusInfoInterval uint64
+	statisticsOutputInterval  int
 }
 
 func (m *ManageModular) Name() string {
@@ -78,13 +79,13 @@ func (m *ManageModular) Start(ctx context.Context) error {
 func (m *ManageModular) eventLoop(ctx context.Context) {
 	gcObjectTicker := time.NewTicker(time.Duration(m.gcObjectTimeInterval) * time.Second)
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
-	statisticsTicker := time.NewTicker(time.Duration(60) * time.Second)
+	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-statisticsTicker.C:
-			log.CtxDebugw(ctx, m.State())
+			log.CtxDebugw(ctx, m.Statistics())
 		case <-syncConsensusInfoTicker.C:
 			m.syncConsensusInfo(ctx)
 		case <-gcObjectTicker.C:
@@ -226,7 +227,7 @@ func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
 }
 
 func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
-	return qTask.ExceedTimeout()
+	return qTask.GetRetry() == 0 || qTask.ExceedTimeout()
 }
 
 func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) task.Task {
@@ -277,7 +278,7 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 	}
 }
 
-func (m *ManageModular) State() string {
+func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
 		"upload[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlock[%d], gcSafeDistanc[%d]",
 		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),

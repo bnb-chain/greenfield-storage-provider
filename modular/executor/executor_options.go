@@ -14,6 +14,7 @@ const (
 	DefaultExecutorListenSealTimeoutHeight      int     = 10
 	DefaultExecutorListenSealRetryTimeout       int     = 3 * 2
 	DefaultExecutorMaxListenSealRetry           int     = 3
+	DefaultStatisticsOutputInterval             int     = 60
 )
 
 func NewExecuteModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -53,5 +54,6 @@ func DefaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig
 		cfg.Executor.MaxListenSealRetry = DefaultExecutorMaxListenSealRetry
 	}
 	executor.maxListenSealRetry = cfg.Executor.MaxListenSealRetry
+	executor.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	return nil
 }

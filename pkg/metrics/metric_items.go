@@ -31,6 +31,12 @@ var MetricsItems = []prometheus.Collector{
 	ReplicateSucceedCounter,
 	ReplicateFailedCounter,
 	ReplicatePieceTimeHistogram,
+	ExecutorReplicatePieceTaskCounter,
+	ExecutorSealObjectTaskCounter,
+	ExecutorReceiveTaskCounter,
+	ExecutorGCObjectTaskCounter,
+	ExecutorGCZombieTaskCounter,
+	ExecutorGCMetaTaskCounter,
 
 	UploadObjectTaskTimeHistogram,
 	ReplicateAndSealTaskTimeHistogram,
@@ -188,6 +194,30 @@ var (
 		Help:    "Track the time of replicate piece to secondary.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"replicate_piece_time"})
+	ExecutorReplicatePieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "replicate_task_count",
+		Help: "Track replicate task number.",
+	}, []string{"replicate_task_count"})
+	ExecutorSealObjectTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "seal_task_count",
+		Help: "Track seal task number.",
+	}, []string{"seal_task_count"})
+	ExecutorReceiveTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "receive_task_count",
+		Help: "Track receive task number.",
+	}, []string{"receive_task_count"})
+	ExecutorGCObjectTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "gc_object_task_count",
+		Help: "Track gc object task number.",
+	}, []string{"gc_object_task_count"})
+	ExecutorGCZombieTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "gc_zombie_task_count",
+		Help: "Track gc zombie task number.",
+	}, []string{"gc_zombie_task_count"})
+	ExecutorGCMetaTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "gc_meta_task_count",
+		Help: "Track gc meta task number.",
+	}, []string{"gc_meta_task_count"})
 
 	// manager mertics
 	UploadObjectTaskTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{

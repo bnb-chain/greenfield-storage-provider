@@ -33,7 +33,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
-		log.CtxDebugw(reqCtx.Context(), "ask approval handler", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -136,6 +136,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 	default:
 		err = ErrUnsupportedRequestType
 	}
+	log.CtxDebugw(reqCtx.Context(), "succeed to ask approval")
 	return
 }
 
@@ -154,7 +155,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
-		log.CtxDebugw(reqCtx.Context(), "challenge handler", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 	if reqCtx.NeedVerifySignature() {
 		accAddress, err := reqCtx.VerifySignature()
@@ -226,6 +227,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(model.GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
 	w.Header().Set(model.GnfdPieceHashHeader, util.BytesSliceToString(checksums))
 	w.Write(data)
+	log.CtxDebugw(reqCtx.Context(), "succeed to challenge piece")
 }
 
 func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
@@ -242,7 +244,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
-		log.CtxDebugw(reqCtx.Context(), "replicate handler", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	approvalMsg, err := hex.DecodeString(r.Header.Get(model.GnfdReplicatePieceApprovalHeader))
@@ -308,5 +310,5 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(model.GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
 		w.Header().Set(model.GnfdIntegrityHashSignatureHeader, hex.EncodeToString(signature))
 	}
-
+	log.CtxDebugw(reqCtx.Context(), "succeed to replicate piece")
 }
