@@ -85,15 +85,16 @@ func (u *UploadModular) HandleUploadObjectTask(
 			return ErrPieceStore
 		default:
 		}
-		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
-		segIdx++
 		n, err := StreamReadAt(stream, data)
+		if n != 0 {
+			data = data[0:n]
+			checksums = append(checksums, hash.GenerateChecksum(data))
+		}
+		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 		readSize += n
+		segIdx++
 		if err == io.EOF {
 			if n != 0 {
-				data = data[:n]
-				log.CtxDebugw(ctx, "spilt segment data", "size", len(data))
-				checksums = append(checksums, hash.GenerateChecksum(data))
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {
 					log.CtxErrorw(ctx, "put segment piece to piece store", "piece_key", pieceKey, "error", err)
@@ -138,7 +139,6 @@ func (u *UploadModular) HandleUploadObjectTask(
 				return
 			default:
 			}
-			checksums = append(checksums, hash.GenerateChecksum(data))
 			err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 			if err != nil {
 				log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)

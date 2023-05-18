@@ -45,7 +45,7 @@ func (g *GfSpBaseApp) GfSpSign(
 			log.CtxErrorw(ctx, "failed to seal object", "error", err)
 		}
 	case *gfspserver.GfSpSignRequest_SignIntegrity:
-		signature, integrity, err = g.signer.SignIntegrityHash(ctx, t.SignIntegrity.OnjectId, t.SignIntegrity.Checksums)
+		signature, integrity, err = g.signer.SignIntegrityHash(ctx, t.SignIntegrity.ObjectId, t.SignIntegrity.Checksums)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign integrity hash", "error", err)
 		}

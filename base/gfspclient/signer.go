@@ -124,7 +124,7 @@ func (s *GfSpClient) SignIntegrityHash(
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_SignIntegrity{
 			SignIntegrity: &gfspserver.GfSpSignIntegrityHash{
-				OnjectId:  objectID,
+				ObjectId:  objectID,
 				Checksums: checksums,
 			},
 		},

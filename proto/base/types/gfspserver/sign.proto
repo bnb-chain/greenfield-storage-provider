@@ -9,7 +9,7 @@ import "greenfield/storage/tx.proto";
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
 message GfSpSignIntegrityHash {
-  uint64 onject_id = 1;
+  uint64 object_id = 1;
   repeated bytes checksums = 2;
 }
 
