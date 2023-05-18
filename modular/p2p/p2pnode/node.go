@@ -271,7 +271,7 @@ func (n *Node) sendToPeer(
 	host := n.node
 	s, err := host.NewStream(ctx, peerID, pc)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to init stream", "peer_id", peerID, "protocol", pc, "error", err)
+		//log.CtxErrorw(ctx, "failed to init stream", "peer_id", peerID, "protocol", pc, "error", err)
 		n.peers.DeletePeer(peerID)
 		return err
 	}
