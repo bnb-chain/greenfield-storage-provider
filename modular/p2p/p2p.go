@@ -29,6 +29,9 @@ func (p *P2PModular) Start(ctx context.Context) error {
 		return err
 	}
 	p.scope = scope
+	if err = p.node.Start(ctx); err != nil {
+		return err
+	}
 	return nil
 }
 
