@@ -75,8 +75,7 @@ func (m *ManageModular) DispatchTask(
 		return nil, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-	log.CtxDebugw(ctx, "success to dispatch task", "node_reserve_resource", limit.String(),
-		"task_consume_resource", task.EstimateLimit().String())
+	log.CtxDebugw(ctx, "success to dispatch task")
 	return task, nil
 }
 
