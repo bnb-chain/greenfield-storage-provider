@@ -228,7 +228,6 @@ func (n *Node) eventLoop() {
 		case <-n.stopCh:
 			return
 		case <-ticker.C:
-			// TODO:: send to signer and back fill the signature field
 			ping := &gfspp2p.GfSpPing{
 				SpOperatorAddress: n.baseApp.OperateAddress(),
 			}
@@ -239,6 +238,7 @@ func (n *Node) eventLoop() {
 				continue
 			}
 			ping.Signature = sinagture
+			log.CtxDebugw(ctx, "trigger broadcast ping")
 			n.broadcast(ctx, PingProtocol, ping)
 		}
 	}
@@ -252,6 +252,10 @@ func (n *Node) broadcast(
 	for _, peerID := range n.node.Peerstore().PeersWithAddrs() {
 		if strings.Compare(n.node.ID().String(), peerID.String()) == 0 {
 			continue
+		}
+		addrs := n.node.Peerstore().Addrs(peerID)
+		for _, addr := range addrs {
+			log.CtxErrorw(ctx, "broadcast", "protocol", pc, "peer_addr", addr.String())
 		}
 		n.sendToPeer(ctx, peerID, pc, data)
 	}

@@ -46,6 +46,8 @@ func (n *Node) onPing(s network.Stream) {
 		return
 	}
 
+	log.Debugf("%s received ping request from %s. Message: %s", s.Conn().LocalPeer(), s.Conn().RemotePeer(), ping.String())
+
 	err = VerifySignature(ping.GetSpOperatorAddress(), ping.GetSignBytes(), ping.GetSignature())
 	if err != nil {
 		log.Warnw("failed to verify ping msg signature", "local",
@@ -104,6 +106,8 @@ func (n *Node) onPong(s network.Stream) {
 		return
 	}
 
+	log.Debugf("%s received pong request from %s.", s.Conn().LocalPeer(), s.Conn().RemotePeer())
+
 	err = VerifySignature(pong.GetSpOperatorAddress(), pong.GetSignBytes(), pong.GetSignature())
 	if err != nil {
 		log.Warnw("failed to verify pong msg signature", "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
@@ -125,5 +129,6 @@ func (n *Node) onPong(s network.Stream) {
 			addrs = append(addrs, addr)
 		}
 		n.node.Peerstore().AddAddrs(pID, addrs, peerstore.PermanentAddrTTL)
+		log.Debugw("receive node from remote and permanent", "remote_node", s.Conn().RemotePeer(), "node_id", pID)
 	}
 }
