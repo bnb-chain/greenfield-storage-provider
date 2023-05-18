@@ -156,7 +156,7 @@ func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 	log.Debugf("%s received approval response from %s, object_id: %d",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), resp.GetObjectInfo().Id.Uint64())
 
-	err = VerifySignature(resp.GetApprovedSpApprovalAddress(), resp.GetSignBytes(), resp.GetApprovedSignature())
+	err = VerifySignature(resp.GetApprovedSpOperatorAddress(), resp.GetSignBytes(), resp.GetApprovedSignature())
 	if err != nil {
 		log.Errorw("failed to verify get approval response msg signature", "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
 		return
