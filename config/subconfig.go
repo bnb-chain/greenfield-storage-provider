@@ -336,8 +336,8 @@ func (cfg *StorageProviderConfig) MakeStopServingServiceConfig() (*stopserving.S
 		SpOperatorAddress: cfg.SpOperatorAddress,
 		DiscontinueConfig: cfg.DiscontinueCfg,
 	}
-	if _, ok := cfg.ListenAddress[model.SignerService]; ok {
-		ssCfg.SignerGrpcAddress = cfg.ListenAddress[model.SignerService]
+	if _, ok := cfg.Endpoint[model.SignerService]; ok {
+		ssCfg.SignerGrpcAddress = cfg.Endpoint[model.SignerService]
 	} else {
 		return nil, fmt.Errorf("missing signer gRPC address configuration for stop serving service")
 	}
