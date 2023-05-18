@@ -58,14 +58,14 @@ func (m *GfSpTask) SetRetry(retry int) {
 }
 
 func (m *GfSpTask) ExceedRetry() bool {
-	return m.GetRetry() > m.GetMaxRetry()
+	return m.GetRetry() >= m.GetMaxRetry()
 }
 
 func (m *GfSpTask) Expired() bool {
-	if !m.ExceedRetry() {
-		return false
+	if m.ExceedRetry() && m.ExceedTimeout() {
+		return true
 	}
-	return m.GetUpdateTime()+m.GetTimeout() < time.Now().Unix()
+	return false
 }
 
 func (m *GfSpTask) GetPriority() coretask.TPriority {
