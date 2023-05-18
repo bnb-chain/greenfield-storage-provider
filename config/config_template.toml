@@ -1,4 +1,4 @@
-Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager", "auth"]
+Service = ["gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager", "auth", "stopserving"]
 SpOperatorAddress = "677265656e6669656c642d73746f726167652d70726f7669646572"
 
 [Endpoint]
@@ -111,7 +111,7 @@ Enable = false
 R = 100
 B = 1000
 
-[StopServingCfg]
+[DiscontinueCfg]
 BucketKeepAliveDays = 7
 
 [MetadataCfg]
