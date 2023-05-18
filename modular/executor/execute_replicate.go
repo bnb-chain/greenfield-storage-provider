@@ -195,8 +195,8 @@ func (e *ExecuteModular) handleReplicatePiece(
 			} else {
 				doReplicateSegmentPiece(pIdx, segData)
 			}
-			doneReplicate()
 		}
+		doneReplicate()
 	}
 }
 

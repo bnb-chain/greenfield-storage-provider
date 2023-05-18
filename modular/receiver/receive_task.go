@@ -55,6 +55,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(
 	if err = r.baseApp.PieceStore().PutPiece(ctx, pieceKey, data); err != nil {
 		return ErrPieceStore
 	}
+	log.CtxDebugw(ctx, "succeed to receive piece data")
 	return nil
 }
 

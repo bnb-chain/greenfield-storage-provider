@@ -278,11 +278,8 @@ func (n *Node) sendToPeer(
 			"peer", peerID.String(), "addr", addrs)
 	}
 	if err != nil {
-		if !strings.EqualFold(string(pc), PingProtocol) &&
-			!strings.EqualFold(string(pc), PongProtocol) {
-			log.CtxErrorw(ctx, "failed to init stream", "protocol", pc,
-				"peer_id", peerID, "addr", addrs, "error", err)
-		}
+		//log.CtxErrorw(ctx, "failed to init stream", "protocol", pc,
+		//	"peer_id", peerID, "addr", addrs, "error", err)
 		n.peers.DeletePeer(peerID)
 		return err
 	}

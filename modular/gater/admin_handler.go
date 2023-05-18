@@ -276,6 +276,14 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrSignature
 		return
 	}
+	currentHeight, err := g.baseApp.Consensus().CurrentHeight(reqCtx.Context())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get current block height")
+	} else if currentHeight > approval.GetExpiredHeight() {
+		log.CtxErrorw(reqCtx.Context(), "replicate piece approval expired")
+		err = ErrApprovalExpired
+		return
+	}
 
 	receiveMsg, err := hex.DecodeString(r.Header.Get(model.GnfdReceiveMsgHeader))
 	if err != nil {

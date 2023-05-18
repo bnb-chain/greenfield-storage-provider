@@ -26,7 +26,7 @@ func (g *Gnfd) CurrentHeight(
 		log.CtxErrorw(ctx, "get latest block height failed", "node_addr", g.client.Provider, "error", err)
 		return 0, err
 	}
-	return (uint64)(resp.SdkBlock.Header.Height - 1), nil
+	return (uint64)(resp.SdkBlock.Header.Height), nil
 }
 
 // HasAccount returns an indication of the existence of address.

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -62,14 +63,16 @@ func (u *UploadModular) HandleUploadObjectTask(
 		task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 	var (
-		segIdx                uint32
+		segIdx                uint32 = 0
 		pieceKey              string
 		checksums             [][]byte
 		readSize              int
-		data                  = make([]byte, segmentSize)
+		space                 = make([]byte, segmentSize)
 		storeCtx, storeCancel = context.WithCancel(ctx)
+		wg                    sync.WaitGroup
 	)
 	defer func() {
+		wg.Wait()
 		defer u.uploadQueue.PopByKey(task.Key())
 		err := u.baseApp.GfSpClient().ReportTask(ctx, task)
 		if err != nil {
@@ -85,14 +88,14 @@ func (u *UploadModular) HandleUploadObjectTask(
 			return ErrPieceStore
 		default:
 		}
-		n, err := StreamReadAt(stream, data)
-		if n != 0 {
-			data = data[0:n]
+		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
+		segIdx++
+		n, err := StreamReadAt(stream, space)
+		data := space[0:n]
+		readSize += n
+		if len(data) != 0 {
 			checksums = append(checksums, hash.GenerateChecksum(data))
 		}
-		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
-		readSize += n
-		segIdx++
 		if err == io.EOF {
 			if n != 0 {
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
@@ -133,19 +136,21 @@ func (u *UploadModular) HandleUploadObjectTask(
 			log.CtxErrorw(ctx, "stream closed abnormally", "piece_key", pieceKey, "error", err)
 			return ErrClosedStream
 		}
-		go func() {
+		wg.Add(1)
+		go func(key string, pieceData []byte) {
+			defer wg.Done()
 			select {
 			case <-storeCtx.Done():
 				return
 			default:
 			}
-			err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
+			err = u.baseApp.PieceStore().PutPiece(ctx, key, pieceData)
 			if err != nil {
 				log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
 				task.SetError(ErrPieceStore)
 				storeCancel()
 			}
-		}()
+		}(pieceKey, data)
 	}
 }
 
