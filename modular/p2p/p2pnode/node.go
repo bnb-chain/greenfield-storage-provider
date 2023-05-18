@@ -270,16 +270,28 @@ func (n *Node) sendToPeer(
 	pc protocol.ID,
 	data proto.Message) error {
 	host := n.node
+	addrs := n.node.Peerstore().Addrs(peerID)
 	s, err := host.NewStream(ctx, peerID, pc)
+	// current p2p only support approval, add log for debug
+	if strings.EqualFold(string(pc), GetApprovalRequest) ||
+		strings.EqualFold(string(pc), GetApprovalResponse) {
+		log.CtxDebugw(ctx, "send approval protocol", "protocol", pc,
+			"peer", peerID.String(), "addr", addrs)
+	}
 	if err != nil {
-		//log.CtxErrorw(ctx, "failed to init stream", "peer_id", peerID, "protocol", pc, "error", err)
+		if !strings.EqualFold(string(pc), PingProtocol) &&
+			!strings.EqualFold(string(pc), PongProtocol) {
+			log.CtxErrorw(ctx, "failed to init stream", "protocol", pc,
+				"peer_id", peerID, "addr", addrs, "error", err)
+		}
 		n.peers.DeletePeer(peerID)
 		return err
 	}
 	writer := ggio.NewFullWriter(s)
 	err = writer.WriteMsg(data)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to send msg", "peer_id", peerID, "protocol", pc, "error", err)
+		log.CtxErrorw(ctx, "failed to send msg", "protocol", pc,
+			"peer_id", peerID, "addr", addrs, "error", err)
 		s.Close()
 		n.peers.DeletePeer(peerID)
 		return err

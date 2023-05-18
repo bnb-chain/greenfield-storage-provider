@@ -1,14 +1,21 @@
 package p2p
 
 import (
+	"bytes"
 	"context"
+	"sort"
+	"time"
 
+	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/p2p/p2pnode"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
+
+const UpdateSPDuration = 2
 
 var _ module.P2P = &P2PModular{}
 
@@ -32,6 +39,7 @@ func (p *P2PModular) Start(ctx context.Context) error {
 	if err = p.node.Start(ctx); err != nil {
 		return err
 	}
+	go p.eventLoop(ctx)
 	return nil
 }
 
@@ -55,4 +63,36 @@ func (p *P2PModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat
 func (p *P2PModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
 	span.Done()
 	return
+}
+
+func (p *P2PModular) eventLoop(ctx context.Context) {
+	ticker := time.NewTicker(time.Duration(UpdateSPDuration) * time.Second)
+	var integrity []byte
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			spList, err := p.baseApp.GfSpDB().FetchAllSp()
+			if err != nil {
+				log.CtxWarnw(ctx, "failed to fetch all SPs", "error", err)
+				continue
+			}
+			var spOpAddrs []string
+			for _, sp := range spList {
+				spOpAddrs = append(spOpAddrs, sp.GetOperatorAddress())
+			}
+			sort.Strings(spOpAddrs)
+			var spOpByte [][]byte
+			for _, addr := range spOpAddrs {
+				spOpByte = append(spOpByte, []byte(addr))
+			}
+			currentIntegrity := hash.GenerateIntegrityHash(spOpByte)
+			if bytes.Equal(currentIntegrity, integrity) {
+				continue
+			}
+			integrity = currentIntegrity[:]
+			p.node.PeersProvider().UpdateSp(spOpAddrs)
+		}
+	}
 }
