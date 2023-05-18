@@ -2,6 +2,7 @@ package gfspapp
 
 import (
 	"context"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"syscall"
 
 	"google.golang.org/grpc"
@@ -28,6 +29,7 @@ type GfSpBaseApp struct {
 	client *gfspclient.GfSpClient
 
 	gfSpDB     spdb.SPDB
+	gfBsDB     bsdb.BSDB
 	pieceStore piecestore.PieceStore
 	pieceOp    piecestore.PieceOp
 	rcmgr      corercmgr.ResourceManager
@@ -102,6 +104,11 @@ func (g *GfSpBaseApp) OperateAddress() string {
 // GfSpDB returns the sp db client.
 func (g *GfSpBaseApp) GfSpDB() spdb.SPDB {
 	return g.gfSpDB
+}
+
+// GfBsDB returns the block syncer db client.
+func (g *GfSpBaseApp) GfBsDB() bsdb.BSDB {
+	return g.gfBsDB
 }
 
 // ServerForRegister returns the Grpc server for module register own service.

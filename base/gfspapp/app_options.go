@@ -1,6 +1,8 @@
 package gfspapp
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"math"
 	"os"
 	"strings"
@@ -54,6 +56,16 @@ const (
 	SpDBAddress = "SP_DB_ADDRESS"
 	// SpDBDataBase defines env variable name for sp db database
 	SpDBDataBase = "SP_DB_DATABASE"
+
+	// BsDBUser defines env variable name for block syncer db user name
+	BsDBUser = "BS_DB_USER"
+	// BsDBPasswd defines env variable name for block syncer db user passwd
+	BsDBPasswd = "BS_DB_PASSWORD"
+	// BsDBAddress defines env variable name for block syncer db address
+	BsDBAddress = "BS_DB_ADDRESS"
+	// BsDBDataBase defines env variable name for block syncer db database
+	BsDBDataBase = "BS_DB_DATABASE"
+
 	// DefaultConnMaxLifetime defines the default max liveness time of connection
 	DefaultConnMaxLifetime = 60
 	// DefaultConnMaxIdleTime defines the default max idle time of connection
@@ -158,6 +170,10 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		app.gfSpDB = cfg.Customize.GfSpDB
 		return nil
 	}
+	if cfg.Customize.GfBsDB != nil {
+		app.gfBsDB = cfg.Customize.GfBsDB
+		return nil
+	}
 	if val, ok := os.LookupEnv(SpDBUser); ok {
 		cfg.SpDB.User = val
 	}
@@ -200,6 +216,59 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		return err
 	}
 	app.gfSpDB = db
+	return nil
+}
+
+func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Customize.GfBsDB != nil {
+		app.gfBsDB = cfg.Customize.GfBsDB
+		return nil
+	}
+	if val, ok := os.LookupEnv(BsDBUser); ok {
+		cfg.BsDB.User = val
+	}
+	if val, ok := os.LookupEnv(BsDBPasswd); ok {
+		cfg.BsDB.Passwd = val
+	}
+	if val, ok := os.LookupEnv(BsDBAddress); ok {
+		cfg.BsDB.Address = val
+	}
+	if val, ok := os.LookupEnv(BsDBDataBase); ok {
+		cfg.BsDB.Database = val
+	}
+	if cfg.BsDB.ConnMaxLifetime == 0 {
+		cfg.BsDB.ConnMaxLifetime = DefaultConnMaxLifetime
+	}
+	if cfg.BsDB.ConnMaxIdleTime == 0 {
+		cfg.BsDB.ConnMaxIdleTime = DefaultConnMaxIdleTime
+	}
+	if cfg.BsDB.MaxIdleConns == 0 {
+		cfg.BsDB.MaxIdleConns = DefaultMaxIdleConns
+	}
+	if cfg.BsDB.MaxOpenConns == 0 {
+		cfg.BsDB.MaxOpenConns = DefaultMaxOpenConns
+	}
+	if cfg.BsDB.User == "" {
+		cfg.BsDB.User = "root"
+	}
+	if cfg.BsDB.Passwd == "" {
+		cfg.BsDB.User = "test"
+	}
+	if cfg.BsDB.Address == "" {
+		cfg.BsDB.User = "127.0.0.1:3306"
+	}
+	if cfg.BsDB.Database == "" {
+		cfg.BsDB.Database = "block_syncer_db"
+	}
+	dbCfg := &cfg.BsDB
+	metadataConfig := &metadata.MetadataConfig{
+		BsDBConfig: dbCfg,
+	}
+	db, err := bsdb.NewBsDB(metadataConfig, false)
+	if err != nil {
+		return err
+	}
+	app.gfBsDB = db
 	return nil
 }
 
@@ -363,6 +432,7 @@ var gfspBaseAppDefaultOptions = []Option{
 	DefaultStaticOption,
 	DefaultGfSpClientOption,
 	DefaultGfSpDBOption,
+	DefaultGfBsDBOption,
 	DefaultGfSpPieceStoreOption,
 	DefaultGfSpPieceOpOption,
 	DefaultGfSpResourceManagerOption,

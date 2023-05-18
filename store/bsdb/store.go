@@ -22,7 +22,7 @@ type BsDBImpl struct {
 
 // NewBsDB return a block syncer db instance or a block syncer db backup instance based on the isBackup flag
 func NewBsDB(config *metadata.MetadataConfig, isBackup bool) (*BsDBImpl, error) {
-	LoadDBConfigFromEnv(config)
+	//LoadDBConfigFromEnv(config)
 	dbConfig := config.BsDBConfig
 	if isBackup {
 		dbConfig = config.BsDBSwitchedConfig
