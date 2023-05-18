@@ -61,7 +61,7 @@ func (t *GfSpTQueueWithLimit) TopByLimit(limit corercmgr.Limit) coretask.Task {
 	}
 	for i := len(t.tasks) - 1; i >= 0; i-- {
 		task := t.tasks[i]
-		if task.EstimateLimit().NotLess(limit) {
+		if limit.NotLess(task.EstimateLimit()) {
 			if t.filterFunc == nil {
 				return task
 			}
@@ -88,7 +88,7 @@ func (t *GfSpTQueueWithLimit) PopByLimit(limit corercmgr.Limit) coretask.Task {
 	}
 	for i := len(t.tasks) - 1; i >= 0; i-- {
 		task = t.tasks[i]
-		if task.EstimateLimit().NotLess(limit) {
+		if limit.NotLess(task.EstimateLimit()) {
 			if t.filterFunc == nil {
 				return task
 			}
