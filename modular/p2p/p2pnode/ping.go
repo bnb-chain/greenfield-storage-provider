@@ -46,7 +46,7 @@ func (n *Node) onPing(s network.Stream) {
 		return
 	}
 
-	log.Debugf("%s received ping request from %s. Message: %s", s.Conn().LocalPeer(), s.Conn().RemotePeer(), ping.String())
+	//log.Debugf("%s received ping request from %s. Message: %s", s.Conn().LocalPeer(), s.Conn().RemotePeer(), ping.String())
 
 	err = VerifySignature(ping.GetSpOperatorAddress(), ping.GetSignBytes(), ping.GetSignature())
 	if err != nil {
@@ -67,7 +67,7 @@ func (n *Node) onPing(s network.Stream) {
 			nodeInfo.MultiAddr = append(nodeInfo.MultiAddr, addr.String())
 		}
 		pong.Nodes = append(pong.Nodes, nodeInfo)
-		log.Debugw("send node to remote", "node_id", pID.String(), "remote_node", s.Conn().RemotePeer())
+		//log.Debugw("send node to remote", "node_id", pID.String(), "remote_node", s.Conn().RemotePeer())
 	}
 	pong.SpOperatorAddress = n.baseApp.OperateAddress()
 	signature, err := n.baseApp.GfSpClient().SignP2PPongMsg(context.Background(), pong)
@@ -129,6 +129,6 @@ func (n *Node) onPong(s network.Stream) {
 			addrs = append(addrs, addr)
 		}
 		n.node.Peerstore().AddAddrs(pID, addrs, peerstore.PermanentAddrTTL)
-		log.Debugw("receive node from remote and permanent", "remote_node", s.Conn().RemotePeer(), "node_id", pID)
+		//log.Debugw("receive node from remote and permanent", "remote_node", s.Conn().RemotePeer(), "node_id", pID)
 	}
 }

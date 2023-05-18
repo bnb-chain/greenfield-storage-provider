@@ -209,7 +209,8 @@ func (n *Node) GetSecondaryReplicatePieceApproval(
 				accept = append(accept, approval)
 			}
 			if len(accept) >= expectedAccept {
-				log.CtxErrorw(ctx, "succeed to get sufficient approvals", "expect", expectedAccept)
+				log.CtxErrorw(ctx, "succeed to get sufficient approvals",
+					"expect", expectedAccept, "accepted", len(accept))
 				return
 			}
 		case <-approvalCtx.Done():
@@ -238,7 +239,7 @@ func (n *Node) eventLoop() {
 				continue
 			}
 			ping.Signature = sinagture
-			log.CtxDebugw(ctx, "trigger broadcast ping")
+			//log.CtxDebugw(ctx, "trigger broadcast ping")
 			n.broadcast(ctx, PingProtocol, ping)
 		}
 	}
@@ -253,10 +254,10 @@ func (n *Node) broadcast(
 		if strings.Compare(n.node.ID().String(), peerID.String()) == 0 {
 			continue
 		}
-		addrs := n.node.Peerstore().Addrs(peerID)
-		for _, addr := range addrs {
-			log.CtxErrorw(ctx, "broadcast", "protocol", pc, "peer_addr", addr.String())
-		}
+		//addrs := n.node.Peerstore().Addrs(peerID)
+		//for _, addr := range addrs {
+		//	log.CtxErrorw(ctx, "broadcast", "protocol", pc, "peer_addr", addr.String())
+		//}
 		n.sendToPeer(ctx, peerID, pc, data)
 	}
 }
