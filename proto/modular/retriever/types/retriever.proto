@@ -3,12 +3,250 @@ package modular.retriever.types;
 
 import "gogoproto/gogo.proto";
 import "greenfield/storage/types.proto";
+import "greenfield/storage/query.proto";
+import "greenfield/payment/stream_record.proto";
 import "service/types/storage_provider.proto";
 import "base/types/gfsperrors/error.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types";
 
-// GetBucketReadQuotaRequest is request type for the GetBucketReadQuota RPC method.
+// Bucket is the structure for user bucket
+message Bucket {
+  // bucket_info defines the information of the bucket.
+  greenfield.storage.BucketInfo bucket_info = 1;
+  // removed defines the bucket is deleted or not
+  bool removed = 2;
+  // delete_at defines the block number when the bucket deleted.
+  int64 delete_at = 3;
+  // delete_reason defines the deleted reason of bucket
+  string delete_reason = 4;
+  // operator defines the operator address of bucket
+  string operator = 5;
+  // create_tx_hash defines the creation transaction hash of object
+  string create_tx_hash = 6;
+  // update_tx_hash defines the update transaction hash of object
+  string update_tx_hash = 7;
+  // update_at defines the block number when the object updated
+  int64 update_at = 8;
+  // update_time defines the block number when the object updated
+  int64 update_time = 9;
+}
+
+// Object is the structure for user object
+message Object {
+  // object_info defines the information of the object.
+  greenfield.storage.ObjectInfo object_info = 1;
+  // locked_balance defines locked balance of object
+  string locked_balance = 2;
+  // removed defines the object is deleted or not
+  bool removed = 3;
+  // update_at defines the block number when the object updated
+  int64 update_at = 4;
+  // delete_at defines the block number when the object deleted
+  int64 delete_at = 5;
+  // delete_reason defines the deleted reason of object
+  string delete_reason = 6;
+  // operator defines the operator address of object
+  string operator = 7;
+  // create_tx_hash defines the creation transaction hash of object
+  string create_tx_hash = 8;
+  // update_tx_hash defines the update transaction hash of object
+  string update_tx_hash = 9;
+  // seal_tx_hash defines the sealed transaction hash of object
+  string seal_tx_hash = 10;
+}
+
+// GfSpGetUserBucketsRequest is request type for the GfSpGetUserBuckets RPC method.
+message GfSpGetUserBucketsRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+}
+
+// GfSpGetUserBucketsResponse is response type for the GfSpGetUserBuckets RPC method.
+message GfSpGetUserBucketsResponse {
+  // buckets defines the list of bucket
+  repeated Bucket buckets = 1;
+}
+
+// GfSpListObjectsByBucketNameRequest is request type for the GfSpListObjectsByBucketName RPC method
+message GfSpListObjectsByBucketNameRequest {
+  // bucket_name is the name of the bucket
+  string bucket_name = 1;
+  // account_id is the account address of user
+  string account_id = 2;
+  // max_keys sets the maximum number of keys returned in the response
+  uint64 max_keys = 3;
+  // start_after is where you want to start listing from
+  string start_after = 4;
+  // continuation_token indicates that the list is being continued on this bucket with a token
+  string continuation_token = 5;
+  // delimiter is a character you use to group keys
+  string delimiter = 6;
+  // prefix limits the response to keys that begin with the specified prefix
+  string prefix = 7;
+}
+
+// GfSpListObjectsByBucketNameResponse is response type for the GfSpListObjectsByBucketName RPC method.
+message GfSpListObjectsByBucketNameResponse {
+  // objects defines the list of object
+  repeated Object objects = 1;
+  // key_count is the number of keys returned with this request
+  uint64 key_count = 2;
+  // max_keys sets the maximum number of keys returned in the response
+  uint64 max_keys = 3;
+  // is_truncated set to false if all of the results were returned. set to true if more keys are available to return
+  bool is_truncated = 4;
+  // next_continuation_token is sent when is_truncated is true, which means there are more keys in the bucket that can be listed
+  string next_continuation_token = 5;
+  // name of the bucket
+  string name = 6;
+  // prefix is the prefix used during the query.
+  string prefix = 7;
+  // delimiter is the delimiter used during the query
+  string delimiter = 8;
+  // common_prefixes a list of strings representing common prefixes. common_prefixes are those parts of object key names that fall between the specified delimiters
+  repeated string common_prefixes = 9;
+  // continuationToken is the continuation token used during the query
+  string continuation_token = 10;
+}
+
+// GfSpGetBucketByBucketNameRequest is request type for the GfSpGetBucketByBucketName RPC method
+message GfSpGetBucketByBucketNameRequest {
+  // bucket_name is the name of the bucket
+  string bucket_name = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
+// GfSpGetBucketByBucketNameResponse is response type for the GfSpGetBucketByBucketName RPC method.
+message GfSpGetBucketByBucketNameResponse {
+  // bucket defines the information of a bucket
+  Bucket bucket = 1;
+}
+
+// GfSpGetBucketByBucketIDRequest is request type for the GfSpGetBucketByBucketID RPC method
+message GfSpGetBucketByBucketIDRequest {
+  // bucket_id is the unique identifier of bucket
+  int64 bucket_id = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
+// GfSpGetBucketByBucketIDResponse is response type for the GfSpGetBucketByBucketID RPC method.
+message GfSpGetBucketByBucketIDResponse {
+  // bucket defines the information of a bucket
+  Bucket bucket = 1;
+}
+
+// GfSpListDeletedObjectsByBlockNumberRangeRequest is request type for the GfSpListDeletedObjectsByBlockNumberRange RPC method
+message GfSpListDeletedObjectsByBlockNumberRangeRequest {
+  // start_block_number defines the start of range
+  // [start_block_number, end_block_number], start_block_number > end_block_number is invalid
+  int64 start_block_number = 1;
+  // end_block_number defines the end of range
+  // end_block_number < 0 or start_block_number > end_block_number is invalid
+  int64 end_block_number = 2;
+  // is_full_list indicates whether this request can get the private objects information
+  bool is_full_list = 3;
+}
+
+// GfSpListDeletedObjectsByBlockNumberRangeResponse is response type for the GfSpListDeletedObjectsByBlockNumberRange RPC method.
+message GfSpListDeletedObjectsByBlockNumberRangeResponse {
+  // objects defines the list of object
+  repeated Object objects = 1;
+  // latest_block_number defines the response objects latest block number
+  int64 end_block_number = 2;
+}
+
+// GfSpGetUserBucketsCountRequest is request type for the GfSpGetUserBucketsCount RPC method.
+message GfSpGetUserBucketsCountRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+}
+
+// GfSpGetUserBucketsCountResponse is response type for the GfSpGetUserBucketsCount RPC method.
+message GfSpGetUserBucketsCountResponse {
+  // count defines total count of user buckets
+  int64 count = 1;
+}
+
+// GfSpListExpiredBucketsBySpRequest is the request type for the GfSpListExpiredBucketsBySp RPC method.
+message GfSpListExpiredBucketsBySpRequest {
+  // create_at defines the create timestamp of bucket
+  int64 create_at = 1;
+  // primary_sp_address defines the primary sp address of bucket
+  string primary_sp_address = 2;
+  // limit defines the return number limit of bucket
+  int64 limit = 3;
+}
+
+// GfSpListExpiredBucketsBySpResponse is the response type for the GfSpListExpiredBucketsBySp RPC method.
+message GfSpListExpiredBucketsBySpResponse {
+  // buckets defines the list of expired bucket
+  repeated Bucket buckets = 1;
+}
+
+// GfSpGetObjectMetaRequest is request type for the GfSpGetObjectMeta RPC method
+message GfSpGetObjectMetaRequest {
+  // object_name is the name of the object
+  string object_name = 1;
+  // bucket_name is the name of the bucket
+  string bucket_name = 2;
+  // is_full_list indicates whether this request can get the private objects information
+  bool is_full_list = 3;
+}
+
+// GfSpGetObjectMetaResponse is response type for the GfSpGetObjectMeta RPC method.
+message GfSpGetObjectMetaResponse {
+  // object defines the information of an object
+  Object object = 1;
+}
+
+// GfSpGetPaymentByBucketNameRequest is request type for the GfSpGetPaymentByBucketName RPC method
+message GfSpGetPaymentByBucketNameRequest {
+  // bucket_name is the name of the bucket
+  string bucket_name = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
+// GfSpGetPaymentByBucketNameResponse is response type for the GfSpGetPaymentByBucketName RPC method.
+message GfSpGetPaymentByBucketNameResponse {
+  // stream_record defines stream payment record of a stream account
+  greenfield.payment.StreamRecord stream_record = 1;
+}
+
+// GfSpGetPaymentByBucketIDRequest is request type for the GfSpGetPaymentByBucketID RPC method
+message GfSpGetPaymentByBucketIDRequest {
+  // bucket_id is the unique identifier of bucket
+  int64 bucket_id = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
+// GfSpGetPaymentByBucketIDResponse is response type for the GfSpGetPaymentByBucketID RPC method.
+message GfSpGetPaymentByBucketIDResponse {
+  // stream_record defines stream payment record of a stream account
+  greenfield.payment.StreamRecord stream_record = 1;
+}
+
+// GfSpGetBucketMetaRequest is request type for the GfSpGetBucketMeta RPC method
+message GfSpGetBucketMetaRequest {
+  // bucket_name is the name of the bucket
+  string bucket_name = 1;
+  // is_full_list indicates whether this request can get the private buckets information
+  bool is_full_list = 2;
+}
+
+// GfSpGetBucketMetaResponse is response type for the GfSpGetBucketMeta RPC method
+message GfSpGetBucketMetaResponse {
+  // bucket defines the information of a bucket
+  Bucket bucket = 1;
+  // stream_record defines stream payment record of a stream account
+  greenfield.payment.StreamRecord stream_record = 2;
+}
+
+// GfSpGetBucketReadQuotaRequest is request type for the GfSpGetBucketReadQuota RPC method.
 message GfSpGetBucketReadQuotaRequest {
   // bucket info from the greenfield chain
   greenfield.storage.BucketInfo bucket_info = 1;
@@ -16,7 +254,7 @@ message GfSpGetBucketReadQuotaRequest {
   string year_month = 2;
 }
 
-// GetBucketReadQuotaResponse is response type for the GetBucketReadQuota RPC method.
+// GfSpGetBucketReadQuotaResponse is response type for the GfSpGetBucketReadQuota RPC method.
 message GfSpGetBucketReadQuotaResponse {
   base.types.gfsperrors.GfSpError err = 1;
   // charged_quota_size is the greenfield chain bucket info's read quota size
@@ -76,6 +314,18 @@ message GfSpQueryUploadProgressResponse {
 }
 
 service GfSpRetrieverService {
+  rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {};
+  rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {};
+  rpc GfSpGetBucketByBucketName(GfSpGetBucketByBucketNameRequest) returns (GfSpGetBucketByBucketNameResponse) {};
+  rpc GfSpGetBucketByBucketID(GfSpGetBucketByBucketIDRequest) returns (GfSpGetBucketByBucketIDResponse) {};
+  rpc GfSpListDeletedObjectsByBlockNumberRange(GfSpListDeletedObjectsByBlockNumberRangeRequest) returns (GfSpListDeletedObjectsByBlockNumberRangeResponse) {};
+  rpc GfSpGetUserBucketsCount(GfSpGetUserBucketsCountRequest) returns (GfSpGetUserBucketsCountResponse) {};
+  rpc GfSpListExpiredBucketsBySp(GfSpListExpiredBucketsBySpRequest) returns (GfSpListExpiredBucketsBySpResponse) {};
+  rpc GfSpGetObjectMeta(GfSpGetObjectMetaRequest) returns (GfSpGetObjectMetaResponse) {};
+  rpc GfSpGetPaymentByBucketName(GfSpGetPaymentByBucketNameRequest) returns (GfSpGetPaymentByBucketNameResponse) {};
+  rpc GfSpGetPaymentByBucketID(GfSpGetPaymentByBucketIDRequest) returns (GfSpGetPaymentByBucketIDResponse) {};
+  rpc GfSpVerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {};
+  rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {};
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {};
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {};
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {};
