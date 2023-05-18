@@ -243,7 +243,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(
 		return ErrCanceledTask
 	}
 	handleTask = oldTask.(task.ReplicatePieceTask)
-	if !handleTask.Expired() {
+	if !handleTask.ExceedRetry() {
 		handleTask.SetUpdateTime(time.Now().Unix())
 		m.replicateQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "info", handleTask.Info())
@@ -290,7 +290,7 @@ func (m *ManageModular) handleFailedSealObjectTask(
 		return ErrCanceledTask
 	}
 	handleTask = oldTask.(task.SealObjectTask)
-	if !handleTask.Expired() {
+	if !handleTask.ExceedRetry() {
 		handleTask.SetUpdateTime(time.Now().Unix())
 		m.sealQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry")
@@ -337,7 +337,7 @@ func (m *ManageModular) handleFailedReceivePieceTask(
 		return ErrCanceledTask
 	}
 	handleTask = oldTask.(task.ReceivePieceTask)
-	if !handleTask.Expired() {
+	if !handleTask.ExceedRetry() {
 		handleTask.SetUpdateTime(time.Now().Unix())
 		m.receiveQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry")
