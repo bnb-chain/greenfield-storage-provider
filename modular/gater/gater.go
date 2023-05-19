@@ -23,6 +23,7 @@ type GateModular struct {
 	httpServer  *http.Server
 
 	maxListReadQuota int64
+	maxPayloadSize   uint64
 }
 
 func (g *GateModular) Name() string {

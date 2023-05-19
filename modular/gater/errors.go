@@ -25,8 +25,9 @@ var (
 	ErrInvalidRange           = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50012, "invalid range params")
 	ErrExceptionStream        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50013, "stream exception")
 	ErrMisMatchSp             = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50014, "mismatch sp")
-	ErrApprovalExpired        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 550015, "approval expired")
 	ErrSignature              = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50015, "signature verification failed")
+	ErrInvalidPayloadSize     = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50016, "invalid payload")
+	ErrApprovalExpired        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 550015, "approval expired")
 	ErrConsensus              = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")
 )
 

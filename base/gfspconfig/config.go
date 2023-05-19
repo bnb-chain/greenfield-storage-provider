@@ -2,7 +2,7 @@ package gfspconfig
 
 import (
 	"github.com/pelletier/go-toml/v2"
-	
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
@@ -107,6 +107,7 @@ type BucketConfig struct {
 	AccountBucketNumber    int64
 	FreeQuotaPerBucket     uint64
 	MaxListReadQuotaNumber int64
+	MaxPayloadSize         uint64
 }
 
 type GatewayConfig struct {

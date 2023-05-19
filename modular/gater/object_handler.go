@@ -56,6 +56,11 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
+	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > g.maxPayloadSize {
+		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
+		err = ErrInvalidPayloadSize
+		return
+	}
 	params, err := g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
