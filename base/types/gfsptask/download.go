@@ -16,6 +16,7 @@ var _ coretask.ChallengePieceTask = &GfSpChallengePieceTask{}
 
 func (m *GfSpDownloadObjectTask) InitDownloadObjectTask(
 	object *storagetypes.ObjectInfo,
+	bucket *storagetypes.BucketInfo,
 	params *storagetypes.Params,
 	priority coretask.TPriority,
 	userAddress string,
@@ -28,6 +29,7 @@ func (m *GfSpDownloadObjectTask) InitDownloadObjectTask(
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)
+	m.SetBucketInfo(bucket)
 	m.SetStorageParams(params)
 	m.SetUserAddress(userAddress)
 	m.Low = low
@@ -159,6 +161,10 @@ func (m *GfSpDownloadObjectTask) SetUserAddress(address string) {
 
 func (m *GfSpDownloadObjectTask) SetStorageParams(params *storagetypes.Params) {
 	m.StorageParams = params
+}
+
+func (m *GfSpDownloadObjectTask) SetBucketInfo(bucket *storagetypes.BucketInfo) {
+	m.BucketInfo = bucket
 }
 
 func (m *GfSpChallengePieceTask) InitChallengePieceTask(

@@ -106,7 +106,7 @@ func (*NullTask) SetPieceChecksum([]byte)  { return }
 func (*NullTask) GetPieceChecksum() []byte { return nil }
 func (*NullTask) GetSignature() []byte     { return nil }
 func (*NullTask) SetSignature([]byte)      { return }
-func (*NullTask) InitDownloadObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, string, int64, int64, int64, int64) {
+func (*NullTask) InitDownloadObjectTask(*storagetypes.ObjectInfo, *storagetypes.BucketInfo, *storagetypes.Params, TPriority, string, int64, int64, int64, int64) {
 	return
 }
 func (*NullTask) GetBucketInfo() *storagetypes.BucketInfo { return nil }

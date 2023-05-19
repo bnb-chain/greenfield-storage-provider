@@ -147,6 +147,12 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
+	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
+		err = ErrConsensus
+		return
+	}
 	params, err := g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
@@ -173,7 +179,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	task := &gfsptask.GfSpDownloadObjectTask{}
-	task.InitDownloadObjectTask(objectInfo, params, g.baseApp.TaskPriority(task), reqCtx.Account(),
+	task.InitDownloadObjectTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task), reqCtx.Account(),
 		low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
 	data, err := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
 	if err != nil {

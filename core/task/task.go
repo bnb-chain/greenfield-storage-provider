@@ -376,7 +376,9 @@ type SealObjectTask interface {
 type DownloadObjectTask interface {
 	ObjectTask
 	// InitDownloadObjectTask inits DownloadObjectTask.
-	InitDownloadObjectTask(object *storagetypes.ObjectInfo,
+	InitDownloadObjectTask(
+		object *storagetypes.ObjectInfo,
+		bucket *storagetypes.BucketInfo,
 		params *storagetypes.Params,
 		priority TPriority,
 		userAddress string,
@@ -387,6 +389,8 @@ type DownloadObjectTask interface {
 	// GetBucketInfo returns the BucketInfo of the download object.
 	// It is used to Query and calculate bucket read quota.
 	GetBucketInfo() *storagetypes.BucketInfo
+	// SetBucketInfo sets the BucketInfo of the download object.
+	SetBucketInfo(*storagetypes.BucketInfo)
 	// GetUserAddress returns the user account of downloading object.
 	// It is used to record the read bucket information.
 	GetUserAddress() string
