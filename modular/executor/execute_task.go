@@ -42,6 +42,7 @@ func (e *ExecuteModular) HandleSealObjectTask(
 		SecondarySpSignatures: task.GetSecondarySignature(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
+	log.CtxDebugw(ctx, "finish to handle seal object task", "error", task.Error())
 }
 
 func (e *ExecuteModular) sealObject(
@@ -57,6 +58,9 @@ func (e *ExecuteModular) sealObject(
 			time.Sleep(time.Duration(task.GetTimeout()))
 		}
 	}
+	//if err != nil {
+	//	return err
+	//}
 	err = e.listenSealObject(ctx, task.GetObjectInfo())
 	if err != nil {
 		metrics.SealObjectSucceedCounter.WithLabelValues(e.Name()).Inc()
@@ -111,7 +115,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(
 		task.SetSealed(true)
 	}
 	task.SetError(err)
-	log.CtxDebugw(ctx, "execute task report task", "error", task.Error())
+	log.CtxDebugw(ctx, "finish to handle confirm receive piece task", "error", task.Error())
 }
 
 func (e *ExecuteModular) listenSealObject(
@@ -119,12 +123,13 @@ func (e *ExecuteModular) listenSealObject(
 	object *storagetypes.ObjectInfo) error {
 	var err error
 	for retry := 0; retry < e.maxListenSealRetry; retry++ {
-		sealed, err := e.baseApp.Consensus().ListenObjectSeal(ctx,
+		sealed, innerErr := e.baseApp.Consensus().ListenObjectSeal(ctx,
 			object.Id.Uint64(), e.listenSealTimeoutHeight)
-		if err != nil {
+		if innerErr != nil {
 			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
 				"max_retry", e.maxListenSealRetry, "error", err)
 			time.Sleep(time.Duration(e.listenSealRetryTimeout))
+			err = innerErr
 			continue
 		}
 		if !sealed {
@@ -177,6 +182,7 @@ func (e *ExecuteModular) HandleGCObjectTask(
 		return
 	}
 	for {
+		log.CtxDebugw(ctx, "report gc object process", "info", task.Info())
 		if cancel() {
 			return
 		}
