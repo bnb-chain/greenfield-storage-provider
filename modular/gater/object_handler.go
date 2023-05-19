@@ -127,10 +127,11 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 	if reqCtx.NeedVerifyAuthorizer() {
-		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+		verified, innerErr := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		if err != nil {
+		if innerErr != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			err = innerErr
 			return
 		}
 		if !verified {

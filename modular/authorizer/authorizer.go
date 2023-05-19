@@ -160,7 +160,7 @@ func (a *AuthorizeModular) VerifyAuthorize(ctx context.Context,
 			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
 			return false, ErrNotSealedState
 		}
-		streamRecord, err := a.baseApp.Consensus().QueryPaymentStreamRecord(ctx, bucketInfo.GetPrimarySpAddress())
+		streamRecord, err := a.baseApp.Consensus().QueryPaymentStreamRecord(ctx, bucketInfo.GetPaymentAddress())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to query payment stream record from consensus", "error", err)
 			return false, ErrConsensus
