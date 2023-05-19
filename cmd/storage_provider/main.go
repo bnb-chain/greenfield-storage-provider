@@ -17,6 +17,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/approver"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/authorizer"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/executor"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/gater"
@@ -157,6 +158,7 @@ func registerModular() {
 	gfspapp.RegisterModular(retriever.RetrieveModularName, retriever.RetrieveModularDescription, retriever.NewRetrieveModular)
 	gfspapp.RegisterModular(module.SignerModularName, module.SignerModularDescription, singer.NewSingModular)
 	gfspapp.RegisterModular(module.UploadModularName, module.UploadModularDescription, uploader.NewUploadModular)
+	gfspapp.RegisterModular(module.BlockSyncerModularName, module.BlockSyncerModularDescription, blocksyncer.NewBlockSyncerModular)
 }
 
 // initLog inits the log configuration from config file and command flags.

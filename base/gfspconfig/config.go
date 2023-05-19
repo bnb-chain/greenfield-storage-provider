@@ -51,6 +51,7 @@ type GfSpConfig struct {
 	Monitor     MonitorConfig
 	Rcmgr       RcmgrConfig
 	Log         LogConfig
+	BlockSyncer BlockSyncerConfig
 }
 
 // Apply sets the customized implement to the GfSp configuration, it will be called
@@ -197,4 +198,13 @@ type RcmgrConfig struct {
 type LogConfig struct {
 	Level string
 	Path  string
+}
+
+type BlockSyncerConfig struct {
+	Modules        []string
+	Dsn            string
+	DsnSwitched    string
+	RecreateTables bool
+	Workers        uint
+	EnableDualDB   bool
 }
