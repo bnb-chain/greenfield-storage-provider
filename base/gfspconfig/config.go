@@ -2,7 +2,7 @@ package gfspconfig
 
 import (
 	"github.com/pelletier/go-toml/v2"
-	
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
@@ -47,6 +47,7 @@ type GfSpConfig struct {
 	Monitor     MonitorConfig
 	Rcmgr       RcmgrConfig
 	Customize   *Customize
+	BlockSyncer BlockSyncerConfig
 }
 
 func (cfg *GfSpConfig) Apply(opts ...Option) error {
@@ -184,4 +185,13 @@ type MonitorConfig struct {
 type RcmgrConfig struct {
 	DisableRcmgr bool
 	GfSpLimiter  *gfsplimit.GfSpLimiter
+}
+
+type BlockSyncerConfig struct {
+	Modules        []string
+	Dsn            string
+	DsnSwitched    string
+	RecreateTables bool
+	Workers        uint
+	EnableDualDB   bool
 }
