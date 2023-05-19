@@ -1,6 +1,10 @@
 package bsdb
 
-import "gorm.io/gorm"
+import (
+	"fmt"
+
+	"gorm.io/gorm"
+)
 
 // ListObjectsByBucketName lists objects information by a bucket name.
 // The function takes the following parameters:
@@ -29,28 +33,27 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 	// 2. Find common prefixes based on the delimiter
 	// 3. Limit results
 	if delimiter != "" {
-		err = b.db.Raw(
-			`SELECT path_name, result_type, o.*
+		query := fmt.Sprintf(`SELECT path_name, result_type, o.*
 				FROM (
 					SELECT DISTINCT object_name as path_name, 'object' as result_type, id
 					FROM objects
-					WHERE bucket_name = ? AND object_name LIKE ? AND object_name >= IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) = 0
+					WHERE bucket_name = '%s' AND object_name LIKE '%s' AND object_name >= '%s' AND LOCATE('%s', SUBSTRING(object_name, LENGTH('%s') + 1)) = 0
 					UNION
-					SELECT CONCAT(SUBSTRING(object_name, 1, LENGTH(?) + LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) - 1), ?) as path_name, 'common_prefix' as result_type, MIN(id)
+					SELECT CONCAT(SUBSTRING(object_name, 1, LENGTH('%s') + LOCATE('%s', SUBSTRING(object_name, LENGTH('%s') + 1)) - 1), '%s') as path_name, 'common_prefix' as result_type, MIN(id)
 					FROM objects
-					WHERE bucket_name = ? AND object_name LIKE ? AND object_name >= IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) > 0
+					WHERE bucket_name = '%s' AND object_name LIKE '%s' AND object_name >= '%s' AND LOCATE('%s', SUBSTRING(object_name, LENGTH('%s') + 1)) > 0
 					GROUP BY path_name
 				) AS subquery
 				JOIN objects o ON subquery.id = o.id
 				ORDER BY path_name
-				LIMIT ?;`,
-			bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix,
+				LIMIT %d;`,
+			bucketName, prefix+"%", continuationToken, delimiter, prefix,
 			prefix, delimiter, prefix, delimiter,
-			bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix,
-			limit).Scan(&results).Error
+			bucketName, prefix+"%", continuationToken, delimiter, prefix,
+			limit)
+		err = b.db.Raw(query).Scan(&results).Error
 	} else {
 		// If delimiter is not specified, retrieve objects directly
-
 		if continuationToken != "" {
 			filters = append(filters, ContinuationTokenFilter(continuationToken))
 		}
