@@ -13,10 +13,14 @@ import (
 
 func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err     error
-		reqCtx  = NewRequestContext(r)
-		account string
+		err    error
+		reqCtx *RequestContext
 	)
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		return
+	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -28,16 +32,9 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-	if reqCtx.NeedVerifySignature() {
-		accAddress, err := reqCtx.VerifySignature()
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
-			return
-		}
-		account = accAddress.String()
-
+	if reqCtx.NeedVerifyAuthorizer() {
 		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-			coremodule.AuthOpTypeGetBucketQuota, account, reqCtx.bucketName, "")
+			coremodule.AuthOpTypeGetBucketQuota, reqCtx.Account(), reqCtx.bucketName, "")
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
@@ -94,10 +91,14 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 
 func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err     error
-		reqCtx  = NewRequestContext(r)
-		account string
+		err    error
+		reqCtx *RequestContext
 	)
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		return
+	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -109,16 +110,9 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-	if reqCtx.NeedVerifySignature() {
-		accAddress, err := reqCtx.VerifySignature()
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
-			return
-		}
-		account = accAddress.String()
-
+	if reqCtx.NeedVerifyAuthorizer() {
 		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-			coremodule.AuthOpTypeListBucketReadRecord, account, reqCtx.bucketName, "")
+			coremodule.AuthOpTypeListBucketReadRecord, reqCtx.Account(), reqCtx.bucketName, "")
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return

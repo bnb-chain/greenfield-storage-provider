@@ -44,6 +44,7 @@ func (p *P2PModular) Start(ctx context.Context) error {
 }
 
 func (p *P2PModular) Stop(ctx context.Context) error {
+	p.node.Stop(ctx)
 	p.scope.Release()
 	return nil
 }

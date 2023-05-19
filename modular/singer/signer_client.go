@@ -152,8 +152,6 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		secondarySPAccs = append(secondarySPAccs, opAddr)
 	}
 
-	client.mu.Lock()
-	defer client.mu.Unlock()
 	nonce := client.sealAccNonce + 1
 
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),

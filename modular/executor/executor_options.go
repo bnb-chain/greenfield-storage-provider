@@ -12,7 +12,7 @@ const (
 	DefaultExecutorAskReplicateApprovalTimeout  int64   = 10
 	DefaultExecutorAskReplicateApprovalExFactor float64 = 1.0
 	DefaultExecutorListenSealTimeoutHeight      int     = 10
-	DefaultExecutorListenSealRetryTimeout       int     = 3 * 2
+	DefaultExecutorListenSealRetryTimeout       int     = 2
 	DefaultExecutorMaxListenSealRetry           int     = 3
 	DefaultStatisticsOutputInterval             int     = 60
 )

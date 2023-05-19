@@ -33,14 +33,14 @@ type RequestContext struct {
 	startTime time.Time
 }
 
-func NewRequestContext(r *http.Request) *RequestContext {
+func NewRequestContext(r *http.Request, g *GateModular) (*RequestContext, error) {
 	vars := mux.Vars(r)
 	routerName := ""
 	if mux.CurrentRoute(r) != nil {
 		routerName = mux.CurrentRoute(r).GetName()
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	return &RequestContext{
+	reqCtx := &RequestContext{
 		ctx:        ctx,
 		cancel:     cancel,
 		request:    r,
@@ -51,10 +51,20 @@ func NewRequestContext(r *http.Request) *RequestContext {
 		vars:       vars,
 		startTime:  time.Now(),
 	}
+	account, err := reqCtx.VerifySignature()
+	if err != nil {
+		return reqCtx, err
+	}
+	reqCtx.account = account
+	return reqCtx, nil
 }
 
 func (r *RequestContext) Context() context.Context {
 	return r.ctx
+}
+
+func (r *RequestContext) Account() string {
+	return r.account
 }
 
 func (r *RequestContext) Cancel() {
@@ -101,7 +111,7 @@ func (r *RequestContext) String() string {
 		getRequestIP(r.request), time.Since(r.startTime), r.err)
 }
 
-func (r *RequestContext) NeedVerifySignature() bool {
+func (r *RequestContext) NeedVerifyAuthorizer() bool {
 	requestSignature := r.request.Header.Get(model.GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
@@ -115,11 +125,19 @@ func signaturePrefix(version, algorithm string) string {
 	return version + " " + algorithm + ","
 }
 
-func (r *RequestContext) VerifySignature() (sdk.AccAddress, error) {
+func (r *RequestContext) VerifySignature() (string, error) {
 	requestSignature := r.request.Header.Get(model.GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
-		return r.verifySignatureV1(requestSignature[len(v1SignaturePrefix):])
+		accAddress, err := r.verifySignatureV1(requestSignature[len(v1SignaturePrefix):])
+		if err != nil {
+			return "", err
+		}
+		return accAddress.String(), nil
+	}
+	v2SignaturePrefix := signaturePrefix(model.SignTypeV2, model.SignAlgorithm)
+	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
+		return "", nil
 	}
 	//personalSignSignaturePrefix := signaturePrefix(model.SignTypePersonal, model.SignAlgorithm)
 	//if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
@@ -129,7 +147,7 @@ func (r *RequestContext) VerifySignature() (sdk.AccAddress, error) {
 	//if strings.HasPrefix(requestSignature, OffChainSignaturePrefix) {
 	//	return g.verifyOffChainSignature(reqContext, requestSignature[len(OffChainSignaturePrefix):])
 	//}
-	return nil, ErrUnsupportedSignType
+	return "", ErrUnsupportedSignType
 }
 
 // verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed

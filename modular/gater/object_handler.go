@@ -17,10 +17,14 @@ import (
 
 func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err     error
-		reqCtx  = NewRequestContext(r)
-		account string
+		err    error
+		reqCtx *RequestContext
 	)
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		return
+	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -32,16 +36,9 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), "put object handler", "req_info", reqCtx.String())
 	}()
-	if reqCtx.NeedVerifySignature() {
-		accAddress, err := reqCtx.VerifySignature()
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
-			return
-		}
-		account = accAddress.String()
-
+	if reqCtx.NeedVerifyAuthorizer() {
 		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-			coremodule.AuthOpTypePutObject, account, reqCtx.bucketName, reqCtx.objectName)
+			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
@@ -110,10 +107,14 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 
 func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err     error
-		reqCtx  = NewRequestContext(r)
-		account string
+		err    error
+		reqCtx *RequestContext
 	)
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		return
+	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -125,16 +126,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-	if reqCtx.NeedVerifySignature() {
-		accAddress, err := reqCtx.VerifySignature()
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
-			return
-		}
-		account = accAddress.String()
-
+	if reqCtx.NeedVerifyAuthorizer() {
 		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-			coremodule.AuthOpTypeGetObject, account, reqCtx.bucketName, reqCtx.objectName)
+			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
@@ -178,7 +172,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	task := &gfsptask.GfSpDownloadObjectTask{}
-	task.InitDownloadObjectTask(objectInfo, params, g.baseApp.TaskPriority(task), account,
+	task.InitDownloadObjectTask(objectInfo, params, g.baseApp.TaskPriority(task), reqCtx.Account(),
 		low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
 	data, err := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
 	if err != nil {
@@ -198,10 +192,14 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err     error
-		reqCtx  = NewRequestContext(r)
-		account string
+		err    error
+		reqCtx *RequestContext
 	)
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		return
+	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -213,16 +211,9 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-	if reqCtx.NeedVerifySignature() {
-		accAddress, err := reqCtx.VerifySignature()
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
-			return
-		}
-		account = accAddress.String()
-
+	if reqCtx.NeedVerifyAuthorizer() {
 		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-			coremodule.AuthOpTypeGetUploadingState, account, reqCtx.bucketName, reqCtx.objectName)
+			coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return

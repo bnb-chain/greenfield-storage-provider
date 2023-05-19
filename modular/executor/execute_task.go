@@ -55,7 +55,7 @@ func (e *ExecuteModular) sealObject(
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to seal object", "retry", retry,
 				"max_retry", task.GetMaxRetry(), "error", err)
-			time.Sleep(time.Duration(task.GetTimeout()))
+			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
 		}
 	}
 	// even though signer return error, maybe seal on chain success
@@ -80,7 +80,7 @@ func (e *ExecuteModular) listenSealObject(
 		if innerErr != nil {
 			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
 				"max_retry", e.maxListenSealRetry, "error", err)
-			time.Sleep(time.Duration(e.listenSealRetryTimeout))
+			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
 			err = innerErr
 			continue
 		}

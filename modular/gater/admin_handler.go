@@ -20,10 +20,14 @@ import (
 
 func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err     error
-		reqCtx  = NewRequestContext(r)
-		account string
+		err    error
+		reqCtx *RequestContext
 	)
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		return
+	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -35,14 +39,6 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-	if reqCtx.NeedVerifySignature() {
-		accAddress, err := reqCtx.VerifySignature()
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
-			return
-		}
-		account = accAddress.String()
-	}
 	actionName := reqCtx.vars["action"]
 	approvalMsg, err := hex.DecodeString(r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 	if err != nil {
@@ -63,9 +59,9 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if reqCtx.NeedVerifySignature() {
+		if reqCtx.NeedVerifyAuthorizer() {
 			verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-				coremodule.AuthOpAskCreateBucketApproval, account,
+				coremodule.AuthOpAskCreateBucketApproval, reqCtx.Account(),
 				createBucketApproval.GetBucketName(), "")
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
@@ -105,9 +101,9 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if reqCtx.NeedVerifySignature() {
+		if reqCtx.NeedVerifyAuthorizer() {
 			verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-				coremodule.AuthOpAskCreateObjectApproval, account,
+				coremodule.AuthOpAskCreateObjectApproval, reqCtx.Account(),
 				createObjectApproval.GetBucketName(), createObjectApproval.GetObjectName())
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
@@ -142,10 +138,14 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 
 func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err     error
-		reqCtx  = NewRequestContext(r)
-		account string
+		err    error
+		reqCtx *RequestContext
 	)
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		return
+	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -157,14 +157,6 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-	if reqCtx.NeedVerifySignature() {
-		accAddress, err := reqCtx.VerifySignature()
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
-			return
-		}
-		account = accAddress.String()
-	}
 	objectID, err := util.StringToUint64(reqCtx.request.Header.Get(model.GnfdObjectIDHeader))
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse object_id", "object_id",
@@ -179,9 +171,9 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
-	if reqCtx.NeedVerifySignature() {
+	if reqCtx.NeedVerifyAuthorizer() {
 		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-			coremodule.AuthOpTypeChallengePiece, account, objectInfo.GetBucketName(),
+			coremodule.AuthOpTypeChallengePiece, reqCtx.Account(), objectInfo.GetBucketName(),
 			objectInfo.GetObjectName())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
@@ -229,7 +221,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 			parms.VersionedParams.GetRedundantDataChunkNum()))
 	}
 	task := &gfsptask.GfSpChallengePieceTask{}
-	task.InitChallengePieceTask(objectInfo, bucketInfo, g.baseApp.TaskPriority(task), account,
+	task.InitChallengePieceTask(objectInfo, bucketInfo, g.baseApp.TaskPriority(task), reqCtx.Account(),
 		redundancyIdx, segmentIdx, g.baseApp.TaskTimeout(task, pieceSize), g.baseApp.TaskMaxRetry(task))
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
 	integrity, checksums, data, err := g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
@@ -247,8 +239,9 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err    error
-		reqCtx = NewRequestContext(r)
+		reqCtx *RequestContext
 	)
+	reqCtx, _ = NewRequestContext(r, g)
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
