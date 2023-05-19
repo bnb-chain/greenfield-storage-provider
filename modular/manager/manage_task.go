@@ -165,12 +165,10 @@ func (m *ManageModular) HandleDoneUploadObjectTask(
 		log.CtxErrorw(ctx, "reports failed update object task", "error", task.Error())
 		return nil
 	}
-	replicateTask := &gfsptask.GfSpReplicatePieceTask{
-		ObjectInfo:    task.GetObjectInfo(),
-		StorageParams: task.GetStorageParams(),
-	}
+	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
-		m.baseApp.TaskPriority(replicateTask), m.baseApp.TaskTimeout(replicateTask),
+		m.baseApp.TaskPriority(replicateTask),
+		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
 	err := m.replicateQueue.Push(replicateTask)
 	if err != nil {
@@ -216,7 +214,7 @@ func (m *ManageModular) HandleReplicatePieceTask(
 	}
 	sealObject.InitSealObjectTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(sealObject), task.GetSecondarySignature(),
-		m.baseApp.TaskTimeout(sealObject), m.baseApp.TaskMaxRetry(sealObject))
+		m.baseApp.TaskTimeout(sealObject, 0), m.baseApp.TaskMaxRetry(sealObject))
 	err := m.sealQueue.Push(sealObject)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push seal object task to queue", "error", err)
@@ -318,7 +316,7 @@ func (m *ManageModular) HandleReceivePieceTask(
 	} else {
 		task.SetRetry(0)
 		task.SetMaxRetry(m.baseApp.TaskMaxRetry(task))
-		task.SetTimeout(m.baseApp.TaskTimeout(task))
+		task.SetTimeout(m.baseApp.TaskTimeout(task, 0))
 		task.SetPriority(m.baseApp.TaskPriority(task))
 		task.SetUpdateTime(time.Now().Unix())
 		if err := m.receiveQueue.Push(task); err != nil {

@@ -70,19 +70,19 @@ func (*NullTask) SetCreateObjectInfo(*storagetypes.MsgCreateObject)  { return }
 func (*NullTask) InitApprovalReplicatePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, string) {
 	return
 }
-func (*NullTask) GetAskSpOperatorAddress() string                                     { return "" }
-func (*NullTask) SetAskSpOperatorAddress(string)                                      { return }
-func (*NullTask) GetAskSignature() []byte                                             { return nil }
-func (*NullTask) SetAskSignature([]byte)                                              { return }
-func (*NullTask) GetApprovedSpOperatorAddress() string                                { return "" }
-func (*NullTask) SetApprovedSpOperatorAddress(string)                                 { return }
-func (*NullTask) GetApprovedSignature() []byte                                        { return nil }
-func (*NullTask) SetApprovedSignature([]byte)                                         { return }
-func (*NullTask) GetApprovedSpEndpoint() string                                       { return "" }
-func (*NullTask) SetApprovedSpEndpoint(string)                                        { return }
-func (*NullTask) GetApprovedSpApprovalAddress() string                                { return "" }
-func (*NullTask) SetApprovedSpApprovalAddress(string)                                 { return }
-func (*NullTask) InitUploadObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params) { return }
+func (*NullTask) GetAskSpOperatorAddress() string                                            { return "" }
+func (*NullTask) SetAskSpOperatorAddress(string)                                             { return }
+func (*NullTask) GetAskSignature() []byte                                                    { return nil }
+func (*NullTask) SetAskSignature([]byte)                                                     { return }
+func (*NullTask) GetApprovedSpOperatorAddress() string                                       { return "" }
+func (*NullTask) SetApprovedSpOperatorAddress(string)                                        { return }
+func (*NullTask) GetApprovedSignature() []byte                                               { return nil }
+func (*NullTask) SetApprovedSignature([]byte)                                                { return }
+func (*NullTask) GetApprovedSpEndpoint() string                                              { return "" }
+func (*NullTask) SetApprovedSpEndpoint(string)                                               { return }
+func (*NullTask) GetApprovedSpApprovalAddress() string                                       { return "" }
+func (*NullTask) SetApprovedSpApprovalAddress(string)                                        { return }
+func (*NullTask) InitUploadObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, int64) { return }
 func (*NullTask) InitReplicatePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, int64, int64) {
 	return
 }

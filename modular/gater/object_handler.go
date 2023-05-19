@@ -65,11 +65,8 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
-	task := &gfsptask.GfSpUploadObjectTask{
-		ObjectInfo:    objectInfo,
-		StorageParams: params,
-	}
-	task.InitUploadObjectTask(objectInfo, params)
+	task := &gfsptask.GfSpUploadObjectTask{}
+	task.InitUploadObjectTask(objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()))
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
 	err = g.baseApp.GfSpClient().UploadObject(ctx, task, r.Body)
 	if err != nil {
@@ -180,12 +177,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		high = int64(objectInfo.GetPayloadSize())
 	}
 
-	task := &gfsptask.GfSpDownloadObjectTask{
-		ObjectInfo:    objectInfo,
-		StorageParams: params,
-	}
+	task := &gfsptask.GfSpDownloadObjectTask{}
 	task.InitDownloadObjectTask(objectInfo, params, g.baseApp.TaskPriority(task), account,
-		low, high, g.baseApp.TaskTimeout(task), g.baseApp.TaskMaxRetry(task))
+		low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
 	data, err := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)

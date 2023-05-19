@@ -24,7 +24,7 @@ const (
 	MaxGCMetaTime     int64 = 600
 )
 
-func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
+func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 	switch task.Type() {
 	case coretask.TypeTaskCreateBucketApproval:
 		return NotUseTimeout
@@ -33,8 +33,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 	case coretask.TypeTaskReplicatePieceApproval:
 		return NotUseTimeout
 	case coretask.TypeTaskUpload:
-		uploadTask := task.(coretask.UploadObjectTask)
-		timeout := int64(uploadTask.GetObjectInfo().GetPayloadSize()) / (g.uploadSpeed + 1)
+		timeout := int64(size) / (g.uploadSpeed + 1)
 		if timeout < MinUploadTime {
 			return MinUploadTime
 		}
@@ -43,8 +42,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 		}
 		return timeout
 	case coretask.TypeTaskReplicatePiece:
-		replicateTask := task.(coretask.ReplicatePieceTask)
-		timeout := int64(replicateTask.GetObjectInfo().GetPayloadSize()) / (g.replicateSpeed + 1)
+		timeout := int64(size) / (g.replicateSpeed + 1)
 		if timeout < MinReplicateTime {
 			return MinReplicateTime
 		}
@@ -53,8 +51,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 		}
 		return timeout
 	case coretask.TypeTaskReceivePiece:
-		receiveTask := task.(coretask.ReceivePieceTask)
-		timeout := receiveTask.GetPieceSize() / (g.replicateSpeed + 1)
+		timeout := int64(size) / (g.replicateSpeed + 1)
 		if timeout < MinReceiveTime {
 			return MinReceiveTime
 		}
@@ -71,8 +68,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 		}
 		return g.sealObjectTimeout
 	case coretask.TypeTaskDownloadObject:
-		downloadTask := task.(coretask.DownloadObjectTask)
-		timeout := downloadTask.GetSize() / (g.downloadSpeed + 1)
+		timeout := int64(size) / (g.downloadSpeed + 1)
 		if timeout < MinDownloadTime {
 			return MinDownloadTime
 		}
@@ -81,8 +77,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task) int64 {
 		}
 		return timeout
 	case coretask.TypeTaskChallengePiece:
-		challengTask := task.(coretask.ChallengePieceTask)
-		timeout := challengTask.GetPieceDataSize() / (g.downloadSpeed + 1)
+		timeout := int64(size) / (g.downloadSpeed + 1)
 		if timeout < MinDownloadTime {
 			return MinDownloadTime
 		}

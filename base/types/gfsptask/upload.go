@@ -19,11 +19,13 @@ var _ coretask.ReceivePieceTask = &GfSpReceivePieceTask{}
 
 func (m *GfSpUploadObjectTask) InitUploadObjectTask(
 	object *storagetypes.ObjectInfo,
-	params *storagetypes.Params) {
+	params *storagetypes.Params,
+	timeout int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
+	m.SetTimeout(timeout)
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)
 }

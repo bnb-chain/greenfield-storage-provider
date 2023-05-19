@@ -147,7 +147,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
 		sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
-	mode := tx.BroadcastMode_BROADCAST_MODE_BLOCK
+	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
 	txOpt := &ctypes.TxOption{
 		Mode:     &mode,
 		GasLimit: client.gasLimit,

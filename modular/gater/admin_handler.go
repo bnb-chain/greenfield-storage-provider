@@ -214,12 +214,23 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidHeader
 		return
 	}
-	task := &gfsptask.GfSpChallengePieceTask{
-		ObjectInfo: objectInfo,
-		BucketInfo: bucketInfo,
+	parms, err := g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
+		return
 	}
+	var pieceSize uint64
+	if redundancyIdx < 0 {
+		pieceSize = uint64(g.baseApp.PieceOp().SegmentSize(objectInfo.GetPayloadSize(),
+			segmentIdx, parms.VersionedParams.GetMaxSegmentSize()))
+	} else {
+		pieceSize = uint64(g.baseApp.PieceOp().PieceSize(objectInfo.GetPayloadSize(),
+			segmentIdx, parms.VersionedParams.GetMaxSegmentSize(),
+			parms.VersionedParams.GetRedundantDataChunkNum()))
+	}
+	task := &gfsptask.GfSpChallengePieceTask{}
 	task.InitChallengePieceTask(objectInfo, bucketInfo, g.baseApp.TaskPriority(task), account,
-		redundancyIdx, segmentIdx, g.baseApp.TaskTimeout(task), g.baseApp.TaskMaxRetry(task))
+		redundancyIdx, segmentIdx, g.baseApp.TaskTimeout(task, pieceSize), g.baseApp.TaskMaxRetry(task))
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
 	integrity, checksums, data, err := g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
 	if err != nil {
@@ -298,6 +309,13 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal receive header", "receive",
 			r.Header.Get(model.GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
+		return
+	}
+	if receiveTask.GetObjectInfo() == nil ||
+		int(receiveTask.GetReplicateIdx()) >=
+			len(receiveTask.GetObjectInfo().GetChecksums()) {
+		log.CtxErrorw(reqCtx.Context(), "receive task params error")
+		err = ErrInvalidHeader
 		return
 	}
 	data, err := io.ReadAll(r.Body)

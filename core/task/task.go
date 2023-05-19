@@ -274,7 +274,10 @@ type ObjectTask interface {
 type UploadObjectTask interface {
 	ObjectTask
 	// InitUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitUploadObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params)
+	InitUploadObjectTask(
+		object *storagetypes.ObjectInfo,
+		params *storagetypes.Params,
+		timeout int64)
 }
 
 // The ReplicatePieceTask is the interface to record the information for replicating

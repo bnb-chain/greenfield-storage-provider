@@ -90,7 +90,7 @@ func (s *SpDBImpl) GetReplicatePieceChecksum(objectID uint64, replicateIdx uint3
 	)
 	if err = s.db.Model(&PieceHashTable{}).
 		Where("object_id = ? and replicate_index = ? and piece_index = ?", objectID, replicateIdx, pieceIdx).
-		First(queryReturn).Error; err != nil {
+		First(&queryReturn).Error; err != nil {
 		return nil, err
 	}
 	if pieceChecksum, err = hex.DecodeString(queryReturn.PieceChecksum); err != nil {

@@ -75,11 +75,11 @@ func (e *ExecuteModular) HandleReceivePieceTask(
 	}
 	err := e.listenSealObject(ctx, task.GetObjectInfo())
 	if err == nil {
-		onChainObject, err := e.baseApp.Consensus().QueryObjectInfo(ctx, task.GetObjectInfo().GetBucketName(),
+		onChainObject, innerErr := e.baseApp.Consensus().QueryObjectInfo(ctx, task.GetObjectInfo().GetBucketName(),
 			task.GetObjectInfo().GetObjectName())
-		if err != nil {
+		if innerErr != nil {
 			log.CtxErrorw(ctx, "failed to get object info", "error", err)
-			task.SetError(err)
+			task.SetError(innerErr)
 			return
 		}
 		if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperateAddress() {
@@ -88,14 +88,14 @@ func (e *ExecuteModular) HandleReceivePieceTask(
 				log.CtxErrorw(ctx, "failed to delete integrity")
 			}
 			var pieceKey string
-			segmentCount := e.baseApp.PieceOp().SegmentCount(task.GetObjectInfo().GetPayloadSize(),
+			segmentCount := e.baseApp.PieceOp().SegmentCount(onChainObject.GetPayloadSize(),
 				task.GetStorageParams().GetMaxPayloadSize())
 			for i := uint32(0); i < segmentCount; i++ {
 				if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-					pieceKey = e.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(),
+					pieceKey = e.baseApp.PieceOp().ECPieceKey(onChainObject.Id.Uint64(),
 						i, task.GetReplicateIdx())
 				} else {
-					pieceKey = e.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), i)
+					pieceKey = e.baseApp.PieceOp().SegmentPieceKey(onChainObject.Id.Uint64(), i)
 				}
 				err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
 				if err != nil {
@@ -122,7 +122,7 @@ func (e *ExecuteModular) listenSealObject(
 		sealed, err := e.baseApp.Consensus().ListenObjectSeal(ctx,
 			object.Id.Uint64(), e.listenSealTimeoutHeight)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to listen receive piece seal", "retry", retry,
+			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
 				"max_retry", e.maxListenSealRetry, "error", err)
 			time.Sleep(time.Duration(e.listenSealRetryTimeout))
 			continue
