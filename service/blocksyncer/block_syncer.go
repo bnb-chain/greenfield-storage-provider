@@ -17,7 +17,6 @@ import (
 	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/messages"
-	"github.com/forbole/juno/v4/modules/registrar"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
@@ -25,6 +24,9 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	db "github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer/database"
+	registrar "github.com/bnb-chain/greenfield-storage-provider/service/blocksyncer/modules"
+	bsmodels "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 // BlockSyncer synchronizes storage,payment,permission data to db by handling related events
@@ -137,9 +139,9 @@ func (s *BlockSyncer) initClient() error {
 	// JunoConfig the runner
 	junoConfig := cmd.NewConfig("juno").
 		WithParseConfig(parsecmdtypes.NewConfig().
-			WithRegistrar(registrar.NewDefaultRegistrar(
+			WithRegistrar(registrar.NewBlockSyncerRegistrar(
 				messages.CosmosMessageAddressesParser,
-			)).WithFileType("toml"),
+			)).WithDBBuilder(db.BlockSyncerDBBuilder).WithFileType("toml"),
 		)
 	cmdCfg := junoConfig.GetParseConfig()
 	cmdCfg.WithTomlConfig(s.config)
@@ -364,7 +366,7 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 
 func (s *BlockSyncer) prepareMasterFlagTable() error {
 	if err := s.parserCtx.Database.
-		PrepareTables(context.TODO(), []schema.Tabler{&models.MasterDB{}}); err != nil {
+		PrepareTables(context.TODO(), []schema.Tabler{&bsmodels.MasterDB{}}); err != nil {
 		return err
 	}
 	masterRecord, err := s.parserCtx.Database.GetMasterDB(context.TODO())

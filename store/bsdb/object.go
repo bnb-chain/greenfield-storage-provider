@@ -29,35 +29,15 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 	// 2. Find common prefixes based on the delimiter
 	// 3. Limit results
 	if delimiter != "" {
-		err = b.db.Raw(
-			`SELECT path_name, result_type, o.*
-				FROM (
-					SELECT DISTINCT object_name as path_name, 'object' as result_type, id
-					FROM objects
-					WHERE bucket_name = ? AND object_name LIKE ? AND object_name >= IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) = 0
-					UNION
-					SELECT CONCAT(SUBSTRING(object_name, 1, LENGTH(?) + LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) - 1), ?) as path_name, 'common_prefix' as result_type, MIN(id)
-					FROM objects
-					WHERE bucket_name = ? AND object_name LIKE ? AND object_name >= IF(? = '', '', ?) AND LOCATE(?, SUBSTRING(object_name, LENGTH(?) + 1)) > 0
-					GROUP BY path_name
-				) AS subquery
-				JOIN objects o ON subquery.id = o.id
-				ORDER BY path_name
-				LIMIT ?;`,
-			bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix,
-			prefix, delimiter, prefix, delimiter,
-			bucketName, prefix+"%", continuationToken, continuationToken, delimiter, prefix,
-			limit).Scan(&results).Error
+		results, err = b.ListObjects(bucketName, continuationToken, prefix, maxKeys)
 	} else {
 		// If delimiter is not specified, retrieve objects directly
-
 		if continuationToken != "" {
 			filters = append(filters, ContinuationTokenFilter(continuationToken))
 		}
 		if prefix != "" {
 			filters = append(filters, PrefixFilter(prefix))
 		}
-
 		err = b.db.Table((&Object{}).TableName()).
 			Select("*").
 			Where("bucket_name = ?", bucketName).
