@@ -70,6 +70,32 @@ func (e *ExecuteModular) sealObject(
 	return err
 }
 
+func (e *ExecuteModular) listenSealObject(
+	ctx context.Context,
+	object *storagetypes.ObjectInfo) error {
+	var err error
+	for retry := 0; retry < e.maxListenSealRetry; retry++ {
+		sealed, innerErr := e.baseApp.Consensus().ListenObjectSeal(ctx,
+			object.Id.Uint64(), e.listenSealTimeoutHeight)
+		if innerErr != nil {
+			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
+				"max_retry", e.maxListenSealRetry, "error", err)
+			time.Sleep(time.Duration(e.listenSealRetryTimeout))
+			err = innerErr
+			continue
+		}
+		if !sealed {
+			log.CtxErrorw(ctx, "failed to seal object on chain", "retry", retry,
+				"max_retry", e.maxListenSealRetry, "error", err)
+			err = ErrUnsealed
+			continue
+		}
+		err = nil
+		break
+	}
+	return err
+}
+
 func (e *ExecuteModular) HandleReceivePieceTask(
 	ctx context.Context,
 	task coretask.ReceivePieceTask) {
@@ -79,11 +105,18 @@ func (e *ExecuteModular) HandleReceivePieceTask(
 	}
 	err := e.listenSealObject(ctx, task.GetObjectInfo())
 	if err == nil {
+		task.SetSealed(true)
+	} else {
 		onChainObject, innerErr := e.baseApp.Consensus().QueryObjectInfo(ctx, task.GetObjectInfo().GetBucketName(),
 			task.GetObjectInfo().GetObjectName())
 		if innerErr != nil {
 			log.CtxErrorw(ctx, "failed to get object info", "error", err)
 			task.SetError(innerErr)
+			return
+		}
+		if onChainObject.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+			log.CtxErrorw(ctx, "failed to confirm receive task, object is unsealed")
+			task.SetError(ErrUnsealed)
 			return
 		}
 		if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperateAddress() {
@@ -116,32 +149,6 @@ func (e *ExecuteModular) HandleReceivePieceTask(
 	}
 	task.SetError(err)
 	log.CtxDebugw(ctx, "finish to handle confirm receive piece task", "error", task.Error())
-}
-
-func (e *ExecuteModular) listenSealObject(
-	ctx context.Context,
-	object *storagetypes.ObjectInfo) error {
-	var err error
-	for retry := 0; retry < e.maxListenSealRetry; retry++ {
-		sealed, innerErr := e.baseApp.Consensus().ListenObjectSeal(ctx,
-			object.Id.Uint64(), e.listenSealTimeoutHeight)
-		if innerErr != nil {
-			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
-				"max_retry", e.maxListenSealRetry, "error", err)
-			time.Sleep(time.Duration(e.listenSealRetryTimeout))
-			err = innerErr
-			continue
-		}
-		if !sealed {
-			log.CtxErrorw(ctx, "failed to seal object on chain", "retry", retry,
-				"max_retry", e.maxListenSealRetry, "error", err)
-			err = ErrUnsealed
-			continue
-		}
-		err = nil
-		break
-	}
-	return err
 }
 
 func (e *ExecuteModular) HandleGCObjectTask(
