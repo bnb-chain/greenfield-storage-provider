@@ -35,7 +35,8 @@ func (p *P2PModular) HandleReplicatePieceApproval(
 		return nil, err
 	}
 	if len(approvals) < int(min) {
-		log.CtxErrorw(ctx, "failed to get insufficient approvals as secondary sp")
+		log.CtxErrorw(ctx, "failed to get sufficient approvals as secondary sp",
+			"accept", len(approvals), "min", min, "max", max)
 		return nil, ErrInsufficientApproval
 	}
 	return approvals, nil

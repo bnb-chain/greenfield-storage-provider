@@ -51,7 +51,7 @@ func NewNode(baseApp *gfspapp.GfSpBaseApp, privateKey string, address string,
 	if pingPeriod < PingPeriodMin {
 		pingPeriod = PingPeriodMin
 	}
-	if secondaryApprovalExpiredHeight <= MinSecondaryApprovalExpiredHeight {
+	if secondaryApprovalExpiredHeight < MinSecondaryApprovalExpiredHeight {
 		secondaryApprovalExpiredHeight = MinSecondaryApprovalExpiredHeight
 	}
 	var privKey crypto.PrivKey

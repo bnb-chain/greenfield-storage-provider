@@ -58,9 +58,9 @@ func (e *ExecuteModular) sealObject(
 			time.Sleep(time.Duration(task.GetTimeout()))
 		}
 	}
-	//if err != nil {
-	//	return err
-	//}
+	// even though signer return error, maybe seal on chain success
+	// because signer use the async mode, so ignore the error and
+	// listen directly
 	err = e.listenSealObject(ctx, task.GetObjectInfo())
 	if err != nil {
 		metrics.SealObjectSucceedCounter.WithLabelValues(e.Name()).Inc()
