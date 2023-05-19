@@ -3,6 +3,7 @@ package singer
 import (
 	"context"
 	"encoding/hex"
+	"strings"
 	"sync"
 
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
@@ -40,6 +41,7 @@ type GreenfieldChainSignClient struct {
 
 	gasLimit          uint64
 	greenfieldClients map[SignType]*client.GreenfieldClient
+	sealAccNonce      uint64
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
@@ -73,6 +75,10 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	if err != nil {
 		return nil, err
 	}
+	sealAccNonce, err := sealClient.GetNonce()
+	if err != nil {
+		return nil, err
+	}
 
 	approvalKM, err := keys.NewPrivateKeyManager(approvalPrivateKey)
 	if err != nil {
@@ -93,6 +99,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	return &GreenfieldChainSignClient{
 		gasLimit:          gasLimit,
 		greenfieldClients: greenfieldClients,
+		sealAccNonce:      sealAccNonce - 1,
 	}, nil
 }
 
@@ -145,18 +152,33 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		secondarySPAccs = append(secondarySPAccs, opAddr)
 	}
 
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	nonce := client.sealAccNonce + 1
+
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
 		sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
 	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
 	txOpt := &ctypes.TxOption{
 		Mode:     &mode,
 		GasLimit: client.gasLimit,
+		Nonce:    nonce,
 	}
 
 	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgSealObject}, txOpt)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "seal_info", msgSealObject.String())
+		if strings.Contains(err.Error(), "account sequence mismatch") {
+			// if nonce mismatch, reset nonce by querying the nonce on chain
+			nonce, err = client.greenfieldClients[scope].GetNonce()
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to get seal account nonce", "err", err, "seal_info", msgSealObject.String())
+				return nil, merrors.ErrSealObjectOnChain
+			}
+			client.sealAccNonce = nonce - 1
+		}
 		return nil, merrors.ErrSealObjectOnChain
+
 	}
 
 	if resp.TxResponse.Code != 0 {
@@ -168,6 +190,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "seal_info", msgSealObject.String())
 		return nil, merrors.ErrSealObjectOnChain
 	}
+	client.sealAccNonce = nonce
 
 	return txHash, nil
 }

@@ -197,7 +197,7 @@ func (n *Node) GetSecondaryReplicatePieceApproval(
 		select {
 		case approval := <-approvalCh:
 			current, innerErr := n.baseApp.Consensus().CurrentHeight(approvalCtx)
-			if innerErr != nil {
+			if innerErr == nil {
 				if approval.GetExpiredHeight() < current {
 					log.Warnw("discard expired approval", "sp", approval.GetApprovedSpApprovalAddress(),
 						"object_id", approval.GetObjectInfo().Id.Uint64(), "current_height", current,

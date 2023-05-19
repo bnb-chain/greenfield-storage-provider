@@ -26,7 +26,9 @@ const (
 	// DefaultDataPath defines default value that the path of peer store
 	DefaultDataPath = "./data"
 	// P2PNode defines the p2p protocol node name
-	P2PNode                           = "p2p_protocol_node"
+	P2PNode = "p2p_protocol_node"
+	// MinSecondaryApprovalExpiredHeight defines the min expired height for secondary
+	// approval
 	MinSecondaryApprovalExpiredHeight = 900
 )
 

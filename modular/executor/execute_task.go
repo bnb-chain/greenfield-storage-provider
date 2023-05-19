@@ -50,7 +50,7 @@ func (e *ExecuteModular) sealObject(
 	task coretask.ObjectTask,
 	sealMsg *storagetypes.MsgSealObject) error {
 	var err error
-	for retry := int64(0); retry < task.GetMaxRetry(); retry++ {
+	for retry := int64(0); retry <= task.GetMaxRetry(); retry++ {
 		err = e.baseApp.GfSpClient().SealObject(ctx, sealMsg)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to seal object", "retry", retry,

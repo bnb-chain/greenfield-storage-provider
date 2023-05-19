@@ -3,6 +3,7 @@ package p2pnode
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"sync"
@@ -82,6 +83,20 @@ func (a *ApprovalProtocol) notifyApprovalResponse(
 	return nil
 }
 
+func (a *ApprovalProtocol) ComputeApprovalExpiredHeight(task coretask.ApprovalReplicatePieceTask) (uint64, error) {
+	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
+		return 0, fmt.Errorf("ask replicate piece approval param invalied")
+	}
+	var (
+		computeUnit      uint64 = 1024 * 1024
+		speedUnit        uint64 = 8
+		redundancyHeight uint64 = 100
+	)
+	totalUnit := task.GetObjectInfo().GetPayloadSize() /
+		uint64(task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()) / computeUnit
+	return totalUnit/speedUnit + redundancyHeight, nil
+}
+
 // onGetApprovalRequest defines the get approval request protocol callback
 func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 	req := &gfsptask.GfSpReplicatePieceApprovalTask{}
@@ -123,7 +138,11 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 			"remote", s.Conn().RemotePeer(), "error", err)
 		return
 	}
-	req.SetExpiredHeight(current + a.node.secondaryApprovalExpiredHeight)
+	expiredHeight, _ := a.ComputeApprovalExpiredHeight(req)
+	if expiredHeight < a.node.secondaryApprovalExpiredHeight {
+		expiredHeight = a.node.secondaryApprovalExpiredHeight
+	}
+	req.SetExpiredHeight(current + expiredHeight)
 	// TODO:: customized approval strategy, if refuse will fill back resp refuse field
 	signature, err := a.node.baseApp.GfSpClient().SignReplicatePieceApproval(ctx, req)
 	if err != nil {
