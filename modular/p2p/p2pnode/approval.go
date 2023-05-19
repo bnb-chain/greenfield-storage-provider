@@ -142,6 +142,7 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 	if expiredHeight < a.node.secondaryApprovalExpiredHeight {
 		expiredHeight = a.node.secondaryApprovalExpiredHeight
 	}
+	log.CtxErrorw(ctx, "allow replicate piece approval", "expired_height", expiredHeight)
 	req.SetExpiredHeight(current + expiredHeight)
 	// TODO:: customized approval strategy, if refuse will fill back resp refuse field
 	signature, err := a.node.baseApp.GfSpClient().SignReplicatePieceApproval(ctx, req)

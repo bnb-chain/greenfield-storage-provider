@@ -206,8 +206,8 @@ func (n *Node) GetSecondaryReplicatePieceApproval(
 				}
 			} else {
 				log.Warnw("failed to get current height", "error", err)
-				accept = append(accept, approval)
 			}
+			accept = append(accept, approval)
 			if len(accept) >= expectedAccept {
 				log.CtxErrorw(ctx, "succeed to get sufficient approvals",
 					"expect", expectedAccept, "accepted", len(accept))
