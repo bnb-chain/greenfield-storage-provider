@@ -15,7 +15,9 @@ import (
 )
 
 const (
-	MaxCallMsgSize  = 32 * 1024 * 1024
+	// MaxCallMsgSize defines the max message size for grpc client
+	MaxCallMsgSize = 3 * 1024 * 1024 * 1024
+	// ClientCodeSpace defines the code space for gfsp client
 	ClientCodeSpace = "GfSpClient"
 	// HttpMaxIdleConns defines the max idle connections for HTTP server
 	HttpMaxIdleConns = 20

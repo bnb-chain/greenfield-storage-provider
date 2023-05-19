@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	MaxCallMsgSize = 32 * 1024 * 1024
+	// MaxCallMsgSize defines the max message size for grpc server
+	MaxCallMsgSize = 3 * 1024 * 1024
 )
 
 func DefaultGrpcServerOptions() []grpc.ServerOption {

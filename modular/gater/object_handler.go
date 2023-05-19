@@ -175,7 +175,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		high = rangeEnd
 	} else {
 		low = 0
-		high = int64(objectInfo.GetPayloadSize())
+		high = int64(objectInfo.GetPayloadSize()) - 1
 	}
 
 	task := &gfsptask.GfSpDownloadObjectTask{}
