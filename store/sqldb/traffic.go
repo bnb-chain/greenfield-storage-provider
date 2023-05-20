@@ -63,6 +63,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 		if result.Error != nil {
 			return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
 		}
+		// TODO:: change the transaction way to update
 		if result.RowsAffected != 1 {
 			log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 		}

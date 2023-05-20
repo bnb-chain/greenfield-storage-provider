@@ -2,21 +2,24 @@ package downloader
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
 var (
 	ErrDanglingPointer   = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 30001, "OoooH.... request lost")
-	ErrObjectState       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30002, "object unsealed")
+	ErrObjectUnsealed    = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30002, "object unsealed")
 	ErrRepeatedTask      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30003, "request repeated")
 	ErrExceedBucketQuota = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30004, "bucket quota overflow")
 	ErrExceedQueue       = gfsperrors.Register(module.DownloadModularName, http.StatusServiceUnavailable, 30005, "request exceed the limit, try again later")
@@ -29,18 +32,18 @@ func (d *DownloadModular) PreDownloadObject(
 	ctx context.Context,
 	task task.DownloadObjectTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
-		log.CtxErrorw(ctx, "failed pre download object, task pointer dangling")
+		log.CtxErrorw(ctx, "failed pre download object, pointer dangling")
 		return ErrDanglingPointer
 	}
 	if task.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.CtxErrorw(ctx, "failed to pre download object, object unsealed")
-		return ErrObjectState
+		return ErrObjectUnsealed
 	}
 	if d.downloadQueue.Has(task.Key()) {
 		log.CtxErrorw(ctx, "failed to pre download object, task repeated")
 		return ErrRepeatedTask
 	}
-	// TODO:: spilt check and add record, check in pre download, add record in post download
+	// TODO:: spilt check and add record steps, check in pre download, add record in post download
 	if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
 		&spdb.ReadRecord{
 			BucketID:        task.GetBucketInfo().Id.Uint64(),
@@ -56,8 +59,13 @@ func (d *DownloadModular) PreDownloadObject(
 		},
 	); err != nil {
 		log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
-		return ErrExceedBucketQuota
+		if errors.Is(err, merrors.ErrCheckQuotaEnough) {
+			return ErrExceedBucketQuota
+		}
+		// ignore the access db error, it is the system's inner error,
+		// will be let the request go
 	}
+	// report the task to the manager for monitor the download task
 	d.baseApp.GfSpClient().ReportTask(ctx, task)
 	return nil
 }
@@ -161,14 +169,13 @@ func (d *DownloadModular) PreChallengePiece(
 	ctx context.Context,
 	task task.ChallengePieceTask) error {
 	if task == nil || task.GetObjectInfo() == nil {
-		log.CtxErrorw(ctx, "failed to pre challenge piece, task or object pointer dangling")
+		log.CtxErrorw(ctx, "failed to pre challenge piece, pointer dangling")
 		return ErrDanglingPointer
 	}
 	if task.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-		log.CtxErrorw(ctx, "failed to pre download object, object unsealed")
-		return ErrObjectState
+		log.CtxErrorw(ctx, "failed to pre challenge piece, object unsealed")
+		return ErrObjectUnsealed
 	}
-	d.baseApp.GfSpClient().ReportTask(ctx, task)
 	return nil
 }
 
@@ -177,7 +184,12 @@ func (d *DownloadModular) HandleChallengePiece(
 	task task.ChallengePieceTask) (
 	[]byte, [][]byte, []byte, error) {
 	d.challengeQueue.Push(task)
-	if err := d.challengeQueue.Push(task); err != nil {
+	var (
+		err       error
+		integrity *corespdb.IntegrityMeta
+		data      []byte
+	)
+	if err = d.challengeQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push challenge piece queue", "error", err)
 		return nil, nil, nil, ErrExceedQueue
 	}
@@ -186,12 +198,12 @@ func (d *DownloadModular) HandleChallengePiece(
 		task.GetObjectInfo().Id.Uint64(),
 		task.GetSegmentIdx(),
 		task.GetRedundancyIdx())
-	integrity, err := d.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+	integrity, err = d.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get integrity hash", "error", err)
 		return nil, nil, nil, ErrGfSpDB
 	}
-	data, err := d.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
+	data, err = d.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
 		return nil, nil, nil, ErrPieceStore

@@ -20,27 +20,20 @@ import (
 )
 
 // getApprovalHandler handles the get create bucket/object approval request.
-// before create bucket/object to the greenfield, the user should the primary
+// Before create bucket/object to the greenfield, the user should the primary
 // SP whether willing serve for the user to manage the bucket/object.
 // SP checks the user's account if it has the permission to operate, and send
 // the request to approver that running the SP approval's Strategy.
 func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		reqCtx *RequestContext
-
+		err                  error
+		reqCtx               *RequestContext
 		approvalMsg          []byte
 		createBucketApproval = storagetypes.MsgCreateBucket{}
 		createObjectApproval = storagetypes.MsgCreateObject{}
 		authorized           bool
 		approved             bool
 	)
-	reqCtx, err = NewRequestContext(r)
-	if err != nil {
-		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
-		return
-	}
-
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -52,6 +45,11 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
 
 	approvalType := reqCtx.vars["action"]
 	approvalMsg, err = hex.DecodeString(r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
@@ -156,16 +154,19 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 	return
 }
 
+// challengeHandler handles get challenge piece info request. Current only greenfield
+// validator can challenge piece is store correctly. The challenge piece info includes:
+// the challenged piece data, all piece hashes and the integrity hash. The challenger
+// can verify the info whether are correct by comparing with the greenfield info.
 func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		reqCtx *RequestContext
+		err        error
+		reqCtx     *RequestContext
+		authorized bool
+		integrity  []byte
+		checksums  [][]byte
+		data       []byte
 	)
-	reqCtx, err = NewRequestContext(r)
-	if err != nil {
-		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
-		return
-	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -177,9 +178,14 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
 	objectID, err := util.StringToUint64(reqCtx.request.Header.Get(model.GnfdObjectIDHeader))
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse object_id", "object_id",
+		log.CtxErrorw(reqCtx.Context(), "failed to parse object id", "object_id",
 			reqCtx.request.Header.Get(model.GnfdObjectIDHeader))
 		err = ErrInvalidHeader
 		return
@@ -192,14 +198,14 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if reqCtx.NeedVerifyAuthorizer() {
-		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypeChallengePiece, reqCtx.Account(), objectInfo.GetBucketName(),
 			objectInfo.GetObjectName())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
 		}
-		if !verified {
+		if !authorized {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
 			err = ErrNoPermission
 			return
@@ -214,7 +220,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	redundancyIdx, err := util.StringToInt32(reqCtx.request.Header.Get(model.GnfdRedundancyIndexHeader))
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse redundancy_idx", "redundancy_idx",
+		log.CtxErrorw(reqCtx.Context(), "failed to parse redundancy idx", "redundancy_idx",
 			reqCtx.request.Header.Get(model.GnfdRedundancyIndexHeader))
 		err = ErrInvalidHeader
 		return
@@ -244,7 +250,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	task.InitChallengePieceTask(objectInfo, bucketInfo, g.baseApp.TaskPriority(task), reqCtx.Account(),
 		redundancyIdx, segmentIdx, g.baseApp.TaskTimeout(task, pieceSize), g.baseApp.TaskMaxRetry(task))
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
-	integrity, checksums, data, err := g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
+	integrity, checksums, data, err = g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to challenge piece", "error", err)
 		return

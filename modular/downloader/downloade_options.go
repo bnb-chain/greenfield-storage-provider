@@ -7,11 +7,14 @@ import (
 )
 
 const (
+	// DefaultDownloadObjectParallelPerNode defines the default max download object parallel
+	// per downloader
 	DefaultDownloadObjectParallelPerNode = 10240
+	// DefaultChallengePieceParallelPerNode defines the default max challenge piece parallel
+	// per downloader
 	DefaultChallengePieceParallelPerNode = 10240
-	DefaultBucketFreeQuota               = 10 * 1024 * 1024 * 1024
-	DefaultDownloadObjectQueueSuffix     = "-download-queue"
-	DefaultChallengePieceQueueSuffix     = "-challenge-piece"
+	// DefaultBucketFreeQuota defines the default free read quota per bucket
+	DefaultBucketFreeQuota = 10 * 1024 * 1024 * 1024
 )
 
 func NewDownloadModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -33,10 +36,10 @@ func DefaultDownloaderOptions(downloader *DownloadModular, cfg *gfspconfig.GfSpC
 		cfg.Bucket.FreeQuotaPerBucket = DefaultBucketFreeQuota
 	}
 	downloader.downloadQueue = cfg.Customize.NewStrategyTQueueFunc(
-		downloader.Name()+DefaultDownloadObjectQueueSuffix,
+		downloader.Name()+"-download-queue",
 		cfg.Parallel.DownloadObjectParallelPerNode)
 	downloader.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
-		downloader.Name()+DefaultChallengePieceQueueSuffix,
+		downloader.Name()+"-challenge-piece",
 		cfg.Parallel.ChallengePieceParallelPerNode)
 	downloader.bucketFreeQuota = cfg.Bucket.FreeQuotaPerBucket
 	return nil

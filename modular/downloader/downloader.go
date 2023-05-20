@@ -17,6 +17,8 @@ type DownloadModular struct {
 	downloadQueue  taskqueue.TQueueOnStrategy
 	challengeQueue taskqueue.TQueueOnStrategy
 
+	// bucketFreeQuota defines the free read quota per bucket, if exceed
+	// the quota, the account should buy traffic.
 	bucketFreeQuota uint64
 }
 
