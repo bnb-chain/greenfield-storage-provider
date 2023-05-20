@@ -33,7 +33,7 @@ type RequestContext struct {
 	startTime time.Time
 }
 
-func NewRequestContext(r *http.Request, g *GateModular) (*RequestContext, error) {
+func NewRequestContext(r *http.Request) (*RequestContext, error) {
 	vars := mux.Vars(r)
 	routerName := ""
 	if mux.CurrentRoute(r) != nil {

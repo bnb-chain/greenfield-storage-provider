@@ -20,7 +20,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err    error
 		reqCtx *RequestContext
 	)
-	reqCtx, err = NewRequestContext(r, g)
+	reqCtx, err = NewRequestContext(r)
 	if err != nil {
 		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		return
@@ -115,7 +115,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err    error
 		reqCtx *RequestContext
 	)
-	reqCtx, err = NewRequestContext(r, g)
+	reqCtx, err = NewRequestContext(r)
 	if err != nil {
 		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		return
@@ -207,7 +207,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		err    error
 		reqCtx *RequestContext
 	)
-	reqCtx, err = NewRequestContext(r, g)
+	reqCtx, err = NewRequestContext(r)
 	if err != nil {
 		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		return

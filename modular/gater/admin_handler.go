@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/golang/protobuf/proto"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -18,16 +19,28 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
+// getApprovalHandler handles the get create bucket/object approval request.
+// before create bucket/object to the greenfield, the user should the primary
+// SP whether willing serve for the user to manage the bucket/object.
+// SP checks the user's account if it has the permission to operate, and send
+// the request to approver that running the SP approval's Strategy.
 func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err    error
 		reqCtx *RequestContext
+
+		approvalMsg          []byte
+		createBucketApproval = storagetypes.MsgCreateBucket{}
+		createObjectApproval = storagetypes.MsgCreateObject{}
+		authorized           bool
+		approved             bool
 	)
-	reqCtx, err = NewRequestContext(r, g)
+	reqCtx, err = NewRequestContext(r)
 	if err != nil {
 		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		return
 	}
+
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -39,35 +52,39 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-	actionName := reqCtx.vars["action"]
-	approvalMsg, err := hex.DecodeString(r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+
+	approvalType := reqCtx.vars["action"]
+	approvalMsg, err = hex.DecodeString(r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 	if err != nil {
-		log.Errorw("failed to parse approval header", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+		log.Errorw("failed to parse approval header", "approval_type", approvalType,
+			"approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
-	switch actionName {
+
+	switch approvalType {
 	case createBucketApprovalAction:
-		createBucketApproval := storagetypes.MsgCreateBucket{}
 		if err = storagetypes.ModuleCdc.UnmarshalJSON(approvalMsg, &createBucketApproval); err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to unmarshal approval", "approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader), "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to unmarshal approval", "approval",
+				r.Header.Get(model.GnfdUnsignedApprovalMsgHeader), "error", err)
 			err = ErrDecodeMsg
 			return
 		}
 		if err = createBucketApproval.ValidateBasic(); err != nil {
-			log.Errorw("failed to basic check", "bucket_approval_msg", createBucketApproval, "error", err)
+			log.Errorw("failed to basic check bucket approval msg", "bucket_approval_msg",
+				createBucketApproval, "error", err)
 			err = ErrValidateMsg
 			return
 		}
 		if reqCtx.NeedVerifyAuthorizer() {
-			verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-				coremodule.AuthOpAskCreateBucketApproval, reqCtx.Account(),
-				createBucketApproval.GetBucketName(), "")
+			authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(
+				reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
+				reqCtx.Account(), createBucketApproval.GetBucketName(), "")
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 				return
 			}
-			if !verified {
+			if !authorized {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operator")
 				err = ErrNoPermission
 				return
@@ -75,20 +92,20 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		}
 		task := &gfsptask.GfSpCreateBucketApprovalTask{}
 		task.InitApprovalCreateBucketTask(&createBucketApproval, g.baseApp.TaskPriority(task))
-		allow, res, err := g.baseApp.GfSpClient().AskCreateBucketApproval(r.Context(), task)
+		var approvalTask coretask.ApprovalCreateBucketTask
+		approved, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask create bucket approval", "error", err)
 			return
 		}
-		if !allow {
+		if !approved {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask create bucket approval")
 			err = ErrRefuseApproval
 			return
 		}
-		bz := storagetypes.ModuleCdc.MustMarshalJSON(res.GetCreateBucketInfo())
+		bz := storagetypes.ModuleCdc.MustMarshalJSON(approvalTask.GetCreateBucketInfo())
 		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	case createObjectApprovalAction:
-		createObjectApproval := storagetypes.MsgCreateObject{}
 		if err = storagetypes.ModuleCdc.UnmarshalJSON(approvalMsg, &createObjectApproval); err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to unmarshal approval", "approval",
 				r.Header.Get(model.GnfdUnsignedApprovalMsgHeader), "error", err)
@@ -96,20 +113,21 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if err = createObjectApproval.ValidateBasic(); err != nil {
-			log.Errorw("failed to basic check", "object_approval_msg",
+			log.Errorw("failed to basic check approval msg", "object_approval_msg",
 				createObjectApproval, "error", err)
 			err = ErrValidateMsg
 			return
 		}
 		if reqCtx.NeedVerifyAuthorizer() {
-			verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-				coremodule.AuthOpAskCreateObjectApproval, reqCtx.Account(),
-				createObjectApproval.GetBucketName(), createObjectApproval.GetObjectName())
+			authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(
+				reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
+				reqCtx.Account(), createObjectApproval.GetBucketName(),
+				createObjectApproval.GetObjectName())
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 				return
 			}
-			if !verified {
+			if !authorized {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operator")
 				err = ErrNoPermission
 				return
@@ -117,20 +135,22 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		}
 		task := &gfsptask.GfSpCreateObjectApprovalTask{}
 		task.InitApprovalCreateObjectTask(&createObjectApproval, g.baseApp.TaskPriority(task))
-		allow, res, err := g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
+		var approvedTask coretask.ApprovalCreateObjectTask
+		approved, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
 			return
 		}
-		if !allow {
+		if !approved {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
 			err = ErrRefuseApproval
 			return
 		}
-		bz := storagetypes.ModuleCdc.MustMarshalJSON(res.GetCreateObjectInfo())
+		bz := storagetypes.ModuleCdc.MustMarshalJSON(approvedTask.GetCreateObjectInfo())
 		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	default:
 		err = ErrUnsupportedRequestType
+		return
 	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to ask approval")
 	return
@@ -141,7 +161,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		err    error
 		reqCtx *RequestContext
 	)
-	reqCtx, err = NewRequestContext(r, g)
+	reqCtx, err = NewRequestContext(r)
 	if err != nil {
 		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		return
@@ -241,7 +261,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err    error
 		reqCtx *RequestContext
 	)
-	reqCtx, _ = NewRequestContext(r, g)
+	reqCtx, _ = NewRequestContext(r)
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {

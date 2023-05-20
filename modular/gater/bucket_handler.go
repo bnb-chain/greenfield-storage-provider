@@ -16,7 +16,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		err    error
 		reqCtx *RequestContext
 	)
-	reqCtx, err = NewRequestContext(r, g)
+	reqCtx, err = NewRequestContext(r)
 	if err != nil {
 		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		return
@@ -94,7 +94,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		err    error
 		reqCtx *RequestContext
 	)
-	reqCtx, err = NewRequestContext(r, g)
+	reqCtx, err = NewRequestContext(r)
 	if err != nil {
 		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		return

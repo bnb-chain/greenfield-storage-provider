@@ -171,7 +171,7 @@ func (g *Gnfd) ListenObjectSeal(
 			continue
 		}
 		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
-			log.CtxDebugw(ctx, "success to listen object state is sealed")
+			log.CtxDebugw(ctx, "success to listen object stat")
 			return true, nil
 		}
 	}

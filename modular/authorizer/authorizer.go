@@ -53,7 +53,11 @@ func (a *AuthorizeModular) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (a *AuthorizeModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
+func (a *AuthorizeModular) ReserveResource(
+	ctx context.Context,
+	state *rcmgr.ScopeStat) (
+	rcmgr.ResourceScopeSpan,
+	error) {
 	span, err := a.scope.BeginSpan()
 	if err != nil {
 		return nil, err
@@ -65,41 +69,48 @@ func (a *AuthorizeModular) ReserveResource(ctx context.Context, state *rcmgr.Sco
 	return span, nil
 }
 
-func (a *AuthorizeModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
+func (a *AuthorizeModular) ReleaseResource(
+	ctx context.Context,
+	span rcmgr.ResourceScopeSpan) {
 	span.Done()
 	return
 }
 
-func (a *AuthorizeModular) VerifyAuthorize(ctx context.Context,
-	auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {
+// VerifyAuthorize verifies the account has the operation's permission.
+func (a *AuthorizeModular) VerifyAuthorize(
+	ctx context.Context,
+	authType coremodule.AuthOpType,
+	account, bucket, object string) (
+	bool, error) {
 	has, err := a.baseApp.Consensus().HasAccount(ctx, account)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
+		log.CtxErrorw(ctx, "failed to check account from consensus", "error", err)
 		return false, ErrConsensus
 	}
 	if !has {
 		log.CtxErrorw(ctx, "no such account from consensus")
 		return false, ErrNoSuchAccount
 	}
-	switch auth {
+
+	switch authType {
 	case coremodule.AuthOpAskCreateBucketApproval:
 		bucketInfo, _ := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
 		if bucketInfo != nil {
-			log.CtxErrorw(ctx, "failed to ask create bucket approval, bucket repeated",
-				"bucket", bucket, "object", object)
+			log.CtxErrorw(ctx, "failed to verify authorize of asking create bucket "+
+				"approval, bucket repeated", "bucket", bucket)
 			return false, ErrRepeatedBucket
 		}
 		return true, nil
 	case coremodule.AuthOpAskCreateObjectApproval:
 		bucketInfo, objectInfo, _ := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if bucketInfo == nil {
-			log.CtxErrorw(ctx, "failed to ask create object approval, no such bucket to ask create object approval",
-				"bucket", bucket, "object", object)
+			log.CtxErrorw(ctx, "failed to verify authorize of asking create object "+
+				"approval, no such bucket to ask create object approval", "bucket", bucket, "object", object)
 			return false, ErrNoSuchBucket
 		}
 		if objectInfo != nil {
-			log.CtxErrorw(ctx, "failed to ask create object approval, object has been created",
-				"bucket", bucket, "object", object)
+			log.CtxErrorw(ctx, "failed to verify authorize of asking create object "+
+				"approval, object has been created", "bucket", bucket, "object", object)
 			return false, ErrRepeatedObject
 		}
 		return true, nil

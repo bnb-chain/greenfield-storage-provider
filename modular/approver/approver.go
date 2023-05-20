@@ -19,7 +19,11 @@ type ApprovalModular struct {
 	bucketQueue taskqueue.TQueueOnStrategy
 	objectQueue taskqueue.TQueueOnStrategy
 
-	accountBucketNumber         int64
+	// defines the max bucket number per account, approver refuses the ask approval
+	// request if account own the bucket number greater the value
+	accountBucketNumber int64
+	// defines the creation of bucket/object approval timeout height the approval
+	// expired height equal to current block height + timeout height
 	bucketApprovalTimeoutHeight uint64
 	objectApprovalTimeoutHeight uint64
 }
@@ -61,6 +65,8 @@ func (a *ApprovalModular) ReleaseResource(ctx context.Context, span rcmgr.Resour
 	return
 }
 
+// GCApprovalQueue defines the strategy of gc approval queue when the queue is full.
+// if the approval is expired, it can be deleted.
 func (a *ApprovalModular) GCApprovalQueue(qTask task.Task) bool {
 	task := qTask.(task.ApprovalTask)
 	ctx := log.WithValue(context.Background(), log.CtxKeyTask, task.Key().String())
@@ -70,7 +76,7 @@ func (a *ApprovalModular) GCApprovalQueue(qTask task.Task) bool {
 		return false
 	}
 	if task.GetExpiredHeight() < current {
-		log.CtxDebugw(ctx, "expire task")
+		log.CtxDebugw(ctx, "expire approval task", "info", task.Info())
 		return true
 	}
 	log.CtxDebugw(ctx, "approval task not expired", "current_height", current,

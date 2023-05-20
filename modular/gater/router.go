@@ -39,6 +39,7 @@ func (g *GateModular) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// RegisterHandler registers the handlers to the gateway router.
 func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// bucket router, virtual-hosted style
 	hostBucketRouter := router.Host("{bucket:.+}." + g.domain).Subrouter()

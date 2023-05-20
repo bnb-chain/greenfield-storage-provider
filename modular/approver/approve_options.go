@@ -7,13 +7,21 @@ import (
 )
 
 const (
-	DefaultAccountBucketNumber                 = 100
-	DefaultBucketApprovalTimeoutHeight  uint64 = 10
-	DefaultObjectApprovalTimeoutHeight  uint64 = 10
-	DefaultCreateBucketApprovalParallel        = 1024
-	DefaultCreateObjectApprovalParallel        = 1024
-	CreateBucketApprovalQueueSuffix            = "-create-bucket-approval"
-	CreateObjectApprovalQueueSuffix            = "-create-object-approval"
+	// DefaultAccountBucketNumber defines the default value of bucket number is
+	// owned by the same account
+	DefaultAccountBucketNumber = 100
+	// DefaultBucketApprovalTimeoutHeight defines the default value of timeout
+	// height for creating bucket approval
+	DefaultBucketApprovalTimeoutHeight uint64 = 10
+	// DefaultObjectApprovalTimeoutHeight defines the default value of timeout
+	//	// height for creating object approval
+	DefaultObjectApprovalTimeoutHeight uint64 = 10
+	// DefaultCreateBucketApprovalParallel defines the default value of parallel
+	// for approved create bucket per approver
+	DefaultCreateBucketApprovalParallel = 1024
+	// DefaultCreateObjectApprovalParallel defines the default value of parallel
+	// for approved create object per approver
+	DefaultCreateObjectApprovalParallel = 1024
 )
 
 func NewApprovalModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -44,10 +52,10 @@ func DefaultApprovalOptions(cfg *gfspconfig.GfSpConfig, approver *ApprovalModula
 		cfg.Parallel.GlobalCreateObjectApprovalParallel = DefaultCreateObjectApprovalParallel
 	}
 	approver.bucketQueue = cfg.Customize.NewStrategyTQueueFunc(
-		approver.Name()+CreateBucketApprovalQueueSuffix,
+		approver.Name()+"-create-bucket-approval",
 		cfg.Parallel.GlobalCreateBucketApprovalParallel)
 	approver.objectQueue = cfg.Customize.NewStrategyTQueueFunc(
-		approver.Name()+CreateObjectApprovalQueueSuffix,
+		approver.Name()+"-create-object-approval",
 		cfg.Parallel.GlobalCreateObjectApprovalParallel)
 	return nil
 }

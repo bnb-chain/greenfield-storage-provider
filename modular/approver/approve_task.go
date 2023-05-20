@@ -15,8 +15,8 @@ var (
 	ErrExceedBucketNumber = gfsperrors.Register(module.ApprovalModularName, http.StatusServiceUnavailable, 10002, "account buckets exceed the limit")
 	ErrRepeatedTask       = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10003, "ask approval request repeated")
 	ErrExceedQueue        = gfsperrors.Register(module.ApprovalModularName, http.StatusServiceUnavailable, 10004, "ask approval request exceed the limit, try again later")
+	ErrSigner             = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 11001, "server slipped away, try again later")
 	ErrConsensus          = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 15001, "server slipped away, try again later")
-	ErrRetriever          = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 10901, "server slipped away, try again later")
 )
 
 func (a *ApprovalModular) PreCreateBucketApproval(
@@ -28,11 +28,11 @@ func (a *ApprovalModular) PreCreateBucketApproval(
 	}
 	buckets, err := a.baseApp.GfSpClient().GetAccountBucketNumber(ctx, task.GetCreateBucketInfo().GetCreator())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get account created bucket number", "error", err)
-		return ErrRetriever
+		log.CtxErrorw(ctx, "failed to get account owns max bucket number", "error", err)
+		return err
 	}
 	if buckets >= a.accountBucketNumber {
-		log.CtxErrorw(ctx, "account bucket number exceed", "error", err)
+		log.CtxErrorw(ctx, "account owns bucket number exceed")
 		return ErrExceedBucketNumber
 	}
 	if a.bucketQueue.Has(task.Key()) {
@@ -45,16 +45,22 @@ func (a *ApprovalModular) PreCreateBucketApproval(
 func (a *ApprovalModular) HandleCreateBucketApprovalTask(
 	ctx context.Context,
 	task coretask.ApprovalCreateBucketTask) (bool, error) {
-	currentHeight, err := a.baseApp.Consensus().CurrentHeight(ctx)
+	var (
+		err           error
+		signature     []byte
+		currentHeight uint64
+	)
+
+	currentHeight, err = a.baseApp.Consensus().CurrentHeight(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get current height", "error", err)
 		return false, ErrConsensus
 	}
 	task.SetExpiredHeight(currentHeight + a.bucketApprovalTimeoutHeight)
-	signature, err := a.baseApp.GfSpClient().SignCreateBucketApproval(ctx, task.GetCreateBucketInfo())
+	signature, err = a.baseApp.GfSpClient().SignCreateBucketApproval(ctx, task.GetCreateBucketInfo())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the create bucket approval", "error", err)
-		return false, err
+		return false, ErrSigner
 	}
 	task.GetCreateBucketInfo().GetPrimarySpApproval().Sig = signature
 	if err = a.bucketQueue.Push(task); err != nil {
@@ -86,13 +92,19 @@ func (a *ApprovalModular) PreCreateObjectApproval(
 func (a *ApprovalModular) HandleCreateObjectApprovalTask(
 	ctx context.Context,
 	task coretask.ApprovalCreateObjectTask) (bool, error) {
-	currentHeight, err := a.baseApp.Consensus().CurrentHeight(ctx)
+	var (
+		err           error
+		signature     []byte
+		currentHeight uint64
+	)
+
+	currentHeight, err = a.baseApp.Consensus().CurrentHeight(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get current height", "error", err)
 		return false, ErrConsensus
 	}
 	task.SetExpiredHeight(currentHeight + a.objectApprovalTimeoutHeight)
-	signature, err := a.baseApp.GfSpClient().SignCreateObjectApproval(ctx, task.GetCreateObjectInfo())
+	signature, err = a.baseApp.GfSpClient().SignCreateObjectApproval(ctx, task.GetCreateObjectInfo())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the create object approval", "error", err)
 		return false, err
