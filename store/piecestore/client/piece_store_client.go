@@ -71,7 +71,7 @@ func (client *StoreClient) PutPiece(ctx context.Context, key string, value []byt
 			time.Since(startTime).Seconds())
 		metrics.PutPieceTimeCounter.WithLabelValues(client.name).Inc()
 		if err != nil {
-			metrics.PieceWriteSizeGauge.WithLabelValues(client.name).Add(float64(len(value)))
+			metrics.PieceUsageAmountGauge.WithLabelValues(client.name).Add(float64(len(value)))
 		}
 	}()
 	err = client.ps.Put(ctx, key, bytes.NewReader(value))
@@ -90,7 +90,7 @@ func (client *StoreClient) DeletePiece(ctx context.Context, key string) error {
 			time.Since(startTime).Seconds())
 		metrics.DeletePieceTimeCounter.WithLabelValues(client.name).Inc()
 		if err != nil {
-			metrics.PieceWriteSizeGauge.WithLabelValues(client.name).Add(0 - float64(valSize))
+			metrics.PieceUsageAmountGauge.WithLabelValues(client.name).Add(0 - float64(valSize))
 		}
 	}()
 	val, err := client.GetPiece(ctx, key, 0, -1)

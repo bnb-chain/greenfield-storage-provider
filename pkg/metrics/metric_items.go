@@ -9,14 +9,29 @@ import (
 const serviceLabelName = "service"
 
 var MetricsItems = []prometheus.Collector{
+	// Grpc metrics category
 	DefaultGRPCServerMetrics,
 	DefaultGRPCClientMetrics,
+	// Http metrics category
 	DefaultHTTPServerMetrics,
-
+	// TaskQueue metrics category
 	QueueSizeGauge,
 	QueueCapGauge,
 	TaskInQueueTimeHistogram,
-
+	// PieceStore metrics category
+	PutPieceTimeHistogram,
+	PutPieceTimeCounter,
+	GetPieceTimeHistogram,
+	GetPieceTimeCounter,
+	DeletePieceTimeHistogram,
+	DeletePieceTimeCounter,
+	PieceUsageAmountGauge,
+	// Front module metrics category
+	UploadObjectSizeHistogram,
+	DownloadObjectSizeHistogram,
+	ChallengePieceSizeHistogram,
+	ReceivePieceSizeHistogram,
+	// TaskExecutor metrics category
 	MaxTaskNumberGauge,
 	RunningTaskNumberGauge,
 	RemainingMemoryGauge,
@@ -37,7 +52,7 @@ var MetricsItems = []prometheus.Collector{
 	ExecutorGCObjectTaskCounter,
 	ExecutorGCZombieTaskCounter,
 	ExecutorGCMetaTaskCounter,
-
+	// Manager metrics category
 	UploadObjectTaskTimeHistogram,
 	ReplicateAndSealTaskTimeHistogram,
 	ReceiveTaskTimeHistogram,
@@ -52,69 +67,72 @@ var MetricsItems = []prometheus.Collector{
 	DispatchSealObjectTaskCounter,
 	DispatchReceivePieceTaskCounter,
 	DispatchGcObjectTaskCounter,
+	// Signer metrics category
 	SealObjectTimeHistogram,
+	// Spdb metrics category
+	SPDBTimeHistogram,
+	// BlockSyncer metrics category
 	BlockHeightLagGauge,
 }
 
-// this file is used to write metric items in sp service
 var (
-	// DefaultGRPCServerMetrics create default gRPC server metrics
+	// DefaultGRPCServerMetrics defines default gRPC server metrics
 	DefaultGRPCServerMetrics = openmetrics.NewServerMetrics(openmetrics.WithServerHandlingTimeHistogram())
-	// DefaultGRPCClientMetrics create default gRPC client metrics
+	// DefaultGRPCClientMetrics defines default gRPC client metrics
 	DefaultGRPCClientMetrics = openmetrics.NewClientMetrics(openmetrics.WithClientHandlingTimeHistogram(),
 		openmetrics.WithClientStreamSendHistogram(), openmetrics.WithClientStreamRecvHistogram())
-	// DefaultHTTPServerMetrics create default HTTP server metrics
+	// DefaultHTTPServerMetrics defines default HTTP server metrics
 	DefaultHTTPServerMetrics = metricshttp.NewServerMetrics()
 
-	// queue mertices
+	// task queue metrics
 	QueueSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "queue_size",
-		Help: "Current task queue size.",
+		Help: "Track the task queue using size.",
 	}, []string{"queue_size"})
 	QueueCapGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "queue_capacity",
-		Help: "Task queue capacity.",
+		Help: "Track the task queue capacity.",
 	}, []string{"queue_capacity"})
 	TaskInQueueTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "task_active_time",
-		Help:    "Track the task of time in queue.",
+		Help:    "Track the task of alive time duration in queue from task is created.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"task_in_queue_time"})
 
-	// piecestore metrics
+	// piece store metrices
 	PutPieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "put_piece_time",
-		Help:    "Track put piece data to store time.",
+		Name:    "put_piece_store_time",
+		Help:    "Track the time of putting piece data to piece store.",
 		Buckets: prometheus.DefBuckets,
-	}, []string{"put_piece_time"})
+	}, []string{"put_piece_store_time"})
 	PutPieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "put_piece_number",
-		Help: "Track put piece data to store total number.",
-	}, []string{"put_piece_number"})
+		Name: "put_piece_store_number",
+		Help: "Track the total number of putting piece data to piece store.",
+	}, []string{"put_piece_store_number"})
 	GetPieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "get_piece_time",
-		Help:    "Track get piece data to store time.",
+		Name:    "get_piece_store_time",
+		Help:    "Track the time of getting piece data to piece store.",
 		Buckets: prometheus.DefBuckets,
-	}, []string{"get_piece_time"})
+	}, []string{"get_piece_store_time"})
 	GetPieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "get_piece_number",
-		Help: "Track get piece data to store total number.",
-	}, []string{"get_piece_number"})
+		Name: "get_piece_store_number",
+		Help: "Track the total number of getting piece data to piece store.",
+	}, []string{"get_piece_store_number"})
 	DeletePieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "delete_piece_time",
-		Help:    "Track delete piece data to store time..",
+		Name:    "delete_piece_store_time",
+		Help:    "Track the time of deleting piece data to piece store.",
 		Buckets: prometheus.DefBuckets,
-	}, []string{"delete_piece_time"})
+	}, []string{"delete_piece_store_time"})
 	DeletePieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "delete_piece_number",
-		Help: "Track get piece data to store total number.",
-	}, []string{"delete_piece_number"})
-	PieceWriteSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "write_size_to_piece_store",
-		Help: "Track piece store to use capacity.",
-	}, []string{"write_size_to_piece_store"})
+		Name: "delete_piece_store_number",
+		Help: "Track the total number of deleting piece data to piece store.",
+	}, []string{"delete_piece_store_number"})
+	PieceUsageAmountGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "usage_amount_piece_store",
+		Help: "Track usage amount of piece store.",
+	}, []string{"usage_amount_piece_store"})
 
-	// front modular mertices
+	// front module metrics
 	UploadObjectSizeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "upload_object_size",
 		Help:    "Track the object payload size of uploading.",
@@ -288,14 +306,16 @@ var (
 		Buckets: prometheus.DefBuckets,
 	}, []string{"seal_object_time"})
 
-	// BlockHeightLagGauge records the current block height of block syncer service
-	BlockHeightLagGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "block_syncer_height",
-		Help: "Current block number of block syncer progress.",
-	}, []string{"service"})
+	// spdb metrics
 	SPDBTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "sp_db_handling_seconds",
 		Help:    "Track the latency for spdb requests",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"method_name"})
+
+	// BlockHeightLagGauge records the current block height of block syncer service
+	BlockHeightLagGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "block_syncer_height",
+		Help: "Current block number of block syncer progress.",
+	}, []string{"service"})
 )
