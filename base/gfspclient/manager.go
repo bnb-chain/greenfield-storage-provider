@@ -14,10 +14,10 @@ import (
 func (s *GfSpClient) CreateUploadObject(
 	ctx context.Context,
 	task coretask.UploadObjectTask) error {
-	conn, err := s.ManagerConn(ctx)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect manager", "error", err)
-		return err
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpBeginTaskRequest{
 		Request: &gfspserver.GfSpBeginTaskRequest_UploadObjectTask{
@@ -39,10 +39,10 @@ func (s *GfSpClient) AskTask(
 	ctx context.Context,
 	limit corercmgr.Limit) (
 	coretask.Task, error) {
-	conn, err := s.ManagerConn(ctx)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect manager", "error", err)
-		return nil, err
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return nil, ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpAskTaskRequest{
 		NodeLimit: limit.(*gfsplimit.GfSpLimit),
@@ -76,9 +76,9 @@ func (s *GfSpClient) AskTask(
 func (s *GfSpClient) ReportTask(
 	ctx context.Context,
 	report coretask.Task) error {
-	conn, err := s.ManagerConn(ctx)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect manager", "error", err)
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
 		return ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpReportTaskRequest{}
@@ -123,7 +123,7 @@ func (s *GfSpClient) ReportTask(
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpReportTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to report task", "error", err)
-		return err
+		return ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -135,10 +135,10 @@ func (s *GfSpClient) QueryTask(
 	ctx context.Context,
 	key string) (
 	coretask.Task, error) {
-	conn, err := s.ManagerConn(ctx)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect manager", "error", err)
-		return nil, err
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return nil, ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpQueryTaskRequest{TaskKey: key}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryTask(ctx, req)

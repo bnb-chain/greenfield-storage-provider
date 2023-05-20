@@ -13,10 +13,10 @@ func (s *GfSpClient) AskCreateBucketApproval(
 	ctx context.Context,
 	task coretask.ApprovalCreateBucketTask) (
 	bool, coretask.ApprovalCreateBucketTask, error) {
-	conn, err := s.ApproverConn(ctx)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect approver", "error", err)
-		return false, nil, err
+	conn, connErr := s.ApproverConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
+		return false, nil, ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpAskApprovalRequest{
 		Request: &gfspserver.GfSpAskApprovalRequest_CreateBucketApprovalTask{
@@ -43,10 +43,10 @@ func (s *GfSpClient) AskCreateObjectApproval(
 	ctx context.Context,
 	task coretask.ApprovalCreateObjectTask) (
 	bool, coretask.ApprovalCreateObjectTask, error) {
-	conn, err := s.ApproverConn(ctx)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect approver", "error", err)
-		return false, nil, err
+	conn, connErr := s.ApproverConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
+		return false, nil, ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpAskApprovalRequest{
 		Request: &gfspserver.GfSpAskApprovalRequest_CreateObjectApprovalTask{

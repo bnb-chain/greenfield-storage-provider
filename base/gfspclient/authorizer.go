@@ -10,10 +10,10 @@ import (
 
 func (s *GfSpClient) VerifyAuthorize(ctx context.Context,
 	auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {
-	conn, err := s.Connection(ctx, s.authorizerEndpoint)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", err)
-		return false, err
+	conn, connErr := s.Connection(ctx, s.authorizerEndpoint)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", connErr)
+		return false, ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpAuthorizeRequest{

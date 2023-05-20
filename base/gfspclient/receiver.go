@@ -16,10 +16,10 @@ func (s *GfSpClient) ReplicatePiece(
 	task coretask.ReceivePieceTask,
 	data []byte,
 	opts ...grpc.DialOption) error {
-	conn, err := s.Connection(ctx, s.receiverEndpoint, opts...)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect receiver", "error", err)
-		return err
+	conn, connErr := s.Connection(ctx, s.receiverEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect receiver", "error", connErr)
+		return ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpReplicatePieceRequest{
@@ -42,10 +42,10 @@ func (s *GfSpClient) DoneReplicatePiece(
 	task coretask.ReceivePieceTask,
 	opts ...grpc.DialOption) (
 	[]byte, []byte, error) {
-	conn, err := s.Connection(ctx, s.receiverEndpoint, opts...)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect receiver", "error", err)
-		return nil, nil, err
+	conn, connErr := s.Connection(ctx, s.receiverEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect receiver", "error", connErr)
+		return nil, nil, ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpDoneReplicatePieceRequest{

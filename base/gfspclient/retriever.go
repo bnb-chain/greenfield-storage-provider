@@ -39,9 +39,9 @@ func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(
 	includePrivate bool,
 	opts ...grpc.DialOption) ([]*metatypes.Object, uint64, error) {
 	return nil, endBlockNumber, nil
-	//conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
-	//if err != nil {
-	//	return nil, uint64(0), err
+	//conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	//if connErr != nil {
+	//	return nil, uint64(0), ErrRpcUnknown
 	//}
 	//defer conn.Close()
 	//req := &metatypes.ListDeletedObjectsByBlockNumberRangeRequest{
@@ -62,10 +62,10 @@ func (s *GfSpClient) GetBucketReadQuota(
 	yearMonth string,
 	opts ...grpc.DialOption) (
 	uint64, uint64, uint64, error) {
-	conn, err := s.Connection(ctx, s.retrieverEndpoint, opts...)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect retriever", "error", err)
-		return uint64(0), uint64(0), uint64(0), err
+	conn, connErr := s.Connection(ctx, s.retrieverEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect retriever", "error", connErr)
+		return uint64(0), uint64(0), uint64(0), ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &retrievertypes.GfSpGetBucketReadQuotaRequest{
@@ -89,10 +89,10 @@ func (s *GfSpClient) ListBucketReadRecord(
 	startTimestampUs, endTimestampUs, maxRecordNum int64,
 	opts ...grpc.DialOption) (
 	[]*retrievertypes.ReadRecord, int64, error) {
-	conn, err := s.Connection(ctx, s.retrieverEndpoint, opts...)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect retriever", "error", err)
-		return nil, 0, err
+	conn, connErr := s.Connection(ctx, s.retrieverEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect retriever", "error", connErr)
+		return nil, 0, ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &retrievertypes.GfSpListBucketReadRecordRequest{
@@ -116,10 +116,10 @@ func (s *GfSpClient) GetUploadObjectState(
 	ctx context.Context,
 	objectID uint64,
 	opts ...grpc.DialOption) (int32, error) {
-	conn, err := s.Connection(ctx, s.retrieverEndpoint, opts...)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect retriever", "error", err)
-		return 0, err
+	conn, connErr := s.Connection(ctx, s.retrieverEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect retriever", "error", connErr)
+		return 0, ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &retrievertypes.GfSpQueryUploadProgressRequest{

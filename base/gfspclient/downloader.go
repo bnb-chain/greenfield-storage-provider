@@ -16,10 +16,10 @@ func (s *GfSpClient) GetObject(
 	task coretask.DownloadObjectTask,
 	opts ...grpc.DialOption) (
 	[]byte, error) {
-	conn, err := s.Connection(ctx, s.downloaderEndpoint, opts...)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect downloader", "error", err)
-		return nil, err
+	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
+		return nil, ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpDownloadObjectRequest{
@@ -41,10 +41,10 @@ func (s *GfSpClient) GetChallengeInfo(
 	task coretask.ChallengePieceTask,
 	opts ...grpc.DialOption) (
 	[]byte, [][]byte, []byte, error) {
-	conn, err := s.Connection(ctx, s.downloaderEndpoint, opts...)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect downloader", "error", err)
-		return nil, nil, nil, err
+	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
+		return nil, nil, nil, ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpGetChallengeInfoRequest{

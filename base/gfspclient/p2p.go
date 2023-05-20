@@ -15,10 +15,10 @@ func (s *GfSpClient) AskSecondaryReplicatePieceApproval(
 	low, high int,
 	timeout int64) (
 	[]*gfsptask.GfSpReplicatePieceApprovalTask, error) {
-	conn, err := s.P2PConn(ctx)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect p2p", "error", err)
-		return nil, err
+	conn, connErr := s.P2PConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect p2p", "error", connErr)
+		return nil, ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpAskSecondaryReplicatePieceApprovalRequest{
 		ReplicatePieceApprovalTask: task.(*gfsptask.GfSpReplicatePieceApprovalTask),
@@ -38,10 +38,10 @@ func (s *GfSpClient) AskSecondaryReplicatePieceApproval(
 }
 
 func (s *GfSpClient) QueryP2PBootstrap(ctx context.Context) ([]string, error) {
-	conn, err := s.P2PConn(ctx)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect p2p", "error", err)
-		return nil, err
+	conn, connErr := s.P2PConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect p2p", "error", connErr)
+		return nil, ErrRpcUnknown
 	}
 	resp, err := gfspserver.NewGfSpP2PServiceClient(conn).GfSpQueryP2PBootstrap(ctx, &gfspserver.GfSpQueryP2PNodeRequest{})
 	if err != nil {
