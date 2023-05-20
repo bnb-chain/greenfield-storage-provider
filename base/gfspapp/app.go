@@ -68,42 +68,53 @@ type GfSpBaseApp struct {
 	gcMetaRetry         int64
 }
 
+// AppID returns the GfSpBaseApp ID, the default value is prefix(gfsp) add
+// started modules' name.
 func (g *GfSpBaseApp) AppID() string {
 	return g.appID
 }
 
+// GfSpClient returns the sp client that grpc and http protocol.
 func (g *GfSpBaseApp) GfSpClient() *gfspclient.GfSpClient {
 	return g.client
 }
 
+// PieceStore returns the piece store client.
 func (g *GfSpBaseApp) PieceStore() piecestore.PieceStore {
 	return g.pieceStore
 }
 
+// PieceOp returns piece helper struct instance.
 func (g *GfSpBaseApp) PieceOp() piecestore.PieceOp {
 	return g.pieceOp
 }
 
+// Consensus returns greenfield consensus query client.
 func (g *GfSpBaseApp) Consensus() consensus.Consensus {
 	return g.chain
 }
 
+// OperateAddress returns the sp operator address.
 func (g *GfSpBaseApp) OperateAddress() string {
 	return g.operateAddress
 }
 
+// GfSpDB returns the sp db client.
 func (g *GfSpBaseApp) GfSpDB() spdb.SPDB {
 	return g.gfSpDB
 }
 
+// ServerForRegister returns the Grpc server for module register own service.
 func (g *GfSpBaseApp) ServerForRegister() *grpc.Server {
 	return g.server
 }
 
+// ResourceManager returns the resource manager for module to open own resource span.
 func (g *GfSpBaseApp) ResourceManager() corercmgr.ResourceManager {
 	return g.rcmgr
 }
 
+// Start the GfSpBaseApp and blocks the progress until signal.
 func (g *GfSpBaseApp) Start(ctx context.Context) error {
 	err := g.StartRpcServer(ctx)
 	if err != nil {
@@ -116,6 +127,7 @@ func (g *GfSpBaseApp) Start(ctx context.Context) error {
 	return nil
 }
 
+// close recycles the GfSpBaseApp resource on the stop time.
 func (g *GfSpBaseApp) close(ctx context.Context) error {
 	g.StopRpcServer(ctx)
 	g.GfSpClient().Close()
@@ -124,6 +136,7 @@ func (g *GfSpBaseApp) close(ctx context.Context) error {
 	return nil
 }
 
+// EnableMetrics returns an indicator whether enable the metrics service.
 func (g *GfSpBaseApp) EnableMetrics() bool {
 	return g.metrics != nil
 }

@@ -53,7 +53,7 @@ func (g *GfSpBaseApp) OnDownloadObjectTask(
 	}
 	err := g.downloader.PreDownloadObject(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pre download object", "error", err)
+		log.CtxErrorw(ctx, "failed to pre download object", "info", task.Info(), "error", err)
 		return nil, err
 	}
 	data, err := g.downloader.HandleDownloadObjectTask(ctx, task)
@@ -103,7 +103,7 @@ func (g *GfSpBaseApp) OnChallengePieceTask(
 	}
 	err := g.downloader.PreChallengePiece(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pre challenge piece", "error", err)
+		log.CtxErrorw(ctx, "failed to pre challenge piece", "info", task.Info(), "error", err)
 		return nil, nil, nil, err
 	}
 	integrity, checksums, data, err := g.downloader.HandleChallengePiece(ctx, task)

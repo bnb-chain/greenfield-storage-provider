@@ -42,8 +42,8 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 			metrics.UploadObjectSizeHistogram.WithLabelValues(g.uploader.Name()).Observe(
 				float64(task.GetObjectInfo().GetPayloadSize()))
 			g.uploader.PostUploadObject(ctx, task)
-			log.CtxDebugw(ctx, "finish to receive object stream data", "receive_size", receiveSize,
-				"object_size", task.GetObjectInfo().GetPayloadSize(), "error", err)
+			log.CtxDebugw(ctx, "finish to receive object stream data", "info", task.Info(),
+				"receive_size", receiveSize, "error", err)
 		} else {
 			log.CtxDebugw(ctx, "finish to receive object stream data",
 				"receive_size", receiveSize, "error", err)

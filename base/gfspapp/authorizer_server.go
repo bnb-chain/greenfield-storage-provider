@@ -17,10 +17,10 @@ func (g *GfSpBaseApp) GfSpVerifyAuthorize(
 	*gfspserver.GfSpAuthorizeResponse, error) {
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, req.GetBucketName())
 	ctx = log.WithValue(ctx, log.CtxKeyObjectName, req.GetObjectName())
-	log.CtxDebugw(ctx, "begin to authorize", "user", req.GetUserAccount(), "op_type", req.GetAuthType())
+	log.CtxDebugw(ctx, "begin to authorize", "user", req.GetUserAccount(), "auth_type", req.GetAuthType())
 	allow, err := g.authorizer.VerifyAuthorize(ctx, coremodule.AuthOpType(req.GetAuthType()),
 		req.GetUserAccount(), req.GetBucketName(), req.GetObjectName())
-	log.CtxDebugw(ctx, "finish to authorize", "user", req.GetUserAccount(), "op_type", req.GetAuthType(),
+	log.CtxDebugw(ctx, "finish to authorize", "user", req.GetUserAccount(), "auth_type", req.GetAuthType(),
 		"allow", allow, "error", err)
 	return &gfspserver.GfSpAuthorizeResponse{
 		Err:     gfsperrors.MakeGfSpError(err),

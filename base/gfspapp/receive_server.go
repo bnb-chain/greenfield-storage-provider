@@ -50,7 +50,7 @@ func (g *GfSpBaseApp) GfSpDoneReplicatePiece(
 	*gfspserver.GfSpDoneReplicatePieceResponse, error) {
 	task := req.GetReceivePieceTask()
 	if task == nil {
-		log.Error("failed to receive piece, task pointer dangling")
+		log.Error("failed to done receive piece, task pointer dangling")
 		return &gfspserver.GfSpDoneReplicatePieceResponse{Err: ErrReceiveTaskDangling}, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
@@ -59,7 +59,7 @@ func (g *GfSpBaseApp) GfSpDoneReplicatePiece(
 		log.CtxErrorw(ctx, "failed to done replicate piece", "error", err)
 		return &gfspserver.GfSpDoneReplicatePieceResponse{Err: gfsperrors.MakeGfSpError(err)}, nil
 	}
-	log.CtxDebugw(ctx, "succeed to complete replicate pieces")
+	log.CtxDebugw(ctx, "succeed to done replicate pieces")
 	return &gfspserver.GfSpDoneReplicatePieceResponse{
 		IntegrityHash: integrity,
 		Signature:     signature,

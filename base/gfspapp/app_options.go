@@ -21,10 +21,30 @@ import (
 )
 
 const (
+	// DefaultGfSpAppIDPrefix defines the default app id prefix.
 	DefaultGfSpAppIDPrefix = "gfsp"
-	DefaultGrpcAddress     = "localhost:9333"
-	DefaultMetricsAddress  = "localhost:24367"
-	DefaultPprofAddress    = "localhost:24368"
+	// DefaultGrpcAddress defines the default Grpc address.
+	DefaultGrpcAddress = "localhost:9333"
+	// DefaultMetricsAddress defines the default metrics service address.
+	DefaultMetricsAddress = "localhost:24367"
+	// DefaultPprofAddress defines the default pprof service address.
+	DefaultPprofAddress = "localhost:24368"
+
+	// DefaultChainID defines the default greenfield chain ID.
+	DefaultChainID = "greenfield_9000-1741"
+	// DefaultChainAddress defines the default greenfield address.
+	DefaultChainAddress = "http://localhost:26750"
+
+	// DefaultMemoryLimit defines the default memory limit for rcmgr to use.
+	DefaultMemoryLimit = 8 * 1024 * 1024 * 1024
+	// DefaultTaskTotalLimit defines the default total task limit for rcmgr to use.
+	DefaultTaskTotalLimit = 10240
+	// DefaultHighTaskLimit defines the default high priority task limit for rcmgr to use.
+	DefaultHighTaskLimit = 128
+	// DefaultMediumTaskLimit defines the default medium priority task limit for rcmgr to use.
+	DefaultMediumTaskLimit = 1024
+	// DefaultLowTaskLimit defines the default low priority task limit for rcmgr to use.
+	DefaultLowTaskLimit = 16
 
 	// SpDBUser defines env variable name for sp db user name
 	SpDBUser = "SP_DB_USER"
@@ -42,14 +62,6 @@ const (
 	DefaultMaxIdleConns = 16
 	// DefaultMaxOpenConns defines the default max number of open connections
 	DefaultMaxOpenConns = 32
-
-	DefaultChainID         = "greenfield_9000-1741"
-	DefaultChainAddress    = "http://localhost:26750"
-	DefaultMemoryLimit     = 8 * 1024 * 1024 * 1024
-	DefaultTaskTotalLimit  = 10240
-	DefaultHighTaskLimit   = 128
-	DefaultMediumTaskLimit = 1024
-	DefaultLowTaskLimit    = 16
 )
 
 func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {

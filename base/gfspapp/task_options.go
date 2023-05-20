@@ -5,25 +5,63 @@ import (
 )
 
 const (
-	NotUseTimeout     int64 = 0
-	MinUploadTime     int64 = 2
-	MaxUploadTime     int64 = 300
-	MinReplicateTime  int64 = 12
-	MaxReplicateTime  int64 = 500
-	MinReceiveTime    int64 = 2
-	MaxReceiveTime    int64 = 10
+	// NotUseTimeout defines the default task timeout.
+	NotUseTimeout int64 = 0
+	// MinUploadTime defines the min timeout to upload object.
+	MinUploadTime int64 = 2
+	// MaxUploadTime defines the max timeout to upload object.
+	MaxUploadTime int64 = 300
+	// MinReplicateTime defines the min timeout to replicate object.
+	MinReplicateTime int64 = 12
+	// MaxReplicateTime defines the max timeout to replicate object.
+	MaxReplicateTime int64 = 500
+	// MinReceiveTime defines the min timeout to confirm the received piece whether is sealed on greenfield.
+	MinReceiveTime int64 = 2
+	// MaxReceiveTime defines the max timeout to confirm the received piece whether is sealed on greenfield.
+	MaxReceiveTime int64 = 10
+	// MinSealObjectTime defines the min timeout to seal object to greenfield.
 	MinSealObjectTime int64 = 2
+	// MaxSealObjectTime defines the max timeout to seal object to greenfield.
 	MaxSealObjectTime int64 = 5
-	MinDownloadTime   int64 = 2
-	MaxDownloadTime   int64 = 300
-	MinGcObjectTime   int64 = 300
-	MaxGcObjectTime   int64 = 600
-	MinGcZombieTime   int64 = 300
-	MaxGcZombieTime   int64 = 600
-	MinGCMetaTime     int64 = 300
-	MaxGCMetaTime     int64 = 600
+	// MinDownloadTime defines the min timeout to download object.
+	MinDownloadTime int64 = 2
+	// MaxDownloadTime defines the max timeout to download object.
+	MaxDownloadTime int64 = 300
+	// MinGcObjectTime defines the min timeout to gc object.
+	MinGcObjectTime int64 = 300
+	// MaxGcObjectTime defines the max timeout to gc object.
+	MaxGcObjectTime int64 = 600
+	// MinGcZombieTime defines the min timeout to gc zombie piece.
+	MinGcZombieTime int64 = 300
+	// MaxGcZombieTime defines the max timeout to gc zombie piece.
+	MaxGcZombieTime int64 = 600
+	// MinGCMetaTime defines the min timeout to gc meta.
+	MinGCMetaTime int64 = 300
+	// MaxGCMetaTime defines the max timeout to gc meta.
+	MaxGCMetaTime int64 = 600
+
+	// NotUseRetry defines the default task max retry.
+	NotUseRetry int64 = 0
+	// MinReplicateRetry defines the min retry number to replicate object.
+	MinReplicateRetry = 3
+	// MaxReplicateRetry defines the max retry number to replicate object.
+	MaxReplicateRetry = 6
+	// MinReceiveConfirmRetry defines the min retry number to confirm received piece is sealed on greenfield.
+	MinReceiveConfirmRetry = 2
+	// MaxReceiveConfirmRetry defines the max retry number to confirm received piece is sealed on greenfield.
+	MaxReceiveConfirmRetry = 6
+	// MinSealObjectRetry defines the min retry number to seal object.
+	MinSealObjectRetry = 3
+	// MaxSealObjectRetry defines the max retry number to seal object.
+	MaxSealObjectRetry = 10
+	// MinGCObjectRetry defines the min retry number to gc object.
+	MinGCObjectRetry = 3
+	// MaxGCObjectRetry defines the min retry number to gc object.
+	MaxGCObjectRetry = 5
 )
 
+// TaskTimeout returns the task timeout by task type and some task need payload size
+// to compute, example: upload, download, etc.
 func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 	switch task.Type() {
 	case coretask.TypeTaskCreateBucketApproval:
@@ -113,18 +151,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 	return NotUseTimeout
 }
 
-const (
-	NotUseRetry            int64 = 0
-	MinReplicateRetry            = 3
-	MaxReplicateRetry            = 6
-	MinReceiveConfirmRetry       = 2
-	MaxReceiveConfirmRetry       = 6
-	MinSealObjectRetry           = 3
-	MaxSealObjectRetry           = 10
-	MinGCObjectRetry             = 3
-	MaxGCObjectRetry             = 5
-)
-
+// TaskMaxRetry returns the task max retry by task type.
 func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 	switch task.Type() {
 	case coretask.TypeTaskCreateBucketApproval:
@@ -191,6 +218,8 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 	return 0
 }
 
+// TaskPriority returns the task priority by task type, it is the default options.
+// the task priority support self define and dynamic settings.
 func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	switch task.Type() {
 	case coretask.TypeTaskCreateBucketApproval:
@@ -221,6 +250,7 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	return coretask.UnKnownTaskPriority
 }
 
+// TaskPriorityLevel returns the task priority level, it is compute by task priority.
 func (g *GfSpBaseApp) TaskPriorityLevel(task coretask.Task) coretask.TPriorityLevel {
 	if task.GetPriority() <= coretask.DefaultSmallerPriority {
 		return coretask.TLowPriorityLevel

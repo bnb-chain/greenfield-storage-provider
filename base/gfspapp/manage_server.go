@@ -50,10 +50,10 @@ func (g *GfSpBaseApp) OnBeginUploadObjectTask(
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 	err := g.manager.HandleCreateUploadObjectTask(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to begin upload object task", "error", err)
+		log.CtxErrorw(ctx, "failed to begin upload object task", "info", task.Info(), "error", err)
 		return err
 	}
-	log.CtxDebugw(ctx, "succeed to begin upload object task")
+	log.CtxDebugw(ctx, "succeed to begin upload object task", "info", task.Info())
 	return nil
 }
 
@@ -64,7 +64,7 @@ func (g *GfSpBaseApp) GfSpAskTask(
 	gfspTask, err := g.OnAskTask(ctx, req.GetNodeLimit())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to dispatch task", "error", err)
-		return &gfspserver.GfSpAskTaskResponse{Err: ErrNoTaskMatchLimit}, nil
+		return &gfspserver.GfSpAskTaskResponse{Err: gfsperrors.MakeGfSpError(err)}, nil
 	}
 	if gfspTask == nil {
 		return &gfspserver.GfSpAskTaskResponse{Err: ErrNoTaskMatchLimit}, nil
@@ -104,7 +104,7 @@ func (g *GfSpBaseApp) GfSpAskTask(
 		log.CtxErrorw(ctx, "[BUG] Unsupported task type to dispatch")
 		return &gfspserver.GfSpAskTaskResponse{Err: ErrUnsupportedTaskType}, nil
 	}
-	log.CtxDebugw(ctx, "succeed to dispatch task", "node_address", gfspTask.GetAddress())
+	log.CtxDebugw(ctx, "succeed to dispatch task")
 	return resp, nil
 }
 
@@ -117,7 +117,7 @@ func (g *GfSpBaseApp) OnAskTask(
 		return nil, gfsperrors.MakeGfSpError(err)
 	}
 	if gfspTask == nil {
-		return gfspTask, nil
+		return nil, ErrNoTaskMatchLimit
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, gfspTask.Key().String())
 	gfspTask.IncRetry()
@@ -145,7 +145,7 @@ func (g *GfSpBaseApp) GfSpReportTask(
 		task := t.UploadObjectTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(RpcRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_error", task.Error())
+		log.CtxInfow(ctx, "begin to handle reported task", "info", task.Info())
 
 		metrics.UploadObjectTaskTimeHistogram.WithLabelValues(g.manager.Name()).Observe(
 			time.Since(time.Unix(t.UploadObjectTask.GetCreateTime(), 0)).Seconds())
@@ -158,7 +158,7 @@ func (g *GfSpBaseApp) GfSpReportTask(
 		task := t.ReplicatePieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(RpcRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_error", task.Error())
+		log.CtxInfow(ctx, "begin to handle reported task", "info", task.Info())
 
 		metrics.ReplicateAndSealTaskTimeHistogram.WithLabelValues(g.manager.Name()).Observe(
 			time.Since(time.Unix(t.ReplicatePieceTask.GetCreateTime(), 0)).Seconds())
@@ -174,7 +174,7 @@ func (g *GfSpBaseApp) GfSpReportTask(
 		task := t.SealObjectTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(RpcRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_error", task.Error())
+		log.CtxInfow(ctx, "begin to handle reported task", "info", task.Info())
 
 		metrics.SealObjectTaskTimeHistogram.WithLabelValues(g.manager.Name()).Observe(
 			time.Since(time.Unix(t.SealObjectTask.GetCreateTime(), 0)).Seconds())
@@ -187,7 +187,7 @@ func (g *GfSpBaseApp) GfSpReportTask(
 		task := t.ReceivePieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(RpcRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_error", task.Error())
+		log.CtxInfow(ctx, "begin to handle reported task", "info", task.Info())
 
 		metrics.ReceiveTaskTimeHistogram.WithLabelValues(g.manager.Name()).Observe(
 			time.Since(time.Unix(t.ReceivePieceTask.GetCreateTime(), 0)).Seconds())
@@ -200,35 +200,35 @@ func (g *GfSpBaseApp) GfSpReportTask(
 		task := t.GcObjectTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(RpcRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_error", task.Error())
+		log.CtxInfow(ctx, "begin to handle reported task", "info", task.Info())
 
 		err = g.manager.HandleGCObjectTask(ctx, t.GcObjectTask)
 	case *gfspserver.GfSpReportTaskRequest_GcZombiePieceTask:
 		task := t.GcZombiePieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(RpcRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_error", task.Error())
+		log.CtxInfow(ctx, "begin to handle reported task", "info", task.Info())
 
 		err = g.manager.HandleGCZombiePieceTask(ctx, t.GcZombiePieceTask)
 	case *gfspserver.GfSpReportTaskRequest_GcMetaTask:
 		task := t.GcMetaTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(RpcRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_error", task.Error())
+		log.CtxInfow(ctx, "begin to handle reported task", "info", task.Info())
 
 		err = g.manager.HandleGCMetaTask(ctx, t.GcMetaTask)
 	case *gfspserver.GfSpReportTaskRequest_DownloadObjectTask:
 		task := t.DownloadObjectTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(RpcRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_error", task.Error())
+		log.CtxInfow(ctx, "begin to handle reported task", "info", task.Info())
 
 		err = g.manager.HandleDownloadObjectTask(ctx, t.DownloadObjectTask)
 	case *gfspserver.GfSpReportTaskRequest_ChallengePieceTask:
 		task := t.ChallengePieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(RpcRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_error", task.Error())
+		log.CtxInfow(ctx, "begin to handle reported task", "info", task.Info())
 
 		err = g.manager.HandleChallengePieceTask(ctx, t.ChallengePieceTask)
 	default:

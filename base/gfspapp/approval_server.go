@@ -75,7 +75,7 @@ func (g *GfSpBaseApp) OnAskCreateBucketApproval(
 
 	err := g.approver.PreCreateBucketApproval(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pre create bucket approval", "error", err)
+		log.CtxErrorw(ctx, "failed to pre create bucket approval", "info", task.Info(), "error", err)
 		return false, err
 	}
 	allow, err := g.approver.HandleCreateBucketApprovalTask(ctx, task)
@@ -99,7 +99,7 @@ func (g *GfSpBaseApp) OnAskCreateObjectApproval(
 
 	err := g.approver.PreCreateObjectApproval(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pre create object approval", "error", err)
+		log.CtxErrorw(ctx, "failed to pre create object approval", "info", task.Info(), "error", err)
 		return false, err
 	}
 	allow, err := g.approver.HandleCreateObjectApprovalTask(ctx, task)
