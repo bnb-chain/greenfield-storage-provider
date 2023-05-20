@@ -15,6 +15,8 @@ import (
 
 type Option = func(cfg *GfSpConfig) error
 
+// Customize defines the interface for developer to customize own implement, the GfSp base
+// app will call the customized implement.
 type Customize struct {
 	GfSpDB                         spdb.SPDB
 	PieceStore                     piecestore.PieceStore
@@ -28,10 +30,12 @@ type Customize struct {
 	NewStrategyTQueueWithLimitFunc coretaskqueue.NewTQueueOnStrategyWithLimit
 }
 
+// GfSpConfig defines the GfSp configuration.
 type GfSpConfig struct {
 	AppID       string
 	Server      []string
 	GrpcAddress string
+	Customize   *Customize
 	SpDB        storeconfig.SQLDBConfig
 	PieceStore  storage.PieceStoreConfig
 	Chain       ChainConfig
@@ -46,9 +50,11 @@ type GfSpConfig struct {
 	Task        TaskConfig
 	Monitor     MonitorConfig
 	Rcmgr       RcmgrConfig
-	Customize   *Customize
+	Log         LogConfig
 }
 
+// Apply sets the customized implement to the GfSp configuration, it will be called
+// before init GfSp base app.
 func (cfg *GfSpConfig) Apply(opts ...Option) error {
 	for _, opt := range opts {
 		if err := opt(cfg); err != nil {
@@ -58,6 +64,7 @@ func (cfg *GfSpConfig) Apply(opts ...Option) error {
 	return nil
 }
 
+// String returns the detail GfSp configuration.
 func (cfg *GfSpConfig) String() string {
 	customize := cfg.Customize
 	cfg.Customize = nil
@@ -185,4 +192,9 @@ type MonitorConfig struct {
 type RcmgrConfig struct {
 	DisableRcmgr bool
 	GfSpLimiter  *gfsplimit.GfSpLimiter
+}
+
+type LogConfig struct {
+	Level string
+	Path  string
 }

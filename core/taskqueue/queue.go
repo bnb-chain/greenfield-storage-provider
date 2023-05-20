@@ -1,6 +1,8 @@
 package taskqueue
 
 import (
+	"strings"
+
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 )
@@ -35,6 +37,8 @@ type TQueue interface {
 	Len() int
 	// Cap returns the capacity of queue.
 	Cap() int
+	// ScanTask scans all tasks, and call the func one by one task.
+	ScanTask(func(task.Task))
 }
 
 // TQueueWithLimit is the interface task queue that takes resources into account. Only tasks with less
@@ -54,6 +58,8 @@ type TQueueWithLimit interface {
 	Len() int
 	// Cap returns the capacity of queue.
 	Cap() int
+	// ScanTask scans all tasks, and call the func one by one task.
+	ScanTask(func(task.Task))
 }
 
 // TQueueOnStrategy is the interface to task queue and the queue supports customize strategies to filter
@@ -63,8 +69,8 @@ type TQueueOnStrategy interface {
 	TQueueStrategy
 }
 
-// TQueueOnStrategyWithLimit is the interface to task queue that takes resources into account, and the queue
-// supports customize strategies to filter task for popping and retiring task.
+// TQueueOnStrategyWithLimit is the interface to task queue that takes resources into account, and the
+// queue supports customize strategies to filter task for popping and retiring task.
 type TQueueOnStrategyWithLimit interface {
 	TQueueWithLimit
 	TQueueStrategy
@@ -78,4 +84,26 @@ type TQueueStrategy interface {
 	// SetRetireTaskStrategy sets the callback func to retire task, when the queue is full, it will be
 	// called to retire tasks.
 	SetRetireTaskStrategy(func(task.Task) bool)
+}
+
+func ScanTQueueByKeyPrefix(queue TQueue, prefix string) []string {
+	var infos []string
+	scan := func(t task.Task) {
+		if strings.HasPrefix(string(t.Key()), prefix) {
+			infos = append(infos, t.Info())
+		}
+	}
+	queue.ScanTask(scan)
+	return infos
+}
+
+func ScanTQueueWithLimitByKeyPrefix(queue TQueueWithLimit, prefix string) []string {
+	var infos []string
+	scan := func(t task.Task) {
+		if strings.HasPrefix(string(t.Key()), prefix) {
+			infos = append(infos, t.Info())
+		}
+	}
+	queue.ScanTask(scan)
+	return infos
 }

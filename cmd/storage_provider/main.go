@@ -97,6 +97,7 @@ func main() {
 	}
 }
 
+// loadConfig loads the configuration from file.
 func loadConfig(file string, cfg *gfspconfig.GfSpConfig) error {
 	if cfg == nil {
 		return errors.New("failed to load config file, the config param invalid")
@@ -139,6 +140,11 @@ func makeConfig(ctx *cli.Context) (*gfspconfig.GfSpConfig, error) {
 	return cfg, nil
 }
 
+// registerModular registers the module to the module manager, register info include:
+// module name, module description and new module func. Module name is an indexer for
+// starting, the start module name comes from config file or '--service' command flag.
+// Module description uses for 'list' command that shows the SP supports modules info.
+// New module func is help module manager to init the module instance.
 func registerModular() {
 	gfspapp.RegisterModular(module.ApprovalModularName, module.ApprovalModularDescription, approver.NewApprovalModular)
 	gfspapp.RegisterModular(module.AuthorizationModularName, module.AuthorizationModularDescription, authorizer.NewAuthorizeModular)
@@ -153,25 +159,29 @@ func registerModular() {
 	gfspapp.RegisterModular(module.UploadModularName, module.UploadModularDescription, uploader.NewUploadModular)
 }
 
+// initLog inits the log configuration from config file and command flags.
 func initLog(ctx *cli.Context, cfg *gfspconfig.GfSpConfig) error {
-	var (
-		logLevel = "debug"
-		logPath  = "./gfsp.log"
-	)
+	if cfg.Log.Level == "" {
+		// TODO:: change to info
+		cfg.Log.Level = "debug"
+	}
+	if cfg.Log.Path == "" {
+		cfg.Log.Path = "./gnfd-sp.log"
+	}
 	if ctx.IsSet(utils.LogLevelFlag.Name) {
-		logLevel = ctx.String(utils.LogLevelFlag.Name)
+		cfg.Log.Level = ctx.String(utils.LogLevelFlag.Name)
 	}
 	if ctx.IsSet(utils.LogPathFlag.Name) {
-		logPath = ctx.String(utils.LogPathFlag.Name)
+		cfg.Log.Path = ctx.String(utils.LogPathFlag.Name)
 	}
 	if ctx.IsSet(utils.LogStdOutputFlag.Name) {
-		logPath = ""
+		cfg.Log.Path = ""
 	}
-	loglvl, err := log.ParseLevel(logLevel)
+	level, err := log.ParseLevel(cfg.Log.Level)
 	if err != nil {
 		return err
 	}
-	log.Init(loglvl, logPath)
+	log.Init(level, cfg.Log.Path)
 	return nil
 }
 

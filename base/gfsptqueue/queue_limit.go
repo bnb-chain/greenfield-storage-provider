@@ -182,3 +182,12 @@ func (t *GfSpTQueueWithLimit) SetRetireTaskStrategy(retire func(coretask.Task) b
 	defer t.mux.Unlock()
 	t.gcFunc = retire
 }
+
+// ScanTask scans all tasks, and call the func one by one task.
+func (t *GfSpTQueueWithLimit) ScanTask(scan func(coretask.Task)) {
+	t.mux.RLock()
+	defer t.mux.RUnlock()
+	for _, task := range t.tasks {
+		scan(task)
+	}
+}
