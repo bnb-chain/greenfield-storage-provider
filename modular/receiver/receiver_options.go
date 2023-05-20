@@ -7,6 +7,8 @@ import (
 )
 
 const (
+	// DefaultReceivePieceParallelPerNode defines the default max receive piece parallel
+	// per receiver
 	DefaultReceivePieceParallelPerNode = 1024
 )
 

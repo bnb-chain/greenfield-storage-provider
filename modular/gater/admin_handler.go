@@ -262,12 +262,21 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	log.CtxDebugw(reqCtx.Context(), "succeed to challenge piece")
 }
 
+// replicateHandler handles the replicate piece from primary SP request. The Primary
+// replicates the piece data one by one, and will ask the integrity hash and the
+// signature to seal object on greenfield.
 func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		reqCtx *RequestContext
+		err           error
+		reqCtx        *RequestContext
+		approvalMsg   []byte
+		receiveMsg    []byte
+		data          []byte
+		integrity     []byte
+		signature     []byte
+		currentHeight uint64
+		approval      = gfsptask.GfSpReplicatePieceApprovalTask{}
 	)
-	reqCtx, _ = NewRequestContext(r)
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -279,25 +288,27 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+	// ignore the error, because the replicate request only between SPs, the request
+	// verification is by signature of the ReceivePieceTask
+	reqCtx, _ = NewRequestContext(r)
 
-	approvalMsg, err := hex.DecodeString(r.Header.Get(model.GnfdReplicatePieceApprovalHeader))
+	approvalMsg, err = hex.DecodeString(r.Header.Get(model.GnfdReplicatePieceApprovalHeader))
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse replicate piece approval header", "approval",
-			r.Header.Get(model.GnfdReceiveMsgHeader))
+		log.CtxErrorw(reqCtx.Context(), "failed to parse replicate piece approval header",
+			"approval", r.Header.Get(model.GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
-	approval := gfsptask.GfSpReplicatePieceApprovalTask{}
 	err = proto.Unmarshal(approvalMsg, &approval)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal replicate piece approval header", "receive",
-			r.Header.Get(model.GnfdReceiveMsgHeader))
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal replicate piece approval header",
+			"receive", r.Header.Get(model.GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
 	if approval.GetApprovedSpOperatorAddress() != g.baseApp.OperateAddress() {
-		log.CtxErrorw(reqCtx.Context(), "failed to receive piece data, sp mismatch")
-		err = ErrMisMatchSp
+		log.CtxErrorw(reqCtx.Context(), "failed to verify replicate piece approval, sp mismatch")
+		err = ErrMismatchSp
 		return
 	}
 	err = p2pnode.VerifySignature(g.baseApp.OperateAddress(), approval.GetSignBytes(), approval.GetApprovedSignature())
@@ -306,8 +317,9 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrSignature
 		return
 	}
-	currentHeight, err := g.baseApp.Consensus().CurrentHeight(reqCtx.Context())
+	currentHeight, err = g.baseApp.Consensus().CurrentHeight(reqCtx.Context())
 	if err != nil {
+		// ignore the system's inner error,let the request go
 		log.CtxErrorw(reqCtx.Context(), "failed to get current block height")
 	} else if currentHeight > approval.GetExpiredHeight() {
 		log.CtxErrorw(reqCtx.Context(), "replicate piece approval expired")
@@ -315,18 +327,18 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	receiveMsg, err := hex.DecodeString(r.Header.Get(model.GnfdReceiveMsgHeader))
+	receiveMsg, err = hex.DecodeString(r.Header.Get(model.GnfdReceiveMsgHeader))
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse receive header", "receive",
-			r.Header.Get(model.GnfdReceiveMsgHeader))
+		log.CtxErrorw(reqCtx.Context(), "failed to parse receive header",
+			"receive", r.Header.Get(model.GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
 	receiveTask := gfsptask.GfSpReceivePieceTask{}
 	err = proto.Unmarshal(receiveMsg, &receiveTask)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal receive header", "receive",
-			r.Header.Get(model.GnfdReceiveMsgHeader))
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal receive header",
+			"receive", r.Header.Get(model.GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
@@ -337,9 +349,9 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidHeader
 		return
 	}
-	data, err := io.ReadAll(r.Body)
+	data, err = io.ReadAll(r.Body)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "stream exception", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to read replicate piece data", "error", err)
 		err = ErrExceptionStream
 		return
 	}
@@ -350,7 +362,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		integrity, signature, err := g.baseApp.GfSpClient().DoneReplicatePiece(reqCtx.Context(), &receiveTask)
+		integrity, signature, err = g.baseApp.GfSpClient().DoneReplicatePiece(reqCtx.Context(), &receiveTask)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to done receive piece", "error", err)
 			return

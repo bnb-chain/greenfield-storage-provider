@@ -11,6 +11,7 @@ import (
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
@@ -27,8 +28,8 @@ func (r *ReceiveModular) HandleReceivePieceTask(
 	ctx context.Context,
 	task task.ReceivePieceTask,
 	data []byte) error {
-	if task == nil {
-		log.CtxErrorw(ctx, "failed to pre receive piece, task pointer dangling")
+	if task == nil || task.GetObjectInfo() == nil {
+		log.CtxErrorw(ctx, "failed to pre receive piece, pointer dangling")
 		return ErrDanglingTask
 	}
 	if r.receiveQueue.Has(task.Key()) {
@@ -45,8 +46,14 @@ func (r *ReceiveModular) HandleReceivePieceTask(
 	if !bytes.Equal(checksum, task.GetPieceChecksum()) {
 		return ErrInvalidDataChecksum
 	}
-	pieceKey := r.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(),
-		uint32(task.GetPieceIdx()), task.GetReplicateIdx())
+	var pieceKey string
+	if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
+		pieceKey = r.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(),
+			uint32(task.GetPieceIdx()), task.GetReplicateIdx())
+	} else {
+		pieceKey = r.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(),
+			uint32(task.GetPieceIdx()))
+	}
 	if err = r.baseApp.GfSpDB().SetReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(),
 		task.GetReplicateIdx(), uint32(task.GetPieceIdx()), task.GetPieceChecksum()); err != nil {
 		log.CtxErrorw(ctx, "failed to set checksum to db", "error", err)
@@ -69,7 +76,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 	}
 	defer r.receiveQueue.PopByKey(task.Key())
 	if task == nil || task.GetObjectInfo() == nil {
-		log.CtxErrorw(ctx, "failed to done receive task, task pointer dangling")
+		log.CtxErrorw(ctx, "failed to done receive task, pointer dangling")
 		return nil, nil, ErrDanglingTask
 	}
 	segmentCount := r.baseApp.PieceOp().SegmentCount(task.GetObjectInfo().GetPayloadSize(),
@@ -98,17 +105,19 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 	}
 	err = r.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
+		log.CtxErrorw(ctx, "failed to write integrity meta to db", "error", err)
 		return nil, nil, ErrGfSpDB
 	}
 	if err = r.baseApp.GfSpDB().DeleteAllReplicatePieceChecksum(
 		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx(), segmentCount); err != nil {
 		log.CtxErrorw(ctx, "failed to delete all replicate piece checksum", "error", err)
+		// ignore the error,let the request go, the background task will gc the meta again later
 	}
-	// the manager dispatch the reset task to confirm whether seal on chain as secondary sp.
+	// the manager dispatch the task to confirm whether seal on chain as secondary sp.
 	task.SetError(nil)
 	if err = r.baseApp.GfSpClient().ReportTask(ctx, task); err != nil {
 		log.CtxErrorw(ctx, "failed to report receive task for confirming seal", "error", err)
+		// ignore the error,let the request go, the background task will gc the unsealed data later
 	}
 	log.CtxDebugw(ctx, "succeed to done receive piece")
 	return integrity, signature, nil
