@@ -18,6 +18,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// RequestContext generates from http request, it records the common info
+// for handler to use.
 type RequestContext struct {
 	request    *http.Request
 	routerName string
@@ -27,12 +29,18 @@ type RequestContext struct {
 	vars       map[string]string
 	httpCode   int
 
-	ctx       context.Context
+	// ctx is the runtime context for the request
+	ctx context.Context
+	// the cancel func of ctx, it should be called at the end of the request
+	// to make sure the connection to the back server is released.
 	cancel    func()
 	err       error
 	startTime time.Time
 }
 
+// NewRequestContext returns an instance of RequestContext, and verify the
+// request signature, returns the instance regardless of the success or
+// failure of the verification.
 func NewRequestContext(r *http.Request) (*RequestContext, error) {
 	vars := mux.Vars(r)
 	routerName := ""
@@ -59,26 +67,32 @@ func NewRequestContext(r *http.Request) (*RequestContext, error) {
 	return reqCtx, nil
 }
 
+// Context returns the RequestContext runtime context.
 func (r *RequestContext) Context() context.Context {
 	return r.ctx
 }
 
+// Account returns the account who send the request.
 func (r *RequestContext) Account() string {
 	return r.account
 }
 
+// Cancel releases the runtime context.
 func (r *RequestContext) Cancel() {
 	r.cancel()
 }
 
+// SetHttpCode sets the http status code for logging and debugging.
 func (r *RequestContext) SetHttpCode(code int) {
 	r.httpCode = code
 }
 
+// SetError sets the request err to RequestContext for logging and debugging.
 func (r *RequestContext) SetError(err error) {
 	r.err = err
 }
 
+// String shows the detail result of the request for logging and debugging.
 func (r *RequestContext) String() string {
 	var headerToString = func(header http.Header) string {
 		var sb = strings.Builder{}
@@ -111,6 +125,7 @@ func (r *RequestContext) String() string {
 		getRequestIP(r.request), time.Since(r.startTime), r.err)
 }
 
+// NeedVerifyAuthorizer is temporary to Compatible SignatureV2
 func (r *RequestContext) NeedVerifyAuthorizer() bool {
 	requestSignature := r.request.Header.Get(model.GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)

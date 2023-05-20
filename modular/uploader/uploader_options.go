@@ -7,6 +7,8 @@ import (
 )
 
 const (
+	// DefaultUploadObjectParallelPerNode defines the default max parallel of uploading
+	// object per uploader.
 	DefaultUploadObjectParallelPerNode = 1024
 )
 

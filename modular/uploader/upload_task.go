@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -63,53 +62,57 @@ func (u *UploadModular) HandleUploadObjectTask(
 		task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 	var (
+		err       error
 		segIdx    uint32 = 0
 		pieceKey  string
+		signature []byte
+		integrity []byte
 		checksums [][]byte
+		readN     int
 		readSize  int
 		data      = make([]byte, segmentSize)
-		wg        sync.WaitGroup
 	)
 	defer func() {
-		wg.Wait()
 		defer u.uploadQueue.PopByKey(task.Key())
-		err := u.baseApp.GfSpClient().ReportTask(ctx, task)
 		if err != nil {
-			log.CtxDebugw(ctx, "failed to read data from stream", "read_size", readSize,
-				"object_size", task.GetObjectInfo().GetPayloadSize(), "error", err)
+			task.SetError(err)
 		}
-		log.CtxDebugw(ctx, "succeed to read data from stream", "read_size", readSize,
-			"object_size", task.GetObjectInfo().GetPayloadSize())
+		err = u.baseApp.GfSpClient().ReportTask(ctx, task)
+		log.CtxDebugw(ctx, "finish to read data from stream", "info", task.Info(),
+			"read_size", readSize, "error", err)
 	}()
+
 	for {
 		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 		segIdx++
+
 		data = data[0:segmentSize]
-		n, err := StreamReadAt(stream, data)
-		data = data[0:n]
-		readSize += n
+		readN, err = StreamReadAt(stream, data)
 		if len(data) != 0 {
+			readSize += readN
 			checksums = append(checksums, hash.GenerateChecksum(data))
 		}
+		data = data[0:readN]
+
 		if err == io.EOF {
-			if n != 0 {
+			if readN != 0 {
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {
-					log.CtxErrorw(ctx, "put segment piece to piece store", "piece_key", pieceKey, "error", err)
-					task.SetError(ErrPieceStore)
+					log.CtxErrorw(ctx, "put segment piece to piece store",
+						"piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
 			}
-			signature, integrity, err := u.baseApp.GfSpClient().SignIntegrityHash(ctx,
+			signature, integrity, err = u.baseApp.GfSpClient().SignIntegrityHash(ctx,
 				task.GetObjectInfo().Id.Uint64(), checksums)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
 				return err
 			}
 			if !bytes.Equal(integrity, task.GetObjectInfo().GetChecksums()[0]) {
-				log.CtxErrorw(ctx, "invalid integrity hash", "integrity", hex.EncodeToString(integrity),
+				log.CtxErrorw(ctx, "invalid integrity hash",
+					"integrity", hex.EncodeToString(integrity),
 					"expect", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
-				task.SetError(ErrInvalidIntegrity)
 				return ErrInvalidIntegrity
 			}
 			integrityMeta := &corespdb.IntegrityMeta{
@@ -121,7 +124,6 @@ func (u *UploadModular) HandleUploadObjectTask(
 			err = u.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
-				task.SetError(ErrGfSpDB)
 				return ErrGfSpDB
 			}
 			log.CtxDebugw(ctx, "succeed to upload payload to piece store")
@@ -134,7 +136,6 @@ func (u *UploadModular) HandleUploadObjectTask(
 		err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 		if err != nil {
 			log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
-			task.SetError(ErrPieceStore)
 		}
 	}
 }

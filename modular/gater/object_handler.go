@@ -13,18 +13,19 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
+// putObjectHandler handles the upload object request.
 func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		reqCtx *RequestContext
+		err        error
+		reqCtx     *RequestContext
+		authorized bool
+		objectInfo *storagetypes.ObjectInfo
+		params     *storagetypes.Params
 	)
-	reqCtx, err = NewRequestContext(r)
-	if err != nil {
-		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
-		return
-	}
+
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -34,23 +35,28 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
-		log.CtxDebugw(reqCtx.Context(), "put object handler", "req_info", reqCtx.String())
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
 	if reqCtx.NeedVerifyAuthorizer() {
-		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
 		}
-		if !verified {
+		if !authorized {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
 			err = ErrNoPermission
 			return
 		}
 	}
 
-	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
@@ -61,7 +67,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidPayloadSize
 		return
 	}
-	params, err := g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -110,16 +116,16 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 	return false, -1, -1
 }
 
+// getObjectHandler handles the download object request.
 func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		reqCtx *RequestContext
+		err        error
+		reqCtx     *RequestContext
+		authorized bool
+		objectInfo *storagetypes.ObjectInfo
+		bucketInfo *storagetypes.BucketInfo
+		params     *storagetypes.Params
 	)
-	reqCtx, err = NewRequestContext(r)
-	if err != nil {
-		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
-		return
-	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -131,34 +137,37 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
 	if reqCtx.NeedVerifyAuthorizer() {
-		verified, innerErr := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		if innerErr != nil {
+		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
-			err = innerErr
 			return
 		}
-		if !verified {
+		if !authorized {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
-			err = ErrNoPermission
 			return
 		}
 	}
 
-	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
-	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
+	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
-	params, err := g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -204,14 +213,12 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		reqCtx *RequestContext
+		err        error
+		reqCtx     *RequestContext
+		authorized bool
+		objectInfo *storagetypes.ObjectInfo
+		jobState   int32
 	)
-	reqCtx, err = NewRequestContext(r)
-	if err != nil {
-		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
-		return
-	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -223,28 +230,33 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
 	if reqCtx.NeedVerifyAuthorizer() {
-		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
 		}
-		if !verified {
+		if !authorized {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
 			err = ErrNoPermission
 			return
 		}
 	}
 
-	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
 
-	jobState, err := g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
+	jobState, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
 		return

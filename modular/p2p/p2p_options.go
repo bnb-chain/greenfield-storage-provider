@@ -11,8 +11,11 @@ import (
 
 const (
 	// P2PPrivateKey defines env variable for p2p protocol private key
-	P2PPrivateKey                              = "P2P_PRIVATE_KEY"
-	DefaultP2PProtocolAddress                  = "localhost:9933"
+	P2PPrivateKey = "P2P_PRIVATE_KEY"
+	// DefaultP2PProtocolAddress defines the default p2p protocol address
+	DefaultP2PProtocolAddress = "localhost:9933"
+	// DefaultAskReplicateApprovalParallelPerNode defines the default max ask replicate
+	// piece approval parallel per p2p node
 	DefaultAskReplicateApprovalParallelPerNode = 1024
 )
 
