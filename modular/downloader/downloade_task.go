@@ -73,19 +73,30 @@ func (d *DownloadModular) PreDownloadObject(
 func (d *DownloadModular) HandleDownloadObjectTask(
 	ctx context.Context,
 	task task.DownloadObjectTask) ([]byte, error) {
-	if err := d.downloadQueue.Push(task); err != nil {
+	var (
+		err        error
+		pieceInfos []*segmentPieceInfo
+		piece      []byte
+		data       []byte
+	)
+	defer func() {
+		if err != nil {
+			task.SetError(err)
+		}
+		log.CtxDebugw(ctx, task.Info())
+	}()
+	if err = d.downloadQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push download queue", "error", err)
 		return nil, ErrExceedQueue
 	}
 	defer d.downloadQueue.PopByKey(task.Key())
-	pieceInfos, err := d.SplitToSegmentPieceInfos(ctx, task)
+	pieceInfos, err = d.SplitToSegmentPieceInfos(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to generate piece info to download", "error", err)
 		return nil, err
 	}
-	var data []byte
 	for _, pInfo := range pieceInfos {
-		piece, err := d.baseApp.PieceStore().GetPiece(ctx, pInfo.segmentPieceKey,
+		piece, err = d.baseApp.PieceStore().GetPiece(ctx, pInfo.segmentPieceKey,
 			int64(pInfo.offset), int64(pInfo.length))
 		if err != nil {
 			return nil, ErrPieceStore
@@ -189,6 +200,12 @@ func (d *DownloadModular) HandleChallengePiece(
 		integrity *corespdb.IntegrityMeta
 		data      []byte
 	)
+	defer func() {
+		if err != nil {
+			task.SetError(err)
+		}
+		log.CtxDebugw(ctx, task.Info())
+	}()
 	if err = d.challengeQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push challenge piece queue", "error", err)
 		return nil, nil, nil, ErrExceedQueue

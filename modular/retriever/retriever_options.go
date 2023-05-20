@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	// DefaultQuerySPParallelPerNode defines the max parallel for retrieving request
 	DefaultQuerySPParallelPerNode int64 = 10240
 )
 
@@ -17,6 +18,7 @@ func NewRetrieveModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (c
 	if err := DefaultRetrieverOptions(receiver, cfg); err != nil {
 		return nil, err
 	}
+	// register retrieve service to gfsp base app's grpc server
 	types.RegisterGfSpRetrieverServiceServer(receiver.baseApp.ServerForRegister(), receiver)
 	return receiver, nil
 }

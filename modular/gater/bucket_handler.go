@@ -7,20 +7,20 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	retrievertypes "github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		reqCtx *RequestContext
+		err                   error
+		reqCtx                *RequestContext
+		authorized            bool
+		bucketInfo            *storagetypes.BucketInfo
+		charge, free, consume uint64
 	)
-	reqCtx, err = NewRequestContext(r)
-	if err != nil {
-		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
-		return
-	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -32,28 +32,33 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
 	if reqCtx.NeedVerifyAuthorizer() {
-		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypeGetBucketQuota, reqCtx.Account(), reqCtx.bucketName, "")
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
 		}
-		if !verified {
+		if !authorized {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
 			err = ErrNoPermission
 			return
 		}
 	}
 
-	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName)
+	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
-	charge, free, consume, err := g.baseApp.GfSpClient().GetBucketReadQuota(reqCtx.Context(),
-		bucketInfo, reqCtx.vars["year_month"])
+	charge, free, consume, err = g.baseApp.GfSpClient().GetBucketReadQuota(
+		reqCtx.Context(), bucketInfo, reqCtx.vars["year_month"])
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "error", err)
 		return
@@ -91,14 +96,15 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 
 func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		reqCtx *RequestContext
+		err              error
+		reqCtx           *RequestContext
+		authorized       bool
+		startTimestampUs int64
+		endTimestampUs   int64
+		maxRecordNum     int64
+		records          []*retrievertypes.ReadRecord
+		nextTimestampUs  int64
 	)
-	reqCtx, err = NewRequestContext(r)
-	if err != nil {
-		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
-		return
-	}
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -110,14 +116,19 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
 	if reqCtx.NeedVerifyAuthorizer() {
-		verified, err := g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypeListBucketReadRecord, reqCtx.Account(), reqCtx.bucketName, "")
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
 		}
-		if !verified {
+		if !authorized {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
 			err = ErrNoPermission
 			return
@@ -131,19 +142,19 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	startTimestampUs, err := util.StringToInt64(reqCtx.vars["start_ts"])
+	startTimestampUs, err = util.StringToInt64(reqCtx.vars["start_ts"])
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse start_ts query", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
-	endTimestampUs, err := util.StringToInt64(reqCtx.vars["end_ts"])
+	endTimestampUs, err = util.StringToInt64(reqCtx.vars["end_ts"])
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse end_ts query", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
-	maxRecordNum, err := util.StringToInt64(reqCtx.vars["max_records"])
+	maxRecordNum, err = util.StringToInt64(reqCtx.vars["max_records"])
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse max record num query", "error", err)
 		err = ErrInvalidQuery
@@ -153,8 +164,8 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		maxRecordNum = g.maxListReadQuota
 	}
 
-	records, next, err := g.baseApp.GfSpClient().ListBucketReadRecord(reqCtx.Context(), bucketInfo,
-		startTimestampUs, endTimestampUs, maxRecordNum)
+	records, nextTimestampUs, err = g.baseApp.GfSpClient().ListBucketReadRecord(
+		reqCtx.Context(), bucketInfo, startTimestampUs, endTimestampUs, maxRecordNum)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list bucket read record", "error", err)
 		return
@@ -185,7 +196,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		ReadRecords          []ReadRecord `xml:"ReadRecord"`
 	}{
 		Version:              model.GnfdResponseXMLVersion,
-		NextStartTimestampUs: next,
+		NextStartTimestampUs: nextTimestampUs,
 		ReadRecords:          xmlRecords,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)

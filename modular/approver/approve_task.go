@@ -50,7 +50,12 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(
 		signature     []byte
 		currentHeight uint64
 	)
-
+	defer func() {
+		if err != nil {
+			task.SetError(err)
+		}
+		log.CtxDebugw(ctx, task.Info())
+	}()
 	currentHeight, err = a.baseApp.Consensus().CurrentHeight(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get current height", "error", err)
@@ -97,7 +102,12 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(
 		signature     []byte
 		currentHeight uint64
 	)
-
+	defer func() {
+		if err != nil {
+			task.SetError(err)
+		}
+		log.CtxDebugw(ctx, task.Info())
+	}()
 	currentHeight, err = a.baseApp.Consensus().CurrentHeight(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get current height", "error", err)

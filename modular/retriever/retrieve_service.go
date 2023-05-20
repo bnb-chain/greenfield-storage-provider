@@ -3,7 +3,6 @@ package retriever
 import (
 	"context"
 	"errors"
-	systemerrors "errors"
 	"net/http"
 	"sync/atomic"
 
@@ -38,7 +37,7 @@ func (r *RetrieveModular) GfSpGetBucketReadQuota(
 	}
 	bucketTraffic, err := r.baseApp.GfSpDB().GetBucketTraffic(
 		req.GetBucketInfo().Id.Uint64(), req.GetYearMonth())
-	if systemerrors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &types.GfSpGetBucketReadQuotaResponse{
 			ChargedQuotaSize: req.GetBucketInfo().GetChargedReadQuota(),
 			SpFreeQuotaSize:  r.freeQuotaPerBucket,
@@ -46,7 +45,8 @@ func (r *RetrieveModular) GfSpGetBucketReadQuota(
 		}, nil
 	}
 	if err != nil {
-		log.Errorw("failed to get bucket traffic", "bucket_name", req.GetBucketInfo().GetBucketName(),
+		log.Errorw("failed to get bucket traffic",
+			"bucket_name", req.GetBucketInfo().GetBucketName(),
 			"bucket_id", req.GetBucketInfo().Id.String(), "error", err)
 		return &types.GfSpGetBucketReadQuotaResponse{Err: ErrGfSpDB}, nil
 	}
@@ -76,7 +76,7 @@ func (r *RetrieveModular) GfSpListBucketReadRecord(
 			EndTimestampUs:   req.EndTimestampUs,
 			LimitNum:         int(req.MaxRecordNum),
 		})
-	if systemerrors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &types.GfSpListBucketReadRecordResponse{
 			NextStartTimestampUs: 0,
 		}, nil
@@ -89,16 +89,16 @@ func (r *RetrieveModular) GfSpListBucketReadRecord(
 	}
 	var nextStartTimestampUs int64
 	readRecords := make([]*types.ReadRecord, 0)
-	for _, r := range records {
+	for _, record := range records {
 		readRecords = append(readRecords, &types.ReadRecord{
-			ObjectName:     r.ObjectName,
-			ObjectId:       r.ObjectID,
-			AccountAddress: r.UserAddress,
-			TimestampUs:    r.ReadTimestampUs,
-			ReadSize:       r.ReadSize,
+			ObjectName:     record.ObjectName,
+			ObjectId:       record.ObjectID,
+			AccountAddress: record.UserAddress,
+			TimestampUs:    record.ReadTimestampUs,
+			ReadSize:       record.ReadSize,
 		})
-		if r.ReadTimestampUs >= nextStartTimestampUs {
-			nextStartTimestampUs = r.ReadTimestampUs + 1
+		if record.ReadTimestampUs >= nextStartTimestampUs {
+			nextStartTimestampUs = record.ReadTimestampUs + 1
 		}
 	}
 	resp := &types.GfSpListBucketReadRecordResponse{
