@@ -87,12 +87,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 	ctx context.Context,
 	task task.ReceivePieceTask) (
 	[]byte, []byte, error) {
-	var (
-		err       error
-		signature []byte
-		integrity []byte
-		checksums [][]byte
-	)
+	var err error
 	defer func() {
 		if err != nil {
 			task.SetError(err)
@@ -117,7 +112,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 	}
 	segmentCount := r.baseApp.PieceOp().SegmentCount(task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
-	checksums, err = r.baseApp.GfSpDB().GetAllReplicatePieceChecksum(
+	checksums, err := r.baseApp.GfSpDB().GetAllReplicatePieceChecksum(
 		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx(), segmentCount)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get checksum from db", "error", err)
@@ -129,7 +124,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 		err = ErrUnfinishedTask
 		return nil, nil, ErrUnfinishedTask
 	}
-	signature, integrity, err = r.baseApp.GfSpClient().SignIntegrityHash(ctx,
+	signature, integrity, err := r.baseApp.GfSpClient().SignIntegrityHash(ctx,
 		task.GetObjectInfo().Id.Uint64(), checksums)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
