@@ -73,12 +73,7 @@ func (d *DownloadModular) PreDownloadObject(
 func (d *DownloadModular) HandleDownloadObjectTask(
 	ctx context.Context,
 	task task.DownloadObjectTask) ([]byte, error) {
-	var (
-		err        error
-		pieceInfos []*segmentPieceInfo
-		piece      []byte
-		data       []byte
-	)
+	var err error
 	defer func() {
 		if err != nil {
 			task.SetError(err)
@@ -90,13 +85,14 @@ func (d *DownloadModular) HandleDownloadObjectTask(
 		return nil, ErrExceedQueue
 	}
 	defer d.downloadQueue.PopByKey(task.Key())
-	pieceInfos, err = d.SplitToSegmentPieceInfos(ctx, task)
+	pieceInfos, err := d.SplitToSegmentPieceInfos(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to generate piece info to download", "error", err)
 		return nil, err
 	}
+	var data []byte
 	for _, pInfo := range pieceInfos {
-		piece, err = d.baseApp.PieceStore().GetPiece(ctx, pInfo.segmentPieceKey,
+		piece, err := d.baseApp.PieceStore().GetPiece(ctx, pInfo.segmentPieceKey,
 			int64(pInfo.offset), int64(pInfo.length))
 		if err != nil {
 			return nil, ErrPieceStore
