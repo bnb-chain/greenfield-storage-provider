@@ -168,7 +168,7 @@ func (pr *PeerProvider) prunePeers() {
 			return peers[i].last > peers[j].last
 		})
 		var discard []peer.ID
-		for i := PrunePeersNumberMax; i <= len(peers); i++ {
+		for i := PrunePeersNumberMax; i < len(peers); i++ {
 			discard = append(discard, peers[i].ID())
 		}
 		log.Infow("prune sp nodes", "prune_num", len(discard))
