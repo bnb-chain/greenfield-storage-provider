@@ -187,23 +187,20 @@ func (e *ExecuteModular) handleReplicatePiece(
 			return nil
 		}
 		for pIdx := uint32(0); pIdx < segCount; pIdx++ {
-			var (
-				segData []byte
-				ecData  [][]byte
-			)
 			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), pIdx)
-			segData, err = e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
+			segData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to get segment data form piece store", "error", err)
+				rTask.SetError(err)
 				return err
 			}
 			if rTask.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-				ecData, err = redundancy.EncodeRawSegment(
-					segData,
+				ecData, err := redundancy.EncodeRawSegment(segData,
 					int(rTask.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()),
 					int(rTask.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()))
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to ec encode data", "error", err)
+					rTask.SetError(err)
 					return err
 				}
 				doReplicateECPiece(pIdx, ecData)
