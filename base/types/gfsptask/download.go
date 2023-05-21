@@ -53,9 +53,12 @@ func (m *GfSpDownloadObjectTask) Type() coretask.TType {
 }
 
 func (m *GfSpDownloadObjectTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
-		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-		m.GetObjectInfo().String(), m.GetTask().Info())
+	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
+	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+	//	m.GetObjectInfo().String(), m.GetTask().Info())
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
+		m.EstimateLimit().String(), m.GetTask().Info())
 }
 
 func (m *GfSpDownloadObjectTask) GetAddress() string {
@@ -205,9 +208,12 @@ func (m *GfSpChallengePieceTask) Type() coretask.TType {
 }
 
 func (m *GfSpChallengePieceTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s] rIdx[%d], sIdx[%d], %s",
+	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s] rIdx[%d], sIdx[%d], %s",
+	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+	//	m.GetObjectInfo().String(), m.GetRedundancyIdx(), m.GetSegmentIdx(), m.GetTask().Info())
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], rIdx[%d], sIdx[%d], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-		m.GetObjectInfo().String(), m.GetRedundancyIdx(), m.GetSegmentIdx(), m.GetTask().Info())
+		m.GetRedundancyIdx(), m.GetSegmentIdx(), m.GetTask().Info())
 }
 
 func (m *GfSpChallengePieceTask) GetAddress() string {

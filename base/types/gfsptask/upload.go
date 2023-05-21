@@ -42,9 +42,12 @@ func (m *GfSpUploadObjectTask) Type() coretask.TType {
 }
 
 func (m *GfSpUploadObjectTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
-		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-		m.GetObjectInfo().String(), m.GetTask().Info())
+	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
+	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+	//	m.GetObjectInfo().String(), m.GetTask().Info())
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
+		m.EstimateLimit().String(), m.GetTask().Info())
 }
 
 func (m *GfSpUploadObjectTask) GetAddress() string {
@@ -175,9 +178,12 @@ func (m *GfSpReplicatePieceTask) Type() coretask.TType {
 }
 
 func (m *GfSpReplicatePieceTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
-		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-		m.GetObjectInfo().String(), m.GetTask().Info())
+	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
+	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+	//	m.GetObjectInfo().String(), m.GetTask().Info())
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
+		m.EstimateLimit().String(), m.GetTask().Info())
 }
 
 func (m *GfSpReplicatePieceTask) GetAddress() string {
@@ -335,9 +341,12 @@ func (m *GfSpSealObjectTask) Type() coretask.TType {
 }
 
 func (m *GfSpSealObjectTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
-		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-		m.GetObjectInfo().String(), m.GetTask().Info())
+	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
+	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+	//	m.GetObjectInfo().String(), m.GetTask().Info())
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
+		m.EstimateLimit().String(), m.GetTask().Info())
 }
 
 func (m *GfSpSealObjectTask) GetAddress() string {
@@ -485,8 +494,11 @@ func (m *GfSpReceivePieceTask) Type() coretask.TType {
 }
 
 func (m *GfSpReceivePieceTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s] rIdx[%d], pIdx[%s], size[%d], checksum[%s], %s",
-		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(), m.GetObjectInfo().String(),
+	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s] rIdx[%d], pIdx[%s], size[%d], checksum[%s], %s",
+	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(), m.GetObjectInfo().String(),
+	//	m.GetReplicateIdx(), m.GetPieceIdx(), m.GetPieceSize(), m.GetPieceChecksum(), m.GetTask().Info())
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s] rIdx[%d], pIdx[%s], size[%d], checksum[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
 		m.GetReplicateIdx(), m.GetPieceIdx(), m.GetPieceSize(), m.GetPieceChecksum(), m.GetTask().Info())
 }
 
