@@ -83,6 +83,9 @@ func (u *UploadModular) HandleUploadObjectTask(
 	}()
 
 	for {
+		if err != nil {
+			return err
+		}
 		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 		segIdx++
 
@@ -133,10 +136,14 @@ func (u *UploadModular) HandleUploadObjectTask(
 			return ErrClosedStream
 		}
 		checksums = append(checksums, hash.GenerateChecksum(data))
-		err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
-		if err != nil {
-			log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
-		}
+		go func(key string, piece []byte) {
+			pieceErr := u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
+			if pieceErr != nil {
+				log.CtxErrorw(ctx, "put segment piece to piece store", "error", pieceErr)
+				err = ErrPieceStore
+				task.SetError(pieceErr)
+			}
+		}(pieceKey, data)
 	}
 }
 
