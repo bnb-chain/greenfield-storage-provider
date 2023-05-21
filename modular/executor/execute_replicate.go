@@ -275,7 +275,7 @@ func (e *ExecuteModular) doneReplicatePiece(
 		return nil, nil, err
 	}
 	receive.SetSignature(taskSignature)
-	signature, integrity, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx,
+	integrity, signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx,
 		approval.GetApprovedSpEndpoint(), approval, receive)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate piece",
