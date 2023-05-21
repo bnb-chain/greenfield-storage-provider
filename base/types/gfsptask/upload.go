@@ -1,6 +1,7 @@
 package gfsptask
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math"
 	"time"
@@ -498,8 +499,8 @@ func (m *GfSpReceivePieceTask) Info() string {
 	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(), m.GetObjectInfo().String(),
 	//	m.GetReplicateIdx(), m.GetPieceIdx(), m.GetPieceSize(), m.GetPieceChecksum(), m.GetTask().Info())
 	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s] rIdx[%d], pIdx[%s], size[%d], checksum[%s], %s",
-		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-		m.GetReplicateIdx(), m.GetPieceIdx(), m.GetPieceSize(), m.GetPieceChecksum(), m.GetTask().Info())
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(), m.GetReplicateIdx(),
+		m.GetPieceIdx(), m.GetPieceSize(), hex.EncodeToString(m.GetPieceChecksum()), m.GetTask().Info())
 }
 
 func (m *GfSpReceivePieceTask) GetAddress() string {

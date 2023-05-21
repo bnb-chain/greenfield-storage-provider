@@ -3,6 +3,7 @@ package receiver
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"net/http"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -134,8 +135,8 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 		log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
 		return nil, nil, err
 	}
-	log.CtxDebugw(ctx, "compute receive task integrity", "signature", signature,
-		"integrity", integrity)
+	log.CtxDebugw(ctx, "compute receive task integrity", "signature", hex.EncodeToString(signature),
+		"integrity", hex.EncodeToString(integrity))
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
 		IntegrityChecksum: integrity,
