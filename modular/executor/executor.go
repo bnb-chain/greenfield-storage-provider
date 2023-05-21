@@ -2,12 +2,12 @@ package executor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync/atomic"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -60,7 +60,6 @@ func (e *ExecuteModular) Start(ctx context.Context) error {
 func (e *ExecuteModular) eventLoop(ctx context.Context) {
 	askTaskTicker := time.NewTicker(time.Duration(e.askTaskInterval) * time.Second)
 	statisticsTicker := time.NewTicker(time.Duration(e.statisticsOutputInterval) * time.Second)
-	logCnt := 0
 	for {
 		select {
 		case <-ctx.Done():
@@ -68,18 +67,14 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 		case <-statisticsTicker.C:
 			log.CtxInfow(ctx, e.Statistics())
 		case <-askTaskTicker.C:
-			logCnt++
-			maxExecuteNum := atomic.LoadInt64(&e.maxExecuteNum)
-			executingNum := atomic.LoadInt64(&e.executingNum)
-			metrics.MaxTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(maxExecuteNum))
-			metrics.RunningTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(executingNum))
-
-			if executingNum >= maxExecuteNum {
-				continue
-			}
-			atomic.AddInt64(&e.executingNum, 1)
+			metrics.MaxTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(atomic.LoadInt64(&e.maxExecuteNum)))
+			metrics.RunningTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(atomic.LoadInt64(&e.executingNum)))
 			go func() {
 				defer atomic.AddInt64(&e.executingNum, -1)
+				if atomic.AddInt64(&e.executingNum, 1) > atomic.LoadInt64(&e.maxExecuteNum) {
+					log.CtxErrorw(ctx, "asking ask number greater than max limit number")
+					return
+				}
 				limit, err := e.scope.RemainingResource()
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to get remaining resource", "error", err)
@@ -102,16 +97,13 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
 	askTask, err := e.baseApp.GfSpClient().AskTask(ctx, limit)
 	if err != nil {
-		switch e := err.(type) {
-		case *gfsperrors.GfSpError:
-			if e.GetInnerCode() == 60005 || e.GetInnerCode() == 990603 {
-				return
-			}
-		default:
+		if errors.Is(err, gfspapp.ErrNoTaskMatchLimit) {
+			return
 		}
 		log.CtxWarnw(ctx, "failed to ask task", "remaining", limit.String(), "error", err)
 		return
 	}
+	// double confirm the safe task
 	if askTask == nil {
 		log.CtxWarnw(ctx, "failed to ask task, dangling pointer",
 			"remaining", limit.String(), "error", err)
@@ -167,7 +159,7 @@ func (e *ExecuteModular) ReportTask(
 	ctx context.Context,
 	task coretask.Task) error {
 	err := e.baseApp.GfSpClient().ReportTask(ctx, task)
-	log.CtxDebugw(ctx, "finish to report task", "error", err)
+	log.CtxDebugw(ctx, "finish to report task", "info", task.Info(), "error", err)
 	return err
 }
 

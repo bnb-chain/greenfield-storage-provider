@@ -20,7 +20,7 @@ var (
 	ErrRepeatedTask  = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60002, "request repeated")
 	ErrExceedTask    = gfsperrors.Register(module.ManageModularName, http.StatusServiceUnavailable, 60003, "OoooH... request exceed, try again later")
 	ErrCanceledTask  = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60004, "task canceled")
-	ErrFutureSupport = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60006, "future support")
+	ErrFutureSupport = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60005, "future support")
 )
 
 func (m *ManageModular) DispatchTask(
@@ -307,12 +307,11 @@ func (m *ManageModular) handleFailedSealObjectTask(
 func (m *ManageModular) HandleReceivePieceTask(
 	ctx context.Context,
 	task task.ReceivePieceTask) error {
-	if task.Error() != nil {
-		return m.handleFailedReceivePieceTask(ctx, task)
-	}
 	if task.GetSealed() {
 		m.receiveQueue.PopByKey(task.Key())
 		log.CtxDebugw(ctx, "succeed to confirm receive piece seal on chain")
+	} else if task.Error() != nil {
+		return m.handleFailedReceivePieceTask(ctx, task)
 	} else {
 		task.SetRetry(0)
 		task.SetMaxRetry(m.baseApp.TaskMaxRetry(task))
