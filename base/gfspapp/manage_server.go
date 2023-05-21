@@ -104,7 +104,7 @@ func (g *GfSpBaseApp) GfSpAskTask(
 		log.CtxErrorw(ctx, "[BUG] Unsupported task type to dispatch")
 		return &gfspserver.GfSpAskTaskResponse{Err: ErrUnsupportedTaskType}, nil
 	}
-	log.CtxDebugw(ctx, "succeed to dispatch task")
+	log.CtxDebugw(ctx, "succeed to response ask task")
 	return resp, nil
 }
 
@@ -124,7 +124,7 @@ func (g *GfSpBaseApp) OnAskTask(
 	gfspTask.SetError(nil)
 	gfspTask.SetUpdateTime(time.Now().Unix())
 	gfspTask.SetAddress(RpcRemoteAddress(ctx))
-	log.CtxDebugw(ctx, "dispatch task", "info", gfspTask.Info())
+	log.CtxDebugw(ctx, "succeed to dispatch task", "info", gfspTask.Info())
 	return gfspTask, nil
 }
 

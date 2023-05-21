@@ -115,8 +115,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				m.gcBlockHeight = end + 1
 				metrics.GCBlockNumberGauge.WithLabelValues(m.Name()).Set(float64(m.gcBlockHeight))
 			}
-			log.CtxErrorw(ctx, "finish to generate gc object task", "task_key", task.Key().String(),
-				"start_block_height", start, "end_block_height", end, "error", err)
+			log.CtxErrorw(ctx, "finish to generate gc object task", "info", task.Info(), "error", err)
 		}
 	}
 }
@@ -275,7 +274,6 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 				return
 			}
 		}
-		//log.CtxDebugw(ctx, "fetch sp info", "sp", spInfo.String())
 	}
 }
 

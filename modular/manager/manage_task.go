@@ -74,8 +74,6 @@ func (m *ManageModular) DispatchTask(
 	if task == nil {
 		return nil, nil
 	}
-	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-	log.CtxDebugw(ctx, "success to dispatch task")
 	return task, nil
 }
 
@@ -144,12 +142,8 @@ func (m *ManageModular) HandleCreateUploadObjectTask(
 func (m *ManageModular) HandleDoneUploadObjectTask(
 	ctx context.Context,
 	task task.UploadObjectTask) error {
-	if task == nil {
-		log.CtxErrorw(ctx, "failed to handle done upload object, task pointer dangling")
-		return ErrDanglingTask
-	}
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
-		log.CtxErrorw(ctx, "failed to handle done upload object, task pointer dangling")
+		log.CtxErrorw(ctx, "failed to handle done upload object, pointer dangling")
 		return ErrDanglingTask
 	}
 	m.uploadQueue.PopByKey(task.Key())
@@ -158,7 +152,9 @@ func (m *ManageModular) HandleDoneUploadObjectTask(
 		return ErrRepeatedTask
 	}
 	if task.Error() != nil {
-		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
+		err := m.baseApp.GfSpDB().UpdateJobState(
+			task.GetObjectInfo().Id.Uint64(),
+			types.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
@@ -175,7 +171,9 @@ func (m *ManageModular) HandleDoneUploadObjectTask(
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return ErrExceedTask
 	}
-	err = m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
+	err = m.baseApp.GfSpDB().UpdateJobState(
+		task.GetObjectInfo().Id.Uint64(),
+		types.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 	}
@@ -187,7 +185,7 @@ func (m *ManageModular) HandleReplicatePieceTask(
 	ctx context.Context,
 	task task.ReplicatePieceTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
-		log.CtxErrorw(ctx, "failed to handle replicate piece, task pointer dangling")
+		log.CtxErrorw(ctx, "failed to handle replicate piece, pointer dangling")
 		return ErrDanglingTask
 	}
 	if task.Error() != nil {
@@ -201,17 +199,16 @@ func (m *ManageModular) HandleReplicatePieceTask(
 	}
 	if task.GetSealed() {
 		log.CtxDebugw(ctx, "replicate piece object task has combined seal object task")
-		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_SEAL_OBJECT_DONE)
+		err := m.baseApp.GfSpDB().UpdateJobState(
+			task.GetObjectInfo().Id.Uint64(),
+			types.JobState_JOB_STATE_SEAL_OBJECT_DONE)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
 		return nil
 	}
 	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task")
-	sealObject := &gfsptask.GfSpSealObjectTask{
-		ObjectInfo:    task.GetObjectInfo(),
-		StorageParams: task.GetStorageParams(),
-	}
+	sealObject := &gfsptask.GfSpSealObjectTask{}
 	sealObject.InitSealObjectTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(sealObject), task.GetSecondarySignature(),
 		m.baseApp.TaskTimeout(sealObject, 0), m.baseApp.TaskMaxRetry(sealObject))
@@ -220,7 +217,9 @@ func (m *ManageModular) HandleReplicatePieceTask(
 		log.CtxErrorw(ctx, "failed to push seal object task to queue", "error", err)
 		return ErrExceedTask
 	}
-	err = m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_SEAL_OBJECT_DOING)
+	err = m.baseApp.GfSpDB().UpdateJobState(
+		task.GetObjectInfo().Id.Uint64(),
+		types.JobState_JOB_STATE_SEAL_OBJECT_DOING)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 	}
@@ -246,7 +245,9 @@ func (m *ManageModular) handleFailedReplicatePieceTask(
 		m.replicateQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "info", handleTask.Info())
 	} else {
-		err := m.baseApp.GfSpDB().UpdateJobState(handleTask.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
+		err := m.baseApp.GfSpDB().UpdateJobState(
+			handleTask.GetObjectInfo().Id.Uint64(),
+			types.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
@@ -267,7 +268,9 @@ func (m *ManageModular) HandleSealObjectTask(
 		return m.handleFailedSealObjectTask(ctx, task)
 	}
 	m.sealQueue.PopByKey(task.Key())
-	err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_SEAL_OBJECT_DONE)
+	err := m.baseApp.GfSpDB().UpdateJobState(
+		task.GetObjectInfo().Id.Uint64(),
+		types.JobState_JOB_STATE_SEAL_OBJECT_DONE)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 	}
@@ -294,12 +297,13 @@ func (m *ManageModular) handleFailedSealObjectTask(
 		log.CtxDebugw(ctx, "push task again to retry")
 		return nil
 	} else {
-		err := m.baseApp.GfSpDB().UpdateJobState(handleTask.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
+		err := m.baseApp.GfSpDB().UpdateJobState(
+			handleTask.GetObjectInfo().Id.Uint64(),
+			types.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
-		log.CtxWarnw(ctx, "delete expired seal object task", "max_retry", handleTask.GetMaxRetry(),
-			"retry", handleTask.GetRetry(), "time_out", handleTask.GetTimeout())
+		log.CtxWarnw(ctx, "delete expired seal object task", "info", handleTask.Info())
 	}
 	return nil
 }
@@ -339,9 +343,7 @@ func (m *ManageModular) handleFailedReceivePieceTask(
 		m.receiveQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry")
 	} else {
-		log.CtxErrorw(ctx, "delete expired confirm receive piece task", "max_retry", handleTask.GetMaxRetry(),
-			"retry", handleTask.GetRetry(), "time_out", handleTask.GetTimeout())
-		return ErrCanceledTask
+		log.CtxErrorw(ctx, "delete expired confirm receive piece task", "info", handleTask.Info())
 	}
 	return nil
 }

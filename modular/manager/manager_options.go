@@ -7,21 +7,52 @@ import (
 )
 
 const (
-	DefaultGlobalMaxUploadingNumber          int    = 4096
-	DefaultGlobalUploadObjectParallel        int    = 1024
-	DefaultGlobalReplicatePieceParallel      int    = 1024
-	DefaultGlobalSealObjectParallel          int    = 1024
-	DefaultGlobalReceiveObjectParallel       int    = 4096
-	DefaultGlobalGCObjectParallel            int    = 4
-	DefaultGlobalGCZombieParallel            int    = 1
-	DefaultGlobalGCMetaParallel              int    = 1
-	DefaultGlobalDownloadObjectTaskCacheSize int    = 4096
-	DefaultGlobalChallengePieceTaskCacheSize int    = 4096
-	DefaultGlobalBatchGcObjectTimeInterval   int    = 30 * 60
-	DefaultGlobalGcObjectBlockInterval       uint64 = 500
-	DefaultGlobalGcObjectSafeBlockDistance   uint64 = 1000
-	DefaultGlobalSyncConsensusInfoInterval   uint64 = 2
-	DefaultStatisticsOutputInterval          int    = 60
+	// DefaultGlobalMaxUploadingNumber defines the default max uploading object number
+	// in SP, include: uploading object to primary, replicate object to secondaries,
+	// and sealing object on greenfield.
+	DefaultGlobalMaxUploadingNumber int = 4096
+	// DefaultGlobalUploadObjectParallel defines the default max parallel uploading
+	// objects to primary in SP system.
+	DefaultGlobalUploadObjectParallel int = 1024
+	// DefaultGlobalReplicatePieceParallel defines the default max parallel replicating
+	// objects to primary in SP system.
+	DefaultGlobalReplicatePieceParallel int = 1024
+	// DefaultGlobalSealObjectParallel defines the default max parallel sealing objects
+	// on greenfield in SP system.
+	DefaultGlobalSealObjectParallel int = 1024
+	// DefaultGlobalReceiveObjectParallel defines the default max parallel confirming
+	// receive pieces on greenfield in SP system.
+	DefaultGlobalReceiveObjectParallel int = 4096
+	// DefaultGlobalGCObjectParallel defines the default max parallel gc objects in SP
+	// system.
+	DefaultGlobalGCObjectParallel int = 4
+	// DefaultGlobalGCZombieParallel defines the default max parallel gc zonbie pieces
+	// in SP system.
+	DefaultGlobalGCZombieParallel int = 1
+	// DefaultGlobalGCMetaParallel defines the default max parallel gc meta db in SP
+	// system.
+	DefaultGlobalGCMetaParallel int = 1
+	// DefaultGlobalDownloadObjectTaskCacheSize defines the default max cache the download
+	// object tasks in manager.
+	DefaultGlobalDownloadObjectTaskCacheSize int = 4096
+	// DefaultGlobalChallengePieceTaskCacheSize defines the default max cache the challenge
+	// piece tasks in manager.
+	DefaultGlobalChallengePieceTaskCacheSize int = 4096
+	// DefaultGlobalBatchGcObjectTimeInterval defines the default interval for generating
+	// gc object task.
+	DefaultGlobalBatchGcObjectTimeInterval int = 30 * 60
+	// DefaultGlobalGcObjectBlockInterval defines the default blocks number for getting
+	// deleted objects.
+	DefaultGlobalGcObjectBlockInterval uint64 = 500
+	// DefaultGlobalGcObjectSafeBlockDistance defines the default distance form current block
+	// height to gc the deleted object.
+	DefaultGlobalGcObjectSafeBlockDistance uint64 = 1000
+	// DefaultGlobalSyncConsensusInfoInterval defines the default interval for sync the sp
+	// info list to sp db.
+	DefaultGlobalSyncConsensusInfoInterval uint64 = 2
+	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
+	// it is used to log and debug.
+	DefaultStatisticsOutputInterval int = 60
 )
 
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
