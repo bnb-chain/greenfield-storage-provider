@@ -134,6 +134,8 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 		log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
 		return nil, nil, err
 	}
+	log.CtxDebugw(ctx, "compute receive task integrity", "signature", signature,
+		"integrity", integrity)
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
 		IntegrityChecksum: integrity,
