@@ -123,8 +123,6 @@ func (e *ExecuteModular) handleReplicatePiece(
 		secondaryOpAddress = make([]string, replCount)
 		secondarySignature = make([][]byte, replCount)
 		approvals          = make([]coretask.ApprovalReplicatePieceTask, replCount)
-		segData            []byte
-		ecData             [][]byte
 		finish             bool
 	)
 	resetApprovals := func() (bool, error) {
@@ -189,6 +187,10 @@ func (e *ExecuteModular) handleReplicatePiece(
 			return nil
 		}
 		for pIdx := uint32(0); pIdx < segCount; pIdx++ {
+			var (
+				segData []byte
+				ecData  []byte
+			)
 			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), pIdx)
 			segData, err = e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 			if err != nil {
