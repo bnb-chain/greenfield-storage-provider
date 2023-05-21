@@ -194,6 +194,7 @@ func (e *ExecuteModular) handleReplicatePiece(
 				rTask.SetError(err)
 				return err
 			}
+			log.CtxDebugw(ctx, "segment", "len", len(segData))
 			if rTask.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
 				ecData, err := redundancy.EncodeRawSegment(segData,
 					int(rTask.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()),

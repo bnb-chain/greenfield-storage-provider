@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -71,8 +72,10 @@ func (u *UploadModular) HandleUploadObjectTask(
 		readN     int
 		readSize  int
 		data      = make([]byte, segmentSize)
+		wg        sync.WaitGroup
 	)
 	defer func() {
+		wg.Wait()
 		defer u.uploadQueue.PopByKey(task.Key())
 		if err != nil {
 			task.SetError(err)
@@ -137,7 +140,9 @@ func (u *UploadModular) HandleUploadObjectTask(
 		checksums = append(checksums, hash.GenerateChecksum(data))
 		pieceData := make([]byte, len(data))
 		copy(pieceData, data)
+		wg.Add(1)
 		go func(key string, piece []byte) {
+			defer wg.Done()
 			pieceErr := u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 			if pieceErr != nil {
 				log.CtxErrorw(ctx, "put segment piece to piece store", "error", pieceErr)
