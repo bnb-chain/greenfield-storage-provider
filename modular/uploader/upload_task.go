@@ -113,6 +113,7 @@ func (u *UploadModular) HandleUploadObjectTask(
 				log.CtxErrorw(ctx, "invalid integrity hash",
 					"integrity", hex.EncodeToString(integrity),
 					"expect", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
+				err = ErrInvalidIntegrity
 				return ErrInvalidIntegrity
 			}
 			integrityMeta := &corespdb.IntegrityMeta{
