@@ -136,6 +136,8 @@ func (u *UploadModular) HandleUploadObjectTask(
 			return ErrClosedStream
 		}
 		checksums = append(checksums, hash.GenerateChecksum(data))
+		pieceData := make([]byte, len(data))
+		copy(pieceData, data)
 		go func(key string, piece []byte) {
 			pieceErr := u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 			if pieceErr != nil {
@@ -143,7 +145,7 @@ func (u *UploadModular) HandleUploadObjectTask(
 				err = ErrPieceStore
 				task.SetError(pieceErr)
 			}
-		}(pieceKey, data)
+		}(pieceKey, pieceData)
 	}
 }
 
