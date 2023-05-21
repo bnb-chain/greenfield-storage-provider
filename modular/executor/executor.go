@@ -2,12 +2,12 @@ package executor
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync/atomic"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -94,10 +94,20 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 	}
 }
 
+func (e *ExecuteModular) omitError(err error) bool {
+	switch realErr := err.(type) {
+	case *gfsperrors.GfSpError:
+		if realErr.GetInnerCode() == gfspapp.ErrNoTaskMatchLimit.GetInnerCode() {
+			return true
+		}
+	}
+	return false
+}
+
 func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
 	askTask, err := e.baseApp.GfSpClient().AskTask(ctx, limit)
 	if err != nil {
-		if errors.Is(err, gfspapp.ErrNoTaskMatchLimit) {
+		if e.omitError(err) {
 			return
 		}
 		log.CtxWarnw(ctx, "failed to ask task", "remaining", limit.String(), "error", err)
