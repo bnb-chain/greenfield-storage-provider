@@ -86,9 +86,6 @@ func (u *UploadModular) HandleUploadObjectTask(
 		if err != nil {
 			return err
 		}
-		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
-		segIdx++
-
 		data = data[0:segmentSize]
 		readN, err = StreamReadAt(stream, data)
 		readSize += readN
@@ -96,6 +93,7 @@ func (u *UploadModular) HandleUploadObjectTask(
 
 		if err == io.EOF {
 			if readN != 0 {
+				pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 				checksums = append(checksums, hash.GenerateChecksum(data))
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {
@@ -135,6 +133,7 @@ func (u *UploadModular) HandleUploadObjectTask(
 			log.CtxErrorw(ctx, "stream closed abnormally", "piece_key", pieceKey, "error", err)
 			return ErrClosedStream
 		}
+		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 		checksums = append(checksums, hash.GenerateChecksum(data))
 		pieceData := make([]byte, len(data))
 		copy(pieceData, data)
@@ -146,6 +145,7 @@ func (u *UploadModular) HandleUploadObjectTask(
 				task.SetError(pieceErr)
 			}
 		}(pieceKey, pieceData)
+		segIdx++
 	}
 }
 
