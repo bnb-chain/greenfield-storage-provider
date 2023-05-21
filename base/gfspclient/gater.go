@@ -47,7 +47,7 @@ func (s *GfSpClient) ReplicatePieceToSecondary(
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to replicate piece, StatusCode(%d)", resp.StatusCode)
+		return fmt.Errorf("failed to replicate piece, StatusCode(%d) Endpoint(%s)", resp.StatusCode, endpoint)
 	}
 	return nil
 }
