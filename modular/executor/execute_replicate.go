@@ -189,7 +189,7 @@ func (e *ExecuteModular) handleReplicatePiece(
 		for pIdx := uint32(0); pIdx < segCount; pIdx++ {
 			var (
 				segData []byte
-				ecData  []byte
+				ecData  [][]byte
 			)
 			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), pIdx)
 			segData, err = e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
