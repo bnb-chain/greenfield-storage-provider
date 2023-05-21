@@ -77,9 +77,9 @@ func (u *UploadModular) HandleUploadObjectTask(
 		if err != nil {
 			task.SetError(err)
 		}
-		err = u.baseApp.GfSpClient().ReportTask(ctx, task)
 		log.CtxDebugw(ctx, "finish to read data from stream", "info", task.Info(),
 			"read_size", readSize, "error", err)
+		err = u.baseApp.GfSpClient().ReportTask(ctx, task)
 	}()
 
 	for {
@@ -88,14 +88,12 @@ func (u *UploadModular) HandleUploadObjectTask(
 
 		data = data[0:segmentSize]
 		readN, err = StreamReadAt(stream, data)
-		if len(data) != 0 {
-			readSize += readN
-			checksums = append(checksums, hash.GenerateChecksum(data))
-		}
+		readSize += readN
 		data = data[0:readN]
 
 		if err == io.EOF {
 			if readN != 0 {
+				checksums = append(checksums, hash.GenerateChecksum(data))
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {
 					log.CtxErrorw(ctx, "put segment piece to piece store",
@@ -134,6 +132,7 @@ func (u *UploadModular) HandleUploadObjectTask(
 			log.CtxErrorw(ctx, "stream closed abnormally", "piece_key", pieceKey, "error", err)
 			return ErrClosedStream
 		}
+		checksums = append(checksums, hash.GenerateChecksum(data))
 		err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 		if err != nil {
 			log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
