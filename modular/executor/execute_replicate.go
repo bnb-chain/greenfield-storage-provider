@@ -25,7 +25,10 @@ import (
 func (e *ExecuteModular) HandleReplicatePieceTask(
 	ctx context.Context,
 	task coretask.ReplicatePieceTask) {
-	var err error
+	var (
+		err       error
+		approvals []*gfsptask.GfSpReplicatePieceApprovalTask
+	)
 	defer func() {
 		task.SetError(err)
 	}()
@@ -39,7 +42,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(
 	rAppTask := &gfsptask.GfSpReplicatePieceApprovalTask{}
 	rAppTask.InitApprovalReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		e.baseApp.TaskPriority(rAppTask), e.baseApp.OperateAddress())
-	approvals, err := e.AskReplicatePieceApproval(ctx, rAppTask, int(low),
+	approvals, err = e.AskReplicatePieceApproval(ctx, rAppTask, int(low),
 		int(high), e.askReplicateApprovalTimeout)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed get approvals", "error", err)
