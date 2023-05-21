@@ -151,7 +151,7 @@ func (u *UploadModular) HandleUploadObjectTask(
 			task.SetError(pieceErr)
 		}
 		//}(pieceKey, pieceData)
-		//segIdx++
+		segIdx++
 	}
 }
 
