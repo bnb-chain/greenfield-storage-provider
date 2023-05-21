@@ -275,15 +275,22 @@ func (e *ExecuteModular) doneReplicatePiece(
 		return nil, nil, err
 	}
 	receive.SetSignature(taskSignature)
-	integrity, signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx,
+	signature, integrity, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx,
 		approval.GetApprovedSpEndpoint(), approval, receive)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate piece",
 			"replicate_idx", replicateIdx, "error", err)
 		return nil, nil, err
 	}
+	if int(replicateIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
+		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds",
+			"replicate_idx", replicateIdx,
+			"secondary_sp_len", len(rTask.GetObjectInfo().GetSecondarySpAddresses()))
+		return nil, nil, ErrReplicateIdsOutOfBounds
+	}
 	err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), integrity,
-		rTask.GetObjectInfo().Checksums[replicateIdx+1], approval.GetApprovedSpOperatorAddress(),
+		rTask.GetObjectInfo().GetChecksums()[replicateIdx+1],
+		approval.GetApprovedSpOperatorAddress(),
 		approval.GetApprovedSpApprovalAddress(), signature)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed verify secondary signature",
