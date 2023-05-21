@@ -51,6 +51,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(
 	err = r.receiveQueue.Push(task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push receive task to queue", "error", err)
+		err = ErrExceedTask
 		return ErrExceedTask
 	}
 	defer r.receiveQueue.PopByKey(task.Key())

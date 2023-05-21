@@ -355,7 +355,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrExceptionStream
 		return
 	}
-	if receiveTask.GetPieceSize() > 0 {
+	if receiveTask.GetPieceIdx() > 0 {
 		err = g.baseApp.GfSpClient().ReplicatePiece(reqCtx.Context(), &receiveTask, data)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to receive piece", "error", err)

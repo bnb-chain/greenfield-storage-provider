@@ -158,8 +158,8 @@ func (e *ExecuteModular) handleReplicatePiece(
 				go e.doReplicatePiece(ctx, &wg, rTask, approvals[rIdx],
 					uint32(rIdx), pieceIdx, data)
 			}
-			wg.Wait()
 		}
+		wg.Wait()
 	}
 	doneReplicate := func() {
 		for rIdx, done := range record {
