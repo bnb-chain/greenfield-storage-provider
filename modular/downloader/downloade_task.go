@@ -170,7 +170,6 @@ func (d *DownloadModular) SplitToSegmentPieceInfos(
 func (d *DownloadModular) PostDownloadObject(
 	ctx context.Context,
 	task task.DownloadObjectTask) {
-	d.baseApp.GfSpClient().ReportTask(ctx, task)
 }
 
 func (d *DownloadModular) PreChallengePiece(
@@ -184,6 +183,7 @@ func (d *DownloadModular) PreChallengePiece(
 		log.CtxErrorw(ctx, "failed to pre challenge piece, object unsealed")
 		return ErrObjectUnsealed
 	}
+	d.baseApp.GfSpClient().ReportTask(ctx, task)
 	return nil
 }
 
@@ -228,5 +228,4 @@ func (d *DownloadModular) HandleChallengePiece(
 func (d *DownloadModular) PostChallengePiece(
 	ctx context.Context,
 	task task.ChallengePieceTask) {
-	d.baseApp.GfSpClient().ReportTask(ctx, task)
 }
