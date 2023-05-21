@@ -67,7 +67,7 @@ func (m *ManageModular) DispatchTask(
 	task = m.receiveQueue.TopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add confirm receive piece to backup set", "task_key", task.Key().String(),
-			"task_limit", "task_limit", task.EstimateLimit().String())
+			"task_limit", task.EstimateLimit().String())
 		backUpTasks = append(backUpTasks, task)
 	}
 	task = m.PickUpTask(ctx, backUpTasks)

@@ -87,9 +87,10 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 	task task.ReceivePieceTask) (
 	[]byte, []byte, error) {
 	var (
-		err                  error
-		checksums            [][]byte
-		signature, integrity []byte
+		err       error
+		signature []byte
+		integrity []byte
+		checksums [][]byte
 	)
 	defer func() {
 		if err != nil {

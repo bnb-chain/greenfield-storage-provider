@@ -260,20 +260,21 @@ func (e *ExecuteModular) doneReplicatePiece(
 	replicateIdx uint32,
 ) ([]byte, []byte, error) {
 	var (
-		err       error
-		integrity []byte
-		signature []byte
+		err           error
+		integrity     []byte
+		signature     []byte
+		taskSignature []byte
 	)
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(rTask.GetObjectInfo(), rTask.GetStorageParams(),
 		e.baseApp.TaskPriority(rTask), replicateIdx, -1, 0)
-	signature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
+	taskSignature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign done receive task",
 			"replicate_idx", replicateIdx, "error", err)
 		return nil, nil, err
 	}
-	receive.SetSignature(signature)
+	receive.SetSignature(taskSignature)
 	integrity, signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx,
 		approval.GetApprovedSpEndpoint(), approval, receive)
 	if err != nil {
