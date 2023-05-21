@@ -90,11 +90,12 @@ func (d *DownloadModular) HandleDownloadObjectTask(
 		log.CtxErrorw(ctx, "failed to generate piece info to download", "error", err)
 		return nil, err
 	}
-	data := make([]byte, task.GetSize())
+	var data []byte
 	for _, pInfo := range pieceInfos {
 		piece, err := d.baseApp.PieceStore().GetPiece(ctx, pInfo.segmentPieceKey,
 			int64(pInfo.offset), int64(pInfo.length))
 		if err != nil {
+			log.CtxErrorw(ctx, "failed to get piece data from piece store", "error", err)
 			return nil, ErrPieceStore
 		}
 		data = append(data, piece...)
