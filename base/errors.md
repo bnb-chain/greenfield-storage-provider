@@ -38,7 +38,7 @@ It sorts from 0... to 49
 * `06`: is used for Manager modular code.
 * `07`: is used for P2P modular code.
 * `08`: is used for Receiver modular code.
-* `09`: is used for Retriever modular code.
+* `09`: is used for Metadata modular code.
 * `10`: is used for Signer modular code.
 * `11`: is used for Uploader modular code.
 

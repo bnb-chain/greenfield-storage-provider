@@ -1,4 +1,4 @@
-package retriever
+package metadata
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 )
 
 // GfSpVerifyPermission Verify the input account’s permission to input items
-func (r *RetrieveModular) GfSpVerifyPermission(ctx context.Context, req *storagetypes.QueryVerifyPermissionRequest) (resp *storagetypes.QueryVerifyPermissionResponse, err error) {
+func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storagetypes.QueryVerifyPermissionRequest) (resp *storagetypes.QueryVerifyPermissionResponse, err error) {
 	var (
 		operator   sdk.AccAddress
 		bucketInfo *bsdb.Bucket
@@ -86,7 +86,7 @@ func (r *RetrieveModular) GfSpVerifyPermission(ctx context.Context, req *storage
 }
 
 // VerifyBucketPermission verify bucket permission
-func (r *RetrieveModular) VerifyBucketPermission(ctx context.Context, bucketInfo *bsdb.Bucket, operator sdk.AccAddress,
+func (r *MetadataModular) VerifyBucketPermission(ctx context.Context, bucketInfo *bsdb.Bucket, operator sdk.AccAddress,
 	action permtypes.ActionType, options *permtypes.VerifyOptions) (permtypes.Effect, error) {
 	var (
 		err    error
@@ -124,7 +124,7 @@ func (r *RetrieveModular) VerifyBucketPermission(ctx context.Context, bucketInfo
 }
 
 // VerifyObjectPermission verify object permission
-func (r *RetrieveModular) VerifyObjectPermission(ctx context.Context, bucketInfo *bsdb.Bucket, objectInfo *bsdb.Object,
+func (r *MetadataModular) VerifyObjectPermission(ctx context.Context, bucketInfo *bsdb.Bucket, objectInfo *bsdb.Object,
 	operator sdk.AccAddress, action permtypes.ActionType) (permtypes.Effect, error) {
 	var (
 		visibility   bool
@@ -180,7 +180,7 @@ func (r *RetrieveModular) VerifyObjectPermission(ctx context.Context, bucketInfo
 }
 
 // VerifyPolicy verify policy of permission
-func (r *RetrieveModular) VerifyPolicy(ctx context.Context, resourceID math.Uint, resourceType resource.ResourceType,
+func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint, resourceType resource.ResourceType,
 	operator sdk.AccAddress, action permtypes.ActionType, opts *permtypes.VerifyOptions) (permtypes.Effect, error) {
 	var (
 		err                    error

@@ -1,14 +1,14 @@
-package retriever
+package metadata
 
 import (
 	"context"
 	"errors"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 )
 
-func (r *RetrieveModular) GfSpQueryUploadProgress(
+func (r *MetadataModular) GfSpQueryUploadProgress(
 	ctx context.Context,
 	req *types.GfSpQueryUploadProgressRequest) (
 	*types.GfSpQueryUploadProgressResponse, error) {

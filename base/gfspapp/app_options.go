@@ -145,8 +145,8 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Endpoint.MetadataEndpoint == "" {
 		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
 	}
-	if cfg.Endpoint.RetrieverEndpoint == "" {
-		cfg.Endpoint.RetrieverEndpoint = cfg.GrpcAddress
+	if cfg.Endpoint.MetadataEndpoint == "" {
+		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.UploaderEndpoint == "" {
 		cfg.Endpoint.UploaderEndpoint = cfg.GrpcAddress
@@ -166,7 +166,6 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		cfg.Endpoint.DownloaderEndpoint,
 		cfg.Endpoint.ReceiverEndpoint,
 		cfg.Endpoint.MetadataEndpoint,
-		cfg.Endpoint.RetrieverEndpoint,
 		cfg.Endpoint.UploaderEndpoint,
 		cfg.Endpoint.P2PEndpoint,
 		cfg.Endpoint.SignerEndpoint,

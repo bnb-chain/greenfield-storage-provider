@@ -1,15 +1,15 @@
-package retriever
+package metadata
 
 import (
 	"context"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // GfSpGetEndpointBySpAddress get endpoint by sp address
-func (r *RetrieveModular) GfSpGetEndpointBySpAddress(
+func (r *MetadataModular) GfSpGetEndpointBySpAddress(
 	ctx context.Context,
 	req *types.GfSpGetEndpointBySpAddressRequest) (
 	resp *types.GfSpGetEndpointBySpAddressResponse, err error) {

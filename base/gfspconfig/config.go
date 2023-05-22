@@ -99,7 +99,6 @@ type EndpointConfig struct {
 	DownloaderEndpoint string
 	ReceiverEndpoint   string
 	MetadataEndpoint   string
-	RetrieverEndpoint  string
 	UploaderEndpoint   string
 	P2PEndpoint        string
 	SignerEndpoint     string
