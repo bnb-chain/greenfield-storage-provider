@@ -92,6 +92,17 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	app.gcObjectRetry = cfg.Task.GcObjectTaskRetry
 	app.gcZombieRetry = cfg.Task.GcZombieTaskRetry
 	app.gcMetaRetry = cfg.Task.GcMetaTaskRetry
+	app.approver = &coremodule.NullModular{}
+	app.authorizer = &coremodule.NullModular{}
+	app.downloader = &coremodule.NilModular{}
+	app.executor = &coremodule.NilModular{}
+	app.gater = &coremodule.NullModular{}
+	app.manager = &coremodule.NullModular{}
+	app.p2p = &coremodule.NilModular{}
+	app.receiver = &coremodule.NullReceiveModular{}
+	app.signer = &coremodule.NilModular{}
+	app.metrics = &coremodule.NilModular{}
+	app.pprof = &coremodule.NilModular{}
 	app.newRpcServer()
 	return nil
 }

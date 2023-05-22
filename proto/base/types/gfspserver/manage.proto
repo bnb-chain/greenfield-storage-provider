@@ -51,28 +51,8 @@ message GfSpReportTaskResponse {
   base.types.gfsperrors.GfSpError err = 1;
 }
 
-message GfSpQueryTaskRequest {
-  string task_key = 1;
-}
-
-message GfSpQueryTaskResponse {
-  base.types.gfsperrors.GfSpError err = 1;
-  oneof response {
-    base.types.gfsptask.GfSpUploadObjectTask upload_object_task = 2;
-    base.types.gfsptask.GfSpReplicatePieceTask replicate_piece_task= 3;
-    base.types.gfsptask.GfSpSealObjectTask seal_object_task = 4;
-    base.types.gfsptask.GfSpGCObjectTask gc_object_task = 5;
-    base.types.gfsptask.GfSpGCZombiePieceTask gc_zombie_piece_task = 6;
-    base.types.gfsptask.GfSpGCMetaTask gc_meta_task = 7;
-    base.types.gfsptask.GfSpDownloadObjectTask download_object_task = 8;
-    base.types.gfsptask.GfSpChallengePieceTask challenge_piece_task = 9;
-    base.types.gfsptask.GfSpReceivePieceTask receive_piece_task = 10;
-  }
-}
-
 service GfSpManageService {
   rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
   rpc GfSpReportTask(GfSpReportTaskRequest) returns (GfSpReportTaskResponse) {}
-  rpc GfSpQueryTask(GfSpQueryTaskRequest) returns (GfSpQueryTaskResponse) {}
 }

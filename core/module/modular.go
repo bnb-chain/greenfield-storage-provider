@@ -76,6 +76,8 @@ type Approver interface {
 	// PostCreateObjectApproval is called after HandleCreateObjectApprovalTask, it can
 	// recycle resources, statistics and other operations.
 	PostCreateObjectApproval(ctx context.Context, task task.ApprovalCreateObjectTask)
+	// QueryTasks queries tasks that running on approver by task sub key.
+	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }
 
 // Downloader is the interface to handle get object request from user account, and get
@@ -100,6 +102,9 @@ type Downloader interface {
 	// PostChallengePiece is called after HandleChallengePiece, it can recycle
 	// resources, statistics and other operations.
 	PostChallengePiece(ctx context.Context, task task.ChallengePieceTask)
+	// QueryTasks queries donwload/challenge tasks that running on downloader by
+	// task sub key.
+	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }
 
 // TaskExecutor is the interface to handle background task, it will ask task from
@@ -137,8 +142,8 @@ type Manager interface {
 	// DispatchTask dispatches the task to TaskExecutor modular when it ask task.
 	// It will consider task remaining resources when dispatches task.
 	DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error)
-	// QueryTask handles the query task requests, and returns the task information.
-	QueryTask(ctx context.Context, key task.TKey) (task.Task, error)
+	// QueryTasks queries tasks that hold on manager by task sub key.
+	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 	// HandleCreateUploadObjectTask handles the CreateUploadObject request from
 	// Uploader, before Uploader handles the user's UploadObject request, it should
 	// send CreateUploadObject request to Manager ask if it's ok. Through this
@@ -189,6 +194,9 @@ type P2P interface {
 		min, max int32, timeout int64) ([]task.ApprovalReplicatePieceTask, error)
 	// HandleQueryBootstrap handles the query p2p node bootstrap node info.
 	HandleQueryBootstrap(ctx context.Context) ([]string, error)
+	// QueryTasks queries replicate piece approval tasks that running on p2p by task
+	// sub key.
+	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }
 
 // Receiver is the interface to receive the piece data from primary SP.
@@ -199,6 +207,9 @@ type Receiver interface {
 	// HandleDoneReceivePieceTask calculates the integrity hash of the object and sign
 	// it, returns to the primary SP for seal object.
 	HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, []byte, error)
+	// QueryTasks queries replicate piece tasks that running on receiver by task sub
+	// key.
+	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }
 
 // Signer is the interface to handle the SP's sign and on greenfield chain operator.
@@ -241,4 +252,7 @@ type Uploader interface {
 	// PostUploadObject is called after HandleUploadObjectTask, it can recycle
 	// resources, statistics and other operations.
 	PostUploadObject(ctx context.Context, task task.UploadObjectTask)
+	// QueryTasks queries upload object tasks that running on uploading by task
+	// sub key.
+	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }

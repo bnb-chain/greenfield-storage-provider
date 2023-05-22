@@ -2,17 +2,14 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 
-	"github.com/pelletier/go-toml/v2"
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/command"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/conf"
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/approver"
@@ -80,12 +77,14 @@ func init() {
 	)
 	app.Commands = []*cli.Command{
 		// config category commands
-		conf.ConfigDumpCmd,
+		command.ConfigDumpCmd,
+		// query category commands
+		command.QueryTaskCmd,
 		// p2p category commands
-		p2p.P2PCreateKeysCmd,
+		command.P2PCreateKeysCmd,
 		// miscellaneous category commands
 		VersionCmd,
-		utils.ListModularCmd,
+		command.ListModularCmd,
 	}
 	registerModular()
 }
@@ -97,23 +96,11 @@ func main() {
 	}
 }
 
-// loadConfig loads the configuration from file.
-func loadConfig(file string, cfg *gfspconfig.GfSpConfig) error {
-	if cfg == nil {
-		return errors.New("failed to load config file, the config param invalid")
-	}
-	bz, err := os.ReadFile(file)
-	if err != nil {
-		return err
-	}
-	return toml.Unmarshal(bz, cfg)
-}
-
 // makeConfig loads the configuration from local file and replace the fields by flags.
 func makeConfig(ctx *cli.Context) (*gfspconfig.GfSpConfig, error) {
 	cfg := &gfspconfig.GfSpConfig{}
 	if ctx.IsSet(utils.ConfigFileFlag.Name) {
-		err := loadConfig(ctx.String(utils.ConfigFileFlag.Name), cfg)
+		err := utils.LoadConfig(ctx.String(utils.ConfigFileFlag.Name), cfg)
 		if err != nil {
 			log.Errorw("failed to load config file", "error", err)
 			return nil, err

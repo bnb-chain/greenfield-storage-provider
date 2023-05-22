@@ -25,6 +25,9 @@ func (*NullModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.Re
 	return nil, nil
 }
 func (*NullModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan) { return }
+func (*NullModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
+	return nil, nil
+}
 func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) error {
 	return nil
 }
@@ -97,7 +100,10 @@ func (*NilModular) Stop(context.Context) error  { return nil }
 func (*NilModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
 	return nil, nil
 }
-func (*NilModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan)         { return }
+func (*NilModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan) { return }
+func (*NilModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
+	return nil, nil
+}
 func (*NilModular) PreDownloadObject(context.Context, task.DownloadObjectTask) error { return nil }
 func (*NilModular) HandleDownloadObjectTask(context.Context, task.DownloadObjectTask) ([]byte, error) {
 	return nil, nil
@@ -152,6 +158,9 @@ func (*NullReceiveModular) Name() string                { return "" }
 func (*NullReceiveModular) Start(context.Context) error { return nil }
 func (*NullReceiveModular) Stop(context.Context) error  { return nil }
 func (*NullReceiveModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
+	return nil, nil
+}
+func (*NullReceiveModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
 	return nil, nil
 }
 func (*NullReceiveModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan) { return }

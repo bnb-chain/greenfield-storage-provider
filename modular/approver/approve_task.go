@@ -7,6 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -130,4 +131,13 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(
 func (a *ApprovalModular) PostCreateObjectApproval(
 	ctx context.Context,
 	task coretask.ApprovalCreateObjectTask) {
+}
+
+func (a *ApprovalModular) QueryTasks(
+	ctx context.Context,
+	subKey coretask.TKey) (
+	[]coretask.Task, error) {
+	bucketApprovalTasks, _ := taskqueue.ScanTQueueBySubKey(a.bucketQueue, subKey)
+	objectApprovalTasks, _ := taskqueue.ScanTQueueBySubKey(a.objectQueue, subKey)
+	return append(bucketApprovalTasks, objectApprovalTasks...), nil
 }
