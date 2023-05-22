@@ -6,6 +6,7 @@ import (
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 )
 
 const (
@@ -14,23 +15,30 @@ const (
 )
 
 func NewRetrieveModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
-	receiver := &RetrieveModular{baseApp: app}
-	if err := DefaultRetrieverOptions(receiver, cfg); err != nil {
+	retriever := &RetrieveModular{baseApp: app}
+	if err := DefaultRetrieverOptions(retriever, cfg); err != nil {
 		return nil, err
 	}
 	// register retrieve service to gfsp base app's grpc server
-	types.RegisterGfSpRetrieverServiceServer(receiver.baseApp.ServerForRegister(), receiver)
-	return receiver, nil
+	types.RegisterGfSpRetrieverServiceServer(retriever.baseApp.ServerForRegister(), retriever)
+	return retriever, nil
 }
 
-func DefaultRetrieverOptions(receiver *RetrieveModular, cfg *gfspconfig.GfSpConfig) error {
+func DefaultRetrieverOptions(retriever *RetrieveModular, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Parallel.QuerySPParallelPerNode == 0 {
 		cfg.Parallel.QuerySPParallelPerNode = DefaultQuerySPParallelPerNode
 	}
 	if cfg.Bucket.FreeQuotaPerBucket == 0 {
 		cfg.Bucket.FreeQuotaPerBucket = downloader.DefaultBucketFreeQuota
 	}
-	receiver.freeQuotaPerBucket = cfg.Bucket.FreeQuotaPerBucket
-	receiver.maxRetrieveRequest = cfg.Parallel.QuerySPParallelPerNode
+	retriever.freeQuotaPerBucket = cfg.Bucket.FreeQuotaPerBucket
+	retriever.maxRetrieveRequest = cfg.Parallel.QuerySPParallelPerNode
+
+	metadataConfig := &metadata.MetadataConfig{
+		BsDBConfig:         &cfg.BsDB,
+		BsDBSwitchedConfig: &cfg.BsDBBackup,
+	}
+
+	retriever.config = metadataConfig
 	return nil
 }

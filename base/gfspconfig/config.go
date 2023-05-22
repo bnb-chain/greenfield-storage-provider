@@ -1,7 +1,6 @@
 package gfspconfig
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
@@ -20,7 +19,6 @@ type Option = func(cfg *GfSpConfig) error
 // app will call the customized implement.
 type Customize struct {
 	GfSpDB                         spdb.SPDB
-	GfBsDB                         bsdb.BSDB
 	PieceStore                     piecestore.PieceStore
 	PieceOp                        piecestore.PieceOp
 	Rcmgr                          corercmgr.ResourceManager
@@ -40,6 +38,7 @@ type GfSpConfig struct {
 	Customize   *Customize
 	SpDB        storeconfig.SQLDBConfig
 	BsDB        storeconfig.SQLDBConfig
+	BsDBBackup  storeconfig.SQLDBConfig
 	PieceStore  storage.PieceStoreConfig
 	Chain       ChainConfig
 	SpAccount   SpAccountConfig

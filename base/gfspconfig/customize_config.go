@@ -2,8 +2,6 @@ package gfspconfig
 
 import (
 	"errors"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -20,19 +18,6 @@ func CustomizeGfSpDB(db spdb.SPDB) Option {
 			return errors.New("repeated set sp db")
 		}
 		cfg.Customize.GfSpDB = db
-		return nil
-	}
-}
-
-func CustomizeGfBsDB(db bsdb.BSDB) Option {
-	return func(cfg *GfSpConfig) error {
-		if cfg.Customize == nil {
-			cfg.Customize = &Customize{}
-		}
-		if cfg.Customize.GfBsDB != nil {
-			return errors.New("repeated set bs db")
-		}
-		cfg.Customize.GfBsDB = db
 		return nil
 	}
 }
