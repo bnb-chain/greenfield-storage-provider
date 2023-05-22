@@ -23,7 +23,7 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 	var (
 		err    error
 		b      bytes.Buffer
-		reqCtx = NewRequestContext(r)
+		reqCtx *RequestContext
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -33,6 +33,11 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 			MakeErrorResponse(w, err)
 		}
 	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
 
 	if ok := common.IsHexAddress(r.Header.Get(model.GnfdUserAddressHeader)); !ok {
 		log.Errorw("failed to check account id", "account_id", reqCtx.account, "error", err)
@@ -66,7 +71,7 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		err                      error
 		b                        bytes.Buffer
 		maxKeys                  uint64
-		reqCtx                   = NewRequestContext(r)
+		reqCtx                   *RequestContext
 		ok                       bool
 		requestBucketName        string
 		requestMaxKeys           string
@@ -87,6 +92,11 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 			MakeErrorResponse(w, err)
 		}
 	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
 
 	queryParams = reqCtx.request.URL.Query()
 	requestBucketName = reqCtx.bucketName
@@ -190,6 +200,106 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
+		return
+	}
+
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getObjectMetaHandler handle get object metadata request
+func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		b      bytes.Buffer
+		reqCtx *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get object meta", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
+
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		return
+	}
+
+	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		return
+	}
+
+	resp, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, true)
+	if err != nil {
+		log.Errorf("failed to get object meta", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetObjectMetaResponse{
+		Object: resp,
+	}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to get object meta", "error", err)
+		return
+	}
+
+	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getBucketMetaHandler handle get bucket metadata request
+func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		b      bytes.Buffer
+		reqCtx *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get bucket meta", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, err = NewRequestContext(r)
+	if err != nil {
+		return
+	}
+
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		return
+	}
+
+	bucket, streamRecord, err := g.baseApp.GfSpClient().GetBucketMeta(reqCtx.Context(), reqCtx.bucketName, true)
+	if err != nil {
+		log.Errorf("failed to get bucket metadata", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetBucketMetaResponse{
+		Bucket:       bucket,
+		StreamRecord: streamRecord,
+	}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to get bucket metadata", "error", err)
 		return
 	}
 
