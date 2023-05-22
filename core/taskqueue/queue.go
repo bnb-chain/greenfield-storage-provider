@@ -86,24 +86,45 @@ type TQueueStrategy interface {
 	SetRetireTaskStrategy(func(task.Task) bool)
 }
 
-func ScanTQueueByKeyPrefix(queue TQueue, prefix string) []string {
-	var infos []string
+func ScanTQueueBySubKey(queue TQueue, subKey task.TKey) ([]task.Task, error) {
+	var tasks []task.Task
 	scan := func(t task.Task) {
-		if strings.HasPrefix(string(t.Key()), prefix) {
-			infos = append(infos, t.Info())
+		if strings.Contains(string(t.Key()), string(subKey)) {
+			tasks = append(tasks, t)
 		}
 	}
 	queue.ScanTask(scan)
-	return infos
+	return tasks, nil
 }
 
-func ScanTQueueWithLimitByKeyPrefix(queue TQueueWithLimit, prefix string) []string {
-	var infos []string
+func ScanTQueueWithLimitBySubKey(queue TQueueWithLimit, subKey task.TKey) ([]task.Task, error) {
+	var tasks []task.Task
 	scan := func(t task.Task) {
-		if strings.HasPrefix(string(t.Key()), prefix) {
-			infos = append(infos, t.Info())
+		if strings.Contains(string(t.Key()), string(subKey)) {
+			tasks = append(tasks, t)
 		}
 	}
 	queue.ScanTask(scan)
-	return infos
+	return tasks, nil
 }
+
+var _ TQueue = (*NilQueue)(nil)
+var _ TQueueWithLimit = (*NilQueue)(nil)
+var _ TQueueOnStrategy = (*NilQueue)(nil)
+var _ TQueueOnStrategyWithLimit = (*NilQueue)(nil)
+var _ TQueueStrategy = (*NilQueue)(nil)
+
+type NilQueue struct{}
+
+func (*NilQueue) Top() task.Task                             { return nil }
+func (*NilQueue) Pop() task.Task                             { return nil }
+func (*NilQueue) PopByKey(task.TKey) task.Task               { return nil }
+func (*NilQueue) Has(task.TKey) bool                         { return false }
+func (*NilQueue) Push(task.Task) error                       { return nil }
+func (*NilQueue) Len() int                                   { return 0 }
+func (*NilQueue) Cap() int                                   { return 0 }
+func (*NilQueue) ScanTask(func(task.Task))                   { return }
+func (*NilQueue) TopByLimit(rcmgr.Limit) task.Task           { return nil }
+func (*NilQueue) PopByLimit(rcmgr.Limit) task.Task           { return nil }
+func (*NilQueue) SetFilterTaskStrategy(func(task.Task) bool) { return }
+func (*NilQueue) SetRetireTaskStrategy(func(task.Task) bool) { return }

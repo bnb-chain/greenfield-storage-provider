@@ -7,6 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -44,4 +45,12 @@ func (p *P2PModular) HandleReplicatePieceApproval(
 
 func (p *P2PModular) HandleQueryBootstrap(ctx context.Context) ([]string, error) {
 	return p.node.Bootstrap(), nil
+}
+
+func (p *P2PModular) QueryTasks(
+	ctx context.Context,
+	subKey task.TKey) (
+	[]task.Task, error) {
+	approvalTasks, _ := taskqueue.ScanTQueueBySubKey(p.replicateApprovalQueue, subKey)
+	return approvalTasks, nil
 }

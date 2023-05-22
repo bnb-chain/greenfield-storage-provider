@@ -130,39 +130,3 @@ func (s *GfSpClient) ReportTask(
 	}
 	return nil
 }
-
-func (s *GfSpClient) QueryTask(
-	ctx context.Context,
-	key string) (
-	coretask.Task, error) {
-	conn, connErr := s.ManagerConn(ctx)
-	if connErr != nil {
-		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return nil, ErrRpcUnknown
-	}
-	req := &gfspserver.GfSpQueryTaskRequest{TaskKey: key}
-	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryTask(ctx, req)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to query task", "error", err)
-		return nil, ErrRpcUnknown
-	}
-	if resp.GetErr() != nil {
-		return nil, resp.GetErr()
-	}
-	switch t := resp.GetResponse().(type) {
-	case *gfspserver.GfSpQueryTaskResponse_ReplicatePieceTask:
-		return t.ReplicatePieceTask, nil
-	case *gfspserver.GfSpQueryTaskResponse_SealObjectTask:
-		return t.SealObjectTask, nil
-	case *gfspserver.GfSpQueryTaskResponse_ReceivePieceTask:
-		return t.ReceivePieceTask, nil
-	case *gfspserver.GfSpQueryTaskResponse_GcObjectTask:
-		return t.GcObjectTask, nil
-	case *gfspserver.GfSpQueryTaskResponse_GcZombiePieceTask:
-		return t.GcZombiePieceTask, nil
-	case *gfspserver.GfSpQueryTaskResponse_GcMetaTask:
-		return t.GcMetaTask, nil
-	default:
-		return nil, ErrTypeMismatch
-	}
-}
