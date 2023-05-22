@@ -1,9 +1,5 @@
 package spdb
 
-import (
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-)
-
 // SpAddressType identify address type of SP
 type SpAddressType int32
 
@@ -14,6 +10,7 @@ const (
 	ApprovalAddressType
 )
 
+/*
 type SPInfoDB interface {
 	// UpdateAllSp update all sp info, delete old sp info
 	UpdateAllSp(spList []*sptypes.StorageProvider) error
@@ -31,3 +28,5 @@ type SPInfoDB interface {
 	// SetOwnSpInfo set(maybe overwrite) own sp info
 	SetOwnSpInfo(sp *sptypes.StorageProvider) error
 }
+
+*/

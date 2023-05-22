@@ -1,7 +1,6 @@
 package gfspapp
 
 import (
-	"fmt"
 	"math"
 	"os"
 	"strings"
@@ -307,7 +306,6 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 		module, err := newFunc(app, cfg)
 		if err != nil {
 			log.Errorw("failed to new modular instance", "name", modular)
-			fmt.Println("failed to new modular instance", modular)
 			return err
 		}
 		app.RegisterServices(module)
@@ -383,11 +381,10 @@ func NewGfSpBaseApp(cfg *gfspconfig.GfSpConfig, opts ...gfspconfig.Option) (*GfS
 		return nil, err
 	}
 	app := &GfSpBaseApp{}
-	for i, opt := range gfspBaseAppDefaultOptions {
+	for _, opt := range gfspBaseAppDefaultOptions {
 		err := opt(app, cfg)
 		if err != nil {
 			log.Errorw("failed to apply base app opt", "error", err)
-			fmt.Println("failed to apply base app opt", err, i)
 			return nil, err
 		}
 	}

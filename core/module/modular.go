@@ -102,7 +102,7 @@ type Downloader interface {
 	// PostChallengePiece is called after HandleChallengePiece, it can recycle
 	// resources, statistics and other operations.
 	PostChallengePiece(ctx context.Context, task task.ChallengePieceTask)
-	// QueryTasks queries donwload/challenge tasks that running on downloader by
+	// QueryTasks queries download/challenge tasks that running on downloader by
 	// task sub key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }

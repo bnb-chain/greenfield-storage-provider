@@ -34,7 +34,7 @@ tidy:
 
 # only run unit test, exclude e2e tests
 test:
-	mockgen -source=store/sqldb/database.go -destination=store/sqldb/database_mock.go -package=sqldb
+	mockgen -source=core/spdb/spdb.go -destination=core/spdb/spdb_mock.go -package=spdb
 	mockgen -source=store/bsdb/database.go -destination=store/bsdb/database_mock.go -package=bsdb
 	go test `go list ./... | grep -v /test/`
 	# go test -cover ./...

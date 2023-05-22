@@ -198,7 +198,6 @@ func storageProvider(ctx *cli.Context) error {
 	gfsp, err := gfspapp.NewGfSpBaseApp(cfg)
 	if err != nil {
 		log.Errorw("failed to init gf-sp app", "error", err)
-		fmt.Println("failed to init gf-sp app", "error", err)
 		return err
 	}
 	return gfsp.Start(context.Background())

@@ -123,8 +123,8 @@ func (*NilQueue) Has(task.TKey) bool                         { return false }
 func (*NilQueue) Push(task.Task) error                       { return nil }
 func (*NilQueue) Len() int                                   { return 0 }
 func (*NilQueue) Cap() int                                   { return 0 }
-func (*NilQueue) ScanTask(func(task.Task))                   { return }
+func (*NilQueue) ScanTask(func(task.Task))                   {}
 func (*NilQueue) TopByLimit(rcmgr.Limit) task.Task           { return nil }
 func (*NilQueue) PopByLimit(rcmgr.Limit) task.Task           { return nil }
-func (*NilQueue) SetFilterTaskStrategy(func(task.Task) bool) { return }
-func (*NilQueue) SetRetireTaskStrategy(func(task.Task) bool) { return }
+func (*NilQueue) SetFilterTaskStrategy(func(task.Task) bool) {}
+func (*NilQueue) SetRetireTaskStrategy(func(task.Task) bool) {}

@@ -193,11 +193,11 @@ func (n *Node) GetSecondaryReplicatePieceApproval(
 	task.SetAskSignature(signature)
 	n.broadcast(ctx, GetApprovalRequest, task.(*gfsptask.GfSpReplicatePieceApprovalTask))
 	approvalCtx, cancelFunc := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+	defer cancelFunc()
 	for {
 		select {
 		case approval := <-approvalCh:
 			current, innerErr := n.baseApp.Consensus().CurrentHeight(approvalCtx)
-			cancelFunc()
 			if innerErr == nil {
 				if approval.GetExpiredHeight() < current {
 					log.Warnw("discard expired approval", "sp", approval.GetApprovedSpApprovalAddress(),
@@ -215,7 +215,6 @@ func (n *Node) GetSecondaryReplicatePieceApproval(
 				return
 			}
 		case <-approvalCtx.Done():
-			cancelFunc()
 			log.CtxWarnw(ctx, "failed to get sufficient approvals",
 				"expect", expectedAccept, "accepted", len(accept))
 			return
