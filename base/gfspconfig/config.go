@@ -135,6 +135,7 @@ type ExecutorConfig struct {
 type P2PConfig struct {
 	P2PPrivateKey string
 	P2PAddress    string
+	P2PAntAddress string
 	P2PBootstrap  []string
 	P2PPingPeriod int
 }

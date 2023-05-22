@@ -69,6 +69,21 @@ func (n *Node) onPing(s network.Stream) {
 		pong.Nodes = append(pong.Nodes, nodeInfo)
 		//log.Debugw("send node to remote", "node_id", pID.String(), "remote_node", s.Conn().RemotePeer())
 	}
+	// add self ant address
+	if len(n.p2pAntAddress) > 0 {
+		selfAntAddr, err := MakeMultiaddr(n.p2pAntAddress)
+		if err != nil {
+			log.Errorw("failed to parser self ant address",
+				"ant_address", n.p2pAntAddress, "error", err)
+		} else {
+			nodeInfo := &gfspp2p.GfSpNode{
+				NodeId:    n.node.ID().String(),
+				MultiAddr: []string{selfAntAddr.String()},
+			}
+			pong.Nodes = append(pong.Nodes, nodeInfo)
+		}
+	}
+
 	pong.SpOperatorAddress = n.baseApp.OperateAddress()
 	signature, err := n.baseApp.GfSpClient().SignP2PPongMsg(context.Background(), pong)
 	if err != nil {

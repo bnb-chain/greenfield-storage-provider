@@ -39,8 +39,9 @@ func DefaultP2POptions(p2p *P2PModular, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.P2P.P2PAddress == "" {
 		cfg.P2P.P2PAddress = DefaultP2PProtocolAddress
 	}
-	node, err := p2pnode.NewNode(p2p.baseApp, cfg.P2P.P2PPrivateKey, cfg.P2P.P2PAddress,
-		cfg.P2P.P2PBootstrap, cfg.P2P.P2PPingPeriod, cfg.Approval.ReplicatePieceTimeoutHeight)
+	node, err := p2pnode.NewNode(p2p.baseApp, cfg.P2P.P2PPrivateKey,
+		cfg.P2P.P2PAddress, cfg.P2P.P2PBootstrap, cfg.P2P.P2PPingPeriod,
+		cfg.Approval.ReplicatePieceTimeoutHeight, cfg.P2P.P2PAntAddress)
 	if err != nil {
 		return err
 	}
