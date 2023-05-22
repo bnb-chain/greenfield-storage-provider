@@ -232,7 +232,10 @@ func (r *RetrieveModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *t
 }
 
 // GfSpGetBucketMeta get bucket metadata
-func (r *RetrieveModular) GfSpGetBucketMeta(ctx context.Context, req *types.GfSpGetBucketMetaRequest) (resp *types.GfSpGetBucketMetaResponse, err error) {
+func (r *RetrieveModular) GfSpGetBucketMeta(
+	ctx context.Context,
+	req *types.GfSpGetBucketMetaRequest) (
+	resp *types.GfSpGetBucketMetaResponse, err error) {
 	var (
 		bucket          *model.Bucket
 		bucketRes       *types.Bucket
