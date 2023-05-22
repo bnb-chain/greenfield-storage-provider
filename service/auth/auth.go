@@ -1,5 +1,6 @@
 package auth
 
+/*
 import (
 	"context"
 	"net"
@@ -7,8 +8,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	authtypes "github.com/bnb-chain/greenfield-storage-provider/service/auth/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
@@ -73,3 +74,5 @@ func (auth *AuthServer) serve(errCh chan error) {
 		return
 	}
 }
+
+*/

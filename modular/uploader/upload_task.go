@@ -169,7 +169,6 @@ func StreamReadAt(stream io.Reader, b []byte) (int, error) {
 func (u *UploadModular) PostUploadObject(
 	ctx context.Context,
 	task coretask.UploadObjectTask) {
-	return
 }
 
 func (u *UploadModular) QueryTasks(

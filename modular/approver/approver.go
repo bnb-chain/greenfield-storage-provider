@@ -62,7 +62,6 @@ func (a *ApprovalModular) ReserveResource(ctx context.Context, state *rcmgr.Scop
 
 func (a *ApprovalModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
 	span.Done()
-	return
 }
 
 // GCApprovalQueue defines the strategy of gc approval queue when the queue is full.

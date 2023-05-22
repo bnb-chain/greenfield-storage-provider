@@ -1,5 +1,6 @@
 package auth
 
+/*
 import (
 	"context"
 	"encoding/hex"
@@ -102,3 +103,4 @@ func (auth *AuthServer) VerifyOffChainSignature(ctx context.Context, req *authty
 	log.CtxInfow(ctx, "succeed to VerifyOffChainSignature")
 	return resp, nil
 }
+*/

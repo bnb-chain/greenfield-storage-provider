@@ -1,5 +1,6 @@
 package service
 
+/*
 import (
 	"context"
 	"encoding/base64"
@@ -217,3 +218,5 @@ func (metadata *Metadata) GetObjectMeta(ctx context.Context, req *metatypes.GetO
 	log.CtxInfo(ctx, "succeed to get object meta")
 	return resp, nil
 }
+
+*/

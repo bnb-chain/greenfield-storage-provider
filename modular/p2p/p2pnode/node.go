@@ -195,7 +195,8 @@ func (n *Node) GetSecondaryReplicatePieceApproval(
 	}
 	task.SetAskSignature(signature)
 	n.broadcast(ctx, GetApprovalRequest, task.(*gfsptask.GfSpReplicatePieceApprovalTask))
-	approvalCtx, _ := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+	approvalCtx, cancelFunc := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+	defer cancelFunc()
 	for {
 		select {
 		case approval := <-approvalCh:

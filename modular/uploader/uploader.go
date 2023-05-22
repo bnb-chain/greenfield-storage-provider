@@ -54,5 +54,4 @@ func (u *UploadModular) ReleaseResource(
 	ctx context.Context,
 	span rcmgr.ResourceScopeSpan) {
 	span.Done()
-	return
 }

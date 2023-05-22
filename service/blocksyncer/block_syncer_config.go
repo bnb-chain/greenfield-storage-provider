@@ -1,5 +1,6 @@
 package blocksyncer
 
+/*
 import (
 	"os"
 
@@ -22,3 +23,5 @@ func getDBConfigFromEnv(dsn string) (string, error) {
 	}
 	return dsnVal, nil
 }
+
+*/

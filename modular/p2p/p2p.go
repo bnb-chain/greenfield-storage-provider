@@ -63,7 +63,6 @@ func (p *P2PModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat
 
 func (p *P2PModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
 	span.Done()
-	return
 }
 
 func (p *P2PModular) eventLoop(ctx context.Context) {

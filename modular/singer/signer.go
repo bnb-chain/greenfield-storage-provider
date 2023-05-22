@@ -45,7 +45,6 @@ func (s *SingModular) ReleaseResource(
 	ctx context.Context,
 	span rcmgr.ResourceScopeSpan) {
 	span.Done()
-	return
 }
 
 func (s *SingModular) SignCreateBucketApproval(

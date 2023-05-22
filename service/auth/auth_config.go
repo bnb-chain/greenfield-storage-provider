@@ -1,5 +1,6 @@
 package auth
 
+/*
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 )
@@ -10,3 +11,4 @@ type AuthConfig struct {
 	SpDBConfig        *config.SQLDBConfig
 	SpOperatorAddress string
 }
+*/

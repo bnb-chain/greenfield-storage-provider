@@ -478,7 +478,6 @@ func (m *GfSpReceivePieceTask) GetSignBytes() []byte {
 	}
 	bz := ModuleCdc.MustMarshalJSON(fakeMsg)
 	return sdk.MustSortJSON(bz)
-	return nil
 }
 
 func (m *GfSpReceivePieceTask) Key() coretask.TKey {
@@ -498,7 +497,7 @@ func (m *GfSpReceivePieceTask) Info() string {
 	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s] rIdx[%d], pIdx[%s], size[%d], checksum[%s], %s",
 	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(), m.GetObjectInfo().String(),
 	//	m.GetReplicateIdx(), m.GetPieceIdx(), m.GetPieceSize(), m.GetPieceChecksum(), m.GetTask().Info())
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s] rIdx[%d], pIdx[%s], size[%d], checksum[%s], %s",
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s] rIdx[%d], pIdx[%d], size[%d], checksum[%s], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(), m.GetReplicateIdx(),
 		m.GetPieceIdx(), m.GetPieceSize(), hex.EncodeToString(m.GetPieceChecksum()), m.GetTask().Info())
 }

@@ -1,5 +1,6 @@
 package blocksyncer
 
+/*
 import (
 	"context"
 	"encoding/json"
@@ -314,3 +315,5 @@ func (i *Impl) CreateMasterTable() error {
 func (i *Impl) GetServiceName() string {
 	return i.ServiceName
 }
+
+*/

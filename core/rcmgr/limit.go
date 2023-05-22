@@ -65,7 +65,7 @@ func (n *NullLimit) GetConnTotalLimit() int               { return 0 }
 func (n *NullLimit) GetTaskLimit(ReserveTaskPriority) int { return 0 }
 func (n *NullLimit) GetTaskTotalLimit() int               { return 0 }
 func (n *NullLimit) NotLess(Limit) bool                   { return false }
-func (n *NullLimit) Add(Limit)                            { return }
+func (n *NullLimit) Add(Limit)                            {}
 func (n *NullLimit) Sub(Limit) bool                       { return false }
 func (n *NullLimit) Equal(Limit) bool                     { return false }
 func (n *NullLimit) ScopeStat() *ScopeStat                { return nil }
@@ -86,7 +86,7 @@ func (n *Unlimited) GetConnTotalLimit() int               { return math.MaxInt }
 func (n *Unlimited) GetTaskLimit(ReserveTaskPriority) int { return math.MaxInt }
 func (n *Unlimited) GetTaskTotalLimit() int               { return math.MaxInt }
 func (n *Unlimited) NotLess(Limit) bool                   { return true }
-func (n *Unlimited) Add(Limit)                            { return }
+func (n *Unlimited) Add(Limit)                            {}
 func (n *Unlimited) Sub(Limit) bool                       { return true }
 func (n *Unlimited) Equal(Limit) bool                     { return true }
 func (n *Unlimited) ScopeStat() *ScopeStat                { return nil }

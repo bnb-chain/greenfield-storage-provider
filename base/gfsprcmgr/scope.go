@@ -109,7 +109,7 @@ func (s *resourceScope) ReserveMemory(size int64, prio uint8) error {
 		return s.wrapError(err)
 	}
 	if err := s.reserveMemoryForEdges(size, prio); err != nil {
-		s.rc.releaseMemory(int64(size))
+		s.rc.releaseMemory(size)
 		return s.wrapError(err)
 	}
 	return nil
@@ -123,7 +123,7 @@ func (s *resourceScope) reserveMemoryForEdges(size int64, prio uint8) error {
 	var err error
 	for _, e := range s.edges {
 		var stat corercmgr.ScopeStat
-		stat, err = e.ReserveMemoryForChild(int64(size), prio)
+		stat, err = e.ReserveMemoryForChild(size, prio)
 		if err != nil {
 			log.Debugw("blocked memory reservation from constraining edge", logValuesMemoryLimit(s.name, e.name, stat, err)...)
 			break
@@ -133,7 +133,7 @@ func (s *resourceScope) reserveMemoryForEdges(size int64, prio uint8) error {
 	if err != nil {
 		// we failed because of a constraint; undo memory reservations
 		for _, e := range s.edges[:reserved] {
-			e.ReleaseMemoryForChild(int64(size))
+			e.ReleaseMemoryForChild(size)
 		}
 	}
 	return err
@@ -160,7 +160,7 @@ func (s *resourceScope) ReleaseMemory(size int64) {
 	if s.done {
 		return
 	}
-	s.rc.releaseMemory(int64(size))
+	s.rc.releaseMemory(size)
 	s.releaseMemoryForEdges(size)
 }
 

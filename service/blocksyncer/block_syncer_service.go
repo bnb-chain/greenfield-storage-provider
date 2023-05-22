@@ -1,5 +1,6 @@
 package blocksyncer
 
+/*
 import (
 	"context"
 	"time"
@@ -112,3 +113,5 @@ func determineMainService() error {
 	}
 	return nil
 }
+
+*/

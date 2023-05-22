@@ -67,7 +67,6 @@ func (e *ExecuteModular) HandleReplicatePieceTask(
 		task.SetSealed(true)
 	}
 	log.CtxDebugw(ctx, "finish combine seal object", "error", sealErr)
-	return
 }
 
 func (e *ExecuteModular) AskReplicatePieceApproval(

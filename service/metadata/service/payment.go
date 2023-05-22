@@ -1,5 +1,6 @@
 package service
 
+/*
 import (
 	"context"
 
@@ -91,3 +92,5 @@ func (metadata *Metadata) GetPaymentByBucketID(ctx context.Context, req *metatyp
 	log.CtxInfow(ctx, "succeed to get payment by bucket id")
 	return resp, nil
 }
+
+*/
