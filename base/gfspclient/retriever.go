@@ -332,6 +332,30 @@ func (s *GfSpClient) GetBucketMeta(
 	return resp.GetBucket(), resp.GetStreamRecord(), nil
 }
 
+// GetEndpointBySpAddress get endpoint by sp address
+func (s *GfSpClient) GetEndpointBySpAddress(
+	ctx context.Context,
+	spAddress string,
+	opts ...grpc.DialOption) (
+	string, error) {
+	conn, connErr := s.Connection(ctx, s.retrieverEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect retriever", "error", connErr)
+		return "", ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpGetEndpointBySpAddressRequest{
+		SpAddress: spAddress,
+	}
+	resp, err := types.NewGfSpRetrieverServiceClient(conn).GfSpGetEndpointBySpAddress(ctx, req)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get sp by address rpc", "error", err)
+		return "", err
+	}
+	return resp.GetEndpoint(), nil
+}
+
 func (s *GfSpClient) GetBucketReadQuota(
 	ctx context.Context,
 	bucket *storage_types.BucketInfo,
