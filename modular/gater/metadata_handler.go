@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	"net/http"

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package modular.retriever.types;
+package modular.metadata.types;
 
 import "base/types/gfsperrors/error.proto";
 import "gogoproto/gogo.proto";
@@ -8,7 +8,7 @@ import "greenfield/storage/query.proto";
 import "greenfield/payment/stream_record.proto";
 import "service/types/storage_provider.proto";
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types";
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types";
 
 // Bucket is the structure for user bucket
 message Bucket {
@@ -325,7 +325,7 @@ message GfSpQueryUploadProgressResponse {
   service.types.JobState state = 2;
 }
 
-service GfSpRetrieverService {
+service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {};
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {};
   rpc GfSpGetBucketByBucketName(GfSpGetBucketByBucketNameRequest) returns (GfSpGetBucketByBucketNameResponse) {};

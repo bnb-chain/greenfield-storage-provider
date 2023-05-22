@@ -1,4 +1,4 @@
-package retriever
+package metadata
 
 import (
 	"context"
@@ -8,13 +8,13 @@ import (
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 // GfSpListObjectsByBucketName list objects info by a bucket name
-func (r *RetrieveModular) GfSpListObjectsByBucketName(ctx context.Context, req *types.GfSpListObjectsByBucketNameRequest) (resp *types.GfSpListObjectsByBucketNameResponse, err error) {
+func (r *MetadataModular) GfSpListObjectsByBucketName(ctx context.Context, req *types.GfSpListObjectsByBucketNameRequest) (resp *types.GfSpListObjectsByBucketNameResponse, err error) {
 	var (
 		results               []*model.ListObjectsResult
 		keyCount              uint64
@@ -107,7 +107,7 @@ func (r *RetrieveModular) GfSpListObjectsByBucketName(ctx context.Context, req *
 }
 
 // GfSpListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
-func (r *RetrieveModular) GfSpListDeletedObjectsByBlockNumberRange(ctx context.Context, req *types.GfSpListDeletedObjectsByBlockNumberRangeRequest) (resp *types.GfSpListDeletedObjectsByBlockNumberRangeResponse, err error) {
+func (r *MetadataModular) GfSpListDeletedObjectsByBlockNumberRange(ctx context.Context, req *types.GfSpListDeletedObjectsByBlockNumberRangeRequest) (resp *types.GfSpListDeletedObjectsByBlockNumberRangeResponse, err error) {
 	ctx = log.Context(ctx, req)
 
 	endBlockNumber, err := r.baseApp.GfBsDB().GetLatestBlockNumber()
@@ -165,7 +165,7 @@ func (r *RetrieveModular) GfSpListDeletedObjectsByBlockNumberRange(ctx context.C
 }
 
 // GfSpGetObjectMeta get object metadata
-func (r *RetrieveModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSpGetObjectMetaRequest) (resp *types.GfSpGetObjectMetaResponse, err error) {
+func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSpGetObjectMetaRequest) (resp *types.GfSpGetObjectMetaResponse, err error) {
 	var (
 		object *model.Object
 		res    *types.Object

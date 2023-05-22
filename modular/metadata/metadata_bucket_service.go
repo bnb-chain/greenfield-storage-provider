@@ -1,4 +1,4 @@
-package retriever
+package metadata
 
 import (
 	"context"
@@ -16,21 +16,21 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 var (
-	ErrDanglingPointer = gfsperrors.Register(RetrieveModularName, http.StatusInternalServerError, 90001, "OoooH... request lost, try again later")
-	ErrExceedRequest   = gfsperrors.Register(RetrieveModularName, http.StatusServiceUnavailable, 90002, "request exceed")
-	ErrNoRecord        = gfsperrors.Register(RetrieveModularName, http.StatusNotFound, 90003, "no uploading record")
-	ErrGfSpDB          = gfsperrors.Register(RetrieveModularName, http.StatusInternalServerError, 95202, "server slipped away, try again later")
+	ErrDanglingPointer = gfsperrors.Register(MetadataModularName, http.StatusInternalServerError, 90001, "OoooH... request lost, try again later")
+	ErrExceedRequest   = gfsperrors.Register(MetadataModularName, http.StatusServiceUnavailable, 90002, "request exceed")
+	ErrNoRecord        = gfsperrors.Register(MetadataModularName, http.StatusNotFound, 90003, "no uploading record")
+	ErrGfSpDB          = gfsperrors.Register(MetadataModularName, http.StatusInternalServerError, 95202, "server slipped away, try again later")
 )
 
-var _ types.GfSpRetrieverServiceServer = &RetrieveModular{}
+var _ types.GfSpMetadataServiceServer = &MetadataModular{}
 
-func (r *RetrieveModular) GfSpGetUserBuckets(
+func (r *MetadataModular) GfSpGetUserBuckets(
 	ctx context.Context,
 	req *types.GfSpGetUserBucketsRequest) (
 	resp *types.GfSpGetUserBucketsResponse, err error) {
@@ -77,7 +77,7 @@ func (r *RetrieveModular) GfSpGetUserBuckets(
 }
 
 // GfSpGetBucketByBucketName get buckets info by a bucket name
-func (r *RetrieveModular) GfSpGetBucketByBucketName(ctx context.Context, req *types.GfSpGetBucketByBucketNameRequest) (resp *types.GfSpGetBucketByBucketNameResponse, err error) {
+func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *types.GfSpGetBucketByBucketNameRequest) (resp *types.GfSpGetBucketByBucketNameResponse, err error) {
 	var (
 		bucket *model.Bucket
 		res    *types.Bucket
@@ -130,7 +130,7 @@ func (r *RetrieveModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 }
 
 // GfSpGetBucketByBucketID get buckets info by by a bucket id
-func (r *RetrieveModular) GfSpGetBucketByBucketID(ctx context.Context, req *types.GfSpGetBucketByBucketIDRequest) (resp *types.GfSpGetBucketByBucketIDResponse, err error) {
+func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *types.GfSpGetBucketByBucketIDRequest) (resp *types.GfSpGetBucketByBucketIDResponse, err error) {
 	var (
 		bucket *model.Bucket
 		res    *types.Bucket
@@ -178,7 +178,7 @@ func (r *RetrieveModular) GfSpGetBucketByBucketID(ctx context.Context, req *type
 }
 
 // GfSpGetUserBucketsCount get buckets count by a user address
-func (r *RetrieveModular) GfSpGetUserBucketsCount(ctx context.Context, req *types.GfSpGetUserBucketsCountRequest) (resp *types.GfSpGetUserBucketsCountResponse, err error) {
+func (r *MetadataModular) GfSpGetUserBucketsCount(ctx context.Context, req *types.GfSpGetUserBucketsCountRequest) (resp *types.GfSpGetUserBucketsCountResponse, err error) {
 	ctx = log.Context(ctx, req)
 
 	count, err := r.baseApp.GfBsDB().GetUserBucketsCount(common.HexToAddress(req.AccountId))
@@ -193,7 +193,7 @@ func (r *RetrieveModular) GfSpGetUserBucketsCount(ctx context.Context, req *type
 }
 
 // GfSpListExpiredBucketsBySp list expired bucket by sp
-func (r *RetrieveModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *types.GfSpListExpiredBucketsBySpRequest) (resp *types.GfSpListExpiredBucketsBySpResponse, err error) {
+func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *types.GfSpListExpiredBucketsBySpRequest) (resp *types.GfSpListExpiredBucketsBySpResponse, err error) {
 	ctx = log.Context(ctx, req)
 	buckets, err := r.baseApp.GfBsDB().ListExpiredBucketsBySp(req.GetCreateAt(), req.GetPrimarySpAddress(), req.GetLimit())
 	if err != nil {
@@ -232,7 +232,7 @@ func (r *RetrieveModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *t
 }
 
 // GfSpGetBucketMeta get bucket metadata
-func (r *RetrieveModular) GfSpGetBucketMeta(
+func (r *MetadataModular) GfSpGetBucketMeta(
 	ctx context.Context,
 	req *types.GfSpGetBucketMetaRequest) (
 	resp *types.GfSpGetBucketMetaResponse, err error) {
@@ -307,7 +307,7 @@ func (r *RetrieveModular) GfSpGetBucketMeta(
 	return resp, nil
 }
 
-func (r *RetrieveModular) GfSpGetBucketReadQuota(
+func (r *MetadataModular) GfSpGetBucketReadQuota(
 	ctx context.Context,
 	req *types.GfSpGetBucketReadQuotaRequest) (
 	*types.GfSpGetBucketReadQuotaResponse, error) {
@@ -316,7 +316,7 @@ func (r *RetrieveModular) GfSpGetBucketReadQuota(
 	}
 	defer atomic.AddInt64(&r.retrievingRequest, -1)
 	if atomic.AddInt64(&r.retrievingRequest, 1) >
-		atomic.LoadInt64(&r.maxRetrieveRequest) {
+		atomic.LoadInt64(&r.maxMetadataRequest) {
 		return nil, ErrExceedRequest
 	}
 	bucketTraffic, err := r.baseApp.GfSpDB().GetBucketTraffic(
@@ -341,7 +341,7 @@ func (r *RetrieveModular) GfSpGetBucketReadQuota(
 	}, nil
 }
 
-func (r *RetrieveModular) GfSpListBucketReadRecord(
+func (r *MetadataModular) GfSpListBucketReadRecord(
 	ctx context.Context,
 	req *types.GfSpListBucketReadRecordRequest) (
 	*types.GfSpListBucketReadRecordResponse,
@@ -351,7 +351,7 @@ func (r *RetrieveModular) GfSpListBucketReadRecord(
 	}
 	defer atomic.AddInt64(&r.retrievingRequest, -1)
 	if atomic.AddInt64(&r.retrievingRequest, 1) >
-		atomic.LoadInt64(&r.maxRetrieveRequest) {
+		atomic.LoadInt64(&r.maxMetadataRequest) {
 		return nil, ErrExceedRequest
 	}
 	records, err := r.baseApp.GfSpDB().GetBucketReadRecord(req.GetBucketInfo().Id.Uint64(),

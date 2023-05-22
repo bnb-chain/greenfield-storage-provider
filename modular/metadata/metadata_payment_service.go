@@ -1,4 +1,4 @@
-package retriever
+package metadata
 
 import (
 	"context"
@@ -7,13 +7,13 @@ import (
 	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	jsoniter "github.com/json-iterator/go"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 // GfSpGetPaymentByBucketName get bucket payment info by a bucket name
-func (r *RetrieveModular) GfSpGetPaymentByBucketName(ctx context.Context, req *types.GfSpGetPaymentByBucketNameRequest) (resp *types.GfSpGetPaymentByBucketNameResponse, err error) {
+func (r *MetadataModular) GfSpGetPaymentByBucketName(ctx context.Context, req *types.GfSpGetPaymentByBucketNameRequest) (resp *types.GfSpGetPaymentByBucketNameResponse, err error) {
 	var (
 		streamRecord *model.StreamRecord
 		res          *payment_types.StreamRecord
@@ -53,7 +53,7 @@ func (r *RetrieveModular) GfSpGetPaymentByBucketName(ctx context.Context, req *t
 }
 
 // GfSpGetPaymentByBucketID get bucket payment info by a bucket id
-func (r *RetrieveModular) GfSpGetPaymentByBucketID(ctx context.Context, req *types.GfSpGetPaymentByBucketIDRequest) (resp *types.GfSpGetPaymentByBucketIDResponse, err error) {
+func (r *MetadataModular) GfSpGetPaymentByBucketID(ctx context.Context, req *types.GfSpGetPaymentByBucketIDRequest) (resp *types.GfSpGetPaymentByBucketIDResponse, err error) {
 	var (
 		streamRecord *model.StreamRecord
 		res          *payment_types.StreamRecord
