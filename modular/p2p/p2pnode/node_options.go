@@ -68,7 +68,7 @@ func MakeMultiaddr(address string) (ma.Multiaddr, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Infow("parser p2p node address", "ip", host, "port", port)
+	//log.Infow("parser p2p node address", "address", address, "ip", host, "port", port)
 	return ma.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d", host, port))
 }
 

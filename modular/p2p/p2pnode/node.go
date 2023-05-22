@@ -43,11 +43,13 @@ type Node struct {
 	p2pPingPeriod                  int
 	secondaryApprovalExpiredHeight uint64
 	p2pBootstrap                   []string
+	p2pAntAddress                  string
 }
 
 // NewNode return an instance of Node
 func NewNode(baseApp *gfspapp.GfSpBaseApp, privateKey string, address string,
-	bootstrap []string, pingPeriod int, secondaryApprovalExpiredHeight uint64) (*Node, error) {
+	bootstrap []string, pingPeriod int, secondaryApprovalExpiredHeight uint64,
+	p2pAntAddress string) (*Node, error) {
 	if pingPeriod < PingPeriodMin {
 		pingPeriod = PingPeriodMin
 	}
@@ -127,6 +129,7 @@ func NewNode(baseApp *gfspapp.GfSpBaseApp, privateKey string, address string,
 		p2pProtocolAddress:             hostAddr,
 		p2pPingPeriod:                  pingPeriod,
 		p2pBootstrap:                   bootstrap,
+		p2pAntAddress:                  p2pAntAddress,
 		secondaryApprovalExpiredHeight: secondaryApprovalExpiredHeight,
 		stopCh:                         make(chan struct{}),
 	}
