@@ -50,7 +50,6 @@ func (m *GfSpTask) ExceedTimeout() bool {
 
 func (m *GfSpTask) IncRetry() {
 	m.Retry++
-	return
 }
 
 func (m *GfSpTask) SetRetry(retry int) {

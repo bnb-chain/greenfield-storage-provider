@@ -1,5 +1,6 @@
 package auth
 
+/*
 import (
 	"bytes"
 	"crypto/subtle"
@@ -194,9 +195,8 @@ type (
 	PrivateKey = eddsa.PrivateKey
 )
 
-/*
-GenerateEddsaPrivateKey: generate eddsa private key
-*/
+
+// GenerateEddsaPrivateKey: generate eddsa private key
 func GenerateEddsaPrivateKey(seed string) (sk *PrivateKey, err error) {
 	buf := make([]byte, 32)
 	copy(buf, seed)
@@ -237,10 +237,10 @@ func GenerateKey(r io.Reader) (*PrivateKey, error) {
 	h[31] &= 0x7F
 	h[31] |= 0x40
 
-	/*
-		0xFC = 1111 1100
-		convert 256 bits to 254 bits supporting bn254 curve
-	*/
+
+	// 0xFC = 1111 1100
+	// convert 256 bits to 254 bits supporting bn254 curve
+
 	h[31] &= 0xFC
 
 	// reverse first bytes because setBytes interpret stream as big endian
@@ -273,3 +273,4 @@ func GenerateKey(r io.Reader) (*PrivateKey, error) {
 
 	return sk, err
 }
+*/

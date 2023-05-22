@@ -24,40 +24,39 @@ func (*NullModular) Stop(context.Context) error  { return nil }
 func (*NullModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
 	return nil, nil
 }
-func (*NullModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan) { return }
+
 func (*NullModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
 	return nil, nil
 }
+func (*NullModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan) {}
 func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) error {
 	return nil
 }
 func (*NullModular) HandleCreateBucketApprovalTask(context.Context, task.ApprovalCreateBucketTask) (bool, error) {
 	return false, nil
 }
-func (*NullModular) PostCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) { return }
+func (*NullModular) PostCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) {}
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return nil
 }
 func (*NullModular) HandleCreateObjectApprovalTask(context.Context, task.ApprovalCreateObjectTask) (bool, error) {
 	return false, nil
 }
-func (*NullModular) PostCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) { return }
+func (*NullModular) PostCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) {}
 func (*NullModular) PreReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) error {
 	return nil
 }
 func (*NullModular) HandleReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) (bool, error) {
 	return false, nil
 }
-func (*NullModular) PostReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) {
-	return
-}
+func (*NullModular) PostReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) {}
 func (*NullModular) PreUploadObject(ctx context.Context, task task.UploadObjectTask) error {
 	return nil
 }
 func (*NullModular) HandleUploadObjectTask(ctx context.Context, task task.UploadObjectTask, stream io.Reader) error {
 	return nil
 }
-func (*NullModular) PostUploadObject(ctx context.Context, task task.UploadObjectTask) { return }
+func (*NullModular) PostUploadObject(ctx context.Context, task task.UploadObjectTask) {}
 func (*NullModular) DispatchTask(context.Context, rcmgr.Limit) (task.Task, error)     { return nil, nil }
 func (*NullModular) QueryTask(context.Context, task.TKey) (task.Task, error)          { return nil, nil }
 func (*NullModular) HandleCreateUploadObjectTask(context.Context, task.UploadObjectTask) error {
@@ -100,10 +99,11 @@ func (*NilModular) Stop(context.Context) error  { return nil }
 func (*NilModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
 	return nil, nil
 }
-func (*NilModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan) { return }
+
 func (*NilModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
 	return nil, nil
 }
+func (*NilModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan)         {}
 func (*NilModular) PreDownloadObject(context.Context, task.DownloadObjectTask) error { return nil }
 func (*NilModular) HandleDownloadObjectTask(context.Context, task.DownloadObjectTask) ([]byte, error) {
 	return nil, nil
@@ -163,7 +163,7 @@ func (*NullReceiveModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (r
 func (*NullReceiveModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
 	return nil, nil
 }
-func (*NullReceiveModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan) { return }
+func (*NullReceiveModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan) {}
 func (*NullReceiveModular) HandleReceivePieceTask(context.Context, task.ReceivePieceTask, []byte) error {
 	return nil
 }

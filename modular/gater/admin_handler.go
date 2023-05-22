@@ -2,15 +2,14 @@ package gater
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"io"
 	"net/http"
-
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/golang/protobuf/proto"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/p2p/p2pnode"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -151,7 +150,6 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to ask approval")
-	return
 }
 
 // challengeHandler handles get challenge piece info request. Current only greenfield
@@ -299,7 +297,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrDecodeMsg
 		return
 	}
-	err = proto.Unmarshal(approvalMsg, &approval)
+	err = json.Unmarshal(approvalMsg, &approval)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal replicate piece approval header",
 			"receive", r.Header.Get(model.GnfdReceiveMsgHeader))
@@ -335,7 +333,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	receiveTask := gfsptask.GfSpReceivePieceTask{}
-	err = proto.Unmarshal(receiveMsg, &receiveTask)
+	err = json.Unmarshal(receiveMsg, &receiveTask)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal receive header",
 			"receive", r.Header.Get(model.GnfdReceiveMsgHeader))

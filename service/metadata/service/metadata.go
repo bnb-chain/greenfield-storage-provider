@@ -1,5 +1,6 @@
 package service
 
+/*
 import (
 	"context"
 	"net"
@@ -137,3 +138,5 @@ func (metadata *Metadata) switchDB(flag bool) {
 	metadata.config.IsMasterDB = flag
 	log.Info("db switched successfully")
 }
+
+*/

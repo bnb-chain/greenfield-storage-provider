@@ -82,5 +82,4 @@ func (g *GateModular) ReleaseResource(
 	ctx context.Context,
 	span rcmgr.ResourceScopeSpan) {
 	span.Done()
-	return
 }

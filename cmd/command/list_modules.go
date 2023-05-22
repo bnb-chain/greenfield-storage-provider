@@ -16,6 +16,6 @@ var ListModularCmd = &cli.Command{
 }
 
 func listModularAction(ctx *cli.Context) error {
-	fmt.Printf(gfspapp.GetRegisterModulusDescription())
+	fmt.Print(gfspapp.GetRegisterModulusDescription())
 	return nil
 }

@@ -77,7 +77,6 @@ func (p *PProf) ReleaseResource(
 	ctx context.Context,
 	scope corercmgr.ResourceScopeSpan) {
 	scope.Done()
-	return
 }
 
 func (p *PProf) registerProfiler(r *mux.Router) {

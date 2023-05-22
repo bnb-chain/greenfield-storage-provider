@@ -6,7 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const serviceLabelName = "service"
+// const serviceLabelName = "service"
 
 var MetricsItems = []prometheus.Collector{
 	// Grpc metrics category
@@ -99,7 +99,7 @@ var (
 		Buckets: prometheus.DefBuckets,
 	}, []string{"task_in_queue_time"})
 
-	// piece store metrices
+	// piece store metrics
 	PutPieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "put_piece_store_time",
 		Help:    "Track the time of putting piece data to piece store.",

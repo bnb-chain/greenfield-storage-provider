@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/golang/protobuf/proto"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -27,14 +26,14 @@ func (s *GfSpClient) ReplicatePieceToSecondary(
 		return err
 	}
 	approvalTask := approval.(*gfsptask.GfSpReplicatePieceApprovalTask)
-	approvalMsg, err := proto.Marshal(approvalTask)
+	approvalMsg, err := json.Marshal(approvalTask)
 	if err != nil {
 		return err
 	}
 	approvalHeader := hex.EncodeToString(approvalMsg)
 
 	receiveTask := receive.(*gfsptask.GfSpReceivePieceTask)
-	receiveMsg, err := proto.Marshal(receiveTask)
+	receiveMsg, err := json.Marshal(receiveTask)
 	if err != nil {
 		return err
 	}
@@ -64,14 +63,14 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(
 		return nil, nil, err
 	}
 	approvalTask := approval.(*gfsptask.GfSpReplicatePieceApprovalTask)
-	approvalMsg, err := proto.Marshal(approvalTask)
+	approvalMsg, err := json.Marshal(approvalTask)
 	if err != nil {
 		return nil, nil, err
 	}
 	approvalHeader := hex.EncodeToString(approvalMsg)
 
 	receiveTask := receive.(*gfsptask.GfSpReceivePieceTask)
-	receiveMsg, err := proto.Marshal(receiveTask)
+	receiveMsg, err := json.Marshal(receiveTask)
 	if err != nil {
 		return nil, nil, err
 	}

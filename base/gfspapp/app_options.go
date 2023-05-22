@@ -321,7 +321,7 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 		case coremodule.ExecuteModularName:
 			app.executor = module.(coremodule.TaskExecutor)
 		case coremodule.GateModularName:
-			app.gater = module.(coremodule.Modular)
+			app.gater = module
 		case coremodule.ManageModularName:
 			app.manager = module.(coremodule.Manager)
 		case coremodule.P2PModularName:
