@@ -54,8 +54,6 @@ const (
 	ContentTypeHeader = "Content-Type"
 	// ContentLengthHeader indicates the size of the message body, in bytes
 	ContentLengthHeader = "Content-Length"
-	// ETagHeader is an MD5 digest of the object data
-	ETagHeader = "ETag"
 	// RangeHeader asks the server to send only a portion of an HTTP message back to a client
 	RangeHeader = "Range"
 	// ContentRangeHeader response HTTP header indicates where in a full body message a partial message belongs
