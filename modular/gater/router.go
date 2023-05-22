@@ -11,19 +11,22 @@ import (
 )
 
 const (
-	approvalRouterName               = "GetApproval"
-	putObjectRouterName              = "PutObject"
-	getObjectRouterName              = "GetObject"
-	challengeRouterName              = "Challenge"
-	replicateObjectPieceRouterName   = "ReplicateObjectPiece"
-	getUserBucketsRouterName         = "GetUserBuckets"
-	listObjectsByBucketRouterName    = "ListObjectsByBucketName"
-	getBucketReadQuotaRouterName     = "GetBucketReadQuota"
-	listBucketReadRecordRouterName   = "ListBucketReadRecord"
-	requestNonceName                 = "RequestNonce"
-	updateUserPublicKey              = "UpdateUserPublicKey"
-	queryUploadProgressRouterName    = "queryUploadProgress"
-	getObjectByUniversalEndpointName = "GetObjectByUniversalEndpoint"
+	approvalRouterName                    = "GetApproval"
+	putObjectRouterName                   = "PutObject"
+	getObjectRouterName                   = "GetObject"
+	challengeRouterName                   = "Challenge"
+	replicateObjectPieceRouterName        = "ReplicateObjectPiece"
+	getUserBucketsRouterName              = "GetUserBuckets"
+	listObjectsByBucketRouterName         = "ListObjectsByBucketName"
+	getBucketReadQuotaRouterName          = "GetBucketReadQuota"
+	listBucketReadRecordRouterName        = "ListBucketReadRecord"
+	requestNonceName                      = "RequestNonce"
+	updateUserPublicKey                   = "UpdateUserPublicKey"
+	queryUploadProgressRouterName         = "queryUploadProgress"
+	downloadObjectByUniversalEndpointName = "DownloadObjectByUniversalEndpoint"
+	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
+	getObjectMetaRouterName               = "getObjectMeta"
+	getBucketMetaRouterName               = "getBucketMeta"
 )
 
 const (
@@ -54,6 +57,17 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Path("/{object:.+}").
 		Queries(model.UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
+	hostBucketRouter.NewRoute().
+		Name(getBucketMetaRouterName).
+		Methods(http.MethodGet).
+		Queries(model.GetBucketMetaQuery, "").
+		HandlerFunc(g.getBucketMetaHandler)
+	hostBucketRouter.NewRoute().
+		Name(getObjectMetaRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}").
+		Queries(model.GetObjectMetaQuery, "").
+		HandlerFunc(g.getObjectMetaHandler)
 	hostBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).
@@ -132,6 +146,17 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Path("/{object:.+}").
 		Queries(model.UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
+	pathBucketRouter.NewRoute().
+		Name(getBucketMetaRouterName).
+		Methods(http.MethodGet).
+		Queries(model.GetBucketMetaQuery, "").
+		HandlerFunc(g.getBucketMetaHandler)
+	pathBucketRouter.NewRoute().
+		Name(getObjectMetaRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}").
+		Queries(model.GetObjectMetaQuery, "").
+		HandlerFunc(g.getObjectMetaHandler)
 	pathBucketRouter.NewRoute().
 		Name(getObjectRouterName).
 		Methods(http.MethodGet).
