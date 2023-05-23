@@ -214,10 +214,10 @@ func TestVerifyOffChainSignature(t *testing.T) {
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
 					Domain:           "https://a_dapp.com",
-					CurrentNonce:     0,
+					CurrentNonce:     1,
 					CurrentPublicKey: "4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083",
-					NextNonce:        1,
-					ExpiryDate:       Now,
+					NextNonce:        2,
+					ExpiryDate:       Now.Add(time.Minute * 5),
 					CreatedTime:      Now,
 					ModifiedTime:     Now,
 				}
@@ -251,10 +251,10 @@ func TestVerifyOffChainSignature(t *testing.T) {
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
 					Domain:           "https://a_dapp.com",
-					CurrentNonce:     0,
+					CurrentNonce:     1,
 					CurrentPublicKey: "4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083",
-					NextNonce:        1,
-					ExpiryDate:       Now,
+					NextNonce:        2,
+					ExpiryDate:       Now.Add(time.Minute * 4),
 					CreatedTime:      Now,
 					ModifiedTime:     Now,
 				}
@@ -287,10 +287,10 @@ func TestVerifyOffChainSignature(t *testing.T) {
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
 					Domain:           "https://a_dapp.com",
-					CurrentNonce:     0,
+					CurrentNonce:     1,
 					CurrentPublicKey: "4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083",
-					NextNonce:        1,
-					ExpiryDate:       Now,
+					NextNonce:        2,
+					ExpiryDate:       Now.Add(time.Minute * 4),
 					CreatedTime:      Now,
 					ModifiedTime:     Now,
 				}
@@ -323,10 +323,10 @@ func TestVerifyOffChainSignature(t *testing.T) {
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
 					Domain:           "https://a_dapp.com",
-					CurrentNonce:     0,
+					CurrentNonce:     1,
 					CurrentPublicKey: "4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083",
-					NextNonce:        1,
-					ExpiryDate:       Now,
+					NextNonce:        2,
+					ExpiryDate:       Now.Add(time.Minute * 4),
 					CreatedTime:      Now,
 					ModifiedTime:     Now,
 				}
@@ -359,10 +359,10 @@ func TestVerifyOffChainSignature(t *testing.T) {
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
 					Domain:           "https://a_dapp.com",
-					CurrentNonce:     0,
+					CurrentNonce:     1,
 					CurrentPublicKey: "4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083",
-					NextNonce:        1,
-					ExpiryDate:       Now,
+					NextNonce:        2,
+					ExpiryDate:       Now.Add(time.Minute * 4),
 					CreatedTime:      Now,
 					ModifiedTime:     Now,
 				}
@@ -394,10 +394,10 @@ func TestVerifyOffChainSignature(t *testing.T) {
 				mockData := &sqldb.OffChainAuthKeyTable{
 					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
 					Domain:           "https://a_dapp.com",
-					CurrentNonce:     0,
+					CurrentNonce:     1,
 					CurrentPublicKey: "4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083",
-					NextNonce:        1,
-					ExpiryDate:       Now,
+					NextNonce:        2,
+					ExpiryDate:       Now.Add(time.Minute * 4),
 					CreatedTime:      Now,
 					ModifiedTime:     Now,
 				}
@@ -418,6 +418,41 @@ func TestVerifyOffChainSignature(t *testing.T) {
 					args:      args{req: req},
 					wantedRes: nil,
 					wantedErr: errors.New("invalid signature"),
+				}
+			},
+		},
+		{
+			name: "case 7/user public key is expired",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				//nolint:all
+				mockSPDB := sqldb.NewMockSPDB(c)
+				mockData := &sqldb.OffChainAuthKeyTable{
+					UserAddress:      "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
+					Domain:           "https://a_dapp.com",
+					CurrentNonce:     1,
+					CurrentPublicKey: "4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083",
+					NextNonce:        2,
+					ExpiryDate:       Now,
+					CreatedTime:      Now,
+					ModifiedTime:     Now,
+				}
+				mockSPDB.EXPECT().GetAuthKey(gomock.Any(), gomock.Any()).Return(mockData, nil).Times(1)
+
+				realMsgToSign := fmt.Sprintf("Request_API_Download_%d", time.Now().Add(time.Minute*4).UnixMilli())
+				offChainSig := generateOffChainSigForTesting(testSeed, realMsgToSign)
+				req := &authtypes.VerifyOffChainSignatureRequest{
+					AccountId:     "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6",
+					Domain:        "https://a_dapp.com",
+					OffChainSig:   offChainSig,
+					RealMsgToSign: realMsgToSign,
+				}
+				return &Body{
+					fields: fields{
+						store: mockSPDB,
+					},
+					args:      args{req: req},
+					wantedRes: nil,
+					wantedErr: errors.New("user public key is expired"),
 				}
 			},
 		},
