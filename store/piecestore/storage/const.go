@@ -4,6 +4,8 @@ package storage
 const (
 	// S3Store defines storage type for s3
 	S3Store = "s3"
+	// B2Store defines storage type for s3
+	B2Store = "b2"
 	// MinioStore defines storage type for minio
 	MinioStore = "minio"
 	// DiskFileStore defines storage type for file
@@ -41,6 +43,13 @@ const (
 	MinioSecretKey = "MINIO_SECRET_KEY"
 	// MinioSessionToken defines env variable name for minio session token
 	MinioSessionToken = "MINIO_SESSION_TOKEN"
+
+	// B2AccessKey defines env variable name for minio access key
+	B2AccessKey = "B2_ACCESS_KEY"
+	// B2SecretKey defines env variable name for minio secret key
+	B2SecretKey = "B2_SECRET_KEY"
+	// B2SessionToken defines env variable name for minio session token
+	B2SessionToken = "B2_SESSION_TOKEN"
 
 	// OctetStream is used to indicate the binary files
 	OctetStream = "application/octet-stream"

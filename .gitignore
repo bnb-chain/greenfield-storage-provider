@@ -32,3 +32,4 @@ logs/
 
 # Local deployment
 deployment/localup/local_env/
+greenfield/
