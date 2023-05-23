@@ -50,7 +50,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}
@@ -150,7 +150,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			return
 		}
 	}
@@ -211,6 +211,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	log.CtxDebugw(reqCtx.Context(), "succeed to download object")
 }
 
+// queryUploadProgressHandler handles the query uploaded object progress request.
 func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error
@@ -243,7 +244,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}

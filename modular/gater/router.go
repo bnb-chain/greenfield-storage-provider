@@ -22,7 +22,7 @@ const (
 	listBucketReadRecordRouterName   = "ListBucketReadRecord"
 	requestNonceName                 = "RequestNonce"
 	updateUserPublicKey              = "UpdateUserPublicKey"
-	queryUploadProgressRouterName    = "queryUploadProgress"
+	queryUploadProgressRouterName    = "QueryUploadProgress"
 	getObjectByUniversalEndpointName = "GetObjectByUniversalEndpoint"
 )
 

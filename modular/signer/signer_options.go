@@ -12,15 +12,15 @@ import (
 const (
 	// DefaultGasLimit defines the default gas limit
 	DefaultGasLimit = 210000
-	// SpOperatorPrivKey defines env variable name for sp operator priv key
+	// SpOperatorPrivKey defines env variable name for sp operator private key
 	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
-	// SpFundingPrivKey defines env variable name for sp funding priv key
+	// SpFundingPrivKey defines env variable name for sp funding private key
 	SpFundingPrivKey = "SIGNER_FUNDING_PRIV_KEY"
-	// SpApprovalPrivKey defines env variable name for sp approval priv key
+	// SpApprovalPrivKey defines env variable name for sp approval private key
 	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
-	// SpSealPrivKey defines env variable name for sp seal priv key
+	// SpSealPrivKey defines env variable name for sp seal private key
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
-	// SpGcPrivKey defines env variable name for sp gc priv key
+	// SpGcPrivKey defines env variable name for sp gc private key
 	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
 )
 

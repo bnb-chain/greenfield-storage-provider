@@ -13,6 +13,7 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
+// getBucketReadQuotaHandler handles the get bucket read quota request.
 func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err                   error
@@ -45,7 +46,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}
@@ -94,6 +95,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	log.CtxDebugw(reqCtx.Context(), "succeed to get bucket quota", "xml_info", xmlInfo)
 }
 
+// listBucketReadRecordHandler handles list bucket read record request.
 func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
@@ -129,7 +131,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}
