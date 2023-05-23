@@ -1,4 +1,4 @@
-package singer
+package signer
 
 import (
 	"fmt"
@@ -24,15 +24,15 @@ const (
 	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
 )
 
-func NewSingModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
-	signer := &SingModular{baseApp: app}
-	if err := DefaultSingerOptions(signer, cfg); err != nil {
+func NewSignModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	signer := &SignModular{baseApp: app}
+	if err := DefaultSignerOptions(signer, cfg); err != nil {
 		return nil, err
 	}
 	return signer, nil
 }
 
-func DefaultSingerOptions(signer *SingModular, cfg *gfspconfig.GfSpConfig) error {
+func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error {
 	if len(cfg.Chain.ChainAddress) == 0 {
 		return fmt.Errorf("chain address missing")
 	}
