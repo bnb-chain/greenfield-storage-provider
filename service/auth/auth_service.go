@@ -71,6 +71,9 @@ func (auth *AuthServer) VerifyOffChainSignature(ctx context.Context, req *authty
 	if err != nil {
 		return nil, err
 	}
+	if time.Until(time.UnixMilli(getAuthNonceResp.ExpiryDate)).Seconds() < 0 {
+		return nil, fmt.Errorf("user public key is expired")
+	}
 	userPublicKey := getAuthNonceResp.CurrentPublicKey
 
 	// signedMsg must be formatted as `${actionContent}_${expiredTimestamp}` and timestamp must be within $OffChainAuthSigExpiryAgeInSec seconds, actionContent could be any string
