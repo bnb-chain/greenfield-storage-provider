@@ -3,6 +3,7 @@ package metadata
 import (
 	"context"
 	"errors"
+
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"

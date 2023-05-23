@@ -2,10 +2,11 @@ package gater
 
 import (
 	"encoding/xml"
-	"github.com/bnb-chain/greenfield/types/s3util"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/bnb-chain/greenfield/types/s3util"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"

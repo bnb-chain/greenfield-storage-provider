@@ -1,10 +1,6 @@
 package gfspapp
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"math"
 	"os"
 	"strings"
@@ -17,9 +13,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	piecestoreclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
@@ -269,6 +269,8 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 
 	app.gfBsDBMaster = bsDBBlockSyncerMaster
 	app.gfBsDBBackup = bsDBBlockSyncerBackUp
+	//default publicly used bsdb to be master db at first
+	app.gfBsDB = app.gfBsDBMaster
 	return nil
 }
 

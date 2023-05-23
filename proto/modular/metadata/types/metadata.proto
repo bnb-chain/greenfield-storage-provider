@@ -3,9 +3,9 @@ package modular.metadata.types;
 
 import "base/types/gfsperrors/error.proto";
 import "gogoproto/gogo.proto";
-import "greenfield/storage/types.proto";
-import "greenfield/storage/query.proto";
 import "greenfield/payment/stream_record.proto";
+import "greenfield/storage/query.proto";
+import "greenfield/storage/types.proto";
 import "service/types/storage_provider.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types";
@@ -326,20 +326,20 @@ message GfSpQueryUploadProgressResponse {
 }
 
 service GfSpMetadataService {
-  rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {};
-  rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {};
-  rpc GfSpGetBucketByBucketName(GfSpGetBucketByBucketNameRequest) returns (GfSpGetBucketByBucketNameResponse) {};
-  rpc GfSpGetBucketByBucketID(GfSpGetBucketByBucketIDRequest) returns (GfSpGetBucketByBucketIDResponse) {};
-  rpc GfSpListDeletedObjectsByBlockNumberRange(GfSpListDeletedObjectsByBlockNumberRangeRequest) returns (GfSpListDeletedObjectsByBlockNumberRangeResponse) {};
-  rpc GfSpGetUserBucketsCount(GfSpGetUserBucketsCountRequest) returns (GfSpGetUserBucketsCountResponse) {};
-  rpc GfSpListExpiredBucketsBySp(GfSpListExpiredBucketsBySpRequest) returns (GfSpListExpiredBucketsBySpResponse) {};
-  rpc GfSpGetObjectMeta(GfSpGetObjectMetaRequest) returns (GfSpGetObjectMetaResponse) {};
-  rpc GfSpGetPaymentByBucketName(GfSpGetPaymentByBucketNameRequest) returns (GfSpGetPaymentByBucketNameResponse) {};
-  rpc GfSpGetPaymentByBucketID(GfSpGetPaymentByBucketIDRequest) returns (GfSpGetPaymentByBucketIDResponse) {};
-  rpc GfSpVerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {};
-  rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {};
-  rpc GfSpGetEndpointBySpAddress(GfSpGetEndpointBySpAddressRequest) returns (GfSpGetEndpointBySpAddressResponse) {};
-  rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {};
-  rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {};
-  rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {};
+  rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
+  rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
+  rpc GfSpGetBucketByBucketName(GfSpGetBucketByBucketNameRequest) returns (GfSpGetBucketByBucketNameResponse) {}
+  rpc GfSpGetBucketByBucketID(GfSpGetBucketByBucketIDRequest) returns (GfSpGetBucketByBucketIDResponse) {}
+  rpc GfSpListDeletedObjectsByBlockNumberRange(GfSpListDeletedObjectsByBlockNumberRangeRequest) returns (GfSpListDeletedObjectsByBlockNumberRangeResponse) {}
+  rpc GfSpGetUserBucketsCount(GfSpGetUserBucketsCountRequest) returns (GfSpGetUserBucketsCountResponse) {}
+  rpc GfSpListExpiredBucketsBySp(GfSpListExpiredBucketsBySpRequest) returns (GfSpListExpiredBucketsBySpResponse) {}
+  rpc GfSpGetObjectMeta(GfSpGetObjectMetaRequest) returns (GfSpGetObjectMetaResponse) {}
+  rpc GfSpGetPaymentByBucketName(GfSpGetPaymentByBucketNameRequest) returns (GfSpGetPaymentByBucketNameResponse) {}
+  rpc GfSpGetPaymentByBucketID(GfSpGetPaymentByBucketIDRequest) returns (GfSpGetPaymentByBucketIDResponse) {}
+  rpc GfSpVerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {}
+  rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {}
+  rpc GfSpGetEndpointBySpAddress(GfSpGetEndpointBySpAddressRequest) returns (GfSpGetEndpointBySpAddressResponse) {}
+  rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
+  rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
+  rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}
 }

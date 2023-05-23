@@ -2,7 +2,6 @@ package gfspapp
 
 import (
 	"context"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"syscall"
 
 	"google.golang.org/grpc"
@@ -14,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 const (

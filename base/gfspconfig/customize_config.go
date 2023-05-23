@@ -2,6 +2,7 @@ package gfspconfig
 
 import (
 	"errors"
+
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"

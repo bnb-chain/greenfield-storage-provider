@@ -2,7 +2,6 @@ package metadata
 
 import (
 	"context"
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	"strings"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 )
 
 var (
@@ -80,7 +80,8 @@ func (r *MetadataModular) ReleaseResource(
 func (r *MetadataModular) startDBSwitchListener(switchInterval time.Duration) {
 	// create a ticker to periodically check for a new database name
 	r.dbSwitchTicker = time.NewTicker(switchInterval)
-
+	// set the bsdb to be master db at start
+	r.config.IsMasterDB = true
 	// launch a goroutine to handle the ticker events
 	go func() {
 		// check once at the start of the system

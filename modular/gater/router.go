@@ -115,11 +115,16 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Name(replicateObjectPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.replicateHandler)
-	//universal endpoint
-	//router.Path(model.UniversalEndpointPath).
-	//	Name(getObjectByUniversalEndpointName).
-	//	Methods(http.MethodGet).
-	//	HandlerFunc(g.getObjectByUniversalEndpointHandler)
+	// universal endpoint download
+	router.Path("/download/{bucket:[^/]*}/{object:.+}").
+		Name(downloadObjectByUniversalEndpointName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
+	// universal endpoint view
+	router.Path("/view/{bucket:[^/]*}/{object:.+}").
+		Name(viewObjectByUniversalEndpointName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.viewObjectByUniversalEndpointHandler)
 	//redirect for universal endpoint
 	http.Handle("/", router)
 
