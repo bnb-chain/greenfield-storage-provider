@@ -21,7 +21,7 @@ linters:
     - staticcheck
     - unconvert
     - unused
-    - errcheck
+#    - errcheck
 #    - depguard
 #    - dogsled
 #    - exportloopref

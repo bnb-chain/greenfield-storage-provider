@@ -1,6 +1,8 @@
 package rcmgr
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // SP Resource Manager reference go-libp2p, see:
 // https://github.com/libp2p/go-libp2p/blob/master/core/network/

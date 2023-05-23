@@ -8,11 +8,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/gogo/protobuf/proto"
 	"github.com/libp2p/go-libp2p/core/network"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 

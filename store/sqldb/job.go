@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	"gorm.io/gorm"
+
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"gorm.io/gorm"
 )
 
 // CreateUploadJob create JobTable record and ObjectTable record; use JobID field for association

@@ -1,6 +1,8 @@
 package sqldb
 
-import "time"
+import (
+	"time"
+)
 
 //// IntegrityMeta defines the payload integrity hash and piece checksum with objectID
 //type IntegrityMeta struct {

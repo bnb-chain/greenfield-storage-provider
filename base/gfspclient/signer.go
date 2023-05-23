@@ -3,13 +3,12 @@ package gfspclient
 import (
 	"context"
 
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 func (s *GfSpClient) SignCreateBucketApproval(

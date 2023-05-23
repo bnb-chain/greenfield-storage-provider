@@ -1,6 +1,8 @@
 package metadata
 
-import permtypes "github.com/bnb-chain/greenfield/x/permission/types"
+import (
+	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
+)
 
 // ActionTypeMap db action value is a bitmap, traverse this map to get the corresponding action list
 var ActionTypeMap = map[permtypes.ActionType]int{

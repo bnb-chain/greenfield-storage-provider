@@ -4,9 +4,10 @@ import (
 	"errors"
 	"time"
 
-	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
+
+	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
 )
 
 // GetPermissionByResourceAndPrincipal get permission by resource type & ID, principal type & value

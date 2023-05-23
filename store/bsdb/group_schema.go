@@ -1,6 +1,8 @@
 package bsdb
 
-import "github.com/forbole/juno/v4/common"
+import (
+	"github.com/forbole/juno/v4/common"
+)
 
 // Group is the structure for group information
 type Group struct {

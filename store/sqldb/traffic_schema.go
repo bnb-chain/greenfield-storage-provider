@@ -1,6 +1,8 @@
 package sqldb
 
-import "time"
+import (
+	"time"
+)
 
 // BucketTrafficTable table schema
 type BucketTrafficTable struct {
