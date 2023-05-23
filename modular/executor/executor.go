@@ -162,7 +162,6 @@ func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
 		log.CtxErrorw(ctx, "unsupported task type")
 	}
 	log.CtxDebugw(ctx, "finish to handle task")
-	return
 }
 
 func (e *ExecuteModular) ReportTask(

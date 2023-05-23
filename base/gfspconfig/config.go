@@ -33,28 +33,27 @@ type Customize struct {
 
 // GfSpConfig defines the GfSp configuration.
 type GfSpConfig struct {
-	AppID            string
-	Server           []string
-	GrpcAddress      string
-	Customize        *Customize
-	SpDB             storeconfig.SQLDBConfig
-	PieceStore       storage.PieceStoreConfig
-	Chain            ChainConfig
-	SpAccount        SpAccountConfig
-	Endpoint         EndpointConfig
-	Approval         ApprovalConfig
-	Bucket           BucketConfig
-	Gateway          GatewayConfig
-	Executor         ExecutorConfig
-	P2P              P2PConfig
-	Parallel         ParallelConfig
-	Task             TaskConfig
-	Monitor          MonitorConfig
-	Rcmgr            RcmgrConfig
-	Log              LogConfig
-	BlockSyncer      BlockSyncerConfig
-	APIRateLimiter   localhttp.RateLimiterConfig
-	BandwidthLimiter localhttp.BandwidthLimiterConfig
+	AppID          string
+	Server         []string
+	GrpcAddress    string
+	Customize      *Customize
+	SpDB           storeconfig.SQLDBConfig
+	PieceStore     storage.PieceStoreConfig
+	Chain          ChainConfig
+	SpAccount      SpAccountConfig
+	Endpoint       EndpointConfig
+	Approval       ApprovalConfig
+	Bucket         BucketConfig
+	Gateway        GatewayConfig
+	Executor       ExecutorConfig
+	P2P            P2PConfig
+	Parallel       ParallelConfig
+	Task           TaskConfig
+	Monitor        MonitorConfig
+	Rcmgr          RcmgrConfig
+	Log            LogConfig
+	BlockSyncer    BlockSyncerConfig
+	APIRateLimiter localhttp.RateLimiterConfig
 }
 
 // Apply sets the customized implement to the GfSp configuration, it will be called
@@ -139,6 +138,7 @@ type ExecutorConfig struct {
 type P2PConfig struct {
 	P2PPrivateKey string
 	P2PAddress    string
+	P2PAntAddress string
 	P2PBootstrap  []string
 	P2PPingPeriod int
 }

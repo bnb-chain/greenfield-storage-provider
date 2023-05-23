@@ -13,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -168,5 +169,12 @@ func StreamReadAt(stream io.Reader, b []byte) (int, error) {
 func (u *UploadModular) PostUploadObject(
 	ctx context.Context,
 	task coretask.UploadObjectTask) {
-	return
+}
+
+func (u *UploadModular) QueryTasks(
+	ctx context.Context,
+	subKey coretask.TKey) (
+	[]coretask.Task, error) {
+	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(u.uploadQueue, subKey)
+	return uploadTasks, nil
 }

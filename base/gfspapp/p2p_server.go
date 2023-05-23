@@ -13,6 +13,7 @@ import (
 var (
 	ErrReplicatePieceApprovalTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusInternalServerError, 990701, "OoooH... request lost")
 )
+
 var _ gfspserver.GfSpP2PServiceServer = &GfSpBaseApp{}
 
 func (g *GfSpBaseApp) GfSpAskSecondaryReplicatePieceApproval(

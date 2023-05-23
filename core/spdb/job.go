@@ -1,10 +1,6 @@
 package spdb
 
-import (
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-)
-
+/*
 // JobDB interface which contains job related to object id interface
 type JobDB interface {
 	// CreateUploadJob create upload job and return job context
@@ -24,3 +20,5 @@ type ObjectDB interface {
 	// SetObjectInfo set(maybe overwrite) object info by object id
 	SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error
 }
+
+*/

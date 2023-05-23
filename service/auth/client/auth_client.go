@@ -1,5 +1,6 @@
 package client
 
+/*
 import (
 	"context"
 
@@ -75,3 +76,5 @@ func (client *AuthClient) VerifyOffChainSignature(ctx context.Context, in *autht
 	}
 	return resp, nil
 }
+
+*/

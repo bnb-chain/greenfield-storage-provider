@@ -44,9 +44,6 @@ func DefaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 		log.Errorw("failed to new api limiter", "err", err)
 		return err
 	}
-	if cfg.BandwidthLimiter.Enable {
-		localhttp.NewBandwidthLimiter(cfg.BandwidthLimiter.R, cfg.BandwidthLimiter.B)
-	}
 	return nil
 }
 

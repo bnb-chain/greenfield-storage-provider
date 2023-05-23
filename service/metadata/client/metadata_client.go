@@ -1,5 +1,6 @@
 package client
 
+/*
 import (
 	"context"
 
@@ -175,3 +176,5 @@ func (client *MetadataClient) GetBucketMeta(ctx context.Context, in *metatypes.G
 	}
 	return resp, nil
 }
+
+*/

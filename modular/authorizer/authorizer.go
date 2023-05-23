@@ -73,10 +73,10 @@ func (a *AuthorizeModular) ReleaseResource(
 	ctx context.Context,
 	span rcmgr.ResourceScopeSpan) {
 	span.Done()
-	return
 }
 
 // VerifyAuthorize verifies the account has the operation's permission.
+// TODO:: supports permission path verification and query
 func (a *AuthorizeModular) VerifyAuthorize(
 	ctx context.Context,
 	authType coremodule.AuthOpType,
@@ -223,5 +223,4 @@ func (a *AuthorizeModular) VerifyAuthorize(
 	default:
 		return false, ErrUnsupportedAuthType
 	}
-	return false, ErrUnsupportedAuthType
 }

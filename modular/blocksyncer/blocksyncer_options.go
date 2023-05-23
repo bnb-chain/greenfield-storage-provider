@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
-	"gorm.io/gorm/schema"
 	"os"
 	"sync"
 	"time"
@@ -24,6 +23,7 @@ import (
 	parserconfig "github.com/forbole/juno/v4/parser/config"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
+	"gorm.io/gorm/schema"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"

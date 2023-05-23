@@ -1,5 +1,6 @@
 package service
 
+/*
 import (
 	"context"
 	"time"
@@ -271,3 +272,5 @@ func (metadata *Metadata) VerifyPolicy(ctx context.Context, resourceID math.Uint
 	}
 	return permtypes.EFFECT_UNSPECIFIED, nil
 }
+
+*/

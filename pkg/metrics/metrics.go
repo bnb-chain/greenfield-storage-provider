@@ -91,7 +91,6 @@ func (m *Metrics) ReleaseResource(
 	ctx context.Context,
 	scope corercmgr.ResourceScopeSpan) {
 	scope.Done()
-	return
 }
 
 // NilMetrics is a no-op Metrics
