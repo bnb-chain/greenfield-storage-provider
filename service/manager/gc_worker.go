@@ -122,7 +122,7 @@ func (w *GCWorker) gcSegmentPiece(objectInfo *storagetypes.ObjectInfo, storagePa
 
 // gcECPiece is used to gc ec piece.
 func (w *GCWorker) gcECPiece(objectInfo *storagetypes.ObjectInfo, storageParams *storagetypes.Params) {
-	if objectInfo.GetRedundancyType() != storagetypes.REDUNDANCY_REPLICA_TYPE {
+	if objectInfo.GetRedundancyType() != storagetypes.REDUNDANCY_EC_TYPE {
 		return
 	}
 	for redundancyIndex, address := range objectInfo.GetSecondarySpAddresses() {
