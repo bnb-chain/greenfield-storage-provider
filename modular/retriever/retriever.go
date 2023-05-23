@@ -3,13 +3,10 @@ package retriever
 import (
 	"context"
 	"strings"
-	"sync/atomic"
-	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var (
@@ -48,6 +45,7 @@ func (r *RetrieveModular) Start(ctx context.Context) error {
 	return nil
 }
 
+/*
 func (r *RetrieveModular) eventLoop(ctx context.Context) {
 	statisticsTicker := time.NewTicker(time.Duration(DefaultRetrieverStatisticsInterval) * time.Second)
 	for {
@@ -60,6 +58,8 @@ func (r *RetrieveModular) eventLoop(ctx context.Context) {
 		}
 	}
 }
+
+*/
 
 func (r *RetrieveModular) Stop(ctx context.Context) error {
 	r.scope.Release()
@@ -77,5 +77,4 @@ func (r *RetrieveModular) ReleaseResource(
 	ctx context.Context,
 	span rcmgr.ResourceScopeSpan) {
 	span.Done()
-	return
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -154,4 +155,12 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 	}
 	log.CtxDebugw(ctx, "succeed to done receive piece")
 	return integrity, signature, nil
+}
+
+func (r *ReceiveModular) QueryTasks(
+	ctx context.Context,
+	subKey task.TKey) (
+	[]task.Task, error) {
+	receiveTasks, _ := taskqueue.ScanTQueueBySubKey(r.receiveQueue, subKey)
+	return receiveTasks, nil
 }

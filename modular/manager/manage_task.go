@@ -11,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/service/types"
 )
@@ -75,41 +76,6 @@ func (m *ManageModular) DispatchTask(
 		return nil, nil
 	}
 	return task, nil
-}
-
-func (m *ManageModular) QueryTask(
-	ctx context.Context,
-	key task.TKey) (
-	task.Task, error) {
-	var qTask task.Task
-	if qTask = m.uploadQueue.PopByKey(key); qTask != nil {
-		return qTask, nil
-	}
-	if qTask = m.replicateQueue.PopByKey(key); qTask != nil {
-		return qTask, nil
-	}
-	if qTask = m.sealQueue.PopByKey(key); qTask != nil {
-		return qTask, nil
-	}
-	if qTask = m.receiveQueue.PopByKey(key); qTask != nil {
-		return qTask, nil
-	}
-	if qTask = m.gcObjectQueue.PopByKey(key); qTask != nil {
-		return qTask, nil
-	}
-	if qTask = m.gcZombieQueue.PopByKey(key); qTask != nil {
-		return qTask, nil
-	}
-	if qTask = m.gcMetaQueue.PopByKey(key); qTask != nil {
-		return qTask, nil
-	}
-	if qTask = m.downloadQueue.PopByKey(key); qTask != nil {
-		return qTask, nil
-	}
-	if qTask = m.challengeQueue.PopByKey(key); qTask != nil {
-		return qTask, nil
-	}
-	return nil, nil
 }
 
 func (m *ManageModular) HandleCreateUploadObjectTask(
@@ -412,4 +378,31 @@ func (m *ManageModular) HandleChallengePieceTask(
 	m.challengeQueue.Push(task)
 	log.CtxDebugw(ctx, "add challenge piece task to queue")
 	return nil
+}
+
+func (m *ManageModular) QueryTasks(
+	ctx context.Context,
+	subKey task.TKey) (
+	[]task.Task, error) {
+	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(m.uploadQueue, subKey)
+	replicateTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.replicateQueue, subKey)
+	sealTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.sealQueue, subKey)
+	receiveTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.receiveQueue, subKey)
+	gcObjectTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcObjectQueue, subKey)
+	gcZombieTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcZombieQueue, subKey)
+	gcMetaTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcMetaQueue, subKey)
+	downloadTasks, _ := taskqueue.ScanTQueueBySubKey(m.downloadQueue, subKey)
+	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(m.challengeQueue, subKey)
+
+	var tasks []task.Task
+	tasks = append(tasks, uploadTasks...)
+	tasks = append(tasks, replicateTasks...)
+	tasks = append(tasks, receiveTasks...)
+	tasks = append(tasks, sealTasks...)
+	tasks = append(tasks, gcObjectTasks...)
+	tasks = append(tasks, gcZombieTasks...)
+	tasks = append(tasks, gcMetaTasks...)
+	tasks = append(tasks, downloadTasks...)
+	tasks = append(tasks, challengeTasks...)
+	return tasks, nil
 }

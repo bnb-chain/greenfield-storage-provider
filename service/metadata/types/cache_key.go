@@ -1,5 +1,6 @@
 package types
 
+/*
 import "fmt"
 
 func (m *Bucket) GetCacheKey() string {
@@ -9,3 +10,5 @@ func (m *Bucket) GetCacheKey() string {
 func (m *Object) GetCacheKey() string {
 	return fmt.Sprintf("o%s", m.ObjectInfo.Id.String())
 }
+
+*/

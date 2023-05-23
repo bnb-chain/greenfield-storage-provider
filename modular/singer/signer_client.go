@@ -51,41 +51,50 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
 	if err != nil {
+		log.Errorw("failed to new operator private key manager", "error", err)
 		return nil, err
 	}
 
 	operatorClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(operatorKM))
 	if err != nil {
+		log.Errorw("failed to new operator greenfield client", "error", err)
 		return nil, err
 	}
 	fundingKM, err := keys.NewPrivateKeyManager(fundingPrivateKey)
 	if err != nil {
+		log.Errorw("failed to new funding private key manager", "error", err)
 		return nil, err
 	}
 	fundingClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(fundingKM))
 	if err != nil {
+		log.Errorw("failed to new funding greenfield client", "error", err)
 		return nil, err
 	}
 
 	sealKM, err := keys.NewPrivateKeyManager(sealPrivateKey)
 	if err != nil {
+		log.Errorw("failed to new seal private key manager", "error", err)
 		return nil, err
 	}
 	sealClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(sealKM))
 	if err != nil {
+		log.Errorw("failed to new seal greenfield client", "error", err)
 		return nil, err
 	}
 	sealAccNonce, err := sealClient.GetNonce()
 	if err != nil {
+		log.Errorw("failed to get nonce", "error", err)
 		return nil, err
 	}
 
 	approvalKM, err := keys.NewPrivateKeyManager(approvalPrivateKey)
 	if err != nil {
+		log.Errorw("failed to new approval private key manager", "error", err)
 		return nil, err
 	}
 	approvalClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(approvalKM))
 	if err != nil {
+		log.Errorw("failed to new approval greenfield client", "error", err)
 		return nil, err
 	}
 

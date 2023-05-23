@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -228,4 +229,13 @@ func (d *DownloadModular) HandleChallengePiece(
 func (d *DownloadModular) PostChallengePiece(
 	ctx context.Context,
 	task task.ChallengePieceTask) {
+}
+
+func (d *DownloadModular) QueryTasks(
+	ctx context.Context,
+	subKey task.TKey) (
+	[]task.Task, error) {
+	downloadTasks, _ := taskqueue.ScanTQueueBySubKey(d.downloadQueue, subKey)
+	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(d.challengeQueue, subKey)
+	return append(downloadTasks, challengeTasks...), nil
 }

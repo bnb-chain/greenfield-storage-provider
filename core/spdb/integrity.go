@@ -8,6 +8,7 @@ type IntegrityMeta struct {
 	Signature         []byte
 }
 
+/*
 // ObjectIntegrityDB abstract object integrity interface
 type ObjectIntegrityDB interface {
 	// GetObjectIntegrity get integrity meta info by object id
@@ -23,3 +24,5 @@ type ObjectIntegrityDB interface {
 	SetAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32, checksum [][]byte) error
 	DeleteAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) error
 }
+
+*/

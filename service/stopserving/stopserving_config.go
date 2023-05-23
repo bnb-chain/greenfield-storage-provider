@@ -1,5 +1,6 @@
 package stopserving
 
+/*
 // StopServingConfig defines StopServing service config
 type StopServingConfig struct {
 	SpOperatorAddress   string
@@ -16,3 +17,5 @@ type DiscontinueConfig struct {
 var DefaultDiscontinueConfig = &DiscontinueConfig{
 	BucketKeepAliveDays: 7,
 }
+
+*/

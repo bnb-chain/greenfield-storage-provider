@@ -33,6 +33,7 @@ type TrafficTimeRange struct {
 	LimitNum         int // is unlimited if LimitNum <= 0
 }
 
+/*
 // TrafficDB define a series of traffic interfaces
 type TrafficDB interface {
 	// CheckQuotaAndAddReadRecord create bucket traffic firstly if bucket is not existed,
@@ -51,3 +52,5 @@ type TrafficDB interface {
 	// GetUserReadRecord return user record list by time range
 	GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 }
+
+*/

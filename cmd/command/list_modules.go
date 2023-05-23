@@ -1,4 +1,4 @@
-package utils
+package command
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 var ListModularCmd = &cli.Command{
 	Action:      listModularAction,
 	Name:        "list",
-	Usage:       "List the modular in greenfield storage provider",
+	Usage:       "List the modules in greenfield storage provider",
 	Category:    "MISCELLANEOUS COMMANDS",
 	Description: `The list command output the services in greenfield storage provider.`,
 }
 
 func listModularAction(ctx *cli.Context) error {
-	fmt.Printf(gfspapp.GetRegisterModulusDescription())
+	fmt.Print(gfspapp.GetRegisterModulusDescription())
 	return nil
 }

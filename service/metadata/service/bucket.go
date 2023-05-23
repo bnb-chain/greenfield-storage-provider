@@ -1,5 +1,6 @@
 package service
 
+/*
 import (
 	"context"
 
@@ -286,3 +287,5 @@ func (metadata *Metadata) GetBucketMeta(ctx context.Context, req *metatypes.GetB
 	log.CtxInfow(ctx, "succeed to get bucket meta by name")
 	return resp, nil
 }
+
+*/

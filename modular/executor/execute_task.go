@@ -245,7 +245,6 @@ func (e *ExecuteModular) HandleGCObjectTask(
 				} else {
 					pieceKey = e.baseApp.PieceOp().ECPieceKey(deletingObjectID, segIdx, uint32(rIdx))
 				}
-				pieceKey = e.baseApp.PieceOp().ECPieceKey(deletingObjectID, segIdx, uint32(rIdx))
 				err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to delete replicate piece",
@@ -271,12 +270,10 @@ func (e *ExecuteModular) HandleGCZombiePieceTask(
 	ctx context.Context,
 	task coretask.GCZombiePieceTask) {
 	log.CtxWarn(ctx, "gc zombie piece future support")
-	return
 }
 
 func (e *ExecuteModular) HandleGCMetaTask(
 	ctx context.Context,
 	task coretask.GCMetaTask) {
 	log.CtxWarn(ctx, "gc meta future support")
-	return
 }

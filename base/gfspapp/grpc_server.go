@@ -40,6 +40,7 @@ func (g *GfSpBaseApp) newRpcServer(options ...grpc.ServerOption) {
 	gfspserver.RegisterGfSpReceiveServiceServer(g.server, g)
 	gfspserver.RegisterGfSpSignServiceServer(g.server, g)
 	gfspserver.RegisterGfSpUploadServiceServer(g.server, g)
+	gfspserver.RegisterGfSpQueryTaskServiceServer(g.server, g)
 	reflection.Register(g.server)
 }
 
