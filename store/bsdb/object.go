@@ -1,6 +1,8 @@
 package bsdb
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 // ListObjectsByBucketName lists objects information by a bucket name.
 // The function takes the following parameters:

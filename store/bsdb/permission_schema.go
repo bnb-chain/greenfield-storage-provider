@@ -1,6 +1,8 @@
 package bsdb
 
-import "github.com/forbole/juno/v4/common"
+import (
+	"github.com/forbole/juno/v4/common"
+)
 
 // Permission is the structure to verify action permission
 type Permission struct {

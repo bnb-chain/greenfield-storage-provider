@@ -6,8 +6,7 @@ import "base/types/gfsptask/task.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
-message GfSpQueryP2PNodeRequest {
-}
+message GfSpQueryP2PNodeRequest {}
 
 message GfSpQueryP2PNodeResponse {
   base.types.gfsperrors.GfSpError err = 1;

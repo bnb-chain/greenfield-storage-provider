@@ -7,11 +7,11 @@ import (
 	"net/http/pprof"
 	"strings"
 
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/felixge/fgprof"
 	"github.com/gorilla/mux"
 
+	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 

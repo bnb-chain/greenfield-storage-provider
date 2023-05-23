@@ -9,7 +9,14 @@ help:
 	@echo "  generate            to generate code"
 
 format:
+	bash script/format.sh
 	gofmt -w -l .
+
+proto-format:
+	buf format -w
+
+proto-format-check:
+	buf format --diff --exit-code
 
 vet:
 	go vet ./...

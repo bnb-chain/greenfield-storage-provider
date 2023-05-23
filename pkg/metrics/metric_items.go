@@ -1,9 +1,10 @@
 package metrics
 
 import (
-	metricshttp "github.com/bnb-chain/greenfield-storage-provider/pkg/metrics/http"
 	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	"github.com/prometheus/client_golang/prometheus"
+
+	metricshttp "github.com/bnb-chain/greenfield-storage-provider/pkg/metrics/http"
 )
 
 // const serviceLabelName = "service"

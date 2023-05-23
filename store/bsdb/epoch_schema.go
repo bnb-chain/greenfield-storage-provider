@@ -1,6 +1,8 @@
 package bsdb
 
-import "github.com/forbole/juno/v4/common"
+import (
+	"github.com/forbole/juno/v4/common"
+)
 
 // Epoch stores current information of the latest block
 type Epoch struct {

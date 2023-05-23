@@ -3,9 +3,8 @@ package bsdb
 import (
 	"regexp"
 
-	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
+	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
 )
 
 // Eval is used to evaluate the execution results of statement policies.

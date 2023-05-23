@@ -6,14 +6,14 @@ import "base/types/gfsptask/task.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
-message GfSpAskApprovalRequest{
+message GfSpAskApprovalRequest {
   oneof request {
     base.types.gfsptask.GfSpCreateBucketApprovalTask create_bucket_approval_task = 1;
     base.types.gfsptask.GfSpCreateObjectApprovalTask create_object_approval_task = 2;
   }
 }
 
-message GfSpAskApprovalResponse{
+message GfSpAskApprovalResponse {
   base.types.gfsperrors.GfSpError err = 1;
   bool allowed = 2;
   oneof response {
@@ -25,4 +25,3 @@ message GfSpAskApprovalResponse{
 service GfSpApprovalService {
   rpc GfSpAskApproval(GfSpAskApprovalRequest) returns (GfSpAskApprovalResponse) {}
 }
-

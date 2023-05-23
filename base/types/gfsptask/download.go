@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var _ coretask.DownloadObjectTask = &GfSpDownloadObjectTask{}

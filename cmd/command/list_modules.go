@@ -3,8 +3,9 @@ package command
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/urfave/cli/v2"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 )
 
 var ListModularCmd = &cli.Command{

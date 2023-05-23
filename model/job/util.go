@@ -1,6 +1,8 @@
 package job
 
-import servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
+import (
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
+)
 
 type readableUploadProgressType uint32
 

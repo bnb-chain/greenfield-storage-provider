@@ -1,6 +1,8 @@
 package module
 
-import "strings"
+import (
+	"strings"
+)
 
 var (
 	ApprovalModularName             = strings.ToLower("Approval")
