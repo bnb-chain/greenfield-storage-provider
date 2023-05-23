@@ -1,6 +1,7 @@
 package gfspconfig
 
 import (
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
@@ -32,26 +33,28 @@ type Customize struct {
 
 // GfSpConfig defines the GfSp configuration.
 type GfSpConfig struct {
-	AppID       string
-	Server      []string
-	GrpcAddress string
-	Customize   *Customize
-	SpDB        storeconfig.SQLDBConfig
-	PieceStore  storage.PieceStoreConfig
-	Chain       ChainConfig
-	SpAccount   SpAccountConfig
-	Endpoint    EndpointConfig
-	Approval    ApprovalConfig
-	Bucket      BucketConfig
-	Gateway     GatewayConfig
-	Executor    ExecutorConfig
-	P2P         P2PConfig
-	Parallel    ParallelConfig
-	Task        TaskConfig
-	Monitor     MonitorConfig
-	Rcmgr       RcmgrConfig
-	Log         LogConfig
-	BlockSyncer BlockSyncerConfig
+	AppID            string
+	Server           []string
+	GrpcAddress      string
+	Customize        *Customize
+	SpDB             storeconfig.SQLDBConfig
+	PieceStore       storage.PieceStoreConfig
+	Chain            ChainConfig
+	SpAccount        SpAccountConfig
+	Endpoint         EndpointConfig
+	Approval         ApprovalConfig
+	Bucket           BucketConfig
+	Gateway          GatewayConfig
+	Executor         ExecutorConfig
+	P2P              P2PConfig
+	Parallel         ParallelConfig
+	Task             TaskConfig
+	Monitor          MonitorConfig
+	Rcmgr            RcmgrConfig
+	Log              LogConfig
+	BlockSyncer      BlockSyncerConfig
+	APIRateLimiter   localhttp.RateLimiterConfig
+	BandwidthLimiter localhttp.BandwidthLimiterConfig
 }
 
 // Apply sets the customized implement to the GfSp configuration, it will be called
@@ -207,4 +210,7 @@ type BlockSyncerConfig struct {
 	RecreateTables bool
 	Workers        uint
 	EnableDualDB   bool
+}
+
+type APILimiterConfig struct {
 }

@@ -2,6 +2,7 @@ package gfspclient
 
 import (
 	"context"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	"io"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -66,6 +67,12 @@ func (s *GfSpClient) UploadObject(
 		if streamErr != nil {
 			log.CtxErrorw(ctx, "failed to read upload data stream", "error", streamErr)
 			return ErrExceptionsStream
+		}
+		// If it is limited, it will block
+		if localhttp.BandwidthLimit != nil {
+			if err := localhttp.BandwidthLimit.Limiter.Wait(ctx); err != nil {
+				log.Errorw("failed to wait bandwidth limiter", "error", err)
+			}
 		}
 		req := &gfspserver.GfSpUploadObjectRequest{
 			UploadObjectTask: task.(*gfsptask.GfSpUploadObjectTask),
