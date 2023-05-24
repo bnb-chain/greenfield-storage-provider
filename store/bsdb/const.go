@@ -34,6 +34,7 @@ const (
 	PrefixTreeTableName = "slash_prefix_tree_nodes"
 )
 
+// define the list objects const
 const (
 	ObjectName   = "object"
 	CommonPrefix = "common_prefix"

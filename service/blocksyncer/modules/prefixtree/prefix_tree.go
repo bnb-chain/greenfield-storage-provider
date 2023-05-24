@@ -17,16 +17,20 @@ import (
 )
 
 var (
-	EventCreateObject = proto.MessageName(&storagetypes.EventCreateObject{})
-	EventDeleteObject = proto.MessageName(&storagetypes.EventDeleteObject{})
+	EventCreateObject       = proto.MessageName(&storagetypes.EventCreateObject{})
+	EventDeleteObject       = proto.MessageName(&storagetypes.EventDeleteObject{})
+	EventCancelCreateObject = proto.MessageName(&storagetypes.EventCancelCreateObject{})
+	EventRejectSealObject   = proto.MessageName(&storagetypes.EventRejectSealObject{})
 )
 
 // buildPrefixTreeEvents maps event types that trigger the creation or deletion of prefix tree nodes.
 // If an event type is present and set to true in this map,
 // it means that event will result in changes to the prefix tree structure.
 var buildPrefixTreeEvents = map[string]bool{
-	EventCreateObject: true,
-	EventDeleteObject: true,
+	EventCreateObject:       true,
+	EventDeleteObject:       true,
+	EventCancelCreateObject: true,
+	EventRejectSealObject:   true,
 }
 
 // HandleEvent handles the events relevant to the building of the PrefixTree.
@@ -57,6 +61,20 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 			return errors.New("delete object event assert error")
 		}
 		return m.handleDeleteObject(ctx, deleteObject)
+	case EventCancelCreateObject:
+		cancelObject, ok := typedEvent.(*storagetypes.EventCancelCreateObject)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventCancelCreateObject", "event", typedEvent)
+			return errors.New("cancel create object event assert error")
+		}
+		return m.handleCancelCreateObject(ctx, cancelObject)
+	case EventRejectSealObject:
+		rejectSealObject, ok := typedEvent.(*storagetypes.EventRejectSealObject)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventRejectSealObject", "event", typedEvent)
+			return errors.New("reject seal object event assert error")
+		}
+		return m.handleRejectSealObject(ctx, rejectSealObject)
 	default:
 		return nil
 	}
@@ -127,10 +145,24 @@ func (m *Module) handleCreateObject(ctx context.Context, sealObject *storagetype
 // handleDeleteObject handles EventDeleteObject.
 // It removes the directory tree structure associated with the object.
 func (m *Module) handleDeleteObject(ctx context.Context, deleteObject *storagetypes.EventDeleteObject) error {
+	return m.deleteObject(ctx, deleteObject.ObjectName, deleteObject.BucketName)
+}
 
+// handleCancelCreateObject handles EventCancelCreateObject.
+// It removes the directory tree structure associated with the object.
+func (m *Module) handleCancelCreateObject(ctx context.Context, cancelCreateObject *storagetypes.EventCancelCreateObject) error {
+	return m.deleteObject(ctx, cancelCreateObject.ObjectName, cancelCreateObject.BucketName)
+}
+
+// handleRejectSealObject handles EventRejectSealObject.
+// It removes the directory tree structure associated with the object.
+func (m *Module) handleRejectSealObject(ctx context.Context, cancelCreateObject *storagetypes.EventRejectSealObject) error {
+	return m.deleteObject(ctx, cancelCreateObject.ObjectName, cancelCreateObject.BucketName)
+}
+
+// deleteObject according to the given object path and bucket name.
+func (m *Module) deleteObject(ctx context.Context, objectPath, bucketName string) error {
 	var nodes []*bsdb.SlashPrefixTreeNode
-	objectPath := deleteObject.ObjectName
-	bucketName := deleteObject.BucketName
 
 	// Split full path to get the directories
 	pathParts := strings.Split(objectPath, "/")
