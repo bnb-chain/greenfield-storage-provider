@@ -211,6 +211,3 @@ type BlockSyncerConfig struct {
 	Workers        uint
 	EnableDualDB   bool
 }
-
-type APILimiterConfig struct {
-}
