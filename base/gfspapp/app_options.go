@@ -36,32 +36,32 @@ const (
 	// DefaultChainAddress defines the default greenfield address.
 	DefaultChainAddress = "http://localhost:26750"
 
-	// DefaultMemoryLimit defines the default memory limit for rcmgr to use.
+	// DefaultMemoryLimit defines the default memory limit for resource manager.
 	DefaultMemoryLimit = 8 * 1024 * 1024 * 1024
-	// DefaultTaskTotalLimit defines the default total task limit for rcmgr to use.
+	// DefaultTaskTotalLimit defines the default total task limit for resource manager.
 	DefaultTaskTotalLimit = 10240
-	// DefaultHighTaskLimit defines the default high priority task limit for rcmgr to use.
+	// DefaultHighTaskLimit defines the default high priority task limit for resource manager.
 	DefaultHighTaskLimit = 128
-	// DefaultMediumTaskLimit defines the default medium priority task limit for rcmgr to use.
+	// DefaultMediumTaskLimit defines the default medium priority task limit for resource manager.
 	DefaultMediumTaskLimit = 1024
-	// DefaultLowTaskLimit defines the default low priority task limit for rcmgr to use.
+	// DefaultLowTaskLimit defines the default low priority task limit for resource manager.
 	DefaultLowTaskLimit = 16
 
-	// SpDBUser defines env variable name for sp db user name
+	// SpDBUser defines env variable name for sp db user name.
 	SpDBUser = "SP_DB_USER"
-	// SpDBPasswd defines env variable name for sp db user passwd
+	// SpDBPasswd defines env variable name for sp db user passwd.
 	SpDBPasswd = "SP_DB_PASSWORD"
-	// SpDBAddress defines env variable name for sp db address
+	// SpDBAddress defines env variable name for sp db address.
 	SpDBAddress = "SP_DB_ADDRESS"
-	// SpDBDataBase defines env variable name for sp db database
+	// SpDBDataBase defines env variable name for sp db database.
 	SpDBDataBase = "SP_DB_DATABASE"
-	// DefaultConnMaxLifetime defines the default max liveness time of connection
+	// DefaultConnMaxLifetime defines the default max liveliness time of connection.
 	DefaultConnMaxLifetime = 60
-	// DefaultConnMaxIdleTime defines the default max idle time of connection
+	// DefaultConnMaxIdleTime defines the default max idle time of connection.
 	DefaultConnMaxIdleTime = 30
-	// DefaultMaxIdleConns defines the default max number of idle connections
+	// DefaultMaxIdleConns defines the default max number of idle connections.
 	DefaultMaxIdleConns = 16
-	// DefaultMaxOpenConns defines the default max number of open connections
+	// DefaultMaxOpenConns defines the default max number of open connections.
 	DefaultMaxOpenConns = 32
 )
 
@@ -347,7 +347,7 @@ func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		app.metrics = &coremodule.NullModular{}
 	}
 	if cfg.Monitor.MetricsHttpAddress == "" {
-		cfg.Monitor.MetricsHttpAddress = DefaultPprofAddress
+		cfg.Monitor.MetricsHttpAddress = DefaultMetricsAddress
 	}
 	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHttpAddress)
 	app.RegisterServices(app.metrics)
@@ -359,7 +359,7 @@ func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error 
 		app.pprof = &coremodule.NullModular{}
 	}
 	if cfg.Monitor.PProfHttpAddress == "" {
-		cfg.Monitor.PProfHttpAddress = DefaultMetricsAddress
+		cfg.Monitor.PProfHttpAddress = DefaultPprofAddress
 	}
 	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHttpAddress)
 	app.RegisterServices(app.pprof)

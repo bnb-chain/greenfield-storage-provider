@@ -13,7 +13,7 @@ import (
 
 // Modular is the interface to submodule that units scheduled by the GfSp framework.
 // the Modular inherits lifecycle.Service interface, used to managed by lifecycle.
-// and it also be managed by ResourceManager, the GfSp framework will reserve and
+// and it also is managed by ResourceManager, the GfSp framework will reserve and
 // release resources from Modular resources pool.
 type Modular interface {
 	lifecycle.Service

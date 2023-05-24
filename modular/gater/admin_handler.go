@@ -23,7 +23,7 @@ import (
 // Before create bucket/object to the greenfield, the user should the primary
 // SP whether willing serve for the user to manage the bucket/object.
 // SP checks the user's account if it has the permission to operate, and send
-// the request to approver that running the SP approval's Strategy.
+// the request to approver that running the SP approval's strategy.
 func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err                  error
@@ -83,7 +83,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 				return
 			}
 			if !authorized {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
 				return
 			}
@@ -126,7 +126,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 				return
 			}
 			if !authorized {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
 				return
 			}
@@ -205,7 +205,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}
@@ -219,14 +219,14 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	redundancyIdx, err := util.StringToInt32(reqCtx.request.Header.Get(model.GnfdRedundancyIndexHeader))
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse redundancy idx", "redundancy_idx",
+		log.CtxErrorw(reqCtx.Context(), "failed to parse redundancy index", "redundancy_idx",
 			reqCtx.request.Header.Get(model.GnfdRedundancyIndexHeader))
 		err = ErrInvalidHeader
 		return
 	}
 	segmentIdx, err := util.StringToUint32(reqCtx.request.Header.Get(model.GnfdPieceIndexHeader))
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse segment_idx", "segment_idx",
+		log.CtxErrorw(reqCtx.Context(), "failed to parse segment index", "segment_idx",
 			reqCtx.request.Header.Get(model.GnfdPieceIndexHeader))
 		err = ErrInvalidHeader
 		return

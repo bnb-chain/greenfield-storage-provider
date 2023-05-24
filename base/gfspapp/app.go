@@ -74,7 +74,7 @@ func (g *GfSpBaseApp) AppID() string {
 	return g.appID
 }
 
-// GfSpClient returns the sp client that grpc and http protocol.
+// GfSpClient returns the sp client that includes inner grpc and outer http protocol.
 func (g *GfSpBaseApp) GfSpClient() *gfspclient.GfSpClient {
 	return g.client
 }
