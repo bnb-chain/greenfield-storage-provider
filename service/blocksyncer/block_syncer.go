@@ -11,10 +11,7 @@ import (
 	"time"
 
 	"github.com/forbole/juno/v4/cmd"
-	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
-	"github.com/forbole/juno/v4/database"
-	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/messages"
 	"github.com/forbole/juno/v4/parser"
@@ -31,7 +28,7 @@ import (
 
 // BlockSyncer synchronizes storage,payment,permission data to db by handling related events
 type BlockSyncer struct {
-	config    *tomlconfig.TomlConfig
+	config    *config.TomlConfig
 	name      string
 	parserCtx *parser.Context
 	running   atomic.Value
@@ -47,7 +44,7 @@ var (
 	MainService   *BlockSyncer
 	BackupService *BlockSyncer
 
-	FlagDB database.Database
+	FlagDB *db.DB
 
 	NeedBackup bool
 
@@ -56,7 +53,7 @@ var (
 )
 
 // NewBlockSyncerService create a BlockSyncer service to index block events data to db
-func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
+func NewBlockSyncerService(cfg *config.TomlConfig) (*BlockSyncer, error) {
 	MainService = &BlockSyncer{
 		config: cfg,
 		name:   model.BlockSyncerService,
@@ -70,7 +67,8 @@ func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
 	}
 
 	//prepare master table
-	FlagDB = MainService.parserCtx.Database
+
+	FlagDB = db.Cast(MainService.parserCtx.Database)
 	MainService.prepareMasterFlagTable()
 	mainServiceDB, _ := FlagDB.GetMasterDB(context.TODO())
 	mainDBIsMaster := mainServiceDB.IsMaster
@@ -93,7 +91,7 @@ func NewBlockSyncerService(cfg *tomlconfig.TomlConfig) (*BlockSyncer, error) {
 	return MainService, nil
 }
 
-func newBackupBlockSyncerService(cfg *tomlconfig.TomlConfig, mainDBIsMaster bool) (*BlockSyncer, error) {
+func newBackupBlockSyncerService(cfg *config.TomlConfig, mainDBIsMaster bool) (*BlockSyncer, error) {
 	backUpConfig, err := generateConfigForBackup(cfg)
 	if err != nil {
 		return nil, err
@@ -115,8 +113,8 @@ func newBackupBlockSyncerService(cfg *tomlconfig.TomlConfig, mainDBIsMaster bool
 	return BackupService, nil
 }
 
-func generateConfigForBackup(cfg *tomlconfig.TomlConfig) (*tomlconfig.TomlConfig, error) {
-	configBackup := new(tomlconfig.TomlConfig)
+func generateConfigForBackup(cfg *config.TomlConfig) (*config.TomlConfig, error) {
+	configBackup := new(config.TomlConfig)
 	if err := DeepCopyByGob(cfg, configBackup); err != nil {
 		return nil, err
 	}
@@ -365,17 +363,17 @@ func (s *BlockSyncer) quickFetchBlockData(startHeight uint64) {
 }
 
 func (s *BlockSyncer) prepareMasterFlagTable() error {
-	if err := s.parserCtx.Database.
+	if err := FlagDB.
 		PrepareTables(context.TODO(), []schema.Tabler{&bsmodels.MasterDB{}}); err != nil {
 		return err
 	}
-	masterRecord, err := s.parserCtx.Database.GetMasterDB(context.TODO())
+	masterRecord, err := FlagDB.GetMasterDB(context.TODO())
 	if err != nil {
 		return err
 	}
 	//not exist
 	if !masterRecord.OneRowId {
-		if err = s.parserCtx.Database.SetMasterDB(context.TODO(), &models.MasterDB{
+		if err = FlagDB.SetMasterDB(context.TODO(), &bsmodels.MasterDB{
 			OneRowId: true,
 			IsMaster: true,
 		}); err != nil {

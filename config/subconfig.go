@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 
-	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
 	loggingconfig "github.com/forbole/juno/v4/log/config"
 	"github.com/forbole/juno/v4/node/remote"
@@ -257,16 +256,16 @@ func (cfg *StorageProviderConfig) MakeManagerServiceConfig() (*manager.ManagerCo
 }
 
 // MakeBlockSyncerConfig make block syncer service config from StorageProviderConfig
-func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*tomlconfig.TomlConfig, error) {
+func (cfg *StorageProviderConfig) MakeBlockSyncerConfig() (*config.TomlConfig, error) {
 	rpcAddress := cfg.ChainConfig.NodeAddr[0].TendermintAddresses[0]
 	grpcAddress := cfg.ChainConfig.NodeAddr[0].GreenfieldAddresses[0]
 
-	return &tomlconfig.TomlConfig{
+	return &config.TomlConfig{
 		Chain: config.ChainConfig{
 			Bech32Prefix: "cosmos",
 			Modules:      cfg.BlockSyncerCfg.Modules,
 		},
-		Node: tomlconfig.NodeConfig{
+		Node: config.NodeConfig{
 			Type: "remote",
 			RPC: &remote.RPCConfig{
 				ClientName: "juno",
