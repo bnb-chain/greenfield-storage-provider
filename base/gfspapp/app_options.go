@@ -330,8 +330,6 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 			app.signer = module.(coremodule.Signer)
 		case coremodule.UploadModularName:
 			app.uploader = module.(coremodule.Uploader)
-		case coremodule.BlockSyncerModularName:
-			app.blocksyncer = module
 		}
 	}
 	return nil

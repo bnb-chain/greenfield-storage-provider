@@ -145,7 +145,7 @@ func registerModular() {
 	gfspapp.RegisterModular(retriever.RetrieveModularName, retriever.RetrieveModularDescription, retriever.NewRetrieveModular)
 	gfspapp.RegisterModular(module.SignerModularName, module.SignerModularDescription, singer.NewSingModular)
 	gfspapp.RegisterModular(module.UploadModularName, module.UploadModularDescription, uploader.NewUploadModular)
-	gfspapp.RegisterModular(module.BlockSyncerModularName, module.BlockSyncerModularDescription, blocksyncer.NewBlockSyncerModular)
+	gfspapp.RegisterModular(blocksyncer.BlockSyncerModularName, blocksyncer.BlockSyncerModularDescription, blocksyncer.NewBlockSyncerModular)
 }
 
 // initLog inits the log configuration from config file and command flags.

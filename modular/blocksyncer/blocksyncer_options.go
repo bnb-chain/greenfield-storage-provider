@@ -37,8 +37,9 @@ import (
 func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
 	junoCfg := makeBlockSyncerConfig(cfg)
 	MainService = &BlockSyncerModular{
-		config: junoCfg,
-		name:   coremodule.BlockSyncerModularName,
+		config:  junoCfg,
+		name:    BlockSyncerModularName,
+		baseApp: app,
 	}
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
@@ -92,7 +93,7 @@ func (s *BlockSyncerModular) initClient() error {
 
 	// get DSN from env first
 	var dbEnv string
-	if s.Name() == coremodule.BlockSyncerModularName {
+	if s.Name() == BlockSyncerModularName {
 		dbEnv = model.DsnBlockSyncer
 	} else {
 		dbEnv = model.DsnBlockSyncerSwitched
@@ -349,7 +350,7 @@ func newBackupBlockSyncerService(cfg *tomlconfig.TomlConfig, mainDBIsMaster bool
 
 	BackupService = &BlockSyncerModular{
 		config: backUpConfig,
-		name:   coremodule.BlockSyncerModularBackupName,
+		name:   BlockSyncerModularBackupName,
 	}
 
 	if err = BackupService.initClient(); err != nil {
@@ -408,12 +409,12 @@ func CheckProgress() {
 		if err != nil {
 			continue
 		}
-		if epochMaster.BlockHeight-epochSlave.BlockHeight < model.DefaultBlockHeightDiff {
+		if epochMaster.BlockHeight-epochSlave.BlockHeight < DefaultBlockHeightDiff {
 			SwitchMasterDBFlag()
 			StopMainService()
 			break
 		}
-		time.Sleep(time.Minute * model.DefaultCheckDiffPeriod)
+		time.Sleep(time.Minute * DefaultCheckDiffPeriod)
 	}
 }
 
@@ -440,7 +441,7 @@ func StopMainService() error {
 // mustGetLatestHeight tries getting the latest height from the RPC client.
 // If no latest height can be found after MaxRetryCount, it returns 0.
 func mustGetLatestHeight(ctx *parser.Context) uint64 {
-	for retryCount := 0; retryCount < model.MaxRetryCount; retryCount++ {
+	for retryCount := 0; retryCount < MaxRetryCount; retryCount++ {
 		latestBlockHeight, err := ctx.Node.LatestHeight()
 		if err == nil {
 			return uint64(latestBlockHeight)
