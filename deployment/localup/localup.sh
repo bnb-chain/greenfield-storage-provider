@@ -135,7 +135,7 @@ make_config() {
     sed -i -e "s/PProfHttpAddress = '.*'/PProfHttpAddress = '${pprof_address}'/g" config.toml
 
     # blocksyncer
-   sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\]/g" config.toml
+   sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\]/g" config.toml
    sed -i -e "s/RecreateTables = false/RecreateTables = true/g" config.toml
    WORKERS=50
    sed -i -e "s/Workers = 0/Workers = ${WORKERS}/g" config.toml
