@@ -18,13 +18,13 @@ message GfSpBeginTaskResponse {
 }
 
 message GfSpAskTaskRequest {
-    base.types.gfsplimit.GfSpLimit node_limit = 1;
+  base.types.gfsplimit.GfSpLimit node_limit = 1;
 }
 
 message GfSpAskTaskResponse {
   base.types.gfsperrors.GfSpError err = 1;
   oneof response {
-    base.types.gfsptask.GfSpReplicatePieceTask replicate_piece_task= 2;
+    base.types.gfsptask.GfSpReplicatePieceTask replicate_piece_task = 2;
     base.types.gfsptask.GfSpSealObjectTask seal_object_task = 3;
     base.types.gfsptask.GfSpReceivePieceTask receive_piece_task = 4;
     base.types.gfsptask.GfSpGCObjectTask gc_object_task = 5;
@@ -36,7 +36,7 @@ message GfSpAskTaskResponse {
 message GfSpReportTaskRequest {
   oneof request {
     base.types.gfsptask.GfSpUploadObjectTask upload_object_task = 1;
-    base.types.gfsptask.GfSpReplicatePieceTask replicate_piece_task= 2;
+    base.types.gfsptask.GfSpReplicatePieceTask replicate_piece_task = 2;
     base.types.gfsptask.GfSpSealObjectTask seal_object_task = 3;
     base.types.gfsptask.GfSpGCObjectTask gc_object_task = 4;
     base.types.gfsptask.GfSpGCZombiePieceTask gc_zombie_piece_task = 5;

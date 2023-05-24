@@ -1,6 +1,8 @@
 package bsdb
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 func ContinuationTokenFilter(continuationToken string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {

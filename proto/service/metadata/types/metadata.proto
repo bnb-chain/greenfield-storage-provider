@@ -1,9 +1,9 @@
 syntax = "proto3";
 package service.metadata.types;
 
-import "greenfield/storage/types.proto";
-import "greenfield/storage/query.proto";
 import "greenfield/payment/stream_record.proto";
+import "greenfield/storage/query.proto";
+import "greenfield/storage/types.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/metadata/types";
 
@@ -246,27 +246,27 @@ message GetPaymentByBucketIDResponse {
 // MetadataService defines the gRPC service of metadata
 service MetadataService {
   // GetUserBuckets get buckets info by a user address
-  rpc GetUserBuckets(GetUserBucketsRequest) returns (GetUserBucketsResponse) {};
+  rpc GetUserBuckets(GetUserBucketsRequest) returns (GetUserBucketsResponse) {}
   // ListObjectsByBucketName list objects info by a bucket name
-  rpc ListObjectsByBucketName(ListObjectsByBucketNameRequest) returns (ListObjectsByBucketNameResponse) {};
+  rpc ListObjectsByBucketName(ListObjectsByBucketNameRequest) returns (ListObjectsByBucketNameResponse) {}
   // GetBucketByBucketName get bucket info by a bucket name
-  rpc GetBucketByBucketName(GetBucketByBucketNameRequest) returns (GetBucketByBucketNameResponse) {};
+  rpc GetBucketByBucketName(GetBucketByBucketNameRequest) returns (GetBucketByBucketNameResponse) {}
   // GetBucketByBucketID get bucket info by a bucket id
-  rpc GetBucketByBucketID(GetBucketByBucketIDRequest) returns (GetBucketByBucketIDResponse) {};
+  rpc GetBucketByBucketID(GetBucketByBucketIDRequest) returns (GetBucketByBucketIDResponse) {}
   // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block range
-  rpc ListDeletedObjectsByBlockNumberRange(ListDeletedObjectsByBlockNumberRangeRequest) returns (ListDeletedObjectsByBlockNumberRangeResponse) {};
+  rpc ListDeletedObjectsByBlockNumberRange(ListDeletedObjectsByBlockNumberRangeRequest) returns (ListDeletedObjectsByBlockNumberRangeResponse) {}
   // GetUserBucketsCount GetUserBuckets get buckets count by a user address
-  rpc GetUserBucketsCount(GetUserBucketsCountRequest) returns (GetUserBucketsCountResponse) {};
+  rpc GetUserBucketsCount(GetUserBucketsCountRequest) returns (GetUserBucketsCountResponse) {}
   // ListExpiredBucketsBySp list expired buckets by sp
-  rpc ListExpiredBucketsBySp(ListExpiredBucketsBySpRequest) returns (ListExpiredBucketsBySpResponse) {};
+  rpc ListExpiredBucketsBySp(ListExpiredBucketsBySpRequest) returns (ListExpiredBucketsBySpResponse) {}
   // GetObjectMeta get object metadata
-  rpc GetObjectMeta(GetObjectMetaRequest) returns (GetObjectMetaResponse) {};
+  rpc GetObjectMeta(GetObjectMetaRequest) returns (GetObjectMetaResponse) {}
   // GetPaymentByBucketName get bucket payment info by a bucket name
-  rpc GetPaymentByBucketName(GetPaymentByBucketNameRequest) returns (GetPaymentByBucketNameResponse) {};
+  rpc GetPaymentByBucketName(GetPaymentByBucketNameRequest) returns (GetPaymentByBucketNameResponse) {}
   // GetPaymentByBucketID get bucket payment info by a bucket id
-  rpc GetPaymentByBucketID(GetPaymentByBucketIDRequest) returns (GetPaymentByBucketIDResponse) {};
+  rpc GetPaymentByBucketID(GetPaymentByBucketIDRequest) returns (GetPaymentByBucketIDResponse) {}
   // VerifyPermission Verify the input items permission.
-  rpc VerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {};
+  rpc VerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {}
   // GetBucketMeta get bucket metadata with related info such as payment
-  rpc GetBucketMeta(GetBucketMetaRequest) returns (GetBucketMetaResponse) {};
+  rpc GetBucketMeta(GetBucketMetaRequest) returns (GetBucketMetaResponse) {}
 }

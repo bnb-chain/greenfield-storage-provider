@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield/sdk/keys"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func setupKM() (keys.KeyManager, error) {

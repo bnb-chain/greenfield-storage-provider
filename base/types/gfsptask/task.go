@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var _ coretask.Task = &GfSpTask{}

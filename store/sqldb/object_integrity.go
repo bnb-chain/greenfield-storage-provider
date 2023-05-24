@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
+
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 // GetObjectIntegrity returns the integrity hash info

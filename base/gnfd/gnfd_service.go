@@ -7,15 +7,16 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // CurrentHeight the block height sub one as the stable height.

@@ -3,8 +3,9 @@ package sqldb
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"gorm.io/gorm"
+
+	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 )
 
 // SetGCObjectProgress is used to set gc object progress.

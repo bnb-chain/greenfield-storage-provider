@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
+	"gorm.io/gorm"
+
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"gorm.io/gorm"
 )
 
 // UpdateAllSp update(maybe overwrite) all sp info in db

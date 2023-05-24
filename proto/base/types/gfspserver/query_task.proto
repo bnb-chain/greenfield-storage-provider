@@ -14,7 +14,6 @@ message GfSpQueryTasksResponse {
   repeated string task_info = 2;
 }
 
-
 service GfSpQueryTaskService {
   rpc GfSpQueryTasks(GfSpQueryTasksRequest) returns (GfSpQueryTasksResponse) {}
 }

@@ -1,6 +1,8 @@
 package errors
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	// ErrDSNNotSet defines deny request by ip error

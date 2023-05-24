@@ -1,6 +1,8 @@
 package http
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 // CounterOption lets you add options to Counter metrics using With* functions.
 type CounterOption func(*prometheus.CounterOpts)

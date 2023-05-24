@@ -7,11 +7,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	chainClient "github.com/bnb-chain/greenfield/sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 )
 
 const (

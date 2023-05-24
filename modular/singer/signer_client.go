@@ -6,16 +6,16 @@ import (
 	"strings"
 	"sync"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	"github.com/bnb-chain/greenfield/sdk/client"
-	"github.com/bnb-chain/greenfield/sdk/keys"
-	ctypes "github.com/bnb-chain/greenfield/sdk/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield/sdk/client"
+	"github.com/bnb-chain/greenfield/sdk/keys"
+	ctypes "github.com/bnb-chain/greenfield/sdk/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // SignType is the type of msg signature

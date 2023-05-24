@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
