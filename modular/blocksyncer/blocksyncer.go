@@ -3,6 +3,7 @@ package blocksyncer
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -10,8 +11,23 @@ import (
 	"github.com/forbole/juno/v4/database"
 	"github.com/forbole/juno/v4/parser"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+)
+
+var (
+	BlockSyncerModularName        = strings.ToLower("BlockSyncer")
+	BlockSyncerModularDescription = "Synchronize data on the chain to SP"
+	BlockSyncerModularBackupName  = strings.ToLower("BlockSyncerBackup")
+)
+
+const (
+	// MaxRetryCount defines getting the latest height from the RPC client max retry count
+	MaxRetryCount = 50
+	// DefaultBlockHeightDiff defines default block height diff of main and backup service
+	DefaultBlockHeightDiff = 100
+	// DefaultCheckDiffPeriod defines check interval of block height diff
+	DefaultCheckDiffPeriod = 1
 )
 
 // BlockSyncer synchronizes storage,payment,permission data to db by handling related events
@@ -22,6 +38,7 @@ type BlockSyncerModular struct {
 	running   atomic.Value
 	context   context.Context
 	scope     rcmgr.ResourceScope
+	baseApp   *gfspapp.GfSpBaseApp
 }
 
 // Read concurrency required global variables
@@ -42,13 +59,19 @@ var (
 )
 
 func (b *BlockSyncerModular) Name() string {
-	return module.BlockSyncerModularName
+	return BlockSyncerModularName
 }
 
 func (b *BlockSyncerModular) Start(ctx context.Context) error {
 	if b.running.Swap(true) == true {
 		return errors.New("block syncer hub has already started")
 	}
+
+	scope, err := b.baseApp.ResourceManager().OpenService(b.Name())
+	if err != nil {
+		return err
+	}
+	b.scope = scope
 
 	determineMainService()
 
