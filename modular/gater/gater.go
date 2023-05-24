@@ -42,7 +42,7 @@ func (g *GateModular) Start(ctx context.Context) error {
 
 func (g *GateModular) server(ctx context.Context) {
 	router := mux.NewRouter().SkipClean(true)
-	if g.baseApp.IsEnableMetrics() {
+	if g.baseApp.EnableMetrics() {
 		router.Use(metrics.DefaultHTTPServerMetrics.InstrumentationHandler)
 	}
 	g.RegisterHandler(router)

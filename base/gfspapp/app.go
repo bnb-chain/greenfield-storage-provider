@@ -136,7 +136,7 @@ func (g *GfSpBaseApp) close(ctx context.Context) error {
 	return nil
 }
 
-// IsEnableMetrics returns an indicator whether enable the metrics service.
-func (g *GfSpBaseApp) IsEnableMetrics() bool {
+// EnableMetrics returns an indicator whether enable the metrics service.
+func (g *GfSpBaseApp) EnableMetrics() bool {
 	return g.metrics != nil
 }
