@@ -116,7 +116,7 @@ make_config() {
     sed -i -e "s/^HttpAddress = '.*'/HttpAddress = '${SP_ENDPOINT}'/g" config.toml
 
     # metadata
-    sed -i -e "s/IsMasterDB = false/IsMasterDB = true/g" config.toml
+    sed -i -e "s/IsMasterDB = .*/IsMasterDB = true/g" config.toml
     sed -i -e "s/BsDBSwitchCheckIntervalSec = .*/BsDBSwitchCheckIntervalSec = 30/g" config.toml
 
     # p2p

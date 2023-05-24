@@ -2,10 +2,11 @@ package metadata
 
 import (
 	"context"
+	"strings"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"strings"
 )
 
 var (
