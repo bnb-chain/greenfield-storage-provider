@@ -17,7 +17,6 @@ import (
 	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/messages"
-	"github.com/forbole/juno/v4/modules/registrar"
 	"github.com/forbole/juno/v4/node/remote"
 	"github.com/forbole/juno/v4/parser"
 	parserconfig "github.com/forbole/juno/v4/parser/config"
@@ -30,6 +29,8 @@ import (
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
+	registrar "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -77,9 +78,9 @@ func (s *BlockSyncerModular) initClient() error {
 	// JunoConfig the runner
 	junoConfig := cmd.NewConfig("juno").
 		WithParseConfig(parsecmdtypes.NewConfig().
-			WithRegistrar(registrar.NewDefaultRegistrar(
+			WithRegistrar(registrar.NewBlockSyncerRegistrar(
 				messages.CosmosMessageAddressesParser,
-			)).WithFileType("toml"),
+			)).WithDBBuilder(db.BlockSyncerDBBuilder).WithFileType("toml"),
 		)
 	cmdCfg := junoConfig.GetParseConfig()
 	cmdCfg.WithTomlConfig(s.config)
