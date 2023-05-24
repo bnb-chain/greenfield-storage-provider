@@ -21,17 +21,17 @@ type RateLimiterCell struct {
 	RatePeriod string
 }
 
-type HTTPLimitConfig struct {
+type IPLimitConfig struct {
 	On         bool
 	RateLimit  int
 	RatePeriod string
 }
 
 type RateLimiterConfig struct {
-	HTTPLimitCfg HTTPLimitConfig
-	PathPattern  []RateLimiterCell
-	HostPattern  []RateLimiterCell
-	APILimits    []RateLimiterCell
+	IPLimitCfg  IPLimitConfig
+	PathPattern []RateLimiterCell
+	HostPattern []RateLimiterCell
+	APILimits   []RateLimiterCell
 }
 
 type MemoryLimiterConfig struct {
@@ -40,10 +40,10 @@ type MemoryLimiterConfig struct {
 }
 
 type APILimiterConfig struct {
-	HTTPLimitCfg HTTPLimitConfig
-	PathPattern  map[string]MemoryLimiterConfig
-	APILimits    map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
-	HostPattern  map[string]MemoryLimiterConfig
+	IPLimitCfg  IPLimitConfig
+	PathPattern map[string]MemoryLimiterConfig
+	APILimits   map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
+	HostPattern map[string]MemoryLimiterConfig
 }
 
 type apiLimiter struct {
@@ -62,10 +62,10 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 	limiter = &apiLimiter{
 		store: localStore,
 		cfg: APILimiterConfig{
-			APILimits:    make(map[string]MemoryLimiterConfig),
-			PathPattern:  make(map[string]MemoryLimiterConfig),
-			HostPattern:  make(map[string]MemoryLimiterConfig),
-			HTTPLimitCfg: cfg.HTTPLimitCfg,
+			APILimits:   make(map[string]MemoryLimiterConfig),
+			PathPattern: make(map[string]MemoryLimiterConfig),
+			HostPattern: make(map[string]MemoryLimiterConfig),
+			IPLimitCfg:  cfg.IPLimitCfg,
 		},
 	}
 
@@ -148,13 +148,13 @@ func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
 }
 
 func (t *apiLimiter) HTTPAllow(ctx context.Context, r *http.Request) bool {
-	if !t.cfg.HTTPLimitCfg.On {
+	if !t.cfg.IPLimitCfg.On {
 		return true
 	}
 	ipStr := GetIP(r)
 	key := "ip_" + ipStr
 
-	rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", t.cfg.HTTPLimitCfg.RateLimit, t.cfg.HTTPLimitCfg.RatePeriod))
+	rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", t.cfg.IPLimitCfg.RateLimit, t.cfg.IPLimitCfg.RatePeriod))
 	if err != nil {
 		log.Errorw("failed to new rate from formatted", "err", err)
 		return true

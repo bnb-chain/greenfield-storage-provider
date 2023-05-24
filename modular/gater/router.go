@@ -8,6 +8,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 )
 
 const (
@@ -161,4 +162,5 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	pathBucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
 	router.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
+	router.Use(localhttp.Limit)
 }

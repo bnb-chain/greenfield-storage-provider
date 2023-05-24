@@ -9,6 +9,7 @@ import (
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
@@ -32,25 +33,27 @@ type Customize struct {
 
 // GfSpConfig defines the GfSp configuration.
 type GfSpConfig struct {
-	AppID       string
-	Server      []string
-	GrpcAddress string
-	Customize   *Customize
-	SpDB        storeconfig.SQLDBConfig
-	PieceStore  storage.PieceStoreConfig
-	Chain       ChainConfig
-	SpAccount   SpAccountConfig
-	Endpoint    EndpointConfig
-	Approval    ApprovalConfig
-	Bucket      BucketConfig
-	Gateway     GatewayConfig
-	Executor    ExecutorConfig
-	P2P         P2PConfig
-	Parallel    ParallelConfig
-	Task        TaskConfig
-	Monitor     MonitorConfig
-	Rcmgr       RcmgrConfig
-	Log         LogConfig
+	AppID          string
+	Server         []string
+	GrpcAddress    string
+	Customize      *Customize
+	SpDB           storeconfig.SQLDBConfig
+	PieceStore     storage.PieceStoreConfig
+	Chain          ChainConfig
+	SpAccount      SpAccountConfig
+	Endpoint       EndpointConfig
+	Approval       ApprovalConfig
+	Bucket         BucketConfig
+	Gateway        GatewayConfig
+	Executor       ExecutorConfig
+	P2P            P2PConfig
+	Parallel       ParallelConfig
+	Task           TaskConfig
+	Monitor        MonitorConfig
+	Rcmgr          RcmgrConfig
+	Log            LogConfig
+	BlockSyncer    BlockSyncerConfig
+	APIRateLimiter localhttp.RateLimiterConfig
 }
 
 // Apply sets the customized implement to the GfSp configuration, it will be called
@@ -198,4 +201,13 @@ type RcmgrConfig struct {
 type LogConfig struct {
 	Level string
 	Path  string
+}
+
+type BlockSyncerConfig struct {
+	Modules        []string
+	Dsn            string
+	DsnSwitched    string
+	RecreateTables bool
+	Workers        uint
+	EnableDualDB   bool
 }

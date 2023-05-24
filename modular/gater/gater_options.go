@@ -4,6 +4,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 )
 
 const (
@@ -37,5 +39,40 @@ func DefaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 	gater.domain = cfg.Gateway.Domain
 	gater.httpAddress = cfg.Gateway.HttpAddress
 	gater.maxListReadQuota = cfg.Bucket.MaxListReadQuotaNumber
+	rateCfg := makeAPIRateLimitCfg(cfg.APIRateLimiter)
+	if err := localhttp.NewAPILimiter(rateCfg); err != nil {
+		log.Errorw("failed to new api limiter", "err", err)
+		return err
+	}
 	return nil
+}
+
+func makeAPIRateLimitCfg(cfg localhttp.RateLimiterConfig) *localhttp.APILimiterConfig {
+	defaultMap := make(map[string]localhttp.MemoryLimiterConfig)
+	for _, c := range cfg.PathPattern {
+		defaultMap[c.Key] = localhttp.MemoryLimiterConfig{
+			RateLimit:  c.RateLimit,
+			RatePeriod: c.RatePeriod,
+		}
+	}
+	patternMap := make(map[string]localhttp.MemoryLimiterConfig)
+	for _, c := range cfg.HostPattern {
+		patternMap[c.Key] = localhttp.MemoryLimiterConfig{
+			RateLimit:  c.RateLimit,
+			RatePeriod: c.RatePeriod,
+		}
+	}
+	apiLimitsMap := make(map[string]localhttp.MemoryLimiterConfig)
+	for _, c := range cfg.APILimits {
+		apiLimitsMap[c.Key] = localhttp.MemoryLimiterConfig{
+			RateLimit:  c.RateLimit,
+			RatePeriod: c.RatePeriod,
+		}
+	}
+	return &localhttp.APILimiterConfig{
+		PathPattern: defaultMap,
+		HostPattern: patternMap,
+		APILimits:   apiLimitsMap,
+		IPLimitCfg:  cfg.IPLimitCfg,
+	}
 }
