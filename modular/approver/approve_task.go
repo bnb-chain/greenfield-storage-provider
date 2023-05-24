@@ -27,7 +27,7 @@ func (a *ApprovalModular) PreCreateBucketApproval(
 		log.CtxErrorw(ctx, "failed to pre create bucket approval, pointer nil")
 		return ErrDanglingPointer
 	}
-	buckets, err := a.baseApp.GfSpClient().GetAccountBucketNumber(ctx, task.GetCreateBucketInfo().GetCreator())
+	buckets, err := a.baseApp.GfSpClient().GetUserBucketsCount(ctx, task.GetCreateBucketInfo().GetCreator())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get account owns max bucket number", "error", err)
 		return err
