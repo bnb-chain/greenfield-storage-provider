@@ -4,5 +4,5 @@ package bsdb
 type ListObjectsResult struct {
 	PathName   string `gorm:"path_name"`
 	ResultType string `gorm:"result_type"`
-	Object
+	*Object
 }
