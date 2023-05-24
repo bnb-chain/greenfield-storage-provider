@@ -10,7 +10,7 @@ replace (
 	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v0.0.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.2.0
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230519091839-83376738961a
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230524100435-96e3d88a7e6c
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
@@ -57,6 +57,7 @@ require (
 
 require (
 	github.com/cometbft/cometbft v0.37.1
+	github.com/gogo/protobuf v1.3.3
 	golang.org/x/time v0.3.0
 )
 
@@ -71,7 +72,6 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/frankban/quicktest v1.14.4 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
-	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
