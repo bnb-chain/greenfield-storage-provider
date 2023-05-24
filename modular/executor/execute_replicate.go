@@ -53,7 +53,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(
 		log.CtxErrorw(ctx, "failed to replicate piece", "error", err)
 		return
 	}
-	log.CtxDebugw(ctx, "success to replicate all pieces")
+	log.CtxDebugw(ctx, "succeed to replicate all pieces")
 	// combine seal object
 	sealMsg := &storagetypes.MsgSealObject{
 		Operator:              e.baseApp.OperateAddress(),

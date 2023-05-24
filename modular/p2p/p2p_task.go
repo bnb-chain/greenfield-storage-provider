@@ -26,7 +26,7 @@ func (p *P2PModular) HandleReplicatePieceApproval(
 		return nil, ErrRepeatedTask
 	}
 	if err := p.replicateApprovalQueue.Push(task); err != nil {
-		log.CtxErrorw(ctx, "failed to puysh replicate piece approval task to queue", "error", err)
+		log.CtxErrorw(ctx, "failed to push replicate piece approval task to queue", "error", err)
 		return nil, ErrRepeatedTask
 	}
 	defer p.replicateApprovalQueue.PopByKey(task.Key())

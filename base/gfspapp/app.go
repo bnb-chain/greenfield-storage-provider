@@ -74,7 +74,7 @@ func (g *GfSpBaseApp) AppID() string {
 	return g.appID
 }
 
-// GfSpClient returns the sp client that grpc and http protocol.
+// GfSpClient returns the sp client that includes inner grpc and outer http protocol.
 func (g *GfSpBaseApp) GfSpClient() *gfspclient.GfSpClient {
 	return g.client
 }
@@ -136,7 +136,7 @@ func (g *GfSpBaseApp) close(ctx context.Context) error {
 	return nil
 }
 
-// EnableMetrics returns an indicator whether enable the metrics service.
-func (g *GfSpBaseApp) EnableMetrics() bool {
+// IsEnableMetrics returns an indicator whether enable the metrics service.
+func (g *GfSpBaseApp) IsEnableMetrics() bool {
 	return g.metrics != nil
 }
