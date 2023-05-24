@@ -28,7 +28,7 @@ func (g *GfSpBaseApp) GfSpDownloadObject(
 		return &gfspserver.GfSpDownloadObjectResponse{Err: ErrDownloadTaskDangling}, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-	span, err := g.receiver.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
+	span, err := g.downloader.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve download resource", "error", err)
 		return &gfspserver.GfSpDownloadObjectResponse{Err: ErrDownloadExhaustResource}, nil
@@ -76,7 +76,7 @@ func (g *GfSpBaseApp) GfSpGetChallengeInfo(
 		return &gfspserver.GfSpGetChallengeInfoResponse{Err: ErrDownloadTaskDangling}, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-	span, err := g.receiver.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
+	span, err := g.downloader.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve challenge resource", "error", err)
 		return &gfspserver.GfSpGetChallengeInfoResponse{Err: ErrDownloadExhaustResource}, nil

@@ -13,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
@@ -275,7 +276,11 @@ func DefaultGfSpResourceManagerOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConf
 	if cfg.Customize.Rcmgr == nil {
 		cfg.Customize.Rcmgr = gfsprcmgr.NewResourceManager(cfg.Customize.RcLimiter)
 	}
-	app.rcmgr = cfg.Customize.Rcmgr
+	if !cfg.Rcmgr.DisableRcmgr {
+		app.rcmgr = cfg.Customize.Rcmgr
+	} else {
+		app.rcmgr = &corercmgr.NullResourceManager{}
+	}
 	return nil
 }
 

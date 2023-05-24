@@ -22,7 +22,7 @@ func (*NullModular) Name() string                { return "" }
 func (*NullModular) Start(context.Context) error { return nil }
 func (*NullModular) Stop(context.Context) error  { return nil }
 func (*NullModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
-	return nil, nil
+	return &rcmgr.NullScope{}, nil
 }
 
 func (*NullModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
@@ -97,7 +97,7 @@ func (*NilModular) Name() string                { return "" }
 func (*NilModular) Start(context.Context) error { return nil }
 func (*NilModular) Stop(context.Context) error  { return nil }
 func (*NilModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
-	return nil, nil
+	return &rcmgr.NullScope{}, nil
 }
 
 func (*NilModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
@@ -158,7 +158,7 @@ func (*NullReceiveModular) Name() string                { return "" }
 func (*NullReceiveModular) Start(context.Context) error { return nil }
 func (*NullReceiveModular) Stop(context.Context) error  { return nil }
 func (*NullReceiveModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
-	return nil, nil
+	return &rcmgr.NullScope{}, nil
 }
 func (*NullReceiveModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
 	return nil, nil

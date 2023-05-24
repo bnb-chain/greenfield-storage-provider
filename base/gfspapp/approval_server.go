@@ -29,7 +29,7 @@ func (g *GfSpBaseApp) GfSpAskApproval(
 	case *gfspserver.GfSpAskApprovalRequest_CreateBucketApprovalTask:
 		approvalTask := task.CreateBucketApprovalTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
-		span, err := g.receiver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
+		span, err := g.approver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to reserve approval resource", "error", err)
 			return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalExhaustResource}, nil
@@ -45,7 +45,7 @@ func (g *GfSpBaseApp) GfSpAskApproval(
 	case *gfspserver.GfSpAskApprovalRequest_CreateObjectApprovalTask:
 		approvalTask := task.CreateObjectApprovalTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
-		span, err := g.receiver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
+		span, err := g.approver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to reserve approval resource", "error", err)
 			return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalExhaustResource}, nil
