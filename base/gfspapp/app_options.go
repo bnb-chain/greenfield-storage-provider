@@ -197,7 +197,8 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	dbCfg := &cfg.SpDB
 	db, err := sqldb.NewSpDB(dbCfg)
 	if err != nil {
-		return err
+		log.Warnw("if not use spdb, please ignore: failed to new spdb", "error", err)
+		return nil
 	}
 	app.gfSpDB = db
 	return nil
@@ -225,7 +226,8 @@ func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) e
 	}
 	pieceStore, err := piecestoreclient.NewStoreClient(&cfg.PieceStore)
 	if err != nil {
-		return err
+		log.Warnw("if not use piece store, please ignore: failed to new piece store", "error", err)
+		return nil
 	}
 	app.pieceStore = pieceStore
 	return nil
