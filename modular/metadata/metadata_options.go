@@ -36,6 +36,12 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 	metadata.freeQuotaPerBucket = cfg.Bucket.FreeQuotaPerBucket
 	metadata.maxMetadataRequest = cfg.Parallel.QuerySPParallelPerNode
 
+	if cfg.Metadata.IsMasterDB {
+		metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBMaster())
+	} else {
+		metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBBackup())
+	}
+
 	startDBSwitchListener(time.Second*time.Duration(cfg.Metadata.BsDBSwitchCheckIntervalSec), cfg, metadata)
 
 	return nil
@@ -52,8 +58,6 @@ func startDBSwitchListener(switchInterval time.Duration, cfg *gfspconfig.GfSpCon
 	cfg.Metadata.IsMasterDB = true
 	// launch a goroutine to handle the ticker events
 	go func() {
-		// check once at the start of the system
-		checkSignal(cfg, metadata)
 		// loop until the context is canceled (e.g., when the Metadata service is stopped)
 		for range dbSwitchTicker.C {
 			checkSignal(cfg, metadata)

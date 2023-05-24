@@ -266,8 +266,7 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 
 	app.gfBsDBMaster = bsDBBlockSyncerMaster
 	app.gfBsDBBackup = bsDBBlockSyncerBackUp
-	//default publicly used bsdb to be master db at first
-	app.gfBsDB = app.gfBsDBMaster
+
 	return nil
 }
 
