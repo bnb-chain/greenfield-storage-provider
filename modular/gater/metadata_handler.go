@@ -106,6 +106,12 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 	requestDelimiter = queryParams.Get(model.ListObjectsDelimiterQuery)
 	requestPrefix = queryParams.Get(model.ListObjectsPrefixQuery)
 
+	if requestDelimiter != "" && requestDelimiter != "/" {
+		log.CtxErrorw(reqCtx.Context(), "failed to check delimiter", "delimiter", requestBucketName, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
 	if err = s3util.CheckValidBucketName(requestBucketName); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to check bucket name", "bucket_name", requestBucketName, "error", err)
 		return
