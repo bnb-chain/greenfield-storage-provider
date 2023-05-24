@@ -107,7 +107,7 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 	requestPrefix = queryParams.Get(model.ListObjectsPrefixQuery)
 
 	if requestDelimiter != "" && requestDelimiter != "/" {
-		log.CtxErrorw(reqCtx.Context(), "failed to check delimiter", "delimiter", requestBucketName, "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to check delimiter", "delimiter", requestDelimiter, "error", err)
 		err = ErrInvalidQuery
 		return
 	}
