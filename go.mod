@@ -54,6 +54,7 @@ require (
 )
 
 require (
+	github.com/cometbft/cometbft v0.37.1
 	github.com/gogo/protobuf v1.3.3
 	golang.org/x/time v0.3.0
 )
@@ -62,18 +63,36 @@ require (
 	cosmossdk.io/api v0.4.0 // indirect
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
+	github.com/bits-and-blooms/bitset v1.2.0 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
-	github.com/cometbft/cometbft v0.37.1 // indirect
+	github.com/chzyer/readline v1.5.1 // indirect
+	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
+	github.com/cosmos/gogogateway v1.2.0 // indirect
+	github.com/creachadair/taskgroup v0.4.2 // indirect
+	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/frankban/quicktest v1.14.4 // indirect
+	github.com/go-co-op/gocron v1.13.0 // indirect
+	github.com/gogo/googleapis v1.4.1 // indirect
+	github.com/google/orderedcode v0.0.1 // indirect
+	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
+	github.com/jackc/pgx/v5 v5.2.0 // indirect
+	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
+	github.com/rs/cors v1.8.3 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
+	github.com/willf/bitset v1.1.11 // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
+	gorm.io/driver/postgres v1.4.7 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 )
 
