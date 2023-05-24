@@ -30,4 +30,12 @@ const (
 	GroupTableName = "groups"
 	// MasterDBTableName defines the name of master db table
 	MasterDBTableName = "master_db"
+	// PrefixTreeTableName defines the name of prefix tree node table
+	PrefixTreeTableName = "slash_prefix_tree_nodes"
+)
+
+// define the list objects const
+const (
+	ObjectName   = "object"
+	CommonPrefix = "common_prefix"
 )
