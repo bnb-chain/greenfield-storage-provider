@@ -67,7 +67,7 @@ func startDBSwitchListener(switchInterval time.Duration, cfg *gfspconfig.GfSpCon
 
 func checkSignal(cfg *gfspconfig.GfSpConfig, metadata *MetadataModular) {
 	// check if there is a signal from block syncer database to switch the database
-	signal, err := metadata.baseApp.GfBsDB().GetSwitchDBSignal()
+	signal, err := metadata.baseApp.GfBsDBMaster().GetSwitchDBSignal()
 	if err != nil || signal == nil {
 		log.Errorw("failed to get switch db signal", "err", err)
 	}
