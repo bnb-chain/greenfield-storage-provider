@@ -65,6 +65,8 @@ Infrastructure interface includes:
   must be a singleton.
 * [Uploader](./module/README.md): Uploader is the modular to handle put object request from user 
   account, and store it in primary SP's piece store.
+* [Metadata](./module/README.md): Metadata is the modular to handle the get request of metadata of objects,
+  buckets etc. from SP and chain.
 
 ### Common Modular
 In addition to the modular specified above, developers can also customize own modular, 

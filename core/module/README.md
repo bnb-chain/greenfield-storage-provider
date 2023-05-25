@@ -77,3 +77,7 @@ must be a singleton.
 ## Uploader
 Uploader is the modular to handle put object request from user account, and
 store it in primary SP's piece store. 
+
+## Metadata
+Metadata is the modular to handle the get request of metadata of objects,
+buckets etc. from SP and chain.
