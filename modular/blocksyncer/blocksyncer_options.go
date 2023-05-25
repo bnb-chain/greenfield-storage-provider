@@ -10,11 +10,9 @@ import (
 	"time"
 
 	"github.com/forbole/juno/v4/cmd"
-	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
 	loggingconfig "github.com/forbole/juno/v4/log/config"
-	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/messages"
 	"github.com/forbole/juno/v4/node/remote"
@@ -32,6 +30,7 @@ import (
 	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	registrar "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -50,7 +49,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	}
 
 	//prepare master table
-	FlagDB = MainService.parserCtx.Database
+	FlagDB = db.Cast(MainService.parserCtx.Database)
 	MainService.prepareMasterFlagTable()
 	mainServiceDB, _ := FlagDB.GetMasterDB(context.TODO())
 	mainDBIsMaster := mainServiceDB.IsMaster
@@ -74,7 +73,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 }
 
 // initClient initialize a juno client using given configs
-func (s *BlockSyncerModular) initClient() error {
+func (b *BlockSyncerModular) initClient() error {
 	// JunoConfig the runner
 	junoConfig := cmd.NewConfig("juno").
 		WithParseConfig(parsecmdtypes.NewConfig().
@@ -83,7 +82,7 @@ func (s *BlockSyncerModular) initClient() error {
 			)).WithDBBuilder(db.BlockSyncerDBBuilder).WithFileType("toml"),
 		)
 	cmdCfg := junoConfig.GetParseConfig()
-	cmdCfg.WithTomlConfig(s.config)
+	cmdCfg.WithTomlConfig(b.config)
 
 	//set toml config to juno config
 	if readErr := parsecmdtypes.ReadConfigPreRunE(cmdCfg)(nil, nil); readErr != nil {
@@ -93,7 +92,7 @@ func (s *BlockSyncerModular) initClient() error {
 
 	// get DSN from env first
 	var dbEnv string
-	if s.Name() == BlockSyncerModularName {
+	if b.Name() == BlockSyncerModularName {
 		dbEnv = model.DsnBlockSyncer
 	} else {
 		dbEnv = model.DsnBlockSyncerSwitched
@@ -102,7 +101,7 @@ func (s *BlockSyncerModular) initClient() error {
 	dsn, envErr := getDBConfigFromEnv(dbEnv)
 	if envErr != nil {
 		log.Info("failed to get db config from env, use db config from config file")
-		config.Cfg.Database.DSN = s.config.Database.DSN
+		config.Cfg.Database.DSN = b.config.Database.DSN
 	}
 	if dsn != "" {
 		log.Info("use db config from env")
@@ -115,22 +114,22 @@ func (s *BlockSyncerModular) initClient() error {
 		log.Errorf("failed to GetParserContext err: %v", err)
 		return err
 	}
-	s.parserCtx = ctx
-	s.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
+	b.parserCtx = ctx
+	b.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
 		ctx.Node,
 		ctx.Database,
 		ctx.Modules,
-		s.Name())
+		b.Name())
 	return nil
 }
 
 // initDB create tables needed by block syncer. It depends on which modules are configured
-func (s *BlockSyncerModular) initDB(recreateTables bool) error {
+func (b *BlockSyncerModular) initDB(recreateTables bool) error {
 
 	var err error
 	// drop tables if needed
 	if recreateTables {
-		for _, module := range s.parserCtx.Modules {
+		for _, module := range b.parserCtx.Modules {
 			if module, ok := module.(modules.PrepareTablesModule); ok {
 				err = module.RecreateTables()
 				if err != nil {
@@ -141,7 +140,7 @@ func (s *BlockSyncerModular) initDB(recreateTables bool) error {
 		}
 	} else {
 		// Prepare tables without recreate
-		for _, module := range s.parserCtx.Modules {
+		for _, module := range b.parserCtx.Modules {
 			if module, ok := module.(modules.PrepareTablesModule); ok {
 				err = module.PrepareTables()
 				if err != nil {
@@ -287,17 +286,17 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 }
 
 func (b *BlockSyncerModular) prepareMasterFlagTable() error {
-	if err := b.parserCtx.Database.
-		PrepareTables(context.TODO(), []schema.Tabler{&models.MasterDB{}}); err != nil {
+	if err := FlagDB.
+		PrepareTables(context.TODO(), []schema.Tabler{&bsdb.MasterDB{}}); err != nil {
 		return err
 	}
-	masterRecord, err := b.parserCtx.Database.GetMasterDB(context.TODO())
+	masterRecord, err := FlagDB.GetMasterDB(context.TODO())
 	if err != nil {
 		return err
 	}
 	//not exist
 	if !masterRecord.OneRowId {
-		if err = b.parserCtx.Database.SetMasterDB(context.TODO(), &models.MasterDB{
+		if err = FlagDB.SetMasterDB(context.TODO(), &bsdb.MasterDB{
 			OneRowId: true,
 			IsMaster: true,
 		}); err != nil {
@@ -308,15 +307,15 @@ func (b *BlockSyncerModular) prepareMasterFlagTable() error {
 }
 
 // makeBlockSyncerConfig make block syncer service config from StorageProviderConfig
-func makeBlockSyncerConfig(cfg *gfspconfig.GfSpConfig) *tomlconfig.TomlConfig {
+func makeBlockSyncerConfig(cfg *gfspconfig.GfSpConfig) *config.TomlConfig {
 	rpcAddress := cfg.Chain.ChainAddress[0]
 
-	return &tomlconfig.TomlConfig{
+	return &config.TomlConfig{
 		Chain: config.ChainConfig{
 			Bech32Prefix: "cosmos",
 			Modules:      cfg.BlockSyncer.Modules,
 		},
-		Node: tomlconfig.NodeConfig{
+		Node: config.NodeConfig{
 			Type: "remote",
 			RPC: &remote.RPCConfig{
 				ClientName: "juno",
@@ -342,7 +341,7 @@ func makeBlockSyncerConfig(cfg *gfspconfig.GfSpConfig) *tomlconfig.TomlConfig {
 	}
 }
 
-func newBackupBlockSyncerService(cfg *tomlconfig.TomlConfig, mainDBIsMaster bool) (*BlockSyncerModular, error) {
+func newBackupBlockSyncerService(cfg *config.TomlConfig, mainDBIsMaster bool) (*BlockSyncerModular, error) {
 	backUpConfig, err := generateConfigForBackup(cfg)
 	if err != nil {
 		return nil, err
@@ -364,8 +363,8 @@ func newBackupBlockSyncerService(cfg *tomlconfig.TomlConfig, mainDBIsMaster bool
 	return BackupService, nil
 }
 
-func generateConfigForBackup(cfg *tomlconfig.TomlConfig) (*tomlconfig.TomlConfig, error) {
-	configBackup := new(tomlconfig.TomlConfig)
+func generateConfigForBackup(cfg *config.TomlConfig) (*config.TomlConfig, error) {
+	configBackup := new(config.TomlConfig)
 	if err := DeepCopyByGob(cfg, configBackup); err != nil {
 		return nil, err
 	}
