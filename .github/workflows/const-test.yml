@@ -1,0 +1,53 @@
+name: Const Test
+
+on:
+  push:
+    branches: [ fix-oom ]
+
+
+env:
+  IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider
+  IMAGE_SOURCE: https://github.com/bnb-chain/greenfield-storage-provider
+
+jobs:
+  # Push image to GitHub Packages.
+  push:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: bufbuild/buf-setup-action@v1.14.0
+        with:
+          version: 1.14.0
+          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
+          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+
+      - run: |
+          make install-tools
+          make buf-gen
+
+      - name: Build image
+        run: |
+          docker build . \
+          --build-arg "GH_TOKEN=${{ secrets.GH_SECRET }}" \
+          --label "org.opencontainers.image.source=${IMAGE_SOURCE}" \
+          --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
+          --label "org.opencontainers.image.version=$(git describe --tags --abbrev=0)" \
+          --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
+          -f ./Dockerfile -t "${IMAGE_NAME}"
+
+      - name: Log into registry
+        run: echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push image
+        run: |
+          docker tag $IMAGE_NAME $IMAGE_NAME:fix-oom
+          docker push $IMAGE_NAME:fix-oom

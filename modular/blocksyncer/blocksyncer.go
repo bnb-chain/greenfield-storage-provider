@@ -10,10 +10,9 @@ import (
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types/config"
 
-	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 )
 
 var (
@@ -30,6 +29,8 @@ const (
 	// DefaultCheckDiffPeriod defines check interval of block height diff
 	DefaultCheckDiffPeriod = 1
 )
+
+type MigrateDBKey struct{}
 
 // BlockSyncerModular synchronizes storage,payment,permission data to db by handling related events
 type BlockSyncerModular struct {
@@ -82,7 +83,7 @@ func (b *BlockSyncerModular) Start(ctx context.Context) error {
 
 	//create backup blocksyncer
 	if NeedBackup {
-		ctxBackup := context.Background()
+		ctxBackup := context.WithValue(context.Background(), MigrateDBKey{}, true)
 		BackupService.context = ctxBackup
 
 		go BackupService.serve(ctxBackup)
@@ -118,13 +119,12 @@ func determineMainService() error {
 	if err != nil {
 		return err
 	}
-	if masterFlag.IsMaster {
-		return nil
-	} else {
+	if !masterFlag.IsMaster {
 		//switch role
 		temp := MainService
 		MainService = BackupService
 		BackupService = temp
 	}
+
 	return nil
 }

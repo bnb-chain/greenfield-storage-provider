@@ -55,7 +55,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	mainDBIsMaster := mainServiceDB.IsMaster
 
 	// init main service db, if main service DB is not current master then recreate tables
-	if err := MainService.initDB(!mainDBIsMaster || junoCfg.RecreateTables); err != nil {
+	if err := MainService.initDB(false); err != nil {
 		return nil, err
 	}
 
@@ -124,29 +124,19 @@ func (b *BlockSyncerModular) initClient() error {
 }
 
 // initDB create tables needed by block syncer. It depends on which modules are configured
-func (b *BlockSyncerModular) initDB(recreateTables bool) error {
+func (b *BlockSyncerModular) initDB(useMigrate bool) error {
 
 	var err error
-	// drop tables if needed
-	if recreateTables {
-		for _, module := range b.parserCtx.Modules {
-			if module, ok := module.(modules.PrepareTablesModule); ok {
-				err = module.RecreateTables()
-				if err != nil {
-					log.Errorw("failed to recreate tables", "error", err)
-					return err
-				}
-			}
-		}
-	} else {
-		// Prepare tables without recreate
-		for _, module := range b.parserCtx.Modules {
-			if module, ok := module.(modules.PrepareTablesModule); ok {
+	for _, module := range b.parserCtx.Modules {
+		if module, ok := module.(modules.PrepareTablesModule); ok {
+			if useMigrate {
+				err = module.AutoMigrate()
+			} else {
 				err = module.PrepareTables()
-				if err != nil {
-					log.Errorw("failed to prepare tables", "error", err)
-					return err
-				}
+			}
+			if err != nil {
+				log.Errorw("failed to recreate tables", "error", err)
+				return err
 			}
 		}
 	}
@@ -155,6 +145,10 @@ func (b *BlockSyncerModular) initDB(recreateTables bool) error {
 
 // serve start BlockSyncer rpc service
 func (b *BlockSyncerModular) serve(ctx context.Context) {
+	migrateDBAny := ctx.Value(MigrateDBKey{})
+	if migrateDB, ok := migrateDBAny.(bool); ok && migrateDB {
+		b.initDB(true)
+	}
 	// Create a queue that will collect, aggregate, and export blocks and metadata
 	exportQueue := types.NewQueue(25)
 
@@ -253,6 +247,7 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 			log.Warnf("ProcessedQueue is closed")
 			return
 		}
+		log.Infof("processedHeight:%d, will process height:%d", processedHeight, count*cycle+startHeight)
 		if processedHeight != 0 && count*cycle+startHeight-processedHeight > 4*count {
 			continue
 		}
@@ -349,9 +344,8 @@ func makeBlockSyncerConfig(cfg *gfspconfig.GfSpConfig) *config.TomlConfig {
 		Logging: loggingconfig.Config{
 			Level: "debug",
 		},
-		RecreateTables: cfg.BlockSyncer.RecreateTables,
-		EnableDualDB:   cfg.BlockSyncer.EnableDualDB,
-		DsnSwitched:    cfg.BlockSyncer.DsnSwitched,
+		EnableDualDB: cfg.BlockSyncer.EnableDualDB,
+		DsnSwitched:  cfg.BlockSyncer.DsnSwitched,
 	}
 }
 
@@ -371,7 +365,7 @@ func newBackupBlockSyncerService(cfg *config.TomlConfig, mainDBIsMaster bool) (*
 	}
 
 	// init meta db, if mainService db is not current master, backup is master, don't recreate
-	if err = BackupService.initDB(mainDBIsMaster || backUpConfig.RecreateTables); err != nil {
+	if err = BackupService.initDB(false); err != nil {
 		return nil, err
 	}
 	return BackupService, nil
