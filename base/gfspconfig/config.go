@@ -210,12 +210,11 @@ type LogConfig struct {
 }
 
 type BlockSyncerConfig struct {
-	Modules        []string
-	Dsn            string
-	DsnSwitched    string
-	RecreateTables bool
-	Workers        uint
-	EnableDualDB   bool
+	Modules      []string
+	Dsn          string
+	DsnSwitched  string
+	Workers      uint
+	EnableDualDB bool
 }
 
 type MetadataConfig struct {
