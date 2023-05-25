@@ -18,7 +18,6 @@ const (
 	KeyPrefixGfSpReplicatePieceTask         = "Uploading"
 	KeyPrefixGfSpSealObjectTask             = "Uploading"
 	KeyPrefixGfSpReceivePieceTask           = "ReceivePiece"
-	KeyPrefixGfSpDiscontinueBucket          = "DiscontinueBucket"
 )
 
 var (
@@ -77,10 +76,6 @@ func GfSpGCZombiePieceTaskKey(time int64) task.TKey {
 
 func GfSpGfSpGCMetaTaskKey(time int64) task.TKey {
 	return task.TKey(KeyPrefixGfSpGfSpGCMetaTask + CombineKey(fmt.Sprint(time)))
-}
-
-func GfSpDiscontinueBucketTaskKey(createAt uint64) task.TKey {
-	return task.TKey(KeyPrefixGfSpDiscontinueBucket + CombineKey(fmt.Sprint(createAt)))
 }
 
 func CombineKey(field ...string) string {

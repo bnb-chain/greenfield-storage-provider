@@ -110,8 +110,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	if cfg.Parallel.GlobalSyncConsensusInfoInterval == 0 {
 		cfg.Parallel.GlobalSyncConsensusInfoInterval = DefaultGlobalSyncConsensusInfoInterval
 	}
-	if cfg.Parallel.GlobalDiscontinueTimeInterval == 0 {
-		cfg.Parallel.GlobalDiscontinueTimeInterval = DefaultGlobalDiscontinueTimeInterval
+	if cfg.Parallel.DiscontinueBucketTimeInterval == 0 {
+		cfg.Parallel.DiscontinueBucketTimeInterval = DefaultGlobalDiscontinueTimeInterval
 	}
 
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
@@ -120,8 +120,9 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	manager.gcObjectBlockInterval = cfg.Parallel.GlobalGcObjectBlockInterval
 	manager.gcSafeBlockDistance = cfg.Parallel.GlobalGcObjectSafeBlockDistance
 	manager.syncConsensusInfoInterval = cfg.Parallel.GlobalSyncConsensusInfoInterval
-	manager.discontinueBucketTimeInterval = cfg.Parallel.GlobalDiscontinueTimeInterval
-	manager.discontinueBucketKeepAliveDays = cfg.Parallel.GlobalDiscontinueKeepAliveDays
+	manager.discontinueBucketEnabled = cfg.Parallel.DiscontinueBucketEnabled
+	manager.discontinueBucketTimeInterval = cfg.Parallel.DiscontinueBucketTimeInterval
+	manager.discontinueBucketKeepAliveDays = cfg.Parallel.DiscontinueBucketKeepAliveDays
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
