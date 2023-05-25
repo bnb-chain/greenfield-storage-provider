@@ -76,4 +76,4 @@ must be a singleton.
 
 ## Uploader
 Uploader is the modular to handle put object request from user account, and
-store it in primary SP's piece store. 
+store it in primary SP's piece store.
