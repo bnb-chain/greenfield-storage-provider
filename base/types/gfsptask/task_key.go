@@ -15,8 +15,8 @@ const (
 	KeyPrefixGfSpDownloadObjectTask         = "DownloadObject"
 	KeyPrefixGfSpChallengeTask              = "ChallengePiece"
 	KeyPrefixGfSpUploadObjectTask           = "Uploading"
-	KeyPrefixGfSpReplicatePieceTask         = "Uploading"
-	KeyPrefixGfSpSealObjectTask             = "Uploading"
+	KeyPrefixGfSpReplicatePieceTask         = "Replicating"
+	KeyPrefixGfSpSealObjectTask             = "Sealing"
 	KeyPrefixGfSpReceivePieceTask           = "ReceivePiece"
 )
 
