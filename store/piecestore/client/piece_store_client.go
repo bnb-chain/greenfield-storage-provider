@@ -43,7 +43,7 @@ func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, lim
 	defer func() {
 		metrics.GetPieceTimeHistogram.WithLabelValues(client.name).Observe(
 			time.Since(startTime).Seconds())
-		metrics.GetPieceTimeCounter.WithLabelValues(client.name).Inc()
+		metrics.GetPieceTotalNumberCounter.WithLabelValues(client.name).Inc()
 	}()
 
 	rc, err := client.ps.Get(ctx, key, offset, limit)
@@ -69,7 +69,7 @@ func (client *StoreClient) PutPiece(ctx context.Context, key string, value []byt
 	defer func() {
 		metrics.PutPieceTimeHistogram.WithLabelValues(client.name).Observe(
 			time.Since(startTime).Seconds())
-		metrics.PutPieceTimeCounter.WithLabelValues(client.name).Inc()
+		metrics.PutPieceTotalNumberCounter.WithLabelValues(client.name).Inc()
 		if err != nil {
 			metrics.PieceUsageAmountGauge.WithLabelValues(client.name).Add(float64(len(value)))
 		}
@@ -88,7 +88,7 @@ func (client *StoreClient) DeletePiece(ctx context.Context, key string) error {
 	defer func() {
 		metrics.DeletePieceTimeHistogram.WithLabelValues(client.name).Observe(
 			time.Since(startTime).Seconds())
-		metrics.DeletePieceTimeCounter.WithLabelValues(client.name).Inc()
+		metrics.DeletePieceTotalNumberCounter.WithLabelValues(client.name).Inc()
 		if err != nil {
 			metrics.PieceUsageAmountGauge.WithLabelValues(client.name).Add(0 - float64(valSize))
 		}

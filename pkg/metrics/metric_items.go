@@ -21,11 +21,11 @@ var MetricsItems = []prometheus.Collector{
 	TaskInQueueTimeHistogram,
 	// PieceStore metrics category
 	PutPieceTimeHistogram,
-	PutPieceTimeCounter,
+	PutPieceTotalNumberCounter,
 	GetPieceTimeHistogram,
-	GetPieceTimeCounter,
+	GetPieceTotalNumberCounter,
 	DeletePieceTimeHistogram,
-	DeletePieceTimeCounter,
+	DeletePieceTotalNumberCounter,
 	PieceUsageAmountGauge,
 	// Front module metrics category
 	UploadObjectSizeHistogram,
@@ -70,7 +70,7 @@ var MetricsItems = []prometheus.Collector{
 	DispatchGcObjectTaskCounter,
 	// Signer metrics category
 	SealObjectTimeHistogram,
-	// Spdb metrics category
+	// SPDB metrics category
 	SPDBTimeHistogram,
 	// BlockSyncer metrics category
 	BlockHeightLagGauge,
@@ -106,7 +106,7 @@ var (
 		Help:    "Track the time of putting piece data to piece store.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"put_piece_store_time"})
-	PutPieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	PutPieceTotalNumberCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "put_piece_store_number",
 		Help: "Track the total number of putting piece data to piece store.",
 	}, []string{"put_piece_store_number"})
@@ -115,7 +115,7 @@ var (
 		Help:    "Track the time of getting piece data to piece store.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"get_piece_store_time"})
-	GetPieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	GetPieceTotalNumberCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "get_piece_store_number",
 		Help: "Track the total number of getting piece data to piece store.",
 	}, []string{"get_piece_store_number"})
@@ -124,7 +124,7 @@ var (
 		Help:    "Track the time of deleting piece data to piece store.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"delete_piece_store_time"})
-	DeletePieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	DeletePieceTotalNumberCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "delete_piece_store_number",
 		Help: "Track the total number of deleting piece data to piece store.",
 	}, []string{"delete_piece_store_number"})
