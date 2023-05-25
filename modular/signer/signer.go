@@ -157,3 +157,22 @@ func (s *SignModular) SealObject(
 	_, err = s.client.SealObject(ctx, SignSeal, object)
 	return err
 }
+
+func (s *SignModular) DiscontinueBucket(
+	ctx context.Context,
+	bucket *storagetypes.MsgDiscontinueBucket) error {
+	var (
+		err       error
+		startTime = time.Now()
+	)
+	defer func() {
+		metrics.DiscontinueBucketTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
+		if err != nil {
+			metrics.DiscontinueBucketSucceedCounter.WithLabelValues(s.Name()).Inc()
+		} else {
+			metrics.DiscontinueBucketFailedCounter.WithLabelValues(s.Name()).Inc()
+		}
+	}()
+	_, err = s.client.DiscontinueBucket(ctx, SignGc, bucket)
+	return err
+}

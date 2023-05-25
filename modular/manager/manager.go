@@ -19,21 +19,30 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/service/types"
 )
 
+const (
+	// DiscontinueBucketReason defines the reason for stop serving
+	DiscontinueBucketReason = "testnet cleanup"
+
+	// DiscontinueBucketLimit define the max buckets to fetch in a single request
+	DiscontinueBucketLimit = uint64(500)
+)
+
 var _ module.Manager = &ManageModular{}
 
 type ManageModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
 
-	uploadQueue    taskqueue.TQueueOnStrategy
-	replicateQueue taskqueue.TQueueOnStrategyWithLimit
-	sealQueue      taskqueue.TQueueOnStrategyWithLimit
-	receiveQueue   taskqueue.TQueueOnStrategyWithLimit
-	gcObjectQueue  taskqueue.TQueueOnStrategyWithLimit
-	gcZombieQueue  taskqueue.TQueueOnStrategyWithLimit
-	gcMetaQueue    taskqueue.TQueueOnStrategyWithLimit
-	downloadQueue  taskqueue.TQueueOnStrategy
-	challengeQueue taskqueue.TQueueOnStrategy
+	uploadQueue            taskqueue.TQueueOnStrategy
+	replicateQueue         taskqueue.TQueueOnStrategyWithLimit
+	sealQueue              taskqueue.TQueueOnStrategyWithLimit
+	receiveQueue           taskqueue.TQueueOnStrategyWithLimit
+	gcObjectQueue          taskqueue.TQueueOnStrategyWithLimit
+	gcZombieQueue          taskqueue.TQueueOnStrategyWithLimit
+	gcMetaQueue            taskqueue.TQueueOnStrategyWithLimit
+	downloadQueue          taskqueue.TQueueOnStrategy
+	challengeQueue         taskqueue.TQueueOnStrategy
+	discontinueBucketQueue taskqueue.TQueueOnStrategy
 
 	maxUploadObjectNumber int
 
@@ -44,6 +53,9 @@ type ManageModular struct {
 
 	syncConsensusInfoInterval uint64
 	statisticsOutputInterval  int
+
+	discontinueBucketTimeInterval  int
+	discontinueBucketKeepAliveDays int
 }
 
 func (m *ManageModular) Name() string {
@@ -62,6 +74,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
+	m.discontinueBucketQueue.SetRetireTaskStrategy(nil)
+
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
 		return err
@@ -80,6 +94,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 	gcObjectTicker := time.NewTicker(time.Duration(m.gcObjectTimeInterval) * time.Second)
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
+	discontinueBucketTicker := time.NewTicker(time.Duration(m.discontinueBucketTimeInterval) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
@@ -116,6 +131,16 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				metrics.GCBlockNumberGauge.WithLabelValues(m.Name()).Set(float64(m.gcBlockHeight))
 			}
 			log.CtxErrorw(ctx, "finish to generate gc object task", "info", task.Info(), "error", err)
+		case <-discontinueBucketTicker.C:
+			if m.discontinueBucketKeepAliveDays <= 0 {
+				continue
+			}
+			createAt := time.Now().AddDate(0, 0, -m.discontinueBucketKeepAliveDays)
+			task := &gfsptask.GfSpDiscontinueBucketTask{}
+			task.InitDiscontinueBucketTask(uint64(createAt.Unix()), DiscontinueBucketReason, DiscontinueBucketLimit,
+				m.baseApp.TaskPriority(task), m.baseApp.TaskTimeout(task, 0))
+			err := m.discontinueBucketQueue.Push(task)
+			log.CtxErrorw(ctx, "finish to generate discontinue task", "info", task.Info(), "error", err)
 		}
 	}
 }

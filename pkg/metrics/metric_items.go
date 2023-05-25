@@ -192,6 +192,14 @@ var (
 		Name: "seal_object_failure",
 		Help: "Track seal object failure total number",
 	}, []string{"seal_object_failure"})
+	DiscontinueBucketSucceedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "discontinue_bucket_success",
+		Help: "Track discontinue bucket success total number",
+	}, []string{"seal_object_success"})
+	DiscontinueBucketFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "discontinue_bucket_failure",
+		Help: "Track discontinue bucket failure total number",
+	}, []string{"seal_object_failure"})
 	GCObjectCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "delete_object_number",
 		Help: "Track deleted object number.",
@@ -306,6 +314,11 @@ var (
 		Help:    "Track the time of seal object time to chain.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"seal_object_time"})
+	DiscontinueBucketTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "discontinue_bucket_time",
+		Help:    "Track the time of discontinue bucket time to chain.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"discontinue_bucket_time"})
 
 	// spdb metrics
 	SPDBTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{

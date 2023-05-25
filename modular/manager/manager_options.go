@@ -53,6 +53,10 @@ const (
 	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
+
+	// DefaultGlobalDiscontinueTimeInterval defines the default interval for generating
+	// discontinue bucket task.
+	DefaultGlobalDiscontinueTimeInterval = 30 * 60
 )
 
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -106,12 +110,18 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	if cfg.Parallel.GlobalSyncConsensusInfoInterval == 0 {
 		cfg.Parallel.GlobalSyncConsensusInfoInterval = DefaultGlobalSyncConsensusInfoInterval
 	}
+	if cfg.Parallel.GlobalDiscontinueTimeInterval == 0 {
+		cfg.Parallel.GlobalDiscontinueTimeInterval = DefaultGlobalDiscontinueTimeInterval
+	}
+
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	manager.maxUploadObjectNumber = cfg.Parallel.GlobalMaxUploadingParallel
 	manager.gcObjectTimeInterval = cfg.Parallel.GlobalBatchGcObjectTimeInterval
 	manager.gcObjectBlockInterval = cfg.Parallel.GlobalGcObjectBlockInterval
 	manager.gcSafeBlockDistance = cfg.Parallel.GlobalGcObjectSafeBlockDistance
 	manager.syncConsensusInfoInterval = cfg.Parallel.GlobalSyncConsensusInfoInterval
+	manager.discontinueBucketTimeInterval = cfg.Parallel.GlobalDiscontinueTimeInterval
+	manager.discontinueBucketKeepAliveDays = cfg.Parallel.GlobalDiscontinueKeepAliveDays
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(

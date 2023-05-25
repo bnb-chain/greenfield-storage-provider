@@ -510,3 +510,28 @@ type GCMetaTask interface {
 	// deleted object id and the number that has been deleted.
 	SetGCMetaStatus(uint64, uint64)
 }
+
+// The DiscontinueBucketTask is the interface to record the information for discontinue bucket to
+// the greenfield.
+type DiscontinueBucketTask interface {
+	Task
+	// InitDiscontinueBucketTask inits the DiscontinueBucketTask.
+	InitDiscontinueBucketTask(
+		createAt uint64,
+		reason string,
+		limit uint64,
+		priority TPriority,
+		timeout int64)
+	// GetCreateAt returns the creation time of buckets, before which the buckets will be discontinued.
+	GetCreateAt() uint64
+	// SetCreateAt sets the creation time of buckets, before which the buckets will be discontinued.
+	SetCreateAt(uint64)
+	// GetReason returns the reason for discontinue.
+	GetReason() string
+	// SetReason sets the reason for discontinue.
+	SetReason(string)
+	// GetLimit returns the count of buckets returned by metadata for discontinue.
+	GetLimit() uint64
+	// SetLimit sets the count of buckets returned by metadata for discontinue.
+	SetLimit(uint64)
+}

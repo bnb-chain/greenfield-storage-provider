@@ -169,6 +169,9 @@ type ParallelConfig struct {
 	ChallengePieceParallelPerNode       int
 	AskReplicateApprovalParallelPerNode int
 	QuerySPParallelPerNode              int64
+
+	GlobalDiscontinueTimeInterval  int
+	GlobalDiscontinueKeepAliveDays int
 }
 
 type TaskConfig struct {

@@ -90,6 +90,8 @@ var (
 	ErrSignMsg = errors.New("sign message with private key failed")
 	// ErrSealObjectOnChain defines send seal object tx to chain error
 	ErrSealObjectOnChain = errors.New("send sealObject msg failed")
+	// ErrDiscontinueBucketOnChain defines send discontinue bucket tx to chain error
+	ErrDiscontinueBucketOnChain = errors.New("send discontinueBucket msg failed")
 )
 
 // metadata service error

@@ -120,3 +120,11 @@ message GfSpGCMetaTask {
   uint64 delete_count = 3;
   bool running = 4;
 }
+
+message GfSpDiscontinueBucketTask {
+  GfSpTask task = 1;
+  uint64 create_at = 2;
+  string reason = 3;
+  uint64 limit = 4;
+  bool running = 5;
+}

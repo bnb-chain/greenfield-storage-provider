@@ -277,3 +277,34 @@ func (e *ExecuteModular) HandleGCMetaTask(
 	task coretask.GCMetaTask) {
 	log.CtxWarn(ctx, "gc meta future support")
 }
+
+func (e *ExecuteModular) HandleDiscontinueBucketTask(
+	ctx context.Context,
+	task coretask.DiscontinueBucketTask) {
+	if task == nil {
+		return
+	}
+
+	buckets, err := e.baseApp.GfSpClient().ListExpiredBucketsBySp(context.Background(),
+		int64(task.GetCreateAt()), e.baseApp.OperateAddress(), int64(task.GetLimit()))
+	if err != nil {
+		log.Errorw("failed to query expired buckets", "error", err)
+		return
+	}
+
+	for _, bucket := range buckets {
+		time.Sleep(1 * time.Second)
+		log.Infow("start to discontinue bucket", "bucket_name", bucket.BucketInfo.BucketName)
+		discontinueBucket := &storagetypes.MsgDiscontinueBucket{
+			BucketName: bucket.BucketInfo.BucketName,
+			Reason:     task.GetReason(),
+		}
+		err = e.baseApp.GfSpClient().DiscontinueBucket(ctx, discontinueBucket)
+		if err != nil {
+			log.Errorw("failed to discontinue bucket on chain", "error", err)
+			continue
+		} else {
+			log.Infow("succeed to discontinue bucket", "bucket_name", discontinueBucket.BucketName)
+		}
+	}
+}
