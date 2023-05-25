@@ -36,6 +36,7 @@ Infrastructure interface includes:
 * [PieceOp](./piecestore/piecestore.go): PieceOp is the helper interface for piece key 
   operator and piece size calculate.
 * [SPDB](./spdb/spdb.go): SPDB is the interface to records the SP metadata.
+* [BSDB](./bsdb/bsdb.go): BSDB is the interface to records the chain metadata.
 * [TaskQueue](./taskqueue/README.md): Task is the interface to the smallest unit of 
   SP background service interaction. Task scheduling and execution are directly related 
   to the order of task arrival, so task queue is a relatively important basic interface 
@@ -65,8 +66,6 @@ Infrastructure interface includes:
   must be a singleton.
 * [Uploader](./module/README.md): Uploader is the modular to handle put object request from user 
   account, and store it in primary SP's piece store.
-* [Metadata](./module/README.md): Metadata is the modular to handle the get request of metadata of objects,
-  buckets etc. from SP and chain.
 
 ### Common Modular
 In addition to the modular specified above, developers can also customize own modular, 
