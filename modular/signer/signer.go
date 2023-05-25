@@ -1,4 +1,4 @@
-package singer
+package signer
 
 import (
 	"context"
@@ -16,39 +16,39 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-var _ module.Signer = &SingModular{}
+var _ module.Signer = &SignModular{}
 
-type SingModular struct {
+type SignModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	client  *GreenfieldChainSignClient
 }
 
-func (s *SingModular) Name() string {
+func (s *SignModular) Name() string {
 	return module.SignerModularName
 }
 
-func (s *SingModular) Start(ctx context.Context) error {
+func (s *SignModular) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s *SingModular) Stop(ctx context.Context) error {
+func (s *SignModular) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *SingModular) ReserveResource(
+func (s *SignModular) ReserveResource(
 	ctx context.Context,
 	state *rcmgr.ScopeStat) (
 	rcmgr.ResourceScopeSpan, error) {
 	return &rcmgr.NullScope{}, nil
 }
 
-func (s *SingModular) ReleaseResource(
+func (s *SignModular) ReleaseResource(
 	ctx context.Context,
 	span rcmgr.ResourceScopeSpan) {
 	span.Done()
 }
 
-func (s *SingModular) SignCreateBucketApproval(
+func (s *SignModular) SignCreateBucketApproval(
 	ctx context.Context,
 	bucket *storagetypes.MsgCreateBucket) (
 	[]byte, error) {
@@ -60,7 +60,7 @@ func (s *SingModular) SignCreateBucketApproval(
 	return sig, nil
 }
 
-func (s *SingModular) SignCreateObjectApproval(
+func (s *SignModular) SignCreateObjectApproval(
 	ctx context.Context,
 	object *storagetypes.MsgCreateObject) (
 	[]byte, error) {
@@ -72,7 +72,7 @@ func (s *SingModular) SignCreateObjectApproval(
 	return sig, nil
 }
 
-func (s *SingModular) SignReplicatePieceApproval(
+func (s *SignModular) SignReplicatePieceApproval(
 	ctx context.Context,
 	task task.ApprovalReplicatePieceTask) (
 	[]byte, error) {
@@ -84,7 +84,7 @@ func (s *SingModular) SignReplicatePieceApproval(
 	return sig, nil
 }
 
-func (s *SingModular) SignReceivePieceTask(
+func (s *SignModular) SignReceivePieceTask(
 	ctx context.Context,
 	task task.ReceivePieceTask) (
 	[]byte, error) {
@@ -96,7 +96,7 @@ func (s *SingModular) SignReceivePieceTask(
 	return sig, nil
 }
 
-func (s *SingModular) SignIntegrityHash(
+func (s *SignModular) SignIntegrityHash(
 	ctx context.Context,
 	objectID uint64,
 	checksums [][]byte) (
@@ -115,7 +115,7 @@ func (s *SingModular) SignIntegrityHash(
 	return sig, integrityHash, nil
 }
 
-func (s *SingModular) SignP2PPingMsg(
+func (s *SignModular) SignP2PPingMsg(
 	ctx context.Context,
 	ping *gfspp2p.GfSpPing) (
 	[]byte, error) {
@@ -127,7 +127,7 @@ func (s *SingModular) SignP2PPingMsg(
 	return sig, nil
 }
 
-func (s *SingModular) SignP2PPongMsg(
+func (s *SignModular) SignP2PPongMsg(
 	ctx context.Context,
 	pong *gfspp2p.GfSpPong) (
 	[]byte, error) {
@@ -139,7 +139,7 @@ func (s *SingModular) SignP2PPongMsg(
 	return sig, nil
 }
 
-func (s *SingModular) SealObject(
+func (s *SignModular) SealObject(
 	ctx context.Context,
 	object *storagetypes.MsgSealObject) error {
 	var (

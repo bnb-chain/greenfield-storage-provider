@@ -13,9 +13,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	piecestoreclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
@@ -35,32 +39,49 @@ const (
 	// DefaultChainAddress defines the default greenfield address.
 	DefaultChainAddress = "http://localhost:26750"
 
-	// DefaultMemoryLimit defines the default memory limit for rcmgr to use.
+	// DefaultMemoryLimit defines the default memory limit for resource manager.
 	DefaultMemoryLimit = 8 * 1024 * 1024 * 1024
-	// DefaultTaskTotalLimit defines the default total task limit for rcmgr to use.
+	// DefaultTaskTotalLimit defines the default total task limit for resource manager.
 	DefaultTaskTotalLimit = 10240
-	// DefaultHighTaskLimit defines the default high priority task limit for rcmgr to use.
+	// DefaultHighTaskLimit defines the default high priority task limit for resource manager.
 	DefaultHighTaskLimit = 128
-	// DefaultMediumTaskLimit defines the default medium priority task limit for rcmgr to use.
+	// DefaultMediumTaskLimit defines the default medium priority task limit for resource manager.
 	DefaultMediumTaskLimit = 1024
-	// DefaultLowTaskLimit defines the default low priority task limit for rcmgr to use.
+	// DefaultLowTaskLimit defines the default low priority task limit for resource manager.
 	DefaultLowTaskLimit = 16
 
-	// SpDBUser defines env variable name for sp db user name
+	// SpDBUser defines env variable name for sp db user name.
 	SpDBUser = "SP_DB_USER"
-	// SpDBPasswd defines env variable name for sp db user passwd
+	// SpDBPasswd defines env variable name for sp db user passwd.
 	SpDBPasswd = "SP_DB_PASSWORD"
-	// SpDBAddress defines env variable name for sp db address
+	// SpDBAddress defines env variable name for sp db address.
 	SpDBAddress = "SP_DB_ADDRESS"
-	// SpDBDataBase defines env variable name for sp db database
+	// SpDBDataBase defines env variable name for sp db database.
 	SpDBDataBase = "SP_DB_DATABASE"
+	// BsDBUser defines env variable name for block syncer db user name
+	BsDBUser = "BS_DB_USER"
+	// BsDBPasswd defines env variable name for block syncer db user passwd
+	BsDBPasswd = "BS_DB_PASSWORD"
+	// BsDBAddress defines env variable name for block syncer db address
+	BsDBAddress = "BS_DB_ADDRESS"
+	// BsDBDataBase defines env variable name for block syncer db database
+	BsDBDataBase = "BS_DB_DATABASE"
+	// BsDBSwitchedUser defines env variable name for switched block syncer db user name
+	BsDBSwitchedUser = "BS_DB_SWITCHED_USER"
+	// BsDBSwitchedPasswd defines env variable name for switched block syncer db user passwd
+	BsDBSwitchedPasswd = "BS_DB_SWITCHED_PASSWORD"
+	// BsDBSwitchedAddress defines env variable name for switched block syncer db address
+	BsDBSwitchedAddress = "BS_DB_SWITCHED_ADDRESS"
+	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database
+	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
+
 	// DefaultConnMaxLifetime defines the default max liveness time of connection
 	DefaultConnMaxLifetime = 60
-	// DefaultConnMaxIdleTime defines the default max idle time of connection
+	// DefaultConnMaxIdleTime defines the default max idle time of connection.
 	DefaultConnMaxIdleTime = 30
-	// DefaultMaxIdleConns defines the default max number of idle connections
+	// DefaultMaxIdleConns defines the default max number of idle connections.
 	DefaultMaxIdleConns = 16
-	// DefaultMaxOpenConns defines the default max number of open connections
+	// DefaultMaxOpenConns defines the default max number of open connections.
 	DefaultMaxOpenConns = 32
 )
 
@@ -123,8 +144,8 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Endpoint.MetadataEndpoint == "" {
 		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
 	}
-	if cfg.Endpoint.RetrieverEndpoint == "" {
-		cfg.Endpoint.RetrieverEndpoint = cfg.GrpcAddress
+	if cfg.Endpoint.MetadataEndpoint == "" {
+		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
 	}
 	if cfg.Endpoint.UploaderEndpoint == "" {
 		cfg.Endpoint.UploaderEndpoint = cfg.GrpcAddress
@@ -144,7 +165,6 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		cfg.Endpoint.DownloaderEndpoint,
 		cfg.Endpoint.ReceiverEndpoint,
 		cfg.Endpoint.MetadataEndpoint,
-		cfg.Endpoint.RetrieverEndpoint,
 		cfg.Endpoint.UploaderEndpoint,
 		cfg.Endpoint.P2PEndpoint,
 		cfg.Endpoint.SignerEndpoint,
@@ -197,10 +217,85 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	dbCfg := &cfg.SpDB
 	db, err := sqldb.NewSpDB(dbCfg)
 	if err != nil {
-		return err
+		log.Warnw("if not use spdb, please ignore: failed to new spdb", "error", err)
+		return nil
 	}
 	app.gfSpDB = db
 	return nil
+}
+
+func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+	if val, ok := os.LookupEnv(BsDBUser); ok {
+		cfg.BsDB.User = val
+	}
+	if val, ok := os.LookupEnv(BsDBPasswd); ok {
+		cfg.BsDB.Passwd = val
+	}
+	if val, ok := os.LookupEnv(BsDBAddress); ok {
+		cfg.BsDB.Address = val
+	}
+	if val, ok := os.LookupEnv(BsDBDataBase); ok {
+		cfg.BsDB.Database = val
+	}
+	if val, ok := os.LookupEnv(BsDBSwitchedUser); ok {
+		cfg.BsDBBackup.User = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedPasswd); ok {
+		cfg.BsDBBackup.Passwd = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedAddress); ok {
+		cfg.BsDBBackup.Address = val
+	}
+	if val, ok := os.LookupEnv(model.BsDBSwitchedDataBase); ok {
+		cfg.BsDBBackup.Database = val
+	}
+
+	DefaultGfBsDB(&cfg.BsDB)
+	DefaultGfBsDB(&cfg.BsDBBackup)
+
+	bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
+	if err != nil {
+		return err
+	}
+
+	bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
+	if err != nil {
+		return err
+	}
+
+	app.gfBsDBMaster = bsDBBlockSyncerMaster
+	app.gfBsDBBackup = bsDBBlockSyncerBackUp
+
+	return nil
+}
+
+// DefaultGfBsDB cast block syncer db connections, user and password if not loaded from env vars
+func DefaultGfBsDB(config *config.SQLDBConfig) {
+
+	if config.ConnMaxLifetime == 0 {
+		config.ConnMaxLifetime = DefaultConnMaxLifetime
+	}
+	if config.ConnMaxIdleTime == 0 {
+		config.ConnMaxIdleTime = DefaultConnMaxIdleTime
+	}
+	if config.MaxIdleConns == 0 {
+		config.MaxIdleConns = DefaultMaxIdleConns
+	}
+	if config.MaxOpenConns == 0 {
+		config.MaxOpenConns = DefaultMaxOpenConns
+	}
+	if config.User == "" {
+		config.User = "root"
+	}
+	if config.Passwd == "" {
+		config.User = "test"
+	}
+	if config.Address == "" {
+		config.User = "127.0.0.1:3306"
+	}
+	if config.Database == "" {
+		config.Database = "block_syncer_db"
+	}
 }
 
 func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
@@ -225,7 +320,8 @@ func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) e
 	}
 	pieceStore, err := piecestoreclient.NewStoreClient(&cfg.PieceStore)
 	if err != nil {
-		return err
+		log.Warnw("if not use piece store, please ignore: failed to new piece store", "error", err)
+		return nil
 	}
 	app.pieceStore = pieceStore
 	return nil
@@ -273,7 +369,11 @@ func DefaultGfSpResourceManagerOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConf
 	if cfg.Customize.Rcmgr == nil {
 		cfg.Customize.Rcmgr = gfsprcmgr.NewResourceManager(cfg.Customize.RcLimiter)
 	}
-	app.rcmgr = cfg.Customize.Rcmgr
+	if !cfg.Rcmgr.DisableRcmgr {
+		app.rcmgr = cfg.Customize.Rcmgr
+	} else {
+		app.rcmgr = &corercmgr.NullResourceManager{}
+	}
 	return nil
 }
 
@@ -340,7 +440,7 @@ func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		app.metrics = &coremodule.NullModular{}
 	}
 	if cfg.Monitor.MetricsHttpAddress == "" {
-		cfg.Monitor.MetricsHttpAddress = DefaultPprofAddress
+		cfg.Monitor.MetricsHttpAddress = DefaultMetricsAddress
 	}
 	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHttpAddress)
 	app.RegisterServices(app.metrics)
@@ -352,7 +452,7 @@ func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error 
 		app.pprof = &coremodule.NullModular{}
 	}
 	if cfg.Monitor.PProfHttpAddress == "" {
-		cfg.Monitor.PProfHttpAddress = DefaultMetricsAddress
+		cfg.Monitor.PProfHttpAddress = DefaultPprofAddress
 	}
 	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHttpAddress)
 	app.RegisterServices(app.pprof)
@@ -363,6 +463,7 @@ var gfspBaseAppDefaultOptions = []Option{
 	DefaultStaticOption,
 	DefaultGfSpClientOption,
 	DefaultGfSpDBOption,
+	DefaultGfBsDBOption,
 	DefaultGfSpPieceStoreOption,
 	DefaultGfSpPieceOpOption,
 	DefaultGfSpResourceManagerOption,

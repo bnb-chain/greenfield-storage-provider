@@ -1,4 +1,4 @@
-package singer
+package signer
 
 import (
 	"context"

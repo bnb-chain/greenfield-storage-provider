@@ -3,7 +3,10 @@ package gater
 import (
 	"encoding/xml"
 	"net/http"
+	"net/url"
 	"strings"
+
+	"github.com/bnb-chain/greenfield/types/s3util"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -50,7 +53,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}
@@ -150,7 +153,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			return
 		}
 	}
@@ -211,6 +214,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	log.CtxDebugw(reqCtx.Context(), "succeed to download object")
 }
 
+// queryUploadProgressHandler handles the query uploaded object progress request.
 func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error
@@ -243,7 +247,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}
@@ -284,4 +288,140 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		return
 	}
 	log.Debugw("succeed to query upload progress", "xml_info", xmlInfo)
+}
+
+// getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
+func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request, isDownload bool) {
+	var (
+		err         error
+		reqCtx      *RequestContext
+		isRange     bool
+		rangeStart  int64
+		rangeEnd    int64
+		redirectUrl string
+		params      *storagetypes.Params
+	)
+
+	// ignore the error, because the universal endpoint does not need signature
+	reqCtx, _ = NewRequestContext(r)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	escapedObjectName, err := url.PathUnescape(reqCtx.objectName)
+	if err != nil {
+		log.Errorw("failed to unescape object name ", "object_name", reqCtx.objectName, "error", err)
+		return
+	}
+
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		return
+	}
+	if err = s3util.CheckValidObjectName(escapedObjectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", escapedObjectName, "error", err)
+		return
+	}
+
+	getBucketInfoRes, err := g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), reqCtx.bucketName, true)
+	if err != nil || getBucketInfoRes == nil || getBucketInfoRes.GetBucketInfo() == nil {
+		log.Errorw("failed to check bucket info", "bucket_name", reqCtx.bucketName, "error", err)
+		return
+	}
+
+	bucketPrimarySpAddress := getBucketInfoRes.GetBucketInfo().GetPrimarySpAddress()
+
+	// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
+	if bucketPrimarySpAddress != g.baseApp.OperateAddress() {
+		log.Debugw("primary sp address not matched ",
+			"bucketPrimarySpAddress", bucketPrimarySpAddress, "gateway.config.SpOperatorAddress", g.baseApp.OperateAddress(),
+		)
+
+		endpoint, err := g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), bucketPrimarySpAddress)
+
+		if err != nil || endpoint == "" {
+			log.Errorw("failed to get endpoint by address ", "sp_address", reqCtx.bucketName, "error", err)
+			return
+		}
+
+		if isDownload {
+			redirectUrl = endpoint + "/download/" + reqCtx.bucketName + "/" + reqCtx.objectName
+		} else {
+			redirectUrl = endpoint + "/view/" + reqCtx.bucketName + "/" + reqCtx.objectName
+		}
+
+		log.Debugw("getting redirect url:", "redirectUrl", redirectUrl)
+
+		http.Redirect(w, r, redirectUrl, 302)
+		return
+	}
+
+	// In first phase, do not provide universal endpoint for private object
+	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, false)
+	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
+		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
+		return
+	}
+
+	if getObjectInfoRes.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+		log.Errorw("object is not sealed",
+			"status", getObjectInfoRes.GetObjectInfo().GetObjectStatus())
+		return
+	}
+
+	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
+		err = ErrConsensus
+		return
+	}
+
+	var low int64
+	var high int64
+	if isRange {
+		low = rangeStart
+		high = rangeEnd
+	} else {
+		low = 0
+		high = int64(getObjectInfoRes.GetObjectInfo().GetPayloadSize()) - 1
+	}
+
+	task := &gfsptask.GfSpDownloadObjectTask{}
+	task.InitDownloadObjectTask(getObjectInfoRes.GetObjectInfo(), getBucketInfoRes.GetBucketInfo(), params, g.baseApp.TaskPriority(task), reqCtx.Account(),
+		low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
+	data, err := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
+		return
+	}
+
+	if isDownload {
+		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
+	} else {
+		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionInlineValue)
+	}
+
+	w.Write(data)
+	w.Header().Set(model.ContentTypeHeader, getObjectInfoRes.GetObjectInfo().GetContentType())
+	w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(getObjectInfoRes.GetObjectInfo().GetPayloadSize()))
+	log.CtxDebugw(reqCtx.Context(), "succeed to download object for universal endpoint")
+}
+
+// downloadObjectByUniversalEndpointHandler handles the download object request sent by universal endpoint
+func (g *GateModular) downloadObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
+	g.getObjectByUniversalEndpointHandler(w, r, true)
+}
+
+// viewObjectByUniversalEndpointHandler handles the view object request sent by universal endpoint
+func (g *GateModular) viewObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
+	g.getObjectByUniversalEndpointHandler(w, r, false)
 }

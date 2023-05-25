@@ -23,7 +23,7 @@ type PieceOp interface {
 	// max segment size that comes from storage params.
 	SegmentSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64) int64
 	// PieceSize returns the ec piece size of ec index, by object payload size, max segment
-	//size and chunk number that ths last two params comes from storage params.
+	// size and chunk number that ths last two params comes from storage params.
 	PieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64, chunkNum uint32) int64
 }
 

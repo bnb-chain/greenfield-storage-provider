@@ -185,7 +185,7 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	// off of the export queue.
-	time.Sleep(time.Second)
+	Cast(b.parserCtx.Indexer).ProcessedQueue <- uint64(0) // init ProcessedQueue
 	go worker.Start(ctx)
 }
 
@@ -239,7 +239,8 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 
 func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 	count := uint64(b.config.Parser.Workers)
-	for cycle := uint64(0); ; cycle++ {
+	cycle := uint64(0)
+	for {
 		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 		latestBlockHeight := latestBlockHeightAny.(int64)
 		if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
@@ -247,42 +248,55 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 			Cast(b.parserCtx.Indexer).GetCatchUpFlag().Store(int64(count*cycle + startHeight - 1))
 			break
 		}
-		wg := &sync.WaitGroup{}
-		wg.Add(int(count))
-		for i := uint64(0); i < count; i++ {
-			go func(idx, c uint64) {
-				defer wg.Done()
-				height := idx + count*c + startHeight
-				if height > uint64(latestBlockHeight) {
-					return
-				}
-				for {
-					block, err := b.parserCtx.Node.Block(int64(height))
-					if err != nil {
-						log.Warnf("failed to get block from node: %s", err)
-						continue
-					}
-
-					events, err := b.parserCtx.Node.BlockResults(int64(height))
-					if err != nil {
-						log.Warnf("failed to get block results from node: %s", err)
-						continue
-					}
-					txs, err := b.parserCtx.Node.Txs(block)
-					if err != nil {
-						log.Warnf("failed to get block results from node: %s", err)
-						continue
-					}
-					heightKey := fmt.Sprintf("%s-%d", b.Name(), height)
-					blockMap.Store(heightKey, block)
-					eventMap.Store(heightKey, events)
-					txMap.Store(heightKey, txs)
-					break
-				}
-			}(i, cycle)
+		processedHeight, ok := <-Cast(b.parserCtx.Indexer).ProcessedQueue
+		if !ok {
+			log.Warnf("ProcessedQueue is closed")
+			return
 		}
-		wg.Wait()
+		if processedHeight != 0 && count*cycle+startHeight-processedHeight > 4*count {
+			continue
+		}
+		b.fetchData(count, cycle, startHeight, latestBlockHeight)
+		cycle++
 	}
+}
+
+func (b *BlockSyncerModular) fetchData(count, cycle, startHeight uint64, latestBlockHeight int64) {
+	wg := &sync.WaitGroup{}
+	wg.Add(int(count))
+	for i := uint64(0); i < count; i++ {
+		go func(idx, c uint64) {
+			defer wg.Done()
+			height := idx + count*c + startHeight
+			if height > uint64(latestBlockHeight) {
+				return
+			}
+			for {
+				block, err := b.parserCtx.Node.Block(int64(height))
+				if err != nil {
+					log.Warnf("failed to get block from node: %s", err)
+					continue
+				}
+
+				events, err := b.parserCtx.Node.BlockResults(int64(height))
+				if err != nil {
+					log.Warnf("failed to get block results from node: %s", err)
+					continue
+				}
+				txs, err := b.parserCtx.Node.Txs(block)
+				if err != nil {
+					log.Warnf("failed to get block results from node: %s", err)
+					continue
+				}
+				heightKey := fmt.Sprintf("%s-%d", b.Name(), height)
+				blockMap.Store(heightKey, block)
+				eventMap.Store(heightKey, events)
+				txMap.Store(heightKey, txs)
+				break
+			}
+		}(i, cycle)
+	}
+	wg.Wait()
 }
 
 func (b *BlockSyncerModular) prepareMasterFlagTable() error {

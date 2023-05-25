@@ -9,7 +9,7 @@ GfSpBaseApp only implements specific processes, which are the standard part
 of GfSp Framework, and the unnecessary parts are customized by modular.
 
 Non-standard processes can register Grpc service to GfSpBaseApp by calling
-ServerForRegister, see [retriever](../modular/retriever/retriever.go) as 
+ServerForRegister, see [metadata](../modular/metadata/metadata.go) as 
 example. 
 
 GfSpBaseApp also implements the all [Core Infrastructure Interface](../core/README.md).

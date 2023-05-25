@@ -26,11 +26,12 @@ import (
 
 func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string) parser.Indexer {
 	return &Impl{
-		codec:       codec,
-		Node:        proxy,
-		DB:          db,
-		Modules:     modules,
-		ServiceName: serviceName,
+		codec:          codec,
+		Node:           proxy,
+		DB:             db,
+		Modules:        modules,
+		ServiceName:    serviceName,
+		ProcessedQueue: make(chan uint64),
 	}
 }
 
@@ -42,6 +43,7 @@ type Impl struct {
 
 	LatestBlockHeight atomic.Value
 	CatchUpFlag       atomic.Value
+	ProcessedQueue    chan uint64
 
 	ServiceName string
 }

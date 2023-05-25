@@ -250,7 +250,7 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	return coretask.UnKnownTaskPriority
 }
 
-// TaskPriorityLevel returns the task priority level, it is compute by task priority.
+// TaskPriorityLevel returns the task priority level, it is computed by task priority.
 func (g *GfSpBaseApp) TaskPriorityLevel(task coretask.Task) coretask.TPriorityLevel {
 	if task.GetPriority() <= coretask.DefaultSmallerPriority {
 		return coretask.TLowPriorityLevel

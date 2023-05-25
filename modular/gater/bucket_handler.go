@@ -7,12 +7,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	retrievertypes "github.com/bnb-chain/greenfield-storage-provider/modular/retriever/types"
+	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
+// getBucketReadQuotaHandler handles the get bucket read quota request.
 func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err                   error
@@ -45,7 +46,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}
@@ -94,6 +95,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	log.CtxDebugw(reqCtx.Context(), "succeed to get bucket quota", "xml_info", xmlInfo)
 }
 
+// listBucketReadRecordHandler handles list bucket read record request.
 func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
@@ -102,7 +104,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		startTimestampUs int64
 		endTimestampUs   int64
 		maxRecordNum     int64
-		records          []*retrievertypes.ReadRecord
+		records          []*metadatatypes.ReadRecord
 		nextTimestampUs  int64
 	)
 	defer func() {
@@ -129,7 +131,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operator")
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}

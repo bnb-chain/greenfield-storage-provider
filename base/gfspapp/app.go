@@ -13,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 const (
@@ -27,11 +28,14 @@ type GfSpBaseApp struct {
 	server *grpc.Server
 	client *gfspclient.GfSpClient
 
-	gfSpDB     spdb.SPDB
-	pieceStore piecestore.PieceStore
-	pieceOp    piecestore.PieceOp
-	rcmgr      corercmgr.ResourceManager
-	chain      consensus.Consensus
+	gfSpDB       spdb.SPDB
+	gfBsDB       bsdb.BSDB
+	gfBsDBMaster bsdb.BSDB
+	gfBsDBBackup bsdb.BSDB
+	pieceStore   piecestore.PieceStore
+	pieceOp      piecestore.PieceOp
+	rcmgr        corercmgr.ResourceManager
+	chain        consensus.Consensus
 
 	approver   module.Approver
 	authorizer module.Authorizer
@@ -74,7 +78,7 @@ func (g *GfSpBaseApp) AppID() string {
 	return g.appID
 }
 
-// GfSpClient returns the sp client that grpc and http protocol.
+// GfSpClient returns the sp client that includes inner grpc and outer http protocol.
 func (g *GfSpBaseApp) GfSpClient() *gfspclient.GfSpClient {
 	return g.client
 }
@@ -102,6 +106,27 @@ func (g *GfSpBaseApp) OperateAddress() string {
 // GfSpDB returns the sp db client.
 func (g *GfSpBaseApp) GfSpDB() spdb.SPDB {
 	return g.gfSpDB
+}
+
+// GfBsDB returns the block syncer db client.
+func (g *GfSpBaseApp) GfBsDB() bsdb.BSDB {
+	return g.gfBsDB
+}
+
+// GfBsDBMaster returns the master block syncer db client.
+func (g *GfSpBaseApp) GfBsDBMaster() bsdb.BSDB {
+	return g.gfBsDBMaster
+}
+
+// GfBsDBBackup returns the backup block syncer db client.
+func (g *GfSpBaseApp) GfBsDBBackup() bsdb.BSDB {
+	return g.gfBsDBBackup
+}
+
+// SetGfBsDB set the block syncer db client.
+func (g *GfSpBaseApp) SetGfBsDB(setDB bsdb.BSDB) bsdb.BSDB {
+	g.gfBsDB = setDB
+	return g.gfBsDB
 }
 
 // ServerForRegister returns the Grpc server for module register own service.

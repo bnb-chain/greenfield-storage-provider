@@ -51,7 +51,7 @@ func (g *GfSpBaseApp) StartRpcServer(ctx context.Context) error {
 	}
 	go func() {
 		if err = g.server.Serve(lis); err != nil {
-			log.Errorw("failed to start gfsp app grpc server", "error", err)
+			log.Errorw("failed to start gf-sp app grpc server", "error", err)
 		}
 	}()
 	return nil

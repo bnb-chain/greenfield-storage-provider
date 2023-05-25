@@ -115,6 +115,10 @@ make_config() {
     sed -i -e "s/Domain = '.*'/Domain = 'gnfd.test-sp.com'/g" config.toml
     sed -i -e "s/^HttpAddress = '.*'/HttpAddress = '${SP_ENDPOINT}'/g" config.toml
 
+    # metadata
+    sed -i -e "s/IsMasterDB = .*/IsMasterDB = true/g" config.toml
+    sed -i -e "s/BsDBSwitchCheckIntervalSec = .*/BsDBSwitchCheckIntervalSec = 30/g" config.toml
+
     # p2p
     if [ ${index} -eq 0 ];
       then
