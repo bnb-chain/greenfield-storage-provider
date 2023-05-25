@@ -7,9 +7,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	tomlconfig "github.com/forbole/juno/v4/cmd/migrate/toml"
-	"github.com/forbole/juno/v4/database"
 	"github.com/forbole/juno/v4/parser"
+	"github.com/forbole/juno/v4/types/config"
+
+	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -30,9 +31,9 @@ const (
 	DefaultCheckDiffPeriod = 1
 )
 
-// BlockSyncer synchronizes storage,payment,permission data to db by handling related events
+// BlockSyncerModular synchronizes storage,payment,permission data to db by handling related events
 type BlockSyncerModular struct {
-	config    *tomlconfig.TomlConfig
+	config    *config.TomlConfig
 	name      string
 	parserCtx *parser.Context
 	running   atomic.Value
@@ -50,7 +51,7 @@ var (
 	MainService   *BlockSyncerModular
 	BackupService *BlockSyncerModular
 
-	FlagDB database.Database
+	FlagDB *db.DB
 
 	NeedBackup bool
 

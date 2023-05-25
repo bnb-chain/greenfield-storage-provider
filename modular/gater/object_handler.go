@@ -203,7 +203,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
 		return
 	}
-	w.Write(data)
 	w.Header().Set(model.ContentTypeHeader, objectInfo.GetContentType())
 	if isRange {
 		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
@@ -211,6 +210,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(objectInfo.GetPayloadSize()))
 	}
+	w.Write(data)
 	log.CtxDebugw(reqCtx.Context(), "succeed to download object")
 }
 
@@ -409,10 +409,14 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	} else {
 		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionInlineValue)
 	}
-
-	w.Write(data)
 	w.Header().Set(model.ContentTypeHeader, getObjectInfoRes.GetObjectInfo().GetContentType())
-	w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(getObjectInfoRes.GetObjectInfo().GetPayloadSize()))
+	if isRange {
+		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
+			"-"+util.Uint64ToString(uint64(high)))
+	} else {
+		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(getObjectInfoRes.GetObjectInfo().GetPayloadSize()))
+	}
+	w.Write(data)
 	log.CtxDebugw(reqCtx.Context(), "succeed to download object for universal endpoint")
 }
 
