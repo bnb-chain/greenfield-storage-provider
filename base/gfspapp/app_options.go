@@ -255,12 +255,14 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 
 	bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
 	if err != nil {
-		return err
+		log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
+		return nil
 	}
 
 	bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
 	if err != nil {
-		return err
+		log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
+		return nil
 	}
 
 	app.gfBsDBMaster = bsDBBlockSyncerMaster
