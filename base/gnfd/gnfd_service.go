@@ -121,6 +121,7 @@ func (g *Gnfd) QueryObjectInfoByID(
 	resp, err := client.HeadObjectById(ctx, &storagetypes.QueryHeadObjectByIdRequest{
 		ObjectId: objectID,
 	})
+	// TODO: refine it
 	if errors.Is(err, storagetypes.ErrNoSuchObject) {
 		return nil, merrors.ErrNoSuchObject
 	}
@@ -139,6 +140,7 @@ func (g *Gnfd) QueryBucketInfoAndObjectInfo(
 	*storagetypes.ObjectInfo,
 	error) {
 	bucketInfo, err := g.QueryBucketInfo(ctx, bucket)
+	// TODO: refine it
 	if errors.Is(err, storagetypes.ErrNoSuchBucket) {
 		return nil, nil, merrors.ErrNoSuchBucket
 	}
@@ -146,6 +148,7 @@ func (g *Gnfd) QueryBucketInfoAndObjectInfo(
 		return nil, nil, err
 	}
 	objectInfo, err := g.QueryObjectInfo(ctx, bucket, object)
+	// TODO: refine it
 	if errors.Is(err, storagetypes.ErrNoSuchObject) {
 		return bucketInfo, nil, merrors.ErrNoSuchObject
 	}
@@ -180,7 +183,7 @@ func (g *Gnfd) ListenObjectSeal(
 		log.CtxErrorw(ctx, "seal object timeout", "object_id", objectID)
 		return false, ErrSealTimeout
 	}
-	log.CtxErrorw(ctx, "listen seal object failed", "object_id", objectID, "error", err)
+	log.CtxErrorw(ctx, "failed to listen seal object", "object_id", objectID, "error", err)
 	return false, err
 }
 

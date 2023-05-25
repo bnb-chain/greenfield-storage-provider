@@ -36,7 +36,7 @@ type GreenfieldClient struct {
 	Provider      string
 }
 
-// GnfdClient return the greenfield chain client
+// GnfdClient return the greenfield chain client.
 func (client *GreenfieldClient) GnfdClient() *chainClient.GreenfieldClient {
 	return client.chainClient
 }

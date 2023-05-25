@@ -50,7 +50,7 @@ const (
 	// DefaultLowTaskLimit defines the default low priority task limit for resource manager.
 	DefaultLowTaskLimit = 16
 
-	// SpDBUser defines env variable name for sp db user name.
+	// SpDBUser defines env variable name for sp db username.
 	SpDBUser = "SP_DB_USER"
 	// SpDBPasswd defines env variable name for sp db user passwd.
 	SpDBPasswd = "SP_DB_PASSWORD"
@@ -58,24 +58,24 @@ const (
 	SpDBAddress = "SP_DB_ADDRESS"
 	// SpDBDataBase defines env variable name for sp db database.
 	SpDBDataBase = "SP_DB_DATABASE"
-	// BsDBUser defines env variable name for block syncer db user name
+	// BsDBUser defines env variable name for block syncer db username.
 	BsDBUser = "BS_DB_USER"
-	// BsDBPasswd defines env variable name for block syncer db user passwd
+	// BsDBPasswd defines env variable name for block syncer db user passwd.
 	BsDBPasswd = "BS_DB_PASSWORD"
-	// BsDBAddress defines env variable name for block syncer db address
+	// BsDBAddress defines env variable name for block syncer db address.
 	BsDBAddress = "BS_DB_ADDRESS"
-	// BsDBDataBase defines env variable name for block syncer db database
+	// BsDBDataBase defines env variable name for block syncer db database.
 	BsDBDataBase = "BS_DB_DATABASE"
-	// BsDBSwitchedUser defines env variable name for switched block syncer db user name
+	// BsDBSwitchedUser defines env variable name for switched block syncer db username.
 	BsDBSwitchedUser = "BS_DB_SWITCHED_USER"
-	// BsDBSwitchedPasswd defines env variable name for switched block syncer db user passwd
+	// BsDBSwitchedPasswd defines env variable name for switched block syncer db user passwd.
 	BsDBSwitchedPasswd = "BS_DB_SWITCHED_PASSWORD"
-	// BsDBSwitchedAddress defines env variable name for switched block syncer db address
+	// BsDBSwitchedAddress defines env variable name for switched block syncer db address.
 	BsDBSwitchedAddress = "BS_DB_SWITCHED_ADDRESS"
-	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database
+	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database.
 	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
 
-	// DefaultConnMaxLifetime defines the default max liveness time of connection
+	// DefaultConnMaxLifetime defines the default max liveliness time of connection.
 	DefaultConnMaxLifetime = 60
 	// DefaultConnMaxIdleTime defines the default max idle time of connection.
 	DefaultConnMaxIdleTime = 30

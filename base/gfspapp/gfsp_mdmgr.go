@@ -17,7 +17,7 @@ type Option func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 // NewModularFunc defines the module new instance func type.
 type NewModularFunc = func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error)
 
-// ModularManager manages the models, record the module info, module info include:
+// ModularManager manages the modulus, record the module info, module info include:
 // module name, module description and new module func. Module name is an indexer for
 // starting, the start module name comes from config file or '--service' command flag.
 // Module description uses for 'list' command that shows the SP supports modules info.
@@ -38,7 +38,6 @@ func init() {
 			descriptions:   make(map[string]string),
 			newModularFunc: make(map[string]NewModularFunc),
 		}
-		// TODO: add modular
 	})
 }
 
@@ -79,7 +78,7 @@ func GetRegisterModulusDescription() string {
 	return descriptions
 }
 
-// GetNewModularFunc  returns the list registered module's new instances func.
+// GetNewModularFunc returns the list registered module's new instances func.
 func GetNewModularFunc(name string) NewModularFunc {
 	mdmgr.mux.RLock()
 	defer mdmgr.mux.RUnlock()
