@@ -17,6 +17,75 @@ message GfSpAuthorizeResponse {
   bool allowed = 2;
 }
 
+// GetAuthNonceRequest is request type for the GetAuthNonce RPC method.
+message GetAuthNonceRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+  // domain is the DApp domain for this nonce
+  string domain = 2;
+}
+
+// GetAuthNonceResponse is response type for the GetAuthNonce RPC method.
+message GetAuthNonceResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  // current_nonce defines the current nonce value, which the current_public_key is tied to
+  int32 current_nonce = 2;
+  // next_nonce defines the next nonce value , for which the DApp or client can update their auth public key
+  int32 next_nonce = 3;
+  // current_public_key defines the current user EDDSA public key
+  string current_public_key = 4;
+  // expiry_date is the expiry timestamp of the current public key
+  int64 expiry_date = 5;
+}
+
+// UpdateUserPublicKeyRequest is request type for the UpdateUserPublicKey RPC method.
+message UpdateUserPublicKeyRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+  // domain is the DApp domain for which the public key is updated
+  string domain = 2;
+  // current_nonce is the current_nonce value for which the existing public key is matching
+  int32 current_nonce = 3;
+  // nonce is the nonce value for which the public key is updated
+  int32 nonce = 4;
+  // user_public_key is the public key value to update in SP database
+  string user_public_key = 5;
+  // expiry_date is the expiry timestamp of the public key
+  int64 expiry_date = 6;
+}
+
+// UpdateUserPublicKeyResponse is response type for the UpdateUserPublicKey RPC method.
+message UpdateUserPublicKeyResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  // result defines the result of if the user public key is updated
+  bool result = 2;
+}
+
+// VerifyOffChainSignatureRequest is request type for the VerifyOffChainSignature RPC method.
+message VerifyOffChainSignatureRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+  // domain is the DApp domain for which the public key is updated
+  string domain = 2;
+  // off_chain_sig is the off chain signature signed by user's eddsa seed private key
+  string off_chain_sig = 3;
+  // real_msg_to_sign is the msg that the off_chain_sig is signed for
+  string real_msg_to_sign = 4;
+}
+
+// VerifyOffChainSignatureResponse is response type for the VerifyOffChainSignature RPC method.
+message VerifyOffChainSignatureResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  // result defines the result of if the OffChainSignature is verified
+  bool result = 2;
+}
+
 service GfSpAuthorizationService {
   rpc GfSpVerifyAuthorize(GfSpAuthorizeRequest) returns (GfSpAuthorizeResponse) {}
+  // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
+  rpc GetAuthNonce(GetAuthNonceRequest) returns (GetAuthNonceResponse) {};
+  // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
+  rpc UpdateUserPublicKey(UpdateUserPublicKeyRequest) returns (UpdateUserPublicKeyResponse) {};
+  // VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
+  rpc VerifyOffChainSignature(VerifyOffChainSignatureRequest) returns (VerifyOffChainSignatureResponse) {};
 }
