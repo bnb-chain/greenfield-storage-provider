@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/eth/ethsecp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
@@ -16,6 +17,7 @@ import (
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/model"
+	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -42,7 +44,7 @@ type RequestContext struct {
 // NewRequestContext returns an instance of RequestContext, and verify the
 // request signature, returns the instance regardless of the success or
 // failure of the verification.
-func NewRequestContext(r *http.Request) (*RequestContext, error) {
+func (g *GateModular) NewRequestContext(r *http.Request) (*RequestContext, error) {
 	vars := mux.Vars(r)
 	routerName := ""
 	if mux.CurrentRoute(r) != nil {
@@ -60,7 +62,7 @@ func NewRequestContext(r *http.Request) (*RequestContext, error) {
 		vars:       vars,
 		startTime:  time.Now(),
 	}
-	account, err := reqCtx.VerifySignature()
+	account, err := g.VerifySignature(reqCtx)
 	if err != nil {
 		return reqCtx, err
 	}
@@ -138,7 +140,7 @@ func signaturePrefix(version, algorithm string) string {
 	return version + " " + algorithm + ","
 }
 
-func (r *RequestContext) VerifySignature() (string, error) {
+func (g *GateModular) VerifySignature(r *RequestContext) (string, error) {
 	requestSignature := r.request.Header.Get(model.GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
@@ -152,14 +154,15 @@ func (r *RequestContext) VerifySignature() (string, error) {
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
 		return "", nil
 	}
-	//personalSignSignaturePrefix := signaturePrefix(model.SignTypePersonal, model.SignAlgorithm)
-	//if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
-	//	return reqContext.verifyPersonalSignature(requestSignature[len(personalSignSignaturePrefix):])
-	//}
-	//OffChainSignaturePrefix := signaturePrefix(model.SignTypeOffChain, model.SignAlgorithmEddsa)
-	//if strings.HasPrefix(requestSignature, OffChainSignaturePrefix) {
-	//	return g.verifyOffChainSignature(reqContext, requestSignature[len(OffChainSignaturePrefix):])
-	//}
+
+	OffChainSignaturePrefix := signaturePrefix(model.SignTypeOffChain, model.SignAlgorithmEddsa)
+	if strings.HasPrefix(requestSignature, OffChainSignaturePrefix) {
+		accAddress, err := g.verifyOffChainSignature(r, requestSignature[len(OffChainSignaturePrefix):])
+		if err != nil {
+			return "", err
+		}
+		return accAddress.String(), nil
+	}
 	return "", ErrUnsupportedSignType
 }
 
@@ -225,4 +228,63 @@ func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, e
 	}
 	recoverAcc := sdk.AccAddress(pk.Address().Bytes())
 	return recoverAcc, pk, nil
+}
+
+// verifyOffChainSignature used to verify off-chain-auth signature, return (address, nil) if check succeed
+func (g *GateModular) verifyOffChainSignature(reqContext *RequestContext, requestSignature string) (sdk.AccAddress, error) {
+	var (
+		signedMsg *string
+		err       error
+	)
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	if err != nil {
+		return nil, err
+	}
+
+	req := &gfspserver.VerifyOffChainSignatureRequest{
+		AccountId:     reqContext.request.Header.Get(model.GnfdUserAddressHeader),
+		Domain:        reqContext.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader),
+		OffChainSig:   *sigString,
+		RealMsgToSign: *signedMsg,
+	}
+	ctx := log.Context(context.Background(), req)
+	verifyOffChainSignatureResp, _ := g.baseApp.GfSpClient().VerifyOffChainSignature(ctx, req)
+	if verifyOffChainSignatureResp.Err != nil {
+		log.Errorf("failed to verifyOffChainSignature", "error", err)
+		return nil, verifyOffChainSignatureResp.Err
+	}
+	if verifyOffChainSignatureResp.Result {
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(reqContext.request.Header.Get(model.GnfdUserAddressHeader))
+		return userAddress, nil
+	} else {
+		return nil, verifyOffChainSignatureResp.Err
+	}
+}
+
+func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string, error) {
+	var (
+		signedMsg string
+		signature string
+	)
+	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
+	signatureItems := strings.Split(requestSignature, ",")
+	if len(signatureItems) != 2 {
+		return nil, nil, errors.ErrAuthorizationFormat
+	}
+	for _, item := range signatureItems {
+		pair := strings.Split(item, "=")
+		if len(pair) != 2 {
+			return nil, nil, errors.ErrAuthorizationFormat
+		}
+		switch pair[0] {
+		case model.SignedMsg:
+			signedMsg = pair[1]
+		case model.Signature:
+			signature = pair[1]
+		default:
+			return nil, nil, errors.ErrAuthorizationFormat
+		}
+	}
+
+	return &signedMsg, &signature, nil
 }

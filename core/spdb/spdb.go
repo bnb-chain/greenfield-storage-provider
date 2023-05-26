@@ -1,6 +1,8 @@
 package spdb
 
 import (
+	"time"
+
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
@@ -94,6 +96,13 @@ type StorageParamDB interface {
 	SetStorageParams(params *storagetypes.Params) error
 }
 
+// OffChainAuthKeyDB interface
+type OffChainAuthKeyDB interface {
+	GetAuthKey(userAddress string, domain string) (*OffChainAuthKey, error)
+	UpdateAuthKey(userAddress string, domain string, oldNonce int32, newNonce int32, newPublicKey string, newExpiryDate time.Time) error
+	InsertAuthKey(newRecord *OffChainAuthKey) error
+}
+
 type SPDB interface {
 	JobDB
 	ObjectDB
@@ -102,5 +111,5 @@ type SPDB interface {
 	SPInfoDB
 	GCObjectInfoDB
 	StorageParamDB
-	// OffChainAuthKey
+	OffChainAuthKeyDB
 }
