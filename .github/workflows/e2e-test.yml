@@ -16,8 +16,8 @@ on:
       - fix-release*
 
 env:
-  GreenfieldTag: v0.2.0
-  GreenfieldIntegrationTestBranch: sp-refactor-0.2.1
+  GreenfieldTag: v0.2.1-alpha.1
+  GreenfieldIntegrationTestBranch: sp-refactor-0.2.1-new-sdk
   GOPRIVATE: github.com/bnb-chain
   GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   MYSQL_USER: root
