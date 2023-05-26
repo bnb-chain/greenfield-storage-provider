@@ -42,8 +42,6 @@ const (
 	TypeTaskGCZombiePiece
 	// TypeTaskGCMeta defines the type of collecting SP metadata task.
 	TypeTaskGCMeta
-	// TypeTaskDiscontinueBucket defines the type of discontinue bucket task.
-	TypeTaskDiscontinueBucket
 )
 
 var TypeTaskMap = map[TType]string{

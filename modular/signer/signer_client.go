@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield/sdk/client"
 	"github.com/bnb-chain/greenfield/sdk/keys"
@@ -167,7 +166,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "err", err)
-		return nil, merrors.ErrSignMsg
+		return nil, ErrSignMsg
 	}
 
 	var secondarySPAccs []sdk.AccAddress
@@ -199,22 +198,22 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 			nonce, err = client.greenfieldClients[scope].GetNonce()
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to get seal account nonce", "err", err, "seal_info", msgSealObject.String())
-				return nil, merrors.ErrSealObjectOnChain
+				return nil, ErrSealObjectOnChain
 			}
 			client.sealAccNonce = nonce - 1
 		}
-		return nil, merrors.ErrSealObjectOnChain
+		return nil, ErrSealObjectOnChain
 
 	}
 
 	if resp.TxResponse.Code != 0 {
 		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "seal_info", msgSealObject.String())
-		return nil, merrors.ErrSealObjectOnChain
+		return nil, ErrSealObjectOnChain
 	}
 	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "seal_info", msgSealObject.String())
-		return nil, merrors.ErrSealObjectOnChain
+		return nil, ErrSealObjectOnChain
 	}
 	client.sealAccNonce = nonce
 
@@ -227,7 +226,7 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "err", err)
-		return nil, merrors.ErrSignMsg
+		return nil, ErrSignMsg
 	}
 
 	client.mu.Lock()
@@ -251,21 +250,21 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 			nonce, err := client.greenfieldClients[scope].GetNonce()
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to get gc account nonce", "err", err)
-				return nil, merrors.ErrDiscontinueBucketOnChain
+				return nil, ErrDiscontinueBucketOnChain
 			}
 			client.gcAccNonce = nonce - 1
 		}
-		return nil, merrors.ErrDiscontinueBucketOnChain
+		return nil, ErrDiscontinueBucketOnChain
 	}
 
 	if resp.TxResponse.Code != 0 {
 		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "discontinue_bucket", msgDiscontinueBucket.String())
-		return nil, merrors.ErrDiscontinueBucketOnChain
+		return nil, ErrDiscontinueBucketOnChain
 	}
 	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "discontinue_bucket", msgDiscontinueBucket.String())
-		return nil, merrors.ErrDiscontinueBucketOnChain
+		return nil, ErrDiscontinueBucketOnChain
 	}
 
 	// update nonce when tx is successful submitted

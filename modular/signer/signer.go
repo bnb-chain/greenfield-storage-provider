@@ -2,18 +2,26 @@ package signer
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+)
+
+var (
+	ErrSignMsg                  = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
+	ErrSealObjectOnChain        = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
+	ErrDiscontinueBucketOnChain = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120003, "send discontinueBucket msg failed")
 )
 
 var _ module.Signer = &SignModular{}

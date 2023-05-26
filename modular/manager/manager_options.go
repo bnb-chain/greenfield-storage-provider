@@ -54,9 +54,9 @@ const (
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
 
-	// DefaultGlobalDiscontinueTimeInterval defines the default interval for generating
-	// discontinue bucket task.
-	DefaultGlobalDiscontinueTimeInterval = 30 * 60
+	// DefaultDiscontinueTimeInterval defines the default interval for starting
+	// discontinue buckets task.
+	DefaultDiscontinueTimeInterval = 30 * 60
 )
 
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -111,7 +111,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 		cfg.Parallel.GlobalSyncConsensusInfoInterval = DefaultGlobalSyncConsensusInfoInterval
 	}
 	if cfg.Parallel.DiscontinueBucketTimeInterval == 0 {
-		cfg.Parallel.DiscontinueBucketTimeInterval = DefaultGlobalDiscontinueTimeInterval
+		cfg.Parallel.DiscontinueBucketTimeInterval = DefaultDiscontinueTimeInterval
 	}
 
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval

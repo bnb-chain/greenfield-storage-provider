@@ -132,7 +132,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			}
 			log.CtxErrorw(ctx, "finish to generate gc object task", "info", task.Info(), "error", err)
 		case <-discontinueBucketTicker.C:
-			if m.discontinueBucketEnabled == false {
+			if !m.discontinueBucketEnabled {
 				continue
 			}
 			m.discontinueBuckets(ctx)
