@@ -72,7 +72,6 @@ jobs:
       - name: Run Greenfield-SPs
         run: |
           bash ./deployment/localup/localup.sh --generate $GITHUB_WORKSPACE/greenfield/sp.json ${{ env.MYSQL_USER }} ${{ env.MYSQL_PASSWORD }} ${{ env.MYSQL_IP }}:${{ env.MYSQL_PORT }}
-          bash ./deployment/localup/localup.sh --gene2e $GITHUB_WORKSPACE/greenfield/sp.json
           bash ./deployment/localup/localup.sh --reset
           bash ./deployment/localup/localup.sh --start
           sleep 10
@@ -85,7 +84,8 @@ jobs:
           cd greenfield-integration-test
           git checkout ${{ env.GreenfieldIntegrationTestBranch }}
           cd ..
-          /bin/cp -rf test/e2e/localup_env/integration_config/config.yml greenfield-integration-test/config/config.yml
+          bash ./deployment/localup/localup.sh --gene2e $GITHUB_WORKSPACE/greenfield/sp.json
+          cp -rf test/e2e/localup_env/integration_config/config.yml greenfield-integration-test/config/config.yml
           cd greenfield-integration-test
           cat config/config.yml
           go test -v  tests/storage/new_sdk_test.go

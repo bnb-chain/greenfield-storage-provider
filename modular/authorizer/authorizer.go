@@ -3,6 +3,7 @@ package authorizer
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -18,13 +19,14 @@ var (
 	ErrUnsupportedAuthType = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20001, "unsupported auth op type")
 	ErrMismatchSp          = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20002, "mismatched primary sp")
 	ErrNotCreatedState     = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20003, "object has not been created state")
-	ErrNotSealedState      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20004, "object has not been sealed")
+	ErrNotSealedState      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20004, "object has not been sealed state")
 	ErrPaymentState        = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20005, "payment account is not active")
 	ErrNoSuchAccount       = gfsperrors.Register(module.AuthorizationModularName, http.StatusNotFound, 20006, "no such account")
 	ErrNoSuchBucket        = gfsperrors.Register(module.AuthorizationModularName, http.StatusNotFound, 20007, "no such bucket")
-	ErrRepeatedBucket      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20008, "repeated bucket")
-	ErrRepeatedObject      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20009, "repeated object")
-	ErrNoPermission        = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20010, "no permission")
+	ErrNoSuchObject        = gfsperrors.Register(module.AuthorizationModularName, http.StatusNotFound, 20008, "no such object")
+	ErrRepeatedBucket      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20009, "repeated bucket")
+	ErrRepeatedObject      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20010, "repeated object")
+	ErrNoPermission        = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20011, "no permission")
 	ErrConsensus           = gfsperrors.Register(module.AuthorizationModularName, http.StatusInternalServerError, 25002, "server slipped away, try again later")
 )
 
@@ -118,6 +120,13 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
+			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+			if strings.Contains(err.Error(), "No such bucket") {
+				return false, ErrNoSuchBucket
+			}
+			if strings.Contains(err.Error(), "No such object") {
+				return false, ErrNoSuchObject
+			}
 			return false, ErrConsensus
 		}
 		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperateAddress() {
@@ -126,7 +135,7 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-			log.CtxErrorw(ctx, "object state is noe create", "state", objectInfo.GetObjectStatus())
+			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
 			return false, ErrNotCreatedState
 		}
 		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
@@ -139,6 +148,13 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
+			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+			if strings.Contains(err.Error(), "No such bucket") {
+				return false, ErrNoSuchBucket
+			}
+			if strings.Contains(err.Error(), "No such object") {
+				return false, ErrNoSuchObject
+			}
 			return false, ErrConsensus
 		}
 		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperateAddress() {
@@ -147,7 +163,7 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-			log.CtxErrorw(ctx, "object state is not create", "state", objectInfo.GetObjectStatus())
+			log.CtxErrorw(ctx, "object state is not created", "state", objectInfo.GetObjectStatus())
 			return false, ErrNotCreatedState
 		}
 		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
@@ -160,6 +176,13 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
+			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+			if strings.Contains(err.Error(), "No such bucket") {
+				return false, ErrNoSuchBucket
+			}
+			if strings.Contains(err.Error(), "No such object") {
+				return false, ErrNoSuchObject
+			}
 			return false, ErrConsensus
 		}
 		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperateAddress() {
@@ -190,6 +213,10 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		bucketInfo, err := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket info from consensus", "error", err)
+			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+			if strings.Contains(err.Error(), "No such bucket") {
+				return false, ErrNoSuchBucket
+			}
 			return false, ErrConsensus
 		}
 		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperateAddress() {
@@ -208,6 +235,13 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
+			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+			if strings.Contains(err.Error(), "No such bucket") {
+				return false, ErrNoSuchBucket
+			}
+			if strings.Contains(err.Error(), "No such object") {
+				return false, ErrNoSuchObject
+			}
 			return false, ErrConsensus
 		}
 		if bucketInfo.GetPrimarySpAddress() == a.baseApp.OperateAddress() {

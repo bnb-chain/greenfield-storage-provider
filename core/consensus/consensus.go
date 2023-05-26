@@ -9,7 +9,7 @@ import (
 )
 
 // Consensus is the interface to query greenfield consensus data. the consensus
-// data can come from validator, fullnode, or other off-chain data service
+// data can come from validator, full-node, or other off-chain data service
 type Consensus interface {
 	// CurrentHeight returns the current greenfield height - 1,
 	CurrentHeight(ctx context.Context) (uint64, error)

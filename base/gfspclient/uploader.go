@@ -22,7 +22,7 @@ func (s *GfSpClient) UploadObject(
 	}
 	var sendSize = 0
 	defer func() {
-		defer conn.Close()
+		conn.Close()
 		if task != nil {
 			log.CtxDebugw(ctx, "succeed to send payload data", "info", task.Info(),
 				"send_size", sendSize)

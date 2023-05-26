@@ -2,7 +2,6 @@ package gnfd
 
 import (
 	"context"
-	"errors"
 	"math"
 	"strconv"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
@@ -78,16 +76,13 @@ func (g *Gnfd) QueryStorageParams(
 	return &resp.Params, nil
 }
 
-// QueryBucketInfo return the bucket info by name.
+// QueryBucketInfo returns the bucket info by name.
 func (g *Gnfd) QueryBucketInfo(
 	ctx context.Context,
 	bucket string) (
 	*storagetypes.BucketInfo, error) {
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
-	if errors.Is(err, storagetypes.ErrNoSuchBucket) {
-		return nil, ErrNoSuchBucket
-	}
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query bucket", "bucket_name", bucket, "error", err)
 		return nil, err
@@ -95,7 +90,7 @@ func (g *Gnfd) QueryBucketInfo(
 	return resp.GetBucketInfo(), nil
 }
 
-// QueryObjectInfo return the object info by name.
+// QueryObjectInfo returns the object info by name.
 func (g *Gnfd) QueryObjectInfo(
 	ctx context.Context,
 	bucket, object string) (
@@ -112,7 +107,7 @@ func (g *Gnfd) QueryObjectInfo(
 	return resp.GetObjectInfo(), nil
 }
 
-// QueryObjectInfoByID return the object info by name.
+// QueryObjectInfoByID returns the object info by name.
 func (g *Gnfd) QueryObjectInfoByID(
 	ctx context.Context,
 	objectID string) (
@@ -121,9 +116,6 @@ func (g *Gnfd) QueryObjectInfoByID(
 	resp, err := client.HeadObjectById(ctx, &storagetypes.QueryHeadObjectByIdRequest{
 		ObjectId: objectID,
 	})
-	if errors.Is(err, storagetypes.ErrNoSuchObject) {
-		return nil, merrors.ErrNoSuchObject
-	}
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query object", "object_id", objectID, "error", err)
 		return nil, err
@@ -131,7 +123,7 @@ func (g *Gnfd) QueryObjectInfoByID(
 	return resp.GetObjectInfo(), nil
 }
 
-// QueryBucketInfoAndObjectInfo return bucket info and object info, if not found, return the corresponding error code
+// QueryBucketInfoAndObjectInfo returns bucket info and object info, if not found, return the corresponding error code
 func (g *Gnfd) QueryBucketInfoAndObjectInfo(
 	ctx context.Context,
 	bucket, object string) (
@@ -139,33 +131,27 @@ func (g *Gnfd) QueryBucketInfoAndObjectInfo(
 	*storagetypes.ObjectInfo,
 	error) {
 	bucketInfo, err := g.QueryBucketInfo(ctx, bucket)
-	if errors.Is(err, storagetypes.ErrNoSuchBucket) {
-		return nil, nil, merrors.ErrNoSuchBucket
-	}
 	if err != nil {
 		return nil, nil, err
 	}
 	objectInfo, err := g.QueryObjectInfo(ctx, bucket, object)
-	if errors.Is(err, storagetypes.ErrNoSuchObject) {
-		return bucketInfo, nil, merrors.ErrNoSuchObject
-	}
 	if err != nil {
 		return bucketInfo, nil, err
 	}
 	return bucketInfo, objectInfo, nil
 }
 
-// ListenObjectSeal return an indication of the object is sealed.
+// ListenObjectSeal returns an indication of the object is sealed.
 // TODO:: retrieve service support seal event subscription
 func (g *Gnfd) ListenObjectSeal(
 	ctx context.Context,
 	objectID uint64,
-	timeOutHeight int) (bool, error) {
+	timeoutHeight int) (bool, error) {
 	var (
 		objectInfo *storagetypes.ObjectInfo
 		err        error
 	)
-	for i := 0; i < timeOutHeight; i++ {
+	for i := 0; i < timeoutHeight; i++ {
 		time.Sleep(ExpectedOutputBlockInternal * time.Second)
 		objectInfo, err = g.QueryObjectInfoByID(ctx, strconv.FormatUint(objectID, 10))
 		if err != nil {
@@ -180,11 +166,11 @@ func (g *Gnfd) ListenObjectSeal(
 		log.CtxErrorw(ctx, "seal object timeout", "object_id", objectID)
 		return false, ErrSealTimeout
 	}
-	log.CtxErrorw(ctx, "listen seal object failed", "object_id", objectID, "error", err)
+	log.CtxErrorw(ctx, "failed to listen seal object", "object_id", objectID, "error", err)
 	return false, err
 }
 
-// QueryPaymentStreamRecord return the steam record info by account.
+// QueryPaymentStreamRecord returns the steam record info by account.
 func (g *Gnfd) QueryPaymentStreamRecord(
 	ctx context.Context,
 	account string) (
@@ -201,7 +187,7 @@ func (g *Gnfd) QueryPaymentStreamRecord(
 	return &resp.StreamRecord, nil
 }
 
-// VerifyGetObjectPermission verify get object permission.
+// VerifyGetObjectPermission verifies get object permission.
 func (g *Gnfd) VerifyGetObjectPermission(
 	ctx context.Context,
 	account, bucket, object string) (
@@ -223,7 +209,7 @@ func (g *Gnfd) VerifyGetObjectPermission(
 	return false, err
 }
 
-// VerifyPutObjectPermission verify put object permission.
+// VerifyPutObjectPermission verifies put object permission.
 func (g *Gnfd) VerifyPutObjectPermission(
 	ctx context.Context,
 	account, bucket, object string) (
