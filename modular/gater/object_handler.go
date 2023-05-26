@@ -18,10 +18,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield/types/s3util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // putObjectHandler handles the upload object request.
@@ -133,6 +136,11 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 		return true, int64(rangeStart), int64(rangeEnd)
 	}
 	return false, -1, -1
+}
+
+// putObjectByOffsetHandler handles the resumable put object
+func (g *GateModular) putObjectByOffsetHandler(w http.ResponseWriter, r *http.Request) {
+
 }
 
 // getObjectHandler handles the download object request.
