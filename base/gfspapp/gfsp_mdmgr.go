@@ -17,7 +17,7 @@ type Option func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 // NewModularFunc defines the module new instance func type.
 type NewModularFunc = func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error)
 
-// ModularManager manages the modulus, record the module info, module info include:
+// ModularManager manages the modules, record the module info, module info include:
 // module name, module description and new module func. Module name is an indexer for
 // starting, the start module name comes from config file or '--service' command flag.
 // Module description uses for 'list' command that shows the SP supports modules info.

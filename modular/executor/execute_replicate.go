@@ -277,6 +277,7 @@ func (e *ExecuteModular) doneReplicatePiece(
 		approval.GetApprovedSpEndpoint(), approval, receive)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate piece",
+			"endpoint", approval.GetApprovedSpEndpoint(),
 			"replicate_idx", replicateIdx, "error", err)
 		return nil, nil, err
 	}
