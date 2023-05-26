@@ -111,7 +111,7 @@ func (a *AuthorizeModular) GetAuthNonce(ctx context.Context, req *gfspserver.Get
 func (a *AuthorizeModular) UpdateUserPublicKey(ctx context.Context, req *gfspserver.UpdateUserPublicKeyRequest) (bool, error) {
 	err := a.baseApp.GfSpDB().UpdateAuthKey(req.AccountId, req.Domain, req.CurrentNonce, req.Nonce, req.UserPublicKey, time.UnixMilli(req.ExpiryDate))
 	if err != nil {
-		log.Errorw("failed to updateUserPublicKey when saving key")
+		log.CtxErrorw(ctx, "failed to updateUserPublicKey when saving key")
 		return false, err
 	}
 	log.CtxInfow(ctx, "succeed to UpdateUserPublicKey")
@@ -142,13 +142,13 @@ func (a *AuthorizeModular) VerifyOffChainSignature(ctx context.Context, req *gfs
 	// signedMsg must be formatted as `${actionContent}_${expiredTimestamp}` and timestamp must be within $OffChainAuthSigExpiryAgeInSec seconds, actionContent could be any string
 	signedMsgParts := strings.Split(signedMsg, "_")
 	if len(signedMsgParts) < 2 {
-		err = fmt.Errorf("signed msg must be formated as ${actionContent}_${expiredTimestamp}")
+		log.CtxErrorw(ctx, "signed msg must be formated as ${actionContent}_${expiredTimestamp}")
 		return false, ErrSignedMsgFormat
 	}
 
 	signedMsgExpiredTimestamp, err := strconv.Atoi(signedMsgParts[len(signedMsgParts)-1])
 	if err != nil {
-		err = fmt.Errorf("expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
+		log.CtxErrorw(ctx, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
 		return false, ErrExpiredTimestampFormat
 	}
 	expiredAge := time.Until(time.UnixMilli(int64(signedMsgExpiredTimestamp))).Seconds()

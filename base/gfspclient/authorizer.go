@@ -36,7 +36,12 @@ func (s *GfSpClient) VerifyAuthorize(ctx context.Context,
 
 // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
 func (s *GfSpClient) GetAuthNonce(ctx context.Context, in *gfspserver.GetAuthNonceRequest, opts ...grpc.CallOption) (*gfspserver.GetAuthNonceResponse, error) {
-	conn, err := s.Connection(ctx, s.authorizerEndpoint)
+	conn, connErr := s.Connection(ctx, s.authorizerEndpoint)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
 	resp, err := gfspserver.NewGfSpAuthorizationServiceClient(conn).GetAuthNonce(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -48,7 +53,11 @@ func (s *GfSpClient) GetAuthNonce(ctx context.Context, in *gfspserver.GetAuthNon
 
 // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
 func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, in *gfspserver.UpdateUserPublicKeyRequest, opts ...grpc.CallOption) (*gfspserver.UpdateUserPublicKeyResponse, error) {
-	conn, err := s.Connection(ctx, s.authorizerEndpoint)
+	conn, connErr := s.Connection(ctx, s.authorizerEndpoint)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
 	resp, err := gfspserver.NewGfSpAuthorizationServiceClient(conn).UpdateUserPublicKey(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
@@ -60,7 +69,11 @@ func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, in *gfspserver.Upd
 
 // VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
 func (s *GfSpClient) VerifyOffChainSignature(ctx context.Context, in *gfspserver.VerifyOffChainSignatureRequest, opts ...grpc.CallOption) (*gfspserver.VerifyOffChainSignatureResponse, error) {
-	conn, err := s.Connection(ctx, s.authorizerEndpoint)
+	conn, connErr := s.Connection(ctx, s.authorizerEndpoint)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
 	resp, err := gfspserver.NewGfSpAuthorizationServiceClient(conn).VerifyOffChainSignature(ctx, in, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
