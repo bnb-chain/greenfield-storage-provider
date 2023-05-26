@@ -126,7 +126,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 		gasLimit:          gasLimit,
 		greenfieldClients: greenfieldClients,
 		sealAccNonce:      sealAccNonce - 1,
-		gcAccNonce:        gcAccNonce,
+		gcAccNonce:        gcAccNonce - 1,
 	}, nil
 }
 
@@ -160,9 +160,6 @@ func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, si
 
 // SealObject seal the object on the greenfield chain.
 func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope SignType, sealObject *storagetypes.MsgSealObject) ([]byte, error) {
-	client.mu.Lock()
-	defer client.mu.Unlock()
-
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "err", err)
@@ -179,6 +176,8 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		secondarySPAccs = append(secondarySPAccs, opAddr)
 	}
 
+	client.mu.Lock()
+	defer client.mu.Unlock()
 	nonce := client.sealAccNonce + 1
 
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
