@@ -159,10 +159,12 @@ func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 		}
 		err = m.baseApp.GfSpClient().DiscontinueBucket(ctx, discontinueBucket)
 		if err != nil {
-			log.Errorw("failed to discontinue bucket on chain", "error", err)
+			log.Errorw("failed to discontinue bucket on chain", "bucket_name",
+				discontinueBucket.BucketName, "error", err)
 			continue
 		} else {
-			log.Infow("succeed to discontinue bucket", "bucket_name", discontinueBucket.BucketName)
+			log.Infow("succeed to discontinue bucket", "bucket_name",
+				discontinueBucket.BucketName)
 		}
 	}
 }

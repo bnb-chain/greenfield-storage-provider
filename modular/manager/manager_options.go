@@ -54,9 +54,12 @@ const (
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
 
-	// DefaultDiscontinueTimeInterval defines the default interval for starting
-	// discontinue buckets task.
+	// DefaultDiscontinueTimeInterval defines the default interval for starting discontinue
+	// buckets task , used for test net.
 	DefaultDiscontinueTimeInterval = 30 * 60
+	// DefaultDiscontinueBucketKeepAliveDays defines the default bucket keep alive days, after
+	// the interval, buckets will be discontinued, used for test net.
+	DefaultDiscontinueBucketKeepAliveDays = 7
 )
 
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -112,6 +115,9 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	}
 	if cfg.Parallel.DiscontinueBucketTimeInterval == 0 {
 		cfg.Parallel.DiscontinueBucketTimeInterval = DefaultDiscontinueTimeInterval
+	}
+	if cfg.Parallel.DiscontinueBucketKeepAliveDays == 0 {
+		cfg.Parallel.DiscontinueBucketKeepAliveDays = DefaultDiscontinueBucketKeepAliveDays
 	}
 
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
