@@ -95,7 +95,7 @@ var (
 		Help: "Track the task queue capacity.",
 	}, []string{"queue_capacity"})
 	TaskInQueueTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "task_active_time",
+		Name:    "task_in_queue_time",
 		Help:    "Track the task of alive time duration in queue from task is created.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"task_in_queue_time"})
@@ -266,7 +266,7 @@ var (
 	UploadObjectTaskFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "upload_object_task_failure",
 		Help: "Track upload object task failure total number",
-	}, []string{"seal_object_task_failure"})
+	}, []string{"upload_object_task_failure"})
 	ReplicatePieceTaskFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "replicate_object_task_failure",
 		Help: "Track replicate object task failure total number",

@@ -70,7 +70,7 @@ func (client *StoreClient) PutPiece(ctx context.Context, key string, value []byt
 		metrics.PutPieceTimeHistogram.WithLabelValues(client.name).Observe(
 			time.Since(startTime).Seconds())
 		metrics.PutPieceTotalNumberCounter.WithLabelValues(client.name).Inc()
-		if err != nil {
+		if err == nil {
 			metrics.PieceUsageAmountGauge.WithLabelValues(client.name).Add(float64(len(value)))
 		}
 	}()
@@ -89,7 +89,7 @@ func (client *StoreClient) DeletePiece(ctx context.Context, key string) error {
 		metrics.DeletePieceTimeHistogram.WithLabelValues(client.name).Observe(
 			time.Since(startTime).Seconds())
 		metrics.DeletePieceTotalNumberCounter.WithLabelValues(client.name).Inc()
-		if err != nil {
+		if err == nil {
 			metrics.PieceUsageAmountGauge.WithLabelValues(client.name).Add(0 - float64(valSize))
 		}
 	}()
