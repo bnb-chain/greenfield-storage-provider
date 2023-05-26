@@ -1,5 +1,6 @@
 package blocksyncer
 
+/*
 import (
 	"bytes"
 	"context"
@@ -382,3 +383,4 @@ func (s *BlockSyncer) prepareMasterFlagTable() error {
 	}
 	return nil
 }
+*/

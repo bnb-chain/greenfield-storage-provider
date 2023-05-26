@@ -1,5 +1,6 @@
 package auth
 
+/*
 import (
 	"encoding/hex"
 	"errors"
@@ -54,3 +55,4 @@ func VerifyEddsaSignature(pubKey string, sig, message []byte) error {
 	}
 	return nil
 }
+*/

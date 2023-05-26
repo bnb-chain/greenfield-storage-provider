@@ -3,8 +3,9 @@ package http
 import (
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"golang.org/x/time/rate"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 type BandwidthLimiterConfig struct {

@@ -30,6 +30,10 @@ serve as the gatekeeper for user rights and authentications.
 
 - **P2P**  used to interact with the control flow of the payload data, eg: GetSecondaryApproval.
 
+- **Metadata**  used to provide efficient query interface to achieve low latency and high-performance SP requirements.
+
 - **PieceStore** interacts with underlying storage vendors, eg. AWS S3, MinIO.
 
 - **SPDB** stores all the contexts of the background jobs and the metadata of the SP.
+
+- **BSDB** stores all the events' data from the greenfield chain and provides them to the metadata service of SP.

@@ -37,6 +37,7 @@ jobs:
           buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
           buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
 
+      - run: buf format --diff --exit-code
       - uses: bufbuild/buf-lint-action@v1
         with:
           input: 'proto'

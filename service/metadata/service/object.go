@@ -1,5 +1,6 @@
 package service
 
+/*
 import (
 	"context"
 	"encoding/base64"
@@ -43,7 +44,11 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		return
 	}
 
-	for _, object := range results {
+	for i, object := range results {
+		// Avoid returning the extra queried continuation value to the user.
+		if i == int(maxKeys) {
+			break
+		}
 		if object.ResultType == "common_prefix" {
 			commonPrefixes = append(commonPrefixes, object.PathName)
 		} else {
@@ -87,7 +92,6 @@ func (metadata *Metadata) ListObjectsByBucketName(ctx context.Context, req *meta
 		if req.Delimiter == "" {
 			nextContinuationToken = results[len(results)-1].ObjectName
 		}
-		res = res[:len(res)-1]
 	}
 
 	resp = &metatypes.ListObjectsByBucketNameResponse{
@@ -214,3 +218,5 @@ func (metadata *Metadata) GetObjectMeta(ctx context.Context, req *metatypes.GetO
 	log.CtxInfo(ctx, "succeed to get object meta")
 	return resp, nil
 }
+
+*/

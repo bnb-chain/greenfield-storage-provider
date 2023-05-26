@@ -16,8 +16,8 @@ on:
       - fix-release*
 
 env:
-  GreenfieldTag: v0.2.0
-  GreenfieldIntegrationTestBranch: adapt-greenfield-develop_v0.47_latest-develop
+  GreenfieldTag: v0.2.1-alpha.1
+  GreenfieldIntegrationTestBranch: sp-refactor-0.2.1-new-sdk
   GOPRIVATE: github.com/bnb-chain
   GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   MYSQL_USER: root
@@ -84,7 +84,8 @@ jobs:
           cd greenfield-integration-test
           git checkout ${{ env.GreenfieldIntegrationTestBranch }}
           cd ..
-          /bin/cp -rf test/e2e/localup_env/integration_config/config.yml greenfield-integration-test/config/config.yml
+          bash ./deployment/localup/localup.sh --gene2e $GITHUB_WORKSPACE/greenfield/sp.json
+          cp -rf test/e2e/localup_env/integration_config/config.yml greenfield-integration-test/config/config.yml
           cd greenfield-integration-test
           cat config/config.yml
           go test -v  tests/storage/new_sdk_test.go

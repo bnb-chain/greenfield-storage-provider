@@ -1,0 +1,20 @@
+syntax = "proto3";
+package base.types.gfspserver;
+
+import "base/types/gfsperrors/error.proto";
+import "base/types/gfsptask/task.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
+
+message GfSpUploadObjectRequest {
+  base.types.gfsptask.GfSpUploadObjectTask upload_object_task = 1;
+  bytes payload = 2;
+}
+
+message GfSpUploadObjectResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+}
+
+service GfSpUploadService {
+  rpc GfSpUploadObject(stream GfSpUploadObjectRequest) returns (GfSpUploadObjectResponse) {}
+}

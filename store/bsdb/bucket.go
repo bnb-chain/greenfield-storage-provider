@@ -4,9 +4,10 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
+
+	"github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // GetUserBuckets get buckets info by a user address

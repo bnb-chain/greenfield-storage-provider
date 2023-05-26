@@ -86,10 +86,6 @@ var (
 	ErrIPBlocked = errors.New("ip blocked")
 	// ErrAPIKey defines invalid signer api key
 	ErrAPIKey = errors.New("invalid api key")
-	// ErrSignMsg defines sign msg error by private key
-	ErrSignMsg = errors.New("sign message with private key failed")
-	// ErrSealObjectOnChain defines send seal object tx to chain error
-	ErrSealObjectOnChain = errors.New("send sealObject msg failed")
 )
 
 // metadata service error

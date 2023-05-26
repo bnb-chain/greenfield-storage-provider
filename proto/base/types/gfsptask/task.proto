@@ -1,0 +1,122 @@
+syntax = "proto3";
+package base.types.gfsptask;
+
+import "base/types/gfsperrors/error.proto";
+import "greenfield/storage/params.proto";
+import "greenfield/storage/tx.proto";
+import "greenfield/storage/types.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask";
+
+message GfSpTask {
+  string address = 1;
+  int64 create_time = 2;
+  int64 update_time = 3;
+  int64 timeout = 4;
+  int32 task_priority = 5;
+  int64 retry = 6;
+  int64 max_retry = 7;
+  base.types.gfsperrors.GfSpError err = 8;
+}
+
+message GfSpCreateBucketApprovalTask {
+  GfSpTask task = 1;
+  greenfield.storage.MsgCreateBucket create_bucket_info = 2;
+}
+
+message GfSpCreateObjectApprovalTask {
+  GfSpTask task = 1;
+  greenfield.storage.MsgCreateObject create_object_info = 2;
+}
+
+message GfSpReplicatePieceApprovalTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  string ask_sp_operator_address = 4;
+  bytes ask_signature = 5;
+  string approved_sp_endpoint = 6;
+  string approved_sp_operator_address = 7;
+  bytes approved_signature = 8;
+  string approved_sp_approval_address = 9;
+  uint64 expired_height = 10;
+}
+
+message GfSpUploadObjectTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+}
+
+message GfSpReplicatePieceTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  repeated bytes secondary_signature = 4;
+  bool sealed = 5;
+}
+
+message GfSpReceivePieceTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  uint32 replicate_idx = 4;
+  int32 piece_idx = 5;
+  int64 piece_size = 6;
+  bytes piece_checksum = 7;
+  bytes signature = 8;
+  bool sealed = 9;
+}
+
+message GfSpSealObjectTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  repeated bytes secondary_signature = 4;
+}
+
+message GfSpDownloadObjectTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.BucketInfo bucket_info = 3;
+  greenfield.storage.Params storage_params = 4;
+  string user_address = 5;
+  int64 low = 6;
+  int64 high = 7;
+}
+
+message GfSpChallengePieceTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.BucketInfo bucket_info = 3;
+  greenfield.storage.Params storage_params = 4;
+  string user_address = 5;
+  uint32 segment_idx = 6;
+  int32 redundancy_idx = 7;
+  bytes integrity_hash = 8;
+  repeated bytes piece_hash = 9;
+  int64 piece_data_size = 10;
+}
+
+message GfSpGCObjectTask {
+  GfSpTask task = 1;
+  uint64 start_block_number = 2;
+  uint64 end_block_number = 3;
+  uint64 current_block_number = 4;
+  uint64 last_deleted_object_id = 5;
+  bool running = 6;
+}
+
+message GfSpGCZombiePieceTask {
+  GfSpTask task = 1;
+  uint64 object_id = 2;
+  uint64 delete_count = 3;
+  bool running = 4;
+}
+
+message GfSpGCMetaTask {
+  GfSpTask task = 1;
+  uint64 current_idx = 2;
+  uint64 delete_count = 3;
+  bool running = 4;
+}

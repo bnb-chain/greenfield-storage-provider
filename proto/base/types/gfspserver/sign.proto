@@ -1,0 +1,38 @@
+syntax = "proto3";
+package base.types.gfspserver;
+
+import "base/types/gfsperrors/error.proto";
+import "base/types/gfspp2p/p2p.proto";
+import "base/types/gfsptask/task.proto";
+import "greenfield/storage/tx.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
+
+message GfSpSignIntegrityHash {
+  uint64 object_id = 1;
+  repeated bytes checksums = 2;
+}
+
+message GfSpSignRequest {
+  oneof request {
+    greenfield.storage.MsgCreateBucket create_bucket_info = 1;
+    greenfield.storage.MsgCreateObject create_object_info = 2;
+    greenfield.storage.MsgSealObject seal_object_info = 3;
+    greenfield.storage.MsgDiscontinueBucket discontinue_bucket_info = 4;
+    GfSpSignIntegrityHash sign_integrity = 5;
+    base.types.gfspp2p.GfSpPing ping_msg = 6;
+    base.types.gfspp2p.GfSpPong pong_msg = 7;
+    base.types.gfsptask.GfSpReplicatePieceApprovalTask gfsp_replicate_piece_approval_task = 8;
+    base.types.gfsptask.GfSpReceivePieceTask gfsp_receive_piece_task = 9;
+  }
+}
+
+message GfSpSignResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  bytes signature = 2;
+  bytes integrity_hash = 3;
+}
+
+service GfSpSignService {
+  rpc GfSpSign(GfSpSignRequest) returns (GfSpSignResponse) {}
+}

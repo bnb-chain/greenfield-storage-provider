@@ -1,0 +1,32 @@
+syntax = "proto3";
+package base.types.gfspserver;
+
+import "base/types/gfsperrors/error.proto";
+import "base/types/gfsptask/task.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
+
+message GfSpDownloadObjectRequest {
+  base.types.gfsptask.GfSpDownloadObjectTask down_load_task = 1;
+}
+
+message GfSpDownloadObjectResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  bytes data = 2;
+}
+
+message GfSpGetChallengeInfoRequest {
+  base.types.gfsptask.GfSpChallengePieceTask challenge_piece_task = 1;
+}
+
+message GfSpGetChallengeInfoResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  bytes data = 2;
+  bytes integrity_hash = 3;
+  repeated bytes checksums = 4;
+}
+
+service GfSpDownloadService {
+  rpc GfSpDownloadObject(GfSpDownloadObjectRequest) returns (GfSpDownloadObjectResponse) {}
+  rpc GfSpGetChallengeInfo(GfSpGetChallengeInfoRequest) returns (GfSpGetChallengeInfoResponse) {}
+}

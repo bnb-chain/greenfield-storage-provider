@@ -1,0 +1,19 @@
+syntax = "proto3";
+package base.types.gfspserver;
+
+import "base/types/gfsperrors/error.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
+
+message GfSpQueryTasksRequest {
+  string task_sub_key = 1;
+}
+
+message GfSpQueryTasksResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  repeated string task_info = 2;
+}
+
+service GfSpQueryTaskService {
+  rpc GfSpQueryTasks(GfSpQueryTasksRequest) returns (GfSpQueryTasksResponse) {}
+}

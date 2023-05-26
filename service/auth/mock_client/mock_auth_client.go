@@ -4,6 +4,8 @@
 // Package mock_client is a generated GoMock package.
 package mock_client
 
+/*
+
 import (
 	context "context"
 	reflect "reflect"
@@ -163,3 +165,5 @@ func (mr *MockAuthServiceServerMockRecorder) VerifyOffChainSignature(arg0, arg1 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyOffChainSignature", reflect.TypeOf((*MockAuthServiceServer)(nil).VerifyOffChainSignature), arg0, arg1)
 }
+
+*/

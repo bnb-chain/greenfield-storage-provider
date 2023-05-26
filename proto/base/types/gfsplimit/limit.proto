@@ -1,0 +1,22 @@
+syntax = "proto3";
+package base.types.gfsplimit;
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit";
+
+message GfSpLimit {
+  int64 memory = 1;
+  int32 tasks = 2;
+  int32 tasks_high_priority = 3;
+  int32 tasks_medium_priority = 4;
+  int32 tasks_low_priority = 5;
+  int32 fd = 6;
+  int32 conns = 7;
+  int32 conns_inbound = 8;
+  int32 conns_outbound = 9;
+}
+
+message GfSpLimiter {
+  GfSpLimit system = 1;
+  GfSpLimit transient = 2;
+  map<string, GfSpLimit> service_limit = 3;
+}

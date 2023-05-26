@@ -1,22 +1,24 @@
 package stopserving
 
+/*
 import (
 	"context"
 	"errors"
 	"sync/atomic"
 	"time"
 
+	corelifecycle "github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	lru "github.com/hashicorp/golang-lru"
 
 	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	metadataclient "github.com/bnb-chain/greenfield-storage-provider/service/metadata/client"
-	signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
+	// TODO: need to refactor
+	// signerclient "github.com/bnb-chain/greenfield-storage-provider/service/signer/client"
 )
 
-var _ lifecycle.Service = &StopServing{}
+var _ corelifecycle.Service = &StopServing{}
 
 const (
 	// DiscontinueReason defines the reason for stop serving
@@ -139,3 +141,5 @@ func (s *StopServing) Stop(ctx context.Context) error {
 	close(s.stopCh)
 	return nil
 }
+
+*/

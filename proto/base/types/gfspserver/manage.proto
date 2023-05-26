@@ -1,0 +1,58 @@
+syntax = "proto3";
+package base.types.gfspserver;
+
+import "base/types/gfsperrors/error.proto";
+import "base/types/gfsplimit/limit.proto";
+import "base/types/gfsptask/task.proto";
+
+option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
+
+message GfSpBeginTaskRequest {
+  oneof request {
+    base.types.gfsptask.GfSpUploadObjectTask upload_object_task = 1;
+  }
+}
+
+message GfSpBeginTaskResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+}
+
+message GfSpAskTaskRequest {
+  base.types.gfsplimit.GfSpLimit node_limit = 1;
+}
+
+message GfSpAskTaskResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  oneof response {
+    base.types.gfsptask.GfSpReplicatePieceTask replicate_piece_task = 2;
+    base.types.gfsptask.GfSpSealObjectTask seal_object_task = 3;
+    base.types.gfsptask.GfSpReceivePieceTask receive_piece_task = 4;
+    base.types.gfsptask.GfSpGCObjectTask gc_object_task = 5;
+    base.types.gfsptask.GfSpGCZombiePieceTask gc_zombie_piece_task = 6;
+    base.types.gfsptask.GfSpGCMetaTask gc_meta_task = 7;
+  }
+}
+
+message GfSpReportTaskRequest {
+  oneof request {
+    base.types.gfsptask.GfSpUploadObjectTask upload_object_task = 1;
+    base.types.gfsptask.GfSpReplicatePieceTask replicate_piece_task = 2;
+    base.types.gfsptask.GfSpSealObjectTask seal_object_task = 3;
+    base.types.gfsptask.GfSpGCObjectTask gc_object_task = 4;
+    base.types.gfsptask.GfSpGCZombiePieceTask gc_zombie_piece_task = 5;
+    base.types.gfsptask.GfSpGCMetaTask gc_meta_task = 6;
+    base.types.gfsptask.GfSpDownloadObjectTask download_object_task = 7;
+    base.types.gfsptask.GfSpChallengePieceTask challenge_piece_task = 8;
+    base.types.gfsptask.GfSpReceivePieceTask receive_piece_task = 9;
+  }
+}
+
+message GfSpReportTaskResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+}
+
+service GfSpManageService {
+  rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
+  rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
+  rpc GfSpReportTask(GfSpReportTaskRequest) returns (GfSpReportTaskResponse) {}
+}
