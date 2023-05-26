@@ -17,6 +17,15 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/service/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+)
+
+const (
+	// DiscontinueBucketReason defines the reason for stop serving
+	DiscontinueBucketReason = "testnet cleanup"
+
+	// DiscontinueBucketLimit define the max buckets to fetch in a single request
+	DiscontinueBucketLimit = int64(500)
 )
 
 var _ module.Manager = &ManageModular{}
@@ -44,6 +53,10 @@ type ManageModular struct {
 
 	syncConsensusInfoInterval uint64
 	statisticsOutputInterval  int
+
+	discontinueBucketEnabled       bool
+	discontinueBucketTimeInterval  int
+	discontinueBucketKeepAliveDays int
 }
 
 func (m *ManageModular) Name() string {
@@ -62,6 +75,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
+
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
 		return err
@@ -80,6 +94,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 	gcObjectTicker := time.NewTicker(time.Duration(m.gcObjectTimeInterval) * time.Second)
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
+	discontinueBucketTicker := time.NewTicker(time.Duration(m.discontinueBucketTimeInterval) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
@@ -116,6 +131,40 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				metrics.GCBlockNumberGauge.WithLabelValues(m.Name()).Set(float64(m.gcBlockHeight))
 			}
 			log.CtxErrorw(ctx, "finish to generate gc object task", "info", task.Info(), "error", err)
+		case <-discontinueBucketTicker.C:
+			if !m.discontinueBucketEnabled {
+				continue
+			}
+			m.discontinueBuckets(ctx)
+			log.Infof("finish to discontinue buckets", "time", time.Now())
+		}
+	}
+}
+
+func (m *ManageModular) discontinueBuckets(ctx context.Context) {
+	createAt := time.Now().AddDate(0, 0, -m.discontinueBucketKeepAliveDays)
+	buckets, err := m.baseApp.GfSpClient().ListExpiredBucketsBySp(context.Background(),
+		createAt.Unix(), m.baseApp.OperateAddress(), DiscontinueBucketLimit)
+	if err != nil {
+		log.Errorw("failed to query expired buckets", "error", err)
+		return
+	}
+
+	for _, bucket := range buckets {
+		time.Sleep(1 * time.Second)
+		log.Infow("start to discontinue bucket", "bucket_name", bucket.BucketInfo.BucketName)
+		discontinueBucket := &storagetypes.MsgDiscontinueBucket{
+			BucketName: bucket.BucketInfo.BucketName,
+			Reason:     DiscontinueBucketReason,
+		}
+		err = m.baseApp.GfSpClient().DiscontinueBucket(ctx, discontinueBucket)
+		if err != nil {
+			log.Errorw("failed to discontinue bucket on chain", "bucket_name",
+				discontinueBucket.BucketName, "error", err)
+			continue
+		} else {
+			log.Infow("succeed to discontinue bucket", "bucket_name",
+				discontinueBucket.BucketName)
 		}
 	}
 }
