@@ -83,9 +83,9 @@ message VerifyOffChainSignatureResponse {
 service GfSpAuthorizationService {
   rpc GfSpVerifyAuthorize(GfSpAuthorizeRequest) returns (GfSpAuthorizeResponse) {}
   // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
-  rpc GetAuthNonce(GetAuthNonceRequest) returns (GetAuthNonceResponse) {};
+  rpc GetAuthNonce(GetAuthNonceRequest) returns (GetAuthNonceResponse) {}
   // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
-  rpc UpdateUserPublicKey(UpdateUserPublicKeyRequest) returns (UpdateUserPublicKeyResponse) {};
+  rpc UpdateUserPublicKey(UpdateUserPublicKeyRequest) returns (UpdateUserPublicKeyResponse) {}
   // VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-  rpc VerifyOffChainSignature(VerifyOffChainSignatureRequest) returns (VerifyOffChainSignatureResponse) {};
+  rpc VerifyOffChainSignature(VerifyOffChainSignatureRequest) returns (VerifyOffChainSignatureResponse) {}
 }
