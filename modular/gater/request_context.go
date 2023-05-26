@@ -130,13 +130,10 @@ func (r *RequestContext) String() string {
 func (r *RequestContext) NeedVerifyAuthorizer() bool {
 	requestSignature := r.request.Header.Get(model.GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
-	/*
-		if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
-			return true
-		}
-		return false
-	*/
-	return strings.HasPrefix(requestSignature, v1SignaturePrefix)
+	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
+		return true
+	}
+	return false
 }
 
 // signaturePrefix return supported Authorization prefix

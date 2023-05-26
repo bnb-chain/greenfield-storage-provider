@@ -140,12 +140,24 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-
+	
 	reqCtx, err = NewRequestContext(r)
 	if err != nil {
-		return
+		// check the object's visibility type whether equal to public read
+		authorized, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), "",
+			reqCtx.bucketName, reqCtx.objectName)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize for getting public object", "error", err)
+			err = ErrConsensus
+			return
+		}
+		if !authorized {
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public")
+			err = ErrNoPermission
+			return
+		}
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
+	if !authorized && reqCtx.NeedVerifyAuthorizer() {
 		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
