@@ -1,12 +1,22 @@
 # Changelog
 
-## v0.2.1
+## v0.2.1-alpha.1
 
 FEATURES
-
+* [\#444](https://github.com/bnb-chain/greenfield-storage-provider/pull/444) feat: refactor v0.2.1 query cli
+* [\#446](https://github.com/bnb-chain/greenfield-storage-provider/pull/446) feat: add p2p ant address config
+* [\#449](https://github.com/bnb-chain/greenfield-storage-provider/pull/449) feat: metadata service and universal endpoint refactor v0.2.1
+* [\#450](https://github.com/bnb-chain/greenfield-storage-provider/pull/450) refactor:blocksyncer
+* [\#468](https://github.com/bnb-chain/greenfield-storage-provider/pull/468) feat: add error for cal nil model
+* [\#471](https://github.com/bnb-chain/greenfield-storage-provider/pull/471) refactor: update listobjects & blocksyncer modules
+* [\#473](https://github.com/bnb-chain/greenfield-storage-provider/pull/473) refactor: update stop serving module
 
 BUGFIX
-
+* [\#431](https://github.com/bnb-chain/greenfield-storage-provider/pull/431) fix: data query issues caused by character set replacement
+* [\#439](https://github.com/bnb-chain/greenfield-storage-provider/pull/439) fix:blocksyncer oom
+* [\#457](https://github.com/bnb-chain/greenfield-storage-provider/pull/457) fix: fix listobjects sql err
+* [\#462](https://github.com/bnb-chain/greenfield-storage-provider/pull/462) fix: base app rcmgr span panic
+* [\#464](https://github.com/bnb-chain/greenfield-storage-provider/pull/464) fix: task queue gc delay when call has method
 
 ## v0.2.0
 
