@@ -140,7 +140,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-	
 	reqCtx, err = NewRequestContext(r)
 	if err != nil {
 		// check the object's visibility type whether equal to public read
@@ -156,6 +155,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			err = ErrNoPermission
 			return
 		}
+		err = nil
 	}
 	if !authorized && reqCtx.NeedVerifyAuthorizer() {
 		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
