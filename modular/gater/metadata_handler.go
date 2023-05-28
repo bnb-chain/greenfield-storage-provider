@@ -34,7 +34,7 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}()
 
-	reqCtx, err = g.NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -93,7 +93,7 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		}
 	}()
 
-	reqCtx, err = g.NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -230,7 +230,7 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}()
 
-	reqCtx, err = g.NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -282,7 +282,7 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}()
 
-	reqCtx, err = g.NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}

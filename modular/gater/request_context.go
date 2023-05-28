@@ -43,7 +43,7 @@ type RequestContext struct {
 // NewRequestContext returns an instance of RequestContext, and verify the
 // request signature, returns the instance regardless of the success or
 // failure of the verification.
-func (g *GateModular) NewRequestContext(r *http.Request) (*RequestContext, error) {
+func NewRequestContext(r *http.Request, g *GateModular) (*RequestContext, error) {
 	vars := mux.Vars(r)
 	routerName := ""
 	if mux.CurrentRoute(r) != nil {

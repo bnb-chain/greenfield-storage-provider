@@ -41,7 +41,7 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 	}()
 
 	// ignore the error, because the requestNonce does not need signature
-	reqCtx, _ = g.NewRequestContext(r)
+	reqCtx, _ = NewRequestContext(r, g)
 
 	account := reqCtx.request.Header.Get(model.GnfdUserAddressHeader)
 	domain := reqCtx.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader)
@@ -91,7 +91,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		}
 	}()
 
-	reqCtx, err = g.NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		// verify personal sign signature
 		personalSignSignaturePrefix := signaturePrefix(model.SignTypePersonal, model.SignAlgorithm)
