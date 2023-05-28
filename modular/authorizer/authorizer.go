@@ -37,6 +37,7 @@ var (
 	ErrBadSignature           = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20012, "bad signature")
 	ErrSignedMsgFormat        = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20013, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
 	ErrExpiredTimestampFormat = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20014, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
+	ErrPublicKeyExpired       = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20015, "user public key is expired")
 
 	ErrConsensus = gfsperrors.Register(module.AuthorizationModularName, http.StatusInternalServerError, 25002, "server slipped away, try again later")
 )
@@ -124,6 +125,9 @@ func (a *AuthorizeModular) VerifyOffChainSignature(ctx context.Context, account 
 	getAuthNonceResp, err := a.GetAuthNonce(ctx, account, domain)
 	if err != nil {
 		return false, err
+	}
+	if time.Until(getAuthNonceResp.ExpiryDate).Seconds() < 0 {
+		return false, ErrPublicKeyExpired
 	}
 	userPublicKey := getAuthNonceResp.CurrentPublicKey
 
