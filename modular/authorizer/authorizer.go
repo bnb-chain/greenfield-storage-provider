@@ -12,7 +12,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -94,11 +93,8 @@ const (
 )
 
 // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
-func (a *AuthorizeModular) GetAuthNonce(ctx context.Context, req *gfspserver.GetAuthNonceRequest) (*spdb.OffChainAuthKey, error) {
-	domain := req.Domain
-
-	ctx = log.Context(ctx, req)
-	authKey, err := a.baseApp.GfSpDB().GetAuthKey(req.AccountId, domain)
+func (a *AuthorizeModular) GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error) {
+	authKey, err := a.baseApp.GfSpDB().GetAuthKey(account, domain)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to GetAuthKey", "error", err)
 		return nil, err
@@ -108,8 +104,8 @@ func (a *AuthorizeModular) GetAuthNonce(ctx context.Context, req *gfspserver.Get
 }
 
 // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
-func (a *AuthorizeModular) UpdateUserPublicKey(ctx context.Context, req *gfspserver.UpdateUserPublicKeyRequest) (bool, error) {
-	err := a.baseApp.GfSpDB().UpdateAuthKey(req.AccountId, req.Domain, req.CurrentNonce, req.Nonce, req.UserPublicKey, time.UnixMilli(req.ExpiryDate))
+func (a *AuthorizeModular) UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64) (bool, error) {
+	err := a.baseApp.GfSpDB().UpdateAuthKey(account, domain, currentNonce, nonce, userPublicKey, time.UnixMilli(expiryDate))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to updateUserPublicKey when saving key")
 		return false, err
@@ -119,28 +115,20 @@ func (a *AuthorizeModular) UpdateUserPublicKey(ctx context.Context, req *gfspser
 }
 
 // VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-func (a *AuthorizeModular) VerifyOffChainSignature(ctx context.Context, req *gfspserver.VerifyOffChainSignatureRequest) (bool, error) {
-
-	signedMsg := req.RealMsgToSign
-	sigString := req.OffChainSig
-
-	signature, err := hex.DecodeString(sigString)
+func (a *AuthorizeModular) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error) {
+	signature, err := hex.DecodeString(offChainSig)
 	if err != nil {
 		return false, ErrBadSignature
 	}
 
-	getAuthNonceReq := &gfspserver.GetAuthNonceRequest{
-		AccountId: req.AccountId,
-		Domain:    req.Domain,
-	}
-	getAuthNonceResp, err := a.GetAuthNonce(ctx, getAuthNonceReq)
+	getAuthNonceResp, err := a.GetAuthNonce(ctx, account, domain)
 	if err != nil {
 		return false, err
 	}
 	userPublicKey := getAuthNonceResp.CurrentPublicKey
 
 	// signedMsg must be formatted as `${actionContent}_${expiredTimestamp}` and timestamp must be within $OffChainAuthSigExpiryAgeInSec seconds, actionContent could be any string
-	signedMsgParts := strings.Split(signedMsg, "_")
+	signedMsgParts := strings.Split(realMsgToSign, "_")
 	if len(signedMsgParts) < 2 {
 		log.CtxErrorw(ctx, "signed msg must be formated as ${actionContent}_${expiredTimestamp}")
 		return false, ErrSignedMsgFormat
@@ -158,7 +146,7 @@ func (a *AuthorizeModular) VerifyOffChainSignature(ctx context.Context, req *gfs
 		return false, gfsperrors.MakeGfSpError(err)
 	}
 
-	err = VerifyEddsaSignature(userPublicKey, signature, []byte(signedMsg))
+	err = VerifyEddsaSignature(userPublicKey, signature, []byte(realMsgToSign))
 	if err != nil {
 		return false, gfsperrors.MakeGfSpError(err)
 	}

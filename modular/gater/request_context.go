@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/eth/ethsecp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
@@ -241,23 +240,21 @@ func (g *GateModular) verifyOffChainSignature(reqContext *RequestContext, reques
 		return nil, err
 	}
 
-	req := &gfspserver.VerifyOffChainSignatureRequest{
-		AccountId:     reqContext.request.Header.Get(model.GnfdUserAddressHeader),
-		Domain:        reqContext.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader),
-		OffChainSig:   *sigString,
-		RealMsgToSign: *signedMsg,
+	account := reqContext.request.Header.Get(model.GnfdUserAddressHeader)
+	domain := reqContext.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader)
+	offChainSig := *sigString
+	realMsgToSign := *signedMsg
+
+	verifyOffChainSignatureResp, err := g.baseApp.GfSpClient().VerifyOffChainSignature(reqContext.Context(), account, domain, offChainSig, realMsgToSign)
+	if err != nil {
+		log.Errorf("failed to verify off chain signature", "error", err)
+		return nil, err
 	}
-	ctx := log.Context(context.Background(), req)
-	verifyOffChainSignatureResp, _ := g.baseApp.GfSpClient().VerifyOffChainSignature(ctx, req)
-	if verifyOffChainSignatureResp.Err != nil {
-		log.Errorf("failed to verifyOffChainSignature", "error", err)
-		return nil, verifyOffChainSignatureResp.Err
-	}
-	if verifyOffChainSignatureResp.Result {
+	if verifyOffChainSignatureResp {
 		userAddress, _ := sdk.AccAddressFromHexUnsafe(reqContext.request.Header.Get(model.GnfdUserAddressHeader))
 		return userAddress, nil
 	} else {
-		return nil, verifyOffChainSignatureResp.Err
+		return nil, err
 	}
 }
 

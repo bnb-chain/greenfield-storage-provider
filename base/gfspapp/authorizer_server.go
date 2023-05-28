@@ -30,9 +30,9 @@ func (g *GfSpBaseApp) GfSpVerifyAuthorize(
 
 // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
 func (g *GfSpBaseApp) GetAuthNonce(ctx context.Context, req *gfspserver.GetAuthNonceRequest) (*gfspserver.GetAuthNonceResponse, error) {
-	log.CtxDebugw(ctx, "begin to GetAuthNonce", "user", req.GetAccountId(), "domain", req.GetDomain())
-	resp, err := g.authorizer.GetAuthNonce(ctx, req)
-	log.CtxDebugw(ctx, "finish to GetAuthNonce", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
+	log.CtxDebugw(ctx, "begin to get auth nonce", "user", req.GetAccountId(), "domain", req.GetDomain())
+	resp, err := g.authorizer.GetAuthNonce(ctx, req.AccountId, req.Domain)
+	log.CtxDebugw(ctx, "finish to get auth nonce", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
 	if err != nil {
 		return &gfspserver.GetAuthNonceResponse{
 			Err: gfsperrors.MakeGfSpError(err),
@@ -50,9 +50,9 @@ func (g *GfSpBaseApp) GetAuthNonce(ctx context.Context, req *gfspserver.GetAuthN
 
 // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
 func (g *GfSpBaseApp) UpdateUserPublicKey(ctx context.Context, req *gfspserver.UpdateUserPublicKeyRequest) (*gfspserver.UpdateUserPublicKeyResponse, error) {
-	log.CtxDebugw(ctx, "begin to UpdateUserPublicKey", "user", req.GetAccountId(), "domain", req.GetDomain(), "public key", req.UserPublicKey)
-	resp, err := g.authorizer.UpdateUserPublicKey(ctx, req)
-	log.CtxDebugw(ctx, "finish to UpdateUserPublicKey", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
+	log.CtxDebugw(ctx, "begin to update user public key", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_key", req.UserPublicKey)
+	resp, err := g.authorizer.UpdateUserPublicKey(ctx, req.AccountId, req.Domain, req.CurrentNonce, req.Nonce, req.UserPublicKey, req.ExpiryDate)
+	log.CtxDebugw(ctx, "finish to update user public key", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
 	return &gfspserver.UpdateUserPublicKeyResponse{
 		Err:    gfsperrors.MakeGfSpError(err),
 		Result: resp,
@@ -61,10 +61,9 @@ func (g *GfSpBaseApp) UpdateUserPublicKey(ctx context.Context, req *gfspserver.U
 
 // VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
 func (g *GfSpBaseApp) VerifyOffChainSignature(ctx context.Context, req *gfspserver.VerifyOffChainSignatureRequest) (*gfspserver.VerifyOffChainSignatureResponse, error) {
-
-	log.CtxDebugw(ctx, "begin to VerifyOffChainSignature", "user", req.GetAccountId(), "domain", req.GetDomain(), "OffChainSig", req.OffChainSig, "RealMsgToSign", req.RealMsgToSign)
-	resp, err := g.authorizer.VerifyOffChainSignature(ctx, req)
-	log.CtxDebugw(ctx, "finish to VerifyOffChainSignature", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
+	log.CtxDebugw(ctx, "begin to verify off-chain signature", "user", req.GetAccountId(), "domain", req.GetDomain(), "off_chain_sig", req.OffChainSig, "real_msg_to_sign", req.RealMsgToSign)
+	resp, err := g.authorizer.VerifyOffChainSignature(ctx, req.AccountId, req.Domain, req.OffChainSig, req.RealMsgToSign)
+	log.CtxDebugw(ctx, "finish to verify off-chain signature", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
 	return &gfspserver.VerifyOffChainSignatureResponse{
 		Err:    gfsperrors.MakeGfSpError(err),
 		Result: resp,

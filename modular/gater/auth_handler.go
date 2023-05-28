@@ -1,8 +1,8 @@
 package gater
 
 import (
-	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -10,16 +10,13 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/gogo/protobuf/jsonpb"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
@@ -31,7 +28,7 @@ const (
 func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err    error
-		b      bytes.Buffer
+		b      []byte
 		reqCtx *RequestContext
 	)
 	defer func() {
@@ -46,31 +43,36 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 	// ignore the error, because the requestNonce does not need signature
 	reqCtx, _ = g.NewRequestContext(r)
 
-	req := &gfspserver.GetAuthNonceRequest{
-		AccountId: reqCtx.request.Header.Get(model.GnfdUserAddressHeader),
-		Domain:    reqCtx.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader),
-	}
-	ctx := log.Context(context.Background(), req)
-	resp, err := g.baseApp.GfSpClient().GetAuthNonce(ctx, req)
+	account := reqCtx.request.Header.Get(model.GnfdUserAddressHeader)
+	domain := reqCtx.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader)
+	ctx := log.Context(context.Background(), account, domain)
+	currentNonce, nextNonce, currentPublicKey, expiryDate, err := g.baseApp.GfSpClient().GetAuthNonce(ctx, account, domain)
 
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to GetAuthNonce", "error", err)
-		return
-	}
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, resp); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to GetAuthNonce", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to get auth nonce", "error", err)
 		return
 	}
 
+	var resp = map[string]interface{}{
+		"current_nonce":      currentNonce,
+		"next_nonce":         nextNonce,
+		"current_public_key": currentPublicKey,
+		"expiry_date":        expiryDate,
+	}
+	b, err = json.Marshal(resp)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal get auth nonce response")
+		err = ErrDecodeMsg
+		return
+	}
 	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Write(b)
 }
 
 func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err           error
-		b             bytes.Buffer
+		b             []byte
 		reqCtx        *RequestContext
 		account       string
 		userPublicKey string
@@ -127,12 +129,13 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	req := &gfspserver.GetAuthNonceRequest{
-		AccountId: account,
-		Domain:    domain,
+	ctx := log.Context(context.Background(), account, domain)
+	currentNonce, nextNonce, _, _, err := g.baseApp.GfSpClient().GetAuthNonce(ctx, account, domain)
+
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to GetAuthNonce", "error", err)
+		return
 	}
-	ctx := log.Context(context.Background(), req)
-	getAuthNonceResp, err := g.baseApp.GfSpClient().GetAuthNonce(ctx, req)
 
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to GetAuthNonce", "error", err)
@@ -140,7 +143,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 	}
 
 	nonceInt, err := strconv.Atoi(nonce)
-	if err != nil || int(getAuthNonceResp.NextNonce) != nonceInt { // nonce must be the same as NextNonce
+	if err != nil || int(nextNonce) != nonceInt { // nonce must be the same as NextNonce
 		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey due to bad nonce")
 		err = ErrInvalidRegNonceHeader
 		return
@@ -174,28 +177,23 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	updateUserPublicKeyReq := &gfspserver.UpdateUserPublicKeyRequest{
-		AccountId:     account,
-		Domain:        domain,
-		CurrentNonce:  getAuthNonceResp.CurrentNonce,
-		Nonce:         int32(nonceInt),
-		UserPublicKey: userPublicKey,
-		ExpiryDate:    expiryDate.UnixMilli(),
-	}
-	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKey(ctx, updateUserPublicKeyReq)
+	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKey(ctx, account, domain, currentNonce, int32(nonceInt), userPublicKey, expiryDate.UnixMilli())
 	if err != nil {
 		log.Errorw("failed to updateUserPublicKey when saving key")
 		return
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, updateUserPublicKeyResp); err != nil {
-		log.Errorw("failed to UpdateUserPublicKey", "error", err)
+	var resp = map[string]interface{}{
+		"result": updateUserPublicKeyResp,
+	}
+	b, err = json.Marshal(resp)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal update user public key response")
+		err = ErrDecodeMsg
 		return
 	}
-
 	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Write(b)
 }
 
 func verifyPersonalSignature(requestSignature string) (sdk.AccAddress, error) {
