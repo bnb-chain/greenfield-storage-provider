@@ -15,8 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/stretchr/testify/assert"
-
-	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 )
 
 const (
@@ -478,13 +476,13 @@ func TestS3_ListError(t *testing.T) {
 func TestNewSessionWithRegionSetViaEnv(t *testing.T) {
 	s3SessionCache.clear()
 
-	os.Setenv(mpiecestore.AWSAccessKey, "NoSignRequest")
-	defer os.Unsetenv(mpiecestore.AWSAccessKey)
+	os.Setenv(AWSAccessKey, "NoSignRequest")
+	defer os.Unsetenv(AWSAccessKey)
 
 	sess, _, err := s3SessionCache.newSession(ObjectStorageConfig{
-		Storage:   mpiecestore.S3Store,
+		Storage:   S3Store,
 		BucketURL: mockEndpoint,
-		IAMType:   mpiecestore.AKSKIAMType,
+		IAMType:   AKSKIAMType,
 	})
 	if err != nil {
 		t.Fatal(err)
