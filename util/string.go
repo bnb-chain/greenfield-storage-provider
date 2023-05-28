@@ -2,11 +2,15 @@ package util
 
 import (
 	"encoding/hex"
+	"errors"
 	"math"
 	"strconv"
 	"strings"
+)
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
+var (
+	// ErrIntegerOverflow defines integer overflow
+	ErrIntegerOverflow = errors.New("integer overflow")
 )
 
 // StringToUint64 converts string to uint64
@@ -34,7 +38,7 @@ func StringToUint32(str string) (uint32, error) {
 		return 0, err
 	}
 	if ui64 > math.MaxUint32 {
-		return 0, merrors.ErrIntegerOverflow
+		return 0, ErrIntegerOverflow
 	}
 	return uint32(ui64), nil
 }
@@ -46,7 +50,7 @@ func StringToInt32(str string) (int32, error) {
 		return 0, err
 	}
 	if i64 > math.MaxInt32 {
-		return 0, merrors.ErrIntegerOverflow
+		return 0, ErrIntegerOverflow
 	}
 	return int32(i64), nil
 }

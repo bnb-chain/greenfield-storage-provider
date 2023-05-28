@@ -6,7 +6,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -45,7 +44,7 @@ func MakeErrorResponse(w http.ResponseWriter, err error) {
 	if err != nil {
 		log.Errorw("failed to marshal error response", "error", gfspErr.String())
 	}
-	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.WriteHeader(int(gfspErr.GetHttpStatusCode()))
 	w.Write(xmlBody)
 	if _, err = w.Write(xmlBody); err != nil {

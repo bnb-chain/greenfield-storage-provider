@@ -3,7 +3,6 @@ package bsdb
 import (
 	"regexp"
 
-	"github.com/bnb-chain/greenfield-storage-provider/service/metadata"
 	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
 )
 
@@ -36,7 +35,7 @@ func (s *Statement) Eval(action permtypes.ActionType, opts *permtypes.VerifyOpti
 
 	// convert action bitmap to action list
 	actions := make([]permtypes.ActionType, 0)
-	for _, v := range metadata.ActionTypeMap {
+	for _, v := range ActionTypeMap {
 		if s.ActionValue&(1<<v) == 1<<v {
 			actions = append(actions, permtypes.ActionType(v))
 		}

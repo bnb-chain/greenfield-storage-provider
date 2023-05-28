@@ -15,14 +15,17 @@ import (
 )
 
 const (
-	// MaxCallMsgSize defines the max message size for grpc client
-	MaxCallMsgSize = 3 * 1024 * 1024 * 1024
+	// MaxClientCallMsgSize defines the max message size for grpc client
+	MaxClientCallMsgSize = 3 * 1024 * 1024 * 1024
 	// ClientCodeSpace defines the code space for gfsp client
 	ClientCodeSpace = "GfSpClient"
 	// HttpMaxIdleConns defines the max idle connections for HTTP server
 	HttpMaxIdleConns = 20
 	// HttpIdleConnTimout defines the idle time of connection for closing
 	HttpIdleConnTimout = 60 * time.Second
+
+	// DefaultStreamBufSize defines gateway stream forward payload buf size
+	DefaultStreamBufSize = 16 * 1024 * 1024
 )
 
 var (
@@ -203,7 +206,7 @@ func (s *GfSpClient) Close() error {
 func DefaultClientOptions() []grpc.DialOption {
 	var options []grpc.DialOption
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxCallMsgSize)))
-	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxCallMsgSize)))
+	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxClientCallMsgSize)))
+	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxClientCallMsgSize)))
 	return options
 }
