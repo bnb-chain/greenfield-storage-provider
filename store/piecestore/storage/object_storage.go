@@ -7,8 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -23,10 +21,10 @@ func NewObjectStorage(cfg ObjectStorageConfig) (ObjectStorage, error) {
 type StorageFn func(cfg ObjectStorageConfig) (ObjectStorage, error)
 
 var storageMap = map[string]StorageFn{
-	mpiecestore.S3Store:       newS3Store,
-	mpiecestore.MinioStore:    newMinioStore,
-	mpiecestore.DiskFileStore: newDiskFileStore,
-	mpiecestore.MemoryStore:   newMemoryStore,
+	S3Store:       newS3Store,
+	MinioStore:    newMinioStore,
+	DiskFileStore: newDiskFileStore,
+	MemoryStore:   newMemoryStore,
 }
 
 type DefaultObjectStorage struct{}
@@ -36,11 +34,11 @@ func (s DefaultObjectStorage) CreateBucket(ctx context.Context) error {
 }
 
 func (s DefaultObjectStorage) ListObjects(ctx context.Context, prefix, marker, delimiter string, limit int64) ([]Object, error) {
-	return nil, merrors.ErrUnsupportedMethod
+	return nil, ErrUnsupportedMethod
 }
 
 func (s DefaultObjectStorage) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan Object, error) {
-	return nil, merrors.ErrUnsupportedMethod
+	return nil, ErrUnsupportedMethod
 }
 
 type file struct {
@@ -58,7 +56,7 @@ func (f *file) IsSymlink() bool   { return f.isSymlink }
 
 var bufPool = sync.Pool{
 	New: func() any {
-		buf := make([]byte, mpiecestore.BufPoolSize)
+		buf := make([]byte, BufPoolSize)
 		return &buf
 	},
 }

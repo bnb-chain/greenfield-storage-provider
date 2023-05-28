@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"cosmossdk.io/math"
@@ -15,9 +16,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/forbole/juno/v4/common"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+)
+
+var (
+	// ErrInvalidParams defines invalid params
+	ErrInvalidParams = errors.New("invalid params")
+	// ErrInvalidBucketName defines invalid bucket name
+	ErrInvalidBucketName = errors.New("invalid bucket name")
+	// ErrNoSuchBucket defines not existed bucket error
+	ErrNoSuchBucket = errors.New("the specified bucket does not exist")
+	// ErrNoSuchObject defines not existed object error
+	ErrNoSuchObject = errors.New("the specified key does not exist")
 )
 
 // GfSpVerifyPermission Verify the input account’s permission to input items
@@ -33,7 +44,7 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 
 	if req == nil {
 		log.CtxErrorw(ctx, "invalid request", "error", err)
-		return nil, errors.ErrInvalidParams
+		return nil, ErrInvalidParams
 	}
 
 	operator, err = sdk.AccAddressFromHexUnsafe(req.Operator)
@@ -44,7 +55,7 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 
 	if err = s3util.CheckValidBucketName(req.BucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", req.BucketName, "error", err)
-		return nil, errors.ErrInvalidBucketName
+		return nil, ErrInvalidBucketName
 	}
 
 	bucketInfo, err = r.baseApp.GfBsDB().GetBucketByName(req.BucketName, true)
@@ -54,7 +65,7 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 	}
 	if bucketInfo == nil {
 		log.CtxError(ctx, "no such bucket")
-		return nil, errors.ErrNoSuchBucket
+		return nil, ErrNoSuchBucket
 	}
 
 	if req.ObjectName == "" {
@@ -71,7 +82,7 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 		}
 		if objectInfo == nil {
 			log.CtxError(ctx, "no such object")
-			return nil, errors.ErrNoSuchObject
+			return nil, ErrNoSuchObject
 		}
 		effect, err = r.VerifyObjectPermission(ctx, bucketInfo, objectInfo, operator, req.ActionType)
 		if err != nil {

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
-	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -53,7 +52,7 @@ func (sc *SessionCache) newMinioSession(cfg ObjectStorageConfig) (*session.Sessi
 	}
 
 	// get region
-	region, ok := os.LookupEnv(mpiecestore.MinioRegion)
+	region, ok := os.LookupEnv(MinioRegion)
 	if !ok {
 		region = endpoints.UsEast1RegionID
 	}
@@ -64,7 +63,7 @@ func (sc *SessionCache) newMinioSession(cfg ObjectStorageConfig) (*session.Sessi
 		S3ForcePathStyle: aws.Bool(true),
 		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
 	}
-	key := getSecretKeyFromEnv(mpiecestore.MinioAccessKey, mpiecestore.MinioSecretKey, mpiecestore.MinioSessionToken)
+	key := getSecretKeyFromEnv(MinioAccessKey, MinioSecretKey, MinioSessionToken)
 	if key.accessKey != "" && key.secretKey != "" {
 		awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
 	}

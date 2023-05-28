@@ -6,7 +6,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 )
@@ -56,18 +55,18 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Name(queryUploadProgressRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
-		Queries(model.UploadProgressQuery, "").
+		Queries(UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
 	hostBucketRouter.NewRoute().
 		Name(getBucketMetaRouterName).
 		Methods(http.MethodGet).
-		Queries(model.GetBucketMetaQuery, "").
+		Queries(GetBucketMetaQuery, "").
 		HandlerFunc(g.getBucketMetaHandler)
 	hostBucketRouter.NewRoute().
 		Name(getObjectMetaRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
-		Queries(model.GetObjectMetaQuery, "").
+		Queries(GetObjectMetaQuery, "").
 		HandlerFunc(g.getObjectMetaHandler)
 	hostBucketRouter.NewRoute().
 		Name(getObjectRouterName).
@@ -77,16 +76,16 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	hostBucketRouter.NewRoute().
 		Name(getBucketReadQuotaRouterName).
 		Methods(http.MethodGet).
-		Queries(model.GetBucketReadQuotaQuery, "",
-			model.GetBucketReadQuotaMonthQuery, "{year_month}").
+		Queries(GetBucketReadQuotaQuery, "",
+			GetBucketReadQuotaMonthQuery, "{year_month}").
 		HandlerFunc(g.getBucketReadQuotaHandler)
 	hostBucketRouter.NewRoute().
 		Name(listBucketReadRecordRouterName).
 		Methods(http.MethodGet).
-		Queries(model.ListBucketReadRecordQuery, "",
-			model.ListBucketReadRecordMaxRecordsQuery, "{max_records}",
-			model.StartTimestampUs, "{start_ts}",
-			model.EndTimestampUs, "{end_ts}").
+		Queries(ListBucketReadRecordQuery, "",
+			ListBucketReadRecordMaxRecordsQuery, "{max_records}",
+			StartTimestampUs, "{start_ts}",
+			EndTimestampUs, "{end_ts}").
 		HandlerFunc(g.listBucketReadRecordHandler)
 	hostBucketRouter.NewRoute().
 		Name(listObjectsByBucketRouterName).
@@ -102,17 +101,17 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		HandlerFunc(g.getUserBucketsHandler)
 
 	// admin router, path style
-	router.Path(model.GetApprovalPath).
+	router.Path(GetApprovalPath).
 		Name(approvalRouterName).
 		Methods(http.MethodGet).
-		Queries(model.ActionQuery, "{action}").
+		Queries(ActionQuery, "{action}").
 		HandlerFunc(g.getApprovalHandler)
-	router.Path(model.ChallengePath).
+	router.Path(ChallengePath).
 		Name(challengeRouterName).
 		Methods(http.MethodGet).
 		HandlerFunc(g.challengeHandler)
 	// replicate piece to receiver
-	router.Path(model.ReplicateObjectPiecePath).
+	router.Path(ReplicateObjectPiecePath).
 		Name(replicateObjectPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.replicateHandler)
@@ -150,18 +149,18 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Name(queryUploadProgressRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
-		Queries(model.UploadProgressQuery, "").
+		Queries(UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
 	pathBucketRouter.NewRoute().
 		Name(getBucketMetaRouterName).
 		Methods(http.MethodGet).
-		Queries(model.GetBucketMetaQuery, "").
+		Queries(GetBucketMetaQuery, "").
 		HandlerFunc(g.getBucketMetaHandler)
 	pathBucketRouter.NewRoute().
 		Name(getObjectMetaRouterName).
 		Methods(http.MethodGet).
 		Path("/{object:.+}").
-		Queries(model.GetObjectMetaQuery, "").
+		Queries(GetObjectMetaQuery, "").
 		HandlerFunc(g.getObjectMetaHandler)
 	pathBucketRouter.NewRoute().
 		Name(getObjectRouterName).
@@ -171,16 +170,16 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	pathBucketRouter.NewRoute().
 		Name(getBucketReadQuotaRouterName).
 		Methods(http.MethodGet).
-		Queries(model.GetBucketReadQuotaQuery, "",
-			model.GetBucketReadQuotaMonthQuery, "{year_month}").
+		Queries(GetBucketReadQuotaQuery, "",
+			GetBucketReadQuotaMonthQuery, "{year_month}").
 		HandlerFunc(g.getBucketReadQuotaHandler)
 	pathBucketRouter.NewRoute().
 		Name(listBucketReadRecordRouterName).
 		Methods(http.MethodGet).
-		Queries(model.ListBucketReadRecordQuery, "",
-			model.ListBucketReadRecordMaxRecordsQuery, "{max_records}",
-			model.StartTimestampUs, "{start_ts}",
-			model.EndTimestampUs, "{end_ts}").
+		Queries(ListBucketReadRecordQuery, "",
+			ListBucketReadRecordMaxRecordsQuery, "{max_records}",
+			StartTimestampUs, "{start_ts}",
+			EndTimestampUs, "{end_ts}").
 		HandlerFunc(g.listBucketReadRecordHandler)
 	pathBucketRouter.NewRoute().
 		Name(listObjectsByBucketRouterName).

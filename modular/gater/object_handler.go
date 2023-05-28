@@ -11,10 +11,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/job"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -192,7 +190,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isRange, rangeStart, rangeEnd := parseRange(reqCtx.request.Header.Get(model.RangeHeader))
+	isRange, rangeStart, rangeEnd := parseRange(reqCtx.request.Header.Get(RangeHeader))
 	if isRange && (rangeEnd < 0 || rangeEnd >= int64(objectInfo.GetPayloadSize())) {
 		rangeEnd = int64(objectInfo.GetPayloadSize()) - 1
 	}
@@ -218,12 +216,12 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
 		return
 	}
-	w.Header().Set(model.ContentTypeHeader, objectInfo.GetContentType())
+	w.Header().Set(ContentTypeHeader, objectInfo.GetContentType())
 	if isRange {
-		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
+		w.Header().Set(ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
 			"-"+util.Uint64ToString(uint64(high)))
 	} else {
-		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(objectInfo.GetPayloadSize()))
+		w.Header().Set(ContentLengthHeader, util.Uint64ToString(objectInfo.GetPayloadSize()))
 	}
 	w.Write(data)
 	log.CtxDebugw(reqCtx.Context(), "succeed to download object")
@@ -280,14 +278,14 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
 		return
 	}
-	jobStateDescription := job.StateToDescription(servicetypes.JobState(jobState))
+	jobStateDescription := servicetypes.StateToDescription(servicetypes.JobState(jobState))
 
 	var xmlInfo = struct {
 		XMLName             xml.Name `xml:"QueryUploadProgress"`
 		Version             string   `xml:"version,attr"`
 		ProgressDescription string   `xml:"ProgressDescription"`
 	}{
-		Version:             model.GnfdResponseXMLVersion,
+		Version:             GnfdResponseXMLVersion,
 		ProgressDescription: jobStateDescription,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
@@ -296,7 +294,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		err = ErrEncodeResponse
 		return
 	}
-	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
 		err = ErrEncodeResponse
@@ -420,16 +418,16 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	}
 
 	if isDownload {
-		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
+		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
 	} else {
-		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionInlineValue)
+		w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
 	}
-	w.Header().Set(model.ContentTypeHeader, getObjectInfoRes.GetObjectInfo().GetContentType())
+	w.Header().Set(ContentTypeHeader, getObjectInfoRes.GetObjectInfo().GetContentType())
 	if isRange {
-		w.Header().Set(model.ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
+		w.Header().Set(ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
 			"-"+util.Uint64ToString(uint64(high)))
 	} else {
-		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(getObjectInfoRes.GetObjectInfo().GetPayloadSize()))
+		w.Header().Set(ContentLengthHeader, util.Uint64ToString(getObjectInfoRes.GetObjectInfo().GetPayloadSize()))
 	}
 	w.Write(data)
 	log.CtxDebugw(reqCtx.Context(), "succeed to download object for universal endpoint")

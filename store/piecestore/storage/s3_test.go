@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/stretchr/testify/assert"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 )
 
@@ -286,7 +285,7 @@ func TestS3_ListSuccess(t *testing.T) {
 func TestS3_ListAll(t *testing.T) {
 	store := setupS3Test(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
-	assert.Equal(t, merrors.ErrUnsupportedMethod, err)
+	assert.Equal(t, ErrUnsupportedMethod, err)
 }
 
 type mockS3ClientError struct {

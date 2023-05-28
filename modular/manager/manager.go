@@ -16,7 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/service/types"
+	"github.com/bnb-chain/greenfield-storage-provider/store/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 

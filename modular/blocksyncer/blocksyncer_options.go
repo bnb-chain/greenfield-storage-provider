@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -25,12 +26,21 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	registrar "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+)
+
+const (
+	// DsnBlockSyncer defines env variable name for block syncer dsn
+	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
+	// DsnBlockSyncerSwitched defines env variable name for block syncer backup dsn
+	DsnBlockSyncerSwitched = "BLOCK_SYNCER_DSN_SWITCHED"
+)
+
+var (
+	ErrDSNNotSet = errors.New("dsn config is not set in environment")
 )
 
 func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -93,9 +103,9 @@ func (b *BlockSyncerModular) initClient() error {
 	// get DSN from env first
 	var dbEnv string
 	if b.Name() == BlockSyncerModularName {
-		dbEnv = model.DsnBlockSyncer
+		dbEnv = DsnBlockSyncer
 	} else {
-		dbEnv = model.DsnBlockSyncerSwitched
+		dbEnv = DsnBlockSyncerSwitched
 	}
 
 	dsn, envErr := getDBConfigFromEnv(dbEnv)
@@ -385,7 +395,7 @@ func DeepCopyByGob(src, dst interface{}) error {
 func getDBConfigFromEnv(dsn string) (string, error) {
 	dsnVal, ok := os.LookupEnv(dsn)
 	if !ok {
-		return "", errors.ErrDSNNotSet
+		return "", ErrDSNNotSet
 	}
 	return dsnVal, nil
 }
