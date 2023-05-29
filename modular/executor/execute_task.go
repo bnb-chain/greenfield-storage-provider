@@ -57,6 +57,8 @@ func (e *ExecuteModular) sealObject(
 			log.CtxErrorw(ctx, "failed to seal object", "retry", retry,
 				"max_retry", task.GetMaxRetry(), "error", err)
 			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
+		} else {
+			break
 		}
 	}
 	// even though signer return error, maybe seal on chain successfully because
