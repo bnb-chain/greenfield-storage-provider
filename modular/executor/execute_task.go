@@ -11,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/manager"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -162,108 +163,117 @@ func (e *ExecuteModular) HandleReceivePieceTask(
 		}
 		return
 	}
-	log.CtxDebugw(ctx, "success to handle confirm receive piece task")
+	log.CtxDebugw(ctx, "succeed to handle confirm receive piece task")
 }
 
 func (e *ExecuteModular) HandleGCObjectTask(
 	ctx context.Context,
 	task coretask.GCObjectTask) {
-	var err error
-	defer func() {
-		task.SetError(err)
-	}()
-
-	objects, endBlockNumber, err := e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
-		ctx, e.baseApp.OperateAddress(), task.GetStartBlockNumber(),
-		task.GetEndBlockNumber(), true)
-	if err != nil {
-		return
-	}
-	if len(objects) == 0 {
-		task.SetCurrentBlockNumber(task.GetEndBlockNumber() + 1)
-		return
-	}
-
-	cancel := func() bool {
-		return errors.Is(e.ReportTask(ctx, task), manager.ErrCanceledTask)
-	}
-
 	var (
-		objectInfo       *storagetypes.ObjectInfo
-		deletingBlock    uint64
-		deletingObjectID uint64
-		deletingIdx      int
-		pieceKey         string
-		segmentCount     uint32
-		params           *storagetypes.Params
+		err                error
+		toGCObjects        []*types.Object
+		currentGCBlockID   uint64
+		currentGCObjectID  uint64
+		responseEndBlockID uint64
+		storageParams      *storagetypes.Params
+		gcObjectNumber     int
+		tryAgainLater      bool
+		taskIsCanceled     bool
+		hasNoObject        bool
+		isSucceed          bool
 	)
-	params, err = e.baseApp.GfSpDB().GetStorageParams()
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to get params", "error", err)
+
+	reportProgress := func() bool {
+		reportErr := e.ReportTask(ctx, task)
+		log.CtxDebugw(ctx, "gc object task report progress", "task_info", task.Info(), "error", reportErr)
+		return errors.Is(reportErr, manager.ErrCanceledTask)
+	}
+
+	defer func() {
+		if err == nil && (isSucceed || hasNoObject) { // succeed
+			task.SetCurrentBlockNumber(task.GetEndBlockNumber() + 1)
+			reportProgress()
+		} else { // failed
+			task.SetError(err)
+			reportProgress()
+		}
+		log.CtxDebugw(ctx, "gc object task",
+			"task_info", task.Info(), "is_succeed", isSucceed,
+			"response_end_block_id", responseEndBlockID, "to_gc_object_number", len(toGCObjects),
+			"has_gc_object_number", gcObjectNumber, "try_again_later", tryAgainLater,
+			"task_is_canceled", taskIsCanceled, "has_no_object", hasNoObject, "error", err)
+	}()
+	if storageParams, err = e.baseApp.GfSpDB().GetStorageParams(); err != nil {
+		log.CtxErrorw(ctx, "failed to get storage params", "task_info", task.Info(), "error", err)
 		return
 	}
-	for {
-		log.CtxDebugw(ctx, "report gc object process", "info", task.Info())
-		if cancel() {
-			return
-		}
-		if deletingIdx >= len(objects) {
-			deletingBlock = task.GetEndBlockNumber() + 1
-		}
-		if deletingBlock > endBlockNumber {
-			deletingBlock = task.GetEndBlockNumber() + 1
-		}
-		task.SetCurrentBlockNumber(deletingBlock)
-		if task.GetCurrentBlockNumber() > task.GetEndBlockNumber() {
-			return
-		}
-		object := objects[deletingIdx]
-		objectInfo = object.GetObjectInfo()
-		deletingIdx++
-		deletingObjectID = objectInfo.Id.Uint64()
-		deletingBlock = uint64(object.GetDeleteAt())
+	if toGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
+		ctx, e.baseApp.OperateAddress(), task.GetStartBlockNumber(),
+		task.GetEndBlockNumber(), true); err != nil {
+		log.CtxErrorw(ctx, "failed to query deleted object list", "task_info", task.Info(), "error", err)
+		return
+	}
+	if responseEndBlockID < task.GetStartBlockNumber() || responseEndBlockID < task.GetEndBlockNumber() {
+		// metadata is not latest, try again later.
+		tryAgainLater = true
+		log.CtxInfow(ctx, "metadata is not latest, try again later",
+			"response_end_block_id", responseEndBlockID, "task_info", task.Info())
+		time.Sleep(10 * time.Second)
+		return
+	}
+	if len(toGCObjects) == 0 {
+		// has no deleted object.
+		hasNoObject = true
+		return
+	}
 
-		segmentCount = e.baseApp.PieceOp().SegmentCount(
-			objectInfo.GetPayloadSize(), params.VersionedParams.GetMaxSegmentSize())
+	for _, object := range toGCObjects {
+		currentGCBlockID = uint64(object.GetDeleteAt())
+		objectInfo := object.GetObjectInfo()
+		currentGCObjectID = objectInfo.Id.Uint64()
+		if currentGCBlockID < task.GetCurrentBlockNumber() {
+			continue
+		}
+		if currentGCObjectID <= task.GetLastDeletedObjectId() {
+			continue
+		}
+		segmentCount := e.baseApp.PieceOp().SegmentCount(
+			objectInfo.GetPayloadSize(), storageParams.VersionedParams.GetMaxSegmentSize())
 		for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
-			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(deletingObjectID, segIdx)
-			err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to delete segment piece",
-					"piece_key", pieceKey, "error", err)
-				return
-			}
-			log.CtxDebugw(ctx, "succeed to delete primary payload", "piece_key", pieceKey)
+			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(currentGCObjectID, segIdx)
+			// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
+			deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+			log.CtxDebugw(ctx, "delete the primary sp pieces",
+				"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 		}
 		for rIdx, address := range objectInfo.GetSecondarySpAddresses() {
-			if strings.Compare(e.baseApp.OperateAddress(), address) != 0 {
-				continue
-			}
-			for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
-				if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
-					pieceKey = e.baseApp.PieceOp().SegmentPieceKey(deletingObjectID, segIdx)
-				} else {
-					pieceKey = e.baseApp.PieceOp().ECPieceKey(deletingObjectID, segIdx, uint32(rIdx))
+			if strings.Compare(e.baseApp.OperateAddress(), address) == 0 {
+				for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
+					pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
+					if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
+						pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
+					}
+					// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
+					deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+					log.CtxDebugw(ctx, "delete the secondary sp pieces",
+						"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 				}
-				err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-				if err != nil {
-					log.CtxErrorw(ctx, "failed to delete replicate piece",
-						"piece_key", pieceKey, "error", err)
-					return
-				}
-				log.CtxDebugw(ctx, "succeed to delete secondary piece", "piece_key", pieceKey)
 			}
-			break
 		}
-		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(deletingObjectID)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to delete integrity meta", "error", err)
+		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
+		deleteErr := e.baseApp.GfSpDB().DeleteObjectIntegrity(objectInfo.Id.Uint64())
+		log.CtxDebugw(ctx, "delete the object integrity meta", "object_info", objectInfo, "error", deleteErr)
+		task.SetCurrentBlockNumber(currentGCBlockID)
+		task.SetLastDeletedObjectId(currentGCObjectID)
+		metrics.GCObjectCounter.WithLabelValues(e.Name()).Inc()
+		if taskIsCanceled = reportProgress(); taskIsCanceled {
+			log.CtxErrorw(ctx, "gc object task has been canceled", "task_info", task.Info())
 			return
 		}
-		task.SetCurrentBlockNumber(deletingBlock)
-		task.SetLastDeletedObjectId(deletingObjectID)
-		metrics.GCObjectCounter.WithLabelValues(e.Name()).Inc()
+		log.CtxInfow(ctx, "succeed to gc an object", "object_info", objectInfo, "deleted_at_block_id", currentGCBlockID)
+		gcObjectNumber++
 	}
+	isSucceed = true
 }
 
 func (e *ExecuteModular) HandleGCZombiePieceTask(
