@@ -44,6 +44,11 @@ func (g *GfSpBaseApp) GfSpSign(
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to seal object", "error", err)
 		}
+	case *gfspserver.GfSpSignRequest_DiscontinueBucketInfo:
+		err = g.signer.DiscontinueBucket(ctx, t.DiscontinueBucketInfo)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to discontinue bucket", "error", err)
+		}
 	case *gfspserver.GfSpSignRequest_SignIntegrity:
 		signature, integrity, err = g.signer.SignIntegrityHash(ctx, t.SignIntegrity.ObjectId, t.SignIntegrity.Checksums)
 		if err != nil {

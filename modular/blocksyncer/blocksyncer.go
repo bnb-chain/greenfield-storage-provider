@@ -78,6 +78,9 @@ func (b *BlockSyncerModular) Start(ctx context.Context) error {
 	determineMainService()
 
 	CtxMain, CancelMain = context.WithCancel(context.Background())
+	if !NeedBackup {
+		CtxMain = context.WithValue(CtxMain, MigrateDBKey{}, true)
+	}
 
 	go MainService.serve(CtxMain)
 

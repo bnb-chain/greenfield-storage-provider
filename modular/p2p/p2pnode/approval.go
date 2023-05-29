@@ -154,7 +154,7 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 	req.SetApprovedSignature(signature)
 	req.SetApprovedSpOperatorAddress(a.node.baseApp.OperateAddress())
 	err = a.node.sendToPeer(ctx, s.Conn().RemotePeer(), GetApprovalResponse, req)
-	log.Infof("%s response to %s approval request, error: %s",
+	log.Infof("%s response to %s approval request, error: %v",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), err)
 }
 

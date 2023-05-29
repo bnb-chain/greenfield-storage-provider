@@ -56,7 +56,7 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 	}
 	client, err := NewGreenfieldChainSignClient(cfg.Chain.ChainAddress[0], cfg.Chain.ChainID,
 		cfg.Chain.GasLimit, cfg.SpAccount.OperatorPrivateKey, cfg.SpAccount.FundingPrivateKey,
-		cfg.SpAccount.SealPrivateKey, cfg.SpAccount.ApprovalPrivateKey)
+		cfg.SpAccount.SealPrivateKey, cfg.SpAccount.ApprovalPrivateKey, cfg.SpAccount.GcPrivateKey)
 	if err != nil {
 		return err
 	}

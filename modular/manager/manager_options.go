@@ -53,6 +53,13 @@ const (
 	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
+
+	// DefaultDiscontinueTimeInterval defines the default interval for starting discontinue
+	// buckets task , used for test net.
+	DefaultDiscontinueTimeInterval = 30 * 60
+	// DefaultDiscontinueBucketKeepAliveDays defines the default bucket keep alive days, after
+	// the interval, buckets will be discontinued, used for test net.
+	DefaultDiscontinueBucketKeepAliveDays = 7
 )
 
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -106,12 +113,22 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	if cfg.Parallel.GlobalSyncConsensusInfoInterval == 0 {
 		cfg.Parallel.GlobalSyncConsensusInfoInterval = DefaultGlobalSyncConsensusInfoInterval
 	}
+	if cfg.Parallel.DiscontinueBucketTimeInterval == 0 {
+		cfg.Parallel.DiscontinueBucketTimeInterval = DefaultDiscontinueTimeInterval
+	}
+	if cfg.Parallel.DiscontinueBucketKeepAliveDays == 0 {
+		cfg.Parallel.DiscontinueBucketKeepAliveDays = DefaultDiscontinueBucketKeepAliveDays
+	}
+
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	manager.maxUploadObjectNumber = cfg.Parallel.GlobalMaxUploadingParallel
 	manager.gcObjectTimeInterval = cfg.Parallel.GlobalBatchGcObjectTimeInterval
 	manager.gcObjectBlockInterval = cfg.Parallel.GlobalGcObjectBlockInterval
 	manager.gcSafeBlockDistance = cfg.Parallel.GlobalGcObjectSafeBlockDistance
 	manager.syncConsensusInfoInterval = cfg.Parallel.GlobalSyncConsensusInfoInterval
+	manager.discontinueBucketEnabled = cfg.Parallel.DiscontinueBucketEnabled
+	manager.discontinueBucketTimeInterval = cfg.Parallel.DiscontinueBucketTimeInterval
+	manager.discontinueBucketKeepAliveDays = cfg.Parallel.DiscontinueBucketKeepAliveDays
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
