@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	ApprovalModularName             = strings.ToLower("Approval")
+	ApprovalModularName             = strings.ToLower("Approver")
 	ApprovalModularDescription      = "Handles the ask crate bucket/object and replicate piece approval request."
 	AuthorizationModularName        = strings.ToLower("Authorizer")
 	AuthorizationModularDescription = "Authorization authentication."
@@ -22,7 +22,7 @@ var (
 	ReceiveModularName              = strings.ToLower("Receiver")
 	ReceiveModularDescription       = "Receives data pieces of an object from other storage provider and store."
 	SignerModularName               = strings.ToLower("Signer")
-	SignerModularDescription        = "Sign the transaction and broadcast to chain"
+	SignerModularDescription        = "Sign the transaction and broadcast to chain."
 	UploadModularName               = strings.ToLower("Uploader")
-	UploadModularDescription        = "Uploads object payload to primary SP"
+	UploadModularDescription        = "Uploads object payload to primary SP."
 )

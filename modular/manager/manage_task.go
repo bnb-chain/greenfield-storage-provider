@@ -50,19 +50,19 @@ func (m *ManageModular) DispatchTask(
 	task = m.gcObjectQueue.TopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add gc object task to backup set", "task_key", task.Key().String(),
-			"task_limit", "task_limit", task.EstimateLimit().String())
+			"task_limit", task.EstimateLimit().String())
 		backUpTasks = append(backUpTasks, task)
 	}
 	task = m.gcZombieQueue.TopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add gc zombie piece task to backup set", "task_key", task.Key().String(),
-			"task_limit", "task_limit", task.EstimateLimit().String())
+			"task_limit", task.EstimateLimit().String())
 		backUpTasks = append(backUpTasks, task)
 	}
 	task = m.gcMetaQueue.TopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add gc meta task to backup set", "task_key", task.Key().String(),
-			"task_limit", "task_limit", task.EstimateLimit().String())
+			"task_limit", task.EstimateLimit().String())
 		backUpTasks = append(backUpTasks, task)
 	}
 	task = m.receiveQueue.TopByLimit(limit)
@@ -334,20 +334,21 @@ func (m *ManageModular) HandleGCObjectTask(
 	if oldTask != nil {
 		if oldTask.(task.GCObjectTask).GetCurrentBlockNumber() > gcTask.GetCurrentBlockNumber() ||
 			(oldTask.(task.GCObjectTask).GetCurrentBlockNumber() == gcTask.GetCurrentBlockNumber() &&
-				oldTask.(task.GCObjectTask).GetLastDeletedObjectId() >= gcTask.GetLastDeletedObjectId()) {
-			log.CtxErrorw(ctx, "report gc object task is expired", "report_info", gcTask.Info(),
+				oldTask.(task.GCObjectTask).GetLastDeletedObjectId() > gcTask.GetLastDeletedObjectId()) {
+			log.CtxErrorw(ctx, "the reported gc object task is expired", "report_info", gcTask.Info(),
 				"current_info", oldTask.Info())
 			return ErrCanceledTask
 		}
 	} else {
-		log.CtxErrorw(ctx, "report gc object task is clear", "report_info", gcTask.Info())
+		log.CtxErrorw(ctx, "the reported gc object task is canceled", "report_info", gcTask.Info())
 		return ErrCanceledTask
 	}
+	log.Errorw("update gc task", "old", oldTask, "new", gcTask)
 	m.gcObjectQueue.Push(gcTask)
 	block, object := gcTask.GetGCObjectProgress()
 	err := m.baseApp.GfSpDB().SetGCObjectProgress(gcTask.Key().String(), block, object)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to update gc object status", "error", err)
+		log.CtxErrorw(ctx, "failed to update gc object task progress", "error", err)
 	}
 	return nil
 }

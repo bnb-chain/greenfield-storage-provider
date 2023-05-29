@@ -65,14 +65,14 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-statisticsTicker.C:
-			log.CtxInfow(ctx, e.Statistics())
+			log.CtxInfo(ctx, e.Statistics())
 		case <-askTaskTicker.C:
 			metrics.MaxTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(atomic.LoadInt64(&e.maxExecuteNum)))
 			metrics.RunningTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(atomic.LoadInt64(&e.executingNum)))
 			go func() {
 				defer atomic.AddInt64(&e.executingNum, -1)
 				if atomic.AddInt64(&e.executingNum, 1) > atomic.LoadInt64(&e.maxExecuteNum) {
-					log.CtxErrorw(ctx, "asking ask number greater than max limit number")
+					log.CtxErrorw(ctx, "failed to ask due to asking number greater than max limit number")
 					return
 				}
 				limit, err := e.scope.RemainingResource()
@@ -110,12 +110,12 @@ func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
 		if e.omitError(err) {
 			return
 		}
-		log.CtxWarnw(ctx, "failed to ask task", "remaining", limit.String(), "error", err)
+		log.CtxErrorw(ctx, "failed to ask task", "remaining", limit.String(), "error", err)
 		return
 	}
 	// double confirm the safe task
 	if askTask == nil {
-		log.CtxWarnw(ctx, "failed to ask task, dangling pointer",
+		log.CtxErrorw(ctx, "failed to ask task, dangling pointer",
 			"remaining", limit.String(), "error", err)
 		return
 	}

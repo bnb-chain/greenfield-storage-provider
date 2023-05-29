@@ -81,7 +81,7 @@ type SPInfoDB interface {
 }
 
 type GCObjectInfoDB interface {
-	SetGCObjectProgress(taskKey string, deletingBlockID uint64, deletingObjectID uint64) error
+	SetGCObjectProgress(taskKey string, deletingBlockID uint64, deletedObjectID uint64) error
 	DeleteGCObjectProgress(taskKey string) error
 	GetAllGCObjectTask(taskKey string) []task.GCObjectTask
 }

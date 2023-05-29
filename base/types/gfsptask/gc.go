@@ -38,7 +38,8 @@ func (m *GfSpGCObjectTask) Type() coretask.TType {
 }
 
 func (m *GfSpGCObjectTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], start[%d], end[%d], curr[%d], object[%d],å %s",
+	return fmt.Sprintf(
+		"key[%s], type[%s], priority[%d], limit[%s], start_block[%d], end_block[%d], current_block[%d], last_deleted_object[%d], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
 		m.GetStartBlockNumber(), m.GetEndBlockNumber(), m.GetCurrentBlockNumber(),
 		m.GetLastDeletedObjectId(), m.GetTask().Info())
