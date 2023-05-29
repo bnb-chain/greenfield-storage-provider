@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
@@ -28,7 +27,7 @@ func setup(t *testing.T, storageType, bucketURL string, shards int) (*piece.Piec
 			Storage:    storageType,
 			BucketURL:  bucketURL,
 			MaxRetries: 5,
-			IAMType:    mpiecestore.AKSKIAMType,
+			IAMType:    storage.AKSKIAMType,
 		},
 	})
 }

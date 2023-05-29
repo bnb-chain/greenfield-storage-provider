@@ -6,12 +6,22 @@ import (
 	"fmt"
 	"time"
 
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"gorm.io/gorm"
 )
 
 // InsertAuthKey insert a new record into OffChainAuthKeyTable
-func (s *SpDBImpl) InsertAuthKey(newRecord *OffChainAuthKeyTable) error {
-	result := s.db.Create(newRecord)
+func (s *SpDBImpl) InsertAuthKey(newRecord *corespdb.OffChainAuthKey) error {
+	result := s.db.Create(&OffChainAuthKeyTable{
+		UserAddress:      newRecord.UserAddress,
+		Domain:           newRecord.Domain,
+		CurrentNonce:     newRecord.CurrentNonce,
+		CurrentPublicKey: newRecord.CurrentPublicKey,
+		NextNonce:        newRecord.NextNonce,
+		ExpiryDate:       newRecord.ExpiryDate,
+		CreatedTime:      newRecord.CreatedTime,
+		ModifiedTime:     newRecord.ModifiedTime,
+	})
 	if result.Error != nil || result.RowsAffected != 1 {
 		return fmt.Errorf("failed to insert record in service config table: %s", result.Error)
 	}
@@ -49,7 +59,7 @@ func errIsNotFound(err error) bool {
 }
 
 // GetAuthKey get OffChainAuthKey from OffChainAuthKeyTable
-func (s *SpDBImpl) GetAuthKey(userAddress string, domain string) (*OffChainAuthKeyTable, error) {
+func (s *SpDBImpl) GetAuthKey(userAddress string, domain string) (*corespdb.OffChainAuthKey, error) {
 	if userAddress == "" || domain == "" {
 		return nil, fmt.Errorf("failed to GetAuthKey: userAddress or domain can't be null")
 	}
@@ -60,7 +70,7 @@ func (s *SpDBImpl) GetAuthKey(userAddress string, domain string) (*OffChainAuthK
 	if result.Error != nil {
 		if errIsNotFound(result.Error) {
 			// this is a new initial record, not containing any public key but just generate the first nonce as 1
-			newRecord := &OffChainAuthKeyTable{
+			newRecord := &corespdb.OffChainAuthKey{
 				UserAddress:      userAddress,
 				Domain:           domain,
 				CurrentNonce:     0,
@@ -79,5 +89,14 @@ func (s *SpDBImpl) GetAuthKey(userAddress string, domain string) (*OffChainAuthK
 		}
 		return nil, fmt.Errorf("failed to query OffChainAuthKey table: %s", result.Error)
 	}
-	return queryKeyReturn, nil
+	return &corespdb.OffChainAuthKey{
+		UserAddress:      queryKeyReturn.UserAddress,
+		Domain:           queryKeyReturn.Domain,
+		CurrentNonce:     queryKeyReturn.CurrentNonce,
+		CurrentPublicKey: queryKeyReturn.CurrentPublicKey,
+		NextNonce:        queryKeyReturn.NextNonce,
+		ExpiryDate:       queryKeyReturn.ExpiryDate,
+		CreatedTime:      queryKeyReturn.CreatedTime,
+		ModifiedTime:     queryKeyReturn.ModifiedTime,
+	}, nil
 }

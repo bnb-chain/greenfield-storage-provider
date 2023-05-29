@@ -27,9 +27,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/viki-org/dnscache"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -98,7 +95,7 @@ func (s *s3Store) GetObject(ctx context.Context, key string, offset, limit int64
 		return nil, err
 	}
 	if offset == 0 && limit == -1 {
-		cs := resp.Metadata[mpiecestore.ChecksumAlgo]
+		cs := resp.Metadata[ChecksumAlgo]
 		if cs != nil {
 			resp.Body = verifyChecksum(resp.Body, aws.StringValue(cs))
 		}
@@ -123,8 +120,8 @@ func (s *s3Store) PutObject(ctx context.Context, key string, reader io.Reader) e
 		Bucket:      aws.String(s.bucketName),
 		Key:         aws.String(key),
 		Body:        body,
-		ContentType: aws.String(model.OctetStream),
-		Metadata:    map[string]*string{mpiecestore.ChecksumAlgo: aws.String(checksum)},
+		ContentType: aws.String(OctetStream),
+		Metadata:    map[string]*string{ChecksumAlgo: aws.String(checksum)},
 	}
 	_, err := s.api.PutObjectWithContext(ctx, params)
 	return err
@@ -150,7 +147,7 @@ func (s *s3Store) HeadBucket(ctx context.Context) error {
 		log.Errorw("S3 failed to head bucket", "error", err)
 		if reqErr, ok := err.(awserr.RequestFailure); ok {
 			if reqErr.StatusCode() == http.StatusNotFound {
-				return merrors.ErrNoSuchBucket
+				return ErrNoSuchBucket
 			}
 		}
 		return err
@@ -218,7 +215,7 @@ func (s *s3Store) ListObjects(ctx context.Context, prefix, marker, delimiter str
 }
 
 func (s *s3Store) ListAllObjects(ctx context.Context, prefix, marker string) (<-chan Object, error) {
-	return nil, merrors.ErrUnsupportedMethod
+	return nil, ErrUnsupportedMethod
 }
 
 // SessionCache holds session.Session according to ObjectStorageConfig and it synchronizes access/modification
@@ -257,8 +254,8 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	}
 	var sess *session.Session
 	switch cfg.IAMType {
-	case mpiecestore.AKSKIAMType:
-		key := getSecretKeyFromEnv(mpiecestore.AWSAccessKey, mpiecestore.AWSSecretKey, mpiecestore.AWSSessionToken)
+	case AKSKIAMType:
+		key := getSecretKeyFromEnv(AWSAccessKey, AWSSecretKey, AWSSessionToken)
 		if key.accessKey == "NoSignRequest" {
 			// access public s3 bucket
 			awsConfig.Credentials = credentials.AnonymousCredentials
@@ -267,7 +264,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		}
 		sess = session.Must(session.NewSession(awsConfig))
 		log.Debugw("use aksk to access s3", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
-	case mpiecestore.SAIAMType:
+	case SAIAMType:
 		sess = session.Must(session.NewSession())
 		irsa, roleARN, tokenPath := checkIRSAAvailable()
 		if irsa {
@@ -295,12 +292,12 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 // IRSA is IAM Roles for Service Account in Kubernetes
 func checkIRSAAvailable() (bool, string, string) {
 	irsa := true
-	roleARN, exists := os.LookupEnv(mpiecestore.AWSRoleARN)
+	roleARN, exists := os.LookupEnv(AWSRoleARN)
 	if !exists {
 		irsa = false
 		log.Error("failed to read aws role arn")
 	}
-	tokenPath, exists := os.LookupEnv(mpiecestore.AWSWebIdentityTokenFile)
+	tokenPath, exists := os.LookupEnv(AWSWebIdentityTokenFile)
 	if !exists {
 		irsa = false
 		log.Error("failed to read aws web identity token file")

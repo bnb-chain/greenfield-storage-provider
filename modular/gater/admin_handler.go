@@ -12,7 +12,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/p2p/p2pnode"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -46,16 +45,16 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
 
 	approvalType := reqCtx.vars["action"]
-	approvalMsg, err = hex.DecodeString(r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdUnsignedApprovalMsgHeader))
 	if err != nil {
 		log.Errorw("failed to parse approval header", "approval_type", approvalType,
-			"approval", r.Header.Get(model.GnfdUnsignedApprovalMsgHeader))
+			"approval", r.Header.Get(GnfdUnsignedApprovalMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
@@ -64,7 +63,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 	case createBucketApprovalAction:
 		if err = storagetypes.ModuleCdc.UnmarshalJSON(approvalMsg, &createBucketApproval); err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to unmarshal approval", "approval",
-				r.Header.Get(model.GnfdUnsignedApprovalMsgHeader), "error", err)
+				r.Header.Get(GnfdUnsignedApprovalMsgHeader), "error", err)
 			err = ErrDecodeMsg
 			return
 		}
@@ -102,11 +101,11 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		bz := storagetypes.ModuleCdc.MustMarshalJSON(approvalTask.GetCreateBucketInfo())
-		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
+		w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	case createObjectApprovalAction:
 		if err = storagetypes.ModuleCdc.UnmarshalJSON(approvalMsg, &createObjectApproval); err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to unmarshal approval", "approval",
-				r.Header.Get(model.GnfdUnsignedApprovalMsgHeader), "error", err)
+				r.Header.Get(GnfdUnsignedApprovalMsgHeader), "error", err)
 			err = ErrDecodeMsg
 			return
 		}
@@ -145,7 +144,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		bz := storagetypes.ModuleCdc.MustMarshalJSON(approvedTask.GetCreateObjectInfo())
-		w.Header().Set(model.GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
+		w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	default:
 		err = ErrUnsupportedRequestType
 		return
@@ -178,19 +177,19 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
-	objectID, err := util.StringToUint64(reqCtx.request.Header.Get(model.GnfdObjectIDHeader))
+	objectID, err := util.StringToUint64(reqCtx.request.Header.Get(GnfdObjectIDHeader))
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse object id", "object_id",
-			reqCtx.request.Header.Get(model.GnfdObjectIDHeader))
+			reqCtx.request.Header.Get(GnfdObjectIDHeader))
 		err = ErrInvalidHeader
 		return
 	}
 	objectInfo, err := g.baseApp.Consensus().QueryObjectInfoByID(reqCtx.Context(),
-		reqCtx.request.Header.Get(model.GnfdObjectIDHeader))
+		reqCtx.request.Header.Get(GnfdObjectIDHeader))
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
@@ -217,17 +216,17 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
-	redundancyIdx, err := util.StringToInt32(reqCtx.request.Header.Get(model.GnfdRedundancyIndexHeader))
+	redundancyIdx, err := util.StringToInt32(reqCtx.request.Header.Get(GnfdRedundancyIndexHeader))
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse redundancy index", "redundancy_idx",
-			reqCtx.request.Header.Get(model.GnfdRedundancyIndexHeader))
+			reqCtx.request.Header.Get(GnfdRedundancyIndexHeader))
 		err = ErrInvalidHeader
 		return
 	}
-	segmentIdx, err := util.StringToUint32(reqCtx.request.Header.Get(model.GnfdPieceIndexHeader))
+	segmentIdx, err := util.StringToUint32(reqCtx.request.Header.Get(GnfdPieceIndexHeader))
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse segment index", "segment_idx",
-			reqCtx.request.Header.Get(model.GnfdPieceIndexHeader))
+			reqCtx.request.Header.Get(GnfdPieceIndexHeader))
 		err = ErrInvalidHeader
 		return
 	}
@@ -254,9 +253,9 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxErrorw(ctx, "failed to challenge piece", "error", err)
 		return
 	}
-	w.Header().Set(model.GnfdObjectIDHeader, util.Uint64ToString(objectID))
-	w.Header().Set(model.GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
-	w.Header().Set(model.GnfdPieceHashHeader, util.BytesSliceToString(checksums))
+	w.Header().Set(GnfdObjectIDHeader, util.Uint64ToString(objectID))
+	w.Header().Set(GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
+	w.Header().Set(GnfdPieceHashHeader, util.BytesSliceToString(checksums))
 	w.Write(data)
 	log.CtxDebugw(reqCtx.Context(), "succeed to challenge piece")
 }
@@ -289,19 +288,19 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask
-	reqCtx, _ = NewRequestContext(r)
+	reqCtx, _ = NewRequestContext(r, g)
 
-	approvalMsg, err = hex.DecodeString(r.Header.Get(model.GnfdReplicatePieceApprovalHeader))
+	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdReplicatePieceApprovalHeader))
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse replicate piece approval header",
-			"approval", r.Header.Get(model.GnfdReceiveMsgHeader))
+			"approval", r.Header.Get(GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
 	err = json.Unmarshal(approvalMsg, &approval)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal replicate piece approval header",
-			"receive", r.Header.Get(model.GnfdReceiveMsgHeader))
+			"receive", r.Header.Get(GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
@@ -326,10 +325,10 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	receiveMsg, err = hex.DecodeString(r.Header.Get(model.GnfdReceiveMsgHeader))
+	receiveMsg, err = hex.DecodeString(r.Header.Get(GnfdReceiveMsgHeader))
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse receive header",
-			"receive", r.Header.Get(model.GnfdReceiveMsgHeader))
+			"receive", r.Header.Get(GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
@@ -337,7 +336,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(receiveMsg, &receiveTask)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal receive header",
-			"receive", r.Header.Get(model.GnfdReceiveMsgHeader))
+			"receive", r.Header.Get(GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
@@ -366,8 +365,8 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 			log.CtxErrorw(reqCtx.Context(), "failed to done receive piece", "error", err)
 			return
 		}
-		w.Header().Set(model.GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
-		w.Header().Set(model.GnfdIntegrityHashSignatureHeader, hex.EncodeToString(signature))
+		w.Header().Set(GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
+		w.Header().Set(GnfdIntegrityHashSignatureHeader, hex.EncodeToString(signature))
 	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to replicate piece")
 }

@@ -10,16 +10,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
 var shardNum = 5
 
 func TestSharding(t *testing.T) {
 	// init PieceStore
-	handler, err := setup(t, mpiecestore.DiskFileStore, "./data/test%d", shardNum)
+	handler, err := setup(t, storage.DiskFileStore, "./data/test%d", shardNum)
 	assert.Equal(t, err, nil)
 
 	err = createFiles(shardNum)

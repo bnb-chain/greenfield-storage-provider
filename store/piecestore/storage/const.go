@@ -1,4 +1,4 @@
-package piecestore
+package storage
 
 // define storage type constants
 const (
@@ -41,6 +41,9 @@ const (
 	MinioSecretKey = "MINIO_SECRET_KEY"
 	// MinioSessionToken defines env variable name for minio session token
 	MinioSessionToken = "MINIO_SESSION_TOKEN"
+
+	// OctetStream is used to indicate the binary files
+	OctetStream = "application/octet-stream"
 )
 
 // define piece store constants.

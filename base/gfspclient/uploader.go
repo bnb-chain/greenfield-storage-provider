@@ -7,7 +7,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -36,7 +35,7 @@ func (s *GfSpClient) UploadObject(
 		return ErrRpcUnknown
 	}
 	var (
-		buf = make([]byte, model.DefaultStreamBufSize)
+		buf = make([]byte, DefaultStreamBufSize)
 	)
 	for {
 		n, streamErr := stream.Read(buf)

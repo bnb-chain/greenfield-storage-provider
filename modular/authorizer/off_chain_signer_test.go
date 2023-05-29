@@ -1,6 +1,5 @@
-package auth
+package authorizer
 
-/*
 import (
 	"bytes"
 	"crypto/subtle"
@@ -120,24 +119,6 @@ func TestErrorCases(t *testing.T) {
 
 }
 
-// todo -- remove it before commit
-func TestForDebug(t *testing.T) {
-	seed := []byte{15, 128, 7, 103, 18, 78, 41, 63, 47, 120, 41, 247, 209, 152, 27, 43, 225, 223, 242, 203, 250, 160, 164, 252, 210, 82, 236, 192, 196, 78, 97, 41, 78, 38, 181, 77, 175, 253, 155, 97, 176, 146, 76, 158, 41, 102, 57, 177, 37, 177, 201, 227, 174, 159, 83, 80, 175, 202, 121, 136, 211, 114, 126, 199, 28}
-	sk, _ := GenerateEddsaPrivateKey(string(seed))
-	correctPK, _ := ParsePk(GetEddsaCompressedPublicKey(string(seed)))
-
-	hFunc := mimc.NewMiMC()
-	msg := "I want to get approval_1681436379000"
-	sig, _ := sk.Sign([]byte(msg), hFunc)
-	log.Infof("sig is %s", hex.EncodeToString(sig))
-	isValid, err := correctPK.Verify(sig, []byte(msg), hFunc)
-	if err != nil {
-		t.Fatal(err)
-	}
-	log.Info(isValid)
-	assert.Equal(t, true, isValid)
-}
-
 func TestParsePK(t *testing.T) {
 	sk, err := GenerateEddsaPrivateKey("testeeetgcxsaahsadcastzxbmjhgmgj")
 	if err != nil {
@@ -195,7 +176,6 @@ type (
 	PrivateKey = eddsa.PrivateKey
 )
 
-
 // GenerateEddsaPrivateKey: generate eddsa private key
 func GenerateEddsaPrivateKey(seed string) (sk *PrivateKey, err error) {
 	buf := make([]byte, 32)
@@ -237,7 +217,6 @@ func GenerateKey(r io.Reader) (*PrivateKey, error) {
 	h[31] &= 0x7F
 	h[31] |= 0x40
 
-
 	// 0xFC = 1111 1100
 	// convert 256 bits to 254 bits supporting bn254 curve
 
@@ -273,4 +252,3 @@ func GenerateKey(r io.Reader) (*PrivateKey, error) {
 
 	return sk, err
 }
-*/

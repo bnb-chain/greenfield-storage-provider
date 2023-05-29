@@ -3,6 +3,7 @@ package blocksyncer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync/atomic"
 
@@ -19,9 +20,13 @@ import (
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+)
+
+var (
+	// ErrBlockNotFound defines not found block data
+	ErrBlockNotFound = errors.New("failed to get block from map need retry")
 )
 
 func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string) parser.Indexer {
@@ -86,7 +91,7 @@ func (i *Impl) Process(height uint64) error {
 		txs, _ = txsAny.([]*types.Tx)
 		if !okb || !oke || !okt {
 			log.Warnf("failed to get map data height: %d", height)
-			return errors.ErrBlockNotFound
+			return ErrBlockNotFound
 		}
 	} else {
 		// get block info

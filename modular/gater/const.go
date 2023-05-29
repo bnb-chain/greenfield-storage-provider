@@ -1,52 +1,4 @@
-package model
-
-// environment constants
-const (
-	// SpDBUser defines env variable name for sp db user name
-	SpDBUser = "SP_DB_USER"
-	// SpDBPasswd defines env variable name for sp db user passwd
-	SpDBPasswd = "SP_DB_PASSWORD"
-	// SpDBAddress defines env variable name for sp db address
-	SpDBAddress = "SP_DB_ADDRESS"
-	// SpDBDataBase defines env variable name for sp db database
-	SpDBDataBase = "SP_DB_DATABASE"
-
-	// BsDBUser defines env variable name for block syncer db user name
-	BsDBUser = "BS_DB_USER"
-	// BsDBPasswd defines env variable name for block syncer db user passwd
-	BsDBPasswd = "BS_DB_PASSWORD"
-	// BsDBAddress defines env variable name for block syncer db address
-	BsDBAddress = "BS_DB_ADDRESS"
-	// BsDBDataBase defines env variable name for block syncer db database
-	BsDBDataBase = "BS_DB_DATABASE"
-	// BsDBSwitchedUser defines env variable name for switched block syncer db user name
-	BsDBSwitchedUser = "BS_DB_SWITCHED_USER"
-	// BsDBSwitchedPasswd defines env variable name for switched block syncer db user passwd
-	BsDBSwitchedPasswd = "BS_DB_SWITCHED_PASSWORD"
-	// BsDBSwitchedAddress defines env variable name for switched block syncer db address
-	BsDBSwitchedAddress = "BS_DB_SWITCHED_ADDRESS"
-	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database
-	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
-
-	// SpOperatorAddress defines env variable name for sp operator address
-	SpOperatorAddress = "greenfield-storage-provider"
-	// DsnBlockSyncer defines env variable name for block syncer dsn
-	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
-	// DsnBlockSyncerSwitched defines env variable name for block syncer backup dsn
-	DsnBlockSyncerSwitched = "BLOCK_SYNCER_DSN_SWITCHED"
-)
-
-// SQLDB default configuration parmas
-const (
-	// DefaultConnMaxLifetime defines the default max liveness time of connection
-	DefaultConnMaxLifetime = 60
-	// DefaultConnMaxIdleTime defines the default max idle time of connection
-	DefaultConnMaxIdleTime = 30
-	// DefaultMaxIdleConns defines the default max number of idle connections
-	DefaultMaxIdleConns = 16
-	// DefaultMaxOpenConns defines the default max number of open connections
-	DefaultMaxOpenConns = 32
-)
+package gater
 
 // define all kinds of http constants
 const (
@@ -169,12 +121,4 @@ const (
 	GnfdOffChainAuthAppRegPublicKeyHeader = "X-Gnfd-App-Reg-Public-Key"
 	// GnfdOffChainAuthAppRegExpiryDateHeader defines the Expiry-Date is the ISO 8601 datetime string (e.g. 2021-09-30T16:25:24Z), used to register the EDDSA public key
 	GnfdOffChainAuthAppRegExpiryDateHeader = "X-Gnfd-App-Reg-Expiry-Date"
-)
-
-// // define all kinds of size
-const (
-	// MaxCallMsgSize defines gPRC max send or receive msg size
-	MaxCallMsgSize = 25 * 1024 * 1024
-	// DefaultStreamBufSize defines gateway stream forward payload buf size
-	DefaultStreamBufSize = 16 * 1024 * 1024
 )
