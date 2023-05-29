@@ -21,6 +21,7 @@ import (
 // RequestContext generates from http request, it records the common info
 // for handler to use.
 type RequestContext struct {
+	g          *GateModular
 	request    *http.Request
 	routerName string
 	bucketName string
@@ -41,7 +42,7 @@ type RequestContext struct {
 // NewRequestContext returns an instance of RequestContext, and verify the
 // request signature, returns the instance regardless of the success or
 // failure of the verification.
-func NewRequestContext(r *http.Request) (*RequestContext, error) {
+func NewRequestContext(r *http.Request, g *GateModular) (*RequestContext, error) {
 	vars := mux.Vars(r)
 	routerName := ""
 	if mux.CurrentRoute(r) != nil {
@@ -49,6 +50,7 @@ func NewRequestContext(r *http.Request) (*RequestContext, error) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	reqCtx := &RequestContext{
+		g:          g,
 		ctx:        ctx,
 		cancel:     cancel,
 		request:    r,
@@ -151,14 +153,15 @@ func (r *RequestContext) VerifySignature() (string, error) {
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
 		return "", nil
 	}
-	//personalSignSignaturePrefix := signaturePrefix(model.SignTypePersonal, model.SignAlgorithm)
-	//if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
-	//	return reqContext.verifyPersonalSignature(requestSignature[len(personalSignSignaturePrefix):])
-	//}
-	//OffChainSignaturePrefix := signaturePrefix(model.SignTypeOffChain, model.SignAlgorithmEddsa)
-	//if strings.HasPrefix(requestSignature, OffChainSignaturePrefix) {
-	//	return g.verifyOffChainSignature(reqContext, requestSignature[len(OffChainSignaturePrefix):])
-	//}
+
+	OffChainSignaturePrefix := signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)
+	if strings.HasPrefix(requestSignature, OffChainSignaturePrefix) {
+		accAddress, err := r.verifyOffChainSignature(requestSignature[len(OffChainSignaturePrefix):])
+		if err != nil {
+			return "", err
+		}
+		return accAddress.String(), nil
+	}
 	return "", ErrUnsupportedSignType
 }
 
@@ -224,4 +227,61 @@ func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, e
 	}
 	recoverAcc := sdk.AccAddress(pk.Address().Bytes())
 	return recoverAcc, pk, nil
+}
+
+// verifyOffChainSignature used to verify off-chain-auth signature, return (address, nil) if check succeed
+func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.AccAddress, error) {
+	var (
+		signedMsg *string
+		err       error
+	)
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	if err != nil {
+		return nil, err
+	}
+
+	account := r.request.Header.Get(GnfdUserAddressHeader)
+	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
+	offChainSig := *sigString
+	realMsgToSign := *signedMsg
+
+	verifyOffChainSignatureResp, err := r.g.baseApp.GfSpClient().VerifyOffChainSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
+	if err != nil {
+		log.Errorf("failed to verify off chain signature", "error", err)
+		return nil, err
+	}
+	if verifyOffChainSignatureResp {
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(r.request.Header.Get(GnfdUserAddressHeader))
+		return userAddress, nil
+	} else {
+		return nil, err
+	}
+}
+
+func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string, error) {
+	var (
+		signedMsg string
+		signature string
+	)
+	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
+	signatureItems := strings.Split(requestSignature, ",")
+	if len(signatureItems) != 2 {
+		return nil, nil, ErrAuthorizationFormat
+	}
+	for _, item := range signatureItems {
+		pair := strings.Split(item, "=")
+		if len(pair) != 2 {
+			return nil, nil, ErrAuthorizationFormat
+		}
+		switch pair[0] {
+		case SignedMsg:
+			signedMsg = pair[1]
+		case Signature:
+			signature = pair[1]
+		default:
+			return nil, nil, ErrAuthorizationFormat
+		}
+	}
+
+	return &signedMsg, &signature, nil
 }

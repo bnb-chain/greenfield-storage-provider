@@ -7,6 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -52,6 +53,12 @@ type Authorizer interface {
 	Modular
 	// VerifyAuthorize verifies the operator authority.
 	VerifyAuthorize(ctx context.Context, auth AuthOpType, account, bucket, object string) (bool, error)
+	// GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
+	GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error)
+	// UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
+	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64) (bool, error)
+	// VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
+	VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error)
 }
 
 // Approver is the interface to handle ask approval.

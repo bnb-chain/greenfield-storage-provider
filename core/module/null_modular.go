@@ -7,6 +7,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -96,6 +97,18 @@ func (*NullModular) HandleChallengePieceTask(context.Context, task.ChallengePiec
 	return ErrNilModular
 }
 func (*NullModular) VerifyAuthorize(context.Context, AuthOpType, string, string, string) (bool, error) {
+	return false, ErrNilModular
+}
+
+func (*NullModular) GetAuthNonce(ctx context.Context, account string, domain string) (*corespdb.OffChainAuthKey, error) {
+	return nil, ErrNilModular
+}
+
+func (*NullModular) UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64) (bool, error) {
+	return false, ErrNilModular
+}
+
+func (*NullModular) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error) {
 	return false, ErrNilModular
 }
 

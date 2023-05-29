@@ -33,7 +33,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -118,7 +118,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}

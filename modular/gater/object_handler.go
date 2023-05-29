@@ -39,7 +39,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -139,7 +139,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-	reqCtx, reqCtxErr = NewRequestContext(r)
+	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object's visibility type whether equal to public read
 	authorized, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), "",
 		reqCtx.bucketName, reqCtx.objectName)
@@ -248,7 +248,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -316,7 +316,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	)
 
 	// ignore the error, because the universal endpoint does not need signature
-	reqCtx, _ = NewRequestContext(r)
+	reqCtx, _ = NewRequestContext(r, g)
 
 	defer func() {
 		reqCtx.Cancel()

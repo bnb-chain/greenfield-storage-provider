@@ -45,7 +45,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -177,7 +177,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -288,7 +288,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask
-	reqCtx, _ = NewRequestContext(r)
+	reqCtx, _ = NewRequestContext(r, g)
 
 	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdReplicatePieceApprovalHeader))
 	if err != nil {

@@ -129,14 +129,14 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	http.Handle("/", router)
 
 	// off-chain-auth router
-	//r.Path(model.AuthRequestNoncePath).
-	//	Name(requestNonceName).
-	//	Methods(http.MethodGet).
-	//	HandlerFunc(g.requestNonceHandler)
-	//r.Path(model.AuthUpdateKeyPath).
-	//	Name(updateUserPublicKey).
-	//	Methods(http.MethodPost).
-	//	HandlerFunc(g.updateUserPublicKeyHandler)
+	router.Path(AuthRequestNoncePath).
+		Name(requestNonceName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.requestNonceHandler)
+	router.Path(AuthUpdateKeyPath).
+		Name(updateUserPublicKey).
+		Methods(http.MethodPost).
+		HandlerFunc(g.updateUserPublicKeyHandler)
 
 	// path style
 	pathBucketRouter := router.PathPrefix("/{bucket}").Subrouter()
