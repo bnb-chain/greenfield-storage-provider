@@ -413,6 +413,7 @@ type ChallengePieceTask interface {
 	InitChallengePieceTask(
 		object *storagetypes.ObjectInfo,
 		bucket *storagetypes.BucketInfo,
+		params *storagetypes.Params,
 		priority TPriority,
 		userAddress string,
 		replicateIdx int32,

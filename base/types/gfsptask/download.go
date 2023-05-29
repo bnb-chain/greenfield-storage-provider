@@ -172,6 +172,7 @@ func (m *GfSpDownloadObjectTask) SetBucketInfo(bucket *storagetypes.BucketInfo) 
 func (m *GfSpChallengePieceTask) InitChallengePieceTask(
 	object *storagetypes.ObjectInfo,
 	bucket *storagetypes.BucketInfo,
+	params *storagetypes.Params,
 	priority coretask.TPriority,
 	userAddress string,
 	replicateIdx int32,
@@ -184,6 +185,7 @@ func (m *GfSpChallengePieceTask) InitChallengePieceTask(
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetBucketInfo(bucket)
 	m.SetObjectInfo(object)
+	m.SetStorageParams(params)
 	m.SetUserAddress(userAddress)
 	m.SetRedundancyIdx(replicateIdx)
 	m.SetSegmentIdx(segmentIdx)

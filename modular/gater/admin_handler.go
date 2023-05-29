@@ -230,7 +230,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidHeader
 		return
 	}
-	parms, err := g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	params, err := g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
 		return
@@ -238,14 +238,14 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	var pieceSize uint64
 	if redundancyIdx < 0 {
 		pieceSize = uint64(g.baseApp.PieceOp().SegmentSize(objectInfo.GetPayloadSize(),
-			segmentIdx, parms.VersionedParams.GetMaxSegmentSize()))
+			segmentIdx, params.VersionedParams.GetMaxSegmentSize()))
 	} else {
 		pieceSize = uint64(g.baseApp.PieceOp().PieceSize(objectInfo.GetPayloadSize(),
-			segmentIdx, parms.VersionedParams.GetMaxSegmentSize(),
-			parms.VersionedParams.GetRedundantDataChunkNum()))
+			segmentIdx, params.VersionedParams.GetMaxSegmentSize(),
+			params.VersionedParams.GetRedundantDataChunkNum()))
 	}
 	task := &gfsptask.GfSpChallengePieceTask{}
-	task.InitChallengePieceTask(objectInfo, bucketInfo, g.baseApp.TaskPriority(task), reqCtx.Account(),
+	task.InitChallengePieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task), reqCtx.Account(),
 		redundancyIdx, segmentIdx, g.baseApp.TaskTimeout(task, pieceSize), g.baseApp.TaskMaxRetry(task))
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
 	integrity, checksums, data, err = g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
