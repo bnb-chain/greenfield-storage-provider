@@ -143,6 +143,11 @@ func (g *GateModular) putObjectByOffsetHandler(w http.ResponseWriter, r *http.Re
 
 }
 
+// queryPutObjectOffsetHandler handles the resumable put object
+func (g *GateModular) queryPutObjectOffsetHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
 // getObjectHandler handles the download object request.
 func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (

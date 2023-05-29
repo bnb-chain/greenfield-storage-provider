@@ -70,6 +70,14 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: putObjectRouterName,
 		},
+    {
+			name:             "PutObjectByOffset router",
+			router:           gwRouter,
+			method:           http.MethodPost,
+      url:              scheme + testDomain + "/" + bucketName + "/"+ objectName + "?offset=0&complete=false&context=",
+			shouldMatch:      true,
+			wantedRouterName: putObjectByOffsetRouterName,
+		},
 		{
 			name:             "Get object upload progress router, virtual host style",
 			router:           gwRouter,
@@ -237,6 +245,7 @@ func TestRouters(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+      t.Log(testCase.url)
 			request := httptest.NewRequest(testCase.method, testCase.url, strings.NewReader(""))
 			router := testCase.router
 
