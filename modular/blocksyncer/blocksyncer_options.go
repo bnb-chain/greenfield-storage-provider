@@ -190,7 +190,7 @@ func (b *BlockSyncerModular) enqueueNewBlocks(context context.Context, exportQue
 		select {
 		case <-context.Done():
 			log.Infof("Receive cancel signal, enqueueNewBlocks routine will stop")
-			//close channel
+			// close channel
 			close(exportQueue)
 			return
 		default:
@@ -199,7 +199,7 @@ func (b *BlockSyncerModular) enqueueNewBlocks(context context.Context, exportQue
 				latestBlockHeight := latestBlockHeightAny.(int64)
 				// Enqueue all heights from the current height up to the latest height
 				for ; currHeight <= uint64(latestBlockHeight); currHeight++ {
-					log.Debugw("enqueueing new block", "height", currHeight)
+					// log.Debugw("enqueueing new block", "height", currHeight)
 					exportQueue <- currHeight
 				}
 				time.Sleep(config.GetAvgBlockTime())

@@ -36,7 +36,7 @@ type GreenfieldClient struct {
 	Provider      string
 }
 
-// GnfdClient return the greenfield chain client
+// GnfdClient returns the greenfield chain client.
 func (client *GreenfieldClient) GnfdClient() *chainClient.GreenfieldClient {
 	return client.chainClient
 }
@@ -55,7 +55,7 @@ type Gnfd struct {
 	mutex         sync.RWMutex
 }
 
-// NewGnfd return the Greenfield instance.
+// NewGnfd returns the Greenfield instance.
 func NewGnfd(cfg *GnfdChainConfig) (*Gnfd, error) {
 	if len(cfg.ChainAddress) == 0 {
 		return nil, errors.New("greenfield nodes missing")
@@ -88,21 +88,21 @@ func (g *Gnfd) Close() error {
 	return nil
 }
 
-// getCurrentClient return the current client to use.
+// getCurrentClient returns the current client to use.
 func (g *Gnfd) getCurrentClient() *GreenfieldClient {
 	g.mutex.RLock()
 	defer g.mutex.RUnlock()
 	return g.client
 }
 
-// setCurrentClient set client to current client for using.
+// setCurrentClient sets client to current client for using.
 func (g *Gnfd) setCurrentClient(client *GreenfieldClient) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 	g.client = client
 }
 
-// updateClient select the client that block height is the largest and set to current client.
+// updateClient selects the client that block height is the largest and set to current client.
 func (g *Gnfd) updateClient() {
 	ticker := time.NewTicker(UpdateClientInternal * time.Second)
 	for {
@@ -117,7 +117,7 @@ func (g *Gnfd) updateClient() {
 					context.Background(),
 					&tmservice.GetLatestBlockRequest{})
 				if err != nil {
-					log.Errorw("get latest block height failed", "node_addr", client.Provider, "error", err)
+					log.Errorw("failed to get latest block height", "node_addr", client.Provider, "error", err)
 					continue
 				}
 				currentHeight := (uint64)(resp.SdkBlock.Header.Height)

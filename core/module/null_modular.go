@@ -168,6 +168,10 @@ func (*NilModular) SealObject(context.Context, *storagetypes.MsgSealObject) erro
 	return ErrNilModular
 }
 
+func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) error {
+	return nil
+}
+
 var _ Receiver = (*NullReceiveModular)(nil)
 
 type NullReceiveModular struct{}

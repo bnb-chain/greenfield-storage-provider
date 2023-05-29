@@ -237,6 +237,8 @@ type Signer interface {
 	SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong) ([]byte, error)
 	// SealObject signs the MsgSealObject and broadcast the tx to greenfield.
 	SealObject(ctx context.Context, object *storagetypes.MsgSealObject) error
+	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
+	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error
 }
 
 // Uploader is the interface to handle put object request from user account, and

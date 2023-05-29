@@ -32,12 +32,12 @@ func (g *GfSpBaseApp) StartServices(ctx context.Context) corelifecycle.Lifecycle
 func (g *GfSpBaseApp) startServices(ctx context.Context) {
 	for i, service := range g.services {
 		if err := service.Start(ctx); err != nil {
-			log.Errorf("service %s starts error: %v", service.Name(), err)
+			log.Errorw("failed to start service", "service_name", service.Name(), "error", err)
 			g.services = g.services[:i]
 			g.appCancel()
 			break
 		} else {
-			log.Infof("service %s starts successfully", service.Name())
+			log.Infow("succeed to start service", "service_name", service.Name())
 		}
 	}
 }
@@ -79,7 +79,7 @@ func (g *GfSpBaseApp) StopServices(ctx context.Context) {
 
 	<-gCtx.Done()
 	if errors.Is(gCtx.Err(), context.Canceled) {
-		log.Infow("service stop working", "stop service timeout", DefaultStopTime)
+		log.Infow("service still work, and stop timout", "timeout", DefaultStopTime)
 	} else if errors.Is(gCtx.Err(), context.DeadlineExceeded) {
 		log.Error("service while stopping service, killing instance manually")
 	}
@@ -88,9 +88,9 @@ func (g *GfSpBaseApp) StopServices(ctx context.Context) {
 func (g *GfSpBaseApp) stopServices(ctx context.Context, cancel context.CancelFunc) {
 	for _, service := range g.services {
 		if err := service.Stop(ctx); err != nil {
-			log.Errorf("service %s stops failure: %v", service.Name(), err)
+			log.Errorw("failed to stop service", "service_name", service.Name(), "error", err)
 		} else {
-			log.Infof("service %s stops successfully!", service.Name())
+			log.Infow("succeed to stop service", "service_name", service.Name())
 		}
 	}
 	cancel()

@@ -85,6 +85,30 @@ func (s *GfSpClient) SealObject(
 	return nil
 }
 
+func (s *GfSpClient) DiscontinueBucket(
+	ctx context.Context,
+	bucket *storagetypes.MsgDiscontinueBucket) error {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
+		return ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_DiscontinueBucketInfo{
+			DiscontinueBucketInfo: bucket,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to discontinue bucket", "error", err)
+		return ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
+}
+
 func (s *GfSpClient) SignReplicatePieceApproval(
 	ctx context.Context,
 	task coretask.ApprovalReplicatePieceTask) (

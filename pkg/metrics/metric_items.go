@@ -21,11 +21,11 @@ var MetricsItems = []prometheus.Collector{
 	TaskInQueueTimeHistogram,
 	// PieceStore metrics category
 	PutPieceTimeHistogram,
-	PutPieceTimeCounter,
+	PutPieceTotalNumberCounter,
 	GetPieceTimeHistogram,
-	GetPieceTimeCounter,
+	GetPieceTotalNumberCounter,
 	DeletePieceTimeHistogram,
-	DeletePieceTimeCounter,
+	DeletePieceTotalNumberCounter,
 	PieceUsageAmountGauge,
 	// Front module metrics category
 	UploadObjectSizeHistogram,
@@ -70,7 +70,7 @@ var MetricsItems = []prometheus.Collector{
 	DispatchGcObjectTaskCounter,
 	// Signer metrics category
 	SealObjectTimeHistogram,
-	// Spdb metrics category
+	// SPDB metrics category
 	SPDBTimeHistogram,
 	// BlockSyncer metrics category
 	BlockHeightLagGauge,
@@ -95,7 +95,7 @@ var (
 		Help: "Track the task queue capacity.",
 	}, []string{"queue_capacity"})
 	TaskInQueueTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "task_active_time",
+		Name:    "task_in_queue_time",
 		Help:    "Track the task of alive time duration in queue from task is created.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"task_in_queue_time"})
@@ -106,7 +106,7 @@ var (
 		Help:    "Track the time of putting piece data to piece store.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"put_piece_store_time"})
-	PutPieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	PutPieceTotalNumberCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "put_piece_store_number",
 		Help: "Track the total number of putting piece data to piece store.",
 	}, []string{"put_piece_store_number"})
@@ -115,7 +115,7 @@ var (
 		Help:    "Track the time of getting piece data to piece store.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"get_piece_store_time"})
-	GetPieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	GetPieceTotalNumberCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "get_piece_store_number",
 		Help: "Track the total number of getting piece data to piece store.",
 	}, []string{"get_piece_store_number"})
@@ -124,7 +124,7 @@ var (
 		Help:    "Track the time of deleting piece data to piece store.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"delete_piece_store_time"})
-	DeletePieceTimeCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	DeletePieceTotalNumberCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "delete_piece_store_number",
 		Help: "Track the total number of deleting piece data to piece store.",
 	}, []string{"delete_piece_store_number"})
@@ -266,7 +266,7 @@ var (
 	UploadObjectTaskFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "upload_object_task_failure",
 		Help: "Track upload object task failure total number",
-	}, []string{"seal_object_task_failure"})
+	}, []string{"upload_object_task_failure"})
 	ReplicatePieceTaskFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "replicate_object_task_failure",
 		Help: "Track replicate object task failure total number",
@@ -306,6 +306,19 @@ var (
 		Help:    "Track the time of seal object time to chain.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"seal_object_time"})
+	DiscontinueBucketTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "discontinue_bucket_time",
+		Help:    "Track the time of discontinue bucket time to chain.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"discontinue_bucket_time"})
+	DiscontinueBucketSucceedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "discontinue_bucket_success",
+		Help: "Track discontinue bucket success total number.",
+	}, []string{"discontinue_bucket_success"})
+	DiscontinueBucketFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "discontinue_bucket_failure",
+		Help: "Track discontinue bucket failure total number.",
+	}, []string{"discontinue_bucket_failure"})
 
 	// spdb metrics
 	SPDBTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{

@@ -123,6 +123,7 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error
+		reqCtxErr  error
 		reqCtx     *RequestContext
 		authorized bool
 		objectInfo *storagetypes.ObjectInfo
@@ -140,12 +141,26 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
-
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, reqCtxErr = NewRequestContext(r)
+	// check the object's visibility type whether equal to public read
+	authorized, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), "",
+		reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authorize for getting public object", "error", err)
+		err = ErrConsensus
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
+	if !authorized {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public")
+	} else {
+		reqCtxErr = nil
+	}
+	if reqCtxErr != nil {
+		err = reqCtxErr
+		return
+	}
+
+	if !authorized && reqCtx.NeedVerifyAuthorizer() {
 		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {

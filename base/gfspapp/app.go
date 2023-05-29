@@ -123,7 +123,7 @@ func (g *GfSpBaseApp) GfBsDBBackup() bsdb.BSDB {
 	return g.gfBsDBBackup
 }
 
-// SetGfBsDB set the block syncer db client.
+// SetGfBsDB sets the block syncer db client.
 func (g *GfSpBaseApp) SetGfBsDB(setDB bsdb.BSDB) bsdb.BSDB {
 	g.gfBsDB = setDB
 	return g.gfBsDB

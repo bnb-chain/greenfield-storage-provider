@@ -71,7 +71,7 @@ func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, tx
 // Process fetches a block for a given height and associated metadata and export it to a database.
 // It returns an error if any export process fails.
 func (i *Impl) Process(height uint64) error {
-	log.Debugw("processing block", "height", height)
+	// log.Debugw("processing block", "height", height)
 	var block *coretypes.ResultBlock
 	var events *coretypes.ResultBlockResults
 	var txs []*types.Tx
@@ -273,7 +273,7 @@ func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	log.Infof("epoch height:%d, cur height: %d", ep.BlockHeight, height)
+	// log.Infof("epoch height:%d, cur height: %d", ep.BlockHeight, height)
 	if ep.BlockHeight > int64(height) {
 		heightKey := fmt.Sprintf("%s-%d", i.GetServiceName(), height)
 		blockMap.Delete(heightKey)
