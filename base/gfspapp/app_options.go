@@ -14,7 +14,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
@@ -49,40 +48,6 @@ const (
 	DefaultMediumTaskLimit = 1024
 	// DefaultLowTaskLimit defines the default low priority task limit for resource manager.
 	DefaultLowTaskLimit = 16
-
-	// SpDBUser defines env variable name for sp db username.
-	SpDBUser = "SP_DB_USER"
-	// SpDBPasswd defines env variable name for sp db user passwd.
-	SpDBPasswd = "SP_DB_PASSWORD"
-	// SpDBAddress defines env variable name for sp db address.
-	SpDBAddress = "SP_DB_ADDRESS"
-	// SpDBDataBase defines env variable name for sp db database.
-	SpDBDataBase = "SP_DB_DATABASE"
-	// BsDBUser defines env variable name for block syncer db username.
-	BsDBUser = "BS_DB_USER"
-	// BsDBPasswd defines env variable name for block syncer db user passwd.
-	BsDBPasswd = "BS_DB_PASSWORD"
-	// BsDBAddress defines env variable name for block syncer db address.
-	BsDBAddress = "BS_DB_ADDRESS"
-	// BsDBDataBase defines env variable name for block syncer db database.
-	BsDBDataBase = "BS_DB_DATABASE"
-	// BsDBSwitchedUser defines env variable name for switched block syncer db username.
-	BsDBSwitchedUser = "BS_DB_SWITCHED_USER"
-	// BsDBSwitchedPasswd defines env variable name for switched block syncer db user passwd.
-	BsDBSwitchedPasswd = "BS_DB_SWITCHED_PASSWORD"
-	// BsDBSwitchedAddress defines env variable name for switched block syncer db address.
-	BsDBSwitchedAddress = "BS_DB_SWITCHED_ADDRESS"
-	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database.
-	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
-
-	// DefaultConnMaxLifetime defines the default max liveliness time of connection.
-	DefaultConnMaxLifetime = 60
-	// DefaultConnMaxIdleTime defines the default max idle time of connection.
-	DefaultConnMaxIdleTime = 30
-	// DefaultMaxIdleConns defines the default max number of idle connections.
-	DefaultMaxIdleConns = 16
-	// DefaultMaxOpenConns defines the default max number of open connections.
-	DefaultMaxOpenConns = 32
 )
 
 func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
@@ -178,29 +143,29 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		app.gfSpDB = cfg.Customize.GfSpDB
 		return nil
 	}
-	if val, ok := os.LookupEnv(SpDBUser); ok {
+	if val, ok := os.LookupEnv(sqldb.SpDBUser); ok {
 		cfg.SpDB.User = val
 	}
-	if val, ok := os.LookupEnv(SpDBPasswd); ok {
+	if val, ok := os.LookupEnv(sqldb.SpDBPasswd); ok {
 		cfg.SpDB.Passwd = val
 	}
-	if val, ok := os.LookupEnv(SpDBAddress); ok {
+	if val, ok := os.LookupEnv(sqldb.SpDBAddress); ok {
 		cfg.SpDB.Address = val
 	}
-	if val, ok := os.LookupEnv(SpDBDataBase); ok {
+	if val, ok := os.LookupEnv(sqldb.SpDBDataBase); ok {
 		cfg.SpDB.Database = val
 	}
 	if cfg.SpDB.ConnMaxLifetime == 0 {
-		cfg.SpDB.ConnMaxLifetime = DefaultConnMaxLifetime
+		cfg.SpDB.ConnMaxLifetime = sqldb.DefaultConnMaxLifetime
 	}
 	if cfg.SpDB.ConnMaxIdleTime == 0 {
-		cfg.SpDB.ConnMaxIdleTime = DefaultConnMaxIdleTime
+		cfg.SpDB.ConnMaxIdleTime = sqldb.DefaultConnMaxIdleTime
 	}
 	if cfg.SpDB.MaxIdleConns == 0 {
-		cfg.SpDB.MaxIdleConns = DefaultMaxIdleConns
+		cfg.SpDB.MaxIdleConns = sqldb.DefaultMaxIdleConns
 	}
 	if cfg.SpDB.MaxOpenConns == 0 {
-		cfg.SpDB.MaxOpenConns = DefaultMaxOpenConns
+		cfg.SpDB.MaxOpenConns = sqldb.DefaultMaxOpenConns
 	}
 	if cfg.SpDB.User == "" {
 		cfg.SpDB.User = "root"
@@ -225,28 +190,28 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 }
 
 func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if val, ok := os.LookupEnv(BsDBUser); ok {
+	if val, ok := os.LookupEnv(bsdb.BsDBUser); ok {
 		cfg.BsDB.User = val
 	}
-	if val, ok := os.LookupEnv(BsDBPasswd); ok {
+	if val, ok := os.LookupEnv(bsdb.BsDBPasswd); ok {
 		cfg.BsDB.Passwd = val
 	}
-	if val, ok := os.LookupEnv(BsDBAddress); ok {
+	if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
 		cfg.BsDB.Address = val
 	}
-	if val, ok := os.LookupEnv(BsDBDataBase); ok {
+	if val, ok := os.LookupEnv(bsdb.BsDBDataBase); ok {
 		cfg.BsDB.Database = val
 	}
-	if val, ok := os.LookupEnv(BsDBSwitchedUser); ok {
+	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
 		cfg.BsDBBackup.User = val
 	}
-	if val, ok := os.LookupEnv(model.BsDBSwitchedPasswd); ok {
+	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedPasswd); ok {
 		cfg.BsDBBackup.Passwd = val
 	}
-	if val, ok := os.LookupEnv(model.BsDBSwitchedAddress); ok {
+	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
 		cfg.BsDBBackup.Address = val
 	}
-	if val, ok := os.LookupEnv(model.BsDBSwitchedDataBase); ok {
+	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDataBase); ok {
 		cfg.BsDBBackup.Database = val
 	}
 
@@ -275,16 +240,16 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 func DefaultGfBsDB(config *config.SQLDBConfig) {
 
 	if config.ConnMaxLifetime == 0 {
-		config.ConnMaxLifetime = DefaultConnMaxLifetime
+		config.ConnMaxLifetime = sqldb.DefaultConnMaxLifetime
 	}
 	if config.ConnMaxIdleTime == 0 {
-		config.ConnMaxIdleTime = DefaultConnMaxIdleTime
+		config.ConnMaxIdleTime = sqldb.DefaultConnMaxIdleTime
 	}
 	if config.MaxIdleConns == 0 {
-		config.MaxIdleConns = DefaultMaxIdleConns
+		config.MaxIdleConns = sqldb.DefaultMaxIdleConns
 	}
 	if config.MaxOpenConns == 0 {
-		config.MaxOpenConns = DefaultMaxOpenConns
+		config.MaxOpenConns = sqldb.DefaultMaxOpenConns
 	}
 	if config.User == "" {
 		config.User = "root"

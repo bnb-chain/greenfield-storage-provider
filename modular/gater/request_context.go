@@ -101,7 +101,7 @@ func (r *RequestContext) String() string {
 	var headerToString = func(header http.Header) string {
 		var sb = strings.Builder{}
 		for k := range header {
-			if k == model.GnfdUnsignedApprovalMsgHeader {
+			if k == GnfdUnsignedApprovalMsgHeader {
 				continue
 			}
 			if sb.Len() != 0 {
@@ -131,8 +131,8 @@ func (r *RequestContext) String() string {
 
 // NeedVerifyAuthorizer is temporary to Compatible SignatureV2
 func (r *RequestContext) NeedVerifyAuthorizer() bool {
-	requestSignature := r.request.Header.Get(model.GnfdAuthorizationHeader)
-	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
+	requestSignature := r.request.Header.Get(GnfdAuthorizationHeader)
+	v1SignaturePrefix := signaturePrefix(SignTypeV1, SignAlgorithm)
 	return strings.HasPrefix(requestSignature, v1SignaturePrefix)
 }
 
@@ -142,8 +142,8 @@ func signaturePrefix(version, algorithm string) string {
 }
 
 func (r *RequestContext) VerifySignature() (string, error) {
-	requestSignature := r.request.Header.Get(model.GnfdAuthorizationHeader)
-	v1SignaturePrefix := signaturePrefix(model.SignTypeV1, model.SignAlgorithm)
+	requestSignature := r.request.Header.Get(GnfdAuthorizationHeader)
+	v1SignaturePrefix := signaturePrefix(SignTypeV1, SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
 		accAddress, err := r.verifySignatureV1(requestSignature[len(v1SignaturePrefix):])
 		if err != nil {
@@ -151,7 +151,7 @@ func (r *RequestContext) VerifySignature() (string, error) {
 		}
 		return accAddress.String(), nil
 	}
-	v2SignaturePrefix := signaturePrefix(model.SignTypeV2, model.SignAlgorithm)
+	v2SignaturePrefix := signaturePrefix(SignTypeV2, SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
 		return "", nil
 	}
@@ -185,9 +185,9 @@ func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddr
 			return nil, ErrAuthorizationFormat
 		}
 		switch pair[0] {
-		case model.SignedMsg:
+		case SignedMsg:
 			signedMsg = pair[1]
-		case model.Signature:
+		case Signature:
 			if signature, err = hex.DecodeString(pair[1]); err != nil {
 				return nil, err
 			}

@@ -9,7 +9,7 @@ import (
 	"cosmossdk.io/math"
 	"gorm.io/gorm"
 
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )

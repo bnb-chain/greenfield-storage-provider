@@ -15,9 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/stretchr/testify/assert"
-
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 )
 
 const (
@@ -286,7 +283,7 @@ func TestS3_ListSuccess(t *testing.T) {
 func TestS3_ListAll(t *testing.T) {
 	store := setupS3Test(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
-	assert.Equal(t, merrors.ErrUnsupportedMethod, err)
+	assert.Equal(t, ErrUnsupportedMethod, err)
 }
 
 type mockS3ClientError struct {
@@ -479,13 +476,13 @@ func TestS3_ListError(t *testing.T) {
 func TestNewSessionWithRegionSetViaEnv(t *testing.T) {
 	s3SessionCache.clear()
 
-	os.Setenv(mpiecestore.AWSAccessKey, "NoSignRequest")
-	defer os.Unsetenv(mpiecestore.AWSAccessKey)
+	os.Setenv(AWSAccessKey, "NoSignRequest")
+	defer os.Unsetenv(AWSAccessKey)
 
 	sess, _, err := s3SessionCache.newSession(ObjectStorageConfig{
-		Storage:   mpiecestore.S3Store,
+		Storage:   S3Store,
 		BucketURL: mockEndpoint,
-		IAMType:   mpiecestore.AKSKIAMType,
+		IAMType:   AKSKIAMType,
 	})
 	if err != nil {
 		t.Fatal(err)

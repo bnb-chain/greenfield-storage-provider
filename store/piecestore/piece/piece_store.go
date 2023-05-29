@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"runtime"
 
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
-	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
@@ -41,7 +39,7 @@ func checkConfig(cfg *storage.PieceStoreConfig) {
 	if cfg.Store.MinRetryDelay < 0 {
 		log.Panic("MinRetryDelay should be equal or greater than zero")
 	}
-	if cfg.Store.Storage == mpiecestore.DiskFileStore {
+	if cfg.Store.Storage == storage.DiskFileStore {
 		if cfg.Store.BucketURL == "" {
 			cfg.Store.BucketURL = setDefaultFileStorePath()
 		}
@@ -55,7 +53,7 @@ func checkConfig(cfg *storage.PieceStoreConfig) {
 }
 
 func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) {
-	if val, ok := os.LookupEnv(mpiecestore.BucketURL); ok {
+	if val, ok := os.LookupEnv(storage.BucketURL); ok {
 		cfg.Store.BucketURL = val
 	}
 }
@@ -88,14 +86,14 @@ func createStorage(cfg storage.PieceStoreConfig) (storage.ObjectStorage, error) 
 func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 	if err := store.HeadBucket(ctx); err != nil {
 		log.Errorw("failed to head bucket", "error", err)
-		if errors.Is(err, merrors.ErrNoSuchBucket) {
+		if errors.Is(err, storage.ErrNoSuchBucket) {
 			if err2 := store.CreateBucket(ctx); err2 != nil {
 				return fmt.Errorf("failed to create bucket in %s: %s, previous err: %s", store, err2, err)
 			}
 			log.Info("create bucket successfully!")
 			return nil
 		}
-		return merrors.ErrNoPermissionAccessBucket
+		return storage.ErrNoPermissionAccessBucket
 	}
 	log.Debugf("succeed to head bucket in %s", store)
 	return nil

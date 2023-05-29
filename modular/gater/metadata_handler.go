@@ -12,7 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -39,13 +38,13 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if ok := common.IsHexAddress(r.Header.Get(model.GnfdUserAddressHeader)); !ok {
+	if ok := common.IsHexAddress(r.Header.Get(GnfdUserAddressHeader)); !ok {
 		log.Errorw("failed to check account id", "account_id", reqCtx.account, "error", err)
 		err = ErrInvalidHeader
 		return
 	}
 
-	resp, err := g.baseApp.GfSpClient().GetUserBuckets(reqCtx.Context(), r.Header.Get(model.GnfdUserAddressHeader))
+	resp, err := g.baseApp.GfSpClient().GetUserBuckets(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader))
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
 		return
@@ -61,7 +60,7 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 	w.Write(b.Bytes())
 }
 
@@ -100,11 +99,11 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 
 	queryParams = reqCtx.request.URL.Query()
 	requestBucketName = reqCtx.bucketName
-	requestMaxKeys = queryParams.Get(model.ListObjectsMaxKeysQuery)
-	requestStartAfter = queryParams.Get(model.ListObjectsStartAfterQuery)
-	requestContinuationToken = queryParams.Get(model.ListObjectsContinuationTokenQuery)
-	requestDelimiter = queryParams.Get(model.ListObjectsDelimiterQuery)
-	requestPrefix = queryParams.Get(model.ListObjectsPrefixQuery)
+	requestMaxKeys = queryParams.Get(ListObjectsMaxKeysQuery)
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	requestContinuationToken = queryParams.Get(ListObjectsContinuationTokenQuery)
+	requestDelimiter = queryParams.Get(ListObjectsDelimiterQuery)
+	requestPrefix = queryParams.Get(ListObjectsPrefixQuery)
 
 	if requestDelimiter != "" && requestDelimiter != "/" {
 		log.CtxErrorw(reqCtx.Context(), "failed to check delimiter", "delimiter", requestDelimiter, "error", err)
@@ -209,7 +208,7 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 	w.Write(b.Bytes())
 }
 
@@ -261,7 +260,7 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 	w.Write(b.Bytes())
 }
 
@@ -309,6 +308,6 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 	w.Write(b.Bytes())
 }

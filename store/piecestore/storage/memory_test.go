@@ -8,8 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 )
 
 func setupMemoryTest(t *testing.T) *memoryStore {
@@ -62,12 +60,12 @@ func TestMemory_GetError(t *testing.T) {
 		{
 			name:      "memory_get_error_test1",
 			key:       emptyString,
-			wantedErr: errors.ErrInvalidObjectKey,
+			wantedErr: ErrInvalidObjectKey,
 		},
 		{
 			name:      "memory_get_error_test2",
 			key:       mockKey,
-			wantedErr: errors.ErrNoSuchObject,
+			wantedErr: ErrNoSuchObject,
 		},
 	}
 	for _, tt := range cases {
@@ -94,7 +92,7 @@ func TestMemory_Put(t *testing.T) {
 			name:      "memory_put_test1",
 			key:       emptyString,
 			data:      mockEndpoint,
-			wantedErr: errors.ErrInvalidObjectKey,
+			wantedErr: ErrInvalidObjectKey,
 		},
 		{
 			name:      "memory_put_test2",
@@ -178,7 +176,7 @@ func TestMemory_HeadError(t *testing.T) {
 		{
 			name:      "memory_head_error_test1",
 			key:       emptyString,
-			wantedErr: errors.ErrInvalidObjectKey,
+			wantedErr: ErrInvalidObjectKey,
 		},
 		{
 			name:      "memory_head_error_test2",
@@ -230,7 +228,7 @@ func TestMemory_ListError(t *testing.T) {
 		{
 			name:      "memory_list_error_test1",
 			delimiter: mockKey,
-			wantedErr: errors.ErrUnsupportedDelimiter,
+			wantedErr: ErrUnsupportedDelimiter,
 		},
 	}
 	for _, tt := range cases {
@@ -246,5 +244,5 @@ func TestMemory_ListError(t *testing.T) {
 func TestMemory_ListAll(t *testing.T) {
 	store := setupMemoryTest(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
-	assert.Equal(t, errors.ErrUnsupportedMethod, err)
+	assert.Equal(t, ErrUnsupportedMethod, err)
 }

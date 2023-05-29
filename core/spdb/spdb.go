@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/service/types"
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )

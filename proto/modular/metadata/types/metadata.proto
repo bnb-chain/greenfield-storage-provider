@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 import "greenfield/payment/stream_record.proto";
 import "greenfield/storage/query.proto";
 import "greenfield/storage/types.proto";
-import "service/types/storage_provider.proto";
+import "store/types/store.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types";
 
@@ -322,7 +322,7 @@ message GfSpQueryUploadProgressRequest {
 message GfSpQueryUploadProgressResponse {
   base.types.gfsperrors.GfSpError err = 1;
   // state defines the state of put object.
-  service.types.JobState state = 2;
+  store.types.JobState state = 2;
 }
 
 service GfSpMetadataService {

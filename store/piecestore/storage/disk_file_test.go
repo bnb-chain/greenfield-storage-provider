@@ -12,8 +12,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	merrors "github.com/bnb-chain/greenfield-storage-provider/model/errors"
 )
 
 func setupDiskFileTest(t *testing.T) *diskFileStore {
@@ -289,13 +287,13 @@ func TestDiskFile_HeadDirSuccess(t *testing.T) {
 func TestDiskFile_List(t *testing.T) {
 	store := setupDiskFileTest(t)
 	_, err := store.ListObjects(context.TODO(), emptyString, emptyString, emptyString, 0)
-	assert.Equal(t, merrors.ErrUnsupportedMethod, err)
+	assert.Equal(t, ErrUnsupportedMethod, err)
 }
 
 func TestDiskFile_ListAll(t *testing.T) {
 	store := setupDiskFileTest(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
-	assert.Equal(t, merrors.ErrUnsupportedMethod, err)
+	assert.Equal(t, ErrUnsupportedMethod, err)
 }
 
 func TestPath(t *testing.T) {
