@@ -27,13 +27,13 @@ var (
 	ErrMismatchSp                = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50014, "mismatch sp")
 	ErrSignature                 = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50015, "signature verification failed")
 	ErrInvalidPayloadSize        = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50016, "invalid payload")
-	ErrInvalidDomainHeader       = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50017, "The "+model.GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
-	ErrInvalidPublicKeyHeader    = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50018, "The "+model.GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
-	ErrInvalidRegNonceHeader     = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50019, "The "+model.GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
-	ErrSignedMsgNotMatchHeaders  = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50020, "The signed message in "+model.GnfdAuthorizationHeader+" does not match the content in headers.")
-	ErrSignedMsgNotMatchSPAddr   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50021, "The signed message in "+model.GnfdAuthorizationHeader+" is not for the this SP.")
-	ErrSignedMsgNotMatchTemplate = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50022, "The signed message in "+model.GnfdAuthorizationHeader+" does not match the template.")
-	ErrInvalidExpiryDateHeader   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50023, "The "+model.GnfdOffChainAuthAppRegExpiryDateHeader+" header is incorrect. "+
+	ErrInvalidDomainHeader       = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50017, "The "+GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
+	ErrInvalidPublicKeyHeader    = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50018, "The "+GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
+	ErrInvalidRegNonceHeader     = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50019, "The "+GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
+	ErrSignedMsgNotMatchHeaders  = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50020, "The signed message in "+GnfdAuthorizationHeader+" does not match the content in headers.")
+	ErrSignedMsgNotMatchSPAddr   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50021, "The signed message in "+GnfdAuthorizationHeader+" is not for the this SP.")
+	ErrSignedMsgNotMatchTemplate = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50022, "The signed message in "+GnfdAuthorizationHeader+" does not match the template.")
+	ErrInvalidExpiryDateHeader   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50023, "The "+GnfdOffChainAuthAppRegExpiryDateHeader+" header is incorrect. "+
 		"The expiry date is expected to be within "+strconv.Itoa(int(MaxExpiryAgeInSec))+" seconds and formatted in YYYY-DD-MM HH:MM:SS 'GMT'Z, e.g. 2023-04-20 16:34:12 GMT+08:00 . ")
 
 	ErrConsensus = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")

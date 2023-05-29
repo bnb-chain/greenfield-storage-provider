@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts"
@@ -43,8 +41,8 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 	// ignore the error, because the requestNonce does not need signature
 	reqCtx, _ = NewRequestContext(r, g)
 
-	account := reqCtx.request.Header.Get(model.GnfdUserAddressHeader)
-	domain := reqCtx.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader)
+	account := reqCtx.request.Header.Get(GnfdUserAddressHeader)
+	domain := reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
 	ctx := log.Context(context.Background(), account, domain)
 	currentNonce, nextNonce, currentPublicKey, expiryDate, err := g.baseApp.GfSpClient().GetAuthNonce(ctx, account, domain)
 
@@ -65,7 +63,7 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 		err = ErrDecodeMsg
 		return
 	}
-	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 	w.Write(b)
 }
 
@@ -94,8 +92,8 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		// verify personal sign signature
-		personalSignSignaturePrefix := signaturePrefix(model.SignTypePersonal, model.SignAlgorithm)
-		requestSignature := reqCtx.request.Header.Get(model.GnfdAuthorizationHeader)
+		personalSignSignaturePrefix := signaturePrefix(SignTypePersonal, SignAlgorithm)
+		requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
 
 		if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
 			accAddress, err := verifyPersonalSignature(requestSignature[len(personalSignSignaturePrefix):])
@@ -110,11 +108,11 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		}
 	}
 
-	domain = reqCtx.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader)
+	domain = reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
 	origin = reqCtx.request.Header.Get("Origin")
-	nonce = reqCtx.request.Header.Get(model.GnfdOffChainAuthAppRegNonceHeader)
-	userPublicKey = reqCtx.request.Header.Get(model.GnfdOffChainAuthAppRegPublicKeyHeader)
-	expiryDateStr = reqCtx.request.Header.Get(model.GnfdOffChainAuthAppRegExpiryDateHeader)
+	nonce = reqCtx.request.Header.Get(GnfdOffChainAuthAppRegNonceHeader)
+	userPublicKey = reqCtx.request.Header.Get(GnfdOffChainAuthAppRegPublicKeyHeader)
+	expiryDateStr = reqCtx.request.Header.Get(GnfdOffChainAuthAppRegExpiryDateHeader)
 
 	// validate headers
 	if domain == "" || domain != origin {
@@ -164,8 +162,8 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	requestSignature := reqCtx.request.Header.Get(model.GnfdAuthorizationHeader)
-	personalSignSignaturePrefix := signaturePrefix(model.SignTypePersonal, model.SignAlgorithm)
+	requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
+	personalSignSignaturePrefix := signaturePrefix(SignTypePersonal, SignAlgorithm)
 	signedMsg, _, err := parseSignedMsgAndSigFromRequest(requestSignature[len(personalSignSignaturePrefix):])
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey when parseSignedMsgAndSigFromRequest")
@@ -192,7 +190,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		err = ErrDecodeMsg
 		return
 	}
-	w.Header().Set(model.ContentTypeHeader, model.ContentTypeJSONHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 	w.Write(b)
 }
 
@@ -215,7 +213,7 @@ func verifyPersonalSignature(requestSignature string) (sdk.AccAddress, error) {
 
 	if len(signature) != crypto.SignatureLength {
 		log.Errorw("signature length (actual: %d) doesn't match typical [R||S||V] signature 65 bytes")
-		return nil, errors.ErrSignatureConsistent
+		return nil, ErrSignature
 	}
 	if signature[crypto.RecoveryIDOffset] == 27 || signature[crypto.RecoveryIDOffset] == 28 {
 		signature[crypto.RecoveryIDOffset] -= 27
@@ -225,7 +223,7 @@ func verifyPersonalSignature(requestSignature string) (sdk.AccAddress, error) {
 	addr, _, err := RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.Errorw("failed to recover address")
-		return nil, errors.ErrSignatureConsistent
+		return nil, ErrSignature
 	}
 
 	return addr, nil

@@ -15,8 +15,6 @@ import (
 	"github.com/gorilla/mux"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -156,7 +154,7 @@ func (r *RequestContext) VerifySignature() (string, error) {
 		return "", nil
 	}
 
-	OffChainSignaturePrefix := signaturePrefix(model.SignTypeOffChain, model.SignAlgorithmEddsa)
+	OffChainSignaturePrefix := signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)
 	if strings.HasPrefix(requestSignature, OffChainSignaturePrefix) {
 		accAddress, err := r.verifyOffChainSignature(requestSignature[len(OffChainSignaturePrefix):])
 		if err != nil {
@@ -242,8 +240,8 @@ func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.A
 		return nil, err
 	}
 
-	account := r.request.Header.Get(model.GnfdUserAddressHeader)
-	domain := r.request.Header.Get(model.GnfdOffChainAuthAppDomainHeader)
+	account := r.request.Header.Get(GnfdUserAddressHeader)
+	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
 	offChainSig := *sigString
 	realMsgToSign := *signedMsg
 
@@ -253,7 +251,7 @@ func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.A
 		return nil, err
 	}
 	if verifyOffChainSignatureResp {
-		userAddress, _ := sdk.AccAddressFromHexUnsafe(r.request.Header.Get(model.GnfdUserAddressHeader))
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(r.request.Header.Get(GnfdUserAddressHeader))
 		return userAddress, nil
 	} else {
 		return nil, err
@@ -268,20 +266,20 @@ func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string,
 	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
 	signatureItems := strings.Split(requestSignature, ",")
 	if len(signatureItems) != 2 {
-		return nil, nil, errors.ErrAuthorizationFormat
+		return nil, nil, ErrAuthorizationFormat
 	}
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
-			return nil, nil, errors.ErrAuthorizationFormat
+			return nil, nil, ErrAuthorizationFormat
 		}
 		switch pair[0] {
-		case model.SignedMsg:
+		case SignedMsg:
 			signedMsg = pair[1]
-		case model.Signature:
+		case Signature:
 			signature = pair[1]
 		default:
-			return nil, nil, errors.ErrAuthorizationFormat
+			return nil, nil, ErrAuthorizationFormat
 		}
 	}
 
