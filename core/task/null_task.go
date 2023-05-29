@@ -105,7 +105,7 @@ func (*NullTask) GetUserAddress() string                  { return "" }
 func (*NullTask) GetSize() int64                          { return 0 }
 func (*NullTask) GetLow() int64                           { return 0 }
 func (*NullTask) GetHigh() int64                          { return 0 }
-func (*NullTask) InitChallengePieceTask(*storagetypes.ObjectInfo, *storagetypes.BucketInfo, TPriority, string, int32, uint32, int64, int64) {
+func (*NullTask) InitChallengePieceTask(*storagetypes.ObjectInfo, *storagetypes.BucketInfo, *storagetypes.Params, TPriority, string, int32, uint32, int64, int64) {
 }
 func (*NullTask) SetBucketInfo(*storagetypes.BucketInfo) {}
 func (*NullTask) SetUserAddress(string)                  {}
