@@ -7,6 +7,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -27,19 +28,17 @@ var (
 	ErrGfSpDB            = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35201, "server slipped away, try again later")
 )
 
-func (d *DownloadModular) PreDownloadObject(
-	ctx context.Context,
-	task task.DownloadObjectTask) error {
+func (d *DownloadModular) PreDownloadObject(ctx context.Context, task task.DownloadObjectTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
-		log.CtxErrorw(ctx, "failed pre download object, pointer dangling")
+		log.CtxErrorw(ctx, "failed pre download object due to pointer dangling")
 		return ErrDanglingPointer
 	}
 	if task.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-		log.CtxErrorw(ctx, "failed to pre download object, object unsealed")
+		log.CtxErrorw(ctx, "failed to pre download object due to object unsealed")
 		return ErrObjectUnsealed
 	}
 	if d.downloadQueue.Has(task.Key()) {
-		log.CtxErrorw(ctx, "failed to pre download object, task repeated")
+		log.CtxErrorw(ctx, "failed to pre download object due to task repeated")
 		return ErrRepeatedTask
 	}
 	// TODO:: spilt check and add record steps, check in pre download, add record in post download
@@ -61,17 +60,14 @@ func (d *DownloadModular) PreDownloadObject(
 		if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
 			return ErrExceedBucketQuota
 		}
-		// ignore the access db error, it is the system's inner error,
-		// will be let the request go
+		// ignore the access db error, it is the system's inner error, will be let the request go.
 	}
 	// report the task to the manager for monitor the download task
 	d.baseApp.GfSpClient().ReportTask(ctx, task)
 	return nil
 }
 
-func (d *DownloadModular) HandleDownloadObjectTask(
-	ctx context.Context,
-	task task.DownloadObjectTask) ([]byte, error) {
+func (d *DownloadModular) HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) ([]byte, error) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -84,15 +80,15 @@ func (d *DownloadModular) HandleDownloadObjectTask(
 		return nil, ErrExceedQueue
 	}
 	defer d.downloadQueue.PopByKey(task.Key())
-	pieceInfos, err := d.SplitToSegmentPieceInfos(ctx, task)
+	pieceInfos, err := SplitToSegmentPieceInfos(task, d.baseApp.PieceOp())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to generate piece info to download", "error", err)
 		return nil, err
 	}
 	var data []byte
 	for _, pInfo := range pieceInfos {
-		piece, err := d.baseApp.PieceStore().GetPiece(ctx, pInfo.segmentPieceKey,
-			int64(pInfo.offset), int64(pInfo.length))
+		piece, err := d.baseApp.PieceStore().GetPiece(ctx, pInfo.SegmentPieceKey,
+			int64(pInfo.Offset), int64(pInfo.Length))
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get piece data from piece store", "error", err)
 			return nil, ErrPieceStore
@@ -102,29 +98,29 @@ func (d *DownloadModular) HandleDownloadObjectTask(
 	return data, nil
 }
 
-type segmentPieceInfo struct {
-	segmentPieceKey string
-	offset          uint64
-	length          uint64
+type SegmentPieceInfo struct {
+	SegmentPieceKey string
+	Offset          uint64
+	Length          uint64
 }
 
-func (d *DownloadModular) SplitToSegmentPieceInfos(
-	ctx context.Context,
-	task task.DownloadObjectTask) (
-	[]*segmentPieceInfo, error) {
+func SplitToSegmentPieceInfos(
+	task task.DownloadObjectTask,
+	op piecestore.PieceOp) (
+	[]*SegmentPieceInfo, error) {
 	if task.GetObjectInfo().GetPayloadSize() == 0 ||
 		task.GetLow() >= int64(task.GetObjectInfo().GetPayloadSize()) ||
 		task.GetHigh() >= int64(task.GetObjectInfo().GetPayloadSize()) ||
 		task.GetHigh() < task.GetLow() {
-		log.CtxErrorw(ctx, "failed to parser params", "object_size",
+		log.Errorw("failed to parse params", "object_size",
 			task.GetObjectInfo().GetPayloadSize(), "low", task.GetLow(), "high", task.GetHigh())
 		return nil, ErrInvalidParam
 	}
 	segmentSize := task.GetStorageParams().VersionedParams.GetMaxSegmentSize()
-	segmentCount := d.baseApp.PieceOp().MaxSegmentSize(task.GetObjectInfo().GetPayloadSize(),
+	segmentCount := op.MaxSegmentSize(task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 	var (
-		pieceInfos []*segmentPieceInfo
+		pieceInfos []*SegmentPieceInfo
 		low        = uint64(task.GetLow())
 		high       = uint64(task.GetHigh())
 	)
@@ -142,24 +138,24 @@ func (d *DownloadModular) SplitToSegmentPieceInfos(
 			currentEnd = high
 			offsetInPiece := currentStart - (segmentPieceIndex * segmentSize)
 			lengthInPiece := currentEnd - currentStart + 1
-			pieceInfos = append(pieceInfos, &segmentPieceInfo{
-				segmentPieceKey: d.baseApp.PieceOp().SegmentPieceKey(
+			pieceInfos = append(pieceInfos, &SegmentPieceInfo{
+				SegmentPieceKey: op.SegmentPieceKey(
 					task.GetObjectInfo().Id.Uint64(),
 					uint32(segmentPieceIndex)),
-				offset: offsetInPiece,
-				length: lengthInPiece,
+				Offset: offsetInPiece,
+				Length: lengthInPiece,
 			})
 			// break to finish
 			break
 		} else {
 			offsetInPiece := currentStart - (segmentPieceIndex * segmentSize)
 			lengthInPiece := currentEnd - currentStart + 1
-			pieceInfos = append(pieceInfos, &segmentPieceInfo{
-				segmentPieceKey: d.baseApp.PieceOp().SegmentPieceKey(
+			pieceInfos = append(pieceInfos, &SegmentPieceInfo{
+				SegmentPieceKey: op.SegmentPieceKey(
 					task.GetObjectInfo().Id.Uint64(),
 					uint32(segmentPieceIndex)),
-				offset: offsetInPiece,
-				length: lengthInPiece,
+				Offset: offsetInPiece,
+				Length: lengthInPiece,
 			})
 		}
 	}
@@ -171,15 +167,91 @@ func (d *DownloadModular) PostDownloadObject(
 	task task.DownloadObjectTask) {
 }
 
+func (d *DownloadModular) PreDownloadPiece(
+	ctx context.Context,
+	task task.DownloadPieceTask) error {
+	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
+		log.CtxErrorw(ctx, "failed pre download piece due to pointer dangling")
+		return ErrDanglingPointer
+	}
+	if task.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+		log.CtxErrorw(ctx, "failed to pre download piece due to object unsealed")
+		return ErrObjectUnsealed
+	}
+	if d.downloadQueue.Has(task.Key()) {
+		log.CtxErrorw(ctx, "failed to pre download piece due to task repeated")
+		return ErrRepeatedTask
+	}
+
+	if task.GetEnableCheck() {
+		if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+			&spdb.ReadRecord{
+				BucketID:        task.GetBucketInfo().Id.Uint64(),
+				ObjectID:        task.GetObjectInfo().Id.Uint64(),
+				UserAddress:     task.GetUserAddress(),
+				BucketName:      task.GetBucketInfo().GetBucketName(),
+				ObjectName:      task.GetObjectInfo().GetObjectName(),
+				ReadSize:        task.GetTotalSize(),
+				ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+			},
+			&spdb.BucketQuota{
+				ReadQuotaSize: task.GetBucketInfo().GetChargedReadQuota() + d.bucketFreeQuota,
+			},
+		); err != nil {
+			log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
+			if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
+				return ErrExceedBucketQuota
+			}
+			// ignore the access db error, it is the system's inner error, will be let the request go.
+		}
+	}
+	// report the task to the manager for monitor the download piece task
+	d.baseApp.GfSpClient().ReportTask(ctx, task)
+	return nil
+}
+
+func (d *DownloadModular) HandleDownloadPieceTask(
+	ctx context.Context,
+	task task.DownloadPieceTask) ([]byte, error) {
+	var (
+		err       error
+		pieceData []byte
+	)
+
+	defer func() {
+		if err != nil {
+			task.SetError(err)
+		}
+		log.CtxDebugw(ctx, task.Info())
+	}()
+	if err = d.downloadQueue.Push(task); err != nil {
+		log.CtxErrorw(ctx, "failed to push download queue", "error", err)
+		return nil, ErrExceedQueue
+	}
+	defer d.downloadQueue.PopByKey(task.Key())
+
+	if pieceData, err = d.baseApp.PieceStore().GetPiece(ctx, task.GetPieceKey(),
+		int64(task.GetPieceOffset()), int64(task.GetPieceLength())); err != nil {
+		log.CtxErrorw(ctx, "failed to get piece data from piece store", "task_info", task.Info(), "error", err)
+		return nil, ErrPieceStore
+	}
+	return pieceData, nil
+}
+
+func (d *DownloadModular) PostDownloadPiece(
+	ctx context.Context,
+	task task.DownloadPieceTask) {
+}
+
 func (d *DownloadModular) PreChallengePiece(
 	ctx context.Context,
 	task task.ChallengePieceTask) error {
 	if task == nil || task.GetObjectInfo() == nil {
-		log.CtxErrorw(ctx, "failed to pre challenge piece, pointer dangling")
+		log.CtxErrorw(ctx, "failed to pre challenge piece due to pointer dangling")
 		return ErrDanglingPointer
 	}
 	if task.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-		log.CtxErrorw(ctx, "failed to pre challenge piece, object unsealed")
+		log.CtxErrorw(ctx, "failed to pre challenge piece due to object unsealed")
 		return ErrObjectUnsealed
 	}
 	d.baseApp.GfSpClient().ReportTask(ctx, task)

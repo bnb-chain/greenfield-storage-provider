@@ -5,7 +5,7 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-// Task is the interface to the smallest unit of SP background service interaction.
+// Task is the interface to the smallest unit of SP service interaction.
 //
 // Task Type:
 //
@@ -402,6 +402,47 @@ type DownloadObjectTask interface {
 	GetLow() int64
 	// GetHigh returns the end offset of download payload data.
 	GetHigh() int64
+}
+
+// The DownloadPieceTask is the interface to record the information for downloading piece data.
+type DownloadPieceTask interface {
+	ObjectTask
+	// InitDownloadPieceTask inits DownloadPieceTask.
+	InitDownloadPieceTask(
+		object *storagetypes.ObjectInfo,
+		bucket *storagetypes.BucketInfo,
+		params *storagetypes.Params,
+		priority TPriority,
+		isFirstPiece bool,
+		userAddress string,
+		totalSize uint64,
+		pieceKey string,
+		pieceOffset uint64,
+		pieceLength uint64,
+		timeout int64,
+		maxRetry int64)
+	// GetBucketInfo returns the BucketInfo of the download object.
+	// It is used to Query and calculate bucket read quota.
+	GetBucketInfo() *storagetypes.BucketInfo
+	// SetBucketInfo sets the BucketInfo of the download object.
+	SetBucketInfo(*storagetypes.BucketInfo)
+	// GetUserAddress returns the user account of downloading object.
+	// It is used to record the read bucket information.
+	GetUserAddress() string
+	// SetUserAddress sets the user account of downloading object.
+	SetUserAddress(string)
+	// GetSize returns the download payload data size.
+	GetSize() int64
+	// GetEnableCheck returns enable_check flag.
+	GetEnableCheck() bool
+	// GetTotalSize returns total size.
+	GetTotalSize() uint64
+	// GetPieceKey returns piece key.
+	GetPieceKey() string
+	// GetPieceOffset returns piece offset.
+	GetPieceOffset() uint64
+	// GetPieceLength returns piece length.
+	GetPieceLength() uint64
 }
 
 // ChallengePieceTask is the interface to record the information for get challenge

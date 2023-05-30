@@ -6,7 +6,9 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield/types/s3util"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -127,6 +129,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		objectInfo *storagetypes.ObjectInfo
 		bucketInfo *storagetypes.BucketInfo
 		params     *storagetypes.Params
+		lowOffset  int64
+		highOffset int64
+		pieceInfos []*downloader.SegmentPieceInfo
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -140,36 +145,32 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
-	// check the object's visibility type whether equal to public read
-	authorized, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), "",
-		reqCtx.bucketName, reqCtx.objectName)
-	if err != nil {
+	// check the object permission whether allow public read.
+	if authorized, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
+		reqCtx.bucketName, reqCtx.objectName); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authorize for getting public object", "error", err)
 		err = ErrConsensus
 		return
 	}
 	if !authorized {
-		log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public")
-	} else {
-		reqCtxErr = nil
-	}
-	if reqCtxErr != nil {
-		err = reqCtxErr
-		return
-	}
-
-	if !authorized && reqCtx.NeedVerifyAuthorizer() {
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+		if reqCtxErr != nil {
+			err = reqCtxErr
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
 			return
 		}
-		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-			return
+		if reqCtx.NeedVerifyAuthorizer() {
+			if authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+				return
+			}
+			if !authorized {
+				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+				err = ErrNoPermission
+				return
+			}
 		}
-	}
+	} // else anonymous users can get public object.
 
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
@@ -198,33 +199,45 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidRange
 		return
 	}
-	var low int64
-	var high int64
+
 	if isRange {
-		low = rangeStart
-		high = rangeEnd
+		lowOffset = rangeStart
+		highOffset = rangeEnd
 	} else {
-		low = 0
-		high = int64(objectInfo.GetPayloadSize()) - 1
+		lowOffset = 0
+		highOffset = int64(objectInfo.GetPayloadSize()) - 1
 	}
 
 	task := &gfsptask.GfSpDownloadObjectTask{}
 	task.InitDownloadObjectTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task), reqCtx.Account(),
-		low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
-	data, err := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
-	if err != nil {
+		lowOffset, highOffset, g.baseApp.TaskTimeout(task, uint64(highOffset-lowOffset+1)), g.baseApp.TaskMaxRetry(task))
+	if pieceInfos, err = downloader.SplitToSegmentPieceInfos(task, g.baseApp.PieceOp()); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
 		return
 	}
 	w.Header().Set(ContentTypeHeader, objectInfo.GetContentType())
 	if isRange {
-		w.Header().Set(ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
-			"-"+util.Uint64ToString(uint64(high)))
+		w.Header().Set(ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(lowOffset))+
+			"-"+util.Uint64ToString(uint64(highOffset)))
 	} else {
 		w.Header().Set(ContentLengthHeader, util.Uint64ToString(objectInfo.GetPayloadSize()))
 	}
-	w.Write(data)
-	log.CtxDebugw(reqCtx.Context(), "succeed to download object")
+	for idx, pInfo := range pieceInfos {
+		enableCheck := false
+		if idx == 0 { // only check in first piece
+			enableCheck = true
+		}
+		pieceTask := &gfsptask.GfSpDownloadPieceTask{}
+		pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task),
+			enableCheck, reqCtx.Account(), uint64(highOffset-lowOffset+1), pInfo.SegmentPieceKey, pInfo.Offset,
+			pInfo.Length, g.baseApp.TaskTimeout(task, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(task))
+		pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
+			return
+		}
+		w.Write(pieceData)
+	}
 }
 
 // queryUploadProgressHandler handles the query uploaded object progress request.
