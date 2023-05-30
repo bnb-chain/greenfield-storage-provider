@@ -20,7 +20,7 @@ type Statement struct {
 	// If no sub-resource is specified in a statement, then all objects in the bucket are accessible by the principal.
 	// However, if the sub-resource is defined as 'bucket/test_*,' in the statement, then only objects with a 'test_'
 	// prefix can be accessed by the principal.
-	Resources pq.StringArray `gorm:"resources"`
+	Resources pq.StringArray `gorm:"resources;type:text"`
 	// ExpirationTime defines how long the permission is valid. If not explicitly specified, it means it will not expire.
 	ExpirationTime int64 `gorm:"expiration_time"`
 	// LimitSize defines the total data size that is allowed to operate. If not explicitly specified, it means it will not limit.

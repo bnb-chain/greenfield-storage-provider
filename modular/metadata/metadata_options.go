@@ -56,6 +56,7 @@ func startDBSwitchListener(switchInterval time.Duration, cfg *gfspconfig.GfSpCon
 	dbSwitchTicker := time.NewTicker(switchInterval)
 	// set the bsdb to be master db at start
 	cfg.Metadata.IsMasterDB = true
+	checkSignal(cfg, metadata)
 	// launch a goroutine to handle the ticker events
 	go func() {
 		// loop until the context is canceled (e.g., when the Metadata service is stopped)

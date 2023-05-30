@@ -70,6 +70,12 @@ const (
 	StartTimestampUs = "start-timestamp"
 	// EndTimestampUs defines end timestamp in microsecond, which is used by list read record, [start_ts,end_ts)
 	EndTimestampUs = "end-timestamp"
+	// VerifyPermissionObjectQuery defines verify permission object name
+	VerifyPermissionObjectQuery = "object"
+	// VerifyPermissionOperator defines verify permission operator address
+	VerifyPermissionOperator = "operator"
+	// VerifyPermissionActionType defines verify permission action type
+	VerifyPermissionActionType = "action-type"
 	// ChallengePath defines challenge path style suffix
 	ChallengePath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
