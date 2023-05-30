@@ -203,8 +203,9 @@ func (e *ExecuteModular) HandleGCObjectTask(
 			"has_gc_object_number", gcObjectNumber, "try_again_later", tryAgainLater,
 			"task_is_canceled", taskIsCanceled, "has_no_object", hasNoObject, "error", err)
 	}()
-	if storageParams, err = e.baseApp.GfSpDB().GetStorageParams(); err != nil {
-		log.CtxErrorw(ctx, "failed to get storage params", "task_info", task.Info(), "error", err)
+	// TODO: refine it to support multi version
+	if storageParams, err = e.baseApp.Consensus().QueryStorageParams(context.Background()); err != nil {
+		log.Errorw("failed to query storage params", "task_info", task.Info(), "error", err)
 		return
 	}
 	if toGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
@@ -270,7 +271,7 @@ func (e *ExecuteModular) HandleGCObjectTask(
 			log.CtxErrorw(ctx, "gc object task has been canceled", "task_info", task.Info())
 			return
 		}
-		log.CtxInfow(ctx, "succeed to gc an object", "object_info", objectInfo, "deleted_at_block_id", currentGCBlockID)
+		log.CtxDebugw(ctx, "succeed to gc an object", "object_info", objectInfo, "deleted_at_block_id", currentGCBlockID)
 		gcObjectNumber++
 	}
 	isSucceed = true
