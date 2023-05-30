@@ -13,8 +13,8 @@ import (
 const (
 	approvalRouterName                    = "GetApproval"
 	putObjectRouterName                   = "PutObject"
-	putObjectByOffsetRouterName           = "PutObjectByOffset"
-	queryPutObjectOffset                  = "queryPutObjectOffset"
+	resumableObjectByOffsetRouterName     = "ResumablePutObject"
+	queryResumeOffsetName                 = "queryResumeOffsetName"
 	getObjectRouterName                   = "GetObject"
 	getChallengeInfoRouterName            = "GetChallengeInfo"
 	replicateObjectPieceRouterName        = "ReplicateObjectPiece"
@@ -56,14 +56,14 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// admin router, path style
 	// Get Approval
-	router.Path(model.GetApprovalPath).Name(approvalRouterName).Methods(http.MethodGet).HandlerFunc(g.getApprovalHandler).Queries(
-		model.ActionQuery, "{action}")
+	router.Path(GetApprovalPath).Name(approvalRouterName).Methods(http.MethodGet).HandlerFunc(g.getApprovalHandler).Queries(
+		ActionQuery, "{action}")
 
 	// Challenge
-	router.Path(model.ChallengePath).Name(challengeRouterName).Methods(http.MethodGet).HandlerFunc(g.challengeHandler)
+	router.Path(ChallengePath).Name(challengeRouterName).Methods(http.MethodGet).HandlerFunc(g.challengeHandler)
 
 	// replicate piece to receiver
-	router.Path(model.ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)
+	router.Path(ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)
 
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
@@ -80,41 +80,41 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
 
 		// Put Object By Offset
-		r.NewRoute().Name(putObjectByOffsetRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.putObjectByOffsetHandler).Queries(
+		r.NewRoute().Name(resumableObjectByOffsetRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).Queries(
 			"offset", "{offset}",
 			"complete", "{complete}",
 			"context", "{context}")
 
 		// QueryPutObjectOffset
-		r.NewRoute().Name(queryPutObjectOffset).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryPutObjectOffsetHandler).Queries(
+		r.NewRoute().Name(queryResumeOffsetName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryResumeOffsetHandler).Queries(
 			"uploadContext", "",
 			"context", "{context}")
 
 		// Query upload progress
 		r.NewRoute().Name(queryUploadProgressRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryUploadProgressHandler).Queries(
-			model.UploadProgressQuery, "")
+			UploadProgressQuery, "")
 
 		// Get Bucket Meta
-		r.NewRoute().Name(getBucketMetaRouterName).Methods(http.MethodGet).Queries(model.GetBucketMetaQuery, "").HandlerFunc(g.getBucketMetaHandler)
+		r.NewRoute().Name(getBucketMetaRouterName).Methods(http.MethodGet).Queries(GetBucketMetaQuery, "").HandlerFunc(g.getBucketMetaHandler)
 
 		// Get Object Meta
 		r.NewRoute().Name(getObjectMetaRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.getObjectMetaHandler).Queries(
-			model.GetObjectMetaQuery, "")
+			GetObjectMetaQuery, "")
 
 		// Get Object
 		r.NewRoute().Name(getObjectRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.getObjectHandler)
 
 		// Get Bucket Read Quota
 		r.NewRoute().Name(getBucketReadQuotaRouterName).Methods(http.MethodGet).HandlerFunc(g.getBucketReadQuotaHandler).Queries(
-			model.GetBucketReadQuotaQuery, "",
-			model.GetBucketReadQuotaMonthQuery, "{year_month}")
+			GetBucketReadQuotaQuery, "",
+			GetBucketReadQuotaMonthQuery, "{year_month}")
 
 		// List Bucket Read Record
 		r.NewRoute().Name(listBucketReadRecordRouterName).Methods(http.MethodGet).HandlerFunc(g.listBucketReadRecordHandler).Queries(
-			model.ListBucketReadRecordQuery, "",
-			model.ListBucketReadRecordMaxRecordsQuery, "{max_records}",
-			model.StartTimestampUs, "{start_ts}",
-			model.EndTimestampUs, "{end_ts}")
+			ListBucketReadRecordQuery, "",
+			ListBucketReadRecordMaxRecordsQuery, "{max_records}",
+			StartTimestampUs, "{start_ts}",
+			EndTimestampUs, "{end_ts}")
 
 		// List Objects by bucket
 		r.NewRoute().Name(listObjectsByBucketRouterName).Methods(http.MethodGet).Path("/").HandlerFunc(g.listObjectsByBucketNameHandler)

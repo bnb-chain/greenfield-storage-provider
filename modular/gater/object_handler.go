@@ -138,13 +138,13 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 	return false, -1, -1
 }
 
-// putObjectByOffsetHandler handles the resumable put object
-func (g *GateModular) putObjectByOffsetHandler(w http.ResponseWriter, r *http.Request) {
+// resumablePutObjectHandler handles the resumable put object
+func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// queryPutObjectOffsetHandler handles the resumable put object
-func (g *GateModular) queryPutObjectOffsetHandler(w http.ResponseWriter, r *http.Request) {
+// queryResumeOffsetHandler handles the resumable put object
+func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 

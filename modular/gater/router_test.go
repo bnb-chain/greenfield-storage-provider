@@ -8,8 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 )
 
 var (
@@ -70,13 +68,37 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: putObjectRouterName,
 		},
-    {
-			name:             "PutObjectByOffset router",
+		{
+			name:             "PutObjectByOffset router, path style",
 			router:           gwRouter,
 			method:           http.MethodPost,
-      url:              scheme + testDomain + "/" + bucketName + "/"+ objectName + "?offset=0&complete=false&context=",
+			url:              scheme + testDomain + "/" + bucketName + "/" + objectName + "?offset=0&complete=false&context=",
 			shouldMatch:      true,
-			wantedRouterName: putObjectByOffsetRouterName,
+			wantedRouterName: resumableObjectByOffsetRouterName,
+		},
+		{
+			name:             "PutObjectByOffset router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              scheme + bucketName + "." + testDomain + "/" + objectName + "?offset=0&complete=false&context=",
+			shouldMatch:      true,
+			wantedRouterName: resumableObjectByOffsetRouterName,
+		},
+		{
+			name:             "QueryUploadOffset router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "/" + objectName + "?uploadContext&context=",
+			shouldMatch:      true,
+			wantedRouterName: queryResumeOffsetName,
+		},
+		{
+			name:             "QueryUploadOffset router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "/" + objectName + "?uploadContext&context=",
+			shouldMatch:      true,
+			wantedRouterName: queryResumeOffsetName,
 		},
 		{
 			name:             "Get object upload progress router, virtual host style",
@@ -245,7 +267,7 @@ func TestRouters(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-      t.Log(testCase.url)
+			t.Log(testCase.url)
 			request := httptest.NewRequest(testCase.method, testCase.url, strings.NewReader(""))
 			router := testCase.router
 

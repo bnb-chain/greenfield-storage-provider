@@ -120,8 +120,8 @@ func (m *GfSpUploadObjectTask) SetPriority(priority coretask.TPriority) {
 
 func (m *GfSpUploadObjectTask) EstimateLimit() corercmgr.Limit {
 	l := &gfsplimit.GfSpLimit{}
-	if m.GetObjectInfo().GetPayloadSize() >= m.GetStorageParams().VersionedParams.GetMaxSegmentSize() {
-		l.Memory = int64(m.GetStorageParams().VersionedParams.GetMaxSegmentSize()) * 2
+	if m.GetObjectInfo().GetPayloadSize() >= m.GetStorageParams().GetMaxSegmentSize() {
+		l.Memory = int64(m.GetStorageParams().GetMaxSegmentSize()) * 2
 	} else {
 		l.Memory = int64(m.GetObjectInfo().GetPayloadSize()) * 2
 	}
