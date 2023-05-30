@@ -23,7 +23,7 @@ func (p *GfSpPieceOp) ChallengePieceKey(objectID uint64, segmentIdx uint32, repl
 	if replicateIdx < 0 {
 		return p.SegmentPieceKey(objectID, segmentIdx)
 	}
-	return p.ChallengePieceKey(objectID, segmentIdx, replicateIdx)
+	return p.ECPieceKey(objectID, segmentIdx, uint32(replicateIdx))
 }
 
 func (p *GfSpPieceOp) MaxSegmentSize(payloadSize uint64, maxSegmentSize uint64) int64 {
