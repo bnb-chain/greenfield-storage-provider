@@ -115,7 +115,7 @@ func (d *DownloadModular) SplitToSegmentPieceInfos(
 	if task.GetObjectInfo().GetPayloadSize() == 0 ||
 		task.GetLow() >= int64(task.GetObjectInfo().GetPayloadSize()) ||
 		task.GetHigh() >= int64(task.GetObjectInfo().GetPayloadSize()) ||
-		task.GetHigh() <= task.GetLow() {
+		task.GetHigh() < task.GetLow() {
 		log.CtxErrorw(ctx, "failed to parser params", "object_size",
 			task.GetObjectInfo().GetPayloadSize(), "low", task.GetLow(), "high", task.GetHigh())
 		return nil, ErrInvalidParam
