@@ -28,9 +28,7 @@ var (
 	ErrGfSpDB                  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45201, "server slipped away, try again later")
 )
 
-func (e *ExecuteModular) HandleSealObjectTask(
-	ctx context.Context,
-	task coretask.SealObjectTask) {
+func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) {
 	if task == nil || task.GetObjectInfo() == nil {
 		log.CtxErrorw(ctx, "failed to handle seal object, task pointer dangling")
 		task.SetError(ErrDanglingPointer)
@@ -47,10 +45,7 @@ func (e *ExecuteModular) HandleSealObjectTask(
 	log.CtxDebugw(ctx, "finish to handle seal object task", "error", task.Error())
 }
 
-func (e *ExecuteModular) sealObject(
-	ctx context.Context,
-	task coretask.ObjectTask,
-	sealMsg *storagetypes.MsgSealObject) error {
+func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTask, sealMsg *storagetypes.MsgSealObject) error {
 	var err error
 	for retry := int64(0); retry <= task.GetMaxRetry(); retry++ {
 		err = e.baseApp.GfSpClient().SealObject(ctx, sealMsg)
@@ -71,9 +66,7 @@ func (e *ExecuteModular) sealObject(
 	return err
 }
 
-func (e *ExecuteModular) listenSealObject(
-	ctx context.Context,
-	object *storagetypes.ObjectInfo) error {
+func (e *ExecuteModular) listenSealObject(ctx context.Context, object *storagetypes.ObjectInfo) error {
 	var err error
 	for retry := 0; retry < e.maxListenSealRetry; retry++ {
 		sealed, innerErr := e.baseApp.Consensus().ListenObjectSeal(ctx,
@@ -97,9 +90,7 @@ func (e *ExecuteModular) listenSealObject(
 	return err
 }
 
-func (e *ExecuteModular) HandleReceivePieceTask(
-	ctx context.Context,
-	task coretask.ReceivePieceTask) {
+func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coretask.ReceivePieceTask) {
 	if task.GetObjectInfo() == nil {
 		log.CtxErrorw(ctx, "failed to handle receive piece confirm, task pointer dangling")
 		return
@@ -166,12 +157,10 @@ func (e *ExecuteModular) HandleReceivePieceTask(
 	log.CtxDebugw(ctx, "succeed to handle confirm receive piece task")
 }
 
-func (e *ExecuteModular) HandleGCObjectTask(
-	ctx context.Context,
-	task coretask.GCObjectTask) {
+func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.GCObjectTask) {
 	var (
 		err                error
-		toGCObjects        []*types.Object
+		waitingGCObjects   []*types.Object
 		currentGCBlockID   uint64
 		currentGCObjectID  uint64
 		responseEndBlockID uint64
@@ -199,7 +188,7 @@ func (e *ExecuteModular) HandleGCObjectTask(
 		}
 		log.CtxDebugw(ctx, "gc object task",
 			"task_info", task.Info(), "is_succeed", isSucceed,
-			"response_end_block_id", responseEndBlockID, "to_gc_object_number", len(toGCObjects),
+			"response_end_block_id", responseEndBlockID, "waiting_gc_object_number", len(waitingGCObjects),
 			"has_gc_object_number", gcObjectNumber, "try_again_later", tryAgainLater,
 			"task_is_canceled", taskIsCanceled, "has_no_object", hasNoObject, "error", err)
 	}()
@@ -208,27 +197,24 @@ func (e *ExecuteModular) HandleGCObjectTask(
 		log.Errorw("failed to query storage params", "task_info", task.Info(), "error", err)
 		return
 	}
-	if toGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
+	if waitingGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
 		ctx, e.baseApp.OperateAddress(), task.GetStartBlockNumber(),
 		task.GetEndBlockNumber(), true); err != nil {
 		log.CtxErrorw(ctx, "failed to query deleted object list", "task_info", task.Info(), "error", err)
 		return
 	}
 	if responseEndBlockID < task.GetStartBlockNumber() || responseEndBlockID < task.GetEndBlockNumber() {
-		// metadata is not latest, try again later.
 		tryAgainLater = true
 		log.CtxInfow(ctx, "metadata is not latest, try again later",
 			"response_end_block_id", responseEndBlockID, "task_info", task.Info())
-		time.Sleep(10 * time.Second)
 		return
 	}
-	if len(toGCObjects) == 0 {
-		// has no deleted object.
+	if len(waitingGCObjects) == 0 {
 		hasNoObject = true
 		return
 	}
 
-	for _, object := range toGCObjects {
+	for _, object := range waitingGCObjects {
 		currentGCBlockID = uint64(object.GetDeleteAt())
 		objectInfo := object.GetObjectInfo()
 		currentGCObjectID = objectInfo.Id.Uint64()
@@ -277,14 +263,10 @@ func (e *ExecuteModular) HandleGCObjectTask(
 	isSucceed = true
 }
 
-func (e *ExecuteModular) HandleGCZombiePieceTask(
-	ctx context.Context,
-	task coretask.GCZombiePieceTask) {
+func (e *ExecuteModular) HandleGCZombiePieceTask(ctx context.Context, task coretask.GCZombiePieceTask) {
 	log.CtxWarn(ctx, "gc zombie piece future support")
 }
 
-func (e *ExecuteModular) HandleGCMetaTask(
-	ctx context.Context,
-	task coretask.GCMetaTask) {
+func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCMetaTask) {
 	log.CtxWarn(ctx, "gc meta future support")
 }

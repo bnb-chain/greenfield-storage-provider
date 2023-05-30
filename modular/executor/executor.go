@@ -115,7 +115,7 @@ func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
 	}
 	// double confirm the safe task
 	if askTask == nil {
-		log.CtxErrorw(ctx, "failed to ask task, dangling pointer",
+		log.CtxErrorw(ctx, "failed to ask task due to dangling pointer",
 			"remaining", limit.String(), "error", err)
 		return
 	}
@@ -168,7 +168,7 @@ func (e *ExecuteModular) ReportTask(
 	ctx context.Context,
 	task coretask.Task) error {
 	err := e.baseApp.GfSpClient().ReportTask(ctx, task)
-	log.CtxDebugw(ctx, "finish to report task", "info", task.Info(), "error", err)
+	log.CtxDebugw(ctx, "finish to report task", "task_info", task.Info(), "error", err)
 	return err
 }
 
