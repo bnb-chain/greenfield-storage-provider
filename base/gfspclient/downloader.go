@@ -23,11 +23,36 @@ func (s *GfSpClient) GetObject(
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpDownloadObjectRequest{
-		DownLoadTask: task.(*gfsptask.GfSpDownloadObjectTask),
+		DownloadObjectTask: task.(*gfsptask.GfSpDownloadObjectTask),
 	}
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadObject(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to download object", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetData(), nil
+}
+
+func (s *GfSpClient) GetPiece(
+	ctx context.Context,
+	task coretask.DownloadPieceTask,
+	opts ...grpc.DialOption) (
+	[]byte, error) {
+	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &gfspserver.GfSpDownloadPieceRequest{
+		DownloadPieceTask: task.(*gfsptask.GfSpDownloadPieceTask),
+	}
+	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadPiece(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to download piece", "error", err)
 		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {

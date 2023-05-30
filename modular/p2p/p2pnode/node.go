@@ -80,12 +80,12 @@ func NewNode(baseApp *gfspapp.GfSpBaseApp, privateKey string, address string,
 	}
 	hostAddr, err := MakeMultiaddr(address)
 	if err != nil {
-		log.Errorw("failed to parser p2p protocol address", "error", err)
+		log.Errorw("failed to parse p2p protocol address", "error", err)
 		return nil, err
 	}
 	bootstrapIDs, bootstrapAddrs, err := MakeBootstrapMultiaddr(bootstrap)
 	if err != nil {
-		log.Errorw("failed to parser bootstrap address", "error", err)
+		log.Errorw("failed to parse bootstrap address", "error", err)
 		return nil, err
 	}
 	// init store for storing peers addr
