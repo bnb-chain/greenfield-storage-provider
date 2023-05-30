@@ -325,16 +325,6 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 			}
 		}
 	}
-	storageParams, err := m.baseApp.Consensus().QueryStorageParams(context.Background())
-	if err != nil {
-		log.Errorw("failed to query storage params", "error", err)
-		return
-	}
-	if err = m.baseApp.GfSpDB().SetStorageParams(storageParams); err != nil {
-		log.Errorw("failed to update storage params", "error", err)
-		return
-	}
-	log.Infow("succeed to refresh storage params", "params", storageParams)
 }
 
 func (m *ManageModular) Statistics() string {
