@@ -91,6 +91,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 }
 
 func (m *ManageModular) eventLoop(ctx context.Context) {
+	m.syncConsensusInfo(ctx)
 	gcObjectTicker := time.NewTicker(time.Duration(m.gcObjectTimeInterval) * time.Second)
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
