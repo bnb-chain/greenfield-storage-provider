@@ -203,14 +203,16 @@ func (n *Node) GetSecondaryReplicatePieceApproval(
 			current, innerErr := n.baseApp.Consensus().CurrentHeight(approvalCtx)
 			if innerErr == nil {
 				if approval.GetExpiredHeight() < current {
-					log.Warnw("discard expired approval", "sp", approval.GetApprovedSpApprovalAddress(),
+					log.CtxWarnw(ctx, "discard expired approval", "sp", approval.GetApprovedSpApprovalAddress(),
 						"object_id", approval.GetObjectInfo().Id.Uint64(), "current_height", current,
 						"expire_height", approval.GetExpiredHeight())
 					continue
 				}
 			} else {
-				log.Warnw("failed to get current height", "error", err)
+				log.CtxWarnw(ctx, "failed to get current height", "error", err)
 			}
+			log.CtxDebugw(ctx, "append replicate approval",
+				"approval_op_address", approval.GetStorageParams())
 			accept = append(accept, approval)
 			if len(accept) >= expectedAccept {
 				log.CtxErrorw(ctx, "succeed to get sufficient approvals",
