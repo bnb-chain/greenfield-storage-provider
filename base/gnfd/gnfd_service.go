@@ -39,8 +39,8 @@ func (g *Gnfd) HasAccount(ctx context.Context, address string) (bool, error) {
 	return resp.GetAccount() != nil, nil
 }
 
-// QuerySPInfo returns the list of storage provider info.
-func (g *Gnfd) QuerySPInfo(ctx context.Context) ([]*sptypes.StorageProvider, error) {
+// ListSPs returns the list of storage provider info.
+func (g *Gnfd) ListSPs(ctx context.Context) ([]*sptypes.StorageProvider, error) {
 	client := g.getCurrentClient().GnfdClient()
 	var spInfos []*sptypes.StorageProvider
 	resp, err := client.StorageProviders(ctx, &sptypes.QueryStorageProvidersRequest{
@@ -50,7 +50,7 @@ func (g *Gnfd) QuerySPInfo(ctx context.Context) ([]*sptypes.StorageProvider, err
 		},
 	})
 	if err != nil {
-		log.Errorw("failed to query storage provider list", "error", err)
+		log.Errorw("failed to list storage providers", "error", err)
 		return spInfos, err
 	}
 	for i := 0; i < len(resp.GetSps()); i++ {
