@@ -16,11 +16,8 @@ var (
 
 var _ gfspserver.GfSpP2PServiceServer = &GfSpBaseApp{}
 
-func (g *GfSpBaseApp) GfSpAskSecondaryReplicatePieceApproval(
-	ctx context.Context,
-	req *gfspserver.GfSpAskSecondaryReplicatePieceApprovalRequest) (
-	*gfspserver.GfSpAskSecondaryReplicatePieceApprovalResponse,
-	error) {
+func (g *GfSpBaseApp) GfSpAskSecondaryReplicatePieceApproval(ctx context.Context, req *gfspserver.GfSpAskSecondaryReplicatePieceApprovalRequest) (
+	*gfspserver.GfSpAskSecondaryReplicatePieceApprovalResponse, error) {
 	task := req.GetReplicatePieceApprovalTask()
 	if task == nil {
 		log.CtxError(ctx, "failed to ask replicate piece approval, task pointer dangling")
@@ -39,8 +36,7 @@ func (g *GfSpBaseApp) GfSpAskSecondaryReplicatePieceApproval(
 	return resp, nil
 }
 
-func (g *GfSpBaseApp) GfSpQueryP2PBootstrap(ctx context.Context,
-	req *gfspserver.GfSpQueryP2PNodeRequest) (
+func (g *GfSpBaseApp) GfSpQueryP2PBootstrap(ctx context.Context, req *gfspserver.GfSpQueryP2PNodeRequest) (
 	*gfspserver.GfSpQueryP2PNodeResponse, error) {
 	nodes, err := g.p2p.HandleQueryBootstrap(ctx)
 	if err != nil {

@@ -40,7 +40,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(
 	}()
 
 	if task == nil || task.GetObjectInfo() == nil {
-		log.CtxErrorw(ctx, "failed to pre receive piece, pointer dangling")
+		log.CtxErrorw(ctx, "failed to pre receive piece due to pointer dangling")
 		err = ErrDanglingTask
 		return ErrDanglingTask
 	}
@@ -96,7 +96,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 	}()
 
 	if task == nil || task.GetObjectInfo() == nil {
-		log.CtxErrorw(ctx, "failed to pre receive piece, pointer dangling")
+		log.CtxErrorw(ctx, "failed to pre receive piece due to pointer dangling")
 		err = ErrDanglingTask
 		return nil, nil, ErrDanglingTask
 	}
@@ -110,7 +110,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 		err = ErrDanglingTask
 		return nil, nil, ErrDanglingTask
 	}
-	segmentCount := r.baseApp.PieceOp().SegmentCount(task.GetObjectInfo().GetPayloadSize(),
+	segmentCount := r.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 	checksums, err := r.baseApp.GfSpDB().GetAllReplicatePieceChecksum(
 		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx(), segmentCount)

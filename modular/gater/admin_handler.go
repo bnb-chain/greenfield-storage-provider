@@ -153,11 +153,11 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 	log.CtxDebugw(reqCtx.Context(), "succeed to ask approval")
 }
 
-// challengeHandler handles get challenge piece info request. Current only greenfield
+// getChallengeInfoHandler handles get challenge piece info request. Current only greenfield
 // validator can challenge piece is store correctly. The challenge piece info includes:
 // the challenged piece data, all piece hashes and the integrity hash. The challenger
 // can verify the info whether are correct by comparing with the greenfield info.
-func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
+func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error
 		reqCtx     *RequestContext
@@ -209,7 +209,7 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+			log.CtxErrorw(reqCtx.Context(), "failed to get challenge info due to no permission")
 			err = ErrNoPermission
 			return
 		}
@@ -242,10 +242,10 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var pieceSize uint64
 	if redundancyIdx < 0 {
-		pieceSize = uint64(g.baseApp.PieceOp().SegmentSize(objectInfo.GetPayloadSize(),
+		pieceSize = uint64(g.baseApp.PieceOp().SegmentPieceSize(objectInfo.GetPayloadSize(),
 			segmentIdx, params.VersionedParams.GetMaxSegmentSize()))
 	} else {
-		pieceSize = uint64(g.baseApp.PieceOp().PieceSize(objectInfo.GetPayloadSize(),
+		pieceSize = uint64(g.baseApp.PieceOp().ECPieceSize(objectInfo.GetPayloadSize(),
 			segmentIdx, params.VersionedParams.GetMaxSegmentSize(),
 			params.VersionedParams.GetRedundantDataChunkNum()))
 	}

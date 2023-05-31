@@ -11,10 +11,7 @@ import (
 
 var _ gfspserver.GfSpAuthorizationServiceServer = &GfSpBaseApp{}
 
-func (g *GfSpBaseApp) GfSpVerifyAuthorize(
-	ctx context.Context,
-	req *gfspserver.GfSpAuthorizeRequest) (
-	*gfspserver.GfSpAuthorizeResponse, error) {
+func (g *GfSpBaseApp) GfSpVerifyAuthorize(ctx context.Context, req *gfspserver.GfSpAuthorizeRequest) (*gfspserver.GfSpAuthorizeResponse, error) {
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, req.GetBucketName())
 	ctx = log.WithValue(ctx, log.CtxKeyObjectName, req.GetObjectName())
 	log.CtxDebugw(ctx, "begin to authorize", "user", req.GetUserAccount(), "auth_type", req.GetAuthType())

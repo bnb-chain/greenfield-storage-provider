@@ -113,7 +113,7 @@ func (e *ExecuteModular) handleReplicatePiece(
 	var (
 		wg       sync.WaitGroup
 		pieceKey string
-		segCount = e.baseApp.PieceOp().SegmentCount(
+		segCount = e.baseApp.PieceOp().SegmentPieceCount(
 			rTask.GetObjectInfo().GetPayloadSize(),
 			rTask.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 		replCount = rTask.GetStorageParams().VersionedParams.GetRedundantDataChunkNum() +

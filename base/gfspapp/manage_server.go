@@ -107,10 +107,7 @@ func (g *GfSpBaseApp) GfSpAskTask(
 	return resp, nil
 }
 
-func (g *GfSpBaseApp) OnAskTask(
-	ctx context.Context,
-	limit corercmgr.Limit,
-) (coretask.Task, error) {
+func (g *GfSpBaseApp) OnAskTask(ctx context.Context, limit corercmgr.Limit) (coretask.Task, error) {
 	gfspTask, err := g.manager.DispatchTask(ctx, limit)
 	if err != nil {
 		return nil, gfsperrors.MakeGfSpError(err)
@@ -127,9 +124,7 @@ func (g *GfSpBaseApp) OnAskTask(
 	return gfspTask, nil
 }
 
-func (g *GfSpBaseApp) GfSpReportTask(
-	ctx context.Context,
-	req *gfspserver.GfSpReportTaskRequest) (
+func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpReportTaskRequest) (
 	*gfspserver.GfSpReportTaskResponse, error) {
 	var (
 		reportTask = req.GetRequest()

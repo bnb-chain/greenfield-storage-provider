@@ -140,7 +140,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 			log.CtxErrorw(ctx, "failed to delete integrity")
 		}
 		var pieceKey string
-		segmentCount := e.baseApp.PieceOp().SegmentCount(onChainObject.GetPayloadSize(),
+		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(onChainObject.GetPayloadSize(),
 			task.GetStorageParams().GetMaxPayloadSize())
 		for i := uint32(0); i < segmentCount; i++ {
 			if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
@@ -226,7 +226,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		if currentGCObjectID <= task.GetLastDeletedObjectId() {
 			continue
 		}
-		segmentCount := e.baseApp.PieceOp().SegmentCount(
+		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(
 			objectInfo.GetPayloadSize(), storageParams.VersionedParams.GetMaxSegmentSize())
 		for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(currentGCObjectID, segIdx)

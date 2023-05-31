@@ -76,8 +76,8 @@ const (
 	VerifyPermissionOperator = "operator"
 	// VerifyPermissionActionType defines verify permission action type
 	VerifyPermissionActionType = "action-type"
-	// ChallengePath defines challenge path style suffix
-	ChallengePath = "/greenfield/admin/v1/challenge"
+	// GetChallengeInfoPath defines get challenge info path style suffix
+	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
 	// AuthRequestNoncePath defines path to request auth nonce

@@ -15,12 +15,9 @@ var (
 
 var _ gfspserver.GfSpSignServiceServer = &GfSpBaseApp{}
 
-func (g *GfSpBaseApp) GfSpSign(
-	ctx context.Context,
-	req *gfspserver.GfSpSignRequest) (
-	*gfspserver.GfSpSignResponse, error) {
+func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequest) (*gfspserver.GfSpSignResponse, error) {
 	if req.GetRequest() == nil {
-		log.Error("failed to sign msg, msg pointer dangling")
+		log.Error("failed to sign msg due to pointer dangling")
 		return &gfspserver.GfSpSignResponse{Err: ErrSingTaskDangling}, nil
 	}
 	var (
