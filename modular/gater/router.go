@@ -28,6 +28,7 @@ const (
 	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
 	getObjectMetaRouterName               = "GetObjectMeta"
 	getBucketMetaRouterName               = "GetBucketMeta"
+	getGroupListRouterName                = "GetGroupList"
 )
 
 const (
@@ -144,6 +145,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Name(verifyPermissionRouterName).
 		Methods(http.MethodGet).
 		HandlerFunc(g.verifyPermissionHandler)
+
+	// group router
+	router.Path(GroupListPath).
+		Name(getGroupListRouterName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.getGroupListHandler)
 
 	// path style
 	pathBucketRouter := router.PathPrefix("/{bucket}").Subrouter()

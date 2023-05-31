@@ -42,6 +42,8 @@ type Metadata interface {
 	GetSwitchDBSignal() (*MasterDB, error)
 	// GetBucketMetaByName get bucket info with its related info
 	GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error)
+	// ListGroupsByNameAndSourceType get groups list by specific parameters
+	ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int) ([]*Group, error)
 }
 
 // BSDB contains all the methods required by block syncer database
