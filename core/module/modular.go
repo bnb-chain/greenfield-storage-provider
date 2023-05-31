@@ -105,7 +105,7 @@ type Downloader interface {
 	PreDownloadPiece(ctx context.Context, task task.DownloadPieceTask) error
 	// HandleDownloadPieceTask handles the DownloadPiece, get data from piece store.
 	HandleDownloadPieceTask(ctx context.Context, task task.DownloadPieceTask) ([]byte, error)
-	// PostDownloadPiece is called after HandleDownloadObjectTask, it can recycle
+	// PostDownloadPiece is called after HandleDownloadPieceTask, it can recycle
 	// resources, statistics and other operations.
 	PostDownloadPiece(ctx context.Context, task task.DownloadPieceTask)
 
