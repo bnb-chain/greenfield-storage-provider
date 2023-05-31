@@ -125,8 +125,8 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	return &GreenfieldChainSignClient{
 		gasLimit:          gasLimit,
 		greenfieldClients: greenfieldClients,
-		sealAccNonce:      sealAccNonce - 1,
-		gcAccNonce:        gcAccNonce - 1,
+		sealAccNonce:      sealAccNonce,
+		gcAccNonce:        gcAccNonce,
 	}, nil
 }
 
@@ -178,7 +178,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.sealAccNonce + 1
+	nonce := client.sealAccNonce
 
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
 		sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
@@ -199,10 +199,9 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 				log.CtxErrorw(ctx, "failed to get seal account nonce", "err", err, "seal_info", msgSealObject.String())
 				return nil, ErrSealObjectOnChain
 			}
-			client.sealAccNonce = nonce - 1
+			client.sealAccNonce = nonce
 		}
 		return nil, ErrSealObjectOnChain
-
 	}
 
 	if resp.TxResponse.Code != 0 {
@@ -214,7 +213,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "seal_info", msgSealObject.String())
 		return nil, ErrSealObjectOnChain
 	}
-	client.sealAccNonce = nonce
+	client.sealAccNonce = nonce + 1
 
 	return txHash, nil
 }
@@ -230,7 +229,7 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.gcAccNonce + 1
+	nonce := client.gcAccNonce
 
 	msgDiscontinueBucket := storagetypes.NewMsgDiscontinueBucket(km.GetAddr(),
 		discontinueBucket.BucketName, discontinueBucket.Reason)
@@ -251,7 +250,7 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 				log.CtxErrorw(ctx, "failed to get gc account nonce", "err", err)
 				return nil, ErrDiscontinueBucketOnChain
 			}
-			client.gcAccNonce = nonce - 1
+			client.gcAccNonce = nonce
 		}
 		return nil, ErrDiscontinueBucketOnChain
 	}
@@ -267,6 +266,6 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 	}
 
 	// update nonce when tx is successful submitted
-	client.gcAccNonce = nonce
+	client.gcAccNonce = nonce + 1
 	return txHash, nil
 }

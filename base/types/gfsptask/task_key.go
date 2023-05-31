@@ -13,6 +13,7 @@ const (
 	KeyPrefixGfSpCreateObjectApprovalTask   = "CreateObjectApproval"
 	KeyPrefixGfSpReplicatePieceApprovalTask = "ReplicatePieceApproval"
 	KeyPrefixGfSpDownloadObjectTask         = "DownloadObject"
+	KeyPrefixGfSpDownloadPieceTask          = "DownloadPiece"
 	KeyPrefixGfSpChallengeTask              = "ChallengePiece"
 	KeyPrefixGfSpUploadObjectTask           = "Uploading"
 	KeyPrefixGfSpReplicatePieceTask         = "Replicating"
@@ -41,6 +42,11 @@ func GfSpReplicatePieceApprovalTaskKey(bucket, object, id string) task.TKey {
 func GfSpDownloadObjectTaskKey(bucket, object, id string, low, high int64) task.TKey {
 	return task.TKey(KeyPrefixGfSpDownloadObjectTask + CombineKey(bucket, object, id,
 		"low:"+fmt.Sprint(low), "high:"+fmt.Sprint(high)))
+}
+
+func GfSpDownloadPieceTaskKey(bucket, object, pieceKey string, pieceOffset, pieceLength uint64) task.TKey {
+	return task.TKey(KeyPrefixGfSpDownloadPieceTask + CombineKey(bucket, object, pieceKey,
+		"offset:"+fmt.Sprint(pieceOffset), "length:"+fmt.Sprint(pieceLength)))
 }
 
 func GfSpChallengePieceTaskKey(bucket, object, id string, sIdx uint32, rIdx int32, user string) task.TKey {

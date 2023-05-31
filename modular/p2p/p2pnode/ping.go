@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/peerstore"
@@ -46,7 +46,7 @@ func (n *Node) onPing(s network.Stream) {
 		return
 	}
 
-	//log.Debugf("%s received ping request from %s. Message: %s", s.Conn().LocalPeer(), s.Conn().RemotePeer(), ping.String())
+	// log.Debugf("%s received ping request from %s. Message: %s", s.Conn().LocalPeer(), s.Conn().RemotePeer(), ping.String())
 
 	err = VerifySignature(ping.GetSpOperatorAddress(), ping.GetSignBytes(), ping.GetSignature())
 	if err != nil {
@@ -67,13 +67,13 @@ func (n *Node) onPing(s network.Stream) {
 			nodeInfo.MultiAddr = append(nodeInfo.MultiAddr, addr.String())
 		}
 		pong.Nodes = append(pong.Nodes, nodeInfo)
-		//log.Debugw("send node to remote", "node_id", pID.String(), "remote_node", s.Conn().RemotePeer())
+		// log.Debugw("send node to remote", "node_id", pID.String(), "remote_node", s.Conn().RemotePeer())
 	}
 	// add self ant address
 	if len(n.p2pAntAddress) > 0 {
 		selfAntAddr, err := MakeMultiaddr(n.p2pAntAddress)
 		if err != nil {
-			log.Errorw("failed to parser self ant address",
+			log.Errorw("failed to parse self ant address",
 				"ant_address", n.p2pAntAddress, "error", err)
 		} else {
 			nodeInfo := &gfspp2p.GfSpNode{
@@ -121,7 +121,7 @@ func (n *Node) onPong(s network.Stream) {
 		return
 	}
 
-	//log.Debugf("%s received pong request from %s.", s.Conn().LocalPeer(), s.Conn().RemotePeer())
+	// log.Debugf("%s received pong request from %s.", s.Conn().LocalPeer(), s.Conn().RemotePeer())
 
 	err = VerifySignature(pong.GetSpOperatorAddress(), pong.GetSignBytes(), pong.GetSignature())
 	if err != nil {
@@ -144,6 +144,6 @@ func (n *Node) onPong(s network.Stream) {
 			addrs = append(addrs, addr)
 		}
 		n.node.Peerstore().AddAddrs(pID, addrs, peerstore.PermanentAddrTTL)
-		//log.Debugw("receive node from remote and permanent", "remote_node", s.Conn().RemotePeer(), "node_id", pID)
+		// log.Debugw("receive node from remote and permanent", "remote_node", s.Conn().RemotePeer(), "node_id", pID)
 	}
 }

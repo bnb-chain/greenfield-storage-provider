@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
@@ -192,7 +193,11 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 		reqCtx.request.Header.Get(GnfdObjectIDHeader))
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensus
+		if strings.Contains(err.Error(), "No such object") {
+			err = ErrNoSuchObject
+		} else {
+			err = ErrConsensus
+		}
 		return
 	}
 	if reqCtx.NeedVerifyAuthorizer() {
