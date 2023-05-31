@@ -86,10 +86,7 @@ func TestApprovalTaskRetireByExpiredHeight(t *testing.T) {
 	currentBlockHeight := uint64(100)
 	retireFunc := func(qTask task.Task) bool {
 		task := qTask.(task.ApprovalTask)
-		if task.GetExpiredHeight() < currentBlockHeight {
-			return true
-		}
-		return false
+		return task.GetExpiredHeight() < currentBlockHeight
 	}
 	queue := NewGfSpTQueue("test_expired_height_queue", 3)
 	queue.SetRetireTaskStrategy(retireFunc)
