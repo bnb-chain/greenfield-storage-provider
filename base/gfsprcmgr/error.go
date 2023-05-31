@@ -24,10 +24,7 @@ func (e *ErrMemoryLimitExceeded) Error() string { return e.err.Error() }
 func (e *ErrMemoryLimitExceeded) Unwrap() error { return e.err }
 
 // edge may be empty if this is not an edge error
-func logValuesMemoryLimit(
-	scope, edge string,
-	stat corercmgr.ScopeStat,
-	err error) []interface{} {
+func logValuesMemoryLimit(scope, edge string, stat corercmgr.ScopeStat, err error) []interface{} {
 	logValues := make([]interface{}, 0, 2*8)
 	logValues = append(logValues, "scope", scope)
 	if edge != "" {
@@ -54,11 +51,7 @@ func (e *ErrConnLimitExceeded) Error() string { return e.err.Error() }
 func (e *ErrConnLimitExceeded) Unwrap() error { return e.err }
 
 // edge may be empty if this is not an edge error
-func logValuesConnLimit(
-	scope, edge string,
-	dir corercmgr.Direction,
-	stat corercmgr.ScopeStat,
-	err error) []interface{} {
+func logValuesConnLimit(scope, edge string, dir corercmgr.Direction, stat corercmgr.ScopeStat, err error) []interface{} {
 	logValues := make([]interface{}, 0, 2*9)
 	logValues = append(logValues, "scope", scope)
 	if edge != "" {
@@ -86,10 +79,7 @@ func (e *ErrTaskLimitExceeded) Error() string { return e.err.Error() }
 func (e *ErrTaskLimitExceeded) Unwrap() error { return e.err }
 
 // edge may be empty if this is not an edge error
-func logValuesTaskLimit(
-	scope, edge string,
-	stat corercmgr.ScopeStat,
-	err error) []interface{} {
+func logValuesTaskLimit(scope, edge string, stat corercmgr.ScopeStat, err error) []interface{} {
 	logValues := make([]interface{}, 0, 2*8)
 	logValues = append(logValues, "scope", scope)
 	if edge != "" {

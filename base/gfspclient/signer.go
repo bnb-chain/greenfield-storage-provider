@@ -11,9 +11,7 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-func (s *GfSpClient) SignCreateBucketApproval(
-	ctx context.Context,
-	bucket *storagetypes.MsgCreateBucket) (
+func (s *GfSpClient) SignCreateBucketApproval(ctx context.Context, bucket *storagetypes.MsgCreateBucket) (
 	[]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
@@ -36,10 +34,7 @@ func (s *GfSpClient) SignCreateBucketApproval(
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignCreateObjectApproval(
-	ctx context.Context,
-	object *storagetypes.MsgCreateObject) (
-	[]byte, error) {
+func (s *GfSpClient) SignCreateObjectApproval(ctx context.Context, object *storagetypes.MsgCreateObject) ([]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
@@ -61,9 +56,7 @@ func (s *GfSpClient) SignCreateObjectApproval(
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SealObject(
-	ctx context.Context,
-	object *storagetypes.MsgSealObject) error {
+func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSealObject) error {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
@@ -85,9 +78,7 @@ func (s *GfSpClient) SealObject(
 	return nil
 }
 
-func (s *GfSpClient) DiscontinueBucket(
-	ctx context.Context,
-	bucket *storagetypes.MsgDiscontinueBucket) error {
+func (s *GfSpClient) DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
@@ -109,10 +100,7 @@ func (s *GfSpClient) DiscontinueBucket(
 	return nil
 }
 
-func (s *GfSpClient) SignReplicatePieceApproval(
-	ctx context.Context,
-	task coretask.ApprovalReplicatePieceTask) (
-	[]byte, error) {
+func (s *GfSpClient) SignReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask) ([]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
@@ -134,11 +122,7 @@ func (s *GfSpClient) SignReplicatePieceApproval(
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignIntegrityHash(
-	ctx context.Context,
-	objectID uint64,
-	checksums [][]byte) (
-	[]byte, []byte, error) {
+func (s *GfSpClient) SignIntegrityHash(ctx context.Context, objectID uint64, checksums [][]byte) ([]byte, []byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
@@ -163,10 +147,7 @@ func (s *GfSpClient) SignIntegrityHash(
 	return resp.GetSignature(), resp.GetIntegrityHash(), nil
 }
 
-func (s *GfSpClient) SignReceiveTask(
-	ctx context.Context,
-	receiveTask coretask.ReceivePieceTask) (
-	[]byte, error) {
+func (s *GfSpClient) SignReceiveTask(ctx context.Context, receiveTask coretask.ReceivePieceTask) ([]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
@@ -188,10 +169,7 @@ func (s *GfSpClient) SignReceiveTask(
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignP2PPingMsg(
-	ctx context.Context,
-	ping *gfspp2p.GfSpPing) (
-	[]byte, error) {
+func (s *GfSpClient) SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
@@ -213,10 +191,7 @@ func (s *GfSpClient) SignP2PPingMsg(
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignP2PPongMsg(
-	ctx context.Context,
-	pong *gfspp2p.GfSpPong) (
-	[]byte, error) {
+func (s *GfSpClient) SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong) ([]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)

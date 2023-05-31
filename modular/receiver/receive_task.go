@@ -25,10 +25,7 @@ var (
 	ErrGfSpDB              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85201, "server slipped away, try again later")
 )
 
-func (r *ReceiveModular) HandleReceivePieceTask(
-	ctx context.Context,
-	task task.ReceivePieceTask,
-	data []byte) error {
+func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask, data []byte) error {
 	var (
 		err error
 	)
@@ -83,10 +80,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(
 	return nil
 }
 
-func (r *ReceiveModular) HandleDoneReceivePieceTask(
-	ctx context.Context,
-	task task.ReceivePieceTask) (
-	[]byte, []byte, error) {
+func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, []byte, error) {
 	var err error
 	defer func() {
 		if err != nil {
