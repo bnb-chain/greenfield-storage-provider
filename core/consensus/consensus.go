@@ -16,8 +16,8 @@ type Consensus interface {
 	CurrentHeight(ctx context.Context) (uint64, error)
 	// HasAccount returns an indicator whether the account has been created.
 	HasAccount(ctx context.Context, account string) (bool, error)
-	// QuerySPInfo returns all SP info.
-	QuerySPInfo(ctx context.Context) ([]*sptypes.StorageProvider, error)
+	// ListSPs returns all SP info.
+	ListSPs(ctx context.Context) ([]*sptypes.StorageProvider, error)
 	// ListBondedValidators returns all bonded validators info.
 	ListBondedValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 	// QueryStorageParams returns the storage params.
@@ -50,7 +50,7 @@ func (*NullConsensus) CurrentHeight(context.Context) (uint64, error) { return 0,
 func (*NullConsensus) HasAccount(context.Context, string) (bool, error) {
 	return false, nil
 }
-func (*NullConsensus) QuerySPInfo(context.Context) ([]*sptypes.StorageProvider, error) {
+func (*NullConsensus) ListSPs(context.Context) ([]*sptypes.StorageProvider, error) {
 	return nil, nil
 }
 
