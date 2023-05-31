@@ -333,7 +333,7 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get bucket meta", reqCtx.String())
+			log.CtxErrorw(reqCtx.Context(), "failed to verify permission", reqCtx.String())
 			MakeErrorResponse(w, err)
 		}
 	}()
