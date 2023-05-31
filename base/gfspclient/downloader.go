@@ -11,10 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-func (s *GfSpClient) GetObject(
-	ctx context.Context,
-	task coretask.DownloadObjectTask,
-	opts ...grpc.DialOption) (
+func (s *GfSpClient) GetObject(ctx context.Context, downloadObjectTask coretask.DownloadObjectTask, opts ...grpc.DialOption) (
 	[]byte, error) {
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
@@ -23,7 +20,7 @@ func (s *GfSpClient) GetObject(
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpDownloadObjectRequest{
-		DownloadObjectTask: task.(*gfsptask.GfSpDownloadObjectTask),
+		DownloadObjectTask: downloadObjectTask.(*gfsptask.GfSpDownloadObjectTask),
 	}
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadObject(ctx, req)
 	if err != nil {
@@ -36,10 +33,7 @@ func (s *GfSpClient) GetObject(
 	return resp.GetData(), nil
 }
 
-func (s *GfSpClient) GetPiece(
-	ctx context.Context,
-	task coretask.DownloadPieceTask,
-	opts ...grpc.DialOption) (
+func (s *GfSpClient) GetPiece(ctx context.Context, downloadPieceTask coretask.DownloadPieceTask, opts ...grpc.DialOption) (
 	[]byte, error) {
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
@@ -48,7 +42,7 @@ func (s *GfSpClient) GetPiece(
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpDownloadPieceRequest{
-		DownloadPieceTask: task.(*gfsptask.GfSpDownloadPieceTask),
+		DownloadPieceTask: downloadPieceTask.(*gfsptask.GfSpDownloadPieceTask),
 	}
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadPiece(ctx, req)
 	if err != nil {
@@ -61,10 +55,7 @@ func (s *GfSpClient) GetPiece(
 	return resp.GetData(), nil
 }
 
-func (s *GfSpClient) GetChallengeInfo(
-	ctx context.Context,
-	task coretask.ChallengePieceTask,
-	opts ...grpc.DialOption) (
+func (s *GfSpClient) GetChallengeInfo(ctx context.Context, challengePieceTask coretask.ChallengePieceTask, opts ...grpc.DialOption) (
 	[]byte, [][]byte, []byte, error) {
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
@@ -73,7 +64,7 @@ func (s *GfSpClient) GetChallengeInfo(
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpGetChallengeInfoRequest{
-		ChallengePieceTask: task.(*gfsptask.GfSpChallengePieceTask),
+		ChallengePieceTask: challengePieceTask.(*gfsptask.GfSpChallengePieceTask),
 	}
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpGetChallengeInfo(ctx, req)
 	if err != nil {
