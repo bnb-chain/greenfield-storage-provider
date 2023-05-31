@@ -35,6 +35,8 @@ var (
 	ErrSignedMsgNotMatchTemplate = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50022, "The signed message in "+GnfdAuthorizationHeader+" does not match the template.")
 	ErrInvalidExpiryDateHeader   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50023, "The "+GnfdOffChainAuthAppRegExpiryDateHeader+" header is incorrect. "+
 		"The expiry date is expected to be within "+strconv.Itoa(int(MaxExpiryAgeInSec))+" seconds and formatted in YYYY-DD-MM HH:MM:SS 'GMT'Z, e.g. 2023-04-20 16:34:12 GMT+08:00 . ")
+	ErrInvalidExpiryDate = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50024, "The expiry parameter is incorrect. "+
+		"The expiry date is expected to be within "+strconv.Itoa(int(MaxExpiryAgeInSec))+" seconds and formatted in YYYY-DD-MM HH:MM:SS 'GMT'Z, e.g. 2023-04-20 16:34:12 GMT+08:00 . ")
 
 	ErrConsensus = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")
 
