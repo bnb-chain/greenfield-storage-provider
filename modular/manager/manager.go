@@ -146,7 +146,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 	createAt := time.Now().AddDate(0, 0, -m.discontinueBucketKeepAliveDays)
 	buckets, err := m.baseApp.GfSpClient().ListExpiredBucketsBySp(context.Background(),
-		createAt.Unix(), m.baseApp.OperateAddress(), DiscontinueBucketLimit)
+		createAt.Unix(), m.baseApp.OperatorAddress(), DiscontinueBucketLimit)
 	if err != nil {
 		log.Errorw("failed to query expired buckets", "error", err)
 		return
@@ -319,7 +319,7 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 		return
 	}
 	for _, spInfo := range spInfoList {
-		if strings.EqualFold(m.baseApp.OperateAddress(), spInfo.OperatorAddress) {
+		if strings.EqualFold(m.baseApp.OperatorAddress(), spInfo.OperatorAddress) {
 			if err = m.baseApp.GfSpDB().SetOwnSpInfo(spInfo); err != nil {
 				log.Errorw("failed to set own sp info", "error", err)
 				return

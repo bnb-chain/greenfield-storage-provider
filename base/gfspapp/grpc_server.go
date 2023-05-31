@@ -44,7 +44,7 @@ func (g *GfSpBaseApp) newRpcServer(options ...grpc.ServerOption) {
 	reflection.Register(g.server)
 }
 
-func (g *GfSpBaseApp) StartRpcServer(ctx context.Context) error {
+func (g *GfSpBaseApp) StartRPCServer(ctx context.Context) error {
 	lis, err := net.Listen("tcp", g.grpcAddress)
 	if err != nil {
 		log.Errorw("failed to listen tcp address", "address", g.grpcAddress, "error", err)
@@ -58,7 +58,7 @@ func (g *GfSpBaseApp) StartRpcServer(ctx context.Context) error {
 	return nil
 }
 
-func (g *GfSpBaseApp) StopRpcServer(ctx context.Context) error {
+func (g *GfSpBaseApp) StopRPCServer(ctx context.Context) error {
 	g.server.GracefulStop()
 	return nil
 }

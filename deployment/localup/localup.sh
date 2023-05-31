@@ -91,7 +91,7 @@ make_config() {
     source db.info
     source sp.info
     # app
-    sed -i -e "s/GrpcAddress = '.*'/GrpcAddress = '127.0.0.1:${cur_port}'/g" config.toml
+    sed -i -e "s/GRPCAddress = '.*'/GRPCAddress = '127.0.0.1:${cur_port}'/g" config.toml
 
     # db
     sed -i -e "s/User = '.*'/User = '${USER}'/g" config.toml

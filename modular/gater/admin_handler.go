@@ -309,12 +309,12 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrDecodeMsg
 		return
 	}
-	if approval.GetApprovedSpOperatorAddress() != g.baseApp.OperateAddress() {
+	if approval.GetApprovedSpOperatorAddress() != g.baseApp.OperatorAddress() {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify replicate piece approval, sp mismatch")
 		err = ErrMismatchSp
 		return
 	}
-	err = p2pnode.VerifySignature(g.baseApp.OperateAddress(), approval.GetSignBytes(), approval.GetApprovedSignature())
+	err = p2pnode.VerifySignature(g.baseApp.OperatorAddress(), approval.GetSignBytes(), approval.GetApprovedSignature())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify replicate piece approval signature")
 		err = ErrSignature

@@ -120,7 +120,7 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 			req.GetAskSpOperatorAddress(), "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
-	if strings.Compare(req.GetAskSpOperatorAddress(), a.node.baseApp.OperateAddress()) == 0 {
+	if strings.Compare(req.GetAskSpOperatorAddress(), a.node.baseApp.OperatorAddress()) == 0 {
 		log.CtxWarnw(ctx, "ignore self replicate piece approval request", "sp",
 			req.GetAskSpOperatorAddress(), "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
@@ -151,7 +151,7 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 		return
 	}
 	req.SetApprovedSignature(signature)
-	req.SetApprovedSpOperatorAddress(a.node.baseApp.OperateAddress())
+	req.SetApprovedSpOperatorAddress(a.node.baseApp.OperatorAddress())
 	err = a.node.sendToPeer(ctx, s.Conn().RemotePeer(), GetApprovalResponse, req)
 	log.Infof("%s response to %s approval request, task_key: %s, error: %v",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), req.Key().String(), err)
@@ -187,7 +187,7 @@ func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
-	if strings.Compare(resp.GetApprovedSpOperatorAddress(), a.node.baseApp.OperateAddress()) == 0 {
+	if strings.Compare(resp.GetApprovedSpOperatorAddress(), a.node.baseApp.OperatorAddress()) == 0 {
 		log.CtxWarnw(ctx, "ignore self approval response", "sp", resp.GetApprovedSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return

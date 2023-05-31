@@ -35,7 +35,7 @@ type Customize struct {
 type GfSpConfig struct {
 	AppID          string
 	Server         []string
-	GrpcAddress    string
+	GRPCAddress    string
 	Customize      *Customize
 	SpDB           storeconfig.SQLDBConfig
 	BsDB           storeconfig.SQLDBConfig

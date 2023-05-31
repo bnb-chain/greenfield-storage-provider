@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
-
 	"strconv"
 	"strings"
 	"time"
@@ -211,8 +210,8 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperateAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperateAddress(),
+		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
+			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
 				"require", bucketInfo.GetPrimarySpAddress())
 			return false, ErrMismatchSp
 		}
@@ -239,8 +238,8 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperateAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperateAddress(),
+		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
+			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
 				"require", bucketInfo.GetPrimarySpAddress())
 			return false, ErrMismatchSp
 		}
@@ -267,8 +266,8 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperateAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperateAddress(),
+		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
+			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
 				"require", bucketInfo.GetPrimarySpAddress())
 			return false, ErrMismatchSp
 		}
@@ -301,8 +300,8 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperateAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperateAddress(),
+		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
+			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
 				"require", bucketInfo.GetPrimarySpAddress())
 			return false, ErrMismatchSp
 		}
@@ -313,7 +312,7 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		}
 		return true, nil
 	case coremodule.AuthOpTypeChallengePiece:
-		//TODO:: only validator has permission to challenge piece
+		// TODO:: only validator has permission to challenge piece
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
@@ -326,15 +325,15 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() == a.baseApp.OperateAddress() {
+		if bucketInfo.GetPrimarySpAddress() == a.baseApp.OperatorAddress() {
 			return true, nil
 		}
 		for _, address := range objectInfo.GetSecondarySpAddresses() {
-			if address == a.baseApp.OperateAddress() {
+			if address == a.baseApp.OperatorAddress() {
 				return true, nil
 			}
 		}
-		log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperateAddress())
+		log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress())
 		return false, ErrMismatchSp
 	default:
 		return false, ErrUnsupportedAuthType

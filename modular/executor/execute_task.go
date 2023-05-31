@@ -35,7 +35,7 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		return
 	}
 	sealMsg := &storagetypes.MsgSealObject{
-		Operator:              e.baseApp.OperateAddress(),
+		Operator:              e.baseApp.OperatorAddress(),
 		BucketName:            task.GetObjectInfo().GetBucketName(),
 		ObjectName:            task.GetObjectInfo().GetObjectName(),
 		SecondarySpAddresses:  task.GetObjectInfo().GetSecondarySpAddresses(),
@@ -130,10 +130,10 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 		task.SetError(ErrReplicateIdsOutOfBounds)
 		return
 	}
-	if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperateAddress() {
+	if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperatorAddress() {
 		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch",
 			"expect", onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())],
-			"current", e.baseApp.OperateAddress())
+			"current", e.baseApp.OperatorAddress())
 		task.SetError(ErrSecondaryMismatch)
 		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
 		if err != nil {
@@ -200,7 +200,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		return
 	}
 	if waitingGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
-		ctx, e.baseApp.OperateAddress(), task.GetStartBlockNumber(),
+		ctx, e.baseApp.OperatorAddress(), task.GetStartBlockNumber(),
 		task.GetEndBlockNumber(), true); err != nil {
 		log.CtxErrorw(ctx, "failed to query deleted object list", "task_info", task.Info(), "error", err)
 		return
@@ -236,7 +236,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 				"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 		}
 		for rIdx, address := range objectInfo.GetSecondarySpAddresses() {
-			if strings.Compare(e.baseApp.OperateAddress(), address) == 0 {
+			if strings.Compare(e.baseApp.OperatorAddress(), address) == 0 {
 				for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 					pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
 					if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {

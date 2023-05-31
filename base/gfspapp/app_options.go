@@ -27,7 +27,7 @@ const (
 	// DefaultGfSpAppIDPrefix defines the default app id prefix.
 	DefaultGfSpAppIDPrefix = "gfsp"
 	// DefaultGrpcAddress defines the default Grpc address.
-	DefaultGrpcAddress = "localhost:9333"
+	DefaultGRPCAddress = "localhost:9333"
 	// DefaultMetricsAddress defines the default metrics service address.
 	DefaultMetricsAddress = "localhost:24367"
 	// DefaultPProfAddress defines the default pprof service address.
@@ -59,11 +59,11 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		cfg.AppID = DefaultGfSpAppIDPrefix + "-" + servers
 	}
 	app.appID = cfg.AppID
-	if cfg.GrpcAddress == "" {
-		cfg.GrpcAddress = DefaultGrpcAddress
+	if cfg.GRPCAddress == "" {
+		cfg.GRPCAddress = DefaultGRPCAddress
 	}
-	app.grpcAddress = cfg.GrpcAddress
-	app.operateAddress = cfg.SpAccount.SpOperatorAddress
+	app.grpcAddress = cfg.GRPCAddress
+	app.operatorAddress = cfg.SpAccount.SpOperatorAddress
 	app.uploadSpeed = cfg.Task.UploadTaskSpeed
 	app.downloadSpeed = cfg.Task.DownloadTaskSpeed
 	app.replicateSpeed = cfg.Task.ReplicateTaskSpeed
@@ -95,34 +95,34 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 
 func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Endpoint.ApproverEndpoint == "" {
-		cfg.Endpoint.ApproverEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ApproverEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.ManagerEndpoint == "" {
-		cfg.Endpoint.ManagerEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ManagerEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.DownloaderEndpoint == "" {
-		cfg.Endpoint.DownloaderEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.DownloaderEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.ReceiverEndpoint == "" {
-		cfg.Endpoint.ReceiverEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ReceiverEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.MetadataEndpoint == "" {
-		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.MetadataEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.MetadataEndpoint == "" {
-		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.MetadataEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.UploaderEndpoint == "" {
-		cfg.Endpoint.UploaderEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.UploaderEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.P2PEndpoint == "" {
-		cfg.Endpoint.P2PEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.P2PEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.SignerEndpoint == "" {
-		cfg.Endpoint.SignerEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.SignerEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.AuthorizerEndpoint == "" {
-		cfg.Endpoint.AuthorizerEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.AuthorizerEndpoint = cfg.GRPCAddress
 	}
 	app.client = gfspclient.NewGfSpClient(
 		cfg.Endpoint.ApproverEndpoint,
