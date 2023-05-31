@@ -17,7 +17,7 @@ type Group struct {
 	// SourceType defines which chain the user should send the bucket management transactions to
 	SourceType string `gorm:"column:source_type"`
 	// AccountID defines the group user address
-	AccountID common.Hash `gorm:"column:account_id"`
+	AccountID common.Address `gorm:"column:account_id"`
 	// Operator defines operator address of group
 	Operator common.Address `gorm:"column:operator"`
 	// CreateAt defines the block number when the group created

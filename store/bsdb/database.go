@@ -23,13 +23,13 @@ type Metadata interface {
 	// GetPaymentByPaymentAddress get bucket payment info by a payment address
 	GetPaymentByPaymentAddress(address common.Address) (*StreamRecord, error)
 	// GetPermissionByResourceAndPrincipal get permission info by resource type & id, principal type & value
-	GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue string) (*Permission, error)
+	GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue string, resourceID common.Hash) (*Permission, error)
 	// GetStatementsByPolicyID get statements info by a policy id
 	GetStatementsByPolicyID(policyIDList []common.Hash) ([]*Statement, error)
 	// GetPermissionsByResourceAndPrincipleType get permissions info by resource type & id, principal type
-	GetPermissionsByResourceAndPrincipleType(resourceType, resourceID, principalType string) ([]*Permission, error)
+	GetPermissionsByResourceAndPrincipleType(resourceType, principalType string, resourceID common.Hash) ([]*Permission, error)
 	// GetGroupsByGroupIDAndAccount get groups info by group id list and account id
-	GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Hash) ([]*Group, error)
+	GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Address) ([]*Group, error)
 	// ListObjectsByBucketName list objects info by a bucket name
 	ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*ListObjectsResult, error)
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
