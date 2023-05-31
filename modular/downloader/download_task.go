@@ -24,6 +24,7 @@ var (
 	ErrExceedBucketQuota = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30004, "bucket quota overflow")
 	ErrExceedQueue       = gfsperrors.Register(module.DownloadModularName, http.StatusServiceUnavailable, 30005, "request exceed the limit, try again later")
 	ErrInvalidParam      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid")
+	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "request params invalid, no such piece")
 	ErrPieceStore        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35101, "server slipped away, try again later")
 	ErrGfSpDB            = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35201, "server slipped away, try again later")
 )
@@ -262,7 +263,6 @@ func (d *DownloadModular) HandleChallengePiece(
 	ctx context.Context,
 	task task.ChallengePieceTask) (
 	[]byte, [][]byte, []byte, error) {
-	d.challengeQueue.Push(task)
 	var (
 		err       error
 		integrity *corespdb.IntegrityMeta
@@ -287,6 +287,10 @@ func (d *DownloadModular) HandleChallengePiece(
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get integrity hash", "error", err)
 		return nil, nil, nil, ErrGfSpDB
+	}
+	if int(task.GetSegmentIdx()) >= len(integrity.PieceChecksumList) {
+		log.CtxErrorw(ctx, "failed to get challenge info due to segment index wrong")
+		return nil, nil, nil, ErrNoSuchPiece
 	}
 	data, err = d.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 	if err != nil {
