@@ -96,7 +96,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
 
 		if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
-			accAddress, err := verifyPersonalSignature(requestSignature[len(personalSignSignaturePrefix):])
+			accAddress, err := verifyPersonalSignatureFromHeader(requestSignature[len(personalSignSignaturePrefix):])
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
 				return
@@ -194,22 +194,28 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 	w.Write(b)
 }
 
-func verifyPersonalSignature(requestSignature string) (sdk.AccAddress, error) {
-	var (
-		signedMsg *string
-		signature []byte
-		err       error
-	)
+func verifyPersonalSignatureFromHeader(requestSignature string) (sdk.AccAddress, error) {
 	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
 	if err != nil {
 		return nil, err
 	}
-	signature, err = hexutil.Decode(*sigString)
+	return VerifyPersonalSignature(*signedMsg, *sigString)
+}
+
+func VerifyPersonalSignature(signedMsg string, sigString string) (sdk.AccAddress, error) {
+	var (
+		signature []byte
+		err       error
+	)
+	if err != nil {
+		return nil, err
+	}
+	signature, err = hexutil.Decode(sigString)
 	if err != nil {
 		return nil, err
 	}
 
-	realMsgToSign := accounts.TextHash([]byte(*signedMsg))
+	realMsgToSign := accounts.TextHash([]byte(signedMsg))
 
 	if len(signature) != crypto.SignatureLength {
 		log.Errorw("signature length (actual: %d) doesn't match typical [R||S||V] signature 65 bytes")
