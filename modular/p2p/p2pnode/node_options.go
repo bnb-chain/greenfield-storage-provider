@@ -36,7 +36,7 @@ const (
 func MakeMultiaddr(address string) (ma.Multiaddr, error) {
 	addrInfo := strings.Split(strings.TrimSpace(address), ":")
 	if len(addrInfo) != 2 {
-		err := fmt.Errorf("failed to parser address '%s' configuration", address)
+		err := fmt.Errorf("failed to parse address '%s' configuration", address)
 		return nil, err
 	}
 	host := strings.TrimSpace(addrInfo[0])
@@ -68,17 +68,17 @@ func MakeMultiaddr(address string) (ma.Multiaddr, error) {
 	if err != nil {
 		return nil, err
 	}
-	//log.Infow("parser p2p node address", "address", address, "ip", host, "port", port)
+	// log.Infow("parse p2p node address", "address", address, "ip", host, "port", port)
 	return ma.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d", host, port))
 }
 
-// MakeBootstrapMultiaddr new bootstrap nodes multi addr
+// MakeBootstrapMultiaddr new bootstrap nodes multi addr.
 func MakeBootstrapMultiaddr(bootstrap []string) (peersIDs []peer.ID, addrs []ma.Multiaddr, err error) {
 	for _, boot := range bootstrap {
 		boot = strings.TrimSpace(boot)
 		bootInfo := strings.Split(boot, "@")
 		if len(bootInfo) != 2 {
-			err = fmt.Errorf("failed to parser bootstrap '%s' configuration", boot)
+			err = fmt.Errorf("failed to parse bootstrap '%s' configuration", boot)
 			return nil, nil, err
 		}
 		bootID, err := peer.Decode(strings.TrimSpace(bootInfo[0]))
@@ -91,7 +91,7 @@ func MakeBootstrapMultiaddr(bootstrap []string) (peersIDs []peer.ID, addrs []ma.
 			log.Errorw("failed to make bootstrap multi addr", "bootstrap", boot, "error", err)
 			return nil, nil, err
 		}
-		log.Infow("parser bootstrap node info", "id", bootID, "multiaddr", addr.String())
+		log.Infow("parse bootstrap node info", "id", bootID, "multiaddr", addr.String())
 		peersIDs = append(peersIDs, bootID)
 		addrs = append(addrs, addr)
 	}

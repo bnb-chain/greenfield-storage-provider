@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -8,20 +9,39 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 )
 
-// SetGCObjectProgress is used to set gc object progress.
+// SetGCObjectProgress is used to insert/update gc object progress.
 func (s *SpDBImpl) SetGCObjectProgress(taskKey string, curDeletingBlockID uint64, lastDeletedObjectID uint64) error {
 	var (
-		result             *gorm.DB
-		insertGCObjectTask *GCObjectTaskTable
+		result      *gorm.DB
+		queryReturn *GCObjectTaskTable
 	)
-	insertGCObjectTask = &GCObjectTaskTable{
-		TaskKey:                taskKey,
+
+	queryReturn = &GCObjectTaskTable{}
+	result = s.db.First(queryReturn, "task_key = ?", taskKey)
+	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		result = s.db.Create(&GCObjectTaskTable{
+			TaskKey:                taskKey,
+			CurrentDeletingBlockID: curDeletingBlockID,
+			LastDeletedObjectID:    lastDeletedObjectID,
+		})
+		if result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to insert gc task record: %s", result.Error)
+		}
+		return nil
+	}
+	if result.Error != nil {
+		return fmt.Errorf("failed to set gc task record: %s", result.Error)
+	}
+	if queryReturn.CurrentDeletingBlockID == curDeletingBlockID &&
+		queryReturn.LastDeletedObjectID == lastDeletedObjectID {
+		return nil
+	}
+	result = s.db.Model(&GCObjectTaskTable{}).Where("task_key = ?", taskKey).Updates(&GCObjectTaskTable{
 		CurrentDeletingBlockID: curDeletingBlockID,
 		LastDeletedObjectID:    lastDeletedObjectID,
-	}
-	result = s.db.Create(insertGCObjectTask)
+	})
 	if result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("failed to insert gc task record: %s", result.Error)
+		return fmt.Errorf("failed to update gc task record: %s", result.Error)
 	}
 	return nil
 }

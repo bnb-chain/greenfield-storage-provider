@@ -91,6 +91,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 }
 
 func (m *ManageModular) eventLoop(ctx context.Context) {
+	m.syncConsensusInfo(ctx)
 	gcObjectTicker := time.NewTicker(time.Duration(m.gcObjectTimeInterval) * time.Second)
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
@@ -108,21 +109,22 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			end := m.gcBlockHeight + m.gcObjectBlockInterval
 			currentBlockHeight, err := m.baseApp.Consensus().CurrentHeight(ctx)
 			if err != nil {
-				log.CtxErrorw(ctx, "failed to get current block number for gc object")
+				log.CtxErrorw(ctx, "failed to get current block number for gc object and try again later", "error", err)
 				continue
 			}
-			if end+m.gcSafeBlockDistance < currentBlockHeight {
-				log.CtxErrorw(ctx, "current block number less safe distance",
-					"current_block_height", currentBlockHeight,
-					"gc_block_height", m.gcBlockHeight,
-					"safe_distance", m.gcSafeBlockDistance)
+			if end+m.gcSafeBlockDistance > currentBlockHeight {
+				log.CtxErrorw(ctx, "current block number less safe distance and try again later",
+					"start_gc_block_height", start,
+					"end_gc_block_height", end,
+					"safe_distance", m.gcSafeBlockDistance,
+					"current_block_height", currentBlockHeight)
 				continue
 			}
 			task := &gfsptask.GfSpGCObjectTask{}
 			task.InitGCObjectTask(m.baseApp.TaskPriority(task), start, end, m.baseApp.TaskTimeout(task, 0))
-			err = m.baseApp.GfSpDB().SetGCObjectProgress(task.Key().String(), start, end)
+			err = m.baseApp.GfSpDB().SetGCObjectProgress(task.Key().String(), start, task.GetLastDeletedObjectId())
 			if err != nil {
-				log.CtxErrorw(ctx, "failed to update gc object status", "error", err)
+				log.CtxErrorw(ctx, "failed to init gc object task progress", "error", err)
 				continue
 			}
 			err = m.gcObjectQueue.Push(task)
@@ -130,7 +132,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				m.gcBlockHeight = end + 1
 				metrics.GCBlockNumberGauge.WithLabelValues(m.Name()).Set(float64(m.gcBlockHeight))
 			}
-			log.CtxErrorw(ctx, "finish to generate gc object task", "info", task.Info(), "error", err)
+			log.CtxErrorw(ctx, "generate a gc object task", "task_info", task.Info(), "error", err)
 		case <-discontinueBucketTicker.C:
 			if !m.discontinueBucketEnabled {
 				continue
@@ -221,7 +223,7 @@ func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 	if task.Expired() {
 		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
 		if err != nil {
-			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error, err")
+			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
 	}
@@ -233,7 +235,7 @@ func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 	if task.Expired() {
 		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
 		if err != nil {
-			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error, err")
+			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
 	}
@@ -245,7 +247,7 @@ func (m *ManageModular) GCSealObjectQueue(qTask task.Task) bool {
 	if task.Expired() {
 		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
 		if err != nil {
-			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error, err")
+			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
 	}
@@ -328,7 +330,7 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlock[%d], gcSafeDistance[%d]",
+		"upload[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
 		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
 		m.receiveQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
 		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(),

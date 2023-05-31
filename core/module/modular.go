@@ -100,6 +100,15 @@ type Downloader interface {
 	// resources, statistics and other operations.
 	PostDownloadObject(ctx context.Context, task task.DownloadObjectTask)
 
+	// PreDownloadPiece prepares to handle DownloadPiece, it can do some checks
+	// Example: check for duplicates, if limit specified by SP is reached, etc.
+	PreDownloadPiece(ctx context.Context, task task.DownloadPieceTask) error
+	// HandleDownloadPieceTask handles the DownloadPiece, get data from piece store.
+	HandleDownloadPieceTask(ctx context.Context, task task.DownloadPieceTask) ([]byte, error)
+	// PostDownloadPiece is called after HandleDownloadPieceTask, it can recycle
+	// resources, statistics and other operations.
+	PostDownloadPiece(ctx context.Context, task task.DownloadPieceTask)
+
 	// PreChallengePiece prepares to handle ChallengePiece, it can do some checks
 	// Example: check for duplicates, if limit specified by SP is reached, etc.
 	PreChallengePiece(ctx context.Context, task task.ChallengePieceTask) error

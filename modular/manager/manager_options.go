@@ -49,7 +49,7 @@ const (
 	DefaultGlobalGcObjectSafeBlockDistance uint64 = 1000
 	// DefaultGlobalSyncConsensusInfoInterval defines the default interval for sync the sp
 	// info list to sp db.
-	DefaultGlobalSyncConsensusInfoInterval uint64 = 2
+	DefaultGlobalSyncConsensusInfoInterval uint64 = 600
 	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
