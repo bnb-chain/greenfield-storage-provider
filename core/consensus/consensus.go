@@ -6,6 +6,7 @@ import (
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Consensus is the interface to query greenfield consensus data. the consensus
@@ -17,6 +18,8 @@ type Consensus interface {
 	HasAccount(ctx context.Context, account string) (bool, error)
 	// QuerySPInfo returns all SP info.
 	QuerySPInfo(ctx context.Context) ([]*sptypes.StorageProvider, error)
+	// ListBondedValidators returns all bonded validators info.
+	ListBondedValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 	// QueryStorageParams returns the storage params.
 	QueryStorageParams(ctx context.Context) (params *storagetypes.Params, err error)
 	// QueryBucketInfo returns the bucket info by bucket name.
@@ -50,6 +53,11 @@ func (*NullConsensus) HasAccount(context.Context, string) (bool, error) {
 func (*NullConsensus) QuerySPInfo(context.Context) ([]*sptypes.StorageProvider, error) {
 	return nil, nil
 }
+
+func (*NullConsensus) ListBondedValidators(context.Context) ([]stakingtypes.Validator, error) {
+	return nil, nil
+}
+
 func (*NullConsensus) QueryStorageParams(context.Context) (*storagetypes.Params, error) {
 	return nil, nil
 }

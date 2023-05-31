@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
@@ -61,6 +62,23 @@ func (g *Gnfd) QuerySPInfo(
 		spInfos = append(spInfos, resp.GetSps()[i])
 	}
 	return spInfos, nil
+}
+
+// ListBondedValidators returns the list of bonded validators.
+func (g *Gnfd) ListBondedValidators(
+	ctx context.Context) (
+	[]stakingtypes.Validator, error) {
+	client := g.getCurrentClient().GnfdClient()
+	var validators []stakingtypes.Validator
+	resp, err := client.Validators(ctx, &stakingtypes.QueryValidatorsRequest{Status: "BOND_STATUS_BONDED"})
+	if err != nil {
+		log.Errorw("failed to list validators", "error", err)
+		return validators, err
+	}
+	for i := 0; i < len(resp.GetValidators()); i++ {
+		validators = append(validators, resp.GetValidators()[i])
+	}
+	return validators, nil
 }
 
 // QueryStorageParams returns storage params

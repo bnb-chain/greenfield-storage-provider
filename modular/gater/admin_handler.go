@@ -202,7 +202,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	}
 	if reqCtx.NeedVerifyAuthorizer() {
 		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-			coremodule.AuthOpTypeChallengePiece, reqCtx.Account(), objectInfo.GetBucketName(),
+			coremodule.AuthOpTypeGetChallengePieceInfo, reqCtx.Account(), objectInfo.GetBucketName(),
 			objectInfo.GetObjectName())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
@@ -255,14 +255,14 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
 	integrity, checksums, data, err = g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to challenge piece", "error", err)
+		log.CtxErrorw(ctx, "failed to get challenge info", "error", err)
 		return
 	}
 	w.Header().Set(GnfdObjectIDHeader, util.Uint64ToString(objectID))
 	w.Header().Set(GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
 	w.Header().Set(GnfdPieceHashHeader, util.BytesSliceToString(checksums))
 	w.Write(data)
-	log.CtxDebugw(reqCtx.Context(), "succeed to challenge piece")
+	log.CtxDebugw(reqCtx.Context(), "succeed to get challenge info")
 }
 
 // replicateHandler handles the replicate piece from primary SP request. The Primary
