@@ -435,3 +435,32 @@ func (s *GfSpClient) GetUploadObjectState(
 	}
 	return int32(resp.GetState()), nil
 }
+
+func (s *GfSpClient) GetGroupList(
+	ctx context.Context,
+	name string,
+	prefix string,
+	sourceType string,
+	limit int64,
+	offset int64,
+	opts ...grpc.DialOption) ([]*types.Group, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpGetGroupListRequest{
+		Name:       name,
+		Prefix:     prefix,
+		SourceType: sourceType,
+		Limit:      limit,
+		Offset:     offset,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetGroupList(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get group list", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Groups, nil
+}

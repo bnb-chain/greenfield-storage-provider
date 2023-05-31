@@ -66,6 +66,16 @@ const (
 	GetBucketMetaQuery = "bucket-meta"
 	// GetObjectMetaQuery defines get object metadata query, which is used to route request
 	GetObjectMetaQuery = "object-meta"
+	// GetGroupListSourceTypeQuery defines get group list source type query, which is used to route request
+	GetGroupListSourceTypeQuery = "source-type"
+	// GetGroupListLimitQuery defines get group list limit query, which is used to route request
+	GetGroupListLimitQuery = "limit"
+	// GetGroupListOffsetQuery defines get group list offset query, which is used to route request
+	GetGroupListOffsetQuery = "offset"
+	// GetGroupListNameQuery defines get group list name query, which is used to route request
+	GetGroupListNameQuery = "name"
+	// GetGroupListPrefixQuery defines get group list prefix query, which is used to route request
+	GetGroupListPrefixQuery = "prefix"
 	// StartTimestampUs defines start timestamp in microsecond, which is used by list read record, [start_ts,end_ts)
 	StartTimestampUs = "start-timestamp"
 	// EndTimestampUs defines end timestamp in microsecond, which is used by list read record, [start_ts,end_ts)
@@ -78,6 +88,8 @@ const (
 	AuthRequestNoncePath = "/auth/request_nonce"
 	// AuthUpdateKeyPath defines path to update user public key
 	AuthUpdateKeyPath = "/auth/update_key"
+	// GroupListPath defines path to request group list
+	GroupListPath = "/group"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
 	// GnfdAuthorizationHeader defines authorization, verify signature and check authorization

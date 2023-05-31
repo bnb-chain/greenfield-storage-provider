@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/bnb-chain/greenfield/types/s3util"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -15,6 +16,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+)
+
+const (
+	MaximumGetGroupListLimit  = 1000
+	DefaultGetGroupListLimit  = 50
+	DefaultGetGroupListOffset = 0
 )
 
 // getUserBucketsHandler handle get object request
@@ -305,6 +312,105 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.Errorf("failed to get bucket metadata", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getGroupListHandler handle get group list request
+func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		b           bytes.Buffer
+		queryParams url.Values
+		limitStr    string
+		offsetStr   string
+		name        string
+		prefix      string
+		sourceType  string
+		limit       int64
+		offset      int64
+		groups      []*types.Group
+		reqCtx      *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get group list", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+
+	queryParams = reqCtx.request.URL.Query()
+	sourceType = queryParams.Get(GetGroupListSourceTypeQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+	offsetStr = queryParams.Get(GetGroupListOffsetQuery)
+	name = queryParams.Get(GetGroupListNameQuery)
+	prefix = queryParams.Get(GetGroupListPrefixQuery)
+
+	if name == "" {
+		log.CtxErrorw(reqCtx.Context(), "failed to check name", "name", name, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if prefix == "" {
+		log.CtxErrorw(reqCtx.Context(), "failed to check prefix", "prefix", name, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToInt64(limitStr); err != nil || limit <= 0 {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		if limit > 1000 {
+			limit = MaximumGetGroupListLimit
+		}
+	} else {
+		limit = DefaultGetGroupListLimit
+	}
+
+	if offsetStr != "" {
+		if offset, err = util.StringToInt64(offsetStr); err != nil || offset < 0 {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check offset", "offset", offsetStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	} else {
+		offset = DefaultGetGroupListOffset
+	}
+
+	if sourceType != "" {
+		if _, ok := storage_types.SourceType_value[sourceType]; !ok {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check source type", "source-type", sourceType, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	groups, err = g.baseApp.GfSpClient().GetGroupList(reqCtx.Context(), name, prefix, sourceType, limit, offset)
+	if err != nil {
+		log.Errorf("failed to get group list", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetGroupListResponse{Groups: groups}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to get group list", "error", err)
 		return
 	}
 
