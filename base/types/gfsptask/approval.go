@@ -16,9 +16,7 @@ var _ coretask.ApprovalCreateBucketTask = &GfSpCreateBucketApprovalTask{}
 var _ coretask.ApprovalCreateObjectTask = &GfSpCreateObjectApprovalTask{}
 var _ coretask.ApprovalReplicatePieceTask = &GfSpReplicatePieceApprovalTask{}
 
-func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(
-	bucket *storagetypes.MsgCreateBucket,
-	priority coretask.TPriority) {
+func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(bucket *storagetypes.MsgCreateBucket, priority coretask.TPriority) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.GetTask().SetCreateTime(time.Now().Unix())
@@ -36,9 +34,6 @@ func (m *GfSpCreateBucketApprovalTask) Type() coretask.TType {
 }
 
 func (m *GfSpCreateBucketApprovalTask) Info() string {
-	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], bucket[%s] expiredHeight[%d], %s",
-	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-	//	m.GetCreateBucketInfo().String(), m.GetExpiredHeight(), m.GetTask().Info())
 	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], expiredHeight[%d], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
 		m.GetExpiredHeight(), m.GetTask().Info())
@@ -164,9 +159,6 @@ func (m *GfSpCreateObjectApprovalTask) Type() coretask.TType {
 }
 
 func (m *GfSpCreateObjectApprovalTask) Info() string {
-	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], expiedHeight[%d], %s",
-	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-	//	m.GetCreateObjectInfo().String(), m.GetExpiredHeight(), m.GetTask().Info())
 	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], expiedHeight[%d], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
 		m.GetExpiredHeight(), m.GetTask().Info())
@@ -270,11 +262,8 @@ func (m *GfSpCreateObjectApprovalTask) SetCreateObjectInfo(object *storagetypes.
 	m.CreateObjectInfo = object
 }
 
-func (m *GfSpReplicatePieceApprovalTask) InitApprovalReplicatePieceTask(
-	object *storagetypes.ObjectInfo,
-	params *storagetypes.Params,
-	priority coretask.TPriority,
-	askOpAddress string) {
+func (m *GfSpReplicatePieceApprovalTask) InitApprovalReplicatePieceTask(object *storagetypes.ObjectInfo,
+	params *storagetypes.Params, priority coretask.TPriority, askOpAddress string) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetStorageParams(params)
@@ -308,9 +297,6 @@ func (m *GfSpReplicatePieceApprovalTask) Type() coretask.TType {
 }
 
 func (m *GfSpReplicatePieceApprovalTask) Info() string {
-	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], expiedHeight[%d], %s",
-	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-	//	m.GetObjectInfo().String(), m.GetExpiredHeight(), m.GetTask().Info())
 	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], expiedHeight[%d], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
 		m.GetExpiredHeight(), m.GetTask().Info())

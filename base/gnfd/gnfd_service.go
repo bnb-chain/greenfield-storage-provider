@@ -19,8 +19,7 @@ import (
 )
 
 // CurrentHeight the block height sub one as the stable height.
-func (g *Gnfd) CurrentHeight(
-	ctx context.Context) (uint64, error) {
+func (g *Gnfd) CurrentHeight(ctx context.Context) (uint64, error) {
 	resp, err := g.getCurrentClient().chainClient.TmClient.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
 	if err != nil {
 		log.CtxErrorw(ctx, "get latest block height failed", "node_addr", g.client.Provider, "error", err)
@@ -30,9 +29,7 @@ func (g *Gnfd) CurrentHeight(
 }
 
 // HasAccount returns an indication of the existence of address.
-func (g *Gnfd) HasAccount(
-	ctx context.Context,
-	address string) (bool, error) {
+func (g *Gnfd) HasAccount(ctx context.Context, address string) (bool, error) {
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: address})
 	if err != nil {
@@ -43,9 +40,7 @@ func (g *Gnfd) HasAccount(
 }
 
 // QuerySPInfo returns the list of storage provider info.
-func (g *Gnfd) QuerySPInfo(
-	ctx context.Context) (
-	[]*sptypes.StorageProvider, error) {
+func (g *Gnfd) QuerySPInfo(ctx context.Context) ([]*sptypes.StorageProvider, error) {
 	client := g.getCurrentClient().GnfdClient()
 	var spInfos []*sptypes.StorageProvider
 	resp, err := client.StorageProviders(ctx, &sptypes.QueryStorageProvidersRequest{
@@ -65,9 +60,7 @@ func (g *Gnfd) QuerySPInfo(
 }
 
 // ListBondedValidators returns the list of bonded validators.
-func (g *Gnfd) ListBondedValidators(
-	ctx context.Context) (
-	[]stakingtypes.Validator, error) {
+func (g *Gnfd) ListBondedValidators(ctx context.Context) ([]stakingtypes.Validator, error) {
 	client := g.getCurrentClient().GnfdClient()
 	var validators []stakingtypes.Validator
 	resp, err := client.Validators(ctx, &stakingtypes.QueryValidatorsRequest{Status: "BOND_STATUS_BONDED"})
@@ -82,9 +75,7 @@ func (g *Gnfd) ListBondedValidators(
 }
 
 // QueryStorageParams returns storage params
-func (g *Gnfd) QueryStorageParams(
-	ctx context.Context) (
-	params *storagetypes.Params, err error) {
+func (g *Gnfd) QueryStorageParams(ctx context.Context) (params *storagetypes.Params, err error) {
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.StorageQueryClient.Params(ctx, &storagetypes.QueryParamsRequest{})
 	if err != nil {
@@ -95,10 +86,7 @@ func (g *Gnfd) QueryStorageParams(
 }
 
 // QueryBucketInfo returns the bucket info by name.
-func (g *Gnfd) QueryBucketInfo(
-	ctx context.Context,
-	bucket string) (
-	*storagetypes.BucketInfo, error) {
+func (g *Gnfd) QueryBucketInfo(ctx context.Context, bucket string) (*storagetypes.BucketInfo, error) {
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if err != nil {
@@ -109,10 +97,7 @@ func (g *Gnfd) QueryBucketInfo(
 }
 
 // QueryObjectInfo returns the object info by name.
-func (g *Gnfd) QueryObjectInfo(
-	ctx context.Context,
-	bucket, object string) (
-	*storagetypes.ObjectInfo, error) {
+func (g *Gnfd) QueryObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.ObjectInfo, error) {
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.HeadObject(ctx, &storagetypes.QueryHeadObjectRequest{
 		BucketName: bucket,
@@ -126,10 +111,7 @@ func (g *Gnfd) QueryObjectInfo(
 }
 
 // QueryObjectInfoByID returns the object info by name.
-func (g *Gnfd) QueryObjectInfoByID(
-	ctx context.Context,
-	objectID string) (
-	*storagetypes.ObjectInfo, error) {
+func (g *Gnfd) QueryObjectInfoByID(ctx context.Context, objectID string) (*storagetypes.ObjectInfo, error) {
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.HeadObjectById(ctx, &storagetypes.QueryHeadObjectByIdRequest{
 		ObjectId: objectID,
@@ -142,12 +124,8 @@ func (g *Gnfd) QueryObjectInfoByID(
 }
 
 // QueryBucketInfoAndObjectInfo returns bucket info and object info, if not found, return the corresponding error code
-func (g *Gnfd) QueryBucketInfoAndObjectInfo(
-	ctx context.Context,
-	bucket, object string) (
-	*storagetypes.BucketInfo,
-	*storagetypes.ObjectInfo,
-	error) {
+func (g *Gnfd) QueryBucketInfoAndObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.BucketInfo,
+	*storagetypes.ObjectInfo, error) {
 	bucketInfo, err := g.QueryBucketInfo(ctx, bucket)
 	if err != nil {
 		return nil, nil, err
@@ -161,10 +139,7 @@ func (g *Gnfd) QueryBucketInfoAndObjectInfo(
 
 // ListenObjectSeal returns an indication of the object is sealed.
 // TODO:: retrieve service support seal event subscription
-func (g *Gnfd) ListenObjectSeal(
-	ctx context.Context,
-	objectID uint64,
-	timeoutHeight int) (bool, error) {
+func (g *Gnfd) ListenObjectSeal(ctx context.Context, objectID uint64, timeoutHeight int) (bool, error) {
 	var (
 		objectInfo *storagetypes.ObjectInfo
 		err        error
@@ -189,11 +164,7 @@ func (g *Gnfd) ListenObjectSeal(
 }
 
 // QueryPaymentStreamRecord returns the steam record info by account.
-func (g *Gnfd) QueryPaymentStreamRecord(
-	ctx context.Context,
-	account string) (
-	*paymenttypes.StreamRecord,
-	error) {
+func (g *Gnfd) QueryPaymentStreamRecord(ctx context.Context, account string) (*paymenttypes.StreamRecord, error) {
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.StreamRecord(ctx, &paymenttypes.QueryGetStreamRecordRequest{
 		Account: account,
@@ -206,10 +177,7 @@ func (g *Gnfd) QueryPaymentStreamRecord(
 }
 
 // VerifyGetObjectPermission verifies get object permission.
-func (g *Gnfd) VerifyGetObjectPermission(
-	ctx context.Context,
-	account, bucket, object string) (
-	bool, error) {
+func (g *Gnfd) VerifyGetObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{
 		Operator:   account,
@@ -228,10 +196,7 @@ func (g *Gnfd) VerifyGetObjectPermission(
 }
 
 // VerifyPutObjectPermission verifies put object permission.
-func (g *Gnfd) VerifyPutObjectPermission(
-	ctx context.Context,
-	account, bucket, object string) (
-	bool, error) {
+func (g *Gnfd) VerifyPutObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
 	_ = object
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{

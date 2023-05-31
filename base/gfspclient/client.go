@@ -79,19 +79,12 @@ func NewGfSpClient(
 	}
 }
 
-func (s *GfSpClient) Connection(
-	ctx context.Context,
-	address string,
-	opts ...grpc.DialOption) (
-	*grpc.ClientConn, error) {
+func (s *GfSpClient) Connection(ctx context.Context, address string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	options := append(DefaultClientOptions(), opts...)
 	return grpc.DialContext(ctx, address, options...)
 }
 
-func (s *GfSpClient) ManagerConn(
-	ctx context.Context,
-	opts ...grpc.DialOption) (
-	*grpc.ClientConn, error) {
+func (s *GfSpClient) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
@@ -109,10 +102,7 @@ func (s *GfSpClient) ManagerConn(
 	return s.managerConn, nil
 }
 
-func (s *GfSpClient) ApproverConn(
-	ctx context.Context,
-	opts ...grpc.DialOption) (
-	*grpc.ClientConn, error) {
+func (s *GfSpClient) ApproverConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
@@ -130,10 +120,7 @@ func (s *GfSpClient) ApproverConn(
 	return s.approverConn, nil
 }
 
-func (s *GfSpClient) P2PConn(
-	ctx context.Context,
-	opts ...grpc.DialOption) (
-	*grpc.ClientConn, error) {
+func (s *GfSpClient) P2PConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
@@ -151,10 +138,7 @@ func (s *GfSpClient) P2PConn(
 	return s.p2pConn, nil
 }
 
-func (s *GfSpClient) SignerConn(
-	ctx context.Context,
-	opts ...grpc.DialOption) (
-	*grpc.ClientConn, error) {
+func (s *GfSpClient) SignerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)

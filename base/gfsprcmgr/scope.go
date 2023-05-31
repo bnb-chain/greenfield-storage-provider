@@ -34,10 +34,7 @@ type resourceScope struct {
 }
 
 // newResourceScope returns an instance of resourceScope.
-func newResourceScope(
-	limit corercmgr.Limit,
-	edges []*resourceScope,
-	name string) *resourceScope {
+func newResourceScope(limit corercmgr.Limit, edges []*resourceScope, name string) *resourceScope {
 	for _, e := range edges {
 		e.IncRef()
 	}
@@ -50,9 +47,7 @@ func newResourceScope(
 }
 
 // newResourceScopeSpan returns an instance of span resourceScope.
-func newResourceScopeSpan(
-	owner *resourceScope,
-	id int, name string) *resourceScope {
+func newResourceScopeSpan(owner *resourceScope, id int, name string) *resourceScope {
 	r := &resourceScope{
 		rc:    resources{limit: owner.rc.limit},
 		owner: owner,
