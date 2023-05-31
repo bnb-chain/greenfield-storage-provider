@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	ggio "github.com/gogo/protobuf/io"
-	"github.com/gogo/protobuf/proto"
+	ggio "github.com/cosmos/gogoproto/io"
+	"github.com/cosmos/gogoproto/proto"
 	ds "github.com/ipfs/go-datastore"
 	leveldb "github.com/ipfs/go-ds-leveldb"
 	"github.com/libp2p/go-libp2p"
@@ -80,12 +80,12 @@ func NewNode(baseApp *gfspapp.GfSpBaseApp, privateKey string, address string,
 	}
 	hostAddr, err := MakeMultiaddr(address)
 	if err != nil {
-		log.Errorw("failed to parser p2p protocol address", "error", err)
+		log.Errorw("failed to parse p2p protocol address", "error", err)
 		return nil, err
 	}
 	bootstrapIDs, bootstrapAddrs, err := MakeBootstrapMultiaddr(bootstrap)
 	if err != nil {
-		log.Errorw("failed to parser bootstrap address", "error", err)
+		log.Errorw("failed to parse bootstrap address", "error", err)
 		return nil, err
 	}
 	// init store for storing peers addr
@@ -245,7 +245,7 @@ func (n *Node) eventLoop() {
 				continue
 			}
 			ping.Signature = sinagture
-			//log.CtxDebugw(ctx, "trigger broadcast ping")
+			// log.CtxDebugw(ctx, "trigger broadcast ping")
 			n.broadcast(ctx, PingProtocol, ping)
 		}
 	}
@@ -260,10 +260,10 @@ func (n *Node) broadcast(
 		if strings.Compare(n.node.ID().String(), peerID.String()) == 0 {
 			continue
 		}
-		//addrs := n.node.Peerstore().Addrs(peerID)
-		//for _, addr := range addrs {
+		// addrs := n.node.Peerstore().Addrs(peerID)
+		// for _, addr := range addrs {
 		//	log.CtxErrorw(ctx, "broadcast", "protocol", pc, "peer_addr", addr.String())
-		//}
+		// }
 		n.sendToPeer(ctx, peerID, pc, data)
 	}
 }
@@ -284,7 +284,7 @@ func (n *Node) sendToPeer(
 			"peer", peerID.String(), "addr", addrs)
 	}
 	if err != nil {
-		//log.CtxErrorw(ctx, "failed to init stream", "protocol", pc,
+		// log.CtxErrorw(ctx, "failed to init stream", "protocol", pc,
 		//	"peer_id", peerID, "addr", addrs, "error", err)
 		n.peers.DeletePeer(peerID)
 		return err

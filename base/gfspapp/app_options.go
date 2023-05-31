@@ -64,6 +64,7 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	}
 	app.grpcAddress = cfg.GrpcAddress
 	app.operateAddress = cfg.SpAccount.SpOperateAddress
+	app.chainID = cfg.Chain.ChainID
 	app.uploadSpeed = cfg.Task.UploadTaskSpeed
 	app.downloadSpeed = cfg.Task.DownloadTaskSpeed
 	app.replicateSpeed = cfg.Task.ReplicateTaskSpeed
