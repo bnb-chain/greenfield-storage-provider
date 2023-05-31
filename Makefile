@@ -27,7 +27,7 @@ generate:
 install-tools:
 	go install github.com/golang/mock/mockgen@v1.6.0
 	go install github.com/bufbuild/buf/cmd/buf@v1.13.1
-	go install github.com/cosmos/gogoproto/protoc-gen-gocosmos
+	go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@latest
 
 buf-gen:
 	buf generate
