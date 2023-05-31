@@ -175,8 +175,8 @@ github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230425074444-eb5869b05fe
 github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230425074444-eb5869b05fe9/go.mod h1:rbc4o84RSEvhf09o2+4Qiazsv0snRJLiEZdk17HeIDw=
 github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05fe9 h1:1ZdK+iR1Up02bOa2YTZCml7PBpP//kcdamOcK6aWO/s=
 github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05fe9/go.mod h1:Ygz4wBHrgc7g0N+8+MrnTfS9LLn9aaTGa9hKopuym5k=
-github.com/bnb-chain/juno/v4 v4.0.0-20230525072107-1d98a9519eac h1:6LBBJc7Ru/qd6DaZKfTb67nTnTiOUMvF5zBGr6zEC2o=
-github.com/bnb-chain/juno/v4 v4.0.0-20230525072107-1d98a9519eac/go.mod h1:wBv09zohyHMazl2maUHk0CUiKjQYGzXGe1aPOkgUWwQ=
+github.com/bnb-chain/juno/v4 v4.0.0-20230531074525-061556e5a8d4 h1:VpgWNYaWC4w+GmCpQv6vF8c4ZbP26RKq0i0o50u5VFA=
+github.com/bnb-chain/juno/v4 v4.0.0-20230531074525-061556e5a8d4/go.mod h1:EyZFqV+s8JckllSsMKQRLNBGwWterYYVBfJQl3PssaA=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=
@@ -1525,6 +1525,7 @@ github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqri
 github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef/go.mod h1:sJ5fKU0s6JVwZjjcUEX2zFOnvq0ASQ2K9Zr6cf67kNs=
 github.com/tyler-smith/go-bip39 v1.1.0/go.mod h1:gUYDtqQw1JS3ZJ8UWVcGTGqqr6YIN3CWg+kkNaLt55U=
 github.com/uber/jaeger-client-go v2.25.0+incompatible/go.mod h1:WVhlPFC8FDjOFMMWRy2pZqQJSXxYSwNYOkTr/Z6d3Kk=
+github.com/ugorji/go v1.1.7 h1:/68gy2h+1mWMrwZFeD1kQialdSzAb432dtpeJ42ovdo=
 github.com/ugorji/go v1.1.7/go.mod h1:kZn38zHttfInRq0xu/PH0az30d+z6vm202qpg1oXVMw=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/ugorji/go/codec v1.1.7/go.mod h1:Ax+UKWsSmolVDwsd+7N3ZtXu+yMGCf907BLYF3GoBXY=
