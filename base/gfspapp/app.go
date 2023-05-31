@@ -24,6 +24,7 @@ type GfSpBaseApp struct {
 	appID          string
 	grpcAddress    string
 	operateAddress string
+	chainID        string
 
 	server *grpc.Server
 	client *gfspclient.GfSpClient
@@ -101,6 +102,11 @@ func (g *GfSpBaseApp) Consensus() consensus.Consensus {
 // OperateAddress returns the sp operator address.
 func (g *GfSpBaseApp) OperateAddress() string {
 	return g.operateAddress
+}
+
+// ChainID returns the chain ID used by this sp instance
+func (g *GfSpBaseApp) ChainID() string {
+	return g.chainID
 }
 
 // GfSpDB returns the sp db client.

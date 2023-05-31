@@ -5,7 +5,7 @@ import (
 )
 
 // GetGroupsByGroupIDAndAccount get groups info by group id list and account id
-func (b *BsDBImpl) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Hash) ([]*Group, error) {
+func (b *BsDBImpl) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Address) ([]*Group, error) {
 	var (
 		groups []*Group
 		err    error
@@ -13,7 +13,7 @@ func (b *BsDBImpl) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, accou
 
 	err = b.db.Table((&Group{}).TableName()).
 		Select("*").
-		Where("group_id in ? and account_id = ?", groupIDList, account).
+		Where("group_id in (?) and account_id = ?", groupIDList, account).
 		Find(&groups).Error
 	return groups, err
 }

@@ -56,6 +56,7 @@ func startDBSwitchListener(switchInterval time.Duration, cfg *gfspconfig.GfSpCon
 	dbSwitchTicker := time.NewTicker(switchInterval)
 	// set the bsdb to be master db at start
 	cfg.Metadata.IsMasterDB = true
+	checkSignal(cfg, metadata)
 	// launch a goroutine to handle the ticker events
 	go func() {
 		// loop until the context is canceled (e.g., when the Metadata service is stopped)
@@ -71,7 +72,6 @@ func checkSignal(cfg *gfspconfig.GfSpConfig, metadata *MetadataModular) {
 	if err != nil || signal == nil {
 		log.Errorw("failed to get switch db signal", "err", err)
 	}
-	log.Debugf("switchDB check: signal: %t and IsMasterDB: %t", signal.IsMaster, cfg.Metadata.IsMasterDB)
 	// if a signal db is not equal to current metadata db, attempt to switch the database
 	if signal.IsMaster != cfg.Metadata.IsMasterDB {
 		switchDB(signal.IsMaster, cfg, metadata)
