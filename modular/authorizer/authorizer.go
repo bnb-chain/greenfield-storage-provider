@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
-
 	"strconv"
 	"strings"
 	"time"
@@ -312,8 +311,24 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			return false, ErrNoPermission
 		}
 		return true, nil
-	case coremodule.AuthOpTypeChallengePiece:
-		//TODO:: only validator has permission to challenge piece
+	case coremodule.AuthOpTypeGetChallengePieceInfo:
+		challengeIsFromValidator := false
+		validators, err := a.baseApp.Consensus().ListBondedValidators(ctx)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to list validator from consensus", "error", err)
+			return false, ErrConsensus
+		}
+		for _, validator := range validators {
+			if strings.EqualFold(validator.ChallengerAddress, account) {
+				challengeIsFromValidator = true
+				break
+			}
+		}
+		if !challengeIsFromValidator {
+			log.CtxErrorw(ctx, "failed to get challenge info due to it is not in bonded validator list",
+				"actual_challenge_address", account)
+			return false, ErrNoPermission
+		}
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
@@ -326,11 +341,11 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() == a.baseApp.OperateAddress() {
+		if strings.EqualFold(bucketInfo.GetPrimarySpAddress(), a.baseApp.OperateAddress()) {
 			return true, nil
 		}
 		for _, address := range objectInfo.GetSecondarySpAddresses() {
-			if address == a.baseApp.OperateAddress() {
+			if strings.EqualFold(address, a.baseApp.OperateAddress()) {
 				return true, nil
 			}
 		}
