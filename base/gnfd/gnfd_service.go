@@ -76,6 +76,21 @@ func (g *Gnfd) QueryStorageParams(
 	return &resp.Params, nil
 }
 
+// QueryStorageParamsByTimestamp returns storage params by block create time.
+func (g *Gnfd) QueryStorageParamsByTimestamp(
+	ctx context.Context,
+	timestamp int64) (
+	params *storagetypes.Params, err error) {
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.StorageQueryClient.QueryParamsByTimestamp(ctx,
+		&storagetypes.QueryParamsByTimestampRequest{Timestamp: timestamp})
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query storage params", "error", err)
+		return nil, err
+	}
+	return &resp.Params, nil
+}
+
 // QueryBucketInfo returns the bucket info by name.
 func (g *Gnfd) QueryBucketInfo(
 	ctx context.Context,
