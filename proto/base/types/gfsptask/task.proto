@@ -85,6 +85,19 @@ message GfSpDownloadObjectTask {
   int64 high = 7;
 }
 
+message GfSpDownloadPieceTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.BucketInfo bucket_info = 3;
+  greenfield.storage.Params storage_params = 4;
+  bool enable_check = 5; // check read quota, only in first piece
+  string user_address = 6;
+  uint64 total_size = 7;
+  string piece_key = 8;
+  uint64 piece_offset = 9;
+  uint64 piece_length = 10;
+}
+
 message GfSpChallengePieceTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;

@@ -24,17 +24,29 @@ func (s *SpDBImpl) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 			return fmt.Errorf("failed to query record in sp info table: %s", result.Error)
 		}
 		// 2. if there is no record, insert new record; otherwise delete old record, then insert new record
-		if recordNotFound {
+		if recordNotFound { // insert
 			if err := s.insertNewRecordInSpInfoTable(value); err != nil {
 				return err
 			}
-		} else {
-			result = s.db.Where("operator_address = ? and is_own = false", value.GetOperatorAddress()).Delete(queryReturn)
+		} else { // update
+			result = s.db.Model(&GCObjectTaskTable{}).
+				Where("operator_address = ? and is_own = false", value.GetOperatorAddress()).Updates(&SpInfoTable{
+				OperatorAddress: value.GetOperatorAddress(),
+				IsOwn:           false,
+				FundingAddress:  value.GetFundingAddress(),
+				SealAddress:     value.GetSealAddress(),
+				ApprovalAddress: value.GetApprovalAddress(),
+				TotalDeposit:    value.GetTotalDeposit().String(),
+				Status:          int32(value.Status),
+				Endpoint:        value.GetEndpoint(),
+				Moniker:         value.GetDescription().Moniker,
+				Identity:        value.GetDescription().Identity,
+				Website:         value.GetDescription().Website,
+				SecurityContact: value.GetDescription().SecurityContact,
+				Details:         value.GetDescription().Identity,
+			})
 			if result.Error != nil {
 				return fmt.Errorf("failed to detele record in sp info table: %s", result.Error)
-			}
-			if err := s.insertNewRecordInSpInfoTable(value); err != nil {
-				return err
 			}
 		}
 	}

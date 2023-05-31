@@ -26,6 +26,7 @@ func (m *GfSpTask) Info() string {
 	return fmt.Sprintf("create[%d], update[%d], timeout[%d], retry[%d], max_retry[%d], runner[%s], error[%v]",
 		m.GetCreateTime(), m.GetUpdateTime(), m.GetTimeout(), m.GetRetry(), m.GetMaxRetry(), m.GetAddress(), m.GetErr())
 }
+
 func (m *GfSpTask) SetAddress(address string) {
 	m.Address = address
 }
