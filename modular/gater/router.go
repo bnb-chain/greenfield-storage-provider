@@ -18,6 +18,7 @@ const (
 	replicateObjectPieceRouterName        = "ReplicateObjectPiece"
 	getUserBucketsRouterName              = "GetUserBuckets"
 	listObjectsByBucketRouterName         = "ListObjectsByBucketName"
+	verifyPermissionRouterName            = "VerifyPermission"
 	getBucketReadQuotaRouterName          = "GetBucketReadQuota"
 	listBucketReadRecordRouterName        = "ListBucketReadRecord"
 	requestNonceName                      = "RequestNonce"
@@ -137,6 +138,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Name(updateUserPublicKey).
 		Methods(http.MethodPost).
 		HandlerFunc(g.updateUserPublicKeyHandler)
+
+	// verify permission router
+	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").
+		Name(verifyPermissionRouterName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.verifyPermissionHandler)
 
 	// path style
 	pathBucketRouter := router.PathPrefix("/{bucket}").Subrouter()
