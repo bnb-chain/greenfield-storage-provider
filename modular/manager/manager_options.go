@@ -56,7 +56,7 @@ const (
 
 	// DefaultDiscontinueTimeInterval defines the default interval for starting discontinue
 	// buckets task , used for test net.
-	DefaultDiscontinueTimeInterval = 30 * 60
+	DefaultDiscontinueTimeInterval = 3 * 60
 	// DefaultDiscontinueBucketKeepAliveDays defines the default bucket keep alive days, after
 	// the interval, buckets will be discontinued, used for test net.
 	DefaultDiscontinueBucketKeepAliveDays = 7
