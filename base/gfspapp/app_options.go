@@ -30,8 +30,8 @@ const (
 	DefaultGrpcAddress = "localhost:9333"
 	// DefaultMetricsAddress defines the default metrics service address.
 	DefaultMetricsAddress = "localhost:24367"
-	// DefaultPprofAddress defines the default pprof service address.
-	DefaultPprofAddress = "localhost:24368"
+	// DefaultPProfAddress defines the default pprof service address.
+	DefaultPProfAddress = "localhost:24368"
 
 	// DefaultChainID defines the default greenfield chain ID.
 	DefaultChainID = "greenfield_9000-1741"
@@ -63,7 +63,7 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		cfg.GrpcAddress = DefaultGrpcAddress
 	}
 	app.grpcAddress = cfg.GrpcAddress
-	app.operateAddress = cfg.SpAccount.SpOperateAddress
+	app.operateAddress = cfg.SpAccount.SpOperatorAddress
 	app.uploadSpeed = cfg.Task.UploadTaskSpeed
 	app.downloadSpeed = cfg.Task.DownloadTaskSpeed
 	app.replicateSpeed = cfg.Task.ReplicateTaskSpeed
@@ -406,10 +406,10 @@ func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Monitor.DisableMetrics {
 		app.metrics = &coremodule.NullModular{}
 	}
-	if cfg.Monitor.MetricsHttpAddress == "" {
-		cfg.Monitor.MetricsHttpAddress = DefaultMetricsAddress
+	if cfg.Monitor.MetricsHTTPAddress == "" {
+		cfg.Monitor.MetricsHTTPAddress = DefaultMetricsAddress
 	}
-	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHttpAddress)
+	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHTTPAddress)
 	app.RegisterServices(app.metrics)
 	return nil
 }
@@ -418,10 +418,10 @@ func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error 
 	if cfg.Monitor.DisablePProf {
 		app.pprof = &coremodule.NullModular{}
 	}
-	if cfg.Monitor.PProfHttpAddress == "" {
-		cfg.Monitor.PProfHttpAddress = DefaultPprofAddress
+	if cfg.Monitor.PProfHTTPAddress == "" {
+		cfg.Monitor.PProfHTTPAddress = DefaultPProfAddress
 	}
-	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHttpAddress)
+	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHTTPAddress)
 	app.RegisterServices(app.pprof)
 	return nil
 }

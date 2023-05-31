@@ -138,7 +138,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				continue
 			}
 			m.discontinueBuckets(ctx)
-			log.Infof("finish to discontinue buckets", "time", time.Now())
+			log.Infow("finished to discontinue buckets", "time", time.Now())
 		}
 	}
 }

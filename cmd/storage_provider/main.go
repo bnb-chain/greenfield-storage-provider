@@ -114,13 +114,13 @@ func makeConfig(ctx *cli.Context) (*gfspconfig.GfSpConfig, error) {
 		cfg.Monitor.DisableMetrics = ctx.Bool(utils.MetricsDisableFlag.Name)
 	}
 	if ctx.IsSet(utils.MetricsHTTPFlag.Name) {
-		cfg.Monitor.MetricsHttpAddress = ctx.String(utils.MetricsHTTPFlag.Name)
+		cfg.Monitor.MetricsHTTPAddress = ctx.String(utils.MetricsHTTPFlag.Name)
 	}
 	if ctx.IsSet(utils.PProfDisableFlag.Name) {
 		cfg.Monitor.DisablePProf = ctx.Bool(utils.PProfDisableFlag.Name)
 	}
 	if ctx.IsSet(utils.PProfHTTPFlag.Name) {
-		cfg.Monitor.PProfHttpAddress = ctx.String(utils.PProfHTTPFlag.Name)
+		cfg.Monitor.PProfHTTPAddress = ctx.String(utils.PProfHTTPFlag.Name)
 	}
 	if ctx.IsSet(utils.DisableResourceManagerFlag.Name) {
 		cfg.Rcmgr.DisableRcmgr = ctx.Bool(utils.DisableResourceManagerFlag.Name)

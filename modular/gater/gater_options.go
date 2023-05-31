@@ -26,8 +26,8 @@ func DefaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Gateway.Domain == "" {
 		cfg.Gateway.Domain = DefaultGatewayDomain
 	}
-	if cfg.Gateway.HttpAddress == "" {
-		cfg.Gateway.HttpAddress = DefaultGatewayDomain
+	if cfg.Gateway.HTTPAddress == "" {
+		cfg.Gateway.HTTPAddress = DefaultGatewayDomain
 	}
 	if cfg.Bucket.MaxListReadQuotaNumber == 0 {
 		cfg.Bucket.MaxListReadQuotaNumber = DefaultMaxListReadQuota
@@ -37,7 +37,7 @@ func DefaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 	}
 	gater.maxPayloadSize = cfg.Bucket.MaxPayloadSize
 	gater.domain = cfg.Gateway.Domain
-	gater.httpAddress = cfg.Gateway.HttpAddress
+	gater.httpAddress = cfg.Gateway.HTTPAddress
 	gater.maxListReadQuota = cfg.Bucket.MaxListReadQuotaNumber
 	rateCfg := makeAPIRateLimitCfg(cfg.APIRateLimiter)
 	if err := localhttp.NewAPILimiter(rateCfg); err != nil {
