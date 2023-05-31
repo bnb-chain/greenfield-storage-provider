@@ -319,12 +319,12 @@ func veritySignature(
 	}
 	signOp, err := sdk.AccAddressFromHexUnsafe(signOpAddress)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to parser sign op address", "error", err)
+		log.CtxErrorw(ctx, "failed to parse sign op address", "error", err)
 		return err
 	}
 	signApproval, err := sdk.AccAddressFromHexUnsafe(signApprovalAddress)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to parser sign approval address", "error", err)
+		log.CtxErrorw(ctx, "failed to parse sign approval address", "error", err)
 		return err
 	}
 	originMsgHash := storagetypes.NewSecondarySpSignDoc(signOp,

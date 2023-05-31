@@ -136,6 +136,15 @@ func (*NilModular) HandleDownloadObjectTask(context.Context, task.DownloadObject
 	return nil, ErrNilModular
 }
 func (*NilModular) PostDownloadObject(context.Context, task.DownloadObjectTask) {}
+
+func (*NilModular) PreDownloadPiece(context.Context, task.DownloadPieceTask) error {
+	return ErrNilModular
+}
+func (*NilModular) HandleDownloadPieceTask(context.Context, task.DownloadPieceTask) ([]byte, error) {
+	return nil, ErrNilModular
+}
+func (*NilModular) PostDownloadPiece(context.Context, task.DownloadPieceTask) {}
+
 func (*NilModular) PreChallengePiece(context.Context, task.ChallengePieceTask) error {
 	return ErrNilModular
 }

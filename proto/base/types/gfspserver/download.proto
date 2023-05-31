@@ -7,10 +7,19 @@ import "base/types/gfsptask/task.proto";
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
 message GfSpDownloadObjectRequest {
-  base.types.gfsptask.GfSpDownloadObjectTask down_load_task = 1;
+  base.types.gfsptask.GfSpDownloadObjectTask download_object_task = 1;
 }
 
 message GfSpDownloadObjectResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  bytes data = 2;
+}
+
+message GfSpDownloadPieceRequest {
+  base.types.gfsptask.GfSpDownloadPieceTask download_piece_task = 1;
+}
+
+message GfSpDownloadPieceResponse {
   base.types.gfsperrors.GfSpError err = 1;
   bytes data = 2;
 }
@@ -28,5 +37,6 @@ message GfSpGetChallengeInfoResponse {
 
 service GfSpDownloadService {
   rpc GfSpDownloadObject(GfSpDownloadObjectRequest) returns (GfSpDownloadObjectResponse) {}
+  rpc GfSpDownloadPiece(GfSpDownloadPieceRequest) returns (GfSpDownloadPieceResponse) {}
   rpc GfSpGetChallengeInfo(GfSpGetChallengeInfoRequest) returns (GfSpGetChallengeInfoResponse) {}
 }
