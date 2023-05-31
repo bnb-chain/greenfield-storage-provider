@@ -371,7 +371,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	bucketPrimarySpAddress := getBucketInfoRes.GetBucketInfo().GetPrimarySpAddress()
 
 	// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
-	if bucketPrimarySpAddress != g.baseApp.OperateAddress() {
+	if !strings.EqualFold(bucketPrimarySpAddress, g.baseApp.OperateAddress()) {
 		log.Debugw("primary sp address not matched ",
 			"bucketPrimarySpAddress", bucketPrimarySpAddress, "gateway.config.SpOperatorAddress", g.baseApp.OperateAddress(),
 		)
