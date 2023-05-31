@@ -19,9 +19,10 @@ import (
 )
 
 var (
-	ErrSignMsg                  = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
-	ErrSealObjectOnChain        = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
-	ErrDiscontinueBucketOnChain = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120003, "send discontinueBucket msg failed")
+	ErrSignMsg                   = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
+	ErrSealObjectOnChain         = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
+	ErrRejectUnSealObjectOnChain = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
+	ErrDiscontinueBucketOnChain  = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -156,13 +157,27 @@ func (s *SignModular) SealObject(
 	)
 	defer func() {
 		metrics.SealObjectTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
-		if err != nil {
-			metrics.SealObjectFailedCounter.WithLabelValues(s.Name()).Inc()
-		} else {
-			metrics.SealObjectSucceedCounter.WithLabelValues(s.Name()).Inc()
-		}
 	}()
 	_, err = s.client.SealObject(ctx, SignSeal, object)
+	return err
+}
+
+func (s *SignModular) RejectUnSealObject(
+	ctx context.Context,
+	rejectObject *storagetypes.MsgRejectSealObject) error {
+	var (
+		err       error
+		startTime = time.Now()
+	)
+	defer func() {
+		metrics.RejectUnSealObjectTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
+		if err != nil {
+			metrics.RejectUnSealObjectSucceedCounter.WithLabelValues(s.Name()).Inc()
+		} else {
+			metrics.RejectUnSealObjectFailedCounter.WithLabelValues(s.Name()).Inc()
+		}
+	}()
+	_, err = s.client.RejectUnSealObject(ctx, SignSeal, rejectObject)
 	return err
 }
 

@@ -124,6 +124,10 @@ func (m *ManageModular) HandleDoneUploadObjectTask(
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
+		err = m.RejectUnSealObject(ctx, task.GetObjectInfo())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reject unseal object by signer", "error", err)
+		}
 		log.CtxErrorw(ctx, "reports failed update object task", "error", task.Error())
 		return nil
 	}
@@ -216,6 +220,10 @@ func (m *ManageModular) handleFailedReplicatePieceTask(
 			types.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
+		}
+		err = m.RejectUnSealObject(ctx, handleTask.GetObjectInfo())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reject unseal object by signer", "error", err)
 		}
 		log.CtxWarnw(ctx, "delete expired replicate piece task", "info", handleTask.Info())
 	}
