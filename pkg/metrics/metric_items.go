@@ -144,6 +144,11 @@ var (
 		Help:    "Track the object payload size of downloading.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"download_object_size"})
+	DownloadPieceSizeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "download_piece_size",
+		Help:    "Track the object piece payload size of downloading.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"download_piece_size"})
 	ChallengePieceSizeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "challenge_piece_size",
 		Help:    "Track the piece size of challenging.",

@@ -73,7 +73,7 @@ func (n *Node) onPing(s network.Stream) {
 	if len(n.p2pAntAddress) > 0 {
 		selfAntAddr, err := MakeMultiaddr(n.p2pAntAddress)
 		if err != nil {
-			log.Errorw("failed to parser self ant address",
+			log.Errorw("failed to parse self ant address",
 				"ant_address", n.p2pAntAddress, "error", err)
 		} else {
 			nodeInfo := &gfspp2p.GfSpNode{
