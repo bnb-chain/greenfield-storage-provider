@@ -22,6 +22,8 @@ type Consensus interface {
 	ListBondedValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 	// QueryStorageParams returns the storage params.
 	QueryStorageParams(ctx context.Context) (params *storagetypes.Params, err error)
+	// QueryStorageParamsByTimestamp returns the storage params by block create time.
+	QueryStorageParamsByTimestamp(ctx context.Context, timestamp int64) (params *storagetypes.Params, err error)
 	// QueryBucketInfo returns the bucket info by bucket name.
 	QueryBucketInfo(ctx context.Context, bucket string) (*storagetypes.BucketInfo, error)
 	// QueryObjectInfo returns the object info by bucket and object name.
@@ -59,6 +61,9 @@ func (*NullConsensus) ListBondedValidators(context.Context) ([]stakingtypes.Vali
 }
 
 func (*NullConsensus) QueryStorageParams(context.Context) (*storagetypes.Params, error) {
+	return nil, nil
+}
+func (*NullConsensus) QueryStorageParamsByTimestamp(context.Context, int64) (*storagetypes.Params, error) {
 	return nil, nil
 }
 func (*NullConsensus) QueryBucketInfo(context.Context, string) (*storagetypes.BucketInfo, error) {

@@ -235,7 +235,8 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		err = ErrInvalidHeader
 		return
 	}
-	params, err := g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(
+		reqCtx.Context(), objectInfo.GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
 		return
