@@ -1,4 +1,4 @@
-name: Metadata Dev Env Docker
+name: Clyde-Test
 
 on:
   push:
