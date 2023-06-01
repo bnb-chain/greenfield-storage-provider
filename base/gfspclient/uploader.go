@@ -10,10 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-func (s *GfSpClient) UploadObject(
-	ctx context.Context,
-	task coretask.UploadObjectTask,
-	stream io.Reader) error {
+func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader) error {
 	conn, connErr := s.Connection(ctx, s.uploaderEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect uploader", "error", connErr)

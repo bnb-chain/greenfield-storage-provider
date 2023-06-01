@@ -153,11 +153,11 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 	log.CtxDebugw(reqCtx.Context(), "succeed to ask approval")
 }
 
-// challengeHandler handles get challenge piece info request. Current only greenfield
+// getChallengeInfoHandler handles get challenge piece info request. Current only greenfield
 // validator can challenge piece is store correctly. The challenge piece info includes:
 // the challenged piece data, all piece hashes and the integrity hash. The challenger
 // can verify the info whether are correct by comparing with the greenfield info.
-func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
+func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error
 		reqCtx     *RequestContext
@@ -202,14 +202,14 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if reqCtx.NeedVerifyAuthorizer() {
 		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
-			coremodule.AuthOpTypeChallengePiece, reqCtx.Account(), objectInfo.GetBucketName(),
+			coremodule.AuthOpTypeGetChallengePieceInfo, reqCtx.Account(), objectInfo.GetBucketName(),
 			objectInfo.GetObjectName())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
 		}
 		if !authorized {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+			log.CtxErrorw(reqCtx.Context(), "failed to get challenge info due to no permission")
 			err = ErrNoPermission
 			return
 		}
@@ -242,10 +242,10 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var pieceSize uint64
 	if redundancyIdx < 0 {
-		pieceSize = uint64(g.baseApp.PieceOp().SegmentSize(objectInfo.GetPayloadSize(),
+		pieceSize = uint64(g.baseApp.PieceOp().SegmentPieceSize(objectInfo.GetPayloadSize(),
 			segmentIdx, params.VersionedParams.GetMaxSegmentSize()))
 	} else {
-		pieceSize = uint64(g.baseApp.PieceOp().PieceSize(objectInfo.GetPayloadSize(),
+		pieceSize = uint64(g.baseApp.PieceOp().ECPieceSize(objectInfo.GetPayloadSize(),
 			segmentIdx, params.VersionedParams.GetMaxSegmentSize(),
 			params.VersionedParams.GetRedundantDataChunkNum()))
 	}
@@ -255,14 +255,14 @@ func (g *GateModular) challengeHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
 	integrity, checksums, data, err = g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to challenge piece", "error", err)
+		log.CtxErrorw(ctx, "failed to get challenge info", "error", err)
 		return
 	}
 	w.Header().Set(GnfdObjectIDHeader, util.Uint64ToString(objectID))
 	w.Header().Set(GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
 	w.Header().Set(GnfdPieceHashHeader, util.BytesSliceToString(checksums))
 	w.Write(data)
-	log.CtxDebugw(reqCtx.Context(), "succeed to challenge piece")
+	log.CtxDebugw(reqCtx.Context(), "succeed to get challenge info")
 }
 
 // replicateHandler handles the replicate piece from primary SP request. The Primary
