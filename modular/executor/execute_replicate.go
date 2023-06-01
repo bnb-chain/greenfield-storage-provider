@@ -22,9 +22,7 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-func (e *ExecuteModular) HandleReplicatePieceTask(
-	ctx context.Context,
-	task coretask.ReplicatePieceTask) {
+func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) {
 	var (
 		err       error
 		approvals []*gfsptask.GfSpReplicatePieceApprovalTask
@@ -69,9 +67,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(
 	log.CtxDebugw(ctx, "finish combine seal object", "error", sealErr)
 }
 
-func (e *ExecuteModular) AskReplicatePieceApproval(
-	ctx context.Context,
-	task coretask.ApprovalReplicatePieceTask,
+func (e *ExecuteModular) AskReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask,
 	low, high int, timeout int64) (
 	[]*gfsptask.GfSpReplicatePieceApprovalTask, error) {
 	var (
@@ -105,15 +101,12 @@ func (e *ExecuteModular) AskReplicatePieceApproval(
 	return approvals, nil
 }
 
-func (e *ExecuteModular) handleReplicatePiece(
-	ctx context.Context,
-	rTask coretask.ReplicatePieceTask,
-	backUpApprovals []*gfsptask.GfSpReplicatePieceApprovalTask,
-) (err error) {
+func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretask.ReplicatePieceTask,
+	backUpApprovals []*gfsptask.GfSpReplicatePieceApprovalTask) (err error) {
 	var (
 		wg       sync.WaitGroup
 		pieceKey string
-		segCount = e.baseApp.PieceOp().SegmentCount(
+		segCount = e.baseApp.PieceOp().SegmentPieceCount(
 			rTask.GetObjectInfo().GetPayloadSize(),
 			rTask.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 		replCount = rTask.GetStorageParams().VersionedParams.GetRedundantDataChunkNum() +
@@ -211,15 +204,8 @@ func (e *ExecuteModular) handleReplicatePiece(
 	}
 }
 
-func (e *ExecuteModular) doReplicatePiece(
-	ctx context.Context,
-	waitGroup *sync.WaitGroup,
-	rTask coretask.ReplicatePieceTask,
-	approval coretask.ApprovalReplicatePieceTask,
-	replicateIdx uint32,
-	pieceIdx uint32,
-	data []byte,
-) (err error) {
+func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.WaitGroup, rTask coretask.ReplicatePieceTask,
+	approval coretask.ApprovalReplicatePieceTask, replicateIdx uint32, pieceIdx uint32, data []byte) (err error) {
 	var signature []byte
 	metrics.ReplicatePieceSizeCounter.WithLabelValues(e.Name()).Add(float64(len(data)))
 	startTime := time.Now()
@@ -251,12 +237,8 @@ func (e *ExecuteModular) doReplicatePiece(
 	return
 }
 
-func (e *ExecuteModular) doneReplicatePiece(
-	ctx context.Context,
-	rTask coretask.ReplicatePieceTask,
-	approval coretask.ApprovalReplicatePieceTask,
-	replicateIdx uint32,
-) ([]byte, []byte, error) {
+func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.ReplicatePieceTask,
+	approval coretask.ApprovalReplicatePieceTask, replicateIdx uint32) ([]byte, []byte, error) {
 	var (
 		err           error
 		integrity     []byte
@@ -303,15 +285,8 @@ func (e *ExecuteModular) doneReplicatePiece(
 	return integrity, signature, nil
 }
 
-func veritySignature(
-	ctx context.Context,
-	objectID uint64,
-	integrity []byte,
-	expectedIntegrity []byte,
-	signOpAddress string,
-	signApprovalAddress string,
-	signature []byte,
-) error {
+func veritySignature(ctx context.Context, objectID uint64, integrity []byte, expectedIntegrity []byte,
+	signOpAddress string, signApprovalAddress string, signature []byte) error {
 	if !bytes.Equal(expectedIntegrity, integrity) {
 		log.CtxErrorw(ctx, "replicate sp invalid integrity", "integrity", hex.EncodeToString(integrity),
 			"expect", hex.EncodeToString(expectedIntegrity))

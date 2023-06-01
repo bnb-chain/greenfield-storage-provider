@@ -11,9 +11,7 @@ import (
 
 var _ gfspserver.GfSpQueryTaskServiceServer = &GfSpBaseApp{}
 
-func (g *GfSpBaseApp) GfSpQueryTasks(
-	ctx context.Context,
-	req *gfspserver.GfSpQueryTasksRequest) (
+func (g *GfSpBaseApp) GfSpQueryTasks(ctx context.Context, req *gfspserver.GfSpQueryTasksRequest) (
 	*gfspserver.GfSpQueryTasksResponse, error) {
 	subKey := req.GetTaskSubKey()
 	if len(subKey) == 0 {

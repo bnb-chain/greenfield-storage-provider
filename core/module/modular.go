@@ -34,8 +34,8 @@ const (
 	AuthOpAskCreateBucketApproval
 	// AuthOpAskCreateObjectApproval defines the AskCreateObjectApproval operator
 	AuthOpAskCreateObjectApproval
-	// AuthOpTypeChallengePiece defines the ChallengePiece operator
-	AuthOpTypeChallengePiece
+	// AuthOpTypeGetChallengePieceInfo defines the GetChallengePieceInfo operator
+	AuthOpTypeGetChallengePieceInfo
 	// AuthOpTypePutObject defines the PutObject operator
 	AuthOpTypePutObject
 	// AuthOpTypeGetObject defines the GetObject operator
