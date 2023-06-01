@@ -20,12 +20,13 @@ func (b *BsDBImpl) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, accou
 }
 
 // ListGroupsByNameAndSourceType get groups list by specific parameters
-func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int) ([]*Group, error) {
+func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int) ([]*Group, int64, error) {
 	var (
 		groups   []*Group
 		err      error
 		filters  []func(*gorm.DB) *gorm.DB
 		subQuery *gorm.DB
+		count    int64
 	)
 	if sourceType != "" {
 		filters = append(filters, SourceTypeFilter(sourceType))
@@ -40,7 +41,15 @@ func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string
 		Where("group_id IN (?)", subQuery).
 		Limit(limit).
 		Offset(offset).
-		Find(&groups).
-		Error
-	return groups, err
+		Order("create_time").
+		Find(&groups).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	err = b.db.Table((&Group{}).TableName()).
+		Select("count(*)").
+		Where("group_name LIKE ?", prefix+"%"+name+"%").
+		Scopes(filters...).
+		Take(&count).Error
+	return groups, count, err
 }

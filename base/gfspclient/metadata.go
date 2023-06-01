@@ -378,11 +378,11 @@ func (s *GfSpClient) GetGroupList(
 	sourceType string,
 	limit int64,
 	offset int64,
-	opts ...grpc.DialOption) ([]*types.Group, error) {
+	opts ...grpc.DialOption) ([]*types.Group, int64, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return nil, ErrRpcUnknown
+		return nil, 0, ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &types.GfSpGetGroupListRequest{
@@ -395,7 +395,7 @@ func (s *GfSpClient) GetGroupList(
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetGroupList(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to get group list", "error", err)
-		return nil, ErrRpcUnknown
+		return nil, 0, ErrRpcUnknown
 	}
-	return resp.Groups, nil
+	return resp.Groups, resp.Count, nil
 }

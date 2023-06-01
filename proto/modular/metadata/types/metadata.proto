@@ -325,32 +325,45 @@ message GfSpQueryUploadProgressResponse {
   store.types.JobState state = 2;
 }
 
-
 // Group is the structure for group information
 message Group {
+  // group defines the basic group info
   greenfield.storage.GroupInfo group = 1;
+  // operator defines operator address of group
   string operator = 2;
+  // create_at defines the block number when the group created
   int64 create_at = 3;
+  // create_time defines the timestamp when the group created
   int64 create_time = 4;
+  // update_at defines the block number when the group updated
   int64 update_at = 5;
+  // update_time defines the timestamp when the group updated
   int64 update_time = 6;
-  bool removed  = 7;
+  // removed defines the group is deleted or not
+  bool removed = 7;
 }
 
 // GfSpGetGroupListRequest is request type for the GetGroupList RPC method.
 message GfSpGetGroupListRequest {
+  // name defines the query group name
   string name = 1;
+  // prefix defines the prefix of the group name
   string prefix = 2;
+  // source_type defines which chain the user should send the bucket management transactions to
   string source_type = 3;
+  // limit defines the maximum number of results that should be returned in response
   int64 limit = 4;
+  // offset defines the position in the list from where to start returning results
   int64 offset = 5;
 }
 
 // GfSpGetGroupListResponse is response type for the GetGroupList RPC method.
 message GfSpGetGroupListResponse {
-   repeated Group groups = 1;
+  // groups defines the response of group list
+  repeated Group groups = 1;
+  // count defines total groups amount
+  int64 count = 2;
 }
-
 
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}

@@ -16,10 +16,11 @@ func (r *MetadataModular) GfSpGetGroupList(ctx context.Context, req *types.GfSpG
 	var (
 		groups []*model.Group
 		res    []*types.Group
+		count  int64
 	)
 
 	ctx = log.Context(ctx, req)
-	groups, err = r.baseApp.GfBsDB().ListGroupsByNameAndSourceType(req.Name, req.Prefix, req.SourceType, int(req.Limit), int(req.Offset))
+	groups, count, err = r.baseApp.GfBsDB().ListGroupsByNameAndSourceType(req.Name, req.Prefix, req.SourceType, int(req.Limit), int(req.Offset))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get group list", "error", err)
 		return nil, err
@@ -44,7 +45,10 @@ func (r *MetadataModular) GfSpGetGroupList(ctx context.Context, req *types.GfSpG
 		}
 	}
 
-	resp = &types.GfSpGetGroupListResponse{Groups: res}
+	resp = &types.GfSpGetGroupListResponse{
+		Groups: res,
+		Count:  count,
+	}
 	log.CtxInfo(ctx, "succeed to get group list")
 	return resp, nil
 }
