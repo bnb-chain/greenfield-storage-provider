@@ -31,7 +31,7 @@ const (
 var (
 	ErrRpcUnknown       = gfsperrors.Register(ClientCodeSpace, http.StatusNotFound, 98001, "server slipped away, try again later")
 	ErrExceptionsStream = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98002, "stream closed abnormally")
-	ErrTypeMismatch     = gfsperrors.Register(ClientCodeSpace, http.StatusInternalServerError, 98101, "response type mismatch")
+	ErrTypeMismatch     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98101, "response type mismatch")
 )
 
 type GfSpClient struct {

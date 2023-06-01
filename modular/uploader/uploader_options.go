@@ -9,7 +9,7 @@ import (
 const (
 	// DefaultUploadObjectParallelPerNode defines the default max parallel of uploading
 	// object per uploader.
-	DefaultUploadObjectParallelPerNode = 1024
+	DefaultUploadObjectParallelPerNode = 10240
 )
 
 func NewUploadModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {

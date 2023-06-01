@@ -18,7 +18,7 @@ var ConfigDumpCmd = &cli.Command{
 values to ./config.toml file for editing.`,
 }
 
-// dumpConfigAction is the dump.config command.
+// dumpConfigAction is the dump.config command action.
 func dumpConfigAction(ctx *cli.Context) error {
 	bz, err := toml.Marshal(&gfspconfig.GfSpConfig{})
 	if err != nil {

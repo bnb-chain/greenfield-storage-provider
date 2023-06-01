@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	ErrDanglingTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 80001, "OoooH... request lost, try again later")
-	ErrRepeatedTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusBadRequest, 80002, "request repeated")
-	ErrExceedTask          = gfsperrors.Register(module.ReceiveModularName, http.StatusServiceUnavailable, 80003, "OoooH... request exceed, try again later")
+	ErrDanglingTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusBadRequest, 80001, "OoooH... request lost, try again later")
+	ErrRepeatedTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80002, "request repeated")
+	ErrExceedTask          = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80003, "OoooH... request exceed, try again later")
 	ErrUnfinishedTask      = gfsperrors.Register(module.ReceiveModularName, http.StatusForbidden, 80004, "replicate piece unfinished")
 	ErrInvalidDataChecksum = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80005, "verify data checksum failed")
 	ErrPieceStore          = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85101, "server slipped away, try again later")
