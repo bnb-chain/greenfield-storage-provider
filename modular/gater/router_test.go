@@ -197,9 +197,9 @@ func TestRouters(t *testing.T) {
 			name:             "Challenge router",
 			router:           gwRouter,
 			method:           http.MethodGet,
-			url:              scheme + testDomain + ChallengePath,
+			url:              scheme + testDomain + GetChallengeInfoPath,
 			shouldMatch:      true,
-			wantedRouterName: challengeRouterName,
+			wantedRouterName: getChallengeInfoRouterName,
 		},
 		{
 			name:             "Replicate router",

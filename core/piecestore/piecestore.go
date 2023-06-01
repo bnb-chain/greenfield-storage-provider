@@ -13,18 +13,18 @@ type PieceOp interface {
 	// ChallengePieceKey returns the  piece key used as the key of challenge piece key.
 	// if replicateIdx < 0 , returns the SegmentPieceKey, otherwise returns the ECPieceKey.
 	ChallengePieceKey(objectID uint64, segmentIdx uint32, replicateIdx int32) string
-	// MaxSegmentSize returns the object max segment size by object payload size and
+	// MaxSegmentPieceSize returns the object max segment piece size by object payload size and
 	// max segment size that comes from storage params.
-	MaxSegmentSize(payloadSize uint64, maxSegmentSize uint64) int64
-	// SegmentCount returns the segment count of object payload by object payload size
+	MaxSegmentPieceSize(payloadSize uint64, maxSegmentSize uint64) int64
+	// SegmentPieceCount returns the segment piece count of object payload by object payload size
 	// and max segment size that comes from storage params.
-	SegmentCount(payloadSize uint64, maxSegmentSize uint64) uint32
-	// SegmentSize returns the segment size of segment index by object payload size and
+	SegmentPieceCount(payloadSize uint64, maxSegmentSize uint64) uint32
+	// SegmentPieceSize returns the segment piece size of segment index by object payload size and
 	// max segment size that comes from storage params.
-	SegmentSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64) int64
-	// PieceSize returns the ec piece size of ec index, by object payload size, max segment
+	SegmentPieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64) int64
+	// ECPieceSize returns the ec piece size of ec index, by object payload size, max segment
 	// size and chunk number that ths last two params comes from storage params.
-	PieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64, chunkNum uint32) int64
+	ECPieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64, chunkNum uint32) int64
 }
 
 // PieceStore is the interface to piece store that store the object payload data.

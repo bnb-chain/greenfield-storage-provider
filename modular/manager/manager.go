@@ -309,18 +309,18 @@ func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) task.
 }
 
 func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
-	spInfoList, err := m.baseApp.Consensus().QuerySPInfo(ctx)
+	spList, err := m.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to query sp info", "error", err)
+		log.CtxErrorw(ctx, "failed to list sps", "error", err)
 		return
 	}
-	if err = m.baseApp.GfSpDB().UpdateAllSp(spInfoList); err != nil {
-		log.CtxErrorw(ctx, "failed to update sp info", "error", err)
+	if err = m.baseApp.GfSpDB().UpdateAllSp(spList); err != nil {
+		log.CtxErrorw(ctx, "failed to update all sp list", "error", err)
 		return
 	}
-	for _, spInfo := range spInfoList {
-		if strings.EqualFold(m.baseApp.OperateAddress(), spInfo.OperatorAddress) {
-			if err = m.baseApp.GfSpDB().SetOwnSpInfo(spInfo); err != nil {
+	for _, sp := range spList {
+		if strings.EqualFold(m.baseApp.OperateAddress(), sp.OperatorAddress) {
+			if err = m.baseApp.GfSpDB().SetOwnSpInfo(sp); err != nil {
 				log.Errorw("failed to set own sp info", "error", err)
 				return
 			}

@@ -17,13 +17,11 @@ var (
 	ErrReceiveExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusServiceUnavailable, 990802, "server overload, try again later")
 )
 
-func (g *GfSpBaseApp) GfSpReplicatePiece(
-	ctx context.Context,
-	req *gfspserver.GfSpReplicatePieceRequest) (
+func (g *GfSpBaseApp) GfSpReplicatePiece(ctx context.Context, req *gfspserver.GfSpReplicatePieceRequest) (
 	*gfspserver.GfSpReplicatePieceResponse, error) {
 	task := req.GetReceivePieceTask()
 	if task == nil {
-		log.Error("failed to receive piece, task pointer dangling")
+		log.Error("failed to receive piece due to task pointer dangling")
 		return &gfspserver.GfSpReplicatePieceResponse{Err: ErrReceiveTaskDangling}, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
@@ -44,13 +42,11 @@ func (g *GfSpBaseApp) GfSpReplicatePiece(
 	return &gfspserver.GfSpReplicatePieceResponse{}, nil
 }
 
-func (g *GfSpBaseApp) GfSpDoneReplicatePiece(
-	ctx context.Context,
-	req *gfspserver.GfSpDoneReplicatePieceRequest) (
+func (g *GfSpBaseApp) GfSpDoneReplicatePiece(ctx context.Context, req *gfspserver.GfSpDoneReplicatePieceRequest) (
 	*gfspserver.GfSpDoneReplicatePieceResponse, error) {
 	task := req.GetReceivePieceTask()
 	if task == nil {
-		log.Error("failed to done receive piece, task pointer dangling")
+		log.Error("failed to done receive piece due to task pointer dangling")
 		return &gfspserver.GfSpDoneReplicatePieceResponse{Err: ErrReceiveTaskDangling}, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())

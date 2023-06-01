@@ -14,16 +14,8 @@ var _ coretask.DownloadObjectTask = &GfSpDownloadObjectTask{}
 var _ coretask.DownloadPieceTask = &GfSpDownloadPieceTask{}
 var _ coretask.ChallengePieceTask = &GfSpChallengePieceTask{}
 
-func (m *GfSpDownloadObjectTask) InitDownloadObjectTask(
-	object *storagetypes.ObjectInfo,
-	bucket *storagetypes.BucketInfo,
-	params *storagetypes.Params,
-	priority coretask.TPriority,
-	userAddress string,
-	low int64,
-	high int64,
-	timeout int64,
-	maxRetry int64) {
+func (m *GfSpDownloadObjectTask) InitDownloadObjectTask(object *storagetypes.ObjectInfo, bucket *storagetypes.BucketInfo,
+	params *storagetypes.Params, priority coretask.TPriority, userAddress string, low int64, high int64, timeout int64, maxRetry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())
@@ -167,19 +159,9 @@ func (m *GfSpDownloadObjectTask) SetBucketInfo(bucket *storagetypes.BucketInfo) 
 	m.BucketInfo = bucket
 }
 
-func (m *GfSpDownloadPieceTask) InitDownloadPieceTask(
-	object *storagetypes.ObjectInfo,
-	bucket *storagetypes.BucketInfo,
-	params *storagetypes.Params,
-	priority coretask.TPriority,
-	enableCheck bool,
-	userAddress string,
-	totalSize uint64,
-	pieceKey string,
-	pieceOffset uint64,
-	pieceLength uint64,
-	timeout int64,
-	maxRetry int64) {
+func (m *GfSpDownloadPieceTask) InitDownloadPieceTask(object *storagetypes.ObjectInfo, bucket *storagetypes.BucketInfo,
+	params *storagetypes.Params, priority coretask.TPriority, enableCheck bool, userAddress string, totalSize uint64,
+	pieceKey string, pieceOffset uint64, pieceLength uint64, timeout int64, maxRetry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())
@@ -323,16 +305,9 @@ func (m *GfSpDownloadPieceTask) SetBucketInfo(bucket *storagetypes.BucketInfo) {
 	m.BucketInfo = bucket
 }
 
-func (m *GfSpChallengePieceTask) InitChallengePieceTask(
-	object *storagetypes.ObjectInfo,
-	bucket *storagetypes.BucketInfo,
-	params *storagetypes.Params,
-	priority coretask.TPriority,
-	userAddress string,
-	replicateIdx int32,
-	segmentIdx uint32,
-	timeout int64,
-	retry int64) {
+func (m *GfSpChallengePieceTask) InitChallengePieceTask(object *storagetypes.ObjectInfo, bucket *storagetypes.BucketInfo,
+	params *storagetypes.Params, priority coretask.TPriority, userAddress string, replicateIdx int32, segmentIdx uint32,
+	timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())

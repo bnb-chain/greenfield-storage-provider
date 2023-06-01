@@ -11,10 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-func (s *GfSpClient) ReplicatePiece(
-	ctx context.Context,
-	task coretask.ReceivePieceTask,
-	data []byte,
+func (s *GfSpClient) ReplicatePiece(ctx context.Context, task coretask.ReceivePieceTask, data []byte,
 	opts ...grpc.DialOption) error {
 	conn, connErr := s.Connection(ctx, s.receiverEndpoint, opts...)
 	if connErr != nil {
@@ -37,10 +34,7 @@ func (s *GfSpClient) ReplicatePiece(
 	return nil
 }
 
-func (s *GfSpClient) DoneReplicatePiece(
-	ctx context.Context,
-	task coretask.ReceivePieceTask,
-	opts ...grpc.DialOption) (
+func (s *GfSpClient) DoneReplicatePiece(ctx context.Context, task coretask.ReceivePieceTask, opts ...grpc.DialOption) (
 	[]byte, []byte, error) {
 	conn, connErr := s.Connection(ctx, s.receiverEndpoint, opts...)
 	if connErr != nil {
