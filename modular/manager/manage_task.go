@@ -160,8 +160,10 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 		if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
 			types.TaskState_TASK_STATE_SEAL_OBJECT_DONE, ""); err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
-			return ErrGfSpDB
+			// succeed, ignore this error
+			// return ErrGfSpDB
 		}
+		// TODO: delete this upload db record?
 		return nil
 	}
 	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task", "task_info", task.Info())
@@ -224,8 +226,10 @@ func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.Seal
 	if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
 		types.TaskState_TASK_STATE_SEAL_OBJECT_DONE, ""); err != nil {
 		log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
-		return ErrGfSpDB
+		// succeed, ignore this error
+		// return ErrGfSpDB
 	}
+	// TODO: delete this upload db record?
 	log.CtxDebugw(ctx, "succeed to seal object on chain", "task_info", task.Info())
 	return nil
 }
