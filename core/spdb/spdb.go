@@ -6,7 +6,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
@@ -75,18 +74,11 @@ type SPInfoDB interface {
 	SetOwnSpInfo(sp *sptypes.StorageProvider) error
 }
 
+// TODO: refine interface
 type GCObjectProgressDB interface {
 	SetGCObjectProgress(taskKey string, deletingBlockID uint64, deletedObjectID uint64) error
 	DeleteGCObjectProgress(taskKey string) error
 	GetAllGCObjectTask(taskKey string) []task.GCObjectTask
-}
-
-// StorageParamDB interface
-type StorageParamDB interface {
-	// GetStorageParams return storage params
-	GetStorageParams() (*storagetypes.Params, error)
-	// SetStorageParams set(maybe overwrite) storage params
-	SetStorageParams(params *storagetypes.Params) error
 }
 
 // OffChainAuthKeyDB interface
@@ -98,9 +90,12 @@ type OffChainAuthKeyDB interface {
 
 type SPDB interface {
 	UploadObjectProgressDB
+	GCObjectProgressDB
+
 	ObjectIntegrityDB
 	TrafficDB
-	GCObjectProgressDB
+
 	SPInfoDB
+
 	OffChainAuthKeyDB
 }
