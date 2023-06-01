@@ -49,24 +49,50 @@ func (t *GfSpTQueueWithLimit) Cap() int {
 func (t *GfSpTQueueWithLimit) Has(key coretask.TKey) bool {
 	t.mux.RLock()
 	defer t.mux.RUnlock()
-	_, ok := t.indexer[key]
+	idx, ok := t.indexer[key]
+	if ok {
+		if idx >= len(t.tasks) {
+			log.Errorw("[BUG] index out of bounds", "queue", t.name,
+				"len", len(t.tasks), "index", idx, "key", key)
+			return false
+		}
+		task := t.tasks[idx]
+		if t.gcFunc != nil {
+			if t.gcFunc(task) {
+				t.delete(task)
+				return false
+			}
+		}
+	}
 	return ok
 }
 
 func (t *GfSpTQueueWithLimit) TopByLimit(limit corercmgr.Limit) coretask.Task {
+	var gcTasks []coretask.Task
 	t.mux.RLock()
-	defer t.mux.RUnlock()
+	defer func() {
+		defer t.mux.RUnlock()
+		for _, task := range gcTasks {
+			t.delete(task)
+		}
+	}()
+
 	if len(t.tasks) == 0 {
 		return nil
 	}
 	for i := len(t.tasks) - 1; i >= 0; i-- {
-		task := t.tasks[i]
-		if limit.NotLess(task.EstimateLimit()) {
-			if t.filterFunc == nil {
-				return task
+		if t.gcFunc != nil {
+			if t.gcFunc(t.tasks[i]) {
+				gcTasks = append(gcTasks, t.tasks[i])
 			}
-			if t.filterFunc(task) {
-				return task
+		}
+		if limit.NotLess(t.tasks[i].EstimateLimit()) {
+			if t.filterFunc != nil {
+				if t.filterFunc(t.tasks[i]) {
+					return t.tasks[i]
+				}
+			} else {
+				return t.tasks[i]
 			}
 		}
 	}
@@ -75,25 +101,37 @@ func (t *GfSpTQueueWithLimit) TopByLimit(limit corercmgr.Limit) coretask.Task {
 
 // PopByLimit pops and returns the top task that the LimitEstimate less than the param in the queue.
 func (t *GfSpTQueueWithLimit) PopByLimit(limit corercmgr.Limit) coretask.Task {
-	t.mux.Lock()
-	var task coretask.Task
+	var gcTasks []coretask.Task
+	var popTask coretask.Task
+	t.mux.RLock()
 	defer func() {
-		if task != nil {
+		defer t.mux.RUnlock()
+		for _, task := range gcTasks {
 			t.delete(task)
 		}
-		t.mux.Unlock()
+		if popTask != nil {
+			t.delete(popTask)
+		}
 	}()
+
 	if len(t.tasks) == 0 {
 		return nil
 	}
 	for i := len(t.tasks) - 1; i >= 0; i-- {
-		task = t.tasks[i]
-		if limit.NotLess(task.EstimateLimit()) {
-			if t.filterFunc == nil {
-				return task
+		if t.gcFunc != nil {
+			if t.gcFunc(t.tasks[i]) {
+				gcTasks = append(gcTasks, t.tasks[i])
 			}
-			if t.filterFunc(task) {
-				return task
+		}
+		if limit.NotLess(t.tasks[i].EstimateLimit()) {
+			if t.filterFunc != nil {
+				if t.filterFunc(t.tasks[i]) {
+					popTask = t.tasks[i]
+					return popTask
+				}
+			} else {
+				popTask = t.tasks[i]
+				return popTask
 			}
 		}
 	}
@@ -127,11 +165,12 @@ func (t *GfSpTQueueWithLimit) Push(task coretask.Task) error {
 		return errors.New("repeated task")
 	}
 	if t.exceed() {
+		var gcTasks []coretask.Task
 		clear := false
 		if t.gcFunc != nil {
-			for _, backup := range t.tasks {
-				if t.gcFunc(backup) {
-					t.delete(task)
+			for i := len(t.tasks) - 1; i >= 0; i-- {
+				if t.gcFunc(t.tasks[i]) {
+					gcTasks = append(gcTasks, t.tasks[i])
 					clear = true
 				}
 			}
@@ -139,6 +178,10 @@ func (t *GfSpTQueueWithLimit) Push(task coretask.Task) error {
 		if !clear {
 			log.Warnw("queue exceed", "queue", t.name, "cap", t.cap, "len", len(t.tasks))
 			return errors.New("queue exceed")
+		} else {
+			for _, gcTask := range gcTasks {
+				t.delete(gcTask)
+			}
 		}
 	}
 	t.add(task)

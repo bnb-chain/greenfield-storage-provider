@@ -12,10 +12,7 @@ var _ coretask.GCObjectTask = &GfSpGCObjectTask{}
 var _ coretask.GCZombiePieceTask = &GfSpGCZombiePieceTask{}
 var _ coretask.GCMetaTask = &GfSpGCMetaTask{}
 
-func (m *GfSpGCObjectTask) InitGCObjectTask(
-	priority coretask.TPriority,
-	start, end uint64,
-	timeout int64) {
+func (m *GfSpGCObjectTask) InitGCObjectTask(priority coretask.TPriority, start, end uint64, timeout int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetStartBlockNumber(start)

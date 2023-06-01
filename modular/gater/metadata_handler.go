@@ -5,9 +5,11 @@ import (
 	"encoding/base64"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/bnb-chain/greenfield/types/s3util"
+	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/ethereum/go-ethereum/common"
@@ -312,6 +314,85 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.Errorf("failed to get bucket metadata", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// verifyPermissionHandler handle verify permission request
+func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		operator    string
+		objectName  string
+		actionType  string
+		action      int
+		b           bytes.Buffer
+		queryParams url.Values
+		effect      *permission_types.Effect
+		reqCtx      *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to verify permission", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+
+	queryParams = reqCtx.request.URL.Query()
+	objectName = queryParams.Get(VerifyPermissionObjectQuery)
+	operator = reqCtx.vars[VerifyPermissionOperator]
+	actionType = reqCtx.vars[VerifyPermissionActionType]
+
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		return
+	}
+
+	if objectName != "" {
+		if err = s3util.CheckValidObjectName(objectName); err != nil {
+			log.Errorw("failed to check object name", "object_name", objectName, "error", err)
+			return
+		}
+	}
+
+	if ok := common.IsHexAddress(operator); !ok {
+		log.Errorw("failed to check operator", "operator", operator, "error", err)
+		return
+	}
+
+	if actionType == "" {
+		log.Errorw("failed to check action type", "action_type", actionType, "error", err)
+		return
+	}
+
+	action, err = strconv.Atoi(actionType)
+	if err != nil {
+		log.Errorw("failed to check action type", "action_type", actionType, "error", err)
+		return
+	}
+
+	effect, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(), operator, reqCtx.bucketName, objectName, permission_types.ActionType(action))
+	if err != nil {
+		log.Errorf("failed to verify permission", "error", err)
+		return
+	}
+
+	grpcResponse := &storage_types.QueryVerifyPermissionResponse{Effect: *effect}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to verify permission", "error", err)
 		return
 	}
 

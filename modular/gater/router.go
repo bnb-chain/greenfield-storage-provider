@@ -14,15 +14,16 @@ const (
 	approvalRouterName                    = "GetApproval"
 	putObjectRouterName                   = "PutObject"
 	getObjectRouterName                   = "GetObject"
-	challengeRouterName                   = "Challenge"
+	getChallengeInfoRouterName            = "GetChallengeInfo"
 	replicateObjectPieceRouterName        = "ReplicateObjectPiece"
 	getUserBucketsRouterName              = "GetUserBuckets"
 	listObjectsByBucketRouterName         = "ListObjectsByBucketName"
+	verifyPermissionRouterName            = "VerifyPermission"
 	getBucketReadQuotaRouterName          = "GetBucketReadQuota"
 	listBucketReadRecordRouterName        = "ListBucketReadRecord"
 	requestNonceName                      = "RequestNonce"
 	updateUserPublicKey                   = "UpdateUserPublicKey"
-	queryUploadProgressRouterName         = "queryUploadProgress"
+	queryUploadProgressRouterName         = "QueryUploadProgress"
 	downloadObjectByUniversalEndpointName = "DownloadObjectByUniversalEndpoint"
 	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
 	getObjectMetaRouterName               = "GetObjectMeta"
@@ -107,10 +108,10 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Methods(http.MethodGet).
 		Queries(ActionQuery, "{action}").
 		HandlerFunc(g.getApprovalHandler)
-	router.Path(ChallengePath).
-		Name(challengeRouterName).
+	router.Path(GetChallengeInfoPath).
+		Name(getChallengeInfoRouterName).
 		Methods(http.MethodGet).
-		HandlerFunc(g.challengeHandler)
+		HandlerFunc(g.getChallengeInfoHandler)
 	// replicate piece to receiver
 	router.Path(ReplicateObjectPiecePath).
 		Name(replicateObjectPieceRouterName).
@@ -138,6 +139,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Name(updateUserPublicKey).
 		Methods(http.MethodPost).
 		HandlerFunc(g.updateUserPublicKeyHandler)
+
+	// verify permission router
+	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").
+		Name(verifyPermissionRouterName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.verifyPermissionHandler)
 
 	// group router
 	router.Path(GroupListPath).
