@@ -322,7 +322,7 @@ message GfSpQueryUploadProgressRequest {
 message GfSpQueryUploadProgressResponse {
   base.types.gfsperrors.GfSpError err = 1;
   // state defines the state of put object.
-  store.types.JobState state = 2;
+  store.types.TaskState state = 2;
 }
 
 // Group is the structure for group information

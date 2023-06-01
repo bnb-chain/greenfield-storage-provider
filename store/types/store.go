@@ -18,31 +18,31 @@ var ToReadableDescription = map[readableUploadProgressType]string{
 	UploadProgressDataReplicating: "object payload is replicating to the secondary SPs in the background",
 	UploadProgressSealing:         "object meta is sealing onto the chain in the background",
 	UploadProgressCompleted:       "object is succeed to upload",
-	UploadProgressFailed:          "something is wrong in the upload process",
+	UploadProgressFailed:          "something is wrong in the upload progress",
 }
 
 // StateToProgressType convents inner state to the readable type
-var StateToProgressType = map[JobState]readableUploadProgressType{
-	JobState_JOB_STATE_INIT_UNSPECIFIED:       UploadProgressDataUploading,
-	JobState_JOB_STATE_UPLOAD_OBJECT_DOING:    UploadProgressDataUploading,
-	JobState_JOB_STATE_UPLOAD_OBJECT_DONE:     UploadProgressDataReplicating,
-	JobState_JOB_STATE_UPLOAD_OBJECT_ERROR:    UploadProgressFailed,
-	JobState_JOB_STATE_ALLOC_SECONDARY_DOING:  UploadProgressDataReplicating,
-	JobState_JOB_STATE_ALLOC_SECONDARY_DONE:   UploadProgressDataReplicating,
-	JobState_JOB_STATE_ALLOC_SECONDARY_ERROR:  UploadProgressFailed,
-	JobState_JOB_STATE_REPLICATE_OBJECT_DOING: UploadProgressDataReplicating,
-	JobState_JOB_STATE_REPLICATE_OBJECT_DONE:  UploadProgressDataReplicating,
-	JobState_JOB_STATE_REPLICATE_OBJECT_ERROR: UploadProgressFailed,
-	JobState_JOB_STATE_SIGN_OBJECT_DOING:      UploadProgressSealing,
-	JobState_JOB_STATE_SIGN_OBJECT_DONE:       UploadProgressSealing,
-	JobState_JOB_STATE_SIGN_OBJECT_ERROR:      UploadProgressFailed,
-	JobState_JOB_STATE_SEAL_OBJECT_DOING:      UploadProgressSealing,
-	JobState_JOB_STATE_SEAL_OBJECT_DONE:       UploadProgressCompleted,
-	JobState_JOB_STATE_SEAL_OBJECT_ERROR:      UploadProgressFailed,
+var StateToProgressType = map[TaskState]readableUploadProgressType{
+	TaskState_TASK_STATE_INIT_UNSPECIFIED:       UploadProgressDataUploading,
+	TaskState_TASK_STATE_UPLOAD_OBJECT_DOING:    UploadProgressDataUploading,
+	TaskState_TASK_STATE_UPLOAD_OBJECT_DONE:     UploadProgressDataReplicating,
+	TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR:    UploadProgressFailed,
+	TaskState_TASK_STATE_ALLOC_SECONDARY_DOING:  UploadProgressDataReplicating,
+	TaskState_TASK_STATE_ALLOC_SECONDARY_DONE:   UploadProgressDataReplicating,
+	TaskState_TASK_STATE_ALLOC_SECONDARY_ERROR:  UploadProgressFailed,
+	TaskState_TASK_STATE_REPLICATE_OBJECT_DOING: UploadProgressDataReplicating,
+	TaskState_TASK_STATE_REPLICATE_OBJECT_DONE:  UploadProgressDataReplicating,
+	TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR: UploadProgressFailed,
+	TaskState_TASK_STATE_SIGN_OBJECT_DOING:      UploadProgressSealing,
+	TaskState_TASK_STATE_SIGN_OBJECT_DONE:       UploadProgressSealing,
+	TaskState_TASK_STATE_SIGN_OBJECT_ERROR:      UploadProgressFailed,
+	TaskState_TASK_STATE_SEAL_OBJECT_DOING:      UploadProgressSealing,
+	TaskState_TASK_STATE_SEAL_OBJECT_DONE:       UploadProgressCompleted,
+	TaskState_TASK_STATE_SEAL_OBJECT_ERROR:      UploadProgressFailed,
 }
 
 // StateToDescription convents state to description.
-func StateToDescription(state JobState) string {
+func StateToDescription(state TaskState) string {
 	uploadProgressType, ok := StateToProgressType[state]
 	if !ok {
 		return state.String()

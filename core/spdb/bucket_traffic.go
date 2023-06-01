@@ -32,25 +32,3 @@ type TrafficTimeRange struct {
 	EndTimestampUs   int64
 	LimitNum         int // is unlimited if LimitNum <= 0
 }
-
-/*
-// TrafficDB define a series of traffic interfaces
-type TrafficDB interface {
-	// CheckQuotaAndAddReadRecord create bucket traffic firstly if bucket is not existed,
-	// and check whether the added traffic record exceeds the quota, if it exceeds the quota,
-	// it will return error, Otherwise, add a record and return nil.
-	CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error
-	// GetBucketTraffic return bucket traffic info,
-	// notice maybe return (nil, nil) while there is no bucket traffic
-	GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error)
-	// GetReadRecord return record list by time range
-	GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error)
-	// GetBucketReadRecord return bucket record list by time range
-	GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
-	// GetObjectReadRecord return object record list by time range
-	GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
-	// GetUserReadRecord return user record list by time range
-	GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
-}
-
-*/

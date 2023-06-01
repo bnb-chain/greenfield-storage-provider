@@ -13,13 +13,13 @@ import (
 func (s *SpDBImpl) SetGCObjectProgress(taskKey string, curDeletingBlockID uint64, lastDeletedObjectID uint64) error {
 	var (
 		result      *gorm.DB
-		queryReturn *GCObjectTaskTable
+		queryReturn *GCObjectProgressTable
 	)
 
-	queryReturn = &GCObjectTaskTable{}
+	queryReturn = &GCObjectProgressTable{}
 	result = s.db.First(queryReturn, "task_key = ?", taskKey)
 	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		result = s.db.Create(&GCObjectTaskTable{
+		result = s.db.Create(&GCObjectProgressTable{
 			TaskKey:                taskKey,
 			CurrentDeletingBlockID: curDeletingBlockID,
 			LastDeletedObjectID:    lastDeletedObjectID,
@@ -36,7 +36,7 @@ func (s *SpDBImpl) SetGCObjectProgress(taskKey string, curDeletingBlockID uint64
 		queryReturn.LastDeletedObjectID == lastDeletedObjectID {
 		return nil
 	}
-	result = s.db.Model(&GCObjectTaskTable{}).Where("task_key = ?", taskKey).Updates(&GCObjectTaskTable{
+	result = s.db.Model(&GCObjectProgressTable{}).Where("task_key = ?", taskKey).Updates(&GCObjectProgressTable{
 		CurrentDeletingBlockID: curDeletingBlockID,
 		LastDeletedObjectID:    lastDeletedObjectID,
 	})
@@ -48,7 +48,7 @@ func (s *SpDBImpl) SetGCObjectProgress(taskKey string, curDeletingBlockID uint64
 
 // DeleteGCObjectProgress is used to delete gc object task.
 func (s *SpDBImpl) DeleteGCObjectProgress(taskKey string) error {
-	return s.db.Delete(&GCObjectTaskTable{
+	return s.db.Delete(&GCObjectProgressTable{
 		TaskKey: taskKey, // should be the primary key
 	}).Error
 }

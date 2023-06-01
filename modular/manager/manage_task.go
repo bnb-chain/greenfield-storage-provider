@@ -94,10 +94,8 @@ func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task t
 		log.CtxErrorw(ctx, "failed to push upload object task to queue", "task_info", task.Info(), "error", err)
 		return ErrExceedTask
 	}
-	// TODO: refine it
-	_, err := m.baseApp.GfSpDB().CreateUploadJob(task.GetObjectInfo())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to init upload object task", "error", err)
+	if err := m.baseApp.GfSpDB().CreateUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
+		log.CtxErrorw(ctx, "failed to create upload object progress", "task_info", task.Info(), "error", err)
 		return ErrGfSpDB
 	}
 	return nil
@@ -114,14 +112,14 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		return ErrRepeatedTask
 	}
 	if task.Error() != nil {
-		// TODO: refien it
-		err := m.baseApp.GfSpDB().UpdateJobState(
-			task.GetObjectInfo().Id.Uint64(),
-			types.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
-		if err != nil {
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
+			types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR, task.Error().Error()); err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
+			return ErrGfSpDB
 		}
-		log.CtxErrorw(ctx, "reports failed update object task", "error", task.Error())
+		err := m.RejectUnSealObject(ctx, task.GetObjectInfo())
+		log.CtxErrorw(ctx, "reports failed update object task and reject unseal object",
+			"task_info", task.Info(), "error", task.Error(), "reject_unseal_error", err)
 		return nil
 	}
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
@@ -134,14 +132,12 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return ErrExceedTask
 	}
-	// TODO: refine it
-	err = m.baseApp.GfSpDB().UpdateJobState(
-		task.GetObjectInfo().Id.Uint64(),
-		types.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to update object task state", "error", err)
+	if err = m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
+		types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING, ""); err != nil {
+		log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
+		return ErrGfSpDB
 	}
-	log.CtxDebugw(ctx, "succeed to done upload object and waiting for scheduling to replicate piece")
+	log.CtxDebugw(ctx, "succeed to done upload object and waiting for scheduling to replicate piece", "task_info", task.Info())
 	return nil
 }
 
@@ -161,35 +157,29 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	}
 	if task.GetSealed() {
 		log.CtxDebugw(ctx, "replicate piece object task has combined seal object task")
-		// TODO: refine it
-		err := m.baseApp.GfSpDB().UpdateJobState(
-			task.GetObjectInfo().Id.Uint64(),
-			types.JobState_JOB_STATE_SEAL_OBJECT_DONE)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
+			types.TaskState_TASK_STATE_SEAL_OBJECT_DONE, ""); err != nil {
+			log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
 			return ErrGfSpDB
 		}
 		return nil
 	}
-	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task")
+	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task", "task_info", task.Info())
 	sealObject := &gfsptask.GfSpSealObjectTask{}
 	sealObject.InitSealObjectTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(sealObject), task.GetSecondarySignature(),
 		m.baseApp.TaskTimeout(sealObject, 0), m.baseApp.TaskMaxRetry(sealObject))
 	err := m.sealQueue.Push(sealObject)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to push seal object task to queue", "error", err)
+		log.CtxErrorw(ctx, "failed to push seal object task to queue", "task_info", task.Info(), "error", err)
 		return ErrExceedTask
 	}
-	// TODO: refine it
-	err = m.baseApp.GfSpDB().UpdateJobState(
-		task.GetObjectInfo().Id.Uint64(),
-		types.JobState_JOB_STATE_SEAL_OBJECT_DOING)
-	if err != nil {
+	if err = m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
+		types.TaskState_TASK_STATE_SEAL_OBJECT_DOING, ""); err != nil {
 		log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
 		return ErrGfSpDB
 	}
-	log.CtxDebugw(ctx, "succeed to done replicate piece and waiting for scheduling to seal object")
+	log.CtxDebugw(ctx, "succeed to done replicate piece and waiting for scheduling to seal object", "task_info", task.Info())
 	return nil
 }
 
@@ -209,15 +199,12 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 		m.replicateQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info())
 	} else {
-		// TODO: refine it
-		err := m.baseApp.GfSpDB().UpdateJobState(
-			handleTask.GetObjectInfo().Id.Uint64(),
-			types.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
-		if err != nil {
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(handleTask.GetObjectInfo().Id.Uint64(),
+			types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR, "exceed_retry"); err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "task_info", handleTask.Info(), "error", err)
 			return ErrGfSpDB
 		}
-		err = m.RejectUnSealObject(ctx, handleTask.GetObjectInfo())
+		err := m.RejectUnSealObject(ctx, handleTask.GetObjectInfo())
 		log.CtxWarnw(ctx, "delete expired replicate piece task and reject unseal object",
 			"task_info", handleTask.Info(), "reject_unseal_error", err)
 	}
@@ -234,15 +221,12 @@ func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.Seal
 		return m.handleFailedSealObjectTask(ctx, task)
 	}
 	m.sealQueue.PopByKey(task.Key())
-	// TODO: refine it
-	err := m.baseApp.GfSpDB().UpdateJobState(
-		task.GetObjectInfo().Id.Uint64(),
-		types.JobState_JOB_STATE_SEAL_OBJECT_DONE)
-	if err != nil {
+	if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
+		types.TaskState_TASK_STATE_SEAL_OBJECT_DONE, ""); err != nil {
 		log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
 		return ErrGfSpDB
 	}
-	log.CtxDebugw(ctx, "succeed to seal object on chain")
+	log.CtxDebugw(ctx, "succeed to seal object on chain", "task_info", task.Info())
 	return nil
 }
 
@@ -263,14 +247,13 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info())
 		return nil
 	} else {
-		err := m.baseApp.GfSpDB().UpdateJobState(
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(
 			handleTask.GetObjectInfo().Id.Uint64(),
-			types.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
-		if err != nil {
+			types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR, "exceed_retry"); err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "task_info", handleTask.Info(), "error", err)
 			return ErrGfSpDB
 		}
-		log.CtxWarnw(ctx, "delete expired seal object task", "info", handleTask.Info())
+		log.CtxWarnw(ctx, "delete expired seal object task", "task_info", handleTask.Info())
 	}
 	return nil
 }
