@@ -28,7 +28,7 @@ func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.Uploa
 		return ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
-		resp.GetErr()
+		return resp.GetErr()
 	}
 	return nil
 }
@@ -118,8 +118,5 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 		log.CtxErrorw(ctx, "client failed to report task", "error", err)
 		return ErrRpcUnknown
 	}
-	if resp.GetErr() != nil {
-		return resp.GetErr()
-	}
-	return nil
+	return resp.GetErr()
 }
