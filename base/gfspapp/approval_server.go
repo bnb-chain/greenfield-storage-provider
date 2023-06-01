@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	ErrApprovalTaskDangling    = gfsperrors.Register(BaseCodeSpace, http.StatusInternalServerError, 990101, "OoooH... request lost")
-	ErrApprovalExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusServiceUnavailable, 990102, "server overload, try again later")
+	ErrApprovalTaskDangling    = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990101, "OoooH... request lost")
+	ErrApprovalExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990102, "server overload, try again later")
 )
 
 var _ gfspserver.GfSpApprovalServiceServer = &GfSpBaseApp{}

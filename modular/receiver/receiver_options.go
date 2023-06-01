@@ -9,7 +9,7 @@ import (
 const (
 	// DefaultReceivePieceParallelPerNode defines the default max receive piece parallel
 	// per receiver
-	DefaultReceivePieceParallelPerNode = 1024
+	DefaultReceivePieceParallelPerNode = 10240
 )
 
 func NewReceiveModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {

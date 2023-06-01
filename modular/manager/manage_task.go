@@ -17,9 +17,9 @@ import (
 )
 
 var (
-	ErrDanglingTask  = gfsperrors.Register(module.ManageModularName, http.StatusInternalServerError, 60001, "OoooH... request lost")
-	ErrRepeatedTask  = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60002, "request repeated")
-	ErrExceedTask    = gfsperrors.Register(module.ManageModularName, http.StatusServiceUnavailable, 60003, "OoooH... request exceed, try again later")
+	ErrDanglingTask  = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60001, "OoooH... request lost")
+	ErrRepeatedTask  = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60002, "request repeated")
+	ErrExceedTask    = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60003, "OoooH... request exceed, try again later")
 	ErrCanceledTask  = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60004, "task canceled")
 	ErrFutureSupport = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60005, "future support")
 )
