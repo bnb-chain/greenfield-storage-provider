@@ -55,7 +55,7 @@ type ManageModular struct {
 	maxUploadObjectNumber int
 
 	gcObjectTimeInterval  int
-	gcBlockHeight         uint64
+	gcBlockHeight         uint64 // TODO: load from db?
 	gcObjectBlockInterval uint64
 	gcSafeBlockDistance   uint64
 
@@ -109,7 +109,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-statisticsTicker.C:
-			log.CtxDebugw(ctx, m.Statistics())
+			log.CtxDebug(ctx, m.Statistics())
 		case <-syncConsensusInfoTicker.C:
 			m.syncConsensusInfo(ctx)
 		case <-gcObjectTicker.C:
@@ -117,7 +117,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			end := m.gcBlockHeight + m.gcObjectBlockInterval
 			currentBlockHeight, err := m.baseApp.Consensus().CurrentHeight(ctx)
 			if err != nil {
-				log.CtxErrorw(ctx, "failed to get current block number for gc object and try again later", "error", err)
+				log.CtxErrorw(ctx, "failed to get current block height for gc object and try again later", "error", err)
 				continue
 			}
 			if end+m.gcSafeBlockDistance > currentBlockHeight {
@@ -130,15 +130,14 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			}
 			task := &gfsptask.GfSpGCObjectTask{}
 			task.InitGCObjectTask(m.baseApp.TaskPriority(task), start, end, m.baseApp.TaskTimeout(task, 0))
-			err = m.baseApp.GfSpDB().SetGCObjectProgress(task.Key().String(), start, task.GetLastDeletedObjectId())
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to init gc object task progress", "error", err)
+			if err = m.baseApp.GfSpDB().SetGCObjectProgress(task.Key().String(), start, task.GetLastDeletedObjectId()); err != nil {
+				log.CtxErrorw(ctx, "failed to init the gc object task", "error", err)
 				continue
 			}
 			err = m.gcObjectQueue.Push(task)
 			if err == nil {
-				m.gcBlockHeight = end + 1
 				metrics.GCBlockNumberGauge.WithLabelValues(m.Name()).Set(float64(m.gcBlockHeight))
+				m.gcBlockHeight = end + 1
 			}
 			log.CtxErrorw(ctx, "generate a gc object task", "task_info", task.Info(), "error", err)
 		case <-discontinueBucketTicker.C:
