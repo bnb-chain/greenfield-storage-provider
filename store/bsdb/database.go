@@ -43,7 +43,7 @@ type Metadata interface {
 	// GetBucketMetaByName get bucket info with its related info
 	GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error)
 	// ListGroupsByNameAndSourceType get groups list by specific parameters
-	ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int) ([]*Group, error)
+	ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int) ([]*Group, int64, error)
 }
 
 // BSDB contains all the methods required by block syncer database

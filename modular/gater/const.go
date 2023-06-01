@@ -72,6 +72,8 @@ const (
 	GetGroupListLimitQuery = "limit"
 	// GetGroupListOffsetQuery defines get group list offset query, which is used to route request
 	GetGroupListOffsetQuery = "offset"
+	// GetGroupListGroupQuery defines get group list group query, which is used to route request
+	GetGroupListGroupQuery = "group-query"
 	// GetGroupListNameQuery defines get group list name query, which is used to route request
 	GetGroupListNameQuery = "name"
 	// GetGroupListPrefixQuery defines get group list prefix query, which is used to route request
@@ -94,8 +96,6 @@ const (
 	AuthRequestNoncePath = "/auth/request_nonce"
 	// AuthUpdateKeyPath defines path to update user public key
 	AuthUpdateKeyPath = "/auth/update_key"
-	// GroupListPath defines path to request group list
-	GroupListPath = "/group"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
 	// GnfdAuthorizationHeader defines authorization, verify signature and check authorization

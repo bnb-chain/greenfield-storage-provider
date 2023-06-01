@@ -22,6 +22,7 @@ import (
 
 const (
 	MaximumGetGroupListLimit  = 1000
+	MaximumGetGroupListOffset = 100000
 	DefaultGetGroupListLimit  = 50
 	DefaultGetGroupListOffset = 0
 )
@@ -413,6 +414,7 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		sourceType  string
 		limit       int64
 		offset      int64
+		count       int64
 		groups      []*types.Group
 		reqCtx      *RequestContext
 	)
@@ -464,7 +466,7 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	if offsetStr != "" {
-		if offset, err = util.StringToInt64(offsetStr); err != nil || offset < 0 {
+		if offset, err = util.StringToInt64(offsetStr); err != nil || offset < 0 || offset > MaximumGetGroupListOffset {
 			log.CtxErrorw(reqCtx.Context(), "failed to parse or check offset", "offset", offsetStr, "error", err)
 			err = ErrInvalidQuery
 			return
@@ -481,13 +483,16 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	groups, err = g.baseApp.GfSpClient().GetGroupList(reqCtx.Context(), name, prefix, sourceType, limit, offset)
+	groups, count, err = g.baseApp.GfSpClient().GetGroupList(reqCtx.Context(), name, prefix, sourceType, limit, offset)
 	if err != nil {
 		log.Errorf("failed to get group list", "error", err)
 		return
 	}
 
-	grpcResponse := &types.GfSpGetGroupListResponse{Groups: groups}
+	grpcResponse := &types.GfSpGetGroupListResponse{
+		Groups: groups,
+		Count:  count,
+	}
 
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
