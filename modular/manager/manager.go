@@ -228,9 +228,9 @@ func (m *ManageModular) UploadingObjectNumber() int {
 func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.UploadObjectTask)
 	if task.Expired() {
-		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
-		if err != nil {
-			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error", err)
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
+			types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR, "expired"); err != nil {
+			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
 	}
@@ -240,9 +240,9 @@ func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 	task := qTask.(task.ReplicatePieceTask)
 	if task.Expired() {
-		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
-		if err != nil {
-			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error", err)
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
+			types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR, "expired"); err != nil {
+			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
 	}
@@ -252,9 +252,9 @@ func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 func (m *ManageModular) GCSealObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.SealObjectTask)
 	if task.Expired() {
-		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
-		if err != nil {
-			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error", err)
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
+			types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR, "expired"); err != nil {
+			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
 	}

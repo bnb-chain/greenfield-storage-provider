@@ -94,7 +94,7 @@ type Task interface {
 	// GetCreateTime returns the creation time of the task. The creation time used to
 	// judge task execution time.
 	GetCreateTime() int64
-	// SetCreateTime sets the creation time of the tas.
+	// SetCreateTime sets the creation time of the task.
 	SetCreateTime(int64)
 	// GetUpdateTime returns the last updated time of the task. The updated time used
 	// to determine whether the task is expired with the timeout.

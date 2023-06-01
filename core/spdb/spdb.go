@@ -9,24 +9,17 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-// JobDB interface which contains job related to object id interface
-type JobDB interface {
-	// CreateUploadJob create upload job and return job context
-	CreateUploadJob(objectInfo *storagetypes.ObjectInfo) (*servicetypes.JobContext, error)
-	// UpdateJobState update the state of a job by object id
-	UpdateJobState(objectID uint64, state servicetypes.JobState) error
-	// GetJobByID get job context by job id and return job context
-	GetJobByID(jobID uint64) (*servicetypes.JobContext, error)
-	// GetJobByObjectID get job context by object id
-	GetJobByObjectID(objectID uint64) (*servicetypes.JobContext, error)
-}
+// UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
+type UploadObjectProgressDB interface {
+	// TODO: delete/load
 
-// ObjectDB interface which contains get and set object info interface
-type ObjectDB interface {
-	// GetObjectInfo get object info by object id
-	GetObjectInfo(objectID uint64) (*storagetypes.ObjectInfo, error)
-	// SetObjectInfo set(maybe overwrite) object info by object id
-	SetObjectInfo(objectID uint64, objectInfo *storagetypes.ObjectInfo) error
+	// CreateUploadProgress inserts upload object progress.
+	CreateUploadProgress(objectID uint64) error
+	// UpdateUploadProgress updates upload object progress state.
+	// TODO: include hash
+	UpdateUploadProgress(objectID uint64, taskState servicetypes.TaskState, errorDescription string) error
+	// QueryUploadState queries the task state by object id.
+	QueryUploadState(objectID uint64) (servicetypes.TaskState, error)
 }
 
 // ObjectIntegrityDB abstract object integrity interface
@@ -82,7 +75,7 @@ type SPInfoDB interface {
 	SetOwnSpInfo(sp *sptypes.StorageProvider) error
 }
 
-type GCObjectInfoDB interface {
+type GCObjectProgressDB interface {
 	SetGCObjectProgress(taskKey string, deletingBlockID uint64, deletedObjectID uint64) error
 	DeleteGCObjectProgress(taskKey string) error
 	GetAllGCObjectTask(taskKey string) []task.GCObjectTask
@@ -104,12 +97,10 @@ type OffChainAuthKeyDB interface {
 }
 
 type SPDB interface {
-	JobDB
-	ObjectDB
+	UploadObjectProgressDB
 	ObjectIntegrityDB
 	TrafficDB
+	GCObjectProgressDB
 	SPInfoDB
-	GCObjectInfoDB
-	StorageParamDB
 	OffChainAuthKeyDB
 }
