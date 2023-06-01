@@ -166,9 +166,9 @@ func (t *GfSpTQueue) Push(task coretask.Task) error {
 		var gcTasks []coretask.Task
 		clear := false
 		if t.gcFunc != nil {
-			for _, backup := range t.tasks {
-				if t.gcFunc(backup) {
-					gcTasks = append(gcTasks, backup)
+			for i := len(t.tasks) - 1; i >= 0; i-- {
+				if t.gcFunc(t.tasks[i]) {
+					gcTasks = append(gcTasks, t.tasks[i])
 					clear = true
 				}
 			}
