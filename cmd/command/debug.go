@@ -210,6 +210,6 @@ func putObjectAction(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to upload %s to uploader, error: %v", filePath, err)
 	}
-	fmt.Printf("succeed to upload %d, len %d to uploader\n", filePath, len(data))
+	fmt.Printf("succeed to upload %s, len %d to uploader\n", filePath, len(data))
 	return nil
 }
