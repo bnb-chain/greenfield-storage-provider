@@ -54,13 +54,13 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 }
 
 // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
-func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, isFullList bool) ([]*Object, error) {
+func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
 	var (
 		objects []*Object
 		err     error
 	)
 
-	if isFullList {
+	if includePrivate {
 		err = b.db.Table((&Object{}).TableName()).
 			Select("*").
 			Where("update_at >= ? and update_at <= ? and removed = ?", startBlockNumber, endBlockNumber, true).
@@ -82,13 +82,13 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 }
 
 // GetObjectByName get object info by an object name
-func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, isFullList bool) (*Object, error) {
+func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, includePrivate bool) (*Object, error) {
 	var (
 		object *Object
 		err    error
 	)
 
-	if isFullList {
+	if includePrivate {
 		err = b.db.Table((&Object{}).TableName()).
 			Select("*").
 			Where("object_name = ? and bucket_name = ? and removed = false", objectName, bucketName).

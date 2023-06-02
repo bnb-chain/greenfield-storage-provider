@@ -120,7 +120,7 @@ func (r *MetadataModular) GfSpListDeletedObjectsByBlockNumberRange(ctx context.C
 		endBlockNumber = req.EndBlockNumber
 	}
 
-	objects, err := r.baseApp.GfBsDB().ListDeletedObjectsByBlockNumberRange(req.StartBlockNumber, endBlockNumber, req.IsFullList)
+	objects, err := r.baseApp.GfBsDB().ListDeletedObjectsByBlockNumberRange(req.StartBlockNumber, endBlockNumber, req.IncludePrivate)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list deleted objects by block number range", "error", err)
 		return nil, err
@@ -177,7 +177,7 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 		return nil, err
 	}
 
-	object, err = r.baseApp.GfBsDB().GetObjectByName(req.ObjectName, req.BucketName, req.IsFullList)
+	object, err = r.baseApp.GfBsDB().GetObjectByName(req.ObjectName, req.BucketName, req.IncludePrivate)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get object by object name", "error", err)
 		return nil, err
