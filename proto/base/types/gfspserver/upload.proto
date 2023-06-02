@@ -15,6 +15,16 @@ message GfSpUploadObjectResponse {
   base.types.gfsperrors.GfSpError err = 1;
 }
 
+message GfSpResumableUploadObjectRequest {
+  base.types.gfsptask.GfSpResumableUploadObjectTask resumable_upload_object_task = 1;
+  bytes payload = 2;
+}
+
+message GfSpResumableUploadObjectResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+}
+
 service GfSpUploadService {
   rpc GfSpUploadObject(stream GfSpUploadObjectRequest) returns (GfSpUploadObjectResponse) {}
+  rpc GfSpResumableUploadObject(stream GfSpResumableUploadObjectRequest) returns (GfSpResumableUploadObjectResponse) {}
 }

@@ -74,7 +74,7 @@ func TestRouters(t *testing.T) {
 			method:           http.MethodPost,
 			url:              scheme + testDomain + "/" + bucketName + "/" + objectName + "?offset=0&complete=false&context=",
 			shouldMatch:      true,
-			wantedRouterName: resumableObjectByOffsetRouterName,
+			wantedRouterName: resumablePutObjectRouterName,
 		},
 		{
 			name:             "PutObjectByOffset router, virtual host style",
@@ -82,7 +82,7 @@ func TestRouters(t *testing.T) {
 			method:           http.MethodPost,
 			url:              scheme + bucketName + "." + testDomain + "/" + objectName + "?offset=0&complete=false&context=",
 			shouldMatch:      true,
-			wantedRouterName: resumableObjectByOffsetRouterName,
+			wantedRouterName: resumablePutObjectRouterName,
 		},
 		{
 			name:             "QueryUploadOffset router, virtual host style",

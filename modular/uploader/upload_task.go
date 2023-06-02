@@ -184,3 +184,16 @@ func (u *UploadModular) QueryTasks(ctx context.Context, subKey coretask.TKey) (
 	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(u.uploadQueue, subKey)
 	return uploadTasks, nil
 }
+
+func (u *UploadModular) PreResumableUploadObject(
+	ctx context.Context,
+	task coretask.ResumableUploadObjectTask) error {
+	return nil
+}
+
+func (u *UploadModular) HandleResumableUploadObjectTask(
+	ctx context.Context,
+	task coretask.ResumableUploadObjectTask,
+	stream io.Reader) error {
+	return nil
+}

@@ -142,3 +142,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 	log.CtxDebugw(ctx, "succeed to upload object")
 	return nil
 }
+
+func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadService_GfSpResumableUploadObjectServer) error {
+	return nil
+}

@@ -89,3 +89,9 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 		}
 	}
 }
+
+func (s *GfSpClient) ResumableUploadObject(
+	ctx context.Context,
+	task coretask.ResumableUploadObjectTask,
+	stream io.Reader) {
+}

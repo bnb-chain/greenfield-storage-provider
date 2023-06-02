@@ -59,6 +59,13 @@ func (*NullModular) PostReplicatePieceApproval(context.Context, task.ApprovalRep
 func (*NullModular) PreUploadObject(ctx context.Context, task task.UploadObjectTask) error {
 	return ErrNilModular
 }
+func (*NullModular) PreResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error {
+	return ErrNilModular
+}
+
 func (*NullModular) HandleUploadObjectTask(ctx context.Context, task task.UploadObjectTask, stream io.Reader) error {
 	return nil
 }

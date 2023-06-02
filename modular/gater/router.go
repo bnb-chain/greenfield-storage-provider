@@ -13,7 +13,7 @@ import (
 const (
 	approvalRouterName                    = "GetApproval"
 	putObjectRouterName                   = "PutObject"
-	resumableObjectByOffsetRouterName     = "ResumablePutObject"
+	resumablePutObjectRouterName          = "ResumablePutObject"
 	queryResumeOffsetName                 = "queryResumeOffsetName"
 	getObjectRouterName                   = "GetObject"
 	getChallengeInfoRouterName            = "GetChallengeInfo"
@@ -80,7 +80,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
 
 		// Put Object By Offset
-		r.NewRoute().Name(resumableObjectByOffsetRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).Queries(
+		r.NewRoute().Name(resumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).Queries(
 			"offset", "{offset}",
 			"complete", "{complete}",
 			"context", "{context}")
