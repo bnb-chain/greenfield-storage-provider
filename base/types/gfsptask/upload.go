@@ -279,8 +279,12 @@ func (m *GfSpReplicatePieceTask) SetSealed(sealed bool) {
 	m.Sealed = sealed
 }
 
-func (m *GfSpReplicatePieceTask) SetSecondarySignature(signatures [][]byte) {
-	m.SecondarySignature = signatures
+func (m *GfSpReplicatePieceTask) SetSecondarySignatures(signatures [][]byte) {
+	m.SecondarySignatures = signatures
+}
+
+func (m *GfSpReplicatePieceTask) SetSecondaryAddresses(addresses []string) {
+	m.SecondaryAddresses = addresses
 }
 
 func (m *GfSpReplicatePieceTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
@@ -409,7 +413,7 @@ func (m *GfSpSealObjectTask) EstimateLimit() corercmgr.Limit {
 }
 
 func (m *GfSpSealObjectTask) SetSecondarySignature(signatures [][]byte) {
-	m.SecondarySignature = signatures
+	m.SecondarySignatures = signatures
 }
 
 func (m *GfSpSealObjectTask) SetObjectInfo(object *storagetypes.ObjectInfo) {

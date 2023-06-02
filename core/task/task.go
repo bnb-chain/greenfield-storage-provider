@@ -288,11 +288,16 @@ type ReplicatePieceTask interface {
 	GetSealed() bool
 	// SetSealed sets the state successful seal object after replicating piece.
 	SetSealed(bool)
-	// GetSecondarySignature returns the secondary SP's signatures. It is used to
+	// GetSecondaryAddresses returns the secondary SP's addresses. It is used to
 	// generate MsgSealObject.
-	GetSecondarySignature() [][]byte
-	// SetSecondarySignature sets the secondary SP's signatures.
-	SetSecondarySignature([][]byte)
+	GetSecondaryAddresses() []string
+	// SetSecondaryAddresses sets the secondary SP's addresses.
+	SetSecondaryAddresses([]string)
+	// GetSecondarySignatures returns the secondary SP's signatures. It is used to
+	// generate MsgSealObject.
+	GetSecondarySignatures() [][]byte
+	// SetSecondarySignatures sets the secondary SP's signatures.
+	SetSecondarySignatures([][]byte)
 }
 
 // The ReceivePieceTask is the interface to record the information for receiving pieces
@@ -344,9 +349,11 @@ type SealObjectTask interface {
 	// InitSealObjectTask inits the SealObjectTask.
 	InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, signature [][]byte,
 		timeout int64, retry int64)
-	// GetSecondarySignature returns the secondary SP's signature, it is used to generate
+	// GetSecondaryAddresses return the secondary SP's addresses.
+	GetSecondaryAddresses() []string
+	// GetSecondarySignatures return the secondary SP's signature, it is used to generate
 	// MsgSealObject.
-	GetSecondarySignature() [][]byte
+	GetSecondarySignatures() [][]byte
 }
 
 // The DownloadObjectTask is the interface to record the information for downloading
