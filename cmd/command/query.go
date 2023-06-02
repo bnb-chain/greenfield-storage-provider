@@ -134,11 +134,9 @@ func listModularAction(ctx *cli.Context) error {
 
 func listErrorsAction(ctx *cli.Context) error {
 	gfspErrors := gfsperrors.GfSpErrorList()
-	var errInfo string
 	for _, gfspError := range gfspErrors {
 		fmt.Printf(gfspError.String() + "\n")
 	}
-	fmt.Printf(errInfo)
 	return nil
 }
 

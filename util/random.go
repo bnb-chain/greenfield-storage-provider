@@ -16,7 +16,7 @@ const (
 )
 
 func rdm(n int, data string) string {
-	rand.Seed(time.Now().UnixNano())
+	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	b := make([]byte, n)
 	for i := range b {
 		b[i] = data[rand.Int63()%int64(len(data))]
@@ -25,7 +25,7 @@ func rdm(n int, data string) string {
 }
 
 func RandomNum(n, scope int) int {
-	rand.Seed(time.Now().UnixNano())
+	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return rand.Intn(n) + scope
 }
 
