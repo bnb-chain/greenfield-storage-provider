@@ -11,7 +11,7 @@ import (
 
 func (r *MetadataModular) GfSpQueryUploadProgress(ctx context.Context, req *types.GfSpQueryUploadProgressRequest) (
 	*types.GfSpQueryUploadProgressResponse, error) {
-	state, err := r.baseApp.GfSpDB().QueryUploadState(req.GetObjectId())
+	state, err := r.baseApp.GfSpDB().GetUploadState(req.GetObjectId())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &types.GfSpQueryUploadProgressResponse{

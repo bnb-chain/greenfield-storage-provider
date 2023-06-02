@@ -1,49 +1,24 @@
 package sqldb
 
 import (
-	"errors"
 	"fmt"
-
-	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 )
 
-// SetGCObjectProgress is used to insert/update gc object progress.
-func (s *SpDBImpl) SetGCObjectProgress(taskKey string, curDeletingBlockID uint64, lastDeletedObjectID uint64) error {
-	var (
-		result      *gorm.DB
-		queryReturn *GCObjectProgressTable
-	)
-
-	queryReturn = &GCObjectProgressTable{}
-	result = s.db.First(queryReturn, "task_key = ?", taskKey)
-	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		result = s.db.Create(&GCObjectProgressTable{
-			TaskKey:                taskKey,
-			CurrentDeletingBlockID: curDeletingBlockID,
-			LastDeletedObjectID:    lastDeletedObjectID,
-		})
-		if result.Error != nil || result.RowsAffected != 1 {
-			return fmt.Errorf("failed to insert gc task record: %s", result.Error)
-		}
-		return nil
-	}
-	if result.Error != nil {
-		return fmt.Errorf("failed to set gc task record: %s", result.Error)
-	}
-	if queryReturn.CurrentDeletingBlockID == curDeletingBlockID &&
-		queryReturn.LastDeletedObjectID == lastDeletedObjectID {
-		return nil
-	}
-	result = s.db.Model(&GCObjectProgressTable{}).Where("task_key = ?", taskKey).Updates(&GCObjectProgressTable{
+// InsertGCObjectProgress is used to insert/update gc object progress.
+func (s *SpDBImpl) InsertGCObjectProgress(taskKey string, curDeletingBlockID uint64, lastDeletedObjectID uint64) error {
+	if result := s.db.Create(&GCObjectProgressTable{
+		TaskKey:                taskKey,
 		CurrentDeletingBlockID: curDeletingBlockID,
 		LastDeletedObjectID:    lastDeletedObjectID,
-	})
-	if result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("failed to update gc task record: %s", result.Error)
+		CreateTimestampSecond:  GetCurrentUnixTime(),
+		UpdateTimestampSecond:  GetCurrentUnixTime(),
+	}); result.Error != nil || result.RowsAffected != 1 {
+		return fmt.Errorf("failed to insert gc task record: %s", result.Error)
 	}
 	return nil
+
 }
 
 // DeleteGCObjectProgress is used to delete gc object task.
@@ -51,6 +26,17 @@ func (s *SpDBImpl) DeleteGCObjectProgress(taskKey string) error {
 	return s.db.Delete(&GCObjectProgressTable{
 		TaskKey: taskKey, // should be the primary key
 	}).Error
+}
+
+func (s *SpDBImpl) UpdateGCObjectProgress(taskKey string, curDeletingBlockID uint64, lastDeletedObjectID uint64) error {
+	if result := s.db.Model(&GCObjectProgressTable{}).Where("task_key = ?", taskKey).Updates(&GCObjectProgressTable{
+		CurrentDeletingBlockID: curDeletingBlockID,
+		LastDeletedObjectID:    lastDeletedObjectID,
+		UpdateTimestampSecond:  GetCurrentUnixTime(),
+	}); result.Error != nil {
+		return fmt.Errorf("failed to update gc task record: %s", result.Error)
+	}
+	return nil
 }
 
 // GetAllGCObjectTask is unused.

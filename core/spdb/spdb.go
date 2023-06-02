@@ -10,22 +10,36 @@ import (
 
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
 type UploadObjectProgressDB interface {
-	// TODO: delete/load
-
-	// CreateUploadProgress inserts upload object progress.
-	CreateUploadProgress(objectID uint64) error
+	// InsertUploadProgress inserts a new upload object progress.
+	InsertUploadProgress(objectID uint64) error
+	// DeleteUploadProgress deletes the upload object progress.
+	DeleteUploadProgress(objectID uint64) error
 	// UpdateUploadProgress updates upload object progress state.
 	// TODO: include hash
 	UpdateUploadProgress(objectID uint64, taskState servicetypes.TaskState, errorDescription string) error
-	// QueryUploadState queries the task state by object id.
-	QueryUploadState(objectID uint64) (servicetypes.TaskState, error)
+	// GetUploadState queries the task state by object id.
+	GetUploadState(objectID uint64) (servicetypes.TaskState, error)
+	// TODO: support load
 }
 
-// ObjectIntegrityDB abstract object integrity interface
+// GCObjectProgressDB interface which records gc object related progress.
+// TODO: refine interface
+type GCObjectProgressDB interface {
+	// InsertGCObjectProgress inserts a new gc object progress.
+	InsertGCObjectProgress(taskKey string, deletingBlockID uint64, lastDeletedObjectID uint64) error
+	// DeleteGCObjectProgress deletes the gc object progress.
+	DeleteGCObjectProgress(taskKey string) error
+	// UpdateGCObjectProgress updates gc object progress state.
+	UpdateGCObjectProgress(taskKey string, deletingBlockID uint64, lastDeletedObjectID uint64) error
+	// TODO: refine it
+	GetAllGCObjectTask(taskKey string) []task.GCObjectTask
+}
+
+// ObjectIntegrityDB abstract object integrity interface.
 type ObjectIntegrityDB interface {
-	// GetObjectIntegrity get integrity meta info by object id
+	// GetObjectIntegrity get integrity meta info by object id.
 	GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error)
-	// SetObjectIntegrity set(maybe overwrite) integrity hash info to db
+	// SetObjectIntegrity set(maybe overwrite) integrity hash info to db.
 	SetObjectIntegrity(integrity *IntegrityMeta) error
 	DeleteObjectIntegrity(objectID uint64) error
 
@@ -72,13 +86,6 @@ type SPInfoDB interface {
 	GetOwnSpInfo() (*sptypes.StorageProvider, error)
 	// SetOwnSpInfo set(maybe overwrite) own sp info
 	SetOwnSpInfo(sp *sptypes.StorageProvider) error
-}
-
-// TODO: refine interface
-type GCObjectProgressDB interface {
-	SetGCObjectProgress(taskKey string, deletingBlockID uint64, deletedObjectID uint64) error
-	DeleteGCObjectProgress(taskKey string) error
-	GetAllGCObjectTask(taskKey string) []task.GCObjectTask
 }
 
 // OffChainAuthKeyDB interface

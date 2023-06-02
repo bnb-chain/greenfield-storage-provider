@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *SpDBImpl) CreateUploadProgress(objectID uint64) error {
+func (s *SpDBImpl) InsertUploadProgress(objectID uint64) error {
 	var result *gorm.DB
 	taskState := servicetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED
 	result = s.db.Create(&UploadObjectProgressTable{
@@ -22,6 +22,11 @@ func (s *SpDBImpl) CreateUploadProgress(objectID uint64) error {
 	}
 	return nil
 }
+func (s *SpDBImpl) DeleteUploadProgress(objectID uint64) error {
+	return s.db.Delete(&UploadObjectProgressTable{
+		ObjectID: objectID, // should be the primary key
+	}).Error
+}
 
 func (s *SpDBImpl) UpdateUploadProgress(objectID uint64, taskState servicetypes.TaskState, errorDescription string) error {
 	if result := s.db.Model(&UploadObjectProgressTable{}).Where("object_id = ?", objectID).Updates(&UploadObjectProgressTable{
@@ -35,7 +40,7 @@ func (s *SpDBImpl) UpdateUploadProgress(objectID uint64, taskState servicetypes.
 	return nil
 }
 
-func (s *SpDBImpl) QueryUploadState(objectID uint64) (servicetypes.TaskState, error) {
+func (s *SpDBImpl) GetUploadState(objectID uint64) (servicetypes.TaskState, error) {
 	queryReturn := &UploadObjectProgressTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
