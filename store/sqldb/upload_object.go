@@ -3,6 +3,7 @@ package sqldb
 import (
 	"fmt"
 
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"gorm.io/gorm"
 )
@@ -28,13 +29,14 @@ func (s *SpDBImpl) DeleteUploadProgress(objectID uint64) error {
 	}).Error
 }
 
-func (s *SpDBImpl) UpdateUploadProgress(objectID uint64, taskState servicetypes.TaskState, errorDescription string) error {
-	if result := s.db.Model(&UploadObjectProgressTable{}).Where("object_id = ?", objectID).Updates(&UploadObjectProgressTable{
-		TaskState:             int32(taskState),
-		TaskStateDescription:  taskState.String(),
-		ErrorDescription:      errorDescription,
-		UpdateTimestampSecond: GetCurrentUnixTime(),
-	}); result.Error != nil || result.RowsAffected != 1 {
+func (s *SpDBImpl) UpdateUploadProgress(uploadMeta *corespdb.UploadObjectMeta) error {
+	if result := s.db.Model(&UploadObjectProgressTable{}).Where("object_id = ?", uploadMeta.ObjectID).
+		Updates(&UploadObjectProgressTable{
+			TaskState:             int32(uploadMeta.TaskState),
+			TaskStateDescription:  uploadMeta.TaskState.String(),
+			ErrorDescription:      uploadMeta.ErrorDescription,
+			UpdateTimestampSecond: GetCurrentUnixTime(),
+		}); result.Error != nil || result.RowsAffected != 1 {
 		return fmt.Errorf("failed to update upload task record: %s", result.Error)
 	}
 	return nil

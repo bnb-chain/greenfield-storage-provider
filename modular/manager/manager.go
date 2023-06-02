@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -122,7 +123,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			}
 			task := &gfsptask.GfSpGCObjectTask{}
 			task.InitGCObjectTask(m.baseApp.TaskPriority(task), start, end, m.baseApp.TaskTimeout(task, 0))
-			if err = m.baseApp.GfSpDB().InsertGCObjectProgress(task.Key().String(), start, task.GetLastDeletedObjectId()); err != nil {
+			if err = m.baseApp.GfSpDB().InsertGCObjectProgress(task.Key().String()); err != nil {
 				log.CtxErrorw(ctx, "failed to init the gc object task", "error", err)
 				continue
 			}
@@ -220,8 +221,11 @@ func (m *ManageModular) UploadingObjectNumber() int {
 func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.UploadObjectTask)
 	if task.Expired() {
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
-			types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR, "expired"); err != nil {
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:         task.GetObjectInfo().Id.Uint64(),
+			TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+			ErrorDescription: "expired",
+		}); err != nil {
 			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
@@ -232,8 +236,11 @@ func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 	task := qTask.(task.ReplicatePieceTask)
 	if task.Expired() {
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
-			types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR, "expired"); err != nil {
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:         task.GetObjectInfo().Id.Uint64(),
+			TaskState:        types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR,
+			ErrorDescription: "expired",
+		}); err != nil {
 			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
@@ -244,8 +251,11 @@ func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 func (m *ManageModular) GCSealObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.SealObjectTask)
 	if task.Expired() {
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(task.GetObjectInfo().Id.Uint64(),
-			types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR, "expired"); err != nil {
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:         task.GetObjectInfo().Id.Uint64(),
+			TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
+			ErrorDescription: "expired",
+		}); err != nil {
 			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
 		}
 		return true

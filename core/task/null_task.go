@@ -86,7 +86,7 @@ func (*NullTask) GetSecondaryAddresses() []string  { return nil }
 func (*NullTask) GetSecondarySignatures() [][]byte { return nil }
 func (*NullTask) SetSecondarySignatures([][]byte)  {}
 func (*NullTask) SetSecondaryAddresses([]string)   {}
-func (*NullTask) InitSealObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, [][]byte, int64, int64) {
+func (*NullTask) InitSealObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64) {
 }
 func (*NullTask) InitReceivePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64) {
 }

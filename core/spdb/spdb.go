@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
+	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 )
 
@@ -15,10 +15,9 @@ type UploadObjectProgressDB interface {
 	// DeleteUploadProgress deletes the upload object progress.
 	DeleteUploadProgress(objectID uint64) error
 	// UpdateUploadProgress updates upload object progress state.
-	// TODO: include hash
-	UpdateUploadProgress(objectID uint64, taskState servicetypes.TaskState, errorDescription string) error
+	UpdateUploadProgress(uploadMeta *UploadObjectMeta) error
 	// GetUploadState queries the task state by object id.
-	GetUploadState(objectID uint64) (servicetypes.TaskState, error)
+	GetUploadState(objectID uint64) (storetypes.TaskState, error)
 	// TODO: support load
 }
 
@@ -26,11 +25,11 @@ type UploadObjectProgressDB interface {
 // TODO: refine interface
 type GCObjectProgressDB interface {
 	// InsertGCObjectProgress inserts a new gc object progress.
-	InsertGCObjectProgress(taskKey string, deletingBlockID uint64, lastDeletedObjectID uint64) error
+	InsertGCObjectProgress(taskKey string) error
 	// DeleteGCObjectProgress deletes the gc object progress.
 	DeleteGCObjectProgress(taskKey string) error
 	// UpdateGCObjectProgress updates gc object progress state.
-	UpdateGCObjectProgress(taskKey string, deletingBlockID uint64, lastDeletedObjectID uint64) error
+	UpdateGCObjectProgress(gcMeta *GCObjectMeta) error
 	// TODO: refine it
 	GetAllGCObjectTask(taskKey string) []task.GCObjectTask
 }
@@ -98,11 +97,8 @@ type OffChainAuthKeyDB interface {
 type SPDB interface {
 	UploadObjectProgressDB
 	GCObjectProgressDB
-
 	ObjectIntegrityDB
 	TrafficDB
-
 	SPInfoDB
-
 	OffChainAuthKeyDB
 }

@@ -6,6 +6,8 @@ type UploadObjectProgressTable struct {
 	TaskState             int32  `gorm:"index:state_index"`
 	TaskStateDescription  string
 	ErrorDescription      string
+	SecondaryAddresses    string
+	SecondarySignatures   string
 	CreateTimestampSecond int64
 	UpdateTimestampSecond int64 `gorm:"index:update_timestamp_index"`
 }

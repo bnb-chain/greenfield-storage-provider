@@ -3,15 +3,16 @@ package sqldb
 import (
 	"fmt"
 
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 )
 
 // InsertGCObjectProgress is used to insert/update gc object progress.
-func (s *SpDBImpl) InsertGCObjectProgress(taskKey string, curDeletingBlockID uint64, lastDeletedObjectID uint64) error {
+func (s *SpDBImpl) InsertGCObjectProgress(taskKey string) error {
 	if result := s.db.Create(&GCObjectProgressTable{
 		TaskKey:                taskKey,
-		CurrentDeletingBlockID: curDeletingBlockID,
-		LastDeletedObjectID:    lastDeletedObjectID,
+		CurrentDeletingBlockID: 0,
+		LastDeletedObjectID:    0,
 		CreateTimestampSecond:  GetCurrentUnixTime(),
 		UpdateTimestampSecond:  GetCurrentUnixTime(),
 	}); result.Error != nil || result.RowsAffected != 1 {
@@ -28,10 +29,10 @@ func (s *SpDBImpl) DeleteGCObjectProgress(taskKey string) error {
 	}).Error
 }
 
-func (s *SpDBImpl) UpdateGCObjectProgress(taskKey string, curDeletingBlockID uint64, lastDeletedObjectID uint64) error {
-	if result := s.db.Model(&GCObjectProgressTable{}).Where("task_key = ?", taskKey).Updates(&GCObjectProgressTable{
-		CurrentDeletingBlockID: curDeletingBlockID,
-		LastDeletedObjectID:    lastDeletedObjectID,
+func (s *SpDBImpl) UpdateGCObjectProgress(gcMeta *spdb.GCObjectMeta) error {
+	if result := s.db.Model(&GCObjectProgressTable{}).Where("task_key = ?", gcMeta.TaskKey).Updates(&GCObjectProgressTable{
+		CurrentDeletingBlockID: gcMeta.CurrentBlockHeight,
+		LastDeletedObjectID:    gcMeta.LastDeletedObjectID,
 		UpdateTimestampSecond:  GetCurrentUnixTime(),
 	}); result.Error != nil {
 		return fmt.Errorf("failed to update gc task record: %s", result.Error)
