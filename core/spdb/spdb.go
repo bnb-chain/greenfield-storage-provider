@@ -28,7 +28,7 @@ type UploadObjectProgressDB interface {
 // GCObjectProgressDB interface which records gc object related progress.
 type GCObjectProgressDB interface {
 	// InsertGCObjectProgress inserts a new gc object progress.
-	InsertGCObjectProgress(taskKey string) error
+	InsertGCObjectProgress(taskKey string, gcMeta *GCObjectMeta) error
 	// DeleteGCObjectProgress deletes the gc object progress.
 	DeleteGCObjectProgress(taskKey string) error
 	// UpdateGCObjectProgress updates the gc object progress.

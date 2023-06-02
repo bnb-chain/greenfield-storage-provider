@@ -20,7 +20,7 @@ func (s *SpDBImpl) InsertUploadProgress(objectID uint64) error {
 		UpdateTimestampSecond: GetCurrentUnixTime(),
 	})
 	if result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("failed to insert upload task record: %s", result.Error)
+		return fmt.Errorf("failed to insert upload record: %s", result.Error)
 	}
 	return nil
 }
@@ -68,32 +68,48 @@ func (s *SpDBImpl) GetUploadState(objectID uint64) (storetypes.TaskState, error)
 
 func (s *SpDBImpl) GetUploadMetasToReplicate(limit int) ([]*corespdb.UploadObjectMeta, error) {
 	var (
-		result        *gorm.DB
-		uploadObjects []UploadObjectProgressTable
+		result                  *gorm.DB
+		uploadObjectProgresses  []UploadObjectProgressTable
+		returnUploadObjectMetas []*corespdb.UploadObjectMeta
 	)
 	result = s.db.Where("task_state IN ?", []string{
 		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE)),
 		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING)),
-	}).Order("update_timestamp_second DESC").Limit(limit).Find(&uploadObjects)
+	}).Order("update_timestamp_second DESC").Limit(limit).Find(&uploadObjectProgresses)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query upload table: %s", result.Error)
 	}
-	// TODO: impl
-	return nil, nil
+	for _, u := range uploadObjectProgresses {
+		returnUploadObjectMetas = append(returnUploadObjectMetas, &corespdb.UploadObjectMeta{
+			ObjectID: u.ObjectID,
+		})
+	}
+	return returnUploadObjectMetas, nil
 }
 
 func (s *SpDBImpl) GetUploadMetasToSeal(limit int) ([]*corespdb.UploadObjectMeta, error) {
 	var (
-		result        *gorm.DB
-		uploadObjects []UploadObjectProgressTable
+		result                  *gorm.DB
+		uploadObjectProgresses  []UploadObjectProgressTable
+		returnUploadObjectMetas []*corespdb.UploadObjectMeta
 	)
 	result = s.db.Where("task_state IN ?", []string{
 		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DONE)),
 		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_SEAL_OBJECT_DOING)),
-	}).Order("update_timestamp_second DESC").Limit(limit).Find(&uploadObjects)
+	}).Order("update_timestamp_second DESC").Limit(limit).Find(&uploadObjectProgresses)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query upload table: %s", result.Error)
 	}
-	// TODO: impl
-	return nil, nil
+	for _, u := range uploadObjectProgresses {
+		secondarySignatures, err := util.StringToBytesSlice(u.SecondarySignatures)
+		if err != nil {
+			return nil, err
+		}
+		returnUploadObjectMetas = append(returnUploadObjectMetas, &corespdb.UploadObjectMeta{
+			ObjectID:            u.ObjectID,
+			SecondaryAddresses:  util.SplitByComma(u.SecondaryAddresses),
+			SecondarySignatures: secondarySignatures,
+		})
+	}
+	return returnUploadObjectMetas, nil
 }
