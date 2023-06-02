@@ -169,7 +169,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task", "task_info", task.Info())
 	sealObject := &gfsptask.GfSpSealObjectTask{}
 	sealObject.InitSealObjectTask(task.GetObjectInfo(), task.GetStorageParams(),
-		m.baseApp.TaskPriority(sealObject), task.GetSecondarySignature(),
+		m.baseApp.TaskPriority(sealObject), task.GetSecondarySignatures(),
 		m.baseApp.TaskTimeout(sealObject, 0), m.baseApp.TaskMaxRetry(sealObject))
 	err := m.sealQueue.Push(sealObject)
 	if err != nil {

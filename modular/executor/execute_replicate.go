@@ -57,8 +57,8 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 		Operator:              e.baseApp.OperateAddress(),
 		BucketName:            task.GetObjectInfo().GetBucketName(),
 		ObjectName:            task.GetObjectInfo().GetObjectName(),
-		SecondarySpAddresses:  task.GetObjectInfo().GetSecondarySpAddresses(),
-		SecondarySpSignatures: task.GetSecondarySignature(),
+		SecondarySpAddresses:  task.GetSecondaryAddresses(),
+		SecondarySpSignatures: task.GetSecondarySignatures(),
 	}
 	sealErr := e.sealObject(ctx, task, sealMsg)
 	if sealErr == nil {
@@ -111,11 +111,11 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 			rTask.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 		replCount = rTask.GetStorageParams().VersionedParams.GetRedundantDataChunkNum() +
 			rTask.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()
-		record             = make([]bool, replCount)
-		secondaryOpAddress = make([]string, replCount)
-		secondarySignature = make([][]byte, replCount)
-		approvals          = make([]coretask.ApprovalReplicatePieceTask, replCount)
-		finish             bool
+		record              = make([]bool, replCount)
+		secondaryAddresses  = make([]string, replCount)
+		secondarySignatures = make([][]byte, replCount)
+		approvals           = make([]coretask.ApprovalReplicatePieceTask, replCount)
+		finish              bool
 	)
 	resetApprovals := func() (bool, error) {
 		doneAll := true
@@ -156,8 +156,8 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 			if !done {
 				_, signature, innerErr := e.doneReplicatePiece(ctx, rTask, approvals[rIdx], uint32(rIdx))
 				if innerErr == nil {
-					secondaryOpAddress[rIdx] = approvals[rIdx].GetApprovedSpOperatorAddress()
-					secondarySignature[rIdx] = signature
+					secondaryAddresses[rIdx] = approvals[rIdx].GetApprovedSpOperatorAddress()
+					secondarySignatures[rIdx] = signature
 					record[rIdx] = true
 					metrics.ReplicateSucceedCounter.WithLabelValues(e.Name()).Inc()
 				} else {
@@ -173,8 +173,8 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 			return err
 		}
 		if finish {
-			rTask.GetObjectInfo().SecondarySpAddresses = secondaryOpAddress
-			rTask.SetSecondarySignature(secondarySignature)
+			rTask.SetSecondaryAddresses(secondaryAddresses)
+			rTask.SetSecondarySignatures(secondarySignatures)
 			log.CtxDebugw(ctx, "success to replicate all pieces")
 			return nil
 		}
