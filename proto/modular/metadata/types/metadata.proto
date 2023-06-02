@@ -60,6 +60,8 @@ message Object {
 message GfSpGetUserBucketsRequest {
   // account_id is the account address of user
   string account_id = 1;
+  // include_removed indicates whether this request can get the removed buckets information
+  bool include_removed = 2;
 }
 
 // GfSpGetUserBucketsResponse is response type for the GfSpGetUserBuckets RPC method.

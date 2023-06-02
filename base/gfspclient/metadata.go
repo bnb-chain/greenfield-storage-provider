@@ -47,14 +47,15 @@ func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, s
 	return resp.GetObjects(), uint64(resp.GetEndBlockNumber()), nil
 }
 
-func (s *GfSpClient) GetUserBuckets(ctx context.Context, account string, opts ...grpc.DialOption) ([]*types.Bucket, error) {
+func (s *GfSpClient) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Bucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
 	req := &types.GfSpGetUserBucketsRequest{
-		AccountId: account,
+		AccountId:      account,
+		IncludeRemoved: includeRemoved,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetUserBuckets(ctx, req)
 	if err != nil {
