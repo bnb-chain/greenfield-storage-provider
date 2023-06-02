@@ -4,14 +4,14 @@ import (
 	"fmt"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
+	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"gorm.io/gorm"
 )
 
 func (s *SpDBImpl) InsertUploadProgress(objectID uint64) error {
 	var result *gorm.DB
-	taskState := servicetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED
+	taskState := storetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED
 	result = s.db.Create(&UploadObjectProgressTable{
 		ObjectID:              objectID,
 		TaskState:             int32(taskState),
@@ -57,11 +57,43 @@ func (s *SpDBImpl) UpdateUploadProgress(uploadMeta *corespdb.UploadObjectMeta) e
 	return nil
 }
 
-func (s *SpDBImpl) GetUploadState(objectID uint64) (servicetypes.TaskState, error) {
+func (s *SpDBImpl) GetUploadState(objectID uint64) (storetypes.TaskState, error) {
 	queryReturn := &UploadObjectProgressTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
-		return servicetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED, fmt.Errorf("failed to query upload table: %s", result.Error)
+		return storetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED, fmt.Errorf("failed to query upload table: %s", result.Error)
 	}
-	return servicetypes.TaskState(queryReturn.TaskState), nil
+	return storetypes.TaskState(queryReturn.TaskState), nil
+}
+
+func (s *SpDBImpl) GetUploadMetasToReplicate(limit int) ([]*corespdb.UploadObjectMeta, error) {
+	var (
+		result        *gorm.DB
+		uploadObjects []UploadObjectProgressTable
+	)
+	result = s.db.Where("task_state IN ?", []string{
+		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE)),
+		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING)),
+	}).Order("update_timestamp_second DESC").Limit(limit).Find(&uploadObjects)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to query upload table: %s", result.Error)
+	}
+	// TODO: impl
+	return nil, nil
+}
+
+func (s *SpDBImpl) GetUploadMetasToSeal(limit int) ([]*corespdb.UploadObjectMeta, error) {
+	var (
+		result        *gorm.DB
+		uploadObjects []UploadObjectProgressTable
+	)
+	result = s.db.Where("task_state IN ?", []string{
+		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DONE)),
+		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_SEAL_OBJECT_DOING)),
+	}).Order("update_timestamp_second DESC").Limit(limit).Find(&uploadObjects)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to query upload table: %s", result.Error)
+	}
+	// TODO: impl
+	return nil, nil
 }
