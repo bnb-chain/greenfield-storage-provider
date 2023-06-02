@@ -11,18 +11,27 @@ import (
 )
 
 // GetUserBuckets get buckets info by a user address
-func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
+func (b *BsDBImpl) GetUserBuckets(accountID common.Address, includeRemoved bool) ([]*Bucket, error) {
 	var (
 		buckets []*Bucket
 		err     error
 	)
 
-	err = b.db.Table((&Bucket{}).TableName()).
-		Select("*").
-		Where("owner = ?", accountID).
-		Order("create_at desc").
-		Limit(GetUserBucketsLimitSize).
-		Find(&buckets).Error
+	if includeRemoved {
+		err = b.db.Table((&Bucket{}).TableName()).
+			Select("*").
+			Where("owner = ?", accountID).
+			Order("create_at desc").
+			Limit(GetUserBucketsLimitSize).
+			Find(&buckets).Error
+	} else {
+		err = b.db.Table((&Bucket{}).TableName()).
+			Select("*").
+			Where("owner = ? and removed = false", accountID).
+			Order("create_at desc").
+			Limit(GetUserBucketsLimitSize).
+			Find(&buckets).Error
+	}
 	return buckets, err
 }
 
@@ -73,13 +82,17 @@ func (b *BsDBImpl) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, 
 }
 
 // GetUserBucketsCount get buckets count by a user address
-func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address) (int64, error) {
+func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address, includeRemoved bool) (int64, error) {
 	var (
 		count int64
 		err   error
 	)
 
-	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
+	if includeRemoved {
+		err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
+	} else {
+		err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?, removed = false", accountID).Error
+	}
 	return count, err
 }
 
