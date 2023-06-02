@@ -36,10 +36,11 @@ type GCObjectProgressDB interface {
 
 // ObjectIntegrityDB abstract object integrity interface.
 type ObjectIntegrityDB interface {
-	// GetObjectIntegrity get integrity meta info by object id.
+	// GetObjectIntegrity gets integrity meta info by object id.
 	GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error)
-	// SetObjectIntegrity set(maybe overwrite) integrity hash info to db.
+	// SetObjectIntegrity sets(maybe overwrite) integrity hash info to db.
 	SetObjectIntegrity(integrity *IntegrityMeta) error
+	// DeleteObjectIntegrity deletes the integrity hash.
 	DeleteObjectIntegrity(objectID uint64) error
 
 	GetReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32) ([]byte, error)

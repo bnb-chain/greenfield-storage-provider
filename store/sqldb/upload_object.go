@@ -5,6 +5,7 @@ import (
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"gorm.io/gorm"
 )
 
@@ -30,14 +31,28 @@ func (s *SpDBImpl) DeleteUploadProgress(objectID uint64) error {
 }
 
 func (s *SpDBImpl) UpdateUploadProgress(uploadMeta *corespdb.UploadObjectMeta) error {
-	if result := s.db.Model(&UploadObjectProgressTable{}).Where("object_id = ?", uploadMeta.ObjectID).
-		Updates(&UploadObjectProgressTable{
-			TaskState:             int32(uploadMeta.TaskState),
-			TaskStateDescription:  uploadMeta.TaskState.String(),
-			ErrorDescription:      uploadMeta.ErrorDescription,
-			UpdateTimestampSecond: GetCurrentUnixTime(),
-		}); result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("failed to update upload task record: %s", result.Error)
+	if len(uploadMeta.SecondaryAddresses) != 0 {
+		if result := s.db.Model(&UploadObjectProgressTable{}).Where("object_id = ?", uploadMeta.ObjectID).
+			Updates(&UploadObjectProgressTable{
+				TaskState:             int32(uploadMeta.TaskState),
+				TaskStateDescription:  uploadMeta.TaskState.String(),
+				ErrorDescription:      uploadMeta.ErrorDescription,
+				SecondaryAddresses:    util.JoinWithComma(uploadMeta.SecondaryAddresses),
+				SecondarySignatures:   util.BytesSliceToString(uploadMeta.SecondarySignatures),
+				UpdateTimestampSecond: GetCurrentUnixTime(),
+			}); result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to update upload task record: %s", result.Error)
+		}
+	} else {
+		if result := s.db.Model(&UploadObjectProgressTable{}).Where("object_id = ?", uploadMeta.ObjectID).
+			Updates(&UploadObjectProgressTable{
+				TaskState:             int32(uploadMeta.TaskState),
+				TaskStateDescription:  uploadMeta.TaskState.String(),
+				ErrorDescription:      uploadMeta.ErrorDescription,
+				UpdateTimestampSecond: GetCurrentUnixTime(),
+			}); result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to update upload task record: %s", result.Error)
+		}
 	}
 	return nil
 }
