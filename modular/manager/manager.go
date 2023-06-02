@@ -131,7 +131,10 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			}
 			task := &gfsptask.GfSpGCObjectTask{}
 			task.InitGCObjectTask(m.baseApp.TaskPriority(task), start, end, m.baseApp.TaskTimeout(task, 0))
-			if err = m.baseApp.GfSpDB().InsertGCObjectProgress(task.Key().String()); err != nil {
+			if err = m.baseApp.GfSpDB().InsertGCObjectProgress(task.Key().String(), &spdb.GCObjectMeta{
+				StartBlockHeight: start,
+				EndBlockHeight:   end,
+			}); err != nil {
 				log.CtxErrorw(ctx, "failed to init the gc object task", "error", err)
 				continue
 			}
