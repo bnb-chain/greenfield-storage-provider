@@ -5,7 +5,8 @@ type GCObjectProgressTable struct {
 	TaskKey                string `gorm:"primary_key"`
 	CurrentDeletingBlockID uint64
 	LastDeletedObjectID    uint64
-	// TODO: timestamp
+	CreateTimestampSecond  int64
+	UpdateTimestampSecond  int64 `gorm:"index:update_timestamp_index"`
 }
 
 // TableName is used to set GCObjectProgressTable Schema's table name in database

@@ -94,7 +94,7 @@ func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task t
 		log.CtxErrorw(ctx, "failed to push upload object task to queue", "task_info", task.Info(), "error", err)
 		return ErrExceedTask
 	}
-	if err := m.baseApp.GfSpDB().CreateUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
+	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
 		log.CtxErrorw(ctx, "failed to create upload object progress", "task_info", task.Info(), "error", err)
 		return ErrGfSpDB
 	}
@@ -331,7 +331,7 @@ func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask task.GCOb
 	}
 	m.gcObjectQueue.Push(gcTask)
 	currentGCBlockID, deletedObjectID := gcTask.GetGCObjectProgress()
-	err := m.baseApp.GfSpDB().SetGCObjectProgress(gcTask.Key().String(), currentGCBlockID, deletedObjectID)
+	err := m.baseApp.GfSpDB().UpdateGCObjectProgress(gcTask.Key().String(), currentGCBlockID, deletedObjectID)
 	log.CtxInfow(ctx, "update the gc object task progress", "from", oldTask, "to", gcTask, "error", err)
 	return nil
 }
