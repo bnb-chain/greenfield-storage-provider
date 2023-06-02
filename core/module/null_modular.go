@@ -189,7 +189,9 @@ func (*NilModular) SignP2PPongMsg(context.Context, *gfspp2p.GfSpPong) ([]byte, e
 func (*NilModular) SealObject(context.Context, *storagetypes.MsgSealObject) error {
 	return ErrNilModular
 }
-
+func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSealObject) error {
+	return ErrNilModular
+}
 func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) error {
 	return nil
 }

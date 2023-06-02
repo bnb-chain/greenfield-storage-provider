@@ -78,6 +78,30 @@ func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSea
 	return nil
 }
 
+func (s *GfSpClient) RejectUnSealObject(
+	ctx context.Context,
+	object *storagetypes.MsgRejectSealObject) error {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
+		return ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_RejectObjectInfo{
+			RejectObjectInfo: object,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to reject unseal object approval", "error", err)
+		return ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
+}
+
 func (s *GfSpClient) DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
