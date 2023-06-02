@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"gorm.io/gorm"
 )
 
 // InsertGCObjectProgress is used to insert/update gc object progress.
@@ -40,6 +40,15 @@ func (s *SpDBImpl) UpdateGCObjectProgress(gcMeta *spdb.GCObjectMeta) error {
 	return nil
 }
 
-// GetAllGCObjectTask is unused.
-// TODO: will be implemented in the future, may be used in startup.
-func (s *SpDBImpl) GetAllGCObjectTask(taskKey string) []task.GCObjectTask { return nil }
+func (s *SpDBImpl) GetGCMetasToGC(limit int) ([]*spdb.GCObjectMeta, error) {
+	var (
+		result       *gorm.DB
+		gcProgresses []GCObjectProgressTable
+	)
+	result = s.db.Order("update_timestamp_second DESC").Limit(limit).Find(&gcProgresses)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to query gc table: %s", result.Error)
+	}
+	// TODO: impl
+	return nil, nil
+}

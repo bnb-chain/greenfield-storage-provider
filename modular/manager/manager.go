@@ -203,6 +203,7 @@ func (m *ManageModular) ReleaseResource(ctx context.Context, span rcmgr.Resource
 }
 
 func (m *ManageModular) LoadTaskFromDB() error {
+	// TODO: impl
 	return nil
 }
 
