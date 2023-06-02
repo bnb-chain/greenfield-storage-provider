@@ -98,10 +98,6 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to create read record table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&ServiceConfigTable{}); err != nil {
-		log.Errorw("failed to create service config table", "error", err)
-		return nil, err
-	}
 	if err = db.AutoMigrate(&OffChainAuthKeyTable{}); err != nil {
 		log.Errorw("failed to create off-chain authKey table", "error", err)
 		return nil, err

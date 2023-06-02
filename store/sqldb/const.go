@@ -2,10 +2,6 @@ package sqldb
 
 // define table name constant.
 const (
-	// JobTableName defines the job context table name.
-	JobTableName = "job"
-	// ObjectTableName defines the object table name.
-	ObjectTableName = "object"
 	// UploadObjectProgressTableName defines the gc object task table name.
 	UploadObjectProgressTableName = "upload_object_progress"
 	// GCObjectProgressTableName defines the gc object task table name.

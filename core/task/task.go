@@ -347,8 +347,8 @@ type ReceivePieceTask interface {
 type SealObjectTask interface {
 	ObjectTask
 	// InitSealObjectTask inits the SealObjectTask.
-	InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, signature [][]byte,
-		timeout int64, retry int64)
+	InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, addresses []string,
+		signatures [][]byte, timeout int64, retry int64)
 	// GetSecondaryAddresses return the secondary SP's addresses.
 	GetSecondaryAddresses() []string
 	// GetSecondarySignatures return the secondary SP's signature, it is used to generate
