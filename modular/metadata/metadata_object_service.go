@@ -80,7 +80,7 @@ func (r *MetadataModular) GfSpListObjectsByBucketName(ctx context.Context, req *
 	// if keyCount is equal to req.MaxKeys+1 which means that we additionally return NextContinuationToken, and it is not counted in the keyCount
 	// isTruncated set to false if all the results were returned, set to true if more keys are available to return
 	// remove the returned NextContinuationToken object and separately return its object ID to the user for the next API call
-	if keyCount == req.MaxKeys+1 {
+	if keyCount == maxKeys+1 {
 		isTruncated = true
 		keyCount -= 1
 		nextContinuationToken = results[len(results)-1].PathName

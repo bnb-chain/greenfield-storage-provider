@@ -14,6 +14,8 @@ import (
 const (
 	// DefaultQuerySPParallelPerNode defines the max parallel for retrieving request
 	DefaultQuerySPParallelPerNode int64 = 10240
+	// DefaultBsDBSwitchCheckIntervalSec defines the default db switch check interval in seconds
+	DefaultBsDBSwitchCheckIntervalSec = 30
 )
 
 func NewMetadataModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -32,6 +34,9 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 	}
 	if cfg.Bucket.FreeQuotaPerBucket == 0 {
 		cfg.Bucket.FreeQuotaPerBucket = downloader.DefaultBucketFreeQuota
+	}
+	if cfg.Metadata.BsDBSwitchCheckIntervalSec == 0 {
+		cfg.Metadata.BsDBSwitchCheckIntervalSec = DefaultBsDBSwitchCheckIntervalSec
 	}
 	metadata.freeQuotaPerBucket = cfg.Bucket.FreeQuotaPerBucket
 	metadata.maxMetadataRequest = cfg.Parallel.QuerySPParallelPerNode
