@@ -8,14 +8,14 @@ import (
 )
 
 // GetPaymentByBucketName get payment info by a bucket name
-func (b *BsDBImpl) GetPaymentByBucketName(bucketName string, isFullList bool) (*StreamRecord, error) {
+func (b *BsDBImpl) GetPaymentByBucketName(bucketName string, includePrivate bool) (*StreamRecord, error) {
 	var (
 		streamRecord *StreamRecord
 		err          error
 		bucket       *Bucket
 	)
 
-	bucket, err = b.GetBucketByName(bucketName, isFullList)
+	bucket, err = b.GetBucketByName(bucketName, includePrivate)
 	if err != nil {
 		return nil, err
 	}
@@ -29,14 +29,14 @@ func (b *BsDBImpl) GetPaymentByBucketName(bucketName string, isFullList bool) (*
 }
 
 // GetPaymentByBucketID get payment info by a bucket id
-func (b *BsDBImpl) GetPaymentByBucketID(bucketID int64, isFullList bool) (*StreamRecord, error) {
+func (b *BsDBImpl) GetPaymentByBucketID(bucketID int64, includePrivate bool) (*StreamRecord, error) {
 	var (
 		streamRecord *StreamRecord
 		err          error
 		bucket       *Bucket
 	)
 
-	bucket, err = b.GetBucketByID(bucketID, isFullList)
+	bucket, err = b.GetBucketByID(bucketID, includePrivate)
 	if err != nil {
 		return nil, err
 	}

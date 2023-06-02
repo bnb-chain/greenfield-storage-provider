@@ -27,13 +27,13 @@ func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
 }
 
 // GetBucketByName get buckets info by a bucket name
-func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*Bucket, error) {
+func (b *BsDBImpl) GetBucketByName(bucketName string, includePrivate bool) (*Bucket, error) {
 	var (
 		bucket *Bucket
 		err    error
 	)
 
-	if isFullList {
+	if includePrivate {
 		err = b.db.Take(&bucket, "bucket_name = ?", bucketName).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -49,7 +49,7 @@ func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*Bucket,
 }
 
 // GetBucketByID get buckets info by a bucket id
-func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, error) {
+func (b *BsDBImpl) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, error) {
 	var (
 		bucket       *Bucket
 		err          error
@@ -57,7 +57,7 @@ func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, erro
 	)
 
 	bucketIDHash = common.HexToHash(strconv.FormatInt(bucketID, 10))
-	if isFullList {
+	if includePrivate {
 		err = b.db.Take(&bucket, "bucket_id = ?", bucketIDHash).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -104,13 +104,13 @@ func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpAddress strin
 	return buckets, err
 }
 
-func (b *BsDBImpl) GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error) {
+func (b *BsDBImpl) GetBucketMetaByName(bucketName string, includePrivate bool) (*BucketFullMeta, error) {
 	var (
 		bucketFullMeta *BucketFullMeta
 		err            error
 	)
 
-	if isFullList {
+	if includePrivate {
 		err = b.db.Table((&Bucket{}).TableName()).
 			Select("*").
 			Joins("left join stream_records on buckets.payment_address = stream_records.account").

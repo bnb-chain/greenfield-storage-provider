@@ -89,7 +89,7 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 		return nil, err
 	}
 
-	bucket, err = r.baseApp.GfBsDB().GetBucketByName(req.BucketName, req.IsFullList)
+	bucket, err = r.baseApp.GfBsDB().GetBucketByName(req.BucketName, req.IncludePrivate)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket by bucket name", "error", err)
 		return nil, err
@@ -137,7 +137,7 @@ func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *type
 	)
 
 	ctx = log.Context(ctx, req)
-	bucket, err = r.baseApp.GfBsDB().GetBucketByID(req.BucketId, req.IsFullList)
+	bucket, err = r.baseApp.GfBsDB().GetBucketByID(req.BucketId, req.IncludePrivate)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket by bucket id", "error", err)
 		return nil, err
@@ -245,7 +245,7 @@ func (r *MetadataModular) GfSpGetBucketMeta(
 	)
 
 	ctx = log.Context(ctx, req)
-	bucketFullMeta, err := r.baseApp.GfBsDB().GetBucketMetaByName(req.GetBucketName(), req.GetIsFullList())
+	bucketFullMeta, err := r.baseApp.GfBsDB().GetBucketMetaByName(req.GetBucketName(), req.GetIncludePrivate())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket meta by name", "error", err)
 		return

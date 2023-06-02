@@ -114,8 +114,8 @@ message GfSpListObjectsByBucketNameResponse {
 message GfSpGetBucketByBucketNameRequest {
   // bucket_name is the name of the bucket
   string bucket_name = 1;
-  // is_full_list indicates whether this request can get the private buckets information
-  bool is_full_list = 2;
+  // include_private indicates whether this request can get the private buckets information
+  bool include_private = 2;
 }
 
 // GfSpGetBucketByBucketNameResponse is response type for the GfSpGetBucketByBucketName RPC method.
@@ -128,8 +128,8 @@ message GfSpGetBucketByBucketNameResponse {
 message GfSpGetBucketByBucketIDRequest {
   // bucket_id is the unique identifier of bucket
   int64 bucket_id = 1;
-  // is_full_list indicates whether this request can get the private buckets information
-  bool is_full_list = 2;
+  // include_private indicates whether this request can get the private buckets information
+  bool include_private = 2;
 }
 
 // GfSpGetBucketByBucketIDResponse is response type for the GfSpGetBucketByBucketID RPC method.
@@ -146,8 +146,8 @@ message GfSpListDeletedObjectsByBlockNumberRangeRequest {
   // end_block_number defines the end of range
   // end_block_number < 0 or start_block_number > end_block_number is invalid
   int64 end_block_number = 2;
-  // is_full_list indicates whether this request can get the private objects information
-  bool is_full_list = 3;
+  // include_private indicates whether this request can get the private objects information
+  bool include_private = 3;
 }
 
 // GfSpListDeletedObjectsByBlockNumberRangeResponse is response type for the GfSpListDeletedObjectsByBlockNumberRange RPC method.
@@ -192,8 +192,8 @@ message GfSpGetObjectMetaRequest {
   string object_name = 1;
   // bucket_name is the name of the bucket
   string bucket_name = 2;
-  // is_full_list indicates whether this request can get the private objects information
-  bool is_full_list = 3;
+  // include_private indicates whether this request can get the private objects information
+  bool include_private = 3;
 }
 
 // GfSpGetObjectMetaResponse is response type for the GfSpGetObjectMeta RPC method.
@@ -206,8 +206,8 @@ message GfSpGetObjectMetaResponse {
 message GfSpGetPaymentByBucketNameRequest {
   // bucket_name is the name of the bucket
   string bucket_name = 1;
-  // is_full_list indicates whether this request can get the private buckets information
-  bool is_full_list = 2;
+  // include_private indicates whether this request can get the private buckets information
+  bool include_private = 2;
 }
 
 // GfSpGetPaymentByBucketNameResponse is response type for the GfSpGetPaymentByBucketName RPC method.
@@ -220,8 +220,8 @@ message GfSpGetPaymentByBucketNameResponse {
 message GfSpGetPaymentByBucketIDRequest {
   // bucket_id is the unique identifier of bucket
   int64 bucket_id = 1;
-  // is_full_list indicates whether this request can get the private buckets information
-  bool is_full_list = 2;
+  // include_private indicates whether this request can get the private buckets information
+  bool include_private = 2;
 }
 
 // GfSpGetPaymentByBucketIDResponse is response type for the GfSpGetPaymentByBucketID RPC method.
@@ -234,8 +234,8 @@ message GfSpGetPaymentByBucketIDResponse {
 message GfSpGetBucketMetaRequest {
   // bucket_name is the name of the bucket
   string bucket_name = 1;
-  // is_full_list indicates whether this request can get the private buckets information
-  bool is_full_list = 2;
+  // include_private indicates whether this request can get the private buckets information
+  bool include_private = 2;
 }
 
 // GfSpGetBucketMetaResponse is response type for the GfSpGetBucketMeta RPC method
