@@ -10,16 +10,14 @@ import (
 )
 
 func (s *SpDBImpl) InsertUploadProgress(objectID uint64) error {
-	var result *gorm.DB
 	taskState := storetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED
-	result = s.db.Create(&UploadObjectProgressTable{
+	if result := s.db.Create(&UploadObjectProgressTable{
 		ObjectID:              objectID,
 		TaskState:             int32(taskState),
 		TaskStateDescription:  taskState.String(),
 		CreateTimestampSecond: GetCurrentUnixTime(),
 		UpdateTimestampSecond: GetCurrentUnixTime(),
-	})
-	if result.Error != nil || result.RowsAffected != 1 {
+	}); result.Error != nil || result.RowsAffected != 1 {
 		return fmt.Errorf("failed to insert upload record: %s", result.Error)
 	}
 	return nil

@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// InsertGCObjectProgress is used to insert/update gc object progress.
+// InsertGCObjectProgress is used to insert gc object progress.
 func (s *SpDBImpl) InsertGCObjectProgress(taskKey string, gcMeta *spdb.GCObjectMeta) error {
 	if result := s.db.Create(&GCObjectProgressTable{
 		TaskKey:               taskKey,
@@ -21,7 +21,6 @@ func (s *SpDBImpl) InsertGCObjectProgress(taskKey string, gcMeta *spdb.GCObjectM
 		return fmt.Errorf("failed to insert gc record: %s", result.Error)
 	}
 	return nil
-
 }
 
 // DeleteGCObjectProgress is used to delete gc object task.

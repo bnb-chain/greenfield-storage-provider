@@ -348,6 +348,7 @@ func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask task.GCOb
 		return ErrDanglingTask
 	}
 	if !m.gcObjectQueue.Has(gcTask.Key()) {
+		log.CtxErrorw(ctx, "task is not in the gc queue", "task_info", gcTask.Info())
 		return ErrCanceledTask
 	}
 	if gcTask.GetCurrentBlockNumber() > gcTask.GetEndBlockNumber() {
