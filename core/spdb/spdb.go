@@ -38,20 +38,22 @@ type GCObjectProgressDB interface {
 	GetGCMetasToGC(limit int) ([]*GCObjectMeta, error)
 }
 
-// ObjectIntegrityDB abstract object integrity interface.
-type ObjectIntegrityDB interface {
+// SignatureDB abstract object integrity interface.
+type SignatureDB interface {
+	/*
+		Object Signature is used to get challenge info.
+	*/
 	// GetObjectIntegrity gets integrity meta info by object id.
 	GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error)
 	// SetObjectIntegrity sets(maybe overwrite) integrity hash info to db.
 	SetObjectIntegrity(integrity *IntegrityMeta) error
 	// DeleteObjectIntegrity deletes the integrity hash.
 	DeleteObjectIntegrity(objectID uint64) error
-	// GetReplicatePieceChecksum gets the piece hash.
-	GetReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32) ([]byte, error)
-	// SetReplicatePieceChecksum sets the piece hash.
+	/*
+		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
+	*/
+	// SetReplicatePieceChecksum sets(maybe overwrite) the piece hash.
 	SetReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32, checksum []byte) error
-	// DeleteReplicatePieceChecksum deletes the piece hash.
-	DeleteReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32) error
 	// GetAllReplicatePieceChecksum gets all piece hashes.
 	GetAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) ([][]byte, error)
 	// DeleteAllReplicatePieceChecksum deletes all piece hashes.
@@ -96,7 +98,7 @@ type SPInfoDB interface {
 	SetOwnSpInfo(sp *sptypes.StorageProvider) error
 }
 
-// OffChainAuthKeyDB interface
+// OffChainAuthKeyDB interface.
 type OffChainAuthKeyDB interface {
 	GetAuthKey(userAddress string, domain string) (*OffChainAuthKey, error)
 	UpdateAuthKey(userAddress string, domain string, oldNonce int32, newNonce int32, newPublicKey string, newExpiryDate time.Time) error
@@ -106,7 +108,7 @@ type OffChainAuthKeyDB interface {
 type SPDB interface {
 	UploadObjectProgressDB
 	GCObjectProgressDB
-	ObjectIntegrityDB
+	SignatureDB
 	TrafficDB
 	SPInfoDB
 	OffChainAuthKeyDB
