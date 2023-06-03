@@ -239,7 +239,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 			log.Infow("object is not in create status and continue", "object_info", objectInfo)
 			continue
 		}
-		storageParams, queryErr := m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+		storageParams, queryErr := m.baseApp.Consensus().QueryStorageParams(context.Background())
 		if queryErr != nil {
 			log.Errorw("failed to query storage param and continue", "object_id", meta.ObjectID, "error", queryErr)
 			continue
@@ -270,7 +270,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 			log.Infow("object is not in create status and continue", "object_info", objectInfo)
 			continue
 		}
-		storageParams, queryErr := m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+		storageParams, queryErr := m.baseApp.Consensus().QueryStorageParams(context.Background())
 		if queryErr != nil {
 			log.Errorw("failed to query storage param and continue", "object_id", meta.ObjectID, "error", queryErr)
 			continue

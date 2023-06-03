@@ -121,9 +121,8 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 			return ErrGfSpDB
 		}
-		err := m.RejectUnSealObject(ctx, task.GetObjectInfo())
 		log.CtxErrorw(ctx, "reports failed update object task and reject unseal object",
-			"task_info", task.Info(), "error", task.Error(), "reject_unseal_error", err)
+			"task_info", task.Info(), "error", task.Error())
 		return nil
 	}
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
@@ -222,9 +221,8 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 			log.CtxErrorw(ctx, "failed to update object task state", "task_info", handleTask.Info(), "error", err)
 			return ErrGfSpDB
 		}
-		err := m.RejectUnSealObject(ctx, handleTask.GetObjectInfo())
 		log.CtxWarnw(ctx, "delete expired replicate piece task and reject unseal object",
-			"task_info", handleTask.Info(), "reject_unseal_error", err)
+			"task_info", handleTask.Info())
 	}
 	return nil
 }
