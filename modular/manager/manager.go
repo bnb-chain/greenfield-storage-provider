@@ -26,6 +26,12 @@ const (
 
 	// DiscontinueBucketLimit define the max buckets to fetch in a single request
 	DiscontinueBucketLimit = int64(500)
+
+	// RejectUnSealObjectRetry defines the retry number of sending reject unseal object tx.
+	RejectUnSealObjectRetry = 3
+
+	// RejectUnSealObjectTimeout defines the timeout of sending reject unseal object tx.
+	RejectUnSealObjectTimeout = 3
 )
 
 var _ module.Manager = &ManageModular{}
@@ -309,23 +315,42 @@ func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) task.
 }
 
 func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
-	spInfoList, err := m.baseApp.Consensus().QuerySPInfo(ctx)
+	spList, err := m.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to query sp info", "error", err)
+		log.CtxErrorw(ctx, "failed to list sps", "error", err)
 		return
 	}
-	if err = m.baseApp.GfSpDB().UpdateAllSp(spInfoList); err != nil {
-		log.CtxErrorw(ctx, "failed to update sp info", "error", err)
+	if err = m.baseApp.GfSpDB().UpdateAllSp(spList); err != nil {
+		log.CtxErrorw(ctx, "failed to update all sp list", "error", err)
 		return
 	}
-	for _, spInfo := range spInfoList {
-		if strings.EqualFold(m.baseApp.OperatorAddress(), spInfo.OperatorAddress) {
-			if err = m.baseApp.GfSpDB().SetOwnSpInfo(spInfo); err != nil {
+	for _, sp := range spList {
+		if strings.EqualFold(m.baseApp.OperatorAddress(), sp.OperatorAddress) {
+			if err = m.baseApp.GfSpDB().SetOwnSpInfo(sp); err != nil {
 				log.Errorw("failed to set own sp info", "error", err)
 				return
 			}
 		}
 	}
+}
+
+func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storagetypes.ObjectInfo) error {
+	rejectUnSealObjectMsg := &storagetypes.MsgRejectSealObject{
+		BucketName: object.GetBucketName(),
+		ObjectName: object.GetObjectName(),
+	}
+
+	var err error
+	for i := 0; i < RejectUnSealObjectRetry; i++ {
+		err = m.baseApp.GfSpClient().RejectUnSealObject(ctx, rejectUnSealObjectMsg)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reject unseal object", "retry", i, "error", err)
+			time.Sleep(RejectUnSealObjectTimeout * time.Second)
+		} else {
+			break
+		}
+	}
+	return err
 }
 
 func (m *ManageModular) Statistics() string {

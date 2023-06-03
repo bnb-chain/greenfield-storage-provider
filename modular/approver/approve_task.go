@@ -20,9 +20,7 @@ var (
 	ErrConsensus          = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 15001, "server slipped away, try again later")
 )
 
-func (a *ApprovalModular) PreCreateBucketApproval(
-	ctx context.Context,
-	task coretask.ApprovalCreateBucketTask) error {
+func (a *ApprovalModular) PreCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) error {
 	if task == nil || task.GetCreateBucketInfo() == nil {
 		log.CtxErrorw(ctx, "failed to pre create bucket approval, pointer nil")
 		return ErrDanglingPointer
@@ -43,9 +41,7 @@ func (a *ApprovalModular) PreCreateBucketApproval(
 	return nil
 }
 
-func (a *ApprovalModular) HandleCreateBucketApprovalTask(
-	ctx context.Context,
-	task coretask.ApprovalCreateBucketTask) (bool, error) {
+func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, task coretask.ApprovalCreateBucketTask) (bool, error) {
 	var (
 		err           error
 		signature     []byte
@@ -76,14 +72,10 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(
 	return true, nil
 }
 
-func (a *ApprovalModular) PostCreateBucketApproval(
-	ctx context.Context,
-	task coretask.ApprovalCreateBucketTask) {
+func (a *ApprovalModular) PostCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) {
 }
 
-func (a *ApprovalModular) PreCreateObjectApproval(
-	ctx context.Context,
-	task coretask.ApprovalCreateObjectTask) error {
+func (a *ApprovalModular) PreCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) error {
 	if task == nil || task.GetCreateObjectInfo() == nil {
 		log.CtxErrorw(ctx, "failed to pre create object approval, pointer nil")
 		return ErrDanglingPointer
@@ -95,9 +87,7 @@ func (a *ApprovalModular) PreCreateObjectApproval(
 	return nil
 }
 
-func (a *ApprovalModular) HandleCreateObjectApprovalTask(
-	ctx context.Context,
-	task coretask.ApprovalCreateObjectTask) (bool, error) {
+func (a *ApprovalModular) HandleCreateObjectApprovalTask(ctx context.Context, task coretask.ApprovalCreateObjectTask) (bool, error) {
 	var (
 		err           error
 		signature     []byte
@@ -128,9 +118,7 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(
 	return true, nil
 }
 
-func (a *ApprovalModular) PostCreateObjectApproval(
-	ctx context.Context,
-	task coretask.ApprovalCreateObjectTask) {
+func (a *ApprovalModular) PostCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) {
 }
 
 func (a *ApprovalModular) QueryTasks(

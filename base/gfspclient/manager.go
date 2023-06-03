@@ -11,9 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-func (s *GfSpClient) CreateUploadObject(
-	ctx context.Context,
-	task coretask.UploadObjectTask) error {
+func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.UploadObjectTask) error {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
@@ -35,10 +33,7 @@ func (s *GfSpClient) CreateUploadObject(
 	return nil
 }
 
-func (s *GfSpClient) AskTask(
-	ctx context.Context,
-	limit corercmgr.Limit) (
-	coretask.Task, error) {
+func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coretask.Task, error) {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
@@ -73,9 +68,7 @@ func (s *GfSpClient) AskTask(
 	}
 }
 
-func (s *GfSpClient) ReportTask(
-	ctx context.Context,
-	report coretask.Task) error {
+func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)

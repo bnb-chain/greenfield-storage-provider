@@ -24,10 +24,7 @@ var (
 	ErrFutureSupport = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60005, "future support")
 )
 
-func (m *ManageModular) DispatchTask(
-	ctx context.Context,
-	limit rcmgr.Limit) (
-	task.Task, error) {
+func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error) {
 	var (
 		backUpTasks []task.Task
 		task        task.Task
@@ -78,9 +75,7 @@ func (m *ManageModular) DispatchTask(
 	return task, nil
 }
 
-func (m *ManageModular) HandleCreateUploadObjectTask(
-	ctx context.Context,
-	task task.UploadObjectTask) error {
+func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error {
 	if task == nil {
 		log.CtxErrorw(ctx, "failed to handle begin upload object, task pointer dangling")
 		return ErrDanglingTask
@@ -105,9 +100,7 @@ func (m *ManageModular) HandleCreateUploadObjectTask(
 	return nil
 }
 
-func (m *ManageModular) HandleDoneUploadObjectTask(
-	ctx context.Context,
-	task task.UploadObjectTask) error {
+func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to handle done upload object, pointer dangling")
 		return ErrDanglingTask
@@ -124,7 +117,9 @@ func (m *ManageModular) HandleDoneUploadObjectTask(
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
-		log.CtxErrorw(ctx, "reports failed update object task", "error", task.Error())
+		err = m.RejectUnSealObject(ctx, task.GetObjectInfo())
+		log.CtxErrorw(ctx, "reports failed update object task and reject unseal object",
+			"error", task.Error(), "reject_unseal_error", err)
 		return nil
 	}
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
@@ -147,9 +142,7 @@ func (m *ManageModular) HandleDoneUploadObjectTask(
 	return nil
 }
 
-func (m *ManageModular) HandleReplicatePieceTask(
-	ctx context.Context,
-	task task.ReplicatePieceTask) error {
+func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to handle replicate piece, pointer dangling")
 		return ErrDanglingTask
@@ -193,9 +186,7 @@ func (m *ManageModular) HandleReplicatePieceTask(
 	return nil
 }
 
-func (m *ManageModular) handleFailedReplicatePieceTask(
-	ctx context.Context,
-	handleTask task.ReplicatePieceTask) error {
+func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, handleTask task.ReplicatePieceTask) error {
 	oldTask := m.replicateQueue.PopByKey(handleTask.Key())
 	if m.TaskUploading(ctx, handleTask) {
 		log.CtxErrorw(ctx, "replicate piece task repeated")
@@ -217,14 +208,14 @@ func (m *ManageModular) handleFailedReplicatePieceTask(
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
-		log.CtxWarnw(ctx, "delete expired replicate piece task", "info", handleTask.Info())
+		err = m.RejectUnSealObject(ctx, handleTask.GetObjectInfo())
+		log.CtxWarnw(ctx, "delete expired replicate piece task and reject unseal object",
+			"info", handleTask.Info(), "reject_unseal_error", err)
 	}
 	return nil
 }
 
-func (m *ManageModular) HandleSealObjectTask(
-	ctx context.Context,
-	task task.SealObjectTask) error {
+func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.SealObjectTask) error {
 	if task == nil {
 		log.CtxErrorw(ctx, "failed to handle seal object, task pointer dangling")
 		return ErrDanglingTask
@@ -244,9 +235,7 @@ func (m *ManageModular) HandleSealObjectTask(
 	return nil
 }
 
-func (m *ManageModular) handleFailedSealObjectTask(
-	ctx context.Context,
-	handleTask task.SealObjectTask) error {
+func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTask task.SealObjectTask) error {
 	oldTask := m.sealQueue.PopByKey(handleTask.Key())
 	if m.TaskUploading(ctx, handleTask) {
 		log.CtxErrorw(ctx, "seal object task repeated")
@@ -274,9 +263,7 @@ func (m *ManageModular) handleFailedSealObjectTask(
 	return nil
 }
 
-func (m *ManageModular) HandleReceivePieceTask(
-	ctx context.Context,
-	task task.ReceivePieceTask) error {
+func (m *ManageModular) HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) error {
 	if task.GetSealed() {
 		m.receiveQueue.PopByKey(task.Key())
 		log.CtxDebugw(ctx, "succeed to confirm receive piece seal on chain")
@@ -295,9 +282,7 @@ func (m *ManageModular) HandleReceivePieceTask(
 	return nil
 }
 
-func (m *ManageModular) handleFailedReceivePieceTask(
-	ctx context.Context,
-	handleTask task.ReceivePieceTask) error {
+func (m *ManageModular) handleFailedReceivePieceTask(ctx context.Context, handleTask task.ReceivePieceTask) error {
 	oldTask := m.receiveQueue.PopByKey(handleTask.Key())
 	if oldTask == nil {
 		log.CtxErrorw(ctx, "task has been canceled")
@@ -314,9 +299,7 @@ func (m *ManageModular) handleFailedReceivePieceTask(
 	return nil
 }
 
-func (m *ManageModular) HandleGCObjectTask(
-	ctx context.Context,
-	gcTask task.GCObjectTask) error {
+func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask task.GCObjectTask) error {
 	if gcTask == nil {
 		log.CtxErrorw(ctx, "failed to handle gc object due to task pointer dangling")
 		return ErrDanglingTask
@@ -351,38 +334,27 @@ func (m *ManageModular) HandleGCObjectTask(
 	return nil
 }
 
-func (m *ManageModular) HandleGCZombiePieceTask(
-	ctx context.Context,
-	task task.GCZombiePieceTask) error {
+func (m *ManageModular) HandleGCZombiePieceTask(ctx context.Context, task task.GCZombiePieceTask) error {
 	return ErrFutureSupport
 }
 
-func (m *ManageModular) HandleGCMetaTask(
-	ctx context.Context,
-	task task.GCMetaTask) error {
+func (m *ManageModular) HandleGCMetaTask(ctx context.Context, task task.GCMetaTask) error {
 	return ErrFutureSupport
 }
 
-func (m *ManageModular) HandleDownloadObjectTask(
-	ctx context.Context,
-	task task.DownloadObjectTask) error {
+func (m *ManageModular) HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) error {
 	m.downloadQueue.Push(task)
 	log.CtxDebugw(ctx, "add download object task to queue")
 	return nil
 }
 
-func (m *ManageModular) HandleChallengePieceTask(
-	ctx context.Context,
-	task task.ChallengePieceTask) error {
+func (m *ManageModular) HandleChallengePieceTask(ctx context.Context, task task.ChallengePieceTask) error {
 	m.challengeQueue.Push(task)
 	log.CtxDebugw(ctx, "add challenge piece task to queue")
 	return nil
 }
 
-func (m *ManageModular) QueryTasks(
-	ctx context.Context,
-	subKey task.TKey) (
-	[]task.Task, error) {
+func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error) {
 	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(m.uploadQueue, subKey)
 	replicateTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.replicateQueue, subKey)
 	sealTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.sealQueue, subKey)

@@ -34,8 +34,8 @@ const (
 	AuthOpAskCreateBucketApproval
 	// AuthOpAskCreateObjectApproval defines the AskCreateObjectApproval operator
 	AuthOpAskCreateObjectApproval
-	// AuthOpTypeChallengePiece defines the ChallengePiece operator
-	AuthOpTypeChallengePiece
+	// AuthOpTypeGetChallengePieceInfo defines the GetChallengePieceInfo operator
+	AuthOpTypeGetChallengePieceInfo
 	// AuthOpTypePutObject defines the PutObject operator
 	AuthOpTypePutObject
 	// AuthOpTypeGetObject defines the GetObject operator
@@ -253,6 +253,8 @@ type Signer interface {
 	SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong) ([]byte, error)
 	// SealObject signs the MsgSealObject and broadcast the tx to greenfield.
 	SealObject(ctx context.Context, object *storagetypes.MsgSealObject) error
+	// RejectUnSealObject signs the MsgRejectSealObject and broadcast the tx to greenfield.
+	RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) error
 	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error
 }

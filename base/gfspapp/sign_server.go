@@ -15,12 +15,9 @@ var (
 
 var _ gfspserver.GfSpSignServiceServer = &GfSpBaseApp{}
 
-func (g *GfSpBaseApp) GfSpSign(
-	ctx context.Context,
-	req *gfspserver.GfSpSignRequest) (
-	*gfspserver.GfSpSignResponse, error) {
+func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequest) (*gfspserver.GfSpSignResponse, error) {
 	if req.GetRequest() == nil {
-		log.Error("failed to sign msg, msg pointer dangling")
+		log.Error("failed to sign msg due to pointer dangling")
 		return &gfspserver.GfSpSignResponse{Err: ErrSingTaskDangling}, nil
 	}
 	var (
@@ -43,6 +40,11 @@ func (g *GfSpBaseApp) GfSpSign(
 		err = g.signer.SealObject(ctx, t.SealObjectInfo)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to seal object", "error", err)
+		}
+	case *gfspserver.GfSpSignRequest_RejectObjectInfo:
+		err = g.signer.RejectUnSealObject(ctx, t.RejectObjectInfo)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reject unseal object", "error", err)
 		}
 	case *gfspserver.GfSpSignRequest_DiscontinueBucketInfo:
 		err = g.signer.DiscontinueBucket(ctx, t.DiscontinueBucketInfo)

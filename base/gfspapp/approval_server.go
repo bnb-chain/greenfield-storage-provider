@@ -17,12 +17,10 @@ var (
 
 var _ gfspserver.GfSpApprovalServiceServer = &GfSpBaseApp{}
 
-func (g *GfSpBaseApp) GfSpAskApproval(
-	ctx context.Context,
-	req *gfspserver.GfSpAskApprovalRequest) (
+func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpAskApprovalRequest) (
 	*gfspserver.GfSpAskApprovalResponse, error) {
 	if req.GetRequest() == nil {
-		log.Error("failed to ask approval, approval task pointer dangling")
+		log.Error("failed to ask approval due to pointer dangling")
 		return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalTaskDangling}, nil
 	}
 	switch task := req.GetRequest().(type) {
@@ -64,12 +62,9 @@ func (g *GfSpBaseApp) GfSpAskApproval(
 	}
 }
 
-func (g *GfSpBaseApp) OnAskCreateBucketApproval(
-	ctx context.Context,
-	task task.ApprovalCreateBucketTask) (
-	bool, error) {
+func (g *GfSpBaseApp) OnAskCreateBucketApproval(ctx context.Context, task task.ApprovalCreateBucketTask) (bool, error) {
 	if task == nil || task.GetCreateBucketInfo() == nil {
-		log.CtxError(ctx, "failed to ask create bucket approval, bucket info pointer dangling")
+		log.CtxError(ctx, "failed to ask create bucket approval due to bucket info pointer dangling")
 		return false, ErrApprovalTaskDangling
 	}
 
@@ -88,12 +83,9 @@ func (g *GfSpBaseApp) OnAskCreateBucketApproval(
 	return allow, nil
 }
 
-func (g *GfSpBaseApp) OnAskCreateObjectApproval(
-	ctx context.Context,
-	task task.ApprovalCreateObjectTask) (
-	bool, error) {
+func (g *GfSpBaseApp) OnAskCreateObjectApproval(ctx context.Context, task task.ApprovalCreateObjectTask) (bool, error) {
 	if task == nil || task.GetCreateObjectInfo() == nil {
-		log.CtxError(ctx, "failed to ask create object approval, object info pointer dangling")
+		log.CtxError(ctx, "failed to ask create object approval due to object info pointer dangling")
 		return false, ErrApprovalTaskDangling
 	}
 

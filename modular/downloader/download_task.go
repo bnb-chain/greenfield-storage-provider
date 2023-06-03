@@ -115,7 +115,7 @@ func SplitToSegmentPieceInfos(downloadObjectTask task.DownloadObjectTask, op pie
 		return nil, ErrInvalidParam
 	}
 	segmentSize := downloadObjectTask.GetStorageParams().VersionedParams.GetMaxSegmentSize()
-	segmentCount := op.MaxSegmentSize(downloadObjectTask.GetObjectInfo().GetPayloadSize(),
+	segmentCount := op.SegmentPieceCount(downloadObjectTask.GetObjectInfo().GetPayloadSize(),
 		downloadObjectTask.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 	var (
 		pieceInfos []*SegmentPieceInfo

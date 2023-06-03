@@ -14,7 +14,7 @@ const (
 	approvalRouterName                    = "GetApproval"
 	putObjectRouterName                   = "PutObject"
 	getObjectRouterName                   = "GetObject"
-	challengeRouterName                   = "Challenge"
+	getChallengeInfoRouterName            = "GetChallengeInfo"
 	replicateObjectPieceRouterName        = "ReplicateObjectPiece"
 	getUserBucketsRouterName              = "GetUserBuckets"
 	listObjectsByBucketRouterName         = "ListObjectsByBucketName"
@@ -23,11 +23,12 @@ const (
 	listBucketReadRecordRouterName        = "ListBucketReadRecord"
 	requestNonceName                      = "RequestNonce"
 	updateUserPublicKey                   = "UpdateUserPublicKey"
-	queryUploadProgressRouterName         = "queryUploadProgress"
+	queryUploadProgressRouterName         = "QueryUploadProgress"
 	downloadObjectByUniversalEndpointName = "DownloadObjectByUniversalEndpoint"
 	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
 	getObjectMetaRouterName               = "GetObjectMeta"
 	getBucketMetaRouterName               = "GetBucketMeta"
+	getGroupListRouterName                = "GetGroupList"
 )
 
 const (
@@ -95,6 +96,13 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		HandlerFunc(g.listObjectsByBucketNameHandler)
 	hostBucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 
+	// group router
+	router.Path("/").
+		Name(getGroupListRouterName).
+		Methods(http.MethodGet).
+		Queries(GetGroupListGroupQuery, "").
+		HandlerFunc(g.getGroupListHandler)
+
 	// bucket list router, path style
 	router.Path("/").
 		Name(getUserBucketsRouterName).
@@ -107,10 +115,10 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Methods(http.MethodGet).
 		Queries(ActionQuery, "{action}").
 		HandlerFunc(g.getApprovalHandler)
-	router.Path(ChallengePath).
-		Name(challengeRouterName).
+	router.Path(GetChallengeInfoPath).
+		Name(getChallengeInfoRouterName).
 		Methods(http.MethodGet).
-		HandlerFunc(g.challengeHandler)
+		HandlerFunc(g.getChallengeInfoHandler)
 	// replicate piece to receiver
 	router.Path(ReplicateObjectPiecePath).
 		Name(replicateObjectPieceRouterName).
