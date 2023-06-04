@@ -195,7 +195,7 @@ func getObjectAction(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to query bucket info, error: %v", err)
 	}
-	params, err := chain.QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+	params, err := chain.QueryStorageParams(context.Background())
 	if err != nil {
 		return fmt.Errorf("failed to query storage params, error: %v", err)
 	}
@@ -237,7 +237,7 @@ func challengePieceAction(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to query bucket info, error: %v", err)
 	}
-	params, err := chain.QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+	params, err := chain.QueryStorageParams(context.Background())
 	if err != nil {
 		return fmt.Errorf("failed to query storage params, error: %v", err)
 	}
