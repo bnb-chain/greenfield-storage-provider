@@ -216,6 +216,8 @@ type ResumableUploadObjectTask interface {
 	GetResumeOffset() uint64
 	// SetResumeOffset
 	SetResumeOffset(offset uint64)
+	GetCompleted() bool
+	SetCompleted(completed bool)
 }
 
 // The ReplicatePieceTask is the interface to record the information for replicating

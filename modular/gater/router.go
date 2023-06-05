@@ -60,7 +60,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		ActionQuery, "{action}")
 
 	// Challenge
-	router.Path(ChallengePath).Name(challengeRouterName).Methods(http.MethodGet).HandlerFunc(g.challengeHandler)
+	router.Path(GetChallengeInfoPath).Name(getChallengeInfoRouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoHandler)
 
 	// replicate piece to receiver
 	router.Path(ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)

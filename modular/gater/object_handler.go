@@ -140,6 +140,69 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 
 // resumablePutObjectHandler handles the resumable put object
 func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err        error
+		reqCtx     *RequestContext
+		authorized bool
+		objectInfo *storagetypes.ObjectInfo
+		params     *storagetypes.Params
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+	if reqCtx.NeedVerifyAuthorizer() {
+		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			return
+		}
+		if !authorized {
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+			err = ErrNoPermission
+			return
+		}
+	}
+
+	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+		err = ErrConsensus
+		return
+	}
+	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > g.maxPayloadSize {
+		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
+		err = ErrInvalidPayloadSize
+		return
+	}
+	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
+		err = ErrConsensus
+		return
+	}
+	task := &gfsptask.GfSpResumableUploadObjectTask{}
+	task.InitResumableUploadObjectTask(objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()))
+	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
+	err = g.baseApp.GfSpClient().ResumableUploadObject(ctx, task, r.Body)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
+	}
+	log.CtxDebugw(ctx, "succeed to upload payload data")
 
 }
 

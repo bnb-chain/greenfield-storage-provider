@@ -15,6 +15,7 @@ import (
 )
 
 var _ coretask.UploadObjectTask = &GfSpUploadObjectTask{}
+var _ coretask.ResumableUploadObjectTask = &GfSpResumableUploadObjectTask{}
 var _ coretask.ReplicatePieceTask = &GfSpReplicatePieceTask{}
 var _ coretask.SealObjectTask = &GfSpSealObjectTask{}
 var _ coretask.ReceivePieceTask = &GfSpReceivePieceTask{}
@@ -142,6 +143,151 @@ func (m *GfSpUploadObjectTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
 }
 
 func (m *GfSpUploadObjectTask) SetStorageParams(param *storagetypes.Params) {
+	m.StorageParams = param
+}
+
+func (m *GfSpResumableUploadObjectTask) InitResumableUploadObjectTask(
+	object *storagetypes.ObjectInfo,
+	params *storagetypes.Params,
+	timeout int64) {
+	m.Reset()
+	m.Task = &GfSpTask{}
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
+	m.SetTimeout(timeout)
+	m.SetObjectInfo(object)
+	m.SetStorageParams(params)
+}
+
+func (m *GfSpResumableUploadObjectTask) GetResumeOffset() uint64 {
+	return m.GetResumeOffset()
+}
+
+func (m *GfSpResumableUploadObjectTask) SetResumeOffset(offset uint64) {
+	m.SetResumeOffset(offset)
+}
+
+//func (m *GfSpResumableUploadObjectTask) GetCompleted() bool {
+//	return m.GetCompleted()
+//}
+
+func (m *GfSpResumableUploadObjectTask) SetCompleted(completed bool) {
+	m.SetCompleted(completed)
+}
+
+func (m *GfSpResumableUploadObjectTask) Key() coretask.TKey {
+	return GfSpResumableUploadObjectTaskKey(
+		m.GetObjectInfo().GetBucketName(),
+		m.GetObjectInfo().GetObjectName(),
+		m.GetObjectInfo().Id.String())
+}
+
+func (m *GfSpResumableUploadObjectTask) Type() coretask.TType {
+	return coretask.TypeTaskUpload
+}
+
+func (m *GfSpResumableUploadObjectTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
+		m.EstimateLimit().String(), m.GetTask().Info())
+}
+
+func (m *GfSpResumableUploadObjectTask) GetAddress() string {
+	return m.GetTask().GetAddress()
+}
+
+func (m *GfSpResumableUploadObjectTask) SetAddress(address string) {
+	m.GetTask().SetAddress(address)
+}
+
+func (m *GfSpResumableUploadObjectTask) GetCreateTime() int64 {
+	return m.GetTask().GetCreateTime()
+}
+
+func (m *GfSpResumableUploadObjectTask) SetCreateTime(time int64) {
+	m.GetTask().SetCreateTime(time)
+}
+
+func (m *GfSpResumableUploadObjectTask) GetUpdateTime() int64 {
+	return m.GetTask().GetUpdateTime()
+}
+
+func (m *GfSpResumableUploadObjectTask) SetUpdateTime(time int64) {
+	m.GetTask().SetUpdateTime(time)
+}
+
+func (m *GfSpResumableUploadObjectTask) GetTimeout() int64 {
+	return m.GetTask().GetTimeout()
+}
+
+func (m *GfSpResumableUploadObjectTask) SetTimeout(time int64) {
+	m.GetTask().SetTimeout(time)
+}
+
+func (m *GfSpResumableUploadObjectTask) ExceedTimeout() bool {
+	return m.GetTask().ExceedTimeout()
+}
+
+func (m *GfSpResumableUploadObjectTask) GetRetry() int64 {
+	return m.GetTask().GetRetry()
+}
+
+func (m *GfSpResumableUploadObjectTask) IncRetry() {
+	m.GetTask().IncRetry()
+}
+
+func (m *GfSpResumableUploadObjectTask) SetRetry(retry int) {
+	m.GetTask().SetRetry(retry)
+}
+
+func (m *GfSpResumableUploadObjectTask) GetMaxRetry() int64 {
+	return m.GetTask().GetMaxRetry()
+}
+
+func (m *GfSpResumableUploadObjectTask) SetMaxRetry(limit int64) {
+	m.GetTask().SetMaxRetry(limit)
+}
+
+func (m *GfSpResumableUploadObjectTask) ExceedRetry() bool {
+	return m.GetTask().ExceedRetry()
+}
+
+func (m *GfSpResumableUploadObjectTask) Expired() bool {
+	return m.GetTask().Expired()
+}
+
+func (m *GfSpResumableUploadObjectTask) GetPriority() coretask.TPriority {
+	return m.GetTask().GetPriority()
+}
+
+func (m *GfSpResumableUploadObjectTask) SetPriority(priority coretask.TPriority) {
+	m.GetTask().SetPriority(priority)
+}
+
+func (m *GfSpResumableUploadObjectTask) EstimateLimit() corercmgr.Limit {
+	l := &gfsplimit.GfSpLimit{}
+	if m.GetObjectInfo().GetPayloadSize() >= m.GetStorageParams().GetMaxSegmentSize() {
+		l.Memory = int64(m.GetStorageParams().GetMaxSegmentSize()) * 2
+	} else {
+		l.Memory = int64(m.GetObjectInfo().GetPayloadSize()) * 2
+	}
+	l.Add(LimitEstimateByPriority(m.GetPriority()))
+	return l
+}
+
+func (m *GfSpResumableUploadObjectTask) Error() error {
+	return m.GetTask().Error()
+}
+
+func (m *GfSpResumableUploadObjectTask) SetError(err error) {
+	m.GetTask().SetError(err)
+}
+
+func (m *GfSpResumableUploadObjectTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
+	m.ObjectInfo = object
+}
+
+func (m *GfSpResumableUploadObjectTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
 }
 

@@ -250,6 +250,9 @@ type Uploader interface {
 
 	PreResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) error
 	HandleResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error
+	// PostResumableUploadObject is called after HandleResumableUploadObjectTask, it can recycle
+	// resources, statistics and other operations.
+	PostResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask)
 
 	// QueryTasks queries upload object tasks that running on uploading by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)

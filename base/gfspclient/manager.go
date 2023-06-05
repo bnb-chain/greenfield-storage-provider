@@ -35,7 +35,34 @@ func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.Uploa
 	return nil
 }
 
-func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coretask.Task, error) {
+func (s *GfSpClient) CreateResumableUploadObject(
+	ctx context.Context,
+	task coretask.ResumableUploadObjectTask) error {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpBeginTaskRequest{
+		Request: &gfspserver.GfSpBeginTaskRequest_ResumableUploadObjectTask{
+			ResumableUploadObjectTask: task.(*gfsptask.GfSpResumableUploadObjectTask),
+		},
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpBeginTask(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to create upload object task", "error", err)
+		return ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		resp.GetErr()
+	}
+	return nil
+}
+
+func (s *GfSpClient) AskTask(
+	ctx context.Context,
+	limit corercmgr.Limit) (
+	coretask.Task, error) {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)

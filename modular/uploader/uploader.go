@@ -12,9 +12,10 @@ import (
 var _ module.Uploader = &UploadModular{}
 
 type UploadModular struct {
-	baseApp     *gfspapp.GfSpBaseApp
-	scope       rcmgr.ResourceScope
-	uploadQueue taskqueue.TQueueOnStrategy
+	baseApp               *gfspapp.GfSpBaseApp
+	scope                 rcmgr.ResourceScope
+	uploadQueue           taskqueue.TQueueOnStrategy
+	resumeableUploadQueue taskqueue.TQueueOnStrategy
 }
 
 func (u *UploadModular) Name() string {

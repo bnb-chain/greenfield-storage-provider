@@ -65,6 +65,8 @@ func (*NullModular) PreResumableUploadObject(ctx context.Context, task task.Resu
 func (*NullModular) HandleResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error {
 	return ErrNilModular
 }
+func (*NullModular) PostResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) {
+}
 
 func (*NullModular) HandleUploadObjectTask(ctx context.Context, task task.UploadObjectTask, stream io.Reader) error {
 	return nil
