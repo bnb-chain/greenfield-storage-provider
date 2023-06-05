@@ -1,0 +1,177 @@
+AppID = ''
+Server = []
+GrpcAddress = '${grpc_address}'
+
+[SpDB]
+User = '${user}'
+Passwd = '${password}'
+Address = '${db_address}'
+Database = '${database}'
+ConnMaxLifetime = 0
+ConnMaxIdleTime = 0
+MaxIdleConns = 0
+MaxOpenConns = 0
+
+[BsDB]
+User = '${user}'
+Passwd = '${password}'
+Address = '${db_address}'
+Database = '${database}'
+ConnMaxLifetime = 0
+ConnMaxIdleTime = 0
+MaxIdleConns = 0
+MaxOpenConns = 0
+
+[BsDBBackup]
+User = '${user}'
+Passwd = '${password}'
+Address = '${db_address}'
+Database = '${database}'
+ConnMaxLifetime = 0
+ConnMaxIdleTime = 0
+MaxIdleConns = 0
+MaxOpenConns = 0
+
+[PieceStore]
+Shards = 0
+
+[PieceStore.Store]
+Storage = ''
+BucketURL = ''
+MaxRetries = 0
+MinRetryDelay = 0
+TLSInsecureSkipVerify = false
+IAMType = ''
+
+[Chain]
+ChainID = '${chain_id}'
+ChainAddress = ['${chain_address}']
+GasLimit = 0
+
+[SpAccount]
+SpOperateAddress = '${sp_operator_address}'
+OperatorPrivateKey = '${operator_private_key}'
+FundingPrivateKey = '${funding_private_key}'
+SealPrivateKey = '${seal_private_key}'
+ApprovalPrivateKey = '${approval_private_key}'
+GcPrivateKey = '${gc_private_key}'
+
+[Endpoint]
+ApproverEndpoint = ''
+ManagerEndpoint = ''
+DownloaderEndpoint = ''
+ReceiverEndpoint = ''
+MetadataEndpoint = ''
+UploaderEndpoint = ''
+P2PEndpoint = ''
+SignerEndpoint = ''
+AuthorizerEndpoint = ''
+
+[Approval]
+BucketApprovalTimeoutHeight = 0
+ObjectApprovalTimeoutHeight = 0
+ReplicatePieceTimeoutHeight = 0
+
+[Bucket]
+AccountBucketNumber = 0
+FreeQuotaPerBucket = 0
+MaxListReadQuotaNumber = 0
+MaxPayloadSize = 0
+
+[Gateway]
+Domain = 'gnfd.test-sp.com'
+HttpAddress = '${http_address}'
+
+[Executor]
+MaxExecuteNumber = 0
+AskTaskInterval = 0
+AskReplicateApprovalTimeout = 0
+AskReplicateApprovalExFactor = 0.0
+ListenSealTimeoutHeight = 0
+ListenSealRetryTimeout = 0
+MaxListenSealRetry = 0
+
+[P2P]
+P2PPrivateKey = '${p2p_private_key}'
+P2PAddress = '${p2p_address}'
+P2PAntAddress = '${p2p_ant_address}'
+P2PBootstrap = []
+P2PPingPeriod = 0
+
+[Parallel]
+GlobalCreateBucketApprovalParallel = 0
+GlobalCreateObjectApprovalParallel = 0
+GlobalMaxUploadingParallel = 0
+GlobalUploadObjectParallel = 0
+GlobalReplicatePieceParallel = 0
+GlobalSealObjectParallel = 0
+GlobalReceiveObjectParallel = 0
+GlobalGCObjectParallel = 0
+GlobalGCZombieParallel = 0
+GlobalGCMetaParallel = 0
+GlobalDownloadObjectTaskCacheSize = 0
+GlobalChallengePieceTaskCacheSize = 0
+GlobalBatchGcObjectTimeInterval = 0
+GlobalGcObjectBlockInterval = 0
+GlobalGcObjectSafeBlockDistance = 0
+GlobalSyncConsensusInfoInterval = 0
+UploadObjectParallelPerNode = 0
+ReceivePieceParallelPerNode = 0
+DownloadObjectParallelPerNode = 0
+ChallengePieceParallelPerNode = 0
+AskReplicateApprovalParallelPerNode = 0
+QuerySPParallelPerNode = 0
+DiscontinueBucketEnabled = false
+DiscontinueBucketTimeInterval = 0
+DiscontinueBucketKeepAliveDays = 0
+
+[Task]
+UploadTaskSpeed = 0
+DownloadTaskSpeed = 0
+ReplicateTaskSpeed = 0
+ReceiveTaskSpeed = 0
+SealObjectTaskTimeout = 0
+GcObjectTaskTimeout = 0
+GcZombieTaskTimeout = 0
+GcMetaTaskTimeout = 0
+SealObjectTaskRetry = 0
+ReplicateTaskRetry = 0
+ReceiveConfirmTaskRetry = 0
+GcObjectTaskRetry = 0
+GcZombieTaskRetry = 0
+GcMetaTaskRetry = 0
+
+[Monitor]
+DisableMetrics = true
+DisablePProf = true
+MetricsHttpAddress = '${metrics_http_address}'
+PProfHttpAddress = '${pprof_http_address}'
+
+[Rcmgr]
+DisableRcmgr = false
+
+[Log]
+Level = ''
+Path = ''
+
+[Metadata]
+IsMasterDB = true
+BsDBSwitchCheckIntervalSec = 30
+
+[BlockSyncer]
+Modules = ['epoch','bucket','object','payment','group','permission','storage_provider','prefix_tree']
+Dsn = "${dsn}"
+DsnSwitched = ''
+RecreateTables = true
+Workers = 50
+EnableDualDB = false
+
+[APIRateLimiter]
+PathPattern = []
+HostPattern = []
+APILimits = []
+
+[APIRateLimiter.IPLimitCfg]
+On = false
+RateLimit = 0
+RatePeriod = ''

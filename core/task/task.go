@@ -1,86 +1,20 @@
 package task
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
+	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 )
 
-// Task is the interface to the smallest unit of SP service interaction.
-//
-// Task Type:
-//
-//	There are three main types of task, ApprovalTask, ObjectTask and GCTask.
-//	The ApprovalTask is used to record the ask approval information, for user
-//	creating bucket and object need ask primary SP approval if willing serve
-//	the bucket and object, the SP will sign the approval msg if it approved
-//	the msg, and the greenfield will verify the signature of the approval msg
-//	to judge whether SP accepts the bucket and object, for primary replicating
-//	pieces to the secondary SPs need broadcast the approval msg to other SPs,
-//	if they approved the msg, the primary SP will pick up some of them that
-//	approved the msg and replicate the pieces to the these, and they will verify
-//	the signature of the approval msg before receive the pieces. so the
-//	ApprovalTask includes ApprovalCreateBucketTask, ApprovalCreateBucketTask and
-//	ApprovalReplicatePieceTask.
-//	The ObjectTask associated with an object, and records the information of
-//	different stages of the object, includes UploadObjectTask stands upload the
-//	object payload data to the primary SP, ReplicatePieceTask stands replicate
-//	the object pieces to the secondary SPs, ReceivePieceTask only belong to the
-//	secondary SP, records the information of receiving piece and the secondary SP
-//	use it to confirm the object if success to seal on the greenfield, this will
-//	guarantee a return of the secondary SP. SealObjectTask stands seal object on
-//	the greenfield, DownloadObjectTask stands the user download the part or all
-//	object payload data, ChallengePieceTask stands the validator get the challenge
-//	piece info, the validator to challenge the SP if store the user's payload data
-//	correctly by this way.
-//	The GCTask is the interface to record the information of garbage collection,
-//	includes GCObjectTask stands the collection of piece store space by deleting
-//	the payload data that has been deleted on the greenfield, GCZombiePieceTask
-//	stands the collection of piece store space by deleting zombie pieces data that
-//	dues to any exception, the piece data meta is not on the greenfield, GCMetaTask
-//	stands the collection of the SP meta store space by deleting the expired data.
-//
-// Task Priority:
-//
-//	Each type of task has a priority, the range of priority is [0, 255], the higher
-//	the priority, the higher the urgency to be executed, the greater the probability
-//	of being executed by priority scheduling.
-//
-// Task Priority Level:
-//
-//	Task priority is divided into three levels, TLowPriorityLevel, TMediumPriorityLevel,
-//	THighPriorityLevel. The TLowPriorityLevel default priority range is [0, 85), The
-//	TMediumPriorityLevel default priority range is [85, 170), The THighPriorityLevel
-//	default priority range is [170, 256). When allocating for task execution resources
-//	from ResourceManager, the resources are allocated according to task priority level,
-//	but not task priority, because task priority up to 256 levels, the task priority
-//	level make resource management easier.
-//	Example:
-//		the resource limit configuration of task execution node :
-//			[TasksHighPriority: 30, TasksMediumPriority: 20, TasksLowPriority: 2]
-//		the executor of the task can run 30 high level tasks at the same time that the
-//			task priority >= 170
-//	 	the executor of the task can run 20 medium level tasks at the same time that the
-//			task priority between [85, 170)
-//		the executor of the task can run 2 medium level tasks at the same time that the
-//			task priority < 85
-//
-// Task Init:
-//
-//	Each task needs to call its InitXXX method before use. This method requires passing
-//	in the necessary parameters of each type of task. These parameters will not be changed
-//	in most cases and are necessary, such as task priority, timeout, max retries, and
-//	necessary information for resource estimation.
-//	Any changes to initialization parameters during task execution may cause unpredictable
-//	consequences. For example, changes in parameters that affect resource estimation may
-//	lead to OOM, etc.
+// Task is an abstract interface to describe the smallest unit of SP service how to interact.
 type Task interface {
 	// Key returns the uniquely identify of the task. It is recommended that each task
 	// has its own prefix. In addition, it should also include the information of the
 	// task's own identity.
-	// Example:
-	//	the ApprovalTask maybe includes the bucket and object name,
-	//	the ObjectTask maybe includes the object ID,
-	// 	the GCTask maybe includes the timestamp.
+	// For example:
+	// 1. ApprovalTask maybe includes the bucket name and object name,
+	// 2. ObjectTask maybe includes the object ID,
+	// 3. GCTask maybe includes the timestamp.
 	Key() TKey
 	// Type returns the type of the task. A task has a unique type, such as
 	// TypeTaskCreateBucketApproval, TypeTaskUpload etc. has the only one TType
@@ -149,9 +83,9 @@ type Task interface {
 	SetError(error)
 }
 
-// ApprovalTask is the interface to record the ask approval information, the
-// approval task timeliness uses the block height, if reached expired height,
-// the approval invalid.
+// ApprovalTask is an abstract interface to record the ask approval information.
+// ApprovalTask uses block height to verify whether the approval is expired.
+// If reached expired height, the approval invalid.
 type ApprovalTask interface {
 	Task
 	// GetExpiredHeight returns the expired height of the approval.
@@ -163,14 +97,14 @@ type ApprovalTask interface {
 	SetExpiredHeight(uint64)
 }
 
-// ApprovalCreateBucketTask is the interface to record the ask create bucket
-// approval information. The user account will create MsgCreateBucket, the SP
+// ApprovalCreateBucketTask is an abstract interface to record the ask create bucket approval information.
+// The user account will create MsgCreateBucket, SP
 // should decide whether approved the request based on the MsgCreateBucket.
-// If so, the sp will SetExpiredHeight and signs the MsgCreateBucket.
+// If so, SP will SetExpiredHeight and signs the MsgCreateBucket.
 type ApprovalCreateBucketTask interface {
 	ApprovalTask
 	// InitApprovalCreateBucketTask inits the ApprovalCreateBucketTask by
-	// MsgCreateBucket and task priority. the SP only fill the MsgCreateBucket's
+	// MsgCreateBucket and task priority. SP only fill the MsgCreateBucket's
 	// PrimarySpApproval field, can not change other fields.
 	InitApprovalCreateBucketTask(*storagetypes.MsgCreateBucket, TPriority)
 	// GetCreateBucketInfo returns the user's MsgCreateBucket.
@@ -180,14 +114,14 @@ type ApprovalCreateBucketTask interface {
 	SetCreateBucketInfo(*storagetypes.MsgCreateBucket)
 }
 
-// ApprovalCreateObjectTask is the interface to record the ask create object
-// approval information. The user account will create MsgCreateObject, the SP
+// ApprovalCreateObjectTask is an abstract interface to record the ask create object
+// approval information. The user account will create MsgCreateObject, SP
 // should decide whether approved the request based on the MsgCreateObject.
-// If so, the sp will SetExpiredHeight and signs the MsgCreateObject.
+// If so, SP will SetExpiredHeight and signs the MsgCreateObject.
 type ApprovalCreateObjectTask interface {
 	ApprovalTask
 	// InitApprovalCreateObjectTask inits the ApprovalCreateObjectTask by
-	// MsgCreateObject and task priority. the SP only fill the MsgCreateObject's
+	// MsgCreateObject and task priority. SP only fill the MsgCreateObject's
 	// PrimarySpApproval field, can not change other fields.
 	InitApprovalCreateObjectTask(*storagetypes.MsgCreateObject, TPriority)
 	// GetCreateObjectInfo returns the user's MsgCreateObject.
@@ -197,7 +131,7 @@ type ApprovalCreateObjectTask interface {
 	SetCreateObjectInfo(*storagetypes.MsgCreateObject)
 }
 
-// ApprovalReplicatePieceTask is the interface to record the ask replicate pieces
+// ApprovalReplicatePieceTask is an abstract interface to record the ask replicate pieces
 // to other SPs(as secondary SP for the object). It is initiated by the primary SP
 // in the replicate pieces phase. Before the primary SP sends it to other SPs, the
 // primary SP will sign the task, other SPs will verify it is sent by a legitimate
@@ -208,44 +142,44 @@ type ApprovalReplicatePieceTask interface {
 	ApprovalTask
 	// InitApprovalReplicatePieceTask inits the ApprovalReplicatePieceTask by ObjectInfo,
 	// storage params, task priority and primary operator address. the storage params
-	// can affect the size of the data accepted by the secondary SP, so this is a necessary
+	// can affect the size of the data accepted by secondary SP, so this is a necessary
 	// and cannot be changed parameter.
 	InitApprovalReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, askOpAddress string)
-	// GetAskSpOperatorAddress returns the SP's operator address that initiated the ask
+	// GetAskSpOperatorAddress returns the operator address of SP that initiated the ask
 	// replicate piece approval request.
 	GetAskSpOperatorAddress() string
-	// SetAskSpOperatorAddress sets the SP's operator address that initiated the ask
+	// SetAskSpOperatorAddress sets the operator address of SP that initiated the ask
 	// replicate piece approval request. Should try to avoid calling this method,
 	// it will change the approval information.
 	SetAskSpOperatorAddress(string)
-	// GetAskSignature returns the initiated SP's signature by its operator private key.
+	// GetAskSignature returns the initiated signature of SP signature by its operator private key.
 	GetAskSignature() []byte
-	// SetAskSignature sets the initiated SP's signature by its operator private key.
+	// SetAskSignature sets the initiated signature of SP by its operator private key.
 	SetAskSignature([]byte)
-	// GetApprovedSpOperatorAddress returns the approved SP's operator address.
+	// GetApprovedSpOperatorAddress returns the approved operator address of SP.
 	GetApprovedSpOperatorAddress() string
-	// SetApprovedSpOperatorAddress sets the approved SP's operator address.
+	// SetApprovedSpOperatorAddress sets the approved operator address of SP.
 	SetApprovedSpOperatorAddress(string)
-	// GetApprovedSignature returns the approved SP's signature.
+	// GetApprovedSignature returns the approved signature of SP.
 	GetApprovedSignature() []byte
-	// SetApprovedSignature sets the approved SP's signature.
+	// SetApprovedSignature sets the approved signature of SP.
 	SetApprovedSignature([]byte)
-	// GetApprovedSpEndpoint returns the approved SP's endpoint. It is used to replicate
+	// GetApprovedSpEndpoint returns the approved endpoint of SP. It is used to replicate
 	// pieces to secondary SP.
 	GetApprovedSpEndpoint() string
-	// SetApprovedSpEndpoint sets the approved SP's endpoint.
+	// SetApprovedSpEndpoint sets the approved endpoint of SP.
 	SetApprovedSpEndpoint(string)
-	// GetApprovedSpApprovalAddress returns the approved SP's approval address. It is
+	// GetApprovedSpApprovalAddress returns the approved approval address of SP. It is
 	// used to seal object on greenfield.
 	GetApprovedSpApprovalAddress() string
-	// SetApprovedSpApprovalAddress sets the approved SP's approval address.
+	// SetApprovedSpApprovalAddress sets the approved approval address of SP.
 	SetApprovedSpApprovalAddress(string)
 	// GetSignBytes returns the bytes from the task for initiated and approved SPs
 	// to sign.
 	GetSignBytes() []byte
 }
 
-// The ObjectTask associated with an object and storage params, and records the
+// ObjectTask associated with an object and storage params, and records the
 // information of different stages of the object. Considering the change of storage
 // params on the greenfield, the storage params of each object should be determined
 // when it is created, and it should not be queried during the task flow, which is
@@ -260,12 +194,11 @@ type ObjectTask interface {
 	GetStorageParams() *storagetypes.Params
 	// SetStorageParams sets the storage params.Should try to avoid calling this
 	// method, it will change the task base information.
-	// Example:
-	// 	it will change resource estimate for UploadObjectTask and so on.
+	// For example: it will change resource estimate for UploadObjectTask and so on.
 	SetStorageParams(*storagetypes.Params)
 }
 
-// The UploadObjectTask is the interface to record the information for uploading object
+// UploadObjectTask is an abstract interface to record the information for uploading object
 // payload data to the primary SP.
 type UploadObjectTask interface {
 	ObjectTask
@@ -273,7 +206,7 @@ type UploadObjectTask interface {
 	InitUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
 }
 
-// The ReplicatePieceTask is the interface to record the information for replicating
+// ReplicatePieceTask is an abstract interface to record the information for replicating
 // pieces of object pieces data to secondary SPs.
 type ReplicatePieceTask interface {
 	ObjectTask
@@ -288,14 +221,14 @@ type ReplicatePieceTask interface {
 	GetSealed() bool
 	// SetSealed sets the state successful seal object after replicating piece.
 	SetSealed(bool)
-	// GetSecondarySignature returns the secondary SP's signatures. It is used to
+	// GetSecondarySignature returns the secondary signatures of SP. It is used to
 	// generate MsgSealObject.
 	GetSecondarySignature() [][]byte
-	// SetSecondarySignature sets the secondary SP's signatures.
+	// SetSecondarySignature sets the secondary signatures of SP.
 	SetSecondarySignature([][]byte)
 }
 
-// The ReceivePieceTask is the interface to record the information for receiving pieces
+// ReceivePieceTask is an abstract interface to record the information for receiving pieces
 // of object payload data from primary SP, it exists only in secondary SP.
 type ReceivePieceTask interface {
 	ObjectTask
@@ -321,11 +254,11 @@ type ReceivePieceTask interface {
 	GetPieceChecksum() []byte
 	// SetPieceChecksum set the checksum of received piece data.
 	SetPieceChecksum([]byte)
-	// GetSignature returns the primary SP's signature, because the InitReceivePieceTask
-	// will be transfer to secondary SP's, It is necessary to prove that the task was
+	// GetSignature returns the primary signature of SP, because the InitReceivePieceTask
+	// will be transfer to secondary SP, It is necessary to prove that the task was
 	// sent by a legitimate SP.
 	GetSignature() []byte
-	// SetSignature sets the primary SP's signature.
+	// SetSignature sets the primary signature of SP.
 	SetSignature([]byte)
 	// GetSignBytes returns the bytes from the task for primary SP to sign.
 	GetSignBytes() []byte
@@ -337,19 +270,18 @@ type ReceivePieceTask interface {
 	SetSealed(bool)
 }
 
-// The SealObjectTask is the interface to  record the information for sealing object to
-// the greenfield.
+// SealObjectTask is an abstract interface to record the information for sealing object on Greenfield chain.
 type SealObjectTask interface {
 	ObjectTask
 	// InitSealObjectTask inits the SealObjectTask.
 	InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, signature [][]byte,
 		timeout int64, retry int64)
-	// GetSecondarySignature returns the secondary SP's signature, it is used to generate
+	// GetSecondarySignature returns the secondary signature of SP, it is used to generate
 	// MsgSealObject.
 	GetSecondarySignature() [][]byte
 }
 
-// The DownloadObjectTask is the interface to record the information for downloading
+// DownloadObjectTask is an abstract interface to record the information for downloading
 // pieces of object payload data.
 type DownloadObjectTask interface {
 	ObjectTask
@@ -374,7 +306,7 @@ type DownloadObjectTask interface {
 	GetHigh() int64
 }
 
-// The DownloadPieceTask is the interface to record the information for downloading piece data.
+// DownloadPieceTask is an abstract interface to record the information for downloading piece data.
 type DownloadPieceTask interface {
 	ObjectTask
 	// InitDownloadPieceTask inits DownloadPieceTask.
@@ -405,7 +337,7 @@ type DownloadPieceTask interface {
 	GetPieceLength() uint64
 }
 
-// ChallengePieceTask is the interface to record the information for get challenge
+// ChallengePieceTask is an abstract interface to record the information for get challenge
 // piece info, the validator get challenge info to confirm whether the sp stores
 // the user's data correctly.
 type ChallengePieceTask interface {
@@ -444,12 +376,12 @@ type ChallengePieceTask interface {
 	SetPieceDataSize(int64)
 }
 
-// The GCTask is the interface to record the information of garbage collection.
+// GCTask is an abstract interface to record the information of garbage collection.
 type GCTask interface {
 	Task
 }
 
-// The GCObjectTask is the interface to record the information for collecting the
+// The GCObjectTask is an abstract interface to record the information for collecting the
 // piece store space by deleting object payload data that the object has been deleted
 // on the Greenfield chain.
 type GCObjectTask interface {
@@ -480,7 +412,7 @@ type GCObjectTask interface {
 	SetGCObjectProgress(uint64, uint64)
 }
 
-// The GCZombiePieceTask is the interface to record the information for collecting
+// GCZombiePieceTask is an abstract interface to record the information for collecting
 // the piece store space by deleting zombie pieces data that dues to any exception,
 // the piece data meta is not on chain but the pieces has been store in piece store.
 type GCZombiePieceTask interface {
@@ -493,7 +425,7 @@ type GCZombiePieceTask interface {
 	SetGCZombiePieceStatus(uint64, uint64)
 }
 
-// The GCMetaTask is the interface to record the information for collecting the SP
+// GCMetaTask is an abstract interface to record the information for collecting the SP
 // meta store space by deleting the expired data.
 type GCMetaTask interface {
 	GCTask

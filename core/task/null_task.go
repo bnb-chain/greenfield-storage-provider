@@ -1,8 +1,9 @@
 package task
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
+	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 )
 
 var _ Task = (*NullTask)(nil)
