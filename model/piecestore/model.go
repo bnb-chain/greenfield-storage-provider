@@ -43,13 +43,6 @@ const (
 	MinioSecretKey = "MINIO_SECRET_KEY"
 	// MinioSessionToken defines env variable name for minio session token
 	MinioSessionToken = "MINIO_SESSION_TOKEN"
-
-	// LdfsAccessKey defines env variable name for ldfs access key
-	LdfsAccessKey = "LDFS_ACCESS_KEY"
-	// LdfsSecretKey defines env variable name for ldfs secret key
-	LdfsSecretKey = "LDFS_SECRET_KEY"
-	// LdfsSessionToken defines env variable name for ldfs session token
-	LdfsSessionToken = "LDFS_SESSION_TOKEN"
 )
 
 // define piece store constants.

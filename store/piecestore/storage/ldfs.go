@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
-	mpiecestore "github.com/bnb-chain/greenfield-storage-provider/model/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -58,10 +57,7 @@ func (sc *SessionCache) newLdfsSession(cfg ObjectStorageConfig) (*session.Sessio
 		S3ForcePathStyle: aws.Bool(true),
 		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
 	}
-	key := getSecretKeyFromEnv(mpiecestore.LdfsAccessKey, mpiecestore.LdfsSecretKey, mpiecestore.LdfsSessionToken)
-	if key.accessKey != "" && key.secretKey != "" {
-		awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
-	}
+	awsConfig.Credentials = credentials.NewStaticCredentials("ldfs", "ldfs", "")
 
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {
