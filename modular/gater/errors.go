@@ -20,7 +20,7 @@ var (
 	ErrRefuseApproval            = gfsperrors.Register(module.GateModularName, http.StatusOK, 50007, "approval request is refuse")
 	ErrUnsupportedRequestType    = gfsperrors.Register(module.GateModularName, http.StatusNotFound, 50008, "unsupported request type")
 	ErrInvalidHeader             = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50009, "invalid request header")
-	ErrInvalidQuery              = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50010, "invalid request header params for query")
+	ErrInvalidQuery              = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50010, "invalid request params for query")
 	ErrEncodeResponse            = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50011, "server slipped away, try again later")
 	ErrInvalidRange              = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50012, "invalid range params")
 	ErrExceptionStream           = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50013, "stream exception")
