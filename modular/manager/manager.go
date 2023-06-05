@@ -26,6 +26,12 @@ const (
 
 	// DiscontinueBucketLimit define the max buckets to fetch in a single request
 	DiscontinueBucketLimit = int64(500)
+
+	// RejectUnSealObjectRetry defines the retry number of sending reject unseal object tx.
+	RejectUnSealObjectRetry = 3
+
+	// RejectUnSealObjectTimeout defines the timeout of sending reject unseal object tx.
+	RejectUnSealObjectTimeout = 3
 )
 
 var _ module.Manager = &ManageModular{}
@@ -326,6 +332,25 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 			}
 		}
 	}
+}
+
+func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storagetypes.ObjectInfo) error {
+	rejectUnSealObjectMsg := &storagetypes.MsgRejectSealObject{
+		BucketName: object.GetBucketName(),
+		ObjectName: object.GetObjectName(),
+	}
+
+	var err error
+	for i := 0; i < RejectUnSealObjectRetry; i++ {
+		err = m.baseApp.GfSpClient().RejectUnSealObject(ctx, rejectUnSealObjectMsg)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reject unseal object", "retry", i, "error", err)
+			time.Sleep(RejectUnSealObjectTimeout * time.Second)
+		} else {
+			break
+		}
+	}
+	return err
 }
 
 func (m *ManageModular) Statistics() string {

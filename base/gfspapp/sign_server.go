@@ -41,6 +41,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to seal object", "error", err)
 		}
+	case *gfspserver.GfSpSignRequest_RejectObjectInfo:
+		err = g.signer.RejectUnSealObject(ctx, t.RejectObjectInfo)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reject unseal object", "error", err)
+		}
 	case *gfspserver.GfSpSignRequest_DiscontinueBucketInfo:
 		err = g.signer.DiscontinueBucket(ctx, t.DiscontinueBucketInfo)
 		if err != nil {

@@ -28,6 +28,7 @@ const (
 	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
 	getObjectMetaRouterName               = "GetObjectMeta"
 	getBucketMetaRouterName               = "GetBucketMeta"
+	getGroupListRouterName                = "GetGroupList"
 )
 
 const (
@@ -94,6 +95,13 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Path("/").
 		HandlerFunc(g.listObjectsByBucketNameHandler)
 	hostBucketRouter.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
+
+	// group router
+	router.Path("/").
+		Name(getGroupListRouterName).
+		Methods(http.MethodGet).
+		Queries(GetGroupListGroupQuery, "").
+		HandlerFunc(g.getGroupListHandler)
 
 	// bucket list router, path style
 	router.Path("/").
