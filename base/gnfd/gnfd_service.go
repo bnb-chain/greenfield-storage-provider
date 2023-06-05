@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -20,12 +19,13 @@ import (
 
 // CurrentHeight the block height sub one as the stable height.
 func (g *Gnfd) CurrentHeight(ctx context.Context) (uint64, error) {
-	resp, err := g.getCurrentClient().chainClient.TmClient.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
+	resp, err := g.getCurrentWsClient().ABCIInfo(ctx)
 	if err != nil {
-		log.CtxErrorw(ctx, "get latest block height failed", "node_addr", g.client.Provider, "error", err)
+		log.CtxErrorw(ctx, "get latest block height failed", "node_addr",
+			g.getCurrentWsClient().Remote(), "error", err)
 		return 0, err
 	}
-	return (uint64)(resp.SdkBlock.Header.Height), nil
+	return (uint64)(resp.Response.LastBlockHeight), nil
 }
 
 // HasAccount returns an indication of the existence of address.
