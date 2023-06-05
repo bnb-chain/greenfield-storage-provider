@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	ErrUploadTaskDangling  = gfsperrors.Register(BaseCodeSpace, http.StatusInternalServerError, 990601, "OoooH... request lost")
+	ErrUploadTaskDangling  = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990601, "OoooH... request lost")
 	ErrUnsupportedTaskType = gfsperrors.Register(BaseCodeSpace, http.StatusNotFound, 990602, "unsupported task type")
 	ErrNoTaskMatchLimit    = gfsperrors.Register(BaseCodeSpace, http.StatusNotFound, 990603, "no task to dispatch below the require limits")
 )

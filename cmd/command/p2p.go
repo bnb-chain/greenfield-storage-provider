@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var number = &cli.IntFlag{
+var numberFlag = &cli.IntFlag{
 	Name:  "n",
 	Usage: "The number of key pairs",
 	Value: 1,
@@ -19,7 +19,7 @@ var P2PCreateKeysCmd = &cli.Command{
 	Name:   "p2p.create.key",
 	Usage:  "Create Secp256k1 key pairs for encrypting p2p protocol msg and identifying p2p node",
 	Flags: []cli.Flag{
-		number,
+		numberFlag,
 	},
 	Category: "P2P COMMANDS",
 	Description: `The p2p.create.key creates 'n' sets of Secp256k1 key pairs, each key pair contains a private key 
@@ -28,7 +28,7 @@ to other p2p nodes for communication by p2p protocol.`,
 }
 
 func p2pCreateKeysAction(ctx *cli.Context) error {
-	n := ctx.Int(number.Name)
+	n := ctx.Int(numberFlag.Name)
 	makeKeyPairs := func() (string, string, error) {
 		privKey, _, err := crypto.GenerateKeyPair(crypto.Secp256k1, 256)
 		if err != nil {

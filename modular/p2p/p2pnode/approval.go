@@ -93,7 +93,7 @@ func (a *ApprovalProtocol) ComputeApprovalExpiredHeight(task coretask.ApprovalRe
 		redundancyHeight uint64 = 100
 	)
 	totalUnit := task.GetObjectInfo().GetPayloadSize() /
-		uint64(task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()) / computeUnit
+		uint64(task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()+1) / computeUnit
 	return totalUnit/speedUnit + redundancyHeight, nil
 }
 

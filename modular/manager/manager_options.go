@@ -10,19 +10,19 @@ const (
 	// DefaultGlobalMaxUploadingNumber defines the default max uploading object number
 	// in SP, include: uploading object to primary, replicate object to secondaries,
 	// and sealing object on greenfield.
-	DefaultGlobalMaxUploadingNumber int = 4096
+	DefaultGlobalMaxUploadingNumber int = 40960
 	// DefaultGlobalUploadObjectParallel defines the default max parallel uploading
 	// objects to primary in SP system.
-	DefaultGlobalUploadObjectParallel int = 1024
+	DefaultGlobalUploadObjectParallel int = 10240
 	// DefaultGlobalReplicatePieceParallel defines the default max parallel replicating
 	// objects to primary in SP system.
-	DefaultGlobalReplicatePieceParallel int = 1024
+	DefaultGlobalReplicatePieceParallel int = 10240
 	// DefaultGlobalSealObjectParallel defines the default max parallel sealing objects
 	// on greenfield in SP system.
-	DefaultGlobalSealObjectParallel int = 1024
+	DefaultGlobalSealObjectParallel int = 10240
 	// DefaultGlobalReceiveObjectParallel defines the default max parallel confirming
 	// receive pieces on greenfield in SP system.
-	DefaultGlobalReceiveObjectParallel int = 4096
+	DefaultGlobalReceiveObjectParallel int = 10240
 	// DefaultGlobalGCObjectParallel defines the default max parallel gc objects in SP
 	// system.
 	DefaultGlobalGCObjectParallel int = 4
@@ -56,7 +56,7 @@ const (
 
 	// DefaultDiscontinueTimeInterval defines the default interval for starting discontinue
 	// buckets task , used for test net.
-	DefaultDiscontinueTimeInterval = 30 * 60
+	DefaultDiscontinueTimeInterval = 3 * 60
 	// DefaultDiscontinueBucketKeepAliveDays defines the default bucket keep alive days, after
 	// the interval, buckets will be discontinued, used for test net.
 	DefaultDiscontinueBucketKeepAliveDays = 7

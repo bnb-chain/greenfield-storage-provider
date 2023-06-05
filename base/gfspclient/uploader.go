@@ -23,7 +23,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 			log.CtxDebugw(ctx, "succeed to send payload data", "info", task.Info(),
 				"send_size", sendSize)
 		} else {
-			log.CtxDebugw(ctx, "failed to send payload data", "send_size", sendSize)
+			log.CtxDebugw(ctx, "finished to send payload data", "send_size", sendSize)
 		}
 	}()
 	client, err := gfspserver.NewGfSpUploadServiceClient(conn).GfSpUploadObject(ctx)
