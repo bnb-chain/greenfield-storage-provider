@@ -412,9 +412,9 @@ func (gateway *Gateway) getObjectByUniversalEndpointHandler(w http.ResponseWrite
 		w.Header().Set(model.ContentDispositionHeader, model.ContentDispositionInlineValue)
 	}
 	w.Header().Set(model.GnfdRequestIDHeader, reqContext.requestID)
-	w.Header().Set(model.ContentTypeHeader, reqContext.objectInfo.GetContentType())
+	w.Header().Set(model.ContentTypeHeader, getObjectInfoRes.GetObject().GetObjectInfo().GetContentType())
 	if !isRange {
-		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(reqContext.objectInfo.GetPayloadSize()))
+		w.Header().Set(model.ContentLengthHeader, util.Uint64ToString(getObjectInfoRes.GetObject().GetObjectInfo().GetPayloadSize()))
 	}
 
 	for {
