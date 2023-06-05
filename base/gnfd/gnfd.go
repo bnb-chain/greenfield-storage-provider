@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	ErrNoSuchBucket = gfsperrors.Register(GreenFieldChain, http.StatusInternalServerError, 500001, "no such bucket")
-	ErrSealTimeout  = gfsperrors.Register(GreenFieldChain, http.StatusInternalServerError, 500002, "seal failed")
+	ErrNoSuchBucket = gfsperrors.Register(GreenFieldChain, http.StatusBadRequest, 500001, "no such bucket")
+	ErrSealTimeout  = gfsperrors.Register(GreenFieldChain, http.StatusBadRequest, 500002, "seal failed")
 )
 
 // GreenfieldClient the greenfield chain client, only use to query.

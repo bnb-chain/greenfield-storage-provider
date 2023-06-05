@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ErrReplicatePieceApprovalTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusInternalServerError, 990701, "OoooH... request lost")
+	ErrReplicatePieceApprovalTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990701, "OoooH... request lost")
 )
 
 var _ gfspserver.GfSpP2PServiceServer = &GfSpBaseApp{}

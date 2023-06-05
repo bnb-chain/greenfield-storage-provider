@@ -18,10 +18,10 @@ const (
 	DefaultObjectApprovalTimeoutHeight uint64 = 10
 	// DefaultCreateBucketApprovalParallel defines the default value of parallel
 	// for approved create bucket per approver
-	DefaultCreateBucketApprovalParallel = 1024
+	DefaultCreateBucketApprovalParallel = 10240
 	// DefaultCreateObjectApprovalParallel defines the default value of parallel
 	// for approved create object per approver
-	DefaultCreateObjectApprovalParallel = 1024
+	DefaultCreateObjectApprovalParallel = 10240
 )
 
 func NewApprovalModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {

@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	ErrUploadObjectDangling  = gfsperrors.Register(BaseCodeSpace, http.StatusInternalServerError, 991101, "OoooH... request lost")
-	ErrUploadExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusServiceUnavailable, 991102, "server overload, try again later")
+	ErrUploadObjectDangling  = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 991101, "OoooH... request lost")
+	ErrUploadExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 991102, "server overload, try again later")
 	ErrExceptionsStream      = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 991103, "stream closed abnormally")
 )
 

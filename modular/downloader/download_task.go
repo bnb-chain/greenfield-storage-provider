@@ -18,11 +18,11 @@ import (
 )
 
 var (
-	ErrDanglingPointer   = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 30001, "OoooH.... request lost")
+	ErrDanglingPointer   = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30001, "OoooH.... request lost")
 	ErrObjectUnsealed    = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30002, "object unsealed")
 	ErrRepeatedTask      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30003, "request repeated")
-	ErrExceedBucketQuota = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30004, "bucket quota overflow")
-	ErrExceedQueue       = gfsperrors.Register(module.DownloadModularName, http.StatusServiceUnavailable, 30005, "request exceed the limit, try again later")
+	ErrExceedBucketQuota = gfsperrors.Register(module.DownloadModularName, http.StatusNotAcceptable, 30004, "bucket quota overflow")
+	ErrExceedQueue       = gfsperrors.Register(module.DownloadModularName, http.StatusNotAcceptable, 30005, "request exceed the limit, try again later")
 	ErrInvalidParam      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid")
 	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "request params invalid, no such piece")
 	ErrPieceStore        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35101, "server slipped away, try again later")

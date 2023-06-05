@@ -80,7 +80,7 @@ func (mr *MockMetadataMockRecorder) GetBucketMetaByName(bucketName, isFullList i
 }
 
 // GetGroupsByGroupIDAndAccount mocks base method.
-func (m *MockMetadata) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Hash) ([]*Group, error) {
+func (m *MockMetadata) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Address) ([]*Group, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGroupsByGroupIDAndAccount", groupIDList, account)
 	ret0, _ := ret[0].([]*Group)
@@ -170,33 +170,33 @@ func (mr *MockMetadataMockRecorder) GetPaymentByPaymentAddress(address interface
 }
 
 // GetPermissionByResourceAndPrincipal mocks base method.
-func (m *MockMetadata) GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue string) (*Permission, error) {
+func (m *MockMetadata) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue string, resourceID common.Hash) (*Permission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermissionByResourceAndPrincipal", resourceType, resourceID, principalType, principalValue)
+	ret := m.ctrl.Call(m, "GetPermissionByResourceAndPrincipal", resourceType, principalType, principalValue, resourceID)
 	ret0, _ := ret[0].(*Permission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermissionByResourceAndPrincipal indicates an expected call of GetPermissionByResourceAndPrincipal.
-func (mr *MockMetadataMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue, resourceID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByResourceAndPrincipal", reflect.TypeOf((*MockMetadata)(nil).GetPermissionByResourceAndPrincipal), resourceType, resourceID, principalType, principalValue)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByResourceAndPrincipal", reflect.TypeOf((*MockMetadata)(nil).GetPermissionByResourceAndPrincipal), resourceType, principalType, principalValue, resourceID)
 }
 
 // GetPermissionsByResourceAndPrincipleType mocks base method.
-func (m *MockMetadata) GetPermissionsByResourceAndPrincipleType(resourceType, resourceID, principalType string) ([]*Permission, error) {
+func (m *MockMetadata) GetPermissionsByResourceAndPrincipleType(resourceType, principalType string, resourceID common.Hash) ([]*Permission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermissionsByResourceAndPrincipleType", resourceType, resourceID, principalType)
+	ret := m.ctrl.Call(m, "GetPermissionsByResourceAndPrincipleType", resourceType, principalType, resourceID)
 	ret0, _ := ret[0].([]*Permission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermissionsByResourceAndPrincipleType indicates an expected call of GetPermissionsByResourceAndPrincipleType.
-func (mr *MockMetadataMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, resourceID, principalType interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, principalType, resourceID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockMetadata)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, resourceID, principalType)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockMetadata)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, principalType, resourceID)
 }
 
 // GetStatementsByPolicyID mocks base method.
@@ -373,7 +373,7 @@ func (mr *MockBSDBMockRecorder) GetBucketMetaByName(bucketName, isFullList inter
 }
 
 // GetGroupsByGroupIDAndAccount mocks base method.
-func (m *MockBSDB) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Hash) ([]*Group, error) {
+func (m *MockBSDB) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Address) ([]*Group, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGroupsByGroupIDAndAccount", groupIDList, account)
 	ret0, _ := ret[0].([]*Group)
@@ -463,33 +463,33 @@ func (mr *MockBSDBMockRecorder) GetPaymentByPaymentAddress(address interface{}) 
 }
 
 // GetPermissionByResourceAndPrincipal mocks base method.
-func (m *MockBSDB) GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue string) (*Permission, error) {
+func (m *MockBSDB) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue string, resourceID common.Hash) (*Permission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermissionByResourceAndPrincipal", resourceType, resourceID, principalType, principalValue)
+	ret := m.ctrl.Call(m, "GetPermissionByResourceAndPrincipal", resourceType, principalType, principalValue, resourceID)
 	ret0, _ := ret[0].(*Permission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermissionByResourceAndPrincipal indicates an expected call of GetPermissionByResourceAndPrincipal.
-func (mr *MockBSDBMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue, resourceID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByResourceAndPrincipal", reflect.TypeOf((*MockBSDB)(nil).GetPermissionByResourceAndPrincipal), resourceType, resourceID, principalType, principalValue)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByResourceAndPrincipal", reflect.TypeOf((*MockBSDB)(nil).GetPermissionByResourceAndPrincipal), resourceType, principalType, principalValue, resourceID)
 }
 
 // GetPermissionsByResourceAndPrincipleType mocks base method.
-func (m *MockBSDB) GetPermissionsByResourceAndPrincipleType(resourceType, resourceID, principalType string) ([]*Permission, error) {
+func (m *MockBSDB) GetPermissionsByResourceAndPrincipleType(resourceType, principalType string, resourceID common.Hash) ([]*Permission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermissionsByResourceAndPrincipleType", resourceType, resourceID, principalType)
+	ret := m.ctrl.Call(m, "GetPermissionsByResourceAndPrincipleType", resourceType, principalType, resourceID)
 	ret0, _ := ret[0].([]*Permission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermissionsByResourceAndPrincipleType indicates an expected call of GetPermissionsByResourceAndPrincipleType.
-func (mr *MockBSDBMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, resourceID, principalType interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, principalType, resourceID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockBSDB)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, resourceID, principalType)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockBSDB)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, principalType, resourceID)
 }
 
 // GetStatementsByPolicyID mocks base method.

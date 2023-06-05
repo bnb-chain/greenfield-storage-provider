@@ -16,7 +16,7 @@ const (
 	DefaultP2PProtocolAddress = "localhost:9933"
 	// DefaultAskReplicateApprovalParallelPerNode defines the default max ask replicate
 	// piece approval parallel per p2p node
-	DefaultAskReplicateApprovalParallelPerNode = 1024
+	DefaultAskReplicateApprovalParallelPerNode = 10240
 )
 
 func NewP2PModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
