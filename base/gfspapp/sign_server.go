@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	ErrSingTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusInternalServerError, 991001, "OoooH... request lost")
+	ErrSingTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 991001, "OoooH... request lost")
 )
 
 var _ gfspserver.GfSpSignServiceServer = &GfSpBaseApp{}

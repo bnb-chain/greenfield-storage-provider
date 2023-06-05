@@ -12,9 +12,10 @@ import (
 )
 
 var (
-	ErrDanglingPointer    = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 10001, "OoooH.... request lost")
-	ErrExceedBucketNumber = gfsperrors.Register(module.ApprovalModularName, http.StatusServiceUnavailable, 10002, "account buckets exceed the limit")
-	ErrExceedQueue        = gfsperrors.Register(module.ApprovalModularName, http.StatusServiceUnavailable, 10003, "ask approval request exceed the limit, try again later")
+	ErrDanglingPointer    = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10001, "OoooH.... request lost")
+	ErrExceedBucketNumber = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10002, "account buckets exceed the limit")
+	ErrRepeatedTask       = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10003, "ask approval request repeated")
+	ErrExceedQueue        = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10004, "ask approval request exceed the limit, try again later")
 	ErrSigner             = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 11001, "server slipped away, try again later")
 	ErrConsensus          = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 15001, "server slipped away, try again later")
 )

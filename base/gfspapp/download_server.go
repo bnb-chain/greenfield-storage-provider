@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	ErrDownloadTaskDangling    = gfsperrors.Register(BaseCodeSpace, http.StatusInternalServerError, 990301, "OoooH... request lost")
-	ErrDownloadExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusServiceUnavailable, 990302, "server overload, try again later")
+	ErrDownloadTaskDangling    = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990301, "OoooH... request lost")
+	ErrDownloadExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990302, "server overload, try again later")
 )
 
 var _ gfspserver.GfSpDownloadServiceServer = &GfSpBaseApp{}

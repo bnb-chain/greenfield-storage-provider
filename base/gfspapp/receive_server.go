@@ -13,8 +13,8 @@ import (
 var _ gfspserver.GfSpReceiveServiceServer = &GfSpBaseApp{}
 
 var (
-	ErrReceiveTaskDangling    = gfsperrors.Register(BaseCodeSpace, http.StatusInternalServerError, 990801, "OoooH... request lost")
-	ErrReceiveExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusServiceUnavailable, 990802, "server overload, try again later")
+	ErrReceiveTaskDangling    = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990801, "OoooH... request lost")
+	ErrReceiveExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990802, "server overload, try again later")
 )
 
 func (g *GfSpBaseApp) GfSpReplicatePiece(ctx context.Context, req *gfspserver.GfSpReplicatePieceRequest) (
