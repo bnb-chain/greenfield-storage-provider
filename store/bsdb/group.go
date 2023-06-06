@@ -27,7 +27,7 @@ func (b *BsDBImpl) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, accou
 }
 
 // ListGroupsByNameAndSourceType get groups list by specific parameters
-func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int) ([]*Group, int64, error) {
+func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int, includeRemoved bool) ([]*Group, int64, error) {
 	var (
 		groups   []*Group
 		err      error
@@ -38,10 +38,17 @@ func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string
 	if sourceType != "" {
 		filters = append(filters, SourceTypeFilter(sourceType))
 	}
-	subQuery = b.db.Table((&Group{}).TableName()).
-		Select("DISTINCT(group_id)").
-		Where("group_name LIKE ?", prefix+"%"+name+"%").
-		Scopes(filters...)
+	if includeRemoved {
+		subQuery = b.db.Table((&Group{}).TableName()).
+			Select("DISTINCT(group_id)").
+			Where("group_name LIKE ?", prefix+"%"+name+"%").
+			Scopes(filters...)
+	} else {
+		subQuery = b.db.Table((&Group{}).TableName()).
+			Select("DISTINCT(group_id)").
+			Where("group_name LIKE ? and removed = false", prefix+"%"+name+"%").
+			Scopes(filters...)
+	}
 
 	err = b.db.Table((&Group{}).TableName()).
 		Select("*").
@@ -53,10 +60,19 @@ func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string
 	if err != nil {
 		return nil, 0, err
 	}
-	err = b.db.Table((&Group{}).TableName()).
-		Select("count(*)").
-		Where("group_name LIKE ?", prefix+"%"+name+"%").
-		Scopes(filters...).
-		Take(&count).Error
+
+	if includeRemoved {
+		err = b.db.Table((&Group{}).TableName()).
+			Select("count(*)").
+			Where("group_name LIKE ?", prefix+"%"+name+"%").
+			Scopes(filters...).
+			Take(&count).Error
+	} else {
+		err = b.db.Table((&Group{}).TableName()).
+			Select("count(*)").
+			Where("group_name LIKE ? and removed = false", prefix+"%"+name+"%").
+			Scopes(filters...).
+			Take(&count).Error
+	}
 	return groups, count, err
 }

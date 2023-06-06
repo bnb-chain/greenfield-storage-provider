@@ -484,7 +484,7 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	groups, count, err = g.baseApp.GfSpClient().GetGroupList(reqCtx.Context(), name, prefix, sourceType, limit, offset)
+	groups, count, err = g.baseApp.GfSpClient().GetGroupList(reqCtx.Context(), name, prefix, sourceType, limit, offset, false)
 	if err != nil {
 		log.Errorf("failed to get group list", "error", err)
 		return

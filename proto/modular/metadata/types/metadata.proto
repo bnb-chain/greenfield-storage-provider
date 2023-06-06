@@ -361,6 +361,8 @@ message GfSpGetGroupListRequest {
   int64 limit = 4;
   // offset defines the position in the list from where to start returning results
   int64 offset = 5;
+  // include_removed indicates whether this request can get the removed groups information
+  bool include_removed = 6;
 }
 
 // GfSpGetGroupListResponse is response type for the GetGroupList RPC method.
