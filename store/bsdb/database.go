@@ -7,9 +7,9 @@ import (
 // Metadata contains all the methods required by block syncer db database
 type Metadata interface {
 	// GetUserBuckets get buckets info by a user address
-	GetUserBuckets(accountID common.Address) ([]*Bucket, error)
+	GetUserBuckets(accountID common.Address, includeRemoved bool) ([]*Bucket, error)
 	// GetUserBucketsCount get buckets count by a user address
-	GetUserBucketsCount(accountID common.Address) (int64, error)
+	GetUserBucketsCount(accountID common.Address, includeRemoved bool) (int64, error)
 	// GetBucketByName get buckets info by a bucket name
 	GetBucketByName(bucketName string, includePrivate bool) (*Bucket, error)
 	// GetBucketByID get buckets info by by a bucket id
@@ -25,13 +25,13 @@ type Metadata interface {
 	// GetPermissionByResourceAndPrincipal get permission info by resource type & id, principal type & value
 	GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue string, resourceID common.Hash) (*Permission, error)
 	// GetStatementsByPolicyID get statements info by a policy id
-	GetStatementsByPolicyID(policyIDList []common.Hash) ([]*Statement, error)
+	GetStatementsByPolicyID(policyIDList []common.Hash, includeRemoved bool) ([]*Statement, error)
 	// GetPermissionsByResourceAndPrincipleType get permissions info by resource type & id, principal type
-	GetPermissionsByResourceAndPrincipleType(resourceType, principalType string, resourceID common.Hash) ([]*Permission, error)
+	GetPermissionsByResourceAndPrincipleType(resourceType, principalType string, resourceID common.Hash, includeRemoved bool) ([]*Permission, error)
 	// GetGroupsByGroupIDAndAccount get groups info by group id list and account id
-	GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Address) ([]*Group, error)
+	GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Address, includeRemoved bool) ([]*Group, error)
 	// ListObjectsByBucketName list objects info by a bucket name
-	ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*ListObjectsResult, error)
+	ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int, includeRemoved bool) ([]*ListObjectsResult, error)
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
 	ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error)
 	// ListExpiredBucketsBySp list expired buckets by sp
@@ -43,7 +43,7 @@ type Metadata interface {
 	// GetBucketMetaByName get bucket info with its related info
 	GetBucketMetaByName(bucketName string, includePrivate bool) (*BucketFullMeta, error)
 	// ListGroupsByNameAndSourceType get groups list by specific parameters
-	ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int) ([]*Group, int64, error)
+	ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int, includeRemoved bool) ([]*Group, int64, error)
 }
 
 // BSDB contains all the methods required by block syncer database

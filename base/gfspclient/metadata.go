@@ -381,6 +381,7 @@ func (s *GfSpClient) GetGroupList(
 	sourceType string,
 	limit int64,
 	offset int64,
+	includeRemoved bool,
 	opts ...grpc.DialOption) ([]*types.Group, int64, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
@@ -389,11 +390,12 @@ func (s *GfSpClient) GetGroupList(
 	}
 	defer conn.Close()
 	req := &types.GfSpGetGroupListRequest{
-		Name:       name,
-		Prefix:     prefix,
-		SourceType: sourceType,
-		Limit:      limit,
-		Offset:     offset,
+		Name:           name,
+		Prefix:         prefix,
+		SourceType:     sourceType,
+		Limit:          limit,
+		Offset:         offset,
+		IncludeRemoved: includeRemoved,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetGroupList(ctx, req)
 	if err != nil {
