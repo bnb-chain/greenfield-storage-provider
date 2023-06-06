@@ -15,6 +15,8 @@ var MetricsItems = []prometheus.Collector{
 	DefaultGRPCClientMetrics,
 	// Http metrics category
 	DefaultHTTPServerMetrics,
+	// Perf workflow category
+	PerfUploadTimeHistogram,
 	// TaskQueue metrics category
 	QueueSizeGauge,
 	QueueCapGauge,
