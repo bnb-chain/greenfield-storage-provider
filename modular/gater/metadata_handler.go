@@ -54,7 +54,7 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	resp, err := g.baseApp.GfSpClient().GetUserBuckets(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader))
+	resp, err := g.baseApp.GfSpClient().GetUserBuckets(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader), true)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
 		return
@@ -193,7 +193,8 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 			requestStartAfter,
 			continuationToken,
 			requestDelimiter,
-			requestPrefix)
+			requestPrefix,
+			true)
 	if err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
 		return
@@ -483,7 +484,7 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	groups, count, err = g.baseApp.GfSpClient().GetGroupList(reqCtx.Context(), name, prefix, sourceType, limit, offset)
+	groups, count, err = g.baseApp.GfSpClient().GetGroupList(reqCtx.Context(), name, prefix, sourceType, limit, offset, false)
 	if err != nil {
 		log.Errorf("failed to get group list", "error", err)
 		return

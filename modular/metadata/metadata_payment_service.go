@@ -22,7 +22,7 @@ func (r *MetadataModular) GfSpGetPaymentByBucketName(ctx context.Context, req *t
 
 	ctx = log.Context(ctx, req)
 
-	streamRecord, err = r.baseApp.GfBsDB().GetPaymentByBucketName(req.BucketName, req.IsFullList)
+	streamRecord, err = r.baseApp.GfBsDB().GetPaymentByBucketName(req.BucketName, req.IncludePrivate)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get payment by bucket name", "error", err)
 		return
@@ -62,7 +62,7 @@ func (r *MetadataModular) GfSpGetPaymentByBucketID(ctx context.Context, req *typ
 
 	ctx = log.Context(ctx, req)
 
-	streamRecord, err = r.baseApp.GfBsDB().GetPaymentByBucketID(req.BucketId, req.IsFullList)
+	streamRecord, err = r.baseApp.GfBsDB().GetPaymentByBucketID(req.BucketId, req.IncludePrivate)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get payment by bucket id", "error", err)
 		return
