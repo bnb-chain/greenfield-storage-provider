@@ -181,7 +181,7 @@ func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *type
 func (r *MetadataModular) GfSpGetUserBucketsCount(ctx context.Context, req *types.GfSpGetUserBucketsCountRequest) (resp *types.GfSpGetUserBucketsCountResponse, err error) {
 	ctx = log.Context(ctx, req)
 
-	count, err := r.baseApp.GfBsDB().GetUserBucketsCount(common.HexToAddress(req.AccountId), true)
+	count, err := r.baseApp.GfBsDB().GetUserBucketsCount(common.HexToAddress(req.AccountId), req.GetIncludeRemoved())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get user buckets count", "error", err)
 		return

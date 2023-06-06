@@ -12,14 +12,15 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, opts ...grpc.DialOption) (int64, error) {
+func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return 0, err
 	}
 	defer conn.Close()
 	req := &types.GfSpGetUserBucketsCountRequest{
-		AccountId: account,
+		AccountId:      account,
+		IncludeRemoved: includeRemoved,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetUserBucketsCount(ctx, req)
 	if err != nil {
@@ -66,7 +67,7 @@ func (s *GfSpClient) GetUserBuckets(ctx context.Context, account string, include
 
 // ListObjectsByBucketName list objects info by a bucket name
 func (s *GfSpClient) ListObjectsByBucketName(ctx context.Context, bucketName string, accountId string, maxKeys uint64,
-	startAfter string, continuationToken string, delimiter string, prefix string, opts ...grpc.DialOption) (
+	startAfter string, continuationToken string, delimiter string, prefix string, includeRemoved bool, opts ...grpc.DialOption) (
 	objects []*types.Object, KeyCount uint64, MaxKeys uint64, IsTruncated bool, NextContinuationToken string,
 	Name string, Prefix string, Delimiter string, CommonPrefixes []string, ContinuationToken string, err error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
@@ -83,6 +84,7 @@ func (s *GfSpClient) ListObjectsByBucketName(ctx context.Context, bucketName str
 		ContinuationToken: continuationToken,
 		Delimiter:         delimiter,
 		Prefix:            prefix,
+		IncludeRemoved:    includeRemoved,
 	}
 
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsByBucketName(ctx, req)

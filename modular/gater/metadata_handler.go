@@ -193,7 +193,8 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 			requestStartAfter,
 			continuationToken,
 			requestDelimiter,
-			requestPrefix)
+			requestPrefix,
+			true)
 	if err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
 		return

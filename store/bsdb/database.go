@@ -7,9 +7,9 @@ import (
 // Metadata contains all the methods required by block syncer db database
 type Metadata interface {
 	// GetUserBuckets get buckets info by a user address
-	GetUserBuckets(accountID common.Address, includeRemoved bool) ([]*Bucket, error)
+	GetUserBuckets(accountID common.Address) ([]*Bucket, error)
 	// GetUserBucketsCount get buckets count by a user address
-	GetUserBucketsCount(accountID common.Address, includeRemoved bool) (int64, error)
+	GetUserBucketsCount(accountID common.Address) (int64, error)
 	// GetBucketByName get buckets info by a bucket name
 	GetBucketByName(bucketName string, includePrivate bool) (*Bucket, error)
 	// GetBucketByID get buckets info by by a bucket id

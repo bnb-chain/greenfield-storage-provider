@@ -15,7 +15,7 @@ import (
 // The function returns a slice of ListObjectsResult, which contains information about the objects and their types (object or common_prefix).
 // If there is a delimiter specified, the function will group objects that share a common prefix and return them as common_prefix in the result.
 // If the delimiter is empty, the function will return all objects without grouping them by a common prefix.
-func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*ListObjectsResult, error) {
+func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int, includeRemoved bool) ([]*ListObjectsResult, error) {
 	var (
 		err     error
 		limit   int
@@ -42,13 +42,23 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 			filters = append(filters, PrefixFilter(prefix))
 		}
 
-		err = b.db.Table((&Object{}).TableName()).
-			Select("*").
-			Where("bucket_name = ?", bucketName).
-			Scopes(filters...).
-			Limit(limit).
-			Order("object_name asc").
-			Find(&results).Error
+		if includeRemoved {
+			err = b.db.Table((&Object{}).TableName()).
+				Select("*").
+				Where("bucket_name = ?", bucketName).
+				Scopes(filters...).
+				Limit(limit).
+				Order("object_name asc").
+				Find(&results).Error
+		} else {
+			err = b.db.Table((&Object{}).TableName()).
+				Select("*").
+				Where("bucket_name = ? and removed = false", bucketName).
+				Scopes(filters...).
+				Limit(limit).
+				Order("object_name asc").
+				Find(&results).Error
+		}
 	}
 	return results, err
 }
