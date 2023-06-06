@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -15,6 +16,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -76,7 +78,9 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		}
 		log.CtxDebugw(ctx, "finish to read data from stream", "info", uploadObjectTask.Info(),
 			"read_size", readSize, "error", err)
+		startReportManager := time.Now()
 		err = u.baseApp.GfSpClient().ReportTask(ctx, uploadObjectTask)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_to_manager").Observe(time.Since(startReportManager).Seconds())
 	}()
 
 	for {
@@ -84,7 +88,9 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			return err
 		}
 		data = data[0:segmentSize]
+		startReadFromGateway := time.Now()
 		readN, err = StreamReadAt(stream, data)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("consumer_read_from_gateway").Observe(time.Since(startReadFromGateway).Seconds())
 		readSize += readN
 		data = data[0:readN]
 
@@ -93,17 +99,23 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			if readN != 0 { // the last segment piece
 				pieceKey = u.baseApp.PieceOp().SegmentPieceKey(uploadObjectTask.GetObjectInfo().Id.Uint64(), segIdx)
 				checksums = append(checksums, hash.GenerateChecksum(data))
+				startPutPiece := time.Now()
 				if err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data); err != nil {
+					metrics.PerfUploadTimeHistogram.WithLabelValues("put_to_piecestore").Observe(time.Since(startPutPiece).Seconds())
 					log.CtxErrorw(ctx, "failed to put segment piece to piece store",
 						"piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
+				metrics.PerfUploadTimeHistogram.WithLabelValues("put_to_piecestore").Observe(time.Since(startPutPiece).Seconds())
 			}
+			startSignSignature := time.Now()
 			if signature, integrity, err = u.baseApp.GfSpClient().SignIntegrityHash(ctx,
 				uploadObjectTask.GetObjectInfo().Id.Uint64(), checksums); err != nil {
+				metrics.PerfUploadTimeHistogram.WithLabelValues("sign_from_signer").Observe(time.Since(startSignSignature).Seconds())
 				log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
 				return err
 			}
+			metrics.PerfUploadTimeHistogram.WithLabelValues("sign_from_signer").Observe(time.Since(startSignSignature).Seconds())
 			if !bytes.Equal(integrity, uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
 					"actual_integrity", hex.EncodeToString(integrity),
@@ -117,10 +129,13 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				IntegrityChecksum: integrity,
 				Signature:         signature,
 			}
+			startUpdateSignature := time.Now()
 			if err = u.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta); err != nil {
+				metrics.PerfUploadTimeHistogram.WithLabelValues("update_to_sqldb").Observe(time.Since(startUpdateSignature).Seconds())
 				log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
 				return ErrGfSpDB
 			}
+			metrics.PerfUploadTimeHistogram.WithLabelValues("update_to_sqldb").Observe(time.Since(startUpdateSignature).Seconds())
 			log.CtxDebugw(ctx, "succeed to upload payload to piece store")
 			return nil
 		}
@@ -130,11 +145,14 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		}
 		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(uploadObjectTask.GetObjectInfo().Id.Uint64(), segIdx)
 		checksums = append(checksums, hash.GenerateChecksum(data))
+		startPutPiece := time.Now()
 		err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 		if err != nil {
+			metrics.PerfUploadTimeHistogram.WithLabelValues("put_to_piecestore").Observe(time.Since(startPutPiece).Seconds())
 			log.CtxErrorw(ctx, "failed to put segment piece to piece store", "error", err)
 			return ErrPieceStore
 		}
+		metrics.PerfUploadTimeHistogram.WithLabelValues("put_to_piecestore").Observe(time.Since(startPutPiece).Seconds())
 		segIdx++
 	}
 }
