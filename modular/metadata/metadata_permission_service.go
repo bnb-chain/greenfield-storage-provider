@@ -216,7 +216,7 @@ func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint
 
 	if permission != nil {
 		accountPolicyID = append(accountPolicyID, permission.PolicyID)
-		statements, err = r.baseApp.GfBsDB().GetStatementsByPolicyID(accountPolicyID)
+		statements, err = r.baseApp.GfBsDB().GetStatementsByPolicyID(accountPolicyID, false)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get statements by policy id", "error", err)
 			return permtypes.EFFECT_DENY, err
@@ -230,7 +230,7 @@ func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint
 	}
 
 	// verify policy which grant permission to group
-	permissions, err = r.baseApp.GfBsDB().GetPermissionsByResourceAndPrincipleType(resourceType.String(), permtypes.PRINCIPAL_TYPE_GNFD_GROUP.String(), common.BigToHash(resourceID.BigInt()))
+	permissions, err = r.baseApp.GfBsDB().GetPermissionsByResourceAndPrincipleType(resourceType.String(), permtypes.PRINCIPAL_TYPE_GNFD_GROUP.String(), common.BigToHash(resourceID.BigInt()), false)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get permission by resource and principle type", "error", err)
 		return permtypes.EFFECT_DENY, err
@@ -240,7 +240,7 @@ func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint
 		for i, perm := range permissions {
 			groupIDList[i] = common.BigToHash(math.NewUintFromString(perm.PrincipalValue).BigInt())
 		}
-		groups, err = r.baseApp.GfBsDB().GetGroupsByGroupIDAndAccount(groupIDList, common.HexToAddress(operator.String()))
+		groups, err = r.baseApp.GfBsDB().GetGroupsByGroupIDAndAccount(groupIDList, common.HexToAddress(operator.String()), false)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get groups by group id and account", "error", err)
 			return permtypes.EFFECT_DENY, err
@@ -261,7 +261,7 @@ func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint
 		}
 	}
 
-	statements, err = r.baseApp.GfBsDB().GetStatementsByPolicyID(policyIDList)
+	statements, err = r.baseApp.GfBsDB().GetStatementsByPolicyID(policyIDList, false)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get statements by policy id", "error", err)
 		return permtypes.EFFECT_DENY, err

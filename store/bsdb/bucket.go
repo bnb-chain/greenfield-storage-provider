@@ -43,14 +43,14 @@ func (b *BsDBImpl) GetBucketByName(bucketName string, includePrivate bool) (*Buc
 	)
 
 	if includePrivate {
-		err = b.db.Take(&bucket, "bucket_name = ?", bucketName).Error
+		err = b.db.Take(&bucket, "bucket_name = ? and removed = false", bucketName).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return bucket, err
 	}
 
-	err = b.db.Take(&bucket, "bucket_name = ? and visibility = ?", bucketName, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
+	err = b.db.Take(&bucket, "bucket_name = ? and visibility = ? and removed = false", bucketName, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -67,14 +67,14 @@ func (b *BsDBImpl) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, 
 
 	bucketIDHash = common.HexToHash(strconv.FormatInt(bucketID, 10))
 	if includePrivate {
-		err = b.db.Take(&bucket, "bucket_id = ?", bucketIDHash).Error
+		err = b.db.Take(&bucket, "bucket_id = ? and removed = false", bucketIDHash).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return bucket, err
 	}
 
-	err = b.db.Take(&bucket, "bucket_id = ? and visibility = ?", bucketIDHash, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
+	err = b.db.Take(&bucket, "bucket_id = ? and visibility = ? and removed = false", bucketIDHash, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -91,7 +91,7 @@ func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address, includeRemoved 
 	if includeRemoved {
 		err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
 	} else {
-		err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?, removed = false", accountID).Error
+		err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ? and removed = false", accountID).Error
 	}
 	return count, err
 }
@@ -127,13 +127,13 @@ func (b *BsDBImpl) GetBucketMetaByName(bucketName string, includePrivate bool) (
 		err = b.db.Table((&Bucket{}).TableName()).
 			Select("*").
 			Joins("left join stream_records on buckets.payment_address = stream_records.account").
-			Where("buckets.bucket_name = ?", bucketName).
+			Where("buckets.bucket_name = ? and buckets.removed = false", bucketName).
 			Take(&bucketFullMeta).Error
 	} else {
 		err = b.db.Table((&Bucket{}).TableName()).
 			Select("*").
 			Joins("left join stream_records on buckets.payment_address = stream_records.account").
-			Where("buckets.bucket_name = ? and "+
+			Where("buckets.bucket_name = ? and buckets.removed = false and"+
 				"buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'", bucketName).
 			Take(&bucketFullMeta).Error
 	}
