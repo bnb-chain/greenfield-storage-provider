@@ -24,7 +24,7 @@ func PathNameFilter(pathName string) func(db *gorm.DB) *gorm.DB {
 
 func NameFilter(name string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Where("name like ", name+"%")
+		return db.Where("name like ?", name+"%")
 	}
 }
 
