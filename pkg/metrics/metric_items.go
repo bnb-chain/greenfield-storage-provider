@@ -85,6 +85,13 @@ var (
 	// DefaultHTTPServerMetrics defines default HTTP server metrics
 	DefaultHTTPServerMetrics = metricshttp.NewServerMetrics()
 
+	// perf upload workflow
+	PerfUploadTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_upload_time",
+		Help:    "Track upload workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_upload_time"})
+
 	// task queue metrics
 	QueueSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "queue_size",
@@ -305,7 +312,7 @@ var (
 		Help: "Track gc object task total number",
 	}, []string{"dispatch_gc_object_task"})
 
-	// singer metrics
+	// signer metrics
 	SealObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "seal_object_time",
 		Help:    "Track the time of seal object time to chain.",

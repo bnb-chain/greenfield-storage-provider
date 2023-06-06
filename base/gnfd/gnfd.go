@@ -7,12 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	chainClient "github.com/bnb-chain/greenfield/sdk/client"
+	chttp "github.com/cometbft/cometbft/rpc/client/http"
 )
 
 const (
@@ -49,10 +48,12 @@ type GnfdChainConfig struct {
 }
 
 type Gnfd struct {
-	client        *GreenfieldClient
-	backUpClients []*GreenfieldClient
-	stopCh        chan struct{}
-	mutex         sync.RWMutex
+	client          *GreenfieldClient
+	backUpClients   []*GreenfieldClient
+	wsClient        *chttp.HTTP
+	backUpWsClients []*chttp.HTTP
+	stopCh          chan struct{}
+	mutex           sync.RWMutex
 }
 
 // NewGnfd returns the Greenfield instance.
@@ -61,6 +62,7 @@ func NewGnfd(cfg *GnfdChainConfig) (*Gnfd, error) {
 		return nil, errors.New("greenfield nodes missing")
 	}
 	var clients []*GreenfieldClient
+	var wsClients []*chttp.HTTP
 	for _, address := range cfg.ChainAddress {
 		cc, err := chainClient.NewGreenfieldClient(address, cfg.ChainID)
 		if err != nil {
@@ -71,11 +73,18 @@ func NewGnfd(cfg *GnfdChainConfig) (*Gnfd, error) {
 			chainClient: cc,
 		}
 		clients = append(clients, client)
+		wsClient, err := chttp.New(address, "/websocket")
+		if err != nil {
+			return nil, err
+		}
+		wsClients = append(wsClients, wsClient)
 	}
 	greenfield := &Gnfd{
-		client:        clients[0],
-		backUpClients: clients,
-		stopCh:        make(chan struct{}),
+		client:          clients[0],
+		backUpClients:   clients,
+		wsClient:        wsClients[0],
+		backUpWsClients: wsClients,
+		stopCh:          make(chan struct{}),
 	}
 
 	go greenfield.updateClient()
@@ -102,6 +111,20 @@ func (g *Gnfd) setCurrentClient(client *GreenfieldClient) {
 	g.client = client
 }
 
+// getCurrentWsClient returns the current websocket client to get last block height use.
+func (g *Gnfd) getCurrentWsClient() *chttp.HTTP {
+	g.mutex.RLock()
+	defer g.mutex.RUnlock()
+	return g.wsClient
+}
+
+// setCurrentWsAddress sets client to current websocket client for get last block height using.
+func (g *Gnfd) setCurrentWsAddress(client *chttp.HTTP) {
+	g.mutex.RLock()
+	defer g.mutex.RUnlock()
+	g.wsClient = client
+}
+
 // updateClient selects the client that block height is the largest and set to current client.
 func (g *Gnfd) updateClient() {
 	ticker := time.NewTicker(UpdateClientInternal * time.Second)
@@ -109,27 +132,29 @@ func (g *Gnfd) updateClient() {
 		select {
 		case <-ticker.C:
 			var (
-				maxHeight, _    = g.CurrentHeight(context.Background())
-				maxHeightClient = g.getCurrentClient()
+				maxHeight, _      = g.CurrentHeight(context.Background())
+				maxHeightClient   = g.getCurrentClient()
+				maxHeightWsClient = g.getCurrentWsClient()
 			)
-			for _, client := range g.backUpClients {
-				resp, err := client.GnfdClient().TmClient.GetLatestBlock(
-					context.Background(),
-					&tmservice.GetLatestBlockRequest{})
+			for idx, client := range g.backUpWsClients {
+				info, err := client.ABCIInfo(context.Background())
 				if err != nil {
-					log.Errorw("failed to get latest block height", "node_addr", client.Provider, "error", err)
+					log.Errorw("failed to get latest block height",
+						"node_addr", g.backUpClients[idx].Provider, "error", err)
 					continue
 				}
-				currentHeight := (uint64)(resp.SdkBlock.Header.Height)
+				currentHeight := uint64(info.Response.LastBlockHeight)
 				if currentHeight > maxHeight {
 					maxHeight = currentHeight
-					maxHeightClient = client
+					maxHeightClient = g.backUpClients[idx]
+					maxHeightWsClient = client
 				}
-				client.currentHeight = (int64)(currentHeight)
-				client.updatedAt = time.Now()
+				g.backUpClients[idx].currentHeight = (int64)(currentHeight)
+				g.backUpClients[idx].updatedAt = time.Now()
 			}
 			if maxHeightClient != g.getCurrentClient() {
 				g.setCurrentClient(maxHeightClient)
+				g.setCurrentWsAddress(maxHeightWsClient)
 			}
 		case <-g.stopCh:
 			return
