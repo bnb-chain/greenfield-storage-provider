@@ -150,14 +150,12 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
 	}
-
 	startUpdateSPDBTime := time.Now()
 	err = m.baseApp.GfSpDB().UpdateJobState(
 		task.GetObjectInfo().Id.Uint64(),
 		types.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
 	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
 		Observe(time.Since(startUpdateSPDBTime).Seconds())
-	
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 	}
