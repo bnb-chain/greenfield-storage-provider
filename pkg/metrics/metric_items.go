@@ -15,6 +15,8 @@ var MetricsItems = []prometheus.Collector{
 	DefaultGRPCClientMetrics,
 	// Http metrics category
 	DefaultHTTPServerMetrics,
+	// Perf workflow category
+	PerfUploadTimeHistogram,
 	// TaskQueue metrics category
 	QueueSizeGauge,
 	QueueCapGauge,
@@ -40,8 +42,6 @@ var MetricsItems = []prometheus.Collector{
 	RemainingHighPriorityTaskGauge,
 	RemainingMediumPriorityTaskGauge,
 	RemainingLowTaskGauge,
-	SealObjectSucceedCounter,
-	SealObjectFailedCounter,
 	GCObjectCounter,
 	ReplicatePieceSizeCounter,
 	ReplicateSucceedCounter,
@@ -70,6 +70,14 @@ var MetricsItems = []prometheus.Collector{
 	DispatchGcObjectTaskCounter,
 	// Signer metrics category
 	SealObjectTimeHistogram,
+	SealObjectSucceedCounter,
+	SealObjectFailedCounter,
+	RejectUnSealObjectTimeHistogram,
+	RejectUnSealObjectSucceedCounter,
+	RejectUnSealObjectFailedCounter,
+	DiscontinueBucketTimeHistogram,
+	DiscontinueBucketSucceedCounter,
+	DiscontinueBucketFailedCounter,
 	// SPDB metrics category
 	SPDBTimeHistogram,
 	// BlockSyncer metrics category
@@ -84,6 +92,13 @@ var (
 		openmetrics.WithClientStreamSendHistogram(), openmetrics.WithClientStreamRecvHistogram())
 	// DefaultHTTPServerMetrics defines default HTTP server metrics
 	DefaultHTTPServerMetrics = metricshttp.NewServerMetrics()
+
+	// perf upload workflow
+	PerfUploadTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_upload_time",
+		Help:    "Track upload workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_upload_time"})
 
 	// task queue metrics
 	QueueSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -189,14 +204,6 @@ var (
 		Name: "remaining_low_task_resource",
 		Help: "Track remaining resource of low task number.",
 	}, []string{"remaining_task_resource"})
-	SealObjectSucceedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "seal_object_success",
-		Help: "Track seal object success total number",
-	}, []string{"seal_object_success"})
-	SealObjectFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "seal_object_failure",
-		Help: "Track seal object failure total number",
-	}, []string{"seal_object_failure"})
 	GCObjectCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "delete_object_number",
 		Help: "Track deleted object number.",
@@ -305,12 +312,33 @@ var (
 		Help: "Track gc object task total number",
 	}, []string{"dispatch_gc_object_task"})
 
-	// singer metrics
+	// signer metrics
 	SealObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "seal_object_time",
 		Help:    "Track the time of seal object time to chain.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"seal_object_time"})
+	SealObjectSucceedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "seal_object_success",
+		Help: "Track seal object success total number",
+	}, []string{"seal_object_success"})
+	SealObjectFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "seal_object_failure",
+		Help: "Track seal object failure total number",
+	}, []string{"seal_object_failure"})
+	RejectUnSealObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "reject_unseal_object_time",
+		Help:    "Track the time of reject unseal object time to chain.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"reject_unseal_object_time"})
+	RejectUnSealObjectSucceedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "reject_unseal_object_success",
+		Help: "Track reject unseal object success total number",
+	}, []string{"reject_unseal_object_success"})
+	RejectUnSealObjectFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "reject_unseal_object_failure",
+		Help: "Track reject unseal object failure total number",
+	}, []string{"reject_unseal_object_failure"})
 	DiscontinueBucketTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "discontinue_bucket_time",
 		Help:    "Track the time of discontinue bucket time to chain.",

@@ -73,7 +73,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidPayloadSize
 		return
 	}
-	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -187,7 +187,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
-	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -461,8 +461,9 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		} else {
 			// return a built-in dapp for users to make the signature
 			var htmlConfigMap = map[string]string{
-				"9000": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
-				"5600": "{\n  \"envType\": \"testnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 5600,\n  \"chainName\": \"greenfield testnet\",\n  \"rpcUrls\": [\"https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
+				"greenfield_7971-1":    "{\n  \"envType\": \"dev\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 7971,\n  \"chainName\": \"dev - greenfield\",\n  \"rpcUrls\": [\"https://gnfd-dev.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
+				"greenfield_9000-1741": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
+				"greenfield_5600-1":    "{\n  \"envType\": \"testnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 5600,\n  \"chainName\": \"greenfield testnet\",\n  \"rpcUrls\": [\"https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
 			}
 
 			htmlConfig := htmlConfigMap[g.baseApp.ChainID()]
@@ -480,7 +481,8 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 	}
 
-	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(
+		reqCtx.Context(), getObjectInfoRes.GetObjectInfo().GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus

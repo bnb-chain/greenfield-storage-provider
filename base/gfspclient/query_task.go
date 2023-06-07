@@ -7,11 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-func (s *GfSpClient) QueryTasks(
-	ctx context.Context,
-	endpoint string,
-	subKey string) (
-	[]string, error) {
+func (s *GfSpClient) QueryTasks(ctx context.Context, endpoint string, subKey string) ([]string, error) {
 	conn, connErr := s.Connection(ctx, endpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)

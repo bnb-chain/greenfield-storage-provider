@@ -66,12 +66,30 @@ const (
 	GetBucketMetaQuery = "bucket-meta"
 	// GetObjectMetaQuery defines get object metadata query, which is used to route request
 	GetObjectMetaQuery = "object-meta"
+	// GetGroupListSourceTypeQuery defines get group list source type query, which is used to route request
+	GetGroupListSourceTypeQuery = "source-type"
+	// GetGroupListLimitQuery defines get group list limit query, which is used to route request
+	GetGroupListLimitQuery = "limit"
+	// GetGroupListOffsetQuery defines get group list offset query, which is used to route request
+	GetGroupListOffsetQuery = "offset"
+	// GetGroupListGroupQuery defines get group list group query, which is used to route request
+	GetGroupListGroupQuery = "group-query"
+	// GetGroupListNameQuery defines get group list name query, which is used to route request
+	GetGroupListNameQuery = "name"
+	// GetGroupListPrefixQuery defines get group list prefix query, which is used to route request
+	GetGroupListPrefixQuery = "prefix"
 	// StartTimestampUs defines start timestamp in microsecond, which is used by list read record, [start_ts,end_ts)
 	StartTimestampUs = "start-timestamp"
 	// EndTimestampUs defines end timestamp in microsecond, which is used by list read record, [start_ts,end_ts)
 	EndTimestampUs = "end-timestamp"
-	// ChallengePath defines challenge path style suffix
-	ChallengePath = "/greenfield/admin/v1/challenge"
+	// VerifyPermissionObjectQuery defines verify permission object name
+	VerifyPermissionObjectQuery = "object"
+	// VerifyPermissionOperator defines verify permission operator address
+	VerifyPermissionOperator = "operator"
+	// VerifyPermissionActionType defines verify permission action type
+	VerifyPermissionActionType = "action-type"
+	// GetChallengeInfoPath defines get challenge info path style suffix
+	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
 	// AuthRequestNoncePath defines path to request auth nonce

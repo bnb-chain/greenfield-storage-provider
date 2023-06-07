@@ -16,19 +16,16 @@ import (
 )
 
 var (
-	ErrDanglingTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 80001, "OoooH... request lost, try again later")
-	ErrRepeatedTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusBadRequest, 80002, "request repeated")
-	ErrExceedTask          = gfsperrors.Register(module.ReceiveModularName, http.StatusServiceUnavailable, 80003, "OoooH... request exceed, try again later")
+	ErrDanglingTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusBadRequest, 80001, "OoooH... request lost, try again later")
+	ErrRepeatedTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80002, "request repeated")
+	ErrExceedTask          = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80003, "OoooH... request exceed, try again later")
 	ErrUnfinishedTask      = gfsperrors.Register(module.ReceiveModularName, http.StatusForbidden, 80004, "replicate piece unfinished")
 	ErrInvalidDataChecksum = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80005, "verify data checksum failed")
 	ErrPieceStore          = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85101, "server slipped away, try again later")
 	ErrGfSpDB              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85201, "server slipped away, try again later")
 )
 
-func (r *ReceiveModular) HandleReceivePieceTask(
-	ctx context.Context,
-	task task.ReceivePieceTask,
-	data []byte) error {
+func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask, data []byte) error {
 	var (
 		err error
 	)
@@ -40,7 +37,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(
 	}()
 
 	if task == nil || task.GetObjectInfo() == nil {
-		log.CtxErrorw(ctx, "failed to pre receive piece, pointer dangling")
+		log.CtxErrorw(ctx, "failed to pre receive piece due to pointer dangling")
 		err = ErrDanglingTask
 		return ErrDanglingTask
 	}
@@ -83,10 +80,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(
 	return nil
 }
 
-func (r *ReceiveModular) HandleDoneReceivePieceTask(
-	ctx context.Context,
-	task task.ReceivePieceTask) (
-	[]byte, []byte, error) {
+func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, []byte, error) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -96,7 +90,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 	}()
 
 	if task == nil || task.GetObjectInfo() == nil {
-		log.CtxErrorw(ctx, "failed to pre receive piece, pointer dangling")
+		log.CtxErrorw(ctx, "failed to pre receive piece due to pointer dangling")
 		err = ErrDanglingTask
 		return nil, nil, ErrDanglingTask
 	}
@@ -110,7 +104,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(
 		err = ErrDanglingTask
 		return nil, nil, ErrDanglingTask
 	}
-	segmentCount := r.baseApp.PieceOp().SegmentCount(task.GetObjectInfo().GetPayloadSize(),
+	segmentCount := r.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 	checksums, err := r.baseApp.GfSpDB().GetAllReplicatePieceChecksum(
 		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx(), segmentCount)

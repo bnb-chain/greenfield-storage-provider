@@ -197,9 +197,9 @@ func TestRouters(t *testing.T) {
 			name:             "Challenge router",
 			router:           gwRouter,
 			method:           http.MethodGet,
-			url:              scheme + testDomain + ChallengePath,
+			url:              scheme + testDomain + GetChallengeInfoPath,
 			shouldMatch:      true,
-			wantedRouterName: challengeRouterName,
+			wantedRouterName: getChallengeInfoRouterName,
 		},
 		{
 			name:             "Replicate router",
@@ -208,6 +208,14 @@ func TestRouters(t *testing.T) {
 			url:              scheme + testDomain + ReplicateObjectPiecePath,
 			shouldMatch:      true,
 			wantedRouterName: replicateObjectPieceRouterName,
+		},
+		{
+			name:             "Get group list router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetGroupListGroupQuery + "&" + GetGroupListNameQuery + "&" + GetGroupListPrefixQuery + "&" + GetGroupListSourceTypeQuery + "&" + GetGroupListLimitQuery + "&" + GetGroupListOffsetQuery,
+			shouldMatch:      true,
+			wantedRouterName: getGroupListRouterName,
 		},
 	}
 	for _, testCase := range testCases {

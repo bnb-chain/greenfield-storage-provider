@@ -5,9 +5,12 @@ import (
 	"encoding/base64"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/bnb-chain/greenfield/types/s3util"
+	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -15,6 +18,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+)
+
+const (
+	MaximumGetGroupListLimit  = 1000
+	MaximumGetGroupListOffset = 100000
+	DefaultGetGroupListLimit  = 50
+	DefaultGetGroupListOffset = 0
 )
 
 // getUserBucketsHandler handle get object request
@@ -44,7 +54,7 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	resp, err := g.baseApp.GfSpClient().GetUserBuckets(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader))
+	resp, err := g.baseApp.GfSpClient().GetUserBuckets(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader), true)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
 		return
@@ -183,7 +193,8 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 			requestStartAfter,
 			continuationToken,
 			requestDelimiter,
-			requestPrefix)
+			requestPrefix,
+			true)
 	if err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
 		return
@@ -305,6 +316,188 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.Errorf("failed to get bucket metadata", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// verifyPermissionHandler handle verify permission request
+func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		operator    string
+		objectName  string
+		actionType  string
+		action      int
+		b           bytes.Buffer
+		queryParams url.Values
+		effect      *permission_types.Effect
+		reqCtx      *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to verify permission", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+
+	queryParams = reqCtx.request.URL.Query()
+	objectName = queryParams.Get(VerifyPermissionObjectQuery)
+	operator = reqCtx.vars[VerifyPermissionOperator]
+	actionType = reqCtx.vars[VerifyPermissionActionType]
+
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		return
+	}
+
+	if objectName != "" {
+		if err = s3util.CheckValidObjectName(objectName); err != nil {
+			log.Errorw("failed to check object name", "object_name", objectName, "error", err)
+			return
+		}
+	}
+
+	if ok := common.IsHexAddress(operator); !ok {
+		log.Errorw("failed to check operator", "operator", operator, "error", err)
+		return
+	}
+
+	if actionType == "" {
+		log.Errorw("failed to check action type", "action_type", actionType, "error", err)
+		return
+	}
+
+	action, err = strconv.Atoi(actionType)
+	if err != nil {
+		log.Errorw("failed to check action type", "action_type", actionType, "error", err)
+		return
+	}
+
+	effect, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(), operator, reqCtx.bucketName, objectName, permission_types.ActionType(action))
+	if err != nil {
+		log.Errorf("failed to verify permission", "error", err)
+		return
+	}
+
+	grpcResponse := &storage_types.QueryVerifyPermissionResponse{Effect: *effect}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to verify permission", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getGroupListHandler handle get group list request
+func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		b           bytes.Buffer
+		queryParams url.Values
+		limitStr    string
+		offsetStr   string
+		name        string
+		prefix      string
+		sourceType  string
+		limit       int64
+		offset      int64
+		count       int64
+		groups      []*types.Group
+		reqCtx      *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get group list", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+
+	queryParams = reqCtx.request.URL.Query()
+	sourceType = queryParams.Get(GetGroupListSourceTypeQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+	offsetStr = queryParams.Get(GetGroupListOffsetQuery)
+	name = queryParams.Get(GetGroupListNameQuery)
+	prefix = queryParams.Get(GetGroupListPrefixQuery)
+
+	if name == "" {
+		log.CtxErrorw(reqCtx.Context(), "failed to check name", "name", name, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if prefix == "" {
+		log.CtxErrorw(reqCtx.Context(), "failed to check prefix", "prefix", name, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToInt64(limitStr); err != nil || limit <= 0 {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		if limit > 1000 {
+			limit = MaximumGetGroupListLimit
+		}
+	} else {
+		limit = DefaultGetGroupListLimit
+	}
+
+	if offsetStr != "" {
+		if offset, err = util.StringToInt64(offsetStr); err != nil || offset < 0 || offset > MaximumGetGroupListOffset {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check offset", "offset", offsetStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	} else {
+		offset = DefaultGetGroupListOffset
+	}
+
+	if sourceType != "" {
+		if _, ok := storage_types.SourceType_value[sourceType]; !ok {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check source type", "source-type", sourceType, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	groups, count, err = g.baseApp.GfSpClient().GetGroupList(reqCtx.Context(), name, prefix, sourceType, limit, offset, false)
+	if err != nil {
+		log.Errorf("failed to get group list", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetGroupListResponse{
+		Groups: groups,
+		Count:  count,
+	}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to get group list", "error", err)
 		return
 	}
 

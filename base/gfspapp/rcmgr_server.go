@@ -14,18 +14,12 @@ var (
 
 var _ gfspserver.GfSpResourceServiceServer = &GfSpBaseApp{}
 
-func (g *GfSpBaseApp) GfSpSetResourceLimit(
-	context.Context,
-	*gfspserver.GfSpSetResourceLimitRequest) (
-	*gfspserver.GfSpSetResourceLimitResponse,
-	error) {
+func (g *GfSpBaseApp) GfSpSetResourceLimit(context.Context, *gfspserver.GfSpSetResourceLimitRequest) (
+	*gfspserver.GfSpSetResourceLimitResponse, error) {
 	return &gfspserver.GfSpSetResourceLimitResponse{Err: ErrFutureSupport}, nil
 }
 
-func (g *GfSpBaseApp) GfSpQueryResourceLimit(
-	context.Context,
-	*gfspserver.GfSpQueryResourceLimitRequest) (
-	*gfspserver.GfSpQueryResourceLimitResponse,
-	error) {
+func (g *GfSpBaseApp) GfSpQueryResourceLimit(context.Context, *gfspserver.GfSpQueryResourceLimitRequest) (
+	*gfspserver.GfSpQueryResourceLimitResponse, error) {
 	return &gfspserver.GfSpQueryResourceLimitResponse{Err: ErrFutureSupport}, nil
 }

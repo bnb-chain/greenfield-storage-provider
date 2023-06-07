@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	ErrDanglingPointer         = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 40001, "OoooH.... request lost")
+	ErrDanglingPointer         = gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 40001, "OoooH.... request lost")
 	ErrInsufficientApproval    = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40002, "insufficient approvals from p2p")
 	ErrUnsealed                = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 40003, "seal object on chain failed")
 	ErrExhaustedApproval       = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40004, "approvals exhausted")
@@ -60,11 +60,6 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 	// even though signer return error, maybe seal on chain successfully because
 	// signer use the async mode, so ignore the error and listen directly
 	err = e.listenSealObject(ctx, task.GetObjectInfo())
-	if err != nil {
-		metrics.SealObjectSucceedCounter.WithLabelValues(e.Name()).Inc()
-	} else {
-		metrics.SealObjectFailedCounter.WithLabelValues(e.Name()).Inc()
-	}
 	return err
 }
 
@@ -140,7 +135,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 			log.CtxErrorw(ctx, "failed to delete integrity")
 		}
 		var pieceKey string
-		segmentCount := e.baseApp.PieceOp().SegmentCount(onChainObject.GetPayloadSize(),
+		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(onChainObject.GetPayloadSize(),
 			task.GetStorageParams().GetMaxPayloadSize())
 		for i := uint32(0); i < segmentCount; i++ {
 			if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
@@ -194,11 +189,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			"has_gc_object_number", gcObjectNumber, "try_again_later", tryAgainLater,
 			"task_is_canceled", taskIsCanceled, "has_no_object", hasNoObject, "error", err)
 	}()
-	// TODO: refine it to support multi version
-	if storageParams, err = e.baseApp.Consensus().QueryStorageParams(context.Background()); err != nil {
-		log.Errorw("failed to query storage params", "task_info", task.Info(), "error", err)
-		return
-	}
+
 	if waitingGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
 		ctx, e.baseApp.OperateAddress(), task.GetStartBlockNumber(),
 		task.GetEndBlockNumber(), true); err != nil {
@@ -217,6 +208,12 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 	}
 
 	for _, object := range waitingGCObjects {
+		if storageParams, err = e.baseApp.Consensus().QueryStorageParamsByTimestamp(
+			context.Background(), object.GetObjectInfo().GetCreateAt()); err != nil {
+			log.Errorw("failed to query storage params", "task_info", task.Info(), "error", err)
+			return
+		}
+
 		currentGCBlockID = uint64(object.GetDeleteAt())
 		objectInfo := object.GetObjectInfo()
 		currentGCObjectID = objectInfo.Id.Uint64()
@@ -226,7 +223,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		if currentGCObjectID <= task.GetLastDeletedObjectId() {
 			continue
 		}
-		segmentCount := e.baseApp.PieceOp().SegmentCount(
+		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(
 			objectInfo.GetPayloadSize(), storageParams.VersionedParams.GetMaxSegmentSize())
 		for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(currentGCObjectID, segIdx)

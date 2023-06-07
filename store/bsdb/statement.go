@@ -10,12 +10,12 @@ import (
 func (s *Statement) Eval(action permtypes.ActionType, opts *permtypes.VerifyOptions) permtypes.Effect {
 	// If 'resource' is not nil, it implies that the user intends to access a sub-resource, which would
 	// be specified in 's.Resources'. Therefore, if the sub-resource in the statement is nil, we will ignore this statement.
-	if opts != nil && opts.Resource != "" && s.Resources == nil {
+	if opts != nil && opts.Resource != "" && s != nil && s.Resources == nil {
 		return permtypes.EFFECT_UNSPECIFIED
 	}
 	// If 'resource' is not nil, and 's.Resource' is also not nil, it indicates that we should verify whether
 	// the resource that the user intends to access matches any items in 's.Resource'
-	if opts != nil && opts.Resource != "" && s.Resources != nil {
+	if opts != nil && opts.Resource != "" && s != nil && s.Resources != nil {
 		isMatch := false
 		for _, res := range s.Resources {
 			reg := regexp.MustCompile(res)

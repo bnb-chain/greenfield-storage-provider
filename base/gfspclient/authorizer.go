@@ -9,8 +9,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func (s *GfSpClient) VerifyAuthorize(ctx context.Context,
-	auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {
+func (s *GfSpClient) VerifyAuthorize(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {
 	conn, connErr := s.Connection(ctx, s.authorizerEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", connErr)
