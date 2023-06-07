@@ -2,6 +2,7 @@ package gfspclient
 
 import (
 	"context"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -9,6 +10,7 @@ import (
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.UploadObjectTask) error {
@@ -77,9 +79,12 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 	req := &gfspserver.GfSpReportTaskRequest{}
 	switch t := report.(type) {
 	case *gfsptask.GfSpUploadObjectTask:
+		startReportDoneUploadTask := time.Now()
 		req.Request = &gfspserver.GfSpReportTaskRequest_UploadObjectTask{
 			UploadObjectTask: t,
 		}
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_done_client").
+			Observe(time.Since(startReportDoneUploadTask).Seconds())
 	case *gfsptask.GfSpReplicatePieceTask:
 		req.Request = &gfspserver.GfSpReportTaskRequest_ReplicatePieceTask{
 			ReplicatePieceTask: t,
