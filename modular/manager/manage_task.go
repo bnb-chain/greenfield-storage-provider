@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -13,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
 )
 
@@ -28,10 +28,9 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 	var (
 		backUpTasks []task.Task
 		task        task.Task
-		mux         sync.Mutex
 	)
-	mux.Lock()
-	defer mux.Unlock()
+	m.mux.Lock()
+	defer m.mux.Unlock()
 	task = m.replicateQueue.TopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add replicate piece task to backup set", "task_key", task.Key().String(),
@@ -91,7 +90,7 @@ func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task t
 	}
 	if err := m.uploadQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push upload object task to queue", "error", err)
-		return ErrExceedTask
+		return err
 	}
 	_, err := m.baseApp.GfSpDB().CreateUploadJob(task.GetObjectInfo())
 	if err != nil {
@@ -106,18 +105,32 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		return ErrDanglingTask
 	}
 	m.uploadQueue.PopByKey(task.Key())
-	if m.TaskUploading(ctx, task) {
+
+	startCheckUploadingTime := time.Now()
+	uploading := m.TaskUploading(ctx, task)
+	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_check_uploading").
+		Observe(time.Since(startCheckUploadingTime).Seconds())
+	if uploading {
 		log.CtxErrorw(ctx, "uploading object repeated")
 		return ErrRepeatedTask
 	}
 	if task.Error() != nil {
+		startUpdateSPDBTime := time.Now()
 		err := m.baseApp.GfSpDB().UpdateJobState(
 			task.GetObjectInfo().Id.Uint64(),
 			types.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
+			Observe(time.Since(startUpdateSPDBTime).Seconds())
+
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
+
+		startRejectUnSealTime := time.Now()
 		err = m.RejectUnSealObject(ctx, task.GetObjectInfo())
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_reject_unseal").
+			Observe(time.Since(startRejectUnSealTime).Seconds())
+
 		log.CtxErrorw(ctx, "reports failed update object task and reject unseal object",
 			"error", task.Error(), "reject_unseal_error", err)
 		return nil
@@ -127,14 +140,24 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
+
+	startPushReplicateQueueTime := time.Now()
 	err := m.replicateQueue.Push(replicateTask)
+	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_push_replicate_queue").
+		Observe(time.Since(startPushReplicateQueueTime).Seconds())
+
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
-		return ErrExceedTask
+		return err
 	}
+
+	startUpdateSPDBTime := time.Now()
 	err = m.baseApp.GfSpDB().UpdateJobState(
 		task.GetObjectInfo().Id.Uint64(),
 		types.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
+	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
+		Observe(time.Since(startUpdateSPDBTime).Seconds())
+	
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 	}
@@ -174,7 +197,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	err := m.sealQueue.Push(sealObject)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push seal object task to queue", "error", err)
-		return ErrExceedTask
+		return err
 	}
 	err = m.baseApp.GfSpDB().UpdateJobState(
 		task.GetObjectInfo().Id.Uint64(),
@@ -199,8 +222,8 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 	handleTask = oldTask.(task.ReplicatePieceTask)
 	if !handleTask.ExceedRetry() {
 		handleTask.SetUpdateTime(time.Now().Unix())
-		m.replicateQueue.Push(handleTask)
-		log.CtxDebugw(ctx, "push task again to retry", "info", handleTask.Info())
+		err := m.replicateQueue.Push(handleTask)
+		log.CtxDebugw(ctx, "push task again to retry", "info", handleTask.Info(), "error", err)
 	} else {
 		err := m.baseApp.GfSpDB().UpdateJobState(
 			handleTask.GetObjectInfo().Id.Uint64(),
@@ -248,8 +271,8 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 	handleTask = oldTask.(task.SealObjectTask)
 	if !handleTask.ExceedRetry() {
 		handleTask.SetUpdateTime(time.Now().Unix())
-		m.sealQueue.Push(handleTask)
-		log.CtxDebugw(ctx, "push task again to retry")
+		err := m.sealQueue.Push(handleTask)
+		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 		return nil
 	} else {
 		err := m.baseApp.GfSpDB().UpdateJobState(
@@ -275,9 +298,8 @@ func (m *ManageModular) HandleReceivePieceTask(ctx context.Context, task task.Re
 		task.SetTimeout(m.baseApp.TaskTimeout(task, 0))
 		task.SetPriority(m.baseApp.TaskPriority(task))
 		task.SetUpdateTime(time.Now().Unix())
-		if err := m.receiveQueue.Push(task); err != nil {
-			log.CtxErrorw(ctx, "failed to receive task to queue", "error", err)
-		}
+		err := m.receiveQueue.Push(task)
+		log.CtxErrorw(ctx, "push receive task to queue", "error", err)
 	}
 	return nil
 }
@@ -291,8 +313,8 @@ func (m *ManageModular) handleFailedReceivePieceTask(ctx context.Context, handle
 	handleTask = oldTask.(task.ReceivePieceTask)
 	if !handleTask.ExceedRetry() {
 		handleTask.SetUpdateTime(time.Now().Unix())
-		m.receiveQueue.Push(handleTask)
-		log.CtxDebugw(ctx, "push task again to retry")
+		err := m.receiveQueue.Push(handleTask)
+		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 	} else {
 		log.CtxErrorw(ctx, "delete expired confirm receive piece task", "info", handleTask.Info())
 	}
@@ -327,9 +349,10 @@ func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask task.GCOb
 		log.CtxErrorw(ctx, "the reported gc object task is canceled", "report_info", gcTask.Info())
 		return ErrCanceledTask
 	}
-	m.gcObjectQueue.Push(gcTask)
+	err := m.gcObjectQueue.Push(gcTask)
+	log.CtxInfow(ctx, "push gc object task to queue again", "from", oldTask, "to", gcTask, "error", err)
 	currentGCBlockID, deletedObjectID := gcTask.GetGCObjectProgress()
-	err := m.baseApp.GfSpDB().SetGCObjectProgress(gcTask.Key().String(), currentGCBlockID, deletedObjectID)
+	err = m.baseApp.GfSpDB().SetGCObjectProgress(gcTask.Key().String(), currentGCBlockID, deletedObjectID)
 	log.CtxInfow(ctx, "update the gc object task progress", "from", oldTask, "to", gcTask, "error", err)
 	return nil
 }

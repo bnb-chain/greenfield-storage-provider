@@ -18,9 +18,8 @@ import (
 var (
 	ErrDanglingTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusBadRequest, 80001, "OoooH... request lost, try again later")
 	ErrRepeatedTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80002, "request repeated")
-	ErrExceedTask          = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80003, "OoooH... request exceed, try again later")
-	ErrUnfinishedTask      = gfsperrors.Register(module.ReceiveModularName, http.StatusForbidden, 80004, "replicate piece unfinished")
-	ErrInvalidDataChecksum = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80005, "verify data checksum failed")
+	ErrUnfinishedTask      = gfsperrors.Register(module.ReceiveModularName, http.StatusForbidden, 80003, "replicate piece unfinished")
+	ErrInvalidDataChecksum = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80004, "verify data checksum failed")
 	ErrPieceStore          = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85101, "server slipped away, try again later")
 	ErrGfSpDB              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85201, "server slipped away, try again later")
 )
@@ -49,8 +48,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 	err = r.receiveQueue.Push(task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push receive task to queue", "error", err)
-		err = ErrExceedTask
-		return ErrExceedTask
+		return err
 	}
 	defer r.receiveQueue.PopByKey(task.Key())
 	checksum := hash.GenerateChecksum(data)
@@ -96,7 +94,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	}
 	if err = r.receiveQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push receive task", "error", err)
-		return nil, nil, ErrExceedTask
+		return nil, nil, err
 	}
 	defer r.receiveQueue.PopByKey(task.Key())
 	if task == nil || task.GetObjectInfo() == nil {

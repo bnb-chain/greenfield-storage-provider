@@ -24,9 +24,8 @@ var (
 	ErrDanglingDownloadTask = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110001, "OoooH... request lost, try again later")
 	ErrNotCreatedState      = gfsperrors.Register(module.UploadModularName, http.StatusForbidden, 110002, "object not created state")
 	ErrRepeatedTask         = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110003, "put object request repeated")
-	ErrExceedTask           = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110004, "OoooH... request exceed, try again later")
-	ErrInvalidIntegrity     = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110005, "invalid payload data integrity hash")
-	ErrClosedStream         = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110006, "upload payload data stream exception")
+	ErrInvalidIntegrity     = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110004, "invalid payload data integrity hash")
+	ErrClosedStream         = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110005, "upload payload data stream exception")
 	ErrPieceStore           = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 115101, "server slipped away, try again later")
 	ErrGfSpDB               = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 115001, "server slipped away, try again later")
 )
@@ -54,7 +53,7 @@ func (u *UploadModular) PreUploadObject(ctx context.Context, uploadObjectTask co
 func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObjectTask coretask.UploadObjectTask, stream io.Reader) error {
 	if err := u.uploadQueue.Push(uploadObjectTask); err != nil {
 		log.CtxErrorw(ctx, "failed to push upload queue", "error", err)
-		return ErrExceedTask
+		return err
 	}
 	defer u.uploadQueue.PopByKey(uploadObjectTask.Key())
 
