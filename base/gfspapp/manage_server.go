@@ -139,7 +139,10 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 			metrics.UploadObjectTaskFailedCounter.WithLabelValues(g.manager.Name()).Inc()
 		}
 
+		startReportDoneUploadTask := time.Now()
 		err = g.manager.HandleDoneUploadObjectTask(ctx, t.UploadObjectTask)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_done_server").
+			Observe(time.Since(startReportDoneUploadTask).Seconds())
 	case *gfspserver.GfSpReportTaskRequest_ReplicatePieceTask:
 		task := t.ReplicatePieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())

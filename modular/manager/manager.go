@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -33,6 +34,7 @@ var _ module.Manager = &ManageModular{}
 type ManageModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
+	mux     sync.Mutex
 
 	uploadQueue    taskqueue.TQueueOnStrategy
 	replicateQueue taskqueue.TQueueOnStrategyWithLimit

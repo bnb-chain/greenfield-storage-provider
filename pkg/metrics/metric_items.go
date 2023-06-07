@@ -17,6 +17,7 @@ var MetricsItems = []prometheus.Collector{
 	DefaultHTTPServerMetrics,
 	// Perf workflow category
 	PerfUploadTimeHistogram,
+	PerfReportUploadTimeHistogram,
 	// TaskQueue metrics category
 	QueueSizeGauge,
 	QueueCapGauge,
@@ -93,6 +94,12 @@ var (
 		Help:    "Track upload workflow costs.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"perf_upload_time"})
+	// perf report upload task workflow
+	PerfReportUploadTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_report_upload_task_time",
+		Help:    "Track report upload task workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_report_upload_task_time"})
 
 	// task queue metrics
 	QueueSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
