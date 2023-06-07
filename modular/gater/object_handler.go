@@ -364,7 +364,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	getBucketInfoRes, getBucketInfoErr := g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), reqCtx.bucketName, true)
 	if getBucketInfoErr != nil || getBucketInfoRes == nil || getBucketInfoRes.GetBucketInfo() == nil {
 		log.Errorw("failed to check bucket info", "bucket_name", reqCtx.bucketName, "error", getBucketInfoErr)
-		err = getBucketInfoErr
+		err = ErrNoSuchObject
 		return
 	}
 
@@ -394,12 +394,14 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
 		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
+		err = ErrNoSuchObject
 		return
 	}
 
 	if getObjectInfoRes.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.Errorw("object is not sealed",
 			"status", getObjectInfoRes.GetObjectInfo().GetObjectStatus())
+		err = ErrNoSuchObject
 		return
 	}
 
@@ -455,6 +457,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			}
 			if !authorized {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+				err = ErrNoPermission
 				return
 			}
 
