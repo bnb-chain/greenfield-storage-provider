@@ -10,7 +10,7 @@ replace (
 	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v0.0.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.2.1-alpha.2
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230531074525-061556e5a8d4
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230531095434-52daa6bf3a57
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )

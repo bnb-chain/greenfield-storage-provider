@@ -41,7 +41,6 @@ func (m *Module) PrepareTables() error {
 	return m.db.PrepareTables(context.TODO(), []schema.Tabler{&bsdb.SlashPrefixTreeNode{}})
 }
 
-// RecreateTables implements
-func (m *Module) RecreateTables() error {
-	return m.db.RecreateTables(context.TODO(), []schema.Tabler{&bsdb.SlashPrefixTreeNode{}})
+func (m *Module) AutoMigrate() error {
+	return m.db.AutoMigrate(context.TODO(), []schema.Tabler{&bsdb.SlashPrefixTreeNode{}})
 }
