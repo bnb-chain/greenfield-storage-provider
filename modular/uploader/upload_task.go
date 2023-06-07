@@ -218,13 +218,13 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 	segmentSize := u.baseApp.PieceOp().MaxSegmentPieceSize(
 		task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().GetMaxSegmentSize())
+	offset := task.GetResumeOffset()
 	var (
 		err       error
-		segIdx    uint32 = 0
+		segIdx    uint32 = uint32(int64(offset) % segmentSize)
 		pieceKey  string
 		signature []byte
 		integrity []byte
-		checksums [][]byte
 		readN     int
 		readSize  int
 		data      = make([]byte, segmentSize)
@@ -252,7 +252,6 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 			err = nil
 			if readN != 0 {
 				pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
-				checksums = append(checksums, hash.GenerateChecksum(data))
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {
 					log.CtxErrorw(ctx, "put segment piece to piece store",
@@ -261,6 +260,14 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				}
 			}
 			if task.GetCompleted() {
+				var checksums [][]byte
+				// TODO(chris): get all piece, verify checksum
+				var i uint32 = 0
+				for ; i <= segIdx; i++ {
+					data, err = u.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
+					checksums = append(checksums, hash.GenerateChecksum(data))
+				}
+
 				signature, integrity, err = u.baseApp.GfSpClient().SignIntegrityHash(ctx,
 					task.GetObjectInfo().Id.Uint64(), checksums)
 				if err != nil {
@@ -295,7 +302,6 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 			return ErrClosedStream
 		}
 		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
-		checksums = append(checksums, hash.GenerateChecksum(data))
 		err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 		if err != nil {
 			log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)

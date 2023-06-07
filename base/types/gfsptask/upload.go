@@ -149,7 +149,9 @@ func (m *GfSpUploadObjectTask) SetStorageParams(param *storagetypes.Params) {
 func (m *GfSpResumableUploadObjectTask) InitResumableUploadObjectTask(
 	object *storagetypes.ObjectInfo,
 	params *storagetypes.Params,
-	timeout int64) {
+	timeout int64,
+	complete bool,
+	offset uint64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())
@@ -157,22 +159,20 @@ func (m *GfSpResumableUploadObjectTask) InitResumableUploadObjectTask(
 	m.SetTimeout(timeout)
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)
-}
-
-func (m *GfSpResumableUploadObjectTask) GetResumeOffset() uint64 {
-	return m.GetResumeOffset()
-}
-
-func (m *GfSpResumableUploadObjectTask) SetResumeOffset(offset uint64) {
+	m.SetCompleted(complete)
 	m.SetResumeOffset(offset)
 }
 
-//func (m *GfSpResumableUploadObjectTask) GetCompleted() bool {
-//	return m.GetCompleted()
-//}
+func (m *GfSpResumableUploadObjectTask) GetResumeOffset() uint64 {
+	return m.Offset
+}
+
+func (m *GfSpResumableUploadObjectTask) SetResumeOffset(offset uint64) {
+	m.Offset = offset
+}
 
 func (m *GfSpResumableUploadObjectTask) SetCompleted(completed bool) {
-	m.SetCompleted(completed)
+	m.Completed = completed
 }
 
 func (m *GfSpResumableUploadObjectTask) Key() coretask.TKey {

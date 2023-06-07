@@ -211,7 +211,9 @@ type UploadObjectTask interface {
 type ResumableUploadObjectTask interface {
 	ObjectTask
 	// InitUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
+	InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64,
+		complete bool,
+		offset uint64)
 	// GetResumeOffset
 	GetResumeOffset() uint64
 	// SetResumeOffset
