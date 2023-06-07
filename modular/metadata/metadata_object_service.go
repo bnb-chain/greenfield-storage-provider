@@ -3,11 +3,11 @@ package metadata
 import (
 	"context"
 	"encoding/base64"
-	"github.com/forbole/juno/v4/common"
 
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
