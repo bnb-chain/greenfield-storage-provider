@@ -3,6 +3,7 @@ package metadata
 import (
 	"context"
 	"encoding/base64"
+	"github.com/forbole/juno/v4/common"
 
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/types/s3util"
@@ -212,5 +213,58 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 	}
 	resp = &types.GfSpGetObjectMetaResponse{Object: res}
 	log.CtxInfo(ctx, "succeed to get object meta")
+	return resp, nil
+}
+
+// GfSpListObjectsByObjectID list objects by object ids
+func (r *MetadataModular) GfSpListObjectsByObjectID(ctx context.Context, req *types.GfSpListObjectsByObjectIDRequest) (resp *types.GfSpListObjectsByObjectIDResponse, err error) {
+	var (
+		objects []*model.Object
+		res     []*types.Object
+		ids     []common.Hash
+	)
+
+	ids = make([]common.Hash, len(req.ObjectIds))
+	for i, id := range req.ObjectIds {
+		ids[i] = common.BigToHash(math.NewInt(id).BigInt())
+	}
+
+	objects, err = r.baseApp.GfBsDB().ListObjectsByObjectID(ids, req.IncludeRemoved)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list objects by object ids", "error", err)
+		return nil, err
+	}
+
+	res = make([]*types.Object, len(objects))
+	for i, object := range objects {
+		res[i] = &types.Object{
+			ObjectInfo: &storage_types.ObjectInfo{
+				Owner:                object.Owner.String(),
+				BucketName:           object.BucketName,
+				ObjectName:           object.ObjectName,
+				Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
+				PayloadSize:          object.PayloadSize,
+				ContentType:          object.ContentType,
+				CreateAt:             object.CreateTime,
+				ObjectStatus:         storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
+				RedundancyType:       storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
+				SourceType:           storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+				Checksums:            object.Checksums,
+				SecondarySpAddresses: object.SecondarySpAddresses,
+				Visibility:           storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+			},
+			LockedBalance: object.LockedBalance.String(),
+			Removed:       object.Removed,
+			DeleteAt:      object.DeleteAt,
+			DeleteReason:  object.DeleteReason,
+			Operator:      object.Operator.String(),
+			CreateTxHash:  object.CreateTxHash.String(),
+			UpdateTxHash:  object.UpdateTxHash.String(),
+			SealTxHash:    object.SealTxHash.String(),
+		}
+	}
+
+	resp = &types.GfSpListObjectsByObjectIDResponse{Objects: res}
+	log.CtxInfo(ctx, "succeed to list objects by object ids")
 	return resp, nil
 }

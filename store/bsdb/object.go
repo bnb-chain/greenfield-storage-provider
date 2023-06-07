@@ -1,6 +1,7 @@
 package bsdb
 
 import (
+	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 )
 
@@ -114,4 +115,24 @@ func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, include
 			objectName, bucketName).
 		Take(&object).Error
 	return object, err
+}
+
+// ListObjectsByObjectID list objects by object ids
+func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool) ([]*Object, error) {
+	var (
+		objects []*Object
+		err     error
+		filters []func(*gorm.DB) *gorm.DB
+	)
+
+	if !includeRemoved {
+		filters = append(filters, RemovedFilter())
+	}
+
+	err = b.db.Table((&Object{}).TableName()).
+		Select("*").
+		Where("object_id in (?)", ids).
+		Scopes(filters...).
+		Find(&objects).Error
+	return objects, err
 }

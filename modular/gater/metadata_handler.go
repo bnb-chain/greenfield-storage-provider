@@ -3,6 +3,8 @@ package gater
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -498,6 +500,98 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.Errorf("failed to get group list", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listObjectsByObjectIDHandler list objects by object ids
+func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err       error
+		b         bytes.Buffer
+		objects   []*types.Object
+		objectIDs bsdb.ObjectIDs
+		reqCtx    *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list objects by ids", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	err = json.NewDecoder(r.Body).Decode(&objectIDs)
+	if err != nil {
+		log.Errorf("failed to parse object ids", "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	objects, err = g.baseApp.GfSpClient().ListObjectsByObjectID(reqCtx.Context(), objectIDs.IDs, false)
+	if err != nil {
+		log.Errorf("failed to list objects by ids", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListObjectsByObjectIDResponse{Objects: objects}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to list objects by ids", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listBucketsByBucketIDHandler list buckets by bucket ids
+func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err       error
+		b         bytes.Buffer
+		buckets   []*types.Bucket
+		bucketIDs bsdb.BucketIDs
+		reqCtx    *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list buckets by ids", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	err = json.NewDecoder(r.Body).Decode(&bucketIDs)
+	if err != nil {
+		log.Errorf("failed to parse bucket ids", "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	buckets, err = g.baseApp.GfSpClient().ListBucketsByBucketID(reqCtx.Context(), bucketIDs.IDs, false)
+	if err != nil {
+		log.Errorf("failed to list buckets by ids", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListBucketsByBucketIDResponse{Buckets: buckets}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to list buckets by ids", "error", err)
 		return
 	}
 

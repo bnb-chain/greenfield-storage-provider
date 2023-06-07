@@ -404,3 +404,49 @@ func (s *GfSpClient) GetGroupList(
 	}
 	return resp.Groups, resp.Count, nil
 }
+
+func (s *GfSpClient) ListBucketsByBucketID(
+	ctx context.Context,
+	bucketIDs []int64,
+	includeRemoved bool,
+	opts ...grpc.DialOption) ([]*types.Bucket, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListBucketsByBucketIDRequest{
+		BucketIds:      bucketIDs,
+		IncludeRemoved: includeRemoved,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListBucketsByBucketID(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list buckets by bucket ids", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Buckets, nil
+}
+
+func (s *GfSpClient) ListObjectsByObjectID(
+	ctx context.Context,
+	objectIDs []int64,
+	includeRemoved bool,
+	opts ...grpc.DialOption) ([]*types.Object, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListObjectsByObjectIDRequest{
+		ObjectIds:      objectIDs,
+		IncludeRemoved: includeRemoved,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsByObjectID(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list objects by object ids", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Objects, nil
+}

@@ -74,6 +74,10 @@ const (
 	GetGroupListOffsetQuery = "offset"
 	// GetGroupListGroupQuery defines get group list group query, which is used to route request
 	GetGroupListGroupQuery = "group-query"
+	// ListBucketsByBucketID defines list buckets by bucket ids, which is used to route request
+	ListBucketsByBucketID = "buckets-query"
+	// ListObjectsByObjectID defines list objects by object ids, which is used to route request
+	ListObjectsByObjectID = "objects-query"
 	// GetGroupListNameQuery defines get group list name query, which is used to route request
 	GetGroupListNameQuery = "name"
 	// GetGroupListPrefixQuery defines get group list prefix query, which is used to route request
