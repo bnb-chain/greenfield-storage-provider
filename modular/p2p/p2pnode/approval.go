@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/libp2p/go-libp2p/core/network"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -93,7 +93,7 @@ func (a *ApprovalProtocol) ComputeApprovalExpiredHeight(task coretask.ApprovalRe
 		redundancyHeight uint64 = 100
 	)
 	totalUnit := task.GetObjectInfo().GetPayloadSize() /
-		uint64(task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()) / computeUnit
+		uint64(task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()+1) / computeUnit
 	return totalUnit/speedUnit + redundancyHeight, nil
 }
 
@@ -112,29 +112,28 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 		log.Errorw("failed to unmarshal replicate piece approval request msg", "error", err)
 		return
 	}
+	ctx := log.WithValue(context.Background(), log.CtxKeyTask, req.Key().String())
 	log.Debugf("%s received replicate piece approval request from %s, object_id: %d",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), req.GetObjectInfo().Id.Uint64())
-
 	if !a.node.peers.checkSP(req.GetAskSpOperatorAddress()) {
-		log.Warnw("ignore invalid sp replicate piece approval request", "sp", req.GetAskSpOperatorAddress(),
-			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
+		log.CtxWarnw(ctx, "ignore invalid sp replicate piece approval request", "sp",
+			req.GetAskSpOperatorAddress(), "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	if strings.Compare(req.GetAskSpOperatorAddress(), a.node.baseApp.OperateAddress()) == 0 {
-		log.Warnw("ignore self replicate piece approval request", "sp", req.GetAskSpOperatorAddress(),
-			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
+		log.CtxWarnw(ctx, "ignore self replicate piece approval request", "sp",
+			req.GetAskSpOperatorAddress(), "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	err = VerifySignature(req.GetAskSpOperatorAddress(), req.GetSignBytes(), req.GetAskSignature())
 	if err != nil {
-		log.Errorw("failed to verify replicate piece approval request signature",
+		log.CtxErrorw(ctx, "failed to verify replicate piece approval request signature",
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
 		return
 	}
-	ctx := context.Background()
 	current, err := a.node.baseApp.Consensus().CurrentHeight(ctx)
 	if err != nil {
-		log.Errorw("failed to consensus get current height", "local", s.Conn().LocalPeer(),
+		log.CtxErrorw(ctx, "failed to consensus get current height", "local", s.Conn().LocalPeer(),
 			"remote", s.Conn().RemotePeer(), "error", err)
 		return
 	}
@@ -147,15 +146,15 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 	// TODO:: customized approval strategy, if refuse will fill back resp refuse field
 	signature, err := a.node.baseApp.GfSpClient().SignReplicatePieceApproval(ctx, req)
 	if err != nil {
-		log.Errorw("failed to sign replicate piece approval", "local", s.Conn().LocalPeer(),
+		log.CtxErrorw(ctx, "failed to sign replicate piece approval", "local", s.Conn().LocalPeer(),
 			"remote", s.Conn().RemotePeer(), "error", err)
 		return
 	}
 	req.SetApprovedSignature(signature)
 	req.SetApprovedSpOperatorAddress(a.node.baseApp.OperateAddress())
 	err = a.node.sendToPeer(ctx, s.Conn().RemotePeer(), GetApprovalResponse, req)
-	log.Infof("%s response to %s approval request, error: %v",
-		s.Conn().LocalPeer(), s.Conn().RemotePeer(), err)
+	log.Infof("%s response to %s approval request, task_key: %s, error: %v",
+		s.Conn().LocalPeer(), s.Conn().RemotePeer(), req.Key().String(), err)
 }
 
 // onGetApprovalRequest defines the get approval response protocol callback
@@ -173,25 +172,27 @@ func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 		log.Errorw("failed to unmarshal replicate piece approval response msg", "error", err)
 		return
 	}
+	ctx := log.WithValue(context.Background(), log.CtxKeyTask, resp.Key().String())
 	log.Debugf("%s received approval response from %s, object_id: %d",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), resp.GetObjectInfo().Id.Uint64())
 
 	err = VerifySignature(resp.GetApprovedSpOperatorAddress(), resp.GetSignBytes(), resp.GetApprovedSignature())
 	if err != nil {
-		log.Errorw("failed to verify get approval response msg signature", "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
+		log.CtxErrorw(ctx, "failed to verify get approval response msg signature", "local",
+			s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)
 		return
 	}
 	if !a.node.peers.checkSP(resp.GetApprovedSpOperatorAddress()) {
-		log.Warnw("ignore invalid sp approval response", "sp", resp.GetApprovedSpOperatorAddress(),
+		log.CtxWarnw(ctx, "ignore invalid sp approval response", "sp", resp.GetApprovedSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	if strings.Compare(resp.GetApprovedSpOperatorAddress(), a.node.baseApp.OperateAddress()) == 0 {
-		log.Warnw("ignore self approval response", "sp", resp.GetApprovedSpOperatorAddress(),
+		log.CtxWarnw(ctx, "ignore self approval response", "sp", resp.GetApprovedSpOperatorAddress(),
 			"local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer())
 		return
 	}
 	err = a.notifyApprovalResponse(resp)
-	log.Infof("%s received approval response to %s, and notify to hang request error: %v",
-		s.Conn().LocalPeer(), s.Conn().RemotePeer(), err)
+	log.Infof("%s received approval response to %s, and notify to hang request, task_key: %s, error: %v",
+		s.Conn().LocalPeer(), s.Conn().RemotePeer(), resp.Key().String(), err)
 }

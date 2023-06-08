@@ -35,63 +35,63 @@ func (m *MockMetadata) EXPECT() *MockMetadataMockRecorder {
 }
 
 // GetBucketByID mocks base method.
-func (m *MockMetadata) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, error) {
+func (m *MockMetadata) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketByID", bucketID, isFullList)
+	ret := m.ctrl.Call(m, "GetBucketByID", bucketID, includePrivate)
 	ret0, _ := ret[0].(*Bucket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketByID indicates an expected call of GetBucketByID.
-func (mr *MockMetadataMockRecorder) GetBucketByID(bucketID, isFullList interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetBucketByID(bucketID, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByID", reflect.TypeOf((*MockMetadata)(nil).GetBucketByID), bucketID, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByID", reflect.TypeOf((*MockMetadata)(nil).GetBucketByID), bucketID, includePrivate)
 }
 
 // GetBucketByName mocks base method.
-func (m *MockMetadata) GetBucketByName(bucketName string, isFullList bool) (*Bucket, error) {
+func (m *MockMetadata) GetBucketByName(bucketName string, includePrivate bool) (*Bucket, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketByName", bucketName, isFullList)
+	ret := m.ctrl.Call(m, "GetBucketByName", bucketName, includePrivate)
 	ret0, _ := ret[0].(*Bucket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketByName indicates an expected call of GetBucketByName.
-func (mr *MockMetadataMockRecorder) GetBucketByName(bucketName, isFullList interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetBucketByName(bucketName, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByName", reflect.TypeOf((*MockMetadata)(nil).GetBucketByName), bucketName, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByName", reflect.TypeOf((*MockMetadata)(nil).GetBucketByName), bucketName, includePrivate)
 }
 
 // GetBucketMetaByName mocks base method.
-func (m *MockMetadata) GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error) {
+func (m *MockMetadata) GetBucketMetaByName(bucketName string, includePrivate bool) (*BucketFullMeta, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketMetaByName", bucketName, isFullList)
+	ret := m.ctrl.Call(m, "GetBucketMetaByName", bucketName, includePrivate)
 	ret0, _ := ret[0].(*BucketFullMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketMetaByName indicates an expected call of GetBucketMetaByName.
-func (mr *MockMetadataMockRecorder) GetBucketMetaByName(bucketName, isFullList interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetBucketMetaByName(bucketName, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMetaByName", reflect.TypeOf((*MockMetadata)(nil).GetBucketMetaByName), bucketName, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMetaByName", reflect.TypeOf((*MockMetadata)(nil).GetBucketMetaByName), bucketName, includePrivate)
 }
 
 // GetGroupsByGroupIDAndAccount mocks base method.
-func (m *MockMetadata) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Hash) ([]*Group, error) {
+func (m *MockMetadata) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Address, includeRemoved bool) ([]*Group, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGroupsByGroupIDAndAccount", groupIDList, account)
+	ret := m.ctrl.Call(m, "GetGroupsByGroupIDAndAccount", groupIDList, account, includeRemoved)
 	ret0, _ := ret[0].([]*Group)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetGroupsByGroupIDAndAccount indicates an expected call of GetGroupsByGroupIDAndAccount.
-func (mr *MockMetadataMockRecorder) GetGroupsByGroupIDAndAccount(groupIDList, account interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetGroupsByGroupIDAndAccount(groupIDList, account, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupsByGroupIDAndAccount", reflect.TypeOf((*MockMetadata)(nil).GetGroupsByGroupIDAndAccount), groupIDList, account)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupsByGroupIDAndAccount", reflect.TypeOf((*MockMetadata)(nil).GetGroupsByGroupIDAndAccount), groupIDList, account, includeRemoved)
 }
 
 // GetLatestBlockNumber mocks base method.
@@ -110,48 +110,48 @@ func (mr *MockMetadataMockRecorder) GetLatestBlockNumber() *gomock.Call {
 }
 
 // GetObjectByName mocks base method.
-func (m *MockMetadata) GetObjectByName(objectName, bucketName string, isFullList bool) (*Object, error) {
+func (m *MockMetadata) GetObjectByName(objectName, bucketName string, includePrivate bool) (*Object, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetObjectByName", objectName, bucketName, isFullList)
+	ret := m.ctrl.Call(m, "GetObjectByName", objectName, bucketName, includePrivate)
 	ret0, _ := ret[0].(*Object)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetObjectByName indicates an expected call of GetObjectByName.
-func (mr *MockMetadataMockRecorder) GetObjectByName(objectName, bucketName, isFullList interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetObjectByName(objectName, bucketName, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByName", reflect.TypeOf((*MockMetadata)(nil).GetObjectByName), objectName, bucketName, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByName", reflect.TypeOf((*MockMetadata)(nil).GetObjectByName), objectName, bucketName, includePrivate)
 }
 
 // GetPaymentByBucketID mocks base method.
-func (m *MockMetadata) GetPaymentByBucketID(bucketID int64, isFullList bool) (*StreamRecord, error) {
+func (m *MockMetadata) GetPaymentByBucketID(bucketID int64, includePrivate bool) (*StreamRecord, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPaymentByBucketID", bucketID, isFullList)
+	ret := m.ctrl.Call(m, "GetPaymentByBucketID", bucketID, includePrivate)
 	ret0, _ := ret[0].(*StreamRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPaymentByBucketID indicates an expected call of GetPaymentByBucketID.
-func (mr *MockMetadataMockRecorder) GetPaymentByBucketID(bucketID, isFullList interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPaymentByBucketID(bucketID, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketID", reflect.TypeOf((*MockMetadata)(nil).GetPaymentByBucketID), bucketID, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketID", reflect.TypeOf((*MockMetadata)(nil).GetPaymentByBucketID), bucketID, includePrivate)
 }
 
 // GetPaymentByBucketName mocks base method.
-func (m *MockMetadata) GetPaymentByBucketName(bucketName string, isFullList bool) (*StreamRecord, error) {
+func (m *MockMetadata) GetPaymentByBucketName(bucketName string, includePrivate bool) (*StreamRecord, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPaymentByBucketName", bucketName, isFullList)
+	ret := m.ctrl.Call(m, "GetPaymentByBucketName", bucketName, includePrivate)
 	ret0, _ := ret[0].(*StreamRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPaymentByBucketName indicates an expected call of GetPaymentByBucketName.
-func (mr *MockMetadataMockRecorder) GetPaymentByBucketName(bucketName, isFullList interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPaymentByBucketName(bucketName, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketName", reflect.TypeOf((*MockMetadata)(nil).GetPaymentByBucketName), bucketName, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketName", reflect.TypeOf((*MockMetadata)(nil).GetPaymentByBucketName), bucketName, includePrivate)
 }
 
 // GetPaymentByPaymentAddress mocks base method.
@@ -170,48 +170,48 @@ func (mr *MockMetadataMockRecorder) GetPaymentByPaymentAddress(address interface
 }
 
 // GetPermissionByResourceAndPrincipal mocks base method.
-func (m *MockMetadata) GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue string) (*Permission, error) {
+func (m *MockMetadata) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue string, resourceID common.Hash) (*Permission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermissionByResourceAndPrincipal", resourceType, resourceID, principalType, principalValue)
+	ret := m.ctrl.Call(m, "GetPermissionByResourceAndPrincipal", resourceType, principalType, principalValue, resourceID)
 	ret0, _ := ret[0].(*Permission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermissionByResourceAndPrincipal indicates an expected call of GetPermissionByResourceAndPrincipal.
-func (mr *MockMetadataMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue, resourceID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByResourceAndPrincipal", reflect.TypeOf((*MockMetadata)(nil).GetPermissionByResourceAndPrincipal), resourceType, resourceID, principalType, principalValue)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByResourceAndPrincipal", reflect.TypeOf((*MockMetadata)(nil).GetPermissionByResourceAndPrincipal), resourceType, principalType, principalValue, resourceID)
 }
 
 // GetPermissionsByResourceAndPrincipleType mocks base method.
-func (m *MockMetadata) GetPermissionsByResourceAndPrincipleType(resourceType, resourceID, principalType string) ([]*Permission, error) {
+func (m *MockMetadata) GetPermissionsByResourceAndPrincipleType(resourceType, principalType string, resourceID common.Hash, includeRemoved bool) ([]*Permission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermissionsByResourceAndPrincipleType", resourceType, resourceID, principalType)
+	ret := m.ctrl.Call(m, "GetPermissionsByResourceAndPrincipleType", resourceType, principalType, resourceID, includeRemoved)
 	ret0, _ := ret[0].([]*Permission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermissionsByResourceAndPrincipleType indicates an expected call of GetPermissionsByResourceAndPrincipleType.
-func (mr *MockMetadataMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, resourceID, principalType interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, principalType, resourceID, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockMetadata)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, resourceID, principalType)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockMetadata)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, principalType, resourceID, includeRemoved)
 }
 
 // GetStatementsByPolicyID mocks base method.
-func (m *MockMetadata) GetStatementsByPolicyID(policyIDList []common.Hash) ([]*Statement, error) {
+func (m *MockMetadata) GetStatementsByPolicyID(policyIDList []common.Hash, includeRemoved bool) ([]*Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStatementsByPolicyID", policyIDList)
+	ret := m.ctrl.Call(m, "GetStatementsByPolicyID", policyIDList, includeRemoved)
 	ret0, _ := ret[0].([]*Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetStatementsByPolicyID indicates an expected call of GetStatementsByPolicyID.
-func (mr *MockMetadataMockRecorder) GetStatementsByPolicyID(policyIDList interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetStatementsByPolicyID(policyIDList, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementsByPolicyID", reflect.TypeOf((*MockMetadata)(nil).GetStatementsByPolicyID), policyIDList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementsByPolicyID", reflect.TypeOf((*MockMetadata)(nil).GetStatementsByPolicyID), policyIDList, includeRemoved)
 }
 
 // GetSwitchDBSignal mocks base method.
@@ -230,48 +230,48 @@ func (mr *MockMetadataMockRecorder) GetSwitchDBSignal() *gomock.Call {
 }
 
 // GetUserBuckets mocks base method.
-func (m *MockMetadata) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
+func (m *MockMetadata) GetUserBuckets(accountID common.Address, includeRemoved bool) ([]*Bucket, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserBuckets", accountID)
+	ret := m.ctrl.Call(m, "GetUserBuckets", accountID, includeRemoved)
 	ret0, _ := ret[0].([]*Bucket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserBuckets indicates an expected call of GetUserBuckets.
-func (mr *MockMetadataMockRecorder) GetUserBuckets(accountID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetUserBuckets(accountID, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBuckets", reflect.TypeOf((*MockMetadata)(nil).GetUserBuckets), accountID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBuckets", reflect.TypeOf((*MockMetadata)(nil).GetUserBuckets), accountID, includeRemoved)
 }
 
 // GetUserBucketsCount mocks base method.
-func (m *MockMetadata) GetUserBucketsCount(accountID common.Address) (int64, error) {
+func (m *MockMetadata) GetUserBucketsCount(accountID common.Address, includeRemoved bool) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserBucketsCount", accountID)
+	ret := m.ctrl.Call(m, "GetUserBucketsCount", accountID, includeRemoved)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserBucketsCount indicates an expected call of GetUserBucketsCount.
-func (mr *MockMetadataMockRecorder) GetUserBucketsCount(accountID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetUserBucketsCount(accountID, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBucketsCount", reflect.TypeOf((*MockMetadata)(nil).GetUserBucketsCount), accountID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBucketsCount", reflect.TypeOf((*MockMetadata)(nil).GetUserBucketsCount), accountID, includeRemoved)
 }
 
 // ListDeletedObjectsByBlockNumberRange mocks base method.
-func (m *MockMetadata) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, isFullList bool) ([]*Object, error) {
+func (m *MockMetadata) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListDeletedObjectsByBlockNumberRange", startBlockNumber, endBlockNumber, isFullList)
+	ret := m.ctrl.Call(m, "ListDeletedObjectsByBlockNumberRange", startBlockNumber, endBlockNumber, includePrivate)
 	ret0, _ := ret[0].([]*Object)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListDeletedObjectsByBlockNumberRange indicates an expected call of ListDeletedObjectsByBlockNumberRange.
-func (mr *MockMetadataMockRecorder) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber, isFullList interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeletedObjectsByBlockNumberRange", reflect.TypeOf((*MockMetadata)(nil).ListDeletedObjectsByBlockNumberRange), startBlockNumber, endBlockNumber, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeletedObjectsByBlockNumberRange", reflect.TypeOf((*MockMetadata)(nil).ListDeletedObjectsByBlockNumberRange), startBlockNumber, endBlockNumber, includePrivate)
 }
 
 // ListExpiredBucketsBySp mocks base method.
@@ -289,19 +289,35 @@ func (mr *MockMetadataMockRecorder) ListExpiredBucketsBySp(createAt, primarySpAd
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpiredBucketsBySp", reflect.TypeOf((*MockMetadata)(nil).ListExpiredBucketsBySp), createAt, primarySpAddress, limit)
 }
 
-// ListObjectsByBucketName mocks base method.
-func (m *MockMetadata) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*ListObjectsResult, error) {
+// ListGroupsByNameAndSourceType mocks base method.
+func (m *MockMetadata) ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int, includeRemoved bool) ([]*Group, int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListObjectsByBucketName", bucketName, continuationToken, prefix, delimiter, maxKeys)
+	ret := m.ctrl.Call(m, "ListGroupsByNameAndSourceType", name, prefix, sourceType, limit, offset, includeRemoved)
+	ret0, _ := ret[0].([]*Group)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListGroupsByNameAndSourceType indicates an expected call of ListGroupsByNameAndSourceType.
+func (mr *MockMetadataMockRecorder) ListGroupsByNameAndSourceType(name, prefix, sourceType, limit, offset, includeRemoved interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroupsByNameAndSourceType", reflect.TypeOf((*MockMetadata)(nil).ListGroupsByNameAndSourceType), name, prefix, sourceType, limit, offset, includeRemoved)
+}
+
+// ListObjectsByBucketName mocks base method.
+func (m *MockMetadata) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int, includeRemoved bool) ([]*ListObjectsResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListObjectsByBucketName", bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved)
 	ret0, _ := ret[0].([]*ListObjectsResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListObjectsByBucketName indicates an expected call of ListObjectsByBucketName.
-func (mr *MockMetadataMockRecorder) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter, maxKeys interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBucketName", reflect.TypeOf((*MockMetadata)(nil).ListObjectsByBucketName), bucketName, continuationToken, prefix, delimiter, maxKeys)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBucketName", reflect.TypeOf((*MockMetadata)(nil).ListObjectsByBucketName), bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved)
 }
 
 // MockBSDB is a mock of BSDB interface.
@@ -328,63 +344,63 @@ func (m *MockBSDB) EXPECT() *MockBSDBMockRecorder {
 }
 
 // GetBucketByID mocks base method.
-func (m *MockBSDB) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, error) {
+func (m *MockBSDB) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketByID", bucketID, isFullList)
+	ret := m.ctrl.Call(m, "GetBucketByID", bucketID, includePrivate)
 	ret0, _ := ret[0].(*Bucket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketByID indicates an expected call of GetBucketByID.
-func (mr *MockBSDBMockRecorder) GetBucketByID(bucketID, isFullList interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetBucketByID(bucketID, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByID", reflect.TypeOf((*MockBSDB)(nil).GetBucketByID), bucketID, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByID", reflect.TypeOf((*MockBSDB)(nil).GetBucketByID), bucketID, includePrivate)
 }
 
 // GetBucketByName mocks base method.
-func (m *MockBSDB) GetBucketByName(bucketName string, isFullList bool) (*Bucket, error) {
+func (m *MockBSDB) GetBucketByName(bucketName string, includePrivate bool) (*Bucket, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketByName", bucketName, isFullList)
+	ret := m.ctrl.Call(m, "GetBucketByName", bucketName, includePrivate)
 	ret0, _ := ret[0].(*Bucket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketByName indicates an expected call of GetBucketByName.
-func (mr *MockBSDBMockRecorder) GetBucketByName(bucketName, isFullList interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetBucketByName(bucketName, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByName", reflect.TypeOf((*MockBSDB)(nil).GetBucketByName), bucketName, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByName", reflect.TypeOf((*MockBSDB)(nil).GetBucketByName), bucketName, includePrivate)
 }
 
 // GetBucketMetaByName mocks base method.
-func (m *MockBSDB) GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error) {
+func (m *MockBSDB) GetBucketMetaByName(bucketName string, includePrivate bool) (*BucketFullMeta, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketMetaByName", bucketName, isFullList)
+	ret := m.ctrl.Call(m, "GetBucketMetaByName", bucketName, includePrivate)
 	ret0, _ := ret[0].(*BucketFullMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketMetaByName indicates an expected call of GetBucketMetaByName.
-func (mr *MockBSDBMockRecorder) GetBucketMetaByName(bucketName, isFullList interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetBucketMetaByName(bucketName, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMetaByName", reflect.TypeOf((*MockBSDB)(nil).GetBucketMetaByName), bucketName, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMetaByName", reflect.TypeOf((*MockBSDB)(nil).GetBucketMetaByName), bucketName, includePrivate)
 }
 
 // GetGroupsByGroupIDAndAccount mocks base method.
-func (m *MockBSDB) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Hash) ([]*Group, error) {
+func (m *MockBSDB) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, account common.Address, includeRemoved bool) ([]*Group, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGroupsByGroupIDAndAccount", groupIDList, account)
+	ret := m.ctrl.Call(m, "GetGroupsByGroupIDAndAccount", groupIDList, account, includeRemoved)
 	ret0, _ := ret[0].([]*Group)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetGroupsByGroupIDAndAccount indicates an expected call of GetGroupsByGroupIDAndAccount.
-func (mr *MockBSDBMockRecorder) GetGroupsByGroupIDAndAccount(groupIDList, account interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetGroupsByGroupIDAndAccount(groupIDList, account, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupsByGroupIDAndAccount", reflect.TypeOf((*MockBSDB)(nil).GetGroupsByGroupIDAndAccount), groupIDList, account)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupsByGroupIDAndAccount", reflect.TypeOf((*MockBSDB)(nil).GetGroupsByGroupIDAndAccount), groupIDList, account, includeRemoved)
 }
 
 // GetLatestBlockNumber mocks base method.
@@ -403,48 +419,48 @@ func (mr *MockBSDBMockRecorder) GetLatestBlockNumber() *gomock.Call {
 }
 
 // GetObjectByName mocks base method.
-func (m *MockBSDB) GetObjectByName(objectName, bucketName string, isFullList bool) (*Object, error) {
+func (m *MockBSDB) GetObjectByName(objectName, bucketName string, includePrivate bool) (*Object, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetObjectByName", objectName, bucketName, isFullList)
+	ret := m.ctrl.Call(m, "GetObjectByName", objectName, bucketName, includePrivate)
 	ret0, _ := ret[0].(*Object)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetObjectByName indicates an expected call of GetObjectByName.
-func (mr *MockBSDBMockRecorder) GetObjectByName(objectName, bucketName, isFullList interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetObjectByName(objectName, bucketName, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByName", reflect.TypeOf((*MockBSDB)(nil).GetObjectByName), objectName, bucketName, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByName", reflect.TypeOf((*MockBSDB)(nil).GetObjectByName), objectName, bucketName, includePrivate)
 }
 
 // GetPaymentByBucketID mocks base method.
-func (m *MockBSDB) GetPaymentByBucketID(bucketID int64, isFullList bool) (*StreamRecord, error) {
+func (m *MockBSDB) GetPaymentByBucketID(bucketID int64, includePrivate bool) (*StreamRecord, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPaymentByBucketID", bucketID, isFullList)
+	ret := m.ctrl.Call(m, "GetPaymentByBucketID", bucketID, includePrivate)
 	ret0, _ := ret[0].(*StreamRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPaymentByBucketID indicates an expected call of GetPaymentByBucketID.
-func (mr *MockBSDBMockRecorder) GetPaymentByBucketID(bucketID, isFullList interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPaymentByBucketID(bucketID, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketID", reflect.TypeOf((*MockBSDB)(nil).GetPaymentByBucketID), bucketID, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketID", reflect.TypeOf((*MockBSDB)(nil).GetPaymentByBucketID), bucketID, includePrivate)
 }
 
 // GetPaymentByBucketName mocks base method.
-func (m *MockBSDB) GetPaymentByBucketName(bucketName string, isFullList bool) (*StreamRecord, error) {
+func (m *MockBSDB) GetPaymentByBucketName(bucketName string, includePrivate bool) (*StreamRecord, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPaymentByBucketName", bucketName, isFullList)
+	ret := m.ctrl.Call(m, "GetPaymentByBucketName", bucketName, includePrivate)
 	ret0, _ := ret[0].(*StreamRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPaymentByBucketName indicates an expected call of GetPaymentByBucketName.
-func (mr *MockBSDBMockRecorder) GetPaymentByBucketName(bucketName, isFullList interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPaymentByBucketName(bucketName, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketName", reflect.TypeOf((*MockBSDB)(nil).GetPaymentByBucketName), bucketName, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketName", reflect.TypeOf((*MockBSDB)(nil).GetPaymentByBucketName), bucketName, includePrivate)
 }
 
 // GetPaymentByPaymentAddress mocks base method.
@@ -463,48 +479,48 @@ func (mr *MockBSDBMockRecorder) GetPaymentByPaymentAddress(address interface{}) 
 }
 
 // GetPermissionByResourceAndPrincipal mocks base method.
-func (m *MockBSDB) GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue string) (*Permission, error) {
+func (m *MockBSDB) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue string, resourceID common.Hash) (*Permission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermissionByResourceAndPrincipal", resourceType, resourceID, principalType, principalValue)
+	ret := m.ctrl.Call(m, "GetPermissionByResourceAndPrincipal", resourceType, principalType, principalValue, resourceID)
 	ret0, _ := ret[0].(*Permission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermissionByResourceAndPrincipal indicates an expected call of GetPermissionByResourceAndPrincipal.
-func (mr *MockBSDBMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, resourceID, principalType, principalValue interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue, resourceID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByResourceAndPrincipal", reflect.TypeOf((*MockBSDB)(nil).GetPermissionByResourceAndPrincipal), resourceType, resourceID, principalType, principalValue)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByResourceAndPrincipal", reflect.TypeOf((*MockBSDB)(nil).GetPermissionByResourceAndPrincipal), resourceType, principalType, principalValue, resourceID)
 }
 
 // GetPermissionsByResourceAndPrincipleType mocks base method.
-func (m *MockBSDB) GetPermissionsByResourceAndPrincipleType(resourceType, resourceID, principalType string) ([]*Permission, error) {
+func (m *MockBSDB) GetPermissionsByResourceAndPrincipleType(resourceType, principalType string, resourceID common.Hash, includeRemoved bool) ([]*Permission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermissionsByResourceAndPrincipleType", resourceType, resourceID, principalType)
+	ret := m.ctrl.Call(m, "GetPermissionsByResourceAndPrincipleType", resourceType, principalType, resourceID, includeRemoved)
 	ret0, _ := ret[0].([]*Permission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPermissionsByResourceAndPrincipleType indicates an expected call of GetPermissionsByResourceAndPrincipleType.
-func (mr *MockBSDBMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, resourceID, principalType interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, principalType, resourceID, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockBSDB)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, resourceID, principalType)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockBSDB)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, principalType, resourceID, includeRemoved)
 }
 
 // GetStatementsByPolicyID mocks base method.
-func (m *MockBSDB) GetStatementsByPolicyID(policyIDList []common.Hash) ([]*Statement, error) {
+func (m *MockBSDB) GetStatementsByPolicyID(policyIDList []common.Hash, includeRemoved bool) ([]*Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStatementsByPolicyID", policyIDList)
+	ret := m.ctrl.Call(m, "GetStatementsByPolicyID", policyIDList, includeRemoved)
 	ret0, _ := ret[0].([]*Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetStatementsByPolicyID indicates an expected call of GetStatementsByPolicyID.
-func (mr *MockBSDBMockRecorder) GetStatementsByPolicyID(policyIDList interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetStatementsByPolicyID(policyIDList, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementsByPolicyID", reflect.TypeOf((*MockBSDB)(nil).GetStatementsByPolicyID), policyIDList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementsByPolicyID", reflect.TypeOf((*MockBSDB)(nil).GetStatementsByPolicyID), policyIDList, includeRemoved)
 }
 
 // GetSwitchDBSignal mocks base method.
@@ -523,48 +539,48 @@ func (mr *MockBSDBMockRecorder) GetSwitchDBSignal() *gomock.Call {
 }
 
 // GetUserBuckets mocks base method.
-func (m *MockBSDB) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
+func (m *MockBSDB) GetUserBuckets(accountID common.Address, includeRemoved bool) ([]*Bucket, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserBuckets", accountID)
+	ret := m.ctrl.Call(m, "GetUserBuckets", accountID, includeRemoved)
 	ret0, _ := ret[0].([]*Bucket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserBuckets indicates an expected call of GetUserBuckets.
-func (mr *MockBSDBMockRecorder) GetUserBuckets(accountID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetUserBuckets(accountID, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBuckets", reflect.TypeOf((*MockBSDB)(nil).GetUserBuckets), accountID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBuckets", reflect.TypeOf((*MockBSDB)(nil).GetUserBuckets), accountID, includeRemoved)
 }
 
 // GetUserBucketsCount mocks base method.
-func (m *MockBSDB) GetUserBucketsCount(accountID common.Address) (int64, error) {
+func (m *MockBSDB) GetUserBucketsCount(accountID common.Address, includeRemoved bool) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserBucketsCount", accountID)
+	ret := m.ctrl.Call(m, "GetUserBucketsCount", accountID, includeRemoved)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserBucketsCount indicates an expected call of GetUserBucketsCount.
-func (mr *MockBSDBMockRecorder) GetUserBucketsCount(accountID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetUserBucketsCount(accountID, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBucketsCount", reflect.TypeOf((*MockBSDB)(nil).GetUserBucketsCount), accountID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBucketsCount", reflect.TypeOf((*MockBSDB)(nil).GetUserBucketsCount), accountID, includeRemoved)
 }
 
 // ListDeletedObjectsByBlockNumberRange mocks base method.
-func (m *MockBSDB) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, isFullList bool) ([]*Object, error) {
+func (m *MockBSDB) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListDeletedObjectsByBlockNumberRange", startBlockNumber, endBlockNumber, isFullList)
+	ret := m.ctrl.Call(m, "ListDeletedObjectsByBlockNumberRange", startBlockNumber, endBlockNumber, includePrivate)
 	ret0, _ := ret[0].([]*Object)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListDeletedObjectsByBlockNumberRange indicates an expected call of ListDeletedObjectsByBlockNumberRange.
-func (mr *MockBSDBMockRecorder) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber, isFullList interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeletedObjectsByBlockNumberRange", reflect.TypeOf((*MockBSDB)(nil).ListDeletedObjectsByBlockNumberRange), startBlockNumber, endBlockNumber, isFullList)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeletedObjectsByBlockNumberRange", reflect.TypeOf((*MockBSDB)(nil).ListDeletedObjectsByBlockNumberRange), startBlockNumber, endBlockNumber, includePrivate)
 }
 
 // ListExpiredBucketsBySp mocks base method.
@@ -582,17 +598,33 @@ func (mr *MockBSDBMockRecorder) ListExpiredBucketsBySp(createAt, primarySpAddres
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpiredBucketsBySp", reflect.TypeOf((*MockBSDB)(nil).ListExpiredBucketsBySp), createAt, primarySpAddress, limit)
 }
 
-// ListObjectsByBucketName mocks base method.
-func (m *MockBSDB) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int) ([]*ListObjectsResult, error) {
+// ListGroupsByNameAndSourceType mocks base method.
+func (m *MockBSDB) ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int, includeRemoved bool) ([]*Group, int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListObjectsByBucketName", bucketName, continuationToken, prefix, delimiter, maxKeys)
+	ret := m.ctrl.Call(m, "ListGroupsByNameAndSourceType", name, prefix, sourceType, limit, offset, includeRemoved)
+	ret0, _ := ret[0].([]*Group)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListGroupsByNameAndSourceType indicates an expected call of ListGroupsByNameAndSourceType.
+func (mr *MockBSDBMockRecorder) ListGroupsByNameAndSourceType(name, prefix, sourceType, limit, offset, includeRemoved interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroupsByNameAndSourceType", reflect.TypeOf((*MockBSDB)(nil).ListGroupsByNameAndSourceType), name, prefix, sourceType, limit, offset, includeRemoved)
+}
+
+// ListObjectsByBucketName mocks base method.
+func (m *MockBSDB) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int, includeRemoved bool) ([]*ListObjectsResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListObjectsByBucketName", bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved)
 	ret0, _ := ret[0].([]*ListObjectsResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListObjectsByBucketName indicates an expected call of ListObjectsByBucketName.
-func (mr *MockBSDBMockRecorder) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter, maxKeys interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBucketName", reflect.TypeOf((*MockBSDB)(nil).ListObjectsByBucketName), bucketName, continuationToken, prefix, delimiter, maxKeys)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBucketName", reflect.TypeOf((*MockBSDB)(nil).ListObjectsByBucketName), bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved)
 }

@@ -52,8 +52,9 @@ message GfSpReplicatePieceTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
-  repeated bytes secondary_signature = 4;
-  bool sealed = 5;
+  repeated string secondary_addresses = 4;
+  repeated bytes secondary_signatures = 5;
+  bool sealed = 6;
 }
 
 message GfSpReceivePieceTask {
@@ -72,7 +73,8 @@ message GfSpSealObjectTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
-  repeated bytes secondary_signature = 4;
+  repeated string secondary_addresses = 4;
+  repeated bytes secondary_signatures = 5;
 }
 
 message GfSpDownloadObjectTask {
@@ -83,6 +85,19 @@ message GfSpDownloadObjectTask {
   string user_address = 5;
   int64 low = 6;
   int64 high = 7;
+}
+
+message GfSpDownloadPieceTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.BucketInfo bucket_info = 3;
+  greenfield.storage.Params storage_params = 4;
+  bool enable_check = 5; // check read quota, only in first piece
+  string user_address = 6;
+  uint64 total_size = 7;
+  string piece_key = 8;
+  uint64 piece_offset = 9;
+  uint64 piece_length = 10;
 }
 
 message GfSpChallengePieceTask {

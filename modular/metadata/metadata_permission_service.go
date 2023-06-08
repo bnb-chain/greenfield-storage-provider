@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"cosmossdk.io/math"
@@ -15,9 +16,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/forbole/juno/v4/common"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+)
+
+var (
+	// ErrInvalidParams defines invalid params
+	ErrInvalidParams = errors.New("invalid params")
+	// ErrInvalidBucketName defines invalid bucket name
+	ErrInvalidBucketName = errors.New("invalid bucket name")
+	// ErrNoSuchBucket defines not existed bucket error
+	ErrNoSuchBucket = errors.New("the specified bucket does not exist")
+	// ErrNoSuchObject defines not existed object error
+	ErrNoSuchObject = errors.New("the specified key does not exist")
 )
 
 // GfSpVerifyPermission Verify the input account’s permission to input items
@@ -33,7 +44,7 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 
 	if req == nil {
 		log.CtxErrorw(ctx, "invalid request", "error", err)
-		return nil, errors.ErrInvalidParams
+		return nil, ErrInvalidParams
 	}
 
 	operator, err = sdk.AccAddressFromHexUnsafe(req.Operator)
@@ -44,7 +55,7 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 
 	if err = s3util.CheckValidBucketName(req.BucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", req.BucketName, "error", err)
-		return nil, errors.ErrInvalidBucketName
+		return nil, ErrInvalidBucketName
 	}
 
 	bucketInfo, err = r.baseApp.GfBsDB().GetBucketByName(req.BucketName, true)
@@ -52,9 +63,9 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 		log.CtxErrorw(ctx, "failed to get bucket info", "error", err)
 		return nil, err
 	}
-	if bucketInfo == nil {
+	if bucketInfo == nil || bucketInfo.Removed {
 		log.CtxError(ctx, "no such bucket")
-		return nil, errors.ErrNoSuchBucket
+		return nil, ErrNoSuchBucket
 	}
 
 	if req.ObjectName == "" {
@@ -64,14 +75,14 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 			return nil, err
 		}
 	} else {
-		objectInfo, err = r.baseApp.GfBsDB().GetObjectByName(req.BucketName, req.ObjectName, true)
+		objectInfo, err = r.baseApp.GfBsDB().GetObjectByName(req.ObjectName, req.BucketName, true)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get object info", "error", err)
 			return nil, err
 		}
-		if objectInfo == nil {
+		if objectInfo == nil || objectInfo.Removed {
 			log.CtxError(ctx, "no such object")
-			return nil, errors.ErrNoSuchObject
+			return nil, ErrNoSuchObject
 		}
 		effect, err = r.VerifyObjectPermission(ctx, bucketInfo, objectInfo, operator, req.ActionType)
 		if err != nil {
@@ -197,77 +208,78 @@ func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint
 	)
 
 	// verify policy which grant permission to account
-	permission, err = r.baseApp.GfBsDB().GetPermissionByResourceAndPrincipal(resourceType.String(), resourceID.String(), permtypes.PRINCIPAL_TYPE_GNFD_ACCOUNT.String(), operator.String())
-	if err != nil || permission == nil {
+	permission, err = r.baseApp.GfBsDB().GetPermissionByResourceAndPrincipal(resourceType.String(), permtypes.PRINCIPAL_TYPE_GNFD_ACCOUNT.String(), operator.String(), common.BigToHash(resourceID.BigInt()))
+	if err != nil {
 		log.CtxErrorw(ctx, "failed to get permission by resource and principal", "error", err)
 		return permtypes.EFFECT_DENY, err
 	}
 
-	accountPolicyID = append(accountPolicyID, permission.PolicyID)
-	statements, err = r.baseApp.GfBsDB().GetStatementsByPolicyID(accountPolicyID)
-	if err != nil || statements == nil {
-		log.CtxErrorw(ctx, "failed to get statements by policy id", "error", err)
-		return permtypes.EFFECT_DENY, err
+	if permission != nil {
+		accountPolicyID = append(accountPolicyID, permission.PolicyID)
+		statements, err = r.baseApp.GfBsDB().GetStatementsByPolicyID(accountPolicyID, false)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get statements by policy id", "error", err)
+			return permtypes.EFFECT_DENY, err
+		}
 	}
-
-	effect = permission.Eval(action, time.Now(), opts, statements)
-	if effect != permtypes.EFFECT_UNSPECIFIED {
-		return effect, nil
-	}
-
-	// verify policy which grant permission to group
-	permissions, err = r.baseApp.GfBsDB().GetPermissionsByResourceAndPrincipleType(resourceType.String(), resourceID.String(), permtypes.PRINCIPAL_TYPE_GNFD_GROUP.String())
-	if err != nil || permissions == nil {
-		log.CtxErrorw(ctx, "failed to get permission by resource and principle type", "error", err)
-		return permtypes.EFFECT_DENY, err
-	}
-
-	groupIDList := make([]common.Hash, len(permissions))
-	for i, perm := range permissions {
-		groupIDList[i] = common.HexToHash(perm.PrincipalValue)
-	}
-
-	// filter group id by account
-	groups, err = r.baseApp.GfBsDB().GetGroupsByGroupIDAndAccount(groupIDList, common.HexToHash(operator.String()))
-	if err != nil || groups == nil {
-		log.CtxErrorw(ctx, "failed to get groups by group id and account", "error", err)
-		return permtypes.EFFECT_DENY, err
-	}
-
-	// store the group id into map
-	for _, group := range groups {
-		groupIDMap[group.GroupID] = true
-	}
-
-	// use group id map to filter the above permission list and get the permissions which related to the specific account
-	for _, perm := range permissions {
-		_, ok := groupIDMap[common.HexToHash(perm.PrincipalValue)]
-		if ok {
-			policyIDList = append(policyIDList, perm.PolicyID)
-			filteredPermissionList = append(filteredPermissionList, perm)
+	if statements != nil {
+		effect = permission.Eval(action, time.Now(), opts, statements)
+		if effect != permtypes.EFFECT_UNSPECIFIED {
+			return effect, nil
 		}
 	}
 
-	statements, err = r.baseApp.GfBsDB().GetStatementsByPolicyID(policyIDList)
-	if err != nil || statements == nil {
-		log.CtxErrorw(ctx, "failed to get statements by policy id", "error", err)
+	// verify policy which grant permission to group
+	permissions, err = r.baseApp.GfBsDB().GetPermissionsByResourceAndPrincipleType(resourceType.String(), permtypes.PRINCIPAL_TYPE_GNFD_GROUP.String(), common.BigToHash(resourceID.BigInt()), false)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get permission by resource and principle type", "error", err)
 		return permtypes.EFFECT_DENY, err
 	}
-
-	// eval permission and get effect result
-	for _, perm := range filteredPermissionList {
-		effect = perm.Eval(action, time.Now(), opts, statements)
-		if effect != permtypes.EFFECT_UNSPECIFIED {
-			if effect == permtypes.EFFECT_ALLOW {
-				allowed = true
-			} else if effect == permtypes.EFFECT_DENY {
-				return permtypes.EFFECT_DENY, nil
+	if permissions != nil {
+		groupIDList := make([]common.Hash, len(permissions))
+		for i, perm := range permissions {
+			groupIDList[i] = common.BigToHash(math.NewUintFromString(perm.PrincipalValue).BigInt())
+		}
+		groups, err = r.baseApp.GfBsDB().GetGroupsByGroupIDAndAccount(groupIDList, common.HexToAddress(operator.String()), false)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get groups by group id and account", "error", err)
+			return permtypes.EFFECT_DENY, err
+		}
+		if groups != nil {
+			// store the group id into map
+			for _, group := range groups {
+				groupIDMap[group.GroupID] = true
+			}
+			// use group id map to filter the above permission list and get the permissions which related to the specific account
+			for _, perm := range permissions {
+				_, ok := groupIDMap[common.BigToHash(math.NewUintFromString(perm.PrincipalValue).BigInt())]
+				if ok {
+					policyIDList = append(policyIDList, perm.PolicyID)
+					filteredPermissionList = append(filteredPermissionList, perm)
+				}
 			}
 		}
 	}
 
-	if allowed {
-		return permtypes.EFFECT_ALLOW, nil
+	statements, err = r.baseApp.GfBsDB().GetStatementsByPolicyID(policyIDList, false)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get statements by policy id", "error", err)
+		return permtypes.EFFECT_DENY, err
+	}
+	if statements != nil {
+		for _, perm := range filteredPermissionList {
+			effect = perm.Eval(action, time.Now(), opts, statements)
+			if effect != permtypes.EFFECT_UNSPECIFIED {
+				if effect == permtypes.EFFECT_ALLOW {
+					allowed = true
+				} else if effect == permtypes.EFFECT_DENY {
+					return permtypes.EFFECT_DENY, nil
+				}
+			}
+		}
+		if allowed {
+			return permtypes.EFFECT_ALLOW, nil
+		}
 	}
 	return permtypes.EFFECT_UNSPECIFIED, nil
 }

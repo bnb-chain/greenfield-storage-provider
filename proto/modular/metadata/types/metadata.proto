@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 import "greenfield/payment/stream_record.proto";
 import "greenfield/storage/query.proto";
 import "greenfield/storage/types.proto";
-import "service/types/storage_provider.proto";
+import "store/types/store.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types";
 
@@ -60,6 +60,8 @@ message Object {
 message GfSpGetUserBucketsRequest {
   // account_id is the account address of user
   string account_id = 1;
+  // include_removed indicates whether this request can get the removed buckets information
+  bool include_removed = 2;
 }
 
 // GfSpGetUserBucketsResponse is response type for the GfSpGetUserBuckets RPC method.
@@ -84,6 +86,8 @@ message GfSpListObjectsByBucketNameRequest {
   string delimiter = 6;
   // prefix limits the response to keys that begin with the specified prefix
   string prefix = 7;
+  // include_removed indicates whether this request can get the removed objects information
+  bool include_removed = 8;
 }
 
 // GfSpListObjectsByBucketNameResponse is response type for the GfSpListObjectsByBucketName RPC method.
@@ -114,8 +118,8 @@ message GfSpListObjectsByBucketNameResponse {
 message GfSpGetBucketByBucketNameRequest {
   // bucket_name is the name of the bucket
   string bucket_name = 1;
-  // is_full_list indicates whether this request can get the private buckets information
-  bool is_full_list = 2;
+  // include_private indicates whether this request can get the private buckets information
+  bool include_private = 2;
 }
 
 // GfSpGetBucketByBucketNameResponse is response type for the GfSpGetBucketByBucketName RPC method.
@@ -128,8 +132,8 @@ message GfSpGetBucketByBucketNameResponse {
 message GfSpGetBucketByBucketIDRequest {
   // bucket_id is the unique identifier of bucket
   int64 bucket_id = 1;
-  // is_full_list indicates whether this request can get the private buckets information
-  bool is_full_list = 2;
+  // include_private indicates whether this request can get the private buckets information
+  bool include_private = 2;
 }
 
 // GfSpGetBucketByBucketIDResponse is response type for the GfSpGetBucketByBucketID RPC method.
@@ -146,8 +150,8 @@ message GfSpListDeletedObjectsByBlockNumberRangeRequest {
   // end_block_number defines the end of range
   // end_block_number < 0 or start_block_number > end_block_number is invalid
   int64 end_block_number = 2;
-  // is_full_list indicates whether this request can get the private objects information
-  bool is_full_list = 3;
+  // include_private indicates whether this request can get the private objects information
+  bool include_private = 3;
 }
 
 // GfSpListDeletedObjectsByBlockNumberRangeResponse is response type for the GfSpListDeletedObjectsByBlockNumberRange RPC method.
@@ -162,6 +166,8 @@ message GfSpListDeletedObjectsByBlockNumberRangeResponse {
 message GfSpGetUserBucketsCountRequest {
   // account_id is the account address of user
   string account_id = 1;
+  // include_removed indicates whether this request can get the removed buckets information
+  bool include_removed = 2;
 }
 
 // GfSpGetUserBucketsCountResponse is response type for the GfSpGetUserBucketsCount RPC method.
@@ -192,8 +198,8 @@ message GfSpGetObjectMetaRequest {
   string object_name = 1;
   // bucket_name is the name of the bucket
   string bucket_name = 2;
-  // is_full_list indicates whether this request can get the private objects information
-  bool is_full_list = 3;
+  // include_private indicates whether this request can get the private objects information
+  bool include_private = 3;
 }
 
 // GfSpGetObjectMetaResponse is response type for the GfSpGetObjectMeta RPC method.
@@ -206,8 +212,8 @@ message GfSpGetObjectMetaResponse {
 message GfSpGetPaymentByBucketNameRequest {
   // bucket_name is the name of the bucket
   string bucket_name = 1;
-  // is_full_list indicates whether this request can get the private buckets information
-  bool is_full_list = 2;
+  // include_private indicates whether this request can get the private buckets information
+  bool include_private = 2;
 }
 
 // GfSpGetPaymentByBucketNameResponse is response type for the GfSpGetPaymentByBucketName RPC method.
@@ -220,8 +226,8 @@ message GfSpGetPaymentByBucketNameResponse {
 message GfSpGetPaymentByBucketIDRequest {
   // bucket_id is the unique identifier of bucket
   int64 bucket_id = 1;
-  // is_full_list indicates whether this request can get the private buckets information
-  bool is_full_list = 2;
+  // include_private indicates whether this request can get the private buckets information
+  bool include_private = 2;
 }
 
 // GfSpGetPaymentByBucketIDResponse is response type for the GfSpGetPaymentByBucketID RPC method.
@@ -234,8 +240,8 @@ message GfSpGetPaymentByBucketIDResponse {
 message GfSpGetBucketMetaRequest {
   // bucket_name is the name of the bucket
   string bucket_name = 1;
-  // is_full_list indicates whether this request can get the private buckets information
-  bool is_full_list = 2;
+  // include_private indicates whether this request can get the private buckets information
+  bool include_private = 2;
 }
 
 // GfSpGetBucketMetaResponse is response type for the GfSpGetBucketMeta RPC method
@@ -322,7 +328,49 @@ message GfSpQueryUploadProgressRequest {
 message GfSpQueryUploadProgressResponse {
   base.types.gfsperrors.GfSpError err = 1;
   // state defines the state of put object.
-  service.types.JobState state = 2;
+  store.types.TaskState state = 2;
+}
+
+// Group is the structure for group information
+message Group {
+  // group defines the basic group info
+  greenfield.storage.GroupInfo group = 1;
+  // operator defines operator address of group
+  string operator = 2;
+  // create_at defines the block number when the group created
+  int64 create_at = 3;
+  // create_time defines the timestamp when the group created
+  int64 create_time = 4;
+  // update_at defines the block number when the group updated
+  int64 update_at = 5;
+  // update_time defines the timestamp when the group updated
+  int64 update_time = 6;
+  // removed defines the group is deleted or not
+  bool removed = 7;
+}
+
+// GfSpGetGroupListRequest is request type for the GetGroupList RPC method.
+message GfSpGetGroupListRequest {
+  // name defines the query group name
+  string name = 1;
+  // prefix defines the prefix of the group name
+  string prefix = 2;
+  // source_type defines which chain the user should send the bucket management transactions to
+  string source_type = 3;
+  // limit defines the maximum number of results that should be returned in response
+  int64 limit = 4;
+  // offset defines the position in the list from where to start returning results
+  int64 offset = 5;
+  // include_removed indicates whether this request can get the removed groups information
+  bool include_removed = 6;
+}
+
+// GfSpGetGroupListResponse is response type for the GetGroupList RPC method.
+message GfSpGetGroupListResponse {
+  // groups defines the response of group list
+  repeated Group groups = 1;
+  // count defines total groups amount
+  int64 count = 2;
 }
 
 service GfSpMetadataService {
@@ -342,4 +390,5 @@ service GfSpMetadataService {
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}
+  rpc GfSpGetGroupList(GfSpGetGroupListRequest) returns (GfSpGetGroupListResponse) {}
 }

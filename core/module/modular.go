@@ -7,6 +7,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -33,8 +34,8 @@ const (
 	AuthOpAskCreateBucketApproval
 	// AuthOpAskCreateObjectApproval defines the AskCreateObjectApproval operator
 	AuthOpAskCreateObjectApproval
-	// AuthOpTypeChallengePiece defines the ChallengePiece operator
-	AuthOpTypeChallengePiece
+	// AuthOpTypeGetChallengePieceInfo defines the GetChallengePieceInfo operator
+	AuthOpTypeGetChallengePieceInfo
 	// AuthOpTypePutObject defines the PutObject operator
 	AuthOpTypePutObject
 	// AuthOpTypeGetObject defines the GetObject operator
@@ -52,6 +53,12 @@ type Authorizer interface {
 	Modular
 	// VerifyAuthorize verifies the operator authority.
 	VerifyAuthorize(ctx context.Context, auth AuthOpType, account, bucket, object string) (bool, error)
+	// GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
+	GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error)
+	// UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
+	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64) (bool, error)
+	// VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
+	VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error)
 }
 
 // Approver is the interface to handle ask approval.
@@ -92,6 +99,15 @@ type Downloader interface {
 	// PostDownloadObject is called after HandleDownloadObjectTask, it can recycle
 	// resources, statistics and other operations.
 	PostDownloadObject(ctx context.Context, task task.DownloadObjectTask)
+
+	// PreDownloadPiece prepares to handle DownloadPiece, it can do some checks
+	// Example: check for duplicates, if limit specified by SP is reached, etc.
+	PreDownloadPiece(ctx context.Context, task task.DownloadPieceTask) error
+	// HandleDownloadPieceTask handles the DownloadPiece, get data from piece store.
+	HandleDownloadPieceTask(ctx context.Context, task task.DownloadPieceTask) ([]byte, error)
+	// PostDownloadPiece is called after HandleDownloadPieceTask, it can recycle
+	// resources, statistics and other operations.
+	PostDownloadPiece(ctx context.Context, task task.DownloadPieceTask)
 
 	// PreChallengePiece prepares to handle ChallengePiece, it can do some checks
 	// Example: check for duplicates, if limit specified by SP is reached, etc.
@@ -139,7 +155,7 @@ type TaskExecutor interface {
 // scheduling and other management of SP.
 type Manager interface {
 	Modular
-	// DispatchTask dispatches the task to TaskExecutor modular when it ask task.
+	// DispatchTask dispatches the task to TaskExecutor modular when it asks task.
 	// It will consider task remaining resources when dispatches task.
 	DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error)
 	// QueryTasks queries tasks that hold on manager by task sub key.
@@ -237,6 +253,8 @@ type Signer interface {
 	SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong) ([]byte, error)
 	// SealObject signs the MsgSealObject and broadcast the tx to greenfield.
 	SealObject(ctx context.Context, object *storagetypes.MsgSealObject) error
+	// RejectUnSealObject signs the MsgRejectSealObject and broadcast the tx to greenfield.
+	RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) error
 	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error
 }

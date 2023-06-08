@@ -10,7 +10,6 @@ import (
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // UpdateAllSp update(maybe overwrite) all sp info in db
@@ -24,17 +23,29 @@ func (s *SpDBImpl) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 			return fmt.Errorf("failed to query record in sp info table: %s", result.Error)
 		}
 		// 2. if there is no record, insert new record; otherwise delete old record, then insert new record
-		if recordNotFound {
+		if recordNotFound { // insert
 			if err := s.insertNewRecordInSpInfoTable(value); err != nil {
 				return err
 			}
-		} else {
-			result = s.db.Where("operator_address = ? and is_own = false", value.GetOperatorAddress()).Delete(queryReturn)
+		} else { // update
+			result = s.db.Model(&SpInfoTable{}).
+				Where("operator_address = ? and is_own = false", value.GetOperatorAddress()).Updates(&SpInfoTable{
+				OperatorAddress: value.GetOperatorAddress(),
+				IsOwn:           false,
+				FundingAddress:  value.GetFundingAddress(),
+				SealAddress:     value.GetSealAddress(),
+				ApprovalAddress: value.GetApprovalAddress(),
+				TotalDeposit:    value.GetTotalDeposit().String(),
+				Status:          int32(value.Status),
+				Endpoint:        value.GetEndpoint(),
+				Moniker:         value.GetDescription().Moniker,
+				Identity:        value.GetDescription().Identity,
+				Website:         value.GetDescription().Website,
+				SecurityContact: value.GetDescription().SecurityContact,
+				Details:         value.GetDescription().Identity,
+			})
 			if result.Error != nil {
 				return fmt.Errorf("failed to detele record in sp info table: %s", result.Error)
-			}
-			if err := s.insertNewRecordInSpInfoTable(value); err != nil {
-				return err
 			}
 		}
 	}
@@ -301,56 +312,6 @@ func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 		result := s.db.Model(&SpInfoTable{}).Where("is_own = true").Updates(insertRecord)
 		if result.Error != nil {
 			return fmt.Errorf("failed to update own sp record in sp info table: %s", result.Error)
-		}
-		return nil
-	}
-}
-
-// GetStorageParams query storage params in db
-func (s *SpDBImpl) GetStorageParams() (*storagetypes.Params, error) {
-	queryReturn := &StorageParamsTable{}
-	result := s.db.Last(queryReturn)
-	if result.Error != nil {
-		return nil, fmt.Errorf("failed to query storage params table: %s", result.Error)
-	}
-	return &storagetypes.Params{
-		VersionedParams: storagetypes.VersionedParams{
-			MaxSegmentSize:          queryReturn.MaxSegmentSize,
-			RedundantDataChunkNum:   queryReturn.RedundantDataChunkNum,
-			RedundantParityChunkNum: queryReturn.RedundantParityChunkNum,
-		},
-
-		MaxPayloadSize: queryReturn.MaxPayloadSize,
-	}, nil
-}
-
-// SetStorageParams set(maybe overwrite) storage params to db
-func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
-	queryReturn := &StorageParamsTable{}
-	result := s.db.Last(queryReturn)
-	recordNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
-	if result.Error != nil && !recordNotFound {
-		return fmt.Errorf("failed to query storage params table: %s", result.Error)
-	}
-
-	insertParamsRecord := &StorageParamsTable{
-		MaxSegmentSize:          params.VersionedParams.GetMaxSegmentSize(),
-		RedundantDataChunkNum:   params.VersionedParams.GetRedundantDataChunkNum(),
-		RedundantParityChunkNum: params.VersionedParams.GetRedundantParityChunkNum(),
-		MaxPayloadSize:          params.GetMaxPayloadSize(),
-	}
-	// if there is no records in StorageParamsTable, insert a new record
-	if recordNotFound {
-		result = s.db.Create(insertParamsRecord)
-		if result.Error != nil || result.RowsAffected != 1 {
-			return fmt.Errorf("failed to insert storage params table: %s", result.Error)
-		}
-		return nil
-	} else {
-		queryCondition := &StorageParamsTable{ID: queryReturn.ID}
-		result = s.db.Model(queryCondition).Updates(insertParamsRecord)
-		if result.Error != nil {
-			return fmt.Errorf("failed to update storage params table: %s", result.Error)
 		}
 		return nil
 	}

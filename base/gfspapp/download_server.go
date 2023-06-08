@@ -12,79 +12,117 @@ import (
 )
 
 var (
-	ErrDownloadTaskDangling    = gfsperrors.Register(BaseCodeSpace, http.StatusInternalServerError, 990301, "OoooH... request lost")
-	ErrDownloadExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusServiceUnavailable, 990302, "server overload, try again later")
+	ErrDownloadTaskDangling    = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990301, "OoooH... request lost")
+	ErrDownloadExhaustResource = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990302, "server overload, try again later")
 )
 
 var _ gfspserver.GfSpDownloadServiceServer = &GfSpBaseApp{}
 
-func (g *GfSpBaseApp) GfSpDownloadObject(
-	ctx context.Context,
-	req *gfspserver.GfSpDownloadObjectRequest) (
+func (g *GfSpBaseApp) GfSpDownloadObject(ctx context.Context, req *gfspserver.GfSpDownloadObjectRequest) (
 	*gfspserver.GfSpDownloadObjectResponse, error) {
-	task := req.GetDownLoadTask()
-	if task == nil {
-		log.Error("failed to download object, download task pointer dangling")
+	downloadObjectTask := req.GetDownloadObjectTask()
+	if downloadObjectTask == nil {
+		log.Error("failed to download object due to task pointer dangling")
 		return &gfspserver.GfSpDownloadObjectResponse{Err: ErrDownloadTaskDangling}, nil
 	}
-	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-	span, err := g.downloader.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
+	ctx = log.WithValue(ctx, log.CtxKeyTask, downloadObjectTask.Key().String())
+	span, err := g.downloader.ReserveResource(ctx, downloadObjectTask.EstimateLimit().ScopeStat())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to reserve download resource", "error", err)
+		log.CtxErrorw(ctx, "failed to reserve download object resource", "error", err)
 		return &gfspserver.GfSpDownloadObjectResponse{Err: ErrDownloadExhaustResource}, nil
 	}
 	defer span.Done()
 	metrics.DownloadObjectSizeHistogram.WithLabelValues(
-		g.downloader.Name()).Observe(float64(task.GetSize()))
-	data, err := g.OnDownloadObjectTask(ctx, task)
+		g.downloader.Name()).Observe(float64(downloadObjectTask.GetSize()))
+	data, err := g.OnDownloadObjectTask(ctx, downloadObjectTask)
 	log.CtxDebugw(ctx, "finished to download object", "len", len(data), "error", err)
 	return &gfspserver.GfSpDownloadObjectResponse{
 		Err:  gfsperrors.MakeGfSpError(err),
 		Data: data}, nil
 }
 
-func (g *GfSpBaseApp) OnDownloadObjectTask(
-	ctx context.Context,
-	task task.DownloadObjectTask) (
+func (g *GfSpBaseApp) OnDownloadObjectTask(ctx context.Context, downloadObjectTask task.DownloadObjectTask) (
 	[]byte, error) {
-	if task == nil || task.GetObjectInfo() == nil {
-		log.CtxError(ctx, "failed to download object, download task pointer dangling")
+	if downloadObjectTask == nil || downloadObjectTask.GetObjectInfo() == nil {
+		log.CtxError(ctx, "failed to download object due to task pointer dangling")
 		return nil, ErrDownloadTaskDangling
 	}
-	err := g.downloader.PreDownloadObject(ctx, task)
+	err := g.downloader.PreDownloadObject(ctx, downloadObjectTask)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pre download object", "info", task.Info(), "error", err)
+		log.CtxErrorw(ctx, "failed to pre download object", "task_info", downloadObjectTask.Info(), "error", err)
 		return nil, err
 	}
-	data, err := g.downloader.HandleDownloadObjectTask(ctx, task)
+	data, err := g.downloader.HandleDownloadObjectTask(ctx, downloadObjectTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to download object", "error", err)
 		return nil, err
 	}
-	g.downloader.PostDownloadObject(ctx, task)
+	g.downloader.PostDownloadObject(ctx, downloadObjectTask)
 	log.CtxDebugw(ctx, "succeed to download object")
 	return data, nil
 }
 
-func (g *GfSpBaseApp) GfSpGetChallengeInfo(
-	ctx context.Context,
-	req *gfspserver.GfSpGetChallengeInfoRequest) (
+func (g *GfSpBaseApp) GfSpDownloadPiece(ctx context.Context, req *gfspserver.GfSpDownloadPieceRequest) (
+	*gfspserver.GfSpDownloadPieceResponse, error) {
+	downloadPieceTask := req.GetDownloadPieceTask()
+	if downloadPieceTask == nil {
+		log.Error("failed to download piece due to task pointer dangling")
+		return &gfspserver.GfSpDownloadPieceResponse{Err: ErrDownloadTaskDangling}, nil
+	}
+	ctx = log.WithValue(ctx, log.CtxKeyTask, downloadPieceTask.Key().String())
+	span, err := g.downloader.ReserveResource(ctx, downloadPieceTask.EstimateLimit().ScopeStat())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reserve download piece resource", "error", err)
+		return &gfspserver.GfSpDownloadPieceResponse{Err: ErrDownloadExhaustResource}, nil
+	}
+	defer span.Done()
+	metrics.DownloadPieceSizeHistogram.WithLabelValues(
+		g.downloader.Name()).Observe(float64(downloadPieceTask.GetSize()))
+	data, err := g.OnDownloadPieceTask(ctx, downloadPieceTask)
+	log.CtxDebugw(ctx, "finished to download piece", "len", len(data), "error", err)
+	return &gfspserver.GfSpDownloadPieceResponse{
+		Err:  gfsperrors.MakeGfSpError(err),
+		Data: data}, nil
+}
+
+func (g *GfSpBaseApp) OnDownloadPieceTask(ctx context.Context, downloadPieceTask task.DownloadPieceTask) (
+	[]byte, error) {
+	if downloadPieceTask == nil || downloadPieceTask.GetObjectInfo() == nil {
+		log.CtxError(ctx, "failed to download piece due to task pointer dangling")
+		return nil, ErrDownloadTaskDangling
+	}
+	err := g.downloader.PreDownloadPiece(ctx, downloadPieceTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pre download piece", "task_info", downloadPieceTask.Info(), "error", err)
+		return nil, err
+	}
+	data, err := g.downloader.HandleDownloadPieceTask(ctx, downloadPieceTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to download piece", "error", err)
+		return nil, err
+	}
+	g.downloader.PostDownloadPiece(ctx, downloadPieceTask)
+	log.CtxDebugw(ctx, "succeed to download piece")
+	return data, nil
+}
+
+func (g *GfSpBaseApp) GfSpGetChallengeInfo(ctx context.Context, req *gfspserver.GfSpGetChallengeInfoRequest) (
 	*gfspserver.GfSpGetChallengeInfoResponse, error) {
-	task := req.GetChallengePieceTask()
-	if task == nil {
-		log.CtxError(ctx, "failed to challenge piece, task pointer dangling")
+	challengePieceTask := req.GetChallengePieceTask()
+	if challengePieceTask == nil {
+		log.CtxError(ctx, "failed to challenge piece due to task pointer dangling")
 		return &gfspserver.GfSpGetChallengeInfoResponse{Err: ErrDownloadTaskDangling}, nil
 	}
-	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-	span, err := g.downloader.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
+	ctx = log.WithValue(ctx, log.CtxKeyTask, challengePieceTask.Key().String())
+	span, err := g.downloader.ReserveResource(ctx, challengePieceTask.EstimateLimit().ScopeStat())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve challenge resource", "error", err)
 		return &gfspserver.GfSpGetChallengeInfoResponse{Err: ErrDownloadExhaustResource}, nil
 	}
 	defer span.Done()
 	metrics.ChallengePieceSizeHistogram.WithLabelValues(g.downloader.Name()).Observe(
-		float64(task.EstimateLimit().GetMemoryLimit()))
-	integrity, checksums, data, err := g.OnChallengePieceTask(ctx, task)
+		float64(challengePieceTask.EstimateLimit().GetMemoryLimit()))
+	integrity, checksums, data, err := g.OnChallengePieceTask(ctx, challengePieceTask)
 	log.CtxDebugw(ctx, "finished to get object challenge info", "len", len(data), "error", err)
 	return &gfspserver.GfSpGetChallengeInfoResponse{
 		Err:           gfsperrors.MakeGfSpError(err),
@@ -93,25 +131,23 @@ func (g *GfSpBaseApp) GfSpGetChallengeInfo(
 		Data:          data}, nil
 }
 
-func (g *GfSpBaseApp) OnChallengePieceTask(
-	ctx context.Context,
-	task task.ChallengePieceTask) (
+func (g *GfSpBaseApp) OnChallengePieceTask(ctx context.Context, challengePieceTask task.ChallengePieceTask) (
 	[]byte, [][]byte, []byte, error) {
-	if task == nil || task.GetObjectInfo() == nil {
-		log.CtxError(ctx, "failed to challenge piece, challenge piece task pointer dangling")
+	if challengePieceTask == nil || challengePieceTask.GetObjectInfo() == nil {
+		log.CtxError(ctx, "failed to challenge piece due to task pointer dangling")
 		return nil, nil, nil, ErrDownloadTaskDangling
 	}
-	err := g.downloader.PreChallengePiece(ctx, task)
+	err := g.downloader.PreChallengePiece(ctx, challengePieceTask)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pre challenge piece", "info", task.Info(), "error", err)
+		log.CtxErrorw(ctx, "failed to pre challenge piece", "task_info", challengePieceTask.Info(), "error", err)
 		return nil, nil, nil, err
 	}
-	integrity, checksums, data, err := g.downloader.HandleChallengePiece(ctx, task)
+	integrity, checksums, data, err := g.downloader.HandleChallengePiece(ctx, challengePieceTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to challenge piece", "error", err)
 		return nil, nil, nil, err
 	}
-	g.downloader.PostChallengePiece(ctx, task)
+	g.downloader.PostChallengePiece(ctx, challengePieceTask)
 	log.CtxDebugw(ctx, "succeed to challenge piece")
 	return integrity, checksums, data, nil
 }

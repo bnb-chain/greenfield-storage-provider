@@ -80,11 +80,13 @@ func (*NullTask) SetApprovedSpApprovalAddress(string)                           
 func (*NullTask) InitUploadObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, int64) {}
 func (*NullTask) InitReplicatePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, int64, int64) {
 }
-func (*NullTask) GetSealed() bool                 { return false }
-func (*NullTask) SetSealed(bool)                  {}
-func (*NullTask) GetSecondarySignature() [][]byte { return nil }
-func (*NullTask) SetSecondarySignature([][]byte)  {}
-func (*NullTask) InitSealObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, [][]byte, int64, int64) {
+func (*NullTask) GetSealed() bool                  { return false }
+func (*NullTask) SetSealed(bool)                   {}
+func (*NullTask) GetSecondaryAddresses() []string  { return nil }
+func (*NullTask) GetSecondarySignatures() [][]byte { return nil }
+func (*NullTask) SetSecondarySignatures([][]byte)  {}
+func (*NullTask) SetSecondaryAddresses([]string)   {}
+func (*NullTask) InitSealObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64) {
 }
 func (*NullTask) InitReceivePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64) {
 }
@@ -105,7 +107,7 @@ func (*NullTask) GetUserAddress() string                  { return "" }
 func (*NullTask) GetSize() int64                          { return 0 }
 func (*NullTask) GetLow() int64                           { return 0 }
 func (*NullTask) GetHigh() int64                          { return 0 }
-func (*NullTask) InitChallengePieceTask(*storagetypes.ObjectInfo, *storagetypes.BucketInfo, TPriority, string, int32, uint32, int64, int64) {
+func (*NullTask) InitChallengePieceTask(*storagetypes.ObjectInfo, *storagetypes.BucketInfo, *storagetypes.Params, TPriority, string, int32, uint32, int64, int64) {
 }
 func (*NullTask) SetBucketInfo(*storagetypes.BucketInfo) {}
 func (*NullTask) SetUserAddress(string)                  {}

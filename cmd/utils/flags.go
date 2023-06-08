@@ -1,20 +1,13 @@
 package utils
 
 import (
-	"errors"
-	"os"
-
-	"github.com/pelletier/go-toml/v2"
 	"github.com/urfave/cli/v2"
-
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 )
 
 const (
 	ConfigCategory          = "SP CONFIG"
 	LoggingCategory         = "LOGGING AND DEBUGGING"
 	MetricsCategory         = "METRICS AND STATS"
-	DatabaseCategory        = "DATABASE"
 	ResourceManagerCategory = "RESOURCE MANAGER"
 	PerfCategory            = "PERFORMANCE TUNING"
 )
@@ -92,16 +85,4 @@ func MergeFlags(groups ...[]cli.Flag) []cli.Flag {
 		ret = append(ret, group...)
 	}
 	return ret
-}
-
-// LoadConfig loads the configuration from file.
-func LoadConfig(file string, cfg *gfspconfig.GfSpConfig) error {
-	if cfg == nil {
-		return errors.New("failed to load config file, the config param invalid")
-	}
-	bz, err := os.ReadFile(file)
-	if err != nil {
-		return err
-	}
-	return toml.Unmarshal(bz, cfg)
 }

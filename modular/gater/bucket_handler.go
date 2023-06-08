@@ -6,7 +6,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -34,7 +33,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -73,7 +72,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		SPFreeReadQuotaSize uint64   `xml:"SPFreeReadQuotaSize"`
 		ReadConsumedSize    uint64   `xml:"ReadConsumedSize"`
 	}{
-		Version:             model.GnfdResponseXMLVersion,
+		Version:             GnfdResponseXMLVersion,
 		BucketName:          bucketInfo.GetBucketName(),
 		BucketID:            util.Uint64ToString(bucketInfo.Id.Uint64()),
 		ReadQuotaSize:       charge,
@@ -86,7 +85,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		err = ErrEncodeResponse
 		return
 	}
-	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
 		err = ErrEncodeResponse
@@ -119,7 +118,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r)
+	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -197,7 +196,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		NextStartTimestampUs int64        `xml:"NextStartTimestampUs"`
 		ReadRecords          []ReadRecord `xml:"ReadRecord"`
 	}{
-		Version:              model.GnfdResponseXMLVersion,
+		Version:              GnfdResponseXMLVersion,
 		NextStartTimestampUs: nextTimestampUs,
 		ReadRecords:          xmlRecords,
 	}
@@ -208,7 +207,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	w.Header().Set(model.ContentTypeHeader, model.ContentTypeXMLHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
 		err = ErrEncodeResponse

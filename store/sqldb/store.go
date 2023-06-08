@@ -9,9 +9,28 @@ import (
 	"gorm.io/gorm"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
+)
+
+const (
+	// SpDBUser defines env variable name for sp db user name.
+	SpDBUser = "SP_DB_USER"
+	// SpDBPasswd defines env variable name for sp db user passwd.
+	SpDBPasswd = "SP_DB_PASSWORD"
+	// SpDBAddress defines env variable name for sp db address.
+	SpDBAddress = "SP_DB_ADDRESS"
+	// SpDBDataBase defines env variable name for sp db database.
+	SpDBDataBase = "SP_DB_DATABASE"
+
+	// DefaultConnMaxLifetime defines the default max liveliness time of connection.
+	DefaultConnMaxLifetime = 60
+	// DefaultConnMaxIdleTime defines the default max idle time of connection.
+	DefaultConnMaxIdleTime = 30
+	// DefaultMaxIdleConns defines the default max number of idle connections.
+	DefaultMaxIdleConns = 16
+	// DefaultMaxOpenConns defines the default max number of open connections.
+	DefaultMaxOpenConns = 32
 )
 
 var _ corespdb.SPDB = &SpDBImpl{}
@@ -51,47 +70,35 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
 	// create if not exist
-	if err := db.AutoMigrate(&JobTable{}); err != nil {
-		log.Errorw("failed to create job table", "error", err)
+	if err = db.AutoMigrate(&UploadObjectProgressTable{}); err != nil {
+		log.Errorw("failed to upload object progress table", "error", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&ObjectTable{}); err != nil {
-		log.Errorw("failed to create object table", "error", err)
+	if err = db.AutoMigrate(&GCObjectProgressTable{}); err != nil {
+		log.Errorw("failed to gc object progress table", "error", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&GCObjectTaskTable{}); err != nil {
-		log.Errorw("failed to gc object task table", "error", err)
-		return nil, err
-	}
-	if err := db.AutoMigrate(&SpInfoTable{}); err != nil {
+	if err = db.AutoMigrate(&SpInfoTable{}); err != nil {
 		log.Errorw("failed to create sp info table", "error", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&StorageParamsTable{}); err != nil {
-		log.Errorw("failed to storage params table", "error", err)
-		return nil, err
-	}
-	if err := db.AutoMigrate(&PieceHashTable{}); err != nil {
+	if err = db.AutoMigrate(&PieceHashTable{}); err != nil {
 		log.Errorw("failed to create piece hash table", "error", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&IntegrityMetaTable{}); err != nil {
+	if err = db.AutoMigrate(&IntegrityMetaTable{}); err != nil {
 		log.Errorw("failed to create integrity meta table", "error", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&BucketTrafficTable{}); err != nil {
+	if err = db.AutoMigrate(&BucketTrafficTable{}); err != nil {
 		log.Errorw("failed to create bucket traffic table", "error", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&ReadRecordTable{}); err != nil {
+	if err = db.AutoMigrate(&ReadRecordTable{}); err != nil {
 		log.Errorw("failed to create read record table", "error", err)
 		return nil, err
 	}
-	if err := db.AutoMigrate(&ServiceConfigTable{}); err != nil {
-		log.Errorw("failed to create service config table", "error", err)
-		return nil, err
-	}
-	if err := db.AutoMigrate(&OffChainAuthKeyTable{}); err != nil {
+	if err = db.AutoMigrate(&OffChainAuthKeyTable{}); err != nil {
 		log.Errorw("failed to create off-chain authKey table", "error", err)
 		return nil, err
 	}
@@ -100,16 +107,16 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 
 // LoadDBConfigFromEnv load db user and password from env vars
 func LoadDBConfigFromEnv(config *config.SQLDBConfig) {
-	if val, ok := os.LookupEnv(model.SpDBUser); ok {
+	if val, ok := os.LookupEnv(SpDBUser); ok {
 		config.User = val
 	}
-	if val, ok := os.LookupEnv(model.SpDBPasswd); ok {
+	if val, ok := os.LookupEnv(SpDBPasswd); ok {
 		config.Passwd = val
 	}
-	if val, ok := os.LookupEnv(model.SpDBAddress); ok {
+	if val, ok := os.LookupEnv(SpDBAddress); ok {
 		config.Address = val
 	}
-	if val, ok := os.LookupEnv(model.SpDBDataBase); ok {
+	if val, ok := os.LookupEnv(SpDBDataBase); ok {
 		config.Database = val
 	}
 }
@@ -117,15 +124,15 @@ func LoadDBConfigFromEnv(config *config.SQLDBConfig) {
 // OverrideConfigVacancy override the SQLDB param zero value
 func OverrideConfigVacancy(config *config.SQLDBConfig) {
 	if config.ConnMaxLifetime == 0 {
-		config.ConnMaxLifetime = model.DefaultConnMaxLifetime
+		config.ConnMaxLifetime = DefaultConnMaxLifetime
 	}
 	if config.ConnMaxIdleTime == 0 {
-		config.ConnMaxIdleTime = model.DefaultConnMaxIdleTime
+		config.ConnMaxIdleTime = DefaultConnMaxIdleTime
 	}
 	if config.MaxIdleConns == 0 {
-		config.MaxIdleConns = model.DefaultMaxIdleConns
+		config.MaxIdleConns = DefaultMaxIdleConns
 	}
 	if config.MaxOpenConns == 0 {
-		config.MaxOpenConns = model.DefaultMaxOpenConns
+		config.MaxOpenConns = DefaultMaxOpenConns
 	}
 }

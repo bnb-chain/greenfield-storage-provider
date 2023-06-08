@@ -2,14 +2,19 @@ package authorizer
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -27,7 +32,13 @@ var (
 	ErrRepeatedBucket      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20009, "repeated bucket")
 	ErrRepeatedObject      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20010, "repeated object")
 	ErrNoPermission        = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20011, "no permission")
-	ErrConsensus           = gfsperrors.Register(module.AuthorizationModularName, http.StatusInternalServerError, 25002, "server slipped away, try again later")
+
+	ErrBadSignature           = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20012, "bad signature")
+	ErrSignedMsgFormat        = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20013, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
+	ErrExpiredTimestampFormat = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20014, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
+	ErrPublicKeyExpired       = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20015, "user public key is expired")
+
+	ErrConsensus = gfsperrors.Register(module.AuthorizationModularName, http.StatusInternalServerError, 25002, "server slipped away, try again later")
 )
 
 var _ module.Authorizer = &AuthorizeModular{}
@@ -75,6 +86,76 @@ func (a *AuthorizeModular) ReleaseResource(
 	ctx context.Context,
 	span rcmgr.ResourceScopeSpan) {
 	span.Done()
+}
+
+const (
+	OffChainAuthSigExpiryAgeInSec int32 = 60 * 5 // in 300 seconds
+)
+
+// GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
+func (a *AuthorizeModular) GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error) {
+	authKey, err := a.baseApp.GfSpDB().GetAuthKey(account, domain)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to GetAuthKey", "error", err)
+		return nil, err
+	}
+	log.CtxInfow(ctx, "succeed to GetAuthNonce")
+	return authKey, nil
+}
+
+// UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
+func (a *AuthorizeModular) UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64) (bool, error) {
+	err := a.baseApp.GfSpDB().UpdateAuthKey(account, domain, currentNonce, nonce, userPublicKey, time.UnixMilli(expiryDate))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to updateUserPublicKey when saving key")
+		return false, err
+	}
+	log.CtxInfow(ctx, "succeed to UpdateUserPublicKey")
+	return true, nil
+}
+
+// VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
+func (a *AuthorizeModular) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error) {
+	signature, err := hex.DecodeString(offChainSig)
+	if err != nil {
+		return false, ErrBadSignature
+	}
+
+	getAuthNonceResp, err := a.GetAuthNonce(ctx, account, domain)
+	if err != nil {
+		return false, err
+	}
+	if time.Until(getAuthNonceResp.ExpiryDate).Seconds() < 0 {
+		return false, ErrPublicKeyExpired
+	}
+	userPublicKey := getAuthNonceResp.CurrentPublicKey
+
+	// signedMsg must be formatted as `${actionContent}_${expiredTimestamp}` and timestamp must be within $OffChainAuthSigExpiryAgeInSec seconds, actionContent could be any string
+	signedMsgParts := strings.Split(realMsgToSign, "_")
+	if len(signedMsgParts) < 2 {
+		log.CtxErrorw(ctx, "signed msg must be formated as ${actionContent}_${expiredTimestamp}")
+		return false, ErrSignedMsgFormat
+	}
+
+	signedMsgExpiredTimestamp, err := strconv.Atoi(signedMsgParts[len(signedMsgParts)-1])
+	if err != nil {
+		log.CtxErrorw(ctx, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
+		return false, ErrExpiredTimestampFormat
+	}
+	expiredAge := time.Until(time.UnixMilli(int64(signedMsgExpiredTimestamp))).Seconds()
+
+	if float64(OffChainAuthSigExpiryAgeInSec) < expiredAge || expiredAge < 0 { // nonce must be the same as NextNonce
+		err = fmt.Errorf("expiredTimestamp in signed msg must be within %d seconds. ExpiredTimestamp in sig is %d, while the current server timestamp is %d ", OffChainAuthSigExpiryAgeInSec, signedMsgExpiredTimestamp, time.Now().UnixMilli())
+		return false, gfsperrors.MakeGfSpError(err)
+	}
+
+	err = VerifyEddsaSignature(userPublicKey, signature, []byte(realMsgToSign))
+	if err != nil {
+		return false, gfsperrors.MakeGfSpError(err)
+	}
+
+	log.CtxInfow(ctx, "succeed to VerifyOffChainSignature")
+	return true, nil
 }
 
 // VerifyAuthorize verifies the account has the operation's permission.
@@ -230,8 +311,24 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			return false, ErrNoPermission
 		}
 		return true, nil
-	case coremodule.AuthOpTypeChallengePiece:
-		//TODO:: only validator has permission to challenge piece
+	case coremodule.AuthOpTypeGetChallengePieceInfo:
+		challengeIsFromValidator := false
+		validators, err := a.baseApp.Consensus().ListBondedValidators(ctx)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to list validator from consensus", "error", err)
+			return false, ErrConsensus
+		}
+		for _, validator := range validators {
+			if strings.EqualFold(validator.ChallengerAddress, account) {
+				challengeIsFromValidator = true
+				break
+			}
+		}
+		if !challengeIsFromValidator {
+			log.CtxErrorw(ctx, "failed to get challenge info due to it is not in bonded validator list",
+				"actual_challenge_address", account)
+			return false, ErrNoPermission
+		}
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
@@ -244,11 +341,11 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() == a.baseApp.OperateAddress() {
+		if strings.EqualFold(bucketInfo.GetPrimarySpAddress(), a.baseApp.OperateAddress()) {
 			return true, nil
 		}
 		for _, address := range objectInfo.GetSecondarySpAddresses() {
-			if address == a.baseApp.OperateAddress() {
+			if strings.EqualFold(address, a.baseApp.OperateAddress()) {
 				return true, nil
 			}
 		}

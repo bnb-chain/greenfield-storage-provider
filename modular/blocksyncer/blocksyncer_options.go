@@ -25,8 +25,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/model"
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	registrar "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -55,7 +53,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	mainDBIsMaster := mainServiceDB.IsMaster
 
 	// init main service db, if main service DB is not current master then recreate tables
-	if err := MainService.initDB(!mainDBIsMaster || junoCfg.RecreateTables); err != nil {
+	if err := MainService.initDB(false); err != nil {
 		return nil, err
 	}
 
@@ -93,9 +91,9 @@ func (b *BlockSyncerModular) initClient() error {
 	// get DSN from env first
 	var dbEnv string
 	if b.Name() == BlockSyncerModularName {
-		dbEnv = model.DsnBlockSyncer
+		dbEnv = DsnBlockSyncer
 	} else {
-		dbEnv = model.DsnBlockSyncerSwitched
+		dbEnv = DsnBlockSyncerSwitched
 	}
 
 	dsn, envErr := getDBConfigFromEnv(dbEnv)
@@ -124,29 +122,19 @@ func (b *BlockSyncerModular) initClient() error {
 }
 
 // initDB create tables needed by block syncer. It depends on which modules are configured
-func (b *BlockSyncerModular) initDB(recreateTables bool) error {
+func (b *BlockSyncerModular) initDB(useMigrate bool) error {
 
 	var err error
-	// drop tables if needed
-	if recreateTables {
-		for _, module := range b.parserCtx.Modules {
-			if module, ok := module.(modules.PrepareTablesModule); ok {
-				err = module.RecreateTables()
-				if err != nil {
-					log.Errorw("failed to recreate tables", "error", err)
-					return err
-				}
-			}
-		}
-	} else {
-		// Prepare tables without recreate
-		for _, module := range b.parserCtx.Modules {
-			if module, ok := module.(modules.PrepareTablesModule); ok {
+	for _, module := range b.parserCtx.Modules {
+		if module, ok := module.(modules.PrepareTablesModule); ok {
+			if useMigrate {
+				err = module.AutoMigrate()
+			} else {
 				err = module.PrepareTables()
-				if err != nil {
-					log.Errorw("failed to prepare tables", "error", err)
-					return err
-				}
+			}
+			if err != nil {
+				log.Errorw("failed to PrepareTables/AutoMigrate tables", "error", err)
+				return err
 			}
 		}
 	}
@@ -155,6 +143,14 @@ func (b *BlockSyncerModular) initDB(recreateTables bool) error {
 
 // serve start BlockSyncer rpc service
 func (b *BlockSyncerModular) serve(ctx context.Context) {
+	migrateDBAny := ctx.Value(MigrateDBKey{})
+	if migrateDB, ok := migrateDBAny.(bool); ok && migrateDB {
+		err := b.initDB(true)
+		if err != nil {
+			log.Errorw("fail to init DB", "error", err)
+			return
+		}
+	}
 	// Create a queue that will collect, aggregate, and export blocks and metadata
 	exportQueue := types.NewQueue(25)
 
@@ -185,7 +181,7 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	// off of the export queue.
-	time.Sleep(time.Second)
+	Cast(b.parserCtx.Indexer).ProcessedQueue <- uint64(0) // init ProcessedQueue
 	go worker.Start(ctx)
 }
 
@@ -239,7 +235,8 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 
 func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 	count := uint64(b.config.Parser.Workers)
-	for cycle := uint64(0); ; cycle++ {
+	cycle := uint64(0)
+	for {
 		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 		latestBlockHeight := latestBlockHeightAny.(int64)
 		if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
@@ -247,42 +244,56 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 			Cast(b.parserCtx.Indexer).GetCatchUpFlag().Store(int64(count*cycle + startHeight - 1))
 			break
 		}
-		wg := &sync.WaitGroup{}
-		wg.Add(int(count))
-		for i := uint64(0); i < count; i++ {
-			go func(idx, c uint64) {
-				defer wg.Done()
-				height := idx + count*c + startHeight
-				if height > uint64(latestBlockHeight) {
-					return
-				}
-				for {
-					block, err := b.parserCtx.Node.Block(int64(height))
-					if err != nil {
-						log.Warnf("failed to get block from node: %s", err)
-						continue
-					}
-
-					events, err := b.parserCtx.Node.BlockResults(int64(height))
-					if err != nil {
-						log.Warnf("failed to get block results from node: %s", err)
-						continue
-					}
-					txs, err := b.parserCtx.Node.Txs(block)
-					if err != nil {
-						log.Warnf("failed to get block results from node: %s", err)
-						continue
-					}
-					heightKey := fmt.Sprintf("%s-%d", b.Name(), height)
-					blockMap.Store(heightKey, block)
-					eventMap.Store(heightKey, events)
-					txMap.Store(heightKey, txs)
-					break
-				}
-			}(i, cycle)
+		processedHeight, ok := <-Cast(b.parserCtx.Indexer).ProcessedQueue
+		if !ok {
+			log.Warnf("ProcessedQueue is closed")
+			return
 		}
-		wg.Wait()
+		log.Infof("processedHeight:%d, will process height:%d", processedHeight, count*cycle+startHeight)
+		if processedHeight != 0 && count*cycle+startHeight-processedHeight > MaxHeightGapFactor*count {
+			continue
+		}
+		b.fetchData(count, cycle, startHeight, latestBlockHeight)
+		cycle++
 	}
+}
+
+func (b *BlockSyncerModular) fetchData(count, cycle, startHeight uint64, latestBlockHeight int64) {
+	wg := &sync.WaitGroup{}
+	wg.Add(int(count))
+	for i := uint64(0); i < count; i++ {
+		go func(idx, c uint64) {
+			defer wg.Done()
+			height := idx + count*c + startHeight
+			if height > uint64(latestBlockHeight) {
+				return
+			}
+			for {
+				block, err := b.parserCtx.Node.Block(int64(height))
+				if err != nil {
+					log.Warnf("failed to get block from node: %s", err)
+					continue
+				}
+
+				events, err := b.parserCtx.Node.BlockResults(int64(height))
+				if err != nil {
+					log.Warnf("failed to get block results from node: %s", err)
+					continue
+				}
+				txs, err := b.parserCtx.Node.Txs(block)
+				if err != nil {
+					log.Warnf("failed to get block results from node: %s", err)
+					continue
+				}
+				heightKey := fmt.Sprintf("%s-%d", b.Name(), height)
+				blockMap.Store(heightKey, block)
+				eventMap.Store(heightKey, events)
+				txMap.Store(heightKey, txs)
+				break
+			}
+		}(i, cycle)
+	}
+	wg.Wait()
 }
 
 func (b *BlockSyncerModular) prepareMasterFlagTable() error {
@@ -335,9 +346,8 @@ func makeBlockSyncerConfig(cfg *gfspconfig.GfSpConfig) *config.TomlConfig {
 		Logging: loggingconfig.Config{
 			Level: "debug",
 		},
-		RecreateTables: cfg.BlockSyncer.RecreateTables,
-		EnableDualDB:   cfg.BlockSyncer.EnableDualDB,
-		DsnSwitched:    cfg.BlockSyncer.DsnSwitched,
+		EnableDualDB: cfg.BlockSyncer.EnableDualDB,
+		DsnSwitched:  cfg.BlockSyncer.DsnSwitched,
 	}
 }
 
@@ -357,7 +367,7 @@ func newBackupBlockSyncerService(cfg *config.TomlConfig, mainDBIsMaster bool) (*
 	}
 
 	// init meta db, if mainService db is not current master, backup is master, don't recreate
-	if err = BackupService.initDB(mainDBIsMaster || backUpConfig.RecreateTables); err != nil {
+	if err = BackupService.initDB(false); err != nil {
 		return nil, err
 	}
 	return BackupService, nil
@@ -385,7 +395,7 @@ func DeepCopyByGob(src, dst interface{}) error {
 func getDBConfigFromEnv(dsn string) (string, error) {
 	dsnVal, ok := os.LookupEnv(dsn)
 	if !ok {
-		return "", errors.ErrDSNNotSet
+		return "", ErrDSNNotSet
 	}
 	return dsnVal, nil
 }

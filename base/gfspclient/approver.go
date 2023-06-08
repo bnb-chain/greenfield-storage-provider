@@ -9,9 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-func (s *GfSpClient) AskCreateBucketApproval(
-	ctx context.Context,
-	task coretask.ApprovalCreateBucketTask) (
+func (s *GfSpClient) AskCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) (
 	bool, coretask.ApprovalCreateBucketTask, error) {
 	conn, connErr := s.ApproverConn(ctx)
 	if connErr != nil {
@@ -39,9 +37,7 @@ func (s *GfSpClient) AskCreateBucketApproval(
 	return resp.GetAllowed(), task, nil
 }
 
-func (s *GfSpClient) AskCreateObjectApproval(
-	ctx context.Context,
-	task coretask.ApprovalCreateObjectTask) (
+func (s *GfSpClient) AskCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) (
 	bool, coretask.ApprovalCreateObjectTask, error) {
 	conn, connErr := s.ApproverConn(ctx)
 	if connErr != nil {

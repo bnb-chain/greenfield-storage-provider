@@ -19,18 +19,18 @@ import (
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/model/errors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string) parser.Indexer {
 	return &Impl{
-		codec:       codec,
-		Node:        proxy,
-		DB:          db,
-		Modules:     modules,
-		ServiceName: serviceName,
+		codec:          codec,
+		Node:           proxy,
+		DB:             db,
+		Modules:        modules,
+		ServiceName:    serviceName,
+		ProcessedQueue: make(chan uint64, 5),
 	}
 }
 
@@ -42,6 +42,7 @@ type Impl struct {
 
 	LatestBlockHeight atomic.Value
 	CatchUpFlag       atomic.Value
+	ProcessedQueue    chan uint64
 
 	ServiceName string
 }
@@ -86,7 +87,7 @@ func (i *Impl) Process(height uint64) error {
 		txs, _ = txsAny.([]*types.Tx)
 		if !okb || !oke || !okt {
 			log.Warnf("failed to get map data height: %d", height)
-			return errors.ErrBlockNotFound
+			return ErrBlockNotFound
 		}
 	} else {
 		// get block info
@@ -149,6 +150,7 @@ func (i *Impl) Process(height uint64) error {
 	blockMap.Delete(heightKey)
 	eventMap.Delete(heightKey)
 	txMap.Delete(heightKey)
+	i.ProcessedQueue <- height
 
 	return nil
 }

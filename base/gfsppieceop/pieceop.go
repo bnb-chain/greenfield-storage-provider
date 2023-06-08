@@ -23,18 +23,18 @@ func (p *GfSpPieceOp) ChallengePieceKey(objectID uint64, segmentIdx uint32, repl
 	if replicateIdx < 0 {
 		return p.SegmentPieceKey(objectID, segmentIdx)
 	}
-	return p.ChallengePieceKey(objectID, segmentIdx, replicateIdx)
+	return p.ECPieceKey(objectID, segmentIdx, uint32(replicateIdx))
 }
 
-func (p *GfSpPieceOp) MaxSegmentSize(payloadSize uint64, maxSegmentSize uint64) int64 {
+func (p *GfSpPieceOp) MaxSegmentPieceSize(payloadSize uint64, maxSegmentSize uint64) int64 {
 	if payloadSize > maxSegmentSize {
 		return int64(maxSegmentSize)
 	}
 	return int64(payloadSize)
 }
 
-func (p *GfSpPieceOp) SegmentSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64) int64 {
-	segmentCount := p.SegmentCount(payloadSize, maxSegmentSize)
+func (p *GfSpPieceOp) SegmentPieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64) int64 {
+	segmentCount := p.SegmentPieceCount(payloadSize, maxSegmentSize)
 	if segmentCount == 1 {
 		return int64(payloadSize)
 	} else if segmentIdx == segmentCount-1 {
@@ -44,8 +44,8 @@ func (p *GfSpPieceOp) SegmentSize(payloadSize uint64, segmentIdx uint32, maxSegm
 	}
 }
 
-func (p *GfSpPieceOp) PieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64, dataChunkNum uint32) int64 {
-	segmentCount := p.SegmentCount(payloadSize, maxSegmentSize)
+func (p *GfSpPieceOp) ECPieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64, dataChunkNum uint32) int64 {
+	segmentCount := p.SegmentPieceCount(payloadSize, maxSegmentSize)
 	if segmentCount == 1 {
 		return int64(payloadSize) / int64(dataChunkNum)
 	} else if segmentIdx == segmentCount-1 {
@@ -55,7 +55,7 @@ func (p *GfSpPieceOp) PieceSize(payloadSize uint64, segmentIdx uint32, maxSegmen
 	}
 }
 
-func (p *GfSpPieceOp) SegmentCount(payloadSize uint64, maxSegmentSize uint64) uint32 {
+func (p *GfSpPieceOp) SegmentPieceCount(payloadSize uint64, maxSegmentSize uint64) uint32 {
 	count := payloadSize / maxSegmentSize
 	if payloadSize%maxSegmentSize > 0 {
 		count++

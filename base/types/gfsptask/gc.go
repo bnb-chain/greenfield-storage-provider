@@ -12,10 +12,7 @@ var _ coretask.GCObjectTask = &GfSpGCObjectTask{}
 var _ coretask.GCZombiePieceTask = &GfSpGCZombiePieceTask{}
 var _ coretask.GCMetaTask = &GfSpGCMetaTask{}
 
-func (m *GfSpGCObjectTask) InitGCObjectTask(
-	priority coretask.TPriority,
-	start, end uint64,
-	timeout int64) {
+func (m *GfSpGCObjectTask) InitGCObjectTask(priority coretask.TPriority, start, end uint64, timeout int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetStartBlockNumber(start)
@@ -38,7 +35,8 @@ func (m *GfSpGCObjectTask) Type() coretask.TType {
 }
 
 func (m *GfSpGCObjectTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], start[%d], end[%d], curr[%d], object[%d],å %s",
+	return fmt.Sprintf(
+		"key[%s], type[%s], priority[%d], limit[%s], start_block[%d], end_block[%d], current_block[%d], last_deleted_object_id[%d], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
 		m.GetStartBlockNumber(), m.GetEndBlockNumber(), m.GetCurrentBlockNumber(),
 		m.GetLastDeletedObjectId(), m.GetTask().Info())

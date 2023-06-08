@@ -37,10 +37,24 @@ func (r *MetadataModular) GfSpListObjectsByBucketName(ctx context.Context, req *
 	}
 
 	ctx = log.Context(ctx, req)
-	results, err = r.baseApp.GfBsDB().ListObjectsByBucketName(req.BucketName, req.ContinuationToken, req.Prefix, req.Delimiter, int(maxKeys))
+	results, err = r.baseApp.GfBsDB().ListObjectsByBucketName(req.BucketName, req.ContinuationToken, req.Prefix, req.Delimiter, int(maxKeys), req.IncludeRemoved)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by bucket name", "error", err)
 		return
+	}
+
+	keyCount = uint64(len(results))
+	// if keyCount is equal to req.MaxKeys+1 which means that we additionally return NextContinuationToken, and it is not counted in the keyCount
+	// isTruncated set to false if all the results were returned, set to true if more keys are available to return
+	// remove the returned NextContinuationToken object and separately return its object ID to the user for the next API call
+	if keyCount == maxKeys+1 {
+		isTruncated = true
+		keyCount -= 1
+		nextContinuationToken = results[len(results)-1].PathName
+		if req.Delimiter == "" {
+			nextContinuationToken = results[len(results)-1].ObjectName
+		}
+		results = results[:len(results)-1]
 	}
 
 	for _, object := range results {
@@ -76,20 +90,6 @@ func (r *MetadataModular) GfSpListObjectsByBucketName(ctx context.Context, req *
 		}
 	}
 
-	keyCount = uint64(len(results))
-	// if keyCount is equal to req.MaxKeys+1 which means that we additionally return NextContinuationToken, and it is not counted in the keyCount
-	// isTruncated set to false if all the results were returned, set to true if more keys are available to return
-	// remove the returned NextContinuationToken object and separately return its object ID to the user for the next API call
-	if keyCount == req.MaxKeys+1 {
-		isTruncated = true
-		keyCount -= 1
-		nextContinuationToken = results[len(results)-1].PathName
-		if req.Delimiter == "" {
-			nextContinuationToken = results[len(results)-1].ObjectName
-		}
-		res = res[:len(res)-1]
-	}
-
 	resp = &types.GfSpListObjectsByBucketNameResponse{
 		Objects:               res,
 		KeyCount:              keyCount,
@@ -120,7 +120,7 @@ func (r *MetadataModular) GfSpListDeletedObjectsByBlockNumberRange(ctx context.C
 		endBlockNumber = req.EndBlockNumber
 	}
 
-	objects, err := r.baseApp.GfBsDB().ListDeletedObjectsByBlockNumberRange(req.StartBlockNumber, endBlockNumber, req.IsFullList)
+	objects, err := r.baseApp.GfBsDB().ListDeletedObjectsByBlockNumberRange(req.StartBlockNumber, endBlockNumber, req.IncludePrivate)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list deleted objects by block number range", "error", err)
 		return nil, err
@@ -177,7 +177,7 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 		return nil, err
 	}
 
-	object, err = r.baseApp.GfBsDB().GetObjectByName(req.ObjectName, req.BucketName, req.IsFullList)
+	object, err = r.baseApp.GfBsDB().GetObjectByName(req.ObjectName, req.BucketName, req.IncludePrivate)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get object by object name", "error", err)
 		return nil, err

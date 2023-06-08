@@ -7,6 +7,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -99,6 +100,18 @@ func (*NullModular) VerifyAuthorize(context.Context, AuthOpType, string, string,
 	return false, ErrNilModular
 }
 
+func (*NullModular) GetAuthNonce(ctx context.Context, account string, domain string) (*corespdb.OffChainAuthKey, error) {
+	return nil, ErrNilModular
+}
+
+func (*NullModular) UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64) (bool, error) {
+	return false, ErrNilModular
+}
+
+func (*NullModular) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error) {
+	return false, ErrNilModular
+}
+
 var _ TaskExecutor = (*NilModular)(nil)
 var _ P2P = (*NilModular)(nil)
 var _ Signer = (*NilModular)(nil)
@@ -123,6 +136,15 @@ func (*NilModular) HandleDownloadObjectTask(context.Context, task.DownloadObject
 	return nil, ErrNilModular
 }
 func (*NilModular) PostDownloadObject(context.Context, task.DownloadObjectTask) {}
+
+func (*NilModular) PreDownloadPiece(context.Context, task.DownloadPieceTask) error {
+	return ErrNilModular
+}
+func (*NilModular) HandleDownloadPieceTask(context.Context, task.DownloadPieceTask) ([]byte, error) {
+	return nil, ErrNilModular
+}
+func (*NilModular) PostDownloadPiece(context.Context, task.DownloadPieceTask) {}
+
 func (*NilModular) PreChallengePiece(context.Context, task.ChallengePieceTask) error {
 	return ErrNilModular
 }
@@ -167,7 +189,9 @@ func (*NilModular) SignP2PPongMsg(context.Context, *gfspp2p.GfSpPong) ([]byte, e
 func (*NilModular) SealObject(context.Context, *storagetypes.MsgSealObject) error {
 	return ErrNilModular
 }
-
+func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSealObject) error {
+	return ErrNilModular
+}
 func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) error {
 	return nil
 }

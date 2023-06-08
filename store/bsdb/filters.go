@@ -24,12 +24,24 @@ func PathNameFilter(pathName string) func(db *gorm.DB) *gorm.DB {
 
 func NameFilter(name string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Where("name like ", name+"%")
+		return db.Where("name like ?", name+"%")
 	}
 }
 
 func FullNameFilter(fullName string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where("full_name >= ?", fullName)
+	}
+}
+
+func SourceTypeFilter(sourceType string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("source_type = ?", sourceType)
+	}
+}
+
+func RemovedFilter(removed bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("removed = ?", removed)
 	}
 }

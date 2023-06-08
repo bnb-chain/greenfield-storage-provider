@@ -15,20 +15,23 @@ import (
 )
 
 const (
-	// MaxCallMsgSize defines the max message size for grpc client
-	MaxCallMsgSize = 3 * 1024 * 1024 * 1024
+	// MaxClientCallMsgSize defines the max message size for grpc client
+	MaxClientCallMsgSize = 3 * 1024 * 1024 * 1024
 	// ClientCodeSpace defines the code space for gfsp client
 	ClientCodeSpace = "GfSpClient"
 	// HttpMaxIdleConns defines the max idle connections for HTTP server
 	HttpMaxIdleConns = 20
 	// HttpIdleConnTimout defines the idle time of connection for closing
 	HttpIdleConnTimout = 60 * time.Second
+
+	// DefaultStreamBufSize defines gateway stream forward payload buf size
+	DefaultStreamBufSize = 16 * 1024 * 1024
 )
 
 var (
 	ErrRpcUnknown       = gfsperrors.Register(ClientCodeSpace, http.StatusNotFound, 98001, "server slipped away, try again later")
 	ErrExceptionsStream = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98002, "stream closed abnormally")
-	ErrTypeMismatch     = gfsperrors.Register(ClientCodeSpace, http.StatusInternalServerError, 98101, "response type mismatch")
+	ErrTypeMismatch     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98101, "response type mismatch")
 )
 
 type GfSpClient struct {
@@ -76,19 +79,12 @@ func NewGfSpClient(
 	}
 }
 
-func (s *GfSpClient) Connection(
-	ctx context.Context,
-	address string,
-	opts ...grpc.DialOption) (
-	*grpc.ClientConn, error) {
+func (s *GfSpClient) Connection(ctx context.Context, address string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	options := append(DefaultClientOptions(), opts...)
 	return grpc.DialContext(ctx, address, options...)
 }
 
-func (s *GfSpClient) ManagerConn(
-	ctx context.Context,
-	opts ...grpc.DialOption) (
-	*grpc.ClientConn, error) {
+func (s *GfSpClient) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
@@ -106,10 +102,7 @@ func (s *GfSpClient) ManagerConn(
 	return s.managerConn, nil
 }
 
-func (s *GfSpClient) ApproverConn(
-	ctx context.Context,
-	opts ...grpc.DialOption) (
-	*grpc.ClientConn, error) {
+func (s *GfSpClient) ApproverConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
@@ -127,10 +120,7 @@ func (s *GfSpClient) ApproverConn(
 	return s.approverConn, nil
 }
 
-func (s *GfSpClient) P2PConn(
-	ctx context.Context,
-	opts ...grpc.DialOption) (
-	*grpc.ClientConn, error) {
+func (s *GfSpClient) P2PConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
@@ -148,10 +138,7 @@ func (s *GfSpClient) P2PConn(
 	return s.p2pConn, nil
 }
 
-func (s *GfSpClient) SignerConn(
-	ctx context.Context,
-	opts ...grpc.DialOption) (
-	*grpc.ClientConn, error) {
+func (s *GfSpClient) SignerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	options := append(DefaultClientOptions(), opts...)
@@ -203,7 +190,7 @@ func (s *GfSpClient) Close() error {
 func DefaultClientOptions() []grpc.DialOption {
 	var options []grpc.DialOption
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxCallMsgSize)))
-	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxCallMsgSize)))
+	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxClientCallMsgSize)))
+	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxClientCallMsgSize)))
 	return options
 }

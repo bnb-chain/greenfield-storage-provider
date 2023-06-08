@@ -12,17 +12,15 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-func (s *GfSpClient) GetUserBucketsCount(
-	ctx context.Context,
-	account string,
-	opts ...grpc.DialOption) (int64, error) {
+func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return 0, err
 	}
 	defer conn.Close()
 	req := &types.GfSpGetUserBucketsCountRequest{
-		AccountId: account,
+		AccountId:      account,
+		IncludeRemoved: includeRemoved,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetUserBucketsCount(ctx, req)
 	if err != nil {
@@ -31,13 +29,8 @@ func (s *GfSpClient) GetUserBucketsCount(
 	return resp.GetCount(), nil
 }
 
-func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(
-	ctx context.Context,
-	spOperatorAddress string,
-	startBlockNumber uint64,
-	endBlockNumber uint64,
-	includePrivate bool,
-	opts ...grpc.DialOption) ([]*types.Object, uint64, error) {
+func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64,
+	endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, uint64(0), err
@@ -46,7 +39,7 @@ func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(
 	req := &types.GfSpListDeletedObjectsByBlockNumberRangeRequest{
 		StartBlockNumber: int64(startBlockNumber),
 		EndBlockNumber:   int64(endBlockNumber),
-		IsFullList:       includePrivate,
+		IncludePrivate:   includePrivate,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListDeletedObjectsByBlockNumberRange(ctx, req)
 	if err != nil {
@@ -55,17 +48,15 @@ func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(
 	return resp.GetObjects(), uint64(resp.GetEndBlockNumber()), nil
 }
 
-func (s *GfSpClient) GetUserBuckets(
-	ctx context.Context,
-	account string,
-	opts ...grpc.DialOption) ([]*types.Bucket, error) {
+func (s *GfSpClient) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Bucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
 	req := &types.GfSpGetUserBucketsRequest{
-		AccountId: account,
+		AccountId:      account,
+		IncludeRemoved: includeRemoved,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetUserBuckets(ctx, req)
 	if err != nil {
@@ -75,27 +66,10 @@ func (s *GfSpClient) GetUserBuckets(
 }
 
 // ListObjectsByBucketName list objects info by a bucket name
-func (s *GfSpClient) ListObjectsByBucketName(
-	ctx context.Context,
-	bucketName string,
-	accountId string,
-	maxKeys uint64,
-	startAfter string,
-	continuationToken string,
-	delimiter string,
-	prefix string,
-	opts ...grpc.DialOption) (
-	objects []*types.Object,
-	KeyCount uint64,
-	MaxKeys uint64,
-	IsTruncated bool,
-	NextContinuationToken string,
-	Name string,
-	Prefix string,
-	Delimiter string,
-	CommonPrefixes []string,
-	ContinuationToken string,
-	err error) {
+func (s *GfSpClient) ListObjectsByBucketName(ctx context.Context, bucketName string, accountId string, maxKeys uint64,
+	startAfter string, continuationToken string, delimiter string, prefix string, includeRemoved bool, opts ...grpc.DialOption) (
+	objects []*types.Object, KeyCount uint64, MaxKeys uint64, IsTruncated bool, NextContinuationToken string,
+	Name string, Prefix string, Delimiter string, CommonPrefixes []string, ContinuationToken string, err error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, 0, 0, false, "", "", "", "", nil, "", err
@@ -110,6 +84,7 @@ func (s *GfSpClient) ListObjectsByBucketName(
 		ContinuationToken: continuationToken,
 		Delimiter:         delimiter,
 		Prefix:            prefix,
+		IncludeRemoved:    includeRemoved,
 	}
 
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsByBucketName(ctx, req)
@@ -123,10 +98,7 @@ func (s *GfSpClient) ListObjectsByBucketName(
 }
 
 // GetBucketByBucketName get bucket info by a bucket name
-func (s *GfSpClient) GetBucketByBucketName(
-	ctx context.Context,
-	bucketName string,
-	isFullList bool,
+func (s *GfSpClient) GetBucketByBucketName(ctx context.Context, bucketName string, includePrivate bool,
 	opts ...grpc.DialOption) (*types.Bucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -135,8 +107,8 @@ func (s *GfSpClient) GetBucketByBucketName(
 	defer conn.Close()
 
 	req := &types.GfSpGetBucketByBucketNameRequest{
-		BucketName: bucketName,
-		IsFullList: isFullList,
+		BucketName:     bucketName,
+		IncludePrivate: includePrivate,
 	}
 
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketByBucketName(ctx, req)
@@ -149,9 +121,7 @@ func (s *GfSpClient) GetBucketByBucketName(
 }
 
 // GetBucketByBucketID get bucket info by a bucket id
-func (s *GfSpClient) GetBucketByBucketID(ctx context.Context,
-	bucketId int64,
-	isFullList bool,
+func (s *GfSpClient) GetBucketByBucketID(ctx context.Context, bucketId int64, includePrivate bool,
 	opts ...grpc.DialOption) (*types.GfSpGetBucketByBucketIDResponse, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -160,8 +130,8 @@ func (s *GfSpClient) GetBucketByBucketID(ctx context.Context,
 	defer conn.Close()
 
 	req := &types.GfSpGetBucketByBucketIDRequest{
-		BucketId:   bucketId,
-		IsFullList: isFullList,
+		BucketId:       bucketId,
+		IncludePrivate: includePrivate,
 	}
 
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketByBucketID(ctx, req)
@@ -174,7 +144,8 @@ func (s *GfSpClient) GetBucketByBucketID(ctx context.Context,
 }
 
 // ListExpiredBucketsBySp list buckets that are expired by specific sp
-func (s *GfSpClient) ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpAddress string, limit int64, opts ...grpc.DialOption) ([]*types.Bucket, error) {
+func (s *GfSpClient) ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpAddress string,
+	limit int64, opts ...grpc.DialOption) ([]*types.Bucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, err
@@ -197,12 +168,8 @@ func (s *GfSpClient) ListExpiredBucketsBySp(ctx context.Context, createAt int64,
 }
 
 // GetObjectMeta get object metadata
-func (s *GfSpClient) GetObjectMeta(
-	ctx context.Context,
-	objectName string,
-	bucketName string,
-	isFullList bool,
-	opts ...grpc.DialOption) (*types.Object, error) {
+func (s *GfSpClient) GetObjectMeta(ctx context.Context, objectName string, bucketName string,
+	includePrivate bool, opts ...grpc.DialOption) (*types.Object, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, err
@@ -210,9 +177,9 @@ func (s *GfSpClient) GetObjectMeta(
 	defer conn.Close()
 
 	req := &types.GfSpGetObjectMetaRequest{
-		ObjectName: objectName,
-		BucketName: bucketName,
-		IsFullList: isFullList,
+		ObjectName:     objectName,
+		BucketName:     bucketName,
+		IncludePrivate: includePrivate,
 	}
 
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetObjectMeta(ctx, req)
@@ -225,10 +192,7 @@ func (s *GfSpClient) GetObjectMeta(
 }
 
 // GetPaymentByBucketName get bucket payment info by a bucket name
-func (s *GfSpClient) GetPaymentByBucketName(
-	ctx context.Context,
-	bucketName string,
-	isFullList bool,
+func (s *GfSpClient) GetPaymentByBucketName(ctx context.Context, bucketName string, includePrivate bool,
 	opts ...grpc.DialOption) (*payment_types.StreamRecord, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -237,8 +201,8 @@ func (s *GfSpClient) GetPaymentByBucketName(
 	defer conn.Close()
 
 	req := &types.GfSpGetPaymentByBucketNameRequest{
-		BucketName: bucketName,
-		IsFullList: isFullList,
+		BucketName:     bucketName,
+		IncludePrivate: includePrivate,
 	}
 
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetPaymentByBucketName(ctx, req)
@@ -251,10 +215,7 @@ func (s *GfSpClient) GetPaymentByBucketName(
 }
 
 // GetPaymentByBucketID get bucket payment info by a bucket id
-func (s *GfSpClient) GetPaymentByBucketID(
-	ctx context.Context,
-	bucketID int64,
-	isFullList bool,
+func (s *GfSpClient) GetPaymentByBucketID(ctx context.Context, bucketID int64, includePrivate bool,
 	opts ...grpc.DialOption) (*payment_types.StreamRecord, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -263,8 +224,8 @@ func (s *GfSpClient) GetPaymentByBucketID(
 	defer conn.Close()
 
 	req := &types.GfSpGetPaymentByBucketIDRequest{
-		BucketId:   bucketID,
-		IsFullList: isFullList,
+		BucketId:       bucketID,
+		IncludePrivate: includePrivate,
 	}
 
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetPaymentByBucketID(ctx, req)
@@ -277,13 +238,8 @@ func (s *GfSpClient) GetPaymentByBucketID(
 }
 
 // VerifyPermission Verify the input account’s permission to input items
-func (s *GfSpClient) VerifyPermission(
-	ctx context.Context,
-	Operator string,
-	bucketName string,
-	objectName string,
-	actionType permission_types.ActionType,
-	opts ...grpc.DialOption) (*permission_types.Effect, error) {
+func (s *GfSpClient) VerifyPermission(ctx context.Context, Operator string, bucketName string, objectName string,
+	actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, err
@@ -307,10 +263,7 @@ func (s *GfSpClient) VerifyPermission(
 }
 
 // GetBucketMeta get bucket info along with its related info such as payment
-func (s *GfSpClient) GetBucketMeta(
-	ctx context.Context,
-	bucketName string,
-	isFullList bool,
+func (s *GfSpClient) GetBucketMeta(ctx context.Context, bucketName string, includePrivate bool,
 	opts ...grpc.DialOption) (*types.Bucket, *payment_types.StreamRecord, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -319,8 +272,8 @@ func (s *GfSpClient) GetBucketMeta(
 	defer conn.Close()
 
 	req := &types.GfSpGetBucketMetaRequest{
-		BucketName: bucketName,
-		IsFullList: isFullList,
+		BucketName:     bucketName,
+		IncludePrivate: includePrivate,
 	}
 
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketMeta(ctx, req)
@@ -333,11 +286,7 @@ func (s *GfSpClient) GetBucketMeta(
 }
 
 // GetEndpointBySpAddress get endpoint by sp address
-func (s *GfSpClient) GetEndpointBySpAddress(
-	ctx context.Context,
-	spAddress string,
-	opts ...grpc.DialOption) (
-	string, error) {
+func (s *GfSpClient) GetEndpointBySpAddress(ctx context.Context, spAddress string, opts ...grpc.DialOption) (string, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -356,11 +305,7 @@ func (s *GfSpClient) GetEndpointBySpAddress(
 	return resp.GetEndpoint(), nil
 }
 
-func (s *GfSpClient) GetBucketReadQuota(
-	ctx context.Context,
-	bucket *storage_types.BucketInfo,
-	yearMonth string,
-	opts ...grpc.DialOption) (
+func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, yearMonth string, opts ...grpc.DialOption) (
 	uint64, uint64, uint64, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
@@ -383,12 +328,8 @@ func (s *GfSpClient) GetBucketReadQuota(
 	return resp.GetChargedQuotaSize(), resp.GetSpFreeQuotaSize(), resp.GetConsumedSize(), nil
 }
 
-func (s *GfSpClient) ListBucketReadRecord(
-	ctx context.Context,
-	bucket *storage_types.BucketInfo,
-	startTimestampUs, endTimestampUs, maxRecordNum int64,
-	opts ...grpc.DialOption) (
-	[]*types.ReadRecord, int64, error) {
+func (s *GfSpClient) ListBucketReadRecord(ctx context.Context, bucket *storage_types.BucketInfo, startTimestampUs,
+	endTimestampUs, maxRecordNum int64, opts ...grpc.DialOption) ([]*types.ReadRecord, int64, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -412,10 +353,7 @@ func (s *GfSpClient) ListBucketReadRecord(
 	return resp.GetReadRecords(), resp.GetNextStartTimestampUs(), nil
 }
 
-func (s *GfSpClient) GetUploadObjectState(
-	ctx context.Context,
-	objectID uint64,
-	opts ...grpc.DialOption) (int32, error) {
+func (s *GfSpClient) GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -434,4 +372,35 @@ func (s *GfSpClient) GetUploadObjectState(
 		return 0, resp.GetErr()
 	}
 	return int32(resp.GetState()), nil
+}
+
+func (s *GfSpClient) GetGroupList(
+	ctx context.Context,
+	name string,
+	prefix string,
+	sourceType string,
+	limit int64,
+	offset int64,
+	includeRemoved bool,
+	opts ...grpc.DialOption) ([]*types.Group, int64, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, 0, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpGetGroupListRequest{
+		Name:           name,
+		Prefix:         prefix,
+		SourceType:     sourceType,
+		Limit:          limit,
+		Offset:         offset,
+		IncludeRemoved: includeRemoved,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetGroupList(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get group list", "error", err)
+		return nil, 0, ErrRpcUnknown
+	}
+	return resp.Groups, resp.Count, nil
 }

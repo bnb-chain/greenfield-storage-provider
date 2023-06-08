@@ -11,18 +11,11 @@ import (
 )
 
 var _ coretask.DownloadObjectTask = &GfSpDownloadObjectTask{}
+var _ coretask.DownloadPieceTask = &GfSpDownloadPieceTask{}
 var _ coretask.ChallengePieceTask = &GfSpChallengePieceTask{}
 
-func (m *GfSpDownloadObjectTask) InitDownloadObjectTask(
-	object *storagetypes.ObjectInfo,
-	bucket *storagetypes.BucketInfo,
-	params *storagetypes.Params,
-	priority coretask.TPriority,
-	userAddress string,
-	low int64,
-	high int64,
-	timeout int64,
-	maxRetry int64) {
+func (m *GfSpDownloadObjectTask) InitDownloadObjectTask(object *storagetypes.ObjectInfo, bucket *storagetypes.BucketInfo,
+	params *storagetypes.Params, priority coretask.TPriority, userAddress string, low int64, high int64, timeout int64, maxRetry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())
@@ -52,9 +45,6 @@ func (m *GfSpDownloadObjectTask) Type() coretask.TType {
 }
 
 func (m *GfSpDownloadObjectTask) Info() string {
-	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s], %s",
-	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-	//	m.GetObjectInfo().String(), m.GetTask().Info())
 	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
 		m.EstimateLimit().String(), m.GetTask().Info())
@@ -169,21 +159,162 @@ func (m *GfSpDownloadObjectTask) SetBucketInfo(bucket *storagetypes.BucketInfo) 
 	m.BucketInfo = bucket
 }
 
-func (m *GfSpChallengePieceTask) InitChallengePieceTask(
-	object *storagetypes.ObjectInfo,
-	bucket *storagetypes.BucketInfo,
-	priority coretask.TPriority,
-	userAddress string,
-	replicateIdx int32,
-	segmentIdx uint32,
-	timeout int64,
-	retry int64) {
+func (m *GfSpDownloadPieceTask) InitDownloadPieceTask(object *storagetypes.ObjectInfo, bucket *storagetypes.BucketInfo,
+	params *storagetypes.Params, priority coretask.TPriority, enableCheck bool, userAddress string, totalSize uint64,
+	pieceKey string, pieceOffset uint64, pieceLength uint64, timeout int64, maxRetry int64) {
+	m.Reset()
+	m.Task = &GfSpTask{}
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
+	m.SetObjectInfo(object)
+	m.SetBucketInfo(bucket)
+	m.SetStorageParams(params)
+	m.SetUserAddress(userAddress)
+	m.SetPriority(priority)
+	m.SetTimeout(timeout)
+	m.SetMaxRetry(maxRetry)
+	m.EnableCheck = enableCheck
+	m.TotalSize = totalSize
+	m.PieceKey = pieceKey
+	m.PieceOffset = pieceOffset
+	m.PieceLength = pieceLength
+}
+
+func (m *GfSpDownloadPieceTask) Key() coretask.TKey {
+	return GfSpDownloadPieceTaskKey(
+		m.GetObjectInfo().GetBucketName(),
+		m.GetObjectInfo().GetObjectName(),
+		m.GetPieceKey(),
+		m.GetPieceOffset(),
+		m.GetPieceLength())
+}
+
+func (m *GfSpDownloadPieceTask) Type() coretask.TType {
+	return coretask.TypeTaskDownloadPiece
+}
+
+func (m *GfSpDownloadPieceTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
+		m.EstimateLimit().String(), m.GetTask().Info())
+}
+
+func (m *GfSpDownloadPieceTask) GetAddress() string {
+	return m.GetTask().GetAddress()
+}
+
+func (m *GfSpDownloadPieceTask) SetAddress(address string) {
+	m.GetTask().SetAddress(address)
+}
+
+func (m *GfSpDownloadPieceTask) GetCreateTime() int64 {
+	return m.GetTask().GetCreateTime()
+}
+
+func (m *GfSpDownloadPieceTask) SetCreateTime(time int64) {
+	m.GetTask().SetCreateTime(time)
+}
+
+func (m *GfSpDownloadPieceTask) GetUpdateTime() int64 {
+	return m.GetTask().GetUpdateTime()
+}
+
+func (m *GfSpDownloadPieceTask) SetUpdateTime(time int64) {
+	m.GetTask().SetUpdateTime(time)
+}
+
+func (m *GfSpDownloadPieceTask) GetTimeout() int64 {
+	return m.GetTask().GetTimeout()
+}
+
+func (m *GfSpDownloadPieceTask) SetTimeout(time int64) {
+	m.GetTask().SetTimeout(time)
+}
+
+func (m *GfSpDownloadPieceTask) ExceedTimeout() bool {
+	return m.GetTask().ExceedTimeout()
+}
+
+func (m *GfSpDownloadPieceTask) GetRetry() int64 {
+	return m.GetTask().GetRetry()
+}
+
+func (m *GfSpDownloadPieceTask) IncRetry() {
+	m.GetTask().IncRetry()
+}
+
+func (m *GfSpDownloadPieceTask) SetRetry(retry int) {
+	m.GetTask().SetRetry(retry)
+}
+
+func (m *GfSpDownloadPieceTask) GetMaxRetry() int64 {
+	return m.GetTask().GetMaxRetry()
+}
+
+func (m *GfSpDownloadPieceTask) SetMaxRetry(limit int64) {
+	m.GetTask().SetMaxRetry(limit)
+}
+
+func (m *GfSpDownloadPieceTask) ExceedRetry() bool {
+	return m.GetTask().ExceedRetry()
+}
+
+func (m *GfSpDownloadPieceTask) Expired() bool {
+	return m.GetTask().Expired()
+}
+
+func (m *GfSpDownloadPieceTask) GetPriority() coretask.TPriority {
+	return m.GetTask().GetPriority()
+}
+
+func (m *GfSpDownloadPieceTask) SetPriority(priority coretask.TPriority) {
+	m.GetTask().SetPriority(priority)
+}
+
+func (m *GfSpDownloadPieceTask) EstimateLimit() corercmgr.Limit {
+	l := &gfsplimit.GfSpLimit{Memory: m.GetSize()}
+	l.Add(LimitEstimateByPriority(m.GetPriority()))
+	return l
+}
+
+func (m *GfSpDownloadPieceTask) Error() error {
+	return m.GetTask().Error()
+}
+
+func (m *GfSpDownloadPieceTask) SetError(err error) {
+	m.GetTask().SetError(err)
+}
+
+func (m *GfSpDownloadPieceTask) GetSize() int64 {
+	return int64(m.GetPieceLength())
+}
+
+func (m *GfSpDownloadPieceTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
+	m.ObjectInfo = object
+}
+
+func (m *GfSpDownloadPieceTask) SetUserAddress(address string) {
+	m.UserAddress = address
+}
+
+func (m *GfSpDownloadPieceTask) SetStorageParams(params *storagetypes.Params) {
+	m.StorageParams = params
+}
+
+func (m *GfSpDownloadPieceTask) SetBucketInfo(bucket *storagetypes.BucketInfo) {
+	m.BucketInfo = bucket
+}
+
+func (m *GfSpChallengePieceTask) InitChallengePieceTask(object *storagetypes.ObjectInfo, bucket *storagetypes.BucketInfo,
+	params *storagetypes.Params, priority coretask.TPriority, userAddress string, replicateIdx int32, segmentIdx uint32,
+	timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetBucketInfo(bucket)
 	m.SetObjectInfo(object)
+	m.SetStorageParams(params)
 	m.SetUserAddress(userAddress)
 	m.SetRedundancyIdx(replicateIdx)
 	m.SetSegmentIdx(segmentIdx)
@@ -207,9 +338,6 @@ func (m *GfSpChallengePieceTask) Type() coretask.TType {
 }
 
 func (m *GfSpChallengePieceTask) Info() string {
-	//return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], object[%s] rIdx[%d], sIdx[%d], %s",
-	//	m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-	//	m.GetObjectInfo().String(), m.GetRedundancyIdx(), m.GetSegmentIdx(), m.GetTask().Info())
 	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], rIdx[%d], sIdx[%d], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
 		m.GetRedundancyIdx(), m.GetSegmentIdx(), m.GetTask().Info())

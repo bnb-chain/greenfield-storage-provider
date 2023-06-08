@@ -5,6 +5,10 @@ import (
 )
 
 const (
+	// MiB defines the MB size
+	MiB = 1024 * 1024
+	// MinSpeed defines the min speed for data transfer
+	MinSpeed = 10 * MiB
 	// NotUseTimeout defines the default task timeout.
 	NotUseTimeout int64 = 0
 	// MinUploadTime defines the min timeout to upload object.
@@ -12,7 +16,7 @@ const (
 	// MaxUploadTime defines the max timeout to upload object.
 	MaxUploadTime int64 = 300
 	// MinReplicateTime defines the min timeout to replicate object.
-	MinReplicateTime int64 = 12
+	MinReplicateTime int64 = 15
 	// MaxReplicateTime defines the max timeout to replicate object.
 	MaxReplicateTime int64 = 500
 	// MinReceiveTime defines the min timeout to confirm the received piece whether is sealed on greenfield.
@@ -71,7 +75,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 	case coretask.TypeTaskReplicatePieceApproval:
 		return NotUseTimeout
 	case coretask.TypeTaskUpload:
-		timeout := int64(size) / (g.uploadSpeed + 1)
+		timeout := int64(size) / (g.uploadSpeed + 1) / (MinSpeed)
 		if timeout < MinUploadTime {
 			return MinUploadTime
 		}
@@ -80,7 +84,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 		}
 		return timeout
 	case coretask.TypeTaskReplicatePiece:
-		timeout := int64(size) / (g.replicateSpeed + 1)
+		timeout := int64(size) / (g.replicateSpeed + 1) / (MinSpeed)
 		if timeout < MinReplicateTime {
 			return MinReplicateTime
 		}
@@ -89,7 +93,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 		}
 		return timeout
 	case coretask.TypeTaskReceivePiece:
-		timeout := int64(size) / (g.replicateSpeed + 1)
+		timeout := int64(size) / (g.replicateSpeed + 1) / (MinSpeed)
 		if timeout < MinReceiveTime {
 			return MinReceiveTime
 		}
@@ -106,7 +110,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 		}
 		return g.sealObjectTimeout
 	case coretask.TypeTaskDownloadObject:
-		timeout := int64(size) / (g.downloadSpeed + 1)
+		timeout := int64(size) / (g.downloadSpeed + 1) / (MinSpeed)
 		if timeout < MinDownloadTime {
 			return MinDownloadTime
 		}
@@ -115,7 +119,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 		}
 		return timeout
 	case coretask.TypeTaskChallengePiece:
-		timeout := int64(size) / (g.downloadSpeed + 1)
+		timeout := int64(size) / (g.downloadSpeed + 1) / (MinSpeed)
 		if timeout < MinDownloadTime {
 			return MinDownloadTime
 		}

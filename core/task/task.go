@@ -5,7 +5,7 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-// Task is the interface to the smallest unit of SP background service interaction.
+// Task is the interface to the smallest unit of SP service interaction.
 //
 // Task Type:
 //
@@ -94,7 +94,7 @@ type Task interface {
 	// GetCreateTime returns the creation time of the task. The creation time used to
 	// judge task execution time.
 	GetCreateTime() int64
-	// SetCreateTime sets the creation time of the tas.
+	// SetCreateTime sets the creation time of the task.
 	SetCreateTime(int64)
 	// GetUpdateTime returns the last updated time of the task. The updated time used
 	// to determine whether the task is expired with the timeout.
@@ -210,11 +210,7 @@ type ApprovalReplicatePieceTask interface {
 	// storage params, task priority and primary operator address. the storage params
 	// can affect the size of the data accepted by the secondary SP, so this is a necessary
 	// and cannot be changed parameter.
-	InitApprovalReplicatePieceTask(
-		object *storagetypes.ObjectInfo,
-		params *storagetypes.Params,
-		priority TPriority,
-		askOpAddress string)
+	InitApprovalReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, askOpAddress string)
 	// GetAskSpOperatorAddress returns the SP's operator address that initiated the ask
 	// replicate piece approval request.
 	GetAskSpOperatorAddress() string
@@ -274,10 +270,7 @@ type ObjectTask interface {
 type UploadObjectTask interface {
 	ObjectTask
 	// InitUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitUploadObjectTask(
-		object *storagetypes.ObjectInfo,
-		params *storagetypes.Params,
-		timeout int64)
+	InitUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
 }
 
 // The ReplicatePieceTask is the interface to record the information for replicating
@@ -286,12 +279,7 @@ type ReplicatePieceTask interface {
 	ObjectTask
 	// InitReplicatePieceTask inits the ReplicatePieceTask by ObjectInfo, params,
 	// task priority, timeout and max retry.
-	InitReplicatePieceTask(
-		object *storagetypes.ObjectInfo,
-		params *storagetypes.Params,
-		priority TPriority,
-		timeout int64,
-		retry int64)
+	InitReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, timeout int64, retry int64)
 	// GetSealed returns an indicator whether successful seal object on greenfield
 	// after replicate pieces, it is an optimization method. ReplicatePieceTask and
 	// SealObjectTask are combined. Otherwise, the two tasks will be completed in
@@ -300,11 +288,16 @@ type ReplicatePieceTask interface {
 	GetSealed() bool
 	// SetSealed sets the state successful seal object after replicating piece.
 	SetSealed(bool)
-	// GetSecondarySignature returns the secondary SP's signatures. It is used to
+	// GetSecondaryAddresses returns the secondary SP's addresses. It is used to
 	// generate MsgSealObject.
-	GetSecondarySignature() [][]byte
-	// SetSecondarySignature sets the secondary SP's signatures.
-	SetSecondarySignature([][]byte)
+	GetSecondaryAddresses() []string
+	// SetSecondaryAddresses sets the secondary SP's addresses.
+	SetSecondaryAddresses([]string)
+	// GetSecondarySignatures returns the secondary SP's signatures. It is used to
+	// generate MsgSealObject.
+	GetSecondarySignatures() [][]byte
+	// SetSecondarySignatures sets the secondary SP's signatures.
+	SetSecondarySignatures([][]byte)
 }
 
 // The ReceivePieceTask is the interface to record the information for receiving pieces
@@ -312,13 +305,8 @@ type ReplicatePieceTask interface {
 type ReceivePieceTask interface {
 	ObjectTask
 	// InitReceivePieceTask init the ReceivePieceTask.
-	InitReceivePieceTask(
-		object *storagetypes.ObjectInfo,
-		params *storagetypes.Params,
-		priority TPriority,
-		replicateIdx uint32,
-		pieceIdx int32,
-		pieceSize int64)
+	InitReceivePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority,
+		replicateIdx uint32, pieceIdx int32, pieceSize int64)
 	// GetReplicateIdx returns the replicate index. The replicate index identifies the
 	// serial number of the secondary SP for object piece copy.
 	GetReplicateIdx() uint32
@@ -359,16 +347,13 @@ type ReceivePieceTask interface {
 type SealObjectTask interface {
 	ObjectTask
 	// InitSealObjectTask inits the SealObjectTask.
-	InitSealObjectTask(
-		object *storagetypes.ObjectInfo,
-		params *storagetypes.Params,
-		priority TPriority,
-		signature [][]byte,
-		timeout int64,
-		retry int64)
-	// GetSecondarySignature returns the secondary SP's signature, it is used to generate
+	InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, addresses []string,
+		signatures [][]byte, timeout int64, retry int64)
+	// GetSecondaryAddresses return the secondary SP's addresses.
+	GetSecondaryAddresses() []string
+	// GetSecondarySignatures return the secondary SP's signature, it is used to generate
 	// MsgSealObject.
-	GetSecondarySignature() [][]byte
+	GetSecondarySignatures() [][]byte
 }
 
 // The DownloadObjectTask is the interface to record the information for downloading
@@ -376,16 +361,8 @@ type SealObjectTask interface {
 type DownloadObjectTask interface {
 	ObjectTask
 	// InitDownloadObjectTask inits DownloadObjectTask.
-	InitDownloadObjectTask(
-		object *storagetypes.ObjectInfo,
-		bucket *storagetypes.BucketInfo,
-		params *storagetypes.Params,
-		priority TPriority,
-		userAddress string,
-		low int64,
-		high int64,
-		timeout int64,
-		retry int64)
+	InitDownloadObjectTask(object *storagetypes.ObjectInfo, bucket *storagetypes.BucketInfo, params *storagetypes.Params,
+		priority TPriority, userAddress string, low int64, high int64, timeout int64, retry int64)
 	// GetBucketInfo returns the BucketInfo of the download object.
 	// It is used to Query and calculate bucket read quota.
 	GetBucketInfo() *storagetypes.BucketInfo
@@ -404,21 +381,45 @@ type DownloadObjectTask interface {
 	GetHigh() int64
 }
 
+// The DownloadPieceTask is the interface to record the information for downloading piece data.
+type DownloadPieceTask interface {
+	ObjectTask
+	// InitDownloadPieceTask inits DownloadPieceTask.
+	InitDownloadPieceTask(object *storagetypes.ObjectInfo, bucket *storagetypes.BucketInfo, params *storagetypes.Params,
+		priority TPriority, enableCheck bool, userAddress string, totalSize uint64, pieceKey string, pieceOffset uint64,
+		pieceLength uint64, timeout int64, maxRetry int64)
+	// GetBucketInfo returns the BucketInfo of the download object.
+	// It is used to Query and calculate bucket read quota.
+	GetBucketInfo() *storagetypes.BucketInfo
+	// SetBucketInfo sets the BucketInfo of the download object.
+	SetBucketInfo(*storagetypes.BucketInfo)
+	// GetUserAddress returns the user account of downloading object.
+	// It is used to record the read bucket information.
+	GetUserAddress() string
+	// SetUserAddress sets the user account of downloading object.
+	SetUserAddress(string)
+	// GetSize returns the download payload data size.
+	GetSize() int64
+	// GetEnableCheck returns enable_check flag.
+	GetEnableCheck() bool
+	// GetTotalSize returns total size.
+	GetTotalSize() uint64
+	// GetPieceKey returns piece key.
+	GetPieceKey() string
+	// GetPieceOffset returns piece offset.
+	GetPieceOffset() uint64
+	// GetPieceLength returns piece length.
+	GetPieceLength() uint64
+}
+
 // ChallengePieceTask is the interface to record the information for get challenge
 // piece info, the validator get challenge info to confirm whether the sp stores
 // the user's data correctly.
 type ChallengePieceTask interface {
 	ObjectTask
 	// InitChallengePieceTask inits InitChallengePieceTask.
-	InitChallengePieceTask(
-		object *storagetypes.ObjectInfo,
-		bucket *storagetypes.BucketInfo,
-		priority TPriority,
-		userAddress string,
-		replicateIdx int32,
-		segmentIdx uint32,
-		timeout int64,
-		retry int64)
+	InitChallengePieceTask(object *storagetypes.ObjectInfo, bucket *storagetypes.BucketInfo, params *storagetypes.Params,
+		priority TPriority, userAddress string, replicateIdx int32, segmentIdx uint32, timeout int64, retry int64)
 	// GetBucketInfo returns the BucketInfo of challenging piece
 	GetBucketInfo() *storagetypes.BucketInfo
 	// SetBucketInfo sets the BucketInfo of challenging piece

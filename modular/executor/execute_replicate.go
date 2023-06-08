@@ -22,9 +22,7 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-func (e *ExecuteModular) HandleReplicatePieceTask(
-	ctx context.Context,
-	task coretask.ReplicatePieceTask) {
+func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) {
 	var (
 		err       error
 		approvals []*gfsptask.GfSpReplicatePieceApprovalTask
@@ -59,8 +57,8 @@ func (e *ExecuteModular) HandleReplicatePieceTask(
 		Operator:              e.baseApp.OperateAddress(),
 		BucketName:            task.GetObjectInfo().GetBucketName(),
 		ObjectName:            task.GetObjectInfo().GetObjectName(),
-		SecondarySpAddresses:  task.GetObjectInfo().GetSecondarySpAddresses(),
-		SecondarySpSignatures: task.GetSecondarySignature(),
+		SecondarySpAddresses:  task.GetSecondaryAddresses(),
+		SecondarySpSignatures: task.GetSecondarySignatures(),
 	}
 	sealErr := e.sealObject(ctx, task, sealMsg)
 	if sealErr == nil {
@@ -69,9 +67,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(
 	log.CtxDebugw(ctx, "finish combine seal object", "error", sealErr)
 }
 
-func (e *ExecuteModular) AskReplicatePieceApproval(
-	ctx context.Context,
-	task coretask.ApprovalReplicatePieceTask,
+func (e *ExecuteModular) AskReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask,
 	low, high int, timeout int64) (
 	[]*gfsptask.GfSpReplicatePieceApprovalTask, error) {
 	var (
@@ -105,24 +101,21 @@ func (e *ExecuteModular) AskReplicatePieceApproval(
 	return approvals, nil
 }
 
-func (e *ExecuteModular) handleReplicatePiece(
-	ctx context.Context,
-	rTask coretask.ReplicatePieceTask,
-	backUpApprovals []*gfsptask.GfSpReplicatePieceApprovalTask,
-) (err error) {
+func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretask.ReplicatePieceTask,
+	backUpApprovals []*gfsptask.GfSpReplicatePieceApprovalTask) (err error) {
 	var (
 		wg       sync.WaitGroup
 		pieceKey string
-		segCount = e.baseApp.PieceOp().SegmentCount(
+		segCount = e.baseApp.PieceOp().SegmentPieceCount(
 			rTask.GetObjectInfo().GetPayloadSize(),
 			rTask.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 		replCount = rTask.GetStorageParams().VersionedParams.GetRedundantDataChunkNum() +
 			rTask.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()
-		record             = make([]bool, replCount)
-		secondaryOpAddress = make([]string, replCount)
-		secondarySignature = make([][]byte, replCount)
-		approvals          = make([]coretask.ApprovalReplicatePieceTask, replCount)
-		finish             bool
+		record              = make([]bool, replCount)
+		secondaryAddresses  = make([]string, replCount)
+		secondarySignatures = make([][]byte, replCount)
+		approvals           = make([]coretask.ApprovalReplicatePieceTask, replCount)
+		finish              bool
 	)
 	resetApprovals := func() (bool, error) {
 		doneAll := true
@@ -163,8 +156,8 @@ func (e *ExecuteModular) handleReplicatePiece(
 			if !done {
 				_, signature, innerErr := e.doneReplicatePiece(ctx, rTask, approvals[rIdx], uint32(rIdx))
 				if innerErr == nil {
-					secondaryOpAddress[rIdx] = approvals[rIdx].GetApprovedSpOperatorAddress()
-					secondarySignature[rIdx] = signature
+					secondaryAddresses[rIdx] = approvals[rIdx].GetApprovedSpOperatorAddress()
+					secondarySignatures[rIdx] = signature
 					record[rIdx] = true
 					metrics.ReplicateSucceedCounter.WithLabelValues(e.Name()).Inc()
 				} else {
@@ -180,8 +173,8 @@ func (e *ExecuteModular) handleReplicatePiece(
 			return err
 		}
 		if finish {
-			rTask.GetObjectInfo().SecondarySpAddresses = secondaryOpAddress
-			rTask.SetSecondarySignature(secondarySignature)
+			rTask.SetSecondaryAddresses(secondaryAddresses)
+			rTask.SetSecondarySignatures(secondarySignatures)
 			log.CtxDebugw(ctx, "success to replicate all pieces")
 			return nil
 		}
@@ -211,15 +204,8 @@ func (e *ExecuteModular) handleReplicatePiece(
 	}
 }
 
-func (e *ExecuteModular) doReplicatePiece(
-	ctx context.Context,
-	waitGroup *sync.WaitGroup,
-	rTask coretask.ReplicatePieceTask,
-	approval coretask.ApprovalReplicatePieceTask,
-	replicateIdx uint32,
-	pieceIdx uint32,
-	data []byte,
-) (err error) {
+func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.WaitGroup, rTask coretask.ReplicatePieceTask,
+	approval coretask.ApprovalReplicatePieceTask, replicateIdx uint32, pieceIdx uint32, data []byte) (err error) {
 	var signature []byte
 	metrics.ReplicatePieceSizeCounter.WithLabelValues(e.Name()).Add(float64(len(data)))
 	startTime := time.Now()
@@ -251,12 +237,8 @@ func (e *ExecuteModular) doReplicatePiece(
 	return
 }
 
-func (e *ExecuteModular) doneReplicatePiece(
-	ctx context.Context,
-	rTask coretask.ReplicatePieceTask,
-	approval coretask.ApprovalReplicatePieceTask,
-	replicateIdx uint32,
-) ([]byte, []byte, error) {
+func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.ReplicatePieceTask,
+	approval coretask.ApprovalReplicatePieceTask, replicateIdx uint32) ([]byte, []byte, error) {
 	var (
 		err           error
 		integrity     []byte
@@ -303,15 +285,8 @@ func (e *ExecuteModular) doneReplicatePiece(
 	return integrity, signature, nil
 }
 
-func veritySignature(
-	ctx context.Context,
-	objectID uint64,
-	integrity []byte,
-	expectedIntegrity []byte,
-	signOpAddress string,
-	signApprovalAddress string,
-	signature []byte,
-) error {
+func veritySignature(ctx context.Context, objectID uint64, integrity []byte, expectedIntegrity []byte,
+	signOpAddress string, signApprovalAddress string, signature []byte) error {
 	if !bytes.Equal(expectedIntegrity, integrity) {
 		log.CtxErrorw(ctx, "replicate sp invalid integrity", "integrity", hex.EncodeToString(integrity),
 			"expect", hex.EncodeToString(expectedIntegrity))
@@ -319,12 +294,12 @@ func veritySignature(
 	}
 	signOp, err := sdk.AccAddressFromHexUnsafe(signOpAddress)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to parser sign op address", "error", err)
+		log.CtxErrorw(ctx, "failed to parse sign op address", "error", err)
 		return err
 	}
 	signApproval, err := sdk.AccAddressFromHexUnsafe(signApprovalAddress)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to parser sign approval address", "error", err)
+		log.CtxErrorw(ctx, "failed to parse sign approval address", "error", err)
 		return err
 	}
 	originMsgHash := storagetypes.NewSecondarySpSignDoc(signOp,

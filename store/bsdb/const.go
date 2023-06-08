@@ -38,4 +38,5 @@ const (
 const (
 	ObjectName   = "object"
 	CommonPrefix = "common_prefix"
+	GroupAddress = "0x0000000000000000000000000000000000000000"
 )

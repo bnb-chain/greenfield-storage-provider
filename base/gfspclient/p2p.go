@@ -9,12 +9,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-func (s *GfSpClient) AskSecondaryReplicatePieceApproval(
-	ctx context.Context,
-	task coretask.ApprovalReplicatePieceTask,
-	low, high int,
-	timeout int64) (
-	[]*gfsptask.GfSpReplicatePieceApprovalTask, error) {
+func (s *GfSpClient) AskSecondaryReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask,
+	low, high int, timeout int64) ([]*gfsptask.GfSpReplicatePieceApprovalTask, error) {
 	conn, connErr := s.P2PConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect p2p", "error", connErr)

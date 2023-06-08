@@ -14,14 +14,14 @@ import (
 )
 
 const (
-	// MaxCallMsgSize defines the max message size for grpc server
-	MaxCallMsgSize = 3 * 1024 * 1024 * 1024
+	// MaxServerCallMsgSize defines the max message size for grpc server
+	MaxServerCallMsgSize = 3 * 1024 * 1024 * 1024
 )
 
 func DefaultGrpcServerOptions() []grpc.ServerOption {
 	var options []grpc.ServerOption
-	options = append(options, grpc.MaxRecvMsgSize(MaxCallMsgSize))
-	options = append(options, grpc.MaxSendMsgSize(MaxCallMsgSize))
+	options = append(options, grpc.MaxRecvMsgSize(MaxServerCallMsgSize))
+	options = append(options, grpc.MaxSendMsgSize(MaxServerCallMsgSize))
 	return options
 }
 
