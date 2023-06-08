@@ -9,11 +9,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 )
 
-func (r *MetadataModular) GfSpQueryUploadProgress(
-	ctx context.Context,
-	req *types.GfSpQueryUploadProgressRequest) (
+func (r *MetadataModular) GfSpQueryUploadProgress(ctx context.Context, req *types.GfSpQueryUploadProgressRequest) (
 	*types.GfSpQueryUploadProgressResponse, error) {
-	job, err := r.baseApp.GfSpDB().GetJobByObjectID(req.GetObjectId())
+	state, err := r.baseApp.GfSpDB().GetUploadState(req.GetObjectId())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &types.GfSpQueryUploadProgressResponse{
@@ -25,6 +23,6 @@ func (r *MetadataModular) GfSpQueryUploadProgress(
 		}, nil
 	}
 	return &types.GfSpQueryUploadProgressResponse{
-		State: job.JobState,
+		State: state,
 	}, nil
 }

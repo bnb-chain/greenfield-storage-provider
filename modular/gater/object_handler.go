@@ -250,7 +250,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		reqCtx     *RequestContext
 		authorized bool
 		objectInfo *storagetypes.ObjectInfo
-		jobState   int32
+		taskState  int32
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -289,12 +289,12 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	jobState, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
+	taskState, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
 		return
 	}
-	jobStateDescription := servicetypes.StateToDescription(servicetypes.JobState(jobState))
+	taskStateDescription := servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 
 	var xmlInfo = struct {
 		XMLName             xml.Name `xml:"QueryUploadProgress"`
@@ -302,7 +302,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		ProgressDescription string   `xml:"ProgressDescription"`
 	}{
 		Version:             GnfdResponseXMLVersion,
-		ProgressDescription: jobStateDescription,
+		ProgressDescription: taskStateDescription,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
