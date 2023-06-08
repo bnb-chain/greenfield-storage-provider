@@ -52,8 +52,9 @@ message GfSpReplicatePieceTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
-  repeated bytes secondary_signature = 4;
-  bool sealed = 5;
+  repeated string secondary_addresses = 4;
+  repeated bytes secondary_signatures = 5;
+  bool sealed = 6;
 }
 
 message GfSpReceivePieceTask {
@@ -72,7 +73,8 @@ message GfSpSealObjectTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
-  repeated bytes secondary_signature = 4;
+  repeated string secondary_addresses = 4;
+  repeated bytes secondary_signatures = 5;
 }
 
 message GfSpDownloadObjectTask {

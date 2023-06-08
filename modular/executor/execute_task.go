@@ -38,8 +38,8 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		Operator:              e.baseApp.OperateAddress(),
 		BucketName:            task.GetObjectInfo().GetBucketName(),
 		ObjectName:            task.GetObjectInfo().GetObjectName(),
-		SecondarySpAddresses:  task.GetObjectInfo().GetSecondarySpAddresses(),
-		SecondarySpSignatures: task.GetSecondarySignature(),
+		SecondarySpAddresses:  task.GetSecondaryAddresses(),
+		SecondarySpSignatures: task.GetSecondarySignatures(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
 	log.CtxDebugw(ctx, "finish to handle seal object task", "error", task.Error())

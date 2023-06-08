@@ -22,9 +22,8 @@ var (
 	ErrObjectUnsealed    = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30002, "object unsealed")
 	ErrRepeatedTask      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30003, "request repeated")
 	ErrExceedBucketQuota = gfsperrors.Register(module.DownloadModularName, http.StatusNotAcceptable, 30004, "bucket quota overflow")
-	ErrExceedQueue       = gfsperrors.Register(module.DownloadModularName, http.StatusNotAcceptable, 30005, "request exceed the limit, try again later")
-	ErrInvalidParam      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid")
-	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "request params invalid, no such piece")
+	ErrInvalidParam      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30005, "request params invalid")
+	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid, no such piece")
 	ErrPieceStore        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35101, "server slipped away, try again later")
 	ErrGfSpDB            = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35201, "server slipped away, try again later")
 )
@@ -78,7 +77,7 @@ func (d *DownloadModular) HandleDownloadObjectTask(ctx context.Context, download
 	}()
 	if err = d.downloadQueue.Push(downloadObjectTask); err != nil {
 		log.CtxErrorw(ctx, "failed to push download queue", "error", err)
-		return nil, ErrExceedQueue
+		return nil, err
 	}
 	defer d.downloadQueue.PopByKey(downloadObjectTask.Key())
 	pieceInfos, err := SplitToSegmentPieceInfos(downloadObjectTask, d.baseApp.PieceOp())
@@ -218,7 +217,7 @@ func (d *DownloadModular) HandleDownloadPieceTask(ctx context.Context, downloadP
 	}()
 	if err = d.downloadQueue.Push(downloadPieceTask); err != nil {
 		log.CtxErrorw(ctx, "failed to push download queue", "error", err)
-		return nil, ErrExceedQueue
+		return nil, err
 	}
 	defer d.downloadQueue.PopByKey(downloadPieceTask.Key())
 
@@ -261,7 +260,7 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	}()
 	if err = d.challengeQueue.Push(downloadPieceTask); err != nil {
 		log.CtxErrorw(ctx, "failed to push challenge piece queue", "error", err)
-		return nil, nil, nil, ErrExceedQueue
+		return nil, nil, nil, err
 	}
 	defer d.challengeQueue.PopByKey(downloadPieceTask.Key())
 	pieceKey := d.baseApp.PieceOp().ChallengePieceKey(

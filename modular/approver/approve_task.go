@@ -14,8 +14,6 @@ import (
 var (
 	ErrDanglingPointer    = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10001, "OoooH.... request lost")
 	ErrExceedBucketNumber = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10002, "account buckets exceed the limit")
-	ErrRepeatedTask       = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10003, "ask approval request repeated")
-	ErrExceedQueue        = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10004, "ask approval request exceed the limit, try again later")
 	ErrSigner             = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 11001, "server slipped away, try again later")
 	ErrConsensus          = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 15001, "server slipped away, try again later")
 )
@@ -73,7 +71,7 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 	task.GetCreateBucketInfo().GetPrimarySpApproval().Sig = signature
 	if err = a.bucketQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push the create bucket approval to queue", "error", err)
-		return false, ErrExceedQueue
+		return false, err
 	}
 	return true, nil
 }
@@ -124,7 +122,7 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(ctx context.Context, ta
 	task.GetCreateObjectInfo().GetPrimarySpApproval().Sig = signature
 	if err = a.objectQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push the create object task to queue", "error", err)
-		return false, ErrExceedQueue
+		return false, err
 	}
 	return true, nil
 }

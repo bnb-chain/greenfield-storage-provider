@@ -123,7 +123,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		err        error
 	)
 	if reportTask == nil {
-		log.CtxError(ctx, "failed to begin upload object task due to object info pointer dangling")
+		log.CtxError(ctx, "failed to receive report task due to object info pointer dangling")
 		return &gfspserver.GfSpReportTaskResponse{Err: ErrUploadTaskDangling}, nil
 	}
 	switch t := reportTask.(type) {
@@ -139,7 +139,10 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 			metrics.UploadObjectTaskFailedCounter.WithLabelValues(g.manager.Name()).Inc()
 		}
 
+		startReportDoneUploadTask := time.Now()
 		err = g.manager.HandleDoneUploadObjectTask(ctx, t.UploadObjectTask)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_done_server").
+			Observe(time.Since(startReportDoneUploadTask).Seconds())
 	case *gfspserver.GfSpReportTaskRequest_ReplicatePieceTask:
 		task := t.ReplicatePieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())

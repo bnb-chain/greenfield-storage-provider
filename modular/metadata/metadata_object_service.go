@@ -44,6 +44,20 @@ func (r *MetadataModular) GfSpListObjectsByBucketName(ctx context.Context, req *
 		return
 	}
 
+	keyCount = uint64(len(results))
+	// if keyCount is equal to req.MaxKeys+1 which means that we additionally return NextContinuationToken, and it is not counted in the keyCount
+	// isTruncated set to false if all the results were returned, set to true if more keys are available to return
+	// remove the returned NextContinuationToken object and separately return its object ID to the user for the next API call
+	if keyCount == maxKeys+1 {
+		isTruncated = true
+		keyCount -= 1
+		nextContinuationToken = results[len(results)-1].PathName
+		if req.Delimiter == "" {
+			nextContinuationToken = results[len(results)-1].ObjectName
+		}
+		results = results[:len(results)-1]
+	}
+
 	for _, object := range results {
 		if object.ResultType == "common_prefix" {
 			commonPrefixes = append(commonPrefixes, object.PathName)
@@ -75,20 +89,6 @@ func (r *MetadataModular) GfSpListObjectsByBucketName(ctx context.Context, req *
 				SealTxHash:    object.SealTxHash.String(),
 			})
 		}
-	}
-
-	keyCount = uint64(len(results))
-	// if keyCount is equal to req.MaxKeys+1 which means that we additionally return NextContinuationToken, and it is not counted in the keyCount
-	// isTruncated set to false if all the results were returned, set to true if more keys are available to return
-	// remove the returned NextContinuationToken object and separately return its object ID to the user for the next API call
-	if keyCount == maxKeys+1 {
-		isTruncated = true
-		keyCount -= 1
-		nextContinuationToken = results[len(results)-1].PathName
-		if req.Delimiter == "" {
-			nextContinuationToken = results[len(results)-1].ObjectName
-		}
-		res = res[:len(res)-1]
 	}
 
 	resp = &types.GfSpListObjectsByBucketNameResponse{

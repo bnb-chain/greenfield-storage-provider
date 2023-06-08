@@ -150,11 +150,6 @@ func (s *SpDBImpl) GetAllReplicatePieceChecksum(objectID uint64, replicateIdx ui
 	return pieceChecksumList, nil
 }
 
-// SetAllReplicatePieceChecksum is unused.
-func (s *SpDBImpl) SetAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32, checksum [][]byte) error {
-	return nil
-}
-
 // DeleteAllReplicatePieceChecksum deletes all the piece checksum.
 func (s *SpDBImpl) DeleteAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) error {
 	var (
