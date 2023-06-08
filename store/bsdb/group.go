@@ -40,7 +40,7 @@ func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string
 	}
 
 	if !includeRemoved {
-		filters = append(filters, RemovedFilter())
+		filters = append(filters, RemovedFilter(includeRemoved))
 	}
 
 	err = b.db.Table((&Group{}).TableName()).
