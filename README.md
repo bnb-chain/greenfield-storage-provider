@@ -42,7 +42,7 @@ Greenfield Storage Provider
     (__  ) /_/ /_/ / /  / /_/ / /_/ /  __/  / /_/ / /  / /_/ / |/ / / /_/ /  __/ /
     /____/\__/\____/_/   \__,_/\__, /\___/  / .___/_/   \____/|___/_/\__,_/\___/_/
     /____/       /_/
-Version : v0.1.3
+Version : vx.x.x
 Branch  : master
 Commit  : bfc32b9748c11d74493f93c420744ade4dbc18ac
 Build   : go1.20.3 darwin arm64 2023-05-12 13:37
@@ -63,90 +63,105 @@ Build   : go1.20.3 darwin arm64 2023-05-12 13:37
 #### Edit configuration
 
 ```toml
-# start service list
-Service = ["auth", "gateway", "uploader", "downloader", "challenge", "tasknode", "receiver", "signer", "blocksyncer", "metadata", "manager"]
-# sp operator address 
-SpOperatorAddress = ""
-# service endpoint for other to connect
-[Endpoint]
-challenge = "localhost:9333"
-downloader = "localhost:9233"
-gateway = "gnfd.test-sp.com"
-metadata = "localhost:9733"
-p2p = "localhost:9833"
-receiver = "localhost:9533"
-signer = "localhost:9633"
-tasknode = "localhost:9433"
-uploader = "localhost:9133"
-auth = "localhost:10033"
-# service listen address
-[ListenAddress]
-challenge = "localhost:9333"
-downloader = "localhost:9233"
-gateway = "localhost:9033"
-metadata = "localhost:9733"
-p2p = "localhost:9833"
-receiver = "localhost:9533"
-signer = "localhost:9633"
-tasknode = "localhost:9433"
-uploader = "localhost:9133"
-auth = "localhost:10033"
-# SQL configuration
-[SpDBConfig]
-User = "root"
-Passwd = "test_pwd"
-Address = "localhost:3306"
-Database = "storage_provider_db"
-# piece store configuration
-[PieceStoreConfig]
+Server = []
+GrpcAddress = '0.0.0.0:9333'
+
+[SpDB]
+User = '${db_user}'
+Passwd = '${db_password}'
+Address = '${db_address}'
+Database = 'storage_provider_db'
+
+[BsDB]
+User = '${db_user}'
+Passwd = '${db_password}'
+Address = '${db_address}'
+Database = 'block_syncer'
+
+[BsDBBackup]
+User = '${db_user}'
+Passwd = '${db_password}'
+Address = '${db_address}'
+Database = 'block_syncer_backup'
+
+[PieceStore]
 Shards = 0
-[PieceStoreConfig.Store]
-# default use local file system 
-Storage = "file"
-BucketURL = "./data"
-# greenfiel chain configuration
-[ChainConfig]
-ChainID = "greenfield_9000-1741"
-[[ChainConfig.NodeAddr]]
-GreenfieldAddresses = ["localhost:9090"]
-TendermintAddresses = ["http://localhost:26750"]
-# signer configuration
-[SignerCfg]
-GRPCAddress = "localhost:9633"
-APIKey = ""
-WhitelistCIDR = ["127.0.0.1/32"]
-GasLimit = 210000
-OperatorPrivateKey = ""
-FundingPrivateKey = ""
-SealPrivateKey = ""
-ApprovalPrivateKey = ""
-# block syncer configuration
-# signer configuration
-[SignerCfg]
-WhitelistCIDR = ["0.0.0.0/0"]
-GasLimit = 210000
-OperatorPrivateKey = "${SP_Operator_PrivKey}"
-FundingPrivateKey = "${SP_Funding_PrivKey}"
-SealPrivateKey = "${SP_Seal_PrivKey}"
-ApprovalPrivateKey = "${SP_Approval_PrivKey}"
-[BlockSyncerCfg]
-Modules = ["epoch", "bucket", "object", "payment"]
-Dsn = "localhost:3308"
-# p2p node configuration
-[P2PCfg]
-ListenAddress = "127.0.0.1:9933"
-# p2p node msg Secp256k1 encryption key, it is different from other SP's addresses
-P2PPrivateKey = ""
-# p2p node's bootstrap node, format: [node_id1@ip1:port1, node_id2@ip1:port2]
-Bootstrap = []
-# log configuration
-[LogCfg]
-Level = "info"
-Path = "./gnfd-sp.log"
-# metrics configuration
-[MetricsCfg]
-Enabled = false
-HTTPAddress = "localhost:24036"
+
+[PieceStore.Store]
+Storage = 's3'
+BucketURL = '${bucket_url}'
+MaxRetries = 5
+MinRetryDelay = 0
+TLSInsecureSkipVerify = false
+IAMType = 'SA'
+
+[Chain]
+ChainID = '${chain_id}'
+ChainAddress = ['${chain_address}']
+
+[SpAccount]
+SpOperateAddress = '${sp_operator_address}'
+OperatorPrivateKey = '${operator_private_key}'
+FundingPrivateKey = '${funding_private_key}'
+SealPrivateKey = '${seal_private_key}'
+ApprovalPrivateKey = '${approval_private_key}'
+GcPrivateKey = '${gc_private_key}'
+
+[Endpoint]
+ApproverEndpoint = 'approver:9333'
+ManagerEndpoint = 'manager:9333'
+DownloaderEndpoint = 'downloader:9333'
+ReceiverEndpoint = 'receiver:9333'
+MetadataEndpoint = 'metadata:9333'
+UploaderEndpoint = 'uploader:9333'
+P2PEndpoint = 'p2p:9333'
+SignerEndpoint = 'signer:9333'
+AuthorizerEndpoint = 'localhost:9333'
+
+[Gateway]
+Domain = '${gateway_domain_name}'
+HttpAddress = '0.0.0.0:9033'
+
+[P2P]
+P2PPrivateKey = '${p2p_private_key}'
+P2PAddress = '0.0.0.0:9933'
+P2PAntAddress = '${p2p_ant_address}'
+P2PBootstrap = ['${node_id@p2p_ant_address}']
+P2PPingPeriod = 0
+
+[Parallel]
+DiscontinueBucketEnabled = true
+DiscontinueBucketKeepAliveDays = 2
+
+[Monitor]
+DisableMetrics = false
+DisablePProf = false
+MetricsHttpAddress = '0.0.0.0:24367'
+PProfHttpAddress = '0.0.0.0:24368'
+
+[Rcmgr]
+DisableRcmgr = false
+
+[Metadata]
+IsMasterDB = true
+BsDBSwitchCheckIntervalSec = 30
+
+[BlockSyncer]
+Modules = ['epoch','bucket','object','payment','group','permission','storage_provider','prefix_tree']
+Dsn = '${dsn}'
+DsnSwitched = ''
+RecreateTables = false
+Workers = 50
+EnableDualDB = false
+
+[APIRateLimiter]
+PathPattern = [{Key = ".*request_nonc.*", RateLimit = 10, RatePeriod = 'S'},{Key = ".*1l65v.*", RateLimit = 20, RatePeriod = 'S'}]
+HostPattern = [{Key = ".*vfdxy.*", RateLimit = 15, RatePeriod = 'S'}]
+
+[APIRateLimiter.IPLimitCfg]
+On = true
+RateLimit = 5000
+RatePeriod = 'S'
 ```
 
 ### Start
