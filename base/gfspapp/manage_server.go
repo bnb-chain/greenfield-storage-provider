@@ -123,7 +123,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		err        error
 	)
 	if reportTask == nil {
-		log.CtxError(ctx, "failed to begin upload object task due to object info pointer dangling")
+		log.CtxError(ctx, "failed to receive report task due to object info pointer dangling")
 		return &gfspserver.GfSpReportTaskResponse{Err: ErrUploadTaskDangling}, nil
 	}
 	switch t := reportTask.(type) {

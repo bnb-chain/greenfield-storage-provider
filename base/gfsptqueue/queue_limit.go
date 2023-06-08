@@ -243,6 +243,7 @@ func (t *GfSpTQueueWithLimit) delete(task coretask.Task) {
 		}
 	}
 	t.tasks = append(t.tasks[0:idx], t.tasks[idx+1:]...)
+	t.reset()
 	metrics.TaskInQueueTimeHistogram.WithLabelValues(t.name).Observe(
 		time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 }
@@ -279,6 +280,7 @@ func (t *GfSpTQueueWithLimit) has(key coretask.TKey) bool {
 			if t.gcFunc(task) {
 				delete(t.indexer, task.Key())
 				t.tasks = append(t.tasks[0:idx], t.tasks[idx+1:]...)
+				t.reset()
 				return false
 			}
 		}
