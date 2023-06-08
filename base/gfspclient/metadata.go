@@ -30,22 +30,23 @@ func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, in
 }
 
 func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64,
-	endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error) {
+	endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, []*types.Object, uint64, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
-		return nil, uint64(0), err
+		return nil, nil, uint64(0), err
 	}
 	defer conn.Close()
 	req := &types.GfSpListDeletedObjectsByBlockNumberRangeRequest{
-		StartBlockNumber: int64(startBlockNumber),
-		EndBlockNumber:   int64(endBlockNumber),
-		IncludePrivate:   includePrivate,
+		StartBlockNumber:  int64(startBlockNumber),
+		EndBlockNumber:    int64(endBlockNumber),
+		IncludePrivate:    includePrivate,
+		SpOperatorAddress: spOperatorAddress,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListDeletedObjectsByBlockNumberRange(ctx, req)
 	if err != nil {
-		return nil, uint64(0), ErrRpcUnknown
+		return nil, nil, uint64(0), ErrRpcUnknown
 	}
-	return resp.GetObjects(), uint64(resp.GetEndBlockNumber()), nil
+	return resp.GetPrimarySpObjects(), resp.GetSecondarySpsObjects(), uint64(resp.GetEndBlockNumber()), nil
 }
 
 func (s *GfSpClient) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Bucket, error) {

@@ -33,7 +33,7 @@ type Metadata interface {
 	// ListObjectsByBucketName list objects info by a bucket name
 	ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int, includeRemoved bool) ([]*ListObjectsResult, error)
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
-	ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error)
+	ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool, spOperatorAddress string) (DeletedObjectsLists, error)
 	// ListExpiredBucketsBySp list expired buckets by sp
 	ListExpiredBucketsBySp(createAt int64, primarySpAddress string, limit int64) ([]*Bucket, error)
 	// GetObjectByName get object info by an object name

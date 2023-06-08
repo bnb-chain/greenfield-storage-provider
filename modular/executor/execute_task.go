@@ -190,7 +190,9 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			"task_is_canceled", taskIsCanceled, "has_no_object", hasNoObject, "error", err)
 	}()
 
-	if waitingGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
+	// TODO: ListDeletedObjectsByBlockNumberRange has been updated to return primary_sp_objects and secondary_sps_objects
+	// please modify the usage accordingly here
+	if waitingGCObjects, _, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
 		ctx, e.baseApp.OperateAddress(), task.GetStartBlockNumber(),
 		task.GetEndBlockNumber(), true); err != nil {
 		log.CtxErrorw(ctx, "failed to query deleted object list", "task_info", task.Info(), "error", err)

@@ -152,14 +152,18 @@ message GfSpListDeletedObjectsByBlockNumberRangeRequest {
   int64 end_block_number = 2;
   // include_private indicates whether this request can get the private objects information
   bool include_private = 3;
+  // sp_operator_address defines the sp operator address of the returned deleted objects
+  string sp_operator_address = 4;
 }
 
 // GfSpListDeletedObjectsByBlockNumberRangeResponse is response type for the GfSpListDeletedObjectsByBlockNumberRange RPC method.
 message GfSpListDeletedObjectsByBlockNumberRangeResponse {
-  // objects defines the list of object
-  repeated Object objects = 1;
+  // primary_sp_objects defines the list of object that is filtered by primary sp
+  repeated Object primary_sp_objects = 1;
+  // secondary_sps_objects defines the list of object that is filtered by secondary sps
+  repeated Object secondary_sps_objects = 2;
   // latest_block_number defines the response objects latest block number
-  int64 end_block_number = 2;
+  int64 end_block_number = 3;
 }
 
 // GfSpGetUserBucketsCountRequest is request type for the GfSpGetUserBucketsCount RPC method.

@@ -1,6 +1,7 @@
 package bsdb
 
 import (
+	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 )
 
@@ -64,31 +65,80 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 }
 
 // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
-func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
+func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool, spOperatorAddress string) (DeletedObjectsLists, error) {
 	var (
-		objects []*Object
-		err     error
+		deletedObjectsLists DeletedObjectsLists
+		errPrimarySP        error
+		errSecondarySPs     error
+		err                 error
 	)
 
 	if includePrivate {
-		err = b.db.Table((&Object{}).TableName()).
-			Select("*").
-			Where("update_at >= ? and update_at <= ? and removed = ?", startBlockNumber, endBlockNumber, true).
-			Limit(DeletedObjectsDefaultSize).
-			Order("update_at,object_id asc").
-			Find(&objects).Error
-		return objects, err
+		// if no operator address get passed in, we return all matching objects from all sps into deletedObjectsLists.PrimarySPObjects
+		if spOperatorAddress == "" {
+			errPrimarySP = b.db.Table((&Object{}).TableName()).
+				Select("*").
+				Where("update_at >= ? and update_at <= ? and removed = ?", startBlockNumber, endBlockNumber, true).
+				Limit(DeletedObjectsDefaultSize).
+				Order("update_at,object_id asc").
+				Find(&deletedObjectsLists.PrimarySPObjects).Error
+		} else {
+			errPrimarySP = b.db.Table((&Object{}).TableName()).
+				Select("*").
+				Where("update_at >= ? and update_at <= ? and removed = ? and primary_sp_address = ?", startBlockNumber, endBlockNumber, true, common.HexToAddress(spOperatorAddress)).
+				Limit(DeletedObjectsDefaultSize).
+				Order("update_at,object_id asc").
+				Find(&deletedObjectsLists.PrimarySPObjects).Error
+			errSecondarySPs = b.db.Table((&Object{}).TableName()).
+				Select("*").
+				Where("update_at >= ? and update_at <= ? and removed = ? and secondary_sp_addresses like ?", startBlockNumber, endBlockNumber, true, "%"+spOperatorAddress+"%").
+				Limit(DeletedObjectsDefaultSize).
+				Order("update_at,object_id asc").
+				Find(&deletedObjectsLists.SecondarySPsObjects).Error
+		}
+	} else {
+		// if no operator address get passed in, we return all matching objects from all sps into deletedObjectsLists.PrimarySPObjects
+		if spOperatorAddress == "" {
+			errPrimarySP = b.db.Table((&Bucket{}).TableName()).
+				Select("objects.*").
+				Joins("left join objects on buckets.bucket_id = objects.bucket_id").
+				Where("objects.update_at >= ? and objects.update_at <= ? and objects.removed = ? and "+
+					"((objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
+					startBlockNumber, endBlockNumber, true).
+				Limit(DeletedObjectsDefaultSize).
+				Order("objects.update_at, objects.object_id asc").
+				Find(&deletedObjectsLists.PrimarySPObjects).Error
+		} else {
+			errPrimarySP = b.db.Table((&Bucket{}).TableName()).
+				Select("objects.*").
+				Joins("left join objects on buckets.bucket_id = objects.bucket_id").
+				Where("objects.update_at >= ? and objects.update_at <= ? and objects.removed = ? and "+
+					"((objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ')) and "+
+					"primary_sp_address = ?",
+					startBlockNumber, endBlockNumber, true, common.HexToAddress(spOperatorAddress)).
+				Limit(DeletedObjectsDefaultSize).
+				Order("objects.update_at, objects.object_id asc").
+				Find(&deletedObjectsLists.PrimarySPObjects).Error
+			errSecondarySPs = b.db.Table((&Bucket{}).TableName()).
+				Select("objects.*").
+				Joins("left join objects on buckets.bucket_id = objects.bucket_id").
+				Where("objects.update_at >= ? and objects.update_at <= ? and objects.removed = ? and "+
+					"((objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ')) and "+
+					"secondary_sp_addresses like ?",
+					startBlockNumber, endBlockNumber, true, "%"+spOperatorAddress+"%").
+				Limit(DeletedObjectsDefaultSize).
+				Order("objects.update_at, objects.object_id asc").
+				Find(&deletedObjectsLists.PrimarySPObjects).Error
+		}
 	}
-	err = b.db.Table((&Bucket{}).TableName()).
-		Select("objects.*").
-		Joins("left join objects on buckets.bucket_id = objects.bucket_id").
-		Where("objects.update_at >= ? and objects.update_at <= ? and objects.removed = ? and "+
-			"((objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
-			startBlockNumber, endBlockNumber, true).
-		Limit(DeletedObjectsDefaultSize).
-		Order("objects.update_at, objects.object_id asc").
-		Find(&objects).Error
-	return objects, err
+
+	if errPrimarySP != nil {
+		err = errPrimarySP
+	}
+	if errSecondarySPs != nil {
+		err = errSecondarySPs
+	}
+	return deletedObjectsLists, err
 }
 
 // GetObjectByName get object info by an object name

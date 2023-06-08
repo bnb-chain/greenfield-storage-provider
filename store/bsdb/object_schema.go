@@ -67,3 +67,8 @@ type Object struct {
 func (o *Object) TableName() string {
 	return ObjectTableName
 }
+
+type DeletedObjectsLists struct {
+	PrimarySPObjects    []*Object
+	SecondarySPsObjects []*Object
+}

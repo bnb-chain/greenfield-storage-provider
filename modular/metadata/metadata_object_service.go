@@ -61,32 +61,7 @@ func (r *MetadataModular) GfSpListObjectsByBucketName(ctx context.Context, req *
 		if object.ResultType == "common_prefix" {
 			commonPrefixes = append(commonPrefixes, object.PathName)
 		} else {
-			res = append(res, &types.Object{
-				ObjectInfo: &storage_types.ObjectInfo{
-					Owner:                object.Owner.String(),
-					BucketName:           object.BucketName,
-					ObjectName:           object.ObjectName,
-					Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
-					PayloadSize:          object.PayloadSize,
-					ContentType:          object.ContentType,
-					CreateAt:             object.CreateTime,
-					ObjectStatus:         storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-					RedundancyType:       storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-					SourceType:           storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
-					Checksums:            object.Checksums,
-					SecondarySpAddresses: object.SecondarySpAddresses,
-					Visibility:           storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
-				},
-				LockedBalance: object.LockedBalance.String(),
-				Removed:       object.Removed,
-				UpdateAt:      object.UpdateAt,
-				DeleteAt:      object.DeleteAt,
-				DeleteReason:  object.DeleteReason,
-				Operator:      object.Operator.String(),
-				CreateTxHash:  object.CreateTxHash.String(),
-				UpdateTxHash:  object.UpdateTxHash.String(),
-				SealTxHash:    object.SealTxHash.String(),
-			})
+			res = append(res, convertObject(object.Object))
 		}
 	}
 
@@ -120,45 +95,24 @@ func (r *MetadataModular) GfSpListDeletedObjectsByBlockNumberRange(ctx context.C
 		endBlockNumber = req.EndBlockNumber
 	}
 
-	objects, err := r.baseApp.GfBsDB().ListDeletedObjectsByBlockNumberRange(req.StartBlockNumber, endBlockNumber, req.IncludePrivate)
+	objectLists, err := r.baseApp.GfBsDB().ListDeletedObjectsByBlockNumberRange(req.StartBlockNumber, endBlockNumber, req.IncludePrivate, req.SpOperatorAddress)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list deleted objects by block number range", "error", err)
 		return nil, err
 	}
 
-	res := make([]*types.Object, 0)
-	for _, object := range objects {
-		res = append(res, &types.Object{
-			ObjectInfo: &storage_types.ObjectInfo{
-				Owner:                object.Owner.String(),
-				BucketName:           object.BucketName,
-				ObjectName:           object.ObjectName,
-				Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
-				PayloadSize:          object.PayloadSize,
-				ContentType:          object.ContentType,
-				CreateAt:             object.CreateTime,
-				ObjectStatus:         storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-				RedundancyType:       storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-				SourceType:           storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
-				Checksums:            object.Checksums,
-				SecondarySpAddresses: object.SecondarySpAddresses,
-				Visibility:           storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
-			},
-			LockedBalance: object.LockedBalance.String(),
-			Removed:       object.Removed,
-			UpdateAt:      object.UpdateAt,
-			DeleteAt:      object.DeleteAt,
-			DeleteReason:  object.DeleteReason,
-			Operator:      object.Operator.String(),
-			CreateTxHash:  object.CreateTxHash.String(),
-			UpdateTxHash:  object.UpdateTxHash.String(),
-			SealTxHash:    object.SealTxHash.String(),
-		})
+	resPrimarySPObjects, resSecondarySPsObjects := make([]*types.Object, 0), make([]*types.Object, 0)
+	for _, object := range objectLists.PrimarySPObjects {
+		resPrimarySPObjects = append(resPrimarySPObjects, convertObject(object))
+	}
+	for _, object := range objectLists.SecondarySPsObjects {
+		resSecondarySPsObjects = append(resSecondarySPsObjects, convertObject(object))
 	}
 
 	resp = &types.GfSpListDeletedObjectsByBlockNumberRangeResponse{
-		Objects:        res,
-		EndBlockNumber: endBlockNumber,
+		PrimarySpObjects:    resPrimarySPObjects,
+		SecondarySpsObjects: resSecondarySPsObjects,
+		EndBlockNumber:      endBlockNumber,
 	}
 	log.CtxInfow(ctx, "succeed to list deleted objects by block number range")
 	return resp, nil
@@ -184,33 +138,39 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 	}
 
 	if object != nil {
-		res = &types.Object{
-			ObjectInfo: &storage_types.ObjectInfo{
-				Owner:                object.Owner.String(),
-				BucketName:           object.BucketName,
-				ObjectName:           object.ObjectName,
-				Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
-				PayloadSize:          object.PayloadSize,
-				ContentType:          object.ContentType,
-				CreateAt:             object.CreateTime,
-				ObjectStatus:         storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-				RedundancyType:       storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-				SourceType:           storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
-				Checksums:            object.Checksums,
-				SecondarySpAddresses: object.SecondarySpAddresses,
-				Visibility:           storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
-			},
-			LockedBalance: object.LockedBalance.String(),
-			Removed:       object.Removed,
-			DeleteAt:      object.DeleteAt,
-			DeleteReason:  object.DeleteReason,
-			Operator:      object.Operator.String(),
-			CreateTxHash:  object.CreateTxHash.String(),
-			UpdateTxHash:  object.UpdateTxHash.String(),
-			SealTxHash:    object.SealTxHash.String(),
-		}
+		res = convertObject(object)
 	}
 	resp = &types.GfSpGetObjectMetaResponse{Object: res}
 	log.CtxInfo(ctx, "succeed to get object meta")
 	return resp, nil
+}
+
+func convertObject(object *model.Object) *types.Object {
+	res := &types.Object{
+		ObjectInfo: &storage_types.ObjectInfo{
+			Owner:                object.Owner.String(),
+			BucketName:           object.BucketName,
+			ObjectName:           object.ObjectName,
+			Id:                   math.NewUintFromBigInt(object.ObjectID.Big()),
+			PayloadSize:          object.PayloadSize,
+			ContentType:          object.ContentType,
+			CreateAt:             object.CreateTime,
+			ObjectStatus:         storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
+			RedundancyType:       storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
+			SourceType:           storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+			Checksums:            object.Checksums,
+			SecondarySpAddresses: object.SecondarySpAddresses,
+			Visibility:           storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+		},
+		LockedBalance: object.LockedBalance.String(),
+		Removed:       object.Removed,
+		UpdateAt:      object.UpdateAt,
+		DeleteAt:      object.DeleteAt,
+		DeleteReason:  object.DeleteReason,
+		Operator:      object.Operator.String(),
+		CreateTxHash:  object.CreateTxHash.String(),
+		UpdateTxHash:  object.UpdateTxHash.String(),
+		SealTxHash:    object.SealTxHash.String(),
+	}
+	return res
 }
