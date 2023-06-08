@@ -39,3 +39,9 @@ func SourceTypeFilter(sourceType string) func(db *gorm.DB) *gorm.DB {
 		return db.Where("source_type = ?", sourceType)
 	}
 }
+
+func RemovedFilter(removed bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("removed = ?", removed)
+	}
+}
