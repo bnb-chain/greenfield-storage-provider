@@ -535,6 +535,12 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
+	if len(objectIDs.IDs) == 0 {
+		log.Errorf("failed to check ids", "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
 	objects, err = g.baseApp.GfSpClient().ListObjectsByObjectID(reqCtx.Context(), objectIDs.IDs, false)
 	if err != nil {
 		log.Errorf("failed to list objects by ids", "error", err)
@@ -577,6 +583,12 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 	err = json.NewDecoder(r.Body).Decode(&bucketIDs)
 	if err != nil {
 		log.Errorf("failed to parse bucket ids", "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if len(bucketIDs.IDs) == 0 {
+		log.Errorf("failed to check ids", "error", err)
 		err = ErrInvalidQuery
 		return
 	}

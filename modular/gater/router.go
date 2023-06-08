@@ -29,8 +29,8 @@ const (
 	getObjectMetaRouterName               = "GetObjectMeta"
 	getBucketMetaRouterName               = "GetBucketMeta"
 	getGroupListRouterName                = "GetGroupList"
-	listBucketsByBucketID                 = "ListBucketsByBucketID"
-	listObjectsByObjectID                 = "ListObjectsByObjectID"
+	listBucketsByBucketIDRouterName       = "ListBucketsByBucketID"
+	listObjectsByObjectIDRouterName       = "ListObjectsByObjectID"
 )
 
 const (
@@ -105,12 +105,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Queries(GetGroupListGroupQuery, "").
 		HandlerFunc(g.getGroupListHandler)
 	router.Path("/").
-		Name(listObjectsByObjectID).
+		Name(listObjectsByObjectIDRouterName).
 		Methods(http.MethodPost).
 		Queries(ListObjectsByObjectID, "").
 		HandlerFunc(g.listObjectsByObjectIDHandler)
 	router.Path("/").
-		Name(listBucketsByBucketID).
+		Name(listBucketsByBucketIDRouterName).
 		Methods(http.MethodPost).
 		Queries(ListBucketsByBucketID, "").
 		HandlerFunc(g.listBucketsByBucketIDHandler)

@@ -217,6 +217,21 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: getGroupListRouterName,
 		},
+		{
+			name:             "List objects by bucket id",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              scheme + testDomain + "/?" + ListObjectsByObjectID,
+			shouldMatch:      true,
+			wantedRouterName: listObjectsByObjectIDRouterName,
+		}, {
+			name:             "List buckets by bucket id",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              scheme + testDomain + "/?" + ListBucketsByBucketID,
+			shouldMatch:      true,
+			wantedRouterName: listBucketsByBucketIDRouterName,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
