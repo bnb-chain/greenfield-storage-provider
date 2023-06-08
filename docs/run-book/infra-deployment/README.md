@@ -25,7 +25,7 @@ and K8S deployment level.
      3. Alert channels
 
 ## High Level Architecture
-![1](imgs/aws-infra-app-component.png "AWS Infra and SP Components")
+![1](../../asset/04-aws-infra-app-component.png "AWS Infra and SP Components")
 
 
 ## Steps:
