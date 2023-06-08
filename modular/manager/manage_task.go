@@ -294,7 +294,7 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 		return nil
 	} else {
-    metrics.SealObjectFailedCounter.WithLabelValues(m.Name()).Inc()
+		metrics.SealObjectFailedCounter.WithLabelValues(m.Name()).Inc()
 		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:         handleTask.GetObjectInfo().Id.Uint64(),
 			TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
