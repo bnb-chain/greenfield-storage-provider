@@ -185,6 +185,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 		return ErrRepeatedTask
 	}
 	if task.GetSealed() {
+		metrics.SealObjectSucceedCounter.WithLabelValues(m.Name()).Inc()
 		log.CtxDebugw(ctx, "replicate piece object task has combined seal object task")
 		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:  task.GetObjectInfo().Id.Uint64(),
@@ -261,6 +262,7 @@ func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.Seal
 		log.CtxErrorw(ctx, "handler error seal object task", "task_info", task.Info(), "error", task.Error())
 		return m.handleFailedSealObjectTask(ctx, task)
 	}
+	metrics.SealObjectSucceedCounter.WithLabelValues(m.Name()).Inc()
 	m.sealQueue.PopByKey(task.Key())
 	if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 		ObjectID:  task.GetObjectInfo().Id.Uint64(),
@@ -292,13 +294,13 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 		return nil
 	} else {
+    metrics.SealObjectFailedCounter.WithLabelValues(m.Name()).Inc()
 		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:         handleTask.GetObjectInfo().Id.Uint64(),
 			TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
 			ErrorDescription: "exceed_retry",
 		}); err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "task_info", handleTask.Info(), "error", err)
-			return ErrGfSpDB
 		}
 		log.CtxWarnw(ctx, "delete expired seal object task", "task_info", handleTask.Info())
 	}
