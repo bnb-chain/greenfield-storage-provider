@@ -218,14 +218,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: getGroupListRouterName,
 		},
 		{
-			name:             "List objects by bucket id",
+			name:             "List objects by object ids router",
 			router:           gwRouter,
 			method:           http.MethodPost,
 			url:              scheme + testDomain + "/?" + ListObjectsByObjectID,
 			shouldMatch:      true,
 			wantedRouterName: listObjectsByObjectIDRouterName,
 		}, {
-			name:             "List buckets by bucket id",
+			name:             "List buckets by bucket ids router",
 			router:           gwRouter,
 			method:           http.MethodPost,
 			url:              scheme + testDomain + "/?" + ListBucketsByBucketID,

@@ -126,7 +126,7 @@ func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool)
 	)
 
 	if !includeRemoved {
-		filters = append(filters, RemovedFilter())
+		filters = append(filters, RemovedFilter(includeRemoved))
 	}
 
 	err = b.db.Table((&Object{}).TableName()).
