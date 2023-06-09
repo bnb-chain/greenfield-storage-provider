@@ -391,3 +391,62 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 	}
 	return resp, nil
 }
+
+// GfSpListBucketsByBucketID list buckets by bucket ids
+func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *types.GfSpListBucketsByBucketIDRequest) (resp *types.GfSpListBucketsByBucketIDResponse, err error) {
+	var (
+		buckets    []*model.Bucket
+		ids        []common.Hash
+		bucketsMap map[uint64]*types.Bucket
+	)
+
+	ids = make([]common.Hash, len(req.BucketIds))
+	for i, id := range req.BucketIds {
+		ids[i] = common.BigToHash(math.NewUint(id).BigInt())
+	}
+
+	ctx = log.Context(ctx, req)
+	buckets, err = r.baseApp.GfBsDB().ListBucketsByBucketID(ids, req.IncludeRemoved)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list buckets by bucket ids", "error", err)
+		return nil, err
+	}
+
+	bucketsMap = make(map[uint64]*types.Bucket)
+	for _, id := range req.BucketIds {
+		bucketsMap[id] = nil
+	}
+
+	for _, bucket := range buckets {
+		bucketsMap[bucket.BucketID.Big().Uint64()] = &types.Bucket{
+			BucketInfo: &storage_types.BucketInfo{
+				Owner:            bucket.Owner.String(),
+				BucketName:       bucket.BucketName,
+				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:       storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:         bucket.CreateTime,
+				PaymentAddress:   bucket.PaymentAddress.String(),
+				PrimarySpAddress: bucket.PrimarySpAddress.String(),
+				ChargedReadQuota: bucket.ChargedReadQuota,
+				Visibility:       storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				BillingInfo: storage_types.BillingInfo{
+					PriceTime:              0,
+					TotalChargeSize:        0,
+					SecondarySpObjectsSize: nil,
+				},
+				BucketStatus: storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+			},
+			Removed:      bucket.Removed,
+			DeleteAt:     bucket.DeleteAt,
+			DeleteReason: bucket.DeleteReason,
+			Operator:     bucket.Operator.String(),
+			CreateTxHash: bucket.CreateTxHash.String(),
+			UpdateTxHash: bucket.UpdateTxHash.String(),
+			UpdateAt:     bucket.UpdateAt,
+			UpdateTime:   bucket.UpdateTime,
+		}
+	}
+	resp = &types.GfSpListBucketsByBucketIDResponse{Buckets: bucketsMap}
+	log.CtxInfow(ctx, "succeed to list buckets by bucket ids")
+	return resp, nil
+}

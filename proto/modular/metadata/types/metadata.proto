@@ -373,6 +373,34 @@ message GfSpGetGroupListResponse {
   int64 count = 2;
 }
 
+// GfSpGetBucketByBucketIDRequest is request type for the GfSpListBucketsByBucketID RPC method
+message GfSpListBucketsByBucketIDRequest {
+  // bucket_id is the list of unique identifier for buckets
+  repeated uint64 bucket_ids = 1;
+  // include_removed indicates whether this request can get the removed buckets information
+  bool include_removed = 2;
+}
+
+// GfSpGetBucketByBucketIDResponse is response type for the GfSpListBucketsByBucketID RPC method.
+message GfSpListBucketsByBucketIDResponse {
+  // buckets defines the information of a bucket map
+  map<uint64, Bucket> buckets = 1;
+}
+
+// GfSpListBucketsByBucketIDRequest is request type for the GfSpListObjectsByObjectID RPC method
+message GfSpListObjectsByObjectIDRequest {
+  // object_ids is the list of unique identifier for objects
+  repeated uint64 object_ids = 1;
+  // include_removed indicates whether this request can get the removed objects information
+  bool include_removed = 2;
+}
+
+// GfSpListObjectsByBucketIDRequest is response type for the GfSpListObjectsByObjectID RPC method.
+message GfSpListObjectsByObjectIDResponse {
+  // objects defines the information of a object map
+  map<uint64, Object> objects = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -391,4 +419,6 @@ service GfSpMetadataService {
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}
   rpc GfSpGetGroupList(GfSpGetGroupListRequest) returns (GfSpGetGroupListResponse) {}
+  rpc GfSpListBucketsByBucketID(GfSpListBucketsByBucketIDRequest) returns (GfSpListBucketsByBucketIDResponse) {}
+  rpc GfSpListObjectsByObjectID(GfSpListObjectsByObjectIDRequest) returns (GfSpListObjectsByObjectIDResponse) {}
 }
