@@ -6,7 +6,9 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -75,9 +77,11 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if reqCtx.NeedVerifyAuthorizer() {
+			startVerifyAuthorize := time.Now()
 			authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(
 				reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
 				reqCtx.Account(), createBucketApproval.GetBucketName(), "")
+			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthorize).Seconds())
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 				return
@@ -91,7 +95,9 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task := &gfsptask.GfSpCreateBucketApprovalTask{}
 		task.InitApprovalCreateBucketTask(&createBucketApproval, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalCreateBucketTask
+		startAskCreateBucketApproval := time.Now()
 		approved, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
+		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("ask_create_bucket_approval").Observe(time.Since(startAskCreateBucketApproval).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask create bucket approval", "error", err)
 			return
@@ -117,10 +123,12 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if reqCtx.NeedVerifyAuthorizer() {
+			startVerifyAuthorize := time.Now()
 			authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(
 				reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
 				reqCtx.Account(), createObjectApproval.GetBucketName(),
 				createObjectApproval.GetObjectName())
+			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthorize).Seconds())
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 				return
@@ -134,7 +142,9 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task := &gfsptask.GfSpCreateObjectApprovalTask{}
 		task.InitApprovalCreateObjectTask(&createObjectApproval, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask
+		startAskCreateObjectApproval := time.Now()
 		approved, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
+		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("ask_create_object_approval").Observe(time.Since(startAskCreateObjectApproval).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
 			return
