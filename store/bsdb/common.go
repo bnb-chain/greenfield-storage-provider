@@ -46,10 +46,10 @@ const (
 
 // ObjectIDs represents the request of list object by ids
 type ObjectIDs struct {
-	IDs []int64 `json:"ids"`
+	IDs []uint64 `json:"ids"`
 }
 
 // BucketIDs represents the request of list bucket by ids
 type BucketIDs struct {
-	IDs []int64 `json:"ids"`
+	IDs []uint64 `json:"ids"`
 }

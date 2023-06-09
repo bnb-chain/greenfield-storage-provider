@@ -511,11 +511,13 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 // listObjectsByObjectIDHandler list objects by object ids
 func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err       error
-		buf       bytes.Buffer
-		objects   []*types.Object
-		objectIDs bsdb.ObjectIDs
-		reqCtx    *RequestContext
+		err         error
+		buf         bytes.Buffer
+		objects     map[uint64]*types.Object
+		objectIDMap map[uint64]bool
+		ok          bool
+		objectIDs   bsdb.ObjectIDs
+		reqCtx      *RequestContext
 	)
 
 	defer func() {
@@ -542,6 +544,17 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
+	objectIDMap = make(map[uint64]bool)
+	for _, id := range objectIDs.IDs {
+		if _, ok = objectIDMap[id]; ok {
+			// repeat id keys in request
+			log.Errorf("failed to check ids", "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		objectIDMap[id] = true
+	}
+
 	objects, err = g.baseApp.GfSpClient().ListObjectsByObjectID(reqCtx.Context(), objectIDs.IDs, false)
 	if err != nil {
 		log.Errorf("failed to list objects by ids", "error", err)
@@ -562,11 +575,13 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 // listBucketsByBucketIDHandler list buckets by bucket ids
 func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err       error
-		buf       bytes.Buffer
-		buckets   []*types.Bucket
-		bucketIDs bsdb.BucketIDs
-		reqCtx    *RequestContext
+		err         error
+		buf         bytes.Buffer
+		buckets     map[uint64]*types.Bucket
+		bucketIDMap map[uint64]bool
+		ok          bool
+		bucketIDs   bsdb.BucketIDs
+		reqCtx      *RequestContext
 	)
 
 	defer func() {
@@ -591,6 +606,17 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 		log.Errorf("failed to check ids", "error", err)
 		err = ErrInvalidQuery
 		return
+	}
+
+	bucketIDMap = make(map[uint64]bool)
+	for _, id := range bucketIDs.IDs {
+		if _, ok = bucketIDMap[id]; ok {
+			// repeat id keys in request
+			log.Errorf("failed to check ids", "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		bucketIDMap[id] = true
 	}
 
 	buckets, err = g.baseApp.GfSpClient().ListBucketsByBucketID(reqCtx.Context(), bucketIDs.IDs, false)

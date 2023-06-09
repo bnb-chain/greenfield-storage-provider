@@ -219,14 +219,14 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 // GfSpListObjectsByObjectID list objects by object ids
 func (r *MetadataModular) GfSpListObjectsByObjectID(ctx context.Context, req *types.GfSpListObjectsByObjectIDRequest) (resp *types.GfSpListObjectsByObjectIDResponse, err error) {
 	var (
-		objects []*model.Object
-		res     []*types.Object
-		ids     []common.Hash
+		objects    []*model.Object
+		ids        []common.Hash
+		objectsMap map[uint64]*types.Object
 	)
 
 	ids = make([]common.Hash, len(req.ObjectIds))
 	for i, id := range req.ObjectIds {
-		ids[i] = common.BigToHash(math.NewInt(id).BigInt())
+		ids[i] = common.BigToHash(math.NewUint(id).BigInt())
 	}
 
 	objects, err = r.baseApp.GfBsDB().ListObjectsByObjectID(ids, req.IncludeRemoved)
@@ -235,9 +235,13 @@ func (r *MetadataModular) GfSpListObjectsByObjectID(ctx context.Context, req *ty
 		return nil, err
 	}
 
-	res = make([]*types.Object, len(objects))
-	for i, object := range objects {
-		res[i] = &types.Object{
+	objectsMap = make(map[uint64]*types.Object)
+	for _, id := range req.ObjectIds {
+		objectsMap[id] = nil
+	}
+
+	for _, object := range objects {
+		objectsMap[object.ObjectID.Big().Uint64()] = &types.Object{
 			ObjectInfo: &storage_types.ObjectInfo{
 				Owner:                object.Owner.String(),
 				BucketName:           object.BucketName,
@@ -263,8 +267,7 @@ func (r *MetadataModular) GfSpListObjectsByObjectID(ctx context.Context, req *ty
 			SealTxHash:    object.SealTxHash.String(),
 		}
 	}
-
-	resp = &types.GfSpListObjectsByObjectIDResponse{Objects: res}
+	resp = &types.GfSpListObjectsByObjectIDResponse{Objects: objectsMap}
 	log.CtxInfo(ctx, "succeed to list objects by object ids")
 	return resp, nil
 }

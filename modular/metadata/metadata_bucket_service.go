@@ -395,14 +395,14 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 // GfSpListBucketsByBucketID list buckets by bucket ids
 func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *types.GfSpListBucketsByBucketIDRequest) (resp *types.GfSpListBucketsByBucketIDResponse, err error) {
 	var (
-		buckets []*model.Bucket
-		res     []*types.Bucket
-		ids     []common.Hash
+		buckets    []*model.Bucket
+		ids        []common.Hash
+		bucketsMap map[uint64]*types.Bucket
 	)
 
 	ids = make([]common.Hash, len(req.BucketIds))
 	for i, id := range req.BucketIds {
-		ids[i] = common.BigToHash(math.NewInt(id).BigInt())
+		ids[i] = common.BigToHash(math.NewUint(id).BigInt())
 	}
 
 	ctx = log.Context(ctx, req)
@@ -412,9 +412,13 @@ func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *ty
 		return nil, err
 	}
 
-	res = make([]*types.Bucket, len(buckets))
-	for i, bucket := range buckets {
-		res[i] = &types.Bucket{
+	bucketsMap = make(map[uint64]*types.Bucket)
+	for _, id := range req.BucketIds {
+		bucketsMap[id] = nil
+	}
+
+	for _, bucket := range buckets {
+		bucketsMap[bucket.BucketID.Big().Uint64()] = &types.Bucket{
 			BucketInfo: &storage_types.BucketInfo{
 				Owner:            bucket.Owner.String(),
 				BucketName:       bucket.BucketName,
@@ -442,8 +446,7 @@ func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *ty
 			UpdateTime:   bucket.UpdateTime,
 		}
 	}
-
-	resp = &types.GfSpListBucketsByBucketIDResponse{Buckets: res}
+	resp = &types.GfSpListBucketsByBucketIDResponse{Buckets: bucketsMap}
 	log.CtxInfow(ctx, "succeed to list buckets by bucket ids")
 	return resp, nil
 }
