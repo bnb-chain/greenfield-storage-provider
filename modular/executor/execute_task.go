@@ -253,7 +253,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		task.SetLastDeletedObjectId(currentGCObjectID)
 		metrics.GCObjectCounter.WithLabelValues(e.Name()).Inc()
 		if taskIsCanceled = reportProgress(); taskIsCanceled {
-			log.CtxErrorw(ctx, "gc object task has been canceled", "task_info", task.Info())
+			log.CtxErrorw(ctx, "gc object task has been canceled", "current_gc_object_info", objectInfo, "task_info", task.Info())
 			return
 		}
 		log.CtxDebugw(ctx, "succeed to gc an object", "object_info", objectInfo, "deleted_at_block_id", currentGCBlockID)
