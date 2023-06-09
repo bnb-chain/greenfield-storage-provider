@@ -23,10 +23,11 @@ import (
 )
 
 const (
-	MaximumGetGroupListLimit  = 1000
-	MaximumGetGroupListOffset = 100000
-	DefaultGetGroupListLimit  = 50
-	DefaultGetGroupListOffset = 0
+	MaximumGetGroupListLimit         = 1000
+	MaximumGetGroupListOffset        = 100000
+	MaximumListObjectsAndBucketsSize = 1000
+	DefaultGetGroupListLimit         = 50
+	DefaultGetGroupListOffset        = 0
 )
 
 // getUserBucketsHandler handle get object request
@@ -511,7 +512,7 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err       error
-		b         bytes.Buffer
+		buf       bytes.Buffer
 		objects   []*types.Object
 		objectIDs bsdb.ObjectIDs
 		reqCtx    *RequestContext
@@ -535,7 +536,7 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if len(objectIDs.IDs) == 0 {
+	if len(objectIDs.IDs) == 0 || len(objectIDs.IDs) > MaximumListObjectsAndBucketsSize {
 		log.Errorf("failed to check ids", "error", err)
 		err = ErrInvalidQuery
 		return
@@ -546,24 +547,23 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 		log.Errorf("failed to list objects by ids", "error", err)
 		return
 	}
-
 	grpcResponse := &types.GfSpListObjectsByObjectIDResponse{Objects: objects}
 
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	if err = m.Marshal(&buf, grpcResponse); err != nil {
 		log.Errorf("failed to list objects by ids", "error", err)
 		return
 	}
 
 	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Write(buf.Bytes())
 }
 
 // listBucketsByBucketIDHandler list buckets by bucket ids
 func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err       error
-		b         bytes.Buffer
+		buf       bytes.Buffer
 		buckets   []*types.Bucket
 		bucketIDs bsdb.BucketIDs
 		reqCtx    *RequestContext
@@ -587,7 +587,7 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if len(bucketIDs.IDs) == 0 {
+	if len(bucketIDs.IDs) == 0 || len(bucketIDs.IDs) > MaximumListObjectsAndBucketsSize {
 		log.Errorf("failed to check ids", "error", err)
 		err = ErrInvalidQuery
 		return
@@ -598,15 +598,14 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 		log.Errorf("failed to list buckets by ids", "error", err)
 		return
 	}
-
 	grpcResponse := &types.GfSpListBucketsByBucketIDResponse{Buckets: buckets}
 
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	if err = m.Marshal(&buf, grpcResponse); err != nil {
 		log.Errorf("failed to list buckets by ids", "error", err)
 		return
 	}
 
 	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Write(buf.Bytes())
 }

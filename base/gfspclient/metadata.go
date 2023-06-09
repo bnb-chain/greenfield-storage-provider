@@ -405,11 +405,7 @@ func (s *GfSpClient) GetGroupList(
 	return resp.Groups, resp.Count, nil
 }
 
-func (s *GfSpClient) ListBucketsByBucketID(
-	ctx context.Context,
-	bucketIDs []int64,
-	includeRemoved bool,
-	opts ...grpc.DialOption) ([]*types.Bucket, error) {
+func (s *GfSpClient) ListBucketsByBucketID(ctx context.Context, bucketIDs []int64, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Bucket, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -428,11 +424,7 @@ func (s *GfSpClient) ListBucketsByBucketID(
 	return resp.Buckets, nil
 }
 
-func (s *GfSpClient) ListObjectsByObjectID(
-	ctx context.Context,
-	objectIDs []int64,
-	includeRemoved bool,
-	opts ...grpc.DialOption) ([]*types.Object, error) {
+func (s *GfSpClient) ListObjectsByObjectID(ctx context.Context, objectIDs []int64, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Object, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
