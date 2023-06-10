@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -156,18 +157,25 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 
 func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.GCObjectTask) {
 	var (
-		err                error
-		waitingGCObjects   []*types.Object
-		currentGCBlockID   uint64
-		currentGCObjectID  uint64
-		responseEndBlockID uint64
-		storageParams      *storagetypes.Params
-		gcObjectNumber     int
-		tryAgainLater      bool
-		taskIsCanceled     bool
-		hasNoObject        bool
-		isSucceed          bool
+		err                       error
+		waitingGCPrimaryObjects   []*types.Object
+		waitingGCSecondaryObjects []*types.Object
+		currentGCBlockID          uint64
+		currentGCObjectID         uint64
+		responseEndBlockID        uint64
+		storageParams             *storagetypes.Params
+		gcPrimaryObjectNumber     int
+		gcSecondaryObjectNumber   int
+		tryAgainLater             bool
+		taskIsCanceled            bool
+		hasNoObject               bool
+		isSucceed                 bool
 	)
+	type GCObject struct {
+		IsPrimary  bool
+		ObjectMeta *types.Object
+	}
+	waitingGCObjects := make(map[uint64]GCObject)
 
 	reportProgress := func() bool {
 		reportErr := e.ReportTask(ctx, task)
@@ -185,14 +193,13 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		}
 		log.CtxDebugw(ctx, "gc object task",
 			"task_info", task.Info(), "is_succeed", isSucceed,
-			"response_end_block_id", responseEndBlockID, "waiting_gc_object_number", len(waitingGCObjects),
-			"has_gc_object_number", gcObjectNumber, "try_again_later", tryAgainLater,
-			"task_is_canceled", taskIsCanceled, "has_no_object", hasNoObject, "error", err)
+			"response_end_block_id", responseEndBlockID, "waiting_gc_primary_object_number", len(waitingGCPrimaryObjects),
+			"has_gc_primary_object_number", gcPrimaryObjectNumber, "waiting_gc_secondary_object_number",
+			len(waitingGCSecondaryObjects), "has_gc_secondary_object_number", gcSecondaryObjectNumber,
+			"try_again_later", tryAgainLater, "task_is_canceled", taskIsCanceled, "has_no_object", hasNoObject, "error", err)
 	}()
 
-	// TODO: ListDeletedObjectsByBlockNumberRange has been updated to return primary_sp_objects and secondary_sps_objects
-	// please modify the usage accordingly here
-	if waitingGCObjects, _, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
+	if waitingGCPrimaryObjects, waitingGCSecondaryObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
 		ctx, e.baseApp.OperateAddress(), task.GetStartBlockNumber(),
 		task.GetEndBlockNumber(), true); err != nil {
 		log.CtxErrorw(ctx, "failed to query deleted object list", "task_info", task.Info(), "error", err)
@@ -204,12 +211,31 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			"response_end_block_id", responseEndBlockID, "task_info", task.Info())
 		return
 	}
+	for _, primaryObject := range waitingGCPrimaryObjects {
+		waitingGCObjects[primaryObject.ObjectInfo.Id.Uint64()] = GCObject{
+			IsPrimary:  true,
+			ObjectMeta: primaryObject,
+		}
+	}
+	for _, secondaryObject := range waitingGCSecondaryObjects {
+		waitingGCObjects[secondaryObject.ObjectInfo.Id.Uint64()] = GCObject{
+			IsPrimary:  false,
+			ObjectMeta: secondaryObject,
+		}
+	}
 	if len(waitingGCObjects) == 0 {
 		hasNoObject = true
 		return
 	}
+	var gcObjectIDs []uint64
+	for k := range waitingGCObjects {
+		gcObjectIDs = append(gcObjectIDs, k)
+	}
+	sort.Slice(gcObjectIDs, func(i, j int) bool { return gcObjectIDs[i] < gcObjectIDs[j] })
 
-	for _, object := range waitingGCObjects {
+	for _, objectID := range gcObjectIDs {
+		object := waitingGCObjects[objectID].ObjectMeta
+		isPrimary := waitingGCObjects[objectID].IsPrimary
 		if storageParams, err = e.baseApp.Consensus().QueryStorageParamsByTimestamp(
 			context.Background(), object.GetObjectInfo().GetCreateAt()); err != nil {
 			log.Errorw("failed to query storage params", "task_info", task.Info(), "error", err)
@@ -227,28 +253,34 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		}
 		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(
 			objectInfo.GetPayloadSize(), storageParams.VersionedParams.GetMaxSegmentSize())
-		for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
-			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(currentGCObjectID, segIdx)
-			// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
-			deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-			log.CtxDebugw(ctx, "delete the primary sp pieces",
-				"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
-		}
-		for rIdx, address := range objectInfo.GetSecondarySpAddresses() {
-			if strings.Compare(e.baseApp.OperateAddress(), address) == 0 {
-				for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
-					pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
-					if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
-						pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
+		if isPrimary {
+			for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
+				pieceKey := e.baseApp.PieceOp().SegmentPieceKey(currentGCObjectID, segIdx)
+				// ignore this delete api error.
+				deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+				log.CtxDebugw(ctx, "delete the primary sp pieces",
+					"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
+			}
+			gcPrimaryObjectNumber++
+		} else {
+			for rIdx, address := range objectInfo.GetSecondarySpAddresses() {
+				if strings.Compare(e.baseApp.OperateAddress(), address) == 0 {
+					for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
+						pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
+						if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
+							pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
+						}
+						// ignore this delete api error.
+						deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+						log.CtxDebugw(ctx, "delete the secondary sp pieces",
+							"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 					}
-					// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
-					deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-					log.CtxDebugw(ctx, "delete the secondary sp pieces",
-						"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 				}
 			}
+			gcSecondaryObjectNumber++
 		}
-		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
+
+		// ignore this delete api error.
 		deleteErr := e.baseApp.GfSpDB().DeleteObjectIntegrity(objectInfo.Id.Uint64())
 		log.CtxDebugw(ctx, "delete the object integrity meta", "object_info", objectInfo, "error", deleteErr)
 		task.SetCurrentBlockNumber(currentGCBlockID)
@@ -258,8 +290,8 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			log.CtxErrorw(ctx, "gc object task has been canceled", "task_info", task.Info())
 			return
 		}
-		log.CtxDebugw(ctx, "succeed to gc an object", "object_info", objectInfo, "deleted_at_block_id", currentGCBlockID)
-		gcObjectNumber++
+		log.CtxDebugw(ctx, "succeed to gc an object", "object_info", objectInfo, "is_primary", isPrimary,
+			"deleted_at_block_id", currentGCBlockID)
 	}
 	isSucceed = true
 }
