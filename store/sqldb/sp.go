@@ -10,7 +10,6 @@ import (
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // UpdateAllSp update(maybe overwrite) all sp info in db
@@ -29,7 +28,7 @@ func (s *SpDBImpl) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 				return err
 			}
 		} else { // update
-			result = s.db.Model(&GCObjectTaskTable{}).
+			result = s.db.Model(&SpInfoTable{}).
 				Where("operator_address = ? and is_own = false", value.GetOperatorAddress()).Updates(&SpInfoTable{
 				OperatorAddress: value.GetOperatorAddress(),
 				IsOwn:           false,
@@ -313,56 +312,6 @@ func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 		result := s.db.Model(&SpInfoTable{}).Where("is_own = true").Updates(insertRecord)
 		if result.Error != nil {
 			return fmt.Errorf("failed to update own sp record in sp info table: %s", result.Error)
-		}
-		return nil
-	}
-}
-
-// GetStorageParams query storage params in db
-func (s *SpDBImpl) GetStorageParams() (*storagetypes.Params, error) {
-	queryReturn := &StorageParamsTable{}
-	result := s.db.Last(queryReturn)
-	if result.Error != nil {
-		return nil, fmt.Errorf("failed to query storage params table: %s", result.Error)
-	}
-	return &storagetypes.Params{
-		VersionedParams: storagetypes.VersionedParams{
-			MaxSegmentSize:          queryReturn.MaxSegmentSize,
-			RedundantDataChunkNum:   queryReturn.RedundantDataChunkNum,
-			RedundantParityChunkNum: queryReturn.RedundantParityChunkNum,
-		},
-
-		MaxPayloadSize: queryReturn.MaxPayloadSize,
-	}, nil
-}
-
-// SetStorageParams set(maybe overwrite) storage params to db
-func (s *SpDBImpl) SetStorageParams(params *storagetypes.Params) error {
-	queryReturn := &StorageParamsTable{}
-	result := s.db.Last(queryReturn)
-	recordNotFound := errors.Is(result.Error, gorm.ErrRecordNotFound)
-	if result.Error != nil && !recordNotFound {
-		return fmt.Errorf("failed to query storage params table: %s", result.Error)
-	}
-
-	insertParamsRecord := &StorageParamsTable{
-		MaxSegmentSize:          params.VersionedParams.GetMaxSegmentSize(),
-		RedundantDataChunkNum:   params.VersionedParams.GetRedundantDataChunkNum(),
-		RedundantParityChunkNum: params.VersionedParams.GetRedundantParityChunkNum(),
-		MaxPayloadSize:          params.GetMaxPayloadSize(),
-	}
-	// if there is no records in StorageParamsTable, insert a new record
-	if recordNotFound {
-		result = s.db.Create(insertParamsRecord)
-		if result.Error != nil || result.RowsAffected != 1 {
-			return fmt.Errorf("failed to insert storage params table: %s", result.Error)
-		}
-		return nil
-	} else {
-		queryCondition := &StorageParamsTable{ID: queryReturn.ID}
-		result = s.db.Model(queryCondition).Updates(insertParamsRecord)
-		if result.Error != nil {
-			return fmt.Errorf("failed to update storage params table: %s", result.Error)
 		}
 		return nil
 	}

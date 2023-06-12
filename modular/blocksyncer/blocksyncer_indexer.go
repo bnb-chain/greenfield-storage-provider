@@ -3,7 +3,6 @@ package blocksyncer
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"sync/atomic"
 
@@ -24,18 +23,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-var (
-	// ErrBlockNotFound defines not found block data
-	ErrBlockNotFound = errors.New("failed to get block from map need retry")
-)
-
 func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string) parser.Indexer {
 	return &Impl{
-		codec:       codec,
-		Node:        proxy,
-		DB:          db,
-		Modules:     modules,
-		ServiceName: serviceName,
+		codec:          codec,
+		Node:           proxy,
+		DB:             db,
+		Modules:        modules,
+		ServiceName:    serviceName,
+		ProcessedQueue: make(chan uint64, 5),
 	}
 }
 
@@ -47,6 +42,7 @@ type Impl struct {
 
 	LatestBlockHeight atomic.Value
 	CatchUpFlag       atomic.Value
+	ProcessedQueue    chan uint64
 
 	ServiceName string
 }
@@ -154,6 +150,7 @@ func (i *Impl) Process(height uint64) error {
 	blockMap.Delete(heightKey)
 	eventMap.Delete(heightKey)
 	txMap.Delete(heightKey)
+	i.ProcessedQueue <- height
 
 	return nil
 }

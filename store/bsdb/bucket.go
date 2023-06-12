@@ -11,37 +11,46 @@ import (
 )
 
 // GetUserBuckets get buckets info by a user address
-func (b *BsDBImpl) GetUserBuckets(accountID common.Address) ([]*Bucket, error) {
+func (b *BsDBImpl) GetUserBuckets(accountID common.Address, includeRemoved bool) ([]*Bucket, error) {
 	var (
 		buckets []*Bucket
 		err     error
 	)
 
-	err = b.db.Table((&Bucket{}).TableName()).
-		Select("*").
-		Where("owner = ?", accountID).
-		Order("create_at desc").
-		Limit(GetUserBucketsLimitSize).
-		Find(&buckets).Error
+	if includeRemoved {
+		err = b.db.Table((&Bucket{}).TableName()).
+			Select("*").
+			Where("owner = ?", accountID).
+			Order("create_at desc").
+			Limit(GetUserBucketsLimitSize).
+			Find(&buckets).Error
+	} else {
+		err = b.db.Table((&Bucket{}).TableName()).
+			Select("*").
+			Where("owner = ? and removed = false", accountID).
+			Order("create_at desc").
+			Limit(GetUserBucketsLimitSize).
+			Find(&buckets).Error
+	}
 	return buckets, err
 }
 
 // GetBucketByName get buckets info by a bucket name
-func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*Bucket, error) {
+func (b *BsDBImpl) GetBucketByName(bucketName string, includePrivate bool) (*Bucket, error) {
 	var (
 		bucket *Bucket
 		err    error
 	)
 
-	if isFullList {
-		err = b.db.Take(&bucket, "bucket_name = ?", bucketName).Error
+	if includePrivate {
+		err = b.db.Take(&bucket, "bucket_name = ? and removed = false", bucketName).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return bucket, err
 	}
 
-	err = b.db.Take(&bucket, "bucket_name = ? and visibility = ?", bucketName, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
+	err = b.db.Take(&bucket, "bucket_name = ? and visibility = ? and removed = false", bucketName, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -49,7 +58,7 @@ func (b *BsDBImpl) GetBucketByName(bucketName string, isFullList bool) (*Bucket,
 }
 
 // GetBucketByID get buckets info by a bucket id
-func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, error) {
+func (b *BsDBImpl) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, error) {
 	var (
 		bucket       *Bucket
 		err          error
@@ -57,15 +66,15 @@ func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, erro
 	)
 
 	bucketIDHash = common.HexToHash(strconv.FormatInt(bucketID, 10))
-	if isFullList {
-		err = b.db.Take(&bucket, "bucket_id = ?", bucketIDHash).Error
+	if includePrivate {
+		err = b.db.Take(&bucket, "bucket_id = ? and removed = false", bucketIDHash).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return bucket, err
 	}
 
-	err = b.db.Take(&bucket, "bucket_id = ? and visibility = ?", bucketIDHash, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
+	err = b.db.Take(&bucket, "bucket_id = ? and visibility = ? and removed = false", bucketIDHash, types.VISIBILITY_TYPE_PUBLIC_READ.String()).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -73,13 +82,17 @@ func (b *BsDBImpl) GetBucketByID(bucketID int64, isFullList bool) (*Bucket, erro
 }
 
 // GetUserBucketsCount get buckets count by a user address
-func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address) (int64, error) {
+func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address, includeRemoved bool) (int64, error) {
 	var (
 		count int64
 		err   error
 	)
 
-	err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
+	if includeRemoved {
+		err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
+	} else {
+		err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ? and removed = false", accountID).Error
+	}
 	return count, err
 }
 
@@ -104,26 +117,46 @@ func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpAddress strin
 	return buckets, err
 }
 
-func (b *BsDBImpl) GetBucketMetaByName(bucketName string, isFullList bool) (*BucketFullMeta, error) {
+func (b *BsDBImpl) GetBucketMetaByName(bucketName string, includePrivate bool) (*BucketFullMeta, error) {
 	var (
 		bucketFullMeta *BucketFullMeta
 		err            error
 	)
 
-	if isFullList {
+	if includePrivate {
 		err = b.db.Table((&Bucket{}).TableName()).
 			Select("*").
 			Joins("left join stream_records on buckets.payment_address = stream_records.account").
-			Where("buckets.bucket_name = ?", bucketName).
+			Where("buckets.bucket_name = ? and buckets.removed = false", bucketName).
 			Take(&bucketFullMeta).Error
 	} else {
 		err = b.db.Table((&Bucket{}).TableName()).
 			Select("*").
 			Joins("left join stream_records on buckets.payment_address = stream_records.account").
-			Where("buckets.bucket_name = ? and "+
+			Where("buckets.bucket_name = ? and buckets.removed = false and"+
 				"buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'", bucketName).
 			Take(&bucketFullMeta).Error
 	}
 
 	return bucketFullMeta, err
+}
+
+// ListBucketsByBucketID list buckets by bucket ids
+func (b *BsDBImpl) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool) ([]*Bucket, error) {
+	var (
+		buckets []*Bucket
+		err     error
+		filters []func(*gorm.DB) *gorm.DB
+	)
+
+	if !includeRemoved {
+		filters = append(filters, RemovedFilter(includeRemoved))
+	}
+
+	err = b.db.Table((&Bucket{}).TableName()).
+		Select("*").
+		Where("bucket_id in (?)", ids).
+		Scopes(filters...).
+		Find(&buckets).Error
+	return buckets, err
 }

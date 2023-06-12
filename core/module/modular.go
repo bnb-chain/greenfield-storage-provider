@@ -149,7 +149,7 @@ type TaskExecutor interface {
 type Manager interface {
 	Modular
 	// DispatchTask dispatches the task to TaskExecutor module when it asks tasks.
-	// It will consider remaining resources when dispatching task.
+	// It will consider task remaining resources when dispatching task.
 	DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error)
 	// QueryTasks queries tasks that hold on manager by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)

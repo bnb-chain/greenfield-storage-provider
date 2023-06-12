@@ -120,6 +120,11 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 		cfg.Parallel.DiscontinueBucketKeepAliveDays = DefaultDiscontinueBucketKeepAliveDays
 	}
 
+	manager.enableLoadTask = cfg.Manager.EnableLoadTask
+	manager.loadTaskLimitToReplicate = cfg.Parallel.GlobalReplicatePieceParallel
+	manager.loadTaskLimitToSeal = cfg.Parallel.GlobalSealObjectParallel
+	manager.loadTaskLimitToGC = cfg.Parallel.GlobalGCObjectParallel
+
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	manager.maxUploadObjectNumber = cfg.Parallel.GlobalMaxUploadingParallel
 	manager.gcObjectTimeInterval = cfg.Parallel.GlobalBatchGcObjectTimeInterval

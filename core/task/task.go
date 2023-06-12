@@ -28,7 +28,7 @@ type Task interface {
 	// GetCreateTime returns the creation time of the task. The creation time used to
 	// judge task execution time.
 	GetCreateTime() int64
-	// SetCreateTime sets the creation time of the tas.
+	// SetCreateTime sets the creation time of the task.
 	SetCreateTime(int64)
 	// GetUpdateTime returns the last updated time of the task. The updated time used
 	// to determine whether the task is expired with the timeout.
@@ -221,11 +221,16 @@ type ReplicatePieceTask interface {
 	GetSealed() bool
 	// SetSealed sets the state successful seal object after replicating piece.
 	SetSealed(bool)
-	// GetSecondarySignature returns the secondary signatures of SP. It is used to
+	// GetSecondaryAddresses returns the secondary SP's addresses. It is used to
 	// generate MsgSealObject.
-	GetSecondarySignature() [][]byte
-	// SetSecondarySignature sets the secondary signatures of SP.
-	SetSecondarySignature([][]byte)
+	GetSecondaryAddresses() []string
+	// SetSecondaryAddresses sets the secondary SP's addresses.
+	SetSecondaryAddresses([]string)
+	// GetSecondarySignatures returns the secondary SP's signatures. It is used to
+	// generate MsgSealObject.
+	GetSecondarySignatures() [][]byte
+	// SetSecondarySignatures sets the secondary SP's signatures.
+	SetSecondarySignatures([][]byte)
 }
 
 // ReceivePieceTask is an abstract interface to record the information for receiving pieces
@@ -274,11 +279,13 @@ type ReceivePieceTask interface {
 type SealObjectTask interface {
 	ObjectTask
 	// InitSealObjectTask inits the SealObjectTask.
-	InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, signature [][]byte,
-		timeout int64, retry int64)
-	// GetSecondarySignature returns the secondary signature of SP, it is used to generate
+	InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, addresses []string,
+		signatures [][]byte, timeout int64, retry int64)
+	// GetSecondaryAddresses return the secondary SP's addresses.
+	GetSecondaryAddresses() []string
+	// GetSecondarySignatures return the secondary SP's signature, it is used to generate
 	// MsgSealObject.
-	GetSecondarySignature() [][]byte
+	GetSecondarySignatures() [][]byte
 }
 
 // DownloadObjectTask is an abstract interface to record the information for downloading

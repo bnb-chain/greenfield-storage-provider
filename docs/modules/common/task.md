@@ -267,11 +267,16 @@ type ReplicatePieceTask interface {
     GetSealed() bool
     // SetSealed sets the state successful seal object after replicating piece.
     SetSealed(bool)
-    // GetSecondarySignature returns the secondary signatures of SP. It is used to
+    // GetSecondaryAddresses returns the secondary SP's addresses. It is used to
     // generate MsgSealObject.
-    GetSecondarySignature() [][]byte
-    // SetSecondarySignature sets the secondary signatures of SP.
-    SetSecondarySignature([][]byte)
+    GetSecondaryAddresses() []string
+    // SetSecondaryAddresses sets the secondary SP's addresses.
+    SetSecondaryAddresses([]string)
+    // GetSecondarySignatures returns the secondary SP's signatures. It is used to
+    // generate MsgSealObject.
+    GetSecondarySignatures() [][]byte
+    // SetSecondarySignatures sets the secondary SP's signatures.
+    SetSecondarySignatures([][]byte)
 }
 ```
 
@@ -327,14 +332,17 @@ type ReceivePieceTask interface {
 The SealObjectTask is an abstract interface to  record the information for sealing object to the Greenfield chain.
 
 ```go
+// SealObjectTask is an abstract interface to record the information for sealing object on Greenfield chain.
 type SealObjectTask interface {
     ObjectTask
     // InitSealObjectTask inits the SealObjectTask.
-    InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, signature [][]byte,
-        timeout int64, retry int64)
-    // GetSecondarySignature returns the secondary signature of SP, it is used to generate
+    InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, addresses []string,
+        signatures [][]byte, timeout int64, retry int64)
+    // GetSecondaryAddresses return the secondary SP's addresses.
+    GetSecondaryAddresses() []string
+    // GetSecondarySignatures return the secondary SP's signature, it is used to generate
     // MsgSealObject.
-    GetSecondarySignature() [][]byte
+    GetSecondarySignatures() [][]byte
 }
 ```
 

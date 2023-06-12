@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -49,8 +50,10 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if reqCtx.NeedVerifyAuthorizer() {
+		startAuthirzerTime := time.Now()
 		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_authorizer").Observe(time.Since(startAuthirzerTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
@@ -62,7 +65,9 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	startGetObjectInfoTime := time.Now()
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_get_object_info").Observe(time.Since(startGetObjectInfoTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
@@ -73,7 +78,9 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidPayloadSize
 		return
 	}
+	startGetStorageParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_get_storage_param").Observe(time.Since(startGetStorageParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -250,7 +257,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		reqCtx     *RequestContext
 		authorized bool
 		objectInfo *storagetypes.ObjectInfo
-		jobState   int32
+		taskState  int32
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -289,12 +296,12 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	jobState, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
+	taskState, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
 		return
 	}
-	jobStateDescription := servicetypes.StateToDescription(servicetypes.JobState(jobState))
+	taskStateDescription := servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 
 	var xmlInfo = struct {
 		XMLName             xml.Name `xml:"QueryUploadProgress"`
@@ -302,7 +309,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		ProgressDescription string   `xml:"ProgressDescription"`
 	}{
 		Version:             GnfdResponseXMLVersion,
-		ProgressDescription: jobStateDescription,
+		ProgressDescription: taskStateDescription,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
@@ -364,7 +371,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	getBucketInfoRes, getBucketInfoErr := g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), reqCtx.bucketName, true)
 	if getBucketInfoErr != nil || getBucketInfoRes == nil || getBucketInfoRes.GetBucketInfo() == nil {
 		log.Errorw("failed to check bucket info", "bucket_name", reqCtx.bucketName, "error", getBucketInfoErr)
-		err = getBucketInfoErr
+		err = ErrNoSuchObject
 		return
 	}
 
@@ -394,12 +401,14 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
 		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
+		err = ErrNoSuchObject
 		return
 	}
 
 	if getObjectInfoRes.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.Errorw("object is not sealed",
 			"status", getObjectInfoRes.GetObjectInfo().GetObjectStatus())
+		err = ErrNoSuchObject
 		return
 	}
 
@@ -455,6 +464,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			}
 			if !authorized {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+				err = ErrNoPermission
 				return
 			}
 

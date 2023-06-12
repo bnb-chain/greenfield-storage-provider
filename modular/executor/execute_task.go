@@ -38,8 +38,8 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		Operator:              e.baseApp.OperateAddress(),
 		BucketName:            task.GetObjectInfo().GetBucketName(),
 		ObjectName:            task.GetObjectInfo().GetObjectName(),
-		SecondarySpAddresses:  task.GetObjectInfo().GetSecondarySpAddresses(),
-		SecondarySpSignatures: task.GetSecondarySignature(),
+		SecondarySpAddresses:  task.GetSecondaryAddresses(),
+		SecondarySpSignatures: task.GetSecondarySignatures(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
 	log.CtxDebugw(ctx, "finish to handle seal object task", "error", task.Error())
@@ -253,7 +253,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		task.SetLastDeletedObjectId(currentGCObjectID)
 		metrics.GCObjectCounter.WithLabelValues(e.Name()).Inc()
 		if taskIsCanceled = reportProgress(); taskIsCanceled {
-			log.CtxErrorw(ctx, "gc object task has been canceled", "task_info", task.Info())
+			log.CtxErrorw(ctx, "gc object task has been canceled", "current_gc_object_info", objectInfo, "task_info", task.Info())
 			return
 		}
 		log.CtxDebugw(ctx, "succeed to gc an object", "object_info", objectInfo, "deleted_at_block_id", currentGCBlockID)
