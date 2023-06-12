@@ -25,12 +25,12 @@ import (
 
 func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string) parser.Indexer {
 	return &Impl{
-		codec:          codec,
-		Node:           proxy,
-		DB:             db,
-		Modules:        modules,
-		ServiceName:    serviceName,
-		ProcessedQueue: make(chan uint64, 500),
+		codec:           codec,
+		Node:            proxy,
+		DB:              db,
+		Modules:         modules,
+		ServiceName:     serviceName,
+		ProcessedHeight: 0,
 	}
 }
 
@@ -42,7 +42,7 @@ type Impl struct {
 
 	LatestBlockHeight atomic.Value
 	CatchUpFlag       atomic.Value
-	ProcessedQueue    chan uint64
+	ProcessedHeight   uint64
 
 	ServiceName string
 }
@@ -147,15 +147,10 @@ func (i *Impl) Process(height uint64) error {
 		return err
 	}
 
-	if flag == -1 || flag >= int64(height) {
-		blockMap.Delete(heightKey)
-		eventMap.Delete(heightKey)
-		txMap.Delete(heightKey)
-	}
-
-	if flag == -1 {
-		i.ProcessedQueue <- height
-	}
+	blockMap.Delete(heightKey)
+	eventMap.Delete(heightKey)
+	txMap.Delete(heightKey)
+	i.ProcessedHeight = height
 
 	return nil
 }
