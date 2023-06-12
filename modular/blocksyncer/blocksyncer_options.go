@@ -180,8 +180,6 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 	go b.enqueueNewBlocks(ctx, exportQueue, lastDbBlockHeight+1)
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
-	// off of the export queue.
-	Cast(b.parserCtx.Indexer).ProcessedQueue <- uint64(0) // init ProcessedQueue
 	go worker.Start(ctx)
 }
 
@@ -243,11 +241,7 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 			Cast(b.parserCtx.Indexer).GetCatchUpFlag().Store(int64(count*cycle + startHeight - 1))
 			break
 		}
-		processedHeight, ok := <-Cast(b.parserCtx.Indexer).ProcessedQueue
-		if !ok {
-			log.Warnf("ProcessedQueue is closed")
-			return
-		}
+		processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
 		log.Infof("processedHeight:%d, will process height:%d", processedHeight, count*cycle+startHeight)
 		if processedHeight != 0 && count*cycle+startHeight-processedHeight > MaxHeightGapFactor*count {
 			continue
