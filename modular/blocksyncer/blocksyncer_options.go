@@ -241,6 +241,9 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 		if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
 			log.Infof("quick fetch ended latestBlockHeight: %d", latestBlockHeight)
 			Cast(b.parserCtx.Indexer).GetCatchUpFlag().Store(int64(count*cycle + startHeight - 1))
+			// clear queue
+			for _ = range Cast(b.parserCtx.Indexer).ProcessedQueue {
+			}
 			break
 		}
 		processedHeight, ok := <-Cast(b.parserCtx.Indexer).ProcessedQueue
