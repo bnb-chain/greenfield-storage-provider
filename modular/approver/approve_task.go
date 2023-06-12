@@ -17,7 +17,6 @@ var (
 	ErrDanglingPointer    = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10001, "OoooH.... request lost")
 	ErrExceedBucketNumber = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10002, "account buckets exceed the limit")
 	ErrSigner             = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 11001, "server slipped away, try again later")
-	ErrConsensus          = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 15001, "server slipped away, try again later")
 )
 
 func (a *ApprovalModular) PreCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) error {
@@ -71,13 +70,9 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 
 	// begin to sign the new approval task
 	startQueryChain := time.Now()
-	currentHeight, err = a.baseApp.Consensus().CurrentHeight(ctx)
+	currentHeight = a.GetCurrentBlockHeight()
 	metrics.GnfdChainHistogram.WithLabelValues("query_current_height_in_create_bucket_approval").
 		Observe(time.Since(startQueryChain).Seconds())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to get current height", "error", err)
-		return false, ErrConsensus
-	}
 	task.SetExpiredHeight(currentHeight + a.bucketApprovalTimeoutHeight)
 	startSignApproval := time.Now()
 	signature, err = a.baseApp.GfSpClient().SignCreateBucketApproval(ctx, task.GetCreateBucketInfo())
@@ -139,13 +134,9 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(ctx context.Context, ta
 
 	// begin to sign the new approval task
 	startQueryChain := time.Now()
-	currentHeight, err = a.baseApp.Consensus().CurrentHeight(ctx)
+	currentHeight = a.GetCurrentBlockHeight()
 	metrics.GnfdChainHistogram.WithLabelValues("query_current_height_in_create_object_approval").
 		Observe(time.Since(startQueryChain).Seconds())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to get current height", "error", err)
-		return false, ErrConsensus
-	}
 	task.SetExpiredHeight(currentHeight + a.objectApprovalTimeoutHeight)
 	startSignApproval := time.Now()
 	signature, err = a.baseApp.GfSpClient().SignCreateObjectApproval(ctx, task.GetCreateObjectInfo())
