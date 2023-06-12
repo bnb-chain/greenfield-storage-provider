@@ -23,7 +23,7 @@ require (
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.1
-	github.com/consensys/gnark-crypto v0.7.0
+	github.com/consensys/gnark-crypto v0.9.1-0.20230105202408-1a7a29904a7c
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230220103612-f094a0c33410
 	github.com/cosmos/gogoproto v1.4.8
 	github.com/ethereum/go-ethereum v1.10.26
@@ -89,7 +89,7 @@ require (
 	github.com/hashicorp/go-bexpr v0.1.10 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
-	github.com/holiman/uint256 v1.2.0 // indirect
+	github.com/holiman/uint256 v1.2.2-0.20230321075855-87b91420868c // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/influxdata/influxdb v1.8.3 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.4.0 // indirect
@@ -110,7 +110,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rs/cors v1.8.3 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
-	github.com/status-im/keycard-go v0.0.0-20200402102358-957c09536969 // indirect
+	github.com/status-im/keycard-go v0.2.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
@@ -170,7 +170,7 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
+	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
