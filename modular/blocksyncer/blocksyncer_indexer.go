@@ -151,6 +151,9 @@ func (i *Impl) Process(height uint64) error {
 		blockMap.Delete(heightKey)
 		eventMap.Delete(heightKey)
 		txMap.Delete(heightKey)
+	}
+
+	if flag == -1 {
 		i.ProcessedQueue <- height
 	}
 
