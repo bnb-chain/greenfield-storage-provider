@@ -84,6 +84,9 @@ func (*NullModular) HandleCreateUploadObjectTask(context.Context, task.UploadObj
 func (*NullModular) HandleDoneUploadObjectTask(context.Context, task.UploadObjectTask) error {
 	return ErrNilModular
 }
+func (*NullModular) HandleDoneResumableUploadObjectTask(context.Context, task.ResumableUploadObjectTask) error {
+	return ErrNilModular
+}
 func (*NullModular) HandleReplicatePieceTask(context.Context, task.ReplicatePieceTask) error {
 	return ErrNilModular
 }

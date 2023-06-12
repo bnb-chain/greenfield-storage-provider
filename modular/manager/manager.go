@@ -50,15 +50,16 @@ type ManageModular struct {
 	loadTaskLimitToSeal      int
 	loadTaskLimitToGC        int
 
-	uploadQueue    taskqueue.TQueueOnStrategy
-	replicateQueue taskqueue.TQueueOnStrategyWithLimit
-	sealQueue      taskqueue.TQueueOnStrategyWithLimit
-	receiveQueue   taskqueue.TQueueOnStrategyWithLimit
-	gcObjectQueue  taskqueue.TQueueOnStrategyWithLimit
-	gcZombieQueue  taskqueue.TQueueOnStrategyWithLimit
-	gcMetaQueue    taskqueue.TQueueOnStrategyWithLimit
-	downloadQueue  taskqueue.TQueueOnStrategy
-	challengeQueue taskqueue.TQueueOnStrategy
+	uploadQueue           taskqueue.TQueueOnStrategy
+	resumeableUploadQueue taskqueue.TQueueOnStrategy
+	replicateQueue        taskqueue.TQueueOnStrategyWithLimit
+	sealQueue             taskqueue.TQueueOnStrategyWithLimit
+	receiveQueue          taskqueue.TQueueOnStrategyWithLimit
+	gcObjectQueue         taskqueue.TQueueOnStrategyWithLimit
+	gcZombieQueue         taskqueue.TQueueOnStrategyWithLimit
+	gcMetaQueue           taskqueue.TQueueOnStrategyWithLimit
+	downloadQueue         taskqueue.TQueueOnStrategy
+	challengeQueue        taskqueue.TQueueOnStrategy
 
 	maxUploadObjectNumber int
 

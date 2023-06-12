@@ -167,6 +167,48 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 	return nil
 }
 
+func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error {
+	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
+		log.CtxErrorw(ctx, "failed to handle done upload object, pointer dangling")
+		return ErrDanglingTask
+	}
+	m.resumeableUploadQueue.PopByKey(task.Key())
+	if m.TaskUploading(ctx, task) {
+		log.CtxErrorw(ctx, "uploading object repeated")
+		return ErrRepeatedTask
+	}
+	if task.Error() != nil {
+		err := m.baseApp.GfSpDB().UpdateJobState(
+			task.GetObjectInfo().Id.Uint64(),
+			types.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
+		}
+		err = m.RejectUnSealObject(ctx, task.GetObjectInfo())
+		log.CtxErrorw(ctx, "reports failed update object task and reject unseal object",
+			"error", task.Error(), "reject_unseal_error", err)
+		return nil
+	}
+	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
+	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
+		m.baseApp.TaskPriority(replicateTask),
+		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
+		m.baseApp.TaskMaxRetry(replicateTask))
+	err := m.replicateQueue.Push(replicateTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
+		return ErrExceedTask
+	}
+	err = m.baseApp.GfSpDB().UpdateJobState(
+		task.GetObjectInfo().Id.Uint64(),
+		types.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to update object task state", "error", err)
+	}
+	log.CtxDebugw(ctx, "succeed to done upload object and waiting for scheduling to replicate piece")
+	return nil
+}
+
 func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to handle replicate piece due to pointer dangling")
