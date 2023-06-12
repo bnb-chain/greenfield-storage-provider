@@ -178,9 +178,11 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		return ErrRepeatedTask
 	}
 	if task.Error() != nil {
-		err := m.baseApp.GfSpDB().UpdateJobState(
-			task.GetObjectInfo().Id.Uint64(),
-			types.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
+		err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:         task.GetObjectInfo().Id.Uint64(),
+			TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+			ErrorDescription: task.Error().Error(),
+		})
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
@@ -199,9 +201,10 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return ErrExceedTask
 	}
-	err = m.baseApp.GfSpDB().UpdateJobState(
-		task.GetObjectInfo().Id.Uint64(),
-		types.JobState_JOB_STATE_REPLICATE_OBJECT_DOING)
+	err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+		ObjectID:  task.GetObjectInfo().Id.Uint64(),
+		TaskState: types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
+	})
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 	}

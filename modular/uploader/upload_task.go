@@ -213,7 +213,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 	stream io.Reader) error {
 	if err := u.resumeableUploadQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push upload queue", "error", err)
-		return ErrExceedTask
+		return err
 	}
 	segmentSize := u.baseApp.PieceOp().MaxSegmentPieceSize(
 		task.GetObjectInfo().GetPayloadSize(),
