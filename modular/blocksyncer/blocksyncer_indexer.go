@@ -30,7 +30,7 @@ func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, module
 		DB:             db,
 		Modules:        modules,
 		ServiceName:    serviceName,
-		ProcessedQueue: make(chan uint64, 5),
+		ProcessedQueue: make(chan uint64, 500),
 	}
 }
 
