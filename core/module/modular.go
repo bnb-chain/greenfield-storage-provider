@@ -149,7 +149,7 @@ type TaskExecutor interface {
 type Manager interface {
 	Modular
 	// DispatchTask dispatches the task to TaskExecutor module when it asks tasks.
-	// It will consider remaining resources when dispatches task.
+	// It will consider remaining resources when dispatching task.
 	DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error)
 	// QueryTasks queries tasks that hold on manager by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
@@ -169,7 +169,7 @@ type Manager interface {
 	HandleSealObjectTask(ctx context.Context, task task.SealObjectTask) error
 	// HandleReceivePieceTask handles the result of receiving piece task, the request comes from Receiver that
 	// reports have completed ReceivePieceTask to manager and TaskExecutor that the result of confirming whether
-	// the object that is syncer to secondary SP has been sealed.
+	// the object that is synced to secondary SP has been sealed.
 	HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) error
 	// HandleGCObjectTask handles GCObjectTask, the request comes from TaskExecutor.
 	HandleGCObjectTask(ctx context.Context, task task.GCObjectTask) error

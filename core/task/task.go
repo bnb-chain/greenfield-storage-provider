@@ -381,9 +381,9 @@ type GCTask interface {
 	Task
 }
 
-// The GCObjectTask is an abstract interface to record the information for collecting the
+// GCObjectTask is an abstract interface to record the information for collecting the
 // piece store space by deleting object payload data that the object has been deleted
-// on the Greenfield chain.
+// on Greenfield chain.
 type GCObjectTask interface {
 	GCTask
 	// InitGCObjectTask inits InitGCObjectTask.

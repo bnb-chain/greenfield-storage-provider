@@ -20,27 +20,22 @@ type Uploader interface {
 }
 ```
 
-Uploader interface inherits [Modular interface](./lifecycle_modular.md#modular-interface), so Uploader module can be managed by lifycycle and resource manager.
-
-In terms of the functions provided by Uploader module, there is only one part: just upload object. It has three methods: PreXXX, HanldeXXX and PostXXX. Therefore, if you can rewrite these methods to meet your own requirements.
-
-As we can see from the second parameter of the methods defined in `Uploader` interface, uploadObject is splitted into `UploadObjectTask`. They are alse defined as an interface.
-
-We can query UploadObject tasks that we care about by `QueryTasks` method through using subKey.
+Uploader interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so Uploader module can be managed by lifycycle and resource manager. In terms of the functions provided by Uploader module, there is only one part: just upload object. It has three methods: PreXXX, HanldeXXX and PostXXX. Therefore, you can rewrite these methods to meet your own requirements. As we can see from the second parameter of the methods defined in `Uploader` interface, uploadObject is splitted into `UploadObjectTask`. They are also defined as an interface. We can query UploadObject tasks that we care about by `QueryTasks` method through using subKey.
 
 ## UploadObjectTask
 
-UploadObjectTask is an abstract interface to record the information for uploading object payload data to the primary SP.
+The corresponding interfaces definition is shown below:
 
-```go
-type UploadObjectTask interface {
-    ObjectTask
-    // InitUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-    InitUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
-}
-```
+- [ObjectTask](./common/task.md#objecttask)
+- [UploadObjectTask](./common/task.md#uploadobjecttask)
 
-UploadObjectTask inherits ObjectTask interface. UploadObjectTask also defines ten methods to help query info or set data. You can overwrite all these methods in your own.
+ObjectTask inherits [Task interface](./common/task.md#task). UploadObjectTask also defines ten methods to help query info or set data. You can overwrite all these methods in your own.
+
+The corresponding `protobuf` definition is shown below:
+
+- [GfSpUploadObjectTask](./common/proto.md#gfspuploadobjecttask-proto)
+- [ObjectInfo](./common/proto.md#objectinfo-proto)
+- [Params](./common/proto.md#params-proto)
 
 ## GfSp Framework Uploader Code
 

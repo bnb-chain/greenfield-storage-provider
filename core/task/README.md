@@ -2,8 +2,6 @@
 
 Task is an abstract interface to describe the smallest unit of SP background service how to interact.
 
-# Concept
-
 ## Task Type
 
 There are three main types of task: ApprovalTask, ObjectTask and GCTask.
@@ -35,7 +33,7 @@ meta is not on Greenfield chain, and GCMetaTask, which collects the SP meta stor
 ApprovalTask is an abstract interface to record the ask approval information, the approval task timeliness uses the block height,
 if reached expired height, the approval invalid.
 
-#### ApprovalCreateBucketTask 
+#### ApprovalCreateBucketTask
 
 ApprovalCreateBucketTask is an abstract interface to record the ask create bucket approval information. The user account will
 create MsgCreateBucket, the SP should decide whether approved the request based on the MsgCreateBucket. If so, the sp
@@ -101,7 +99,6 @@ pieces data that dues to any exception, the piece data meta is not on chain but 
 #### GCMetaTask
 
 The GCMetaTask is an abstract interface to record the information for collecting the SP meta store space by deleting the expired data.
-
 
 ## Task Priority
 
