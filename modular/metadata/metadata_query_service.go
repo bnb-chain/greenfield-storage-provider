@@ -26,3 +26,21 @@ func (r *MetadataModular) GfSpQueryUploadProgress(ctx context.Context, req *type
 		State: state,
 	}, nil
 }
+
+func (r *MetadataModular) GfSpQueryResumableUploadOffset(ctx context.Context, req *types.GfSpQueryResumableUploadOffsetRequest) (
+	*types.GfSpQueryResumableUploadOffsetResponse, error) {
+	integrityMeta, err := r.baseApp.GfSpDB().GetObjectIntegrity(req.GetObjectId())
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &types.GfSpQueryResumableUploadOffsetResponse{
+				Err: ErrNoRecord,
+			}, nil
+		}
+		return &types.GfSpQueryResumableUploadOffsetResponse{
+			Err: ErrGfSpDB,
+		}, nil
+	}
+	return &types.GfSpQueryResumableUploadOffsetResponse{
+		SegmentCount: uint64(len(integrityMeta.PieceChecksumList)),
+	}, nil
+}

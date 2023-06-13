@@ -226,6 +226,88 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 
 // queryResumeOffsetHandler handles the resumable put object
 func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err          error
+		reqCtx       *RequestContext
+		authorized   bool
+		objectInfo   *storagetypes.ObjectInfo
+		segmentCount uint64
+		offset       uint64
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+	if reqCtx.NeedVerifyAuthorizer() {
+		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+			coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			return
+		}
+		if !authorized {
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+			err = ErrNoPermission
+			return
+		}
+	}
+
+	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+		err = ErrConsensus
+		return
+	}
+
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(
+		reqCtx.Context(), objectInfo.GetCreateAt())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
+		err = ErrConsensus
+		return
+	}
+
+	segmentCount, err = g.baseApp.GfSpClient().GetUploadObjectOffset(reqCtx.Context(), objectInfo.Id.Uint64())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
+		return
+	}
+
+	offset = segmentCount * params.GetMaxSegmentSize()
+
+	var xmlInfo = struct {
+		XMLName xml.Name `xml:"QueryResumeOffset"`
+		Version string   `xml:"version,attr"`
+		Offset  uint64   `xml:"Offset"`
+	}{
+		Version: GnfdResponseXMLVersion,
+		Offset:  offset,
+	}
+	xmlBody, err := xml.Marshal(&xmlInfo)
+	if err != nil {
+		log.Errorw("failed to marshal xml", "error", err)
+		err = ErrEncodeResponse
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	if _, err = w.Write(xmlBody); err != nil {
+		log.Errorw("failed to write body", "error", err)
+		err = ErrEncodeResponse
+		return
+	}
+	log.Debugw("succeed to query resumable offset ", "xml_info", xmlInfo)
 }
 
 // getObjectHandler handles the download object request.

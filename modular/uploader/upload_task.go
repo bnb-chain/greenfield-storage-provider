@@ -258,18 +258,16 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 						"piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
+				err = u.baseApp.GfSpDB().AppendObjectChecksumIntegrity(task.GetObjectInfo().Id.Uint64(), hash.GenerateChecksum(data))
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
+					return ErrGfSpDB
+				}
 			}
 			if task.GetCompleted() {
-				var checksums [][]byte
-				// TODO(chris): get all piece, verify checksum
-				var i uint32 = 0
-				for ; i <= segIdx; i++ {
-					data, err = u.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
-					checksums = append(checksums, hash.GenerateChecksum(data))
-				}
-
+				integrityMeta, err := u.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
 				signature, integrity, err = u.baseApp.GfSpClient().SignIntegrityHash(ctx,
-					task.GetObjectInfo().Id.Uint64(), checksums)
+					task.GetObjectInfo().Id.Uint64(), integrityMeta.PieceChecksumList)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
 					return err
@@ -281,12 +279,8 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 					err = ErrInvalidIntegrity
 					return ErrInvalidIntegrity
 				}
-				integrityMeta := &corespdb.IntegrityMeta{
-					ObjectID:          task.GetObjectInfo().Id.Uint64(),
-					PieceChecksumList: checksums,
-					IntegrityChecksum: integrity,
-					Signature:         signature,
-				}
+				integrityMeta.IntegrityChecksum = integrity
+				integrityMeta.Signature = signature
 				err = u.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
@@ -306,6 +300,11 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		if err != nil {
 			log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
 			return ErrPieceStore
+		}
+		err = u.baseApp.GfSpDB().AppendObjectChecksumIntegrity(task.GetObjectInfo().Id.Uint64(), hash.GenerateChecksum(data))
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
+			return ErrGfSpDB
 		}
 		segIdx++
 	}

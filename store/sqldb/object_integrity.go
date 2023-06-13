@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
@@ -80,6 +81,37 @@ func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64) error {
 	return s.db.Delete(&IntegrityMetaTable{
 		ObjectID: objectID, // should be the primary key
 	}).Error
+}
+
+// AppendObjectChecksumIntegrity append checksum
+func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, checksum []byte) error {
+	integrityMeta, err := s.GetObjectIntegrity(objectID)
+	var checksums [][]byte
+	var integrity []byte
+	var signature []byte
+	if err == gorm.ErrRecordNotFound {
+		integrityMetaNew := &corespdb.IntegrityMeta{
+			ObjectID:          objectID,
+			PieceChecksumList: append(checksums, checksum),
+			IntegrityChecksum: integrity,
+			Signature:         signature,
+		}
+		log.Infof("AppendObjectChecksumIntegrity not found, objectid:%d, checksum:%s", objectID, checksum)
+		err = s.SetObjectIntegrity(integrityMetaNew)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		integrityMeta.PieceChecksumList = append(integrityMeta.PieceChecksumList, checksum)
+		err = s.SetObjectIntegrity(integrityMeta)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // GetReplicatePieceChecksum gets replicate piece checksum.

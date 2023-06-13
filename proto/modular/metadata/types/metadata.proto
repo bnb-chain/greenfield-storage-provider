@@ -331,6 +331,19 @@ message GfSpQueryUploadProgressResponse {
   store.types.TaskState state = 2;
 }
 
+// QueryUploadProgressRequest is request type for the QueryObjectPutState RPC method.
+message GfSpQueryResumableUploadOffsetRequest {
+  // object_id defines the unique id of the object.
+  uint64 object_id = 1;
+}
+
+// QueryUploadProgressResponse is response type for the QueryObjectPutState RPC method.
+message GfSpQueryResumableUploadOffsetResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  // state defines the number of segment count.
+  uint64 segment_count = 2;
+}
+
 // Group is the structure for group information
 message Group {
   // group defines the basic group info
@@ -418,6 +431,7 @@ service GfSpMetadataService {
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}
+  rpc GfSpQueryResumableUploadOffset(GfSpQueryResumableUploadOffsetRequest) returns (GfSpQueryResumableUploadOffsetResponse) {}
   rpc GfSpGetGroupList(GfSpGetGroupListRequest) returns (GfSpGetGroupListResponse) {}
   rpc GfSpListBucketsByBucketID(GfSpListBucketsByBucketIDRequest) returns (GfSpListBucketsByBucketIDResponse) {}
   rpc GfSpListObjectsByObjectID(GfSpListObjectsByObjectIDRequest) returns (GfSpListObjectsByObjectIDResponse) {}

@@ -374,6 +374,27 @@ func (s *GfSpClient) GetUploadObjectState(ctx context.Context, objectID uint64, 
 	return int32(resp.GetState()), nil
 }
 
+func (s *GfSpClient) GetUploadObjectOffset(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint64, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return 0, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpQueryResumableUploadOffsetRequest{
+		ObjectId: objectID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpQueryResumableUploadOffset(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get uploading object state", "error", err)
+		return 0, ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return 0, resp.GetErr()
+	}
+	return resp.GetSegmentCount(), nil
+}
+
 func (s *GfSpClient) GetGroupList(
 	ctx context.Context,
 	name string,
