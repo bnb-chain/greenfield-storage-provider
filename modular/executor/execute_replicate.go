@@ -27,8 +27,10 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 		err       error
 		approvals []*gfsptask.GfSpReplicatePieceApprovalTask
 	)
+	startReplicateTime := time.Now()
 	defer func() {
 		task.SetError(err)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("background_replicate_time").Observe(time.Since(startReplicateTime).Seconds())
 	}()
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		err = ErrDanglingPointer
