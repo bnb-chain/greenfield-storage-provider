@@ -258,9 +258,6 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 			}
 			client.sealAccNonce = nonce
 		}
-		if strings.Contains(err.Error(), "Object already sealed") {
-			return nil, nil
-		}
 		return nil, ErrRejectUnSealObjectOnChain
 	}
 
