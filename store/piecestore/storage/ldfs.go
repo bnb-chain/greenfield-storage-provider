@@ -57,7 +57,7 @@ func (sc *SessionCache) newLdfsSession(cfg ObjectStorageConfig) (*session.Sessio
 		S3ForcePathStyle: aws.Bool(true),
 		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
 	}
-	// We don't need additional authentication. 
+	// We don't need additional authentication.
 	// Because we use a whitelist to restrict the IPs that can access LDFS.
 	awsConfig.Credentials = credentials.NewStaticCredentials("ldfs", "ldfs", "")
 
