@@ -6,31 +6,39 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 )
 
 const (
-	approvalRouterName                    = "GetApproval"
-	putObjectRouterName                   = "PutObject"
-	getObjectRouterName                   = "GetObject"
-	getChallengeInfoRouterName            = "GetChallengeInfo"
-	replicateObjectPieceRouterName        = "ReplicateObjectPiece"
-	getUserBucketsRouterName              = "GetUserBuckets"
-	listObjectsByBucketRouterName         = "ListObjectsByBucketName"
-	verifyPermissionRouterName            = "VerifyPermission"
-	getBucketReadQuotaRouterName          = "GetBucketReadQuota"
-	listBucketReadRecordRouterName        = "ListBucketReadRecord"
-	requestNonceName                      = "RequestNonce"
-	updateUserPublicKey                   = "UpdateUserPublicKey"
-	queryUploadProgressRouterName         = "QueryUploadProgress"
-	downloadObjectByUniversalEndpointName = "DownloadObjectByUniversalEndpoint"
-	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
-	getObjectMetaRouterName               = "GetObjectMeta"
-	getBucketMetaRouterName               = "GetBucketMeta"
-	getGroupListRouterName                = "GetGroupList"
-	listBucketsByBucketIDRouterName       = "ListBucketsByBucketID"
-	listObjectsByObjectIDRouterName       = "ListObjectsByObjectID"
+	approvalRouterName                             = "GetApproval"
+	putObjectRouterName                            = "PutObject"
+	getObjectRouterName                            = "GetObject"
+	getChallengeInfoRouterName                     = "GetChallengeInfo"
+	replicateObjectPieceRouterName                 = "ReplicateObjectPiece"
+	getUserBucketsRouterName                       = "GetUserBuckets"
+	listObjectsByBucketRouterName                  = "ListObjectsByBucketName"
+	verifyPermissionRouterName                     = "VerifyPermission"
+	getBucketReadQuotaRouterName                   = "GetBucketReadQuota"
+	listBucketReadRecordRouterName                 = "ListBucketReadRecord"
+	requestNonceName                               = "RequestNonce"
+	updateUserPublicKey                            = "UpdateUserPublicKey"
+	queryUploadProgressRouterName                  = "QueryUploadProgress"
+	downloadObjectByUniversalEndpointName          = "DownloadObjectByUniversalEndpoint"
+	viewObjectByUniversalEndpointName              = "ViewObjectByUniversalEndpoint"
+	getObjectMetaRouterName                        = "GetObjectMeta"
+	getBucketMetaRouterName                        = "GetBucketMeta"
+	getGroupListRouterName                         = "GetGroupList"
+	listBucketsByBucketIDRouterName                = "ListBucketsByBucketID"
+	listObjectsByObjectIDRouterName                = "ListObjectsByObjectID"
+	getPaymentByBucketIDRouterName                 = "GetPaymentByBucketID"
+	getPaymentByBucketNameRouterName               = "GetPaymentByBucketName"
+	getBucketByBucketNameRouterName                = "GetBucketByBucketName"
+	getBucketByBucketIDRouterName                  = "GetBucketByBucketID"
+	listDeletedObjectsByBlockNumberRangeRouterName = "ListDeletedObjectsByBlockNumberRange"
+	getUserBucketsCountRouterName                  = "GetUserBucketsCount"
+	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
 )
 
 const (
@@ -83,6 +91,18 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Queries(GetBucketReadQuotaQuery, "",
 			GetBucketReadQuotaMonthQuery, "{year_month}").
 		HandlerFunc(g.getBucketReadQuotaHandler)
+	if g.env != gfspapp.EnvMainnet {
+		hostBucketRouter.NewRoute().
+			Name(getBucketByBucketNameRouterName).
+			Methods(http.MethodGet).
+			Queries(GetBucketByBucketNameQuery, "").
+			HandlerFunc(g.getBucketByBucketNameHandler)
+		hostBucketRouter.NewRoute().
+			Name(getPaymentByBucketNameRouterName).
+			Methods(http.MethodGet).
+			Queries(GetPaymentByBucketNameQuery, "").
+			HandlerFunc(g.getPaymentByBucketNameHandler)
+	}
 	hostBucketRouter.NewRoute().
 		Name(listBucketReadRecordRouterName).
 		Methods(http.MethodGet).
@@ -107,13 +127,40 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	router.Path("/").
 		Name(listObjectsByObjectIDRouterName).
 		Methods(http.MethodPost).
-		Queries(ListObjectsByObjectID, "").
+		Queries(ListObjectsByObjectIDQuery, "").
 		HandlerFunc(g.listObjectsByObjectIDHandler)
 	router.Path("/").
 		Name(listBucketsByBucketIDRouterName).
 		Methods(http.MethodPost).
-		Queries(ListBucketsByBucketID, "").
+		Queries(ListBucketsByBucketIDQuery, "").
 		HandlerFunc(g.listBucketsByBucketIDHandler)
+	if g.env != gfspapp.EnvMainnet {
+		router.Path("/").
+			Name(getPaymentByBucketIDRouterName).
+			Methods(http.MethodGet).
+			Queries(GetPaymentByBucketIDQuery, "").
+			HandlerFunc(g.getPaymentByBucketIDHandler)
+		router.Path("/").
+			Name(getBucketByBucketIDRouterName).
+			Methods(http.MethodGet).
+			Queries(GetBucketByBucketIDQuery, "").
+			HandlerFunc(g.getBucketByBucketIDHandler)
+		router.Path("/").
+			Name(listDeletedObjectsByBlockNumberRangeRouterName).
+			Methods(http.MethodGet).
+			Queries(ListDeletedObjectsQuery, "").
+			HandlerFunc(g.listDeletedObjectsByBlockNumberRangeHandler)
+		router.Path("/").
+			Name(getUserBucketsCountRouterName).
+			Methods(http.MethodGet).
+			Queries(GetUserBucketsCountQuery, "").
+			HandlerFunc(g.getUserBucketsCountHandler)
+		router.Path("/").
+			Name(listExpiredBucketsBySpRouterName).
+			Methods(http.MethodGet).
+			Queries(ListExpiredBucketsBySpQuery, "").
+			HandlerFunc(g.listExpiredBucketsBySpHandler)
+	}
 	router.Path("/").
 		Name(getUserBucketsRouterName).
 		Methods(http.MethodGet).
@@ -181,6 +228,18 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Methods(http.MethodGet).
 		Queries(GetBucketMetaQuery, "").
 		HandlerFunc(g.getBucketMetaHandler)
+	if g.env != gfspapp.EnvMainnet {
+		pathBucketRouter.NewRoute().
+			Name(getBucketByBucketNameRouterName).
+			Methods(http.MethodGet).
+			Queries(GetBucketByBucketNameQuery, "").
+			HandlerFunc(g.getBucketByBucketNameHandler)
+		pathBucketRouter.NewRoute().
+			Name(getPaymentByBucketNameRouterName).
+			Methods(http.MethodGet).
+			Queries(GetPaymentByBucketNameQuery, "").
+			HandlerFunc(g.getPaymentByBucketNameHandler)
+	}
 	pathBucketRouter.NewRoute().
 		Name(getObjectMetaRouterName).
 		Methods(http.MethodGet).

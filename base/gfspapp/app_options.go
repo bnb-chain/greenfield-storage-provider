@@ -24,6 +24,17 @@ import (
 )
 
 const (
+	// EnvLocal defines the default environment.
+	EnvLocal = "local"
+	// EnvDevnet defines the devnet environment.
+	EnvDevnet = "devnet"
+	// EvnQanet defines the qanet environment.
+	EvnQanet = "qanet"
+	// EvnTestnet defines the testnet environment.
+	EvnTestnet = "testnet"
+	// EnvMainnet defines the mainnet environment. And as default environment.
+	EnvMainnet = "mainnet"
+
 	// DefaultGfSpAppIDPrefix defines the default app id prefix.
 	DefaultGfSpAppIDPrefix = "gfsp"
 	// DefaultGrpcAddress defines the default Grpc address.
@@ -51,6 +62,9 @@ const (
 )
 
 func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Env == "" {
+		cfg.Env = EnvMainnet
+	}
 	if len(cfg.Server) == 0 {
 		cfg.Server = GetRegisterModulus()
 	}

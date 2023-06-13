@@ -36,6 +36,7 @@ func DefaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 		cfg.Bucket.MaxPayloadSize = DefaultMaxPayloadSize
 	}
 	gater.maxPayloadSize = cfg.Bucket.MaxPayloadSize
+	gater.env = cfg.Env
 	gater.domain = cfg.Gateway.Domain
 	gater.httpAddress = cfg.Gateway.HttpAddress
 	gater.maxListReadQuota = cfg.Bucket.MaxListReadQuotaNumber
