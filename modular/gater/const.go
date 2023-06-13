@@ -78,6 +78,8 @@ const (
 	ListBucketsByBucketID = "buckets-query"
 	// ListObjectsByObjectID defines list objects by object ids, which is used to route request
 	ListObjectsByObjectID = "objects-query"
+	// GetPaymentByBucketID defines get payment by bucket id, which is used to route request
+	GetPaymentByBucketID = "payment-id"
 	// GetGroupListNameQuery defines get group list name query, which is used to route request
 	GetGroupListNameQuery = "name"
 	// GetGroupListPrefixQuery defines get group list prefix query, which is used to route request
@@ -92,6 +94,8 @@ const (
 	VerifyPermissionOperator = "operator"
 	// VerifyPermissionActionType defines verify permission action type
 	VerifyPermissionActionType = "action-type"
+	// BucketIDQuery defines bucket id
+	BucketIDQuery = "bucket-id"
 	// GetChallengeInfoPath defines get challenge info path style suffix
 	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style

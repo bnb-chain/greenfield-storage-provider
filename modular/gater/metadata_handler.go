@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -629,6 +630,56 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&buf, grpcResponse); err != nil {
 		log.Errorf("failed to list buckets by ids", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(buf.Bytes())
+}
+
+// getPaymentByBucketIDHandler get payment by bucket id
+func (g *GateModular) getPaymentByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		buf         bytes.Buffer
+		payment     *payment_types.StreamRecord
+		bucketIDStr string
+		bucketID    int64
+		queryParams url.Values
+		reqCtx      *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get payment by bucket id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	bucketIDStr = queryParams.Get(BucketIDQuery)
+
+	if bucketID, err = util.StringToInt64(bucketIDStr); err != nil || bucketID < 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket_id", bucketIDStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	payment, err = g.baseApp.GfSpClient().GetPaymentByBucketID(reqCtx.Context(), bucketID, false)
+	if err != nil {
+		log.Errorf("get payment by bucket id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetPaymentByBucketIDResponse{StreamRecord: payment}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&buf, grpcResponse); err != nil {
+		log.Errorf("failed to get payment by bucket id", "error", err)
 		return
 	}
 

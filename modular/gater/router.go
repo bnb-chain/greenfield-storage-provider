@@ -31,6 +31,7 @@ const (
 	getGroupListRouterName                = "GetGroupList"
 	listBucketsByBucketIDRouterName       = "ListBucketsByBucketID"
 	listObjectsByObjectIDRouterName       = "ListObjectsByObjectID"
+	getPaymentByBucketIDRouterName        = "GetPaymentByBucketID"
 )
 
 const (
@@ -114,6 +115,11 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Methods(http.MethodPost).
 		Queries(ListBucketsByBucketID, "").
 		HandlerFunc(g.listBucketsByBucketIDHandler)
+	router.Path("/").
+		Name(getPaymentByBucketIDRouterName).
+		Methods(http.MethodGet).
+		Queries(GetPaymentByBucketID, "").
+		HandlerFunc(g.getPaymentByBucketIDHandler)
 	router.Path("/").
 		Name(getUserBucketsRouterName).
 		Methods(http.MethodGet).

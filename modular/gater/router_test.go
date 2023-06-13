@@ -224,13 +224,22 @@ func TestRouters(t *testing.T) {
 			url:              scheme + testDomain + "/?" + ListObjectsByObjectID,
 			shouldMatch:      true,
 			wantedRouterName: listObjectsByObjectIDRouterName,
-		}, {
+		},
+		{
 			name:             "List buckets by bucket ids router",
 			router:           gwRouter,
 			method:           http.MethodPost,
 			url:              scheme + testDomain + "/?" + ListBucketsByBucketID,
 			shouldMatch:      true,
 			wantedRouterName: listBucketsByBucketIDRouterName,
+		},
+		{
+			name:             "Get payment by bucket id router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetPaymentByBucketID + "&" + BucketIDQuery,
+			shouldMatch:      true,
+			wantedRouterName: getPaymentByBucketIDRouterName,
 		},
 	}
 	for _, testCase := range testCases {
