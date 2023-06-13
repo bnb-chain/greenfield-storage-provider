@@ -58,6 +58,12 @@ const (
 	ListObjectsStartAfterQuery = "start-after"
 	// ListObjectsContinuationTokenQuery indicates that the list is being continued on this bucket with a token
 	ListObjectsContinuationTokenQuery = "continuation-token"
+	// SpOperatorAddressQuery defines sp operator address
+	SpOperatorAddressQuery = "sp-operator-address"
+	// StartBlockNumberQuery defines start block number
+	StartBlockNumberQuery = "start-block-number"
+	// EndBlockNumberQuery defines end block number
+	EndBlockNumberQuery = "end-block-number"
 	// ListObjectsDelimiterQuery defines a character you use to group keys
 	ListObjectsDelimiterQuery = "delimiter"
 	// ListObjectsPrefixQuery defines limits the response to keys that begin with the specified prefix
@@ -74,12 +80,18 @@ const (
 	GetGroupListOffsetQuery = "offset"
 	// GetGroupListGroupQuery defines get group list group query, which is used to route request
 	GetGroupListGroupQuery = "group-query"
-	// ListBucketsByBucketID defines list buckets by bucket ids, which is used to route request
-	ListBucketsByBucketID = "buckets-query"
-	// ListObjectsByObjectID defines list objects by object ids, which is used to route request
-	ListObjectsByObjectID = "objects-query"
-	// GetPaymentByBucketID defines get payment by bucket id, which is used to route request
-	GetPaymentByBucketID = "payment-id"
+	// ListBucketsByBucketIDQuery defines list buckets by bucket ids, which is used to route request
+	ListBucketsByBucketIDQuery = "buckets-query"
+	// ListObjectsByObjectIDQuery defines list objects by object ids, which is used to route request
+	ListObjectsByObjectIDQuery = "objects-query"
+	// GetPaymentByBucketIDQuery defines get payment by bucket id, which is used to route request
+	GetPaymentByBucketIDQuery = "payment-id"
+	// GetBucketByBucketNameQuery defines get bucket by bucket name query, which is used to route request
+	GetBucketByBucketNameQuery = "bucket-name"
+	// GetBucketByBucketIDQuery defines get bucket by bucket id, which is used to route request
+	GetBucketByBucketIDQuery = "bucket-id-query"
+	// ListDeletedObjectsQuery defines list deleted objects info by a block number range, which is used to route request
+	ListDeletedObjectsQuery = "deleted-objects"
 	// GetGroupListNameQuery defines get group list name query, which is used to route request
 	GetGroupListNameQuery = "name"
 	// GetGroupListPrefixQuery defines get group list prefix query, which is used to route request
