@@ -294,7 +294,6 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 		return nil
 	} else {
-		metrics.SealObjectFailedCounter.WithLabelValues(m.Name()).Inc()
 		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:         handleTask.GetObjectInfo().Id.Uint64(),
 			TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
@@ -302,7 +301,9 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 		}); err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "task_info", handleTask.Info(), "error", err)
 		}
-		log.CtxWarnw(ctx, "delete expired seal object task", "task_info", handleTask.Info())
+		err := m.RejectUnSealObject(ctx, handleTask.GetObjectInfo())
+		log.CtxWarnw(ctx, "delete expired seal object task and reject unseal object",
+			"task_info", handleTask.Info(), "reject_unseal_error", err)
 	}
 	return nil
 }

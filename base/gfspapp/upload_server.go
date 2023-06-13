@@ -52,13 +52,18 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		if err != nil {
 			resp.Err = gfsperrors.MakeGfSpError(err)
 		}
+
+		closeTime := time.Now()
 		err = stream.SendAndClose(resp)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("server_send_and_close_time").Observe(time.Since(closeTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to close upload object stream", "error", err)
 		}
 	}()
 
 	go func() {
+		serverStartTime := time.Now()
+		defer metrics.PerfUploadTimeHistogram.WithLabelValues("server_total_time").Observe(time.Since(serverStartTime).Seconds())
 		init := false
 		for {
 			select {
