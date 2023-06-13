@@ -2,11 +2,13 @@ package gfspapp
 
 import (
 	"context"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 var _ gfspserver.GfSpAuthorizationServiceServer = &GfSpBaseApp{}
@@ -15,8 +17,10 @@ func (g *GfSpBaseApp) GfSpVerifyAuthorize(ctx context.Context, req *gfspserver.G
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, req.GetBucketName())
 	ctx = log.WithValue(ctx, log.CtxKeyObjectName, req.GetObjectName())
 	log.CtxDebugw(ctx, "begin to authorize", "user", req.GetUserAccount(), "auth_type", req.GetAuthType())
+	startTime := time.Now()
 	allow, err := g.authorizer.VerifyAuthorize(ctx, coremodule.AuthOpType(req.GetAuthType()),
 		req.GetUserAccount(), req.GetBucketName(), req.GetObjectName())
+	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_total_time").Observe(time.Since(startTime).Seconds())
 	log.CtxDebugw(ctx, "finish to authorize", "user", req.GetUserAccount(), "auth_type", req.GetAuthType(),
 		"allow", allow, "error", err)
 	return &gfspserver.GfSpAuthorizeResponse{

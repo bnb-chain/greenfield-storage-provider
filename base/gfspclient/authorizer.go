@@ -2,15 +2,20 @@ package gfspclient
 
 import (
 	"context"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"google.golang.org/grpc"
 )
 
 func (s *GfSpClient) VerifyAuthorize(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {
+	startTime := time.Now()
+	defer metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_total_time").Observe(time.Since(startTime).Seconds())
 	conn, connErr := s.Connection(ctx, s.authorizerEndpoint)
+	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_create_conn_time").Observe(time.Since(startTime).Seconds())
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", connErr)
 		return false, ErrRpcUnknown
@@ -22,7 +27,9 @@ func (s *GfSpClient) VerifyAuthorize(ctx context.Context, auth coremodule.AuthOp
 		BucketName:  bucket,
 		ObjectName:  object,
 	}
+	startRequestTime := time.Now()
 	resp, err := gfspserver.NewGfSpAuthorizationServiceClient(conn).GfSpVerifyAuthorize(ctx, req)
+	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_network_time").Observe(time.Since(startRequestTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to verify authorize", "error", err)
 		return false, ErrRpcUnknown

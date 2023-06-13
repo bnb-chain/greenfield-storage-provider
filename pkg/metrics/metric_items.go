@@ -16,6 +16,10 @@ var MetricsItems = []prometheus.Collector{
 	// Perf workflow category
 	PerfUploadTimeHistogram,
 	PerfGetApprovalTimeHistogram,
+	PerfAuthTimeHistogram,
+	PerfReceivePieceTimeHistogram,
+	PerfGetObjectTimeHistogram,
+	PerfChallengeTimeHistogram,
 	// TaskQueue metrics category
 	QueueSizeGauge,
 	QueueCapGauge,
@@ -106,6 +110,26 @@ var (
 		Help:    "Track get approval workflow costs.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"perf_get_approval_time"})
+	PerfAuthTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_auth_time",
+		Help:    "Track auth workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_auth_time"})
+	PerfReceivePieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_receive_time",
+		Help:    "Track receive piece workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_receive_time"})
+	PerfGetObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_get_object_time",
+		Help:    "Track get object workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_get_object_time"})
+	PerfChallengeTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_challenge_piece_time",
+		Help:    "Track challenge piece workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_challenge_piece_time"})
 
 	// task queue metrics
 	QueueSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{

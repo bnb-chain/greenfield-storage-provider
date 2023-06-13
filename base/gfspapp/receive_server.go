@@ -3,6 +3,7 @@ package gfspapp
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -19,6 +20,8 @@ var (
 
 func (g *GfSpBaseApp) GfSpReplicatePiece(ctx context.Context, req *gfspserver.GfSpReplicatePieceRequest) (
 	*gfspserver.GfSpReplicatePieceResponse, error) {
+	startTime := time.Now()
+	defer metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_total_time").Observe(time.Since(startTime).Seconds())
 	task := req.GetReceivePieceTask()
 	if task == nil {
 		log.Error("failed to receive piece due to task pointer dangling")
@@ -44,6 +47,8 @@ func (g *GfSpBaseApp) GfSpReplicatePiece(ctx context.Context, req *gfspserver.Gf
 
 func (g *GfSpBaseApp) GfSpDoneReplicatePiece(ctx context.Context, req *gfspserver.GfSpDoneReplicatePieceRequest) (
 	*gfspserver.GfSpDoneReplicatePieceResponse, error) {
+	startTime := time.Now()
+	defer metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_done_server_total_time").Observe(time.Since(startTime).Seconds())
 	task := req.GetReceivePieceTask()
 	if task == nil {
 		log.Error("failed to done receive piece due to task pointer dangling")

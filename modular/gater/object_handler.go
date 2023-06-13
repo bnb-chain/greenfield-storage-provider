@@ -33,6 +33,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		params     *storagetypes.Params
 	)
 
+	uploadPrimaryStartTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -43,6 +44,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_primary_total_time").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	}()
 
 	reqCtx, err = NewRequestContext(r, g)
@@ -143,6 +145,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		highOffset int64
 		pieceInfos []*downloader.SegmentPieceInfo
 	)
+	getObjectStartTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -153,6 +156,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_total_time").Observe(time.Since(getObjectStartTime).Seconds())
 	}()
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
@@ -169,11 +173,14 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if reqCtx.NeedVerifyAuthorizer() {
+			authTime := time.Now()
 			if authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
+				metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 				return
 			}
+			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
 			if !authorized {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
@@ -182,19 +189,27 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} // else anonymous users can get public object.
 
+	getObjectTime := time.Now()
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_object_info_time").Observe(time.Since(getObjectTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
+
+	getBucketTime := time.Now()
 	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_bucket_info_time").Observe(time.Since(getBucketTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
+
+	getParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_storage_param_time").Observe(time.Since(getParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -232,6 +247,8 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Header().Set(ContentLengthHeader, util.Uint64ToString(objectInfo.GetPayloadSize()))
 	}
+
+	getDataTime := time.Now()
 	for idx, pInfo := range pieceInfos {
 		enableCheck := false
 		if idx == 0 { // only check in first piece
@@ -241,13 +258,16 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task),
 			enableCheck, reqCtx.Account(), uint64(highOffset-lowOffset+1), pInfo.SegmentPieceKey, pInfo.Offset,
 			pInfo.Length, g.baseApp.TaskTimeout(task, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(task))
+		getSegmentTime := time.Now()
 		pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_segment_data_time").Observe(time.Since(getSegmentTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
 			return
 		}
 		w.Write(pieceData)
 	}
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_data_time").Observe(time.Since(getDataTime).Seconds())
 }
 
 // queryUploadProgressHandler handles the query uploaded object progress request.

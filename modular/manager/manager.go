@@ -459,6 +459,7 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 }
 
 func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storagetypes.ObjectInfo) error {
+	metrics.SealObjectFailedCounter.WithLabelValues(m.Name()).Inc()
 	rejectUnSealObjectMsg := &storagetypes.MsgRejectSealObject{
 		BucketName: object.GetBucketName(),
 		ObjectName: object.GetObjectName(),
