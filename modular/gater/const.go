@@ -86,12 +86,18 @@ const (
 	ListObjectsByObjectIDQuery = "objects-query"
 	// GetPaymentByBucketIDQuery defines get payment by bucket id, which is used to route request
 	GetPaymentByBucketIDQuery = "payment-id"
+	// GetPaymentByBucketNameQuery defines get payment by bucket name, which is used to route request
+	GetPaymentByBucketNameQuery = "payment-name"
 	// GetBucketByBucketNameQuery defines get bucket by bucket name query, which is used to route request
 	GetBucketByBucketNameQuery = "bucket-name"
 	// GetBucketByBucketIDQuery defines get bucket by bucket id, which is used to route request
 	GetBucketByBucketIDQuery = "bucket-id-query"
 	// ListDeletedObjectsQuery defines list deleted objects info by a block number range, which is used to route request
 	ListDeletedObjectsQuery = "deleted-objects"
+	// GetUserBucketsCountQuery defines get user buckets count, which is used to route request
+	GetUserBucketsCountQuery = "buckets-count"
+	// ListExpiredBucketsBySpQuery defines list buckets that are expired by specific sp, which is used to route request
+	ListExpiredBucketsBySpQuery = "expired-buckets"
 	// GetGroupListNameQuery defines get group list name query, which is used to route request
 	GetGroupListNameQuery = "name"
 	// GetGroupListPrefixQuery defines get group list prefix query, which is used to route request
@@ -108,6 +114,12 @@ const (
 	VerifyPermissionActionType = "action-type"
 	// BucketIDQuery defines bucket id
 	BucketIDQuery = "bucket-id"
+	// LimitQuery defines limit of results
+	LimitQuery = "limit"
+	// CreateAtQuery defines the create timestamp
+	CreateAtQuery = "create-at"
+	// PrimarySpAddressQuery defines the primary sp address
+	PrimarySpAddressQuery = "primary-sp-address"
 	// GetChallengeInfoPath defines get challenge info path style suffix
 	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style

@@ -242,6 +242,22 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: getPaymentByBucketIDRouterName,
 		},
 		{
+			name:             "Get payment by bucket name router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "?" + GetPaymentByBucketNameQuery,
+			shouldMatch:      true,
+			wantedRouterName: getPaymentByBucketNameRouterName,
+		},
+		{
+			name:             "Get payment by bucket name router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/" + bucketName + "?" + GetPaymentByBucketNameQuery,
+			shouldMatch:      true,
+			wantedRouterName: getPaymentByBucketNameRouterName,
+		},
+		{
 			name:             "Get bucket by bucket name router, virtual host style",
 			router:           gwRouter,
 			method:           http.MethodGet,
@@ -272,6 +288,22 @@ func TestRouters(t *testing.T) {
 			url:              scheme + testDomain + "/?" + ListDeletedObjectsQuery + "&" + SpOperatorAddressQuery + "&" + StartBlockNumberQuery + "&" + EndBlockNumberQuery,
 			shouldMatch:      true,
 			wantedRouterName: listDeletedObjectsByBlockNumberRangeRouterName,
+		},
+		{
+			name:             "Get user buckets count router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetUserBucketsCountQuery,
+			shouldMatch:      true,
+			wantedRouterName: getUserBucketsCountRouterName,
+		},
+		{
+			name:             "List expired buckets by sp router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + ListExpiredBucketsBySpQuery + "&" + LimitQuery + "&" + CreateAtQuery + "&" + PrimarySpAddressQuery,
+			shouldMatch:      true,
+			wantedRouterName: listExpiredBucketsBySpRouterName,
 		},
 	}
 	for _, testCase := range testCases {

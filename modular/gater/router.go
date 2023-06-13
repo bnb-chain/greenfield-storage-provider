@@ -32,9 +32,12 @@ const (
 	listBucketsByBucketIDRouterName                = "ListBucketsByBucketID"
 	listObjectsByObjectIDRouterName                = "ListObjectsByObjectID"
 	getPaymentByBucketIDRouterName                 = "GetPaymentByBucketID"
+	getPaymentByBucketNameRouterName               = "GetPaymentByBucketName"
 	getBucketByBucketNameRouterName                = "GetBucketByBucketName"
 	getBucketByBucketIDRouterName                  = "GetBucketByBucketID"
 	listDeletedObjectsByBlockNumberRangeRouterName = "ListDeletedObjectsByBlockNumberRange"
+	getUserBucketsCountRouterName                  = "GetUserBucketsCount"
+	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
 )
 
 const (
@@ -93,6 +96,11 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Queries(GetBucketByBucketNameQuery, "").
 		HandlerFunc(g.getBucketByBucketNameHandler)
 	hostBucketRouter.NewRoute().
+		Name(getPaymentByBucketNameRouterName).
+		Methods(http.MethodGet).
+		Queries(GetPaymentByBucketNameQuery, "").
+		HandlerFunc(g.getPaymentByBucketNameHandler)
+	hostBucketRouter.NewRoute().
 		Name(listBucketReadRecordRouterName).
 		Methods(http.MethodGet).
 		Queries(ListBucketReadRecordQuery, "",
@@ -138,6 +146,16 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Methods(http.MethodGet).
 		Queries(ListDeletedObjectsQuery, "").
 		HandlerFunc(g.listDeletedObjectsByBlockNumberRangeHandler)
+	router.Path("/").
+		Name(getUserBucketsCountRouterName).
+		Methods(http.MethodGet).
+		Queries(GetUserBucketsCountQuery, "").
+		HandlerFunc(g.getUserBucketsCountHandler)
+	router.Path("/").
+		Name(listExpiredBucketsBySpRouterName).
+		Methods(http.MethodGet).
+		Queries(ListExpiredBucketsBySpQuery, "").
+		HandlerFunc(g.listExpiredBucketsBySpHandler)
 	router.Path("/").
 		Name(getUserBucketsRouterName).
 		Methods(http.MethodGet).
@@ -210,6 +228,11 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Methods(http.MethodGet).
 		Queries(GetBucketByBucketNameQuery, "").
 		HandlerFunc(g.getBucketByBucketNameHandler)
+	pathBucketRouter.NewRoute().
+		Name(getPaymentByBucketNameRouterName).
+		Methods(http.MethodGet).
+		Queries(GetPaymentByBucketNameQuery, "").
+		HandlerFunc(g.getPaymentByBucketNameHandler)
 	pathBucketRouter.NewRoute().
 		Name(getObjectMetaRouterName).
 		Methods(http.MethodGet).
