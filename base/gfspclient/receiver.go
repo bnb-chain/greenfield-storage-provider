@@ -2,7 +2,9 @@ package gfspclient
 
 import (
 	"context"
+	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -23,7 +25,9 @@ func (s *GfSpClient) ReplicatePiece(ctx context.Context, task coretask.ReceivePi
 		ReceivePieceTask: task.(*gfsptask.GfSpReceivePieceTask),
 		PieceData:        data,
 	}
+	startTime := time.Now()
 	resp, err := gfspserver.NewGfSpReceiveServiceClient(conn).GfSpReplicatePiece(ctx, req)
+	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_client_total_time").Observe(time.Since(startTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to replicate piece", "error", err)
 		return ErrRpcUnknown
@@ -45,7 +49,9 @@ func (s *GfSpClient) DoneReplicatePiece(ctx context.Context, task coretask.Recei
 	req := &gfspserver.GfSpDoneReplicatePieceRequest{
 		ReceivePieceTask: task.(*gfsptask.GfSpReceivePieceTask),
 	}
+	startTime := time.Now()
 	resp, err := gfspserver.NewGfSpReceiveServiceClient(conn).GfSpDoneReplicatePiece(ctx, req)
+	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_done_client_total_time").Observe(time.Since(startTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to done replicate piece", "error", err)
 		return nil, nil, ErrRpcUnknown

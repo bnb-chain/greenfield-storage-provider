@@ -2,7 +2,9 @@ package gfspclient
 
 import (
 	"context"
+	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -44,7 +46,9 @@ func (s *GfSpClient) GetPiece(ctx context.Context, downloadPieceTask coretask.Do
 	req := &gfspserver.GfSpDownloadPieceRequest{
 		DownloadPieceTask: downloadPieceTask.(*gfsptask.GfSpDownloadPieceTask),
 	}
+	startTime := time.Now()
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadPiece(ctx, req)
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_client_total_time").Observe(time.Since(startTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to download piece", "error", err)
 		return nil, ErrRpcUnknown
@@ -66,7 +70,9 @@ func (s *GfSpClient) GetChallengeInfo(ctx context.Context, challengePieceTask co
 	req := &gfspserver.GfSpGetChallengeInfoRequest{
 		ChallengePieceTask: challengePieceTask.(*gfsptask.GfSpChallengePieceTask),
 	}
+	startTime := time.Now()
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpGetChallengeInfo(ctx, req)
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_client_total_time").Observe(time.Since(startTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to get challenge piece info", "error", err)
 		return nil, nil, nil, ErrRpcUnknown
