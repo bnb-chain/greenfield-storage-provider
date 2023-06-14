@@ -15,138 +15,70 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockJobDB is a mock of JobDB interface.
-type MockJobDB struct {
+// MockUploadObjectProgressDB is a mock of UploadObjectProgressDB interface.
+type MockUploadObjectProgressDB struct {
 	ctrl     *gomock.Controller
-	recorder *MockJobDBMockRecorder
+	recorder *MockUploadObjectProgressDBMockRecorder
 }
 
-// MockJobDBMockRecorder is the mock recorder for MockJobDB.
-type MockJobDBMockRecorder struct {
-	mock *MockJobDB
+// MockUploadObjectProgressDBMockRecorder is the mock recorder for MockUploadObjectProgressDB.
+type MockUploadObjectProgressDBMockRecorder struct {
+	mock *MockUploadObjectProgressDB
 }
 
-// NewMockJobDB creates a new mock instance.
-func NewMockJobDB(ctrl *gomock.Controller) *MockJobDB {
-	mock := &MockJobDB{ctrl: ctrl}
-	mock.recorder = &MockJobDBMockRecorder{mock}
+// NewMockUploadObjectProgressDB creates a new mock instance.
+func NewMockUploadObjectProgressDB(ctrl *gomock.Controller) *MockUploadObjectProgressDB {
+	mock := &MockUploadObjectProgressDB{ctrl: ctrl}
+	mock.recorder = &MockUploadObjectProgressDBMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockJobDB) EXPECT() *MockJobDBMockRecorder {
+func (m *MockUploadObjectProgressDB) EXPECT() *MockUploadObjectProgressDBMockRecorder {
 	return m.recorder
 }
 
-// CreateUploadJob mocks base method.
-func (m *MockJobDB) CreateUploadJob(objectInfo *types1.ObjectInfo) (*types.JobContext, error) {
+// CreateUploadProgress mocks base method.
+func (m *MockUploadObjectProgressDB) CreateUploadProgress(objectID uint64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUploadJob", objectInfo)
-	ret0, _ := ret[0].(*types.JobContext)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateUploadJob indicates an expected call of CreateUploadJob.
-func (mr *MockJobDBMockRecorder) CreateUploadJob(objectInfo interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadJob", reflect.TypeOf((*MockJobDB)(nil).CreateUploadJob), objectInfo)
-}
-
-// GetJobByID mocks base method.
-func (m *MockJobDB) GetJobByID(jobID uint64) (*types.JobContext, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetJobByID", jobID)
-	ret0, _ := ret[0].(*types.JobContext)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetJobByID indicates an expected call of GetJobByID.
-func (mr *MockJobDBMockRecorder) GetJobByID(jobID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobByID", reflect.TypeOf((*MockJobDB)(nil).GetJobByID), jobID)
-}
-
-// GetJobByObjectID mocks base method.
-func (m *MockJobDB) GetJobByObjectID(objectID uint64) (*types.JobContext, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetJobByObjectID", objectID)
-	ret0, _ := ret[0].(*types.JobContext)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetJobByObjectID indicates an expected call of GetJobByObjectID.
-func (mr *MockJobDBMockRecorder) GetJobByObjectID(objectID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobByObjectID", reflect.TypeOf((*MockJobDB)(nil).GetJobByObjectID), objectID)
-}
-
-// UpdateJobState mocks base method.
-func (m *MockJobDB) UpdateJobState(objectID uint64, state types.JobState) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateJobState", objectID, state)
+	ret := m.ctrl.Call(m, "CreateUploadProgress", objectID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateJobState indicates an expected call of UpdateJobState.
-func (mr *MockJobDBMockRecorder) UpdateJobState(objectID, state interface{}) *gomock.Call {
+// CreateUploadProgress indicates an expected call of CreateUploadProgress.
+func (mr *MockUploadObjectProgressDBMockRecorder) CreateUploadProgress(objectID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateJobState", reflect.TypeOf((*MockJobDB)(nil).UpdateJobState), objectID, state)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadProgress", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).CreateUploadProgress), objectID)
 }
 
-// MockObjectDB is a mock of ObjectDB interface.
-type MockObjectDB struct {
-	ctrl     *gomock.Controller
-	recorder *MockObjectDBMockRecorder
-}
-
-// MockObjectDBMockRecorder is the mock recorder for MockObjectDB.
-type MockObjectDBMockRecorder struct {
-	mock *MockObjectDB
-}
-
-// NewMockObjectDB creates a new mock instance.
-func NewMockObjectDB(ctrl *gomock.Controller) *MockObjectDB {
-	mock := &MockObjectDB{ctrl: ctrl}
-	mock.recorder = &MockObjectDBMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockObjectDB) EXPECT() *MockObjectDBMockRecorder {
-	return m.recorder
-}
-
-// GetObjectInfo mocks base method.
-func (m *MockObjectDB) GetObjectInfo(objectID uint64) (*types1.ObjectInfo, error) {
+// QueryUploadState mocks base method.
+func (m *MockUploadObjectProgressDB) QueryUploadState(objectID uint64) (types.TaskState, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetObjectInfo", objectID)
-	ret0, _ := ret[0].(*types1.ObjectInfo)
+	ret := m.ctrl.Call(m, "QueryUploadState", objectID)
+	ret0, _ := ret[0].(types.TaskState)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetObjectInfo indicates an expected call of GetObjectInfo.
-func (mr *MockObjectDBMockRecorder) GetObjectInfo(objectID interface{}) *gomock.Call {
+// QueryUploadState indicates an expected call of QueryUploadState.
+func (mr *MockUploadObjectProgressDBMockRecorder) QueryUploadState(objectID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectInfo", reflect.TypeOf((*MockObjectDB)(nil).GetObjectInfo), objectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryUploadState", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).QueryUploadState), objectID)
 }
 
-// SetObjectInfo mocks base method.
-func (m *MockObjectDB) SetObjectInfo(objectID uint64, objectInfo *types1.ObjectInfo) error {
+// UpdateUploadProgress mocks base method.
+func (m *MockUploadObjectProgressDB) UpdateUploadProgress(objectID uint64, taskState types.TaskState, errorDescription string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetObjectInfo", objectID, objectInfo)
+	ret := m.ctrl.Call(m, "UpdateUploadProgress", objectID, taskState, errorDescription)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockObjectDBMockRecorder) SetObjectInfo(objectID, objectInfo interface{}) *gomock.Call {
+// UpdateUploadProgress indicates an expected call of UpdateUploadProgress.
+func (mr *MockUploadObjectProgressDBMockRecorder) UpdateUploadProgress(objectID, taskState, errorDescription interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockObjectDB)(nil).SetObjectInfo), objectID, objectInfo)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUploadProgress", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).UpdateUploadProgress), objectID, taskState, errorDescription)
 }
 
 // MockObjectIntegrityDB is a mock of ObjectIntegrityDB interface.
@@ -547,31 +479,31 @@ func (mr *MockSPInfoDBMockRecorder) UpdateAllSp(spList interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAllSp", reflect.TypeOf((*MockSPInfoDB)(nil).UpdateAllSp), spList)
 }
 
-// MockGCObjectInfoDB is a mock of GCObjectInfoDB interface.
-type MockGCObjectInfoDB struct {
+// MockGCObjectProgressDB is a mock of GCObjectProgressDB interface.
+type MockGCObjectProgressDB struct {
 	ctrl     *gomock.Controller
-	recorder *MockGCObjectInfoDBMockRecorder
+	recorder *MockGCObjectProgressDBMockRecorder
 }
 
-// MockGCObjectInfoDBMockRecorder is the mock recorder for MockGCObjectInfoDB.
-type MockGCObjectInfoDBMockRecorder struct {
-	mock *MockGCObjectInfoDB
+// MockGCObjectProgressDBMockRecorder is the mock recorder for MockGCObjectProgressDB.
+type MockGCObjectProgressDBMockRecorder struct {
+	mock *MockGCObjectProgressDB
 }
 
-// NewMockGCObjectInfoDB creates a new mock instance.
-func NewMockGCObjectInfoDB(ctrl *gomock.Controller) *MockGCObjectInfoDB {
-	mock := &MockGCObjectInfoDB{ctrl: ctrl}
-	mock.recorder = &MockGCObjectInfoDBMockRecorder{mock}
+// NewMockGCObjectProgressDB creates a new mock instance.
+func NewMockGCObjectProgressDB(ctrl *gomock.Controller) *MockGCObjectProgressDB {
+	mock := &MockGCObjectProgressDB{ctrl: ctrl}
+	mock.recorder = &MockGCObjectProgressDBMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockGCObjectInfoDB) EXPECT() *MockGCObjectInfoDBMockRecorder {
+func (m *MockGCObjectProgressDB) EXPECT() *MockGCObjectProgressDBMockRecorder {
 	return m.recorder
 }
 
 // DeleteGCObjectProgress mocks base method.
-func (m *MockGCObjectInfoDB) DeleteGCObjectProgress(taskKey string) error {
+func (m *MockGCObjectProgressDB) DeleteGCObjectProgress(taskKey string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteGCObjectProgress", taskKey)
 	ret0, _ := ret[0].(error)
@@ -579,13 +511,13 @@ func (m *MockGCObjectInfoDB) DeleteGCObjectProgress(taskKey string) error {
 }
 
 // DeleteGCObjectProgress indicates an expected call of DeleteGCObjectProgress.
-func (mr *MockGCObjectInfoDBMockRecorder) DeleteGCObjectProgress(taskKey interface{}) *gomock.Call {
+func (mr *MockGCObjectProgressDBMockRecorder) DeleteGCObjectProgress(taskKey interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGCObjectProgress", reflect.TypeOf((*MockGCObjectInfoDB)(nil).DeleteGCObjectProgress), taskKey)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGCObjectProgress", reflect.TypeOf((*MockGCObjectProgressDB)(nil).DeleteGCObjectProgress), taskKey)
 }
 
 // GetAllGCObjectTask mocks base method.
-func (m *MockGCObjectInfoDB) GetAllGCObjectTask(taskKey string) []task.GCObjectTask {
+func (m *MockGCObjectProgressDB) GetAllGCObjectTask(taskKey string) []task.GCObjectTask {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllGCObjectTask", taskKey)
 	ret0, _ := ret[0].([]task.GCObjectTask)
@@ -593,13 +525,13 @@ func (m *MockGCObjectInfoDB) GetAllGCObjectTask(taskKey string) []task.GCObjectT
 }
 
 // GetAllGCObjectTask indicates an expected call of GetAllGCObjectTask.
-func (mr *MockGCObjectInfoDBMockRecorder) GetAllGCObjectTask(taskKey interface{}) *gomock.Call {
+func (mr *MockGCObjectProgressDBMockRecorder) GetAllGCObjectTask(taskKey interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllGCObjectTask", reflect.TypeOf((*MockGCObjectInfoDB)(nil).GetAllGCObjectTask), taskKey)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllGCObjectTask", reflect.TypeOf((*MockGCObjectProgressDB)(nil).GetAllGCObjectTask), taskKey)
 }
 
 // SetGCObjectProgress mocks base method.
-func (m *MockGCObjectInfoDB) SetGCObjectProgress(taskKey string, deletingBlockID, deletedObjectID uint64) error {
+func (m *MockGCObjectProgressDB) SetGCObjectProgress(taskKey string, deletingBlockID, deletedObjectID uint64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetGCObjectProgress", taskKey, deletingBlockID, deletedObjectID)
 	ret0, _ := ret[0].(error)
@@ -607,9 +539,9 @@ func (m *MockGCObjectInfoDB) SetGCObjectProgress(taskKey string, deletingBlockID
 }
 
 // SetGCObjectProgress indicates an expected call of SetGCObjectProgress.
-func (mr *MockGCObjectInfoDBMockRecorder) SetGCObjectProgress(taskKey, deletingBlockID, deletedObjectID interface{}) *gomock.Call {
+func (mr *MockGCObjectProgressDBMockRecorder) SetGCObjectProgress(taskKey, deletingBlockID, deletedObjectID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGCObjectProgress", reflect.TypeOf((*MockGCObjectInfoDB)(nil).SetGCObjectProgress), taskKey, deletingBlockID, deletedObjectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGCObjectProgress", reflect.TypeOf((*MockGCObjectProgressDB)(nil).SetGCObjectProgress), taskKey, deletingBlockID, deletedObjectID)
 }
 
 // MockStorageParamDB is a mock of StorageParamDB interface.
@@ -767,19 +699,18 @@ func (mr *MockSPDBMockRecorder) CheckQuotaAndAddReadRecord(record, quota interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckQuotaAndAddReadRecord", reflect.TypeOf((*MockSPDB)(nil).CheckQuotaAndAddReadRecord), record, quota)
 }
 
-// CreateUploadJob mocks base method.
-func (m *MockSPDB) CreateUploadJob(objectInfo *types1.ObjectInfo) (*types.JobContext, error) {
+// CreateUploadProgress mocks base method.
+func (m *MockSPDB) CreateUploadProgress(objectID uint64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUploadJob", objectInfo)
-	ret0, _ := ret[0].(*types.JobContext)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "CreateUploadProgress", objectID)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// CreateUploadJob indicates an expected call of CreateUploadJob.
-func (mr *MockSPDBMockRecorder) CreateUploadJob(objectInfo interface{}) *gomock.Call {
+// CreateUploadProgress indicates an expected call of CreateUploadProgress.
+func (mr *MockSPDBMockRecorder) CreateUploadProgress(objectID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadJob", reflect.TypeOf((*MockSPDB)(nil).CreateUploadJob), objectInfo)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadProgress", reflect.TypeOf((*MockSPDB)(nil).CreateUploadProgress), objectID)
 }
 
 // DeleteAllReplicatePieceChecksum mocks base method.
@@ -950,51 +881,6 @@ func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID, yearMonth interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID, yearMonth)
 }
 
-// GetJobByID mocks base method.
-func (m *MockSPDB) GetJobByID(jobID uint64) (*types.JobContext, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetJobByID", jobID)
-	ret0, _ := ret[0].(*types.JobContext)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetJobByID indicates an expected call of GetJobByID.
-func (mr *MockSPDBMockRecorder) GetJobByID(jobID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobByID", reflect.TypeOf((*MockSPDB)(nil).GetJobByID), jobID)
-}
-
-// GetJobByObjectID mocks base method.
-func (m *MockSPDB) GetJobByObjectID(objectID uint64) (*types.JobContext, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetJobByObjectID", objectID)
-	ret0, _ := ret[0].(*types.JobContext)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetJobByObjectID indicates an expected call of GetJobByObjectID.
-func (mr *MockSPDBMockRecorder) GetJobByObjectID(objectID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobByObjectID", reflect.TypeOf((*MockSPDB)(nil).GetJobByObjectID), objectID)
-}
-
-// GetObjectInfo mocks base method.
-func (m *MockSPDB) GetObjectInfo(objectID uint64) (*types1.ObjectInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetObjectInfo", objectID)
-	ret0, _ := ret[0].(*types1.ObjectInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetObjectInfo indicates an expected call of GetObjectInfo.
-func (mr *MockSPDBMockRecorder) GetObjectInfo(objectID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectInfo", reflect.TypeOf((*MockSPDB)(nil).GetObjectInfo), objectID)
-}
-
 // GetObjectIntegrity mocks base method.
 func (m *MockSPDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 	m.ctrl.T.Helper()
@@ -1100,21 +986,6 @@ func (mr *MockSPDBMockRecorder) GetSpByEndpoint(endpoint interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByEndpoint", reflect.TypeOf((*MockSPDB)(nil).GetSpByEndpoint), endpoint)
 }
 
-// GetStorageParams mocks base method.
-func (m *MockSPDB) GetStorageParams() (*types1.Params, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStorageParams")
-	ret0, _ := ret[0].(*types1.Params)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetStorageParams indicates an expected call of GetStorageParams.
-func (mr *MockSPDBMockRecorder) GetStorageParams() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStorageParams", reflect.TypeOf((*MockSPDB)(nil).GetStorageParams))
-}
-
 // GetUserReadRecord mocks base method.
 func (m *MockSPDB) GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	m.ctrl.T.Helper()
@@ -1144,6 +1015,21 @@ func (mr *MockSPDBMockRecorder) InsertAuthKey(newRecord interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuthKey", reflect.TypeOf((*MockSPDB)(nil).InsertAuthKey), newRecord)
 }
 
+// QueryUploadState mocks base method.
+func (m *MockSPDB) QueryUploadState(objectID uint64) (types.TaskState, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryUploadState", objectID)
+	ret0, _ := ret[0].(types.TaskState)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryUploadState indicates an expected call of QueryUploadState.
+func (mr *MockSPDBMockRecorder) QueryUploadState(objectID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryUploadState", reflect.TypeOf((*MockSPDB)(nil).QueryUploadState), objectID)
+}
+
 // SetAllReplicatePieceChecksum mocks base method.
 func (m *MockSPDB) SetAllReplicatePieceChecksum(objectID uint64, replicateIdx, pieceCount uint32, checksum [][]byte) error {
 	m.ctrl.T.Helper()
@@ -1170,20 +1056,6 @@ func (m *MockSPDB) SetGCObjectProgress(taskKey string, deletingBlockID, deletedO
 func (mr *MockSPDBMockRecorder) SetGCObjectProgress(taskKey, deletingBlockID, deletedObjectID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGCObjectProgress", reflect.TypeOf((*MockSPDB)(nil).SetGCObjectProgress), taskKey, deletingBlockID, deletedObjectID)
-}
-
-// SetObjectInfo mocks base method.
-func (m *MockSPDB) SetObjectInfo(objectID uint64, objectInfo *types1.ObjectInfo) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetObjectInfo", objectID, objectInfo)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockSPDBMockRecorder) SetObjectInfo(objectID, objectInfo interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockSPDB)(nil).SetObjectInfo), objectID, objectInfo)
 }
 
 // SetObjectIntegrity mocks base method.
@@ -1228,20 +1100,6 @@ func (mr *MockSPDBMockRecorder) SetReplicatePieceChecksum(objectID, replicateIdx
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).SetReplicatePieceChecksum), objectID, replicateIdx, pieceIdx, checksum)
 }
 
-// SetStorageParams mocks base method.
-func (m *MockSPDB) SetStorageParams(params *types1.Params) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetStorageParams", params)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockSPDBMockRecorder) SetStorageParams(params interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockSPDB)(nil).SetStorageParams), params)
-}
-
 // UpdateAllSp mocks base method.
 func (m *MockSPDB) UpdateAllSp(spList []*types0.StorageProvider) error {
 	m.ctrl.T.Helper()
@@ -1270,16 +1128,16 @@ func (mr *MockSPDBMockRecorder) UpdateAuthKey(userAddress, domain, oldNonce, new
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthKey", reflect.TypeOf((*MockSPDB)(nil).UpdateAuthKey), userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate)
 }
 
-// UpdateJobState mocks base method.
-func (m *MockSPDB) UpdateJobState(objectID uint64, state types.JobState) error {
+// UpdateUploadProgress mocks base method.
+func (m *MockSPDB) UpdateUploadProgress(objectID uint64, taskState types.TaskState, errorDescription string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateJobState", objectID, state)
+	ret := m.ctrl.Call(m, "UpdateUploadProgress", objectID, taskState, errorDescription)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateJobState indicates an expected call of UpdateJobState.
-func (mr *MockSPDBMockRecorder) UpdateJobState(objectID, state interface{}) *gomock.Call {
+// UpdateUploadProgress indicates an expected call of UpdateUploadProgress.
+func (mr *MockSPDBMockRecorder) UpdateUploadProgress(objectID, taskState, errorDescription interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateJobState", reflect.TypeOf((*MockSPDB)(nil).UpdateJobState), objectID, state)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUploadProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateUploadProgress), objectID, taskState, errorDescription)
 }

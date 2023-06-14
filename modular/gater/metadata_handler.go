@@ -3,6 +3,7 @@ package gater
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -17,14 +18,16 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 const (
-	MaximumGetGroupListLimit  = 1000
-	MaximumGetGroupListOffset = 100000
-	DefaultGetGroupListLimit  = 50
-	DefaultGetGroupListOffset = 0
+	MaximumGetGroupListLimit         = 1000
+	MaximumGetGroupListOffset        = 100000
+	MaximumListObjectsAndBucketsSize = 1000
+	DefaultGetGroupListLimit         = 50
+	DefaultGetGroupListOffset        = 0
 )
 
 // getUserBucketsHandler handle get object request
@@ -54,7 +57,7 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	resp, err := g.baseApp.GfSpClient().GetUserBuckets(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader))
+	resp, err := g.baseApp.GfSpClient().GetUserBuckets(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader), true)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
 		return
@@ -193,7 +196,8 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 			requestStartAfter,
 			continuationToken,
 			requestDelimiter,
-			requestPrefix)
+			requestPrefix,
+			true)
 	if err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
 		return
@@ -483,7 +487,7 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	groups, count, err = g.baseApp.GfSpClient().GetGroupList(reqCtx.Context(), name, prefix, sourceType, limit, offset)
+	groups, count, err = g.baseApp.GfSpClient().GetGroupList(reqCtx.Context(), name, prefix, sourceType, limit, offset, false)
 	if err != nil {
 		log.Errorf("failed to get group list", "error", err)
 		return
@@ -502,4 +506,132 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 	w.Write(b.Bytes())
+}
+
+// listObjectsByObjectIDHandler list objects by object ids
+func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		buf         bytes.Buffer
+		objects     map[uint64]*types.Object
+		objectIDMap map[uint64]bool
+		ok          bool
+		objectIDs   bsdb.ObjectIDs
+		reqCtx      *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list objects by ids", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	err = json.NewDecoder(r.Body).Decode(&objectIDs)
+	if err != nil {
+		log.Errorf("failed to parse object ids", "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if len(objectIDs.IDs) == 0 || len(objectIDs.IDs) > MaximumListObjectsAndBucketsSize {
+		log.Errorf("failed to check ids", "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	objectIDMap = make(map[uint64]bool)
+	for _, id := range objectIDs.IDs {
+		if _, ok = objectIDMap[id]; ok {
+			// repeat id keys in request
+			log.Errorf("failed to check ids", "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		objectIDMap[id] = true
+	}
+
+	objects, err = g.baseApp.GfSpClient().ListObjectsByObjectID(reqCtx.Context(), objectIDs.IDs, false)
+	if err != nil {
+		log.Errorf("failed to list objects by ids", "error", err)
+		return
+	}
+	grpcResponse := &types.GfSpListObjectsByObjectIDResponse{Objects: objects}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&buf, grpcResponse); err != nil {
+		log.Errorf("failed to list objects by ids", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(buf.Bytes())
+}
+
+// listBucketsByBucketIDHandler list buckets by bucket ids
+func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		buf         bytes.Buffer
+		buckets     map[uint64]*types.Bucket
+		bucketIDMap map[uint64]bool
+		ok          bool
+		bucketIDs   bsdb.BucketIDs
+		reqCtx      *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list buckets by ids", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	err = json.NewDecoder(r.Body).Decode(&bucketIDs)
+	if err != nil {
+		log.Errorf("failed to parse bucket ids", "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if len(bucketIDs.IDs) == 0 || len(bucketIDs.IDs) > MaximumListObjectsAndBucketsSize {
+		log.Errorf("failed to check ids", "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	bucketIDMap = make(map[uint64]bool)
+	for _, id := range bucketIDs.IDs {
+		if _, ok = bucketIDMap[id]; ok {
+			// repeat id keys in request
+			log.Errorf("failed to check ids", "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		bucketIDMap[id] = true
+	}
+
+	buckets, err = g.baseApp.GfSpClient().ListBucketsByBucketID(reqCtx.Context(), bucketIDs.IDs, false)
+	if err != nil {
+		log.Errorf("failed to list buckets by ids", "error", err)
+		return
+	}
+	grpcResponse := &types.GfSpListBucketsByBucketIDResponse{Buckets: buckets}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&buf, grpcResponse); err != nil {
+		log.Errorf("failed to list buckets by ids", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(buf.Bytes())
 }

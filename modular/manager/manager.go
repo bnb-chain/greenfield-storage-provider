@@ -6,17 +6,20 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -39,6 +42,13 @@ var _ module.Manager = &ManageModular{}
 type ManageModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
+	mux     sync.Mutex
+
+	// loading task at startup.
+	enableLoadTask           bool
+	loadTaskLimitToReplicate int
+	loadTaskLimitToSeal      int
+	loadTaskLimitToGC        int
 
 	uploadQueue    taskqueue.TQueueOnStrategy
 	replicateQueue taskqueue.TQueueOnStrategyWithLimit
@@ -107,7 +117,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-statisticsTicker.C:
-			log.CtxDebugw(ctx, m.Statistics())
+			log.CtxDebug(ctx, m.Statistics())
 		case <-syncConsensusInfoTicker.C:
 			m.syncConsensusInfo(ctx)
 		case <-gcObjectTicker.C:
@@ -115,7 +125,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			end := m.gcBlockHeight + m.gcObjectBlockInterval
 			currentBlockHeight, err := m.baseApp.Consensus().CurrentHeight(ctx)
 			if err != nil {
-				log.CtxErrorw(ctx, "failed to get current block number for gc object and try again later", "error", err)
+				log.CtxErrorw(ctx, "failed to get current block height for gc object and try again later", "error", err)
 				continue
 			}
 			if end+m.gcSafeBlockDistance > currentBlockHeight {
@@ -128,15 +138,18 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			}
 			task := &gfsptask.GfSpGCObjectTask{}
 			task.InitGCObjectTask(m.baseApp.TaskPriority(task), start, end, m.baseApp.TaskTimeout(task, 0))
-			err = m.baseApp.GfSpDB().SetGCObjectProgress(task.Key().String(), start, task.GetLastDeletedObjectId())
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to init gc object task progress", "error", err)
-				continue
-			}
 			err = m.gcObjectQueue.Push(task)
 			if err == nil {
-				m.gcBlockHeight = end + 1
 				metrics.GCBlockNumberGauge.WithLabelValues(m.Name()).Set(float64(m.gcBlockHeight))
+				m.gcBlockHeight = end + 1
+
+				if err = m.baseApp.GfSpDB().InsertGCObjectProgress(task.Key().String(), &spdb.GCObjectMeta{
+					StartBlockHeight: start,
+					EndBlockHeight:   end,
+				}); err != nil {
+					log.CtxErrorw(ctx, "failed to init the gc object task", "error", err)
+					continue
+				}
 			}
 			log.CtxErrorw(ctx, "generate a gc object task", "task_info", task.Info(), "error", err)
 		case <-discontinueBucketTicker.C:
@@ -201,6 +214,108 @@ func (m *ManageModular) ReleaseResource(ctx context.Context, span rcmgr.Resource
 }
 
 func (m *ManageModular) LoadTaskFromDB() error {
+	if !m.enableLoadTask {
+		log.Info("skip load tasks from db")
+		return nil
+	}
+
+	var (
+		err                          error
+		replicateMetas               []*spdb.UploadObjectMeta
+		generateReplicateTaskCounter int
+		sealMetas                    []*spdb.UploadObjectMeta
+		generateSealTaskCounter      int
+		gcObjectMetas                []*spdb.GCObjectMeta
+		generateGCOjectTaskCounter   int
+	)
+
+	log.Info("start to load task from sp db")
+
+	replicateMetas, err = m.baseApp.GfSpDB().GetUploadMetasToReplicate(m.loadTaskLimitToReplicate)
+	if err != nil {
+		log.Errorw("failed to load replicate task from sp db", "error", err)
+		return err
+	}
+	for _, meta := range replicateMetas {
+		objectInfo, queryErr := m.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(meta.ObjectID))
+		if queryErr != nil {
+			log.Errorw("failed to query object info and continue", "object_id", meta.ObjectID, "error", queryErr)
+			continue
+		}
+
+		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+			log.Infow("object is not in create status and continue", "object_info", objectInfo)
+			continue
+		}
+		storageParams, queryErr := m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+		if queryErr != nil {
+			log.Errorw("failed to query storage param and continue", "object_id", meta.ObjectID, "error", queryErr)
+			continue
+		}
+		replicateTask := &gfsptask.GfSpReplicatePieceTask{}
+		replicateTask.InitReplicatePieceTask(objectInfo, storageParams, m.baseApp.TaskPriority(replicateTask),
+			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask))
+		pushErr := m.replicateQueue.Push(replicateTask)
+		if pushErr != nil {
+			log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", pushErr)
+			continue
+		}
+		generateReplicateTaskCounter++
+	}
+
+	sealMetas, err = m.baseApp.GfSpDB().GetUploadMetasToSeal(m.loadTaskLimitToSeal)
+	if err != nil {
+		log.Errorw("failed to load seal task from sp db", "error", err)
+		return err
+	}
+	for _, meta := range sealMetas {
+		objectInfo, queryErr := m.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(meta.ObjectID))
+		if queryErr != nil {
+			log.Errorw("failed to query object info and continue", "object_id", meta.ObjectID, "error", queryErr)
+			continue
+		}
+		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+			log.Infow("object is not in create status and continue", "object_info", objectInfo)
+			continue
+		}
+		storageParams, queryErr := m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+		if queryErr != nil {
+			log.Errorw("failed to query storage param and continue", "object_id", meta.ObjectID, "error", queryErr)
+			continue
+		}
+		sealTask := &gfsptask.GfSpSealObjectTask{}
+		sealTask.InitSealObjectTask(objectInfo, storageParams, m.baseApp.TaskPriority(sealTask), meta.SecondaryAddresses,
+			meta.SecondarySignatures, m.baseApp.TaskTimeout(sealTask, 0), m.baseApp.TaskMaxRetry(sealTask))
+		pushErr := m.sealQueue.Push(sealTask)
+		if pushErr != nil {
+			log.Errorw("failed to push seal object task to queue", "object_info", objectInfo, "error", pushErr)
+			continue
+		}
+		generateSealTaskCounter++
+	}
+
+	gcObjectMetas, err = m.baseApp.GfSpDB().GetGCMetasToGC(m.loadTaskLimitToGC)
+	if err != nil {
+		log.Errorw("failed to load gc task from sp db", "error", err)
+		return err
+	}
+	for _, meta := range gcObjectMetas {
+		gcObjectTask := &gfsptask.GfSpGCObjectTask{}
+		gcObjectTask.InitGCObjectTask(m.baseApp.TaskPriority(gcObjectTask), meta.StartBlockHeight, meta.EndBlockHeight, m.baseApp.TaskTimeout(gcObjectTask, 0))
+		gcObjectTask.SetGCObjectProgress(meta.CurrentBlockHeight, meta.LastDeletedObjectID)
+		pushErr := m.gcObjectQueue.Push(gcObjectTask)
+		if pushErr != nil {
+			log.Errorw("failed to push gc object task to queue", "gc_object_task_meta", meta, "error", pushErr)
+			continue
+		}
+		generateGCOjectTaskCounter++
+		if meta.EndBlockHeight >= m.gcBlockHeight {
+			m.gcBlockHeight = meta.EndBlockHeight + 1
+		}
+	}
+
+	log.Infow("end to load task from sp db", "replicate_task_number", generateReplicateTaskCounter,
+		"seal_task_number", generateSealTaskCounter, "gc_object_task_number", generateGCOjectTaskCounter)
 	return nil
 }
 
@@ -227,9 +342,12 @@ func (m *ManageModular) UploadingObjectNumber() int {
 func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.UploadObjectTask)
 	if task.Expired() {
-		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_UPLOAD_OBJECT_ERROR)
-		if err != nil {
-			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error", err)
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:         task.GetObjectInfo().Id.Uint64(),
+			TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+			ErrorDescription: "expired",
+		}); err != nil {
+			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
 	}
@@ -239,9 +357,12 @@ func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 	task := qTask.(task.ReplicatePieceTask)
 	if task.Expired() {
-		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_REPLICATE_OBJECT_ERROR)
-		if err != nil {
-			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error", err)
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:         task.GetObjectInfo().Id.Uint64(),
+			TaskState:        types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR,
+			ErrorDescription: "expired",
+		}); err != nil {
+			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
 	}
@@ -251,9 +372,12 @@ func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 func (m *ManageModular) GCSealObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.SealObjectTask)
 	if task.Expired() {
-		err := m.baseApp.GfSpDB().UpdateJobState(task.GetObjectInfo().Id.Uint64(), types.JobState_JOB_STATE_SEAL_OBJECT_ERROR)
-		if err != nil {
-			log.Errorw("failed to update job state", "task_key", task.Key().String(), "error", err)
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:         task.GetObjectInfo().Id.Uint64(),
+			TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
+			ErrorDescription: "expired",
+		}); err != nil {
+			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
 		}
 		return true
 	}
@@ -335,6 +459,7 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 }
 
 func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storagetypes.ObjectInfo) error {
+	metrics.SealObjectFailedCounter.WithLabelValues(m.Name()).Inc()
 	rejectUnSealObjectMsg := &storagetypes.MsgRejectSealObject{
 		BucketName: object.GetBucketName(),
 		ObjectName: object.GetObjectName(),

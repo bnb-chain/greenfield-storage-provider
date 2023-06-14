@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.2.2-alpha.1
+
+FEATURES
+* [\#502](https://github.com/bnb-chain/greenfield-storage-provider/pull/502) feat: support b2 store
+* [\#512](https://github.com/bnb-chain/greenfield-storage-provider/pull/512) feat: universal endpoint for private object
+* [\#517](https://github.com/bnb-chain/greenfield-storage-provider/pull/517) feat:group add extra field
+* [\#524](https://github.com/bnb-chain/greenfield-storage-provider/pull/524) feat: query storage params by timestamp
+* [\#525](https://github.com/bnb-chain/greenfield-storage-provider/pull/525) feat: reject unseal object after upload or replicate fail
+* [\#528](https://github.com/bnb-chain/greenfield-storage-provider/pull/528) feat: support loading tasks
+* [\#530](https://github.com/bnb-chain/greenfield-storage-provider/pull/530) feat: add debug command
+* [\#533](https://github.com/bnb-chain/greenfield-storage-provider/pull/533) feat: return repeated approval task
+* [\#536](https://github.com/bnb-chain/greenfield-storage-provider/pull/536) feat:group add extra field
+* [\#542](https://github.com/bnb-chain/greenfield-storage-provider/pull/542) feat: change get block height by ws protocol
+
+REFACTOR
+* [\#486](https://github.com/bnb-chain/greenfield-storage-provider/pull/486) refactor: off chain auth
+* [\#493](https://github.com/bnb-chain/greenfield-storage-provider/pull/493) fix: refine gc object workflow
+* [\#495](https://github.com/bnb-chain/greenfield-storage-provider/pull/495) perf: perf get object workflow
+* [\#503](https://github.com/bnb-chain/greenfield-storage-provider/pull/503) fix: refine sp db update interface
+* [\#515](https://github.com/bnb-chain/greenfield-storage-provider/pull/515) feat: refine get challenge info workflow
+* [\#546](https://github.com/bnb-chain/greenfield-storage-provider/pull/546) docs: add sp infra deployment docs
+* [\#557](https://github.com/bnb-chain/greenfield-storage-provider/pull/557) fix: refine error code in universal endpoint and auto-close the walle…
+
+BUGFIX
+* [\#487](https://github.com/bnb-chain/greenfield-storage-provider/pull/487) fix: init challenge task add storage params
+* [\#499](https://github.com/bnb-chain/greenfield-storage-provider/pull/499) fix: permission api
+* [\#509](https://github.com/bnb-chain/greenfield-storage-provider/pull/509) fix:blocksyncer oom
+
 ## v0.2.1-alpha.1
 
 FEATURES

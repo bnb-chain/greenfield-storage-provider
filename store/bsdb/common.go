@@ -43,3 +43,13 @@ const (
 	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database.
 	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
 )
+
+// ObjectIDs represents the request of list object by ids
+type ObjectIDs struct {
+	IDs []uint64 `json:"ids"`
+}
+
+// BucketIDs represents the request of list bucket by ids
+type BucketIDs struct {
+	IDs []uint64 `json:"ids"`
+}

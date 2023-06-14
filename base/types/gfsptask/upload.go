@@ -279,8 +279,12 @@ func (m *GfSpReplicatePieceTask) SetSealed(sealed bool) {
 	m.Sealed = sealed
 }
 
-func (m *GfSpReplicatePieceTask) SetSecondarySignature(signatures [][]byte) {
-	m.SecondarySignature = signatures
+func (m *GfSpReplicatePieceTask) SetSecondarySignatures(signatures [][]byte) {
+	m.SecondarySignatures = signatures
+}
+
+func (m *GfSpReplicatePieceTask) SetSecondaryAddresses(addresses []string) {
+	m.SecondaryAddresses = addresses
 }
 
 func (m *GfSpReplicatePieceTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
@@ -300,7 +304,7 @@ func (m *GfSpReplicatePieceTask) SetError(err error) {
 }
 
 func (m *GfSpSealObjectTask) InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority coretask.TPriority,
-	signature [][]byte, timeout int64, retry int64) {
+	addresses []string, signatures [][]byte, timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())
@@ -310,7 +314,8 @@ func (m *GfSpSealObjectTask) InitSealObjectTask(object *storagetypes.ObjectInfo,
 	m.SetPriority(priority)
 	m.SetTimeout(timeout)
 	m.SetMaxRetry(retry)
-	m.SetSecondarySignature(signature)
+	m.SetSecondaryAddresses(addresses)
+	m.SetSecondarySignatures(signatures)
 }
 
 func (m *GfSpSealObjectTask) Key() coretask.TKey {
@@ -408,8 +413,12 @@ func (m *GfSpSealObjectTask) EstimateLimit() corercmgr.Limit {
 	return l
 }
 
-func (m *GfSpSealObjectTask) SetSecondarySignature(signatures [][]byte) {
-	m.SecondarySignature = signatures
+func (m *GfSpSealObjectTask) SetSecondaryAddresses(addresses []string) {
+	m.SecondaryAddresses = addresses
+}
+
+func (m *GfSpSealObjectTask) SetSecondarySignatures(signatures [][]byte) {
+	m.SecondarySignatures = signatures
 }
 
 func (m *GfSpSealObjectTask) SetObjectInfo(object *storagetypes.ObjectInfo) {

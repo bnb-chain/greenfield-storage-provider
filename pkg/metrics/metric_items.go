@@ -7,14 +7,19 @@ import (
 	metricshttp "github.com/bnb-chain/greenfield-storage-provider/pkg/metrics/http"
 )
 
-// const serviceLabelName = "service"
-
 var MetricsItems = []prometheus.Collector{
 	// Grpc metrics category
 	DefaultGRPCServerMetrics,
 	DefaultGRPCClientMetrics,
 	// Http metrics category
 	DefaultHTTPServerMetrics,
+	// Perf workflow category
+	PerfUploadTimeHistogram,
+	PerfGetApprovalTimeHistogram,
+	PerfAuthTimeHistogram,
+	PerfReceivePieceTimeHistogram,
+	PerfGetObjectTimeHistogram,
+	PerfChallengeTimeHistogram,
 	// TaskQueue metrics category
 	QueueSizeGauge,
 	QueueCapGauge,
@@ -80,6 +85,8 @@ var MetricsItems = []prometheus.Collector{
 	SPDBTimeHistogram,
 	// BlockSyncer metrics category
 	BlockHeightLagGauge,
+	// the greenfield chain metrics.
+	GnfdChainHistogram,
 }
 
 var (
@@ -90,6 +97,39 @@ var (
 		openmetrics.WithClientStreamSendHistogram(), openmetrics.WithClientStreamRecvHistogram())
 	// DefaultHTTPServerMetrics defines default HTTP server metrics
 	DefaultHTTPServerMetrics = metricshttp.NewServerMetrics()
+
+	// PerfUploadTimeHistogram is used to perf upload workflow.
+	PerfUploadTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_upload_time",
+		Help:    "Track upload workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_upload_time"})
+	// PerfGetApprovalTimeHistogram is used to perf get approval workflow
+	PerfGetApprovalTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_get_approval_time",
+		Help:    "Track get approval workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_get_approval_time"})
+	PerfAuthTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_auth_time",
+		Help:    "Track auth workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_auth_time"})
+	PerfReceivePieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_receive_time",
+		Help:    "Track receive piece workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_receive_time"})
+	PerfGetObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_get_object_time",
+		Help:    "Track get object workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_get_object_time"})
+	PerfChallengeTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_challenge_piece_time",
+		Help:    "Track challenge piece workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_challenge_piece_time"})
 
 	// task queue metrics
 	QueueSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -303,7 +343,7 @@ var (
 		Help: "Track gc object task total number",
 	}, []string{"dispatch_gc_object_task"})
 
-	// singer metrics
+	// signer metrics
 	SealObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "seal_object_time",
 		Help:    "Track the time of seal object time to chain.",
@@ -349,11 +389,18 @@ var (
 		Name:    "sp_db_handling_seconds",
 		Help:    "Track the latency for spdb requests",
 		Buckets: prometheus.DefBuckets,
-	}, []string{"method_name"})
+	}, []string{"sp_db_handling_seconds"})
 
 	// BlockHeightLagGauge records the current block height of block syncer service
 	BlockHeightLagGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "block_syncer_height",
 		Help: "Current block number of block syncer progress.",
-	}, []string{"service"})
+	}, []string{"block_syncer_height"})
+
+	// GnfdChainHistogram is used to record greenfield chain cost.
+	GnfdChainHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "gnfd_chain_time",
+		Help:    "Track the greenfield chain api costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"gnfd_chain_time"})
 )

@@ -155,7 +155,7 @@ type TaskExecutor interface {
 // scheduling and other management of SP.
 type Manager interface {
 	Modular
-	// DispatchTask dispatches the task to TaskExecutor modular when it ask task.
+	// DispatchTask dispatches the task to TaskExecutor modular when it asks task.
 	// It will consider task remaining resources when dispatches task.
 	DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error)
 	// QueryTasks queries tasks that hold on manager by task sub key.

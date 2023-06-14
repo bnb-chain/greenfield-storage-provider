@@ -3,9 +3,10 @@ package database
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
+
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 // CreatePrefixTree create prefix tree nodes by input slice

@@ -16,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -165,7 +166,9 @@ func (a *AuthorizeModular) VerifyAuthorize(
 	authType coremodule.AuthOpType,
 	account, bucket, object string) (
 	bool, error) {
+	startTime := time.Now()
 	has, err := a.baseApp.Consensus().HasAccount(ctx, account)
+	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_check_has_account_time").Observe(time.Since(startTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to check account from consensus", "error", err)
 		return false, ErrConsensus
@@ -177,7 +180,9 @@ func (a *AuthorizeModular) VerifyAuthorize(
 
 	switch authType {
 	case coremodule.AuthOpAskCreateBucketApproval:
+		queryTime := time.Now()
 		bucketInfo, _ := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_create_bucket_approval_query_bucket_time").Observe(time.Since(queryTime).Seconds())
 		if bucketInfo != nil {
 			log.CtxErrorw(ctx, "failed to verify authorize of asking create bucket "+
 				"approval, bucket repeated", "bucket", bucket)
@@ -185,7 +190,9 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		}
 		return true, nil
 	case coremodule.AuthOpAskCreateObjectApproval:
+		queryTime := time.Now()
 		bucketInfo, objectInfo, _ := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_create_object_approval_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if bucketInfo == nil {
 			log.CtxErrorw(ctx, "failed to verify authorize of asking create object "+
 				"approval, no such bucket to ask create object approval", "bucket", bucket, "object", object)
@@ -198,7 +205,9 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		}
 		return true, nil
 	case coremodule.AuthOpTypePutObject:
+		queryTime := time.Now()
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_put_object_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
 			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
@@ -219,14 +228,18 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
 			return false, ErrNotCreatedState
 		}
+		permissionTime := time.Now()
 		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_put_object_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to verify put object permission from consensus", "error", err)
 			return false, ErrConsensus
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetUploadingState:
+		queryTime := time.Now()
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_process_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
 			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
@@ -247,14 +260,18 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			log.CtxErrorw(ctx, "object state is not created", "state", objectInfo.GetObjectStatus())
 			return false, ErrNotCreatedState
 		}
+		permissionTime := time.Now()
 		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_process_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to verify put object permission from consensus", "error", err)
 			return false, ErrConsensus
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetObject:
+		queryTime := time.Now()
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
 			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
@@ -275,7 +292,9 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
 			return false, ErrNotSealedState
 		}
+		streamTime := time.Now()
 		streamRecord, err := a.baseApp.Consensus().QueryPaymentStreamRecord(ctx, bucketInfo.GetPaymentAddress())
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_query_stream_time").Observe(time.Since(streamTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to query payment stream record from consensus", "error", err)
 			return false, ErrConsensus
@@ -284,14 +303,18 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			log.CtxErrorw(ctx, "failed to check payment due to account status is not active", "status", streamRecord.Status)
 			return false, ErrPaymentState
 		}
+		permissionTime := time.Now()
 		allow, err := a.baseApp.Consensus().VerifyGetObjectPermission(ctx, account, bucket, object)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
 			return false, ErrConsensus
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetBucketQuota, coremodule.AuthOpTypeListBucketReadRecord:
+		queryTime := time.Now()
 		bucketInfo, err := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_bucket_quota_query_bucket_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket info from consensus", "error", err)
 			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
@@ -313,7 +336,9 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		return true, nil
 	case coremodule.AuthOpTypeGetChallengePieceInfo:
 		challengeIsFromValidator := false
+		queryTime := time.Now()
 		validators, err := a.baseApp.Consensus().ListBondedValidators(ctx)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_challenge_query_validator_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to list validator from consensus", "error", err)
 			return false, ErrConsensus
@@ -329,7 +354,9 @@ func (a *AuthorizeModular) VerifyAuthorize(
 				"actual_challenge_address", account)
 			return false, ErrNoPermission
 		}
+		queryTime = time.Now()
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_challenge_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
 			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go

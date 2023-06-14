@@ -10,16 +10,21 @@ import (
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types/config"
 
-	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 )
 
 var (
 	BlockSyncerModularName        = strings.ToLower("BlockSyncer")
 	BlockSyncerModularDescription = "Synchronize data on the chain to SP"
 	BlockSyncerModularBackupName  = strings.ToLower("BlockSyncerBackup")
+	// DsnBlockSyncer defines env variable name for block syncer dsn
+	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
+	// DsnBlockSyncerSwitched defines env variable name for block syncer backup dsn
+	DsnBlockSyncerSwitched = "BLOCK_SYNCER_DSN_SWITCHED"
+	ErrDSNNotSet           = errors.New("dsn config is not set in environment")
+	ErrBlockNotFound       = errors.New("failed to get block from map need retry")
 )
 
 const (
@@ -29,7 +34,11 @@ const (
 	DefaultBlockHeightDiff = 100
 	// DefaultCheckDiffPeriod defines check interval of block height diff
 	DefaultCheckDiffPeriod = 1
+	// MaxHeightGapFactor defines the gap coefficient between the block height in the Map and the processed block height
+	MaxHeightGapFactor = 4
 )
+
+type MigrateDBKey struct{}
 
 // BlockSyncerModular synchronizes storage,payment,permission data to db by handling related events
 type BlockSyncerModular struct {
@@ -77,12 +86,15 @@ func (b *BlockSyncerModular) Start(ctx context.Context) error {
 	determineMainService()
 
 	CtxMain, CancelMain = context.WithCancel(context.Background())
+	if !NeedBackup {
+		CtxMain = context.WithValue(CtxMain, MigrateDBKey{}, true)
+	}
 
 	go MainService.serve(CtxMain)
 
 	//create backup blocksyncer
 	if NeedBackup {
-		ctxBackup := context.Background()
+		ctxBackup := context.WithValue(context.Background(), MigrateDBKey{}, true)
 		BackupService.context = ctxBackup
 
 		go BackupService.serve(ctxBackup)
@@ -118,13 +130,12 @@ func determineMainService() error {
 	if err != nil {
 		return err
 	}
-	if masterFlag.IsMaster {
-		return nil
-	} else {
+	if !masterFlag.IsMaster {
 		//switch role
 		temp := MainService
 		MainService = BackupService
 		BackupService = temp
 	}
+
 	return nil
 }

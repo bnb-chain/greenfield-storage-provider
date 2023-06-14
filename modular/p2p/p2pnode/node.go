@@ -235,6 +235,15 @@ func (n *Node) eventLoop() {
 		case <-n.stopCh:
 			return
 		case <-ticker.C:
+			bootstrapIDs, bootstrapAddrs, err := MakeBootstrapMultiaddr(n.Bootstrap())
+			if err != nil {
+				log.Errorw("failed to parse bootstrap address", "error", err)
+			} else {
+				for idx, addr := range bootstrapAddrs {
+					n.node.Peerstore().AddAddr(bootstrapIDs[idx], addr, peerstore.PermanentAddrTTL)
+				}
+			}
+
 			ping := &gfspp2p.GfSpPing{
 				SpOperatorAddress: n.baseApp.OperatorAddress(),
 			}

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -32,6 +33,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		params     *storagetypes.Params
 	)
 
+	uploadPrimaryStartTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -42,6 +44,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_primary_total_time").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	}()
 
 	reqCtx, err = NewRequestContext(r, g)
@@ -49,8 +52,10 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if reqCtx.NeedVerifyAuthorizer() {
+		startAuthirzerTime := time.Now()
 		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_authorizer").Observe(time.Since(startAuthirzerTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
@@ -62,7 +67,9 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	startGetObjectInfoTime := time.Now()
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_get_object_info").Observe(time.Since(startGetObjectInfoTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
@@ -73,7 +80,9 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidPayloadSize
 		return
 	}
+	startGetStorageParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_get_storage_param").Observe(time.Since(startGetStorageParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -136,6 +145,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		highOffset int64
 		pieceInfos []*downloader.SegmentPieceInfo
 	)
+	getObjectStartTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -146,6 +156,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_total_time").Observe(time.Since(getObjectStartTime).Seconds())
 	}()
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
@@ -162,11 +173,14 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if reqCtx.NeedVerifyAuthorizer() {
+			authTime := time.Now()
 			if authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
+				metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 				return
 			}
+			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
 			if !authorized {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
@@ -175,19 +189,27 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} // else anonymous users can get public object.
 
+	getObjectTime := time.Now()
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_object_info_time").Observe(time.Since(getObjectTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
+
+	getBucketTime := time.Now()
 	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_bucket_info_time").Observe(time.Since(getBucketTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
+
+	getParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_storage_param_time").Observe(time.Since(getParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -225,6 +247,8 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Header().Set(ContentLengthHeader, util.Uint64ToString(objectInfo.GetPayloadSize()))
 	}
+
+	getDataTime := time.Now()
 	for idx, pInfo := range pieceInfos {
 		enableCheck := false
 		if idx == 0 { // only check in first piece
@@ -234,13 +258,16 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task),
 			enableCheck, reqCtx.Account(), uint64(highOffset-lowOffset+1), pInfo.SegmentPieceKey, pInfo.Offset,
 			pInfo.Length, g.baseApp.TaskTimeout(task, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(task))
+		getSegmentTime := time.Now()
 		pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_segment_data_time").Observe(time.Since(getSegmentTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
 			return
 		}
 		w.Write(pieceData)
 	}
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_data_time").Observe(time.Since(getDataTime).Seconds())
 }
 
 // queryUploadProgressHandler handles the query uploaded object progress request.
@@ -250,7 +277,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		reqCtx     *RequestContext
 		authorized bool
 		objectInfo *storagetypes.ObjectInfo
-		jobState   int32
+		taskState  int32
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -289,12 +316,12 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	jobState, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
+	taskState, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
 		return
 	}
-	jobStateDescription := servicetypes.StateToDescription(servicetypes.JobState(jobState))
+	taskStateDescription := servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 
 	var xmlInfo = struct {
 		XMLName             xml.Name `xml:"QueryUploadProgress"`
@@ -302,7 +329,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		ProgressDescription string   `xml:"ProgressDescription"`
 	}{
 		Version:             GnfdResponseXMLVersion,
-		ProgressDescription: jobStateDescription,
+		ProgressDescription: taskStateDescription,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
@@ -364,7 +391,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	getBucketInfoRes, getBucketInfoErr := g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), reqCtx.bucketName, true)
 	if getBucketInfoErr != nil || getBucketInfoRes == nil || getBucketInfoRes.GetBucketInfo() == nil {
 		log.Errorw("failed to check bucket info", "bucket_name", reqCtx.bucketName, "error", getBucketInfoErr)
-		err = getBucketInfoErr
+		err = ErrNoSuchObject
 		return
 	}
 
@@ -393,12 +420,14 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
 		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
+		err = ErrNoSuchObject
 		return
 	}
 
 	if getObjectInfoRes.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.Errorw("object is not sealed",
 			"status", getObjectInfoRes.GetObjectInfo().GetObjectStatus())
+		err = ErrNoSuchObject
 		return
 	}
 
@@ -454,14 +483,16 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			}
 			if !authorized {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+				err = ErrNoPermission
 				return
 			}
 
 		} else {
 			// return a built-in dapp for users to make the signature
 			var htmlConfigMap = map[string]string{
-				"9000": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
-				"5600": "{\n  \"envType\": \"testnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 5600,\n  \"chainName\": \"greenfield testnet\",\n  \"rpcUrls\": [\"https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
+				"greenfield_7971-1":    "{\n  \"envType\": \"dev\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 7971,\n  \"chainName\": \"dev - greenfield\",\n  \"rpcUrls\": [\"https://gnfd-dev.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
+				"greenfield_9000-1741": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
+				"greenfield_5600-1":    "{\n  \"envType\": \"testnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 5600,\n  \"chainName\": \"greenfield testnet\",\n  \"rpcUrls\": [\"https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
 			}
 
 			htmlConfig := htmlConfigMap[g.baseApp.ChainID()]

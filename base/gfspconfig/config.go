@@ -57,6 +57,7 @@ type GfSpConfig struct {
 	Metadata       MetadataConfig
 	BlockSyncer    BlockSyncerConfig
 	APIRateLimiter localhttp.RateLimiterConfig
+	Manager        ManagerConfig
 }
 
 // Apply sets the customized implement to the GfSp configuration, it will be called
@@ -210,16 +211,19 @@ type LogConfig struct {
 }
 
 type BlockSyncerConfig struct {
-	Modules        []string
-	Dsn            string
-	DsnSwitched    string
-	RecreateTables bool
-	Workers        uint
-	EnableDualDB   bool
+	Modules      []string
+	Dsn          string
+	DsnSwitched  string
+	Workers      uint
+	EnableDualDB bool
 }
 
 type MetadataConfig struct {
 	// IsMasterDB is used to determine if the master database (BsDBConfig) is currently being used.
 	IsMasterDB                 bool
 	BsDBSwitchCheckIntervalSec int64
+}
+
+type ManagerConfig struct {
+	EnableLoadTask bool
 }
