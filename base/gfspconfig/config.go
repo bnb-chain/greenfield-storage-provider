@@ -35,7 +35,7 @@ type Customize struct {
 type GfSpConfig struct {
 	AppID          string
 	Server         []string
-	GrpcAddress    string
+	GRPCAddress    string
 	Customize      *Customize
 	SpDB           storeconfig.SQLDBConfig
 	BsDB           storeconfig.SQLDBConfig
@@ -90,7 +90,7 @@ type ChainConfig struct {
 }
 
 type SpAccountConfig struct {
-	SpOperateAddress   string
+	SpOperatorAddress  string
 	OperatorPrivateKey string
 	FundingPrivateKey  string
 	SealPrivateKey     string
@@ -124,8 +124,8 @@ type BucketConfig struct {
 }
 
 type GatewayConfig struct {
-	Domain      string
-	HttpAddress string
+	DomainName  string
+	HTTPAddress string
 }
 
 type ExecutorConfig struct {
@@ -196,8 +196,8 @@ type TaskConfig struct {
 type MonitorConfig struct {
 	DisableMetrics     bool
 	DisablePProf       bool
-	MetricsHttpAddress string
-	PProfHttpAddress   string
+	MetricsHTTPAddress string
+	PProfHTTPAddress   string
 }
 
 type RcmgrConfig struct {
