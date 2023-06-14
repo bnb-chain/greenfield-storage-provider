@@ -44,6 +44,8 @@ const (
 	ActionQuery = "action"
 	// UploadProgressQuery defines upload progress query, which is used to route request
 	UploadProgressQuery = "upload-progress"
+	// UploadProgressQuery defines upload progress query, which is used to route request
+	UploadContextQuery = "upload-context"
 	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request
 	GetBucketReadQuotaQuery = "read-quota"
 	// GetBucketReadQuotaMonthQuery defines bucket read quota query month

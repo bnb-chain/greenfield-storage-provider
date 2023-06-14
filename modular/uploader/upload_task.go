@@ -222,14 +222,15 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		task.GetStorageParams().GetMaxSegmentSize())
 	offset := task.GetResumeOffset()
 	var (
-		err       error
-		segIdx    uint32 = uint32(int64(offset) / segmentSize)
-		pieceKey  string
-		signature []byte
-		integrity []byte
-		readN     int
-		readSize  int
-		data      = make([]byte, segmentSize)
+		err           error
+		segIdx        uint32 = uint32(int64(offset) / segmentSize)
+		pieceKey      string
+		signature     []byte
+		integrity     []byte
+		readN         int
+		readSize      int
+		data          = make([]byte, segmentSize)
+		integrityMeta *corespdb.IntegrityMeta
 	)
 	defer func() {
 		if err != nil {
@@ -270,7 +271,11 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				}
 			}
 			if task.GetCompleted() {
-				integrityMeta, err := u.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+				integrityMeta, err = u.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to get object integrity hash", "error", err)
+					return err
+				}
 				signature, integrity, err = u.baseApp.GfSpClient().SignIntegrityHash(ctx,
 					task.GetObjectInfo().Id.Uint64(), integrityMeta.PieceChecksumList)
 				if err != nil {
