@@ -1,9 +1,8 @@
 package bsdb
 
 import (
+	"cosmossdk.io/math"
 	"errors"
-	"strconv"
-
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
@@ -65,7 +64,7 @@ func (b *BsDBImpl) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, 
 		bucketIDHash common.Hash
 	)
 
-	bucketIDHash = common.HexToHash(strconv.FormatInt(bucketID, 10))
+	bucketIDHash = common.BigToHash(math.NewInt(bucketID).BigInt())
 	if includePrivate {
 		err = b.db.Take(&bucket, "bucket_id = ? and removed = false", bucketIDHash).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
