@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
@@ -96,7 +95,6 @@ func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, checksum []byt
 			IntegrityChecksum: integrity,
 			Signature:         signature,
 		}
-		log.Infof("AppendObjectChecksumIntegrity not found, objectid:%d, checksum:%s", objectID, checksum)
 		err = s.SetObjectIntegrity(integrityMetaNew)
 		if err != nil {
 			return err
@@ -104,7 +102,9 @@ func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, checksum []byt
 	} else if err != nil {
 		return err
 	} else {
-		integrityMeta.PieceChecksumList = append(integrityMeta.PieceChecksumList, checksum)
+		newChecksums := append(integrityMeta.PieceChecksumList, checksum)
+		integrityMeta.PieceChecksumList = newChecksums
+		s.DeleteObjectIntegrity(objectID)
 		err = s.SetObjectIntegrity(integrityMeta)
 		if err != nil {
 			return err

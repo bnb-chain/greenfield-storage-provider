@@ -277,13 +277,13 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 					log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
 					return err
 				}
-				//if !bytes.Equal(integrity, task.GetObjectInfo().GetChecksums()[0]) {
-				//	log.CtxErrorw(ctx, "invalid integrity hash",
-				//		"integrity", hex.EncodeToString(integrity),
-				//		"expect", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
-				//	err = ErrInvalidIntegrity
-				//	return ErrInvalidIntegrity
-				//}
+				if !bytes.Equal(integrity, task.GetObjectInfo().GetChecksums()[0]) {
+					log.CtxErrorw(ctx, "invalid integrity hash",
+						"integrity", hex.EncodeToString(integrity),
+						"expect", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
+					err = ErrInvalidIntegrity
+					return ErrInvalidIntegrity
+				}
 				integrityMeta.IntegrityChecksum = integrity
 				integrityMeta.Signature = signature
 				err = u.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
