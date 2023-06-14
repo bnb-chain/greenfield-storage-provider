@@ -63,7 +63,7 @@ func (g *GfSpBaseApp) StopRPCServer(ctx context.Context) error {
 	return nil
 }
 
-func RpcRemoteAddress(ctx context.Context) string {
+func GetRPCRemoteAddress(ctx context.Context) string {
 	var addr string
 	if pr, ok := peer.FromContext(ctx); ok {
 		if tcpAddr, ok := pr.Addr.(*net.TCPAddr); ok {

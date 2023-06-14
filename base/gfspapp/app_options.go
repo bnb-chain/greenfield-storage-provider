@@ -26,7 +26,7 @@ import (
 const (
 	// DefaultGfSpAppIDPrefix defines the default app id prefix.
 	DefaultGfSpAppIDPrefix = "gfsp"
-	// DefaultGrpcAddress defines the default Grpc address.
+	// DefaultGrpcAddress defines the default gRPC address.
 	DefaultGRPCAddress = "localhost:9333"
 	// DefaultMetricsAddress defines the default metrics service address.
 	DefaultMetricsAddress = "localhost:24367"

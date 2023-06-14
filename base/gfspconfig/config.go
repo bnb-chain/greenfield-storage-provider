@@ -124,7 +124,7 @@ type BucketConfig struct {
 }
 
 type GatewayConfig struct {
-	Domain      string
+	DomainName  string
 	HTTPAddress string
 }
 
