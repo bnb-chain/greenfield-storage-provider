@@ -26,15 +26,15 @@ import (
 const (
 	// DefaultGfSpAppIDPrefix defines the default app id prefix.
 	DefaultGfSpAppIDPrefix = "gfsp"
-	// DefaultGrpcAddress defines the default gRPC address.
+	// DefaultGRPCAddress defines the default gRPC address.
 	DefaultGRPCAddress = "localhost:9333"
 	// DefaultMetricsAddress defines the default metrics service address.
 	DefaultMetricsAddress = "localhost:24367"
 	// DefaultPProfAddress defines the default pprof service address.
 	DefaultPProfAddress = "localhost:24368"
 
-	// DefaultChainID defines the default greenfield chain ID.
-	DefaultChainID = "greenfield_9000-1741"
+	// DefaultChainID defines the default greenfield chainID.
+	DefaultChainID = "greenfield_9000-121"
 	// DefaultChainAddress defines the default greenfield address.
 	DefaultChainAddress = "http://localhost:26750"
 
@@ -64,6 +64,7 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	}
 	app.grpcAddress = cfg.GRPCAddress
 	app.operatorAddress = cfg.SpAccount.SpOperatorAddress
+	app.chainID = cfg.Chain.ChainID
 	app.uploadSpeed = cfg.Task.UploadTaskSpeed
 	app.downloadSpeed = cfg.Task.DownloadTaskSpeed
 	app.replicateSpeed = cfg.Task.ReplicateTaskSpeed
