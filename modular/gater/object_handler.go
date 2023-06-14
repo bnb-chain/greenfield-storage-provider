@@ -361,7 +361,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		isRange              bool
 		rangeStart           int64
 		rangeEnd             int64
-		redirectUrl          string
+		redirectURL          string
 		params               *storagetypes.Params
 		escapedObjectName    string
 		isRequestFromBrowser bool
@@ -439,10 +439,10 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			return
 		}
 
-		redirectUrl = spEndpoint + r.RequestURI
-		log.Debugw("getting redirect url:", "redirectUrl", redirectUrl)
+		redirectURL = spEndpoint + r.RequestURI
+		log.Debugw("getting redirect url:", "redirectURL", redirectURL)
 
-		http.Redirect(w, r, redirectUrl, 302)
+		http.Redirect(w, r, redirectURL, 302)
 		return
 	}
 
