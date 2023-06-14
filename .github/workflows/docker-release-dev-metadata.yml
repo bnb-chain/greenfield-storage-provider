@@ -49,5 +49,5 @@ jobs:
 
       - name: Push image
         run: |
-          docker tag $IMAGE_NAME $IMAGE_NAME:metadata-dev-env-fix-handler-1
-          docker push $IMAGE_NAME:metadata-dev-env-fix-handler-1
+          docker tag $IMAGE_NAME $IMAGE_NAME:metadata-dev-env-fix-handler-2
+          docker push $IMAGE_NAME:metadata-dev-env-fix-handler-2
