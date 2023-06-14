@@ -23,8 +23,8 @@ env:
   MYSQL_PASSWORD: root
   MYSQL_IP: 127.0.0.1
   MYSQL_PORT: 3306
-#  TEST_ACCOUNT_ADDRESS: 0x76263999b87D08228eFB098F36d17363Acf40c2c
-#  TEST_ACCOUNT_PRIVATE_KEY: da942d31bc4034577f581057e4a3644404ac12828a84052f87086d508fdcf095
+  TEST_ACCOUNT_ADDRESS: "0x76263999b87D08228eFB098F36d17363Acf40c2c"
+  TEST_ACCOUNT_PRIVATE_KEY: "da942d31bc4034577f581057e4a3644404ac12828a84052f87086d508fdcf095"
 
 jobs:
   e2e-test:
@@ -57,10 +57,10 @@ jobs:
           make proto-gen & make build
           bash ./deployment/localup/localup.sh all 1 7
           bash ./deployment/localup/localup.sh export_sps 1 7 > sp.json
-          ./build/bin/gnfd tx bank send validator0 0x76263999b87D08228eFB098F36d17363Acf40c2c 500000000000000000000BNB --home ./deployment/localup/.local/validator0 --keyring-backend test --node http://localhost:26750 -y
+          ./build/bin/gnfd tx bank send validator0 ${{ env.TEST_ACCOUNT_ADDRESS }} 500000000000000000000BNB --home ./deployment/localup/.local/validator0 --keyring-backend test --node http://localhost:26750 -y
           sleep 2
           echo "View account money"
-          ./build/bin/gnfd q bank balances 0x76263999b87D08228eFB098F36d17363Acf40c2c --node http://localhost:26750
+          ./build/bin/gnfd q bank balances ${{ env.TEST_ACCOUNT_ADDRESS }} --node http://localhost:26750
           cd ..
 #      # Build and Start Greenfield SP
       - name: Build and Start Greenfield SP
@@ -73,7 +73,7 @@ jobs:
           sleep 10
           tail -n 1000 deployment/localup/local_env/sp0/gnfd-sp.log
           ps -ef | grep gnfd-sp | wc -l
-#      # Run E2E Test
+#      # Use Greenfield Cmd Running E2E Test
       - name: Run Greenfield E2E Test
         run: |
           git clone https://github.com/bnb-chain/greenfield-cmd.git
@@ -82,7 +82,7 @@ jobs:
           make build
           cd build/
           touch key.txt
-          echo da942d31bc4034577f581057e4a3644404ac12828a84052f87086d508fdcf095 > key.txt
+          echo ${{ env.TEST_ACCOUNT_PRIVATE_KEY }} > key.txt
           touch password.txt
           echo "test_sp_function" > password.txt
           ./gnfd-cmd --home ./ keystore generate --privKeyFile key.txt --passwordfile password.txt
@@ -95,7 +95,7 @@ jobs:
           sleep 5
           ./gnfd-cmd -c ./config.toml --home ./ bucket create gnfd://spe2etestbucket
           sleep 5
-          ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/json" $GITHUB_WORKSPACE/test/e2e/localup_env/testdata/example.json gnfd://spe2etestbucket/example.json
+          ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/json" $GITHUB_WORKSPACE/test/e2e/spworkflow/testdata/example.json gnfd://spe2etestbucket/example.json
           sleep 20
           ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spe2etestbucket/example.json ./test_data.json
           cat test_data.json
