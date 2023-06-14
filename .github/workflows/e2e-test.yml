@@ -15,9 +15,6 @@ on:
       - release*
       - fix-release*
 
-env:
-  GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-
 jobs:
   e2e-test:
     strategy:
@@ -31,8 +28,6 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Setup GitHub Token
-        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
       # Checkout Greenfield-SP
       - name: Checkout Greenfield-SP
         uses: actions/checkout@v3
@@ -48,8 +43,8 @@ jobs:
       - name: Build and Start Greenfield SP
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --startSP
-      # Build Greefeld Cmd
-      - name: Build Greefeld Cmd
+      # Build Greenfield Cmd
+      - name: Build Greenfield Cmd
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --buildCmd
 #     # Use Greenfield Cmd Running E2E Test

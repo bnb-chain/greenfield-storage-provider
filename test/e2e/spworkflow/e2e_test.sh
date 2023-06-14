@@ -61,9 +61,9 @@ function greenfield_sp() {
   ps -ef | grep gnfd-sp | wc -l
 }
 
-#####################################
-# build Greenfield cmd and test SP  #
-#####################################
+############################################
+# build Greenfield cmd and set cmd config  #
+############################################
 function build_cmd() {
   set -e
   cd ${workspace}
@@ -96,6 +96,7 @@ function test_create_bucket() {
   ./gnfd-cmd -c ./config.toml --home ./ sp ls
   sleep 5
   ./gnfd-cmd -c ./config.toml --home ./ bucket create gnfd://${BUCKET_NAME}
+  ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://${BUCKET_NAME}
   sleep 10
 }
 
