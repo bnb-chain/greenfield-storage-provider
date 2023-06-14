@@ -30,11 +30,11 @@ const (
 	DefaultGRPCAddress = "localhost:9333"
 	// DefaultMetricsAddress defines the default metrics service address.
 	DefaultMetricsAddress = "localhost:24367"
-	// DefaultPprofAddress defines the default pprof service address.
+	// DefaultPProfAddress defines the default pprof service address.
 	DefaultPProfAddress = "localhost:24368"
 
-	// DefaultChainID defines the default greenfield chain ID.
-	DefaultChainID = "greenfield_9000-1741"
+	// DefaultChainID defines the default greenfield chainID.
+	DefaultChainID = "greenfield_9000-121"
 	// DefaultChainAddress defines the default greenfield address.
 	DefaultChainAddress = "http://localhost:26750"
 
