@@ -82,6 +82,7 @@ func (m *ManageModular) Name() string {
 
 func (m *ManageModular) Start(ctx context.Context) error {
 	m.uploadQueue.SetRetireTaskStrategy(m.GCUploadObjectQueue)
+	m.resumeableUploadQueue.SetRetireTaskStrategy(m.GCResumableUploadObjectQueue)
 	m.replicateQueue.SetRetireTaskStrategy(m.GCReplicatePieceQueue)
 	m.replicateQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.sealQueue.SetRetireTaskStrategy(m.GCSealObjectQueue)
@@ -352,6 +353,21 @@ func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 				log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
 			}
 		}()
+		return true
+	}
+	return false
+}
+
+func (m *ManageModular) GCResumableUploadObjectQueue(qTask task.Task) bool {
+	task := qTask.(task.ResumableUploadObjectTask)
+	if task.Expired() {
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:         task.GetObjectInfo().Id.Uint64(),
+			TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+			ErrorDescription: "expired",
+		}); err != nil {
+			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
+		}
 		return true
 	}
 	return false

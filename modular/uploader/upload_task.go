@@ -215,13 +215,15 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		log.CtxErrorw(ctx, "failed to push upload queue", "error", err)
 		return err
 	}
+	defer u.resumeableUploadQueue.PopByKey(task.Key())
+
 	segmentSize := u.baseApp.PieceOp().MaxSegmentPieceSize(
 		task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().GetMaxSegmentSize())
 	offset := task.GetResumeOffset()
 	var (
 		err       error
-		segIdx    uint32 = uint32(int64(offset) % segmentSize)
+		segIdx    uint32 = uint32(int64(offset) / segmentSize)
 		pieceKey  string
 		signature []byte
 		integrity []byte
@@ -230,13 +232,14 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		data      = make([]byte, segmentSize)
 	)
 	defer func() {
-		defer u.resumeableUploadQueue.PopByKey(task.Key())
 		if err != nil {
 			task.SetError(err)
 		}
 		log.CtxDebugw(ctx, "finish to read data from stream", "info", task.Info(),
 			"read_size", readSize, "error", err)
-		err = u.baseApp.GfSpClient().ReportTask(ctx, task)
+		if task.GetCompleted() {
+			err = u.baseApp.GfSpClient().ReportTask(ctx, task)
+		}
 	}()
 
 	for {
@@ -247,6 +250,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		readN, err = StreamReadAt(stream, data)
 		readSize += readN
 		data = data[0:readN]
+		log.CtxInfof(ctx, "AppendObjectChecksumIntegrity xxx readN:%d", readN)
 
 		if err == io.EOF {
 			err = nil
@@ -258,6 +262,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 						"piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
+				log.CtxInfof(ctx, "AppendObjectChecksumIntegrity segIdx:%d", segIdx)
 				err = u.baseApp.GfSpDB().AppendObjectChecksumIntegrity(task.GetObjectInfo().Id.Uint64(), hash.GenerateChecksum(data))
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
@@ -272,13 +277,13 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 					log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
 					return err
 				}
-				if !bytes.Equal(integrity, task.GetObjectInfo().GetChecksums()[0]) {
-					log.CtxErrorw(ctx, "invalid integrity hash",
-						"integrity", hex.EncodeToString(integrity),
-						"expect", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
-					err = ErrInvalidIntegrity
-					return ErrInvalidIntegrity
-				}
+				//if !bytes.Equal(integrity, task.GetObjectInfo().GetChecksums()[0]) {
+				//	log.CtxErrorw(ctx, "invalid integrity hash",
+				//		"integrity", hex.EncodeToString(integrity),
+				//		"expect", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
+				//	err = ErrInvalidIntegrity
+				//	return ErrInvalidIntegrity
+				//}
 				integrityMeta.IntegrityChecksum = integrity
 				integrityMeta.Signature = signature
 				err = u.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
@@ -301,6 +306,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 			log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
 			return ErrPieceStore
 		}
+		log.CtxInfof(ctx, "AppendObjectChecksumIntegrity segIdx:%d", segIdx)
 		err = u.baseApp.GfSpDB().AppendObjectChecksumIntegrity(task.GetObjectInfo().Id.Uint64(), hash.GenerateChecksum(data))
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)

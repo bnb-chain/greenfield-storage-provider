@@ -167,6 +167,31 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 	return nil
 }
 
+func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error {
+	if task == nil {
+		log.CtxErrorw(ctx, "failed to handle begin upload object due to task pointer dangling")
+		return ErrDanglingTask
+	}
+	if m.UploadingObjectNumber() >= m.maxUploadObjectNumber {
+		log.CtxErrorw(ctx, "uploading object exceed", "uploading", m.uploadQueue.Len(),
+			"replicating", m.replicateQueue.Len(), "sealing", m.sealQueue.Len())
+		return ErrExceedTask
+	}
+	if m.TaskUploading(ctx, task) {
+		log.CtxErrorw(ctx, "uploading object repeated", "task_info", task.Info())
+		return ErrRepeatedTask
+	}
+	if err := m.resumeableUploadQueue.Push(task); err != nil {
+		log.CtxErrorw(ctx, "failed to push upload object task to queue", "task_info", task.Info(), "error", err)
+		return err
+	}
+	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
+		log.CtxErrorw(ctx, "failed to create upload object progress", "task_info", task.Info(), "error", err)
+		return ErrGfSpDB
+	}
+	return nil
+}
+
 func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to handle done upload object, pointer dangling")

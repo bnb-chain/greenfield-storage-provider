@@ -140,6 +140,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	manager.discontinueBucketKeepAliveDays = cfg.Parallel.DiscontinueBucketKeepAliveDays
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
+	manager.resumeableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		manager.Name()+"-resumeable-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-replicate-piece", cfg.Parallel.GlobalReplicatePieceParallel)
 	manager.sealQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(

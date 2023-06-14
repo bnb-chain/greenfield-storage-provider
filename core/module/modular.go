@@ -162,6 +162,8 @@ type Manager interface {
 	// HandleDoneUploadObjectTask handles the result of uploading object payload data to primary, Manager should
 	// generate ReplicatePieceTask for TaskExecutor to run.
 	HandleDoneUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error
+	HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
+
 	// HandleDoneResumableUploadObjectTask handles the result of resumable uploading object payload data to primary,
 	// Manager should generate ReplicatePieceTask for TaskExecutor to run.
 	HandleDoneResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error

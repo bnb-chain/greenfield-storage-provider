@@ -87,8 +87,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// QueryPutObjectOffset
 		r.NewRoute().Name(queryResumeOffsetName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryResumeOffsetHandler).Queries(
-			"uploadContext", "",
-			"context", "{context}")
+			"upload-context", "")
 
 		// Query upload progress
 		r.NewRoute().Name(queryUploadProgressRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryUploadProgressHandler).Queries(

@@ -112,6 +112,13 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 		}
 		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_done_client").
 			Observe(time.Since(startReportDoneUploadTask).Seconds())
+	case *gfsptask.GfSpResumableUploadObjectTask:
+		startReportDoneUploadTask := time.Now()
+		req.Request = &gfspserver.GfSpReportTaskRequest_ResumableUploadObjectTask{
+			ResumableUploadObjectTask: t,
+		}
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_resumable_upload_task_done_client").
+			Observe(time.Since(startReportDoneUploadTask).Seconds())
 	case *gfsptask.GfSpReplicatePieceTask:
 		req.Request = &gfspserver.GfSpReportTaskRequest_ReplicatePieceTask{
 			ReplicatePieceTask: t,
