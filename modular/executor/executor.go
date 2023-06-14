@@ -132,6 +132,7 @@ func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
 		metrics.ExecutorReplicatePieceTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingReplicatePieceTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingReplicatePieceTaskCnt, -1)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("background_schedule_replicate_time").Observe(time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
 		e.HandleReplicatePieceTask(ctx, t)
 	case *gfsptask.GfSpSealObjectTask:
 		metrics.ExecutorSealObjectTaskCounter.WithLabelValues(e.Name()).Inc()
