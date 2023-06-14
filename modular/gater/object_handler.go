@@ -349,27 +349,50 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
 func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request, isDownload bool) {
 	var (
-		err               error
-		reqCtx            *RequestContext
-		authorized        bool
-		isRange           bool
-		rangeStart        int64
-		rangeEnd          int64
-		redirectUrl       string
-		params            *storagetypes.Params
-		escapedObjectName string
+		err                  error
+		reqCtx               *RequestContext
+		authorized           bool
+		isRange              bool
+		rangeStart           int64
+		rangeEnd             int64
+		redirectURL          string
+		params               *storagetypes.Params
+		escapedObjectName    string
+		isRequestFromBrowser bool
 	)
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
-			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			if isRequestFromBrowser {
+				reqCtx.SetHttpCode(http.StatusOK)
+				errorCodeForPage := "INTERNAL_ERROR" // default errorCode in built-in error page
+				switch err {
+				case downloader.ErrExceedBucketQuota:
+					errorCodeForPage = "NO_ENOUGH_QUOTA"
+				case ErrNoSuchObject:
+					errorCodeForPage = "FILE_NOT_FOUND"
+				case ErrForbidden:
+					errorCodeForPage = "NO_PERMISSION"
+				}
+				html := strings.Replace(GnfdBuiltInUniversalEndpointDappErrorPage, "<% errorCode %>", errorCodeForPage, 1)
+
+				fmt.Fprintf(w, "%s", html)
+				return
+			} else {
+				reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+				reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+				MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			}
+
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	userAgent := r.Header.Get("User-Agent")
+	isRequestFromBrowser = checkIfRequestFromBrowser(userAgent)
+
 	// ignore the error, because the universal endpoint does not need signature
 	reqCtx, _ = NewRequestContext(r, g)
 
@@ -411,10 +434,10 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			return
 		}
 
-		redirectUrl = spEndpoint + r.RequestURI
-		log.Debugw("getting redirect url:", "redirectUrl", redirectUrl)
+		redirectURL = spEndpoint + r.RequestURI
+		log.Debugw("getting redirect url:", "redirectURL", redirectURL)
 
-		http.Redirect(w, r, redirectUrl, 302)
+		http.Redirect(w, r, redirectURL, 302)
 		return
 	}
 
@@ -484,12 +507,16 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			}
 			if !authorized {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
+				err = ErrForbidden
 				return
 			}
 
 		} else {
-			// return a built-in dapp for users to make the signature
+			if !isRequestFromBrowser {
+				err = ErrForbidden
+				return
+			}
+			// if the request comes from browser, we will return a built-in dapp for users to make the signature
 			var htmlConfigMap = map[string]string{
 				"greenfield_7971-1":    "{\n  \"envType\": \"dev\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 7971,\n  \"chainName\": \"dev - greenfield\",\n  \"rpcUrls\": [\"https://gnfd-dev.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
 				"greenfield_9000-1741": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
@@ -558,6 +585,18 @@ func isPrivateObject(bucket *storagetypes.BucketInfo, object *storagetypes.Objec
 	return object.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE ||
 		(object.GetVisibility() == storagetypes.VISIBILITY_TYPE_INHERIT &&
 			bucket.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE)
+}
+
+func checkIfRequestFromBrowser(userAgent string) bool {
+	// List of common user agent substrings for mainstream browsers
+	mainstreamBrowsers := []string{"Chrome", "Firefox", "Safari", "Opera", "Edge"}
+	// Check if the User-Agent header contains any of the mainstream browser substrings
+	for _, browser := range mainstreamBrowsers {
+		if strings.Contains(userAgent, browser) {
+			return true
+		}
+	}
+	return false
 }
 
 // downloadObjectByUniversalEndpointHandler handles the download object request sent by universal endpoint
