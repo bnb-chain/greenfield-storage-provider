@@ -11,13 +11,13 @@ import (
 	"google.golang.org/grpc"
 )
 
-func (s *GfSpClient) VerifyAuthorize(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {
+func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {
 	startTime := time.Now()
 	defer metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_total_time").Observe(time.Since(startTime).Seconds())
-	conn, connErr := s.Connection(ctx, s.authorizerEndpoint)
+	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint)
 	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_create_conn_time").Observe(time.Since(startTime).Seconds())
 	if connErr != nil {
-		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", connErr)
+		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
 		return false, ErrRpcUnknown
 	}
 	defer conn.Close()
@@ -31,7 +31,7 @@ func (s *GfSpClient) VerifyAuthorize(ctx context.Context, auth coremodule.AuthOp
 	resp, err := gfspserver.NewGfSpAuthenticationServiceClient(conn).GfSpVerifyAuthentication(ctx, req)
 	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_network_time").Observe(time.Since(startRequestTime).Seconds())
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to verify authorize", "error", err)
+		log.CtxErrorw(ctx, "client failed to verify authentication", "error", err)
 		return false, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
@@ -42,9 +42,9 @@ func (s *GfSpClient) VerifyAuthorize(ctx context.Context, auth coremodule.AuthOp
 
 // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
 func (s *GfSpClient) GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.CallOption) (currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error) {
-	conn, connErr := s.Connection(ctx, s.authorizerEndpoint)
+	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint)
 	if connErr != nil {
-		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", connErr)
+		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
 		return 0, 0, "", 0, ErrRpcUnknown
 	}
 	defer conn.Close()
@@ -66,9 +66,9 @@ func (s *GfSpClient) GetAuthNonce(ctx context.Context, account string, domain st
 
 // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
 func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.CallOption) (bool, error) {
-	conn, connErr := s.Connection(ctx, s.authorizerEndpoint)
+	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint)
 	if connErr != nil {
-		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", connErr)
+		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
 		return false, ErrRpcUnknown
 	}
 	req := &gfspserver.UpdateUserPublicKeyRequest{
@@ -93,9 +93,9 @@ func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, account string, do
 
 // VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
 func (s *GfSpClient) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string, opts ...grpc.CallOption) (bool, error) {
-	conn, connErr := s.Connection(ctx, s.authorizerEndpoint)
+	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint)
 	if connErr != nil {
-		log.CtxErrorw(ctx, "client failed to connect authorizer", "error", connErr)
+		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
 		return false, ErrRpcUnknown
 	}
 	req := &gfspserver.VerifyOffChainSignatureRequest{

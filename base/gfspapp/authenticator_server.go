@@ -17,12 +17,12 @@ func (g *GfSpBaseApp) GfSpVerifyAuthentication(ctx context.Context, req *gfspser
 	*gfspserver.GfSpAuthenticationResponse, error) {
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, req.GetBucketName())
 	ctx = log.WithValue(ctx, log.CtxKeyObjectName, req.GetObjectName())
-	log.CtxDebugw(ctx, "begin to authorize", "user", req.GetUserAccount(), "auth_type", req.GetAuthType())
+	log.CtxDebugw(ctx, "begin to authenticate", "user", req.GetUserAccount(), "auth_type", req.GetAuthType())
 	startTime := time.Now()
 	allow, err := g.authenticator.VerifyAuthentication(ctx, coremodule.AuthOpType(req.GetAuthType()),
 		req.GetUserAccount(), req.GetBucketName(), req.GetObjectName())
 	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_total_time").Observe(time.Since(startTime).Seconds())
-	log.CtxDebugw(ctx, "finish to authorize", "user", req.GetUserAccount(), "auth_type", req.GetAuthType(),
+	log.CtxDebugw(ctx, "finish to authenticate", "user", req.GetUserAccount(), "auth_type", req.GetAuthType(),
 		"allow", allow, "error", err)
 	return &gfspserver.GfSpAuthenticationResponse{
 		Err:     gfsperrors.MakeGfSpError(err),
