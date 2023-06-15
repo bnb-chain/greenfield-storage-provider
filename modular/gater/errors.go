@@ -12,7 +12,7 @@ import (
 
 var (
 	ErrUnsupportedSignType       = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50001, "unsupported sign type")
-	ErrAuthenticationFormat      = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50002, "authentication format error")
+	ErrAuthorizationHeaderFormat = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50002, "authorization header format error")
 	ErrRequestConsistent         = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50003, "request is tampered")
 	ErrNoPermission              = gfsperrors.Register(module.GateModularName, http.StatusUnauthorized, 50004, "no permission")
 	ErrDecodeMsg                 = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50005, "gnfd msg encoding error")

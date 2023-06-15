@@ -175,12 +175,12 @@ func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddr
 	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
 	signatureItems := strings.Split(requestSignature, ",")
 	if len(signatureItems) < 2 {
-		return nil, ErrAuthenticationFormat
+		return nil, ErrAuthorizationHeaderFormat
 	}
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
-			return nil, ErrAuthenticationFormat
+			return nil, ErrAuthorizationHeaderFormat
 		}
 		switch pair[0] {
 		case SignedMsg:
@@ -190,7 +190,7 @@ func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddr
 				return nil, err
 			}
 		default:
-			return nil, ErrAuthenticationFormat
+			return nil, ErrAuthorizationHeaderFormat
 		}
 	}
 
@@ -266,12 +266,12 @@ func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string,
 	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
 	signatureItems := strings.Split(requestSignature, ",")
 	if len(signatureItems) != 2 {
-		return nil, nil, ErrAuthenticationFormat
+		return nil, nil, ErrAuthorizationHeaderFormat
 	}
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
-			return nil, nil, ErrAuthenticationFormat
+			return nil, nil, ErrAuthorizationHeaderFormat
 		}
 		switch pair[0] {
 		case SignedMsg:
@@ -279,7 +279,7 @@ func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string,
 		case Signature:
 			signature = pair[1]
 		default:
-			return nil, nil, ErrAuthenticationFormat
+			return nil, nil, ErrAuthorizationHeaderFormat
 		}
 	}
 
