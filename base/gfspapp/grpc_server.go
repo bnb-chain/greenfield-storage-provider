@@ -32,7 +32,7 @@ func (g *GfSpBaseApp) newRpcServer(options ...grpc.ServerOption) {
 	}
 	g.server = grpc.NewServer(options...)
 	gfspserver.RegisterGfSpApprovalServiceServer(g.server, g)
-	gfspserver.RegisterGfSpAuthorizationServiceServer(g.server, g)
+	gfspserver.RegisterGfSpAuthenticationServiceServer(g.server, g)
 	gfspserver.RegisterGfSpDownloadServiceServer(g.server, g)
 	gfspserver.RegisterGfSpManageServiceServer(g.server, g)
 	gfspserver.RegisterGfSpP2PServiceServer(g.server, g)

@@ -38,18 +38,18 @@ type GfSpBaseApp struct {
 	rcmgr        corercmgr.ResourceManager
 	chain        consensus.Consensus
 
-	approver   module.Approver
-	authorizer module.Authorizer
-	downloader module.Downloader
-	executor   module.TaskExecutor
-	gater      module.Modular
-	manager    module.Manager
-	p2p        module.P2P
-	receiver   module.Receiver
-	signer     module.Signer
-	uploader   module.Uploader
-	metrics    module.Modular
-	pprof      module.Modular
+	approver      module.Approver
+	authenticator module.Authenticator
+	downloader    module.Downloader
+	executor      module.TaskExecutor
+	gater         module.Modular
+	manager       module.Manager
+	p2p           module.P2P
+	receiver      module.Receiver
+	signer        module.Signer
+	uploader      module.Uploader
+	metrics       module.Modular
+	pprof         module.Modular
 
 	appCtx    context.Context
 	appCancel context.CancelFunc
