@@ -11,7 +11,7 @@ gnfd_workspace=${workspace}/../../greenfield/deployment/localup/
 #########################
 # the command line help #
 #########################
-display_help() {
+function display_help() {
     echo "Usage: $0 [option...] {help|generate|reset|start|stop|print}" >&2
     echo
     echo "   --help           display help info"
@@ -43,7 +43,7 @@ function generate_sp_db_info() {
   for ((i=0;i<${SP_NUM};i++));do
     mkdir -p ${workspace}/${SP_DEPLOY_DIR}/sp${i}
     cp -rf ${sp_bin} ${workspace}/${SP_DEPLOY_DIR}/sp${i}/${sp_bin_name}${i}
-    cd ${workspace}/${SP_DEPLOY_DIR}/sp${i}/
+    cd ${workspace}/${SP_DEPLOY_DIR}/sp${i}/ || exit 1
     ./${sp_bin_name}${i}  config.dump
 
     # generate sp info
@@ -83,11 +83,11 @@ function generate_sp_db_info() {
 #############################################################
 # make sp config.toml according to env.info/db.info/sp.info #
 #############################################################
-make_config() {
+function make_config() {
   index=0
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
     cur_port=$((SP_START_PORT+1000*$index))
-    cd ${sp_dir}
+    cd ${sp_dir} || exit 1
     source db.info
     source sp.info
     # app
@@ -154,7 +154,7 @@ make_config() {
 #############################################################
 # make integration test config.toml according sp.json       #
 #############################################################
-make_integration_test_config() {
+function make_integration_test_config() {
   index=0
   sp_json_file=$1
   file='test/e2e/localup_env/integration_config/config.yml'
@@ -203,10 +203,10 @@ make_integration_test_config() {
 #############
 # start sps #
 #############
-start_sp() {
+function start_sp() {
   index=0
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
-    cd ${sp_dir}
+    cd ${sp_dir} || exit 1
     nohup ./${sp_bin_name}${index} --config config.toml </dev/null >log.txt 2>&1&
     echo "succeed to start sp in "${sp_dir}
     cd - >/dev/null
@@ -218,7 +218,7 @@ start_sp() {
 ############
 # stop sps #
 ############
-stop_sp() {
+function stop_sp() {
   kill -9 $(pgrep -f ${sp_bin_name}) >/dev/null 2>&1
   echo "succeed to stop storage providers"
 }
@@ -226,9 +226,9 @@ stop_sp() {
 #############################################
 # drop databases and recreate new databases #
 #############################################
-reset_sql_db() {
+function reset_sql_db() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
-    cd ${sp_dir}
+    cd ${sp_dir} || exit 1
     source db.info
     hostname=$(echo ${ADDRESS} | cut -d : -f 1)
     port=$(echo ${ADDRESS} | cut -d : -f 2)
@@ -242,9 +242,9 @@ reset_sql_db() {
 ##########################
 # clean piece-store data #
 ##########################
-reset_piece_store() {
+function reset_piece_store() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
-    cd ${sp_dir}
+    cd ${sp_dir} || exit 1
     rm -rf ./data
     echo "succeed to reset piece store in "${sp_dir}
     cd - >/dev/null
@@ -254,7 +254,7 @@ reset_piece_store() {
 ##################
 # print work dir #
 ##################
-print_work_dir() {
+function print_work_dir() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
     echo "  "${sp_dir}
   done
@@ -282,7 +282,7 @@ function clean_local_sp_env() {
 #############
 # reset sps #
 #############
-reset_sp() {
+function reset_sp() {
   stop_sp
   reset_sql_db
   reset_piece_store
@@ -290,7 +290,7 @@ reset_sp() {
   make_config
 }
 
-main() {
+function main() {
   CMD=$1
   case ${CMD} in
   --generate)
