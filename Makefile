@@ -47,7 +47,7 @@ test:
 	# go test -cover ./...
 
 clean:
-	rm -rf ./service/types/*.pb.go && rm -rf ./service/*/types/*.pb.go
+	rm -rf ./base/types/*/*.pb.go && rm -rf ./modular/metadata/types/*.pb.go && rm -rf ./store/types/*.pb.go
 
 lint:
 	golangci-lint run --fix
