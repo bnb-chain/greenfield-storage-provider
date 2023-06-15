@@ -160,12 +160,15 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
+	verifyObjectPermissionTime := time.Now()
 	if authorized, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
 		reqCtx.bucketName, reqCtx.objectName); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authorize for getting public object", "error", err)
 		err = ErrConsensus
 		return
 	}
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_verify_object_permission_time").Observe(time.Since(verifyObjectPermissionTime).Seconds())
+
 	if !authorized {
 		if reqCtxErr != nil {
 			err = reqCtxErr
@@ -265,7 +268,10 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
 			return
 		}
+
+		writeTime := time.Now()
 		w.Write(pieceData)
+		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_write_time").Observe(time.Since(writeTime).Seconds())
 	}
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_data_time").Observe(time.Since(getDataTime).Seconds())
 }
