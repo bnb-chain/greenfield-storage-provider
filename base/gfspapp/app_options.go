@@ -394,7 +394,7 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 			app.p2p = module.(coremodule.P2P)
 		case coremodule.ReceiveModularName:
 			app.receiver = module.(coremodule.Receiver)
-		case coremodule.SignerModularName:
+		case coremodule.SignModularName:
 			app.signer = module.(coremodule.Signer)
 		case coremodule.UploadModularName:
 			app.uploader = module.(coremodule.Uploader)

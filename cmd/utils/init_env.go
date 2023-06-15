@@ -124,7 +124,7 @@ func MakeGfSpClient(cfg *gfspconfig.GfSpConfig) *gfspclient.GfSpClient {
 		cfg.Endpoint.SignerEndpoint = cfg.GRPCAddress
 	}
 	if len(cfg.Endpoint.AuthenticatorEndpoint) == 0 {
-		cfg.Endpoint.AuthenticatorEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.AuthenticatorEndpoint = cfg.GRPCAddress
 	}
 	client := gfspclient.NewGfSpClient(
 		cfg.Endpoint.ApproverEndpoint,
