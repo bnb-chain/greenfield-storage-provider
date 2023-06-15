@@ -8,7 +8,7 @@ import (
 
 const (
 	// DefaultExecutorMaxExecuteNum defines the default max parallel execute task number.
-	DefaultExecutorMaxExecuteNum int64 = 1024
+	DefaultExecutorMaxExecuteNum int64 = 16
 	// DefaultExecutorAskTaskInterval defines the default ask task interval from manager.
 	DefaultExecutorAskTaskInterval int = 1
 	// DefaultExecutorAskReplicateApprovalTimeout defines the ask replicate piece approval
@@ -34,6 +34,9 @@ const (
 	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
+	// DefaultSleepInterval defines the sleep interval when failed to ask task
+	// it is millisecond level
+	DefaultSleepInterval = 100
 )
 
 func NewExecuteModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -46,6 +49,7 @@ func NewExecuteModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (co
 
 func DefaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Executor.MaxExecuteNumber == 0 {
+		// TODO:: DefaultExecutorMaxExecuteNum should core_num * multiple, the core_num is compatible with docker
 		cfg.Executor.MaxExecuteNumber = DefaultExecutorMaxExecuteNum
 	}
 	executor.maxExecuteNum = cfg.Executor.MaxExecuteNumber
