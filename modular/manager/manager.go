@@ -469,13 +469,13 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 	for i := 0; i < RejectUnSealObjectRetry; i++ {
 		err = m.baseApp.GfSpClient().RejectUnSealObject(ctx, rejectUnSealObjectMsg)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to reject unseal object", "retry", i, "error", err)
 			time.Sleep(RejectUnSealObjectTimeout * time.Second)
 		} else {
 			log.CtxDebugw(ctx, "succeed to reject unseal object")
-			break
+			return nil
 		}
 	}
+	log.CtxErrorw(ctx, "failed to reject unseal object", "error", err)
 	return err
 }
 
