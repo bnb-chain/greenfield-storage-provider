@@ -472,6 +472,7 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 			log.CtxErrorw(ctx, "failed to reject unseal object", "retry", i, "error", err)
 			time.Sleep(RejectUnSealObjectTimeout * time.Second)
 		} else {
+			log.CtxDebugw(ctx, "succeed to reject unseal object")
 			break
 		}
 	}

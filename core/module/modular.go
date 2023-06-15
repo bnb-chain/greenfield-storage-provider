@@ -130,7 +130,7 @@ type Downloader interface {
 type TaskExecutor interface {
 	Modular
 	// AskTask asks the task by remaining limit from manager modular.
-	AskTask(ctx context.Context, remaining rcmgr.Limit)
+	AskTask(ctx context.Context) error
 	// HandleReplicatePieceTask handles the ReplicatePieceTask that is asked from
 	// manager modular.
 	HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask)

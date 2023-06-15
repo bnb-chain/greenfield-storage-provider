@@ -178,15 +178,16 @@ func (g *Gnfd) ListenObjectSeal(ctx context.Context, objectID uint64, timeoutHei
 		err        error
 	)
 	for i := 0; i < timeoutHeight; i++ {
-		time.Sleep(ExpectedOutputBlockInternal * time.Second)
 		objectInfo, err = g.QueryObjectInfoByID(ctx, strconv.FormatUint(objectID, 10))
 		if err != nil {
+			time.Sleep(ExpectedOutputBlockInternal * time.Second)
 			continue
 		}
 		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
 			log.CtxDebugw(ctx, "succeed to listen object stat")
 			return true, nil
 		}
+		time.Sleep(ExpectedOutputBlockInternal * time.Second)
 	}
 	if err == nil {
 		log.CtxErrorw(ctx, "seal object timeout", "object_id", objectID)
