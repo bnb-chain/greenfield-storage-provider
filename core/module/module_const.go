@@ -21,8 +21,8 @@ var (
 	P2PModularDescription            = "Communicates between SPs on p2p protocol."
 	ReceiveModularName               = strings.ToLower("Receiver")
 	ReceiveModularDescription        = "Receives data pieces of an object from other storage provider and store."
-	SignerModularName                = strings.ToLower("Signer")
-	SignerModularDescription         = "Signs the transaction and broadcasts to chain."
+	SignModularName                  = strings.ToLower("Signer")
+	SignModularDescription           = "Signs the transaction and broadcasts to chain."
 	UploadModularName                = strings.ToLower("Uploader")
 	UploadModularDescription         = "Uploads object payload to primary SP."
 )

@@ -26,11 +26,11 @@ import (
 // putObjectHandler handles the upload object request.
 func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtx     *RequestContext
-		authorized bool
-		objectInfo *storagetypes.ObjectInfo
-		params     *storagetypes.Params
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		objectInfo    *storagetypes.ObjectInfo
+		params        *storagetypes.Params
 	)
 
 	uploadPrimaryStartTime := time.Now()
@@ -51,16 +51,16 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
-		startAuthirzerTime := time.Now()
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+	if reqCtx.NeedVerifyAuthentication() {
+		startAuthenticationTime := time.Now()
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_authorizer").Observe(time.Since(startAuthirzerTime).Seconds())
+		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 			return
 		}
-		if !authorized {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
@@ -134,16 +134,16 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 // getObjectHandler handles the download object request.
 func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtxErr  error
-		reqCtx     *RequestContext
-		authorized bool
-		objectInfo *storagetypes.ObjectInfo
-		bucketInfo *storagetypes.BucketInfo
-		params     *storagetypes.Params
-		lowOffset  int64
-		highOffset int64
-		pieceInfos []*downloader.SegmentPieceInfo
+		err           error
+		reqCtxErr     error
+		reqCtx        *RequestContext
+		authenticated bool
+		objectInfo    *storagetypes.ObjectInfo
+		bucketInfo    *storagetypes.BucketInfo
+		params        *storagetypes.Params
+		lowOffset     int64
+		highOffset    int64
+		pieceInfos    []*downloader.SegmentPieceInfo
 	)
 	getObjectStartTime := time.Now()
 	defer func() {
@@ -160,28 +160,28 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
-	if authorized, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
+	if authenticated, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
 		reqCtx.bucketName, reqCtx.objectName); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify authorize for getting public object", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
 		err = ErrConsensus
 		return
 	}
-	if !authorized {
+	if !authenticated {
 		if reqCtxErr != nil {
 			err = reqCtxErr
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
 			return
 		}
-		if reqCtx.NeedVerifyAuthorizer() {
+		if reqCtx.NeedVerifyAuthentication() {
 			authTime := time.Now()
-			if authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+			if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
 				metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
 			}
 			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
-			if !authorized {
+			if !authenticated {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
 				return
@@ -273,11 +273,11 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 // queryUploadProgressHandler handles the query uploaded object progress request.
 func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtx     *RequestContext
-		authorized bool
-		objectInfo *storagetypes.ObjectInfo
-		taskState  int32
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		objectInfo    *storagetypes.ObjectInfo
+		taskState     int32
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -295,14 +295,14 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+	if reqCtx.NeedVerifyAuthentication() {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 			return
 		}
-		if !authorized {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
@@ -351,7 +351,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	var (
 		err               error
 		reqCtx            *RequestContext
-		authorized        bool
+		authenticated     bool
 		isRange           bool
 		rangeStart        int64
 		rangeEnd          int64
@@ -475,13 +475,13 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			reqCtx.account = accAddress.String()
 
 			// 2. check permission
-			authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
 			}
-			if !authorized {
+			if !authenticated {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
 				return

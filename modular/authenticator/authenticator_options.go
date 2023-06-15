@@ -7,6 +7,6 @@ import (
 )
 
 func NewAuthenticationModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
-	authorize := &AuthenticationModular{baseApp: app}
-	return authorize, nil
+	auth := &AuthenticationModular{baseApp: app}
+	return auth, nil
 }

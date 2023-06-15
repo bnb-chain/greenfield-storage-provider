@@ -185,7 +185,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		bucketInfo, _ := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_create_bucket_approval_query_bucket_time").Observe(time.Since(queryTime).Seconds())
 		if bucketInfo != nil {
-			log.CtxErrorw(ctx, "failed to verify authorize of asking create bucket "+
+			log.CtxErrorw(ctx, "failed to verify authentication of asking create bucket "+
 				"approval, bucket repeated", "bucket", bucket)
 			return false, ErrRepeatedBucket
 		}
@@ -195,12 +195,12 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		bucketInfo, objectInfo, _ := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_create_object_approval_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if bucketInfo == nil {
-			log.CtxErrorw(ctx, "failed to verify authorize of asking create object "+
+			log.CtxErrorw(ctx, "failed to verify authentication of asking create object "+
 				"approval, no such bucket to ask create object approval", "bucket", bucket, "object", object)
 			return false, ErrNoSuchBucket
 		}
 		if objectInfo != nil {
-			log.CtxErrorw(ctx, "failed to verify authorize of asking create object "+
+			log.CtxErrorw(ctx, "failed to verify authentication of asking create object "+
 				"approval, object has been created", "bucket", bucket, "object", object)
 			return false, ErrRepeatedObject
 		}
