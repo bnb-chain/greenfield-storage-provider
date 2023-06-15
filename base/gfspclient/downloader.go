@@ -46,9 +46,7 @@ func (s *GfSpClient) GetPiece(ctx context.Context, downloadPieceTask coretask.Do
 	req := &gfspserver.GfSpDownloadPieceRequest{
 		DownloadPieceTask: downloadPieceTask.(*gfsptask.GfSpDownloadPieceTask),
 	}
-	startTime := time.Now()
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadPiece(ctx, req)
-	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_client_total_time").Observe(time.Since(startTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to download piece", "error", err)
 		return nil, ErrRpcUnknown
