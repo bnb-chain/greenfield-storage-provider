@@ -58,7 +58,22 @@ func (e *ExecuteModular) Start(ctx context.Context) error {
 }
 
 func (e *ExecuteModular) eventLoop(ctx context.Context) {
-	askTaskTicker := time.NewTicker(time.Duration(e.askTaskInterval) * time.Second)
+	for i := int64(0); i < e.maxExecuteNum; i++ {
+		go func(ctx context.Context) {
+			for {
+				select {
+				case <-ctx.Done():
+				default:
+					err := e.AskTask(ctx)
+					if err != nil {
+						log.CtxErrorw(ctx, "failed to handle ask task, will hold on", "error", err)
+						time.Sleep(time.Duration(DefaultSleepInterval) * time.Millisecond)
+					}
+				}
+			}
+		}(ctx)
+	}
+
 	statisticsTicker := time.NewTicker(time.Duration(e.statisticsOutputInterval) * time.Second)
 	for {
 		select {
@@ -66,30 +81,6 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 			return
 		case <-statisticsTicker.C:
 			log.CtxInfo(ctx, e.Statistics())
-		case <-askTaskTicker.C:
-			metrics.MaxTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(atomic.LoadInt64(&e.maxExecuteNum)))
-			metrics.RunningTaskNumberGauge.WithLabelValues(e.Name()).Set(float64(atomic.LoadInt64(&e.executingNum)))
-			go func() {
-				defer atomic.AddInt64(&e.executingNum, -1)
-				if atomic.AddInt64(&e.executingNum, 1) > atomic.LoadInt64(&e.maxExecuteNum) {
-					log.CtxErrorw(ctx, "failed to ask due to asking number greater than max limit number")
-					return
-				}
-				limit, err := e.scope.RemainingResource()
-				if err != nil {
-					log.CtxErrorw(ctx, "failed to get remaining resource", "error", err)
-					return
-				}
-				metrics.RemainingMemoryGauge.WithLabelValues(e.Name()).Set(float64(limit.GetMemoryLimit()))
-				metrics.RemainingTaskGauge.WithLabelValues(e.Name()).Set(float64(limit.GetTaskTotalLimit()))
-				metrics.RemainingHighPriorityTaskGauge.WithLabelValues(e.Name()).Set(
-					float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityHigh)))
-				metrics.RemainingMediumPriorityTaskGauge.WithLabelValues(e.Name()).Set(
-					float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityMedium)))
-				metrics.RemainingLowTaskGauge.WithLabelValues(e.Name()).Set(
-					float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityLow)))
-				e.AskTask(ctx, limit)
-			}()
 		}
 	}
 }
@@ -104,25 +95,44 @@ func (e *ExecuteModular) omitError(err error) bool {
 	return false
 }
 
-func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
+func (e *ExecuteModular) AskTask(ctx context.Context) error {
+	atomic.AddInt64(&e.executingNum, 1)
+	defer atomic.AddInt64(&e.executingNum, -1)
+
+	limit, err := e.scope.RemainingResource()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get remaining resource", "error", err)
+		return err
+	}
+
+	metrics.RemainingMemoryGauge.WithLabelValues(e.Name()).Set(float64(limit.GetMemoryLimit()))
+	metrics.RemainingTaskGauge.WithLabelValues(e.Name()).Set(float64(limit.GetTaskTotalLimit()))
+	metrics.RemainingHighPriorityTaskGauge.WithLabelValues(e.Name()).Set(
+		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityHigh)))
+	metrics.RemainingMediumPriorityTaskGauge.WithLabelValues(e.Name()).Set(
+		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityMedium)))
+	metrics.RemainingLowTaskGauge.WithLabelValues(e.Name()).Set(
+		float64(limit.GetTaskLimit(corercmgr.ReserveTaskPriorityLow)))
+
 	askTask, err := e.baseApp.GfSpClient().AskTask(ctx, limit)
 	if err != nil {
 		if e.omitError(err) {
-			return
+			return err
 		}
 		log.CtxErrorw(ctx, "failed to ask task", "remaining", limit.String(), "error", err)
-		return
+		return err
 	}
 	// double confirm the safe task
 	if askTask == nil {
 		log.CtxErrorw(ctx, "failed to ask task due to dangling pointer",
 			"remaining", limit.String(), "error", err)
-		return
+		return ErrDanglingPointer
 	}
 	span, err := e.ReserveResource(ctx, askTask.EstimateLimit().ScopeStat())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve resource", "task_require",
 			askTask.EstimateLimit().String(), "remaining", limit.String(), "error", err)
+		return err
 	}
 	defer e.ReleaseResource(ctx, span)
 	defer e.ReportTask(ctx, askTask)
@@ -163,6 +173,7 @@ func (e *ExecuteModular) AskTask(ctx context.Context, limit corercmgr.Limit) {
 		log.CtxErrorw(ctx, "unsupported task type")
 	}
 	log.CtxDebugw(ctx, "finish to handle task")
+	return nil
 }
 
 func (e *ExecuteModular) ReportTask(
@@ -202,7 +213,7 @@ func (e *ExecuteModular) ReleaseResource(
 func (e *ExecuteModular) Statistics() string {
 	return fmt.Sprintf(
 		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d]",
-		atomic.LoadInt64(&e.maxExecuteNum), atomic.LoadInt64(&e.executingNum),
+		&e.maxExecuteNum, atomic.LoadInt64(&e.executingNum),
 		atomic.LoadInt64(&e.doingReplicatePieceTaskCnt),
 		atomic.LoadInt64(&e.doingSpSealObjectTaskCnt),
 		atomic.LoadInt64(&e.doingReceivePieceTaskCnt),
