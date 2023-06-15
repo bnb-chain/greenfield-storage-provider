@@ -41,7 +41,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	high := math.Ceil(float64(low) * e.askReplicateApprovalExFactor)
 	rAppTask := &gfsptask.GfSpReplicatePieceApprovalTask{}
 	rAppTask.InitApprovalReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
-		e.baseApp.TaskPriority(rAppTask), e.baseApp.OperateAddress())
+		e.baseApp.TaskPriority(rAppTask), e.baseApp.OperatorAddress())
 	askReplicateApprovalTime := time.Now()
 	approvals, err = e.AskReplicatePieceApproval(ctx, rAppTask, int(low),
 		int(high), e.askReplicateApprovalTimeout)
@@ -62,7 +62,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	log.CtxDebugw(ctx, "succeed to replicate all pieces")
 	// combine seal object
 	sealMsg := &storagetypes.MsgSealObject{
-		Operator:              e.baseApp.OperateAddress(),
+		Operator:              e.baseApp.OperatorAddress(),
 		BucketName:            task.GetObjectInfo().GetBucketName(),
 		ObjectName:            task.GetObjectInfo().GetObjectName(),
 		SecondarySpAddresses:  task.GetSecondaryAddresses(),

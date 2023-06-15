@@ -84,7 +84,7 @@ func (n *Node) onPing(s network.Stream) {
 		}
 	}
 
-	pong.SpOperatorAddress = n.baseApp.OperateAddress()
+	pong.SpOperatorAddress = n.baseApp.OperatorAddress()
 	signature, err := n.baseApp.GfSpClient().SignP2PPongMsg(context.Background(), pong)
 	if err != nil {
 		log.Errorw("failed to sign pong msg", "local", s.Conn().LocalPeer(), "remote", s.Conn().RemotePeer(), "error", err)

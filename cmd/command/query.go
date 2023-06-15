@@ -141,7 +141,7 @@ func listErrorsAction(ctx *cli.Context) error {
 }
 
 func queryTasksAction(ctx *cli.Context) error {
-	endpoint := gfspapp.DefaultGrpcAddress
+	endpoint := gfspapp.DefaultGRPCAddress
 	if ctx.IsSet(utils.ConfigFileFlag.Name) {
 		cfg := &gfspconfig.GfSpConfig{}
 		err := utils.LoadConfig(ctx.String(utils.ConfigFileFlag.Name), cfg)
@@ -149,7 +149,7 @@ func queryTasksAction(ctx *cli.Context) error {
 			log.Errorw("failed to load config file", "error", err)
 			return err
 		}
-		endpoint = cfg.GrpcAddress
+		endpoint = cfg.GRPCAddress
 	}
 	if ctx.IsSet(endpointFlag.Name) {
 		endpoint = ctx.String(endpointFlag.Name)
@@ -296,7 +296,7 @@ func getSegmentIntegrityAction(ctx *cli.Context) error {
 
 	replicateIdx := -1
 	for i, addr := range objectInfo.GetSecondarySpAddresses() {
-		if strings.EqualFold(addr, cfg.SpAccount.SpOperateAddress) {
+		if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
 			replicateIdx = i
 			break
 		}

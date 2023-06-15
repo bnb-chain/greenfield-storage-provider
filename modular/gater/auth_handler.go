@@ -263,7 +263,7 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 		spAddress := match[1]
 		// spName := match[2]  // keep this line here to indicate match[2] means spName
 		spNonce := match[3]
-		if spAddress == g.baseApp.OperateAddress() {
+		if spAddress == g.baseApp.OperatorAddress() {
 			found = true
 			if expectedNonce != spNonce { // nonce doesn't match
 				return ErrSignedMsgNotMatchTemplate
