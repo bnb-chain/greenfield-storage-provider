@@ -151,7 +151,7 @@ func (*NilModular) PreChallengePiece(context.Context, task.ChallengePieceTask) e
 func (*NilModular) HandleChallengePiece(context.Context, task.ChallengePieceTask) ([]byte, [][]byte, []byte, error) {
 	return nil, nil, nil, ErrNilModular
 }
-func (*NilModular) AskTask(context.Context, rcmgr.Limit)                              {}
+func (*NilModular) AskTask(context.Context) error                                     { return nil }
 func (*NilModular) PostChallengePiece(context.Context, task.ChallengePieceTask)       {}
 func (*NilModular) ReportTask(context.Context, task.Task) error                       { return ErrNilModular }
 func (*NilModular) HandleReplicatePieceTask(context.Context, task.ReplicatePieceTask) {}

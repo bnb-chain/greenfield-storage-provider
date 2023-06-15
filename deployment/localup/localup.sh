@@ -91,7 +91,7 @@ function make_config() {
     source db.info
     source sp.info
     # app
-    sed -i -e "s/GrpcAddress = '.*'/GrpcAddress = '127.0.0.1:${cur_port}'/g" config.toml
+    sed -i -e "s/GRPCAddress = '.*'/GRPCAddress = '127.0.0.1:${cur_port}'/g" config.toml
 
     # db
     sed -i -e "s/User = '.*'/User = '${USER}'/g" config.toml
@@ -104,7 +104,7 @@ function make_config() {
     sed -i -e "s/ChainAddress = \[.*\]/ChainAddress = \['http:\/\/${CHAIN_HTTP_ENDPOINT}'\]/g" config.toml
 
     # sp account
-    sed -i -e "s/SpOperateAddress = '.*'/SpOperateAddress = '${OPERATOR_ADDRESS}'/g" config.toml
+    sed -i -e "s/SpOperatorAddress = '.*'/SpOperatorAddress = '${OPERATOR_ADDRESS}'/g" config.toml
     sed -i -e "s/OperatorPrivateKey = '.*'/OperatorPrivateKey = '${OPERATOR_PRIVATE_KEY}'/g" config.toml
     sed -i -e "s/FundingPrivateKey = '.*'/FundingPrivateKey = '${FUNDING_PRIVATE_KEY}'/g" config.toml
     sed -i -e "s/SealPrivateKey = '.*'/SealPrivateKey = '${SEAL_PRIVATE_KEY}'/g" config.toml
@@ -112,8 +112,8 @@ function make_config() {
     sed -i -e "s/GcPrivateKey = '.*'/GcPrivateKey = '${GC_PRIVATE_KEY}'/g" config.toml
 
     # gateway
-    sed -i -e "s/Domain = '.*'/Domain = 'gnfd.test-sp.com'/g" config.toml
-    sed -i -e "s/^HttpAddress = '.*'/HttpAddress = '${SP_ENDPOINT}'/g" config.toml
+    sed -i -e "s/DomainName = '.*'/DomainName = 'gnfd.test-sp.com'/g" config.toml
+    sed -i -e "s/^HTTPAddress = '.*'/HTTPAddress = '${SP_ENDPOINT}'/g" config.toml
 
     # metadata
     sed -i -e "s/IsMasterDB = .*/IsMasterDB = true/g" config.toml
@@ -134,9 +134,9 @@ function make_config() {
     sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
     sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
     metrics_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 367))
-    sed -i -e "s/MetricsHttpAddress = '.*'/MetricsHttpAddress = '${metrics_address}'/g" config.toml
+    sed -i -e "s/MetricsHTTPAddress = '.*'/MetricsHTTPAddress = '${metrics_address}'/g" config.toml
     pprof_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 368))
-    sed -i -e "s/PProfHttpAddress = '.*'/PProfHttpAddress = '${pprof_address}'/g" config.toml
+    sed -i -e "s/PProfHTTPAddress = '.*'/PProfHTTPAddress = '${pprof_address}'/g" config.toml
 
     # blocksyncer
     sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\]/g" config.toml

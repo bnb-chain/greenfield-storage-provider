@@ -21,10 +21,10 @@ const (
 )
 
 type GfSpBaseApp struct {
-	appID          string
-	grpcAddress    string
-	operateAddress string
-	chainID        string
+	appID           string
+	grpcAddress     string
+	operatorAddress string
+	chainID         string
 
 	server *grpc.Server
 	client *gfspclient.GfSpClient
@@ -99,9 +99,9 @@ func (g *GfSpBaseApp) Consensus() consensus.Consensus {
 	return g.chain
 }
 
-// OperateAddress returns the sp operator address.
-func (g *GfSpBaseApp) OperateAddress() string {
-	return g.operateAddress
+// OperatorAddress returns the sp operator address.
+func (g *GfSpBaseApp) OperatorAddress() string {
+	return g.operatorAddress
 }
 
 // ChainID returns the chain ID used by this sp instance
@@ -147,7 +147,7 @@ func (g *GfSpBaseApp) ResourceManager() corercmgr.ResourceManager {
 
 // Start the GfSpBaseApp and blocks the progress until signal.
 func (g *GfSpBaseApp) Start(ctx context.Context) error {
-	err := g.StartRpcServer(ctx)
+	err := g.StartRPCServer(ctx)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (g *GfSpBaseApp) Start(ctx context.Context) error {
 
 // close recycles the GfSpBaseApp resource on the stop time.
 func (g *GfSpBaseApp) close(ctx context.Context) error {
-	g.StopRpcServer(ctx)
+	g.StopRPCServer(ctx)
 	g.GfSpClient().Close()
 	g.rcmgr.Close()
 	g.chain.Close()
