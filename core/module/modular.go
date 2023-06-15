@@ -24,7 +24,7 @@ type Modular interface {
 	ReleaseResource(ctx context.Context, scope rcmgr.ResourceScopeSpan)
 }
 
-// AuthOpType defines the operator type used to authority verification.
+// AuthOpType defines the operator type used to authentication verification.
 type AuthOpType int32
 
 const (
@@ -48,11 +48,11 @@ const (
 	AuthOpTypeListBucketReadRecord
 )
 
-// Authorizer is the interface to authority verification modular.
-type Authorizer interface {
+// Authenticator is the interface to authentication verification modular.
+type Authenticator interface {
 	Modular
-	// VerifyAuthorize verifies the operator authority.
-	VerifyAuthorize(ctx context.Context, auth AuthOpType, account, bucket, object string) (bool, error)
+	// VerifyAuthentication verifies the operator authentication.
+	VerifyAuthentication(ctx context.Context, auth AuthOpType, account, bucket, object string) (bool, error)
 	// GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
 	GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error)
 	// UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.

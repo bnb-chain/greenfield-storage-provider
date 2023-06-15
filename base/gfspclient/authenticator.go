@@ -21,14 +21,14 @@ func (s *GfSpClient) VerifyAuthorize(ctx context.Context, auth coremodule.AuthOp
 		return false, ErrRpcUnknown
 	}
 	defer conn.Close()
-	req := &gfspserver.GfSpAuthorizeRequest{
+	req := &gfspserver.GfSpAuthenticationRequest{
 		AuthType:    int32(auth),
 		UserAccount: account,
 		BucketName:  bucket,
 		ObjectName:  object,
 	}
 	startRequestTime := time.Now()
-	resp, err := gfspserver.NewGfSpAuthorizationServiceClient(conn).GfSpVerifyAuthorize(ctx, req)
+	resp, err := gfspserver.NewGfSpAuthenticationServiceClient(conn).GfSpVerifyAuthentication(ctx, req)
 	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_network_time").Observe(time.Since(startRequestTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to verify authorize", "error", err)
@@ -52,7 +52,7 @@ func (s *GfSpClient) GetAuthNonce(ctx context.Context, account string, domain st
 		AccountId: account,
 		Domain:    domain,
 	}
-	resp, err := gfspserver.NewGfSpAuthorizationServiceClient(conn).GetAuthNonce(ctx, req, opts...)
+	resp, err := gfspserver.NewGfSpAuthenticationServiceClient(conn).GetAuthNonce(ctx, req, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get auth nonce rpc", "error", err)
@@ -79,7 +79,7 @@ func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, account string, do
 		UserPublicKey: userPublicKey,
 		ExpiryDate:    expiryDate,
 	}
-	resp, err := gfspserver.NewGfSpAuthorizationServiceClient(conn).UpdateUserPublicKey(ctx, req, opts...)
+	resp, err := gfspserver.NewGfSpAuthenticationServiceClient(conn).UpdateUserPublicKey(ctx, req, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to update user public key rpc", "error", err)
@@ -104,7 +104,7 @@ func (s *GfSpClient) VerifyOffChainSignature(ctx context.Context, account string
 		OffChainSig:   offChainSig,
 		RealMsgToSign: realMsgToSign,
 	}
-	resp, err := gfspserver.NewGfSpAuthorizationServiceClient(conn).VerifyOffChainSignature(ctx, req, opts...)
+	resp, err := gfspserver.NewGfSpAuthenticationServiceClient(conn).VerifyOffChainSignature(ctx, req, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to verify off-chain signature rpc", "error", err)

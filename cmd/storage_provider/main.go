@@ -12,7 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/approver"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/authorizer"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/authenticator"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/executor"
@@ -33,7 +33,7 @@ import (
 // New module func is help module manager to init the module instance.
 func registerModular() {
 	gfspapp.RegisterModular(module.ApprovalModularName, module.ApprovalModularDescription, approver.NewApprovalModular)
-	gfspapp.RegisterModular(module.AuthorizationModularName, module.AuthorizationModularDescription, authorizer.NewAuthorizeModular)
+	gfspapp.RegisterModular(module.AuthenticationModularName, module.AuthenticationModularDescription, authenticator.NewAuthenticationModular)
 	gfspapp.RegisterModular(module.DownloadModularName, module.DownloadModularDescription, downloader.NewDownloadModular)
 	gfspapp.RegisterModular(module.ExecuteModularName, module.ExecuteModularDescription, executor.NewExecuteModular)
 	gfspapp.RegisterModular(module.GateModularName, module.GateModularDescription, gater.NewGateModular)
