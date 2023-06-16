@@ -53,6 +53,10 @@ const (
 	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
+	// DefaultListenRejectUnSealTimeoutHeight defines the default listen reject unseal object
+	// on greenfield timeout height, if after current block height + timeout height, the object
+	// is not rejected, it is judged failed to reject unseal object on greenfield.
+	DefaultListenRejectUnSealTimeoutHeight int = 10
 
 	// DefaultDiscontinueTimeInterval defines the default interval for starting discontinue
 	// buckets task , used for test net.
