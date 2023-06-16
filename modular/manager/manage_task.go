@@ -185,6 +185,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 		return ErrRepeatedTask
 	}
 	if task.GetSealed() {
+		metrics.PerfDispatchReplicateObjectIdGauge.WithLabelValues("replicate_seal_success_object_id").Set(float64(task.GetObjectInfo().Id.Uint64()))
 		metrics.SealObjectSucceedCounter.WithLabelValues(m.Name()).Inc()
 		log.CtxDebugw(ctx, "replicate piece object task has combined seal object task")
 		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
@@ -238,6 +239,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 		err := m.replicateQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 	} else {
+		metrics.PerfDispatchReplicateObjectIdGauge.WithLabelValues("replicate_failed_object_id").Set(float64(handleTask.GetObjectInfo().Id.Uint64()))
 		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:         handleTask.GetObjectInfo().Id.Uint64(),
 			TaskState:        types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR,
@@ -262,6 +264,7 @@ func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.Seal
 		log.CtxErrorw(ctx, "handler error seal object task", "task_info", task.Info(), "error", task.Error())
 		return m.handleFailedSealObjectTask(ctx, task)
 	}
+	metrics.PerfDispatchReplicateObjectIdGauge.WithLabelValues("seal_success_object_id").Set(float64(task.GetObjectInfo().Id.Uint64()))
 	metrics.SealObjectSucceedCounter.WithLabelValues(m.Name()).Inc()
 	m.sealQueue.PopByKey(task.Key())
 	if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
@@ -294,6 +297,7 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 		return nil
 	} else {
+		metrics.PerfDispatchReplicateObjectIdGauge.WithLabelValues("seal_failed_object_id").Set(float64(handleTask.GetObjectInfo().Id.Uint64()))
 		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:         handleTask.GetObjectInfo().Id.Uint64(),
 			TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
