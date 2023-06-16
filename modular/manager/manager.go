@@ -407,7 +407,7 @@ func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
 }
 
 func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
-	return !qTask.Expired() && (qTask.GetRetry() == 0 || qTask.ExceedTimeout())
+	return !qTask.ExceedRetry() && qTask.ExceedTimeout()
 }
 
 func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) task.Task {
@@ -472,6 +472,13 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 			time.Sleep(RejectUnSealObjectTimeout * time.Second)
 		} else {
 			log.CtxDebugw(ctx, "succeed to reject unseal object")
+			reject, err := m.baseApp.Consensus().ListenRejectUnSealObject(ctx, object.Id.Uint64(), DefaultListenRejectUnSealTimeoutHeight)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to reject unseal object", "error", err)
+			}
+			if !reject {
+				log.CtxErrorw(ctx, "failed to reject unseal object")
+			}
 			return nil
 		}
 	}
