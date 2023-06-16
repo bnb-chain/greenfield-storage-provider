@@ -163,13 +163,10 @@ func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, si
 }
 
 // SealObject seal the object on the greenfield chain.
-func (client *GreenfieldChainSignClient) SealObject(
-	ctx context.Context,
-	scope SignType,
-	sealObject *storagetypes.MsgSealObject) (
-	[]byte, error) {
+func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope SignType,
+	sealObject *storagetypes.MsgSealObject) ([]byte, error) {
 	if sealObject == nil {
-		log.CtxErrorw(ctx, "seal object msg pointer dangling")
+		log.CtxErrorw(ctx, "failed to seal object due to pointer dangling")
 		return nil, ErrDanglingPointer
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, sealObject.GetBucketName())
@@ -184,7 +181,7 @@ func (client *GreenfieldChainSignClient) SealObject(
 	for _, sp := range sealObject.SecondarySpAddresses {
 		opAddr, err := sdk.AccAddressFromHexUnsafe(sp) // should be 0x...
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", opAddr)
+			log.CtxErrorw(ctx, "failed to parse address", "address", sp, "error", err)
 			return nil, err
 		}
 		secondarySPAccs = append(secondarySPAccs, opAddr)
@@ -192,22 +189,20 @@ func (client *GreenfieldChainSignClient) SealObject(
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.sealAccNonce
-
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
 		sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
-	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
-		Nonce:    nonce,
-	}
-
 	var (
 		resp   *tx.BroadcastTxResponse
 		txHash []byte
 	)
 	for i := 0; i < BroadcastTxRetry; i++ {
+		mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+		nonce := client.sealAccNonce
+		txOpt := &ctypes.TxOption{
+			Mode:     &mode,
+			GasLimit: client.gasLimit,
+			Nonce:    nonce,
+		}
 		resp, err = client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgSealObject}, txOpt)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to broadcast seal object tx", "error", err)
@@ -220,8 +215,8 @@ func (client *GreenfieldChainSignClient) SealObject(
 					return nil, ErrSealObjectOnChain
 				}
 				client.sealAccNonce = nonce
-				continue
 			}
+			continue
 		}
 
 		if resp.TxResponse.Code != 0 {
@@ -230,30 +225,24 @@ func (client *GreenfieldChainSignClient) SealObject(
 			err = ErrSealObjectOnChain
 			continue
 		}
-		txHash, err = hex.DecodeString(resp.TxResponse.TxHash)
-		if err != nil {
+		if txHash, err = hex.DecodeString(resp.TxResponse.TxHash); err != nil {
 			log.CtxErrorw(ctx, "failed to marshal tx hash", "error", err)
 			ErrSealObjectOnChain.SetError(fmt.Errorf("failed to decode seal object tx hash, error: %v", err))
 			err = ErrSealObjectOnChain
 			continue
 		}
-		if err == nil {
-			client.sealAccNonce = nonce + 1
-			log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash)
-			return txHash, nil
-		}
+		client.sealAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash)
+		return txHash, nil
 	}
 	return nil, err
 }
 
 // RejectUnSealObject reject seal object on the greenfield chain.
-func (client *GreenfieldChainSignClient) RejectUnSealObject(
-	ctx context.Context,
-	scope SignType,
-	rejectObject *storagetypes.MsgRejectSealObject) (
-	[]byte, error) {
+func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context, scope SignType,
+	rejectObject *storagetypes.MsgRejectSealObject) ([]byte, error) {
 	if rejectObject == nil {
-		log.CtxErrorw(ctx, "reject unseal object msg pointer dangling")
+		log.CtxErrorw(ctx, "failed to reject unseal object due to pointer dangling")
 		return nil, ErrDanglingPointer
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, rejectObject.GetBucketName())
@@ -266,21 +255,20 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.sealAccNonce
-
 	msgRejectUnSealObject := storagetypes.NewMsgRejectUnsealedObject(km.GetAddr(), rejectObject.GetBucketName(), rejectObject.GetObjectName())
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
-	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
-		Nonce:    nonce,
-	}
 
 	var (
 		resp   *tx.BroadcastTxResponse
 		txHash []byte
 	)
 	for i := 0; i < BroadcastTxRetry; i++ {
+		mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+		nonce := client.sealAccNonce
+		txOpt := &ctypes.TxOption{
+			Mode:     &mode,
+			GasLimit: client.gasLimit,
+			Nonce:    nonce,
+		}
 		resp, err = client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgRejectUnSealObject}, txOpt)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to broadcast reject unseal object tx", "error", err)
@@ -293,8 +281,8 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 					return nil, ErrRejectUnSealObjectOnChain
 				}
 				client.sealAccNonce = nonce
-				continue
 			}
+			continue
 		}
 
 		if resp.TxResponse.Code != 0 {
@@ -303,19 +291,15 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 			err = ErrSealObjectOnChain
 			continue
 		}
-		txHash, err = hex.DecodeString(resp.TxResponse.TxHash)
-		if err != nil {
+		if txHash, err = hex.DecodeString(resp.TxResponse.TxHash); err != nil {
 			log.CtxErrorw(ctx, "failed to marshal tx hash", "error", err)
 			ErrRejectUnSealObjectOnChain.SetError(fmt.Errorf("failed to decode reject unseal object tx hash, error: %v", err))
 			err = ErrRejectUnSealObjectOnChain
 			continue
 		}
-
-		if err == nil {
-			client.sealAccNonce = nonce + 1
-			log.CtxDebugw(ctx, "succeed to broadcast reject unseal object tx", "tx_hash", txHash)
-			return txHash, nil
-		}
+		client.sealAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast reject unseal object tx", "tx_hash", txHash)
+		return txHash, nil
 	}
 	return nil, err
 }

@@ -206,19 +206,17 @@ func (g *Gnfd) ListenRejectUnSealObject(ctx context.Context, objectID uint64, ti
 	var err error
 	for i := 0; i < timeoutHeight; i++ {
 		_, err = g.QueryObjectInfoByID(ctx, strconv.FormatUint(objectID, 10))
-		if err != nil {
-			if strings.Contains(err.Error(), "No such object") {
-				return true, nil
-			}
+		if err != nil && strings.Contains(err.Error(), "No such object") {
+			return true, nil
 		}
 		time.Sleep(ExpectedOutputBlockInternal * time.Second)
 	}
-	if err == nil {
-		log.CtxErrorw(ctx, "reject unseal object timeout", "object_id", objectID)
-		return false, ErrRejectUnSealTimeout
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to listen reject unseal object", "object_id", objectID, "error", err)
+		return false, err
 	}
-	log.CtxErrorw(ctx, "failed to listen reject unseal object", "object_id", objectID, "error", err)
-	return false, err
+	log.CtxErrorw(ctx, "failed to listen reject unseal object due to timeout", "object_id", objectID)
+	return false, ErrRejectUnSealTimeout
 }
 
 // QueryPaymentStreamRecord returns the steam record info by account.

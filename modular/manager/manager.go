@@ -407,7 +407,9 @@ func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
 }
 
 func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
-	return !qTask.ExceedRetry() && qTask.ExceedTimeout()
+	// TODO:
+	// return !qTask.ExceedRetry() && qTask.ExceedTimeout()
+	return !qTask.Expired() && (qTask.GetRetry() == 0 || qTask.ExceedTimeout())
 }
 
 func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) task.Task {
@@ -472,12 +474,9 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 			time.Sleep(RejectUnSealObjectTimeout * time.Second)
 		} else {
 			log.CtxDebugw(ctx, "succeed to reject unseal object")
-			reject, err := m.baseApp.Consensus().ListenRejectUnSealObject(ctx, object.Id.Uint64(), DefaultListenRejectUnSealTimeoutHeight)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to reject unseal object", "error", err)
-			}
-			if !reject {
-				log.CtxErrorw(ctx, "failed to reject unseal object")
+			listenRejectSucceed, err := m.baseApp.Consensus().ListenRejectUnSealObject(ctx, object.Id.Uint64(), DefaultListenRejectUnSealTimeoutHeight)
+			if !listenRejectSucceed {
+				log.CtxErrorw(ctx, "failed to reject unseal object", "listen_reject_succeed", listenRejectSucceed, "error", err)
 			}
 			return nil
 		}
