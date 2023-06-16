@@ -44,9 +44,6 @@ func (m *GfSpTask) SetTimeout(timeout int64) {
 }
 
 func (m *GfSpTask) ExceedTimeout() bool {
-	if m.Retry == 0 {
-		return false
-	}
 	return m.GetUpdateTime()+m.GetTimeout() < time.Now().Unix()
 }
 
