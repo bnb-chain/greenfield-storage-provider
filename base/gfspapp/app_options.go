@@ -17,7 +17,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	piecestoreclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
@@ -191,48 +190,48 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 }
 
 func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if val, ok := os.LookupEnv(bsdb.BsDBUser); ok {
-		cfg.BsDB.User = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBPasswd); ok {
-		cfg.BsDB.Passwd = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
-		cfg.BsDB.Address = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBDataBase); ok {
-		cfg.BsDB.Database = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
-		cfg.BsDBBackup.User = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedPasswd); ok {
-		cfg.BsDBBackup.Passwd = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
-		cfg.BsDBBackup.Address = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDataBase); ok {
-		cfg.BsDBBackup.Database = val
-	}
-
-	DefaultGfBsDB(&cfg.BsDB)
-	DefaultGfBsDB(&cfg.BsDBBackup)
-
-	bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
-	if err != nil {
-		log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
-		return nil
-	}
-
-	bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
-	if err != nil {
-		log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
-		return nil
-	}
-
-	app.gfBsDBMaster = bsDBBlockSyncerMaster
-	app.gfBsDBBackup = bsDBBlockSyncerBackUp
+	//if val, ok := os.LookupEnv(bsdb.BsDBUser); ok {
+	//	cfg.BsDB.User = val
+	//}
+	//if val, ok := os.LookupEnv(bsdb.BsDBPasswd); ok {
+	//	cfg.BsDB.Passwd = val
+	//}
+	//if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
+	//	cfg.BsDB.Address = val
+	//}
+	//if val, ok := os.LookupEnv(bsdb.BsDBDataBase); ok {
+	//	cfg.BsDB.Database = val
+	//}
+	//if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
+	//	cfg.BsDBBackup.User = val
+	//}
+	//if val, ok := os.LookupEnv(bsdb.BsDBSwitchedPasswd); ok {
+	//	cfg.BsDBBackup.Passwd = val
+	//}
+	//if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
+	//	cfg.BsDBBackup.Address = val
+	//}
+	//if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDataBase); ok {
+	//	cfg.BsDBBackup.Database = val
+	//}
+	//
+	//DefaultGfBsDB(&cfg.BsDB)
+	//DefaultGfBsDB(&cfg.BsDBBackup)
+	//
+	//bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
+	//if err != nil {
+	//	log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
+	//	return nil
+	//}
+	//
+	//bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
+	//if err != nil {
+	//	log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
+	//	return nil
+	//}
+	//
+	//app.gfBsDBMaster = bsDBBlockSyncerMaster
+	//app.gfBsDBBackup = bsDBBlockSyncerBackUp
 
 	return nil
 }

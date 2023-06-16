@@ -62,10 +62,10 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	log.CtxDebugw(ctx, "succeed to replicate all pieces")
 	// combine seal object
 	sealMsg := &storagetypes.MsgSealObject{
-		Operator:              e.baseApp.OperatorAddress(),
-		BucketName:            task.GetObjectInfo().GetBucketName(),
-		ObjectName:            task.GetObjectInfo().GetObjectName(),
-		SecondarySpAddresses:  task.GetSecondaryAddresses(),
+		Operator:   e.baseApp.OperatorAddress(),
+		BucketName: task.GetObjectInfo().GetBucketName(),
+		ObjectName: task.GetObjectInfo().GetObjectName(),
+		// SecondarySpAddresses:  task.GetSecondaryAddresses(),
 		SecondarySpSignatures: task.GetSecondarySignatures(),
 	}
 	sealTime := time.Now()
@@ -306,8 +306,8 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	}
 	if int(replicateIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
 		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds",
-			"replicate_idx", replicateIdx,
-			"secondary_sp_len", len(rTask.GetObjectInfo().GetSecondarySpAddresses()))
+			"replicate_idx", replicateIdx)
+		// "secondary_sp_len", len(rTask.GetObjectInfo().GetSecondarySpAddresses()))
 		return nil, nil, ErrReplicateIdsOutOfBounds
 	}
 	veritySignatureTime := time.Now()

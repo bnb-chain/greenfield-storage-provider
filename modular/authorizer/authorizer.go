@@ -207,6 +207,8 @@ func (a *AuthorizeModular) VerifyAuthorize(
 	case coremodule.AuthOpTypePutObject:
 		queryTime := time.Now()
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		// TODO:
+		_ = bucketInfo
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_put_object_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
@@ -219,11 +221,12 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", bucketInfo.GetPrimarySpAddress())
-			return false, ErrMismatchSp
-		}
+		// TODO:
+		//if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
+		//	log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
+		//		"require", bucketInfo.GetPrimarySpAddress())
+		//	return false, ErrMismatchSp
+		//}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
 			return false, ErrNotCreatedState
@@ -239,6 +242,8 @@ func (a *AuthorizeModular) VerifyAuthorize(
 	case coremodule.AuthOpTypeGetUploadingState:
 		queryTime := time.Now()
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		// TODO:
+		_ = bucketInfo
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_process_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
@@ -251,11 +256,12 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", bucketInfo.GetPrimarySpAddress())
-			return false, ErrMismatchSp
-		}
+		// TODO:
+		//if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
+		//	log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
+		//		"require", bucketInfo.GetPrimarySpAddress())
+		//	return false, ErrMismatchSp
+		//}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 			log.CtxErrorw(ctx, "object state is not created", "state", objectInfo.GetObjectStatus())
 			return false, ErrNotCreatedState
@@ -283,11 +289,11 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", bucketInfo.GetPrimarySpAddress())
-			return false, ErrMismatchSp
-		}
+		//if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
+		//	log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
+		//		"require", bucketInfo.GetPrimarySpAddress())
+		//	return false, ErrMismatchSp
+		//}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
 			return false, ErrNotSealedState
@@ -323,11 +329,11 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", bucketInfo.GetPrimarySpAddress())
-			return false, ErrMismatchSp
-		}
+		//if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
+		//	log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
+		//		"require", bucketInfo.GetPrimarySpAddress())
+		//	return false, ErrMismatchSp
+		//}
 		if bucketInfo.GetOwner() != account {
 			log.CtxErrorw(ctx, "only owner can get bucket quota", "current", account,
 				"bucket_owner", bucketInfo.GetOwner())
@@ -356,6 +362,9 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		}
 		queryTime = time.Now()
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		// TODO:
+		_ = bucketInfo
+		_ = objectInfo
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_challenge_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
@@ -368,14 +377,15 @@ func (a *AuthorizeModular) VerifyAuthorize(
 			}
 			return false, ErrConsensus
 		}
-		if strings.EqualFold(bucketInfo.GetPrimarySpAddress(), a.baseApp.OperatorAddress()) {
-			return true, nil
-		}
-		for _, address := range objectInfo.GetSecondarySpAddresses() {
-			if strings.EqualFold(address, a.baseApp.OperatorAddress()) {
-				return true, nil
-			}
-		}
+		// TODO:
+		//if strings.EqualFold(bucketInfo.GetPrimarySpAddress(), a.baseApp.OperatorAddress()) {
+		//	return true, nil
+		//}
+		//for _, address := range objectInfo.GetSecondarySpAddresses() {
+		//	if strings.EqualFold(address, a.baseApp.OperatorAddress()) {
+		//		return true, nil
+		//	}
+		//}
 		log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress())
 		return false, ErrMismatchSp
 	default:

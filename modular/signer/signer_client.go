@@ -170,22 +170,27 @@ func (client *GreenfieldChainSignClient) SealObject(
 		return nil, ErrSignMsg
 	}
 
-	var secondarySPAccs []sdk.AccAddress
-	for _, sp := range sealObject.SecondarySpAddresses {
-		opAddr, err := sdk.AccAddressFromHexUnsafe(sp) // should be 0x...
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", opAddr)
-			return nil, err
-		}
-		secondarySPAccs = append(secondarySPAccs, opAddr)
-	}
+	// TODO:
+	// var secondarySPAccs []sdk.AccAddress
+	// TODO:
+	//for _, sp := range sealObject.SecondarySpAddresses {
+	//	opAddr, err := sdk.AccAddressFromHexUnsafe(sp) // should be 0x...
+	//	if err != nil {
+	//		log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", opAddr)
+	//		return nil, err
+	//	}
+	//	secondarySPAccs = append(secondarySPAccs, opAddr)
+	//}
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
 	nonce := client.sealAccNonce
 
+	// TODO:
+	//msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
+	//	sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
-		sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
+		sealObject.BucketName, sealObject.ObjectName, 0, sealObject.SecondarySpSignatures)
 	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
 	txOpt := &ctypes.TxOption{
 		Mode:     &mode,

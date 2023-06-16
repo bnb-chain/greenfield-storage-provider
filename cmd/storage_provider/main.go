@@ -13,12 +13,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/approver"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/authorizer"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/executor"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/gater"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/manager"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/p2p"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/receiver"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/signer"
@@ -41,9 +39,9 @@ func registerModular() {
 	gfspapp.RegisterModular(module.P2PModularName, module.P2PModularDescription, p2p.NewP2PModular)
 	gfspapp.RegisterModular(module.ReceiveModularName, module.ReceiveModularDescription, receiver.NewReceiveModular)
 	gfspapp.RegisterModular(module.SignerModularName, module.SignerModularDescription, signer.NewSignModular)
-	gfspapp.RegisterModular(metadata.MetadataModularName, metadata.MetadataModularDescription, metadata.NewMetadataModular)
+	// gfspapp.RegisterModular(metadata.MetadataModularName, metadata.MetadataModularDescription, metadata.NewMetadataModular)
 	gfspapp.RegisterModular(module.UploadModularName, module.UploadModularDescription, uploader.NewUploadModular)
-	gfspapp.RegisterModular(blocksyncer.BlockSyncerModularName, blocksyncer.BlockSyncerModularDescription, blocksyncer.NewBlockSyncerModular)
+	// gfspapp.RegisterModular(blocksyncer.BlockSyncerModularName, blocksyncer.BlockSyncerModularDescription, blocksyncer.NewBlockSyncerModular)
 }
 
 var (

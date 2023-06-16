@@ -89,8 +89,9 @@ func createBucketApproval(ctx *cli.Context) error {
 	client := utils.MakeGfSpClient(cfg)
 
 	msg := &storagetypes.MsgCreateBucket{
-		BucketName:        DebugCommandPrefix + util.GetRandomBucketName(),
-		PrimarySpApproval: &storagetypes.Approval{},
+		BucketName: DebugCommandPrefix + util.GetRandomBucketName(),
+		// TODO:
+		// PrimarySpApproval: &storagetypes.Approval{},
 	}
 	task := &gfsptask.GfSpCreateBucketApprovalTask{}
 	task.InitApprovalCreateBucketTask(msg, coretask.UnSchedulingPriority)
@@ -115,9 +116,10 @@ func createObjectApproval(ctx *cli.Context) error {
 	client := utils.MakeGfSpClient(cfg)
 
 	msg := &storagetypes.MsgCreateObject{
-		BucketName:        DebugCommandPrefix + util.GetRandomBucketName(),
-		ObjectName:        DebugCommandPrefix + util.GetRandomObjectName(),
-		PrimarySpApproval: &storagetypes.Approval{},
+		BucketName: DebugCommandPrefix + util.GetRandomBucketName(),
+		ObjectName: DebugCommandPrefix + util.GetRandomObjectName(),
+		// TODO:
+		// PrimarySpApproval: &storagetypes.Approval{},
 	}
 	task := &gfsptask.GfSpCreateObjectApprovalTask{}
 	task.InitApprovalCreateObjectTask(msg, coretask.UnSchedulingPriority)

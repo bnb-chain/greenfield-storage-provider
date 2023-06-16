@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -35,10 +34,11 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		return
 	}
 	sealMsg := &storagetypes.MsgSealObject{
-		Operator:              e.baseApp.OperatorAddress(),
-		BucketName:            task.GetObjectInfo().GetBucketName(),
-		ObjectName:            task.GetObjectInfo().GetObjectName(),
-		SecondarySpAddresses:  task.GetSecondaryAddresses(),
+		Operator:   e.baseApp.OperatorAddress(),
+		BucketName: task.GetObjectInfo().GetBucketName(),
+		ObjectName: task.GetObjectInfo().GetObjectName(),
+		// TODO:
+		// SecondarySpAddresses:  task.GetSecondaryAddresses(),
 		SecondarySpSignatures: task.GetSecondarySignatures(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
@@ -121,39 +121,40 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 	// regardless of whether the sp is as secondary or not, it needs to be set to the
 	// sealed state to let the manager clear the task.
 	task.SetSealed(true)
-	if int(task.GetReplicateIdx()) >= len(onChainObject.GetSecondarySpAddresses()) {
-		log.CtxErrorw(ctx, "failed to confirm receive task, replicate idx out of bounds",
-			"replicate_idx", task.GetReplicateIdx(),
-			"secondary_sp_len", len(onChainObject.GetSecondarySpAddresses()))
-		task.SetError(ErrReplicateIdsOutOfBounds)
-		return
-	}
-	if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperatorAddress() {
-		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch",
-			"expect", onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())],
-			"current", e.baseApp.OperatorAddress())
-		task.SetError(ErrSecondaryMismatch)
-		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to delete integrity")
-		}
-		var pieceKey string
-		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(onChainObject.GetPayloadSize(),
-			task.GetStorageParams().GetMaxPayloadSize())
-		for i := uint32(0); i < segmentCount; i++ {
-			if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-				pieceKey = e.baseApp.PieceOp().ECPieceKey(onChainObject.Id.Uint64(),
-					i, task.GetReplicateIdx())
-			} else {
-				pieceKey = e.baseApp.PieceOp().SegmentPieceKey(onChainObject.Id.Uint64(), i)
-			}
-			err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to delete piece data", "piece_key", pieceKey)
-			}
-		}
-		return
-	}
+	// TODO:
+	//if int(task.GetReplicateIdx()) >= len(onChainObject.GetSecondarySpAddresses()) {
+	//	log.CtxErrorw(ctx, "failed to confirm receive task, replicate idx out of bounds",
+	//		"replicate_idx", task.GetReplicateIdx(),
+	//		"secondary_sp_len", len(onChainObject.GetSecondarySpAddresses()))
+	//	task.SetError(ErrReplicateIdsOutOfBounds)
+	//	return
+	//}
+	//if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperatorAddress() {
+	//	log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch",
+	//		"expect", onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())],
+	//		"current", e.baseApp.OperatorAddress())
+	//	task.SetError(ErrSecondaryMismatch)
+	//	err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+	//	if err != nil {
+	//		log.CtxErrorw(ctx, "failed to delete integrity")
+	//	}
+	//	var pieceKey string
+	//	segmentCount := e.baseApp.PieceOp().SegmentPieceCount(onChainObject.GetPayloadSize(),
+	//		task.GetStorageParams().GetMaxPayloadSize())
+	//	for i := uint32(0); i < segmentCount; i++ {
+	//		if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
+	//			pieceKey = e.baseApp.PieceOp().ECPieceKey(onChainObject.Id.Uint64(),
+	//				i, task.GetReplicateIdx())
+	//		} else {
+	//			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(onChainObject.Id.Uint64(), i)
+	//		}
+	//		err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+	//		if err != nil {
+	//			log.CtxErrorw(ctx, "failed to delete piece data", "piece_key", pieceKey)
+	//		}
+	//	}
+	//	return
+	//}
 	log.CtxDebugw(ctx, "succeed to handle confirm receive piece task")
 }
 
@@ -235,20 +236,21 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			log.CtxDebugw(ctx, "delete the primary sp pieces",
 				"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 		}
-		for rIdx, address := range objectInfo.GetSecondarySpAddresses() {
-			if strings.Compare(e.baseApp.OperatorAddress(), address) == 0 {
-				for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
-					pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
-					if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
-						pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
-					}
-					// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
-					deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-					log.CtxDebugw(ctx, "delete the secondary sp pieces",
-						"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
-				}
-			}
-		}
+		// TODO:
+		//for rIdx, address := range objectInfo.GetSecondarySpAddresses() {
+		//	if strings.Compare(e.baseApp.OperatorAddress(), address) == 0 {
+		//		for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
+		//			pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
+		//			if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
+		//				pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
+		//			}
+		//			// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
+		//			deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+		//			log.CtxDebugw(ctx, "delete the secondary sp pieces",
+		//				"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
+		//		}
+		//	}
+		//}
 		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
 		deleteErr := e.baseApp.GfSpDB().DeleteObjectIntegrity(objectInfo.Id.Uint64())
 		log.CtxDebugw(ctx, "delete the object integrity meta", "object_info", objectInfo, "error", deleteErr)

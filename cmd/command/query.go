@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -290,17 +289,20 @@ func getSegmentIntegrityAction(ctx *cli.Context) error {
 	}
 	objectIDStr := ctx.String(objectIDFlag.Name)
 	objectInfo, err := chain.QueryObjectInfoByID(context.Background(), objectIDStr)
+	// TODO:
+	_ = objectInfo
 	if err != nil {
 		return fmt.Errorf("failed to query object info, error: %v", err)
 	}
 
 	replicateIdx := -1
-	for i, addr := range objectInfo.GetSecondarySpAddresses() {
-		if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
-			replicateIdx = i
-			break
-		}
-	}
+	// TODO:
+	//for i, addr := range objectInfo.GetSecondarySpAddresses() {
+	//	if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
+	//		replicateIdx = i
+	//		break
+	//	}
+	//}
 
 	objectID, err := strconv.ParseUint(objectIDStr, 10, 64)
 	if err != nil {
