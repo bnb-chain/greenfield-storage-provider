@@ -407,7 +407,7 @@ func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
 }
 
 func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
-	return !qTask.ExceedRetry() && qTask.ExceedTimeout()
+	return !qTask.Expired() && (qTask.GetRetry() == 0 || qTask.ExceedTimeout())
 }
 
 func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) task.Task {
