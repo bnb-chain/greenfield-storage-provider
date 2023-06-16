@@ -172,7 +172,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 	case *gfspserver.GfSpReportTaskRequest_ResumableUploadObjectTask:
 		task := t.ResumableUploadObjectTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(RpcRemoteAddress(ctx))
+		task.SetAddress(GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 
 		metrics.UploadObjectTaskTimeHistogram.WithLabelValues(g.manager.Name()).Observe(

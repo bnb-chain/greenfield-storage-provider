@@ -146,12 +146,8 @@ func (m *GfSpUploadObjectTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
 }
 
-func (m *GfSpResumableUploadObjectTask) InitResumableUploadObjectTask(
-	object *storagetypes.ObjectInfo,
-	params *storagetypes.Params,
-	timeout int64,
-	complete bool,
-	offset uint64) {
+func (m *GfSpResumableUploadObjectTask) InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
+	timeout int64, complete bool, offset uint64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())

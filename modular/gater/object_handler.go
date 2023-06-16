@@ -138,11 +138,11 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 // resumablePutObjectHandler handles the resumable put object
 func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtx     *RequestContext
-		authorized bool
-		objectInfo *storagetypes.ObjectInfo
-		params     *storagetypes.Params
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		objectInfo    *storagetypes.ObjectInfo
+		params        *storagetypes.Params
 	)
 
 	defer func() {
@@ -162,13 +162,13 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 	if reqCtx.NeedVerifyAuthorizer() {
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
 		}
-		if !authorized {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
