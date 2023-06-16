@@ -94,6 +94,7 @@ type SpAccountConfig struct {
 	OperatorPrivateKey string
 	FundingPrivateKey  string
 	SealPrivateKey     string
+	SealBlsPrivateKey  string
 	ApprovalPrivateKey string
 	GcPrivateKey       string
 }

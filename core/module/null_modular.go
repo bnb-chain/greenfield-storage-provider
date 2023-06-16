@@ -177,7 +177,7 @@ func (*NilModular) SignReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NilModular) SignReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) SignIntegrityHash(ctx context.Context, objectID uint64, hash [][]byte) ([]byte, []byte, error) {
+func (*NilModular) SignIntegrityHash(ctx context.Context, objectID uint64, gvgid uint32, hash [][]byte) ([]byte, []byte, error) {
 	return nil, nil, ErrNilModular
 }
 func (*NilModular) SignP2PPingMsg(context.Context, *gfspp2p.GfSpPing) ([]byte, error) {

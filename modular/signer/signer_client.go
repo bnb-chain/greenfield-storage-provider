@@ -45,11 +45,12 @@ type GreenfieldChainSignClient struct {
 	greenfieldClients map[SignType]*client.GreenfieldClient
 	sealAccNonce      uint64
 	gcAccNonce        uint64
+	sealBlsKm         keys.KeyManager
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
 func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, operatorPrivateKey, fundingPrivateKey,
-	sealPrivateKey, approvalPrivateKey, gcPrivateKey string) (*GreenfieldChainSignClient, error) {
+	sealPrivateKey, approvalPrivateKey, gcPrivateKey, sealBlsPrivKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
@@ -71,6 +72,12 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	fundingClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(fundingKM))
 	if err != nil {
 		log.Errorw("failed to new funding greenfield client", "error", err)
+		return nil, err
+	}
+
+	sealBlsKm, err := keys.NewBlsPrivateKeyManager(fundingPrivateKey)
+	if err != nil {
+		log.Errorw("failed to new funding private key manager", "error", err)
 		return nil, err
 	}
 
@@ -127,6 +134,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 		greenfieldClients: greenfieldClients,
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
+		sealBlsKm:         sealBlsKm,
 	}, nil
 }
 
@@ -170,22 +178,14 @@ func (client *GreenfieldChainSignClient) SealObject(
 		return nil, ErrSignMsg
 	}
 
-	var secondarySPAccs []sdk.AccAddress
-	for _, sp := range sealObject.SecondarySpAddresses {
-		opAddr, err := sdk.AccAddressFromHexUnsafe(sp) // should be 0x...
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", opAddr)
-			return nil, err
-		}
-		secondarySPAccs = append(secondarySPAccs, opAddr)
-	}
-
 	client.mu.Lock()
 	defer client.mu.Unlock()
 	nonce := client.sealAccNonce
 
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
-		sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
+		sealObject.BucketName, sealObject.ObjectName, sealObject.GlobalVirtualGroupId,
+		sealObject.SecondarySpBlsAggSignatures)
+
 	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
 	txOpt := &ctypes.TxOption{
 		Mode:     &mode,

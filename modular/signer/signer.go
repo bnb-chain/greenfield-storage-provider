@@ -90,20 +90,14 @@ func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.Receiv
 	return sig, nil
 }
 
-func (s *SignModular) SignIntegrityHash(ctx context.Context, objectID uint64, checksums [][]byte) (
+func (s *SignModular) SignIntegrityHash(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) (
 	[]byte, []byte, error) {
 	integrityHash := hash.GenerateIntegrityHash(checksums)
-	opAddr, err := s.client.GetAddr(SignOperator)
-	if err != nil {
-		return nil, nil, err
-	}
 
-	msg := storagetypes.NewSecondarySpSignDoc(opAddr, sdkmath.NewUint(objectID), integrityHash).GetSignBytes()
-	sig, err := s.client.Sign(SignApproval, msg)
-	if err != nil {
-		return nil, nil, err
-	}
-	return sig, integrityHash, nil
+	msg := storagetypes.NewSecondarySpSignDoc(sdkmath.NewUint(objectID), gvgId, integrityHash).GetSignBytes()
+	sig := s.client.blsSigner.Sign(msg[:])
+
+	return sig.Marshal(), integrityHash, nil
 }
 
 func (s *SignModular) SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error) {

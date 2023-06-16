@@ -52,7 +52,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			log.CtxErrorw(ctx, "failed to discontinue bucket", "error", err)
 		}
 	case *gfspserver.GfSpSignRequest_SignIntegrity:
-		signature, integrity, err = g.signer.SignIntegrityHash(ctx, t.SignIntegrity.ObjectId, t.SignIntegrity.Checksums)
+		signature, integrity, err = g.signer.SignIntegrityHash(ctx, t.SignIntegrity.ObjectId, t.SignIntegrity.GlobalVirtualGroupId, t.SignIntegrity.Checksums)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign integrity hash", "error", err)
 		}

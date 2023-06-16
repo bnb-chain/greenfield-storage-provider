@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"github.com/prysmaticlabs/prysm/crypto/bls"
 	"math"
 	"sync"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -52,13 +51,18 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 		return
 	}
 	log.CtxDebugw(ctx, "succeed to replicate all pieces")
+
+	blsSig, err := bls.MultipleSignaturesFromBytes(task.GetSecondarySignatures())
+	if err != nil {
+		return
+	}
 	// combine seal object
 	sealMsg := &storagetypes.MsgSealObject{
-		Operator:              e.baseApp.OperateAddress(),
-		BucketName:            task.GetObjectInfo().GetBucketName(),
-		ObjectName:            task.GetObjectInfo().GetObjectName(),
-		SecondarySpAddresses:  task.GetSecondaryAddresses(),
-		SecondarySpSignatures: task.GetSecondarySignatures(),
+		Operator:                    e.baseApp.OperateAddress(),
+		BucketName:                  task.GetObjectInfo().GetBucketName(),
+		ObjectName:                  task.GetObjectInfo().GetObjectName(),
+		GlobalVirtualGroupId:        task.GetObjectInfo().GetLocalVirtualGroupId(),
+		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
 	}
 	sealErr := e.sealObject(ctx, task, sealMsg)
 	if sealErr == nil {
@@ -263,16 +267,13 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 			"replicate_idx", replicateIdx, "error", err)
 		return nil, nil, err
 	}
-	if int(replicateIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
-		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds",
-			"replicate_idx", replicateIdx,
-			"secondary_sp_len", len(rTask.GetObjectInfo().GetSecondarySpAddresses()))
-		return nil, nil, ErrReplicateIdsOutOfBounds
-	}
-	err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), integrity,
-		rTask.GetObjectInfo().GetChecksums()[replicateIdx+1],
-		approval.GetApprovedSpOperatorAddress(),
-		approval.GetApprovedSpApprovalAddress(), signature)
+
+	// TODO get gvgId and blsPubKey from task
+	var gvgId uint32
+	var blsPubKey bls.PublicKey
+
+	err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), gvgId, integrity,
+		storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed verify secondary signature",
 			"endpoint", approval.GetApprovedSpEndpoint(),
@@ -285,26 +286,14 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	return integrity, signature, nil
 }
 
-func veritySignature(ctx context.Context, objectID uint64, integrity []byte, expectedIntegrity []byte,
-	signOpAddress string, signApprovalAddress string, signature []byte) error {
+func veritySignature(ctx context.Context, objectID uint64, gvgId uint32, integrity []byte, expectedIntegrity []byte, signature []byte, blsPubKey bls.PublicKey) error {
 	if !bytes.Equal(expectedIntegrity, integrity) {
 		log.CtxErrorw(ctx, "replicate sp invalid integrity", "integrity", hex.EncodeToString(integrity),
 			"expect", hex.EncodeToString(expectedIntegrity))
 		return ErrInvalidIntegrity
 	}
-	signOp, err := sdk.AccAddressFromHexUnsafe(signOpAddress)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to parse sign op address", "error", err)
-		return err
-	}
-	signApproval, err := sdk.AccAddressFromHexUnsafe(signApprovalAddress)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to parse sign approval address", "error", err)
-		return err
-	}
-	originMsgHash := storagetypes.NewSecondarySpSignDoc(signOp,
-		sdkmath.NewUint(objectID), integrity).GetSignBytes()
-	err = storagetypes.VerifySignature(signApproval, sdk.Keccak256(originMsgHash), signature)
+	originMsgHash := storagetypes.NewSecondarySpSignDoc(sdkmath.NewUint(objectID), gvgId, integrity).GetSignBytes()
+	err := storagetypes.VerifyBlsSignature(blsPubKey, originMsgHash, signature)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to verify signature", "error", err)
 		return err
