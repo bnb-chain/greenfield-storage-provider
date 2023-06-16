@@ -16,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var (
@@ -23,6 +24,7 @@ var (
 	ErrSealObjectOnChain         = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
 	ErrRejectUnSealObjectOnChain = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
 	ErrDiscontinueBucketOnChain  = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
+	ErrCreateGVGOnChain          = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120004, "send create gvg msg failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -169,5 +171,11 @@ func (s *SignModular) DiscontinueBucket(ctx context.Context, bucket *storagetype
 		}
 	}()
 	_, err = s.client.DiscontinueBucket(ctx, SignGc, bucket)
+	return err
+}
+
+func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
+	// TODO: add metrics
+	_, err := s.client.CreateGlobalVirtualGroup(ctx, SignApproval, gvg)
 	return err
 }

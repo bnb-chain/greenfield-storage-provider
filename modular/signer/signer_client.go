@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -45,6 +46,7 @@ type GreenfieldChainSignClient struct {
 	greenfieldClients map[SignType]*client.GreenfieldClient
 	sealAccNonce      uint64
 	gcAccNonce        uint64
+	approvalAccNonce  uint64 // is used by create global virtual group.
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
@@ -100,6 +102,11 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 		log.Errorw("failed to new approval greenfield client", "error", err)
 		return nil, err
 	}
+	approvalAccNonce, err := approvalClient.GetNonce()
+	if err != nil {
+		log.Errorw("failed to get nonce", "error", err)
+		return nil, err
+	}
 
 	gcKM, err := keys.NewPrivateKeyManager(gcPrivateKey)
 	if err != nil {
@@ -127,6 +134,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 		greenfieldClients: greenfieldClients,
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
+		approvalAccNonce:  approvalAccNonce,
 	}, nil
 }
 
@@ -329,5 +337,56 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 
 	// update nonce when tx is successful submitted
 	client.gcAccNonce = nonce + 1
+	return txHash, nil
+}
+
+func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Context, scope SignType, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) ([]byte, error) {
+	log.Infow("signer start to create global virtual group", "scope", scope)
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "err", err)
+		return nil, ErrSignMsg
+	}
+
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	nonce := client.approvalAccNonce
+
+	msgCreateGlobalVirtualGroup := virtualgrouptypes.NewMsgCreateGlobalVirtualGroup(km.GetAddr(),
+		gvg.FamilyId, gvg.GetSecondarySpIds(), gvg.GetDeposit())
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
+	txOpt := &ctypes.TxOption{
+		Mode:     &mode,
+		GasLimit: client.gasLimit,
+		Nonce:    nonce,
+	}
+
+	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgCreateGlobalVirtualGroup}, txOpt)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "global_virtual_group", msgCreateGlobalVirtualGroup.String())
+		if strings.Contains(err.Error(), "account sequence mismatch") {
+			// if nonce mismatch, reset nonce by querying the nonce on chain
+			nonce, err := client.greenfieldClients[scope].GetNonce()
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to get approval account nonce", "err", err)
+				return nil, ErrCreateGVGOnChain
+			}
+			client.approvalAccNonce = nonce
+		}
+		return nil, ErrCreateGVGOnChain
+	}
+
+	if resp.TxResponse.Code != 0 {
+		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "global_virtual_group", msgCreateGlobalVirtualGroup.String())
+		return nil, ErrCreateGVGOnChain
+	}
+	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "global_virtual_group", msgCreateGlobalVirtualGroup.String())
+		return nil, ErrCreateGVGOnChain
+	}
+
+	// update nonce when tx is successful submitted
+	client.approvalAccNonce = nonce + 1
 	return txHash, nil
 }
