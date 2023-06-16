@@ -197,17 +197,17 @@ func (client *GreenfieldChainSignClient) SealObject(
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
 		sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
 	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
-	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
-		Nonce:    nonce,
-	}
 
 	var (
 		resp   *tx.BroadcastTxResponse
 		txHash []byte
 	)
 	for i := 0; i < BroadcastTxRetry; i++ {
+		txOpt := &ctypes.TxOption{
+			Mode:     &mode,
+			GasLimit: client.gasLimit,
+			Nonce:    nonce,
+		}
 		resp, err = client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgSealObject}, txOpt)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to broadcast seal object tx", "error", err)
@@ -220,9 +220,10 @@ func (client *GreenfieldChainSignClient) SealObject(
 					return nil, ErrSealObjectOnChain
 				}
 				client.sealAccNonce = nonce
-				continue
 			}
+			continue
 		}
+		client.sealAccNonce = nonce + 1
 
 		if resp.TxResponse.Code != 0 {
 			log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
@@ -238,7 +239,6 @@ func (client *GreenfieldChainSignClient) SealObject(
 			continue
 		}
 		if err == nil {
-			client.sealAccNonce = nonce + 1
 			log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash)
 			return txHash, nil
 		}
@@ -270,17 +270,17 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 
 	msgRejectUnSealObject := storagetypes.NewMsgRejectUnsealedObject(km.GetAddr(), rejectObject.GetBucketName(), rejectObject.GetObjectName())
 	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
-	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
-		Nonce:    nonce,
-	}
 
 	var (
 		resp   *tx.BroadcastTxResponse
 		txHash []byte
 	)
 	for i := 0; i < BroadcastTxRetry; i++ {
+		txOpt := &ctypes.TxOption{
+			Mode:     &mode,
+			GasLimit: client.gasLimit,
+			Nonce:    nonce,
+		}
 		resp, err = client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgRejectUnSealObject}, txOpt)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to broadcast reject unseal object tx", "error", err)
@@ -293,9 +293,10 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 					return nil, ErrRejectUnSealObjectOnChain
 				}
 				client.sealAccNonce = nonce
-				continue
 			}
+			continue
 		}
+		client.sealAccNonce = nonce + 1
 
 		if resp.TxResponse.Code != 0 {
 			log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
@@ -312,7 +313,6 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 		}
 
 		if err == nil {
-			client.sealAccNonce = nonce + 1
 			log.CtxDebugw(ctx, "succeed to broadcast reject unseal object tx", "tx_hash", txHash)
 			return txHash, nil
 		}
