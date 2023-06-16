@@ -11,7 +11,7 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.2.2-alpha.1
 	// TODO: Temporary succeed to compile
-	// github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230608053739-30bdfe1a1244
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230608053739-30bdfe1a1244
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
@@ -57,35 +57,27 @@ require (
 	gorm.io/gorm v1.24.5
 )
 
+require github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
+
 require (
 	cosmossdk.io/api v0.4.0 // indirect
 	cosmossdk.io/core v0.6.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/VictoriaMetrics/fastcache v1.6.0 // indirect
-	github.com/bits-and-blooms/bitset v1.2.0 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
-	github.com/chzyer/readline v1.5.1 // indirect
-	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
-	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/creachadair/taskgroup v0.4.2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/deepmap/oapi-codegen v1.8.2 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fjl/memsize v0.0.0-20190710130421-bcb5799ab5e5 // indirect
 	github.com/frankban/quicktest v1.14.4 // indirect
 	github.com/gballet/go-libpcsclite v0.0.0-20191108122812-4678299bea08 // indirect
-	github.com/go-co-op/gocron v1.13.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
-	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang-jwt/jwt/v4 v4.3.0 // indirect
-	github.com/google/orderedcode v0.0.1 // indirect
-	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/graph-gophers/graphql-go v1.3.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/hashicorp/go-bexpr v0.1.10 // indirect
@@ -96,12 +88,7 @@ require (
 	github.com/influxdata/influxdb v1.8.3 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.4.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210311194329-9aa0e372d097 // indirect
-	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgx/v5 v5.2.0 // indirect
-	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
-	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/pointerstructure v1.2.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
@@ -109,7 +96,6 @@ require (
 	github.com/prometheus/tsdb v0.10.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rjeczalik/notify v0.9.3 // indirect
-	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rs/cors v1.8.3 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/status-im/keycard-go v0.0.0-20200402102358-957c09536969 // indirect
@@ -118,11 +104,9 @@ require (
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/tklauser/numcpus v0.4.0 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
-	github.com/willf/bitset v1.1.11 // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
-	gorm.io/driver/postgres v1.4.7 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 )
 

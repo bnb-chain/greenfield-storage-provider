@@ -144,7 +144,7 @@ func (s *GfSpClient) GetBucketByBucketID(ctx context.Context, bucketId int64, in
 }
 
 // ListExpiredBucketsBySp list buckets that are expired by specific sp
-func (s *GfSpClient) ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpAddress string,
+func (s *GfSpClient) ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpID uint32,
 	limit int64, opts ...grpc.DialOption) ([]*types.Bucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -153,9 +153,9 @@ func (s *GfSpClient) ListExpiredBucketsBySp(ctx context.Context, createAt int64,
 	defer conn.Close()
 
 	req := &types.GfSpListExpiredBucketsBySpRequest{
-		CreateAt:         createAt,
-		PrimarySpAddress: primarySpAddress,
-		Limit:            limit,
+		CreateAt:    createAt,
+		PrimarySpId: primarySpID,
+		Limit:       limit,
 	}
 
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListExpiredBucketsBySp(ctx, req)

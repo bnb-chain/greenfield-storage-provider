@@ -164,8 +164,9 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 
 func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 	createAt := time.Now().AddDate(0, 0, -m.discontinueBucketKeepAliveDays)
+	// TODO: Arthur Li/Will needs to get operator ID by getSpIDbySpAddress or add one more attribute in GfSpBaseApp
 	buckets, err := m.baseApp.GfSpClient().ListExpiredBucketsBySp(context.Background(),
-		createAt.Unix(), m.baseApp.OperatorAddress(), DiscontinueBucketLimit)
+		createAt.Unix(), 0, DiscontinueBucketLimit)
 	if err != nil {
 		log.Errorw("failed to query expired buckets", "error", err)
 		return
