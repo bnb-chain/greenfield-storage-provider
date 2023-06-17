@@ -20,10 +20,9 @@ import (
 
 var (
 	ErrSignMsg                   = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
-	ErrSealObjectOnChain         = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120002, "send seal object msg failed")
-	ErrRejectUnSealObjectOnChain = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120003, "send reject unseal object msg failed")
-	ErrDiscontinueBucketOnChain  = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120004, "send discontinue bucket msg failed")
-	ErrDanglingPointer           = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
+	ErrSealObjectOnChain         = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
+	ErrRejectUnSealObjectOnChain = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
+	ErrDiscontinueBucketOnChain  = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
 )
 
 var _ module.Signer = &SignModular{}

@@ -253,7 +253,7 @@ func (d *DownloadModular) PreChallengePiece(ctx context.Context, downloadPieceTa
 		log.CtxErrorw(ctx, "failed to pre challenge piece due to object unsealed")
 		return ErrObjectUnsealed
 	}
-	d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+	go d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
 	return nil
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"math"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
@@ -195,29 +194,6 @@ func (g *Gnfd) ListenObjectSeal(ctx context.Context, objectID uint64, timeoutHei
 		return false, ErrSealTimeout
 	}
 	log.CtxErrorw(ctx, "failed to listen seal object", "object_id", objectID, "error", err)
-	return false, err
-}
-
-// ListenRejectUnSealObject returns an indication of the object is rejected.
-// TODO:: retrieve service support reject unseal event subscription
-func (g *Gnfd) ListenRejectUnSealObject(ctx context.Context, objectID uint64, timeoutHeight int) (bool, error) {
-	startTime := time.Now()
-	defer metrics.GnfdChainHistogram.WithLabelValues("wait_reject_unseal_object").Observe(time.Since(startTime).Seconds())
-	var err error
-	for i := 0; i < timeoutHeight; i++ {
-		_, err = g.QueryObjectInfoByID(ctx, strconv.FormatUint(objectID, 10))
-		if err != nil {
-			if strings.Contains(err.Error(), "No such object") {
-				return true, nil
-			}
-		}
-		time.Sleep(ExpectedOutputBlockInternal * time.Second)
-	}
-	if err == nil {
-		log.CtxErrorw(ctx, "reject unseal object timeout", "object_id", objectID)
-		return false, ErrRejectUnSealTimeout
-	}
-	log.CtxErrorw(ctx, "failed to listen reject unseal object", "object_id", objectID, "error", err)
 	return false, err
 }
 

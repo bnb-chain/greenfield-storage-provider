@@ -8,8 +8,10 @@ import (
 	reflect "reflect"
 	time "time"
 
+	task "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	types "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	types0 "github.com/bnb-chain/greenfield/x/sp/types"
+	types1 "github.com/bnb-chain/greenfield/x/storage/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -36,198 +38,74 @@ func (m *MockUploadObjectProgressDB) EXPECT() *MockUploadObjectProgressDBMockRec
 	return m.recorder
 }
 
-// DeleteUploadProgress mocks base method.
-func (m *MockUploadObjectProgressDB) DeleteUploadProgress(objectID uint64) error {
+// CreateUploadProgress mocks base method.
+func (m *MockUploadObjectProgressDB) CreateUploadProgress(objectID uint64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUploadProgress", objectID)
+	ret := m.ctrl.Call(m, "CreateUploadProgress", objectID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteUploadProgress indicates an expected call of DeleteUploadProgress.
-func (mr *MockUploadObjectProgressDBMockRecorder) DeleteUploadProgress(objectID interface{}) *gomock.Call {
+// CreateUploadProgress indicates an expected call of CreateUploadProgress.
+func (mr *MockUploadObjectProgressDBMockRecorder) CreateUploadProgress(objectID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUploadProgress", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).DeleteUploadProgress), objectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadProgress", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).CreateUploadProgress), objectID)
 }
 
-// GetUploadMetasToReplicate mocks base method.
-func (m *MockUploadObjectProgressDB) GetUploadMetasToReplicate(limit int) ([]*UploadObjectMeta, error) {
+// QueryUploadState mocks base method.
+func (m *MockUploadObjectProgressDB) QueryUploadState(objectID uint64) (types.TaskState, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadMetasToReplicate", limit)
-	ret0, _ := ret[0].([]*UploadObjectMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUploadMetasToReplicate indicates an expected call of GetUploadMetasToReplicate.
-func (mr *MockUploadObjectProgressDBMockRecorder) GetUploadMetasToReplicate(limit interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadMetasToReplicate", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).GetUploadMetasToReplicate), limit)
-}
-
-// GetUploadMetasToSeal mocks base method.
-func (m *MockUploadObjectProgressDB) GetUploadMetasToSeal(limit int) ([]*UploadObjectMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadMetasToSeal", limit)
-	ret0, _ := ret[0].([]*UploadObjectMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUploadMetasToSeal indicates an expected call of GetUploadMetasToSeal.
-func (mr *MockUploadObjectProgressDBMockRecorder) GetUploadMetasToSeal(limit interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadMetasToSeal", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).GetUploadMetasToSeal), limit)
-}
-
-// GetUploadState mocks base method.
-func (m *MockUploadObjectProgressDB) GetUploadState(objectID uint64) (types.TaskState, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadState", objectID)
+	ret := m.ctrl.Call(m, "QueryUploadState", objectID)
 	ret0, _ := ret[0].(types.TaskState)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUploadState indicates an expected call of GetUploadState.
-func (mr *MockUploadObjectProgressDBMockRecorder) GetUploadState(objectID interface{}) *gomock.Call {
+// QueryUploadState indicates an expected call of QueryUploadState.
+func (mr *MockUploadObjectProgressDBMockRecorder) QueryUploadState(objectID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadState", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).GetUploadState), objectID)
-}
-
-// InsertUploadProgress mocks base method.
-func (m *MockUploadObjectProgressDB) InsertUploadProgress(objectID uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertUploadProgress", objectID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InsertUploadProgress indicates an expected call of InsertUploadProgress.
-func (mr *MockUploadObjectProgressDBMockRecorder) InsertUploadProgress(objectID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUploadProgress", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).InsertUploadProgress), objectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryUploadState", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).QueryUploadState), objectID)
 }
 
 // UpdateUploadProgress mocks base method.
-func (m *MockUploadObjectProgressDB) UpdateUploadProgress(uploadMeta *UploadObjectMeta) error {
+func (m *MockUploadObjectProgressDB) UpdateUploadProgress(objectID uint64, taskState types.TaskState, errorDescription string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUploadProgress", uploadMeta)
+	ret := m.ctrl.Call(m, "UpdateUploadProgress", objectID, taskState, errorDescription)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateUploadProgress indicates an expected call of UpdateUploadProgress.
-func (mr *MockUploadObjectProgressDBMockRecorder) UpdateUploadProgress(uploadMeta interface{}) *gomock.Call {
+func (mr *MockUploadObjectProgressDBMockRecorder) UpdateUploadProgress(objectID, taskState, errorDescription interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUploadProgress", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).UpdateUploadProgress), uploadMeta)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUploadProgress", reflect.TypeOf((*MockUploadObjectProgressDB)(nil).UpdateUploadProgress), objectID, taskState, errorDescription)
 }
 
-// MockGCObjectProgressDB is a mock of GCObjectProgressDB interface.
-type MockGCObjectProgressDB struct {
+// MockObjectIntegrityDB is a mock of ObjectIntegrityDB interface.
+type MockObjectIntegrityDB struct {
 	ctrl     *gomock.Controller
-	recorder *MockGCObjectProgressDBMockRecorder
+	recorder *MockObjectIntegrityDBMockRecorder
 }
 
-// MockGCObjectProgressDBMockRecorder is the mock recorder for MockGCObjectProgressDB.
-type MockGCObjectProgressDBMockRecorder struct {
-	mock *MockGCObjectProgressDB
+// MockObjectIntegrityDBMockRecorder is the mock recorder for MockObjectIntegrityDB.
+type MockObjectIntegrityDBMockRecorder struct {
+	mock *MockObjectIntegrityDB
 }
 
-// NewMockGCObjectProgressDB creates a new mock instance.
-func NewMockGCObjectProgressDB(ctrl *gomock.Controller) *MockGCObjectProgressDB {
-	mock := &MockGCObjectProgressDB{ctrl: ctrl}
-	mock.recorder = &MockGCObjectProgressDBMockRecorder{mock}
+// NewMockObjectIntegrityDB creates a new mock instance.
+func NewMockObjectIntegrityDB(ctrl *gomock.Controller) *MockObjectIntegrityDB {
+	mock := &MockObjectIntegrityDB{ctrl: ctrl}
+	mock.recorder = &MockObjectIntegrityDBMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockGCObjectProgressDB) EXPECT() *MockGCObjectProgressDBMockRecorder {
-	return m.recorder
-}
-
-// DeleteGCObjectProgress mocks base method.
-func (m *MockGCObjectProgressDB) DeleteGCObjectProgress(taskKey string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteGCObjectProgress", taskKey)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteGCObjectProgress indicates an expected call of DeleteGCObjectProgress.
-func (mr *MockGCObjectProgressDBMockRecorder) DeleteGCObjectProgress(taskKey interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGCObjectProgress", reflect.TypeOf((*MockGCObjectProgressDB)(nil).DeleteGCObjectProgress), taskKey)
-}
-
-// GetGCMetasToGC mocks base method.
-func (m *MockGCObjectProgressDB) GetGCMetasToGC(limit int) ([]*GCObjectMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGCMetasToGC", limit)
-	ret0, _ := ret[0].([]*GCObjectMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetGCMetasToGC indicates an expected call of GetGCMetasToGC.
-func (mr *MockGCObjectProgressDBMockRecorder) GetGCMetasToGC(limit interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGCMetasToGC", reflect.TypeOf((*MockGCObjectProgressDB)(nil).GetGCMetasToGC), limit)
-}
-
-// InsertGCObjectProgress mocks base method.
-func (m *MockGCObjectProgressDB) InsertGCObjectProgress(taskKey string, gcMeta *GCObjectMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertGCObjectProgress", taskKey, gcMeta)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InsertGCObjectProgress indicates an expected call of InsertGCObjectProgress.
-func (mr *MockGCObjectProgressDBMockRecorder) InsertGCObjectProgress(taskKey, gcMeta interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertGCObjectProgress", reflect.TypeOf((*MockGCObjectProgressDB)(nil).InsertGCObjectProgress), taskKey, gcMeta)
-}
-
-// UpdateGCObjectProgress mocks base method.
-func (m *MockGCObjectProgressDB) UpdateGCObjectProgress(gcMeta *GCObjectMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateGCObjectProgress", gcMeta)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateGCObjectProgress indicates an expected call of UpdateGCObjectProgress.
-func (mr *MockGCObjectProgressDBMockRecorder) UpdateGCObjectProgress(gcMeta interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGCObjectProgress", reflect.TypeOf((*MockGCObjectProgressDB)(nil).UpdateGCObjectProgress), gcMeta)
-}
-
-// MockSignatureDB is a mock of SignatureDB interface.
-type MockSignatureDB struct {
-	ctrl     *gomock.Controller
-	recorder *MockSignatureDBMockRecorder
-}
-
-// MockSignatureDBMockRecorder is the mock recorder for MockSignatureDB.
-type MockSignatureDBMockRecorder struct {
-	mock *MockSignatureDB
-}
-
-// NewMockSignatureDB creates a new mock instance.
-func NewMockSignatureDB(ctrl *gomock.Controller) *MockSignatureDB {
-	mock := &MockSignatureDB{ctrl: ctrl}
-	mock.recorder = &MockSignatureDBMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSignatureDB) EXPECT() *MockSignatureDBMockRecorder {
+func (m *MockObjectIntegrityDB) EXPECT() *MockObjectIntegrityDBMockRecorder {
 	return m.recorder
 }
 
 // DeleteAllReplicatePieceChecksum mocks base method.
-func (m *MockSignatureDB) DeleteAllReplicatePieceChecksum(objectID uint64, replicateIdx, pieceCount uint32) error {
+func (m *MockObjectIntegrityDB) DeleteAllReplicatePieceChecksum(objectID uint64, replicateIdx, pieceCount uint32) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAllReplicatePieceChecksum", objectID, replicateIdx, pieceCount)
 	ret0, _ := ret[0].(error)
@@ -235,13 +113,13 @@ func (m *MockSignatureDB) DeleteAllReplicatePieceChecksum(objectID uint64, repli
 }
 
 // DeleteAllReplicatePieceChecksum indicates an expected call of DeleteAllReplicatePieceChecksum.
-func (mr *MockSignatureDBMockRecorder) DeleteAllReplicatePieceChecksum(objectID, replicateIdx, pieceCount interface{}) *gomock.Call {
+func (mr *MockObjectIntegrityDBMockRecorder) DeleteAllReplicatePieceChecksum(objectID, replicateIdx, pieceCount interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).DeleteAllReplicatePieceChecksum), objectID, replicateIdx, pieceCount)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReplicatePieceChecksum", reflect.TypeOf((*MockObjectIntegrityDB)(nil).DeleteAllReplicatePieceChecksum), objectID, replicateIdx, pieceCount)
 }
 
 // DeleteObjectIntegrity mocks base method.
-func (m *MockSignatureDB) DeleteObjectIntegrity(objectID uint64) error {
+func (m *MockObjectIntegrityDB) DeleteObjectIntegrity(objectID uint64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteObjectIntegrity", objectID)
 	ret0, _ := ret[0].(error)
@@ -249,13 +127,27 @@ func (m *MockSignatureDB) DeleteObjectIntegrity(objectID uint64) error {
 }
 
 // DeleteObjectIntegrity indicates an expected call of DeleteObjectIntegrity.
-func (mr *MockSignatureDBMockRecorder) DeleteObjectIntegrity(objectID interface{}) *gomock.Call {
+func (mr *MockObjectIntegrityDBMockRecorder) DeleteObjectIntegrity(objectID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockSignatureDB)(nil).DeleteObjectIntegrity), objectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockObjectIntegrityDB)(nil).DeleteObjectIntegrity), objectID)
+}
+
+// DeleteReplicatePieceChecksum mocks base method.
+func (m *MockObjectIntegrityDB) DeleteReplicatePieceChecksum(objectID uint64, replicateIdx, pieceIdx uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteReplicatePieceChecksum", objectID, replicateIdx, pieceIdx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteReplicatePieceChecksum indicates an expected call of DeleteReplicatePieceChecksum.
+func (mr *MockObjectIntegrityDBMockRecorder) DeleteReplicatePieceChecksum(objectID, replicateIdx, pieceIdx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReplicatePieceChecksum", reflect.TypeOf((*MockObjectIntegrityDB)(nil).DeleteReplicatePieceChecksum), objectID, replicateIdx, pieceIdx)
 }
 
 // GetAllReplicatePieceChecksum mocks base method.
-func (m *MockSignatureDB) GetAllReplicatePieceChecksum(objectID uint64, replicateIdx, pieceCount uint32) ([][]byte, error) {
+func (m *MockObjectIntegrityDB) GetAllReplicatePieceChecksum(objectID uint64, replicateIdx, pieceCount uint32) ([][]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllReplicatePieceChecksum", objectID, replicateIdx, pieceCount)
 	ret0, _ := ret[0].([][]byte)
@@ -264,13 +156,13 @@ func (m *MockSignatureDB) GetAllReplicatePieceChecksum(objectID uint64, replicat
 }
 
 // GetAllReplicatePieceChecksum indicates an expected call of GetAllReplicatePieceChecksum.
-func (mr *MockSignatureDBMockRecorder) GetAllReplicatePieceChecksum(objectID, replicateIdx, pieceCount interface{}) *gomock.Call {
+func (mr *MockObjectIntegrityDBMockRecorder) GetAllReplicatePieceChecksum(objectID, replicateIdx, pieceCount interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).GetAllReplicatePieceChecksum), objectID, replicateIdx, pieceCount)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllReplicatePieceChecksum", reflect.TypeOf((*MockObjectIntegrityDB)(nil).GetAllReplicatePieceChecksum), objectID, replicateIdx, pieceCount)
 }
 
 // GetObjectIntegrity mocks base method.
-func (m *MockSignatureDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
+func (m *MockObjectIntegrityDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObjectIntegrity", objectID)
 	ret0, _ := ret[0].(*IntegrityMeta)
@@ -279,13 +171,42 @@ func (m *MockSignatureDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, e
 }
 
 // GetObjectIntegrity indicates an expected call of GetObjectIntegrity.
-func (mr *MockSignatureDBMockRecorder) GetObjectIntegrity(objectID interface{}) *gomock.Call {
+func (mr *MockObjectIntegrityDBMockRecorder) GetObjectIntegrity(objectID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectIntegrity", reflect.TypeOf((*MockSignatureDB)(nil).GetObjectIntegrity), objectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectIntegrity", reflect.TypeOf((*MockObjectIntegrityDB)(nil).GetObjectIntegrity), objectID)
+}
+
+// GetReplicatePieceChecksum mocks base method.
+func (m *MockObjectIntegrityDB) GetReplicatePieceChecksum(objectID uint64, replicateIdx, pieceIdx uint32) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetReplicatePieceChecksum", objectID, replicateIdx, pieceIdx)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetReplicatePieceChecksum indicates an expected call of GetReplicatePieceChecksum.
+func (mr *MockObjectIntegrityDBMockRecorder) GetReplicatePieceChecksum(objectID, replicateIdx, pieceIdx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReplicatePieceChecksum", reflect.TypeOf((*MockObjectIntegrityDB)(nil).GetReplicatePieceChecksum), objectID, replicateIdx, pieceIdx)
+}
+
+// SetAllReplicatePieceChecksum mocks base method.
+func (m *MockObjectIntegrityDB) SetAllReplicatePieceChecksum(objectID uint64, replicateIdx, pieceCount uint32, checksum [][]byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetAllReplicatePieceChecksum", objectID, replicateIdx, pieceCount, checksum)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetAllReplicatePieceChecksum indicates an expected call of SetAllReplicatePieceChecksum.
+func (mr *MockObjectIntegrityDBMockRecorder) SetAllReplicatePieceChecksum(objectID, replicateIdx, pieceCount, checksum interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAllReplicatePieceChecksum", reflect.TypeOf((*MockObjectIntegrityDB)(nil).SetAllReplicatePieceChecksum), objectID, replicateIdx, pieceCount, checksum)
 }
 
 // SetObjectIntegrity mocks base method.
-func (m *MockSignatureDB) SetObjectIntegrity(integrity *IntegrityMeta) error {
+func (m *MockObjectIntegrityDB) SetObjectIntegrity(integrity *IntegrityMeta) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetObjectIntegrity", integrity)
 	ret0, _ := ret[0].(error)
@@ -293,13 +214,13 @@ func (m *MockSignatureDB) SetObjectIntegrity(integrity *IntegrityMeta) error {
 }
 
 // SetObjectIntegrity indicates an expected call of SetObjectIntegrity.
-func (mr *MockSignatureDBMockRecorder) SetObjectIntegrity(integrity interface{}) *gomock.Call {
+func (mr *MockObjectIntegrityDBMockRecorder) SetObjectIntegrity(integrity interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectIntegrity", reflect.TypeOf((*MockSignatureDB)(nil).SetObjectIntegrity), integrity)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectIntegrity", reflect.TypeOf((*MockObjectIntegrityDB)(nil).SetObjectIntegrity), integrity)
 }
 
 // SetReplicatePieceChecksum mocks base method.
-func (m *MockSignatureDB) SetReplicatePieceChecksum(objectID uint64, replicateIdx, pieceIdx uint32, checksum []byte) error {
+func (m *MockObjectIntegrityDB) SetReplicatePieceChecksum(objectID uint64, replicateIdx, pieceIdx uint32, checksum []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetReplicatePieceChecksum", objectID, replicateIdx, pieceIdx, checksum)
 	ret0, _ := ret[0].(error)
@@ -307,9 +228,9 @@ func (m *MockSignatureDB) SetReplicatePieceChecksum(objectID uint64, replicateId
 }
 
 // SetReplicatePieceChecksum indicates an expected call of SetReplicatePieceChecksum.
-func (mr *MockSignatureDBMockRecorder) SetReplicatePieceChecksum(objectID, replicateIdx, pieceIdx, checksum interface{}) *gomock.Call {
+func (mr *MockObjectIntegrityDBMockRecorder) SetReplicatePieceChecksum(objectID, replicateIdx, pieceIdx, checksum interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).SetReplicatePieceChecksum), objectID, replicateIdx, pieceIdx, checksum)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockObjectIntegrityDB)(nil).SetReplicatePieceChecksum), objectID, replicateIdx, pieceIdx, checksum)
 }
 
 // MockTrafficDB is a mock of TrafficDB interface.
@@ -558,6 +479,123 @@ func (mr *MockSPInfoDBMockRecorder) UpdateAllSp(spList interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAllSp", reflect.TypeOf((*MockSPInfoDB)(nil).UpdateAllSp), spList)
 }
 
+// MockGCObjectProgressDB is a mock of GCObjectProgressDB interface.
+type MockGCObjectProgressDB struct {
+	ctrl     *gomock.Controller
+	recorder *MockGCObjectProgressDBMockRecorder
+}
+
+// MockGCObjectProgressDBMockRecorder is the mock recorder for MockGCObjectProgressDB.
+type MockGCObjectProgressDBMockRecorder struct {
+	mock *MockGCObjectProgressDB
+}
+
+// NewMockGCObjectProgressDB creates a new mock instance.
+func NewMockGCObjectProgressDB(ctrl *gomock.Controller) *MockGCObjectProgressDB {
+	mock := &MockGCObjectProgressDB{ctrl: ctrl}
+	mock.recorder = &MockGCObjectProgressDBMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockGCObjectProgressDB) EXPECT() *MockGCObjectProgressDBMockRecorder {
+	return m.recorder
+}
+
+// DeleteGCObjectProgress mocks base method.
+func (m *MockGCObjectProgressDB) DeleteGCObjectProgress(taskKey string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteGCObjectProgress", taskKey)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteGCObjectProgress indicates an expected call of DeleteGCObjectProgress.
+func (mr *MockGCObjectProgressDBMockRecorder) DeleteGCObjectProgress(taskKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGCObjectProgress", reflect.TypeOf((*MockGCObjectProgressDB)(nil).DeleteGCObjectProgress), taskKey)
+}
+
+// GetAllGCObjectTask mocks base method.
+func (m *MockGCObjectProgressDB) GetAllGCObjectTask(taskKey string) []task.GCObjectTask {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllGCObjectTask", taskKey)
+	ret0, _ := ret[0].([]task.GCObjectTask)
+	return ret0
+}
+
+// GetAllGCObjectTask indicates an expected call of GetAllGCObjectTask.
+func (mr *MockGCObjectProgressDBMockRecorder) GetAllGCObjectTask(taskKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllGCObjectTask", reflect.TypeOf((*MockGCObjectProgressDB)(nil).GetAllGCObjectTask), taskKey)
+}
+
+// SetGCObjectProgress mocks base method.
+func (m *MockGCObjectProgressDB) SetGCObjectProgress(taskKey string, deletingBlockID, deletedObjectID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetGCObjectProgress", taskKey, deletingBlockID, deletedObjectID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetGCObjectProgress indicates an expected call of SetGCObjectProgress.
+func (mr *MockGCObjectProgressDBMockRecorder) SetGCObjectProgress(taskKey, deletingBlockID, deletedObjectID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGCObjectProgress", reflect.TypeOf((*MockGCObjectProgressDB)(nil).SetGCObjectProgress), taskKey, deletingBlockID, deletedObjectID)
+}
+
+// MockStorageParamDB is a mock of StorageParamDB interface.
+type MockStorageParamDB struct {
+	ctrl     *gomock.Controller
+	recorder *MockStorageParamDBMockRecorder
+}
+
+// MockStorageParamDBMockRecorder is the mock recorder for MockStorageParamDB.
+type MockStorageParamDBMockRecorder struct {
+	mock *MockStorageParamDB
+}
+
+// NewMockStorageParamDB creates a new mock instance.
+func NewMockStorageParamDB(ctrl *gomock.Controller) *MockStorageParamDB {
+	mock := &MockStorageParamDB{ctrl: ctrl}
+	mock.recorder = &MockStorageParamDBMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockStorageParamDB) EXPECT() *MockStorageParamDBMockRecorder {
+	return m.recorder
+}
+
+// GetStorageParams mocks base method.
+func (m *MockStorageParamDB) GetStorageParams() (*types1.Params, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStorageParams")
+	ret0, _ := ret[0].(*types1.Params)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetStorageParams indicates an expected call of GetStorageParams.
+func (mr *MockStorageParamDBMockRecorder) GetStorageParams() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStorageParams", reflect.TypeOf((*MockStorageParamDB)(nil).GetStorageParams))
+}
+
+// SetStorageParams mocks base method.
+func (m *MockStorageParamDB) SetStorageParams(params *types1.Params) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetStorageParams", params)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetStorageParams indicates an expected call of SetStorageParams.
+func (mr *MockStorageParamDBMockRecorder) SetStorageParams(params interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockStorageParamDB)(nil).SetStorageParams), params)
+}
+
 // MockOffChainAuthKeyDB is a mock of OffChainAuthKeyDB interface.
 type MockOffChainAuthKeyDB struct {
 	ctrl     *gomock.Controller
@@ -661,6 +699,20 @@ func (mr *MockSPDBMockRecorder) CheckQuotaAndAddReadRecord(record, quota interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckQuotaAndAddReadRecord", reflect.TypeOf((*MockSPDB)(nil).CheckQuotaAndAddReadRecord), record, quota)
 }
 
+// CreateUploadProgress mocks base method.
+func (m *MockSPDB) CreateUploadProgress(objectID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUploadProgress", objectID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateUploadProgress indicates an expected call of CreateUploadProgress.
+func (mr *MockSPDBMockRecorder) CreateUploadProgress(objectID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadProgress", reflect.TypeOf((*MockSPDB)(nil).CreateUploadProgress), objectID)
+}
+
 // DeleteAllReplicatePieceChecksum mocks base method.
 func (m *MockSPDB) DeleteAllReplicatePieceChecksum(objectID uint64, replicateIdx, pieceCount uint32) error {
 	m.ctrl.T.Helper()
@@ -703,18 +755,18 @@ func (mr *MockSPDBMockRecorder) DeleteObjectIntegrity(objectID interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).DeleteObjectIntegrity), objectID)
 }
 
-// DeleteUploadProgress mocks base method.
-func (m *MockSPDB) DeleteUploadProgress(objectID uint64) error {
+// DeleteReplicatePieceChecksum mocks base method.
+func (m *MockSPDB) DeleteReplicatePieceChecksum(objectID uint64, replicateIdx, pieceIdx uint32) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUploadProgress", objectID)
+	ret := m.ctrl.Call(m, "DeleteReplicatePieceChecksum", objectID, replicateIdx, pieceIdx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteUploadProgress indicates an expected call of DeleteUploadProgress.
-func (mr *MockSPDBMockRecorder) DeleteUploadProgress(objectID interface{}) *gomock.Call {
+// DeleteReplicatePieceChecksum indicates an expected call of DeleteReplicatePieceChecksum.
+func (mr *MockSPDBMockRecorder) DeleteReplicatePieceChecksum(objectID, replicateIdx, pieceIdx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUploadProgress", reflect.TypeOf((*MockSPDB)(nil).DeleteUploadProgress), objectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).DeleteReplicatePieceChecksum), objectID, replicateIdx, pieceIdx)
 }
 
 // FetchAllSp mocks base method.
@@ -753,6 +805,20 @@ func (m *MockSPDB) FetchAllSpWithoutOwnSp(status ...types0.Status) ([]*types0.St
 func (mr *MockSPDBMockRecorder) FetchAllSpWithoutOwnSp(status ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchAllSpWithoutOwnSp", reflect.TypeOf((*MockSPDB)(nil).FetchAllSpWithoutOwnSp), status...)
+}
+
+// GetAllGCObjectTask mocks base method.
+func (m *MockSPDB) GetAllGCObjectTask(taskKey string) []task.GCObjectTask {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllGCObjectTask", taskKey)
+	ret0, _ := ret[0].([]task.GCObjectTask)
+	return ret0
+}
+
+// GetAllGCObjectTask indicates an expected call of GetAllGCObjectTask.
+func (mr *MockSPDBMockRecorder) GetAllGCObjectTask(taskKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllGCObjectTask", reflect.TypeOf((*MockSPDB)(nil).GetAllGCObjectTask), taskKey)
 }
 
 // GetAllReplicatePieceChecksum mocks base method.
@@ -815,21 +881,6 @@ func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID, yearMonth interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID, yearMonth)
 }
 
-// GetGCMetasToGC mocks base method.
-func (m *MockSPDB) GetGCMetasToGC(limit int) ([]*GCObjectMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGCMetasToGC", limit)
-	ret0, _ := ret[0].([]*GCObjectMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetGCMetasToGC indicates an expected call of GetGCMetasToGC.
-func (mr *MockSPDBMockRecorder) GetGCMetasToGC(limit interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGCMetasToGC", reflect.TypeOf((*MockSPDB)(nil).GetGCMetasToGC), limit)
-}
-
 // GetObjectIntegrity mocks base method.
 func (m *MockSPDB) GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error) {
 	m.ctrl.T.Helper()
@@ -890,6 +941,21 @@ func (mr *MockSPDBMockRecorder) GetReadRecord(timeRange interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReadRecord", reflect.TypeOf((*MockSPDB)(nil).GetReadRecord), timeRange)
 }
 
+// GetReplicatePieceChecksum mocks base method.
+func (m *MockSPDB) GetReplicatePieceChecksum(objectID uint64, replicateIdx, pieceIdx uint32) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetReplicatePieceChecksum", objectID, replicateIdx, pieceIdx)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetReplicatePieceChecksum indicates an expected call of GetReplicatePieceChecksum.
+func (mr *MockSPDBMockRecorder) GetReplicatePieceChecksum(objectID, replicateIdx, pieceIdx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).GetReplicatePieceChecksum), objectID, replicateIdx, pieceIdx)
+}
+
 // GetSpByAddress mocks base method.
 func (m *MockSPDB) GetSpByAddress(address string, addressType SpAddressType) (*types0.StorageProvider, error) {
 	m.ctrl.T.Helper()
@@ -918,51 +984,6 @@ func (m *MockSPDB) GetSpByEndpoint(endpoint string) (*types0.StorageProvider, er
 func (mr *MockSPDBMockRecorder) GetSpByEndpoint(endpoint interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByEndpoint", reflect.TypeOf((*MockSPDB)(nil).GetSpByEndpoint), endpoint)
-}
-
-// GetUploadMetasToReplicate mocks base method.
-func (m *MockSPDB) GetUploadMetasToReplicate(limit int) ([]*UploadObjectMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadMetasToReplicate", limit)
-	ret0, _ := ret[0].([]*UploadObjectMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUploadMetasToReplicate indicates an expected call of GetUploadMetasToReplicate.
-func (mr *MockSPDBMockRecorder) GetUploadMetasToReplicate(limit interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadMetasToReplicate", reflect.TypeOf((*MockSPDB)(nil).GetUploadMetasToReplicate), limit)
-}
-
-// GetUploadMetasToSeal mocks base method.
-func (m *MockSPDB) GetUploadMetasToSeal(limit int) ([]*UploadObjectMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadMetasToSeal", limit)
-	ret0, _ := ret[0].([]*UploadObjectMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUploadMetasToSeal indicates an expected call of GetUploadMetasToSeal.
-func (mr *MockSPDBMockRecorder) GetUploadMetasToSeal(limit interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadMetasToSeal", reflect.TypeOf((*MockSPDB)(nil).GetUploadMetasToSeal), limit)
-}
-
-// GetUploadState mocks base method.
-func (m *MockSPDB) GetUploadState(objectID uint64) (types.TaskState, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadState", objectID)
-	ret0, _ := ret[0].(types.TaskState)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUploadState indicates an expected call of GetUploadState.
-func (mr *MockSPDBMockRecorder) GetUploadState(objectID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadState", reflect.TypeOf((*MockSPDB)(nil).GetUploadState), objectID)
 }
 
 // GetUserReadRecord mocks base method.
@@ -994,32 +1015,47 @@ func (mr *MockSPDBMockRecorder) InsertAuthKey(newRecord interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuthKey", reflect.TypeOf((*MockSPDB)(nil).InsertAuthKey), newRecord)
 }
 
-// InsertGCObjectProgress mocks base method.
-func (m *MockSPDB) InsertGCObjectProgress(taskKey string, gcMeta *GCObjectMeta) error {
+// QueryUploadState mocks base method.
+func (m *MockSPDB) QueryUploadState(objectID uint64) (types.TaskState, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertGCObjectProgress", taskKey, gcMeta)
+	ret := m.ctrl.Call(m, "QueryUploadState", objectID)
+	ret0, _ := ret[0].(types.TaskState)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryUploadState indicates an expected call of QueryUploadState.
+func (mr *MockSPDBMockRecorder) QueryUploadState(objectID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryUploadState", reflect.TypeOf((*MockSPDB)(nil).QueryUploadState), objectID)
+}
+
+// SetAllReplicatePieceChecksum mocks base method.
+func (m *MockSPDB) SetAllReplicatePieceChecksum(objectID uint64, replicateIdx, pieceCount uint32, checksum [][]byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetAllReplicatePieceChecksum", objectID, replicateIdx, pieceCount, checksum)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// InsertGCObjectProgress indicates an expected call of InsertGCObjectProgress.
-func (mr *MockSPDBMockRecorder) InsertGCObjectProgress(taskKey, gcMeta interface{}) *gomock.Call {
+// SetAllReplicatePieceChecksum indicates an expected call of SetAllReplicatePieceChecksum.
+func (mr *MockSPDBMockRecorder) SetAllReplicatePieceChecksum(objectID, replicateIdx, pieceCount, checksum interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertGCObjectProgress", reflect.TypeOf((*MockSPDB)(nil).InsertGCObjectProgress), taskKey, gcMeta)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAllReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).SetAllReplicatePieceChecksum), objectID, replicateIdx, pieceCount, checksum)
 }
 
-// InsertUploadProgress mocks base method.
-func (m *MockSPDB) InsertUploadProgress(objectID uint64) error {
+// SetGCObjectProgress mocks base method.
+func (m *MockSPDB) SetGCObjectProgress(taskKey string, deletingBlockID, deletedObjectID uint64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertUploadProgress", objectID)
+	ret := m.ctrl.Call(m, "SetGCObjectProgress", taskKey, deletingBlockID, deletedObjectID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// InsertUploadProgress indicates an expected call of InsertUploadProgress.
-func (mr *MockSPDBMockRecorder) InsertUploadProgress(objectID interface{}) *gomock.Call {
+// SetGCObjectProgress indicates an expected call of SetGCObjectProgress.
+func (mr *MockSPDBMockRecorder) SetGCObjectProgress(taskKey, deletingBlockID, deletedObjectID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUploadProgress", reflect.TypeOf((*MockSPDB)(nil).InsertUploadProgress), objectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGCObjectProgress", reflect.TypeOf((*MockSPDB)(nil).SetGCObjectProgress), taskKey, deletingBlockID, deletedObjectID)
 }
 
 // SetObjectIntegrity mocks base method.
@@ -1092,30 +1128,16 @@ func (mr *MockSPDBMockRecorder) UpdateAuthKey(userAddress, domain, oldNonce, new
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthKey", reflect.TypeOf((*MockSPDB)(nil).UpdateAuthKey), userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate)
 }
 
-// UpdateGCObjectProgress mocks base method.
-func (m *MockSPDB) UpdateGCObjectProgress(gcMeta *GCObjectMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateGCObjectProgress", gcMeta)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateGCObjectProgress indicates an expected call of UpdateGCObjectProgress.
-func (mr *MockSPDBMockRecorder) UpdateGCObjectProgress(gcMeta interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGCObjectProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateGCObjectProgress), gcMeta)
-}
-
 // UpdateUploadProgress mocks base method.
-func (m *MockSPDB) UpdateUploadProgress(uploadMeta *UploadObjectMeta) error {
+func (m *MockSPDB) UpdateUploadProgress(objectID uint64, taskState types.TaskState, errorDescription string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUploadProgress", uploadMeta)
+	ret := m.ctrl.Call(m, "UpdateUploadProgress", objectID, taskState, errorDescription)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateUploadProgress indicates an expected call of UpdateUploadProgress.
-func (mr *MockSPDBMockRecorder) UpdateUploadProgress(uploadMeta interface{}) *gomock.Call {
+func (mr *MockSPDBMockRecorder) UpdateUploadProgress(objectID, taskState, errorDescription interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUploadProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateUploadProgress), uploadMeta)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUploadProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateUploadProgress), objectID, taskState, errorDescription)
 }

@@ -2,7 +2,6 @@ package gfsptqueue
 
 import (
 	"net/http"
-	"sort"
 	"sync"
 	"time"
 
@@ -27,11 +26,10 @@ var _ taskqueue.TQueue = &GfSpTQueue{}
 var _ taskqueue.TQueueOnStrategy = &GfSpTQueue{}
 
 type GfSpTQueue struct {
-	name    string
-	current int64
-	tasks   map[coretask.TKey]coretask.Task
-	cap     int
-	mux     sync.RWMutex
+	name  string
+	tasks map[coretask.TKey]coretask.Task
+	cap   int
+	mux   sync.RWMutex
 
 	gcFunc     func(task2 coretask.Task) bool
 	filterFunc func(task2 coretask.Task) bool
@@ -165,41 +163,27 @@ func (t *GfSpTQueue) has(key coretask.TKey) bool {
 }
 
 func (t *GfSpTQueue) top() coretask.Task {
-	if len(t.tasks) == 0 {
-		return nil
-	}
-	var backupTasks []coretask.Task
-	var gcTasks []coretask.Task
-	defer func() {
-		for _, task := range gcTasks {
-			delete(t.tasks, task.Key())
-		}
-	}()
+	tasksCreateMap := make(map[int64]coretask.Task)
 	for _, task := range t.tasks {
+		tasksCreateMap[task.GetCreateTime()] = task
+	}
+	keys := maps.SortKeys(tasksCreateMap)
+	for _, key := range keys {
+		task := tasksCreateMap[key]
 		if t.gcFunc != nil {
 			if t.gcFunc(task) {
-				gcTasks = append(gcTasks, task)
-				continue
+				t.delete(t.tasks[task.Key()])
 			}
 		}
 		if t.filterFunc != nil {
-			if !t.filterFunc(task) {
-				continue
+			if t.filterFunc(task) {
+				return task
 			}
+		} else {
+			return task
 		}
-		backupTasks = append(backupTasks, task)
 	}
-	if len(backupTasks) == 0 {
-		return nil
-	}
-	sort.Slice(backupTasks, func(i, j int) bool {
-		return backupTasks[i].GetCreateTime() < backupTasks[j].GetCreateTime()
-	})
-	index := sort.Search(len(backupTasks), func(i int) bool { return backupTasks[i].GetCreateTime() > t.current })
-	if index == len(backupTasks) {
-		index = 0
-	}
-	return backupTasks[index]
+	return nil
 }
 
 // SetFilterTaskStrategy sets the callback func to filter task for popping or topping.

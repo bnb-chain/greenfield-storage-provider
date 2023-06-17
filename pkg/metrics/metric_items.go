@@ -20,8 +20,6 @@ var MetricsItems = []prometheus.Collector{
 	PerfReceivePieceTimeHistogram,
 	PerfGetObjectTimeHistogram,
 	PerfChallengeTimeHistogram,
-	PerfReplicateAndSealTimeoutGauge,
-	PerfDispatchReplicateObjectIdGauge,
 	// TaskQueue metrics category
 	QueueSizeGauge,
 	QueueCapGauge,
@@ -106,14 +104,6 @@ var (
 		Help:    "Track upload workflow costs.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"perf_upload_time"})
-	PerfReplicateAndSealTimeoutGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "replicate_seal_time",
-		Help: "Track replicate seal time.",
-	}, []string{"replicate_seal_time"})
-	PerfDispatchReplicateObjectIdGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "dispatch_object_id",
-		Help: "Track replicate object id time.",
-	}, []string{"dispatch_object_id"})
 	// PerfGetApprovalTimeHistogram is used to perf get approval workflow
 	PerfGetApprovalTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "perf_get_approval_time",

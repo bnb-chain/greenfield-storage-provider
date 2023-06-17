@@ -40,8 +40,6 @@ type Consensus interface {
 	VerifyPutObjectPermission(ctx context.Context, account, bucket, object string) (bool, error)
 	// ListenObjectSeal returns an indicator whether the object is successfully sealed before timeOutHeight.
 	ListenObjectSeal(ctx context.Context, objectID uint64, timeOutHeight int) (bool, error)
-	// ListenRejectUnSealObject returns an indication of the object is rejected.
-	ListenRejectUnSealObject(ctx context.Context, objectID uint64, timeoutHeight int) (bool, error)
 	// Close the Consensus interface.
 	Close() error
 }
@@ -90,9 +88,6 @@ func (*NullConsensus) VerifyPutObjectPermission(context.Context, string, string,
 	return false, nil
 }
 func (*NullConsensus) ListenObjectSeal(context.Context, uint64, int) (bool, error) {
-	return false, nil
-}
-func (*NullConsensus) ListenRejectUnSealObject(context.Context, uint64, int) (bool, error) {
 	return false, nil
 }
 func (*NullConsensus) Close() error { return nil }

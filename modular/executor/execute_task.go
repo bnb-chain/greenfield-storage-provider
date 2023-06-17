@@ -63,7 +63,6 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 	if err == nil {
 		metrics.PerfUploadTimeHistogram.WithLabelValues("upload_replicate_seal_total_time").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
-	metrics.PerfReplicateAndSealTimeoutGauge.WithLabelValues("replicate_seal_scheduling_time").Set(float64(time.Now().Unix() - task.GetCreateTime()))
 	return err
 }
 
