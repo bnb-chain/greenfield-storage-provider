@@ -43,6 +43,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	rAppTask.InitApprovalReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		e.baseApp.TaskPriority(rAppTask), e.baseApp.OperatorAddress())
 	askReplicateApprovalTime := time.Now()
+	// TODO: remove it
 	approvals, err = e.AskReplicatePieceApproval(ctx, rAppTask, int(low),
 		int(high), e.askReplicateApprovalTimeout)
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_ask_p2p_approval_time").Observe(time.Since(askReplicateApprovalTime).Seconds())

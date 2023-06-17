@@ -140,6 +140,9 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 			"task_info", task.Info(), "error", task.Error(), "reject_unseal_error", err)
 		return nil
 	}
+	// TODO: add gvg id to replicate piece task
+	// virtual_group_manager pick, maybe need create new gvg
+
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),

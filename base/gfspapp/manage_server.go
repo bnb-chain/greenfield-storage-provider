@@ -231,3 +231,10 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 	log.CtxInfow(ctx, "succeed to handle reported task")
 	return &gfspserver.GfSpReportTaskResponse{}, nil
 }
+
+func (g *GfSpBaseApp) GfSpPickVirtualGroupFamily(ctx context.Context,
+	req *gfspserver.GfSpPickVirtualGroupFamilyRequest) (*gfspserver.GfSpPickVirtualGroupFamilyResponse, error) {
+	// TODO:
+	// virtual_group_manager pick, maybe need create gvg and wait succeed.
+	return nil, nil
+}

@@ -1,7 +1,6 @@
 package vmmgr
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 )
 
@@ -27,5 +26,4 @@ type VirtualGroupManager interface {
 	PickGlobalVirtualGroupForReplicateObject(bucketID uint64) (*GlobalVirtualGroupMeta, error)
 }
 
-type NewVirtualGroupManager = func(selfOperatorAddress string,
-	metadataClient *gfspclient.GfSpClient, chainClient consensus.Consensus) (VirtualGroupManager, error)
+type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus) (VirtualGroupManager, error)

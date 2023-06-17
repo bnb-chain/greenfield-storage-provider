@@ -51,8 +51,18 @@ message GfSpReportTaskResponse {
   base.types.gfsperrors.GfSpError err = 1;
 }
 
+message GfSpPickVirtualGroupFamilyRequest{
+  base.types.gfsptask.GfSpCreateBucketApprovalTask create_bucket_approval_task = 1;
+}
+
+message GfSpPickVirtualGroupFamilyResponse{
+  base.types.gfsperrors.GfSpError err = 1;
+  base.types.gfsptask.GfSpCreateBucketApprovalTask create_bucket_approval_task = 2;
+}
+
 service GfSpManageService {
   rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
   rpc GfSpReportTask(GfSpReportTaskRequest) returns (GfSpReportTaskResponse) {}
+  rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns(GfSpPickVirtualGroupFamilyResponse) {}
 }

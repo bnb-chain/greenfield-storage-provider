@@ -126,12 +126,11 @@ type virtualGroupManager struct {
 }
 
 // NewVirtualGroupManager returns a virtual group manager interface.
-func NewVirtualGroupManager(selfOperatorAddress string, metadataClient *gfspclient.GfSpClient,
-	chainClient consensus.Consensus) (vmmgr.VirtualGroupManager, error) {
+func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Consensus) (vmmgr.VirtualGroupManager, error) {
 	vgm := &virtualGroupManager{
 		selfOperatorAddress: selfOperatorAddress,
-		metadataClient:      metadataClient,
-		chainClient:         chainClient,
+		// metadataClient:      metadataClient,
+		chainClient: chainClient,
 	}
 	vgm.refreshMeta()
 	go func() {
