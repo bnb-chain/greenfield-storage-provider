@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"sync/atomic"
 	"time"
 
@@ -66,8 +67,9 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 				default:
 					err := e.AskTask(ctx)
 					if err != nil {
-						log.CtxErrorw(ctx, "failed to handle ask task, will hold on", "error", err)
-						time.Sleep(time.Duration(DefaultSleepInterval) * time.Millisecond)
+						rand.New(rand.NewSource(time.Now().Unix()))
+						sleep := rand.Intn(DefaultSleepInterval) + 1
+						time.Sleep(time.Duration(sleep) * time.Millisecond)
 					}
 				}
 			}

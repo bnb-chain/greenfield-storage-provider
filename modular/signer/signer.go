@@ -24,7 +24,8 @@ var (
 	ErrSealObjectOnChain         = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
 	ErrRejectUnSealObjectOnChain = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
 	ErrDiscontinueBucketOnChain  = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
-	ErrCreateGVGOnChain          = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120004, "send create gvg msg failed")
+	ErrDanglingPointer           = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
+	ErrCreateGVGOnChain          = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
 )
 
 var _ module.Signer = &SignModular{}

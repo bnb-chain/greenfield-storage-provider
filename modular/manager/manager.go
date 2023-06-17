@@ -346,13 +346,15 @@ func (m *ManageModular) UploadingObjectNumber() int {
 func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.UploadObjectTask)
 	if task.Expired() {
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:         task.GetObjectInfo().Id.Uint64(),
-			TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
-			ErrorDescription: "expired",
-		}); err != nil {
-			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
-		}
+		go func() {
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+				ErrorDescription: "expired",
+			}); err != nil {
+				log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
+			}
+		}()
 		return true
 	}
 	return false
@@ -361,13 +363,15 @@ func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 	task := qTask.(task.ReplicatePieceTask)
 	if task.Expired() {
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:         task.GetObjectInfo().Id.Uint64(),
-			TaskState:        types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR,
-			ErrorDescription: "expired",
-		}); err != nil {
-			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
-		}
+		go func() {
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR,
+				ErrorDescription: "expired",
+			}); err != nil {
+				log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
+			}
+		}()
 		return true
 	}
 	return false
@@ -376,13 +380,15 @@ func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 func (m *ManageModular) GCSealObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.SealObjectTask)
 	if task.Expired() {
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:         task.GetObjectInfo().Id.Uint64(),
-			TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
-			ErrorDescription: "expired",
-		}); err != nil {
-			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
-		}
+		go func() {
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
+				ErrorDescription: "expired",
+			}); err != nil {
+				log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
+			}
+		}()
 		return true
 	}
 	return false
@@ -411,7 +417,16 @@ func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
 }
 
 func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
-	return !qTask.Expired() && (qTask.GetRetry() == 0 || qTask.ExceedTimeout())
+	if qTask.ExceedRetry() {
+		return false
+	}
+	if qTask.ExceedTimeout() {
+		return true
+	}
+	if qTask.GetRetry() == 0 {
+		return true
+	}
+	return false
 }
 
 func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) task.Task {
@@ -476,6 +491,15 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 			time.Sleep(RejectUnSealObjectTimeout * time.Second)
 		} else {
 			log.CtxDebugw(ctx, "succeed to reject unseal object")
+			reject, err := m.baseApp.Consensus().ListenRejectUnSealObject(ctx, object.Id.Uint64(), DefaultListenRejectUnSealTimeoutHeight)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to reject unseal object", "error", err)
+				continue
+			}
+			if !reject {
+				log.CtxErrorw(ctx, "failed to reject unseal object")
+				continue
+			}
 			return nil
 		}
 	}
