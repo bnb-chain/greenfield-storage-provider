@@ -221,9 +221,13 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		objectInfo := object.GetObjectInfo()
 		currentGCObjectID = objectInfo.Id.Uint64()
 		if currentGCBlockID < task.GetCurrentBlockNumber() {
+			log.Errorw("skip gc object", "object_info", objectInfo,
+				"task_current_gc_block_id", task.GetCurrentBlockNumber())
 			continue
 		}
 		if currentGCObjectID <= task.GetLastDeletedObjectId() {
+			log.Errorw("skip gc object", "object_info", objectInfo,
+				"task_last_deleted_object_id", task.GetLastDeletedObjectId())
 			continue
 		}
 		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(

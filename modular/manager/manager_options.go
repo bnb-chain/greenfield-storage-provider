@@ -40,10 +40,10 @@ const (
 	DefaultGlobalChallengePieceTaskCacheSize int = 4096
 	// DefaultGlobalBatchGcObjectTimeInterval defines the default interval for generating
 	// gc object task.
-	DefaultGlobalBatchGcObjectTimeInterval int = 30 * 60
+	DefaultGlobalBatchGcObjectTimeInterval int = 1 * 60
 	// DefaultGlobalGcObjectBlockInterval defines the default blocks number for getting
 	// deleted objects.
-	DefaultGlobalGcObjectBlockInterval uint64 = 500
+	DefaultGlobalGcObjectBlockInterval uint64 = 1000
 	// DefaultGlobalGcObjectSafeBlockDistance defines the default distance form current block
 	// height to gc the deleted object.
 	DefaultGlobalGcObjectSafeBlockDistance uint64 = 1000
