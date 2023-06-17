@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsppieceop"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsprcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -310,6 +311,9 @@ func DefaultGfSpTQueueOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	}
 	if cfg.Customize.NewStrategyTQueueWithLimitFunc == nil {
 		cfg.Customize.NewStrategyTQueueWithLimitFunc = gfsptqueue.NewGfSpTQueueWithLimit
+	}
+	if cfg.Customize.NewVirtualGroupManagerFunc == nil {
+		cfg.Customize.NewVirtualGroupManagerFunc = gfspvgmgr.NewVirtualGroupManager
 	}
 	return nil
 }

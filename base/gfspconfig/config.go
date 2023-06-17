@@ -1,6 +1,7 @@
 package gfspconfig
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
@@ -29,6 +30,7 @@ type Customize struct {
 	NewTQueueWithLimit             coretaskqueue.NewTQueueWithLimit
 	NewStrategyTQueueFunc          coretaskqueue.NewTQueueOnStrategy
 	NewStrategyTQueueWithLimitFunc coretaskqueue.NewTQueueOnStrategyWithLimit
+	NewVirtualGroupManagerFunc     vmmgr.NewVirtualGroupManager
 }
 
 // GfSpConfig defines the GfSp configuration.

@@ -16,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
@@ -73,6 +74,8 @@ type ManageModular struct {
 	discontinueBucketEnabled       bool
 	discontinueBucketTimeInterval  int
 	discontinueBucketKeepAliveDays int
+
+	virtualGroupManager vmmgr.VirtualGroupManager
 }
 
 func (m *ManageModular) Name() string {

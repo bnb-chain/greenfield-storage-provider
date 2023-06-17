@@ -28,12 +28,8 @@ const (
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 )
 
-func (s *GfSpClient) ReplicatePieceToSecondary(
-	ctx context.Context,
-	endpoint string,
-	approval coretask.ApprovalReplicatePieceTask,
-	receive coretask.ReceivePieceTask,
-	data []byte) error {
+func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string,
+	approval coretask.ApprovalReplicatePieceTask, receive coretask.ReceivePieceTask, data []byte) error {
 	req, err := http.NewRequest(http.MethodPut, endpoint+ReplicateObjectPiecePath, bytes.NewReader(data))
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
@@ -65,8 +61,8 @@ func (s *GfSpClient) ReplicatePieceToSecondary(
 	return nil
 }
 
-func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint string, approval coretask.ApprovalReplicatePieceTask,
-	receive coretask.ReceivePieceTask) ([]byte, []byte, error) {
+func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint string,
+	approval coretask.ApprovalReplicatePieceTask, receive coretask.ReceivePieceTask) ([]byte, []byte, error) {
 	req, err := http.NewRequest(http.MethodPut, endpoint+ReplicateObjectPiecePath, nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
