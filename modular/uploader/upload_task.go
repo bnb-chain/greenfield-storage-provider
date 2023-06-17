@@ -177,6 +177,7 @@ func StreamReadAt(stream io.Reader, b []byte) (int, error) {
 }
 
 func (u *UploadModular) PostUploadObject(ctx context.Context, uploadObjectTask coretask.UploadObjectTask) {
+	metrics.PerfUploadTimeHistogram.WithLabelValues("put_piece_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 }
 
 func (u *UploadModular) QueryTasks(ctx context.Context, subKey coretask.TKey) (
