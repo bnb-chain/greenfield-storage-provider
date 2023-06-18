@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 )
 
 var _ vmmgr.VirtualGroupManager = &virtualGroupManager{}
@@ -113,6 +114,27 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(bucketID uint64) (
 	return vgfm.bucketIDToVgf[bucketID].GVGMap[globalVirtualGroupID], nil
 }
 
+type spManager struct {
+	primarySP    *sptypes.StorageProvider
+	secondarySPs []*sptypes.StorageProvider
+}
+
+func (sm *spManager) generateVirtualGroupMeta() (*vmmgr.GlobalVirtualGroupMeta, error) {
+	// TODO: refine it.
+	if sm.primarySP == nil || len(sm.secondarySPs) < 6 {
+		return nil, fmt.Errorf("no enough sp")
+	}
+	secondarySPIDs := make([]uint32, 6)
+	for _, sp := range sm.secondarySPs {
+		secondarySPIDs = append(secondarySPIDs, sp.Id)
+	}
+	return &vmmgr.GlobalVirtualGroupMeta{
+		PrimarySPID:        sm.primarySP.Id,
+		SecondarySPIDs:     secondarySPIDs,
+		StakingStorageSize: DefaultStakingStorageSize,
+	}, nil
+}
+
 type virtualGroupManager struct {
 	selfOperatorAddress string
 	selfSPID            uint32
@@ -120,9 +142,9 @@ type virtualGroupManager struct {
 	chainClient         consensus.Consensus    // query VG params from chain
 	mutex               sync.RWMutex
 	storageStakingPrice uint64
-	vgfManager          *virtualGroupFamilyManager
-	// TODO: add sp list which is used to generate global virtual group to create new gvg.
-	// spManager
+	// TODO: add storage parms to pick secondary
+	vgfManager *virtualGroupFamilyManager
+	spManager  *spManager // is used to generate a new gvg
 }
 
 // NewVirtualGroupManager returns a virtual group manager interface.
@@ -157,21 +179,21 @@ func (vgm *virtualGroupManager) refreshMeta() {
 	// TODO: refresh staking price from chain.
 }
 
-// PickVirtualGroupFamilyForGetCreateBucketApproval pick a virtual group family(If failed to pick,
+// PickVirtualGroupFamily pick a virtual group family(If failed to pick,
 // new VGF will be automatically created on the chain) in get create bucket approval workflow.
 // TODO: if returns VirtualGroupManagerSpace, the caller need create gvg and force refresh metadata and retry.
-func (vgm *virtualGroupManager) PickVirtualGroupFamilyForGetCreateBucketApproval() (*vmmgr.VirtualGroupFamilyMeta, error) {
+func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vmmgr.VirtualGroupFamilyMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.vgfManager.pickVirtualGroupFamily()
 }
 
-// PickGlobalVirtualGroupForReplicateObject picks a global virtual group(If failed to pick,
+// PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
 // new GVG will be created by primary SP) in replicate/seal object workflow.
 // return (nil, nil), if there is no gvg in vgm.
 // TODO: If returns ErrFailedPickGVG, the caller need re-stake or create gvg and force refresh metadata and retry.
 // TODO: if returns ErrStaledMetadata, the caller need force refresh from metadata and retry.
-func (vgm *virtualGroupManager) PickGlobalVirtualGroupForReplicateObject(bucketID uint64) (*vmmgr.GlobalVirtualGroupMeta, error) {
+func (vgm *virtualGroupManager) PickGlobalVirtualGroup(bucketID uint64) (*vmmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.vgfManager.pickGlobalVirtualGroup(bucketID)
@@ -179,14 +201,16 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroupForReplicateObject(bucketI
 
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
 // if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
-func (vgm *virtualGroupManager) ForceRefreshMeta() {
+func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 	vgm.refreshMeta()
+	return nil
 }
 
 // GenerateGlobalVirtualGroupMeta is used to generate a new global virtual group meta, the caller need send a tx to chain.
 // TODO: support more generate policy.
-func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta() (*vmmgr.GlobalVirtualGroupMeta, error) {
-	return nil, nil
-}
-
 // TODO: add filter picker to support balance.
+func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta() (*vmmgr.GlobalVirtualGroupMeta, error) {
+	vgm.mutex.RLock()
+	defer vgm.mutex.RUnlock()
+	return vgm.spManager.generateVirtualGroupMeta()
+}

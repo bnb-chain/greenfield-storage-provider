@@ -437,9 +437,13 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 // if pick failed, will create a new gvg to has a new vgf.
 func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error) {
 	// TODO: refine it.
-	vgf, err := m.virtualGroupManager.PickVirtualGroupFamilyForGetCreateBucketApproval()
+	vgf, err := m.virtualGroupManager.PickVirtualGroupFamily()
 	if err != nil {
 		// TODO: create gvg?
+		// 1.generate a new gvg
+		// 2.send tx
+		// 3.refresh
+		// 4.get vgf id
 		log.CtxErrorw(ctx, "failed to pick vgf", "task_info", task.Info(), "error", err)
 		return 0, err
 	}

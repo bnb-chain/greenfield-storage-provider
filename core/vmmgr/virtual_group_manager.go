@@ -22,8 +22,10 @@ type VirtualGroupFamilyMeta struct {
 }
 
 type VirtualGroupManager interface {
-	PickVirtualGroupFamilyForGetCreateBucketApproval() (*VirtualGroupFamilyMeta, error)
-	PickGlobalVirtualGroupForReplicateObject(bucketID uint64) (*GlobalVirtualGroupMeta, error)
+	PickVirtualGroupFamily() (*VirtualGroupFamilyMeta, error)
+	PickGlobalVirtualGroup(bucketID uint64) (*GlobalVirtualGroupMeta, error)
+	ForceRefreshMeta() error
+	GenerateGlobalVirtualGroupMeta() (*GlobalVirtualGroupMeta, error)
 }
 
 type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus) (VirtualGroupManager, error)
