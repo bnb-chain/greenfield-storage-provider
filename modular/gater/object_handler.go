@@ -1,6 +1,7 @@
 package gater
 
 import (
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -265,8 +266,39 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_segment_data_time").Observe(time.Since(getSegmentTime).Seconds())
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
-			return
+			log.CtxErrorw(reqCtx.Context(), "failed to download piecem", "error", err)
+			// TODO pieceStore should return exact error to indicate if the piece data lost
+			// for now, if get piece fail, it is suspected that the piece has been lost
+			// the recovery task will recovery the total segment (ignoring the offset and length of piece info)
+			segmentIndex, parseErr := g.baseApp.PieceOp().ParseSegmentIdx(pInfo.SegmentPieceKey)
+			if parseErr != nil {
+				// no need to return recovery error to user
+				log.CtxErrorw(reqCtx.Context(), "fail to parse recovery segment index", "error", err)
+				return
+			}
+			segSize := g.baseApp.PieceOp().SegmentPieceSize(objectInfo.PayloadSize, segmentIndex, params.GetMaxSegmentSize())
+			recoveryTask := &gfsptask.GfSpRecoveryPieceTask{}
+			recoveryTask.InitRecoveryPieceTask(task.GetObjectInfo(), task.GetStorageParams(),
+				g.baseApp.TaskPriority(recoveryTask),
+				segmentIndex,
+				int32(-1),
+				uint64(segSize),
+				g.baseApp.TaskTimeout(recoveryTask, task.GetStorageParams().GetMaxSegmentSize()),
+				g.baseApp.TaskMaxRetry(recoveryTask))
+
+			taskErr := g.baseApp.GfSpClient().ReportTask(reqCtx.Context(), recoveryTask)
+			if taskErr != nil {
+				// no need to return recovery error to user
+				log.CtxErrorw(reqCtx.Context(), "fail to generate recovery task", "error", err)
+				return
+			}
+			log.CtxDebugw(reqCtx.Context(), "recovery task run successfully", "recovery object", objectInfo.ObjectName, "segment index:", idx, "error", err)
+
+			pieceData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask)
+			if err != nil {
+				log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", err)
+				return
+			}
 		}
 
 		writeTime := time.Now()
@@ -274,6 +306,43 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_write_time").Observe(time.Since(writeTime).Seconds())
 	}
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_data_time").Observe(time.Since(getDataTime).Seconds())
+}
+
+// getECPieceSize return the size of segment
+func getECPieceSize(params *storagetypes.Params, segmentSize uint64) uint32 {
+	shardNum := uint64(params.GetRedundantDataChunkNum())
+	n := segmentSize / shardNum
+	if params.GetMaxSegmentSize()%shardNum != 0 {
+		n++
+	}
+	return uint32(n)
+}
+
+// tryDownloadAfterRecovery try to get piece data after data recoverying
+func (g *GateModular) tryDownloadAfterRecovery(ctx context.Context, pieceTask *gfsptask.GfSpDownloadPieceTask) ([]byte, error) {
+	timeout := time.After(RecoveryTimeOutSeconds * time.Second)
+	ticker := time.NewTicker(RecoveryCheckInterval * time.Second)
+	defer ticker.Stop()
+
+	// sleep 500ms at least to waiting for recovering finish
+	time.Sleep(RecoveryMinMilliseconds * time.Millisecond)
+	startTime := time.Now()
+	for {
+		select {
+		case <-timeout:
+			// if recovering has not finished after time out , return err to client
+			return nil, ErrRecoveryTimeout
+		case <-ticker.C:
+			pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
+
+			if err == nil {
+				log.CtxDebugw(ctx, "get piece successfully after recovering", "recovery object", pieceTask.GetPieceKey(),
+					"cost time:", time.Since(startTime))
+				return pieceData, nil
+			}
+		}
+	}
+
 }
 
 // queryUploadProgressHandler handles the query uploaded object progress request.

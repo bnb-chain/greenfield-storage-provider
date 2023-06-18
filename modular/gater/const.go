@@ -96,6 +96,8 @@ const (
 	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
+	//RecoveryObjectPiecePath defines recovery-object path style
+	RecoveryObjectPiecePath = "/greenfield/recovery/v1/get-piece"
 	// AuthRequestNoncePath defines path to request auth nonce
 	AuthRequestNoncePath = "/auth/request_nonce"
 	// AuthUpdateKeyPath defines path to update user public key
@@ -106,6 +108,8 @@ const (
 	GnfdAuthorizationHeader = "Authorization"
 	// GnfdReceiveMsgHeader defines receive piece data meta
 	GnfdReceiveMsgHeader = "X-Gnfd-Receive-Msg"
+	// GnfdRecoveryMsgHeader defines receive piece data meta
+	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
 	// GnfdReplicatePieceApprovalHeader defines secondary approved msg for replicating piece
 	GnfdReplicatePieceApprovalHeader = "X-Gnfd-Replicate-Piece-Approval-Msg"
 	// GnfdObjectIDHeader defines object id
@@ -148,4 +152,8 @@ const (
 	GnfdOffChainAuthAppRegPublicKeyHeader = "X-Gnfd-App-Reg-Public-Key"
 	// GnfdOffChainAuthAppRegExpiryDateHeader defines the Expiry-Date is the ISO 8601 datetime string (e.g. 2021-09-30T16:25:24Z), used to register the EDDSA public key
 	GnfdOffChainAuthAppRegExpiryDateHeader = "X-Gnfd-App-Reg-Expiry-Date"
+
+	RecoveryTimeOutSeconds  = 10
+	RecoveryCheckInterval   = 2
+	RecoveryMinMilliseconds = 500
 )

@@ -54,6 +54,9 @@ func (*NullModular) PreReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NullModular) HandleReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) (bool, error) {
 	return false, ErrNilModular
 }
+func (*NullModular) HandleRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
+	return ErrNilModular
+}
 func (*NullModular) PostReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) {}
 func (*NullModular) PreUploadObject(ctx context.Context, task task.UploadObjectTask) error {
 	return ErrNilModular

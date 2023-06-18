@@ -44,6 +44,8 @@ const (
 	TypeTaskGCZombiePiece
 	// TypeTaskGCMeta defines the type of collecting SP metadata task.
 	TypeTaskGCMeta
+	// TypeTaskRecoveryPiece defines the type of the recovering piece task.
+	TypeTaskRecoveryPiece
 )
 
 var TypeTaskMap = map[TType]string{

@@ -52,6 +52,7 @@ type ManageModular struct {
 
 	uploadQueue    taskqueue.TQueueOnStrategy
 	replicateQueue taskqueue.TQueueOnStrategyWithLimit
+	recoveryQueue  taskqueue.TQueueOnStrategyWithLimit
 	sealQueue      taskqueue.TQueueOnStrategyWithLimit
 	receiveQueue   taskqueue.TQueueOnStrategyWithLimit
 	gcObjectQueue  taskqueue.TQueueOnStrategyWithLimit
@@ -91,6 +92,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
+	m.recoveryQueue.SetRetireTaskStrategy(m.GCCacheQueue)
+	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {

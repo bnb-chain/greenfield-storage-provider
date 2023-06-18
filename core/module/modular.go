@@ -198,6 +198,8 @@ type Manager interface {
 	// HandleChallengePieceTask handles the result ChallengePieceTask, the request comes
 	// from Downloader.
 	HandleChallengePieceTask(ctx context.Context, task task.ChallengePieceTask) error
+	// HandleRecoveryPieceTask handles the result of recovering piece task, the request comes from TaskExecutor.
+	HandleRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) error
 }
 
 // P2P is the interface to the interaction of control information between Sps.
@@ -226,6 +228,11 @@ type Receiver interface {
 	// QueryTasks queries replicate piece tasks that running on receiver by task sub
 	// key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+}
+
+type Supplier interface {
+	Modular
+	HandleSupplyPieceTask(ctx context.Context, task task.ReceivePieceTask, data []byte) error
 }
 
 // Signer is the interface to handle the SP's sign and on greenfield chain operator.

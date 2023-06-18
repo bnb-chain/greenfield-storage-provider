@@ -31,6 +31,7 @@ const (
 	getGroupListRouterName                = "GetGroupList"
 	listBucketsByBucketIDRouterName       = "ListBucketsByBucketID"
 	listObjectsByObjectIDRouterName       = "ListObjectsByObjectID"
+	recoveryPieceRouterName               = "RecoveryObjectPiece"
 )
 
 const (
@@ -134,6 +135,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Name(replicateObjectPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.replicateHandler)
+	// recovery piece to primary SP
+	router.Path(RecoveryObjectPiecePath).
+		Name(recoveryPieceRouterName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.recoveryPrimaryHandler)
+
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").
 		Name(downloadObjectByUniversalEndpointName).

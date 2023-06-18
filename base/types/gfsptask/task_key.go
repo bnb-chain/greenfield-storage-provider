@@ -69,6 +69,15 @@ func GfSpReplicatePieceTaskKey(bucket, object, id string) task.TKey {
 		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id))
 }
 
+func GfSpRecoveryPieceTaskKey(bucket, object, id string, pIdx uint32, ECIdx int32) task.TKey {
+	if ECIdx > 0 {
+		return task.TKey(KeyPrefixGfSpReplicatePieceTask +
+			CombineKey("bucket:"+bucket, "object:"+object, "id:"+id, "pIdx:"+fmt.Sprint(pIdx), "ecIdx:"+fmt.Sprint(ECIdx)))
+	}
+	return task.TKey(KeyPrefixGfSpReplicatePieceTask +
+		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id, "pIdx:"+fmt.Sprint(pIdx)))
+}
+
 func GfSpSealObjectTaskKey(bucket, object, id string) task.TKey {
 	return task.TKey(KeyPrefixGfSpSealObjectTask +
 		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id))

@@ -2,6 +2,8 @@ package gfsppieceop
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 )
@@ -61,4 +63,18 @@ func (p *GfSpPieceOp) SegmentPieceCount(payloadSize uint64, maxSegmentSize uint6
 		count++
 	}
 	return uint32(count)
+}
+
+func (p *GfSpPieceOp) ParseSegmentIdx(segmentKey string) (uint32, error) {
+	segments := strings.Split(segmentKey, "_")
+	if len(segments) != 2 {
+		return 0, fmt.Errorf("invalid segmentKey format")
+	}
+
+	segmentIdx, err := strconv.ParseUint(segments[1], 10, 32)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint32(segmentIdx), nil
 }
