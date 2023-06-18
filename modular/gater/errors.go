@@ -45,6 +45,8 @@ var (
 	ErrConsensus = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")
 
 	ErrApprovalExpired = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 550015, "approval expired")
+	ErrRecoverySP      = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50026, "The SP is not the correct SP to recovery")
+	ErrRecoveryTimeout = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50027, "System busy, try to request later")
 )
 
 func MakeErrorResponse(w http.ResponseWriter, err error) {

@@ -25,6 +25,8 @@ type PieceOp interface {
 	// ECPieceSize returns the ec piece size of ec index, by object payload size, max segment
 	// size and chunk number that ths last two params comes from storage params.
 	ECPieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64, chunkNum uint32) int64
+	// ParseSegmentIdx returns the segment index according to the segment piece key
+	ParseSegmentIdx(segmentKey string) (uint32, error)
 }
 
 // PieceStore is an abstract interface to piece store that store the object payload data.

@@ -280,6 +280,10 @@ var (
 		Name: "gc_meta_task_count",
 		Help: "Track gc meta task number.",
 	}, []string{"gc_meta_task_count"})
+	ExecutorRecoveryTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "recover_piece_task_count",
+		Help: "Track recovery task number.",
+	}, []string{"recovery__task_count"})
 
 	// manager mertics
 	UploadObjectTaskTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{

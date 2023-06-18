@@ -348,7 +348,11 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrSignature
 		return
 	}
+<<<<<<< HEAD
 	getBlockHeightTime := time.Now()
+=======
+
+>>>>>>> 809a1cf (feat: support segment data recovering during downloding)
 	currentHeight, err = g.baseApp.Consensus().CurrentHeight(reqCtx.Context())
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_get_block_height_time").Observe(time.Since(getBlockHeightTime).Seconds())
 	if err != nil {
@@ -412,4 +416,110 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(GnfdIntegrityHashSignatureHeader, hex.EncodeToString(signature))
 	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to replicate piece")
+}
+
+// recoveryPrimaryHandler handles the query for ec piece data from primary SP.
+func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		reqCtx      *RequestContext
+		recoveryMsg []byte
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+	// ignore the error, because the recovery request only between SPs, the request
+	// verification is by signature of the RecoveryTask
+	reqCtx, _ = NewRequestContext(r, g)
+
+	recoveryMsg, err = hex.DecodeString(r.Header.Get(GnfdRecoveryMsgHeader))
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse recovery header",
+			"header", r.Header.Get(GnfdRecoveryMsgHeader))
+		err = ErrDecodeMsg
+		return
+	}
+	recoveryTask := gfsptask.GfSpRecoveryPieceTask{}
+	err = json.Unmarshal(recoveryMsg, &recoveryTask)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal receive header",
+			"receive", r.Header.Get(GnfdReceiveMsgHeader))
+		err = ErrDecodeMsg
+		return
+	}
+
+	if recoveryTask.GetObjectInfo() == nil {
+		log.CtxErrorw(reqCtx.Context(), "recovery task params error")
+		err = ErrInvalidHeader
+		return
+	}
+
+	if recoveryTask.GetObjectInfo().RedundancyType != storagetypes.REDUNDANCY_EC_TYPE {
+		log.CtxErrorw(reqCtx.Context(), "recovery redundancy type only support EC")
+		return
+	}
+
+	bucketName := recoveryTask.GetObjectInfo().BucketName
+	objectName := recoveryTask.GetObjectInfo().ObjectName
+	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), bucketName)
+	if err != nil {
+		return
+	}
+
+	// How to get the address of the peer network request? It is necessary to confirm that the request is sent by the primary sp.
+	/*
+		if bucketInfo.PrimarySpAddress != reqCtx.Account() {
+			log.CtxErrorw(reqCtx.Context(), "recovery request not come from primary sp")
+		}
+	*/
+	operatorAddr := g.baseApp.OperateAddress()
+	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), bucketName, objectName)
+
+	secondarySPs := objectInfo.SecondarySpAddresses
+	isOneOfSecondary := false
+	var replicateIdx int
+	for idx, spAddr := range secondarySPs {
+		if spAddr == operatorAddr {
+			isOneOfSecondary = true
+			replicateIdx = idx
+		}
+	}
+	// if the handler SP is not one of the secondary SP, return  err
+	if !isOneOfSecondary {
+		err = ErrRecoverySP
+		return
+	}
+	ECPieceKey := g.baseApp.PieceOp().ECPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(), recoveryTask.GetSegmentIdx(), uint32(replicateIdx))
+
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
+		err = ErrConsensus
+		return
+	}
+
+	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(), params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
+
+	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
+	// TODO check user address if it is reqCtx.Account
+	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
+		false, reqCtx.Account(), uint64(recoveryTask.GetPieceSize()), ECPieceKey, 0, uint64(ECPieceSize),
+		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
+
+	pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
+	}
+
+	log.CtxDebugw(reqCtx.Context(), "succeed to recovery one ec piece")
+
+	w.Write(pieceData)
 }

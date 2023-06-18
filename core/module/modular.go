@@ -191,6 +191,8 @@ type Manager interface {
 	HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) error
 	// HandleChallengePieceTask handles ChallengePieceTask, the request comes from Downloader.
 	HandleChallengePieceTask(ctx context.Context, task task.ChallengePieceTask) error
+	// HandleRecoveryPieceTask handles the result of recovering piece task, the request comes from TaskExecutor.
+	HandleRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.

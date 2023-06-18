@@ -60,6 +60,7 @@ type ManageModular struct {
 	gcMetaQueue           taskqueue.TQueueOnStrategyWithLimit
 	downloadQueue         taskqueue.TQueueOnStrategy
 	challengeQueue        taskqueue.TQueueOnStrategy
+	recoveryQueue         taskqueue.TQueueOnStrategyWithLimit
 
 	maxUploadObjectNumber int
 
@@ -93,6 +94,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
+	m.recoveryQueue.SetRetireTaskStrategy(m.GCCacheQueue)
+	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {

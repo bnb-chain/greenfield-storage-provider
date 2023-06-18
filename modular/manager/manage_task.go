@@ -70,6 +70,8 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
+	task = m.recoveryQueue.TopByLimit(limit)
+
 	task = m.PickUpTask(ctx, backupTasks)
 	if task == nil {
 		return nil, nil
@@ -508,6 +510,21 @@ func (m *ManageModular) HandleChallengePieceTask(ctx context.Context, task task.
 	return nil
 }
 
+func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
+	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
+		log.CtxErrorw(ctx, "failed to handle replicate piece due to pointer dangling")
+		return ErrDanglingTask
+	}
+	if task.Error() != nil {
+		log.CtxErrorw(ctx, "handler error replicate piece task", "task_info", task.Info(), "error", task.Error())
+		//TODO retry failed job
+		//return m.handleFailedReplicatePieceTask(ctx, task)
+	}
+	m.recoveryQueue.PopByKey(task.Key())
+
+	return nil
+}
+
 func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error) {
 	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(m.uploadQueue, subKey)
 	replicateTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.replicateQueue, subKey)
@@ -518,6 +535,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	gcMetaTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcMetaQueue, subKey)
 	downloadTasks, _ := taskqueue.ScanTQueueBySubKey(m.downloadQueue, subKey)
 	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(m.challengeQueue, subKey)
+	recoveryTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.recoveryQueue, subKey)
 
 	var tasks []task.Task
 	tasks = append(tasks, uploadTasks...)
@@ -529,5 +547,6 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, gcMetaTasks...)
 	tasks = append(tasks, downloadTasks...)
 	tasks = append(tasks, challengeTasks...)
+	tasks = append(tasks, recoveryTasks...)
 	return tasks, nil
 }

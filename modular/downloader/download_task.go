@@ -170,16 +170,29 @@ func (d *DownloadModular) PostDownloadObject(ctx context.Context, downloadObject
 }
 
 func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTask task.DownloadPieceTask) error {
+	defer func() {
+		// report the task to the manager for monitor the download piece task
+		d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+	}()
+
 	if downloadPieceTask == nil || downloadPieceTask.GetObjectInfo() == nil || downloadPieceTask.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed pre download piece due to pointer dangling")
 		return ErrDanglingPointer
 	}
+
 	if downloadPieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.CtxErrorw(ctx, "failed to pre download piece due to object unsealed")
 		return ErrObjectUnsealed
 	}
 
 	checkQuotaTime := time.Now()
+	// if it is a request from primary SP, no need to check quota
+	if downloadPieceTask.GetUserAddress() == downloadPieceTask.GetBucketInfo().PrimarySpAddress {
+		return nil
+	}
+
+	// if it is a request from client , but I am the secondary SP of the object
+
 	if downloadPieceTask.GetEnableCheck() {
 		if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
 			&spdb.ReadRecord{
@@ -206,6 +219,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
 	// report the task to the manager for monitor the download piece task
 	d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+
 	return nil
 }
 

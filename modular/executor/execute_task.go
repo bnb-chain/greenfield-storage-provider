@@ -3,10 +3,14 @@ package executor
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -27,6 +31,10 @@ var (
 	ErrSecondaryMismatch       = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40006, "secondary sp mismatch")
 	ErrReplicateIdsOutOfBounds = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40007, "replicate idx out of bounds")
 	ErrGfSpDB                  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45201, "server slipped away, try again later")
+	ErrRecoveryRedundancyType  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45202, "recovery only support EC redundancy type")
+	ErrRecoveryPieceNotEnough  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "fail to get enough piece data to recovery")
+	ErrRecoveryDecodeErr       = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
+	ErrPieceStore              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 45205, "server slipped away, try again later")
 )
 
 func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) {
@@ -279,4 +287,129 @@ func (e *ExecuteModular) HandleGCZombiePieceTask(ctx context.Context, task coret
 
 func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCMetaTask) {
 	log.CtxWarn(ctx, "gc meta future support")
+}
+
+func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coretask.RecoveryPieceTask) error {
+	var (
+		wg                sync.WaitGroup
+		dataShards        = task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()
+		segmentSize       = task.GetStorageParams().VersionedParams.GetMaxSegmentSize()
+		parityShards      = task.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()
+		minRecoveryPieces = dataShards
+		record            = make([]bool, dataShards+parityShards)
+		doneTaskNum       uint32
+	)
+	if task.GetObjectInfo().GetRedundancyType() != storagetypes.REDUNDANCY_EC_TYPE {
+		return ErrRecoveryRedundancyType
+	}
+
+	secondaryEndpoints, err := e.getSecondaryEndpoints(ctx, task.GetObjectInfo())
+	if err != nil {
+		return err
+	}
+	var recoveryDataSources = make([][]byte, len(secondaryEndpoints))
+
+	for rIdx, done := range record {
+		if !done {
+			wg.Add(1)
+			go func(rIdx int) {
+				defer wg.Done()
+				pieceData, err := e.doRecoveryPiece(ctx, &wg, task, secondaryEndpoints[rIdx])
+				if err != nil {
+					recoveryDataSources[rIdx] = nil
+					return
+				}
+				recoveryDataSources[rIdx] = pieceData
+				if atomic.AddUint32(&doneTaskNum, 1) >= minRecoveryPieces {
+					wg.Done()
+				}
+			}(rIdx)
+		}
+	}
+
+	wg.Wait()
+
+	if doneTaskNum <= dataShards {
+		log.CtxErrorw(ctx, "get piece from secondary not enough", "get secondary piece num:", doneTaskNum, "error", err)
+		return ErrRecoveryPieceNotEnough
+	}
+
+	recoveryData, err := redundancy.DecodeRawSegment(recoveryDataSources, int64(segmentSize), int(dataShards), int(parityShards))
+	if err != nil {
+		log.CtxErrorw(ctx, "EC decode error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "segIndex:", task.GetSegmentIdx(), "error", err)
+		return ErrRecoveryDecodeErr
+	}
+
+	recoveryKey := e.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx())
+
+	err = e.baseApp.PieceStore().PutPiece(ctx, recoveryKey, recoveryData)
+	if err != nil {
+		log.CtxErrorw(ctx, "EC decode data write piece fail", "pieceKey:", recoveryKey, "error", err)
+		return ErrPieceStore
+	}
+
+	return nil
+}
+
+func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, waitGroup *sync.WaitGroup, rTask coretask.RecoveryPieceTask,
+	endpoint string) (data []byte, err error) {
+	var signature []byte
+	metrics.ReplicatePieceSizeCounter.WithLabelValues(e.Name()).Add(float64(len(data)))
+	startTime := time.Now()
+	defer func() {
+		metrics.ReplicatePieceTimeHistogram.WithLabelValues(e.Name()).Observe(time.Since(startTime).Seconds())
+		waitGroup.Done()
+	}()
+
+	/*
+		signature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign receive task", "replicate_idx", replicateIdx,
+				"piece_idx", pieceIdx, "error", err)
+			return
+		}
+	*/
+
+	signature = []byte("test")
+	rTask.SetSignature(signature)
+	respBody, err := e.baseApp.GfSpClient().GetPieceFromSecondary(ctx, endpoint, rTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to recovery piece", "objectID", rTask.GetObjectInfo().Id,
+			"segment_idx", rTask.GetSegmentIdx(), "secondary endpoint", endpoint, "error", err)
+		return
+	}
+
+	defer respBody.Close()
+
+	pieceData, err := io.ReadAll(respBody)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to read recovery piece data from sp", "objectID", rTask.GetObjectInfo().Id,
+			"segment idx", rTask.GetSegmentIdx(), "secondary endpoint", endpoint, "error", err)
+		return nil, err
+	}
+
+	log.CtxDebugw(ctx, "success to recovery piece from sp", "objectID", rTask.GetObjectInfo().Id,
+		"segment_idx", rTask.GetSegmentIdx(), "secondary endpoint", endpoint)
+
+	return pieceData, nil
+}
+
+func (g *ExecuteModular) getSecondaryEndpoints(ctx context.Context, objectInfo *storagetypes.ObjectInfo) ([]string, error) {
+	secondarySPAddrs := objectInfo.GetSecondarySpAddresses()
+	spList, err := g.baseApp.Consensus().ListSPs(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	secondaryEndpointList := make([]string, 0)
+	for _, info := range spList {
+		spAddress := info.GetOperatorAddress()
+		for _, addr := range secondarySPAddrs {
+			if addr == spAddress {
+				secondaryEndpointList = append(secondaryEndpointList, addr)
+			}
+		}
+	}
+
+	return secondaryEndpointList, nil
 }

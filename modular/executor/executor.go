@@ -43,6 +43,7 @@ type ExecuteModular struct {
 	doingGCObjectTaskCnt       int64
 	doingGCZombiePieceTaskCnt  int64
 	doingGCGCMetaTaskCnt       int64
+	doingRecoveryPieceTaskCnt  int64
 }
 
 func (e *ExecuteModular) Name() string {
@@ -184,6 +185,11 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		atomic.AddInt64(&e.doingGCGCMetaTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingGCGCMetaTaskCnt, -1)
 		e.HandleGCMetaTask(ctx, t)
+	case *gfsptask.GfSpRecoveryPieceTask:
+		metrics.ExecutorRecoveryTaskCounter.WithLabelValues(e.Name()).Inc()
+		atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
+		e.HandleRecoveryPieceTask(ctx, t)
 	default:
 		log.CtxErrorw(ctx, "unsupported task type")
 	}
