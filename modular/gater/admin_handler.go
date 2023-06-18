@@ -107,10 +107,6 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrRefuseApproval
 			return
 		}
-		// TODO: pick a vgf from manager
-		// PickVirtualGroupFamilyForGetCreateBucketApproval
-		// GfSpPickVirtualGroupFamily
-
 		bz := storagetypes.ModuleCdc.MustMarshalJSON(approvalTask.GetCreateBucketInfo())
 		w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	case createObjectApprovalAction:

@@ -432,3 +432,16 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, challengeTasks...)
 	return tasks, nil
 }
+
+// PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.
+// if pick failed, will create a new gvg to has a new vgf.
+func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error) {
+	// TODO: refine it.
+	vgf, err := m.virtualGroupManager.PickVirtualGroupFamilyForGetCreateBucketApproval()
+	if err != nil {
+		// TODO: create gvg?
+		log.CtxErrorw(ctx, "failed to pick vgf", "task_info", task.Info(), "error", err)
+		return 0, err
+	}
+	return vgf.ID, nil
+}

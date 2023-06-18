@@ -67,6 +67,12 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 		err = ErrExceedBucketNumber
 		return false, err
 	}
+	// TODO: refine it.
+	vgfID, err := a.baseApp.GfSpClient().PickVirtualGroupFamilyID(ctx, task)
+	if err != nil {
+		return false, err
+	}
+	task.GetCreateBucketInfo().PrimarySpApproval.GlobalVirtualGroupFamilyId = vgfID
 
 	// begin to sign the new approval task
 	startQueryChain := time.Now()
@@ -162,10 +168,7 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(ctx context.Context, ta
 func (a *ApprovalModular) PostCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) {
 }
 
-func (a *ApprovalModular) QueryTasks(
-	ctx context.Context,
-	subKey coretask.TKey) (
-	[]coretask.Task, error) {
+func (a *ApprovalModular) QueryTasks(ctx context.Context, subKey coretask.TKey) ([]coretask.Task, error) {
 	bucketApprovalTasks, _ := taskqueue.ScanTQueueBySubKey(a.bucketQueue, subKey)
 	objectApprovalTasks, _ := taskqueue.ScanTQueueBySubKey(a.objectQueue, subKey)
 	return append(bucketApprovalTasks, objectApprovalTasks...), nil

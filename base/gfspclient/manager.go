@@ -125,3 +125,19 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 	}
 	return resp.GetErr()
 }
+
+func (s *GfSpClient) PickVirtualGroupFamilyID(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error) {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return 0, ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpPickVirtualGroupFamilyRequest{
+		CreateBucketApprovalTask: task.(*gfsptask.GfSpCreateBucketApprovalTask),
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpPickVirtualGroupFamily(ctx, req)
+	if err != nil {
+		return 0, err
+	}
+	return resp.VgfId, nil
+}

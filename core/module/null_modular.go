@@ -40,6 +40,11 @@ func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreate
 func (*NullModular) HandleCreateBucketApprovalTask(context.Context, task.ApprovalCreateBucketTask) (bool, error) {
 	return false, ErrNilModular
 }
+
+func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateBucketTask) (uint32, error) {
+	return 0, ErrNilModular
+}
+
 func (*NullModular) PostCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) {}
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return ErrNilModular
@@ -96,6 +101,7 @@ func (*NullModular) HandleDownloadObjectTask(context.Context, task.DownloadObjec
 func (*NullModular) HandleChallengePieceTask(context.Context, task.ChallengePieceTask) error {
 	return ErrNilModular
 }
+
 func (*NullModular) VerifyAuthorize(context.Context, AuthOpType, string, string, string) (bool, error) {
 	return false, ErrNilModular
 }

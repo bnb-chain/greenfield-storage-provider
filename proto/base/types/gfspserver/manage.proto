@@ -57,7 +57,7 @@ message GfSpPickVirtualGroupFamilyRequest{
 
 message GfSpPickVirtualGroupFamilyResponse{
   base.types.gfsperrors.GfSpError err = 1;
-  base.types.gfsptask.GfSpCreateBucketApprovalTask create_bucket_approval_task = 2;
+  uint32 vgf_id = 2;
 }
 
 service GfSpManageService {

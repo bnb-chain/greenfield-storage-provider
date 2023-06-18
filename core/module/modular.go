@@ -198,6 +198,8 @@ type Manager interface {
 	// HandleChallengePieceTask handles the result ChallengePieceTask, the request comes
 	// from Downloader.
 	HandleChallengePieceTask(ctx context.Context, task task.ChallengePieceTask) error
+	// PickVirtualGroupFamily is used to pick vgf for the new bucket.
+	PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error)
 }
 
 // P2P is the interface to the interaction of control information between Sps.
