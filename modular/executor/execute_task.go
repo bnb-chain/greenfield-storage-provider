@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -283,13 +282,12 @@ func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCM
 
 func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coretask.RecoveryPieceTask) error {
 	var (
-		wg                sync.WaitGroup
 		dataShards        = task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()
 		segmentSize       = task.GetStorageParams().VersionedParams.GetMaxSegmentSize()
 		parityShards      = task.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()
-		minRecoveryPieces = dataShards
+		minRecoveryPieces = int32(dataShards)
 		record            = make([]bool, dataShards+parityShards)
-		doneTaskNum       uint32
+		doneTaskNum       = uint32(0)
 	)
 	if task.GetObjectInfo().GetRedundancyType() != storagetypes.REDUNDANCY_EC_TYPE {
 		return ErrRecoveryRedundancyType
@@ -299,31 +297,46 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 	if err != nil {
 		return err
 	}
+
 	var recoveryDataSources = make([][]byte, len(secondaryEndpoints))
+	doneCh := make(chan bool, len(secondaryEndpoints))
+	quitCh := make(chan bool)
+	var doneCount, total int32
 
 	for rIdx, done := range record {
 		if !done {
-			wg.Add(1)
-			go func(rIdx int) {
-				defer wg.Done()
-				pieceData, err := e.doRecoveryPiece(ctx, &wg, task, secondaryEndpoints[rIdx])
+			recoveryDataSources[rIdx] = nil
+			total++
+			go func(secondaryIndex int) {
+				pieceData, err := e.doRecoveryPiece(ctx, task, secondaryEndpoints[secondaryIndex])
 				if err != nil {
 					recoveryDataSources[rIdx] = nil
-					return
+				} else {
+					recoveryDataSources[secondaryIndex] = pieceData
+					doneCh <- true
 				}
-				recoveryDataSources[rIdx] = pieceData
-				if atomic.AddUint32(&doneTaskNum, 1) >= minRecoveryPieces {
-					wg.Done()
+				// finish all the task, send signal to quitCh
+				if atomic.AddInt32(&total, -1) == 0 {
+					quitCh <- true
 				}
 			}(rIdx)
 		}
 	}
 
-	wg.Wait()
-
-	if doneTaskNum <= dataShards {
-		log.CtxErrorw(ctx, "get piece from secondary not enough", "get secondary piece num:", doneTaskNum, "error", err)
-		return ErrRecoveryPieceNotEnough
+	for {
+		select {
+		case <-doneCh:
+			doneCount++
+			// it is enough to recovery data with minRecoveryPieces EC data, no need to wait
+			if doneCount >= minRecoveryPieces {
+				break
+			}
+		case <-quitCh: // all the task finish
+			if doneCount < minRecoveryPieces { // finish task num not enough
+				log.CtxErrorw(ctx, "get piece from secondary not enough", "get secondary piece num:", doneTaskNum, "error", err)
+				return ErrRecoveryPieceNotEnough
+			}
+		}
 	}
 
 	recoveryData, err := redundancy.DecodeRawSegment(recoveryDataSources, int64(segmentSize), int(dataShards), int(parityShards))
@@ -343,26 +356,19 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 	return nil
 }
 
-func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, waitGroup *sync.WaitGroup, rTask coretask.RecoveryPieceTask,
-	endpoint string) (data []byte, err error) {
+func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.RecoveryPieceTask, endpoint string) (data []byte, err error) {
 	var signature []byte
 	metrics.ReplicatePieceSizeCounter.WithLabelValues(e.Name()).Add(float64(len(data)))
 	startTime := time.Now()
 	defer func() {
 		metrics.ReplicatePieceTimeHistogram.WithLabelValues(e.Name()).Observe(time.Since(startTime).Seconds())
-		waitGroup.Done()
 	}()
 
-	/*
-		signature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign receive task", "replicate_idx", replicateIdx,
-				"piece_idx", pieceIdx, "error", err)
-			return
-		}
-	*/
-
-	signature = []byte("test")
+	signature, err = e.baseApp.GfSpClient().SignRecoveryTask(ctx, rTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to sign recovery task", "object", rTask.GetObjectInfo().GetObjectName(), "error", err)
+		return
+	}
 	rTask.SetSignature(signature)
 	respBody, err := e.baseApp.GfSpClient().GetPieceFromSecondary(ctx, endpoint, rTask)
 	if err != nil {
