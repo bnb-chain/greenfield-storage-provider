@@ -8,6 +8,7 @@ import (
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (m *GfSpRecoveryPieceTask) InitRecoveryPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
@@ -154,4 +155,17 @@ func (m *GfSpRecoveryPieceTask) SetSignature(signature []byte) {
 
 func (m *GfSpRecoveryPieceTask) SetPieceSize(size uint64) {
 	m.PieceSize = size
+}
+
+func (m *GfSpRecoveryPieceTask) GetSignBytes() []byte {
+	fakeMsg := &GfSpRecoveryPieceTask{
+		ObjectInfo:    m.GetObjectInfo(),
+		StorageParams: m.GetStorageParams(),
+		Task:          &GfSpTask{CreateTime: m.GetCreateTime()},
+		PieceSize:     m.GetPieceSize(),
+		SegmentIdx:    m.GetSegmentIdx(),
+		EcIdx:         m.GetEcIdx(),
+	}
+	bz := ModuleCdc.MustMarshalJSON(fakeMsg)
+	return sdk.MustSortJSON(bz)
 }
