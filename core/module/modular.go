@@ -252,6 +252,8 @@ type Signer interface {
 	// SignReceivePieceTask signs the ReceivePieceTask for replicating pieces data
 	// between SPs.
 	SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
+	//SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
+	SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) ([]byte, error)
 	// SignIntegrityHash signs the integrity hash of object for sealing object.
 	SignIntegrityHash(ctx context.Context, objectID uint64, hash [][]byte) ([]byte, []byte, error)
 	// SignP2PPingMsg signs the ping msg for p2p node probing.

@@ -180,6 +180,9 @@ func (*NilModular) SignReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NilModular) SignReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
+func (*NilModular) SignRecoveryPieceTask(context.Context, task.RecoveryPieceTask) ([]byte, error) {
+	return nil, ErrNilModular
+}
 func (*NilModular) SignIntegrityHash(ctx context.Context, objectID uint64, hash [][]byte) ([]byte, []byte, error) {
 	return nil, nil, ErrNilModular
 }

@@ -91,6 +91,16 @@ func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.Receiv
 	return sig, nil
 }
 
+func (s *SignModular) SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) (
+	[]byte, error) {
+	msg := task.GetSignBytes()
+	sig, err := s.client.Sign(SignOperator, msg)
+	if err != nil {
+		return nil, err
+	}
+	return sig, nil
+}
+
 func (s *SignModular) SignIntegrityHash(ctx context.Context, objectID uint64, checksums [][]byte) (
 	[]byte, []byte, error) {
 	integrityHash := hash.GenerateIntegrityHash(checksums)

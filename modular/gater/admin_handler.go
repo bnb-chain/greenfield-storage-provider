@@ -510,6 +510,7 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	// TODO check user address if it is reqCtx.Account
+	// no need to check quota when recoverying primary SP segment data
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
 		false, reqCtx.Account(), uint64(recoveryTask.GetPieceSize()), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
