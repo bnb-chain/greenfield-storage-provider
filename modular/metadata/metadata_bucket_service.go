@@ -298,7 +298,7 @@ func (r *MetadataModular) GfSpGetBucketMeta(
 			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
 			Status:          paymenttypes.StreamAccountStatus(paymenttypes.StreamAccountStatus_value[streamRecord.Status]),
 			SettleTimestamp: streamRecord.SettleTimestamp,
-			OutFlows:        outflows,
+			// OutFlows:        outflows,
 		}
 	}
 

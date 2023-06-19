@@ -43,7 +43,7 @@ func (r *MetadataModular) GfSpGetPaymentByBucketName(ctx context.Context, req *t
 			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
 			Status:          payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
 			SettleTimestamp: streamRecord.SettleTimestamp,
-			OutFlows:        outflows,
+			// OutFlows:        outflows,
 		}
 	}
 
@@ -83,7 +83,7 @@ func (r *MetadataModular) GfSpGetPaymentByBucketID(ctx context.Context, req *typ
 			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
 			Status:          payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
 			SettleTimestamp: streamRecord.SettleTimestamp,
-			OutFlows:        outflows,
+			// OutFlows:        outflows,
 		}
 	}
 
