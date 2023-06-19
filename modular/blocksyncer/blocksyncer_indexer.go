@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync/atomic"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -90,6 +91,8 @@ func (i *Impl) Process(height uint64) error {
 			return ErrBlockNotFound
 		}
 	} else {
+		timeStart := time.Now().UnixMilli()
+
 		// get block info
 		block, err = i.Node.Block(int64(height))
 		if err != nil {
@@ -110,10 +113,16 @@ func (i *Impl) Process(height uint64) error {
 			log.Errorf("failed to get block results from node: %s", err)
 			return err
 		}
+
+		timeEnd := time.Now().UnixMilli()
+
+		log.Infow("get data from chain", "height", height, "time_used", timeEnd-timeStart)
 	}
 
 	beginBlockEvents := events.BeginBlockEvents
 	endBlockEvents := events.EndBlockEvents
+
+	timeStart := time.Now().UnixMilli()
 
 	// 1. handle events in startBlock
 
@@ -146,6 +155,10 @@ func (i *Impl) Process(height uint64) error {
 		log.Errorf("failed to export epoch: %s", err)
 		return err
 	}
+
+	timeEnd := time.Now().UnixMilli()
+
+	log.Infow("processing events and write db", "height", height, "time_used", timeEnd-timeStart)
 
 	blockMap.Delete(heightKey)
 	eventMap.Delete(heightKey)
