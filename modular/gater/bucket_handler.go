@@ -17,7 +17,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	var (
 		err                   error
 		reqCtx                *RequestContext
-		authorized            bool
+		authenticated         bool
 		bucketInfo            *storagetypes.BucketInfo
 		charge, free, consume uint64
 	)
@@ -37,14 +37,14 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+	if reqCtx.NeedVerifyAuthentication() {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetBucketQuota, reqCtx.Account(), reqCtx.bucketName, "")
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 			return
 		}
-		if !authorized {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
@@ -99,7 +99,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 	var (
 		err              error
 		reqCtx           *RequestContext
-		authorized       bool
+		authenticated    bool
 		startTimestampUs int64
 		endTimestampUs   int64
 		maxRecordNum     int64
@@ -122,14 +122,14 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+	if reqCtx.NeedVerifyAuthentication() {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeListBucketReadRecord, reqCtx.Account(), reqCtx.bucketName, "")
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 			return
 		}
-		if !authorized {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return

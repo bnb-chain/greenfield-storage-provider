@@ -80,7 +80,7 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	app.gcZombieRetry = cfg.Task.GcZombieTaskRetry
 	app.gcMetaRetry = cfg.Task.GcMetaTaskRetry
 	app.approver = &coremodule.NullModular{}
-	app.authorizer = &coremodule.NullModular{}
+	app.authenticator = &coremodule.NullModular{}
 	app.downloader = &coremodule.NilModular{}
 	app.executor = &coremodule.NilModular{}
 	app.gater = &coremodule.NullModular{}
@@ -122,8 +122,8 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Endpoint.SignerEndpoint == "" {
 		cfg.Endpoint.SignerEndpoint = cfg.GRPCAddress
 	}
-	if cfg.Endpoint.AuthorizerEndpoint == "" {
-		cfg.Endpoint.AuthorizerEndpoint = cfg.GRPCAddress
+	if cfg.Endpoint.AuthenticatorEndpoint == "" {
+		cfg.Endpoint.AuthenticatorEndpoint = cfg.GRPCAddress
 	}
 	app.client = gfspclient.NewGfSpClient(
 		cfg.Endpoint.ApproverEndpoint,
@@ -134,7 +134,7 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		cfg.Endpoint.UploaderEndpoint,
 		cfg.Endpoint.P2PEndpoint,
 		cfg.Endpoint.SignerEndpoint,
-		cfg.Endpoint.AuthorizerEndpoint,
+		cfg.Endpoint.AuthenticatorEndpoint,
 		!cfg.Monitor.DisableMetrics)
 	return nil
 }
@@ -380,8 +380,8 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 		switch module.Name() {
 		case coremodule.ApprovalModularName:
 			app.approver = module.(coremodule.Approver)
-		case coremodule.AuthorizationModularName:
-			app.authorizer = module.(coremodule.Authorizer)
+		case coremodule.AuthenticationModularName:
+			app.authenticator = module.(coremodule.Authenticator)
 		case coremodule.DownloadModularName:
 			app.downloader = module.(coremodule.Downloader)
 		case coremodule.ExecuteModularName:
@@ -394,7 +394,7 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 			app.p2p = module.(coremodule.P2P)
 		case coremodule.ReceiveModularName:
 			app.receiver = module.(coremodule.Receiver)
-		case coremodule.SignerModularName:
+		case coremodule.SignModularName:
 			app.signer = module.(coremodule.Signer)
 		case coremodule.UploadModularName:
 			app.uploader = module.(coremodule.Uploader)
