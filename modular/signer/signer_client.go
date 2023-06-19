@@ -192,7 +192,6 @@ func (client *GreenfieldChainSignClient) SealObject(
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.sealAccNonce
 
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
 		sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
@@ -201,8 +200,13 @@ func (client *GreenfieldChainSignClient) SealObject(
 	var (
 		resp   *tx.BroadcastTxResponse
 		txHash []byte
+		nonce  uint64
 	)
 	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce, err = client.greenfieldClients[scope].GetNonce()
+		if err != nil {
+			nonce = client.sealAccNonce
+		}
 		txOpt := &ctypes.TxOption{
 			Mode:     &mode,
 			GasLimit: client.gasLimit,
@@ -266,7 +270,6 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.sealAccNonce
 
 	msgRejectUnSealObject := storagetypes.NewMsgRejectUnsealedObject(km.GetAddr(), rejectObject.GetBucketName(), rejectObject.GetObjectName())
 	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
@@ -274,8 +277,13 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 	var (
 		resp   *tx.BroadcastTxResponse
 		txHash []byte
+		nonce  uint64
 	)
 	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce, err = client.greenfieldClients[scope].GetNonce()
+		if err != nil {
+			nonce = client.sealAccNonce
+		}
 		txOpt := &ctypes.TxOption{
 			Mode:     &mode,
 			GasLimit: client.gasLimit,
