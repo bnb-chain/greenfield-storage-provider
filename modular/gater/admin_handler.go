@@ -513,7 +513,6 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	ECPieceKey := g.baseApp.PieceOp().ECPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(), recoveryTask.GetSegmentIdx(), uint32(replicateIdx))
-
 	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
@@ -521,13 +520,13 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(), params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
+	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
+		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
 
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
-	// TODO check user address if it is reqCtx.Account
-	// no need to check quota when recoverying primary SP segment data
+	// no need to check quota when recovering primary SP segment data
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
-		false, reqCtx.Account(), uint64(recoveryTask.GetPieceSize()), ECPieceKey, 0, uint64(ECPieceSize),
+		false, primaryAddr.String(), recoveryTask.GetPieceSize(), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 	pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
