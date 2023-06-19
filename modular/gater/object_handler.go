@@ -26,11 +26,11 @@ import (
 // putObjectHandler handles the upload object request.
 func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtx     *RequestContext
-		authorized bool
-		objectInfo *storagetypes.ObjectInfo
-		params     *storagetypes.Params
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		objectInfo    *storagetypes.ObjectInfo
+		params        *storagetypes.Params
 	)
 
 	uploadPrimaryStartTime := time.Now()
@@ -51,16 +51,16 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
-		startAuthirzerTime := time.Now()
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+	if reqCtx.NeedVerifyAuthentication() {
+		startAuthenticationTime := time.Now()
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_authorizer").Observe(time.Since(startAuthirzerTime).Seconds())
+		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 			return
 		}
-		if !authorized {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
@@ -134,16 +134,16 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 // getObjectHandler handles the download object request.
 func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtxErr  error
-		reqCtx     *RequestContext
-		authorized bool
-		objectInfo *storagetypes.ObjectInfo
-		bucketInfo *storagetypes.BucketInfo
-		params     *storagetypes.Params
-		lowOffset  int64
-		highOffset int64
-		pieceInfos []*downloader.SegmentPieceInfo
+		err           error
+		reqCtxErr     error
+		reqCtx        *RequestContext
+		authenticated bool
+		objectInfo    *storagetypes.ObjectInfo
+		bucketInfo    *storagetypes.BucketInfo
+		params        *storagetypes.Params
+		lowOffset     int64
+		highOffset    int64
+		pieceInfos    []*downloader.SegmentPieceInfo
 	)
 	getObjectStartTime := time.Now()
 	defer func() {
@@ -161,30 +161,30 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
-	if authorized, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
+	if authenticated, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
 		reqCtx.bucketName, reqCtx.objectName); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify authorize for getting public object", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
 		err = ErrConsensus
 		return
 	}
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_verify_object_permission_time").Observe(time.Since(verifyObjectPermissionTime).Seconds())
 
-	if !authorized {
+	if !authenticated {
 		if reqCtxErr != nil {
 			err = reqCtxErr
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
 			return
 		}
-		if reqCtx.NeedVerifyAuthorizer() {
+		if reqCtx.NeedVerifyAuthentication() {
 			authTime := time.Now()
-			if authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+			if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
 				metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
 			}
 			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
-			if !authorized {
+			if !authenticated {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
 				return
@@ -279,11 +279,11 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 // queryUploadProgressHandler handles the query uploaded object progress request.
 func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtx     *RequestContext
-		authorized bool
-		objectInfo *storagetypes.ObjectInfo
-		taskState  int32
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		objectInfo    *storagetypes.ObjectInfo
+		taskState     int32
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -301,14 +301,14 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+	if reqCtx.NeedVerifyAuthentication() {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 			return
 		}
-		if !authorized {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
@@ -355,27 +355,50 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
 func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request, isDownload bool) {
 	var (
-		err               error
-		reqCtx            *RequestContext
-		authorized        bool
-		isRange           bool
-		rangeStart        int64
-		rangeEnd          int64
-		redirectUrl       string
-		params            *storagetypes.Params
-		escapedObjectName string
+		err                  error
+		reqCtx               *RequestContext
+		authenticated        bool
+		isRange              bool
+		rangeStart           int64
+		rangeEnd             int64
+		redirectURL          string
+		params               *storagetypes.Params
+		escapedObjectName    string
+		isRequestFromBrowser bool
 	)
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
-			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			if isRequestFromBrowser {
+				reqCtx.SetHttpCode(http.StatusOK)
+				errorCodeForPage := "INTERNAL_ERROR" // default errorCode in built-in error page
+				switch err {
+				case downloader.ErrExceedBucketQuota:
+					errorCodeForPage = "NO_ENOUGH_QUOTA"
+				case ErrNoSuchObject:
+					errorCodeForPage = "FILE_NOT_FOUND"
+				case ErrForbidden:
+					errorCodeForPage = "NO_PERMISSION"
+				}
+				html := strings.Replace(GnfdBuiltInUniversalEndpointDappErrorPage, "<% errorCode %>", errorCodeForPage, 1)
+
+				fmt.Fprintf(w, "%s", html)
+				return
+			} else {
+				reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+				reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+				MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			}
+
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	userAgent := r.Header.Get("User-Agent")
+	isRequestFromBrowser = checkIfRequestFromBrowser(userAgent)
+
 	// ignore the error, because the universal endpoint does not need signature
 	reqCtx, _ = NewRequestContext(r, g)
 
@@ -416,10 +439,10 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			return
 		}
 
-		redirectUrl = spEndpoint + r.RequestURI
-		log.Debugw("getting redirect url:", "redirectUrl", redirectUrl)
+		redirectURL = spEndpoint + r.RequestURI
+		log.Debugw("getting redirect url:", "redirectURL", redirectURL)
 
-		http.Redirect(w, r, redirectUrl, 302)
+		http.Redirect(w, r, redirectURL, 302)
 		return
 	}
 
@@ -481,20 +504,25 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			reqCtx.account = accAddress.String()
 
 			// 2. check permission
-			authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authenticate", "error", err)
+				err = ErrForbidden
 				return
 			}
-			if !authorized {
+			if !authenticated {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
+				err = ErrForbidden
 				return
 			}
 
 		} else {
-			// return a built-in dapp for users to make the signature
+			if !isRequestFromBrowser {
+				err = ErrForbidden
+				return
+			}
+			// if the request comes from browser, we will return a built-in dapp for users to make the signature
 			var htmlConfigMap = map[string]string{
 				"greenfield_7971-1":    "{\n  \"envType\": \"dev\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 7971,\n  \"chainName\": \"dev - greenfield\",\n  \"rpcUrls\": [\"https://gnfd-dev.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
 				"greenfield_9000-1741": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
@@ -537,8 +565,9 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	task := &gfsptask.GfSpDownloadObjectTask{}
 	task.InitDownloadObjectTask(getObjectInfoRes.GetObjectInfo(), getBucketInfoRes.GetBucketInfo(), params, g.baseApp.TaskPriority(task), reqCtx.Account(),
 		low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
-	data, err := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
-	if err != nil {
+	data, getObjectErr := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
+	if getObjectErr != nil {
+		err = getObjectErr
 		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
 		return
 	}
@@ -563,6 +592,18 @@ func isPrivateObject(bucket *storagetypes.BucketInfo, object *storagetypes.Objec
 	return object.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE ||
 		(object.GetVisibility() == storagetypes.VISIBILITY_TYPE_INHERIT &&
 			bucket.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE)
+}
+
+func checkIfRequestFromBrowser(userAgent string) bool {
+	// List of common user agent substrings for mainstream browsers
+	mainstreamBrowsers := []string{"Chrome", "Firefox", "Safari", "Opera", "Edge"}
+	// Check if the User-Agent header contains any of the mainstream browser substrings
+	for _, browser := range mainstreamBrowsers {
+		if strings.Contains(userAgent, browser) {
+			return true
+		}
+	}
+	return false
 }
 
 // downloadObjectByUniversalEndpointHandler handles the download object request sent by universal endpoint
