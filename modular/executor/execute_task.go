@@ -352,6 +352,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		log.CtxErrorw(ctx, "EC decode error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "segIndex:", task.GetSegmentIdx(), "error", err)
 		return ErrRecoveryDecodeErr
 	}
+	// TODO compare integrity hash
 
 	recoveryKey := e.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx())
 
@@ -360,6 +361,8 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		log.CtxErrorw(ctx, "EC decode data write piece fail", "pieceKey:", recoveryKey, "error", err)
 		return ErrPieceStore
 	}
+
+	log.CtxDebugw(ctx, "primary SP recovery successfully", "pieceKey:", recoveryKey)
 
 	return nil
 }
