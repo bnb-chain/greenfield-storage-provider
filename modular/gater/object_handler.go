@@ -485,7 +485,6 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
-				err = ErrForbidden
 				return
 			}
 			if !authorized {
@@ -538,9 +537,8 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	task := &gfsptask.GfSpDownloadObjectTask{}
 	task.InitDownloadObjectTask(getObjectInfoRes.GetObjectInfo(), getBucketInfoRes.GetBucketInfo(), params, g.baseApp.TaskPriority(task), reqCtx.Account(),
 		low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
-	data, getObjectErr := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
-	if getObjectErr != nil {
-		err = getObjectErr
+	data, err := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
 		return
 	}
