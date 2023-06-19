@@ -379,7 +379,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// verify receive task signature
-	_, err = reqCtx.VerifyTaskSignature(receiveMsg, receiveTask.GetSignature())
+	_, err = reqCtx.VerifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
 	if err != nil {
 		err = ErrSignature
 		return
