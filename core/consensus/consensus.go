@@ -6,6 +6,7 @@ import (
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -20,6 +21,12 @@ type Consensus interface {
 	ListSPs(ctx context.Context) ([]*sptypes.StorageProvider, error)
 	// ListBondedValidators returns all bonded validators info.
 	ListBondedValidators(ctx context.Context) ([]stakingtypes.Validator, error)
+	// ListVirtualGroupFamilies return all virtual group family which primary sp is spID.
+	ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error)
+	// QueryGlobalVirtualGroup returns the global virtual group info.
+	QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error)
+	// QueryVirtualGroupParams returns the virtual group params.
+	QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error)
 	// QueryStorageParams returns the storage params.
 	QueryStorageParams(ctx context.Context) (params *storagetypes.Params, err error)
 	// QueryStorageParamsByTimestamp returns the storage params by block create time.
@@ -59,6 +66,18 @@ func (*NullConsensus) ListSPs(context.Context) ([]*sptypes.StorageProvider, erro
 }
 
 func (*NullConsensus) ListBondedValidators(context.Context) ([]stakingtypes.Validator, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) ListVirtualGroupFamilies(context.Context, uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error) {
 	return nil, nil
 }
 

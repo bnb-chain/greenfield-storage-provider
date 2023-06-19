@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -82,6 +83,53 @@ func (g *Gnfd) ListBondedValidators(ctx context.Context) ([]stakingtypes.Validat
 		validators = append(validators, resp.GetValidators()[i])
 	}
 	return validators, nil
+}
+
+// ListVirtualGroupFamilies return the list of virtual group family.
+func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("list_virtual_group_family").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	var vgfs []*virtualgrouptypes.GlobalVirtualGroupFamily
+	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{
+		StorageProviderId: spID,
+	})
+	if err != nil {
+		log.Errorw("failed to list virtual group families", "error", err)
+		return vgfs, err
+	}
+	for i := 0; i < len(resp.GetGlobalVirtualGroupFamilies()); i++ {
+		vgfs = append(vgfs, resp.GetGlobalVirtualGroupFamilies()[i])
+	}
+	return vgfs, nil
+}
+
+// QueryGlobalVirtualGroup returns the global virtual group info.
+func (g *Gnfd) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_global_virtual_group").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroup(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupRequest{
+		gvgID,
+	})
+	if err != nil {
+		log.Errorw("failed to query global virtual group", "error", err)
+		return nil, err
+	}
+	return resp.GetGlobalVirtualGroup(), nil
+}
+
+// QueryVirtualGroupParams return virtual group params.
+func (g *Gnfd) QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_virtual_group_params").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.VirtualGroupQueryClient.Params(ctx, &virtualgrouptypes.QueryParamsRequest{})
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query virtual group params", "error", err)
+		return nil, err
+	}
+	return &resp.Params, nil
 }
 
 // QueryStorageParams returns storage params

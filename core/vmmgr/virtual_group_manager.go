@@ -23,7 +23,7 @@ type VirtualGroupFamilyMeta struct {
 
 type VirtualGroupManager interface {
 	PickVirtualGroupFamily() (*VirtualGroupFamilyMeta, error)
-	PickGlobalVirtualGroup(bucketID uint64) (*GlobalVirtualGroupMeta, error)
+	PickGlobalVirtualGroup(vgfID uint32) (*GlobalVirtualGroupMeta, error)
 	ForceRefreshMeta() error
 	GenerateGlobalVirtualGroupMeta() (*GlobalVirtualGroupMeta, error)
 }
