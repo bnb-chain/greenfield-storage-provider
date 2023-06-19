@@ -322,15 +322,17 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 // signature to seal object on greenfield.
 func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err           error
-		reqCtx        *RequestContext
-		approvalMsg   []byte
-		receiveMsg    []byte
-		data          []byte
-		integrity     []byte
-		signature     []byte
-		currentHeight uint64
-		approval      = gfsptask.GfSpReplicatePieceApprovalTask{}
+		err            error
+		reqCtx         *RequestContext
+		approvalMsg    []byte
+		receiveMsg     []byte
+		data           []byte
+		integrity      []byte
+		signature      []byte
+		currentHeight  uint64
+		approval       = gfsptask.GfSpReplicatePieceApprovalTask{}
+		requestAccount sdktypes.AccAddress
+		bucketInfo     *storagetypes.BucketInfo
 	)
 	receivePieceStartTime := time.Now()
 	defer func() {
@@ -405,6 +407,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrDecodeMsg
 		return
 	}
+
 	receiveTask := gfsptask.GfSpReceivePieceTask{}
 	err = json.Unmarshal(receiveMsg, &receiveTask)
 	if err != nil {
@@ -413,6 +416,28 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrDecodeMsg
 		return
 	}
+
+	// verify receive task signature
+	requestAccount, err = reqCtx.VerifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "fail to verify receive task", "error", err)
+		err = ErrSignature
+		return
+	}
+
+	// check if the request account is the primary SP of the object of the receive task
+	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
+	if bucketInfo.PrimarySpAddress != requestAccount.String() {
+		log.CtxErrorw(reqCtx.Context(), "the request account of replicate object is not primary SP", "expected:", bucketInfo.PrimarySpAddress,
+			"actual sp:", requestAccount.String())
+		err = ErrMismatchSp
+		return
+	}
+
 	if receiveTask.GetObjectInfo() == nil ||
 		int(receiveTask.GetReplicateIdx()) >=
 			len(receiveTask.GetObjectInfo().GetChecksums()) {
