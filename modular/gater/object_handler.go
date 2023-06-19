@@ -487,10 +487,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 				g.baseApp.TaskTimeout(recoveryTask, task.GetStorageParams().GetMaxSegmentSize()),
 				g.baseApp.TaskMaxRetry(recoveryTask))
 
-			taskErr := g.baseApp.GfSpClient().ReportTask(reqCtx.Context(), recoveryTask)
-			if taskErr != nil {
+			if taskErr := g.baseApp.GfSpClient().ReportTask(reqCtx.Context(), recoveryTask); taskErr != nil {
 				// no need to return recovery error to user
-				log.CtxErrorw(reqCtx.Context(), "fail to generate recovery task", "error", err)
+				log.CtxErrorw(reqCtx.Context(), "fail to generate recovery task", "error", taskErr)
 				return
 			}
 			log.CtxDebugw(reqCtx.Context(), "recovery task run successfully", "recovery object", objectInfo.ObjectName, "segment index:", idx, "error", err)

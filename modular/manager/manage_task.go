@@ -71,6 +71,11 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 		backupTasks = append(backupTasks, task)
 	}
 	task = m.recoveryQueue.TopByLimit(limit)
+	if task != nil {
+		log.CtxDebugw(ctx, "add confirm receive piece to backup set", "task_key", task.Key().String(),
+			"task_limit", task.EstimateLimit().String())
+		backupTasks = append(backupTasks, task)
+	}
 
 	task = m.PickUpTask(ctx, backupTasks)
 	if task == nil {

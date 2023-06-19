@@ -349,11 +349,8 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrSignature
 		return
 	}
-<<<<<<< HEAD
 	getBlockHeightTime := time.Now()
-=======
 
->>>>>>> 809a1cf (feat: support segment data recovering during downloding)
 	currentHeight, err = g.baseApp.Consensus().CurrentHeight(reqCtx.Context())
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_get_block_height_time").Observe(time.Since(getBlockHeightTime).Seconds())
 	if err != nil {
@@ -459,13 +456,16 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	// check signature consistent
-	primaryAddr, pk, err := RecoverAddr(recoveryMsg, recoveryTask.GetSignature())
+	taskSignature := recoveryTask.GetSignature()
+	primaryAddr, pk, err := RecoverAddr(recoveryTask.GetSignBytes(), taskSignature)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address")
+		err = ErrSignature
 		return
 	}
-	if !secp256k1.VerifySignature(pk.Bytes(), recoveryMsg, recoveryTask.GetSignature()) {
+	if !secp256k1.VerifySignature(pk.Bytes(), recoveryTask.GetSignBytes(), taskSignature[:len(taskSignature)-1]) {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task signature")
+		err = ErrSignature
 		return
 	}
 
@@ -492,36 +492,31 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		log.CtxErrorw(reqCtx.Context(), "recovery request not come from primary sp")
 	}
 
-	operatorAddr := g.baseApp.OperateAddress()
-	infoOnChain, err := g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), objectInfo.BucketName, objectInfo.ObjectName)
+	chainInfo, err := g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), objectInfo.BucketName, objectInfo.ObjectName)
 	if err != nil {
 		err = ErrConsensus
 	}
 
-	secondarySPs := infoOnChain.SecondarySpAddresses
 	isOneOfSecondary := false
-	var replicateIdx int
-	for idx, spAddr := range secondarySPs {
-		if spAddr == operatorAddr {
+	handlerAddr := g.baseApp.OperatorAddress()
+	var ECIndex int
+	for idx, spAddr := range chainInfo.SecondarySpAddresses {
+		if spAddr == handlerAddr {
 			isOneOfSecondary = true
-			replicateIdx = idx
+			ECIndex = idx
 		}
 	}
-	// if the handler SP is not one of the secondary SP, return  err
+	// if the handler SP is not one of the secondary SP of the task object, return err
 	if !isOneOfSecondary {
 		err = ErrRecoverySP
 		return
 	}
-	ECPieceKey := g.baseApp.PieceOp().ECPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(), recoveryTask.GetSegmentIdx(), uint32(replicateIdx))
-	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensus
-		return
-	}
 
+	params := recoveryTask.GetStorageParams()
+	// init download piece task, get piece data and return the data
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
+	ECPieceKey := g.baseApp.PieceOp().ECPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(), recoveryTask.GetSegmentIdx(), uint32(ECIndex))
 
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	// no need to check quota when recovering primary SP segment data
@@ -533,8 +528,7 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
 	}
-
-	log.CtxDebugw(reqCtx.Context(), "succeed to recovery one ec piece")
-
 	w.Write(pieceData)
+
+	log.CtxDebugw(reqCtx.Context(), "succeed to get one ec piece data")
 }
