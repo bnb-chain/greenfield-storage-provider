@@ -153,7 +153,7 @@ package blocksyncer
 //		}
 //	}
 //	// Create a queue that will collect, aggregate, and export blocks and metadata
-//	exportQueue := types.NewQueue(25)
+//	exportQueue := types.NewQueue(100)
 //
 //	// Create workers
 //	worker := parser.NewWorker(b.parserCtx, exportQueue, 0, config.Cfg.Parser.ConcurrentSync)
@@ -181,8 +181,6 @@ package blocksyncer
 //	go b.enqueueNewBlocks(ctx, exportQueue, lastDbBlockHeight+1)
 //
 //	// Start each blocking worker in a go-routine where the worker consumes jobs
-//	// off of the export queue.
-//	Cast(b.parserCtx.Indexer).ProcessedQueue <- uint64(0) // init ProcessedQueue
 //	go worker.Start(ctx)
 //}
 //
@@ -205,7 +203,6 @@ package blocksyncer
 //					// log.Debugw("enqueueing new block", "height", currHeight)
 //					exportQueue <- currHeight
 //				}
-//				time.Sleep(config.GetAvgBlockTime())
 //			}
 //		}
 //	}
@@ -228,7 +225,7 @@ package blocksyncer
 //				}
 //				Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(latestBlockHeight)
 //
-//				time.Sleep(config.GetAvgBlockTime())
+//				time.Sleep(time.Second)
 //			}
 //		}
 //	}
@@ -245,13 +242,9 @@ package blocksyncer
 //			Cast(b.parserCtx.Indexer).GetCatchUpFlag().Store(int64(count*cycle + startHeight - 1))
 //			break
 //		}
-//		processedHeight, ok := <-Cast(b.parserCtx.Indexer).ProcessedQueue
-//		if !ok {
-//			log.Warnf("ProcessedQueue is closed")
-//			return
-//		}
-//		log.Infof("processedHeight:%d, will process height:%d", processedHeight, count*cycle+startHeight)
+//		processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
 //		if processedHeight != 0 && count*cycle+startHeight-processedHeight > MaxHeightGapFactor*count {
+//			time.Sleep(time.Second)
 //			continue
 //		}
 //		b.fetchData(count, cycle, startHeight, latestBlockHeight)
