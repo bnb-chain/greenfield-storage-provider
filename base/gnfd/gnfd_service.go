@@ -68,6 +68,21 @@ func (g *Gnfd) ListSPs(ctx context.Context) ([]*sptypes.StorageProvider, error) 
 	return spInfos, nil
 }
 
+// QuerySP returns the sp info.
+func (g *Gnfd) QuerySP(ctx context.Context, operatorAddress string) (*sptypes.StorageProvider, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_sp").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.StorageProviderByOperatorAddress(ctx, &sptypes.QueryStorageProviderByOperatorAddressRequest{
+		OperatorAddress: operatorAddress,
+	})
+	if err != nil {
+		log.Errorw("failed to query storage provider", "error", err)
+		return nil, err
+	}
+	return resp.GetStorageProvider(), nil
+}
+
 // ListBondedValidators returns the list of bonded validators.
 func (g *Gnfd) ListBondedValidators(ctx context.Context) ([]stakingtypes.Validator, error) {
 	startTime := time.Now()
@@ -102,6 +117,22 @@ func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*vi
 		vgfs = append(vgfs, resp.GetGlobalVirtualGroupFamilies()[i])
 	}
 	return vgfs, nil
+}
+
+// QueryVirtualGroupFamily returns the virtual group family.
+func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, spID, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_virtual_group_family").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamily(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamilyRequest{
+		StorageProviderId: spID,
+		FamilyId:          vgfID,
+	})
+	if err != nil {
+		log.Errorw("failed to query virtual group family", "error", err)
+		return nil, err
+	}
+	return resp.GetGlobalVirtualGroupFamily(), nil
 }
 
 // QueryGlobalVirtualGroup returns the global virtual group info.
