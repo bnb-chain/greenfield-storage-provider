@@ -369,6 +369,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrDecodeMsg
 		return
 	}
+
 	receiveTask := gfsptask.GfSpReceivePieceTask{}
 	err = json.Unmarshal(receiveMsg, &receiveTask)
 	if err != nil {
@@ -377,6 +378,13 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrDecodeMsg
 		return
 	}
+	// verify receive task signature
+	_, err = reqCtx.VerifyTaskSignature(receiveMsg, receiveTask.GetSignature())
+	if err != nil {
+		err = ErrSignature
+		return
+	}
+
 	if receiveTask.GetObjectInfo() == nil ||
 		int(receiveTask.GetReplicateIdx()) >=
 			len(receiveTask.GetObjectInfo().GetChecksums()) {
