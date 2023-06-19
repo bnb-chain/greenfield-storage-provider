@@ -226,11 +226,6 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 				"task_current_gc_block_id", task.GetCurrentBlockNumber())
 			continue
 		}
-		if currentGCObjectID <= task.GetLastDeletedObjectId() {
-			log.Errorw("skip gc object", "object_info", objectInfo,
-				"task_last_deleted_object_id", task.GetLastDeletedObjectId())
-			continue
-		}
 		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(
 			objectInfo.GetPayloadSize(), storageParams.VersionedParams.GetMaxSegmentSize())
 		for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {

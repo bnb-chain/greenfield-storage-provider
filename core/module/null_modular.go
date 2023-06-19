@@ -20,7 +20,7 @@ var _ Modular = (*NullModular)(nil)
 var _ Approver = (*NullModular)(nil)
 var _ Uploader = (*NullModular)(nil)
 var _ Manager = (*NullModular)(nil)
-var _ Authorizer = (*NullModular)(nil)
+var _ Authenticator = (*NullModular)(nil)
 
 type NullModular struct{}
 
@@ -102,7 +102,7 @@ func (*NullModular) HandleChallengePieceTask(context.Context, task.ChallengePiec
 	return ErrNilModular
 }
 
-func (*NullModular) VerifyAuthorize(context.Context, AuthOpType, string, string, string) (bool, error) {
+func (*NullModular) VerifyAuthentication(context.Context, AuthOpType, string, string, string) (bool, error) {
 	return false, ErrNilModular
 }
 

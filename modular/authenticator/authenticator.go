@@ -1,4 +1,4 @@
-package authorizer
+package authenticator
 
 import (
 	"context"
@@ -9,6 +9,9 @@ import (
 	"strings"
 	"time"
 
+	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -17,43 +20,41 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
-	ErrUnsupportedAuthType = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20001, "unsupported auth op type")
-	ErrMismatchSp          = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20002, "mismatched primary sp")
-	ErrNotCreatedState     = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20003, "object has not been created state")
-	ErrNotSealedState      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20004, "object has not been sealed state")
-	ErrPaymentState        = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20005, "payment account is not active")
-	ErrNoSuchAccount       = gfsperrors.Register(module.AuthorizationModularName, http.StatusNotFound, 20006, "no such account")
-	ErrNoSuchBucket        = gfsperrors.Register(module.AuthorizationModularName, http.StatusNotFound, 20007, "no such bucket")
-	ErrNoSuchObject        = gfsperrors.Register(module.AuthorizationModularName, http.StatusNotFound, 20008, "no such object")
-	ErrRepeatedBucket      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20009, "repeated bucket")
-	ErrRepeatedObject      = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20010, "repeated object")
-	ErrNoPermission        = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20011, "no permission")
+	ErrUnsupportedAuthType = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20001, "unsupported auth op type")
+	ErrMismatchSp          = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20002, "mismatched primary sp")
+	ErrNotCreatedState     = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20003, "object has not been created state")
+	ErrNotSealedState      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20004, "object has not been sealed state")
+	ErrPaymentState        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20005, "payment account is not active")
+	ErrNoSuchAccount       = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 20006, "no such account")
+	ErrNoSuchBucket        = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 20007, "no such bucket")
+	ErrNoSuchObject        = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 20008, "no such object")
+	ErrRepeatedBucket      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20009, "repeated bucket")
+	ErrRepeatedObject      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20010, "repeated object")
+	ErrNoPermission        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20011, "no permission")
 
-	ErrBadSignature           = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20012, "bad signature")
-	ErrSignedMsgFormat        = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20013, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
-	ErrExpiredTimestampFormat = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20014, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
-	ErrPublicKeyExpired       = gfsperrors.Register(module.AuthorizationModularName, http.StatusBadRequest, 20015, "user public key is expired")
+	ErrBadSignature           = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20012, "bad signature")
+	ErrSignedMsgFormat        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20013, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
+	ErrExpiredTimestampFormat = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20014, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
+	ErrPublicKeyExpired       = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20015, "user public key is expired")
 
-	ErrConsensus = gfsperrors.Register(module.AuthorizationModularName, http.StatusInternalServerError, 25002, "server slipped away, try again later")
+	ErrConsensus = gfsperrors.Register(module.AuthenticationModularName, http.StatusInternalServerError, 25002, "server slipped away, try again later")
 )
 
-var _ module.Authorizer = &AuthorizeModular{}
+var _ module.Authenticator = &AuthenticationModular{}
 
-type AuthorizeModular struct {
+type AuthenticationModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
 }
 
-func (a *AuthorizeModular) Name() string {
-	return module.AuthorizationModularName
+func (a *AuthenticationModular) Name() string {
+	return module.AuthenticationModularName
 }
 
-func (a *AuthorizeModular) Start(ctx context.Context) error {
+func (a *AuthenticationModular) Start(ctx context.Context) error {
 	scope, err := a.baseApp.ResourceManager().OpenService(a.Name())
 	if err != nil {
 		return err
@@ -62,12 +63,12 @@ func (a *AuthorizeModular) Start(ctx context.Context) error {
 	return nil
 }
 
-func (a *AuthorizeModular) Stop(ctx context.Context) error {
+func (a *AuthenticationModular) Stop(ctx context.Context) error {
 	a.scope.Release()
 	return nil
 }
 
-func (a *AuthorizeModular) ReserveResource(
+func (a *AuthenticationModular) ReserveResource(
 	ctx context.Context,
 	state *rcmgr.ScopeStat) (
 	rcmgr.ResourceScopeSpan,
@@ -83,7 +84,7 @@ func (a *AuthorizeModular) ReserveResource(
 	return span, nil
 }
 
-func (a *AuthorizeModular) ReleaseResource(
+func (a *AuthenticationModular) ReleaseResource(
 	ctx context.Context,
 	span rcmgr.ResourceScopeSpan) {
 	span.Done()
@@ -94,7 +95,7 @@ const (
 )
 
 // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
-func (a *AuthorizeModular) GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error) {
+func (a *AuthenticationModular) GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error) {
 	authKey, err := a.baseApp.GfSpDB().GetAuthKey(account, domain)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to GetAuthKey", "error", err)
@@ -105,7 +106,7 @@ func (a *AuthorizeModular) GetAuthNonce(ctx context.Context, account string, dom
 }
 
 // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
-func (a *AuthorizeModular) UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64) (bool, error) {
+func (a *AuthenticationModular) UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64) (bool, error) {
 	err := a.baseApp.GfSpDB().UpdateAuthKey(account, domain, currentNonce, nonce, userPublicKey, time.UnixMilli(expiryDate))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to updateUserPublicKey when saving key")
@@ -116,7 +117,7 @@ func (a *AuthorizeModular) UpdateUserPublicKey(ctx context.Context, account stri
 }
 
 // VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-func (a *AuthorizeModular) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error) {
+func (a *AuthenticationModular) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error) {
 	signature, err := hex.DecodeString(offChainSig)
 	if err != nil {
 		return false, ErrBadSignature
@@ -159,9 +160,9 @@ func (a *AuthorizeModular) VerifyOffChainSignature(ctx context.Context, account 
 	return true, nil
 }
 
-// VerifyAuthorize verifies the account has the operation's permission.
+// VerifyAuthentication verifies the account has the operation's permission.
 // TODO:: supports permission path verification and query
-func (a *AuthorizeModular) VerifyAuthorize(
+func (a *AuthenticationModular) VerifyAuthentication(
 	ctx context.Context,
 	authType coremodule.AuthOpType,
 	account, bucket, object string) (
@@ -184,7 +185,7 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		bucketInfo, _ := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_create_bucket_approval_query_bucket_time").Observe(time.Since(queryTime).Seconds())
 		if bucketInfo != nil {
-			log.CtxErrorw(ctx, "failed to verify authorize of asking create bucket "+
+			log.CtxErrorw(ctx, "failed to verify authentication of asking create bucket "+
 				"approval, bucket repeated", "bucket", bucket)
 			return false, ErrRepeatedBucket
 		}
@@ -194,12 +195,12 @@ func (a *AuthorizeModular) VerifyAuthorize(
 		bucketInfo, objectInfo, _ := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_create_object_approval_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if bucketInfo == nil {
-			log.CtxErrorw(ctx, "failed to verify authorize of asking create object "+
+			log.CtxErrorw(ctx, "failed to verify authentication of asking create object "+
 				"approval, no such bucket to ask create object approval", "bucket", bucket, "object", object)
 			return false, ErrNoSuchBucket
 		}
 		if objectInfo != nil {
-			log.CtxErrorw(ctx, "failed to verify authorize of asking create object "+
+			log.CtxErrorw(ctx, "failed to verify authentication of asking create object "+
 				"approval, object has been created", "bucket", bucket, "object", object)
 			return false, ErrRepeatedObject
 		}

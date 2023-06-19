@@ -50,7 +50,7 @@ func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint str
 	receiveHeader := hex.EncodeToString(receiveMsg)
 	req.Header.Add(GnfdReplicatePieceApprovalHeader, approvalHeader)
 	req.Header.Add(GnfdReceiveMsgHeader, receiveHeader)
-	resp, err := s.HttpClient(ctx).Do(req)
+	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	receiveHeader := hex.EncodeToString(receiveMsg)
 	req.Header.Add(GnfdReplicatePieceApprovalHeader, approvalHeader)
 	req.Header.Add(GnfdReceiveMsgHeader, receiveHeader)
-	resp, err := s.HttpClient(ctx).Do(req)
+	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		return nil, nil, err
 	}

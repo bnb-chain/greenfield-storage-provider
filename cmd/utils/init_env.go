@@ -4,17 +4,17 @@ import (
 	"errors"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/urfave/cli/v2"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
@@ -123,8 +123,8 @@ func MakeGfSpClient(cfg *gfspconfig.GfSpConfig) *gfspclient.GfSpClient {
 	if len(cfg.Endpoint.SignerEndpoint) == 0 {
 		cfg.Endpoint.SignerEndpoint = cfg.GRPCAddress
 	}
-	if len(cfg.Endpoint.AuthorizerEndpoint) == 0 {
-		cfg.Endpoint.AuthorizerEndpoint = cfg.GRPCAddress
+	if len(cfg.Endpoint.AuthenticatorEndpoint) == 0 {
+		cfg.Endpoint.AuthenticatorEndpoint = cfg.GRPCAddress
 	}
 	client := gfspclient.NewGfSpClient(
 		cfg.Endpoint.ApproverEndpoint,
@@ -135,7 +135,7 @@ func MakeGfSpClient(cfg *gfspconfig.GfSpConfig) *gfspclient.GfSpClient {
 		cfg.Endpoint.UploaderEndpoint,
 		cfg.Endpoint.P2PEndpoint,
 		cfg.Endpoint.SignerEndpoint,
-		cfg.Endpoint.AuthorizerEndpoint,
+		cfg.Endpoint.AuthenticatorEndpoint,
 		false)
 	return client
 }

@@ -6,8 +6,9 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/bnb-chain/greenfield-common/go/hash"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
@@ -15,17 +16,16 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var (
-	ErrSignMsg                   = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
-	ErrSealObjectOnChain         = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
-	ErrRejectUnSealObjectOnChain = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
-	ErrDiscontinueBucketOnChain  = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
-	ErrDanglingPointer           = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
-	ErrCreateGVGOnChain          = gfsperrors.Register(module.SignerModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
+	ErrSignMsg                   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
+	ErrSealObjectOnChain         = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
+	ErrRejectUnSealObjectOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
+	ErrDiscontinueBucketOnChain  = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
+	ErrDanglingPointer           = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
+	ErrCreateGVGOnChain          = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -36,7 +36,7 @@ type SignModular struct {
 }
 
 func (s *SignModular) Name() string {
-	return module.SignerModularName
+	return module.SignModularName
 }
 
 func (s *SignModular) Start(ctx context.Context) error {
