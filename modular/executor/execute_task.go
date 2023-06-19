@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 	"errors"
+	"github.com/prysmaticlabs/prysm/crypto/bls"
 	"net/http"
 	"time"
 
@@ -33,13 +34,20 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		task.SetError(ErrDanglingPointer)
 		return
 	}
+	blsSig, err := bls.MultipleSignaturesFromBytes(task.GetSecondarySignatures())
+	if err != nil {
+		return
+	}
+
+	// todo need gvgId
+	gvgId := uint32(0)
+
 	sealMsg := &storagetypes.MsgSealObject{
-		Operator:   e.baseApp.OperatorAddress(),
-		BucketName: task.GetObjectInfo().GetBucketName(),
-		ObjectName: task.GetObjectInfo().GetObjectName(),
-		// TODO:
-		// SecondarySpAddresses:  task.GetSecondaryAddresses(),
-		SecondarySpSignatures: task.GetSecondarySignatures(),
+		Operator:                    e.baseApp.OperatorAddress(),
+		BucketName:                  task.GetObjectInfo().GetBucketName(),
+		ObjectName:                  task.GetObjectInfo().GetObjectName(),
+		GlobalVirtualGroupId:        gvgId,
+		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
 	log.CtxDebugw(ctx, "finish to handle seal object task", "error", task.Error())

@@ -139,8 +139,11 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		return nil, nil, ErrUnfinishedTask
 	}
 	signTime := time.Now()
+	// TODO pass gvgId from task
+	gvgId := uint32(0)
 	signature, integrity, err := r.baseApp.GfSpClient().SignIntegrityHash(ctx,
-		task.GetObjectInfo().Id.Uint64(), checksums)
+		task.GetObjectInfo().Id.Uint64(), gvgId, checksums)
+
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_sign_time").Observe(time.Since(signTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)

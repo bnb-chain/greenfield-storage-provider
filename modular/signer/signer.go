@@ -93,16 +93,12 @@ func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.Receiv
 	return sig, nil
 }
 
-func (s *SignModular) SignIntegrityHash(ctx context.Context, objectID uint64, checksums [][]byte) (
+func (s *SignModular) SignIntegrityHash(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) (
 	[]byte, []byte, error) {
 	integrityHash := hash.GenerateIntegrityHash(checksums)
-	opAddr, err := s.client.GetAddr(SignOperator)
-	if err != nil {
-		return nil, nil, err
-	}
 
-	msg := storagetypes.NewSecondarySpSignDoc(opAddr, sdkmath.NewUint(objectID), integrityHash).GetSignBytes()
-	sig, err := s.client.Sign(SignApproval, msg)
+	msg := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, integrityHash).GetSignBytes()
+	sig, err := s.client.sealBlsKm.Sign(msg[:])
 	if err != nil {
 		return nil, nil, err
 	}

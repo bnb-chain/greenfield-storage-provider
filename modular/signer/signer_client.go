@@ -16,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield/sdk/client"
 	"github.com/bnb-chain/greenfield/sdk/keys"
 	ctypes "github.com/bnb-chain/greenfield/sdk/types"
+	"github.com/bnb-chain/greenfield/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -51,11 +52,12 @@ type GreenfieldChainSignClient struct {
 	sealAccNonce      uint64
 	gcAccNonce        uint64
 	approvalAccNonce  uint64 // is used by create global virtual group.
+	sealBlsKm         keys.KeyManager
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
 func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, operatorPrivateKey, fundingPrivateKey,
-	sealPrivateKey, approvalPrivateKey, gcPrivateKey string) (*GreenfieldChainSignClient, error) {
+	sealPrivateKey, approvalPrivateKey, gcPrivateKey, sealBlsPrivKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
@@ -77,6 +79,12 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	fundingClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(fundingKM))
 	if err != nil {
 		log.Errorw("failed to new funding greenfield client", "error", err)
+		return nil, err
+	}
+
+	sealBlsKm, err := keys.NewBlsPrivateKeyManager(fundingPrivateKey)
+	if err != nil {
+		log.Errorw("failed to new bls private key manager", "error", err)
 		return nil, err
 	}
 
@@ -139,6 +147,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
 		approvalAccNonce:  approvalAccNonce,
+		sealBlsKm:         sealBlsKm,
 	}, nil
 }
 
@@ -167,7 +176,7 @@ func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, si
 		return false
 	}
 
-	return storagetypes.VerifySignature(km.GetAddr(), crypto.Keccak256(msg), sig) == nil
+	return types.VerifySignature(km.GetAddr(), crypto.Keccak256(msg), sig) == nil
 }
 
 // SealObject seal the object on the greenfield chain.
@@ -188,26 +197,13 @@ func (client *GreenfieldChainSignClient) SealObject(
 		return nil, ErrSignMsg
 	}
 
-	// TODO:
-	// var secondarySPAccs []sdk.AccAddress
-	// TODO:
-	//for _, sp := range sealObject.SecondarySpAddresses {
-	//	opAddr, err := sdk.AccAddressFromHexUnsafe(sp) // should be 0x...
-	//	if err != nil {
-	//		log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", opAddr)
-	//		return nil, err
-	//	}
-	//	secondarySPAccs = append(secondarySPAccs, opAddr)
-	//}
-
 	client.mu.Lock()
 	defer client.mu.Unlock()
 
-	// TODO:
-	//msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
-	//	sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
-		sealObject.BucketName, sealObject.ObjectName, 0, sealObject.SecondarySpSignatures)
+		sealObject.BucketName, sealObject.ObjectName, sealObject.GlobalVirtualGroupId,
+		sealObject.SecondarySpBlsAggSignatures)
+
 	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
 
 	var (

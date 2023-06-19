@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"github.com/bnb-chain/greenfield/types"
+	"github.com/prysmaticlabs/prysm/crypto/bls"
 	"math"
 	"sync"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -61,13 +61,22 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 		return
 	}
 	log.CtxDebugw(ctx, "succeed to replicate all pieces")
+
+	blsSig, err := bls.MultipleSignaturesFromBytes(task.GetSecondarySignatures())
+	if err != nil {
+		return
+	}
 	// combine seal object
+
+	//todo get gvgId
+	gvgId := uint32(0)
+
 	sealMsg := &storagetypes.MsgSealObject{
-		Operator:   e.baseApp.OperatorAddress(),
-		BucketName: task.GetObjectInfo().GetBucketName(),
-		ObjectName: task.GetObjectInfo().GetObjectName(),
-		// SecondarySpAddresses:  task.GetSecondaryAddresses(),
-		SecondarySpSignatures: task.GetSecondarySignatures(),
+		Operator:                    e.baseApp.OperatorAddress(),
+		BucketName:                  task.GetObjectInfo().GetBucketName(),
+		ObjectName:                  task.GetObjectInfo().GetObjectName(),
+		GlobalVirtualGroupId:        gvgId,
+		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
 	}
 	sealTime := time.Now()
 	sealErr := e.sealObject(ctx, task, sealMsg)
@@ -312,10 +321,13 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 		return nil, nil, ErrReplicateIdsOutOfBounds
 	}
 	veritySignatureTime := time.Now()
-	err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), integrity,
-		rTask.GetObjectInfo().GetChecksums()[replicateIdx+1],
-		approval.GetApprovedSpOperatorAddress(),
-		approval.GetApprovedSpApprovalAddress(), signature)
+	// TODO get gvgId and blsPubKey from task, bls pub key alreay injected via key manager for current sp
+	var gvgId uint32
+	var blsPubKey bls.PublicKey
+
+	err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), gvgId, integrity,
+		storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
+
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_time").Observe(time.Since(veritySignatureTime).Seconds())
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
 	if err != nil {
@@ -330,26 +342,14 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	return integrity, signature, nil
 }
 
-func veritySignature(ctx context.Context, objectID uint64, integrity []byte, expectedIntegrity []byte,
-	signOpAddress string, signApprovalAddress string, signature []byte) error {
+func veritySignature(ctx context.Context, objectID uint64, gvgId uint32, integrity []byte, expectedIntegrity []byte, signature []byte, blsPubKey bls.PublicKey) error {
 	if !bytes.Equal(expectedIntegrity, integrity) {
 		log.CtxErrorw(ctx, "replicate sp invalid integrity", "integrity", hex.EncodeToString(integrity),
 			"expect", hex.EncodeToString(expectedIntegrity))
 		return ErrInvalidIntegrity
 	}
-	signOp, err := sdk.AccAddressFromHexUnsafe(signOpAddress)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to parse sign op address", "error", err)
-		return err
-	}
-	signApproval, err := sdk.AccAddressFromHexUnsafe(signApprovalAddress)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to parse sign approval address", "error", err)
-		return err
-	}
-	originMsgHash := storagetypes.NewSecondarySpSignDoc(signOp,
-		sdkmath.NewUint(objectID), integrity).GetSignBytes()
-	err = storagetypes.VerifySignature(signApproval, sdk.Keccak256(originMsgHash), signature)
+	originMsgHash := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, integrity).GetSignBytes()
+	err := types.VerifyBlsSignature(blsPubKey, originMsgHash, signature)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to verify signature", "error", err)
 		return err
