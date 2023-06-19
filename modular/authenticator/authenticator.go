@@ -135,7 +135,7 @@ func (a *AuthenticationModular) VerifyOffChainSignature(ctx context.Context, acc
 	// signedMsg must be formatted as `${actionContent}_${expiredTimestamp}` and timestamp must be within $OffChainAuthSigExpiryAgeInSec seconds, actionContent could be any string
 	signedMsgParts := strings.Split(realMsgToSign, "_")
 	if len(signedMsgParts) < 2 {
-		log.CtxErrorw(ctx, "signed msg must be formated as ${actionContent}_${expiredTimestamp}")
+		log.CtxErrorw(ctx, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
 		return false, ErrSignedMsgFormat
 	}
 

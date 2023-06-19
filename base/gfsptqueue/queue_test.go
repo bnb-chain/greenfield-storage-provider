@@ -3,6 +3,7 @@ package gfsptqueue
 import (
 	"testing"
 
+	"github.com/bnb-chain/greenfield/types/common"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/stretchr/testify/require"
 
@@ -13,49 +14,43 @@ import (
 func TestApprovalTaskRetireByExpiredHeight(t *testing.T) {
 	task1 := &gfsptask.GfSpCreateObjectApprovalTask{
 		CreateObjectInfo: &storagetypes.MsgCreateObject{
-			ObjectName: "test_task_1",
-			// TODO:
-			// PrimarySpApproval: &storagetypes.Approval{ExpiredHeight: 99},
+			ObjectName:        "test_task_1",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 99},
 		},
 	}
 
 	task2 := &gfsptask.GfSpCreateObjectApprovalTask{
 		CreateObjectInfo: &storagetypes.MsgCreateObject{
-			ObjectName: "test_task_2",
-			// TODO:
-			// PrimarySpApproval: &storagetypes.Approval{ExpiredHeight: 100},
+			ObjectName:        "test_task_2",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 100},
 		},
 	}
 
 	task3 := &gfsptask.GfSpCreateObjectApprovalTask{
 		CreateObjectInfo: &storagetypes.MsgCreateObject{
-			ObjectName: "test_task_3",
-			// TODO:
-			// PrimarySpApproval: &storagetypes.Approval{ExpiredHeight: 101},
+			ObjectName:        "test_task_3",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 101},
 		},
 	}
 
 	task4 := &gfsptask.GfSpCreateObjectApprovalTask{
 		CreateObjectInfo: &storagetypes.MsgCreateObject{
-			ObjectName: "test_task_4",
-			// TODO:
-			// PrimarySpApproval: &storagetypes.Approval{ExpiredHeight: 102},
+			ObjectName:        "test_task_4",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 102},
 		},
 	}
 
 	task5 := &gfsptask.GfSpCreateObjectApprovalTask{
 		CreateObjectInfo: &storagetypes.MsgCreateObject{
-			ObjectName: "test_task_5",
-			// TODO:
-			// PrimarySpApproval: &storagetypes.Approval{ExpiredHeight: 103},
+			ObjectName:        "test_task_5",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 103},
 		},
 	}
 
 	task6 := &gfsptask.GfSpCreateObjectApprovalTask{
 		CreateObjectInfo: &storagetypes.MsgCreateObject{
-			ObjectName: "test_task_4",
-			// TODO:
-			// PrimarySpApproval: &storagetypes.Approval{ExpiredHeight: 103},
+			ObjectName:        "test_task_4",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 103},
 		},
 	}
 
