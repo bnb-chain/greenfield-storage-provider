@@ -235,7 +235,7 @@ func (r *RequestContext) VerifyTaskSignature(msg []byte, taskSignature []byte) (
 		log.CtxErrorw(r.ctx, "failed to recover address", "error", err)
 		return nil, err
 	}
-	if !secp256k1.VerifySignature(pk.Bytes(), msg, taskSignature) {
+	if !secp256k1.VerifySignature(pk.Bytes(), msg, taskSignature[:len(taskSignature)-1]) {
 		log.CtxErrorw(r.ctx, "failed to verify task signature", "error", err)
 		return nil, err
 	}
