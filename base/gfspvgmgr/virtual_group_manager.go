@@ -247,7 +247,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 				PrimarySPID:        spID,
 				SecondarySPIDs:     gvg.GetSecondarySpIds(),
 				UsedStorageSize:    gvg.GetStoredSize(),
-				StakingStorageSize: gvg.TotalDeposit.Uint64() / vgParams.GvgStakingPrice.BigInt().Uint64(),
+				StakingStorageSize: gvg.TotalDeposit.Uint64() / vgParams.GvgStakingPrice.BigInt().Uint64(), // TODO: refine it.
 			}
 			vgfm.vgfIDToVgf[vgf.Id].GVGMap[gvg.GetId()] = gvgMeta
 			vgfm.vgfIDToVgf[vgf.Id].FamilyUsedStorageSize += gvgMeta.UsedStorageSize
