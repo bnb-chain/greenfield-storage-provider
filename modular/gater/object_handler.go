@@ -509,16 +509,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_data_time").Observe(time.Since(getDataTime).Seconds())
 }
 
-// getECPieceSize return the size of segment
-func getECPieceSize(params *storagetypes.Params, segmentSize uint64) uint32 {
-	shardNum := uint64(params.GetRedundantDataChunkNum())
-	n := segmentSize / shardNum
-	if params.GetMaxSegmentSize()%shardNum != 0 {
-		n++
-	}
-	return uint32(n)
-}
-
 // tryDownloadAfterRecovery try to get piece data after data recoverying
 func (g *GateModular) tryDownloadAfterRecovery(ctx context.Context, pieceTask *gfsptask.GfSpDownloadPieceTask) ([]byte, error) {
 	timeout := time.After(RecoveryTimeOutSeconds * time.Second)

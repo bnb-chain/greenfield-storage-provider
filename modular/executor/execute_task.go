@@ -1,7 +1,9 @@
 package executor
 
 import (
+	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"io"
 	"net/http"
@@ -34,6 +36,7 @@ var (
 	ErrRecoveryPieceNotEnough  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "fail to get enough piece data to recovery")
 	ErrRecoveryDecodeErr       = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
 	ErrPieceStore              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 45205, "server slipped away, try again later")
+	ErrRecoveryPieceChecksum   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45206, "recovery checksum not correct")
 )
 
 func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) {
@@ -288,6 +291,8 @@ func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCM
 	log.CtxWarn(ctx, "gc meta future support")
 }
 
+// HandleRecoveryPieceTask handle the recovery piece task, it will send request to other SPs to get piece data to recovery,
+// recovery the original data, and write the recovered data to piece store
 func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coretask.RecoveryPieceTask) error {
 	var (
 		dataShards        = task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()
@@ -301,7 +306,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		return ErrRecoveryRedundancyType
 	}
 
-	secondaryEndpoints, err := e.getSecondaryEndpoints(ctx, task.GetObjectInfo())
+	secondaryEndpoints, err := e.getObjectSecondaryEndpoints(ctx, task.GetObjectInfo())
 	if err != nil {
 		return err
 	}
@@ -347,16 +352,30 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		}
 	}
 
-	recoveryData, err := redundancy.DecodeRawSegment(recoveryDataSources, int64(segmentSize), int(dataShards), int(parityShards))
+	recoverySegData, err := redundancy.DecodeRawSegment(recoveryDataSources, int64(segmentSize), int(dataShards), int(parityShards))
 	if err != nil {
 		log.CtxErrorw(ctx, "EC decode error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "segIndex:", task.GetSegmentIdx(), "error", err)
 		return ErrRecoveryDecodeErr
 	}
-	// TODO compare integrity hash
 
+	// compare integrity hash
+	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+	if err != nil {
+		log.CtxErrorw(ctx, "search integrity hash in db error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "error", err)
+		return ErrGfSpDB
+	}
+
+	expectedHash := integrityMeta.PieceChecksumList[task.GetSegmentIdx()]
+	if !bytes.Equal(recoverySegData, expectedHash) {
+		log.CtxErrorw(ctx, "check integrity hash of recovery data err", "objectName:", task.GetObjectInfo().ObjectName,
+			"expected value", hex.EncodeToString(expectedHash), "actual value", hex.EncodeToString(recoverySegData), "error", err)
+		return ErrRecoveryPieceChecksum
+	}
+
+	log.CtxDebugw(ctx, "EC decode error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "segIndex:", task.GetSegmentIdx(), "error", err)
 	recoveryKey := e.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx())
 
-	err = e.baseApp.PieceStore().PutPiece(ctx, recoveryKey, recoveryData)
+	err = e.baseApp.PieceStore().PutPiece(ctx, recoveryKey, recoverySegData)
 	if err != nil {
 		log.CtxErrorw(ctx, "EC decode data write piece fail", "pieceKey:", recoveryKey, "error", err)
 		return ErrPieceStore
@@ -403,7 +422,8 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 	return pieceData, nil
 }
 
-func (g *ExecuteModular) getSecondaryEndpoints(ctx context.Context, objectInfo *storagetypes.ObjectInfo) ([]string, error) {
+// getObjectSecondaryEndpoints return the secondary sp endpoints list of the specific object
+func (g *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, objectInfo *storagetypes.ObjectInfo) ([]string, error) {
 	secondarySPAddrs := objectInfo.GetSecondarySpAddresses()
 	spList, err := g.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
@@ -412,10 +432,9 @@ func (g *ExecuteModular) getSecondaryEndpoints(ctx context.Context, objectInfo *
 
 	secondaryEndpointList := make([]string, 0)
 	for _, info := range spList {
-		spAddress := info.GetOperatorAddress()
 		for _, addr := range secondarySPAddrs {
-			if addr == spAddress {
-				secondaryEndpointList = append(secondaryEndpointList, addr)
+			if addr == info.GetOperatorAddress() {
+				secondaryEndpointList = append(secondaryEndpointList, info.Endpoint)
 			}
 		}
 	}
