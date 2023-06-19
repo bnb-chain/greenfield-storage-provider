@@ -15,6 +15,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -39,7 +40,6 @@ var (
 // virtualGroupFamilyManager is built by metadata data source.
 type virtualGroupFamilyManager struct {
 	vgfIDToVgf map[uint32]*vmmgr.VirtualGroupFamilyMeta // is used to pick VGF
-	// bucketIDToVgf map[uint64]*vmmgr.VirtualGroupFamilyMeta // is used to pick GVG, bucket:VGL = 1:1.
 }
 
 // FreeStorageSizeWeightPicker is used to pick index by storage usage,
@@ -122,14 +122,16 @@ type spManager struct {
 	secondarySPs []*sptypes.StorageProvider
 }
 
-func (sm *spManager) generateVirtualGroupMeta() (*vmmgr.GlobalVirtualGroupMeta, error) {
-	// TODO: refine it.
-	if sm.primarySP == nil || len(sm.secondarySPs) < 6 {
+func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.VersionedParams) (*vmmgr.GlobalVirtualGroupMeta, error) {
+	secondarySPNumber := int(param.GetRedundantDataChunkNum() + param.GetRedundantParityChunkNum())
+	if sm.primarySP == nil || len(sm.secondarySPs) < secondarySPNumber {
 		return nil, fmt.Errorf("no enough sp")
 	}
-	secondarySPIDs := make([]uint32, 6)
-	for _, sp := range sm.secondarySPs {
-		secondarySPIDs = append(secondarySPIDs, sp.Id)
+	secondarySPIDs := make([]uint32, secondarySPNumber)
+	for i, sp := range sm.secondarySPs {
+		if i < secondarySPNumber {
+			secondarySPIDs = append(secondarySPIDs, sp.Id)
+		}
 	}
 	return &vmmgr.GlobalVirtualGroupMeta{
 		PrimarySPID:        sm.primarySP.Id,
@@ -215,8 +217,6 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		return
 	}
 
-	_ = spm
-
 	if vgParams, err = vgm.chainClient.QueryVirtualGroupParams(context.Background()); err != nil {
 		log.Errorw("failed to query virtual group params", "error", err)
 		return
@@ -298,8 +298,8 @@ func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 // GenerateGlobalVirtualGroupMeta is used to generate a new global virtual group meta, the caller need send a tx to chain.
 // TODO: support more generate policy.
 // TODO: add filter picker to support balance.
-func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta() (*vmmgr.GlobalVirtualGroupMeta, error) {
+func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetypes.VersionedParams) (*vmmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.spManager.generateVirtualGroupMeta()
+	return vgm.spManager.generateVirtualGroupMeta(param)
 }

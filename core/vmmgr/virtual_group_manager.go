@@ -2,6 +2,7 @@ package vmmgr
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 type GlobalVirtualGroupMeta struct {
@@ -25,7 +26,7 @@ type VirtualGroupManager interface {
 	PickVirtualGroupFamily() (*VirtualGroupFamilyMeta, error)
 	PickGlobalVirtualGroup(vgfID uint32) (*GlobalVirtualGroupMeta, error)
 	ForceRefreshMeta() error
-	GenerateGlobalVirtualGroupMeta() (*GlobalVirtualGroupMeta, error)
+	GenerateGlobalVirtualGroupMeta(param *storagetypes.VersionedParams) (*GlobalVirtualGroupMeta, error)
 }
 
 type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus) (VirtualGroupManager, error)
