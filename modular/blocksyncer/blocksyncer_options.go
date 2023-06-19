@@ -152,7 +152,7 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 		}
 	}
 	// Create a queue that will collect, aggregate, and export blocks and metadata
-	exportQueue := types.NewQueue(25)
+	exportQueue := types.NewQueue(100)
 
 	// Create workers
 	worker := parser.NewWorker(b.parserCtx, exportQueue, 0, config.Cfg.Parser.ConcurrentSync)
@@ -180,8 +180,6 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 	go b.enqueueNewBlocks(ctx, exportQueue, lastDbBlockHeight+1)
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
-	// off of the export queue.
-	Cast(b.parserCtx.Indexer).ProcessedQueue <- uint64(0) // init ProcessedQueue
 	go worker.Start(ctx)
 }
 
@@ -204,7 +202,6 @@ func (b *BlockSyncerModular) enqueueNewBlocks(context context.Context, exportQue
 					// log.Debugw("enqueueing new block", "height", currHeight)
 					exportQueue <- currHeight
 				}
-				time.Sleep(config.GetAvgBlockTime())
 			}
 		}
 	}
@@ -227,7 +224,7 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 				}
 				Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(latestBlockHeight)
 
-				time.Sleep(config.GetAvgBlockTime())
+				time.Sleep(time.Second)
 			}
 		}
 	}
@@ -244,13 +241,9 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 			Cast(b.parserCtx.Indexer).GetCatchUpFlag().Store(int64(count*cycle + startHeight - 1))
 			break
 		}
-		processedHeight, ok := <-Cast(b.parserCtx.Indexer).ProcessedQueue
-		if !ok {
-			log.Warnf("ProcessedQueue is closed")
-			return
-		}
-		log.Infof("processedHeight:%d, will process height:%d", processedHeight, count*cycle+startHeight)
+		processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
 		if processedHeight != 0 && count*cycle+startHeight-processedHeight > MaxHeightGapFactor*count {
+			time.Sleep(time.Second)
 			continue
 		}
 		b.fetchData(count, cycle, startHeight, latestBlockHeight)
