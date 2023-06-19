@@ -242,6 +242,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: replicateObjectPieceRouterName,
 		},
 		{
+			name:             "Recovery router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + RecoveryObjectPiecePath,
+			shouldMatch:      true,
+			wantedRouterName: recoveryPieceRouterName,
+		},
+		{
 			name:             "Get group list router",
 			router:           gwRouter,
 			method:           http.MethodGet,
