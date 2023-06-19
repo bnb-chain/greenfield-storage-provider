@@ -229,6 +229,19 @@ func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, e
 	return recoverAcc, pk, nil
 }
 
+func (r *RequestContext) VerifyTaskSignature(msg []byte, taskSignature []byte) (sdk.AccAddress, error) {
+	addr, pk, err := RecoverAddr(msg, taskSignature)
+	if err != nil {
+		log.CtxErrorw(r.ctx, "failed to recover address", "error", err)
+		return nil, err
+	}
+	if !secp256k1.VerifySignature(pk.Bytes(), msg, taskSignature) {
+		log.CtxErrorw(r.ctx, "failed to verify task signature", "error", err)
+		return nil, err
+	}
+	return addr, nil
+}
+
 // verifyOffChainSignature used to verify off-chain-auth signature, return (address, nil) if check succeed
 func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.AccAddress, error) {
 	var (
