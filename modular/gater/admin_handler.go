@@ -11,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -447,6 +448,7 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		err = ErrDecodeMsg
 		return
 	}
+
 	recoveryTask := gfsptask.GfSpRecoveryPieceTask{}
 	err = json.Unmarshal(recoveryMsg, &recoveryTask)
 	if err != nil {
@@ -456,34 +458,47 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if recoveryTask.GetObjectInfo() == nil {
+	// check signature consistent
+	primaryAddr, pk, err := RecoverAddr(recoveryMsg, recoveryTask.GetSignature())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address")
+		return
+	}
+	if !secp256k1.VerifySignature(pk.Bytes(), recoveryMsg, recoveryTask.GetSignature()) {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task signature")
+		return
+	}
+
+	objectInfo := recoveryTask.GetObjectInfo()
+	if objectInfo == nil {
 		log.CtxErrorw(reqCtx.Context(), "recovery task params error")
 		err = ErrInvalidHeader
 		return
 	}
 
-	if recoveryTask.GetObjectInfo().RedundancyType != storagetypes.REDUNDANCY_EC_TYPE {
+	if objectInfo.RedundancyType != storagetypes.REDUNDANCY_EC_TYPE {
 		log.CtxErrorw(reqCtx.Context(), "recovery redundancy type only support EC")
+		err = ErrRecoveryRedundancyType
 		return
 	}
 
-	bucketName := recoveryTask.GetObjectInfo().BucketName
-	objectName := recoveryTask.GetObjectInfo().ObjectName
-	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), bucketName)
+	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.BucketName)
 	if err != nil {
-		return
+		err = ErrConsensus
 	}
 
-	// How to get the address of the peer network request? It is necessary to confirm that the request is sent by the primary sp.
-	/*
-		if bucketInfo.PrimarySpAddress != reqCtx.Account() {
-			log.CtxErrorw(reqCtx.Context(), "recovery request not come from primary sp")
-		}
-	*/
-	operatorAddr := g.baseApp.OperateAddress()
-	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), bucketName, objectName)
+	// the primary sp of the object should be consistent with task signature
+	if bucketInfo.PrimarySpAddress != primaryAddr.String() {
+		log.CtxErrorw(reqCtx.Context(), "recovery request not come from primary sp")
+	}
 
-	secondarySPs := objectInfo.SecondarySpAddresses
+	operatorAddr := g.baseApp.OperateAddress()
+	infoOnChain, err := g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), objectInfo.BucketName, objectInfo.ObjectName)
+	if err != nil {
+		err = ErrConsensus
+	}
+
+	secondarySPs := infoOnChain.SecondarySpAddresses
 	isOneOfSecondary := false
 	var replicateIdx int
 	for idx, spAddr := range secondarySPs {
