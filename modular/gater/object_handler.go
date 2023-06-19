@@ -266,7 +266,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_segment_data_time").Observe(time.Since(getSegmentTime).Seconds())
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to download piecem", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
 			// TODO pieceStore should return exact error to indicate if the piece data lost
 			// for now, if get piece fail, it is suspected that the piece has been lost
 			// the recovery task will recovery the total segment (ignoring the offset and length of piece info)
@@ -286,11 +286,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 				g.baseApp.TaskTimeout(recoveryTask, task.GetStorageParams().GetMaxSegmentSize()),
 				g.baseApp.TaskMaxRetry(recoveryTask))
 
-			if taskErr := g.baseApp.GfSpClient().ReportTask(reqCtx.Context(), recoveryTask); taskErr != nil {
-				// no need to return recovery error to user
-				log.CtxErrorw(reqCtx.Context(), "fail to generate recovery task", "error", taskErr)
-				return
-			}
+			//TODO check if it need to get reportTask error value
+			g.baseApp.GfSpClient().ReportTask(reqCtx.Context(), recoveryTask)
+
 			log.CtxDebugw(reqCtx.Context(), "recovery task run successfully", "recovery object", objectInfo.ObjectName, "segment index:", idx, "error", err)
 
 			pieceData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask)
@@ -332,6 +330,97 @@ func (g *GateModular) tryDownloadAfterRecovery(ctx context.Context, pieceTask *g
 		}
 	}
 
+}
+
+// getRecoveryPieceHandler handles the get object segment piece data request.
+func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err           error
+		reqCtxErr     error
+		reqCtx        *RequestContext
+		authenticated bool
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+	reqCtx, reqCtxErr = NewRequestContext(r, g)
+	// check the object permission whether allow public read.
+	if authenticated, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
+		reqCtx.bucketName, reqCtx.objectName); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
+		err = ErrConsensus
+		return
+	}
+
+	// the authorization is same as getObject handler
+	if !authenticated {
+		if reqCtxErr != nil {
+			err = reqCtxErr
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
+			return
+		}
+		if reqCtx.NeedVerifyAuthentication() {
+			if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+				return
+			}
+			if !authenticated {
+				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+				err = ErrNoPermission
+				return
+			}
+		}
+	}
+
+	ECIdx, err := util.StringToInt32(reqCtx.request.Header.Get(GnfdRedundancyIndexHeader))
+	if err != nil || ECIdx < 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse redundancy index", "redundancy_idx",
+			reqCtx.request.Header.Get(GnfdRedundancyIndexHeader))
+		err = ErrInvalidHeader
+		return
+	}
+
+	segmentIdx, err := util.StringToUint32(reqCtx.request.Header.Get(GnfdPieceIndexHeader))
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse segment index", "segment_idx",
+			reqCtx.request.Header.Get(GnfdPieceIndexHeader))
+		err = ErrInvalidHeader
+		return
+	}
+
+	objectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp)
+	if err != nil {
+		err = ErrInvalidHeader
+		return
+	}
+
+	// init download piece task, get piece data and return the data
+	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, segmentIdx,
+		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
+	ECPieceKey := g.baseApp.PieceOp().ECPieceKey(objectInfo.Id.Uint64(), segmentIdx, uint32(ECIdx))
+
+	log.CtxDebugw(reqCtx.Context(), "generating download piece task")
+	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
+	// no need to check quota when recovering primary SP segment data
+	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
+		true, reqCtx.Account(), objectInfo.PayloadSize, ECPieceKey, 0, uint64(ECPieceSize),
+		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
+
+	pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
+	}
+	w.Write(pieceData)
+	log.CtxDebugw(reqCtx.Context(), "succeed to get secondary piece data")
 }
 
 // queryUploadProgressHandler handles the query uploaded object progress request.

@@ -24,6 +24,7 @@ const (
 	requestNonceName                      = "RequestNonce"
 	updateUserPublicKey                   = "UpdateUserPublicKey"
 	queryUploadProgressRouterName         = "QueryUploadProgress"
+	getPieceFromSecondaryRouterName       = "GetPieceFromSecondary"
 	downloadObjectByUniversalEndpointName = "DownloadObjectByUniversalEndpoint"
 	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
 	getObjectMetaRouterName               = "GetObjectMeta"
@@ -62,6 +63,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Path("/{object:.+}").
 		Queries(UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
+	hostBucketRouter.NewRoute().
+		Name(getPieceFromSecondaryRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}").
+		Queries(GetSecondaryPieceData, "").
+		HandlerFunc(g.getRecoveryPieceHandler)
 	hostBucketRouter.NewRoute().
 		Name(getBucketMetaRouterName).
 		Methods(http.MethodGet).
@@ -183,6 +190,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Path("/{object:.+}").
 		Queries(UploadProgressQuery, "").
 		HandlerFunc(g.queryUploadProgressHandler)
+	pathBucketRouter.NewRoute().
+		Name(getPieceFromSecondaryRouterName).
+		Methods(http.MethodGet).
+		Path("/{object:.+}").
+		Queries(GetSecondaryPieceData, "").
+		HandlerFunc(g.getRecoveryPieceHandler)
 	pathBucketRouter.NewRoute().
 		Name(getBucketMetaRouterName).
 		Methods(http.MethodGet).

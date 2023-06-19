@@ -43,7 +43,8 @@ const (
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
 	ActionQuery = "action"
 	// UploadProgressQuery defines upload progress query, which is used to route request
-	UploadProgressQuery = "upload-progress"
+	UploadProgressQuery   = "upload-progress"
+	GetSecondaryPieceData = "get-piece"
 	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request
 	GetBucketReadQuotaQuery = "read-quota"
 	// GetBucketReadQuotaMonthQuery defines bucket read quota query month
