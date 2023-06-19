@@ -6,15 +6,19 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -441,16 +445,48 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 
 // PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.
 func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error) {
-	// TODO: refine it.
-	vgf, err := m.virtualGroupManager.PickVirtualGroupFamily()
-	if err != nil {
-		// TODO: create gvg?
-		// 1.generate a new gvg
-		// 2.send tx
-		// 3.refresh
-		// 4.get vgf id
-		log.CtxErrorw(ctx, "failed to pick vgf", "task_info", task.Info(), "error", err)
-		return 0, err
+	var (
+		err error
+		vgf *vmmgr.VirtualGroupFamilyMeta
+	)
+
+	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+		// create a new gvg, and retry pick.
+		if err = m.createGlobalVirtualGroup(nil); err != nil {
+			log.CtxErrorw(ctx, "failed to create global virtual group", "task_info", task.Info(), "error", err)
+			return 0, err
+		}
+		m.virtualGroupManager.ForceRefreshMeta()
+		if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+			log.CtxErrorw(ctx, "failed to pick vgf", "task_info", task.Info(), "error", err)
+			return 0, err
+		}
+		return vgf.ID, nil
 	}
 	return vgf.ID, nil
+}
+
+func (m *ManageModular) createGlobalVirtualGroup(params *storagetypes.Params) error {
+	var err error
+	if params == nil {
+		if params, err = m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix()); err != nil {
+			return err
+		}
+	}
+	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(params)
+	if err != nil {
+		return err
+	}
+	virtualGroupParams, err := m.baseApp.Consensus().QueryVirtualGroupParams(context.Background())
+	if err != nil {
+		return err
+	}
+	return m.baseApp.GfSpClient().CreateGlobalVirtualGroup(context.Background(), &gfspserver.GfSpCreateGlobalVirtualGroup{
+		PrimarySpAddress: m.baseApp.OperatorAddress(),
+		SecondarySpIds:   gvgMeta.SecondarySPIDs,
+		Deposit: &sdk.Coin{
+			Denom:  virtualGroupParams.GetDepositDenom(),
+			Amount: sdk.NewInt(int64(gvgMeta.StakingStorageSize * virtualGroupParams.GvgStakingPrice.BigInt().Uint64())),
+		},
+	})
 }

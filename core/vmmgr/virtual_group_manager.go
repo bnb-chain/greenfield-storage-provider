@@ -26,7 +26,7 @@ type VirtualGroupManager interface {
 	PickVirtualGroupFamily() (*VirtualGroupFamilyMeta, error)
 	PickGlobalVirtualGroup(vgfID uint32) (*GlobalVirtualGroupMeta, error)
 	ForceRefreshMeta() error
-	GenerateGlobalVirtualGroupMeta(param *storagetypes.VersionedParams) (*GlobalVirtualGroupMeta, error)
+	GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*GlobalVirtualGroupMeta, error)
 }
 
 type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus) (VirtualGroupManager, error)

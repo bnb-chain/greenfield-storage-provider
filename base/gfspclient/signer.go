@@ -78,9 +78,29 @@ func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSea
 	return nil
 }
 
-func (s *GfSpClient) RejectUnSealObject(
-	ctx context.Context,
-	object *storagetypes.MsgRejectSealObject) error {
+func (s *GfSpClient) CreateGlobalVirtualGroup(ctx context.Context, group *gfspserver.GfSpCreateGlobalVirtualGroup) error {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
+		return ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_CreateGlobalVirtualGroup{
+			CreateGlobalVirtualGroup: group,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to create global virtual group", "error", err)
+		return ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
+}
+
+func (s *GfSpClient) RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) error {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)

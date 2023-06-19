@@ -122,7 +122,7 @@ type spManager struct {
 	secondarySPs []*sptypes.StorageProvider
 }
 
-func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.VersionedParams) (*vmmgr.GlobalVirtualGroupMeta, error) {
+func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vmmgr.GlobalVirtualGroupMeta, error) {
 	secondarySPNumber := int(param.GetRedundantDataChunkNum() + param.GetRedundantParityChunkNum())
 	if sm.primarySP == nil || len(sm.secondarySPs) < secondarySPNumber {
 		return nil, fmt.Errorf("no enough sp")
@@ -282,6 +282,7 @@ func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vmmgr.VirtualGroupFam
 // return (nil, nil), if there is no gvg in vgm.
 // TODO: If returns ErrFailedPickGVG, the caller need re-stake or create gvg and force refresh metadata and retry.
 // TODO: if returns ErrStaledMetadata, the caller need force refresh from metadata and retry.
+// TODO: check storage params.
 func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vmmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
@@ -298,7 +299,7 @@ func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 // GenerateGlobalVirtualGroupMeta is used to generate a new global virtual group meta, the caller need send a tx to chain.
 // TODO: support more generate policy.
 // TODO: add filter picker to support balance.
-func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetypes.VersionedParams) (*vmmgr.GlobalVirtualGroupMeta, error) {
+func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*vmmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.spManager.generateVirtualGroupMeta(param)
