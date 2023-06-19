@@ -42,7 +42,7 @@ func (m *GfSpRecoveryPieceTask) Type() coretask.TType {
 }
 
 func (m *GfSpRecoveryPieceTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], piece index[%s], %s",
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], piece index[%d], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
 		m.GetSegmentIdx(), m.GetTask().Info())
 }

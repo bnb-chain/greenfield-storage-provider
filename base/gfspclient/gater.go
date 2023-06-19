@@ -85,7 +85,7 @@ func (s *GfSpClient) GetPieceFromSecondary(ctx context.Context, endpoint string,
 	receiveHeader := hex.EncodeToString(recoveryMsg)
 	req.Header.Add(GnfdRecoveryMsgHeader, receiveHeader)
 
-	resp, err := s.HttpClient(ctx).Do(req)
+	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		return nil, err
 	}

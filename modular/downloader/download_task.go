@@ -184,40 +184,41 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		return ErrRepeatedTask
 	}
 
-	checkQuotaTime := time.Now()
-	// if it is a request from primary SP, no need to check quota
-	if downloadPieceTask.GetUserAddress() == downloadPieceTask.GetBucketInfo().PrimarySpAddress {
+	primarySP := downloadPieceTask.GetBucketInfo().PrimarySpAddress
+	// if it is a request from the primary SP of the object, no need to check quota
+	if downloadPieceTask.GetUserAddress() == primarySP {
 		return nil
 	}
 
-	// if it is a request from client , but I am the secondary SP of the object
-
 	if downloadPieceTask.GetEnableCheck() {
-		if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
-			&spdb.ReadRecord{
-				BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
-				ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
-				UserAddress:     downloadPieceTask.GetUserAddress(),
-				BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
-				ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
-				ReadSize:        downloadPieceTask.GetTotalSize(),
-				ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
-			},
-			&spdb.BucketQuota{
-				ReadQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota() + d.bucketFreeQuota,
-			},
-		); err != nil {
-			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
-			log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
-			if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
-				return ErrExceedBucketQuota
+		myselfAddr := d.baseApp.OperatorAddress()
+		// if it is a request from client, the task handler is the primary SP of the sp
+		if myselfAddr == primarySP {
+			checkQuotaTime := time.Now()
+			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+				&spdb.ReadRecord{
+					BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
+					ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
+					UserAddress:     downloadPieceTask.GetUserAddress(),
+					BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
+					ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
+					ReadSize:        downloadPieceTask.GetTotalSize(),
+					ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+				},
+				&spdb.BucketQuota{
+					ReadQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota() + d.bucketFreeQuota,
+				},
+			); err != nil {
+				metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
+				log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
+				if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
+					return ErrExceedBucketQuota
+				}
+				// ignore the access db error, it is the system's inner error, will be let the request go.
 			}
-			// ignore the access db error, it is the system's inner error, will be let the request go.
+			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
 		}
 	}
-	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
-	// report the task to the manager for monitor the download piece task
-	d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
 
 	return nil
 }

@@ -314,9 +314,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 			total++
 			go func(secondaryIndex int) {
 				pieceData, err := e.doRecoveryPiece(ctx, task, secondaryEndpoints[secondaryIndex])
-				if err != nil {
-					recoveryDataSources[rIdx] = nil
-				} else {
+				if err == nil {
 					recoveryDataSources[secondaryIndex] = pieceData
 					doneCh <- true
 				}
@@ -328,13 +326,14 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		}
 	}
 
+loop:
 	for {
 		select {
 		case <-doneCh:
 			doneCount++
 			// it is enough to recovery data with minRecoveryPieces EC data, no need to wait
 			if doneCount >= minRecoveryPieces {
-				break
+				break loop
 			}
 		case <-quitCh: // all the task finish
 			if doneCount < minRecoveryPieces { // finish task num not enough
