@@ -45,14 +45,16 @@ func (p *GfSpPieceOp) SegmentPieceSize(payloadSize uint64, segmentIdx uint32, ma
 }
 
 func (p *GfSpPieceOp) ECPieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64, dataChunkNum uint32) int64 {
-	segmentCount := p.SegmentPieceCount(payloadSize, maxSegmentSize)
-	if segmentCount == 1 {
-		return int64(payloadSize) / int64(dataChunkNum)
-	} else if segmentIdx == segmentCount-1 {
-		return int64(payloadSize) - (int64(segmentCount)-1)*int64(maxSegmentSize)/int64(dataChunkNum)
-	} else {
-		return int64(maxSegmentSize) / int64(dataChunkNum)
+	segmentSize := p.SegmentPieceSize(payloadSize, segmentIdx, maxSegmentSize)
+
+	ECPieceSize := segmentSize / int64(dataChunkNum)
+	// EC padding will cause the EC pieces to have one extra byte if it cannot be evenly divided.
+	// for example, the segment size is 15, the ec piece size should be 15/4 + 1 = 4
+	if segmentSize > 0 && segmentSize%int64(dataChunkNum) != 0 {
+		ECPieceSize++
 	}
+
+	return ECPieceSize
 }
 
 func (p *GfSpPieceOp) SegmentPieceCount(payloadSize uint64, maxSegmentSize uint64) uint32 {
