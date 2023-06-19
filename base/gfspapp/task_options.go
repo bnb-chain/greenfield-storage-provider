@@ -20,7 +20,7 @@ const (
 	// MaxReplicateTime defines the max timeout to replicate object.
 	MaxReplicateTime int64 = 500
 	// MinReceiveTime defines the min timeout to confirm the received piece whether is sealed on greenfield.
-	MinReceiveTime int64 = 2
+	MinReceiveTime int64 = 5
 	// MaxReceiveTime defines the max timeout to confirm the received piece whether is sealed on greenfield.
 	MaxReceiveTime int64 = 10
 	// MinSealObjectTime defines the min timeout to seal object to greenfield.

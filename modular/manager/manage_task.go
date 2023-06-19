@@ -42,7 +42,7 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 	task = m.sealQueue.TopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add seal object task to backup set", "task_key", task.Key().String(),
-			"task_limit", "task_limit", task.EstimateLimit().String())
+			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
 	task = m.gcObjectQueue.TopByLimit(limit)
