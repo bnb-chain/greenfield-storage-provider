@@ -195,6 +195,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		myselfAddr := d.baseApp.OperatorAddress()
 		// if it is a request from client, the task handler is the primary SP of the sp
 		if myselfAddr == primarySP {
+			log.CtxDebugw(ctx, "downloading from primary SP, checking quota")
 			checkQuotaTime := time.Now()
 			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
 				&spdb.ReadRecord{
@@ -218,7 +219,42 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 				// ignore the access db error, it is the system's inner error, will be let the request go.
 			}
 			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
+			return nil
 		}
+		secondarySPs := downloadPieceTask.GetObjectInfo().SecondarySpAddresses
+		var isMyselfSecondary bool
+		for _, addr := range secondarySPs {
+			if myselfAddr == addr {
+				isMyselfSecondary = true
+			}
+		}
+		// if it is a request from client, the task handler is the secondary SP of the object
+		if isMyselfSecondary {
+			// check free quota
+			log.CtxDebugw(ctx, "downloading piece from secondary SP, checking quota")
+			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+				&spdb.ReadRecord{
+					BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
+					ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
+					UserAddress:     downloadPieceTask.GetUserAddress(),
+					BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
+					ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
+					ReadSize:        downloadPieceTask.GetTotalSize(),
+					ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+				},
+				&spdb.BucketQuota{
+					ReadQuotaSize: d.bucketFreeQuota,
+				},
+			); err != nil {
+				log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
+				if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
+					return ErrExceedBucketQuota
+				}
+				// ignore the access db error, it is the system's inner error, will be let the request go.
+			}
+			return nil
+		}
+
 	}
 
 	return nil

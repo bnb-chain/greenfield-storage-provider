@@ -48,6 +48,7 @@ const (
 	UploadContextQuery      = "upload-context"
 	ResumableUploadComplete = "complete"
 	ResumableUploadOffset   = "offset"
+	GetSecondaryPieceData   = "get-piece"
 	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request
 	GetBucketReadQuotaQuery = "read-quota"
 	// GetBucketReadQuotaMonthQuery defines bucket read quota query month
