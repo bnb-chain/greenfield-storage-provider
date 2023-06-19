@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-#basedir=$(cd `dirname $0` || return; pwd)
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
@@ -11,7 +10,7 @@ MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
 TEST_ACCOUNT_ADDRESS="0x76263999b87D08228eFB098F36d17363Acf40c2c"
 TEST_ACCOUNT_PRIVATE_KEY="da942d31bc4034577f581057e4a3644404ac12828a84052f87086d508fdcf095"
-BUCKET_NAME="spe2etestbucket"
+BUCKET_NAME="spbucket"
 
 #########################################
 # build and start Greenfield blockchain #
@@ -108,7 +107,7 @@ function test_file_size_less_than_16_mb() {
   cd ${workspace}/greenfield-cmd/build/
   ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/json" ${workspace}/test/e2e/spworkflow/testdata/example.json gnfd://${BUCKET_NAME}
   sleep 16
-  ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spe2etestbucket/example.json ./test_data.json
+  ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://${BUCKET_NAME}/example.json ./test_data.json
   check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./test_data.json
   cat test_data.json
 }
@@ -122,7 +121,7 @@ function test_file_size_greater_than_16_mb() {
   dd if=/dev/urandom of=./random_file bs=17M count=1
   ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/octet-stream" ./random_file gnfd://${BUCKET_NAME}/random_file
   sleep 16
-  ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spe2etestbucket/random_file ./new_random_file
+  ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://${BUCKET_NAME}/random_file ./new_random_file
   sleep 10
   check_md5 ./random_file ./new_random_file
 }

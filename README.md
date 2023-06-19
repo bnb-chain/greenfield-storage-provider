@@ -45,7 +45,7 @@ Greenfield Storage Provider
 Version : vx.x.x
 Branch  : master
 Commit  : bfc32b9748c11d74493f93c420744ade4dbc18ac
-Build   : go1.20.3 darwin arm64 2023-05-12 13:37
+Build   : go1.20.3 darwin arm64 2023-06-20 13:37
 
 # show help
 ./gnfd-sp help
@@ -62,9 +62,13 @@ Build   : go1.20.3 darwin arm64 2023-05-12 13:37
 
 #### Edit configuration
 
+If you want to view detailed config.toml, you car visit this page [Detailed Config](./docs/run-book/config_template.toml).
+
+The following lists some important configuration information:
+
 ```toml
 Server = []
-GrpcAddress = '0.0.0.0:9333'
+GRPCAddress = '0.0.0.0:9333'
 
 [SpDB]
 User = '${db_user}'
@@ -100,7 +104,7 @@ ChainID = '${chain_id}'
 ChainAddress = ['${chain_address}']
 
 [SpAccount]
-SpOperateAddress = '${sp_operator_address}'
+SpOperatorAddress = '${sp_operator_address}'
 OperatorPrivateKey = '${operator_private_key}'
 FundingPrivateKey = '${funding_private_key}'
 SealPrivateKey = '${seal_private_key}'
@@ -116,11 +120,11 @@ MetadataEndpoint = 'metadata:9333'
 UploaderEndpoint = 'uploader:9333'
 P2PEndpoint = 'p2p:9333'
 SignerEndpoint = 'signer:9333'
-AuthorizerEndpoint = 'localhost:9333'
+AuthenticatorEndpoint = 'localhost:9333'
 
 [Gateway]
-Domain = '${gateway_domain_name}'
-HttpAddress = '0.0.0.0:9033'
+DomainName = '${gateway_domain_name}'
+HTTPAddress = '0.0.0.0:9033'
 
 [P2P]
 P2PPrivateKey = '${p2p_private_key}'
@@ -136,8 +140,8 @@ DiscontinueBucketKeepAliveDays = 2
 [Monitor]
 DisableMetrics = false
 DisablePProf = false
-MetricsHttpAddress = '0.0.0.0:24367'
-PProfHttpAddress = '0.0.0.0:24368'
+MetricsHTTPAddress = '0.0.0.0:24367'
+PProfHTTPAddress = '0.0.0.0:24368'
 
 [Rcmgr]
 DisableRcmgr = false
@@ -171,9 +175,9 @@ RatePeriod = 'S'
 ./gnfd-sp --config ${config_file_path}
 ```
 
-### Add Greenfield Chain
+### Join Greenfield Testnet
 
-[Add SP to Greenfield](https://github.com/bnb-chain/greenfield-docs/blob/master/src/guide/storage-provider/run-book/run-testnet-SP-node.md)
+[Run Testnet SP Node](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node)
 
 ## Document
 
@@ -191,6 +195,7 @@ RatePeriod = 'S'
 
 * [Greenfield](https://github.com/bnb-chain/greenfield): The Golang implementation of the Greenfield Blockchain.
 * [Greenfield-Go-SDK](https://github.com/bnb-chain/greenfield-go-sdk): The Greenfield SDK, interact with SP, Greenfield and Tendermint.
+* [Greenfield Cmd](https://github.com/bnb-chain/greenfield-cmd): Greenfield client cmd tool, supporting commands to make requests to greenfield.
 * [Greenfield-Common](https://github.com/bnb-chain/greenfield-common): The Greenfield common package.
 * [Reed-Solomon](https://github.com/klauspost/reedsolomon): The Reed-Solomon Erasure package in prue Go, with speeds exceeding 1GB/s/cpu core.
 * [Juno](https://github.com/bnb-chain/juno): The Cosmos Hub blockchain data aggregator and exporter package.
