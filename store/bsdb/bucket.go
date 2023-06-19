@@ -97,7 +97,7 @@ func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address, includeRemoved 
 }
 
 // ListExpiredBucketsBySp lists expired buckets
-func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpAddress string, limit int64) ([]*Bucket, error) {
+func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpID uint32, limit int64) ([]*Bucket, error) {
 	var (
 		buckets []*Bucket
 		err     error
@@ -109,7 +109,7 @@ func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpAddress strin
 
 	err = b.db.Table((&Bucket{}).TableName()).
 		Select("*").
-		Where("primary_sp_address = ? and status = 'BUCKET_STATUS_CREATED' and create_time < ? and removed = false", common.HexToAddress(primarySpAddress), createAt).
+		Where("primary_sp_id = ? and status = 'BUCKET_STATUS_CREATED' and create_time < ? and removed = false", primarySpID, createAt).
 		Limit(int(limit)).
 		Order("create_at").
 		Find(&buckets).Error

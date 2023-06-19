@@ -19,14 +19,14 @@ So the Front Modular has three interfaces for each task type, `PreHandleXXXTask`
 ## Background Modular
 Background Modular handles the SP inner task, since it is internally 
 generated, the correctness of the information can be guaranteed, so only 
-have one interface`HandleXXXTask`. Background Modular includes: `Authorizer`,
+have one interface`HandleXXXTask`. Background Modular includes: `Authenticator`,
 `TaskExecutor`,`Manager`, `P2P`, `c` and `Signer`.
 
 
 # Modular Type
 
 The GfSp framework specifies the following modular: `Gater`, `Approver`, 
-`Authorizer`, `Uploader`, `Downloader`, `Manager`, `P2P`, `Receiver`, 
+`Authenticator`, `Uploader`, `Downloader`, `Manager`, `P2P`, `Receiver`, 
 `Signer`and `Metadata`. The GfSp framework also supports extending more 
 customized mudolar as needed. As long as it is registered in GfSp framework 
 and executes the modular interface, it will be initialized and scheduled.
@@ -41,8 +41,8 @@ modular file.
 Approver is the modular to handle ask approval request, handles CreateBucketApproval 
 and CreateObjectApproval.
 
-## Authorizer
-Authorizer is the modular to authority verification.
+## Authenticator
+Authenticator is the modular to authentication verification.
 
 ## Downloader
 Downloader is the modular to handle get object request from user account,

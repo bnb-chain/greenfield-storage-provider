@@ -38,10 +38,15 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 	if err != nil {
 		return
 	}
+
+	// todo need gvgId
+	gvgId := uint32(0)
+
 	sealMsg := &storagetypes.MsgSealObject{
-		Operator:                    e.baseApp.OperateAddress(),
+		Operator:                    e.baseApp.OperatorAddress(),
 		BucketName:                  task.GetObjectInfo().GetBucketName(),
 		ObjectName:                  task.GetObjectInfo().GetObjectName(),
+		GlobalVirtualGroupId:        gvgId,
 		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
@@ -63,6 +68,9 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 	// even though signer return error, maybe seal on chain successfully because
 	// signer use the async mode, so ignore the error and listen directly
 	err = e.listenSealObject(ctx, task.GetObjectInfo())
+	if err == nil {
+		metrics.PerfUploadTimeHistogram.WithLabelValues("upload_replicate_seal_total_time").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+	}
 	return err
 }
 
@@ -121,6 +129,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 	// regardless of whether the sp is as secondary or not, it needs to be set to the
 	// sealed state to let the manager clear the task.
 	task.SetSealed(true)
+	// TODO:
 	//if int(task.GetReplicateIdx()) >= len(onChainObject.GetSecondarySpAddresses()) {
 	//	log.CtxErrorw(ctx, "failed to confirm receive task, replicate idx out of bounds",
 	//		"replicate_idx", task.GetReplicateIdx(),
@@ -128,30 +137,31 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 	//	task.SetError(ErrReplicateIdsOutOfBounds)
 	//	return
 	//}
-	//if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperateAddress() {
+	//if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperatorAddress() {
 	//	log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch",
 	//		"expect", onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())],
-	//		"current", e.baseApp.OperateAddress())
+	//		"current", e.baseApp.OperatorAddress())
 	//	task.SetError(ErrSecondaryMismatch)
-	//	err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
-	//	if err != nil {
-	//		log.CtxErrorw(ctx, "failed to delete integrity")
-	//	}
-	//	var pieceKey string
-	//	segmentCount := e.baseApp.PieceOp().SegmentPieceCount(onChainObject.GetPayloadSize(),
-	//		task.GetStorageParams().GetMaxPayloadSize())
-	//	for i := uint32(0); i < segmentCount; i++ {
-	//		if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-	//			pieceKey = e.baseApp.PieceOp().ECPieceKey(onChainObject.Id.Uint64(),
-	//				i, task.GetReplicateIdx())
-	//		} else {
-	//			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(onChainObject.Id.Uint64(), i)
-	//		}
-	//		err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-	//		if err != nil {
-	//			log.CtxErrorw(ctx, "failed to delete piece data", "piece_key", pieceKey)
-	//		}
-	//	}
+	//	// TODO:: gc zombie task will gc the zombie piece, it is a conservative plan
+	//	//err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+	//	//if err != nil {
+	//	//	log.CtxErrorw(ctx, "failed to delete integrity")
+	//	//}
+	//	//var pieceKey string
+	//	//segmentCount := e.baseApp.PieceOp().SegmentPieceCount(onChainObject.GetPayloadSize(),
+	//	//	task.GetStorageParams().GetMaxPayloadSize())
+	//	//for i := uint32(0); i < segmentCount; i++ {
+	//	//	if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
+	//	//		pieceKey = e.baseApp.PieceOp().ECPieceKey(onChainObject.Id.Uint64(),
+	//	//			i, task.GetReplicateIdx())
+	//	//	} else {
+	//	//		pieceKey = e.baseApp.PieceOp().SegmentPieceKey(onChainObject.Id.Uint64(), i)
+	//	//	}
+	//	//	err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+	//	//	if err != nil {
+	//	//		log.CtxErrorw(ctx, "failed to delete piece data", "piece_key", pieceKey)
+	//	//	}
+	//	//}
 	//	return
 	//}
 	log.CtxDebugw(ctx, "succeed to handle confirm receive piece task")
@@ -194,7 +204,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 	}()
 
 	if waitingGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
-		ctx, e.baseApp.OperateAddress(), task.GetStartBlockNumber(),
+		ctx, e.baseApp.OperatorAddress(), task.GetStartBlockNumber(),
 		task.GetEndBlockNumber(), true); err != nil {
 		log.CtxErrorw(ctx, "failed to query deleted object list", "task_info", task.Info(), "error", err)
 		return
@@ -221,9 +231,8 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		objectInfo := object.GetObjectInfo()
 		currentGCObjectID = objectInfo.Id.Uint64()
 		if currentGCBlockID < task.GetCurrentBlockNumber() {
-			continue
-		}
-		if currentGCObjectID <= task.GetLastDeletedObjectId() {
+			log.Errorw("skip gc object", "object_info", objectInfo,
+				"task_current_gc_block_id", task.GetCurrentBlockNumber())
 			continue
 		}
 		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(
@@ -235,8 +244,9 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			log.CtxDebugw(ctx, "delete the primary sp pieces",
 				"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 		}
+		// TODO:
 		//for rIdx, address := range objectInfo.GetSecondarySpAddresses() {
-		//	if strings.Compare(e.baseApp.OperateAddress(), address) == 0 {
+		//	if strings.Compare(e.baseApp.OperatorAddress(), address) == 0 {
 		//		for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 		//			pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
 		//			if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {

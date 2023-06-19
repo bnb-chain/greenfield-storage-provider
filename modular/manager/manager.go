@@ -16,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
@@ -73,6 +74,8 @@ type ManageModular struct {
 	discontinueBucketEnabled       bool
 	discontinueBucketTimeInterval  int
 	discontinueBucketKeepAliveDays int
+
+	virtualGroupManager vmmgr.VirtualGroupManager
 }
 
 func (m *ManageModular) Name() string {
@@ -157,15 +160,16 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				continue
 			}
 			m.discontinueBuckets(ctx)
-			log.Infof("finish to discontinue buckets", "time", time.Now())
+			log.Infow("finished to discontinue buckets", "time", time.Now())
 		}
 	}
 }
 
 func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 	createAt := time.Now().AddDate(0, 0, -m.discontinueBucketKeepAliveDays)
+	// TODO: Arthur Li/Will needs to get operator ID by getSpIDbySpAddress or add one more attribute in GfSpBaseApp
 	buckets, err := m.baseApp.GfSpClient().ListExpiredBucketsBySp(context.Background(),
-		createAt.Unix(), m.baseApp.OperateAddress(), DiscontinueBucketLimit)
+		createAt.Unix(), 0, DiscontinueBucketLimit)
 	if err != nil {
 		log.Errorw("failed to query expired buckets", "error", err)
 		return
@@ -342,13 +346,15 @@ func (m *ManageModular) UploadingObjectNumber() int {
 func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.UploadObjectTask)
 	if task.Expired() {
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:         task.GetObjectInfo().Id.Uint64(),
-			TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
-			ErrorDescription: "expired",
-		}); err != nil {
-			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
-		}
+		go func() {
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+				ErrorDescription: "expired",
+			}); err != nil {
+				log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
+			}
+		}()
 		return true
 	}
 	return false
@@ -357,13 +363,15 @@ func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 	task := qTask.(task.ReplicatePieceTask)
 	if task.Expired() {
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:         task.GetObjectInfo().Id.Uint64(),
-			TaskState:        types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR,
-			ErrorDescription: "expired",
-		}); err != nil {
-			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
-		}
+		go func() {
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR,
+				ErrorDescription: "expired",
+			}); err != nil {
+				log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
+			}
+		}()
 		return true
 	}
 	return false
@@ -372,13 +380,15 @@ func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 func (m *ManageModular) GCSealObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.SealObjectTask)
 	if task.Expired() {
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:         task.GetObjectInfo().Id.Uint64(),
-			TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
-			ErrorDescription: "expired",
-		}); err != nil {
-			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
-		}
+		go func() {
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
+				ErrorDescription: "expired",
+			}); err != nil {
+				log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
+			}
+		}()
 		return true
 	}
 	return false
@@ -407,7 +417,16 @@ func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
 }
 
 func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
-	return !qTask.Expired() && (qTask.GetRetry() == 0 || qTask.ExceedTimeout())
+	if qTask.ExceedRetry() {
+		return false
+	}
+	if qTask.ExceedTimeout() {
+		return true
+	}
+	if qTask.GetRetry() == 0 {
+		return true
+	}
+	return false
 }
 
 func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) task.Task {
@@ -449,7 +468,7 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 		return
 	}
 	for _, sp := range spList {
-		if strings.EqualFold(m.baseApp.OperateAddress(), sp.OperatorAddress) {
+		if strings.EqualFold(m.baseApp.OperatorAddress(), sp.OperatorAddress) {
 			if err = m.baseApp.GfSpDB().SetOwnSpInfo(sp); err != nil {
 				log.Errorw("failed to set own sp info", "error", err)
 				return
@@ -459,6 +478,7 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 }
 
 func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storagetypes.ObjectInfo) error {
+	metrics.SealObjectFailedCounter.WithLabelValues(m.Name()).Inc()
 	rejectUnSealObjectMsg := &storagetypes.MsgRejectSealObject{
 		BucketName: object.GetBucketName(),
 		ObjectName: object.GetObjectName(),
@@ -468,12 +488,22 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 	for i := 0; i < RejectUnSealObjectRetry; i++ {
 		err = m.baseApp.GfSpClient().RejectUnSealObject(ctx, rejectUnSealObjectMsg)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to reject unseal object", "retry", i, "error", err)
 			time.Sleep(RejectUnSealObjectTimeout * time.Second)
 		} else {
-			break
+			log.CtxDebugw(ctx, "succeed to reject unseal object")
+			reject, err := m.baseApp.Consensus().ListenRejectUnSealObject(ctx, object.Id.Uint64(), DefaultListenRejectUnSealTimeoutHeight)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to reject unseal object", "error", err)
+				continue
+			}
+			if !reject {
+				log.CtxErrorw(ctx, "failed to reject unseal object")
+				continue
+			}
+			return nil
 		}
 	}
+	log.CtxErrorw(ctx, "failed to reject unseal object", "error", err)
 	return err
 }
 

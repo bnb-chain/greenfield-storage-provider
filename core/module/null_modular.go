@@ -20,7 +20,7 @@ var _ Modular = (*NullModular)(nil)
 var _ Approver = (*NullModular)(nil)
 var _ Uploader = (*NullModular)(nil)
 var _ Manager = (*NullModular)(nil)
-var _ Authorizer = (*NullModular)(nil)
+var _ Authenticator = (*NullModular)(nil)
 
 type NullModular struct{}
 
@@ -40,6 +40,11 @@ func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreate
 func (*NullModular) HandleCreateBucketApprovalTask(context.Context, task.ApprovalCreateBucketTask) (bool, error) {
 	return false, ErrNilModular
 }
+
+func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateBucketTask) (uint32, error) {
+	return 0, ErrNilModular
+}
+
 func (*NullModular) PostCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) {}
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return ErrNilModular
@@ -96,7 +101,8 @@ func (*NullModular) HandleDownloadObjectTask(context.Context, task.DownloadObjec
 func (*NullModular) HandleChallengePieceTask(context.Context, task.ChallengePieceTask) error {
 	return ErrNilModular
 }
-func (*NullModular) VerifyAuthorize(context.Context, AuthOpType, string, string, string) (bool, error) {
+
+func (*NullModular) VerifyAuthentication(context.Context, AuthOpType, string, string, string) (bool, error) {
 	return false, ErrNilModular
 }
 
@@ -151,7 +157,7 @@ func (*NilModular) PreChallengePiece(context.Context, task.ChallengePieceTask) e
 func (*NilModular) HandleChallengePiece(context.Context, task.ChallengePieceTask) ([]byte, [][]byte, []byte, error) {
 	return nil, nil, nil, ErrNilModular
 }
-func (*NilModular) AskTask(context.Context, rcmgr.Limit)                              {}
+func (*NilModular) AskTask(context.Context) error                                     { return nil }
 func (*NilModular) PostChallengePiece(context.Context, task.ChallengePieceTask)       {}
 func (*NilModular) ReportTask(context.Context, task.Task) error                       { return ErrNilModular }
 func (*NilModular) HandleReplicatePieceTask(context.Context, task.ReplicatePieceTask) {}

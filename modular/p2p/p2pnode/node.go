@@ -187,7 +187,7 @@ func (n *Node) GetSecondaryReplicatePieceApproval(
 		return
 	}
 	defer n.approval.cancelApprovalRequest(task.GetObjectInfo().Id.Uint64())
-	task.SetAskSpOperatorAddress(n.baseApp.OperateAddress())
+	task.SetAskSpOperatorAddress(n.baseApp.OperatorAddress())
 	signature, err := n.baseApp.GfSpClient().SignReplicatePieceApproval(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign replicate piece approval request")
@@ -245,7 +245,7 @@ func (n *Node) eventLoop() {
 			}
 
 			ping := &gfspp2p.GfSpPing{
-				SpOperatorAddress: n.baseApp.OperateAddress(),
+				SpOperatorAddress: n.baseApp.OperatorAddress(),
 			}
 			ctx := context.Background()
 			sinagture, err := n.baseApp.GfSpClient().SignP2PPingMsg(ctx, ping)

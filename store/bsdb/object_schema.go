@@ -61,6 +61,8 @@ type Object struct {
 	UpdateTxHash common.Hash `gorm:"update_tx_hash"`
 	// SealTxHash defines the sealed transaction hash of object
 	SealTxHash common.Hash `gorm:"column:sealed_tx_hash"`
+	// LocalVirtualGroupId defines the local virtual group id of object
+	LocalVirtualGroupId uint32 `gorm:"local_virtual_group_id"`
 }
 
 // TableName is used to set Object table name in database

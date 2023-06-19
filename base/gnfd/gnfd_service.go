@@ -4,9 +4,11 @@ import (
 	"context"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -81,6 +83,53 @@ func (g *Gnfd) ListBondedValidators(ctx context.Context) ([]stakingtypes.Validat
 		validators = append(validators, resp.GetValidators()[i])
 	}
 	return validators, nil
+}
+
+// ListVirtualGroupFamilies return the list of virtual group family.
+func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("list_virtual_group_family").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	var vgfs []*virtualgrouptypes.GlobalVirtualGroupFamily
+	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{
+		StorageProviderId: spID,
+	})
+	if err != nil {
+		log.Errorw("failed to list virtual group families", "error", err)
+		return vgfs, err
+	}
+	for i := 0; i < len(resp.GetGlobalVirtualGroupFamilies()); i++ {
+		vgfs = append(vgfs, resp.GetGlobalVirtualGroupFamilies()[i])
+	}
+	return vgfs, nil
+}
+
+// QueryGlobalVirtualGroup returns the global virtual group info.
+func (g *Gnfd) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_global_virtual_group").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroup(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupRequest{
+		gvgID,
+	})
+	if err != nil {
+		log.Errorw("failed to query global virtual group", "error", err)
+		return nil, err
+	}
+	return resp.GetGlobalVirtualGroup(), nil
+}
+
+// QueryVirtualGroupParams return virtual group params.
+func (g *Gnfd) QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_virtual_group_params").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.VirtualGroupQueryClient.Params(ctx, &virtualgrouptypes.QueryParamsRequest{})
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query virtual group params", "error", err)
+		return nil, err
+	}
+	return &resp.Params, nil
 }
 
 // QueryStorageParams returns storage params
@@ -178,21 +227,45 @@ func (g *Gnfd) ListenObjectSeal(ctx context.Context, objectID uint64, timeoutHei
 		err        error
 	)
 	for i := 0; i < timeoutHeight; i++ {
-		time.Sleep(ExpectedOutputBlockInternal * time.Second)
 		objectInfo, err = g.QueryObjectInfoByID(ctx, strconv.FormatUint(objectID, 10))
 		if err != nil {
+			time.Sleep(ExpectedOutputBlockInternal * time.Second)
 			continue
 		}
 		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
 			log.CtxDebugw(ctx, "succeed to listen object stat")
 			return true, nil
 		}
+		time.Sleep(ExpectedOutputBlockInternal * time.Second)
 	}
 	if err == nil {
 		log.CtxErrorw(ctx, "seal object timeout", "object_id", objectID)
 		return false, ErrSealTimeout
 	}
 	log.CtxErrorw(ctx, "failed to listen seal object", "object_id", objectID, "error", err)
+	return false, err
+}
+
+// ListenRejectUnSealObject returns an indication of the object is rejected.
+// TODO:: retrieve service support reject unseal event subscription
+func (g *Gnfd) ListenRejectUnSealObject(ctx context.Context, objectID uint64, timeoutHeight int) (bool, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("wait_reject_unseal_object").Observe(time.Since(startTime).Seconds())
+	var err error
+	for i := 0; i < timeoutHeight; i++ {
+		_, err = g.QueryObjectInfoByID(ctx, strconv.FormatUint(objectID, 10))
+		if err != nil {
+			if strings.Contains(err.Error(), "No such object") {
+				return true, nil
+			}
+		}
+		time.Sleep(ExpectedOutputBlockInternal * time.Second)
+	}
+	if err == nil {
+		log.CtxErrorw(ctx, "reject unseal object timeout", "object_id", objectID)
+		return false, ErrRejectUnSealTimeout
+	}
+	log.CtxErrorw(ctx, "failed to listen reject unseal object", "object_id", objectID, "error", err)
 	return false, err
 }
 

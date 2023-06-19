@@ -1,6 +1,7 @@
 package gfspconfig
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
@@ -29,13 +30,14 @@ type Customize struct {
 	NewTQueueWithLimit             coretaskqueue.NewTQueueWithLimit
 	NewStrategyTQueueFunc          coretaskqueue.NewTQueueOnStrategy
 	NewStrategyTQueueWithLimitFunc coretaskqueue.NewTQueueOnStrategyWithLimit
+	NewVirtualGroupManagerFunc     vmmgr.NewVirtualGroupManager
 }
 
 // GfSpConfig defines the GfSp configuration.
 type GfSpConfig struct {
 	AppID          string
 	Server         []string
-	GrpcAddress    string
+	GRPCAddress    string
 	Customize      *Customize
 	SpDB           storeconfig.SQLDBConfig
 	BsDB           storeconfig.SQLDBConfig
@@ -90,7 +92,7 @@ type ChainConfig struct {
 }
 
 type SpAccountConfig struct {
-	SpOperateAddress   string
+	SpOperatorAddress  string
 	OperatorPrivateKey string
 	FundingPrivateKey  string
 	SealPrivateKey     string
@@ -100,15 +102,15 @@ type SpAccountConfig struct {
 }
 
 type EndpointConfig struct {
-	ApproverEndpoint   string
-	ManagerEndpoint    string
-	DownloaderEndpoint string
-	ReceiverEndpoint   string
-	MetadataEndpoint   string
-	UploaderEndpoint   string
-	P2PEndpoint        string
-	SignerEndpoint     string
-	AuthorizerEndpoint string
+	ApproverEndpoint      string
+	ManagerEndpoint       string
+	DownloaderEndpoint    string
+	ReceiverEndpoint      string
+	MetadataEndpoint      string
+	UploaderEndpoint      string
+	P2PEndpoint           string
+	SignerEndpoint        string
+	AuthenticatorEndpoint string
 }
 
 type ApprovalConfig struct {
@@ -125,8 +127,8 @@ type BucketConfig struct {
 }
 
 type GatewayConfig struct {
-	Domain      string
-	HttpAddress string
+	DomainName  string
+	HTTPAddress string
 }
 
 type ExecutorConfig struct {
@@ -197,8 +199,8 @@ type TaskConfig struct {
 type MonitorConfig struct {
 	DisableMetrics     bool
 	DisablePProf       bool
-	MetricsHttpAddress string
-	PProfHttpAddress   string
+	MetricsHTTPAddress string
+	PProfHTTPAddress   string
 }
 
 type RcmgrConfig struct {

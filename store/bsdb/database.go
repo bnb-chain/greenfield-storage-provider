@@ -35,7 +35,7 @@ type Metadata interface {
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
 	ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error)
 	// ListExpiredBucketsBySp list expired buckets by sp
-	ListExpiredBucketsBySp(createAt int64, primarySpAddress string, limit int64) ([]*Bucket, error)
+	ListExpiredBucketsBySp(createAt int64, primarySpID uint32, limit int64) ([]*Bucket, error)
 	// GetObjectByName get object info by an object name
 	GetObjectByName(objectName string, bucketName string, includePrivate bool) (*Object, error)
 	// GetSwitchDBSignal check if there is a signal to switch the database

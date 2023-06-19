@@ -180,8 +180,8 @@ message GfSpGetUserBucketsCountResponse {
 message GfSpListExpiredBucketsBySpRequest {
   // create_at defines the create timestamp of bucket
   int64 create_at = 1;
-  // primary_sp_address defines the primary sp address of bucket
-  string primary_sp_address = 2;
+  // primary_sp_id defines the primary sp id of bucket
+  uint32 primary_sp_id = 2;
   // limit defines the return number limit of bucket
   int64 limit = 3;
 }
