@@ -202,11 +202,8 @@ func (client *GreenfieldChainSignClient) SealObject(
 		txHash []byte
 		nonce  uint64
 	)
+	nonce = client.sealAccNonce
 	for i := 0; i < BroadcastTxRetry; i++ {
-		nonce, err = client.greenfieldClients[scope].GetNonce()
-		if err != nil {
-			nonce = client.sealAccNonce
-		}
 		txOpt := &ctypes.TxOption{
 			Mode:     &mode,
 			GasLimit: client.gasLimit,
@@ -227,8 +224,6 @@ func (client *GreenfieldChainSignClient) SealObject(
 			}
 			continue
 		}
-		client.sealAccNonce = nonce + 1
-
 		if resp.TxResponse.Code != 0 {
 			log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
 			ErrSealObjectOnChain.SetError(fmt.Errorf("failed to broadcast  seal object tx, resp_code: %d", resp.TxResponse.Code))
@@ -243,6 +238,7 @@ func (client *GreenfieldChainSignClient) SealObject(
 			continue
 		}
 		if err == nil {
+			client.sealAccNonce = nonce + 1
 			log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash)
 			return txHash, nil
 		}
@@ -279,11 +275,8 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 		txHash []byte
 		nonce  uint64
 	)
+	nonce = client.sealAccNonce
 	for i := 0; i < BroadcastTxRetry; i++ {
-		nonce, err = client.greenfieldClients[scope].GetNonce()
-		if err != nil {
-			nonce = client.sealAccNonce
-		}
 		txOpt := &ctypes.TxOption{
 			Mode:     &mode,
 			GasLimit: client.gasLimit,
@@ -304,7 +297,6 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 			}
 			continue
 		}
-		client.sealAccNonce = nonce + 1
 
 		if resp.TxResponse.Code != 0 {
 			log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
@@ -321,6 +313,7 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 		}
 
 		if err == nil {
+			client.sealAccNonce = nonce + 1
 			log.CtxDebugw(ctx, "succeed to broadcast reject unseal object tx", "tx_hash", txHash)
 			return txHash, nil
 		}
