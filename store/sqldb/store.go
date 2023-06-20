@@ -74,6 +74,10 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to upload object progress table", "error", err)
 		return nil, err
 	}
+	if err = db.AutoMigrate(&UploadEventTable{}); err != nil {
+		log.Errorw("failed to upload event progress table", "error", err)
+		return nil, err
+	}
 	if err = db.AutoMigrate(&GCObjectProgressTable{}); err != nil {
 		log.Errorw("failed to gc object progress table", "error", err)
 		return nil, err

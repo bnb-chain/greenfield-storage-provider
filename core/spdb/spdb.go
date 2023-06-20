@@ -7,6 +7,17 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 )
 
+const (
+	GatewayBeginReceiveUpload           = "gateway_begin_receive_upload"
+	GatewayEndReceiveUpload             = "gateway_end_receive_upload"
+	UploaderBeginReceiveData            = "uploader_begin_receive_data"
+	UploaderEndReceiveData              = "uploader_end_receive_data"
+	ManagerReceiveAndWaitSchedulingTask = "manager_receive_and_wait_scheduling_task"
+	ManagerSchedulingTask               = "manager_scheduling_task"
+	ExecutorBeginTask                   = "executor_begin_task"
+	ExecutorEndTask                     = "executor_end_task"
+)
+
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
 type UploadObjectProgressDB interface {
 	// InsertUploadProgress inserts a new upload object progress.
@@ -23,6 +34,8 @@ type UploadObjectProgressDB interface {
 	// GetUploadMetasToSeal queries the latest replicate_done/seal_doing object to continue seal.
 	// It is only used in startup.
 	GetUploadMetasToSeal(limit int) ([]*UploadObjectMeta, error)
+	// InsertUploadEvent inserts a new upload event progress.
+	InsertUploadEvent(objectID uint64, state string, description string) error
 }
 
 // GCObjectProgressDB interface which records gc object related progress.
