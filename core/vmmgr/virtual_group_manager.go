@@ -2,6 +2,7 @@ package vmmgr
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -10,6 +11,7 @@ type GlobalVirtualGroupMeta struct {
 	FamilyID           uint32
 	PrimarySPID        uint32
 	SecondarySPIDs     []uint32
+	SecondarySPs       []*sptypes.StorageProvider
 	UsedStorageSize    uint64
 	StakingStorageSize uint64 // init by staking deposit / staking price
 }

@@ -206,7 +206,8 @@ func putObjectAction(ctx *cli.Context) error {
 	}
 	stream := bytes.NewReader(data)
 	task := &gfsptask.GfSpUploadObjectTask{}
-	task.InitUploadObjectTask(objectInfo, params, 0)
+	// TODO: refine it
+	task.InitUploadObjectTask(0, objectInfo, params, 0)
 	err = client.UploadObject(context.Background(), task, stream)
 	if err != nil {
 		return fmt.Errorf("failed to upload %s to uploader, error: %v", filePath, err)

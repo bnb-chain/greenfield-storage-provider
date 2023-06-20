@@ -270,7 +270,9 @@ type ObjectTask interface {
 type UploadObjectTask interface {
 	ObjectTask
 	// InitUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
+	InitUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
+	// GetVirtualGroupFamilyId returns the object's virtual group family which is bind in bucket.
+	GetVirtualGroupFamilyId() uint32
 }
 
 // The ReplicatePieceTask is the interface to record the information for replicating

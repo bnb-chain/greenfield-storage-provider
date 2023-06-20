@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // Modular is the interface to submodule that units scheduled by the GfSp framework.
@@ -259,6 +260,8 @@ type Signer interface {
 	RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) error
 	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error
+	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
+	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
 }
 
 // Uploader is the interface to handle put object request from user account, and

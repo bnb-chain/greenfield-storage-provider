@@ -128,14 +128,17 @@ func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vmmg
 		return nil, fmt.Errorf("no enough sp")
 	}
 	secondarySPIDs := make([]uint32, secondarySPNumber)
+	secondarySPs := make([]*sptypes.StorageProvider, secondarySPNumber)
 	for i, sp := range sm.secondarySPs {
 		if i < secondarySPNumber {
 			secondarySPIDs = append(secondarySPIDs, sp.Id)
+			secondarySPs = append(secondarySPs, sp)
 		}
 	}
 	return &vmmgr.GlobalVirtualGroupMeta{
 		PrimarySPID:        sm.primarySP.Id,
 		SecondarySPIDs:     secondarySPIDs,
+		SecondarySPs:       secondarySPs,
 		StakingStorageSize: DefaultStakingStorageSize,
 	}, nil
 }

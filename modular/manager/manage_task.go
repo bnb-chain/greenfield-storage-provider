@@ -139,17 +139,26 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		}()
 		return nil
 	}
-	// TODO: add gvg id to replicate piece task
-	// virtual_group_manager pick, maybe need create new gvg
+	// TODO: refine it.
+	startPickGVGTime := time.Now()
+	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
+	metrics.PerfUploadTimeHistogram.WithLabelValues("pick_global_virtual_group").
+		Observe(time.Since(startPickGVGTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pick global virtual group", "error", err)
+		return err
+	}
 
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
+	replicateTask.GlobalVirtualGroupId = task.GetVirtualGroupFamilyId()
+	replicateTask.SecondarySps = gvgMeta.SecondarySPs
 
 	startPushReplicateQueueTime := time.Now()
-	err := m.replicateQueue.Push(replicateTask)
+	err = m.replicateQueue.Push(replicateTask)
 	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_push_replicate_queue").
 		Observe(time.Since(startPushReplicateQueueTime).Seconds())
 	if err != nil {
@@ -452,7 +461,7 @@ func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.Ap
 
 	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
 		// create a new gvg, and retry pick.
-		if err = m.createGlobalVirtualGroup(nil); err != nil {
+		if err = m.createGlobalVirtualGroup(0, nil); err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "task_info", task.Info(), "error", err)
 			return 0, err
 		}
@@ -466,7 +475,7 @@ func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.Ap
 	return vgf.ID, nil
 }
 
-func (m *ManageModular) createGlobalVirtualGroup(params *storagetypes.Params) error {
+func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagetypes.Params) error {
 	var err error
 	if params == nil {
 		if params, err = m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix()); err != nil {
@@ -482,11 +491,35 @@ func (m *ManageModular) createGlobalVirtualGroup(params *storagetypes.Params) er
 		return err
 	}
 	return m.baseApp.GfSpClient().CreateGlobalVirtualGroup(context.Background(), &gfspserver.GfSpCreateGlobalVirtualGroup{
-		PrimarySpAddress: m.baseApp.OperatorAddress(),
-		SecondarySpIds:   gvgMeta.SecondarySPIDs,
+		VirtualGroupFamilyId: vgfID,
+		PrimarySpAddress:     m.baseApp.OperatorAddress(),
+		SecondarySpIds:       gvgMeta.SecondarySPIDs,
 		Deposit: &sdk.Coin{
 			Denom:  virtualGroupParams.GetDepositDenom(),
 			Amount: sdk.NewInt(int64(gvgMeta.StakingStorageSize * virtualGroupParams.GvgStakingPrice.BigInt().Uint64())),
 		},
 	})
+}
+
+// pickGlobalVirtualGroup is used to pick a suitable gvg for replicating object.
+func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32, param *storagetypes.Params) (*vmmgr.GlobalVirtualGroupMeta, error) {
+	var (
+		err error
+		gvg *vmmgr.GlobalVirtualGroupMeta
+	)
+
+	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
+		// create a new gvg, and retry pick.
+		if err = m.createGlobalVirtualGroup(vgfID, param); err != nil {
+			log.CtxErrorw(ctx, "failed to create global virtual group", "vgf_id", vgfID, "error", err)
+			return gvg, err
+		}
+		m.virtualGroupManager.ForceRefreshMeta()
+		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
+			log.CtxErrorw(ctx, "failed to pick gvg", "vgf_id", vgfID, "error", err)
+			return gvg, err
+		}
+		return gvg, nil
+	}
+	return gvg, nil
 }

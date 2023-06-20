@@ -19,9 +19,10 @@ var _ coretask.ReplicatePieceTask = &GfSpReplicatePieceTask{}
 var _ coretask.SealObjectTask = &GfSpSealObjectTask{}
 var _ coretask.ReceivePieceTask = &GfSpReceivePieceTask{}
 
-func (m *GfSpUploadObjectTask) InitUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64) {
+func (m *GfSpUploadObjectTask) InitUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
+	m.VirtualGroupFamilyId = vgfID
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetTimeout(timeout)

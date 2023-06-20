@@ -10,6 +10,7 @@ import (
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var (
@@ -199,6 +200,10 @@ func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSe
 	return ErrNilModular
 }
 func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) error {
+	return nil
+}
+
+func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
 	return nil
 }
 

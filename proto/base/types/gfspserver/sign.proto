@@ -17,9 +17,10 @@ message GfSpSignIntegrityHash {
 
 // TODO: use chain MsgCreateGlobalVirtualGroup replace it.
 message GfSpCreateGlobalVirtualGroup {
-  string primary_sp_address = 1;
-  repeated uint32 secondary_sp_ids = 2;
-  cosmos.base.v1beta1.Coin deposit = 3;
+  uint32 virtual_group_family_id = 1;
+  string primary_sp_address = 2;
+  repeated uint32 secondary_sp_ids = 3;
+  cosmos.base.v1beta1.Coin deposit = 4;
 }
 
 message GfSpSignRequest {
