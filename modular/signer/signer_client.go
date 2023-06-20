@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -227,6 +228,10 @@ func (client *GreenfieldChainSignClient) SealObject(
 			log.CtxErrorw(ctx, "failed to broadcast seal object tx", "error", err)
 			if strings.Contains(err.Error(), "account sequence mismatch") {
 				// if nonce mismatch, reset nonce by querying the nonce on chain
+				err := waitForNextBlock(ctx, client.greenfieldClients[scope])
+				if err != nil {
+					return nil, err
+				}
 				nonce, err = client.greenfieldClients[scope].GetNonce()
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to get seal account nonce", "error", err)
@@ -301,7 +306,11 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to broadcast reject unseal object tx", "error", err)
 			if strings.Contains(err.Error(), "account sequence mismatch") {
-				// if nonce mismatch, reset nonce by querying the nonce on chain
+				// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
+				err := waitForNextBlock(ctx, client.greenfieldClients[scope])
+				if err != nil {
+					return nil, err
+				}
 				nonce, err = client.greenfieldClients[scope].GetNonce()
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to get seal account nonce", "error", err)
@@ -365,6 +374,10 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "discontinue_bucket", msgDiscontinueBucket.String())
 		if strings.Contains(err.Error(), "account sequence mismatch") {
 			// if nonce mismatch, reset nonce by querying the nonce on chain
+			err := waitForNextBlock(ctx, client.greenfieldClients[scope])
+			if err != nil {
+				return nil, err
+			}
 			nonce, err := client.greenfieldClients[scope].GetNonce()
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to get gc account nonce", "err", err)
@@ -388,4 +401,36 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 	// update nonce when tx is successful submitted
 	client.gcAccNonce = nonce + 1
 	return txHash, nil
+}
+
+func waitForNextBlock(ctx context.Context, client *client.GreenfieldClient) error {
+	height, err := latestBlockHeight(ctx, client)
+	if err != nil {
+		return err
+	}
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		latestBlockHeight, err := latestBlockHeight(ctx, client)
+		if err != nil {
+			return err
+		}
+		if latestBlockHeight >= height+1 {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timeout exceeded waiting for block")
+		case <-ticker.C:
+		}
+	}
+}
+
+func latestBlockHeight(ctx context.Context, client *client.GreenfieldClient) (int64, error) {
+	block, err := client.GetLatestBlock(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	return block.SdkBlock.Header.Height, nil
 }
