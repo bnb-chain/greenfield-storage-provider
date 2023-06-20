@@ -29,7 +29,7 @@ import (
 // file  descriptors and task. These account for both space and time used by the stack,
 // as each resource has a direct effect on the system availability and performance.
 //
-// The modus operandi of the resource manager is to restrict resource usage at the
+// The module of the resource manager is to restrict resource usage at the
 // time of reservation. When a component of the stack needs to use a resource, it
 // reserves it in the appropriate scope. The resource manager gates the reservation
 // against the scope applicable limits; if the limit is exceeded, then an error is up
@@ -75,7 +75,7 @@ type ResourceManager interface {
 
 // ResourceScopeViewer is a mixin interface providing view methods for accessing top level scopes
 type ResourceScopeViewer interface {
-	// ViewSystem views the system wide resource scope.
+	// ViewSystem views the system-wide resource scope.
 	// The system scope is the top level scope that accounts for global
 	// resource usage at all levels of the system. This scope constrains all
 	// other scopes and institutes global hard limits.

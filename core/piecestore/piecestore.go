@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-// PieceOp is the helper interface for piece key operator and piece size calculate.
+// PieceOp is a helper interface for piece key operator and piece size calculate.
 type PieceOp interface {
 	// SegmentPieceKey returns the segment piece key used as the key of store piece store.
 	SegmentPieceKey(objectID uint64, segmentIdx uint32) string
@@ -27,7 +27,7 @@ type PieceOp interface {
 	ECPieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64, chunkNum uint32) int64
 }
 
-// PieceStore is the interface to piece store that store the object payload data.
+// PieceStore is an abstract interface to piece store that store the object payload data.
 type PieceStore interface {
 	// GetPiece returns the piece data from piece store by piece key.
 	// the piece can segment or ec piece key.

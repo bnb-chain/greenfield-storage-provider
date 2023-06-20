@@ -86,9 +86,14 @@ func (cfg *GfSpConfig) String() string {
 }
 
 type ChainConfig struct {
-	ChainID      string
-	ChainAddress []string
-	GasLimit     uint64
+	ChainID                    string
+	ChainAddress               []string
+	SealGasLimit               uint64
+	SealFeeAmount              uint64
+	RejectSealGasLimit         uint64
+	RejectSealFeeAmount        uint64
+	DiscontinueBucketGasLimit  uint64
+	DiscontinueBucketFeeAmount uint64
 }
 
 type SpAccountConfig struct {

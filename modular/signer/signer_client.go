@@ -23,6 +23,8 @@ import (
 // SignType is the type of msg signature
 type SignType string
 
+type GasInfoType string
+
 const (
 	// SignOperator is the type of signature signed by the operator account
 	SignOperator SignType = "operator"
@@ -41,13 +43,22 @@ const (
 
 	// BroadcastTxRetry defines the max retry for broadcasting tx on-chain
 	BroadcastTxRetry = 3
+
+	Seal              GasInfoType = "Seal"
+	RejectSeal        GasInfoType = "RejectSeal"
+	DiscontinueBucket GasInfoType = "DiscontinueBucket"
 )
+
+type GasInfo struct {
+	GasLimit  uint64
+	FeeAmount sdk.Coins
+}
 
 // GreenfieldChainSignClient the greenfield chain client
 type GreenfieldChainSignClient struct {
 	mu sync.Mutex
 
-	gasLimit          uint64
+	gasInfo           map[GasInfoType]GasInfo
 	greenfieldClients map[SignType]*client.GreenfieldClient
 	sealAccNonce      uint64
 	gcAccNonce        uint64
@@ -56,8 +67,8 @@ type GreenfieldChainSignClient struct {
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
-func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, operatorPrivateKey, fundingPrivateKey,
-	sealPrivateKey, approvalPrivateKey, gcPrivateKey, sealBlsPrivKey string) (*GreenfieldChainSignClient, error) {
+func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoType]GasInfo, operatorPrivateKey, fundingPrivateKey,
+	sealPrivateKey, approvalPrivateKey, gcPrivateKey string, sealBlsPrivKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
@@ -142,7 +153,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	}
 
 	return &GreenfieldChainSignClient{
-		gasLimit:          gasLimit,
+		gasInfo:           gasInfo,
 		greenfieldClients: greenfieldClients,
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
@@ -214,9 +225,11 @@ func (client *GreenfieldChainSignClient) SealObject(
 	nonce = client.sealAccNonce
 	for i := 0; i < BroadcastTxRetry; i++ {
 		txOpt := &ctypes.TxOption{
-			Mode:     &mode,
-			GasLimit: client.gasLimit,
-			Nonce:    nonce,
+			NoSimulate: true,
+			Mode:       &mode,
+			GasLimit:   client.gasInfo[Seal].GasLimit,
+			FeeAmount:  client.gasInfo[Seal].FeeAmount,
+			Nonce:      nonce,
 		}
 		resp, err = client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgSealObject}, txOpt)
 		if err != nil {
@@ -277,7 +290,7 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 	defer client.mu.Unlock()
 
 	msgRejectUnSealObject := storagetypes.NewMsgRejectUnsealedObject(km.GetAddr(), rejectObject.GetBucketName(), rejectObject.GetObjectName())
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		resp   *tx.BroadcastTxResponse
@@ -287,9 +300,11 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 	nonce = client.sealAccNonce
 	for i := 0; i < BroadcastTxRetry; i++ {
 		txOpt := &ctypes.TxOption{
-			Mode:     &mode,
-			GasLimit: client.gasLimit,
-			Nonce:    nonce,
+			NoSimulate: true,
+			Mode:       &mode,
+			GasLimit:   client.gasInfo[RejectSeal].GasLimit,
+			FeeAmount:  client.gasInfo[RejectSeal].FeeAmount,
+			Nonce:      nonce,
 		}
 		resp, err = client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgRejectUnSealObject}, txOpt)
 		if err != nil {
@@ -347,9 +362,11 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 		discontinueBucket.BucketName, discontinueBucket.Reason)
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
-		Nonce:    nonce,
+		NoSimulate: true,
+		Mode:       &mode,
+		GasLimit:   client.gasInfo[DiscontinueBucket].GasLimit,
+		FeeAmount:  client.gasInfo[DiscontinueBucket].FeeAmount,
+		Nonce:      nonce,
 	}
 
 	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgDiscontinueBucket}, txOpt)
@@ -398,8 +415,9 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 		gvg.FamilyId, gvg.GetSecondarySpIds(), gvg.GetDeposit())
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
+		Mode: &mode,
+		// TODO: refine it.
+		GasLimit: client.gasInfo[DiscontinueBucket].GasLimit,
 		Nonce:    nonce,
 	}
 

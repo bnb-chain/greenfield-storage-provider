@@ -29,12 +29,12 @@ type ModularManager struct {
 	mux            sync.RWMutex
 }
 
-var mdmgr *ModularManager
+var modMgr *ModularManager
 var once sync.Once
 
 func init() {
 	once.Do(func() {
-		mdmgr = &ModularManager{
+		modMgr = &ModularManager{
 			descriptions:   make(map[string]string),
 			newModularFunc: make(map[string]NewModularFunc),
 		}
@@ -43,47 +43,47 @@ func init() {
 
 // RegisterModular registers the module info to the global ModularManager
 func RegisterModular(name string, description string, newFunc NewModularFunc) {
-	mdmgr.mux.Lock()
-	defer mdmgr.mux.Unlock()
+	modMgr.mux.Lock()
+	defer modMgr.mux.Unlock()
 	if name == "" {
 		log.Panic("modular name cannot be blank")
 	}
-	if _, ok := mdmgr.newModularFunc[name]; ok {
+	if _, ok := modMgr.newModularFunc[name]; ok {
 		log.Panicf("[%s] modular repeated", name)
 	}
-	mdmgr.modulus = append(mdmgr.modulus, name)
+	modMgr.modulus = append(modMgr.modulus, name)
 	if len(description) != 0 {
-		mdmgr.descriptions[name] = description
+		modMgr.descriptions[name] = description
 	}
-	mdmgr.newModularFunc[name] = newFunc
+	modMgr.newModularFunc[name] = newFunc
 }
 
 // GetRegisterModulus returns the list registered modules.
 func GetRegisterModulus() []string {
-	mdmgr.mux.RLock()
-	defer mdmgr.mux.RUnlock()
-	return mdmgr.modulus
+	modMgr.mux.RLock()
+	defer modMgr.mux.RUnlock()
+	return modMgr.modulus
 }
 
 // GetRegisterModulusDescription returns the list registered modules' description.
 func GetRegisterModulusDescription() string {
-	mdmgr.mux.RLock()
-	defer mdmgr.mux.RUnlock()
+	modMgr.mux.RLock()
+	defer modMgr.mux.RUnlock()
 	var descriptions string
-	names := maps.SortKeys(mdmgr.newModularFunc)
+	names := maps.SortKeys(modMgr.newModularFunc)
 	for _, name := range names {
 		descriptions = descriptions + fmt.Sprintf("%-"+strconv.Itoa(20)+"s %s\n",
-			name, mdmgr.descriptions[name])
+			name, modMgr.descriptions[name])
 	}
 	return descriptions
 }
 
 // GetNewModularFunc returns the list registered module's new instances func.
 func GetNewModularFunc(name string) NewModularFunc {
-	mdmgr.mux.RLock()
-	defer mdmgr.mux.RUnlock()
-	if _, ok := mdmgr.newModularFunc[name]; !ok {
+	modMgr.mux.RLock()
+	defer modMgr.mux.RUnlock()
+	if _, ok := modMgr.newModularFunc[name]; !ok {
 		log.Panicf("not register [%s] modular info", name)
 	}
-	return mdmgr.newModularFunc[name]
+	return modMgr.newModularFunc[name]
 }
