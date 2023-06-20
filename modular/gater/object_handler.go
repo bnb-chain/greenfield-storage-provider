@@ -231,7 +231,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 		reqCtx       *RequestContext
 		authorized   bool
 		objectInfo   *storagetypes.ObjectInfo
-		segmentCount uint64
+		segmentCount uint32
 		offset       uint64
 	)
 	defer func() {
@@ -279,13 +279,13 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	segmentCount, err = g.baseApp.GfSpClient().GetUploadObjectOffset(reqCtx.Context(), objectInfo.Id.Uint64())
+	segmentCount, err = g.baseApp.GfSpClient().GetUploadObjectSegment(reqCtx.Context(), objectInfo.Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
 		return
 	}
 
-	offset = segmentCount * params.GetMaxSegmentSize()
+	offset = uint64(segmentCount) * params.GetMaxSegmentSize()
 
 	var xmlInfo = struct {
 		XMLName xml.Name `xml:"QueryResumeOffset"`

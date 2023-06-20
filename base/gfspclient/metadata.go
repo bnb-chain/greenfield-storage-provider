@@ -374,7 +374,7 @@ func (s *GfSpClient) GetUploadObjectState(ctx context.Context, objectID uint64, 
 	return int32(resp.GetState()), nil
 }
 
-func (s *GfSpClient) GetUploadObjectOffset(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint64, error) {
+func (s *GfSpClient) GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)

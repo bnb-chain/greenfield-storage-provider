@@ -27,7 +27,7 @@ func (r *MetadataModular) GfSpQueryUploadProgress(ctx context.Context, req *type
 	}, nil
 }
 
-func (r *MetadataModular) GfSpQueryResumableUploadOffset(ctx context.Context, req *types.GfSpQueryResumableUploadOffsetRequest) (
+func (r *MetadataModular) GfSpQueryResumableUploadSegment(ctx context.Context, req *types.GfSpQueryResumableUploadOffsetRequest) (
 	*types.GfSpQueryResumableUploadOffsetResponse, error) {
 	integrityMeta, err := r.baseApp.GfSpDB().GetObjectIntegrity(req.GetObjectId())
 	if err != nil {
@@ -41,6 +41,6 @@ func (r *MetadataModular) GfSpQueryResumableUploadOffset(ctx context.Context, re
 		}, nil
 	}
 	return &types.GfSpQueryResumableUploadOffsetResponse{
-		SegmentCount: uint64(len(integrityMeta.PieceChecksumList)),
+		SegmentCount: uint32(len(integrityMeta.PieceChecksumList)),
 	}, nil
 }

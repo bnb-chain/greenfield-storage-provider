@@ -341,7 +341,7 @@ message GfSpQueryResumableUploadOffsetRequest {
 message GfSpQueryResumableUploadOffsetResponse {
   base.types.gfsperrors.GfSpError err = 1;
   // state defines the number of segment count.
-  uint64 segment_count = 2;
+  uint32 segment_count = 2;
 }
 
 // Group is the structure for group information
