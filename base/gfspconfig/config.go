@@ -99,15 +99,15 @@ type SpAccountConfig struct {
 }
 
 type EndpointConfig struct {
-	ApproverEndpoint   string
-	ManagerEndpoint    string
-	DownloaderEndpoint string
-	ReceiverEndpoint   string
-	MetadataEndpoint   string
-	UploaderEndpoint   string
-	P2PEndpoint        string
-	SignerEndpoint     string
-	AuthorizerEndpoint string
+	ApproverEndpoint      string
+	ManagerEndpoint       string
+	DownloaderEndpoint    string
+	ReceiverEndpoint      string
+	MetadataEndpoint      string
+	UploaderEndpoint      string
+	P2PEndpoint           string
+	SignerEndpoint        string
+	AuthenticatorEndpoint string
 }
 
 type ApprovalConfig struct {

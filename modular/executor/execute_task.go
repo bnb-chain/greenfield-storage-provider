@@ -133,25 +133,26 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 			"expect", onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())],
 			"current", e.baseApp.OperatorAddress())
 		task.SetError(ErrSecondaryMismatch)
-		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to delete integrity")
-		}
-		var pieceKey string
-		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(onChainObject.GetPayloadSize(),
-			task.GetStorageParams().GetMaxPayloadSize())
-		for i := uint32(0); i < segmentCount; i++ {
-			if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-				pieceKey = e.baseApp.PieceOp().ECPieceKey(onChainObject.Id.Uint64(),
-					i, task.GetReplicateIdx())
-			} else {
-				pieceKey = e.baseApp.PieceOp().SegmentPieceKey(onChainObject.Id.Uint64(), i)
-			}
-			err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to delete piece data", "piece_key", pieceKey)
-			}
-		}
+		// TODO:: gc zombie task will gc the zombie piece, it is a conservative plan
+		//err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+		//if err != nil {
+		//	log.CtxErrorw(ctx, "failed to delete integrity")
+		//}
+		//var pieceKey string
+		//segmentCount := e.baseApp.PieceOp().SegmentPieceCount(onChainObject.GetPayloadSize(),
+		//	task.GetStorageParams().GetMaxPayloadSize())
+		//for i := uint32(0); i < segmentCount; i++ {
+		//	if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
+		//		pieceKey = e.baseApp.PieceOp().ECPieceKey(onChainObject.Id.Uint64(),
+		//			i, task.GetReplicateIdx())
+		//	} else {
+		//		pieceKey = e.baseApp.PieceOp().SegmentPieceKey(onChainObject.Id.Uint64(), i)
+		//	}
+		//	err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+		//	if err != nil {
+		//		log.CtxErrorw(ctx, "failed to delete piece data", "piece_key", pieceKey)
+		//	}
+		//}
 		return
 	}
 	log.CtxDebugw(ctx, "succeed to handle confirm receive piece task")
@@ -223,11 +224,6 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		if currentGCBlockID < task.GetCurrentBlockNumber() {
 			log.Errorw("skip gc object", "object_info", objectInfo,
 				"task_current_gc_block_id", task.GetCurrentBlockNumber())
-			continue
-		}
-		if currentGCObjectID <= task.GetLastDeletedObjectId() {
-			log.Errorw("skip gc object", "object_info", objectInfo,
-				"task_last_deleted_object_id", task.GetLastDeletedObjectId())
 			continue
 		}
 		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(
