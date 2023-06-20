@@ -368,6 +368,7 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
 		// generate recovery segment task
+		// TODO check if it need to recovery if the piece data is not correct
 		if downloadPieceTask.GetRedundancyIdx() < 0 {
 			segmentIndex, parseErr := d.baseApp.PieceOp().ParseSegmentIdx(pieceKey)
 			if parseErr != nil {
@@ -384,7 +385,6 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 				d.baseApp.TaskTimeout(recoveryTask, downloadPieceTask.GetStorageParams().GetMaxSegmentSize()),
 				d.baseApp.TaskMaxRetry(recoveryTask))
 
-			//TODO check if it need to get reportTask error value
 			d.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
 		}
 

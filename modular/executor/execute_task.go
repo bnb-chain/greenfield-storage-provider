@@ -299,7 +299,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		segmentSize       = task.GetStorageParams().VersionedParams.GetMaxSegmentSize()
 		parityShards      = task.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()
 		minRecoveryPieces = dataShards
-		record            = make([]bool, dataShards+parityShards)
+		ecPieceCount      = dataShards + parityShards
 		doneTaskNum       = uint32(0)
 	)
 	if task.GetObjectInfo().GetRedundancyType() != storagetypes.REDUNDANCY_EC_TYPE {
@@ -314,24 +314,21 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 	var recoveryDataSources = make([][]byte, len(secondaryEndpoints))
 	doneCh := make(chan bool, len(secondaryEndpoints))
 	quitCh := make(chan bool)
-	var total int32
 
-	for rIdx, done := range record {
-		if !done {
-			recoveryDataSources[rIdx] = nil
-			total++
-			go func(secondaryIndex int) {
-				pieceData, err := e.doRecoveryPiece(ctx, task, secondaryEndpoints[secondaryIndex])
-				if err == nil {
-					recoveryDataSources[secondaryIndex] = pieceData
-					doneCh <- true
-				}
-				// finish all the task, send signal to quitCh
-				if atomic.AddInt32(&total, -1) == 0 {
-					quitCh <- true
-				}
-			}(rIdx)
-		}
+	totalTaskNum := int32(ecPieceCount)
+	for ecIdx := 0; ecIdx < int(ecPieceCount); ecIdx++ {
+		recoveryDataSources[ecIdx] = nil
+		go func(secondaryIndex int) {
+			pieceData, err := e.doRecoveryPiece(ctx, task, secondaryEndpoints[secondaryIndex])
+			if err == nil {
+				recoveryDataSources[secondaryIndex] = pieceData
+				doneCh <- true
+			}
+			// finish all the task, send signal to quitCh
+			if atomic.AddInt32(&totalTaskNum, -1) == 0 {
+				quitCh <- true
+			}
+		}(ecIdx)
 	}
 
 loop:
@@ -381,7 +378,6 @@ loop:
 	}
 
 	log.CtxDebugw(ctx, "primary SP recovery successfully", "pieceKey:", recoveryKey)
-
 	return nil
 }
 
@@ -429,11 +425,11 @@ func (g *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, object
 		return nil, err
 	}
 
-	secondaryEndpointList := make([]string, 0)
-	for _, info := range spList {
-		for _, addr := range secondarySPAddrs {
+	secondaryEndpointList := make([]string, len(secondarySPAddrs))
+	for idx, addr := range secondarySPAddrs {
+		for _, info := range spList {
 			if addr == info.GetOperatorAddress() {
-				secondaryEndpointList = append(secondaryEndpointList, info.Endpoint)
+				secondaryEndpointList[idx] = info.Endpoint
 			}
 		}
 	}

@@ -164,6 +164,7 @@ type ParallelConfig struct {
 	GlobalGCMetaParallel               int
 	GlobalDownloadObjectTaskCacheSize  int
 	GlobalChallengePieceTaskCacheSize  int
+	GlobalRecoveryPieceParallel        int
 	GlobalBatchGcObjectTimeInterval    int
 	GlobalGcObjectBlockInterval        uint64
 	GlobalGcObjectSafeBlockDistance    uint64

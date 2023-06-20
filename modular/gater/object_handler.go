@@ -487,9 +487,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 				g.baseApp.TaskTimeout(recoveryTask, task.GetStorageParams().GetMaxSegmentSize()),
 				g.baseApp.TaskMaxRetry(recoveryTask))
 
-			//TODO check if it need to get reportTask error value
 			g.baseApp.GfSpClient().ReportTask(reqCtx.Context(), recoveryTask)
-
 			log.CtxDebugw(reqCtx.Context(), "recovery task run successfully", "recovery object", objectInfo.ObjectName, "segment index:", idx, "error", err)
 
 			pieceData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask)
@@ -497,6 +495,14 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 				log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", err)
 				return
 			}
+			// the recoveryed segment is total segment data, if the offset and length meta is set, then it is needed  adjust the piece data with the meta
+			if pInfo.Offset > 0 {
+				pieceData = pieceData[pInfo.Offset:]
+				if pInfo.Offset+pInfo.Length < uint64(segSize) {
+					pieceData = pieceData[:pInfo.Length]
+				}
+			}
+
 		}
 
 		writeTime := time.Now()
@@ -506,7 +512,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_data_time").Observe(time.Since(getDataTime).Seconds())
 }
 
-// tryDownloadAfterRecovery try to get piece data after data recoverying
+// tryDownloadAfterRecovery try to get piece data after data been recovery
 func (g *GateModular) tryDownloadAfterRecovery(ctx context.Context, pieceTask *gfsptask.GfSpDownloadPieceTask) ([]byte, error) {
 	timeout := time.After(RecoveryTimeOutSeconds * time.Second)
 	ticker := time.NewTicker(RecoveryCheckInterval * time.Second)
