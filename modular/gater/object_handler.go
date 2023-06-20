@@ -145,6 +145,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		params        *storagetypes.Params
 	)
 
+	uploadPrimaryStartTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -155,6 +156,8 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_primary_total_time").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+
 	}()
 
 	reqCtx, err = NewRequestContext(r, g)
@@ -162,8 +165,10 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 	if reqCtx.NeedVerifyAuthorizer() {
+		startAuthirzerTime := time.Now()
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_authorizer").Observe(time.Since(startAuthirzerTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
@@ -175,7 +180,9 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		}
 	}
 
+	startGetObjectInfoTime := time.Now()
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_get_object_info").Observe(time.Since(startGetObjectInfoTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
@@ -186,7 +193,9 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		err = ErrInvalidPayloadSize
 		return
 	}
+	startGetStorageParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_get_storage_param").Observe(time.Since(startGetStorageParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus

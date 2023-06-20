@@ -173,13 +173,18 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 		if err != nil {
 			resp.Err = gfsperrors.MakeGfSpError(err)
 		}
+
+		closeTime := time.Now()
 		err = stream.SendAndClose(resp)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("server_send_and_close_time").Observe(time.Since(closeTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to close upload object stream", "error", err)
 		}
 	}()
 
 	go func() {
+		serverStartTime := time.Now()
+		defer metrics.PerfUploadTimeHistogram.WithLabelValues("server_total_time").Observe(time.Since(serverStartTime).Seconds())
 		init := false
 		for {
 			select {
@@ -187,10 +192,14 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 				return
 			default:
 			}
+			startReadFromGateway := time.Now()
 			req, err = stream.Recv()
+			metrics.PerfUploadTimeHistogram.WithLabelValues("producer_read_from_gateway").Observe(time.Since(startReadFromGateway).Seconds())
 			if err == io.EOF {
 				if len(req.GetPayload()) != 0 {
+					startForwardToConsumer := time.Now()
 					pWrite.Write(req.GetPayload())
+					metrics.PerfUploadTimeHistogram.WithLabelValues("producer_to_consumer").Observe(time.Since(startForwardToConsumer).Seconds())
 				}
 				log.CtxDebugw(ctx, "received last upload stream data")
 				err = nil
@@ -229,7 +238,9 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 				initCh <- struct{}{}
 			}
 			receiveSize += len(req.GetPayload())
+			startForwardToConsumer := time.Now()
 			pWrite.Write(req.GetPayload())
+			metrics.PerfUploadTimeHistogram.WithLabelValues("producer_to_consumer").Observe(time.Since(startForwardToConsumer).Seconds())
 		}
 	}()
 

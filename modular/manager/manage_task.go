@@ -198,22 +198,33 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		return ErrDanglingTask
 	}
 	m.resumeableUploadQueue.PopByKey(task.Key())
-	if m.TaskUploading(ctx, task) {
+
+	startCheckUploadingTime := time.Now()
+	uploading := m.TaskUploading(ctx, task)
+	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_check_uploading").
+		Observe(time.Since(startCheckUploadingTime).Seconds())
+	if uploading {
 		log.CtxErrorw(ctx, "uploading object repeated")
 		return ErrRepeatedTask
 	}
 	if task.Error() != nil {
+		startUpdateSPDBTime := time.Now()
 		err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:         task.GetObjectInfo().Id.Uint64(),
 			TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
 			ErrorDescription: task.Error().Error(),
 		})
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
+			Observe(time.Since(startUpdateSPDBTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
 		}
+		startRejectUnSealTime := time.Now()
 		err = m.RejectUnSealObject(ctx, task.GetObjectInfo())
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_reject_unseal").
+			Observe(time.Since(startRejectUnSealTime).Seconds())
 		log.CtxErrorw(ctx, "reports failed update object task and reject unseal object",
-			"error", task.Error(), "reject_unseal_error", err)
+			"task_info", task.Info(), "error", task.Error(), "reject_unseal_error", err)
 		return nil
 	}
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
@@ -221,17 +232,24 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
+	startPushReplicateQueueTime := time.Now()
 	err := m.replicateQueue.Push(replicateTask)
+	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_push_replicate_queue").
+		Observe(time.Since(startPushReplicateQueueTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
-		return ErrExceedTask
+		return err
 	}
+	startUpdateSPDBTime := time.Now()
 	err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 		ObjectID:  task.GetObjectInfo().Id.Uint64(),
 		TaskState: types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
 	})
+	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
+		Observe(time.Since(startUpdateSPDBTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to update object task state", "error", err)
+		return ErrGfSpDB
 	}
 	log.CtxDebugw(ctx, "succeed to done upload object and waiting for scheduling to replicate piece")
 	return nil

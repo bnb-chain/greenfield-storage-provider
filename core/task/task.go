@@ -210,13 +210,10 @@ type UploadObjectTask interface {
 // payload data to the primary SP.
 type ResumableUploadObjectTask interface {
 	ObjectTask
-	// InitUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64,
-		complete bool,
-		offset uint64)
-	// GetResumeOffset
+	// InitResumableUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
+	InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, complete bool, offset uint64)
+	// GetResumeOffset return resumable offset user-supplied parameters
 	GetResumeOffset() uint64
-	// SetResumeOffset
 	SetResumeOffset(offset uint64)
 	GetCompleted() bool
 	SetCompleted(completed bool)

@@ -62,13 +62,13 @@ func (g *GfSpBaseApp) OnBeginUploadObjectTask(ctx context.Context, task coretask
 
 func (g *GfSpBaseApp) OnBeginResumableUploadObjectTask(ctx context.Context, task coretask.ResumableUploadObjectTask) error {
 	if task == nil || task.GetObjectInfo() == nil {
-		log.CtxError(ctx, "failed to begin upload object task due to object info pointer dangling")
+		log.CtxError(ctx, "failed to begin resumable upload object task due to object info pointer dangling")
 		return ErrUploadTaskDangling
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 	err := g.manager.HandleCreateResumableUploadObjectTask(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to begin upload object task", "info", task.Info(), "error", err)
+		log.CtxErrorw(ctx, "failed to begin resumable upload object task", "info", task.Info(), "error", err)
 		return err
 	}
 	log.CtxDebugw(ctx, "succeed to begin resumable upload object task", "info", task.Info())

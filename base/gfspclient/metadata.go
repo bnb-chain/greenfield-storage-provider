@@ -386,7 +386,7 @@ func (s *GfSpClient) GetUploadObjectSegment(ctx context.Context, objectID uint64
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpQueryResumableUploadOffset(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to get uploading object state", "error", err)
+		log.CtxErrorw(ctx, "client failed to get uploading object segment", "error", err)
 		return 0, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
