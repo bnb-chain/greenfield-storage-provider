@@ -372,14 +372,22 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			if isRequestFromBrowser {
 				reqCtx.SetHttpCode(http.StatusOK)
 				errorCodeForPage := "INTERNAL_ERROR" // default errorCode in built-in error page
-				switch err {
-				case downloader.ErrExceedBucketQuota:
-					errorCodeForPage = "NO_ENOUGH_QUOTA"
-				case ErrNoSuchObject:
-					errorCodeForPage = "FILE_NOT_FOUND"
-				case ErrForbidden:
-					errorCodeForPage = "NO_PERMISSION"
+				log.Errorw("displaying error page", "error", err)
+				switch eType := err.(type) {
+				case *gfsperrors.GfSpError:
+					if eType.GetInnerCode() == downloader.ErrExceedBucketQuota.InnerCode {
+						errorCodeForPage = "NO_ENOUGH_QUOTA"
+					}
+					switch eType.GetInnerCode() {
+					case downloader.ErrExceedBucketQuota.GetInnerCode():
+						errorCodeForPage = "NO_ENOUGH_QUOTA"
+					case ErrNoSuchObject.GetInnerCode():
+						errorCodeForPage = "FILE_NOT_FOUND"
+					case ErrForbidden.GetInnerCode():
+						errorCodeForPage = "NO_PERMISSION"
+					}
 				}
+
 				html := strings.Replace(GnfdBuiltInUniversalEndpointDappErrorPage, "<% errorCode %>", errorCodeForPage, 1)
 
 				fmt.Fprintf(w, "%s", html)
