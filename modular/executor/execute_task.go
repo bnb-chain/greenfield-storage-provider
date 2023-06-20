@@ -40,7 +40,7 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		return
 	}
 
-	// todo need gvgId
+	// TODO: need gvgId
 	gvgId := uint32(0)
 
 	sealMsg := &storagetypes.MsgSealObject{

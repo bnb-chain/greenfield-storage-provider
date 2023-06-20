@@ -99,7 +99,7 @@ func (*NullTask) SetSecondaryAddresses([]string)              {}
 func (*NullTask) GetSecondarySps() []*sptypes.StorageProvider { return nil }
 func (*NullTask) InitSealObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64) {
 }
-func (*NullTask) InitReceivePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64) {
+func (*NullTask) InitReceivePieceTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64) {
 }
 func (*NullTask) GetReplicateIdx() uint32  { return 0 }
 func (*NullTask) SetReplicateIdx(uint32)   {}

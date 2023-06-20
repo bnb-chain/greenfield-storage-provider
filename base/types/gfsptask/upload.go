@@ -438,10 +438,11 @@ func (m *GfSpSealObjectTask) SetError(err error) {
 	m.GetTask().SetError(err)
 }
 
-func (m *GfSpReceivePieceTask) InitReceivePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
+func (m *GfSpReceivePieceTask) InitReceivePieceTask(gvgID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params,
 	priority coretask.TPriority, replicateIdx uint32, pieceIdx int32, pieceSize int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
+	m.GlobalVirtualGroupId = gvgID
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)

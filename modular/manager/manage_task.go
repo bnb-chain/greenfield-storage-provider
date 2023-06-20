@@ -494,9 +494,11 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 		VirtualGroupFamilyId: vgfID,
 		PrimarySpAddress:     m.baseApp.OperatorAddress(),
 		SecondarySpIds:       gvgMeta.SecondarySPIDs,
+		// TODO: refine it.
 		Deposit: &sdk.Coin{
 			Denom:  virtualGroupParams.GetDepositDenom(),
 			Amount: sdk.NewInt(int64(gvgMeta.StakingStorageSize * virtualGroupParams.GvgStakingPrice.BigInt().Uint64())),
+			//Amount: virtualGroupParams.GvgStakingPrice.MulInt64(int64(gvgMeta.StakingStorageSize)).BigInt().,
 		},
 	})
 }

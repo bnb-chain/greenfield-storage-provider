@@ -72,6 +72,7 @@ message GfSpReceivePieceTask {
   bytes piece_checksum = 7;
   bytes signature = 8;
   bool sealed = 9;
+  uint32 global_virtual_group_id = 10;
 }
 
 message GfSpSealObjectTask {

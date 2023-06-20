@@ -152,7 +152,7 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 		waitGroup.Done()
 	}()
 	receive := &gfsptask.GfSpReceivePieceTask{}
-	receive.InitReceivePieceTask(rTask.GetObjectInfo(), rTask.GetStorageParams(),
+	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
 		e.baseApp.TaskPriority(rTask), replicateIdx, int32(pieceIdx), int64(len(data)))
 	receive.SetPieceChecksum(hash.GenerateChecksum(data))
 	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
@@ -189,7 +189,7 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 		taskSignature []byte
 	)
 	receive := &gfsptask.GfSpReceivePieceTask{}
-	receive.InitReceivePieceTask(rTask.GetObjectInfo(), rTask.GetStorageParams(),
+	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
 		e.baseApp.TaskPriority(rTask), replicateIdx, -1, 0)
 	signTime := time.Now()
 	taskSignature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)

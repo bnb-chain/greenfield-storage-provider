@@ -108,7 +108,8 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				metrics.PerfUploadTimeHistogram.WithLabelValues("put_to_piecestore").Observe(time.Since(startPutPiece).Seconds())
 			}
 			startSignSignature := time.Now()
-			// todo need gvgId
+			// TODO: need gvgId
+			// TODO: pick gvg here!!!
 			gvgId := uint32(0)
 
 			if signature, integrity, err = u.baseApp.GfSpClient().

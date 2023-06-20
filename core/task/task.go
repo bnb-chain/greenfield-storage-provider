@@ -244,7 +244,7 @@ type ReplicatePieceTask interface {
 type ReceivePieceTask interface {
 	ObjectTask
 	// InitReceivePieceTask init the ReceivePieceTask.
-	InitReceivePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority,
+	InitReceivePieceTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority,
 		replicateIdx uint32, pieceIdx int32, pieceSize int64)
 	// GetReplicateIdx returns the replicate index. The replicate index identifies the
 	// serial number of the secondary SP for object piece copy.
@@ -279,6 +279,8 @@ type ReceivePieceTask interface {
 	GetSealed() bool
 	// SetSealed sets the object of receiving piece data whether is successfully sealed.
 	SetSealed(bool)
+	// GetGlobalVirtualGroupId returns the object's global virtual group id.
+	GetGlobalVirtualGroupId() uint32
 }
 
 // SealObjectTask is an abstract interface to record the information for sealing object on Greenfield chain.
