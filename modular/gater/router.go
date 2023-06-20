@@ -76,14 +76,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	routers = append(routers, router.Host("{bucket:.+}."+g.domain).Subrouter())
 	routers = append(routers, router.PathPrefix("/{bucket}").Subrouter())
 	for _, r := range routers {
-		// Put Object
-		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
-
 		// Put Object By Offset
 		r.NewRoute().Name(resumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).Queries(
 			"offset", "{offset}",
-			"complete", "{complete}",
-			"context", "{context}")
+			"complete", "{complete}")
+		// Put Object
+		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
 
 		// QueryPutObjectOffset
 		r.NewRoute().Name(queryResumeOffsetName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryResumeOffsetHandler).Queries(

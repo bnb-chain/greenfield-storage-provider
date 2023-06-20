@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -174,7 +175,7 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 	}
 	if m.UploadingObjectNumber() >= m.maxUploadObjectNumber {
 		log.CtxErrorw(ctx, "uploading object exceed", "uploading", m.uploadQueue.Len(),
-			"replicating", m.replicateQueue.Len(), "sealing", m.sealQueue.Len())
+			"replicating", m.replicateQueue.Len(), "sealing", m.sealQueue.Len(), "resumable uploading", m.resumeableUploadQueue.Len())
 		return ErrExceedTask
 	}
 	if m.TaskUploading(ctx, task) {
@@ -182,12 +183,17 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 		return ErrRepeatedTask
 	}
 	if err := m.resumeableUploadQueue.Push(task); err != nil {
-		log.CtxErrorw(ctx, "failed to push upload object task to queue", "task_info", task.Info(), "error", err)
+		log.CtxErrorw(ctx, "failed to push resumable upload object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
 	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
-		log.CtxErrorw(ctx, "failed to create upload object progress", "task_info", task.Info(), "error", err)
-		return ErrGfSpDB
+		log.CtxErrorw(ctx, "failed to create resumable upload object progress", "task_info", task.Info(), "error", err)
+		// TODO(chris)
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			return nil
+		} else {
+			return ErrGfSpDB
+		}
 	}
 	return nil
 }

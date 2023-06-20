@@ -10,6 +10,7 @@ help:
 
 format:
 	bash script/format.sh
+	gofmt -w -l .
 
 proto-format:
 	buf format -w

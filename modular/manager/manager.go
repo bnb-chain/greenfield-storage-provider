@@ -334,11 +334,15 @@ func (m *ManageModular) TaskUploading(ctx context.Context, task task.Task) bool 
 		log.CtxDebugw(ctx, "sealing object repeated")
 		return true
 	}
+	if m.resumeableUploadQueue.Has(task.Key()) {
+		log.CtxDebugw(ctx, "resumable uploading object repeated")
+		return true
+	}
 	return false
 }
 
 func (m *ManageModular) UploadingObjectNumber() int {
-	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len()
+	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len() + m.resumeableUploadQueue.Len()
 }
 
 func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {

@@ -175,7 +175,7 @@ func (m *GfSpResumableUploadObjectTask) Key() coretask.TKey {
 	return GfSpResumableUploadObjectTaskKey(
 		m.GetObjectInfo().GetBucketName(),
 		m.GetObjectInfo().GetObjectName(),
-		m.GetObjectInfo().Id.String())
+		m.GetObjectInfo().Id.String(), m.GetResumeOffset())
 }
 
 func (m *GfSpResumableUploadObjectTask) Type() coretask.TType {

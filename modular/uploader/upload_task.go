@@ -196,7 +196,7 @@ func (u *UploadModular) PreResumableUploadObject(
 		log.CtxErrorw(ctx, "failed to pre upload object, object not create")
 		return ErrNotCreatedState
 	}
-	if u.uploadQueue.Has(task.Key()) {
+	if u.resumeableUploadQueue.Has(task.Key()) {
 		log.CtxErrorw(ctx, "failed to pre download object, task repeated")
 		return ErrRepeatedTask
 	}
