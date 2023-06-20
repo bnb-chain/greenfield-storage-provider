@@ -164,9 +164,9 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
+	if reqCtx.NeedVerifyAuthentication() {
 		startAuthirzerTime := time.Now()
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_authorizer").Observe(time.Since(startAuthirzerTime).Seconds())
 		if err != nil {
@@ -236,12 +236,12 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 // queryResumeOffsetHandler handles the resumable put object
 func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err          error
-		reqCtx       *RequestContext
-		authorized   bool
-		objectInfo   *storagetypes.ObjectInfo
-		segmentCount uint32
-		offset       uint64
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		objectInfo    *storagetypes.ObjectInfo
+		segmentCount  uint32
+		offset        uint64
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -259,14 +259,14 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+	if reqCtx.NeedVerifyAuthentication() {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
 		}
-		if !authorized {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
