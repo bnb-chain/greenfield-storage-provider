@@ -32,7 +32,7 @@ func (g *GfSpBaseApp) newRpcServer(options ...grpc.ServerOption) {
 	}
 	g.server = grpc.NewServer(options...)
 	gfspserver.RegisterGfSpApprovalServiceServer(g.server, g)
-	gfspserver.RegisterGfSpAuthorizationServiceServer(g.server, g)
+	gfspserver.RegisterGfSpAuthenticationServiceServer(g.server, g)
 	gfspserver.RegisterGfSpDownloadServiceServer(g.server, g)
 	gfspserver.RegisterGfSpManageServiceServer(g.server, g)
 	gfspserver.RegisterGfSpP2PServiceServer(g.server, g)
@@ -44,7 +44,7 @@ func (g *GfSpBaseApp) newRpcServer(options ...grpc.ServerOption) {
 	reflection.Register(g.server)
 }
 
-func (g *GfSpBaseApp) StartRpcServer(ctx context.Context) error {
+func (g *GfSpBaseApp) StartRPCServer(ctx context.Context) error {
 	lis, err := net.Listen("tcp", g.grpcAddress)
 	if err != nil {
 		log.Errorw("failed to listen tcp address", "address", g.grpcAddress, "error", err)
@@ -58,12 +58,12 @@ func (g *GfSpBaseApp) StartRpcServer(ctx context.Context) error {
 	return nil
 }
 
-func (g *GfSpBaseApp) StopRpcServer(ctx context.Context) error {
+func (g *GfSpBaseApp) StopRPCServer(ctx context.Context) error {
 	g.server.GracefulStop()
 	return nil
 }
 
-func RpcRemoteAddress(ctx context.Context) string {
+func GetRPCRemoteAddress(ctx context.Context) string {
 	var addr string
 	if pr, ok := peer.FromContext(ctx); ok {
 		if tcpAddr, ok := pr.Addr.(*net.TCPAddr); ok {

@@ -5,14 +5,14 @@ import "base/types/gfsperrors/error.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
-message GfSpAuthorizeRequest {
+message GfSpAuthenticationRequest {
   int32 auth_type = 1;
   string user_account = 2;
   string bucket_name = 3;
   string object_name = 4;
 }
 
-message GfSpAuthorizeResponse {
+message GfSpAuthenticationResponse {
   base.types.gfsperrors.GfSpError err = 1;
   bool allowed = 2;
 }
@@ -80,8 +80,8 @@ message VerifyOffChainSignatureResponse {
   bool result = 2;
 }
 
-service GfSpAuthorizationService {
-  rpc GfSpVerifyAuthorize(GfSpAuthorizeRequest) returns (GfSpAuthorizeResponse) {}
+service GfSpAuthenticationService {
+  rpc GfSpVerifyAuthentication(GfSpAuthenticationRequest) returns (GfSpAuthenticationResponse) {}
   // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
   rpc GetAuthNonce(GetAuthNonceRequest) returns (GetAuthNonceResponse) {}
   // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.

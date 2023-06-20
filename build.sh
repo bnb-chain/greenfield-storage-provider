@@ -20,6 +20,7 @@ go build -ldflags "\
 
 if [ $? -ne 0 ]; then
     echo "build failed Ooooooh!!!"
+    exit 1
 else
     echo "build succeed!"
 fi

@@ -35,15 +35,15 @@ var (
 )
 
 type GfSpClient struct {
-	approverEndpoint   string
-	managerEndpoint    string
-	downloaderEndpoint string
-	receiverEndpoint   string
-	metadataEndpoint   string
-	uploaderEndpoint   string
-	p2pEndpoint        string
-	signerEndpoint     string
-	authorizerEndpoint string
+	approverEndpoint      string
+	managerEndpoint       string
+	downloaderEndpoint    string
+	receiverEndpoint      string
+	metadataEndpoint      string
+	uploaderEndpoint      string
+	p2pEndpoint           string
+	signerEndpoint        string
+	authenticatorEndpoint string
 
 	mux          sync.RWMutex
 	managerConn  *grpc.ClientConn
@@ -63,19 +63,19 @@ func NewGfSpClient(
 	uploaderEndpoint string,
 	p2pEndpoint string,
 	signerEndpoint string,
-	authorizerEndpoint string,
+	authenticatorEndpoint string,
 	metrics bool) *GfSpClient {
 	return &GfSpClient{
-		approverEndpoint:   approverEndpoint,
-		managerEndpoint:    managerEndpoint,
-		downloaderEndpoint: downloaderEndpoint,
-		receiverEndpoint:   receiverEndpoint,
-		metadataEndpoint:   metadataEndpoint,
-		uploaderEndpoint:   uploaderEndpoint,
-		p2pEndpoint:        p2pEndpoint,
-		signerEndpoint:     signerEndpoint,
-		authorizerEndpoint: authorizerEndpoint,
-		metrics:            metrics,
+		approverEndpoint:      approverEndpoint,
+		managerEndpoint:       managerEndpoint,
+		downloaderEndpoint:    downloaderEndpoint,
+		receiverEndpoint:      receiverEndpoint,
+		metadataEndpoint:      metadataEndpoint,
+		uploaderEndpoint:      uploaderEndpoint,
+		p2pEndpoint:           p2pEndpoint,
+		signerEndpoint:        signerEndpoint,
+		authenticatorEndpoint: authenticatorEndpoint,
+		metrics:               metrics,
 	}
 }
 
@@ -156,7 +156,7 @@ func (s *GfSpClient) SignerConn(ctx context.Context, opts ...grpc.DialOption) (*
 	return s.signerConn, nil
 }
 
-func (s *GfSpClient) HttpClient(ctx context.Context) *http.Client {
+func (s *GfSpClient) HTTPClient(ctx context.Context) *http.Client {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	if s.httpClient == nil {

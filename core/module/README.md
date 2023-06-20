@@ -17,11 +17,11 @@ the request. To accomplish this, the Front Modules have three interfaces for eac
 
 The Background Modules are responsible for handling internal tasks of SP, which are generated internally and thus have
 guaranteed information correctness. As a result, there is only one interface `HandleXXXTask` for these tasks. The Background
-Modules consist of `Authorizer`, `TaskExecutor`, `Manager`, `P2P`, `Receiver` and `Signer`.
+Modules consist of `Authenticator`, `TaskExecutor`, `Manager`, `P2P`, `Receiver` and `Signer`.
 
 ### Module Type
 
-The GfSp framework comprises several modules, including `Gater`, `Approver`, `Authorizer`, `Uploader`, `Downloader`,
+The GfSp framework comprises several modules, including `Gater`, `Authenticator`, `Authorizer`, `Uploader`, `Downloader`,
 `Manager`, `P2P`, `TaskExecutor`, `Receiver`, `Signer`, `Metadata` and `BlockSyncer`. Additionally, the GfSp framework
 supports the extension of customized modules as required. Once registered in the GfSp framework and executing the
 modular interface, these customized modules will be initialized and scheduled.
@@ -32,9 +32,9 @@ Gater module serves as the gateway for SP, providing HTTP services and adhering 
 corresponding to user requests and forwards them to other modules within SP. Since Gater does not allow customization,
 no interface is defined in the modular file.
 
-### Authorizer
+### Authenticator
 
-Authorizer module is responsible for verifying authorization.
+Authenticator module is responsible for verifying authentication.
 
 ### Approver
 

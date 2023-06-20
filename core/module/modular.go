@@ -24,7 +24,7 @@ type Modular interface {
 	ReleaseResource(ctx context.Context, scope rcmgr.ResourceScopeSpan)
 }
 
-// AuthOpType defines the operator type used to authority verification.
+// AuthOpType defines the operator type used to authentication verification.
 type AuthOpType int32
 
 const (
@@ -48,11 +48,11 @@ const (
 	AuthOpTypeListBucketReadRecord
 )
 
-// Authorizer is an abstract interface to verify users authentication.
-type Authorizer interface {
+// Authenticator is an abstract interface to verify users authentication.
+type Authenticator interface {
 	Modular
-	// VerifyAuthorize verifies the operator authority.
-	VerifyAuthorize(ctx context.Context, auth AuthOpType, account, bucket, object string) (bool, error)
+	// VerifyAuthentication verifies the operator authentication.
+	VerifyAuthentication(ctx context.Context, auth AuthOpType, account, bucket, object string) (bool, error)
 	// GetAuthNonce get the auth nonce for which the dApp or client can generate EDDSA key pairs.
 	GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error)
 	// UpdateUserPublicKey updates the user public key once the dApp or client generates the EDDSA key pairs.
@@ -126,7 +126,7 @@ type Downloader interface {
 type TaskExecutor interface {
 	Modular
 	// AskTask asks the task by remaining limitation from manager module.
-	AskTask(ctx context.Context, remaining rcmgr.Limit)
+	AskTask(ctx context.Context)
 	// HandleReplicatePieceTask handles ReplicatePieceTask that is asked from manager module.
 	HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask)
 	// HandleSealObjectTask handles SealObjectTask that is asked from manager module.
