@@ -251,7 +251,6 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		readN, err = StreamReadAt(stream, data)
 		readSize += readN
 		data = data[0:readN]
-		log.CtxInfof(ctx, "AppendObjectChecksumIntegrity xxx readN:%d", readN)
 
 		if err == io.EOF {
 			err = nil
@@ -263,7 +262,6 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 						"piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
-				log.CtxInfof(ctx, "AppendObjectChecksumIntegrity segIdx:%d", segIdx)
 				err = u.baseApp.GfSpDB().AppendObjectChecksumIntegrity(task.GetObjectInfo().Id.Uint64(), hash.GenerateChecksum(data))
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
@@ -311,7 +309,6 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 			log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
 			return ErrPieceStore
 		}
-		log.CtxInfof(ctx, "AppendObjectChecksumIntegrity segIdx:%d", segIdx)
 		err = u.baseApp.GfSpDB().AppendObjectChecksumIntegrity(task.GetObjectInfo().Id.Uint64(), hash.GenerateChecksum(data))
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)

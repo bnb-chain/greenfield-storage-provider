@@ -39,6 +39,8 @@ var (
 		"The expiry date is expected to be within "+strconv.Itoa(int(MaxExpiryAgeInSec))+" seconds and formatted in YYYY-DD-MM HH:MM:SS 'GMT'Z, e.g. 2023-04-20 16:34:12 GMT+08:00 . ")
 	ErrNoSuchObject = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 50025, "no such object")
 	ErrForbidden    = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50026, "Forbidden to access")
+	ErrInvalidComplete = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50027, "invalid complete")
+	ErrInvalidOffset   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50028, "invalid offset")
 
 	ErrConsensus = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")
 

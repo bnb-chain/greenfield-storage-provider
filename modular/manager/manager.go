@@ -365,13 +365,15 @@ func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 func (m *ManageModular) GCResumableUploadObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.ResumableUploadObjectTask)
 	if task.Expired() {
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:         task.GetObjectInfo().Id.Uint64(),
-			TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
-			ErrorDescription: "expired",
-		}); err != nil {
-			log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
-		}
+		go func() {
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+				ErrorDescription: "expired",
+			}); err != nil {
+				log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
+			}
+		}()
 		return true
 	}
 	return false

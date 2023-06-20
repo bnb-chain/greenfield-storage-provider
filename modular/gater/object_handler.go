@@ -203,23 +203,29 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	}
 
 	var (
-		complete bool
-		offset   uint64
+		complete        bool
+		offset          uint64
+		requestComplete string
+		requestOffset   string
 	)
-	queryParams := r.URL.Query()
-	if queryParams["complete"] != nil {
-		completeStr := queryParams["complete"][0]
-		complete, err = util.StringToBool(completeStr)
+	queryParams := reqCtx.request.URL.Query()
+	requestComplete = queryParams.Get(ResumableUploadComplete)
+	requestOffset = queryParams.Get(ResumableUploadOffset)
+	if requestComplete != "" {
+		complete, err = util.StringToBool(requestComplete)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to parse complete from url", "error", err)
 		}
+		err = ErrInvalidComplete
+		return
 	}
-	if queryParams["offset"] != nil {
-		offsetStr := queryParams["offset"][0]
-		offset, err = util.StringToUint64(offsetStr)
+	if requestOffset != "" {
+		offset, err = util.StringToUint64(requestOffset)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to parse complete from url", "error", err)
 		}
+		err = ErrInvalidOffset
+		return
 	}
 
 	task := &gfsptask.GfSpResumableUploadObjectTask{}

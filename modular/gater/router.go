@@ -14,7 +14,7 @@ const (
 	approvalRouterName                    = "GetApproval"
 	putObjectRouterName                   = "PutObject"
 	resumablePutObjectRouterName          = "ResumablePutObject"
-	queryResumeOffsetName                 = "queryResumeOffsetName"
+	queryResumeOffsetName                 = "QueryResumeOffsetName"
 	getObjectRouterName                   = "GetObject"
 	getChallengeInfoRouterName            = "GetChallengeInfo"
 	replicateObjectPieceRouterName        = "ReplicateObjectPiece"

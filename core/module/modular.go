@@ -162,6 +162,11 @@ type Manager interface {
 	// HandleDoneUploadObjectTask handles the result of uploading object payload data to primary, Manager should
 	// generate ReplicatePieceTask for TaskExecutor to run.
 	HandleDoneUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error
+	// HandleCreateResumableUploadObjectTask handles the CreateUploadObject request from
+	// Uploader, before Uploader handles the user's UploadObject request, it should
+	// send CreateUploadObject request to Manager ask if it's ok. Through this
+	// interface that SP implements the global upload object strategy.
+	//
 	HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
 
 	// HandleDoneResumableUploadObjectTask handles the result of resumable uploading object payload data to primary,
@@ -253,7 +258,10 @@ type Uploader interface {
 	// resources, make statistics and do some other operations.
 	PostUploadObject(ctx context.Context, task task.UploadObjectTask)
 
+	// PreResumableUploadObject prepares to handle ResumableUploadObject, it can do some checks
+	// such as checking for duplicates, if limitation of SP has been reached, etc.
 	PreResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) error
+	// HandleResumableUploadObjectTask handles the ResumableUploadObject, store payload data into piece store by data stream.
 	HandleResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error
 	// PostResumableUploadObject is called after HandleResumableUploadObjectTask, it can recycle
 	// resources, statistics and other operations.

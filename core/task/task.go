@@ -214,8 +214,13 @@ type ResumableUploadObjectTask interface {
 	InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, complete bool, offset uint64)
 	// GetResumeOffset return resumable offset user-supplied parameters
 	GetResumeOffset() uint64
+	// SetResumeOffset Set the `ResumeOffset` provided by the user for subsequent processing in the `HandleResumableUploadObjectTask`.
 	SetResumeOffset(offset uint64)
+	// GetCompleted The GetCompleted() function returns the value of completed set by the user in the request.
+	// The completed parameter represents the last upload request in the resumable upload process,
+	// after which integrity checks and replication procedures will be performed.
 	GetCompleted() bool
+	// SetCompleted sets the state from request in InitResumableUploadObjectTask
 	SetCompleted(completed bool)
 }
 
