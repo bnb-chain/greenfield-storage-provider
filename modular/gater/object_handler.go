@@ -570,7 +570,7 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 		}
 		if reqCtx.NeedVerifyAuthentication() {
 			if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
+				coremodule.AuthOpTypeGetRecoveryPiece, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
 			}
@@ -600,7 +600,7 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 
 	objectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp)
 	if err != nil {
-		err = ErrInvalidHeader
+		err = ErrConsensus
 		return
 	}
 

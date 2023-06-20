@@ -312,6 +312,41 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrConsensus
 		}
 		return allow, nil
+	case coremodule.AuthOpTypeGetRecoveryPiece:
+		_, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
+			if strings.Contains(err.Error(), "No such bucket") {
+				return false, ErrNoSuchBucket
+			}
+			if strings.Contains(err.Error(), "No such object") {
+				return false, ErrNoSuchObject
+			}
+			return false, ErrConsensus
+		}
+
+		var isObjectSecondarySP bool
+		for _, addr := range objectInfo.SecondarySpAddresses {
+			if a.baseApp.OperatorAddress() == addr {
+				isObjectSecondarySP = true
+			}
+		}
+		if !isObjectSecondarySP {
+			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
+				"require", objectInfo.SecondarySpAddresses)
+			return false, ErrMismatchSp
+		}
+		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
+			return false, ErrNotSealedState
+		}
+
+		allow, err := a.baseApp.Consensus().VerifyGetObjectPermission(ctx, account, bucket, object)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
+			return false, ErrConsensus
+		}
+		return allow, nil
 	case coremodule.AuthOpTypeGetBucketQuota, coremodule.AuthOpTypeListBucketReadRecord:
 		queryTime := time.Now()
 		bucketInfo, err := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)

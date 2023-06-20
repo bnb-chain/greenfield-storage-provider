@@ -221,17 +221,20 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
 			return nil
 		}
+		// check quota for secondary read task
 		secondarySPs := downloadPieceTask.GetObjectInfo().SecondarySpAddresses
-		var isMyselfSecondary bool
+		var isOneOfSecondary bool
 		for _, addr := range secondarySPs {
 			if myselfAddr == addr {
-				isMyselfSecondary = true
+				isOneOfSecondary = true
 			}
 		}
+		
 		// if it is a request from client, the task handler is the secondary SP of the object
-		if isMyselfSecondary {
+		if isOneOfSecondary {
 			// check free quota
 			log.CtxDebugw(ctx, "downloading piece from secondary SP, checking quota")
+			// TODO traffic db add read type to indicate secondary
 			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
 				&spdb.ReadRecord{
 					BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),

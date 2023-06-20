@@ -482,19 +482,15 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.BucketName)
+	chainInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp)
 	if err != nil {
-		err = ErrConsensus
+		err = ErrInvalidHeader
+		return
 	}
 
 	// the primary sp of the object should be consistent with task signature
 	if bucketInfo.PrimarySpAddress != primaryAddr.String() {
 		log.CtxErrorw(reqCtx.Context(), "recovery request not come from primary sp")
-	}
-
-	chainInfo, err := g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), objectInfo.BucketName, objectInfo.ObjectName)
-	if err != nil {
-		err = ErrConsensus
 	}
 
 	isOneOfSecondary := false
@@ -512,7 +508,6 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	params := recoveryTask.GetStorageParams()
 	// init download piece task, get piece data and return the data
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
@@ -521,7 +516,7 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	// no need to check quota when recovering primary SP segment data
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
-		false, primaryAddr.String(), recoveryTask.GetPieceSize(), ECPieceKey, 0, uint64(ECPieceSize),
+		true, primaryAddr.String(), uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 	pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)

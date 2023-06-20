@@ -298,7 +298,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		dataShards        = task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()
 		segmentSize       = task.GetStorageParams().VersionedParams.GetMaxSegmentSize()
 		parityShards      = task.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()
-		minRecoveryPieces = int32(dataShards)
+		minRecoveryPieces = dataShards
 		record            = make([]bool, dataShards+parityShards)
 		doneTaskNum       = uint32(0)
 	)
@@ -314,7 +314,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 	var recoveryDataSources = make([][]byte, len(secondaryEndpoints))
 	doneCh := make(chan bool, len(secondaryEndpoints))
 	quitCh := make(chan bool)
-	var doneCount, total int32
+	var total int32
 
 	for rIdx, done := range record {
 		if !done {
@@ -338,13 +338,13 @@ loop:
 	for {
 		select {
 		case <-doneCh:
-			doneCount++
+			doneTaskNum++
 			// it is enough to recovery data with minRecoveryPieces EC data, no need to wait
-			if doneCount >= minRecoveryPieces {
+			if doneTaskNum >= minRecoveryPieces {
 				break loop
 			}
 		case <-quitCh: // all the task finish
-			if doneCount < minRecoveryPieces { // finish task num not enough
+			if doneTaskNum < minRecoveryPieces { // finish task num not enough
 				log.CtxErrorw(ctx, "get piece from secondary not enough", "get secondary piece num:", doneTaskNum, "error", err)
 				return ErrRecoveryPieceNotEnough
 			}

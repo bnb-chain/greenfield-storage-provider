@@ -46,6 +46,8 @@ const (
 	AuthOpTypeGetBucketQuota
 	// AuthOpTypeListBucketReadRecord defines the ListBucketReadRecord operator
 	AuthOpTypeListBucketReadRecord
+	// AuthOpTypeGetRecoveryPiece defines the GetRecoveryPiece operator
+	AuthOpTypeGetRecoveryPiece
 )
 
 // Authenticator is an abstract interface to verify users authentication.
