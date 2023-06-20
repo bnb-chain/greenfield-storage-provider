@@ -62,7 +62,7 @@ Build   : go1.20.3 darwin arm64 2023-06-20 13:37
 
 #### Edit configuration
 
-If you want to view detailed config.toml, you car visit this page [Detailed Config](./docs/run-book/config_template.toml).
+If you want to view detailed config.toml, you car visit this [page](./docs/run-book/config/config_template.toml).
 
 The following lists some important configuration information:
 

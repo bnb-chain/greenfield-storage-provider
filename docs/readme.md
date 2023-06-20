@@ -25,4 +25,4 @@ This section explores the inner componnet of the Greenfield Storage Provider imp
 - Workflow
   - [SP Workflow](./workflow/workflow.md)
 - Config
-  - [Config](./spconfig/config_template.toml)
+  - [Config](./run-book/config/config_template.toml)
