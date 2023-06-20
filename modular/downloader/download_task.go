@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -229,7 +230,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 				isOneOfSecondary = true
 			}
 		}
-		
+
 		// if it is a request from client, the task handler is the secondary SP of the object
 		if isOneOfSecondary {
 			// check free quota
@@ -366,8 +367,30 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
+		// generate recovery segment task
+		if downloadPieceTask.GetRedundancyIdx() < 0 {
+			segmentIndex, parseErr := d.baseApp.PieceOp().ParseSegmentIdx(pieceKey)
+			if parseErr != nil {
+				// no need to return recovery error to user
+				log.CtxErrorw(ctx, "fail to parse recovery segment index", "error", err)
+			}
+
+			recoveryTask := &gfsptask.GfSpRecoveryPieceTask{}
+			recoveryTask.InitRecoveryPieceTask(downloadPieceTask.GetObjectInfo(), downloadPieceTask.GetStorageParams(),
+				d.baseApp.TaskPriority(recoveryTask),
+				segmentIndex,
+				int32(-1),
+				uint64(0),
+				d.baseApp.TaskTimeout(recoveryTask, downloadPieceTask.GetStorageParams().GetMaxSegmentSize()),
+				d.baseApp.TaskMaxRetry(recoveryTask))
+
+			//TODO check if it need to get reportTask error value
+			d.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
+		}
+
 		return nil, nil, nil, ErrPieceStore
 	}
+
 	return integrity.IntegrityChecksum, integrity.PieceChecksumList, data, nil
 }
 
