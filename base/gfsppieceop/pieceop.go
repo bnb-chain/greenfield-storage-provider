@@ -12,11 +12,11 @@ type GfSpPieceOp struct {
 }
 
 func (p *GfSpPieceOp) SegmentPieceKey(objectID uint64, segmentIdx uint32) string {
-	return fmt.Sprintf("%d_s%d", objectID, segmentIdx)
+	return fmt.Sprintf("seg_%d_s%d", objectID, segmentIdx)
 }
 
 func (p *GfSpPieceOp) ECPieceKey(objectID uint64, segmentIdx uint32, replicateIdx uint32) string {
-	return fmt.Sprintf("%d_s%d_p%d", objectID, segmentIdx, replicateIdx)
+	return fmt.Sprintf("ec_%d_s%d_p%d", objectID, segmentIdx, replicateIdx)
 }
 
 func (p *GfSpPieceOp) ChallengePieceKey(objectID uint64, segmentIdx uint32, replicateIdx int32) string {
