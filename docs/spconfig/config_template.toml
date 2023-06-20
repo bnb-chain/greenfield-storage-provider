@@ -1,32 +1,32 @@
 AppID = ''
 Server = []
-GrpcAddress = '${grpc_address}'
+GRPCAddress = ''
 
 [SpDB]
-User = '${user}'
-Passwd = '${password}'
-Address = '${db_address}'
-Database = '${database}'
+User = ''
+Passwd = ''
+Address = ''
+Database = ''
 ConnMaxLifetime = 0
 ConnMaxIdleTime = 0
 MaxIdleConns = 0
 MaxOpenConns = 0
 
 [BsDB]
-User = '${user}'
-Passwd = '${password}'
-Address = '${db_address}'
-Database = '${database}'
+User = ''
+Passwd = ''
+Address = ''
+Database = ''
 ConnMaxLifetime = 0
 ConnMaxIdleTime = 0
 MaxIdleConns = 0
 MaxOpenConns = 0
 
 [BsDBBackup]
-User = '${user}'
-Passwd = '${password}'
-Address = '${db_address}'
-Database = '${database}'
+User = ''
+Passwd = ''
+Address = ''
+Database = ''
 ConnMaxLifetime = 0
 ConnMaxIdleTime = 0
 MaxIdleConns = 0
@@ -44,17 +44,17 @@ TLSInsecureSkipVerify = false
 IAMType = ''
 
 [Chain]
-ChainID = '${chain_id}'
-ChainAddress = ['${chain_address}']
+ChainID = ''
+ChainAddress = []
 GasLimit = 0
 
 [SpAccount]
-SpOperateAddress = '${sp_operator_address}'
-OperatorPrivateKey = '${operator_private_key}'
-FundingPrivateKey = '${funding_private_key}'
-SealPrivateKey = '${seal_private_key}'
-ApprovalPrivateKey = '${approval_private_key}'
-GcPrivateKey = '${gc_private_key}'
+SpOperatorAddress = ''
+OperatorPrivateKey = ''
+FundingPrivateKey = ''
+SealPrivateKey = ''
+ApprovalPrivateKey = ''
+GcPrivateKey = ''
 
 [Endpoint]
 ApproverEndpoint = ''
@@ -65,7 +65,7 @@ MetadataEndpoint = ''
 UploaderEndpoint = ''
 P2PEndpoint = ''
 SignerEndpoint = ''
-AuthorizerEndpoint = ''
+AuthenticatorEndpoint = ''
 
 [Approval]
 BucketApprovalTimeoutHeight = 0
@@ -79,8 +79,8 @@ MaxListReadQuotaNumber = 0
 MaxPayloadSize = 0
 
 [Gateway]
-Domain = 'gnfd.test-sp.com'
-HttpAddress = '${http_address}'
+DomainName = ''
+HTTPAddress = ''
 
 [Executor]
 MaxExecuteNumber = 0
@@ -92,9 +92,9 @@ ListenSealRetryTimeout = 0
 MaxListenSealRetry = 0
 
 [P2P]
-P2PPrivateKey = '${p2p_private_key}'
-P2PAddress = '${p2p_address}'
-P2PAntAddress = '${p2p_ant_address}'
+P2PPrivateKey = ''
+P2PAddress = ''
+P2PAntAddress = ''
 P2PBootstrap = []
 P2PPingPeriod = 0
 
@@ -142,10 +142,10 @@ GcZombieTaskRetry = 0
 GcMetaTaskRetry = 0
 
 [Monitor]
-DisableMetrics = true
-DisablePProf = true
-MetricsHttpAddress = '${metrics_http_address}'
-PProfHttpAddress = '${pprof_http_address}'
+DisableMetrics = false
+DisablePProf = false
+MetricsHTTPAddress = ''
+PProfHTTPAddress = ''
 
 [Rcmgr]
 DisableRcmgr = false
@@ -155,15 +155,14 @@ Level = ''
 Path = ''
 
 [Metadata]
-IsMasterDB = true
-BsDBSwitchCheckIntervalSec = 30
+IsMasterDB = false
+BsDBSwitchCheckIntervalSec = 0
 
 [BlockSyncer]
-Modules = ['epoch','bucket','object','payment','group','permission','storage_provider','prefix_tree']
-Dsn = "${dsn}"
+Modules = []
+Dsn = ''
 DsnSwitched = ''
-RecreateTables = true
-Workers = 50
+Workers = 0
 EnableDualDB = false
 
 [APIRateLimiter]
@@ -175,3 +174,6 @@ APILimits = []
 On = false
 RateLimit = 0
 RatePeriod = ''
+
+[Manager]
+EnableLoadTask = false

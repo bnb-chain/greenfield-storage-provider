@@ -21,7 +21,7 @@ Modules consist of `Authenticator`, `TaskExecutor`, `Manager`, `P2P`, `Receiver`
 
 ### Module Type
 
-The GfSp framework comprises several modules, including `Gater`, `Authenticator`, `Authorizer`, `Uploader`, `Downloader`,
+The GfSp framework comprises several modules, including `Gater`, `Approver`, `Authenticator`, `Uploader`, `Downloader`,
 `Manager`, `P2P`, `TaskExecutor`, `Receiver`, `Signer`, `Metadata` and `BlockSyncer`. Additionally, the GfSp framework
 supports the extension of customized modules as required. Once registered in the GfSp framework and executing the
 modular interface, these customized modules will be initialized and scheduled.

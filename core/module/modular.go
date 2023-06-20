@@ -126,7 +126,7 @@ type Downloader interface {
 type TaskExecutor interface {
 	Modular
 	// AskTask asks the task by remaining limitation from manager module.
-	AskTask(ctx context.Context)
+	AskTask(ctx context.Context) error
 	// HandleReplicatePieceTask handles ReplicatePieceTask that is asked from manager module.
 	HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask)
 	// HandleSealObjectTask handles SealObjectTask that is asked from manager module.

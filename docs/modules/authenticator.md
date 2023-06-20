@@ -8,7 +8,7 @@ We currently abstract SP as the GfSp framework, which provides users with custom
 // Authenticator is an abstract interface to verify users authentication.
 type Authenticator interface {
     Modular
-    // VerifyAuthentication verifies the users authentication.
+    // VerifyAuthentication verifies the operator authentication.
     VerifyAuthentication(ctx context.Context, auth AuthOpType, account, bucket, object string) (bool, error)
     // GetAuthNonce get the auth nonce for which the dApp or client can generate EDDSA key pairs.
     GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error)
