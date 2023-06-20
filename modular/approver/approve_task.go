@@ -70,12 +70,11 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 
 	startPickVGF := time.Now()
 	vgfID, err := a.baseApp.GfSpClient().PickVirtualGroupFamilyID(ctx, task)
+	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("pick_vfg").Observe(time.Since(startPickVGF).Seconds())
 	if err != nil {
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("pick_vfg").Observe(time.Since(startPickVGF).Seconds())
 		log.CtxErrorw(ctx, "failed to pick virtual group family", "error", err)
 		return false, err
 	}
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("pick_vfg").Observe(time.Since(startPickVGF).Seconds())
 
 	task.GetCreateBucketInfo().PrimarySpApproval.GlobalVirtualGroupFamilyId = vgfID
 	// begin to sign the new approval task

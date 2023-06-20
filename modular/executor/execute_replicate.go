@@ -1,16 +1,12 @@
 package executor
 
 import (
-	"bytes"
 	"context"
-	"encoding/hex"
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield/types"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -223,11 +219,9 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	}
 	veritySignatureTime := time.Now()
 	// TODO get gvgId and blsPubKey from task, bls pub key alreay injected via key manager for current sp
-	var gvgId uint32
-	var blsPubKey bls.PublicKey
-
-	err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), gvgId, integrity,
-		storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
+	// var blsPubKey bls.PublicKey
+	// err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), rTask.GetGlobalVirtualGroupId(), integrity,
+	//	storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
 
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_time").Observe(time.Since(veritySignatureTime).Seconds())
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
@@ -243,6 +237,7 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	return integrity, signature, nil
 }
 
+/*
 func veritySignature(ctx context.Context, objectID uint64, gvgId uint32, integrity []byte, expectedIntegrity []byte, signature []byte, blsPubKey bls.PublicKey) error {
 	if !bytes.Equal(expectedIntegrity, integrity) {
 		log.CtxErrorw(ctx, "replicate sp invalid integrity", "integrity", hex.EncodeToString(integrity),
@@ -257,3 +252,4 @@ func veritySignature(ctx context.Context, objectID uint64, gvgId uint32, integri
 	}
 	return nil
 }
+*/
