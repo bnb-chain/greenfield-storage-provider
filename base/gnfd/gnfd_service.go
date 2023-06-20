@@ -141,7 +141,7 @@ func (g *Gnfd) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virt
 	defer metrics.GnfdChainHistogram.WithLabelValues("query_global_virtual_group").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroup(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupRequest{
-		gvgID,
+		GlobalVirtualGroupId: gvgID,
 	})
 	if err != nil {
 		log.Errorw("failed to query global virtual group", "error", err)

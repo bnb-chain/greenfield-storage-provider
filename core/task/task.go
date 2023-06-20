@@ -2,6 +2,7 @@ package task
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -300,6 +301,10 @@ type ReplicatePieceTask interface {
 	GetSecondarySignatures() [][]byte
 	// SetSecondarySignatures sets the secondary SP's signatures.
 	SetSecondarySignatures([][]byte)
+	// GetGlobalVirtualGroupId returns the object's global virtual group id.
+	GetGlobalVirtualGroupId() uint32
+	// GetSecondarySps return the secondary sp info.
+	GetSecondarySps() []*sptypes.StorageProvider
 }
 
 // The ReceivePieceTask is the interface to record the information for receiving pieces

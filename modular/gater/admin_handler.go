@@ -16,7 +16,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/p2p/p2pnode"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
@@ -296,7 +295,6 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err           error
 		reqCtx        *RequestContext
-		approvalMsg   []byte
 		receiveMsg    []byte
 		data          []byte
 		integrity     []byte
@@ -320,34 +318,6 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask
 	reqCtx, _ = NewRequestContext(r, g)
-
-	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdReplicatePieceApprovalHeader))
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse replicate piece approval header",
-			"approval", r.Header.Get(GnfdReceiveMsgHeader))
-		err = ErrDecodeMsg
-		return
-	}
-	err = json.Unmarshal(approvalMsg, &approval)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal replicate piece approval header",
-			"receive", r.Header.Get(GnfdReceiveMsgHeader))
-		err = ErrDecodeMsg
-		return
-	}
-	if approval.GetApprovedSpOperatorAddress() != g.baseApp.OperatorAddress() {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify replicate piece approval, sp mismatch")
-		err = ErrMismatchSp
-		return
-	}
-	verifySignatureTime := time.Now()
-	err = p2pnode.VerifySignature(g.baseApp.OperatorAddress(), approval.GetSignBytes(), approval.GetApprovedSignature())
-	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_verify_approval_time").Observe(time.Since(verifySignatureTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify replicate piece approval signature")
-		err = ErrSignature
-		return
-	}
 	getBlockHeightTime := time.Now()
 	currentHeight, err = g.baseApp.Consensus().CurrentHeight(reqCtx.Context())
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_get_block_height_time").Observe(time.Since(getBlockHeightTime).Seconds())

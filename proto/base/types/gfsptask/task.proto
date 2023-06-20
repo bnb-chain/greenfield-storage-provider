@@ -2,10 +2,10 @@ syntax = "proto3";
 package base.types.gfsptask;
 
 import "base/types/gfsperrors/error.proto";
+import "greenfield/sp/types.proto";
 import "greenfield/storage/params.proto";
 import "greenfield/storage/tx.proto";
 import "greenfield/storage/types.proto";
-import "greenfield/sp/types.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask";
 
@@ -60,7 +60,6 @@ message GfSpReplicatePieceTask {
   // TODO: refine it.
   uint32 global_virtual_group_id = 7;
   repeated greenfield.sp.StorageProvider secondary_sps = 8;
-
 }
 
 message GfSpReceivePieceTask {

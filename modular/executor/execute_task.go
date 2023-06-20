@@ -3,9 +3,10 @@ package executor
 import (
 	"context"
 	"errors"
-	"github.com/prysmaticlabs/prysm/crypto/bls"
 	"net/http"
 	"time"
+
+	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"

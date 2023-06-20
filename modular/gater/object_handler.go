@@ -556,11 +556,11 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	//log.CtxDebugw(reqCtx.Context(), "succeed to download object for universal endpoint")
 }
 
-func isPrivateObject(bucket *storagetypes.BucketInfo, object *storagetypes.ObjectInfo) bool {
-	return object.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE ||
-		(object.GetVisibility() == storagetypes.VISIBILITY_TYPE_INHERIT &&
-			bucket.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE)
-}
+//func isPrivateObject(bucket *storagetypes.BucketInfo, object *storagetypes.ObjectInfo) bool {
+//	return object.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE ||
+//		(object.GetVisibility() == storagetypes.VISIBILITY_TYPE_INHERIT &&
+//			bucket.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE)
+//}
 
 // downloadObjectByUniversalEndpointHandler handles the download object request sent by universal endpoint
 func (g *GateModular) downloadObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {

@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
@@ -145,13 +144,13 @@ func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vmmg
 
 type virtualGroupManager struct {
 	selfOperatorAddress string
-	metadataClient      *gfspclient.GfSpClient // query VG meta from metadata service
-	chainClient         consensus.Consensus    // query VG params from chain
-	mutex               sync.RWMutex
-	selfSPID            uint32
-	spManager           *spManager // is used to generate a new gvg
-	vgParams            *virtualgrouptypes.Params
-	vgfManager          *virtualGroupFamilyManager
+	// metadataClient      *gfspclient.GfSpClient // query VG meta from metadata service
+	chainClient consensus.Consensus // query VG params from chain
+	mutex       sync.RWMutex
+	selfSPID    uint32
+	spManager   *spManager // is used to generate a new gvg
+	vgParams    *virtualgrouptypes.Params
+	vgfManager  *virtualGroupFamilyManager
 }
 
 // NewVirtualGroupManager returns a virtual group manager interface.
@@ -164,13 +163,10 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 	vgm.refreshMeta()
 	go func() {
 		RefreshMetaTicker := time.NewTicker(RefreshMetaInterval)
-		for {
-			select {
-			case <-RefreshMetaTicker.C:
-				log.Info("start to refresh virtual group manager meta")
-				vgm.refreshMeta()
-				log.Info("finish to refresh virtual group manager meta")
-			}
+		for range RefreshMetaTicker.C {
+			log.Info("start to refresh virtual group manager meta")
+			vgm.refreshMeta()
+			log.Info("finish to refresh virtual group manager meta")
 		}
 	}()
 	return vgm, nil
@@ -267,9 +263,11 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 	vgm.mutex.Unlock()
 }
 
+/*
 func (vgm *virtualGroupManager) refreshMetaByMetaService() {
 	// TODO: impl
 }
+*/
 
 // PickVirtualGroupFamily pick a virtual group family(If failed to pick,
 // new VGF will be automatically created on the chain) in get create bucket approval workflow.
