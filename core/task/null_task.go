@@ -2,6 +2,7 @@ package task
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -65,30 +66,40 @@ func (*NullTask) GetCreateObjectInfo() *storagetypes.MsgCreateObject            
 func (*NullTask) SetCreateObjectInfo(*storagetypes.MsgCreateObject)                     {}
 func (*NullTask) InitApprovalReplicatePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, string) {
 }
-func (*NullTask) GetAskSpOperatorAddress() string                                            { return "" }
-func (*NullTask) SetAskSpOperatorAddress(string)                                             {}
-func (*NullTask) GetAskSignature() []byte                                                    { return nil }
-func (*NullTask) SetAskSignature([]byte)                                                     {}
-func (*NullTask) GetApprovedSpOperatorAddress() string                                       { return "" }
-func (*NullTask) SetApprovedSpOperatorAddress(string)                                        {}
-func (*NullTask) GetApprovedSignature() []byte                                               { return nil }
-func (*NullTask) SetApprovedSignature([]byte)                                                {}
-func (*NullTask) GetApprovedSpEndpoint() string                                              { return "" }
-func (*NullTask) SetApprovedSpEndpoint(string)                                               {}
-func (*NullTask) GetApprovedSpApprovalAddress() string                                       { return "" }
-func (*NullTask) SetApprovedSpApprovalAddress(string)                                        {}
-func (*NullTask) InitUploadObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, int64) {}
+func (*NullTask) GetAskSpOperatorAddress() string      { return "" }
+func (*NullTask) SetAskSpOperatorAddress(string)       {}
+func (*NullTask) GetAskSignature() []byte              { return nil }
+func (*NullTask) SetAskSignature([]byte)               {}
+func (*NullTask) GetApprovedSpOperatorAddress() string { return "" }
+func (*NullTask) SetApprovedSpOperatorAddress(string)  {}
+func (*NullTask) GetApprovedSignature() []byte         { return nil }
+func (*NullTask) SetApprovedSignature([]byte)          {}
+func (*NullTask) GetApprovedSpEndpoint() string        { return "" }
+func (*NullTask) SetApprovedSpEndpoint(string)         {}
+func (*NullTask) GetApprovedSpApprovalAddress() string { return "" }
+func (*NullTask) SetApprovedSpApprovalAddress(string)  {}
+func (*NullTask) InitUploadObjectTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, int64) {
+}
+func (*NullTask) GetVirtualGroupFamilyId() uint32 {
+	return 0
+}
+
+func (*NullTask) GetGlobalVirtualGroupId() uint32 {
+	return 0
+}
+
 func (*NullTask) InitReplicatePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, int64, int64) {
 }
-func (*NullTask) GetSealed() bool                  { return false }
-func (*NullTask) SetSealed(bool)                   {}
-func (*NullTask) GetSecondaryAddresses() []string  { return nil }
-func (*NullTask) GetSecondarySignatures() [][]byte { return nil }
-func (*NullTask) SetSecondarySignatures([][]byte)  {}
-func (*NullTask) SetSecondaryAddresses([]string)   {}
+func (*NullTask) GetSealed() bool                             { return false }
+func (*NullTask) SetSealed(bool)                              {}
+func (*NullTask) GetSecondaryAddresses() []string             { return nil }
+func (*NullTask) GetSecondarySignatures() [][]byte            { return nil }
+func (*NullTask) SetSecondarySignatures([][]byte)             {}
+func (*NullTask) SetSecondaryAddresses([]string)              {}
+func (*NullTask) GetSecondarySps() []*sptypes.StorageProvider { return nil }
 func (*NullTask) InitSealObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64) {
 }
-func (*NullTask) InitReceivePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64) {
+func (*NullTask) InitReceivePieceTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64) {
 }
 func (*NullTask) GetReplicateIdx() uint32  { return 0 }
 func (*NullTask) SetReplicateIdx(uint32)   {}

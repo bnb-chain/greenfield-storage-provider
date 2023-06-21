@@ -108,8 +108,12 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				metrics.PerfUploadTimeHistogram.WithLabelValues("put_to_piecestore").Observe(time.Since(startPutPiece).Seconds())
 			}
 			startSignSignature := time.Now()
-			if signature, integrity, err = u.baseApp.GfSpClient().SignIntegrityHash(ctx,
-				uploadObjectTask.GetObjectInfo().Id.Uint64(), checksums); err != nil {
+			// TODO: need gvgId
+			// TODO: pick gvg here!!!
+			gvgId := uint32(0)
+
+			if signature, integrity, err = u.baseApp.GfSpClient().
+				SignIntegrityHash(ctx, uploadObjectTask.GetObjectInfo().Id.Uint64(), gvgId, checksums); err != nil {
 				metrics.PerfUploadTimeHistogram.WithLabelValues("sign_from_signer").Observe(time.Since(startSignSignature).Seconds())
 				log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
 				return err

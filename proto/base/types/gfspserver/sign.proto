@@ -4,13 +4,23 @@ package base.types.gfspserver;
 import "base/types/gfsperrors/error.proto";
 import "base/types/gfspp2p/p2p.proto";
 import "base/types/gfsptask/task.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "greenfield/storage/tx.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
 message GfSpSignIntegrityHash {
   uint64 object_id = 1;
-  repeated bytes checksums = 2;
+  uint32 global_virtual_group_id = 2;
+  repeated bytes checksums = 3;
+}
+
+// TODO: use chain MsgCreateGlobalVirtualGroup replace it.
+message GfSpCreateGlobalVirtualGroup {
+  uint32 virtual_group_family_id = 1;
+  string primary_sp_address = 2;
+  repeated uint32 secondary_sp_ids = 3;
+  cosmos.base.v1beta1.Coin deposit = 4;
 }
 
 message GfSpSignRequest {
@@ -25,6 +35,7 @@ message GfSpSignRequest {
     base.types.gfsptask.GfSpReplicatePieceApprovalTask gfsp_replicate_piece_approval_task = 8;
     base.types.gfsptask.GfSpReceivePieceTask gfsp_receive_piece_task = 9;
     greenfield.storage.MsgRejectSealObject reject_object_info = 10;
+    GfSpCreateGlobalVirtualGroup create_global_virtual_group = 11;
   }
 }
 

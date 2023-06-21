@@ -136,6 +136,8 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 			askTask.EstimateLimit().String(), "remaining", limit.String(), "error", err)
 		return err
 	}
+	metrics.RunningTaskNumberGauge.WithLabelValues("running_task_num").Set(float64(atomic.LoadInt64(&e.executingNum)))
+	metrics.MaxTaskNumberGauge.WithLabelValues("max_task_num").Set(float64(atomic.LoadInt64(&e.executingNum)))
 	defer e.ReleaseResource(ctx, span)
 	defer e.ReportTask(ctx, askTask)
 	ctx = log.WithValue(ctx, log.CtxKeyTask, askTask.Key().String())

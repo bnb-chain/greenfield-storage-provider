@@ -9,16 +9,15 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/p2p/p2pnode"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // getApprovalHandler handles the get create bucket/object approval request.
@@ -33,7 +32,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		approvalMsg          []byte
 		createBucketApproval = storagetypes.MsgCreateBucket{}
 		createObjectApproval = storagetypes.MsgCreateObject{}
-		authorized           bool
+		authenticated        bool
 		approved             bool
 	)
 	defer func() {
@@ -76,17 +75,17 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if reqCtx.NeedVerifyAuthorizer() {
-			startVerifyAuthorize := time.Now()
-			authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(
+		if reqCtx.NeedVerifyAuthentication() {
+			startVerifyAuthentication := time.Now()
+			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 				reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
 				reqCtx.Account(), createBucketApproval.GetBucketName(), "")
-			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthorize).Seconds())
+			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthentication).Seconds())
 			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
 			}
-			if !authorized {
+			if !authenticated {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
 				return
@@ -122,18 +121,18 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if reqCtx.NeedVerifyAuthorizer() {
-			startVerifyAuthorize := time.Now()
-			authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(
+		if reqCtx.NeedVerifyAuthentication() {
+			startVerifyAuthentication := time.Now()
+			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 				reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
 				reqCtx.Account(), createObjectApproval.GetBucketName(),
 				createObjectApproval.GetObjectName())
-			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthorize).Seconds())
+			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthentication).Seconds())
 			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
 			}
-			if !authorized {
+			if !authenticated {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
 				return
@@ -169,12 +168,12 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 // can verify the info whether are correct by comparing with the greenfield info.
 func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtx     *RequestContext
-		authorized bool
-		integrity  []byte
-		checksums  [][]byte
-		data       []byte
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		integrity     []byte
+		checksums     [][]byte
+		data          []byte
 	)
 	startTime := time.Now()
 	defer func() {
@@ -215,17 +214,17 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		}
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
+	if reqCtx.NeedVerifyAuthentication() {
 		authTime := time.Now()
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetChallengePieceInfo, reqCtx.Account(), objectInfo.GetBucketName(),
 			objectInfo.GetObjectName())
 		metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_auth_time").Observe(time.Since(authTime).Seconds())
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 			return
 		}
-		if !authorized {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "failed to get challenge info due to no permission")
 			err = ErrNoPermission
 			return
@@ -296,7 +295,6 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err           error
 		reqCtx        *RequestContext
-		approvalMsg   []byte
 		receiveMsg    []byte
 		data          []byte
 		integrity     []byte
@@ -320,34 +318,6 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask
 	reqCtx, _ = NewRequestContext(r, g)
-
-	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdReplicatePieceApprovalHeader))
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse replicate piece approval header",
-			"approval", r.Header.Get(GnfdReceiveMsgHeader))
-		err = ErrDecodeMsg
-		return
-	}
-	err = json.Unmarshal(approvalMsg, &approval)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal replicate piece approval header",
-			"receive", r.Header.Get(GnfdReceiveMsgHeader))
-		err = ErrDecodeMsg
-		return
-	}
-	if approval.GetApprovedSpOperatorAddress() != g.baseApp.OperatorAddress() {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify replicate piece approval, sp mismatch")
-		err = ErrMismatchSp
-		return
-	}
-	verifySignatureTime := time.Now()
-	err = p2pnode.VerifySignature(g.baseApp.OperatorAddress(), approval.GetSignBytes(), approval.GetApprovedSignature())
-	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_verify_approval_time").Observe(time.Since(verifySignatureTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify replicate piece approval signature")
-		err = ErrSignature
-		return
-	}
 	getBlockHeightTime := time.Now()
 	currentHeight, err = g.baseApp.Consensus().CurrentHeight(reqCtx.Context())
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_get_block_height_time").Observe(time.Since(getBlockHeightTime).Seconds())

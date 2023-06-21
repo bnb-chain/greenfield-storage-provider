@@ -4,6 +4,7 @@ package sqldb
 type SpInfoTable struct {
 	OperatorAddress string `gorm:"primary_key"`
 	IsOwn           bool   `gorm:"primary_key"`
+	ID              uint32
 	FundingAddress  string
 	SealAddress     string
 	ApprovalAddress string

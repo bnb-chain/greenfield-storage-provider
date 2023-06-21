@@ -78,9 +78,29 @@ func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSea
 	return nil
 }
 
-func (s *GfSpClient) RejectUnSealObject(
-	ctx context.Context,
-	object *storagetypes.MsgRejectSealObject) error {
+func (s *GfSpClient) CreateGlobalVirtualGroup(ctx context.Context, group *gfspserver.GfSpCreateGlobalVirtualGroup) error {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
+		return ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_CreateGlobalVirtualGroup{
+			CreateGlobalVirtualGroup: group,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to create global virtual group", "error", err)
+		return ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
+}
+
+func (s *GfSpClient) RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) error {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
@@ -146,7 +166,7 @@ func (s *GfSpClient) SignReplicatePieceApproval(ctx context.Context, task coreta
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignIntegrityHash(ctx context.Context, objectID uint64, checksums [][]byte) ([]byte, []byte, error) {
+func (s *GfSpClient) SignIntegrityHash(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, []byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
@@ -155,8 +175,9 @@ func (s *GfSpClient) SignIntegrityHash(ctx context.Context, objectID uint64, che
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_SignIntegrity{
 			SignIntegrity: &gfspserver.GfSpSignIntegrityHash{
-				ObjectId:  objectID,
-				Checksums: checksums,
+				ObjectId:             objectID,
+				GlobalVirtualGroupId: gvgId,
+				Checksums:            checksums,
 			},
 		},
 	}

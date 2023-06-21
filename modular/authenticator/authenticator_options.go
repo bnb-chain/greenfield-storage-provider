@@ -1,4 +1,4 @@
-package authorizer
+package authenticator
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -6,7 +6,7 @@ import (
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 )
 
-func NewAuthorizeModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
-	authorize := &AuthorizeModular{baseApp: app}
-	return authorize, nil
+func NewAuthenticationModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
+	auth := &AuthenticationModular{baseApp: app}
+	return auth, nil
 }

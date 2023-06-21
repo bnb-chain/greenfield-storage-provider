@@ -16,11 +16,14 @@ import (
 	"github.com/bnb-chain/greenfield/sdk/client"
 	"github.com/bnb-chain/greenfield/sdk/keys"
 	ctypes "github.com/bnb-chain/greenfield/sdk/types"
+	"github.com/bnb-chain/greenfield/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // SignType is the type of msg signature
 type SignType string
+
+type GasInfoType string
 
 const (
 	// SignOperator is the type of signature signed by the operator account
@@ -40,22 +43,32 @@ const (
 
 	// BroadcastTxRetry defines the max retry for broadcasting tx on-chain
 	BroadcastTxRetry = 3
+
+	Seal              GasInfoType = "Seal"
+	RejectSeal        GasInfoType = "RejectSeal"
+	DiscontinueBucket GasInfoType = "DiscontinueBucket"
 )
+
+type GasInfo struct {
+	GasLimit  uint64
+	FeeAmount sdk.Coins
+}
 
 // GreenfieldChainSignClient the greenfield chain client
 type GreenfieldChainSignClient struct {
 	mu sync.Mutex
 
-	gasLimit          uint64
+	gasInfo           map[GasInfoType]GasInfo
 	greenfieldClients map[SignType]*client.GreenfieldClient
 	sealAccNonce      uint64
 	gcAccNonce        uint64
 	approvalAccNonce  uint64 // is used by create global virtual group.
+	sealBlsKm         keys.KeyManager
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
-func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, operatorPrivateKey, fundingPrivateKey,
-	sealPrivateKey, approvalPrivateKey, gcPrivateKey string) (*GreenfieldChainSignClient, error) {
+func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoType]GasInfo, operatorPrivateKey, fundingPrivateKey,
+	sealPrivateKey, approvalPrivateKey, gcPrivateKey string, sealBlsPrivKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
@@ -77,6 +90,12 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	fundingClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(fundingKM))
 	if err != nil {
 		log.Errorw("failed to new funding greenfield client", "error", err)
+		return nil, err
+	}
+
+	sealBlsKm, err := keys.NewBlsPrivateKeyManager(fundingPrivateKey)
+	if err != nil {
+		log.Errorw("failed to new bls private key manager", "error", err)
 		return nil, err
 	}
 
@@ -134,11 +153,12 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	}
 
 	return &GreenfieldChainSignClient{
-		gasLimit:          gasLimit,
+		gasInfo:           gasInfo,
 		greenfieldClients: greenfieldClients,
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
 		approvalAccNonce:  approvalAccNonce,
+		sealBlsKm:         sealBlsKm,
 	}, nil
 }
 
@@ -167,7 +187,7 @@ func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, si
 		return false
 	}
 
-	return storagetypes.VerifySignature(km.GetAddr(), crypto.Keccak256(msg), sig) == nil
+	return types.VerifySignature(km.GetAddr(), crypto.Keccak256(msg), sig) == nil
 }
 
 // SealObject seal the object on the greenfield chain.
@@ -188,38 +208,28 @@ func (client *GreenfieldChainSignClient) SealObject(
 		return nil, ErrSignMsg
 	}
 
-	// TODO:
-	// var secondarySPAccs []sdk.AccAddress
-	// TODO:
-	//for _, sp := range sealObject.SecondarySpAddresses {
-	//	opAddr, err := sdk.AccAddressFromHexUnsafe(sp) // should be 0x...
-	//	if err != nil {
-	//		log.CtxErrorw(ctx, "failed to parse address", "error", err, "address", opAddr)
-	//		return nil, err
-	//	}
-	//	secondarySPAccs = append(secondarySPAccs, opAddr)
-	//}
-
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.sealAccNonce
 
-	// TODO:
-	//msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
-	//	sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
-		sealObject.BucketName, sealObject.ObjectName, 0, sealObject.SecondarySpSignatures)
+		sealObject.BucketName, sealObject.ObjectName, sealObject.GlobalVirtualGroupId,
+		sealObject.SecondarySpBlsAggSignatures)
+
 	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
 
 	var (
 		resp   *tx.BroadcastTxResponse
 		txHash []byte
+		nonce  uint64
 	)
+	nonce = client.sealAccNonce
 	for i := 0; i < BroadcastTxRetry; i++ {
 		txOpt := &ctypes.TxOption{
-			Mode:     &mode,
-			GasLimit: client.gasLimit,
-			Nonce:    nonce,
+			NoSimulate: true,
+			Mode:       &mode,
+			GasLimit:   client.gasInfo[Seal].GasLimit,
+			FeeAmount:  client.gasInfo[Seal].FeeAmount,
+			Nonce:      nonce,
 		}
 		resp, err = client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgSealObject}, txOpt)
 		if err != nil {
@@ -236,8 +246,6 @@ func (client *GreenfieldChainSignClient) SealObject(
 			}
 			continue
 		}
-		client.sealAccNonce = nonce + 1
-
 		if resp.TxResponse.Code != 0 {
 			log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
 			ErrSealObjectOnChain.SetError(fmt.Errorf("failed to broadcast  seal object tx, resp_code: %d", resp.TxResponse.Code))
@@ -252,6 +260,7 @@ func (client *GreenfieldChainSignClient) SealObject(
 			continue
 		}
 		if err == nil {
+			client.sealAccNonce = nonce + 1
 			log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash)
 			return txHash, nil
 		}
@@ -279,20 +288,23 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.sealAccNonce
 
 	msgRejectUnSealObject := storagetypes.NewMsgRejectUnsealedObject(km.GetAddr(), rejectObject.GetBucketName(), rejectObject.GetObjectName())
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		resp   *tx.BroadcastTxResponse
 		txHash []byte
+		nonce  uint64
 	)
+	nonce = client.sealAccNonce
 	for i := 0; i < BroadcastTxRetry; i++ {
 		txOpt := &ctypes.TxOption{
-			Mode:     &mode,
-			GasLimit: client.gasLimit,
-			Nonce:    nonce,
+			NoSimulate: true,
+			Mode:       &mode,
+			GasLimit:   client.gasInfo[RejectSeal].GasLimit,
+			FeeAmount:  client.gasInfo[RejectSeal].FeeAmount,
+			Nonce:      nonce,
 		}
 		resp, err = client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgRejectUnSealObject}, txOpt)
 		if err != nil {
@@ -309,7 +321,6 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 			}
 			continue
 		}
-		client.sealAccNonce = nonce + 1
 
 		if resp.TxResponse.Code != 0 {
 			log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
@@ -326,6 +337,7 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 		}
 
 		if err == nil {
+			client.sealAccNonce = nonce + 1
 			log.CtxDebugw(ctx, "succeed to broadcast reject unseal object tx", "tx_hash", txHash)
 			return txHash, nil
 		}
@@ -350,9 +362,11 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 		discontinueBucket.BucketName, discontinueBucket.Reason)
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
-		Nonce:    nonce,
+		NoSimulate: true,
+		Mode:       &mode,
+		GasLimit:   client.gasInfo[DiscontinueBucket].GasLimit,
+		FeeAmount:  client.gasInfo[DiscontinueBucket].FeeAmount,
+		Nonce:      nonce,
 	}
 
 	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgDiscontinueBucket}, txOpt)
@@ -401,8 +415,9 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 		gvg.FamilyId, gvg.GetSecondarySpIds(), gvg.GetDeposit())
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
+		Mode: &mode,
+		// TODO: refine it.
+		GasLimit: client.gasInfo[DiscontinueBucket].GasLimit,
 		Nonce:    nonce,
 	}
 

@@ -6,15 +6,19 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -117,59 +121,65 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		return ErrRepeatedTask
 	}
 	if task.Error() != nil {
-		startUpdateSPDBTime := time.Now()
-		err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:         task.GetObjectInfo().Id.Uint64(),
-			TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
-			ErrorDescription: task.Error().Error(),
-		})
-		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
-			Observe(time.Since(startUpdateSPDBTime).Seconds())
-
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
-			return ErrGfSpDB
-		}
-
-		startRejectUnSealTime := time.Now()
-		err = m.RejectUnSealObject(ctx, task.GetObjectInfo())
-		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_reject_unseal").
-			Observe(time.Since(startRejectUnSealTime).Seconds())
-
-		log.CtxErrorw(ctx, "reports failed update object task and reject unseal object",
-			"task_info", task.Info(), "error", task.Error(), "reject_unseal_error", err)
+		go func() error {
+			startUpdateSPDBTime := time.Now()
+			err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+				ErrorDescription: task.Error().Error(),
+			})
+			metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
+				Observe(time.Since(startUpdateSPDBTime).Seconds())
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to update object task state", "error", err)
+				return ErrGfSpDB
+			}
+			log.CtxErrorw(ctx, "reports failed update object task", "task_info", task.Info(), "error", task.Error())
+			return nil
+		}()
 		return nil
 	}
-	// TODO: add gvg id to replicate piece task
-	// virtual_group_manager pick, maybe need create new gvg
+	// TODO: refine it.
+	startPickGVGTime := time.Now()
+	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
+	metrics.PerfUploadTimeHistogram.WithLabelValues("pick_global_virtual_group").
+		Observe(time.Since(startPickGVGTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pick global virtual group", "error", err)
+		return err
+	}
 
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
+	replicateTask.GlobalVirtualGroupId = task.GetVirtualGroupFamilyId()
+	replicateTask.SecondarySps = gvgMeta.SecondarySPs
 
 	startPushReplicateQueueTime := time.Now()
-	err := m.replicateQueue.Push(replicateTask)
+	err = m.replicateQueue.Push(replicateTask)
 	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_push_replicate_queue").
 		Observe(time.Since(startPushReplicateQueueTime).Seconds())
-
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
 	}
-	startUpdateSPDBTime := time.Now()
-	err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-		ObjectID:  task.GetObjectInfo().Id.Uint64(),
-		TaskState: types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
-	})
-	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
-		Observe(time.Since(startUpdateSPDBTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to update object task state", "error", err)
-		return ErrGfSpDB
-	}
-	log.CtxDebugw(ctx, "succeed to done upload object and waiting for scheduling to replicate piece", "task_info", task.Info())
+	go func() error {
+		startUpdateSPDBTime := time.Now()
+		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:  task.GetObjectInfo().Id.Uint64(),
+			TaskState: types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
+		})
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
+			Observe(time.Since(startUpdateSPDBTime).Seconds())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
+			return ErrGfSpDB
+		}
+		log.CtxDebugw(ctx, "succeed to done upload object and waiting for scheduling to replicate piece", "task_info", task.Info())
+		return nil
+	}()
 	return nil
 }
 
@@ -180,7 +190,8 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	}
 	if task.Error() != nil {
 		log.CtxErrorw(ctx, "handler error replicate piece task", "task_info", task.Info(), "error", task.Error())
-		return m.handleFailedReplicatePieceTask(ctx, task)
+		go m.handleFailedReplicatePieceTask(ctx, task)
+		return nil
 	}
 	m.replicateQueue.PopByKey(task.Key())
 	if m.TaskUploading(ctx, task) {
@@ -188,17 +199,20 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 		return ErrRepeatedTask
 	}
 	if task.GetSealed() {
-		metrics.SealObjectSucceedCounter.WithLabelValues(m.Name()).Inc()
-		log.CtxDebugw(ctx, "replicate piece object task has combined seal object task")
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:  task.GetObjectInfo().Id.Uint64(),
-			TaskState: types.TaskState_TASK_STATE_SEAL_OBJECT_DONE,
-		}); err != nil {
-			log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
-			// succeed, ignore this error
-			// return ErrGfSpDB
-		}
-		// TODO: delete this upload db record?
+		go func() error {
+			metrics.SealObjectSucceedCounter.WithLabelValues(m.Name()).Inc()
+			log.CtxDebugw(ctx, "replicate piece object task has combined seal object task")
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:  task.GetObjectInfo().Id.Uint64(),
+				TaskState: types.TaskState_TASK_STATE_SEAL_OBJECT_DONE,
+			}); err != nil {
+				log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
+				// succeed, ignore this error
+				// return ErrGfSpDB
+			}
+			// TODO: delete this upload db record?
+			return nil
+		}()
 		return nil
 	}
 	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task", "task_info", task.Info())
@@ -209,19 +223,22 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	err := m.sealQueue.Push(sealObject)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push seal object task to queue", "task_info", task.Info(), "error", err)
-		return ErrExceedTask
+		return err
 	}
-	if err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-		ObjectID:            task.GetObjectInfo().Id.Uint64(),
-		TaskState:           types.TaskState_TASK_STATE_SEAL_OBJECT_DOING,
-		SecondaryAddresses:  task.GetSecondaryAddresses(),
-		SecondarySignatures: task.GetSecondarySignatures(),
-		ErrorDescription:    "",
-	}); err != nil {
-		log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
-		return ErrGfSpDB
-	}
-	log.CtxDebugw(ctx, "succeed to done replicate piece and waiting for scheduling to seal object", "task_info", task.Info())
+	go func() error {
+		if err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:            task.GetObjectInfo().Id.Uint64(),
+			TaskState:           types.TaskState_TASK_STATE_SEAL_OBJECT_DOING,
+			SecondaryAddresses:  task.GetSecondaryAddresses(),
+			SecondarySignatures: task.GetSecondarySignatures(),
+			ErrorDescription:    "",
+		}); err != nil {
+			log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
+			return ErrGfSpDB
+		}
+		log.CtxDebugw(ctx, "succeed to done replicate piece and waiting for scheduling to seal object", "task_info", task.Info())
+		return nil
+	}()
 	return nil
 }
 
@@ -249,9 +266,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 			log.CtxErrorw(ctx, "failed to update object task state", "task_info", handleTask.Info(), "error", err)
 			return ErrGfSpDB
 		}
-		err := m.RejectUnSealObject(ctx, handleTask.GetObjectInfo())
-		log.CtxWarnw(ctx, "delete expired replicate piece task and reject unseal object",
-			"task_info", handleTask.Info(), "reject_unseal_error", err)
+		log.CtxWarnw(ctx, "delete expired replicate piece task", "task_info", handleTask.Info())
 	}
 	return nil
 }
@@ -263,20 +278,24 @@ func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.Seal
 	}
 	if task.Error() != nil {
 		log.CtxErrorw(ctx, "handler error seal object task", "task_info", task.Info(), "error", task.Error())
-		return m.handleFailedSealObjectTask(ctx, task)
+		go m.handleFailedSealObjectTask(ctx, task)
+		return nil
 	}
-	metrics.SealObjectSucceedCounter.WithLabelValues(m.Name()).Inc()
-	m.sealQueue.PopByKey(task.Key())
-	if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-		ObjectID:  task.GetObjectInfo().Id.Uint64(),
-		TaskState: types.TaskState_TASK_STATE_SEAL_OBJECT_DONE,
-	}); err != nil {
-		log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
-		// succeed, ignore this error
-		// return ErrGfSpDB
-	}
-	// TODO: delete this upload db record?
-	log.CtxDebugw(ctx, "succeed to seal object on chain", "task_info", task.Info())
+	go func() error {
+		metrics.SealObjectSucceedCounter.WithLabelValues(m.Name()).Inc()
+		m.sealQueue.PopByKey(task.Key())
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:  task.GetObjectInfo().Id.Uint64(),
+			TaskState: types.TaskState_TASK_STATE_SEAL_OBJECT_DONE,
+		}); err != nil {
+			log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
+			// succeed, ignore this error
+			// return ErrGfSpDB
+		}
+		// TODO: delete this upload db record?
+		log.CtxDebugw(ctx, "succeed to seal object on chain", "task_info", task.Info())
+		return nil
+	}()
 	return nil
 }
 
@@ -304,27 +323,28 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 		}); err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "task_info", handleTask.Info(), "error", err)
 		}
-		err := m.RejectUnSealObject(ctx, handleTask.GetObjectInfo())
-		log.CtxWarnw(ctx, "delete expired seal object task and reject unseal object",
-			"task_info", handleTask.Info(), "reject_unseal_error", err)
+		log.CtxWarnw(ctx, "delete expired seal object task", "task_info", handleTask.Info())
 	}
 	return nil
 }
 
 func (m *ManageModular) HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) error {
 	if task.GetSealed() {
-		m.receiveQueue.PopByKey(task.Key())
+		go m.receiveQueue.PopByKey(task.Key())
 		log.CtxDebugw(ctx, "succeed to confirm receive piece seal on chain")
 	} else if task.Error() != nil {
-		return m.handleFailedReceivePieceTask(ctx, task)
+		go m.handleFailedReceivePieceTask(ctx, task)
+		return nil
 	} else {
-		task.SetRetry(0)
-		task.SetMaxRetry(m.baseApp.TaskMaxRetry(task))
-		task.SetTimeout(m.baseApp.TaskTimeout(task, 0))
-		task.SetPriority(m.baseApp.TaskPriority(task))
-		task.SetUpdateTime(time.Now().Unix())
-		err := m.receiveQueue.Push(task)
-		log.CtxErrorw(ctx, "push receive task to queue", "error", err)
+		go func() {
+			task.SetRetry(0)
+			task.SetMaxRetry(m.baseApp.TaskMaxRetry(task))
+			task.SetTimeout(m.baseApp.TaskTimeout(task, 0))
+			task.SetPriority(m.baseApp.TaskPriority(task))
+			task.SetUpdateTime(time.Now().Unix())
+			err := m.receiveQueue.Push(task)
+			log.CtxErrorw(ctx, "push receive task to queue", "error", err)
+		}()
 	}
 	return nil
 }
@@ -343,7 +363,6 @@ func (m *ManageModular) handleFailedReceivePieceTask(ctx context.Context, handle
 	} else {
 		log.CtxErrorw(ctx, "delete expired confirm receive piece task", "task_info", handleTask.Info())
 		// TODO: confirm it
-
 	}
 	return nil
 }
@@ -434,18 +453,75 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 }
 
 // PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.
-// if pick failed, will create a new gvg to has a new vgf.
 func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error) {
-	// TODO: refine it.
-	vgf, err := m.virtualGroupManager.PickVirtualGroupFamily()
-	if err != nil {
-		// TODO: create gvg?
-		// 1.generate a new gvg
-		// 2.send tx
-		// 3.refresh
-		// 4.get vgf id
-		log.CtxErrorw(ctx, "failed to pick vgf", "task_info", task.Info(), "error", err)
-		return 0, err
+	var (
+		err error
+		vgf *vmmgr.VirtualGroupFamilyMeta
+	)
+
+	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+		// create a new gvg, and retry pick.
+		if err = m.createGlobalVirtualGroup(0, nil); err != nil {
+			log.CtxErrorw(ctx, "failed to create global virtual group", "task_info", task.Info(), "error", err)
+			return 0, err
+		}
+		m.virtualGroupManager.ForceRefreshMeta()
+		if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+			log.CtxErrorw(ctx, "failed to pick vgf", "task_info", task.Info(), "error", err)
+			return 0, err
+		}
+		return vgf.ID, nil
 	}
 	return vgf.ID, nil
+}
+
+func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagetypes.Params) error {
+	var err error
+	if params == nil {
+		if params, err = m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix()); err != nil {
+			return err
+		}
+	}
+	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(params)
+	if err != nil {
+		return err
+	}
+	virtualGroupParams, err := m.baseApp.Consensus().QueryVirtualGroupParams(context.Background())
+	if err != nil {
+		return err
+	}
+	return m.baseApp.GfSpClient().CreateGlobalVirtualGroup(context.Background(), &gfspserver.GfSpCreateGlobalVirtualGroup{
+		VirtualGroupFamilyId: vgfID,
+		PrimarySpAddress:     m.baseApp.OperatorAddress(),
+		SecondarySpIds:       gvgMeta.SecondarySPIDs,
+		// TODO: refine it.
+		Deposit: &sdk.Coin{
+			Denom:  virtualGroupParams.GetDepositDenom(),
+			Amount: sdk.NewInt(int64(gvgMeta.StakingStorageSize * virtualGroupParams.GvgStakingPrice.BigInt().Uint64())),
+			//Amount: virtualGroupParams.GvgStakingPrice.MulInt64(int64(gvgMeta.StakingStorageSize)).BigInt().,
+		},
+	})
+}
+
+// pickGlobalVirtualGroup is used to pick a suitable gvg for replicating object.
+func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32, param *storagetypes.Params) (*vmmgr.GlobalVirtualGroupMeta, error) {
+	var (
+		err error
+		gvg *vmmgr.GlobalVirtualGroupMeta
+	)
+
+	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
+		// create a new gvg, and retry pick.
+		if err = m.createGlobalVirtualGroup(vgfID, param); err != nil {
+			log.CtxErrorw(ctx, "failed to create global virtual group", "vgf_id", vgfID, "error", err)
+			return gvg, err
+		}
+		m.virtualGroupManager.ForceRefreshMeta()
+		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
+			log.CtxErrorw(ctx, "failed to pick gvg", "vgf_id", vgfID, "error", err)
+			return gvg, err
+		}
+		return gvg, nil
+	}
+	return gvg, nil
 }

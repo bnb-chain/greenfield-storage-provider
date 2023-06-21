@@ -5,11 +5,13 @@ import (
 	"errors"
 	"io"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var (
@@ -20,7 +22,7 @@ var _ Modular = (*NullModular)(nil)
 var _ Approver = (*NullModular)(nil)
 var _ Uploader = (*NullModular)(nil)
 var _ Manager = (*NullModular)(nil)
-var _ Authorizer = (*NullModular)(nil)
+var _ Authenticator = (*NullModular)(nil)
 
 type NullModular struct{}
 
@@ -102,7 +104,7 @@ func (*NullModular) HandleChallengePieceTask(context.Context, task.ChallengePiec
 	return ErrNilModular
 }
 
-func (*NullModular) VerifyAuthorize(context.Context, AuthOpType, string, string, string) (bool, error) {
+func (*NullModular) VerifyAuthentication(context.Context, AuthOpType, string, string, string) (bool, error) {
 	return false, ErrNilModular
 }
 
@@ -183,7 +185,7 @@ func (*NilModular) SignReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NilModular) SignReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) SignIntegrityHash(ctx context.Context, objectID uint64, hash [][]byte) ([]byte, []byte, error) {
+func (*NilModular) SignIntegrityHash(ctx context.Context, objectID uint64, gvgid uint32, hash [][]byte) ([]byte, []byte, error) {
 	return nil, nil, ErrNilModular
 }
 func (*NilModular) SignP2PPingMsg(context.Context, *gfspp2p.GfSpPing) ([]byte, error) {
@@ -199,6 +201,10 @@ func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSe
 	return ErrNilModular
 }
 func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) error {
+	return nil
+}
+
+func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
 	return nil
 }
 
