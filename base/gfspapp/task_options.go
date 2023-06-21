@@ -237,7 +237,7 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	case coretask.TypeTaskReplicatePiece:
 		return coretask.MaxTaskPriority
 	case coretask.TypeTaskReceivePiece:
-		return coretask.MaxTaskPriority
+		return coretask.DefaultSmallerPriority
 	case coretask.TypeTaskSealObject:
 		return coretask.DefaultLargerTaskPriority
 	case coretask.TypeTaskDownloadObject:
