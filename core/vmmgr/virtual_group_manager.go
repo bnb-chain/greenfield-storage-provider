@@ -25,9 +25,16 @@ type VirtualGroupFamilyMeta struct {
 }
 
 type VirtualGroupManager interface {
+	// PickVirtualGroupFamily pick a virtual group family(If failed to pick,
+	// new VGF will be automatically created on the chain) in get create bucket approval workflow.
 	PickVirtualGroupFamily() (*VirtualGroupFamilyMeta, error)
+	// PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
+	// new GVG will be created by primary SP) in replicate/seal object workflow.
 	PickGlobalVirtualGroup(vgfID uint32) (*GlobalVirtualGroupMeta, error)
+	// ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
+	// if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
 	ForceRefreshMeta() error
+	// GenerateGlobalVirtualGroupMeta is used to generate a new global virtual group meta, the caller need send a tx to chain.
 	GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*GlobalVirtualGroupMeta, error)
 }
 

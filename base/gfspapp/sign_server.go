@@ -80,7 +80,6 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			log.CtxErrorw(ctx, "failed to sign replicate piece task", "error", err)
 		}
 	case *gfspserver.GfSpSignRequest_CreateGlobalVirtualGroup:
-		// TODO: refine it.
 		err = g.signer.CreateGlobalVirtualGroup(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
 			PrimarySpAddress: g.operatorAddress,
 			FamilyId:         t.CreateGlobalVirtualGroup.GetVirtualGroupFamilyId(),

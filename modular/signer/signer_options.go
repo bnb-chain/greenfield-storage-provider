@@ -13,16 +13,12 @@ import (
 )
 
 const (
-	// DefaultGasLimit defines the default gas limit
-	DefaultSealGasLimit  = 1200 // fix gas limit for msgSealObject is 1200
-	DefaultSealFeeAmount = 6000000000000
-
-	DefaultRejectSealGasLimit  = 12000 // fix gas limit for MsgRejectSealObject is 12000
-	DefaultRejectSealFeeAmount = 60000000000000
-
-	DefaultDiscontinueBucketGasLimit  = 2400 // fix gas limit for MsgDiscontinueBucket is 2400
-	DefaultDiscontinueBucketFeeAmount = 12000000000000
-
+	DefaultSealGasLimit                      = 1200 // fix gas limit for msgSealObject is 1200
+	DefaultSealFeeAmount                     = 6000000000000
+	DefaultRejectSealGasLimit                = 12000 // fix gas limit for MsgRejectSealObject is 12000
+	DefaultRejectSealFeeAmount               = 60000000000000
+	DefaultDiscontinueBucketGasLimit         = 2400 // fix gas limit for MsgDiscontinueBucket is 2400
+	DefaultDiscontinueBucketFeeAmount        = 12000000000000
 	DefaultCreateGlobalVirtualGroupGasLimit  = 1200 // fix gas limit for MsgCreateGlobalVirtualGroup is 1200
 	DefaultCreateGlobalVirtualGroupFeeAmount = 6000000000000
 

@@ -74,7 +74,7 @@ func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (cor
 	return manager, nil
 }
 
-func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) error {
+func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (err error) {
 	if cfg.Parallel.GlobalMaxUploadingParallel == 0 {
 		cfg.Parallel.GlobalMaxUploadingParallel = DefaultGlobalMaxUploadingNumber
 	}
@@ -157,8 +157,6 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
 
-	// TODO: enable init metadata to refresh
-	var err error
 	manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus())
 	return err
 }

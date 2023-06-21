@@ -40,7 +40,7 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 	if err != nil {
 		return
 	}
-	
+
 	sealMsg := &storagetypes.MsgSealObject{
 		Operator:                    e.baseApp.OperatorAddress(),
 		BucketName:                  task.GetObjectInfo().GetBucketName(),

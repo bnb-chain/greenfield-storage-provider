@@ -245,6 +245,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 				log.Errorw("failed to query global virtual group", "error", err)
 				return
 			}
+			log.Infow("query global virtual group info", "gvg_info", gvg)
 			gvgMeta := &vmmgr.GlobalVirtualGroupMeta{
 				ID:                 gvg.GetId(),
 				FamilyID:           vgf.Id,
@@ -277,7 +278,6 @@ func (vgm *virtualGroupManager) refreshMetaByMetaService() {
 
 // PickVirtualGroupFamily pick a virtual group family(If failed to pick,
 // new VGF will be automatically created on the chain) in get create bucket approval workflow.
-// TODO: if returns VirtualGroupManagerSpace, the caller need create gvg and force refresh metadata and retry.
 func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vmmgr.VirtualGroupFamilyMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
@@ -286,10 +286,6 @@ func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vmmgr.VirtualGroupFam
 
 // PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
 // new GVG will be created by primary SP) in replicate/seal object workflow.
-// return (nil, nil), if there is no gvg in vgm.
-// TODO: If returns ErrFailedPickGVG, the caller need re-stake or create gvg and force refresh metadata and retry.
-// TODO: if returns ErrStaledMetadata, the caller need force refresh from metadata and retry.
-// TODO: check storage params.
 func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vmmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
@@ -305,9 +301,8 @@ func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 	return nil
 }
 
-// GenerateGlobalVirtualGroupMeta is used to generate a new global virtual group meta, the caller need send a tx to chain.
-// TODO: support more generate policy.
-// TODO: add filter picker to support balance.
+// GenerateGlobalVirtualGroupMeta is used to generate a gvg meta.
+// TODO: support more generation strategies.
 func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*vmmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
