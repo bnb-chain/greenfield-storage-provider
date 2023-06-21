@@ -18,7 +18,6 @@ type IntegrityMetaTable struct {
 	ObjectID          uint64 `gorm:"primary_key"`
 	IntegrityChecksum string
 	PieceChecksumList string
-	Signature         string
 }
 
 // TableName is used to set IntegrityMetaTable schema's table name in database

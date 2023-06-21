@@ -39,7 +39,6 @@ type IntegrityMeta struct {
 	ObjectID          uint64
 	IntegrityChecksum []byte
 	PieceChecksumList [][]byte
-	Signature         []byte
 }
 
 // ReadRecord defines a read request record, will decrease the bucket read quota.

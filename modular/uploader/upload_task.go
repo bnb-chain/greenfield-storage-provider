@@ -64,7 +64,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		err       error
 		segIdx    uint32 = 0
 		pieceKey  string
-		signature []byte
 		integrity []byte
 		checksums [][]byte
 		readN     int
@@ -107,19 +106,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				}
 				metrics.PerfUploadTimeHistogram.WithLabelValues("put_to_piecestore").Observe(time.Since(startPutPiece).Seconds())
 			}
-			startSignSignature := time.Now()
-			// TODO: need gvgId
-			// TODO: pick gvg here!!!
-			gvgId := uint32(0)
-
-			if signature, integrity, err = u.baseApp.GfSpClient().
-				SignIntegrityHash(ctx, uploadObjectTask.GetObjectInfo().Id.Uint64(), gvgId, checksums); err != nil {
-				metrics.PerfUploadTimeHistogram.WithLabelValues("sign_from_signer").Observe(time.Since(startSignSignature).Seconds())
-				log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
-				return err
-			}
-			metrics.PerfUploadTimeHistogram.WithLabelValues("sign_from_signer").Observe(time.Since(startSignSignature).Seconds())
-			if !bytes.Equal(integrity, uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
+			if !bytes.Equal(hash.GenerateIntegrityHash(checksums), uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
 					"actual_integrity", hex.EncodeToString(integrity),
 					"expected_integrity", hex.EncodeToString(uploadObjectTask.GetObjectInfo().GetChecksums()[0]))
@@ -130,7 +117,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				ObjectID:          uploadObjectTask.GetObjectInfo().Id.Uint64(),
 				PieceChecksumList: checksums,
 				IntegrityChecksum: integrity,
-				Signature:         signature,
 			}
 			startUpdateSignature := time.Now()
 			if err = u.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta); err != nil {

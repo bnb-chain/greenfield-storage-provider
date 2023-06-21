@@ -151,7 +151,6 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
 		IntegrityChecksum: integrity,
 		PieceChecksumList: checksums,
-		Signature:         signature,
 	}
 	setIntegrityTime := time.Now()
 	err = r.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)

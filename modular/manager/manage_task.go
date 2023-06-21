@@ -17,6 +17,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
+	sdktypes "github.com/bnb-chain/greenfield/sdk/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -496,9 +497,10 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 		SecondarySpIds:       gvgMeta.SecondarySPIDs,
 		// TODO: refine it.
 		Deposit: &sdk.Coin{
-			Denom:  virtualGroupParams.GetDepositDenom(),
-			Amount: sdk.NewInt(int64(gvgMeta.StakingStorageSize * virtualGroupParams.GvgStakingPrice.BigInt().Uint64())),
-			//Amount: virtualGroupParams.GvgStakingPrice.MulInt64(int64(gvgMeta.StakingStorageSize)).BigInt().,
+			Denom: virtualGroupParams.GetDepositDenom(),
+			// Amount: sdk.NewInt(int64(gvgMeta.StakingStorageSize * virtualGroupParams.GvgStakingPrice.BigInt().Uint64())),
+			// Amount: virtualGroupParams.GvgStakingPrice.MulInt64(int64(gvgMeta.StakingStorageSize)).BigInt().,
+			Amount: sdktypes.NewIntFromInt64WithDecimal(int64(gvgMeta.StakingStorageSize*virtualGroupParams.GvgStakingPrice.BigInt().Uint64()), sdktypes.DecimalBNB),
 		},
 	})
 }

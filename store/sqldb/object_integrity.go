@@ -28,15 +28,10 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (*corespdb.IntegrityMeta,
 	if err != nil {
 		return nil, err
 	}
-	signature, err := hex.DecodeString(queryReturn.Signature)
-	if err != nil {
-		return nil, err
-	}
 
 	meta := &corespdb.IntegrityMeta{
 		ObjectID:          queryReturn.ObjectID,
 		IntegrityChecksum: integrityChecksum,
-		Signature:         signature,
 	}
 	meta.PieceChecksumList, err = util.StringToBytesSlice(queryReturn.PieceChecksumList)
 	if err != nil {
@@ -63,7 +58,6 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) error {
 		ObjectID:          meta.ObjectID,
 		PieceChecksumList: util.BytesSliceToString(meta.PieceChecksumList),
 		IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
-		Signature:         hex.EncodeToString(meta.Signature),
 	}
 	result := s.db.Create(insertIntegrityMetaRecord)
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
