@@ -16,6 +16,18 @@ const (
 	ManagerSchedulingTask               = "manager_scheduling_task"
 	ExecutorBeginTask                   = "executor_begin_task"
 	ExecutorEndTask                     = "executor_end_task"
+	ExecutorBeginP2P                    = "executor_begin_p2p"
+	ExecutorEndP2P                      = "executor_end_p2p"
+	ExecutorBeginReplicateOnePiece      = "executor_begin_replicate_one_piece"
+	ExecutorEndReplicateOnePiece        = "executor_end_replicate_one_piece"
+	ExecutorBeginReplicateAllPiece      = "executor_begin_replicate_all_piece"
+	ExecutorEndReplicateAllPiece        = "executor_end_replicate_all_piece"
+	ExecutorBeginDoneReplicatePiece     = "executor_begin_done_replicate_piece"
+	ExecutorEndDoneReplicatePiece       = "executor_end_done_replicate_piece"
+	ExecutorBeginSealTx                 = "executor_begin_seal_tx"
+	ExecutorEndSealTx                   = "executor_end_seal_tx"
+	ExecutorBeginConfirmSeal            = "executor_begin_confirm_seal"
+	ExecutorEndConfirmSeal              = "executor_end_confirm_seal"
 )
 
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
