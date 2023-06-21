@@ -1,14 +1,10 @@
-name: Docker
+name: Docker-Invisible
 
-on:
-  push:
-    # Publish `v1.2.3` tags as releases.
-    tags:
-      - v*
+on: workflow_dispatch
 
 env:
-  IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider
-  IMAGE_SOURCE: https://github.com/bnb-chain/greenfield-storage-provider
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/greenfield-storage-provider-invisible
+  IMAGE_SOURCE: https://github.com/${{ github.repository_owner }}/greenfield-storage-provider
 
 jobs:
   # Push image to GitHub Packages.
@@ -17,7 +13,6 @@ jobs:
       matrix:
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
-    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v3
@@ -53,15 +48,11 @@ jobs:
 
       - name: Push image
         run: |
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
+          VERSION=${GITHUB_SHA}
           echo IMAGE_NAME=$IMAGE_NAME
           echo VERSION=$VERSION
           docker tag $IMAGE_NAME $IMAGE_NAME:$VERSION
           docker tag $IMAGE_NAME $IMAGE_NAME:latest
           docker push $IMAGE_NAME:$VERSION
           docker push $IMAGE_NAME:latest
+          
