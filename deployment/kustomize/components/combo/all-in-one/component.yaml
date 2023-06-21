@@ -17,7 +17,7 @@ spec:
       serviceAccountName: nodereal-default
       containers:
       - name: sp-all-in-one
-        image: ghcr.io/bnb-chain/greenfield-storage-provider:0.0.3
+        image: ghcr.io/bnb-chain/greenfield-storage-provider:to-be-patched
         args: ["--log.std", "-c", "/config/config.toml", "-server", "approver,authenticator,downloader,taskexecutor,gateway,manager,p2p,receiver,signer,uploader"]
         env:
           - name: AWS_ACCESS_KEY

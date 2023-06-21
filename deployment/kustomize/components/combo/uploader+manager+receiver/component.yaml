@@ -17,7 +17,7 @@ spec:
       serviceAccountName: nodereal-default
       containers:
       - name: uploader-manager-receiver
-        image: ghcr.io/bnb-chain/greenfield-storage-provider:0.0.3
+        image: ghcr.io/bnb-chain/greenfield-storage-provider:to-be-patched
         imagePullPolicy: Always
         args: ["--log.std", "-c", "/config/config.toml", "-server", "uploader,manager,receiver"]
         env:

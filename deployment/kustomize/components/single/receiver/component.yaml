@@ -22,7 +22,7 @@ spec:
       serviceAccountName: nodereal-default
       containers:
       - name: receiver
-        image: ghcr.io/bnb-chain/greenfield-storage-provider:0.0.3
+        image: ghcr.io/bnb-chain/greenfield-storage-provider:to-be-patched
         args: ["--log.std", "-c", "/config/config.toml", "-server", "receiver"]
         env:
           - name: AWS_ACCESS_KEY

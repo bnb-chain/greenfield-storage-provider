@@ -15,7 +15,7 @@ spec:
       serviceAccountName: nodereal-default
       containers:
       - name: manager
-        image: ghcr.io/bnb-chain/greenfield-storage-provider:0.0.3
+        image: ghcr.io/bnb-chain/greenfield-storage-provider:to-be-patched
         args: ["--log.std", "-c", "/config/config.toml", "-server", "manager,approver"]
         env:
           - name: SP_DB_USER
