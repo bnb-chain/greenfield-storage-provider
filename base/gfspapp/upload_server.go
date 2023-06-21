@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
@@ -34,12 +35,14 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		err           error
 		receiveSize   int
 	)
+
 	defer func() {
 		defer cancel()
 		if span != nil {
 			span.Done()
 		}
 		if task != nil {
+			g.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), corespdb.UploaderEndReceiveData, task.Key().String())
 			metrics.UploadObjectSizeHistogram.WithLabelValues(g.uploader.Name()).Observe(
 				float64(task.GetObjectInfo().GetPayloadSize()))
 			g.uploader.PostUploadObject(ctx, task)
@@ -100,6 +103,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 					pWrite.CloseWithError(err)
 					return
 				}
+				g.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), corespdb.UploaderBeginReceiveData, task.Key().String())
 				ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 				span, err = g.uploader.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
 				if err != nil {

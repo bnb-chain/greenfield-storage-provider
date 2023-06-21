@@ -16,17 +16,17 @@ const (
 	// MaxUploadTime defines the max timeout to upload object.
 	MaxUploadTime int64 = 300
 	// MinReplicateTime defines the min timeout to replicate object.
-	MinReplicateTime int64 = 15
+	MinReplicateTime int64 = 90
 	// MaxReplicateTime defines the max timeout to replicate object.
 	MaxReplicateTime int64 = 500
 	// MinReceiveTime defines the min timeout to confirm the received piece whether is sealed on greenfield.
-	MinReceiveTime int64 = 10
+	MinReceiveTime int64 = 90
 	// MaxReceiveTime defines the max timeout to confirm the received piece whether is sealed on greenfield.
-	MaxReceiveTime int64 = 30
+	MaxReceiveTime int64 = 300
 	// MinSealObjectTime defines the min timeout to seal object to greenfield.
-	MinSealObjectTime int64 = 2
+	MinSealObjectTime int64 = 90
 	// MaxSealObjectTime defines the max timeout to seal object to greenfield.
-	MaxSealObjectTime int64 = 5
+	MaxSealObjectTime int64 = 300
 	// MinDownloadTime defines the min timeout to download object.
 	MinDownloadTime int64 = 2
 	// MaxDownloadTime defines the max timeout to download object.
@@ -51,9 +51,9 @@ const (
 	// MaxReplicateRetry defines the max retry number to replicate object.
 	MaxReplicateRetry = 6
 	// MinReceiveConfirmRetry defines the min retry number to confirm received piece is sealed on greenfield.
-	MinReceiveConfirmRetry = 20
+	MinReceiveConfirmRetry = 0
 	// MaxReceiveConfirmRetry defines the max retry number to confirm received piece is sealed on greenfield.
-	MaxReceiveConfirmRetry = 60
+	MaxReceiveConfirmRetry = 3
 	// MinSealObjectRetry defines the min retry number to seal object.
 	MinSealObjectRetry = 3
 	// MaxSealObjectRetry defines the max retry number to seal object.
@@ -235,11 +235,11 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	case coretask.TypeTaskUpload:
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskReplicatePiece:
-		return coretask.DefaultLargerTaskPriority
+		return coretask.MaxTaskPriority
 	case coretask.TypeTaskReceivePiece:
-		return coretask.MaxTaskPriority
+		return coretask.DefaultSmallerPriority
 	case coretask.TypeTaskSealObject:
-		return coretask.MaxTaskPriority
+		return coretask.DefaultLargerTaskPriority
 	case coretask.TypeTaskDownloadObject:
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskChallengePiece:

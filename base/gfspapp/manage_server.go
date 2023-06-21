@@ -9,6 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
@@ -29,7 +30,12 @@ func (g *GfSpBaseApp) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSpBeg
 	}
 	switch task := req.GetRequest().(type) {
 	case *gfspserver.GfSpBeginTaskRequest_UploadObjectTask:
+		g.GfSpDB().InsertUploadEvent(task.UploadObjectTask.GetObjectInfo().Id.Uint64(), corespdb.ManagerReceiveAndWaitSchedulingTask, task.UploadObjectTask.Key().String())
 		err := g.OnBeginUploadObjectTask(ctx, task.UploadObjectTask)
+		if err != nil {
+			g.GfSpDB().InsertUploadEvent(task.UploadObjectTask.GetObjectInfo().Id.Uint64(), corespdb.ManagerReceiveAndWaitSchedulingTask, task.UploadObjectTask.Key().String()+":"+err.Error())
+		}
+		g.GfSpDB().InsertUploadEvent(task.UploadObjectTask.GetObjectInfo().Id.Uint64(), corespdb.ManagerReceiveAndWaitSchedulingTask, task.UploadObjectTask.Key().String()+":")
 		return &gfspserver.GfSpBeginTaskResponse{Err: gfsperrors.MakeGfSpError(err)}, nil
 	default:
 		return &gfspserver.GfSpBeginTaskResponse{Err: ErrUnsupportedTaskType}, nil
@@ -68,11 +74,13 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 			ReplicatePieceTask: t,
 		}
 		metrics.DispatchReplicatePieceTaskCounter.WithLabelValues(g.manager.Name()).Inc()
+		g.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ManagerSchedulingTask, t.Key().String())
 	case *gfsptask.GfSpSealObjectTask:
 		resp.Response = &gfspserver.GfSpAskTaskResponse_SealObjectTask{
 			SealObjectTask: t,
 		}
 		metrics.DispatchSealObjectTaskCounter.WithLabelValues(g.manager.Name()).Inc()
+		g.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ManagerSchedulingTask, t.Key().String())
 	case *gfsptask.GfSpReceivePieceTask:
 		resp.Response = &gfspserver.GfSpAskTaskResponse_ReceivePieceTask{
 			ReceivePieceTask: t,
