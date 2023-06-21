@@ -398,13 +398,12 @@ func (client *GreenfieldChainSignClient) broadcastTx(
 		return nil, sdkErrors.ErrWrongSequence
 	}
 	if resp.TxResponse.Code != 0 {
-		return nil, errors.Wrapf(err, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
+		return nil, fmt.Errorf("failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
 	}
 	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal tx hash")
 	}
-
 	return txHash, nil
 }
 
