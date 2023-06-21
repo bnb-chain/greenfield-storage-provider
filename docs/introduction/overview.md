@@ -25,7 +25,7 @@ recommended that they advertise their information and prove to the community.
 
 ## Architecture
 
-<div align=center><img src="../asset/01-sp_arch.jpg" alt="architecture.png" width="700"/></div>
+<div align=center><img src="../asset/01-sp_arch.jpg" alt="architecture.png" width="500"/></div>
 <div align="center"><i>Storage Provider Architecture</i></div>
 
 SP contains fifteen core modules as show below:

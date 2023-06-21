@@ -10,7 +10,7 @@ Get Approval API provides two actions: CreateBucket and CreateObject. To upload 
 
 The flow chart is shown below:
 
-<div align=center><img src="../asset/02-get_approval.jpg" alt="architecture.png" width="700"/></div>
+<div align=center><img src="../asset/02-get_approval.jpg" width="700"/></div>
 <div align="center"><i>Get Approval Flowchart</i></div>
 
 - Gateway receives GetApproval requests from the request originator.
@@ -33,7 +33,7 @@ After successfully sending requests to the GetApproval API and receiving results
 
 Upload to PrimarySP flow chart is shown below:
 
-<div align=center><img src="../asset/03-put_object.jpg" alt="architecture.png" width="700"/></div>
+<div align=center><img src="../asset/03-put_object.jpg" width="700"/></div>
 <div align="center"><i>Upload Object Flowchart</i></div>
 
 ### Gateway
@@ -52,7 +52,7 @@ Upload to PrimarySP flow chart is shown below:
 
 Replicate to SecondarySP flow chart is shown below:
 
-<div align=center><img src="../asset/04-replicate_object.jpg" alt="architecture.png" width="700"/></div>
+<div align=center><img src="../asset/04-replicate_object.jpg" width="800"/></div>
 <div align="center"><i>Replicate Piece Flowchart</i></div>
 
 ### TaskExecutor
@@ -82,7 +82,7 @@ See request and response details for this API: [PutObject](https://greenfield.bn
 
 Users can download an object from PrimarySP. The flow chart is shown below:
 
-<div align=center><img src="../asset/05-get_object.jpg" alt="architecture.png" width="700"/></div>
+<div align=center><img src="../asset/05-get_object.jpg" width="700"/></div>
 <div align="center"><i>Download Object Flowchart</i></div>
 
 ### Gateway
@@ -107,7 +107,7 @@ See request and response details for this API: [GetObject](https://greenfield.bn
 
 Users maybe want to query some metadata about buckets, objects, bucket read quota or bucket read records from SP. SP provides related APIs about querying metadata. The flow chart is shown below:
 
-<div align=center><img src="../asset/06-query_meta.jpg" alt="architecture.png" width="700"/></div>
+<div align=center><img src="../asset/06-query_meta.jpg" width="700"/></div>
 <div align="center"><i>Query Meta Flowchart</i></div>
 
 ### Gateway
@@ -128,7 +128,7 @@ Ensuring data integrity and availability is always the top priority for any dece
 
 The flow chart is shown below:
 
-<div align=center><img src="../asset/07-challenge.jpg" alt="architecture.png" width="700"/></div>
+<div align=center><img src="../asset/07-challenge.jpg" width="700"/></div>
 <div align="center"><i>Challenge Piece Flowchart</i></div>
 
 ### Gateway
@@ -151,7 +151,7 @@ GC is used to delete objects whose metadata on Greenfield chain has already been
 
 The flow chart is shown below:
 
-<div align=center><img src="../asset/08-gc_object.jpg" alt="architecture.png" width="700"/></div>
+<div align=center><img src="../asset/08-gc_object.jpg" width="400"/></div>
 <div align="center"><i>GC Object Flowchart</i></div>
 
 - Manager dispatches GCObjectTask to TaskExecutor.
