@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
@@ -147,12 +148,22 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		atomic.AddInt64(&e.doingReplicatePieceTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingReplicatePieceTaskCnt, -1)
 		metrics.PerfUploadTimeHistogram.WithLabelValues("background_schedule_replicate_time").Observe(time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
+		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorBeginTask, t.Key().String())
 		e.HandleReplicatePieceTask(ctx, t)
+		if t.Error() != nil {
+			e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String()+":"+t.Error().Error())
+		}
+		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String())
 	case *gfsptask.GfSpSealObjectTask:
 		metrics.ExecutorSealObjectTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingSpSealObjectTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingSpSealObjectTaskCnt, -1)
+		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorBeginTask, t.Key().String())
 		e.HandleSealObjectTask(ctx, t)
+		if t.Error() != nil {
+			e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String()+":"+t.Error().Error())
+		}
+		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String())
 	case *gfsptask.GfSpReceivePieceTask:
 		metrics.ExecutorReceiveTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingReceivePieceTaskCnt, 1)
