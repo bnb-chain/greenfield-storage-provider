@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.2
+FEATURES
+* [\#571](https://github.com/bnb-chain/greenfield-storage-provider/pull/571) feat: list objects & buckets
+* [\#582](https://github.com/bnb-chain/greenfield-storage-provider/pull/582) refactor: task queue
+* [603](https://github.com/bnb-chain/greenfield-storage-provider/pull/603) feat: opt executor goroutine model
+
+BUGFIX
+* [\#579](https://github.com/bnb-chain/greenfield-storage-provider/pull/579) fix:blocksyncer queue size
+* [\#589](https://github.com/bnb-chain/greenfield-storage-provider/pull/589) fix: refine error page in built-in dapp
+* [\#636](https://github.com/bnb-chain/greenfield-storage-provider/pull/636) fix: broadcast tx bypass simulation and sync mode
+
+
 ## v0.2.2-alpha.1
 
 FEATURES
