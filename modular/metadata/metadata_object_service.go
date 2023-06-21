@@ -275,3 +275,178 @@ func (r *MetadataModular) GfSpListObjectsByObjectID(ctx context.Context, req *ty
 	log.CtxInfo(ctx, "succeed to list objects by object ids")
 	return resp, nil
 }
+
+// GfSpListPrimaryObjects list objects by primary sp id
+func (r *MetadataModular) GfSpListPrimaryObjects(ctx context.Context, req *types.GfSpListPrimaryObjectsRequest) (resp *types.GfSpListPrimaryObjectsResponse, err error) {
+	var (
+		objects []*model.Object
+		res     []*types.Object
+		limit   int
+	)
+
+	ctx = log.Context(ctx, req)
+	if req.Limit == 0 {
+		limit = model.ListObjectsDefaultMaxKeys
+	}
+
+	if req.Limit > model.ListObjectsLimitSize {
+		limit = model.ListObjectsLimitSize
+	}
+
+	objects, err = r.baseApp.GfBsDB().ListPrimaryObjects(req.SpId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list objects by primary sp id", "error", err)
+		return nil, err
+	}
+
+	res = make([]*types.Object, 0)
+	for i, object := range objects {
+		res[i] = &types.Object{
+			ObjectInfo: &storage_types.ObjectInfo{
+				Owner:               object.Owner.String(),
+				Creator:             object.Creator.String(),
+				BucketName:          object.BucketName,
+				ObjectName:          object.ObjectName,
+				Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
+				LocalVirtualGroupId: object.LocalVirtualGroupId,
+				PayloadSize:         object.PayloadSize,
+				Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+				ContentType:         object.ContentType,
+				CreateAt:            object.CreateTime,
+				ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
+				RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
+				SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+				Checksums:           object.Checksums,
+			},
+			LockedBalance: object.LockedBalance.String(),
+			Removed:       object.Removed,
+			UpdateAt:      object.UpdateAt,
+			DeleteAt:      object.DeleteAt,
+			DeleteReason:  object.DeleteReason,
+			Operator:      object.Operator.String(),
+			CreateTxHash:  object.CreateTxHash.String(),
+			UpdateTxHash:  object.UpdateTxHash.String(),
+			SealTxHash:    object.SealTxHash.String(),
+		}
+	}
+
+	resp = &types.GfSpListPrimaryObjectsResponse{Objects: res}
+	log.CtxInfow(ctx, "succeed to list objects by primary sp id")
+	return resp, nil
+}
+
+// GfSpListSecondaryObjects list objects by secondary sp id
+func (r *MetadataModular) GfSpListSecondaryObjects(ctx context.Context, req *types.GfSpListSecondaryObjectsRequest) (resp *types.GfSpListSecondaryObjectsResponse, err error) {
+	var (
+		objects []*model.Object
+		res     []*types.Object
+		limit   int
+	)
+
+	ctx = log.Context(ctx, req)
+	if req.Limit == 0 {
+		limit = model.ListObjectsDefaultMaxKeys
+	}
+
+	if req.Limit > model.ListObjectsLimitSize {
+		limit = model.ListObjectsLimitSize
+	}
+	objects, err = r.baseApp.GfBsDB().ListSecondaryObjects(req.SpId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list objects by secondary sp id", "error", err)
+		return nil, err
+	}
+
+	res = make([]*types.Object, 0)
+	for i, object := range objects {
+		res[i] = &types.Object{
+			ObjectInfo: &storage_types.ObjectInfo{
+				Owner:               object.Owner.String(),
+				Creator:             object.Creator.String(),
+				BucketName:          object.BucketName,
+				ObjectName:          object.ObjectName,
+				Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
+				LocalVirtualGroupId: object.LocalVirtualGroupId,
+				PayloadSize:         object.PayloadSize,
+				Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+				ContentType:         object.ContentType,
+				CreateAt:            object.CreateTime,
+				ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
+				RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
+				SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+				Checksums:           object.Checksums,
+			},
+			LockedBalance: object.LockedBalance.String(),
+			Removed:       object.Removed,
+			UpdateAt:      object.UpdateAt,
+			DeleteAt:      object.DeleteAt,
+			DeleteReason:  object.DeleteReason,
+			Operator:      object.Operator.String(),
+			CreateTxHash:  object.CreateTxHash.String(),
+			UpdateTxHash:  object.UpdateTxHash.String(),
+			SealTxHash:    object.SealTxHash.String(),
+		}
+	}
+
+	resp = &types.GfSpListSecondaryObjectsResponse{Objects: res}
+	log.CtxInfow(ctx, "succeed to list objects by secondary sp id")
+	return resp, nil
+}
+
+// GfSpListObjectsInGVG list objects by gvg id
+func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.GfSpListObjectsInGVGRequest) (resp *types.GfSpListObjectsInGVGResponse, err error) {
+	var (
+		objects []*model.Object
+		res     []*types.Object
+		limit   int
+	)
+
+	ctx = log.Context(ctx, req)
+	if req.Limit == 0 {
+		limit = model.ListObjectsDefaultMaxKeys
+	}
+
+	if req.Limit > model.ListObjectsLimitSize {
+		limit = model.ListObjectsLimitSize
+	}
+	objects, err = r.baseApp.GfBsDB().ListObjectsInGVG(req.GvgId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list objects by gvg id", "error", err)
+		return nil, err
+	}
+
+	res = make([]*types.Object, 0)
+	for i, object := range objects {
+		res[i] = &types.Object{
+			ObjectInfo: &storage_types.ObjectInfo{
+				Owner:               object.Owner.String(),
+				Creator:             object.Creator.String(),
+				BucketName:          object.BucketName,
+				ObjectName:          object.ObjectName,
+				Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
+				LocalVirtualGroupId: object.LocalVirtualGroupId,
+				PayloadSize:         object.PayloadSize,
+				Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+				ContentType:         object.ContentType,
+				CreateAt:            object.CreateTime,
+				ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
+				RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
+				SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+				Checksums:           object.Checksums,
+			},
+			LockedBalance: object.LockedBalance.String(),
+			Removed:       object.Removed,
+			UpdateAt:      object.UpdateAt,
+			DeleteAt:      object.DeleteAt,
+			DeleteReason:  object.DeleteReason,
+			Operator:      object.Operator.String(),
+			CreateTxHash:  object.CreateTxHash.String(),
+			UpdateTxHash:  object.UpdateTxHash.String(),
+			SealTxHash:    object.SealTxHash.String(),
+		}
+	}
+
+	resp = &types.GfSpListObjectsInGVGResponse{Objects: res}
+	log.CtxInfow(ctx, "succeed to list objects by gvg id")
+	return resp, nil
+}

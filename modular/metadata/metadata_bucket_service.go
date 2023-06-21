@@ -45,15 +45,16 @@ func (r *MetadataModular) GfSpGetUserBuckets(
 	for _, bucket := range buckets {
 		res = append(res, &types.Bucket{
 			BucketInfo: &storage_types.BucketInfo{
-				Owner:            bucket.Owner.String(),
-				BucketName:       bucket.BucketName,
-				Visibility:       storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
-				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
-				SourceType:       storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
-				CreateAt:         bucket.CreateTime,
-				PaymentAddress:   bucket.PaymentAddress.String(),
-				PrimarySpId:      bucket.PrimarySpId,
-				ChargedReadQuota: bucket.ChargedReadQuota,
+				Owner:                      bucket.Owner.String(),
+				BucketName:                 bucket.BucketName,
+				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:                   bucket.CreateTime,
+				PaymentAddress:             bucket.PaymentAddress.String(),
+				PrimarySpId:                bucket.PrimarySpID,
+				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+				ChargedReadQuota:           bucket.ChargedReadQuota,
 				BillingInfo: storage_types.BillingInfo{
 					PriceTime:       0,
 					TotalChargeSize: 0,
@@ -98,15 +99,16 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 	if bucket != nil {
 		res = &types.Bucket{
 			BucketInfo: &storage_types.BucketInfo{
-				Owner:            bucket.Owner.String(),
-				BucketName:       bucket.BucketName,
-				Visibility:       storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
-				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
-				SourceType:       storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
-				CreateAt:         bucket.CreateTime,
-				PaymentAddress:   bucket.PaymentAddress.String(),
-				PrimarySpId:      bucket.PrimarySpId,
-				ChargedReadQuota: bucket.ChargedReadQuota,
+				Owner:                      bucket.Owner.String(),
+				BucketName:                 bucket.BucketName,
+				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:                   bucket.CreateTime,
+				PaymentAddress:             bucket.PaymentAddress.String(),
+				PrimarySpId:                bucket.PrimarySpID,
+				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+				ChargedReadQuota:           bucket.ChargedReadQuota,
 				BillingInfo: storage_types.BillingInfo{
 					PriceTime:       0,
 					TotalChargeSize: 0,
@@ -146,15 +148,16 @@ func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *type
 	if bucket != nil {
 		res = &types.Bucket{
 			BucketInfo: &storage_types.BucketInfo{
-				Owner:            bucket.Owner.String(),
-				BucketName:       bucket.BucketName,
-				Visibility:       storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
-				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
-				SourceType:       storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
-				CreateAt:         bucket.CreateTime,
-				PaymentAddress:   bucket.PaymentAddress.String(),
-				PrimarySpId:      bucket.PrimarySpId,
-				ChargedReadQuota: bucket.ChargedReadQuota,
+				Owner:                      bucket.Owner.String(),
+				BucketName:                 bucket.BucketName,
+				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:                   bucket.CreateTime,
+				PaymentAddress:             bucket.PaymentAddress.String(),
+				PrimarySpId:                bucket.PrimarySpID,
+				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+				ChargedReadQuota:           bucket.ChargedReadQuota,
 				BillingInfo: storage_types.BillingInfo{
 					PriceTime:       0,
 					TotalChargeSize: 0,
@@ -205,15 +208,16 @@ func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *t
 	for _, bucket := range buckets {
 		res = append(res, &types.Bucket{
 			BucketInfo: &storage_types.BucketInfo{
-				Owner:            bucket.Owner.String(),
-				BucketName:       bucket.BucketName,
-				Visibility:       storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
-				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
-				SourceType:       storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
-				CreateAt:         bucket.CreateTime,
-				PaymentAddress:   bucket.PaymentAddress.String(),
-				PrimarySpId:      bucket.PrimarySpId,
-				ChargedReadQuota: bucket.ChargedReadQuota,
+				Owner:                      bucket.Owner.String(),
+				BucketName:                 bucket.BucketName,
+				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:                   bucket.CreateTime,
+				PaymentAddress:             bucket.PaymentAddress.String(),
+				PrimarySpId:                bucket.PrimarySpID,
+				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+				ChargedReadQuota:           bucket.ChargedReadQuota,
 				BillingInfo: storage_types.BillingInfo{
 					PriceTime:       0,
 					TotalChargeSize: 0,
@@ -256,15 +260,16 @@ func (r *MetadataModular) GfSpGetBucketMeta(
 	if bucket != nil {
 		bucketRes = &types.Bucket{
 			BucketInfo: &storage_types.BucketInfo{
-				Owner:            bucket.Owner.String(),
-				BucketName:       bucket.BucketName,
-				Visibility:       storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
-				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
-				SourceType:       storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
-				CreateAt:         bucket.CreateTime,
-				PaymentAddress:   bucket.PaymentAddress.String(),
-				PrimarySpId:      bucket.PrimarySpId,
-				ChargedReadQuota: bucket.ChargedReadQuota,
+				Owner:                      bucket.Owner.String(),
+				BucketName:                 bucket.BucketName,
+				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:                   bucket.CreateTime,
+				PaymentAddress:             bucket.PaymentAddress.String(),
+				PrimarySpId:                bucket.PrimarySpID,
+				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+				ChargedReadQuota:           bucket.ChargedReadQuota,
 				BillingInfo: storage_types.BillingInfo{
 					PriceTime:       0,
 					TotalChargeSize: 0,
@@ -420,15 +425,16 @@ func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *ty
 	for _, bucket := range buckets {
 		bucketsMap[bucket.BucketID.Big().Uint64()] = &types.Bucket{
 			BucketInfo: &storage_types.BucketInfo{
-				Owner:            bucket.Owner.String(),
-				BucketName:       bucket.BucketName,
-				Visibility:       storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
-				Id:               math.NewUintFromBigInt(bucket.BucketID.Big()),
-				SourceType:       storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
-				CreateAt:         bucket.CreateTime,
-				PaymentAddress:   bucket.PaymentAddress.String(),
-				PrimarySpId:      bucket.PrimarySpId,
-				ChargedReadQuota: bucket.ChargedReadQuota,
+				Owner:                      bucket.Owner.String(),
+				BucketName:                 bucket.BucketName,
+				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:                   bucket.CreateTime,
+				PaymentAddress:             bucket.PaymentAddress.String(),
+				PrimarySpId:                bucket.PrimarySpID,
+				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+				ChargedReadQuota:           bucket.ChargedReadQuota,
 				BillingInfo: storage_types.BillingInfo{
 					PriceTime:       0,
 					TotalChargeSize: 0,
@@ -448,5 +454,120 @@ func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *ty
 	}
 	resp = &types.GfSpListBucketsByBucketIDResponse{Buckets: bucketsMap}
 	log.CtxInfow(ctx, "succeed to list buckets by bucket ids")
+	return resp, nil
+}
+
+// GfSpListBucketsBindingOnPrimarySP list buckets by primary sp id
+func (r *MetadataModular) GfSpListBucketsBindingOnPrimarySP(ctx context.Context, req *types.GfSpListBucketsBindingOnPrimarySPRequest) (resp *types.GfSpListBucketsBindingOnPrimarySPResponse, err error) {
+	var (
+		buckets []*model.Bucket
+		res     []*types.Bucket
+		limit   int
+	)
+	ctx = log.Context(ctx, req)
+	if req.Limit == 0 {
+		limit = model.ListObjectsDefaultMaxKeys
+	}
+
+	if req.Limit > model.ListObjectsLimitSize {
+		limit = model.ListObjectsLimitSize
+	}
+	buckets, err = r.baseApp.GfBsDB().ListBucketsBindingOnPrimarySP(req.SpId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list buckets by primary sp id", "error", err)
+		return
+	}
+
+	res = make([]*types.Bucket, len(buckets))
+	for i, bucket := range buckets {
+		res[i] = &types.Bucket{
+			BucketInfo: &storage_types.BucketInfo{
+				Owner:                      bucket.Owner.String(),
+				BucketName:                 bucket.BucketName,
+				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:                   bucket.CreateTime,
+				PaymentAddress:             bucket.PaymentAddress.String(),
+				PrimarySpId:                bucket.PrimarySpID,
+				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+				ChargedReadQuota:           bucket.ChargedReadQuota,
+				BillingInfo: storage_types.BillingInfo{
+					PriceTime:       0,
+					TotalChargeSize: 0,
+					LvgObjectsSize:  nil,
+				},
+				BucketStatus: storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+			},
+			Removed:      bucket.Removed,
+			DeleteAt:     bucket.DeleteAt,
+			DeleteReason: bucket.DeleteReason,
+			Operator:     bucket.Operator.String(),
+			CreateTxHash: bucket.CreateTxHash.String(),
+			UpdateTxHash: bucket.UpdateTxHash.String(),
+			UpdateAt:     bucket.UpdateAt,
+			UpdateTime:   bucket.UpdateTime,
+		}
+	}
+	resp = &types.GfSpListBucketsBindingOnPrimarySPResponse{Buckets: res}
+	log.CtxInfow(ctx, "succeed to list buckets by primary sp id")
+	return resp, nil
+}
+
+// GfSpListBucketsBindingOnSecondarySP list buckets by secondary sp id
+func (r *MetadataModular) GfSpListBucketsBindingOnSecondarySP(ctx context.Context, req *types.GfSpListBucketsBindingOnSecondarySPRequest) (resp *types.GfSpListBucketsBindingOnSecondarySPResponse, err error) {
+	var (
+		buckets []*model.Bucket
+		res     []*types.Bucket
+		limit   int
+	)
+
+	ctx = log.Context(ctx, req)
+	if req.Limit == 0 {
+		limit = model.ListObjectsDefaultMaxKeys
+	}
+
+	if req.Limit > model.ListObjectsLimitSize {
+		limit = model.ListObjectsLimitSize
+	}
+	buckets, err = r.baseApp.GfBsDB().ListBucketsBindingOnSecondarySP(req.SpId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list buckets by secondary sp id", "error", err)
+		return
+	}
+
+	res = make([]*types.Bucket, len(buckets))
+	for i, bucket := range buckets {
+		res[i] = &types.Bucket{
+			BucketInfo: &storage_types.BucketInfo{
+				Owner:                      bucket.Owner.String(),
+				BucketName:                 bucket.BucketName,
+				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:                   bucket.CreateTime,
+				PaymentAddress:             bucket.PaymentAddress.String(),
+				PrimarySpId:                bucket.PrimarySpID,
+				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+				ChargedReadQuota:           bucket.ChargedReadQuota,
+				BillingInfo: storage_types.BillingInfo{
+					PriceTime:       0,
+					TotalChargeSize: 0,
+					LvgObjectsSize:  nil,
+				},
+				BucketStatus: storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+			},
+			Removed:      bucket.Removed,
+			DeleteAt:     bucket.DeleteAt,
+			DeleteReason: bucket.DeleteReason,
+			Operator:     bucket.Operator.String(),
+			CreateTxHash: bucket.CreateTxHash.String(),
+			UpdateTxHash: bucket.UpdateTxHash.String(),
+			UpdateAt:     bucket.UpdateAt,
+			UpdateTime:   bucket.UpdateTime,
+		}
+	}
+	resp = &types.GfSpListBucketsBindingOnSecondarySPResponse{Buckets: res}
+	log.CtxInfow(ctx, "succeed to list buckets by secondary sp id")
 	return resp, nil
 }

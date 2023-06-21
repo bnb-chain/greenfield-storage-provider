@@ -48,6 +48,40 @@ type Metadata interface {
 	ListObjectsByObjectID(ids []common.Hash, includeRemoved bool) ([]*Object, error)
 	// ListBucketsByBucketID list buckets by bucket ids
 	ListBucketsByBucketID(ids []common.Hash, includeRemoved bool) ([]*Bucket, error)
+	// ListVirtualGroupFamiliesBySpID list virtual group families by sp id
+	ListVirtualGroupFamiliesBySpID(spID uint32) ([]*VirtualGroupFamily, error)
+	// GetVirtualGroupFamiliesByVgfID get virtual group families by vgf id
+	GetVirtualGroupFamiliesByVgfID(vgfID uint32) (*VirtualGroupFamily, error)
+	// GetGlobalVirtualGroupByGvgID get global virtual group by gvg id
+	GetGlobalVirtualGroupByGvgID(gvgID uint32) (*GlobalVirtualGroup, error)
+	// GetVirtualGroupFamilyBindingOnBucket get virtual group family binding on bucket
+	GetVirtualGroupFamilyBindingOnBucket(bucketID common.Hash) (*VirtualGroupFamily, error)
+	// ListBucketsBindingOnPrimarySP list buckets by primary sp id
+	ListBucketsBindingOnPrimarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
+	// ListBucketsBindingOnSecondarySP list buckets by secondary sp id
+	ListBucketsBindingOnSecondarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
+	// ListPrimaryObjects list objects by primary sp id
+	ListPrimaryObjects(spID uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	// ListSecondaryObjects list objects by primary sp id
+	ListSecondaryObjects(spID uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	// ListObjectsInGVG list objects by gvg id
+	ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	// ListGvgByPrimarySpID list gvg by primary sp id
+	ListGvgByPrimarySpID(spID uint32) ([]*GlobalVirtualGroup, error)
+	// ListGvgBySecondarySpID list gvg by secondary sp id
+	ListGvgBySecondarySpID(spID uint32) ([]*GlobalVirtualGroup, error)
+	// ListVgfByGvgID list vgf by gvg ids
+	ListVgfByGvgID(gvgIDs []uint32) ([]*VirtualGroupFamily, error)
+	// ListLvgByGvgID list vgf by gvg ids
+	ListLvgByGvgID(gvgIDs []uint32) ([]*LocalVirtualGroup, error)
+	// ListBucketsByVgfID list buckets by vgf ids
+	ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
+	// ListObjectsByLVGID list objects by lvg id
+	ListObjectsByLVGID(lvgIDs []uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	// GfSpGetGvgByBucketAndLvgID get global virtual group by lvg id and bucket id
+	GfSpGetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*GlobalVirtualGroup, error)
+	// GfSpGetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
+	GfSpGetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error)
 }
 
 // BSDB contains all the methods required by block syncer database

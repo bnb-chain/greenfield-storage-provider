@@ -44,6 +44,9 @@ func (r *MetadataModular) GfSpGetPaymentByBucketName(ctx context.Context, req *t
 			Status:          payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
 			SettleTimestamp: streamRecord.SettleTimestamp,
 			OutFlows:        outflows,
+			OutFlowCount:    uint64(len(outflows)),
+			//TODO: BARRY update the below field
+			FrozenNetflowRate: math.NewInt(0),
 		}
 	}
 
@@ -84,6 +87,9 @@ func (r *MetadataModular) GfSpGetPaymentByBucketID(ctx context.Context, req *typ
 			Status:          payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
 			SettleTimestamp: streamRecord.SettleTimestamp,
 			OutFlows:        outflows,
+			OutFlowCount:    uint64(len(outflows)),
+			//TODO: BARRY update the below field
+			FrozenNetflowRate: math.NewInt(0),
 		}
 	}
 
