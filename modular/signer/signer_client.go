@@ -93,7 +93,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		return nil, err
 	}
 
-	sealBlsKm, err := keys.NewBlsPrivateKeyManager(fundingPrivateKey)
+	sealBlsKM, err := keys.NewBlsPrivateKeyManager(sealBlsPrivKey)
 	if err != nil {
 		log.Errorw("failed to new bls private key manager", "error", err)
 		return nil, err
@@ -158,7 +158,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
 		approvalAccNonce:  approvalAccNonce,
-		sealBlsKm:         sealBlsKm,
+		sealBlsKm:         sealBlsKM,
 	}, nil
 }
 
