@@ -218,7 +218,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	}
 	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task", "task_info", task.Info())
 	sealObject := &gfsptask.GfSpSealObjectTask{}
-	sealObject.InitSealObjectTask(task.GetObjectInfo(), task.GetStorageParams(),
+	sealObject.InitSealObjectTask(task.GetGlobalVirtualGroupId(), task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(sealObject), task.GetSecondaryAddresses(), task.GetSecondarySignatures(),
 		m.baseApp.TaskTimeout(sealObject, 0), m.baseApp.TaskMaxRetry(sealObject))
 	err := m.sealQueue.Push(sealObject)
@@ -228,11 +228,12 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	}
 	go func() error {
 		if err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:            task.GetObjectInfo().Id.Uint64(),
-			TaskState:           types.TaskState_TASK_STATE_SEAL_OBJECT_DOING,
-			SecondaryAddresses:  task.GetSecondaryAddresses(),
-			SecondarySignatures: task.GetSecondarySignatures(),
-			ErrorDescription:    "",
+			ObjectID:             task.GetObjectInfo().Id.Uint64(),
+			TaskState:            types.TaskState_TASK_STATE_SEAL_OBJECT_DOING,
+			GlobalVirtualGroupID: task.GetGlobalVirtualGroupId(),
+			SecondaryAddresses:   task.GetSecondaryAddresses(),
+			SecondarySignatures:  task.GetSecondarySignatures(),
+			ErrorDescription:     "",
 		}); err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "task_info", task.Info(), "error", err)
 			return ErrGfSpDB

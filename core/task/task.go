@@ -287,13 +287,15 @@ type ReceivePieceTask interface {
 type SealObjectTask interface {
 	ObjectTask
 	// InitSealObjectTask inits the SealObjectTask.
-	InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, addresses []string,
+	InitSealObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, addresses []string,
 		signatures [][]byte, timeout int64, retry int64)
 	// GetSecondaryAddresses return the secondary SP's addresses.
 	GetSecondaryAddresses() []string
 	// GetSecondarySignatures return the secondary SP's signature, it is used to generate
 	// MsgSealObject.
 	GetSecondarySignatures() [][]byte
+	// GetGlobalVirtualGroupId returns the object's global virtual group id.
+	GetGlobalVirtualGroupId() uint32
 }
 
 // DownloadObjectTask is an abstract interface to record the information for downloading

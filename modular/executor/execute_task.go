@@ -40,15 +40,12 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 	if err != nil {
 		return
 	}
-
-	// TODO: need gvgId
-	gvgId := uint32(0)
-
+	
 	sealMsg := &storagetypes.MsgSealObject{
 		Operator:                    e.baseApp.OperatorAddress(),
 		BucketName:                  task.GetObjectInfo().GetBucketName(),
 		ObjectName:                  task.GetObjectInfo().GetObjectName(),
-		GlobalVirtualGroupId:        gvgId,
+		GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
 		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))

@@ -229,13 +229,14 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 			"replicate_idx", replicateIdx)
 		return nil, nil, ErrReplicateIdsOutOfBounds
 	}
-	veritySignatureTime := time.Now()
+
+	// TODO:
+	// veritySignatureTime := time.Now()
 	// TODO get gvgId and blsPubKey from task, bls pub key alreay injected via key manager for current sp
 	// var blsPubKey bls.PublicKey
 	// err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), rTask.GetGlobalVirtualGroupId(), integrity,
 	//	storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
-
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_time").Observe(time.Since(veritySignatureTime).Seconds())
+	// metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_time").Observe(time.Since(veritySignatureTime).Seconds())
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed verify secondary signature",

@@ -34,6 +34,7 @@ func (s *SpDBImpl) UpdateUploadProgress(uploadMeta *corespdb.UploadObjectMeta) e
 			Updates(&UploadObjectProgressTable{
 				TaskState:             int32(uploadMeta.TaskState),
 				TaskStateDescription:  uploadMeta.TaskState.String(),
+				GlobalVirtualGroupID:  uploadMeta.GlobalVirtualGroupID,
 				ErrorDescription:      uploadMeta.ErrorDescription,
 				SecondaryAddresses:    util.JoinWithComma(uploadMeta.SecondaryAddresses),
 				SecondarySignatures:   util.BytesSliceToString(uploadMeta.SecondarySignatures),
@@ -104,9 +105,10 @@ func (s *SpDBImpl) GetUploadMetasToSeal(limit int) ([]*corespdb.UploadObjectMeta
 			return nil, err
 		}
 		returnUploadObjectMetas = append(returnUploadObjectMetas, &corespdb.UploadObjectMeta{
-			ObjectID:            u.ObjectID,
-			SecondaryAddresses:  util.SplitByComma(u.SecondaryAddresses),
-			SecondarySignatures: secondarySignatures,
+			ObjectID:             u.ObjectID,
+			GlobalVirtualGroupID: u.GlobalVirtualGroupID,
+			SecondaryAddresses:   util.SplitByComma(u.SecondaryAddresses),
+			SecondarySignatures:  secondarySignatures,
 		})
 	}
 	return returnUploadObjectMetas, nil

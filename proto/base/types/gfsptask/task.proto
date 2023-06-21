@@ -81,6 +81,7 @@ message GfSpSealObjectTask {
   greenfield.storage.Params storage_params = 3;
   repeated string secondary_addresses = 4;
   repeated bytes secondary_signatures = 5;
+  uint32 global_virtual_group_id = 6;
 }
 
 message GfSpDownloadObjectTask {
