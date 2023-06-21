@@ -2,13 +2,16 @@
 
 This section will combine together all the current and existing workflows of SP to help you understand how SP works and how internal state flows.
 
-The workflow of SP is divided into the following six parts: GetApproval, UploadObject(Upload to PrimarySP，Replicate to SecondarySP), DownloadObject, ChallengePiece, GCObject and QueryMeta. GetApproval, UploadObject and DownloadObject belongs to front modules. Therefore, you should firstly send GetApproval requests before uploading objects. Then you can upload objects into SP and finally download objects from SP or query meta info about objects. ChallengePiece and GCObject belongs to background modules, you are not aware of these two moudles.
+The workflow of SP is divided into the following six parts: `GetApproval, UploadObject(Upload to PrimarySP，Replicate to SecondarySP), DownloadObject, ChallengePiece, GCObject and QueryMeta. GetApproval, UploadObject and DownloadObject` belongs to front modules. Therefore, you should firstly send GetApproval requests before uploading objects. Then you can upload objects into SP and finally download objects from SP or query meta info about objects. ChallengePiece and GCObject belongs to background modules, you are not aware of these two modules.
 
 ## Get Approval
 
 Get Approval API provides two actions: CreateBucket and CreateObject. To upload an object into SP, you must first send a CreateBucket approval request, which will create a bucket on the Greenfield blockchain. If the request is successful, you can then send a CreateObject approval request. Both of these actions are used to determine whether SP is willing to serve the request. SP may reject users with a bad reputation or specific objects or buckets. SP approves the request by signing a message for the action and responding to the users. By default, SP will serve the request, but it can refuse if it chooses to do so. Each SP can customize its own strategy for accepting or rejecting requests.
 
 The flow chart is shown below:
+
+<div align=center><img src="../asset/02-get_approval.jpg" alt="architecture.png" width="700"/></div>
+<div align="center"><i>Get Approval Flowchart</i></div>
 
 - Gateway receives GetApproval requests from the request originator.
 - Gateway verifies the signature of request to ensure that the request has not been tampered with.
@@ -30,6 +33,9 @@ After successfully sending requests to the GetApproval API and receiving results
 
 Upload to PrimarySP flow chart is shown below:
 
+<div align=center><img src="../asset/03-put_object.jpg" alt="architecture.png" width="700"/></div>
+<div align="center"><i>Upload Object Flowchart</i></div>
+
 ### Gateway
 
 - Gateway receives PutObject requests from client.
@@ -45,6 +51,9 @@ Upload to PrimarySP flow chart is shown below:
 - Uploader creates an upload object task for Manager and returns a success message to the client indicating that the put object request is successful.
 
 Replicate to SecondarySP flow chart is shown below:
+
+<div align=center><img src="../asset/04-replicate_object.jpg" alt="architecture.png" width="700"/></div>
+<div align="center"><i>Replicate Piece Flowchart</i></div>
 
 ### TaskExecutor
 
@@ -73,6 +82,9 @@ See request and response details for this API: [PutObject](https://greenfield.bn
 
 Users can download an object from PrimarySP. The flow chart is shown below:
 
+<div align=center><img src="../asset/05-get_object.jpg" alt="architecture.png" width="700"/></div>
+<div align="center"><i>Download Object Flowchart</i></div>
+
 ### Gateway
 
 - Receives the GetObject request from the client.
@@ -93,7 +105,10 @@ See request and response details for this API: [GetObject](https://greenfield.bn
 
 ## QueryMeta
 
-Users maybe want to query some metadata about buckets, objects, bucket read quota or bucket read records from SP. SP provides related APIs about querying metatdata. The flow chart is shown below:
+Users maybe want to query some metadata about buckets, objects, bucket read quota or bucket read records from SP. SP provides related APIs about querying metadata. The flow chart is shown below:
+
+<div align=center><img src="../asset/06-query_meta.jpg" alt="architecture.png" width="700"/></div>
+<div align="center"><i>Query Meta Flowchart</i></div>
 
 ### Gateway
 
@@ -112,6 +127,9 @@ Users maybe want to query some metadata about buckets, objects, bucket read quot
 Ensuring data integrity and availability is always the top priority for any decentralized storage network. To achieve better high availability (HA), we use data challenges instead of storage proofs. The system continuously issues data challenges to random pieces on the greenfield chain, and SP that stores the challenged piece responds using the challenge workflow. Each SP splits the object payload data into segments, stores the segment data in the PieceStore, and stores the segment checksum in SP DB.
 
 The flow chart is shown below:
+
+<div align=center><img src="../asset/07-challenge.jpg" alt="architecture.png" width="700"/></div>
+<div align="center"><i>Challenge Piece Flowchart</i></div>
 
 ### Gateway
 
@@ -132,6 +150,9 @@ The flow chart is shown below:
 GC is used to delete objects whose metadata on Greenfield chain has already been deleted, reducing the cost of each SP and data size in Greenfield chain. This function is automatically executed in Manager daemon mode.
 
 The flow chart is shown below:
+
+<div align=center><img src="../asset/08-gc_object.jpg" alt="architecture.png" width="700"/></div>
+<div align="center"><i>GC Object Flowchart</i></div>
 
 - Manager dispatches GCObjectTask to TaskExecutor.
 - TaskExecutor send requests to Metadata to query deleted objects in order.

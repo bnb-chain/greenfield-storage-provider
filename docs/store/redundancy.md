@@ -31,7 +31,7 @@ All EC chunks of each object are stored in some secondary SPs as pieces, which c
 
 All these segments and SPs information are stored on the Greenfield blockchain as the metadata of the object. The same object's each segment's EC replicas are stored in the same sequence of secondary SPs. This convention is to save the metadata size. An example of a 50M object stored with one primary SP, SP0, and 6 secondary SPs, SP1-SP6 is shown in the below diagram.
 
-<div align="center"><img src="../asset/03-ec.jpg"></div>
+<div align="center"><img src="../asset/10-ec.jpg"></div>
 <div align="center"><i>EC for Segments in Different Secondary SPs</i></div>
 
 Below is how the key of each piece is defined:
