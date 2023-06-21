@@ -1,0 +1,19 @@
+resources:
+  - ../../../components/shared/alicloud
+  - ../../../components/single/gateway
+  - ../../../components/single/receiver
+  - ../../../components/single/taskexecutor
+  - ../../../components/single/signer
+  - ../../../components/single/metadata
+  - ../../../components/single/block_syncer
+  - ../../../components/single/manager
+  - ../../../components/single/p2p
+  - ../../../components/single/uploader
+  - ../../../components/single/downloader
+  - ../../../components/single/approver
+
+patches:
+- target:
+    kind: Deployment
+  path: ./patches/set_deployment_revision_history.yaml
+

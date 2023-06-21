@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: block-syncer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: block-syncer
+  template:
+    metadata:
+      labels:
+        app: block-syncer
+    spec:
+      serviceAccountName: nodereal-default
+      containers:
+      - name: block-syncer
+        image: ghcr.io/bnb-chain/greenfield-storage-provider:block-syncer-dev-env-latest
+        args: ["--log.std", "-c", "/config/config.toml", "-server", "blocksyncer"]
+        env:
+          - name: BLOCK_SYNCER_DSN
+            valueFrom:
+              secretKeyRef:
+                key: BLOCK_SYNCER_DSN
+                name: default
+          - name: BLOCK_SYNCER_DSN_SWITCHED
+            valueFrom:
+              secretKeyRef:
+                key: BLOCK_SYNCER_DSN_SWITCHED
+                name: default
+        resources:
+          limits:
+            cpu: "4"
+            memory: 8Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+        ports:
+          - containerPort: 9833
+            name: block-syncer
+        volumeMounts:
+        - mountPath: /config
+          name: config
+      imagePullSecrets:
+        - name: image-pull
+      volumes:
+        - name: config
+          configMap:
+            name: config

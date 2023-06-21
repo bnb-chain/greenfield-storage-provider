@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nodereal-default
+  annotations:
+    eks.amazonaws.com/role-arn: null
+---
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: default
+spec:
+  provider:
+    aws:
+      service: SecretsManager
+      region: null
+      auth:
+        jwt:
+          serviceAccountRef:
+            name: nodereal-default
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: default
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: SecretStore
+    name: default
+  target:
+    name: default
+    creationPolicy: Owner
+  dataFrom:
+  - extract:
+      key: null
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: default
+spec:
+  endpoints:
+  - interval: 30s
+    path: /metrics
+    port: metrics
+    scheme: http
+  namespaceSelector:
+    matchNames:
+    - null
+  selector:
+    matchLabels:
+      team: greenfield
+      biz: storage-provider
+---
+kind: Secret
+type: kubernetes.io/dockerconfigjson
+apiVersion: v1
+metadata:
+  name: image-pull
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7InVzZXJuYW1lIjoiYm5iLXBrZyIsInBhc3N3b3JkIjoiZ2hwX2tlSnhVVno1T0JWTDA5MmZ3N3JFR1BVemJSYzFObTNVdVNDbyIsImF1dGgiOiJZbTVpTFhCclp6cG5hSEJmYTJWS2VGVldlalZQUWxaTU1Ea3labmMzY2tWSFVGVjZZbEpqTVU1dE0xVjFVME52In19fQ==
+

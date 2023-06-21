@@ -1,0 +1,9 @@
+resources:
+  - ../../../components/shared/aws
+  - ../../../components/combo/all-in-one
+
+patches:
+- target:
+    kind: Deployment
+  path: ./patches/set_deployment_revision_history.yaml
+

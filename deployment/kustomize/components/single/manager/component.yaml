@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: manager
+  template:
+    metadata:
+      labels:
+        app: manager
+    spec:
+      serviceAccountName: nodereal-default
+      containers:
+      - name: manager
+        image: ghcr.io/bnb-chain/greenfield-storage-provider:0.0.3
+        args: ["--log.std", "-c", "/config/config.toml", "-server", "manager,approver"]
+        env:
+          - name: SP_DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_USER
+                name: default
+          - name: SP_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_PASSWORD
+                name: default
+          - name: SP_DB_ADDRESS
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_ADDRESS
+                name: default
+          - name: BUCKET_URL
+            valueFrom:
+              secretKeyRef:
+                key: BUCKET_URL
+                name: default
+        resources:
+          limits:
+            cpu: "4"
+            memory: 8Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+        ports:
+          - containerPort: 9333
+            name: manager
+          - containerPort: 24367
+            name: metrics
+          - containerPort: 24368
+            name: pprof
+        volumeMounts:
+        - mountPath: /config
+          name: config
+      imagePullSecrets:
+      - name: image-pull
+      volumes:
+      - name: config
+        configMap:
+          name: config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: manager
+spec:
+  ports:
+  - port: 9333
+    targetPort: 9333
+    name: manager
+  - port: 24367
+    targetPort: 24367
+    name: metrics
+  - port: 24368
+    targetPort: 24368
+    name: pprof
+  selector:
+    app: manager
