@@ -11,7 +11,6 @@ import (
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
-	jsoniter "github.com/json-iterator/go"
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -245,7 +244,6 @@ func (r *MetadataModular) GfSpGetBucketMeta(
 		bucketRes       *types.Bucket
 		streamRecord    *model.StreamRecord
 		streamRecordRes *paymenttypes.StreamRecord
-		outflows        []paymenttypes.OutFlow
 	)
 
 	ctx = log.Context(ctx, req)
@@ -289,21 +287,17 @@ func (r *MetadataModular) GfSpGetBucketMeta(
 	}
 
 	if streamRecord != nil {
-		err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to unmarshal out flows", "error", err)
-			return
-		}
 		streamRecordRes = &paymenttypes.StreamRecord{
-			Account:         streamRecord.Account.String(),
-			CrudTimestamp:   streamRecord.CrudTimestamp,
-			NetflowRate:     math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
-			StaticBalance:   math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
-			BufferBalance:   math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
-			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
-			Status:          paymenttypes.StreamAccountStatus(paymenttypes.StreamAccountStatus_value[streamRecord.Status]),
-			SettleTimestamp: streamRecord.SettleTimestamp,
-			OutFlows:        outflows,
+			Account:           streamRecord.Account.String(),
+			CrudTimestamp:     streamRecord.CrudTimestamp,
+			NetflowRate:       math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
+			StaticBalance:     math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
+			BufferBalance:     math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
+			LockBalance:       math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
+			Status:            paymenttypes.StreamAccountStatus(paymenttypes.StreamAccountStatus_value[streamRecord.Status]),
+			SettleTimestamp:   streamRecord.SettleTimestamp,
+			OutFlowCount:      streamRecord.OutFlowCount,
+			FrozenNetflowRate: math.NewIntFromBigInt(streamRecord.FrozenNetflowRate.Raw()),
 		}
 	}
 

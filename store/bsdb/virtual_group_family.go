@@ -1,11 +1,11 @@
 package bsdb
 
 import (
+	"errors"
 	"fmt"
+
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
-
-	"errors"
 )
 
 // ListVirtualGroupFamiliesBySpID list virtual group families by sp id
