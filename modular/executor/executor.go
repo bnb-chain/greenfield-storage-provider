@@ -150,14 +150,20 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		metrics.PerfUploadTimeHistogram.WithLabelValues("background_schedule_replicate_time").Observe(time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
 		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorBeginTask, t.Key().String())
 		e.HandleReplicatePieceTask(ctx, t)
-		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String()+":"+t.Error().Error())
+		if t.Error() != nil {
+			e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String()+":"+t.Error().Error())
+		}
+		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String())
 	case *gfsptask.GfSpSealObjectTask:
 		metrics.ExecutorSealObjectTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingSpSealObjectTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingSpSealObjectTaskCnt, -1)
 		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorBeginTask, t.Key().String())
 		e.HandleSealObjectTask(ctx, t)
-		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String()+":"+t.Error().Error())
+		if t.Error() != nil {
+			e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String()+":"+t.Error().Error())
+		}
+		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String())
 	case *gfsptask.GfSpReceivePieceTask:
 		metrics.ExecutorReceiveTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingReceivePieceTaskCnt, 1)

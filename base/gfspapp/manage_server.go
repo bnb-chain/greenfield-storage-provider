@@ -32,7 +32,10 @@ func (g *GfSpBaseApp) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSpBeg
 	case *gfspserver.GfSpBeginTaskRequest_UploadObjectTask:
 		g.GfSpDB().InsertUploadEvent(task.UploadObjectTask.GetObjectInfo().Id.Uint64(), corespdb.ManagerReceiveAndWaitSchedulingTask, task.UploadObjectTask.Key().String())
 		err := g.OnBeginUploadObjectTask(ctx, task.UploadObjectTask)
-		g.GfSpDB().InsertUploadEvent(task.UploadObjectTask.GetObjectInfo().Id.Uint64(), corespdb.ManagerReceiveAndWaitSchedulingTask, task.UploadObjectTask.Key().String()+":"+err.Error())
+		if err != nil {
+			g.GfSpDB().InsertUploadEvent(task.UploadObjectTask.GetObjectInfo().Id.Uint64(), corespdb.ManagerReceiveAndWaitSchedulingTask, task.UploadObjectTask.Key().String()+":"+err.Error())
+		}
+		g.GfSpDB().InsertUploadEvent(task.UploadObjectTask.GetObjectInfo().Id.Uint64(), corespdb.ManagerReceiveAndWaitSchedulingTask, task.UploadObjectTask.Key().String()+":")
 		return &gfspserver.GfSpBeginTaskResponse{Err: gfsperrors.MakeGfSpError(err)}, nil
 	default:
 		return &gfspserver.GfSpBeginTaskResponse{Err: ErrUnsupportedTaskType}, nil
