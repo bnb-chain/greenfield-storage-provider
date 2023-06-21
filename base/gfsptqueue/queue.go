@@ -199,6 +199,9 @@ func (t *GfSpTQueue) top() coretask.Task {
 	if index == len(backupTasks) {
 		index = 0
 	}
+	if backupTasks[index] != nil {
+		t.current = backupTasks[index].GetCreateTime()
+	}
 	return backupTasks[index]
 }
 
