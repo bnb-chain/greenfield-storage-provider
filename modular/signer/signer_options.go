@@ -54,13 +54,13 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 		cfg.Chain.SealFeeAmount = DefaultSealFeeAmount
 	}
 	if cfg.Chain.RejectSealGasLimit == 0 {
-		cfg.Chain.SealGasLimit = DefaultRejectSealGasLimit
+		cfg.Chain.RejectSealGasLimit = DefaultRejectSealGasLimit
 	}
 	if cfg.Chain.RejectSealFeeAmount == 0 {
-		cfg.Chain.SealFeeAmount = DefaultRejectSealFeeAmount
+		cfg.Chain.RejectSealFeeAmount = DefaultRejectSealFeeAmount
 	}
 	if cfg.Chain.DiscontinueBucketGasLimit == 0 {
-		cfg.Chain.SealGasLimit = DefaultDiscontinueBucketGasLimit
+		cfg.Chain.DiscontinueBucketGasLimit = DefaultDiscontinueBucketGasLimit
 	}
 	if cfg.Chain.DiscontinueBucketFeeAmount == 0 {
 		cfg.Chain.DiscontinueBucketFeeAmount = DefaultDiscontinueBucketFeeAmount
