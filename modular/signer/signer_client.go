@@ -44,9 +44,10 @@ const (
 	// BroadcastTxRetry defines the max retry for broadcasting tx on-chain
 	BroadcastTxRetry = 3
 
-	Seal              GasInfoType = "Seal"
-	RejectSeal        GasInfoType = "RejectSeal"
-	DiscontinueBucket GasInfoType = "DiscontinueBucket"
+	Seal                     GasInfoType = "Seal"
+	RejectSeal               GasInfoType = "RejectSeal"
+	DiscontinueBucket        GasInfoType = "DiscontinueBucket"
+	CreateGlobalVirtualGroup GasInfoType = "CreateGlobalVirtualGroup"
 )
 
 type GasInfo struct {
@@ -400,10 +401,10 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 }
 
 func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Context, scope SignType, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) ([]byte, error) {
-	log.Infow("signer start to create global virtual group", "scope", scope)
+	log.Infow("signer start to create a new global virtual group", "scope", scope)
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get private key", "err", err)
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return nil, ErrSignMsg
 	}
 
@@ -415,10 +416,10 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 		gvg.FamilyId, gvg.GetSecondarySpIds(), gvg.GetDeposit())
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
-		Mode: &mode,
-		// TODO: refine it.
-		GasLimit: client.gasInfo[DiscontinueBucket].GasLimit,
-		Nonce:    nonce,
+		Mode:      &mode,
+		GasLimit:  client.gasInfo[CreateGlobalVirtualGroup].GasLimit,
+		FeeAmount: client.gasInfo[CreateGlobalVirtualGroup].FeeAmount,
+		Nonce:     nonce,
 	}
 
 	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgCreateGlobalVirtualGroup}, txOpt)

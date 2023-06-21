@@ -83,8 +83,7 @@ func (s *SignModular) SignReplicatePieceApproval(ctx context.Context, task task.
 	return sig, nil
 }
 
-func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) (
-	[]byte, error) {
+func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error) {
 	msg := task.GetSignBytes()
 	sig, err := s.client.Sign(SignOperator, msg)
 	if err != nil {
@@ -135,9 +134,7 @@ func (s *SignModular) SealObject(ctx context.Context, object *storagetypes.MsgSe
 	return err
 }
 
-func (s *SignModular) RejectUnSealObject(
-	ctx context.Context,
-	rejectObject *storagetypes.MsgRejectSealObject) error {
+func (s *SignModular) RejectUnSealObject(ctx context.Context, rejectObject *storagetypes.MsgRejectSealObject) error {
 	var (
 		err       error
 		startTime = time.Now()

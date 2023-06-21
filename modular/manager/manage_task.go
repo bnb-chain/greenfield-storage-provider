@@ -488,6 +488,7 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 	if err != nil {
 		return err
 	}
+	log.Infow("begin to create a gvg", "gvg_meta", gvgMeta)
 	virtualGroupParams, err := m.baseApp.Consensus().QueryVirtualGroupParams(context.Background())
 	if err != nil {
 		return err

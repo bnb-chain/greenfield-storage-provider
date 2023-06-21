@@ -23,6 +23,9 @@ const (
 	DefaultDiscontinueBucketGasLimit  = 2400 // fix gas limit for MsgDiscontinueBucket is 2400
 	DefaultDiscontinueBucketFeeAmount = 12000000000000
 
+	DefaultCreateGlobalVirtualGroupGasLimit  = 1200 // fix gas limit for MsgCreateGlobalVirtualGroup is 1200
+	DefaultCreateGlobalVirtualGroupFeeAmount = 6000000000000
+
 	// SpOperatorPrivKey defines env variable name for sp operator private key
 	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
 	// SpFundingPrivKey defines env variable name for sp funding private key
@@ -67,6 +70,12 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Chain.DiscontinueBucketFeeAmount == 0 {
 		cfg.Chain.DiscontinueBucketFeeAmount = DefaultDiscontinueBucketFeeAmount
 	}
+	if cfg.Chain.CreateGlobalVirtualGroupGasLimit == 0 {
+		cfg.Chain.CreateGlobalVirtualGroupGasLimit = DefaultCreateGlobalVirtualGroupGasLimit
+	}
+	if cfg.Chain.CreateGlobalVirtualGroupFeeAmount == 0 {
+		cfg.Chain.CreateGlobalVirtualGroupFeeAmount = DefaultCreateGlobalVirtualGroupFeeAmount
+	}
 	if val, ok := os.LookupEnv(SpOperatorPrivKey); ok {
 		cfg.SpAccount.OperatorPrivateKey = val
 	}
@@ -98,6 +107,10 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 	gasInfo[DiscontinueBucket] = GasInfo{
 		GasLimit:  cfg.Chain.DiscontinueBucketGasLimit,
 		FeeAmount: sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(int64(cfg.Chain.DiscontinueBucketFeeAmount)))),
+	}
+	gasInfo[CreateGlobalVirtualGroup] = GasInfo{
+		GasLimit:  cfg.Chain.CreateGlobalVirtualGroupGasLimit,
+		FeeAmount: sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(int64(cfg.Chain.CreateGlobalVirtualGroupFeeAmount)))),
 	}
 
 	client, err := NewGreenfieldChainSignClient(cfg.Chain.ChainAddress[0], cfg.Chain.ChainID,

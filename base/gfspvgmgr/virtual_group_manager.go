@@ -126,8 +126,8 @@ func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vmmg
 	if sm.primarySP == nil || len(sm.secondarySPs) < secondarySPNumber {
 		return nil, fmt.Errorf("no enough sp")
 	}
-	secondarySPIDs := make([]uint32, secondarySPNumber)
-	secondarySPs := make([]*sptypes.StorageProvider, secondarySPNumber)
+	secondarySPIDs := make([]uint32, 0)
+	secondarySPs := make([]*sptypes.StorageProvider, 0)
 	for i, sp := range sm.secondarySPs {
 		if i < secondarySPNumber {
 			secondarySPIDs = append(secondarySPIDs, sp.Id)
@@ -210,6 +210,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		primarySP:    primarySP,
 		secondarySPs: secondarySPList,
 	}
+	log.Infow("list sp info", "primary_sp", primarySP, "secondary_sps", secondarySPList)
 
 	if spID == 0 {
 		log.Error("failed to refresh due to current sp is not in sp list")

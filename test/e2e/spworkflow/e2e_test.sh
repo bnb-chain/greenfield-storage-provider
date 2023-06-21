@@ -4,8 +4,8 @@
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_REPO_TAG="v0.2.2-alpha.2"
-GREENFIELD_CMD_BRANCH="dev-new-version"
+GREENFIELD_REPO_TAG="virtual_group_dev"
+GREENFIELD_CMD_BRANCH="feat-adaptor-sp-exit"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"

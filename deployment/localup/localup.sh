@@ -65,6 +65,8 @@ function generate_sp_db_info() {
     echo "APPROVAL_PRIVATE_KEY=\"${apk}\"" >> sp.info
     gpk=$(jq -r ".sp${i}.GcPrivateKey" ${sp_json_file})
     echo "GC_PRIVATE_KEY=\"${gpk}\"" >> sp.info
+    bpk=$(jq -r ".sp${i}.BlsPrivateKey" ${sp_json_file})
+    echo "BLS_PRIVATE_KEY=\"${bpk}\"" >> sp.info
 
     # generate db info
     {

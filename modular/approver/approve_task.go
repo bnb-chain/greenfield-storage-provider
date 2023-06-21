@@ -51,22 +51,22 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 	}
 	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_repeated_in_create_bucket_approval").
 		Observe(time.Since(startQueryQueue).Seconds())
-
-	startQueryMetadata := time.Now()
-	buckets, err := a.baseApp.GfSpClient().GetUserBucketsCount(ctx, task.GetCreateBucketInfo().GetCreator(), false)
-	if err != nil {
+	// TODO: wait metadata server ready
+	/*
+		startQueryMetadata := time.Now()
+		buckets, err := a.baseApp.GfSpClient().GetUserBucketsCount(ctx, task.GetCreateBucketInfo().GetCreator(), false)
 		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_counter_in_create_bucket_approval").
 			Observe(time.Since(startQueryMetadata).Seconds())
-		log.CtxErrorw(ctx, "failed to get account owns max bucket number", "error", err)
-		return false, err
-	}
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_counter_in_create_bucket_approval").
-		Observe(time.Since(startQueryMetadata).Seconds())
-	if buckets >= a.accountBucketNumber {
-		log.CtxErrorw(ctx, "account owns bucket number exceed")
-		err = ErrExceedBucketNumber
-		return false, err
-	}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get account owns max bucket number", "error", err)
+			return false, err
+		}
+		if buckets >= a.accountBucketNumber {
+			log.CtxErrorw(ctx, "account owns bucket number exceed")
+			err = ErrExceedBucketNumber
+			return false, err
+		}
+	*/
 
 	startPickVGF := time.Now()
 	vgfID, err := a.baseApp.GfSpClient().PickVirtualGroupFamilyID(ctx, task)
