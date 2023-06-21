@@ -61,9 +61,9 @@ type GreenfieldChainSignClient struct {
 
 	gasInfo           map[GasInfoType]GasInfo
 	greenfieldClients map[SignType]*client.GreenfieldClient
+	operatorAccNonce  uint64
 	sealAccNonce      uint64
 	gcAccNonce        uint64
-	approvalAccNonce  uint64 // is used by create global virtual group.
 	sealBlsKm         keys.KeyManager
 }
 
@@ -81,6 +81,10 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 	operatorClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(operatorKM))
 	if err != nil {
 		log.Errorw("failed to new operator greenfield client", "error", err)
+		return nil, err
+	}
+	operatorAccNonce, err := operatorClient.GetNonce()
+	if err != nil {
 		return nil, err
 	}
 	fundingKM, err := keys.NewPrivateKeyManager(fundingPrivateKey)
@@ -126,11 +130,6 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		log.Errorw("failed to new approval greenfield client", "error", err)
 		return nil, err
 	}
-	approvalAccNonce, err := approvalClient.GetNonce()
-	if err != nil {
-		log.Errorw("failed to get nonce", "error", err)
-		return nil, err
-	}
 
 	gcKM, err := keys.NewPrivateKeyManager(gcPrivateKey)
 	if err != nil {
@@ -158,7 +157,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		greenfieldClients: greenfieldClients,
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
-		approvalAccNonce:  approvalAccNonce,
+		operatorAccNonce:  operatorAccNonce,
 		sealBlsKm:         sealBlsKM,
 	}, nil
 }
@@ -410,7 +409,7 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.approvalAccNonce
+	nonce := client.operatorAccNonce
 
 	msgCreateGlobalVirtualGroup := virtualgrouptypes.NewMsgCreateGlobalVirtualGroup(km.GetAddr(),
 		gvg.FamilyId, gvg.GetSecondarySpIds(), gvg.GetDeposit())
@@ -432,13 +431,15 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 				log.CtxErrorw(ctx, "failed to get approval account nonce", "err", err)
 				return nil, ErrCreateGVGOnChain
 			}
-			client.approvalAccNonce = nonce
+			client.operatorAccNonce = nonce
 		}
 		return nil, ErrCreateGVGOnChain
 	}
 
 	if resp.TxResponse.Code != 0 {
-		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "global_virtual_group", msgCreateGlobalVirtualGroup.String())
+		log.CtxErrorw(ctx, "failed to broadcast tx", "code", resp.TxResponse.Code,
+			"msg", resp.TxResponse.String(),
+			"global_virtual_group", msgCreateGlobalVirtualGroup.String())
 		return nil, ErrCreateGVGOnChain
 	}
 	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
@@ -448,6 +449,6 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 	}
 
 	// update nonce when tx is successful submitted
-	client.approvalAccNonce = nonce + 1
+	client.operatorAccNonce = nonce + 1
 	return txHash, nil
 }

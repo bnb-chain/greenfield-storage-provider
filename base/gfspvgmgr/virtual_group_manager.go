@@ -221,6 +221,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		log.Errorw("failed to query virtual group params", "error", err)
 		return
 	}
+	log.Infow("query virtual group params", "params", vgParams)
 
 	vgfm = &virtualGroupFamilyManager{
 		vgfIDToVgf: make(map[uint32]*vmmgr.VirtualGroupFamilyMeta),

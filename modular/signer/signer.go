@@ -169,7 +169,6 @@ func (s *SignModular) DiscontinueBucket(ctx context.Context, bucket *storagetype
 }
 
 func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
-	// TODO: add metrics
-	_, err := s.client.CreateGlobalVirtualGroup(ctx, SignApproval, gvg)
+	_, err := s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
 	return err
 }

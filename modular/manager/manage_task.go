@@ -493,16 +493,16 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 	if err != nil {
 		return err
 	}
+
 	return m.baseApp.GfSpClient().CreateGlobalVirtualGroup(context.Background(), &gfspserver.GfSpCreateGlobalVirtualGroup{
 		VirtualGroupFamilyId: vgfID,
-		PrimarySpAddress:     m.baseApp.OperatorAddress(),
+		PrimarySpAddress:     m.baseApp.OperatorAddress(), // it is useless
 		SecondarySpIds:       gvgMeta.SecondarySPIDs,
 		// TODO: refine it.
 		Deposit: &sdk.Coin{
-			Denom: virtualGroupParams.GetDepositDenom(),
-			// Amount: sdk.NewInt(int64(gvgMeta.StakingStorageSize * virtualGroupParams.GvgStakingPrice.BigInt().Uint64())),
-			// Amount: virtualGroupParams.GvgStakingPrice.MulInt64(int64(gvgMeta.StakingStorageSize)).BigInt().,
-			Amount: sdktypes.NewIntFromInt64WithDecimal(int64(gvgMeta.StakingStorageSize*virtualGroupParams.GvgStakingPrice.BigInt().Uint64()), sdktypes.DecimalBNB),
+			Denom:  virtualGroupParams.GetDepositDenom(),
+			Amount: sdktypes.NewIntFromInt64WithDecimal(20000000, sdktypes.DecimalBNB),
+			// Amount: virtualGroupParams.GvgStakingPrice.MulInt64(int64(gvgMeta.StakingStorageSize)).TruncateInt(),
 		},
 	})
 }
