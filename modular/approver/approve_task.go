@@ -75,6 +75,7 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 		log.CtxErrorw(ctx, "failed to pick virtual group family", "error", err)
 		return false, err
 	}
+	log.Debugw("succeed to pick vgf id", "vgf_id", vgfID)
 
 	task.GetCreateBucketInfo().PrimarySpApproval.GlobalVirtualGroupFamilyId = vgfID
 	// begin to sign the new approval task

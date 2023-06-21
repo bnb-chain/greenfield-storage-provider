@@ -86,6 +86,7 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily() (*vmmgr.VirtualG
 		familyID uint32
 		err      error
 	)
+	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 	for _, f := range vgfm.vgfIDToVgf {
 		picker.addVirtualGroupFamily(f)
 	}
@@ -102,6 +103,7 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vm
 		globalVirtualGroupID uint32
 		err                  error
 	)
+	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 	if _, existed := vgfm.vgfIDToVgf[vgfID]; !existed {
 		return nil, ErrStaledMetadata
 	}
@@ -230,6 +232,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		log.Errorw("failed to list virtual group family", "error", err)
 		return
 	}
+	log.Infow("list virtual group family info", "vgf_list", vgfList)
 	for _, vgf := range vgfList {
 		vgfm.vgfIDToVgf[vgf.Id] = &vmmgr.VirtualGroupFamilyMeta{
 			ID:          vgf.Id,
@@ -248,7 +251,8 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 				PrimarySPID:        spID,
 				SecondarySPIDs:     gvg.GetSecondarySpIds(),
 				UsedStorageSize:    gvg.GetStoredSize(),
-				StakingStorageSize: gvg.TotalDeposit.Uint64() / vgParams.GvgStakingPrice.BigInt().Uint64(), // TODO: refine it.
+				StakingStorageSize: DefaultStakingStorageSize,
+				// StakingStorageSize: gvg.TotalDeposit.Mod(vgParams.GvgStakingPrice.TruncateInt()).Uint64(), // TODO: refine it.
 			}
 			vgfm.vgfIDToVgf[vgf.Id].GVGMap[gvg.GetId()] = gvgMeta
 			vgfm.vgfIDToVgf[vgf.Id].FamilyUsedStorageSize += gvgMeta.UsedStorageSize
@@ -295,6 +299,8 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vmmgr.Glo
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
 // if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
 func (vgm *virtualGroupManager) ForceRefreshMeta() error {
+	// sleep 2 seconds for waiting new block
+	time.Sleep(5 * time.Second)
 	vgm.refreshMeta()
 	return nil
 }

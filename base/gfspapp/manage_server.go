@@ -242,7 +242,6 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 
 func (g *GfSpBaseApp) GfSpPickVirtualGroupFamily(ctx context.Context,
 	req *gfspserver.GfSpPickVirtualGroupFamilyRequest) (*gfspserver.GfSpPickVirtualGroupFamilyResponse, error) {
-	// TODO: refine it.
 	vgfID, err := g.manager.PickVirtualGroupFamily(ctx, req.GetCreateBucketApprovalTask())
 	if err != nil {
 		return nil, err
