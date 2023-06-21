@@ -22,6 +22,11 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
+//ExecutorBeginSealTx                 = "executor_begin_seal_tx"
+//ExecutorEndSealTx                   = "executor_end_seal_tx"
+//ExecutorBeginConfirmSeal            = "executor_begin_confirm_seal"
+//ExecutorEndConfirmSeal              = "executor_end_confirm_seal"
+
 func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) {
 	var (
 		err       error
@@ -43,22 +48,28 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	rAppTask.InitApprovalReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		e.baseApp.TaskPriority(rAppTask), e.baseApp.OperatorAddress())
 	askReplicateApprovalTime := time.Now()
+	e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorBeginP2P, task.Key().String())
 	approvals, err = e.AskReplicatePieceApproval(ctx, rAppTask, int(low),
 		int(high), e.askReplicateApprovalTimeout)
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_ask_p2p_approval_time").Observe(time.Since(askReplicateApprovalTime).Seconds())
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_task_p2p_end_time").Observe(time.Since(startReplicateTime).Seconds())
 	if err != nil {
+		e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndP2P, task.Key().String()+":"+err.Error())
 		log.CtxErrorw(ctx, "failed get approvals", "error", err)
 		return
 	}
+	e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndP2P, task.Key().String())
 	replicatePieceTotalTime := time.Now()
+	e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorBeginReplicateAllPiece, task.Key().String())
 	err = e.handleReplicatePiece(ctx, task, approvals)
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_replicate_object_time").Observe(time.Since(replicatePieceTotalTime).Seconds())
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_task_replicate_object_end_time").Observe(time.Since(startReplicateTime).Seconds())
 	if err != nil {
+		e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndReplicateAllPiece, task.Key().String()+":"+err.Error())
 		log.CtxErrorw(ctx, "failed to replicate piece", "error", err)
 		return
 	}
+	e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndReplicateAllPiece, task.Key().String())
 	log.CtxDebugw(ctx, "succeed to replicate all pieces")
 	// combine seal object
 	sealMsg := &storagetypes.MsgSealObject{
@@ -258,15 +269,18 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	}
 	receive.SetSignature(signature)
 	replicateOnePieceTime := time.Now()
+	e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorBeginReplicateOnePiece, receive.Info())
 	err = e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctx,
 		approval.GetApprovedSpEndpoint(), approval, receive, data)
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_replicate_one_piece_time").Observe(time.Since(replicateOnePieceTime).Seconds())
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_replicate_one_piece_end_time").Observe(time.Since(startTime).Seconds())
 	if err != nil {
+		e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndReplicateOnePiece, receive.Info()+":"+err.Error())
 		log.CtxErrorw(ctx, "failed to replicate piece", "replicate_idx", replicateIdx,
 			"piece_idx", pieceIdx, "error", err)
 		return
 	}
+	e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndReplicateOnePiece, receive.Info())
 	log.CtxDebugw(ctx, "success to replicate piece", "replicate_idx", replicateIdx,
 		"piece_idx", pieceIdx)
 	return
@@ -294,16 +308,19 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	}
 	receive.SetSignature(taskSignature)
 	doneReplicateTime := time.Now()
+	e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorBeginDoneReplicatePiece, receive.Info())
 	integrity, signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx,
 		approval.GetApprovedSpEndpoint(), approval, receive)
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_done_receive_http_time").Observe(time.Since(doneReplicateTime).Seconds())
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_done_receive_http_end_time").Observe(time.Since(signTime).Seconds())
 	if err != nil {
+		e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndDoneReplicatePiece, receive.Info()+":"+err.Error())
 		log.CtxErrorw(ctx, "failed to done replicate piece",
 			"endpoint", approval.GetApprovedSpEndpoint(),
 			"replicate_idx", replicateIdx, "error", err)
 		return nil, nil, err
 	}
+	e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndDoneReplicatePiece, receive.Info())
 	if int(replicateIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
 		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds",
 			"replicate_idx", replicateIdx,

@@ -117,6 +117,9 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 		req.Request = &gfspserver.GfSpReportTaskRequest_ChallengePieceTask{
 			ChallengePieceTask: t,
 		}
+	default:
+		log.CtxErrorw(ctx, "unsupported task type to report")
+		return ErrTypeMismatch
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpReportTask(ctx, req)
 	if err != nil {
