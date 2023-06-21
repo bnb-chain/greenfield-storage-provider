@@ -363,7 +363,6 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 		ErrDiscontinueBucketOnChain.SetError(fmt.Errorf("failed to broadcast discontinue bucket, error: %v", err))
 		return nil, ErrDiscontinueBucketOnChain
 	}
-
 	// update nonce when tx is successful submitted
 	client.gcAccNonce = nonce + 1
 	return txHash, nil
