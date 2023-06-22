@@ -83,7 +83,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		err = g.signer.CreateGlobalVirtualGroup(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
 			PrimarySpAddress: g.operatorAddress,
 			FamilyId:         t.CreateGlobalVirtualGroup.GetVirtualGroupFamilyId(),
-			SecondarySpIds:   t.CreateGlobalVirtualGroup.SecondarySpIds,
+			SecondarySpIds:   t.CreateGlobalVirtualGroup.GetSecondarySpIds(),
 			Deposit:          *t.CreateGlobalVirtualGroup.GetDeposit(),
 		})
 		if err != nil {

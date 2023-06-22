@@ -2,7 +2,6 @@ syntax = "proto3";
 package base.types.gfsptask;
 
 import "base/types/gfsperrors/error.proto";
-import "greenfield/sp/types.proto";
 import "greenfield/storage/params.proto";
 import "greenfield/storage/tx.proto";
 import "greenfield/storage/types.proto";
