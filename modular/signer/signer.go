@@ -7,6 +7,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/hash"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -95,12 +96,12 @@ func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.Receiv
 func (s *SignModular) SignIntegrityHash(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) (
 	[]byte, []byte, error) {
 	integrityHash := hash.GenerateIntegrityHash(checksums)
-
 	msg := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, integrityHash).GetSignBytes()
 	sig, err := s.client.sealBlsKm.Sign(msg[:])
 	if err != nil {
 		return nil, nil, err
 	}
+	log.Debugw("bls signature length", "len", len(sig))
 	return sig, integrityHash, nil
 }
 

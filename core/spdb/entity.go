@@ -21,7 +21,7 @@ type UploadObjectMeta struct {
 	ObjectID             uint64
 	TaskState            storetypes.TaskState
 	GlobalVirtualGroupID uint32
-	SecondaryAddresses   []string
+	SecondaryEndpoints   []string
 	SecondarySignatures  [][]byte
 	ErrorDescription     string
 }

@@ -16,7 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
@@ -75,7 +75,7 @@ type ManageModular struct {
 	discontinueBucketTimeInterval  int
 	discontinueBucketKeepAliveDays int
 
-	virtualGroupManager vmmgr.VirtualGroupManager
+	virtualGroupManager vgmgr.VirtualGroupManager
 }
 
 func (m *ManageModular) Name() string {
@@ -289,7 +289,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		}
 		sealTask := &gfsptask.GfSpSealObjectTask{}
 		sealTask.InitSealObjectTask(meta.GlobalVirtualGroupID, objectInfo, storageParams, m.baseApp.TaskPriority(sealTask),
-			meta.SecondaryAddresses, meta.SecondarySignatures, m.baseApp.TaskTimeout(sealTask, 0), m.baseApp.TaskMaxRetry(sealTask))
+			meta.SecondaryEndpoints, meta.SecondarySignatures, m.baseApp.TaskTimeout(sealTask, 0), m.baseApp.TaskMaxRetry(sealTask))
 		pushErr := m.sealQueue.Push(sealTask)
 		if pushErr != nil {
 			log.Errorw("failed to push seal object task to queue", "object_info", objectInfo, "error", pushErr)

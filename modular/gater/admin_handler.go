@@ -293,14 +293,12 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 // signature to seal object on greenfield.
 func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err           error
-		reqCtx        *RequestContext
-		receiveMsg    []byte
-		data          []byte
-		integrity     []byte
-		signature     []byte
-		currentHeight uint64
-		approval      = gfsptask.GfSpReplicatePieceApprovalTask{}
+		err        error
+		reqCtx     *RequestContext
+		receiveMsg []byte
+		data       []byte
+		integrity  []byte
+		signature  []byte
 	)
 	receivePieceStartTime := time.Now()
 	defer func() {
@@ -318,18 +316,6 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask
 	reqCtx, _ = NewRequestContext(r, g)
-	getBlockHeightTime := time.Now()
-	currentHeight, err = g.baseApp.Consensus().CurrentHeight(reqCtx.Context())
-	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_get_block_height_time").Observe(time.Since(getBlockHeightTime).Seconds())
-	if err != nil {
-		// ignore the system's inner error,let the request go
-		log.CtxErrorw(reqCtx.Context(), "failed to get current block height")
-	} else if currentHeight > approval.GetExpiredHeight() {
-		log.CtxErrorw(reqCtx.Context(), "replicate piece approval expired")
-		err = ErrApprovalExpired
-		return
-	}
-
 	decodeTime := time.Now()
 	receiveMsg, err = hex.DecodeString(r.Header.Get(GnfdReceiveMsgHeader))
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_decode_task_time").Observe(time.Since(decodeTime).Seconds())

@@ -1,21 +1,24 @@
-package vmmgr
+package vgmgr
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
+// GlobalVirtualGroupMeta defines global virtual group meta which is used by sp.
 type GlobalVirtualGroupMeta struct {
-	ID                 uint32
-	FamilyID           uint32
-	PrimarySPID        uint32
-	SecondarySPIDs     []uint32
-	SecondarySPs       []*sptypes.StorageProvider
-	UsedStorageSize    uint64
-	StakingStorageSize uint64 // init by staking deposit / staking price
+	ID             uint32
+	FamilyID       uint32
+	PrimarySPID    uint32
+	SecondarySPIDs []uint32
+	// TODO: refine it, current proto is not compatible
+	// SecondarySPs       []*sptypes.StorageProvider
+	SecondarySPEndpoints []string
+	UsedStorageSize      uint64
+	StakingStorageSize   uint64 // init by staking deposit / staking price
 }
 
+// VirtualGroupFamilyMeta defines virtual group family meta which is used by sp.
 type VirtualGroupFamilyMeta struct {
 	ID                       uint32
 	PrimarySPID              uint32
@@ -24,6 +27,7 @@ type VirtualGroupFamilyMeta struct {
 	GVGMap                   map[uint32]*GlobalVirtualGroupMeta
 }
 
+// VirtualGroupManager is used to provide virtual group api.
 type VirtualGroupManager interface {
 	// PickVirtualGroupFamily pick a virtual group family(If failed to pick,
 	// new VGF will be automatically created on the chain) in get create bucket approval workflow.
@@ -38,4 +42,5 @@ type VirtualGroupManager interface {
 	GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*GlobalVirtualGroupMeta, error)
 }
 
+// NewVirtualGroupManager is the virtual group manager init api.
 type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus) (VirtualGroupManager, error)

@@ -305,10 +305,11 @@ func (m *GfSpReplicatePieceTask) SetError(err error) {
 }
 
 func (m *GfSpSealObjectTask) InitSealObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority coretask.TPriority,
-	addresses []string, signatures [][]byte, timeout int64, retry int64) {
+	endpoints []string, signatures [][]byte, timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.GlobalVirtualGroupId = vgfID
+	m.SecondaryEndpoints = endpoints
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)
@@ -316,7 +317,6 @@ func (m *GfSpSealObjectTask) InitSealObjectTask(vgfID uint32, object *storagetyp
 	m.SetPriority(priority)
 	m.SetTimeout(timeout)
 	m.SetMaxRetry(retry)
-	m.SetSecondaryAddresses(addresses)
 	m.SetSecondarySignatures(signatures)
 }
 

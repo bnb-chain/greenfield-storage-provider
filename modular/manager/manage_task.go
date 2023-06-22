@@ -13,7 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
@@ -156,7 +156,9 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
 	replicateTask.GlobalVirtualGroupId = task.GetVirtualGroupFamilyId()
-	replicateTask.SecondarySps = gvgMeta.SecondarySPs
+	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
+
+	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)
 
 	startPushReplicateQueueTime := time.Now()
 	err = m.replicateQueue.Push(replicateTask)
@@ -231,7 +233,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 			ObjectID:             task.GetObjectInfo().Id.Uint64(),
 			TaskState:            types.TaskState_TASK_STATE_SEAL_OBJECT_DOING,
 			GlobalVirtualGroupID: task.GetGlobalVirtualGroupId(),
-			SecondaryAddresses:   task.GetSecondaryAddresses(),
+			SecondaryEndpoints:   task.GetSecondaryEndpoints(),
 			SecondarySignatures:  task.GetSecondarySignatures(),
 			ErrorDescription:     "",
 		}); err != nil {
@@ -458,7 +460,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error) {
 	var (
 		err error
-		vgf *vmmgr.VirtualGroupFamilyMeta
+		vgf *vgmgr.VirtualGroupFamilyMeta
 	)
 
 	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
@@ -508,10 +510,10 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 }
 
 // pickGlobalVirtualGroup is used to pick a suitable gvg for replicating object.
-func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32, param *storagetypes.Params) (*vmmgr.GlobalVirtualGroupMeta, error) {
+func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32, param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		err error
-		gvg *vmmgr.GlobalVirtualGroupMeta
+		gvg *vgmgr.GlobalVirtualGroupMeta
 	)
 
 	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
@@ -527,5 +529,6 @@ func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32
 		}
 		return gvg, nil
 	}
+	log.CtxDebugw(ctx, "succeed to pick gvg", "gvg", gvg)
 	return gvg, nil
 }

@@ -191,11 +191,8 @@ func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, si
 }
 
 // SealObject seal the object on the greenfield chain.
-func (client *GreenfieldChainSignClient) SealObject(
-	ctx context.Context,
-	scope SignType,
-	sealObject *storagetypes.MsgSealObject) (
-	[]byte, error) {
+func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope SignType,
+	sealObject *storagetypes.MsgSealObject) ([]byte, error) {
 	if sealObject == nil {
 		log.CtxErrorw(ctx, "seal object msg pointer dangling")
 		return nil, ErrDanglingPointer
@@ -269,11 +266,8 @@ func (client *GreenfieldChainSignClient) SealObject(
 }
 
 // RejectUnSealObject reject seal object on the greenfield chain.
-func (client *GreenfieldChainSignClient) RejectUnSealObject(
-	ctx context.Context,
-	scope SignType,
-	rejectObject *storagetypes.MsgRejectSealObject) (
-	[]byte, error) {
+func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context, scope SignType,
+	rejectObject *storagetypes.MsgRejectSealObject) ([]byte, error) {
 	if rejectObject == nil {
 		log.CtxErrorw(ctx, "reject unseal object msg pointer dangling")
 		return nil, ErrDanglingPointer

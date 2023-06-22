@@ -59,7 +59,8 @@ message GfSpReplicatePieceTask {
   bool sealed = 6;
   // TODO: refine it.
   uint32 global_virtual_group_id = 7;
-  repeated greenfield.sp.StorageProvider secondary_sps = 8;
+  repeated string secondary_endpoints = 8;
+  // repeated greenfield.sp.StorageProvider secondary_sps = 8;
 }
 
 message GfSpReceivePieceTask {
@@ -82,6 +83,7 @@ message GfSpSealObjectTask {
   repeated string secondary_addresses = 4;
   repeated bytes secondary_signatures = 5;
   uint32 global_virtual_group_id = 6;
+  repeated string secondary_endpoints = 7;
 }
 
 message GfSpDownloadObjectTask {
