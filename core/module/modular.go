@@ -205,9 +205,9 @@ type Receiver interface {
 	Modular
 	// HandleReceivePieceTask stores piece data into secondary SP.
 	HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask, data []byte) error
-	// HandleDoneReceivePieceTask calculates the integrity hash of the object and sign it, returns to the primary
+	// HandleDoneReceivePieceTask calculates the secondary bls of the object and sign it, returns to the primary
 	// SP for sealed object.
-	HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, []byte, error)
+	HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
 	// QueryTasks queries replicate piece tasks that running on receiver by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }
@@ -224,8 +224,8 @@ type Signer interface {
 	SignReplicatePieceApproval(ctx context.Context, task task.ApprovalReplicatePieceTask) ([]byte, error)
 	// SignReceivePieceTask signs the ReceivePieceTask for replicating pieces data between SPs.
 	SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
-	// SignIntegrityHash signs the integrity hash of object for sealing object.
-	SignIntegrityHash(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, []byte, error)
+	// SignSecondaryBls signs the secondary bls for sealing object.
+	SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, error)
 	// SignP2PPingMsg signs the ping msg for p2p node probing.
 	SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error)
 	// SignP2PPongMsg signs the pong msg for p2p to response ping msg.

@@ -259,6 +259,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 		replicateTask.InitReplicatePieceTask(objectInfo, storageParams, m.baseApp.TaskPriority(replicateTask),
 			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask))
+		// TODO: set gvg info
 		pushErr := m.replicateQueue.Push(replicateTask)
 		if pushErr != nil {
 			log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", pushErr)

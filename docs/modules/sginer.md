@@ -15,8 +15,8 @@ type Signer interface {
     SignReplicatePieceApproval(ctx context.Context, task task.ApprovalReplicatePieceTask) ([]byte, error)
     // SignReceivePieceTask signs the ReceivePieceTask for replicating pieces data between SPs.
     SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
-    // SignIntegrityHash signs the integrity hash of object for sealing object.
-    SignIntegrityHash(ctx context.Context, objectID uint64, hash [][]byte) ([]byte, []byte, error)
+    // SignSecondaryBls signs the secondary bls of object for sealing object.
+    SignSecondaryBls(ctx context.Context, objectID uint64, hash [][]byte) ([]byte, error)
     // SignP2PPingMsg signs the ping msg for p2p node probing.
     SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error)
     // SignP2PPongMsg signs the pong msg for p2p to response ping msg.

@@ -383,6 +383,19 @@ var (
 		Name: "discontinue_bucket_failure",
 		Help: "Track discontinue bucket failure total number.",
 	}, []string{"discontinue_bucket_failure"})
+	CreateGlobalVirtualGroupTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "create_global_virtual_group_time",
+		Help:    "Track the time of create global virtual group time to chain.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"create_global_virtual_group_time"})
+	CreateGlobalVirtualGroupSucceedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "create_global_virtual_group_success",
+		Help: "Track create global virtual group success total number.",
+	}, []string{"create_global_virtual_group_success"})
+	CreateGlobalVirtualGroupFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "create_global_virtual_group_failure",
+		Help: "Track create global virtual group failure total number.",
+	}, []string{"create_global_virtual_group_failure"})
 
 	// spdb metrics
 	SPDBTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{

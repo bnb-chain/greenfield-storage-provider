@@ -166,15 +166,15 @@ func (s *GfSpClient) SignReplicatePieceApproval(ctx context.Context, task coreta
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignIntegrityHash(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, []byte, error) {
+func (s *GfSpClient) SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
-		return nil, nil, ErrRpcUnknown
+		return nil, ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpSignRequest{
-		Request: &gfspserver.GfSpSignRequest_SignIntegrity{
-			SignIntegrity: &gfspserver.GfSpSignIntegrityHash{
+		Request: &gfspserver.GfSpSignRequest_SignSecondaryBls{
+			SignSecondaryBls: &gfspserver.GfSpSignSecondaryBls{
 				ObjectId:             objectID,
 				GlobalVirtualGroupId: gvgId,
 				Checksums:            checksums,
@@ -183,13 +183,13 @@ func (s *GfSpClient) SignIntegrityHash(ctx context.Context, objectID uint64, gvg
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to sign integrity hash", "error", err)
-		return nil, nil, ErrRpcUnknown
+		log.CtxErrorw(ctx, "client failed to sign secondary bls", "error", err)
+		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
-		return nil, nil, resp.GetErr()
+		return nil, resp.GetErr()
 	}
-	return resp.GetSignature(), resp.GetIntegrityHash(), nil
+	return resp.GetSignature(), nil
 }
 
 func (s *GfSpClient) SignReceiveTask(ctx context.Context, receiveTask coretask.ReceivePieceTask) ([]byte, error) {

@@ -7,7 +7,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -93,16 +92,14 @@ func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.Receiv
 	return sig, nil
 }
 
-func (s *SignModular) SignIntegrityHash(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) (
-	[]byte, []byte, error) {
-	integrityHash := hash.GenerateIntegrityHash(checksums)
-	msg := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, integrityHash).GetSignBytes()
+func (s *SignModular) SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
+	msg := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, hash.GenerateIntegrityHash(checksums)).GetSignBytes()
 	sig, err := s.client.sealBlsKm.Sign(msg[:])
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	log.Debugw("bls signature length", "len", len(sig))
-	return sig, integrityHash, nil
+	// log.Debugw("bls signature length", "len", len(sig), "object_id", objectID, "gvg_id", gvgId, "checksums", checksums)
+	return sig, nil
 }
 
 func (s *SignModular) SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error) {
@@ -142,7 +139,7 @@ func (s *SignModular) RejectUnSealObject(ctx context.Context, rejectObject *stor
 	)
 	defer func() {
 		metrics.RejectUnSealObjectTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
-		if err != nil {
+		if err == nil {
 			metrics.RejectUnSealObjectSucceedCounter.WithLabelValues(s.Name()).Inc()
 		} else {
 			metrics.RejectUnSealObjectFailedCounter.WithLabelValues(s.Name()).Inc()
@@ -159,7 +156,7 @@ func (s *SignModular) DiscontinueBucket(ctx context.Context, bucket *storagetype
 	)
 	defer func() {
 		metrics.DiscontinueBucketTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
-		if err != nil {
+		if err == nil {
 			metrics.DiscontinueBucketSucceedCounter.WithLabelValues(s.Name()).Inc()
 		} else {
 			metrics.DiscontinueBucketFailedCounter.WithLabelValues(s.Name()).Inc()
@@ -170,6 +167,18 @@ func (s *SignModular) DiscontinueBucket(ctx context.Context, bucket *storagetype
 }
 
 func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
-	_, err := s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
+	var (
+		err       error
+		startTime = time.Now()
+	)
+	defer func() {
+		metrics.CreateGlobalVirtualGroupTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
+		if err == nil {
+			metrics.CreateGlobalVirtualGroupSucceedCounter.WithLabelValues(s.Name()).Inc()
+		} else {
+			metrics.CreateGlobalVirtualGroupFailedCounter.WithLabelValues(s.Name()).Inc()
+		}
+	}()
+	_, err = s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
 	return err
 }

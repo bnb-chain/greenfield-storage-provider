@@ -155,7 +155,7 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
-	replicateTask.GlobalVirtualGroupId = task.GetVirtualGroupFamilyId()
+	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
 	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
 
 	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)

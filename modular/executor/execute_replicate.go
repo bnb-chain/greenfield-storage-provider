@@ -17,11 +17,6 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-//ExecutorBeginSealTx                 = "executor_begin_seal_tx"
-//ExecutorEndSealTx                   = "executor_end_seal_tx"
-//ExecutorBeginConfirmSeal            = "executor_begin_confirm_seal"
-//ExecutorEndConfirmSeal              = "executor_end_confirm_seal"
-
 func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) {
 	var (
 		err    error
@@ -66,7 +61,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	if sealErr == nil {
 		task.SetSealed(true)
 	}
-	log.CtxDebugw(ctx, "finish combine seal object", "error", sealErr)
+	log.CtxDebugw(ctx, "finish combine seal object", "task", task, "error", sealErr)
 }
 
 func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretask.ReplicatePieceTask) (err error) {
@@ -77,7 +72,6 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 			rTask.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 		replicateCount = rTask.GetStorageParams().VersionedParams.GetRedundantDataChunkNum() +
 			rTask.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()
-		secondaryAddresses  = make([]string, replicateCount)
 		secondarySignatures = make([][]byte, replicateCount)
 	)
 
@@ -107,9 +101,8 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		log.Debugw("start to done replicate")
 		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to done replicate", "sp", sp)
-			_, signature, innerErr := e.doneReplicatePiece(ctx, rTask, sp, uint32(rIdx))
+			signature, innerErr := e.doneReplicatePiece(ctx, rTask, sp, uint32(rIdx))
 			if innerErr == nil {
-				// secondaryAddresses[rIdx] = sp.GetOperatorAddress()
 				secondarySignatures[rIdx] = signature
 				metrics.ReplicateSucceedCounter.WithLabelValues(e.Name()).Inc()
 			} else {
@@ -157,7 +150,6 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_done_replicate_time").Observe(time.Since(doneTime).Seconds())
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_done_replicate_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
 	if err == nil {
-		rTask.SetSecondaryAddresses(secondaryAddresses)
 		rTask.SetSecondarySignatures(secondarySignatures)
 	}
 	return err
@@ -205,10 +197,9 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 }
 
 func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.ReplicatePieceTask,
-	spEndpoint string, replicateIdx uint32) ([]byte, []byte, error) {
+	spEndpoint string, replicateIdx uint32) ([]byte, error) {
 	var (
 		err           error
-		integrity     []byte
 		signature     []byte
 		taskSignature []byte
 	)
@@ -222,25 +213,25 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign done receive task",
 			"replicate_idx", replicateIdx, "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 	receive.SetSignature(taskSignature)
 	doneReplicateTime := time.Now()
 	e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorBeginDoneReplicatePiece, receive.Info())
-	integrity, signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, spEndpoint, receive)
+	signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, spEndpoint, receive)
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_done_receive_http_time").Observe(time.Since(doneReplicateTime).Seconds())
 	metrics.PerfUploadTimeHistogram.WithLabelValues("background_done_receive_http_end_time").Observe(time.Since(signTime).Seconds())
 	if err != nil {
 		e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndDoneReplicatePiece, receive.Info()+":"+err.Error())
 		log.CtxErrorw(ctx, "failed to done replicate piece", "endpoint", spEndpoint,
 			"replicate_idx", replicateIdx, "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 	e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndDoneReplicatePiece, receive.Info())
 	if int(replicateIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
 		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds",
 			"replicate_idx", replicateIdx)
-		return nil, nil, ErrReplicateIdsOutOfBounds
+		return nil, ErrReplicateIdsOutOfBounds
 	}
 
 	// TODO:
@@ -254,10 +245,10 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	if err != nil {
 		log.CtxErrorw(ctx, "failed verify secondary signature", "endpoint", spEndpoint,
 			"replicate_idx", replicateIdx, "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 	log.CtxDebugw(ctx, "succeed to done replicate", "endpoint", spEndpoint, "replicate_idx", replicateIdx)
-	return integrity, signature, nil
+	return signature, nil
 }
 
 /*

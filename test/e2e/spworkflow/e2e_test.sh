@@ -4,7 +4,7 @@
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_REPO_TAG="virtual_group_dev"
+GREENFIELD_REPO_TAG="adaptor-sp"
 GREENFIELD_CMD_BRANCH="feat-adaptor-sp-exit"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"

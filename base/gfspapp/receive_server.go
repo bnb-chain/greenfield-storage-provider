@@ -55,14 +55,13 @@ func (g *GfSpBaseApp) GfSpDoneReplicatePiece(ctx context.Context, req *gfspserve
 		return &gfspserver.GfSpDoneReplicatePieceResponse{Err: ErrReceiveTaskDangling}, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-	integrity, signature, err := g.receiver.HandleDoneReceivePieceTask(ctx, task)
+	signature, err := g.receiver.HandleDoneReceivePieceTask(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate piece", "error", err)
 		return &gfspserver.GfSpDoneReplicatePieceResponse{Err: gfsperrors.MakeGfSpError(err)}, nil
 	}
 	log.CtxDebugw(ctx, "succeed to done replicate pieces")
 	return &gfspserver.GfSpDoneReplicatePieceResponse{
-		IntegrityHash: integrity,
-		Signature:     signature,
+		Signature: signature,
 	}, nil
 }

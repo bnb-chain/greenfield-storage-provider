@@ -72,6 +72,8 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 	err = e.listenSealObject(ctx, task.GetObjectInfo())
 	if err == nil {
 		metrics.PerfUploadTimeHistogram.WithLabelValues("upload_replicate_seal_total_time").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+	} else {
+		log.CtxErrorw(ctx, "failed to listen seal object", "seal_object", sealMsg, "error", err)
 	}
 	return err
 }

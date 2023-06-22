@@ -194,7 +194,7 @@ func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, si
 func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope SignType,
 	sealObject *storagetypes.MsgSealObject) ([]byte, error) {
 	if sealObject == nil {
-		log.CtxErrorw(ctx, "seal object msg pointer dangling")
+		log.CtxErrorw(ctx, "failed to seal object due to pointer dangling")
 		return nil, ErrDanglingPointer
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, sealObject.GetBucketName())
@@ -209,8 +209,8 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	defer client.mu.Unlock()
 
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
-		sealObject.BucketName, sealObject.ObjectName, sealObject.GlobalVirtualGroupId,
-		sealObject.SecondarySpBlsAggSignatures)
+		sealObject.GetBucketName(), sealObject.GetObjectName(), sealObject.GetGlobalVirtualGroupId(),
+		sealObject.GetSecondarySpBlsAggSignatures())
 
 	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
 
@@ -256,11 +256,9 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 			err = ErrSealObjectOnChain
 			continue
 		}
-		if err == nil {
-			client.sealAccNonce = nonce + 1
-			log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash)
-			return txHash, nil
-		}
+		client.sealAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash, "seal_msg", msgSealObject)
+		return txHash, nil
 	}
 	return nil, err
 }
@@ -330,11 +328,9 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context,
 			continue
 		}
 
-		if err == nil {
-			client.sealAccNonce = nonce + 1
-			log.CtxDebugw(ctx, "succeed to broadcast reject unseal object tx", "tx_hash", txHash)
-			return txHash, nil
-		}
+		client.sealAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast reject unseal object tx", "tx_hash", txHash)
+		return txHash, nil
 	}
 	return nil, err
 }

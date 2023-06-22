@@ -185,8 +185,8 @@ func (*NilModular) SignReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NilModular) SignReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) SignIntegrityHash(ctx context.Context, objectID uint64, gvgid uint32, hash [][]byte) ([]byte, []byte, error) {
-	return nil, nil, ErrNilModular
+func (*NilModular) SignSecondaryBls(context.Context, uint64, uint32, [][]byte) ([]byte, error) {
+	return nil, ErrNilModular
 }
 func (*NilModular) SignP2PPingMsg(context.Context, *gfspp2p.GfSpPing) ([]byte, error) {
 	return nil, ErrNilModular
@@ -225,6 +225,6 @@ func (*NullReceiveModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) 
 func (*NullReceiveModular) HandleReceivePieceTask(context.Context, task.ReceivePieceTask, []byte) error {
 	return ErrNilModular
 }
-func (*NullReceiveModular) HandleDoneReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, []byte, error) {
-	return nil, nil, ErrNilModular
+func (*NullReceiveModular) HandleDoneReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
+	return nil, ErrNilModular
 }

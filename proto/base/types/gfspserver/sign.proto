@@ -9,7 +9,7 @@ import "greenfield/storage/tx.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
-message GfSpSignIntegrityHash {
+message GfSpSignSecondaryBls {
   uint64 object_id = 1;
   uint32 global_virtual_group_id = 2;
   repeated bytes checksums = 3;
@@ -29,7 +29,7 @@ message GfSpSignRequest {
     greenfield.storage.MsgCreateObject create_object_info = 2;
     greenfield.storage.MsgSealObject seal_object_info = 3;
     greenfield.storage.MsgDiscontinueBucket discontinue_bucket_info = 4;
-    GfSpSignIntegrityHash sign_integrity = 5;
+    GfSpSignSecondaryBls sign_secondary_bls = 5;
     base.types.gfspp2p.GfSpPing ping_msg = 6;
     base.types.gfspp2p.GfSpPong pong_msg = 7;
     base.types.gfsptask.GfSpReplicatePieceApprovalTask gfsp_replicate_piece_approval_task = 8;
@@ -42,7 +42,6 @@ message GfSpSignRequest {
 message GfSpSignResponse {
   base.types.gfsperrors.GfSpError err = 1;
   bytes signature = 2;
-  bytes integrity_hash = 3;
 }
 
 service GfSpSignService {

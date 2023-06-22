@@ -55,36 +55,32 @@ func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint str
 }
 
 func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint string,
-	receive coretask.ReceivePieceTask) ([]byte, []byte, error) {
+	receive coretask.ReceivePieceTask) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodPut, endpoint+ReplicateObjectPiecePath, nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	receiveTask := receive.(*gfsptask.GfSpReceivePieceTask)
 	receiveMsg, err := json.Marshal(receiveTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate to secondary sp due to marshal error", "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 	receiveHeader := hex.EncodeToString(receiveMsg)
 	req.Header.Add(GnfdReceiveMsgHeader, receiveHeader)
 	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("failed to replicate piece, StatusCode(%d) Endpoint(%s)", resp.StatusCode, endpoint)
-	}
-	integrity, err := hex.DecodeString(resp.Header.Get(GnfdIntegrityHashHeader))
-	if err != nil {
-		return nil, nil, err
+		return nil, fmt.Errorf("failed to replicate piece, StatusCode(%d) Endpoint(%s)", resp.StatusCode, endpoint)
 	}
 	signature, err := hex.DecodeString(resp.Header.Get(GnfdIntegrityHashSignatureHeader))
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return integrity, signature, nil
+	return signature, nil
 }

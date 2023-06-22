@@ -218,7 +218,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		primarySP:    primarySP,
 		secondarySPs: secondarySPList,
 	}
-	log.Infow("list sp info", "primary_sp", primarySP, "secondary_sps", secondarySPList, "sp_map", spMap)
+	// log.Infow("list sp info", "primary_sp", primarySP, "secondary_sps", secondarySPList, "sp_map", spMap)
 
 	if spID == 0 {
 		log.Error("failed to refresh due to current sp is not in sp list")
@@ -229,7 +229,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		log.Errorw("failed to query virtual group params", "error", err)
 		return
 	}
-	log.Infow("query virtual group params", "params", vgParams)
+	// log.Infow("query virtual group params", "params", vgParams)
 
 	vgfm = &virtualGroupFamilyManager{
 		vgfIDToVgf: make(map[uint32]*vgmgr.VirtualGroupFamilyMeta),
@@ -239,7 +239,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		return
 	}
 
-	log.Infow("list virtual group family info", "vgf_list", vgfList)
+	// log.Infow("list virtual group family info", "vgf_list", vgfList)
 	for _, vgf := range vgfList {
 		vgfm.vgfIDToVgf[vgf.Id] = &vgmgr.VirtualGroupFamilyMeta{
 			ID:          vgf.Id,
@@ -297,8 +297,8 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vgmgr.Glo
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
 // if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
 func (vgm *virtualGroupManager) ForceRefreshMeta() error {
-	// sleep 5 seconds for waiting a new block
-	// time.Sleep(5 * time.Second)
+	// sleep 2 seconds for waiting a new block
+	time.Sleep(2 * time.Second)
 	vgm.refreshMeta()
 	return nil
 }
