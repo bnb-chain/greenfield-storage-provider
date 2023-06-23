@@ -11,6 +11,7 @@ import (
 	"time"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield/types/s3util"
@@ -481,7 +482,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			segSize := g.baseApp.PieceOp().SegmentPieceSize(objectInfo.PayloadSize, segmentIndex, params.GetMaxSegmentSize())
 			recoveryTask := &gfsptask.GfSpRecoveryPieceTask{}
 			recoveryTask.InitRecoveryPieceTask(task.GetObjectInfo(), task.GetStorageParams(),
-				g.baseApp.TaskPriority(recoveryTask),
+				coretask.DefaultLargerTaskPriority,
 				segmentIndex,
 				int32(-1),
 				uint64(segSize),

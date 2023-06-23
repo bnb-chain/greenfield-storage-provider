@@ -70,6 +70,7 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
+	log.CtxDebugw(ctx, "dispatching recovery queue:", "len:", m.recoveryQueue.Len())
 	task = m.recoveryQueue.TopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add confirm receive piece to backup set", "recovery task_key", task.Key().String(),
@@ -526,13 +527,13 @@ func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.R
 		//return m.handleFailedReplicatePieceTask(ctx, task)
 	}
 
-	go func() {
-		task.SetMaxRetry(3)
-		task.IncRetry()
-		task.SetUpdateTime(time.Now().Unix())
-		err := m.recoveryQueue.Push(task)
-		log.CtxErrorw(ctx, "push recovery task to queue", "error", err)
-	}()
+	task.SetUpdateTime(time.Now().Unix())
+	err := m.recoveryQueue.Push(task)
+	if err == nil {
+		log.CtxErrorw(ctx, "push recovery task to queue successfully")
+	} else {
+		log.CtxErrorw(ctx, "fail to push recovery task to queue ", "error", err)
+	}
 
 	//m.recoveryQueue.PopByKey(task.Key())
 
@@ -540,6 +541,7 @@ func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.R
 }
 
 func (m *ManageModular) handleFailedRecoveryPieceTask(ctx context.Context, handleTask task.RecoveryPieceTask) error {
+	log.CtxErrorw(ctx, "handle failed recovery task: ", handleTask.Info())
 	oldTask := m.recoveryQueue.PopByKey(handleTask.Key())
 	if oldTask == nil {
 		log.CtxErrorw(ctx, "task has been canceled", "task_info", handleTask.Info())
