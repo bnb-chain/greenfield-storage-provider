@@ -61,6 +61,7 @@ var TypeTaskMap = map[TType]string{
 	TypeTaskGCObject:               "GCObjectTask",
 	TypeTaskGCZombiePiece:          "GCZombiePieceTask",
 	TypeTaskGCMeta:                 "GCMetaTask",
+	TypeTaskRecoveryPiece:          "RecoveryPieceTask",
 }
 
 func TaskTypeName(taskType TType) string {
