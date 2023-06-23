@@ -459,10 +459,11 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 	taskSignature := recoveryTask.GetSignature()
 	primaryAddr, pk, err := RecoverAddr(recoveryTask.GetSignBytes(), taskSignature)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address")
+		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address", "error:", err)
 		err = ErrSignature
 		return
 	}
+	log.CtxDebugw(reqCtx.Context(), "get recovery piece primary sp:", primaryAddr)
 	if !secp256k1.VerifySignature(pk.Bytes(), recoveryTask.GetSignBytes(), taskSignature[:len(taskSignature)-1]) {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task signature")
 		err = ErrSignature

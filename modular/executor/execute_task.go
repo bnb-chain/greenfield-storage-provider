@@ -296,7 +296,7 @@ func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCM
 func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coretask.RecoveryPieceTask) error {
 	var (
 		dataShards        = task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()
-		segmentSize       = task.GetStorageParams().VersionedParams.GetMaxSegmentSize()
+		maxSegmentSize    = task.GetStorageParams().VersionedParams.GetMaxSegmentSize()
 		parityShards      = task.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()
 		minRecoveryPieces = dataShards
 		ecPieceCount      = dataShards + parityShards
@@ -316,16 +316,20 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 	quitCh := make(chan bool)
 
 	totalTaskNum := int32(ecPieceCount)
+	downLoadPieceSize := 0
+	segmentSize := e.baseApp.PieceOp().SegmentPieceSize(task.GetObjectInfo().PayloadSize, task.GetSegmentIdx(), maxSegmentSize)
 	for ecIdx := 0; ecIdx < int(ecPieceCount); ecIdx++ {
 		recoveryDataSources[ecIdx] = nil
 		go func(secondaryIndex int) {
 			pieceData, err := e.doRecoveryPiece(ctx, task, secondaryEndpoints[secondaryIndex])
 			if err == nil {
 				recoveryDataSources[secondaryIndex] = pieceData
+				log.Debugf("get one piece from ", "piece length:%d ", len(pieceData), "secondary sp:", secondaryEndpoints[secondaryIndex])
 				doneCh <- true
 			}
 			// finish all the task, send signal to quitCh
 			if atomic.AddInt32(&totalTaskNum, -1) == 0 {
+				downLoadPieceSize = len(pieceData)
 				quitCh <- true
 			}
 		}(ecIdx)
@@ -345,10 +349,15 @@ loop:
 				log.CtxErrorw(ctx, "get piece from secondary not enough", "get secondary piece num:", doneTaskNum, "error", err)
 				return ErrRecoveryPieceNotEnough
 			}
+			ecTotalSize := int64(uint32(downLoadPieceSize) * dataShards)
+			if ecTotalSize < segmentSize || ecTotalSize > segmentSize+int64(dataShards) {
+				//		return fmt.Errorf("get secondary piece data length error")
+				log.CtxErrorw(ctx, "get secondary piece data length error")
+			}
 		}
 	}
 
-	recoverySegData, err := redundancy.DecodeRawSegment(recoveryDataSources, int64(segmentSize), int(dataShards), int(parityShards))
+	recoverySegData, err := redundancy.DecodeRawSegment(recoveryDataSources, segmentSize, int(dataShards), int(parityShards))
 	if err != nil {
 		log.CtxErrorw(ctx, "EC decode error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "segIndex:", task.GetSegmentIdx(), "error", err)
 		return ErrRecoveryDecodeErr

@@ -471,6 +471,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			// TODO pieceStore should return exact error to indicate if the piece data lost
 			// for now, if get piece fail, it is suspected that the piece has been lost
 			// the recovery task will recovery the total segment (ignoring the offset and length of piece info)
+			log.CtxDebugw(reqCtx.Context(), "recovery task key:", "key:", pInfo.SegmentPieceKey)
 			segmentIndex, parseErr := g.baseApp.PieceOp().ParseSegmentIdx(pInfo.SegmentPieceKey)
 			if parseErr != nil {
 				// no need to return recovery error to user
