@@ -489,7 +489,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 				g.baseApp.TaskMaxRetry(recoveryTask))
 
 			g.baseApp.GfSpClient().ReportTask(reqCtx.Context(), recoveryTask)
-			log.CtxDebugw(reqCtx.Context(), "recovery task run successfully", "recovery object", objectInfo.ObjectName, "segment index:", idx, "error", err)
+			log.CtxDebugw(reqCtx.Context(), "recovery task run successfully", "recovery object", objectInfo.ObjectName, "segment index:", idx)
 
 			pieceData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask)
 			if err != nil {

@@ -525,8 +525,35 @@ func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.R
 		//TODO retry failed job
 		//return m.handleFailedReplicatePieceTask(ctx, task)
 	}
-	m.recoveryQueue.PopByKey(task.Key())
 
+	go func() {
+		task.SetMaxRetry(3)
+		task.IncRetry()
+		task.SetUpdateTime(time.Now().Unix())
+		err := m.recoveryQueue.Push(task)
+		log.CtxErrorw(ctx, "push recovery task to queue", "error", err)
+	}()
+
+	//m.recoveryQueue.PopByKey(task.Key())
+
+	return nil
+}
+
+func (m *ManageModular) handleFailedRecoveryPieceTask(ctx context.Context, handleTask task.RecoveryPieceTask) error {
+	oldTask := m.recoveryQueue.PopByKey(handleTask.Key())
+	if oldTask == nil {
+		log.CtxErrorw(ctx, "task has been canceled", "task_info", handleTask.Info())
+		return ErrCanceledTask
+	}
+	handleTask = oldTask.(task.RecoveryPieceTask)
+	if !handleTask.ExceedRetry() {
+		handleTask.SetUpdateTime(time.Now().Unix())
+		err := m.recoveryQueue.Push(handleTask)
+		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
+	} else {
+		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
+		// TODO: confirm it
+	}
 	return nil
 }
 

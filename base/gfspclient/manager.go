@@ -66,6 +66,7 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 	req := &gfspserver.GfSpAskTaskRequest{
 		NodeLimit: limit.(*gfsplimit.GfSpLimit),
 	}
+	log.CtxDebugw(ctx, "manager ask tasking")
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpAskTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask task", "error", err)
@@ -74,6 +75,7 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
 	}
+	log.CtxDebugw(ctx, "manager ask tasking, get response")
 	switch t := resp.GetResponse().(type) {
 	case *gfspserver.GfSpAskTaskResponse_ReplicatePieceTask:
 		return t.ReplicatePieceTask, nil
@@ -149,6 +151,7 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 			ChallengePieceTask: t,
 		}
 	case *gfsptask.GfSpRecoveryPieceTask:
+		log.CtxDebugw(ctx, "report recovery task")
 		req.Request = &gfspserver.GfSpReportTaskRequest_RecoveryPieceTask{
 			RecoveryPieceTask: t,
 		}
