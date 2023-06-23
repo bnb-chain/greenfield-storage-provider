@@ -160,7 +160,7 @@ const (
 	// GnfdOffChainAuthAppRegExpiryDateHeader defines the Expiry-Date is the ISO 8601 datetime string (e.g. 2021-09-30T16:25:24Z), used to register the EDDSA public key
 	GnfdOffChainAuthAppRegExpiryDateHeader = "X-Gnfd-App-Reg-Expiry-Date"
 
-	RecoveryTimeOutSeconds  = 10
+	RecoveryTimeOutSeconds  = 20
 	RecoveryCheckInterval   = 2
 	RecoveryMinMilliseconds = 500
 )

@@ -20,6 +20,7 @@ const (
 	KeyPrefixGfSpReplicatePieceTask         = "Uploading"
 	KeyPrefixGfSpSealObjectTask             = "Uploading"
 	KeyPrefixGfSpResumableUploadObjectTask  = "ResuabmleUploading"
+	KeyPrefixGfSpRecoveryPieceTask          = "Recovering"
 	KeyPrefixGfSpReceivePieceTask           = "ReceivePiece"
 )
 
@@ -79,10 +80,10 @@ func GfSpReplicatePieceTaskKey(bucket, object, id string) task.TKey {
 
 func GfSpRecoveryPieceTaskKey(bucket, object, id string, pIdx uint32, ECIdx int32) task.TKey {
 	if ECIdx > 0 {
-		return task.TKey(KeyPrefixGfSpReplicatePieceTask +
+		return task.TKey(KeyPrefixGfSpRecoveryPieceTask +
 			CombineKey("bucket:"+bucket, "object:"+object, "id:"+id, "pIdx:"+fmt.Sprint(pIdx), "ecIdx:"+fmt.Sprint(ECIdx)))
 	}
-	return task.TKey(KeyPrefixGfSpReplicatePieceTask +
+	return task.TKey(KeyPrefixGfSpRecoveryPieceTask +
 		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id, "pIdx:"+fmt.Sprint(pIdx)))
 }
 

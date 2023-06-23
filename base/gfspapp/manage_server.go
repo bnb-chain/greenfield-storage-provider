@@ -270,7 +270,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		task := t.RecoveryPieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(GetRPCRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
+		log.CtxInfow(ctx, "begin to handle recovery reported task", "task_info", task.Info())
 
 		err = g.manager.HandleRecoveryPieceTask(ctx, t.RecoveryPieceTask)
 	default:

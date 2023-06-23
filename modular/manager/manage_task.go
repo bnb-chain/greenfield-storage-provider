@@ -517,11 +517,11 @@ func (m *ManageModular) HandleChallengePieceTask(ctx context.Context, task task.
 
 func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
-		log.CtxErrorw(ctx, "failed to handle replicate piece due to pointer dangling")
+		log.CtxErrorw(ctx, "failed to handle recovery piece due to pointer dangling")
 		return ErrDanglingTask
 	}
 	if task.Error() != nil {
-		log.CtxErrorw(ctx, "handler error replicate piece task", "task_info", task.Info(), "error", task.Error())
+		log.CtxErrorw(ctx, "handler error recovery piece task", "task_info", task.Info(), "error", task.Error())
 		//TODO retry failed job
 		//return m.handleFailedReplicatePieceTask(ctx, task)
 	}
