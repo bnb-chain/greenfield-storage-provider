@@ -29,6 +29,7 @@ var (
 	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid, no such piece")
 	ErrPieceStore        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35101, "server slipped away, try again later")
 	ErrGfSpDB            = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35201, "server slipped away, try again later")
+	ErrKeyFormat         = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "invalid key format")
 )
 
 func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask) error {
@@ -367,27 +368,7 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
-		// generate recovery segment task
-		// TODO check if it need to recovery if the piece data is not correct
-		if downloadPieceTask.GetRedundancyIdx() < 0 {
-			segmentIndex, parseErr := d.baseApp.PieceOp().ParseSegmentIdx(pieceKey)
-			if parseErr != nil {
-				// no need to return recovery error to user
-				log.CtxErrorw(ctx, "fail to parse recovery segment index", "error", err)
-			}
-
-			recoveryTask := &gfsptask.GfSpRecoveryPieceTask{}
-			recoveryTask.InitRecoveryPieceTask(downloadPieceTask.GetObjectInfo(), downloadPieceTask.GetStorageParams(),
-				d.baseApp.TaskPriority(recoveryTask),
-				segmentIndex,
-				int32(-1),
-				uint64(0),
-				d.baseApp.TaskTimeout(recoveryTask, downloadPieceTask.GetStorageParams().GetMaxSegmentSize()),
-				d.baseApp.TaskMaxRetry(recoveryTask))
-
-			d.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
-		}
-
+		d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
 		return nil, nil, nil, ErrPieceStore
 	}
 
@@ -400,4 +381,25 @@ func (d *DownloadModular) PostChallengePiece(ctx context.Context, downloadPieceT
 func (d *DownloadModular) QueryTasks(ctx context.Context, subKey task.TKey) (
 	[]task.Task, error) {
 	return nil, nil
+}
+
+// recoverChallengePiece recover challenge piece by generating recovery background task if challenge task get piece fail
+func (d *DownloadModular) recoverChallengePiece(ctx context.Context, downloadPieceTask task.ChallengePieceTask, pieceKey string) {
+	// TODO check if it need to recovery if the piece data is not correct
+	var segmentIndex uint32
+	segmentIndex, ECIndex, parseErr := d.baseApp.PieceOp().ParseChallengeIdx(pieceKey)
+	if parseErr != nil {
+		// no need to return recovery error to user
+		log.CtxErrorw(ctx, "fail to parse recovery segment index", "error", parseErr)
+	}
+	recoveryTask := &gfsptask.GfSpRecoveryPieceTask{}
+	recoveryTask.InitRecoveryPieceTask(downloadPieceTask.GetObjectInfo(), downloadPieceTask.GetStorageParams(),
+		d.baseApp.TaskPriority(recoveryTask),
+		segmentIndex,
+		ECIndex,
+		uint64(0),
+		d.baseApp.TaskTimeout(recoveryTask, downloadPieceTask.GetStorageParams().GetMaxSegmentSize()),
+		d.baseApp.TaskMaxRetry(recoveryTask))
+
+	d.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
 }
