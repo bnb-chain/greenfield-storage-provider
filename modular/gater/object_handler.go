@@ -487,7 +487,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 				int32(-1),
 				uint64(segSize),
 				g.baseApp.TaskTimeout(recoveryTask, task.GetStorageParams().GetMaxSegmentSize()),
-				g.baseApp.TaskMaxRetry(recoveryTask))
+				1)
 
 			g.baseApp.GfSpClient().ReportTask(reqCtx.Context(), recoveryTask)
 			log.CtxDebugw(reqCtx.Context(), "recovery task run successfully", "recovery object", objectInfo.ObjectName, "segment index:", idx)

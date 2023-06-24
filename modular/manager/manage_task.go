@@ -525,11 +525,12 @@ func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.R
 		return ErrDanglingTask
 	}
 
-	if m.TaskRecovering(ctx, task) {
-		log.CtxErrorw(ctx, "uploading object repeated", "task_info", task.Info())
-		return ErrRepeatedTask
-	}
-
+	/*
+		if m.TaskRecovering(ctx, task) {
+			log.CtxErrorw(ctx, "recovering object repeated", "task_info", task.Info())
+			return ErrRepeatedTask
+		}
+	*/
 	if task.Error() != nil {
 		log.CtxErrorw(ctx, "handler error recovery piece task", "task_info", task.Info(), "error", task.Error())
 		//TODO retry failed job

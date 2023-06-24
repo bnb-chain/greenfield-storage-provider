@@ -22,7 +22,6 @@ func (m *GfSpRecoveryPieceTask) InitRecoveryPieceTask(object *storagetypes.Objec
 	m.SetPriority(priority)
 	m.SetTimeout(timeout)
 	m.SetMaxRetry(retry)
-	m.SetRetry(1)
 	m.SetSegmentIndex(pieceIdx)
 	m.SetECIndex(ecIdx)
 	m.SetPieceSize(pieceSize)
