@@ -52,6 +52,7 @@ func (p *GfSpPieceOp) ECPieceSize(payloadSize uint64, segmentIdx uint32, maxSegm
 	ECPieceSize := segmentSize / int64(dataChunkNum)
 	// EC padding will cause the EC pieces to have one extra byte if it cannot be evenly divided.
 	// for example, the segment size is 15, the ec piece size should be 15/4 + 1 = 4
+	// TODO add test case
 	if segmentSize > 0 && segmentSize%int64(dataChunkNum) != 0 {
 		ECPieceSize++
 	}
