@@ -70,7 +70,7 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
-	//log.CtxDebugw(ctx, "dispatching recovery queue:", "len:", m.recoveryQueue.Len(), "task limit :",limit.GetMemoryLimit())
+
 	if m.recoveryQueue.Len() > 0 {
 		log.CtxDebugw(ctx, "dispatching recovery queue get task:", m.recoveryQueue.Len())
 	}

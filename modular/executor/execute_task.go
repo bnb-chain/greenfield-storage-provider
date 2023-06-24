@@ -34,9 +34,10 @@ var (
 	ErrGfSpDB                  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45201, "server slipped away, try again later")
 	ErrRecoveryRedundancyType  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45202, "recovery only support EC redundancy type")
 	ErrRecoveryPieceNotEnough  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "fail to get enough piece data to recovery")
-	ErrRecoveryDecodeErr       = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
+	ErrRecoveryDecode          = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
 	ErrPieceStore              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 45205, "server slipped away, try again later")
 	ErrRecoveryPieceChecksum   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45206, "recovery checksum not correct")
+	ErrRecoveryPieceLength     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45207, "get secondary piece data length error")
 )
 
 func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) {
@@ -302,9 +303,15 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		minRecoveryPieces = dataShards
 		ecPieceCount      = dataShards + parityShards
 		doneTaskNum       = uint32(0)
+		err               error
 	)
+	defer func() {
+		task.SetError(err)
+	}()
+
 	if task.GetObjectInfo().GetRedundancyType() != storagetypes.REDUNDANCY_EC_TYPE {
-		return ErrRecoveryRedundancyType
+		err = ErrRecoveryRedundancyType
+		return err
 	}
 
 	secondaryEndpoints, err := e.getObjectSecondaryEndpoints(ctx, task.GetObjectInfo())
@@ -348,12 +355,14 @@ loop:
 		case <-quitCh: // all the task finish
 			if doneTaskNum < minRecoveryPieces { // finish task num not enough
 				log.CtxErrorw(ctx, "get piece from secondary not enough", "get secondary piece num:", doneTaskNum, "error", err)
+				err = ErrRecoveryPieceNotEnough
 				return ErrRecoveryPieceNotEnough
 			}
 			ecTotalSize := int64(uint32(downLoadPieceSize) * dataShards)
 			if ecTotalSize < segmentSize || ecTotalSize > segmentSize+int64(dataShards) {
-				//		return fmt.Errorf("get secondary piece data length error")
+				err = ErrRecoveryPieceLength
 				log.CtxErrorw(ctx, "get secondary piece data length error")
+				return ErrRecoveryPieceLength
 			}
 		}
 	}
@@ -361,30 +370,32 @@ loop:
 	recoverySegData, err := redundancy.DecodeRawSegment(recoveryDataSources, segmentSize, int(dataShards), int(parityShards))
 	if err != nil {
 		log.CtxErrorw(ctx, "EC decode error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "segIndex:", task.GetSegmentIdx(), "error", err)
-		return ErrRecoveryDecodeErr
+		err = ErrRecoveryDecode
+		return err
 	}
 
 	// compare integrity hash
 	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(ctx, "search integrity hash in db error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "error", err)
-		return ErrGfSpDB
+		err = ErrGfSpDB
+		return err
 	}
 
 	expectedHash := integrityMeta.PieceChecksumList[task.GetSegmentIdx()]
 	if !bytes.Equal(recoverySegData, expectedHash) {
 		log.CtxErrorw(ctx, "check integrity hash of recovery data err", "objectName:", task.GetObjectInfo().ObjectName,
 			"expected value", hex.EncodeToString(expectedHash), "actual value", hex.EncodeToString(recoverySegData), "error", err)
-		return ErrRecoveryPieceChecksum
+		err = ErrRecoveryPieceChecksum
+		return err
 	}
-
-	log.CtxDebugw(ctx, "EC decode error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "segIndex:", task.GetSegmentIdx(), "error", err)
+	
 	recoveryKey := e.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx())
 
 	err = e.baseApp.PieceStore().PutPiece(ctx, recoveryKey, recoverySegData)
 	if err != nil {
 		log.CtxErrorw(ctx, "EC decode data write piece fail", "pieceKey:", recoveryKey, "error", err)
-		return ErrPieceStore
+		return err
 	}
 
 	log.CtxDebugw(ctx, "primary SP recovery successfully", "pieceKey:", recoveryKey)
