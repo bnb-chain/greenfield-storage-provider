@@ -527,24 +527,19 @@ func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.R
 	if task.Error() != nil {
 		log.CtxErrorw(ctx, "handler error recovery piece task", "task_info", task.Info(), "error", task.Error())
 		//TODO retry failed job
-		//return m.handleFailedReplicatePieceTask(ctx, task)
+		return m.handleFailedRecoveryPieceTask(ctx, task)
 	}
 
 	task.SetUpdateTime(time.Now().Unix())
 	err := m.recoveryQueue.Push(task)
-	if err == nil {
-		log.CtxErrorw(ctx, "push recovery task to queue successfully")
-	} else {
-		log.CtxErrorw(ctx, "fail to push recovery task to queue ", "error", err)
+	if err != nil {
+		return err
 	}
-
-	//m.recoveryQueue.PopByKey(task.Key())
 
 	return nil
 }
 
 func (m *ManageModular) handleFailedRecoveryPieceTask(ctx context.Context, handleTask task.RecoveryPieceTask) error {
-	log.CtxErrorw(ctx, "handle failed recovery task: ", handleTask.Info())
 	oldTask := m.recoveryQueue.PopByKey(handleTask.Key())
 	if oldTask == nil {
 		log.CtxErrorw(ctx, "task has been canceled", "task_info", handleTask.Info())

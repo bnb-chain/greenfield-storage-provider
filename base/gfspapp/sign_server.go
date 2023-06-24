@@ -80,6 +80,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		}
 	case *gfspserver.GfSpSignRequest_GfspRecoveryPieceTask:
 		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspRecoveryPieceTask.Key().String())
+		log.CtxDebugw(ctx, "signing recovery task")
 		signature, err = g.signer.SignRecoveryPieceTask(ctx, t.GfspRecoveryPieceTask)
 	}
 	return &gfspserver.GfSpSignResponse{

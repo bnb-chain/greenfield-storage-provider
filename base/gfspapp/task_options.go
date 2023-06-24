@@ -242,7 +242,7 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 		if g.recoveryRetry > MaxRecoveryRetry {
 			return MaxRecoveryRetry
 		}
-		return g.replicateRetry
+		return g.recoveryRetry
 	}
 	return 0
 }
