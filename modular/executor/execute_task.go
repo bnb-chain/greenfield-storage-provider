@@ -392,19 +392,22 @@ loop:
 }
 
 func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.RecoveryPieceTask, endpoint string) (data []byte, err error) {
-	var signature []byte
+	//var signature []byte
 	metrics.ReplicatePieceSizeCounter.WithLabelValues(e.Name()).Add(float64(len(data)))
 	startTime := time.Now()
 	defer func() {
 		metrics.ReplicatePieceTimeHistogram.WithLabelValues(e.Name()).Observe(time.Since(startTime).Seconds())
 	}()
 
-	signature, err = e.baseApp.GfSpClient().SignRecoveryTask(ctx, rTask)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to sign recovery task", "object", rTask.GetObjectInfo().GetObjectName(), "error", err)
-		return
-	}
-	rTask.SetSignature(signature)
+	/*
+		signature, err = e.baseApp.GfSpClient().SignRecoveryTask(ctx, rTask)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign recovery task", "object", rTask.GetObjectInfo().GetObjectName(), "error", err)
+			return
+		}
+
+	*/
+	rTask.SetSignature([]byte("temp"))
 	respBody, err := e.baseApp.GfSpClient().GetPieceFromSecondary(ctx, endpoint, rTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to recovery piece", "objectID", rTask.GetObjectInfo().Id,

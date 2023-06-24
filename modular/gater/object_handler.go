@@ -607,7 +607,7 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	objectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp)
+	objectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp, reqCtx.objectName, reqCtx.bucketName)
 	if err != nil {
 		err = ErrConsensus
 		return

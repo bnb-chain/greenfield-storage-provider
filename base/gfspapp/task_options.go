@@ -181,8 +181,6 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 		return NotUseRetry
 	case coretask.TypeTaskReplicatePieceApproval:
 		return NotUseRetry
-	case coretask.TypeTaskRecoveryPiece:
-		return NotUseRetry
 	case coretask.TypeTaskUpload:
 		return NotUseRetry
 	case coretask.TypeTaskReplicatePiece:
@@ -237,6 +235,14 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 			return MaxGCObjectRetry
 		}
 		return g.gcMetaRetry
+	case coretask.TypeTaskRecoveryPiece:
+		if g.recoveryRetry < MinRecoveryRetry {
+			return MinRecoveryRetry
+		}
+		if g.recoveryRetry > MaxRecoveryRetry {
+			return MaxRecoveryRetry
+		}
+		return g.replicateRetry
 	}
 	return 0
 }

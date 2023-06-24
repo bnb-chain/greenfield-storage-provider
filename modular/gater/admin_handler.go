@@ -8,18 +8,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/p2p/p2pnode"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getApprovalHandler handles the get create bucket/object approval request.
@@ -434,6 +432,8 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	log.CtxDebugw(reqCtx.Context(), "recoveryPrimaryHandler begin1")
 	// ignore the error, because the recovery request only between SPs, the request
 	// verification is by signature of the RecoveryTask
 	reqCtx, _ = NewRequestContext(r, g)
@@ -455,20 +455,24 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// check signature consistent
-	taskSignature := recoveryTask.GetSignature()
-	primaryAddr, pk, err := RecoverAddr(recoveryTask.GetSignBytes(), taskSignature)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address", "error:", err)
-		err = ErrSignature
-		return
-	}
-	log.CtxDebugw(reqCtx.Context(), "get recovery piece primary sp:", primaryAddr)
-	if !secp256k1.VerifySignature(pk.Bytes(), recoveryTask.GetSignBytes(), taskSignature[:len(taskSignature)-1]) {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task signature")
-		err = ErrSignature
-		return
-	}
+	/*
+		// check signature consistent
+		taskSignature := recoveryTask.GetSignature()
+		primaryAddr, pk, err := RecoverAddr(recoveryTask.GetSignBytes(), taskSignature)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address", "error:", err)
+			err = ErrSignature
+			return
+		}
+
+		log.CtxDebugw(reqCtx.Context(), "get recovery piece primary sp:", primaryAddr)
+		if !secp256k1.VerifySignature(pk.Bytes(), recoveryTask.GetSignBytes(), taskSignature[:len(taskSignature)-1]) {
+			log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task signature")
+			err = ErrSignature
+			return
+		}
+
+	*/
 
 	objectInfo := recoveryTask.GetObjectInfo()
 	if objectInfo == nil {
@@ -483,17 +487,18 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	chainInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp)
+	chainInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp, objectInfo.ObjectName, objectInfo.BucketName)
 	if err != nil {
 		err = ErrInvalidHeader
 		return
 	}
 
-	// the primary sp of the object should be consistent with task signature
-	if bucketInfo.PrimarySpAddress != primaryAddr.String() {
-		log.CtxErrorw(reqCtx.Context(), "recovery request not come from primary sp")
-	}
-
+	/*
+		// the primary sp of the object should be consistent with task signature
+		if bucketInfo.PrimarySpAddress != primaryAddr.String() {
+			log.CtxErrorw(reqCtx.Context(), "recovery request not come from primary sp")
+		}
+	*/
 	isOneOfSecondary := false
 	handlerAddr := g.baseApp.OperatorAddress()
 	var ECIndex int
@@ -516,8 +521,9 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	// no need to check quota when recovering primary SP segment data
+
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
-		true, primaryAddr.String(), uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
+		true, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 	pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)

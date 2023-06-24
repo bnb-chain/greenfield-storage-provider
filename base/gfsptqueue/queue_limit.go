@@ -1,7 +1,6 @@
 package gfsptqueue
 
 import (
-	"context"
 	"sort"
 	"sync"
 	"time"
@@ -168,7 +167,7 @@ func (t *GfSpTQueueWithLimit) topByLimit(limit corercmgr.Limit) coretask.Task {
 			delete(t.tasks, task.Key())
 		}
 	}()
-	log.CtxDebugw(context.Background(), "tasks size in topByLimit:", len(t.tasks))
+
 	for _, task := range t.tasks {
 		if t.gcFunc != nil {
 			if t.gcFunc(task) {
@@ -178,7 +177,6 @@ func (t *GfSpTQueueWithLimit) topByLimit(limit corercmgr.Limit) coretask.Task {
 		}
 		if limit.NotLess(task.EstimateLimit()) {
 			if t.filterFunc != nil && !t.filterFunc(task) {
-				log.CtxDebugw(context.Background(), "tasks filterFunc not nil")
 				continue
 			}
 			backupTasks = append(backupTasks, task)

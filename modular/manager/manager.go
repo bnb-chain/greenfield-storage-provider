@@ -95,7 +95,6 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.recoveryQueue.SetRetireTaskStrategy(m.GCReceiveQueue)
-	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -440,15 +439,12 @@ func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
 
 func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
 	if qTask.ExceedRetry() {
-		log.CtxDebugw(context.Background(), "tasks ExceedRetry", qTask.ExceedRetry())
 		return false
 	}
 	if qTask.ExceedTimeout() {
-		log.CtxDebugw(context.Background(), "tasks ExceedTimeout", qTask.ExceedTimeout())
 		return true
 	}
 	if qTask.GetRetry() == 0 {
-		log.CtxDebugw(context.Background(), "GetRetry", qTask.GetRetry())
 		return true
 	}
 	return false
