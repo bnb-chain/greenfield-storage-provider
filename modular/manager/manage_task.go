@@ -525,18 +525,18 @@ func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.R
 		return ErrDanglingTask
 	}
 
-	if task.Error() != nil {
-		log.CtxErrorw(ctx, "handler error recovery piece task", "task_info", task.Info(), "error", task.Error())
-		return m.handleFailedRecoveryPieceTask(ctx, task)
-	}
-
 	if m.TaskRecovering(ctx, task) {
 		log.CtxErrorw(ctx, "recovering object repeated", "task_info", task.Info())
 		return ErrRepeatedTask
 	}
 
+	if task.Error() != nil {
+		log.CtxErrorw(ctx, "handler error recovery piece task", "task_info", task.Info(), "error", task.Error())
+		return m.handleFailedRecoveryPieceTask(ctx, task)
+	}
+
 	task.SetUpdateTime(time.Now().Unix())
-	if err := m.uploadQueue.Push(task); err != nil {
+	if err := m.recoveryQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push recovery object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
