@@ -74,7 +74,6 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
 	}
-	log.CtxDebugw(ctx, "manager ask tasking, get response")
 	switch t := resp.GetResponse().(type) {
 	case *gfspserver.GfSpAskTaskResponse_ReplicatePieceTask:
 		return t.ReplicatePieceTask, nil

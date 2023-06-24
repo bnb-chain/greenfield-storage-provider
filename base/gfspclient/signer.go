@@ -206,7 +206,7 @@ func (s *GfSpClient) SignRecoveryTask(ctx context.Context, recoveryTask coretask
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to sign receive task", "recovery object", recoveryTask.GetObjectInfo().ObjectName, "error", err)
+		log.CtxErrorw(ctx, "client failed to sign recovery task", "object name", recoveryTask.GetObjectInfo().ObjectName, "error", err)
 		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {

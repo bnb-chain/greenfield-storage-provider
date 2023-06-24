@@ -159,7 +159,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 			return MaxGCMetaTime
 		}
 		return g.gcMetaTimeout
-	case coretask.TypeTaskRecoveryPiece:
+	case coretask.TypeTaskRecoverPiece:
 		timeout := int64(size)/(g.replicateSpeed+1)/(MinSpeed) + 100
 		if timeout < MinRecoveryTime {
 			return MinRecoveryTime
@@ -235,7 +235,7 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 			return MaxGCObjectRetry
 		}
 		return g.gcMetaRetry
-	case coretask.TypeTaskRecoveryPiece:
+	case coretask.TypeTaskRecoverPiece:
 		if g.recoveryRetry < MinRecoveryRetry {
 			return MinRecoveryRetry
 		}
@@ -275,7 +275,7 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskGCMeta:
 		return coretask.UnSchedulingPriority
-	case coretask.TypeTaskRecoveryPiece:
+	case coretask.TypeTaskRecoverPiece:
 		return coretask.DefaultLargerTaskPriority
 	}
 	return coretask.UnKnownTaskPriority

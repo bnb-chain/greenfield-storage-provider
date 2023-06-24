@@ -73,7 +73,8 @@ func (p *GfSpPieceOp) ParseSegmentIdx(segmentKey string) (uint32, error) {
 		return 0, fmt.Errorf("invalid segmentKey format")
 	}
 
-	segmentIdx, err := strconv.ParseUint(segments[1][1:], 10, 32)
+	segPrefix := "s"
+	segmentIdx, err := strconv.ParseUint(segments[1][len(segPrefix):], 10, 32)
 	if err != nil {
 		return 0, err
 	}

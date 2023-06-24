@@ -12,7 +12,7 @@ import (
 )
 
 func (m *GfSpRecoveryPieceTask) InitRecoveryPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
-	priority coretask.TPriority, pieceIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64) {
+	priority coretask.TPriority, segmentIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())
@@ -22,7 +22,7 @@ func (m *GfSpRecoveryPieceTask) InitRecoveryPieceTask(object *storagetypes.Objec
 	m.SetPriority(priority)
 	m.SetTimeout(timeout)
 	m.SetMaxRetry(retry)
-	m.SetSegmentIndex(pieceIdx)
+	m.SetSegmentIndex(segmentIdx)
 	m.SetECIndex(ecIdx)
 	m.SetPieceSize(pieceSize)
 }
@@ -38,7 +38,7 @@ func (m *GfSpRecoveryPieceTask) Key() coretask.TKey {
 }
 
 func (m *GfSpRecoveryPieceTask) Type() coretask.TType {
-	return coretask.TypeTaskRecoveryPiece
+	return coretask.TypeTaskRecoverPiece
 }
 
 func (m *GfSpRecoveryPieceTask) Info() string {
