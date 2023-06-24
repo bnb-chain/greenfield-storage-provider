@@ -343,6 +343,15 @@ func (m *ManageModular) TaskUploading(ctx context.Context, task task.Task) bool 
 	return false
 }
 
+func (m *ManageModular) TaskRecovering(ctx context.Context, task task.Task) bool {
+	if m.recoveryQueue.Has(task.Key()) {
+		log.CtxDebugw(ctx, "recovery object repeated")
+		return true
+	}
+
+	return false
+}
+
 func (m *ManageModular) UploadingObjectNumber() int {
 	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len() + m.resumeableUploadQueue.Len()
 }
