@@ -496,17 +496,17 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			pieceData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask)
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", err)
-				err = ErrRecoveryTimeout
 				return
 			}
-			// the recoveryed segment is total segment data, if the offset and length meta is set, then it is needed  adjust the piece data with the meta
+			// the recovery segment is a total segment data,
+			// if the offset and length meta is set, then it is needed to adjust the piece data with the meta
 			if pInfo.Offset > 0 {
 				pieceData = pieceData[pInfo.Offset:]
-				if pInfo.Offset+pInfo.Length < uint64(segSize) {
-					pieceData = pieceData[:pInfo.Length]
-				}
 			}
 
+			if pInfo.Offset+pInfo.Length < uint64(segSize) {
+				pieceData = pieceData[:pInfo.Length]
+			}
 		}
 
 		writeTime := time.Now()

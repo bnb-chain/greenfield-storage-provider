@@ -598,29 +598,27 @@ func (g *GateModular) recoverySecondarySP(ctx context.Context, objectInfo *stora
 			return nil, downloader.ErrPieceStore
 		}
 		return pieceData, nil
-	} else {
-		// if recovery parity chunk, need to download the total segment and ec encode it
-		segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(), params.GetMaxSegmentSize())
-		pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
-			false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
-			g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
-
-		segmentData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to download piece", "error", err)
-			return nil, executor.ErrPieceStore
-		}
-
-		ecData, err := redundancy.EncodeRawSegment(segmentData,
-			int(params.GetRedundantDataChunkNum()),
-			int(params.GetRedundantParityChunkNum()))
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to ec encode data when recovering secondary SP", "error", err)
-			return nil, err
-		}
-
-		return ecData[redundancyIdx], nil
 	}
 
-	return nil, executor.ErrRecoveryPieceIndex
+	// if recovery parity chunk, need to download the total segment and ec encode it
+	segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(), params.GetMaxSegmentSize())
+	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
+		false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
+		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
+
+	segmentData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to download piece", "error", err)
+		return nil, executor.ErrPieceStore
+	}
+
+	ecData, err := redundancy.EncodeRawSegment(segmentData,
+		int(params.GetRedundantDataChunkNum()),
+		int(params.GetRedundantParityChunkNum()))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to ec encode data when recovering secondary SP", "error", err)
+		return nil, err
+	}
+
+	return ecData[redundancyIdx], nil
 }

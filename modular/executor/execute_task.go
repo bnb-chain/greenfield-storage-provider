@@ -396,13 +396,13 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 			case <-quitCh: // all the task finish
 				if doneTaskNum < minRecoveryPieces { // finish task num not enough
 					log.CtxErrorw(ctx, "get piece from secondary not enough", "get secondary piece num:", doneTaskNum, "error", err)
-					err = ErrRecoveryPieceNotEnough
+					task.SetError(ErrRecoveryPieceNotEnough)
 					return
 				}
 				ecTotalSize := int64(uint32(downLoadPieceSize) * dataShards)
 				if ecTotalSize < segmentSize || ecTotalSize > segmentSize+int64(dataShards) {
-					err = ErrRecoveryPieceLength
 					log.CtxErrorw(ctx, "get secondary piece data length error")
+					task.SetError(ErrRecoveryPieceLength)
 					return
 				}
 			}
@@ -411,7 +411,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		recoverySegData, err := redundancy.DecodeRawSegment(recoveryDataSources, segmentSize, int(dataShards), int(parityShards))
 		if err != nil {
 			log.CtxErrorw(ctx, "EC decode error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "segIndex:", task.GetSegmentIdx(), "error", err)
-			err = ErrRecoveryDecode
+			task.SetError(ErrRecoveryDecode)
 			return
 		}
 
@@ -419,7 +419,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
 		if err != nil {
 			log.CtxErrorw(ctx, "search integrity hash in db error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "error", err)
-			err = ErrGfSpDB
+			task.SetError(err)
 			return
 		}
 
@@ -427,7 +427,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		if !bytes.Equal(recoverySegData, expectedHash) {
 			log.CtxErrorw(ctx, "check integrity hash of recovery data err", "objectName:", task.GetObjectInfo().ObjectName,
 				"expected value", hex.EncodeToString(expectedHash), "actual value", hex.EncodeToString(recoverySegData), "error", err)
-			err = ErrRecoveryPieceChecksum
+			task.SetError(ErrRecoveryPieceChecksum)
 			return
 		}
 
@@ -441,7 +441,6 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 	}
 
 	log.CtxDebugw(ctx, "primary SP recovery successfully", "pieceKey:", recoveryKey)
-	return
 }
 
 func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.RecoveryPieceTask, endpoint string, ecCount uint32) (data []byte, err error) {
