@@ -337,6 +337,8 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 	// recovery secondary SP
 	if ecIndex >= 0 {
 		log.CtxDebugw(ctx, "begin to recovery secondary SP object")
+		objectId := task.GetObjectInfo().Id.Uint64()
+		segmentIdx := task.GetSegmentIdx()
 		primarySPEndpoint, err := e.getObjectPrimarySPEndpoint(ctx, task.GetObjectInfo().BucketName)
 		if err != nil {
 			return
@@ -345,7 +347,22 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		if err != nil {
 			return
 		}
-		recoveryKey = e.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx(), uint32(ecIndex))
+		// compare integrity hash
+		integrityHash, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(objectId, uint32(ecIndex), segmentIdx)
+		if err != nil {
+			log.CtxErrorw(ctx, "search integrity hash in db error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "error", err)
+			task.SetError(err)
+			return
+		}
+		expectedHash := integrityHash[segmentIdx]
+		if !bytes.Equal(hash.GenerateChecksum(pieceData), expectedHash) {
+			log.CtxErrorw(ctx, "check integrity hash of recovery data err", "objectName:", task.GetObjectInfo().ObjectName,
+				"expected value", hex.EncodeToString(expectedHash), "actual value", hex.EncodeToString(pieceData), "error", ErrRecoveryPieceChecksum)
+			task.SetError(ErrRecoveryPieceChecksum)
+			return
+		}
+		recoveryKey = e.baseApp.PieceOp().ECPieceKey(objectId, segmentIdx, uint32(ecIndex))
+
 		// write the recovery segment key to keystore
 		err = e.baseApp.PieceStore().PutPiece(ctx, recoveryKey, pieceData)
 		if err != nil {
@@ -410,14 +427,12 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 				}
 			}
 		}
-
 		recoverySegData, err := redundancy.DecodeRawSegment(recoveryDataSources, segmentSize, int(dataShards), int(parityShards))
 		if err != nil {
 			log.CtxErrorw(ctx, "EC decode error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "segIndex:", task.GetSegmentIdx(), "error", err)
 			task.SetError(ErrRecoveryDecode)
 			return
 		}
-
 		// compare integrity hash
 		integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
 		if err != nil {
@@ -425,7 +440,6 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 			task.SetError(err)
 			return
 		}
-
 		expectedHash := integrityMeta.PieceChecksumList[task.GetSegmentIdx()]
 		if !bytes.Equal(hash.GenerateChecksum(recoverySegData), expectedHash) {
 			log.CtxErrorw(ctx, "check integrity hash of recovery data err", "objectName:", task.GetObjectInfo().ObjectName,
