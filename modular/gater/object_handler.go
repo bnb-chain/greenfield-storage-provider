@@ -215,15 +215,22 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		complete, err = util.StringToBool(requestComplete)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to parse complete from url", "error", err)
+			err = ErrInvalidComplete
+			return
 		}
+	} else {
 		err = ErrInvalidComplete
 		return
 	}
+
 	if requestOffset != "" {
 		offset, err = util.StringToUint64(requestOffset)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to parse complete from url", "error", err)
+			err = ErrInvalidOffset
+			return
 		}
+	} else {
 		err = ErrInvalidOffset
 		return
 	}
