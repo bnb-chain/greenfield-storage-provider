@@ -625,3 +625,41 @@ func (s *GfSpClient) GfSpGetGlobalVirtualGroup(ctx context.Context, bucketID uin
 	}
 	return resp.Gvg, nil
 }
+
+func (s *GfSpClient) GfSpListMigrateBucketsEvent(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.EventMigrationBucket, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListMigrateBucketEventsRequest{
+		BlockId: blockID,
+		SpId:    spID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListMigrateBucketEvents(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list migrate bucket events", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Events, nil
+}
+
+func (s *GfSpClient) GfSpListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.EventSwapOut, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListSwapOutEventsRequest{
+		BlockId: blockID,
+		SpId:    spID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListSwapOutEvents(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list migrate swap out events", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Events, nil
+}

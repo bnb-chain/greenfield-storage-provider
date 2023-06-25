@@ -24,8 +24,8 @@ func (b *BsDBImpl) ListLvgByGvgID(gvgIDs []uint32) ([]*LocalVirtualGroup, error)
 	return groups, err
 }
 
-// GfSpGetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
-func (b *BsDBImpl) GfSpGetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error) {
+// GetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
+func (b *BsDBImpl) GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error) {
 	var (
 		lvg     *LocalVirtualGroup
 		filters []func(*gorm.DB) *gorm.DB

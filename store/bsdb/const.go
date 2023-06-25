@@ -38,6 +38,10 @@ const (
 	LocalVirtualGroupFamilyTableName = "local_virtual_group"
 	// GlobalVirtualGroupTableName defines the name of global virtual group table
 	GlobalVirtualGroupTableName = "global_virtual_group"
+	// EventMigrateBucketTableName defines the name of migrate bucket event table
+	EventMigrateBucketTableName = "event_migrate_bucket"
+	// EventSwapOutTableName defines the name of swap out event table
+	EventSwapOutTableName = "event_swap_out"
 )
 
 // define the list objects const

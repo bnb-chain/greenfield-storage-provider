@@ -60,14 +60,14 @@ func (b *BsDBImpl) ListGvgBySecondarySpID(spID uint32) ([]*GlobalVirtualGroup, e
 	return gvg, err
 }
 
-// GfSpGetGvgByBucketAndLvgID get global virtual group by lvg id and bucket id
-func (b *BsDBImpl) GfSpGetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*GlobalVirtualGroup, error) {
+// GetGvgByBucketAndLvgID get global virtual group by lvg id and bucket id
+func (b *BsDBImpl) GetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*GlobalVirtualGroup, error) {
 	var (
 		gvg *GlobalVirtualGroup
 		lvg *LocalVirtualGroup
 		err error
 	)
-	lvg, err = b.GfSpGetLvgByBucketAndLvgID(bucketID, lvgID)
+	lvg, err = b.GetLvgByBucketAndLvgID(bucketID, lvgID)
 	if err != nil || lvg == nil {
 		return nil, err
 	}

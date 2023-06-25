@@ -78,10 +78,14 @@ type Metadata interface {
 	ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
 	// ListObjectsByLVGID list objects by lvg id
 	ListObjectsByLVGID(lvgIDs []uint32, startAfter common.Hash, limit int) ([]*Object, error)
-	// GfSpGetGvgByBucketAndLvgID get global virtual group by lvg id and bucket id
-	GfSpGetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*GlobalVirtualGroup, error)
-	// GfSpGetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
-	GfSpGetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error)
+	// GetGvgByBucketAndLvgID get global virtual group by lvg id and bucket id
+	GetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*GlobalVirtualGroup, error)
+	// GetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
+	GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error)
+	// ListMigrateBucketEvents list migrate bucket events
+	ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrateBucket, error)
+	// ListSwapOutEvents list swap out events
+	ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapOut, error)
 }
 
 // BSDB contains all the methods required by block syncer database

@@ -126,7 +126,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 	)
 
 	ctx = log.Context(ctx, req)
-	gvg, err = r.baseApp.GfBsDB().GfSpGetGvgByBucketAndLvgID(common.BigToHash(math.NewUint(req.BucketId).BigInt()), req.LvgId)
+	gvg, err = r.baseApp.GfBsDB().GetGvgByBucketAndLvgID(common.BigToHash(math.NewUint(req.BucketId).BigInt()), req.LvgId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get global virtual group by lvg id and bucket id", "error", err)
 		return nil, err
@@ -144,5 +144,63 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 
 	resp = &types.GfSpGetGlobalVirtualGroupResponse{Gvg: res}
 	log.CtxInfow(ctx, "succeed to get global virtual group by lvg id and bucket id")
+	return resp, nil
+}
+
+// GfSpListMigrateBucketEvents list migrate bucket events
+func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *types.GfSpListMigrateBucketEventsRequest) (resp *types.GfSpListMigrateBucketEventsResponse, err error) {
+	var (
+		events []*model.EventMigrateBucket
+		res    []*types.EventMigrationBucket
+	)
+
+	ctx = log.Context(ctx, req)
+	events, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.BlockId, req.SpId)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
+		return nil, err
+	}
+
+	res = make([]*types.EventMigrationBucket, len(events))
+	for i, event := range events {
+		res[i] = &types.EventMigrationBucket{
+			Operator:       event.Operator.String(),
+			BucketName:     event.BucketName,
+			BucketId:       event.BucketId.String(),
+			DstPrimarySpId: event.DstPrimarySpId,
+		}
+	}
+
+	resp = &types.GfSpListMigrateBucketEventsResponse{Events: res}
+	log.CtxInfow(ctx, "succeed to list migrate bucket events")
+	return resp, nil
+}
+
+// GfSpListSwapOutEvents list migrate swap out events
+func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.GfSpListSwapOutEventsRequest) (resp *types.GfSpListSwapOutEventsResponse, err error) {
+	var (
+		events []*model.EventSwapOut
+		res    []*types.EventSwapOut
+	)
+
+	ctx = log.Context(ctx, req)
+	events, err = r.baseApp.GfBsDB().ListSwapOutEvents(req.BlockId, req.SpId)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list migrate swap out events", "error", err)
+		return nil, err
+	}
+
+	res = make([]*types.EventSwapOut, len(events))
+	for i, event := range events {
+		res[i] = &types.EventSwapOut{
+			StorageProviderId:          event.StorageProviderId,
+			GlobalVirtualGroupFamilyId: event.GlobalVirtualGroupFamilyId,
+			GlobalVirtualGroupIds:      event.GlobalVirtualGroupIds,
+			SuccessorSpId:              event.SuccessorSpId,
+		}
+	}
+
+	resp = &types.GfSpListSwapOutEventsResponse{Events: res}
+	log.CtxInfow(ctx, "succeed to list migrate swap out events")
 	return resp, nil
 }
