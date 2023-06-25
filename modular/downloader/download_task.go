@@ -194,9 +194,8 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 	}
 
 	if downloadPieceTask.GetEnableCheck() {
-		myselfAddr := d.baseApp.OperatorAddress()
 		// if it is a request from client, the task handler is the primary SP of the sp
-		if myselfAddr == primarySP {
+		if d.baseApp.OperatorAddress() == primarySP {
 			log.CtxDebugw(ctx, "downloading from primary SP, checking quota")
 			checkQuotaTime := time.Now()
 			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
