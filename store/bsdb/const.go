@@ -32,6 +32,16 @@ const (
 	MasterDBTableName = "master_db"
 	// PrefixTreeTableName defines the name of prefix tree node table
 	PrefixTreeTableName = "slash_prefix_tree_nodes"
+	// EventMigrationTableName defines the name of event migrate bucket table
+	EventMigrationTableName = "event_migration_bucket"
+	// EventCompleteMigrationTableName defines the name of event complete migrate bucket table
+	EventCompleteMigrationTableName = "event_complete_migration_bucket"
+	// EventStorageProviderExitTableName defines the name of event sp exit table
+	EventStorageProviderExitTableName = "event_sp_exit"
+	// EventCompleteStorageProviderExitTableName defines the name of event sp exit complete table
+	EventCompleteStorageProviderExitTableName = "event_sp_exit_complete"
+	// EventSwapOutTableName defines the name of event sp exit complete table
+	EventSwapOutTableName = "event_swap_out"
 )
 
 // define the list objects const
