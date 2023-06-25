@@ -22,6 +22,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
 var (
@@ -478,7 +479,7 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 		return
 	}
 
-	rTask.SetSignature(signature)
+	rTask.SetSignature(ethcrypto.Keccak256(signature))
 	// recovery primary sp segment pr secondary piece
 	respBody, err := e.baseApp.GfSpClient().GetPieceFromSecondary(ctx, endpoint, rTask)
 	if err != nil {
