@@ -1,14 +1,18 @@
 package gater
 
 import (
+	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield/types/s3util"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -355,53 +359,77 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
 func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request, isDownload bool) {
-	//var (
-	//	err               error
-	//	reqCtx            *RequestContext
-	//	authenticated     bool
-	//	isRange           bool
-	//	rangeStart        int64
-	//	rangeEnd          int64
-	//	redirectUrl       string
-	//	params            *storagetypes.Params
-	//	escapedObjectName string
-	//)
-	//defer func() {
-	//	reqCtx.Cancel()
-	//	if err != nil {
-	//		reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-	//		reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-	//		MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
-	//	} else {
-	//		reqCtx.SetHttpCode(http.StatusOK)
-	//	}
-	//	log.CtxDebugw(reqCtx.Context(), reqCtx.String())
-	//}()
-	//// ignore the error, because the universal endpoint does not need signature
-	//reqCtx, _ = NewRequestContext(r, g)
-	//
-	//escapedObjectName, err = url.PathUnescape(reqCtx.objectName)
-	//if err != nil {
-	//	log.Errorw("failed to unescape object name ", "object_name", reqCtx.objectName, "error", err)
-	//	return
-	//}
-	//
-	//if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
-	//	log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
-	//	return
-	//}
-	//if err = s3util.CheckValidObjectName(escapedObjectName); err != nil {
-	//	log.Errorw("failed to check object name", "object_name", escapedObjectName, "error", err)
-	//	return
-	//}
-	//
-	//getBucketInfoRes, getBucketInfoErr := g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), reqCtx.bucketName, true)
-	//if getBucketInfoErr != nil || getBucketInfoRes == nil || getBucketInfoRes.GetBucketInfo() == nil {
-	//	log.Errorw("failed to check bucket info", "bucket_name", reqCtx.bucketName, "error", getBucketInfoErr)
-	//	err = ErrNoSuchObject
-	//	return
-	//}
-	//
+	var (
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		isRange       bool
+		rangeStart    int64
+		rangeEnd      int64
+		// redirectURL          string
+		params               *storagetypes.Params
+		escapedObjectName    string
+		isRequestFromBrowser bool
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			if isRequestFromBrowser {
+				reqCtx.SetHttpCode(http.StatusOK)
+				errorCodeForPage := "INTERNAL_ERROR" // default errorCode in built-in error page
+				switch err {
+				case downloader.ErrExceedBucketQuota:
+					errorCodeForPage = "NO_ENOUGH_QUOTA"
+				case ErrNoSuchObject:
+					errorCodeForPage = "FILE_NOT_FOUND"
+				case ErrForbidden:
+					errorCodeForPage = "NO_PERMISSION"
+				}
+				html := strings.Replace(GnfdBuiltInUniversalEndpointDappErrorPage, "<% errorCode %>", errorCodeForPage, 1)
+
+				fmt.Fprintf(w, "%s", html)
+				return
+			} else {
+				reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+				reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+				MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			}
+
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	userAgent := r.Header.Get("User-Agent")
+	isRequestFromBrowser = checkIfRequestFromBrowser(userAgent)
+
+	// ignore the error, because the universal endpoint does not need signature
+	reqCtx, _ = NewRequestContext(r, g)
+
+	escapedObjectName, err = url.PathUnescape(reqCtx.objectName)
+	if err != nil {
+		log.Errorw("failed to unescape object name ", "object_name", reqCtx.objectName, "error", err)
+		return
+	}
+
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		return
+	}
+	if err = s3util.CheckValidObjectName(escapedObjectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", escapedObjectName, "error", err)
+		return
+	}
+
+	getBucketInfoRes, getBucketInfoErr := g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), reqCtx.bucketName, true)
+	if getBucketInfoErr != nil || getBucketInfoRes == nil || getBucketInfoRes.GetBucketInfo() == nil {
+		log.Errorw("failed to check bucket info", "bucket_name", reqCtx.bucketName, "error", getBucketInfoErr)
+		err = ErrNoSuchObject
+		return
+	}
+
+	// TODO: refine it.
 	//bucketPrimarySpAddress := getBucketInfoRes.GetBucketInfo().GetPrimarySpAddress()
 	//// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
 	//if !strings.EqualFold(bucketPrimarySpAddress, g.baseApp.OperatorAddress()) {
@@ -417,154 +445,172 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	//		return
 	//	}
 	//
-	//	redirectUrl = spEndpoint + r.RequestURI
-	//	log.Debugw("getting redirect url:", "redirectUrl", redirectUrl)
+	//	redirectURL = spEndpoint + r.RequestURI
+	//	log.Debugw("getting redirect url:", "redirectURL", redirectURL)
 	//
-	//	http.Redirect(w, r, redirectUrl, 302)
+	//	http.Redirect(w, r, redirectURL, 302)
 	//	return
 	//}
-	//
-	//getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
-	//if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
-	//	log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
-	//	err = ErrNoSuchObject
-	//	return
-	//}
-	//
-	//if getObjectInfoRes.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-	//	log.Errorw("object is not sealed",
-	//		"status", getObjectInfoRes.GetObjectInfo().GetObjectStatus())
-	//	err = ErrNoSuchObject
-	//	return
-	//}
-	//
-	//if isPrivateObject(getBucketInfoRes.GetBucketInfo(), getObjectInfoRes.GetObjectInfo()) {
-	//	// for private files, we return a built-in dapp and help users provide a signature for verification
-	//
-	//	var (
-	//		expiry    string
-	//		signature string
-	//	)
-	//	queryParams := r.URL.Query()
-	//	if queryParams["expiry"] != nil {
-	//		expiry = queryParams["expiry"][0]
-	//	}
-	//	if queryParams["signature"] != nil {
-	//		signature = queryParams["signature"][0]
-	//	}
-	//	if expiry != "" && signature != "" {
-	//		// check if expiry set to far or expiry is past
-	//		expiryDate, dateParseErr := time.Parse(ExpiryDateFormat, expiry)
-	//		if dateParseErr != nil {
-	//			log.CtxErrorw(reqCtx.Context(), "failed to parse expiry date due to invalid format", "expiry", expiry)
-	//			err = ErrInvalidExpiryDate
-	//			return
-	//		}
-	//		log.Infof("%s", time.Until(expiryDate).Seconds())
-	//		log.Infof("%s", MaxExpiryAgeInSec)
-	//		expiryAge := int32(time.Until(expiryDate).Seconds())
-	//		if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
-	//			err = ErrInvalidExpiryDate
-	//			log.CtxErrorw(reqCtx.Context(), "failed to parse expiry date due to invalid expiry value", "expiry", expiry)
-	//			return
-	//		}
-	//
-	//		// check permission
-	//
-	//		// 1. solve the account
-	//		signedMsg := fmt.Sprintf(GnfdBuiltInDappSignedContentTemplate, "gnfd://"+getBucketInfoRes.GetBucketInfo().BucketName+"/"+getObjectInfoRes.GetObjectInfo().GetObjectName(), expiry)
-	//		accAddress, verifySigErr := VerifyPersonalSignature(signedMsg, signature)
-	//		if verifySigErr != nil {
-	//			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", verifySigErr)
-	//			err = verifySigErr
-	//			return
-	//		}
-	//		reqCtx.account = accAddress.String()
-	//
-	//		// 2. check permission
-	//		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-	//			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-	//		if err != nil {
-	//			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-	//			return
-	//		}
-	//		if !authenticated {
-	//			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-	//			err = ErrNoPermission
-	//			return
-	//		}
-	//
-	//	} else {
-	//		// return a built-in dapp for users to make the signature
-	//		var htmlConfigMap = map[string]string{
-	//			"greenfield_7971-1":    "{\n  \"envType\": \"dev\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 7971,\n  \"chainName\": \"dev - greenfield\",\n  \"rpcUrls\": [\"https://gnfd-dev.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
-	//			"greenfield_9000-1741": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
-	//			"greenfield_5600-1":    "{\n  \"envType\": \"testnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 5600,\n  \"chainName\": \"greenfield testnet\",\n  \"rpcUrls\": [\"https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
-	//		}
-	//
-	//		htmlConfig := htmlConfigMap[g.baseApp.ChainID()]
-	//		if htmlConfig == "" {
-	//			log.CtxErrorw(reqCtx.Context(), "chain id is not found", "chain id ", g.baseApp.ChainID())
-	//			err = gfsperrors.MakeGfSpError(fmt.Errorf("chain id is not found"))
-	//			return
-	//		}
-	//		hc, _ := json.Marshal(htmlConfig)
-	//		html := strings.Replace(GnfdBuiltInUniversalEndpointDappHtml, "<% env %>", string(hc), 1)
-	//
-	//		fmt.Fprintf(w, "%s", html)
-	//		return
-	//	}
-	//
-	//}
-	//
-	//params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(
-	//	reqCtx.Context(), getObjectInfoRes.GetObjectInfo().GetCreateAt())
-	//if err != nil {
-	//	log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-	//	err = ErrConsensus
-	//	return
-	//}
-	//
-	//var low int64
-	//var high int64
-	//if isRange {
-	//	low = rangeStart
-	//	high = rangeEnd
-	//} else {
-	//	low = 0
-	//	high = int64(getObjectInfoRes.GetObjectInfo().GetPayloadSize()) - 1
-	//}
-	//
-	//task := &gfsptask.GfSpDownloadObjectTask{}
-	//task.InitDownloadObjectTask(getObjectInfoRes.GetObjectInfo(), getBucketInfoRes.GetBucketInfo(), params, g.baseApp.TaskPriority(task), reqCtx.Account(),
-	//	low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
-	//data, err := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
-	//if err != nil {
-	//	log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
-	//	return
-	//}
-	//
-	//if isDownload {
-	//	w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
-	//} else {
-	//	w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
-	//}
-	//w.Header().Set(ContentTypeHeader, getObjectInfoRes.GetObjectInfo().GetContentType())
-	//if isRange {
-	//	w.Header().Set(ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
-	//		"-"+util.Uint64ToString(uint64(high)))
-	//} else {
-	//	w.Header().Set(ContentLengthHeader, util.Uint64ToString(getObjectInfoRes.GetObjectInfo().GetPayloadSize()))
-	//}
-	//w.Write(data)
-	//log.CtxDebugw(reqCtx.Context(), "succeed to download object for universal endpoint")
+
+	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
+	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
+		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
+		err = ErrNoSuchObject
+		return
+	}
+
+	if getObjectInfoRes.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+		log.Errorw("object is not sealed",
+			"status", getObjectInfoRes.GetObjectInfo().GetObjectStatus())
+		err = ErrNoSuchObject
+		return
+	}
+
+	if isPrivateObject(getBucketInfoRes.GetBucketInfo(), getObjectInfoRes.GetObjectInfo()) {
+		// for private files, we return a built-in dapp and help users provide a signature for verification
+
+		var (
+			expiry    string
+			signature string
+		)
+		queryParams := r.URL.Query()
+		if queryParams["expiry"] != nil {
+			expiry = queryParams["expiry"][0]
+		}
+		if queryParams["signature"] != nil {
+			signature = queryParams["signature"][0]
+		}
+		if expiry != "" && signature != "" {
+			// check if expiry set to far or expiry is past
+			expiryDate, dateParseErr := time.Parse(ExpiryDateFormat, expiry)
+			if dateParseErr != nil {
+				log.CtxErrorw(reqCtx.Context(), "failed to parse expiry date due to invalid format", "expiry", expiry)
+				err = ErrInvalidExpiryDate
+				return
+			}
+			log.Infof("%s", time.Until(expiryDate).Seconds())
+			log.Infof("%s", MaxExpiryAgeInSec)
+			expiryAge := int32(time.Until(expiryDate).Seconds())
+			if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
+				err = ErrInvalidExpiryDate
+				log.CtxErrorw(reqCtx.Context(), "failed to parse expiry date due to invalid expiry value", "expiry", expiry)
+				return
+			}
+
+			// check permission
+
+			// 1. solve the account
+			signedMsg := fmt.Sprintf(GnfdBuiltInDappSignedContentTemplate, "gnfd://"+getBucketInfoRes.GetBucketInfo().BucketName+"/"+getObjectInfoRes.GetObjectInfo().GetObjectName(), expiry)
+			accAddress, verifySigErr := VerifyPersonalSignature(signedMsg, signature)
+			if verifySigErr != nil {
+				log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", verifySigErr)
+				err = verifySigErr
+				return
+			}
+			reqCtx.account = accAddress.String()
+
+			// 2. check permission
+			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+			if err != nil {
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+				err = ErrForbidden
+				return
+			}
+			if !authenticated {
+				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+				err = ErrForbidden
+				return
+			}
+
+		} else {
+			if !isRequestFromBrowser {
+				err = ErrForbidden
+				return
+			}
+			// if the request comes from browser, we will return a built-in dapp for users to make the signature
+			var htmlConfigMap = map[string]string{
+				"greenfield_7971-1":    "{\n  \"envType\": \"dev\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 7971,\n  \"chainName\": \"dev - greenfield\",\n  \"rpcUrls\": [\"https://gnfd-dev.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
+				"greenfield_9000-1741": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
+				"greenfield_5600-1":    "{\n  \"envType\": \"testnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 5600,\n  \"chainName\": \"greenfield testnet\",\n  \"rpcUrls\": [\"https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
+			}
+
+			htmlConfig := htmlConfigMap[g.baseApp.ChainID()]
+			if htmlConfig == "" {
+				log.CtxErrorw(reqCtx.Context(), "chain id is not found", "chain id ", g.baseApp.ChainID())
+				err = gfsperrors.MakeGfSpError(fmt.Errorf("chain id is not found"))
+				return
+			}
+			hc, _ := json.Marshal(htmlConfig)
+			html := strings.Replace(GnfdBuiltInUniversalEndpointDappHtml, "<% env %>", string(hc), 1)
+
+			fmt.Fprintf(w, "%s", html)
+			return
+		}
+
+	}
+
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(
+		reqCtx.Context(), getObjectInfoRes.GetObjectInfo().GetCreateAt())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
+		err = ErrConsensus
+		return
+	}
+
+	var low int64
+	var high int64
+	if isRange {
+		low = rangeStart
+		high = rangeEnd
+	} else {
+		low = 0
+		high = int64(getObjectInfoRes.GetObjectInfo().GetPayloadSize()) - 1
+	}
+
+	task := &gfsptask.GfSpDownloadObjectTask{}
+	task.InitDownloadObjectTask(getObjectInfoRes.GetObjectInfo(), getBucketInfoRes.GetBucketInfo(), params, g.baseApp.TaskPriority(task), reqCtx.Account(),
+		low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
+	data, getObjectErr := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
+	if getObjectErr != nil {
+		err = getObjectErr
+		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
+		return
+	}
+
+	if isDownload {
+		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
+	} else {
+		w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
+	}
+	w.Header().Set(ContentTypeHeader, getObjectInfoRes.GetObjectInfo().GetContentType())
+	if isRange {
+		w.Header().Set(ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
+			"-"+util.Uint64ToString(uint64(high)))
+	} else {
+		w.Header().Set(ContentLengthHeader, util.Uint64ToString(getObjectInfoRes.GetObjectInfo().GetPayloadSize()))
+	}
+	w.Write(data)
+	log.CtxDebugw(reqCtx.Context(), "succeed to download object for universal endpoint")
 }
 
-//func isPrivateObject(bucket *storagetypes.BucketInfo, object *storagetypes.ObjectInfo) bool {
-//	return object.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE ||
-//		(object.GetVisibility() == storagetypes.VISIBILITY_TYPE_INHERIT &&
-//			bucket.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE)
-//}
+func isPrivateObject(bucket *storagetypes.BucketInfo, object *storagetypes.ObjectInfo) bool {
+	return object.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE ||
+		(object.GetVisibility() == storagetypes.VISIBILITY_TYPE_INHERIT &&
+			bucket.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE)
+}
+
+func checkIfRequestFromBrowser(userAgent string) bool {
+	// List of common user agent substrings for mainstream browsers
+	mainstreamBrowsers := []string{"Chrome", "Firefox", "Safari", "Opera", "Edge"}
+	// Check if the User-Agent header contains any of the mainstream browser substrings
+	for _, browser := range mainstreamBrowsers {
+		if strings.Contains(userAgent, browser) {
+			return true
+		}
+	}
+	return false
+}
 
 // downloadObjectByUniversalEndpointHandler handles the download object request sent by universal endpoint
 func (g *GateModular) downloadObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
