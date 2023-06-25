@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -431,7 +433,7 @@ func waitForNextBlock(ctx context.Context, client *client.GreenfieldClient) erro
 }
 
 func latestBlockHeight(ctx context.Context, client *client.GreenfieldClient) (int64, error) {
-	block, err := client.GetLatestBlock(ctx, nil)
+	block, err := client.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
 	if err != nil {
 		return 0, err
 	}
