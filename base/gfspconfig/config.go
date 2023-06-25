@@ -96,6 +96,8 @@ type ChainConfig struct {
 	DiscontinueBucketFeeAmount        uint64
 	CreateGlobalVirtualGroupGasLimit  uint64
 	CreateGlobalVirtualGroupFeeAmount uint64
+	CompleteMigrateBucketGasLimit     uint64
+	CompleteMigrateBucketFeeAmount    uint64
 }
 
 type SpAccountConfig struct {

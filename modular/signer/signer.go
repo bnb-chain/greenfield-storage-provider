@@ -20,12 +20,13 @@ import (
 )
 
 var (
-	ErrSignMsg                   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
-	ErrSealObjectOnChain         = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
-	ErrRejectUnSealObjectOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
-	ErrDiscontinueBucketOnChain  = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
-	ErrDanglingPointer           = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
-	ErrCreateGVGOnChain          = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
+	ErrSignMsg                      = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
+	ErrSealObjectOnChain            = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
+	ErrRejectUnSealObjectOnChain    = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
+	ErrDiscontinueBucketOnChain     = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
+	ErrDanglingPointer              = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
+	ErrCreateGVGOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
+	ErrCompleteMigrateBucketOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120007, "send complete migrate bucket msg failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -180,5 +181,22 @@ func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtual
 		}
 	}()
 	_, err = s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
+	return err
+}
+
+func (s *SignModular) CompleteMigrateBucket(ctx context.Context, completeMigrateBucket *storagetypes.MsgCompleteMigrateBucket) error {
+	var (
+		err       error
+		startTime = time.Now()
+	)
+	defer func() {
+		metrics.CompleteMigrateBucketTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
+		if err == nil {
+			metrics.CompleteMigrateBucketSucceedCounter.WithLabelValues(s.Name()).Inc()
+		} else {
+			metrics.CompleteMigrateBucketFailedCounter.WithLabelValues(s.Name()).Inc()
+		}
+	}()
+	_, err = s.client.CompleteMigrateBucket(ctx, SignOperator, completeMigrateBucket)
 	return err
 }
