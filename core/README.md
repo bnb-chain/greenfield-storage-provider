@@ -45,7 +45,7 @@ Infrastructure interface includes:
 ### Special Modular
 * [Approver](./module/README.md) : Approver is the modular to handle ask approval request, 
   handles CreateBucketApproval and CreateObjectApproval.
-* [Authorizer](./module/README.md): Authorizer is the modular to authority verification.
+* [Authenticator](./module/README.md): Authenticator is the modular to authentication verification.
 * [Downloader](./module/README.md): Downloader is the modular to handle get object request 
   from user account, and get challenge info request from other components in the system.
 * [TaskExecutor](./module/README.md): TaskExecutor is the modular to handle background task, 

@@ -25,8 +25,7 @@ const (
 	TypeTaskReplicatePieceApproval
 	// TypeTaskUpload defines the type of uploading object to primary SP task.
 	TypeTaskUpload
-	// TypeTaskReplicatePiece defines the type of replicating pieces to secondary SPs
-	// task.
+	// TypeTaskReplicatePiece defines the type of replicating pieces to secondary SPs task.
 	TypeTaskReplicatePiece
 	// TypeTaskSealObject defines the type of sealing object to the chain task.
 	TypeTaskSealObject

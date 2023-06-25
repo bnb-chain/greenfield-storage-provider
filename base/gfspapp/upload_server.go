@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
@@ -34,12 +35,14 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		err           error
 		receiveSize   int
 	)
+
 	defer func() {
 		defer cancel()
 		if span != nil {
 			span.Done()
 		}
 		if task != nil {
+			g.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), corespdb.UploaderEndReceiveData, task.Key().String())
 			metrics.UploadObjectSizeHistogram.WithLabelValues(g.uploader.Name()).Observe(
 				float64(task.GetObjectInfo().GetPayloadSize()))
 			g.uploader.PostUploadObject(ctx, task)
@@ -52,13 +55,18 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		if err != nil {
 			resp.Err = gfsperrors.MakeGfSpError(err)
 		}
+
+		closeTime := time.Now()
 		err = stream.SendAndClose(resp)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("server_send_and_close_time").Observe(time.Since(closeTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to close upload object stream", "error", err)
 		}
 	}()
 
 	go func() {
+		serverStartTime := time.Now()
+		defer metrics.PerfUploadTimeHistogram.WithLabelValues("server_total_time").Observe(time.Since(serverStartTime).Seconds())
 		init := false
 		for {
 			select {
@@ -95,6 +103,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 					pWrite.CloseWithError(err)
 					return
 				}
+				g.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), corespdb.UploaderBeginReceiveData, task.Key().String())
 				ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 				span, err = g.uploader.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
 				if err != nil {

@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/eth/ethsecp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -127,14 +127,14 @@ func (r *RequestContext) String() string {
 		getRequestIP(r.request), time.Since(r.startTime), r.err)
 }
 
-// NeedVerifyAuthorizer is temporary to Compatible SignatureV2
-func (r *RequestContext) NeedVerifyAuthorizer() bool {
+// NeedVerifyAuthentication is temporary to Compatible SignatureV2
+func (r *RequestContext) NeedVerifyAuthentication() bool {
 	requestSignature := r.request.Header.Get(GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(SignTypeV1, SignAlgorithm)
 	return strings.HasPrefix(requestSignature, v1SignaturePrefix)
 }
 
-// signaturePrefix return supported Authorization prefix
+// signaturePrefix return supported Authentication prefix
 func signaturePrefix(version, algorithm string) string {
 	return version + " " + algorithm + ","
 }
@@ -175,12 +175,12 @@ func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddr
 	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
 	signatureItems := strings.Split(requestSignature, ",")
 	if len(signatureItems) < 2 {
-		return nil, ErrAuthorizationFormat
+		return nil, ErrAuthorizationHeaderFormat
 	}
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
-			return nil, ErrAuthorizationFormat
+			return nil, ErrAuthorizationHeaderFormat
 		}
 		switch pair[0] {
 		case SignedMsg:
@@ -190,7 +190,7 @@ func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddr
 				return nil, err
 			}
 		default:
-			return nil, ErrAuthorizationFormat
+			return nil, ErrAuthorizationHeaderFormat
 		}
 	}
 
@@ -266,12 +266,12 @@ func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string,
 	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
 	signatureItems := strings.Split(requestSignature, ",")
 	if len(signatureItems) != 2 {
-		return nil, nil, ErrAuthorizationFormat
+		return nil, nil, ErrAuthorizationHeaderFormat
 	}
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
-			return nil, nil, ErrAuthorizationFormat
+			return nil, nil, ErrAuthorizationHeaderFormat
 		}
 		switch pair[0] {
 		case SignedMsg:
@@ -279,7 +279,7 @@ func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string,
 		case Signature:
 			signature = pair[1]
 		default:
-			return nil, nil, ErrAuthorizationFormat
+			return nil, nil, ErrAuthorizationHeaderFormat
 		}
 	}
 

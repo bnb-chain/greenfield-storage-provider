@@ -3,6 +3,7 @@ package signer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -20,6 +21,8 @@ import (
 // SignType is the type of msg signature
 type SignType string
 
+type GasInfoType string
+
 const (
 	// SignOperator is the type of signature signed by the operator account
 	SignOperator SignType = "operator"
@@ -35,20 +38,32 @@ const (
 
 	// SignGc is the type of signature signed by the gc account
 	SignGc SignType = "gc"
+
+	// BroadcastTxRetry defines the max retry for broadcasting tx on-chain
+	BroadcastTxRetry = 3
+
+	Seal              GasInfoType = "Seal"
+	RejectSeal        GasInfoType = "RejectSeal"
+	DiscontinueBucket GasInfoType = "DiscontinueBucket"
 )
+
+type GasInfo struct {
+	GasLimit  uint64
+	FeeAmount sdk.Coins
+}
 
 // GreenfieldChainSignClient the greenfield chain client
 type GreenfieldChainSignClient struct {
 	mu sync.Mutex
 
-	gasLimit          uint64
+	gasInfo           map[GasInfoType]GasInfo
 	greenfieldClients map[SignType]*client.GreenfieldClient
 	sealAccNonce      uint64
 	gcAccNonce        uint64
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
-func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, operatorPrivateKey, fundingPrivateKey,
+func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoType]GasInfo, operatorPrivateKey, fundingPrivateKey,
 	sealPrivateKey, approvalPrivateKey, gcPrivateKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
@@ -123,7 +138,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasLimit uint64, oper
 	}
 
 	return &GreenfieldChainSignClient{
-		gasLimit:          gasLimit,
+		gasInfo:           gasInfo,
 		greenfieldClients: greenfieldClients,
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
@@ -164,9 +179,15 @@ func (client *GreenfieldChainSignClient) SealObject(
 	scope SignType,
 	sealObject *storagetypes.MsgSealObject) (
 	[]byte, error) {
+	if sealObject == nil {
+		log.CtxErrorw(ctx, "seal object msg pointer dangling")
+		return nil, ErrDanglingPointer
+	}
+	ctx = log.WithValue(ctx, log.CtxKeyBucketName, sealObject.GetBucketName())
+	ctx = log.WithValue(ctx, log.CtxKeyObjectName, sealObject.GetObjectName())
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get private key", "err", err)
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return nil, ErrSignMsg
 	}
 
@@ -182,44 +203,60 @@ func (client *GreenfieldChainSignClient) SealObject(
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.sealAccNonce
 
 	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
 		sealObject.BucketName, sealObject.ObjectName, secondarySPAccs, sealObject.SecondarySpSignatures)
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
-	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
-		Nonce:    nonce,
-	}
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
-	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgSealObject}, txOpt)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "seal_info", msgSealObject.String())
-		if strings.Contains(err.Error(), "account sequence mismatch") {
-			// if nonce mismatch, reset nonce by querying the nonce on chain
-			nonce, err = client.greenfieldClients[scope].GetNonce()
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to get seal account nonce", "err", err, "seal_info", msgSealObject.String())
-				return nil, ErrSealObjectOnChain
-			}
-			client.sealAccNonce = nonce
+	var (
+		resp   *tx.BroadcastTxResponse
+		txHash []byte
+		nonce  uint64
+	)
+	nonce = client.sealAccNonce
+	for i := 0; i < BroadcastTxRetry; i++ {
+		txOpt := &ctypes.TxOption{
+			NoSimulate: true,
+			Mode:       &mode,
+			GasLimit:   client.gasInfo[Seal].GasLimit,
+			FeeAmount:  client.gasInfo[Seal].FeeAmount,
+			Nonce:      nonce,
 		}
-		return nil, ErrSealObjectOnChain
+		resp, err = client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgSealObject}, txOpt)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast seal object tx", "error", err)
+			if strings.Contains(err.Error(), "account sequence mismatch") {
+				// if nonce mismatch, reset nonce by querying the nonce on chain
+				nonce, err = client.greenfieldClients[scope].GetNonce()
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to get seal account nonce", "error", err)
+					ErrSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", err))
+					return nil, ErrSealObjectOnChain
+				}
+				client.sealAccNonce = nonce
+			}
+			continue
+		}
+		if resp.TxResponse.Code != 0 {
+			log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
+			ErrSealObjectOnChain.SetError(fmt.Errorf("failed to broadcast  seal object tx, resp_code: %d", resp.TxResponse.Code))
+			err = ErrSealObjectOnChain
+			continue
+		}
+		txHash, err = hex.DecodeString(resp.TxResponse.TxHash)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to marshal tx hash", "error", err)
+			ErrSealObjectOnChain.SetError(fmt.Errorf("failed to decode seal object tx hash, error: %v", err))
+			err = ErrSealObjectOnChain
+			continue
+		}
+		if err == nil {
+			client.sealAccNonce = nonce + 1
+			log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash)
+			return txHash, nil
+		}
 	}
-
-	if resp.TxResponse.Code != 0 {
-		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "seal_info", msgSealObject.String())
-		return nil, ErrSealObjectOnChain
-	}
-	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "seal_info", msgSealObject.String())
-		return nil, ErrSealObjectOnChain
-	}
-	client.sealAccNonce = nonce + 1
-
-	return txHash, nil
+	return nil, err
 }
 
 // RejectUnSealObject reject seal object on the greenfield chain.
@@ -228,51 +265,75 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(
 	scope SignType,
 	rejectObject *storagetypes.MsgRejectSealObject) (
 	[]byte, error) {
+	if rejectObject == nil {
+		log.CtxErrorw(ctx, "reject unseal object msg pointer dangling")
+		return nil, ErrDanglingPointer
+	}
+	ctx = log.WithValue(ctx, log.CtxKeyBucketName, rejectObject.GetBucketName())
+	ctx = log.WithValue(ctx, log.CtxKeyObjectName, rejectObject.GetObjectName())
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get private key", "err", err)
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return nil, ErrSignMsg
 	}
 
 	client.mu.Lock()
 	defer client.mu.Unlock()
-	nonce := client.sealAccNonce
 
 	msgRejectUnSealObject := storagetypes.NewMsgRejectUnsealedObject(km.GetAddr(), rejectObject.GetBucketName(), rejectObject.GetObjectName())
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
-	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
-		Nonce:    nonce,
-	}
-	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgRejectUnSealObject}, txOpt)
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "seal_info", msgRejectUnSealObject.String())
-		if strings.Contains(err.Error(), "account sequence mismatch") {
-			// if nonce mismatch, reset nonce by querying the nonce on chain
-			nonce, err = client.greenfieldClients[scope].GetNonce()
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to get seal account nonce", "err", err, "seal_info", msgRejectUnSealObject.String())
-				return nil, ErrRejectUnSealObjectOnChain
-			}
-			client.sealAccNonce = nonce
+	var (
+		resp   *tx.BroadcastTxResponse
+		txHash []byte
+		nonce  uint64
+	)
+	nonce = client.sealAccNonce
+	for i := 0; i < BroadcastTxRetry; i++ {
+		txOpt := &ctypes.TxOption{
+			NoSimulate: true,
+			Mode:       &mode,
+			GasLimit:   client.gasInfo[RejectSeal].GasLimit,
+			FeeAmount:  client.gasInfo[RejectSeal].FeeAmount,
+			Nonce:      nonce,
 		}
-		return nil, ErrRejectUnSealObjectOnChain
-	}
+		resp, err = client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgRejectUnSealObject}, txOpt)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast reject unseal object tx", "error", err)
+			if strings.Contains(err.Error(), "account sequence mismatch") {
+				// if nonce mismatch, reset nonce by querying the nonce on chain
+				nonce, err = client.greenfieldClients[scope].GetNonce()
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to get seal account nonce", "error", err)
+					ErrRejectUnSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", err))
+					return nil, ErrRejectUnSealObjectOnChain
+				}
+				client.sealAccNonce = nonce
+			}
+			continue
+		}
 
-	if resp.TxResponse.Code != 0 {
-		log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code, "seal_info", msgRejectUnSealObject.String())
-		return nil, ErrSealObjectOnChain
-	}
-	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "seal_info", msgRejectUnSealObject.String())
-		return nil, ErrSealObjectOnChain
-	}
-	client.sealAccNonce = nonce + 1
+		if resp.TxResponse.Code != 0 {
+			log.CtxErrorf(ctx, "failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
+			ErrSealObjectOnChain.SetError(fmt.Errorf("failed to broadcast reject unseal object tx, resp_code: %d", resp.TxResponse.Code))
+			err = ErrSealObjectOnChain
+			continue
+		}
+		txHash, err = hex.DecodeString(resp.TxResponse.TxHash)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to marshal tx hash", "error", err)
+			ErrRejectUnSealObjectOnChain.SetError(fmt.Errorf("failed to decode reject unseal object tx hash, error: %v", err))
+			err = ErrRejectUnSealObjectOnChain
+			continue
+		}
 
-	return txHash, nil
+		if err == nil {
+			client.sealAccNonce = nonce + 1
+			log.CtxDebugw(ctx, "succeed to broadcast reject unseal object tx", "tx_hash", txHash)
+			return txHash, nil
+		}
+	}
+	return nil, err
 }
 
 // DiscontinueBucket stops serving the bucket on the greenfield chain.
@@ -292,9 +353,11 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 		discontinueBucket.BucketName, discontinueBucket.Reason)
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
-		Mode:     &mode,
-		GasLimit: client.gasLimit,
-		Nonce:    nonce,
+		NoSimulate: true,
+		Mode:       &mode,
+		GasLimit:   client.gasInfo[DiscontinueBucket].GasLimit,
+		FeeAmount:  client.gasInfo[DiscontinueBucket].FeeAmount,
+		Nonce:      nonce,
 	}
 
 	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgDiscontinueBucket}, txOpt)

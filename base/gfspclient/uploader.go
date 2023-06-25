@@ -29,6 +29,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 		} else {
 			log.CtxDebugw(ctx, "finished to send payload data", "send_size", sendSize)
 		}
+		metrics.PerfUploadTimeHistogram.WithLabelValues("client_total_time").Observe(time.Since(startConnectUploader).Seconds())
 	}()
 	startGetUploaderClient := time.Now()
 	client, err := gfspserver.NewGfSpUploadServiceClient(conn).GfSpUploadObject(ctx)

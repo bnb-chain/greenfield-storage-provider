@@ -10,6 +10,8 @@ const (
 	MinioStore = "minio"
 	// DiskFileStore defines storage type for file
 	DiskFileStore = "file"
+	// LdfsStore defines storage type for ldfs
+	LdfsStore = "ldfs"
 	// MemoryStore defines storage type for memory
 	MemoryStore = "memory"
 )

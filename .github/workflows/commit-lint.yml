@@ -8,14 +8,12 @@ on:
       - release*
       - fix-release*
 
-
   pull_request:
     branches:
       - master
       - develop
       - release*
       - fix-release*
-
 
 jobs:
   commit-message-lint:

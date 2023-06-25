@@ -9,6 +9,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/manager"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
@@ -35,7 +36,7 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		return
 	}
 	sealMsg := &storagetypes.MsgSealObject{
-		Operator:              e.baseApp.OperateAddress(),
+		Operator:              e.baseApp.OperatorAddress(),
 		BucketName:            task.GetObjectInfo().GetBucketName(),
 		ObjectName:            task.GetObjectInfo().GetObjectName(),
 		SecondarySpAddresses:  task.GetSecondaryAddresses(),
@@ -48,27 +49,35 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTask, sealMsg *storagetypes.MsgSealObject) error {
 	var err error
 	for retry := int64(0); retry <= task.GetMaxRetry(); retry++ {
+		e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorBeginSealTx, task.Key().String())
 		err = e.baseApp.GfSpClient().SealObject(ctx, sealMsg)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to seal object", "retry", retry,
 				"max_retry", task.GetMaxRetry(), "error", err)
+			e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndSealTx, task.Key().String()+":"+err.Error())
 			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
 		} else {
+			e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndSealTx, task.Key().String())
 			break
 		}
 	}
 	// even though signer return error, maybe seal on chain successfully because
 	// signer use the async mode, so ignore the error and listen directly
 	err = e.listenSealObject(ctx, task.GetObjectInfo())
+	if err == nil {
+		metrics.PerfUploadTimeHistogram.WithLabelValues("upload_replicate_seal_total_time").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+	}
 	return err
 }
 
 func (e *ExecuteModular) listenSealObject(ctx context.Context, object *storagetypes.ObjectInfo) error {
 	var err error
 	for retry := 0; retry < e.maxListenSealRetry; retry++ {
+		e.baseApp.GfSpDB().InsertUploadEvent(object.Id.Uint64(), spdb.ExecutorBeginConfirmSeal, "")
 		sealed, innerErr := e.baseApp.Consensus().ListenObjectSeal(ctx,
 			object.Id.Uint64(), e.listenSealTimeoutHeight)
 		if innerErr != nil {
+			e.baseApp.GfSpDB().InsertUploadEvent(object.Id.Uint64(), spdb.ExecutorEndConfirmSeal, "err:"+innerErr.Error())
 			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
 				"max_retry", e.maxListenSealRetry, "error", err)
 			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
@@ -76,11 +85,13 @@ func (e *ExecuteModular) listenSealObject(ctx context.Context, object *storagety
 			continue
 		}
 		if !sealed {
+			e.baseApp.GfSpDB().InsertUploadEvent(object.Id.Uint64(), spdb.ExecutorEndConfirmSeal, "unsealed")
 			log.CtxErrorw(ctx, "failed to seal object on chain", "retry", retry,
 				"max_retry", e.maxListenSealRetry, "error", err)
 			err = ErrUnsealed
 			continue
 		}
+		e.baseApp.GfSpDB().InsertUploadEvent(object.Id.Uint64(), spdb.ExecutorEndConfirmSeal, "sealed")
 		err = nil
 		break
 	}
@@ -125,11 +136,12 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 		task.SetError(ErrReplicateIdsOutOfBounds)
 		return
 	}
-	if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperateAddress() {
+	if onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperatorAddress() {
 		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch",
 			"expect", onChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())],
-			"current", e.baseApp.OperateAddress())
+			"current", e.baseApp.OperatorAddress())
 		task.SetError(ErrSecondaryMismatch)
+		// TODO:: gc zombie task will gc the zombie piece, it is a conservative plan
 		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to delete integrity")
@@ -191,7 +203,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 	}()
 
 	if waitingGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
-		ctx, e.baseApp.OperateAddress(), task.GetStartBlockNumber(),
+		ctx, e.baseApp.OperatorAddress(), task.GetStartBlockNumber(),
 		task.GetEndBlockNumber(), true); err != nil {
 		log.CtxErrorw(ctx, "failed to query deleted object list", "task_info", task.Info(), "error", err)
 		return
@@ -218,9 +230,8 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		objectInfo := object.GetObjectInfo()
 		currentGCObjectID = objectInfo.Id.Uint64()
 		if currentGCBlockID < task.GetCurrentBlockNumber() {
-			continue
-		}
-		if currentGCObjectID <= task.GetLastDeletedObjectId() {
+			log.Errorw("skip gc object", "object_info", objectInfo,
+				"task_current_gc_block_id", task.GetCurrentBlockNumber())
 			continue
 		}
 		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(
@@ -233,7 +244,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 				"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 		}
 		for rIdx, address := range objectInfo.GetSecondarySpAddresses() {
-			if strings.Compare(e.baseApp.OperateAddress(), address) == 0 {
+			if strings.Compare(e.baseApp.OperatorAddress(), address) == 0 {
 				for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 					pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
 					if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
