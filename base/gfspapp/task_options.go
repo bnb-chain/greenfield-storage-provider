@@ -44,9 +44,9 @@ const (
 	// MaxGCMetaTime defines the max timeout to gc meta.
 	MaxGCMetaTime int64 = 600
 	// MinRecoveryTime defines the min timeout to recovery object.
-	MinRecoveryTime int64 = 15
+	MinRecoveryTime int64 = 5
 	// MaxRecoveryTime defines the max timeout to replicate object.
-	MaxRecoveryTime int64 = 500
+	MaxRecoveryTime int64 = 300
 
 	// NotUseRetry defines the default task max retry.
 	NotUseRetry int64 = 0
@@ -164,8 +164,8 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 		if timeout < MinRecoveryTime {
 			return MinRecoveryTime
 		}
-		if timeout > MinRecoveryTime {
-			return MaxReplicateTime
+		if timeout > MaxRecoveryTime {
+			return MaxRecoveryTime
 		}
 		return timeout
 	}

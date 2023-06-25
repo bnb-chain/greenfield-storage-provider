@@ -488,12 +488,12 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 				int32(-1),
 				uint64(segSize),
 				g.baseApp.TaskTimeout(recoveryTask, task.GetStorageParams().GetMaxSegmentSize()),
-				1)
+				3)
 
 			g.baseApp.GfSpClient().ReportTask(reqCtx.Context(), recoveryTask)
 			log.CtxDebugw(reqCtx.Context(), "recovery task run successfully", "recovery object", objectInfo.ObjectName, "segment index:", idx)
 
-			pieceData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask)
+			reoverData, err := g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask)
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", err)
 				return
@@ -501,12 +501,15 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			// the recovery segment is a total segment data,
 			// if the offset and length meta is set, then it is needed to adjust the piece data with the meta
 			if pInfo.Offset > 0 {
-				pieceData = pieceData[pInfo.Offset:]
+				reoverData = reoverData[pInfo.Offset:]
 			}
 
 			if pInfo.Offset+pInfo.Length < uint64(segSize) {
-				pieceData = pieceData[:pInfo.Length]
+				reoverData = reoverData[:pInfo.Length]
+				log.CtxErrorw(reqCtx.Context(), "adjust the piece data", "len:", len(reoverData))
 			}
+			w.Write(reoverData)
+			continue
 		}
 
 		writeTime := time.Now()
