@@ -22,6 +22,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 )
 
@@ -469,7 +470,7 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 
 	// check signature consistent
 	taskSignature := recoveryTask.GetSignature()
-	signatureAddr, pk, err := RecoverAddr(recoveryTask.GetSignBytes(), taskSignature)
+	signatureAddr, pk, err := RecoverAddr(crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address", "error:", err)
 		err = ErrSignature
