@@ -81,3 +81,35 @@ func (b *BsDBImpl) GetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*
 	}
 	return gvg, err
 }
+
+// ListGvgByBucketID list global virtual group by bucket id
+func (b *BsDBImpl) ListGvgByBucketID(bucketID common.Hash) ([]*GlobalVirtualGroup, error) {
+	var (
+		globalGroups []*GlobalVirtualGroup
+		localGroups  []*GlobalVirtualGroup
+		gvgID        []uint32
+		filters      []func(*gorm.DB) *gorm.DB
+		err          error
+	)
+
+	filters = append(filters, RemovedFilter(false))
+	err = b.db.Table((&LocalVirtualGroup{}).TableName()).
+		Select("*").
+		Where("bucket_id = ?", bucketID).
+		Scopes(filters...).
+		Find(&localGroups).Error
+	if err != nil || localGroups == nil {
+		return nil, err
+	}
+
+	gvgID = make([]uint32, len(localGroups))
+	for i, group := range localGroups {
+		gvgID[i] = group.GlobalVirtualGroupId
+	}
+	err = b.db.Table((&GlobalVirtualGroup{}).TableName()).
+		Select("*").
+		Where("global_virtual_group_id in (?)", gvgID).
+		Take(&globalGroups).Error
+
+	return globalGroups, err
+}

@@ -150,7 +150,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 // GfSpListMigrateBucketEvents list migrate bucket events
 func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *types.GfSpListMigrateBucketEventsRequest) (resp *types.GfSpListMigrateBucketEventsResponse, err error) {
 	var (
-		events []*model.EventMigrateBucket
+		events []*model.EventMigrationBucket
 		res    []*types.EventMigrationBucket
 	)
 
@@ -164,9 +164,11 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 	res = make([]*types.EventMigrationBucket, len(events))
 	for i, event := range events {
 		res[i] = &types.EventMigrationBucket{
-			Operator:       event.Operator.String(),
-			BucketName:     event.BucketName,
-			BucketId:       event.BucketId.String(),
+			Operator:   event.Operator.String(),
+			BucketName: event.BucketName,
+			// TODO BARRY uncomment below code
+			//BucketId:       math.NewUintFromBigInt(event.BucketID.Big()),
+			BucketId:       event.BucketID.String(),
 			DstPrimarySpId: event.DstPrimarySpId,
 		}
 	}
@@ -181,6 +183,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 	var (
 		events []*model.EventSwapOut
 		res    []*types.EventSwapOut
+		gvgIDs []uint32
 	)
 
 	ctx = log.Context(ctx, req)
@@ -192,15 +195,85 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 
 	res = make([]*types.EventSwapOut, len(events))
 	for i, event := range events {
+		gvgIDs = make([]uint32, len(event.GlobalVirtualGroupIds))
+		//// TODO: BARRY check the below value
+		//// TODO: BARRY switch pb.string array to int32 array
+		for j, id := range event.GlobalVirtualGroupIds {
+			gvgIDs[j] = uint32(id)
+		}
 		res[i] = &types.EventSwapOut{
 			StorageProviderId:          event.StorageProviderId,
 			GlobalVirtualGroupFamilyId: event.GlobalVirtualGroupFamilyId,
-			GlobalVirtualGroupIds:      event.GlobalVirtualGroupIds,
+			GlobalVirtualGroupIds:      gvgIDs,
 			SuccessorSpId:              event.SuccessorSpId,
 		}
 	}
 
 	resp = &types.GfSpListSwapOutEventsResponse{Events: res}
 	log.CtxInfow(ctx, "succeed to list migrate swap out events")
+	return resp, nil
+}
+
+// GfSpListGlobalVirtualGroupsBySecondarySP list global virtual group by secondary sp id
+func (r *MetadataModular) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.Context, req *types.GfSpListGlobalVirtualGroupsBySecondarySPRequest) (resp *types.GfSpListGlobalVirtualGroupsBySecondarySPResponse, err error) {
+	var (
+		groups []*model.GlobalVirtualGroup
+		res    []*types.GlobalVirtualGroup
+	)
+
+	ctx = log.Context(ctx, req)
+	groups, err = r.baseApp.GfBsDB().ListGvgBySecondarySpID(req.SpId)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get global virtual group by lvg id and bucket id", "error", err)
+		return nil, err
+	}
+
+	res = make([]*types.GlobalVirtualGroup, len(groups))
+	for i, gvg := range groups {
+		res[i] = &types.GlobalVirtualGroup{
+			Id:                    gvg.GlobalVirtualGroupId,
+			FamilyId:              gvg.FamilyId,
+			PrimarySpId:           gvg.PrimarySpId,
+			SecondarySpIds:        gvg.SecondarySpIds,
+			StoredSize:            gvg.StoredSize,
+			VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
+			TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
+		}
+	}
+
+	resp = &types.GfSpListGlobalVirtualGroupsBySecondarySPResponse{Groups: res}
+	log.CtxInfow(ctx, "succeed to get global virtual group by secondary sp id")
+	return resp, nil
+}
+
+// GfSpListGlobalVirtualGroupsByBucket list global virtual group by bucket id
+func (r *MetadataModular) GfSpListGlobalVirtualGroupsByBucket(ctx context.Context, req *types.GfSpListGlobalVirtualGroupsByBucketRequest) (resp *types.GfSpListGlobalVirtualGroupsByBucketResponse, err error) {
+	var (
+		groups []*model.GlobalVirtualGroup
+		res    []*types.GlobalVirtualGroup
+	)
+
+	ctx = log.Context(ctx, req)
+	groups, err = r.baseApp.GfBsDB().ListGvgByBucketID(common.BigToHash(math.NewUint(req.BucketId).BigInt()))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list global virtual group by bucket id", "error", err)
+		return nil, err
+	}
+
+	res = make([]*types.GlobalVirtualGroup, len(groups))
+	for i, gvg := range groups {
+		res[i] = &types.GlobalVirtualGroup{
+			Id:                    gvg.GlobalVirtualGroupId,
+			FamilyId:              gvg.FamilyId,
+			PrimarySpId:           gvg.PrimarySpId,
+			SecondarySpIds:        gvg.SecondarySpIds,
+			StoredSize:            gvg.StoredSize,
+			VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
+			TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
+		}
+	}
+
+	resp = &types.GfSpListGlobalVirtualGroupsByBucketResponse{Groups: res}
+	log.CtxInfow(ctx, "succeed to list global virtual group by bucket id")
 	return resp, nil
 }

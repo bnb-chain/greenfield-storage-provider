@@ -1,13 +1,22 @@
 package bsdb
 
+import (
+	"github.com/forbole/juno/v4/common"
+	"github.com/lib/pq"
+)
+
 type EventSwapOut struct {
-	StorageProviderId          uint32   `json:"storage_provider_id,omitempty"`
-	GlobalVirtualGroupFamilyId uint32   `json:"global_virtual_group_family_id,omitempty"`
-	GlobalVirtualGroupIds      []uint32 `json:"global_virtual_group_ids,omitempty"`
-	SuccessorSpId              uint32   `json:"successor_sp_id,omitempty"`
+	ID                         uint64        `gorm:"column:id;primaryKey"`
+	StorageProviderId          uint32        `gorm:"column:storage_provider_id;index:idx_sp_id"`
+	GlobalVirtualGroupFamilyId uint32        `gorm:"column:global_virtual_group_family_id;index:idx_vgf_id"`
+	GlobalVirtualGroupIds      pq.Int32Array `gorm:"column:global_virtual_group_ids;type:MEDIUMTEXT"`
+	SuccessorSpId              uint32        `gorm:"column:successor_sp_id"`
+
+	CreateAt     int64       `gorm:"column:create_at"`
+	CreateTxHash common.Hash `gorm:"column:create_tx_hash;type:BINARY(32);not null"`
+	CreateTime   int64       `gorm:"column:create_time"` // seconds
 }
 
-// TableName is used to set EventSwapOut table name in database
-func (g *EventSwapOut) TableName() string {
+func (*EventSwapOut) TableName() string {
 	return EventSwapOutTableName
 }

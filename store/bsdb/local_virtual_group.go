@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// ListLvgByGvgID list vgf by gvg id
-func (b *BsDBImpl) ListLvgByGvgID(gvgIDs []uint32) ([]*LocalVirtualGroup, error) {
+// ListLvgByGvgAndBucketID list vgf by gvg id and bucket id
+func (b *BsDBImpl) ListLvgByGvgAndBucketID(bucketID common.Hash, gvgIDs []uint32) ([]*LocalVirtualGroup, error) {
 	var (
 		groups  []*LocalVirtualGroup
 		filters []func(*gorm.DB) *gorm.DB
@@ -18,7 +18,7 @@ func (b *BsDBImpl) ListLvgByGvgID(gvgIDs []uint32) ([]*LocalVirtualGroup, error)
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&LocalVirtualGroup{}).TableName()).
 		Select("*").
-		Where("global_virtual_group_id in (?)", gvgIDs).
+		Where("global_virtual_group_id in (?) and bucket_id = ?", gvgIDs, bucketID).
 		Scopes(filters...).
 		Find(&groups).Error
 	return groups, err

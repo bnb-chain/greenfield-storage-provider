@@ -61,19 +61,21 @@ type Metadata interface {
 	// ListBucketsBindingOnSecondarySP list buckets by secondary sp id
 	ListBucketsBindingOnSecondarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
 	// ListPrimaryObjects list objects by primary sp id
-	ListPrimaryObjects(spID uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	ListPrimaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error)
 	// ListSecondaryObjects list objects by primary sp id
-	ListSecondaryObjects(spID uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	ListSecondaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error)
 	// ListObjectsInGVG list objects by gvg id
-	ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	ListObjectsInGVG(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error)
 	// ListGvgByPrimarySpID list gvg by primary sp id
 	ListGvgByPrimarySpID(spID uint32) ([]*GlobalVirtualGroup, error)
 	// ListGvgBySecondarySpID list gvg by secondary sp id
 	ListGvgBySecondarySpID(spID uint32) ([]*GlobalVirtualGroup, error)
+	// ListGvgByBucketID list global virtual group by bucket id
+	ListGvgByBucketID(bucketID common.Hash) ([]*GlobalVirtualGroup, error)
 	// ListVgfByGvgID list vgf by gvg ids
 	ListVgfByGvgID(gvgIDs []uint32) ([]*VirtualGroupFamily, error)
-	// ListLvgByGvgID list vgf by gvg ids
-	ListLvgByGvgID(gvgIDs []uint32) ([]*LocalVirtualGroup, error)
+	// ListLvgByGvgAndBucketID list vgf by gvg ids
+	ListLvgByGvgAndBucketID(bucketID common.Hash, gvgIDs []uint32) ([]*LocalVirtualGroup, error)
 	// ListBucketsByVgfID list buckets by vgf ids
 	ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
 	// ListObjectsByLVGID list objects by lvg id
@@ -83,7 +85,7 @@ type Metadata interface {
 	// GetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
 	GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error)
 	// ListMigrateBucketEvents list migrate bucket events
-	ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrateBucket, error)
+	ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, error)
 	// ListSwapOutEvents list swap out events
 	ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapOut, error)
 }

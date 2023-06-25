@@ -38,9 +38,15 @@ const (
 	LocalVirtualGroupFamilyTableName = "local_virtual_group"
 	// GlobalVirtualGroupTableName defines the name of global virtual group table
 	GlobalVirtualGroupTableName = "global_virtual_group"
-	// EventMigrateBucketTableName defines the name of migrate bucket event table
-	EventMigrateBucketTableName = "event_migrate_bucket"
-	// EventSwapOutTableName defines the name of swap out event table
+	// EventMigrationTableName defines the name of event migrate bucket table
+	EventMigrationTableName = "event_migration_bucket"
+	// EventCompleteMigrationTableName defines the name of event complete migrate bucket table
+	EventCompleteMigrationTableName = "event_complete_migration_bucket"
+	// EventStorageProviderExitTableName defines the name of event sp exit table
+	EventStorageProviderExitTableName = "event_sp_exit"
+	// EventCompleteStorageProviderExitTableName defines the name of event sp exit complete table
+	EventCompleteStorageProviderExitTableName = "event_sp_exit_complete"
+	// EventSwapOutTableName defines the name of event sp exit complete table
 	EventSwapOutTableName = "event_swap_out"
 )
 

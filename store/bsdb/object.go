@@ -138,7 +138,7 @@ func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool)
 }
 
 // ListPrimaryObjects list objects by primary sp id
-func (b *BsDBImpl) ListPrimaryObjects(spID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
+func (b *BsDBImpl) ListPrimaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error) {
 	var (
 		groups      []*GlobalVirtualGroup
 		localGroups []*LocalVirtualGroup
@@ -158,7 +158,7 @@ func (b *BsDBImpl) ListPrimaryObjects(spID uint32, startAfter common.Hash, limit
 		gvgIDs[i] = group.GlobalVirtualGroupId
 	}
 
-	localGroups, err = b.ListLvgByGvgID(gvgIDs)
+	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
 	if err != nil || localGroups == nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (b *BsDBImpl) ListPrimaryObjects(spID uint32, startAfter common.Hash, limit
 }
 
 // ListSecondaryObjects list objects by secondary sp id
-func (b *BsDBImpl) ListSecondaryObjects(spID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
+func (b *BsDBImpl) ListSecondaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error) {
 	var (
 		groups      []*GlobalVirtualGroup
 		localGroups []*LocalVirtualGroup
@@ -194,7 +194,7 @@ func (b *BsDBImpl) ListSecondaryObjects(spID uint32, startAfter common.Hash, lim
 		gvgIDs[i] = group.GlobalVirtualGroupId
 	}
 
-	localGroups, err = b.ListLvgByGvgID(gvgIDs)
+	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
 	if err != nil || localGroups == nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func (b *BsDBImpl) ListSecondaryObjects(spID uint32, startAfter common.Hash, lim
 }
 
 // ListObjectsInGVG list objects by gvg id
-func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
+func (b *BsDBImpl) ListObjectsInGVG(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
 	var (
 		localGroups []*LocalVirtualGroup
 		objects     []*Object
@@ -219,7 +219,7 @@ func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit 
 	)
 	gvgIDs = append(gvgIDs, gvgID)
 
-	localGroups, err = b.ListLvgByGvgID(gvgIDs)
+	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
 	if err != nil || localGroups == nil {
 		return nil, err
 	}

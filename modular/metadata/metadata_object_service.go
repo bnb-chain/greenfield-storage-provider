@@ -293,7 +293,7 @@ func (r *MetadataModular) GfSpListPrimaryObjects(ctx context.Context, req *types
 		limit = model.ListObjectsLimitSize
 	}
 
-	objects, err = r.baseApp.GfBsDB().ListPrimaryObjects(req.SpId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
+	objects, err = r.baseApp.GfBsDB().ListPrimaryObjects(req.SpId, common.BigToHash(math.NewUint(req.BucketId).BigInt()), common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by primary sp id", "error", err)
 		return nil, err
@@ -351,7 +351,7 @@ func (r *MetadataModular) GfSpListSecondaryObjects(ctx context.Context, req *typ
 	if req.Limit > model.ListObjectsLimitSize {
 		limit = model.ListObjectsLimitSize
 	}
-	objects, err = r.baseApp.GfBsDB().ListSecondaryObjects(req.SpId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
+	objects, err = r.baseApp.GfBsDB().ListSecondaryObjects(req.SpId, common.BigToHash(math.NewUint(req.BucketId).BigInt()), common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by secondary sp id", "error", err)
 		return nil, err
@@ -409,7 +409,7 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 	if req.Limit > model.ListObjectsLimitSize {
 		limit = model.ListObjectsLimitSize
 	}
-	objects, err = r.baseApp.GfBsDB().ListObjectsInGVG(req.GvgId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
+	objects, err = r.baseApp.GfBsDB().ListObjectsInGVG(common.BigToHash(math.NewUint(req.BucketId).BigInt()), req.GvgId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by gvg id", "error", err)
 		return nil, err
