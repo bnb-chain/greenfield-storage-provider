@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -310,7 +311,9 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		err                error
 	)
 	defer func() {
-		task.SetError(err)
+		if err != nil {
+			task.SetError(err)
+		}
 	}()
 
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
@@ -338,7 +341,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		if err != nil {
 			return
 		}
-		pieceData, err := e.doRecoveryPiece(ctx, task, primarySPEndpoint, ecPieceCount)
+		pieceData, err := e.doRecoveryPiece(ctx, task, primarySPEndpoint)
 		if err != nil {
 			return
 		}
@@ -370,7 +373,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		for ecIdx := 0; ecIdx < int(ecPieceCount); ecIdx++ {
 			recoveryDataSources[ecIdx] = nil
 			go func(secondaryIndex int) {
-				pieceData, err := e.doRecoveryPiece(ctx, task, secondaryEndpoints[secondaryIndex], ecPieceCount)
+				pieceData, err := e.doRecoveryPiece(ctx, task, secondaryEndpoints[secondaryIndex])
 				if err == nil {
 					recoveryDataSources[secondaryIndex] = pieceData
 					log.Debugf("get one piece from ", "piece length:%d ", len(pieceData), "secondary sp:", secondaryEndpoints[secondaryIndex])
@@ -395,7 +398,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 				}
 			case <-quitCh: // all the task finish
 				if doneTaskNum < minRecoveryPieces { // finish task num not enough
-					log.CtxErrorw(ctx, "get piece from secondary not enough", "get secondary piece num:", doneTaskNum, "error", err)
+					log.CtxErrorw(ctx, "get piece from secondary not enough", "get secondary piece num:", doneTaskNum, "error", ErrRecoveryPieceNotEnough)
 					task.SetError(ErrRecoveryPieceNotEnough)
 					return
 				}
@@ -424,7 +427,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		}
 
 		expectedHash := integrityMeta.PieceChecksumList[task.GetSegmentIdx()]
-		if !bytes.Equal(recoverySegData, expectedHash) {
+		if !bytes.Equal(hash.GenerateChecksum(recoverySegData), expectedHash) {
 			log.CtxErrorw(ctx, "check integrity hash of recovery data err", "objectName:", task.GetObjectInfo().ObjectName,
 				"expected value", hex.EncodeToString(expectedHash), "actual value", hex.EncodeToString(recoverySegData), "error", err)
 			task.SetError(ErrRecoveryPieceChecksum)
@@ -443,16 +446,17 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 	log.CtxDebugw(ctx, "primary SP recovery successfully", "pieceKey:", recoveryKey)
 }
 
-func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.RecoveryPieceTask, endpoint string, ecCount uint32) (data []byte, err error) {
+func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.RecoveryPieceTask, endpoint string) (data []byte, err error) {
 	var (
 		signature []byte
 		pieceData []byte
 	)
-	metrics.ReplicatePieceSizeCounter.WithLabelValues(e.Name()).Add(float64(len(data)))
-	startTime := time.Now()
-	defer func() {
-		metrics.ReplicatePieceTimeHistogram.WithLabelValues(e.Name()).Observe(time.Since(startTime).Seconds())
-	}()
+	/*
+		metrics.ReplicatePieceSizeCounter.WithLabelValues(e.Name()).Add(float64(len(data)))
+		startTime := time.Now()
+		defer func() {
+			metrics.ReplicatePieceTimeHistogram.WithLabelValues(e.Name()).Observe(time.Since(startTime).Seconds())
+		}() */
 
 	signature, err = e.baseApp.GfSpClient().SignRecoveryTask(ctx, rTask)
 	if err != nil {
@@ -461,7 +465,6 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 	}
 
 	rTask.SetSignature(signature)
-
 	// recovery primary sp segment pr secondary piece
 	respBody, err := e.baseApp.GfSpClient().GetPieceFromSecondary(ctx, endpoint, rTask)
 	if err != nil {

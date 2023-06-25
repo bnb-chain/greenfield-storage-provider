@@ -95,6 +95,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.recoveryQueue.SetRetireTaskStrategy(m.GCReceiveQueue)
+	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {

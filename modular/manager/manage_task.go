@@ -525,14 +525,14 @@ func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.R
 		return ErrDanglingTask
 	}
 
-	if m.TaskRecovering(ctx, task) {
-		log.CtxErrorw(ctx, "recovering object repeated", "task_info", task.Info())
-		return ErrRepeatedTask
-	}
-
 	if task.Error() != nil {
 		log.CtxErrorw(ctx, "handler error recovery piece task", "task_info", task.Info(), "error", task.Error())
 		return m.handleFailedRecoveryPieceTask(ctx, task)
+	}
+
+	if m.TaskRecovering(ctx, task) {
+		log.CtxErrorw(ctx, "recovering object repeated", "task_info", task.Info())
+		return ErrRepeatedTask
 	}
 
 	task.SetUpdateTime(time.Now().Unix())
@@ -557,7 +557,6 @@ func (m *ManageModular) handleFailedRecoveryPieceTask(ctx context.Context, handl
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 	} else {
 		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
-		// TODO: confirm it
 	}
 	return nil
 }
