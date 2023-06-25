@@ -314,6 +314,9 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		if err != nil {
 			task.SetError(err)
 		}
+		if task.Error() != nil {
+			log.CtxErrorw(ctx, "recovery task failed", "error", task.Error())
+		}
 	}()
 
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
@@ -341,10 +344,13 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		segmentIdx := task.GetSegmentIdx()
 		primarySPEndpoint, err := e.getObjectPrimarySPEndpoint(ctx, task.GetObjectInfo().BucketName)
 		if err != nil {
+			task.SetError(err)
 			return
 		}
+		log.CtxDebugw(ctx, "send recovery piece request to primary SP:", "primary :", primarySPEndpoint)
 		pieceData, err := e.doRecoveryPiece(ctx, task, primarySPEndpoint)
 		if err != nil {
+			task.SetError(err)
 			return
 		}
 		// compare integrity hash
@@ -367,6 +373,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		err = e.baseApp.PieceStore().PutPiece(ctx, recoveryKey, pieceData)
 		if err != nil {
 			log.CtxErrorw(ctx, "EC decode data write piece fail", "pieceKey:", recoveryKey, "error", err)
+			task.SetError(err)
 			return
 		}
 		log.CtxDebugw(ctx, "secondary SP recovery successfully", "pieceKey:", recoveryKey)
@@ -532,10 +539,9 @@ func (g *ExecuteModular) getObjectPrimarySPEndpoint(ctx context.Context, bucketN
 	}
 
 	primarySP := bucketInfo.GetPrimarySpAddress()
-	var primarySPEndpoint string
 	for _, info := range spList {
 		if primarySP == info.GetOperatorAddress() {
-			return primarySPEndpoint, nil
+			return info.Endpoint, nil
 		}
 	}
 

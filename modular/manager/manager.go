@@ -430,6 +430,9 @@ func (m *ManageModular) GCReceiveQueue(qTask task.Task) bool {
 }
 
 func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
+	if qTask.ExceedRetry() {
+		log.Errorw("gc recovery task:")
+	}
 	return qTask.ExceedRetry()
 }
 
