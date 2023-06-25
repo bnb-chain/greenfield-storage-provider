@@ -22,6 +22,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 )
 
 // getApprovalHandler handles the get create bucket/object approval request.
@@ -446,11 +447,7 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 	// verification is by signature of the RecoveryTask
 	reqCtx, newErr := NewRequestContext(r, g)
 	if newErr != nil {
-		log.CtxDebugw(context.Background(), "recoveryPrimaryHandler new reqCtx errror", "error", newErr)
-	}
-
-	if reqCtx == nil {
-		log.CtxDebugw(context.Background(), "recoveryPrimaryHandler new reqCtx nil")
+		log.CtxDebugw(context.Background(), "recoveryPrimaryHandler new reqCtx error", "error", newErr)
 	}
 
 	recoveryMsg, err = hex.DecodeString(r.Header.Get(GnfdRecoveryMsgHeader))
@@ -469,23 +466,23 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		err = ErrDecodeMsg
 		return
 	}
-	/*
-		// check signature consistent
-		taskSignature := recoveryTask.GetSignature()
-		signatureAddr, pk, err := RecoverAddr(recoveryTask.GetSignBytes(), taskSignature)
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address", "error:", err)
-			err = ErrSignature
-			return
-		}
 
-		log.CtxDebugw(reqCtx.Context(), "get recovery piece request from sp:", signatureAddr)
-		if !secp256k1.VerifySignature(pk.Bytes(), recoveryTask.GetSignBytes(), taskSignature[:len(taskSignature)-1]) {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task signature")
-			err = ErrSignature
-			return
-		}
-	*/
+	// check signature consistent
+	taskSignature := recoveryTask.GetSignature()
+	signatureAddr, pk, err := RecoverAddr(recoveryTask.GetSignBytes(), taskSignature)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address", "error:", err)
+		err = ErrSignature
+		return
+	}
+
+	log.CtxDebugw(reqCtx.Context(), "get recovery piece request from sp:", signatureAddr)
+	if !secp256k1.VerifySignature(pk.Bytes(), recoveryTask.GetSignBytes(), taskSignature[:len(taskSignature)-1]) {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task signature")
+		err = ErrSignature
+		return
+	}
+
 	// handle request from primary SP to recovery segment {
 	objectInfo := recoveryTask.GetObjectInfo()
 	if objectInfo == nil {
@@ -535,13 +532,11 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 func (g *GateModular) recoveryPrimarySP(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
 	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoveryPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	var err error
-	/*
-		// the primary sp of the object should be consistent with task signature
-		if bucketInfo.PrimarySpAddress != signatureAddr.String() {
-			log.CtxErrorw(ctx, "recovery request not come from primary sp")
-		}
 
-	*/
+	// the primary sp of the object should be consistent with task signature
+	if bucketInfo.PrimarySpAddress != signatureAddr.String() {
+		log.CtxErrorw(ctx, "recovery request not come from primary sp")
+	}
 
 	isOneOfSecondary := false
 	handlerAddr := g.baseApp.OperatorAddress()
