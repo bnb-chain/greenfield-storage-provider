@@ -226,7 +226,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		secondarySPs := downloadPieceTask.GetObjectInfo().SecondarySpAddresses
 		var isOneOfSecondary bool
 		for _, addr := range secondarySPs {
-			if myselfAddr == addr {
+			if d.baseApp.OperatorAddress() == addr {
 				isOneOfSecondary = true
 			}
 		}
