@@ -27,13 +27,15 @@ var (
 	KeyPrefixGfSpGfSpGCMetaTask    = strings.ToLower("GCMeta")
 )
 
-func GfSpCreateBucketApprovalTaskKey(bucket string, createBucketHash string) task.TKey {
-	return task.TKey(KeyPrefixGfSpCreateBucketApprovalTask + CombineKey("bucket:"+bucket, "hash:"+createBucketHash))
+func GfSpCreateBucketApprovalTaskKey(bucket string, visibility int32) task.TKey {
+	return task.TKey(KeyPrefixGfSpCreateBucketApprovalTask + CombineKey("bucket:"+bucket,
+		"visibility:"+fmt.Sprint(visibility)))
 }
 
-func GfSpCreateObjectApprovalTaskKey(bucket, object string, createObjectHash string) task.TKey {
+func GfSpCreateObjectApprovalTaskKey(bucket, object string, visibility int32) task.TKey {
 	return task.TKey(KeyPrefixGfSpCreateObjectApprovalTask +
-		CombineKey("bucket:"+bucket, "object:"+object, "hash:"+createObjectHash))
+		CombineKey("bucket:"+bucket, "object:"+object,
+			"visibility:"+fmt.Sprint(visibility)))
 }
 
 func GfSpReplicatePieceApprovalTaskKey(bucket, object, id string) task.TKey {

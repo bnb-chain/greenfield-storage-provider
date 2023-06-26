@@ -1,7 +1,6 @@
 package gfsptask
 
 import (
-	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -28,7 +27,7 @@ func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(bucket *stor
 
 func (m *GfSpCreateBucketApprovalTask) Key() coretask.TKey {
 	return GfSpCreateBucketApprovalTaskKey(m.GetCreateBucketInfo().GetBucketName(),
-		hex.EncodeToString(m.GetCreateBucketInfo().GetSignBytes()))
+		int32(m.GetCreateBucketInfo().GetVisibility()))
 }
 
 func (m *GfSpCreateBucketApprovalTask) Type() coretask.TType {
@@ -154,7 +153,7 @@ func (m *GfSpCreateObjectApprovalTask) Key() coretask.TKey {
 	return GfSpCreateObjectApprovalTaskKey(
 		m.GetCreateObjectInfo().GetBucketName(),
 		m.GetCreateObjectInfo().GetObjectName(),
-		hex.EncodeToString(m.GetCreateObjectInfo().GetSignBytes()))
+		int32(m.GetCreateObjectInfo().GetVisibility()))
 }
 
 func (m *GfSpCreateObjectApprovalTask) Type() coretask.TType {
