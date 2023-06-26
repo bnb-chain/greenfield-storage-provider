@@ -74,6 +74,8 @@ type SignatureDB interface {
 	SetObjectIntegrity(integrity *IntegrityMeta) error
 	// DeleteObjectIntegrity deletes the integrity hash.
 	DeleteObjectIntegrity(objectID uint64) error
+	// AppendObjectChecksumIntegrity gets integrity meta info by object id.
+	AppendObjectChecksumIntegrity(objectID uint64, checksum []byte) error
 	/*
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
 	*/

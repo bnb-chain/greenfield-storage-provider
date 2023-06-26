@@ -1,8 +1,9 @@
 package bsdb
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/ethereum/go-ethereum/common"
+
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 // MetadataDB contains all the methods required by block syncer db database

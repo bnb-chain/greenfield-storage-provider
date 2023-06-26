@@ -26,5 +26,7 @@ func DefaultUploaderOptions(uploader *UploadModular, cfg *gfspconfig.GfSpConfig)
 	}
 	uploader.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		uploader.Name()+"-upload-object", cfg.Parallel.UploadObjectParallelPerNode)
+	uploader.resumeableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		uploader.Name()+"-upload-resumable-object", cfg.Parallel.UploadObjectParallelPerNode)
 	return nil
 }

@@ -48,6 +48,15 @@ message GfSpUploadObjectTask {
   greenfield.storage.Params storage_params = 3;
 }
 
+message GfSpResumableUploadObjectTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  uint64 offset = 4;
+  uint64 length = 5;
+  bool completed = 6;
+}
+
 message GfSpReplicatePieceTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;

@@ -37,6 +37,9 @@ func (g *GfSpBaseApp) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSpBeg
 		}
 		g.GfSpDB().InsertUploadEvent(task.UploadObjectTask.GetObjectInfo().Id.Uint64(), corespdb.ManagerReceiveAndWaitSchedulingTask, task.UploadObjectTask.Key().String()+":")
 		return &gfspserver.GfSpBeginTaskResponse{Err: gfsperrors.MakeGfSpError(err)}, nil
+	case *gfspserver.GfSpBeginTaskRequest_ResumableUploadObjectTask:
+		err := g.OnBeginResumableUploadObjectTask(ctx, task.ResumableUploadObjectTask)
+		return &gfspserver.GfSpBeginTaskResponse{Err: gfsperrors.MakeGfSpError(err)}, nil
 	default:
 		return &gfspserver.GfSpBeginTaskResponse{Err: ErrUnsupportedTaskType}, nil
 	}
@@ -54,6 +57,21 @@ func (g *GfSpBaseApp) OnBeginUploadObjectTask(ctx context.Context, task coretask
 		return err
 	}
 	log.CtxDebugw(ctx, "succeed to begin upload object task", "info", task.Info())
+	return nil
+}
+
+func (g *GfSpBaseApp) OnBeginResumableUploadObjectTask(ctx context.Context, task coretask.ResumableUploadObjectTask) error {
+	if task == nil || task.GetObjectInfo() == nil {
+		log.CtxError(ctx, "failed to begin resumable upload object task due to object info pointer dangling")
+		return ErrUploadTaskDangling
+	}
+	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
+	err := g.manager.HandleCreateResumableUploadObjectTask(ctx, task)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to begin resumable upload object task", "info", task.Info(), "error", err)
+		return err
+	}
+	log.CtxDebugw(ctx, "succeed to begin resumable upload object task", "info", task.Info())
 	return nil
 }
 
@@ -149,6 +167,22 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 
 		startReportDoneUploadTask := time.Now()
 		err = g.manager.HandleDoneUploadObjectTask(ctx, t.UploadObjectTask)
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_done_server").
+			Observe(time.Since(startReportDoneUploadTask).Seconds())
+	case *gfspserver.GfSpReportTaskRequest_ResumableUploadObjectTask:
+		task := t.ResumableUploadObjectTask
+		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
+		task.SetAddress(GetRPCRemoteAddress(ctx))
+		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
+
+		metrics.UploadObjectTaskTimeHistogram.WithLabelValues(g.manager.Name()).Observe(
+			time.Since(time.Unix(t.ResumableUploadObjectTask.GetCreateTime(), 0)).Seconds())
+		if t.ResumableUploadObjectTask.Error() != nil {
+			metrics.UploadObjectTaskFailedCounter.WithLabelValues(g.manager.Name()).Inc()
+		}
+
+		startReportDoneUploadTask := time.Now()
+		err = g.manager.HandleDoneResumableUploadObjectTask(ctx, t.ResumableUploadObjectTask)
 		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_done_server").
 			Observe(time.Since(startReportDoneUploadTask).Seconds())
 	case *gfspserver.GfSpReportTaskRequest_ReplicatePieceTask:

@@ -206,7 +206,25 @@ type UploadObjectTask interface {
 	InitUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
 }
 
-// ReplicatePieceTask is an abstract interface to record the information for replicating
+// The ResumableUploadObjectTask is the interface to record the information for uploading object
+// payload data to the primary SP.
+type ResumableUploadObjectTask interface {
+	ObjectTask
+	// InitResumableUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
+	InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, complete bool, offset uint64)
+	// GetResumeOffset return resumable offset user-supplied parameters
+	GetResumeOffset() uint64
+	// SetResumeOffset Set the `ResumeOffset` provided by the user for subsequent processing in the `HandleResumableUploadObjectTask`.
+	SetResumeOffset(offset uint64)
+	// GetCompleted The GetCompleted() function returns the value of completed set by the user in the request.
+	// The completed parameter represents the last upload request in the resumable upload process,
+	// after which integrity checks and replication procedures will be performed.
+	GetCompleted() bool
+	// SetCompleted sets the state from request in InitResumableUploadObjectTask
+	SetCompleted(completed bool)
+}
+
+// The ReplicatePieceTask is the interface to record the information for replicating
 // pieces of object pieces data to secondary SPs.
 type ReplicatePieceTask interface {
 	ObjectTask

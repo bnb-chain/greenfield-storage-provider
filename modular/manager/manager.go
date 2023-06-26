@@ -50,15 +50,16 @@ type ManageModular struct {
 	loadTaskLimitToSeal      int
 	loadTaskLimitToGC        int
 
-	uploadQueue    taskqueue.TQueueOnStrategy
-	replicateQueue taskqueue.TQueueOnStrategyWithLimit
-	sealQueue      taskqueue.TQueueOnStrategyWithLimit
-	receiveQueue   taskqueue.TQueueOnStrategyWithLimit
-	gcObjectQueue  taskqueue.TQueueOnStrategyWithLimit
-	gcZombieQueue  taskqueue.TQueueOnStrategyWithLimit
-	gcMetaQueue    taskqueue.TQueueOnStrategyWithLimit
-	downloadQueue  taskqueue.TQueueOnStrategy
-	challengeQueue taskqueue.TQueueOnStrategy
+	uploadQueue           taskqueue.TQueueOnStrategy
+	resumeableUploadQueue taskqueue.TQueueOnStrategy
+	replicateQueue        taskqueue.TQueueOnStrategyWithLimit
+	sealQueue             taskqueue.TQueueOnStrategyWithLimit
+	receiveQueue          taskqueue.TQueueOnStrategyWithLimit
+	gcObjectQueue         taskqueue.TQueueOnStrategyWithLimit
+	gcZombieQueue         taskqueue.TQueueOnStrategyWithLimit
+	gcMetaQueue           taskqueue.TQueueOnStrategyWithLimit
+	downloadQueue         taskqueue.TQueueOnStrategy
+	challengeQueue        taskqueue.TQueueOnStrategy
 
 	maxUploadObjectNumber int
 
@@ -81,6 +82,7 @@ func (m *ManageModular) Name() string {
 
 func (m *ManageModular) Start(ctx context.Context) error {
 	m.uploadQueue.SetRetireTaskStrategy(m.GCUploadObjectQueue)
+	m.resumeableUploadQueue.SetRetireTaskStrategy(m.GCResumableUploadObjectQueue)
 	m.replicateQueue.SetRetireTaskStrategy(m.GCReplicatePieceQueue)
 	m.replicateQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.sealQueue.SetRetireTaskStrategy(m.GCSealObjectQueue)
@@ -332,15 +334,36 @@ func (m *ManageModular) TaskUploading(ctx context.Context, task task.Task) bool 
 		log.CtxDebugw(ctx, "sealing object repeated")
 		return true
 	}
+	if m.resumeableUploadQueue.Has(task.Key()) {
+		log.CtxDebugw(ctx, "resumable uploading object repeated")
+		return true
+	}
 	return false
 }
 
 func (m *ManageModular) UploadingObjectNumber() int {
-	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len()
+	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len() + m.resumeableUploadQueue.Len()
 }
 
 func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.UploadObjectTask)
+	if task.Expired() {
+		go func() {
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+				ErrorDescription: "expired",
+			}); err != nil {
+				log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
+			}
+		}()
+		return true
+	}
+	return false
+}
+
+func (m *ManageModular) GCResumableUploadObjectQueue(qTask task.Task) bool {
+	task := qTask.(task.ResumableUploadObjectTask)
 	if task.Expired() {
 		go func() {
 			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{

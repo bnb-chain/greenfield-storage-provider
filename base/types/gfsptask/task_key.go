@@ -2,6 +2,7 @@ package gfsptask
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -18,6 +19,7 @@ const (
 	KeyPrefixGfSpUploadObjectTask           = "Uploading"
 	KeyPrefixGfSpReplicatePieceTask         = "Uploading"
 	KeyPrefixGfSpSealObjectTask             = "Uploading"
+	KeyPrefixGfSpResumableUploadObjectTask  = "ResuabmleUploading"
 	KeyPrefixGfSpReceivePieceTask           = "ReceivePiece"
 )
 
@@ -64,6 +66,10 @@ func GfSpChallengePieceTaskKey(bucket, object, id string, sIdx uint32, rIdx int3
 func GfSpUploadObjectTaskKey(bucket, object, id string) task.TKey {
 	return task.TKey(KeyPrefixGfSpUploadObjectTask +
 		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id))
+}
+
+func GfSpResumableUploadObjectTaskKey(bucket, object, id string, offset uint64) task.TKey {
+	return task.TKey(KeyPrefixGfSpResumableUploadObjectTask + CombineKey(bucket, object, id, strconv.FormatUint(offset, 10)))
 }
 
 func GfSpReplicatePieceTaskKey(bucket, object, id string) task.TKey {
