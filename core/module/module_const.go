@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	ApprovalModularName              = strings.ToLower("Approval")
+	ApprovalModularName              = strings.ToLower("Approver")
 	ApprovalModularDescription       = "Handles the ask crate bucket/object and replicates piece approval request."
 	AuthenticationModularName        = strings.ToLower("Authenticator")
 	AuthenticationModularDescription = "Checks authentication."
