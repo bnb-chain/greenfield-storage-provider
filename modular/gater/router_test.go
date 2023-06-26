@@ -245,7 +245,7 @@ func TestRouters(t *testing.T) {
 			name:             "Recovery router",
 			router:           gwRouter,
 			method:           http.MethodGet,
-			url:              scheme + testDomain + RecoveryObjectPiecePath,
+			url:              scheme + testDomain + RecoverObjectPiecePath,
 			shouldMatch:      true,
 			wantedRouterName: recoveryPieceRouterName,
 		},

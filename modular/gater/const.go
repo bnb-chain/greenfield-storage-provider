@@ -101,8 +101,8 @@ const (
 	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
-	//RecoveryObjectPiecePath defines recovery-object path style
-	RecoveryObjectPiecePath = "/greenfield/recovery/v1/get-piece"
+	//RecoverObjectPiecePath defines recovery-object path style
+	RecoverObjectPiecePath = "/greenfield/recovery/v1/get-piece"
 	// AuthRequestNoncePath defines path to request auth nonce
 	AuthRequestNoncePath = "/auth/request_nonce"
 	// AuthUpdateKeyPath defines path to update user public key

@@ -20,7 +20,7 @@ const (
 	KeyPrefixGfSpReplicatePieceTask         = "Uploading"
 	KeyPrefixGfSpSealObjectTask             = "Uploading"
 	KeyPrefixGfSpResumableUploadObjectTask  = "ResuabmleUploading"
-	KeyPrefixGfSpRecoveryPieceTask          = "Recovering"
+	KeyPrefixGfSpRecoverPieceTask           = "Recovering"
 	KeyPrefixGfSpReceivePieceTask           = "ReceivePiece"
 )
 
