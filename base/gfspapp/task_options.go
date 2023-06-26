@@ -228,6 +228,8 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	switch task.Type() {
 	case coretask.TypeTaskCreateBucketApproval:
 		return coretask.UnSchedulingPriority
+	case coretask.TypeTaskMigrateBucketApproval:
+		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskCreateObjectApproval:
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskReplicatePieceApproval:

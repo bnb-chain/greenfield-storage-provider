@@ -108,6 +108,71 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 func (a *ApprovalModular) PostCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) {
 }
 
+func (a *ApprovalModular) PreMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask) error {
+	// TODO: check sp id.
+	return nil
+}
+
+func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, task coretask.ApprovalMigrateBucketTask) (bool, error) {
+	var (
+		err           error
+		signature     []byte
+		currentHeight uint64
+	)
+	if task == nil || task.GetMigrateBucketInfo() == nil {
+		log.CtxErrorw(ctx, "failed to pre migrate bucket approval due to pointer nil")
+		return false, ErrDanglingPointer
+	}
+	defer func() {
+		if err != nil {
+			task.SetError(err)
+		}
+		log.CtxDebugw(ctx, task.Info())
+	}()
+	startQueryQueue := time.Now()
+	if a.bucketQueue.Has(task.Key()) {
+		shadowTask := a.bucketQueue.PopByKey(task.Key())
+		task.SetMigrateBucketInfo(shadowTask.(coretask.ApprovalMigrateBucketTask).GetMigrateBucketInfo())
+		_ = a.bucketQueue.Push(shadowTask)
+		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_repeated_in_migrate_bucket_approval").
+			Observe(time.Since(startQueryQueue).Seconds())
+		log.CtxErrorw(ctx, "repeated migrate bucket approval task is returned")
+		return true, nil
+	}
+	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_repeated_in_migrate_bucket_approval").
+		Observe(time.Since(startQueryQueue).Seconds())
+
+	// begin to sign the new approval task
+	startQueryChain := time.Now()
+	currentHeight = a.GetCurrentBlockHeight()
+	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("query_current_height_in_migrate_bucket_approval").
+		Observe(time.Since(startQueryChain).Seconds())
+	task.SetExpiredHeight(currentHeight + a.bucketApprovalTimeoutHeight)
+	startSignApproval := time.Now()
+	// TODO: modify to migrate proto.
+	signature, err = a.baseApp.GfSpClient().SignMigrateBucketApproval(ctx, task.GetMigrateBucketInfo())
+	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("sign_in_migrate_bucket_approval").
+		Observe(time.Since(startSignApproval).Seconds())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to sign the migrate bucket approval", "error", err)
+		return false, ErrSigner
+	}
+	task.GetMigrateBucketInfo().GetPrimarySpApproval().Sig = signature
+	startPushQueue := time.Now()
+	if err = a.bucketQueue.Push(task); err != nil {
+		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("update_queue_in_migrate_bucket_approval").
+			Observe(time.Since(startPushQueue).Seconds())
+		log.CtxErrorw(ctx, "failed to push the migrate bucket approval to queue", "error", err)
+		return false, err
+	}
+	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("update_queue_in_migrate_bucket_approval").
+		Observe(time.Since(startPushQueue).Seconds())
+	return true, nil
+}
+
+func (a *ApprovalModular) PostMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask) {
+}
+
 func (a *ApprovalModular) PreCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) error {
 	return nil
 }

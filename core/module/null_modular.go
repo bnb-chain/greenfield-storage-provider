@@ -42,12 +42,20 @@ func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreate
 func (*NullModular) HandleCreateBucketApprovalTask(context.Context, task.ApprovalCreateBucketTask) (bool, error) {
 	return false, ErrNilModular
 }
+func (*NullModular) PostCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) {}
+
+func (*NullModular) PreMigrateBucketApproval(context.Context, task.ApprovalMigrateBucketTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleMigrateBucketApprovalTask(context.Context, task.ApprovalMigrateBucketTask) (bool, error) {
+	return false, ErrNilModular
+}
+func (*NullModular) PostMigrateBucketApproval(context.Context, task.ApprovalMigrateBucketTask) {}
 
 func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateBucketTask) (uint32, error) {
 	return 0, ErrNilModular
 }
 
-func (*NullModular) PostCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) {}
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return ErrNilModular
 }

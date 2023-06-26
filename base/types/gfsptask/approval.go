@@ -14,6 +14,7 @@ import (
 )
 
 var _ coretask.ApprovalCreateBucketTask = &GfSpCreateBucketApprovalTask{}
+var _ coretask.ApprovalMigrateBucketTask = &GfSpMigrateBucketApprovalTask{}
 var _ coretask.ApprovalCreateObjectTask = &GfSpCreateObjectApprovalTask{}
 var _ coretask.ApprovalReplicatePieceTask = &GfSpReplicatePieceApprovalTask{}
 
@@ -137,6 +138,128 @@ func (m *GfSpCreateBucketApprovalTask) GetExpiredHeight() uint64 {
 
 func (m *GfSpCreateBucketApprovalTask) SetCreateBucketInfo(bucket *storagetypes.MsgCreateBucket) {
 	m.CreateBucketInfo = bucket
+}
+
+func (m *GfSpMigrateBucketApprovalTask) InitApprovalMigrateBucketTask(bucket *storagetypes.MsgCreateBucket, priority coretask.TPriority) {
+	m.Reset()
+	m.Task = &GfSpTask{}
+	m.GetTask().SetCreateTime(time.Now().Unix())
+	m.GetTask().SetUpdateTime(time.Now().Unix())
+	m.SetMigrateBucketInfo(bucket)
+	m.SetPriority(priority)
+}
+
+func (m *GfSpMigrateBucketApprovalTask) Key() coretask.TKey {
+	return GfSpCreateBucketApprovalTaskKey(m.GetMigrateBucketInfo().GetBucketName(),
+		hex.EncodeToString(m.GetMigrateBucketInfo().GetSignBytes()))
+}
+
+func (m *GfSpMigrateBucketApprovalTask) Type() coretask.TType {
+	return coretask.TypeTaskMigrateBucketApproval
+}
+
+func (m *GfSpMigrateBucketApprovalTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], expiredHeight[%d], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetExpiredHeight(), m.GetTask().Info())
+}
+
+func (m *GfSpMigrateBucketApprovalTask) GetAddress() string {
+	return m.GetTask().GetAddress()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) SetAddress(address string) {
+	m.GetTask().SetAddress(address)
+}
+
+func (m *GfSpMigrateBucketApprovalTask) GetCreateTime() int64 {
+	return m.GetTask().GetCreateTime()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) SetCreateTime(time int64) {
+	m.GetTask().SetCreateTime(time)
+}
+
+func (m *GfSpMigrateBucketApprovalTask) GetUpdateTime() int64 {
+	return m.GetTask().GetUpdateTime()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) SetUpdateTime(time int64) {
+	m.GetTask().SetUpdateTime(time)
+}
+
+func (m *GfSpMigrateBucketApprovalTask) GetTimeout() int64 {
+	return m.GetTask().GetTimeout()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) SetTimeout(time int64) {
+	m.GetTask().SetTimeout(time)
+}
+
+func (m *GfSpMigrateBucketApprovalTask) ExceedTimeout() bool {
+	return m.GetTask().ExceedTimeout()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) GetRetry() int64 {
+	return m.GetTask().GetRetry()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) IncRetry() {
+	m.GetTask().IncRetry()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) SetRetry(retry int) {
+	m.GetTask().SetRetry(retry)
+}
+
+func (m *GfSpMigrateBucketApprovalTask) GetMaxRetry() int64 {
+	return m.GetTask().GetMaxRetry()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) SetMaxRetry(limit int64) {
+	m.GetTask().SetMaxRetry(limit)
+}
+
+func (m *GfSpMigrateBucketApprovalTask) ExceedRetry() bool {
+	return m.GetTask().ExceedRetry()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) Expired() bool {
+	return m.GetTask().Expired()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) GetPriority() coretask.TPriority {
+	return m.GetTask().GetPriority()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) SetPriority(priority coretask.TPriority) {
+	m.GetTask().SetPriority(priority)
+}
+
+func (m *GfSpMigrateBucketApprovalTask) EstimateLimit() corercmgr.Limit {
+	l := &gfsplimit.GfSpLimit{}
+	l.Add(LimitEstimateByPriority(m.GetPriority()))
+	return l
+}
+
+func (m *GfSpMigrateBucketApprovalTask) Error() error {
+	return m.GetTask().Error()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) SetError(err error) {
+	m.GetTask().SetError(err)
+}
+
+func (m *GfSpMigrateBucketApprovalTask) SetExpiredHeight(height uint64) {
+	m.GetMigrateBucketInfo().GetPrimarySpApproval().ExpiredHeight = height
+}
+
+func (m *GfSpMigrateBucketApprovalTask) GetExpiredHeight() uint64 {
+	return m.GetMigrateBucketInfo().GetPrimarySpApproval().GetExpiredHeight()
+}
+
+func (m *GfSpMigrateBucketApprovalTask) SetMigrateBucketInfo(bucket *storagetypes.MsgCreateBucket) {
+	m.MigrateBucketInfo = bucket
 }
 
 func (m *GfSpCreateObjectApprovalTask) InitApprovalCreateObjectTask(

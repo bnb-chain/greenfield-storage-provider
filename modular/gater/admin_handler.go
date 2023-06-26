@@ -27,13 +27,14 @@ import (
 // the request to approver that running the SP approval's strategy.
 func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err                  error
-		reqCtx               *RequestContext
-		approvalMsg          []byte
-		createBucketApproval = storagetypes.MsgCreateBucket{}
-		createObjectApproval = storagetypes.MsgCreateObject{}
-		authenticated        bool
-		approved             bool
+		err                   error
+		reqCtx                *RequestContext
+		approvalMsg           []byte
+		createBucketApproval  = storagetypes.MsgCreateBucket{}
+		migrateBucketApproval = storagetypes.MsgCreateBucket{} // TODO: update to MsgMigrateBucket when chain proto uploaded to buf.
+		createObjectApproval  = storagetypes.MsgCreateObject{}
+		authenticated         bool
+		approved              bool
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -107,6 +108,52 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		bz := storagetypes.ModuleCdc.MustMarshalJSON(approvalTask.GetCreateBucketInfo())
+		w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
+	case migrateBucketApprovalAction:
+		if err = storagetypes.ModuleCdc.UnmarshalJSON(approvalMsg, &migrateBucketApproval); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to unmarshal approval", "approval",
+				r.Header.Get(GnfdUnsignedApprovalMsgHeader), "error", err)
+			err = ErrDecodeMsg
+			return
+		}
+		if err = migrateBucketApproval.ValidateBasic(); err != nil {
+			log.Errorw("failed to basic check migrate bucket approval msg", "bucket_approval_msg",
+				migrateBucketApproval, "error", err)
+			err = ErrValidateMsg
+			return
+		}
+		if reqCtx.NeedVerifyAuthentication() {
+			startVerifyAuthentication := time.Now()
+			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
+				reqCtx.Context(), coremodule.AuthOpAskMigrateBucketApproval,
+				reqCtx.Account(), migrateBucketApproval.GetBucketName(), "")
+			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthentication).Seconds())
+			if err != nil {
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+				return
+			}
+			if !authenticated {
+				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+				err = ErrNoPermission
+				return
+			}
+		}
+		task := &gfsptask.GfSpMigrateBucketApprovalTask{}
+		task.InitApprovalMigrateBucketTask(&migrateBucketApproval, g.baseApp.TaskPriority(task))
+		var approvalTask coretask.ApprovalMigrateBucketTask
+		startAskMigrateBucketApproval := time.Now()
+		approved, approvalTask, err = g.baseApp.GfSpClient().AskMigrateBucketApproval(reqCtx.Context(), task)
+		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("ask_migrate_bucket_approval").Observe(time.Since(startAskMigrateBucketApproval).Seconds())
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to ask migrate bucket approval", "error", err)
+			return
+		}
+		if !approved {
+			log.CtxErrorw(reqCtx.Context(), "refuse the ask migrate bucket approval")
+			err = ErrRefuseApproval
+			return
+		}
+		bz := storagetypes.ModuleCdc.MustMarshalJSON(approvalTask.GetMigrateBucketInfo())
 		w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	case createObjectApprovalAction:
 		if err = storagetypes.ModuleCdc.UnmarshalJSON(approvalMsg, &createObjectApproval); err != nil {

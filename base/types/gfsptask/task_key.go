@@ -10,6 +10,7 @@ import (
 const (
 	Delimiter                               = "-"
 	KeyPrefixGfSpCreateBucketApprovalTask   = "CreateBucketApproval"
+	KeyPrefixGfSpMigrateBucketApprovalTask  = "MigrateBucketApproval"
 	KeyPrefixGfSpCreateObjectApprovalTask   = "CreateObjectApproval"
 	KeyPrefixGfSpReplicatePieceApprovalTask = "ReplicatePieceApproval"
 	KeyPrefixGfSpDownloadObjectTask         = "DownloadObject"
@@ -29,6 +30,10 @@ var (
 
 func GfSpCreateBucketApprovalTaskKey(bucket string, createBucketHash string) task.TKey {
 	return task.TKey(KeyPrefixGfSpCreateBucketApprovalTask + CombineKey("bucket:"+bucket, "hash:"+createBucketHash))
+}
+
+func GfSpMigrateBucketApprovalTaskKey(bucket string, migrateBucketHash string) task.TKey {
+	return task.TKey(KeyPrefixGfSpMigrateBucketApprovalTask + CombineKey("bucket:"+bucket, "hash:"+migrateBucketHash))
 }
 
 func GfSpCreateObjectApprovalTaskKey(bucket, object string, createObjectHash string) task.TKey {

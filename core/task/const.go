@@ -17,6 +17,9 @@ const (
 	// TypeTaskCreateBucketApproval defines the type of asking create bucket approval
 	// to primary SP task
 	TypeTaskCreateBucketApproval
+	// TypeTaskMigrateBucketApproval defines the type of asking migrate bucket approval
+	// to primary SP task
+	TypeTaskMigrateBucketApproval
 	// TypeTaskCreateObjectApproval defines the type of asking create object approval
 	// to primary SP task
 	TypeTaskCreateObjectApproval

@@ -33,6 +33,8 @@ const (
 	AuthOpTypeUnKnown AuthOpType = iota
 	// AuthOpAskCreateBucketApproval defines the AskCreateBucketApproval operator
 	AuthOpAskCreateBucketApproval
+	// AuthOpAskMigrateBucketApproval defines the AskMigrateBucketApproval operator
+	AuthOpAskMigrateBucketApproval
 	// AuthOpAskCreateObjectApproval defines the AskCreateObjectApproval operator
 	AuthOpAskCreateObjectApproval
 	// AuthOpTypeGetChallengePieceInfo defines the GetChallengePieceInfo operator
@@ -74,6 +76,15 @@ type Approver interface {
 	// PostCreateBucketApproval is called after HandleCreateBucketApprovalTask, it can recycle resources, make statistics
 	// and do some other operations.
 	PostCreateBucketApproval(ctx context.Context, task task.ApprovalCreateBucketTask)
+
+	// PreMigrateBucketApproval prepares to handle MigrateBucketApproval, it can do some
+	// checks such as checking for duplicates, if limitation of SP has been reached, etc.
+	PreMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask) error
+	// HandleMigrateBucketApprovalTask handles the MigrateBucketApproval, it can set expired height, sign the MsgMigrateBucket and so on.
+	HandleMigrateBucketApprovalTask(ctx context.Context, task task.ApprovalMigrateBucketTask) (bool, error)
+	// PostMigrateBucketApproval is called after HandleMigrateBucketApprovalTask, it can recycle resources, make statistics
+	// and do some other operations.
+	PostMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask)
 
 	// PreCreateObjectApproval prepares to handle CreateObjectApproval, it can do some
 	// checks such as check for duplicates, if limitation of SP has been reached, etc.

@@ -34,8 +34,9 @@ const (
 )
 
 const (
-	createBucketApprovalAction = "CreateBucket"
-	createObjectApprovalAction = "CreateObject"
+	createBucketApprovalAction  = "CreateBucket"
+	createObjectApprovalAction  = "CreateObject"
+	migrateBucketApprovalAction = "MigrateBucket"
 )
 
 // notFoundHandler log not found request info.

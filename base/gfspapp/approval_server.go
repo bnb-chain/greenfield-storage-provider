@@ -40,6 +40,22 @@ func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpA
 			Response: &gfspserver.GfSpAskApprovalResponse_CreateBucketApprovalTask{
 				CreateBucketApprovalTask: approvalTask,
 			}}, nil
+	case *gfspserver.GfSpAskApprovalRequest_MigrateBucketApprovalTask:
+		approvalTask := task.MigrateBucketApprovalTask
+		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
+		span, err := g.approver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reserve approval resource", "error", err)
+			return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalExhaustResource}, nil
+		}
+		defer span.Done()
+		allow, err := g.OnAskMigrateBucketApproval(ctx, approvalTask)
+		return &gfspserver.GfSpAskApprovalResponse{
+			Err:     gfsperrors.MakeGfSpError(err),
+			Allowed: allow,
+			Response: &gfspserver.GfSpAskApprovalResponse_MigrateBucketApprovalTask{
+				MigrateBucketApprovalTask: approvalTask,
+			}}, nil
 	case *gfspserver.GfSpAskApprovalRequest_CreateObjectApprovalTask:
 		approvalTask := task.CreateObjectApprovalTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
@@ -80,6 +96,27 @@ func (g *GfSpBaseApp) OnAskCreateBucketApproval(ctx context.Context, task task.A
 	}
 	g.approver.PostCreateBucketApproval(ctx, task)
 	log.CtxDebugw(ctx, "succeed to ask create bucket approval")
+	return allow, nil
+}
+
+func (g *GfSpBaseApp) OnAskMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask) (bool, error) {
+	if task == nil || task.GetMigrateBucketInfo() == nil {
+		log.CtxError(ctx, "failed to ask migrate bucket approval due to bucket info pointer dangling")
+		return false, ErrApprovalTaskDangling
+	}
+
+	err := g.approver.PreMigrateBucketApproval(ctx, task)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pre migrate bucket approval", "info", task.Info(), "error", err)
+		return false, err
+	}
+	allow, err := g.approver.HandleMigrateBucketApprovalTask(ctx, task)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to ask  migrate bucket approval", "error", err)
+		return false, err
+	}
+	g.approver.PostMigrateBucketApproval(ctx, task)
+	log.CtxDebugw(ctx, "succeed to ask migrate bucket approval")
 	return allow, nil
 }
 
