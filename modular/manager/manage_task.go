@@ -525,6 +525,12 @@ func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.R
 		return ErrDanglingTask
 	}
 
+	if task.GetRecovered() {
+		m.recoveryQueue.PopByKey(task.Key())
+		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
+		return nil
+	}
+
 	if task.Error() != nil {
 		log.CtxErrorw(ctx, "handler error recovery piece task", "task_info", task.Info(), "error", task.Error())
 		return m.handleFailedRecoveryPieceTask(ctx, task)

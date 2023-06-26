@@ -74,6 +74,7 @@ message GfSpRecoveryPieceTask {
   int32 ec_idx = 6;
   uint64 piece_size = 7;
   bytes signature = 8;
+  bool recovered = 9;
 }
 
 message GfSpReceivePieceTask {

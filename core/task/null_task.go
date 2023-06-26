@@ -118,6 +118,8 @@ func (*NullTask) SetUserAddress(string)                  {}
 func (*NullTask) GetSegmentIdx() uint32                  { return 0 }
 func (*NullTask) GetEcIdx() int32                        { return 0 }
 func (*NullTask) SetSegmentIdx(uint32)                   {}
+func (*NullTask) GetRecovered() bool                     { return false }
+func (*NullTask) SetRecoverDone()                        {}
 func (*NullTask) GetRedundancyIdx() int32                { return 0 }
 func (*NullTask) SetRedundancyIdx(idx int32)             {}
 func (*NullTask) GetIntegrityHash() []byte               { return nil }

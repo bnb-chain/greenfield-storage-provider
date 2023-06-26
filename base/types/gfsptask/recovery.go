@@ -158,6 +158,10 @@ func (m *GfSpRecoveryPieceTask) SetPieceSize(size uint64) {
 	m.PieceSize = size
 }
 
+func (m *GfSpRecoveryPieceTask) SetRecoverDone() {
+	m.Recovered = true
+}
+
 func (m *GfSpRecoveryPieceTask) GetSignBytes() []byte {
 	fakeMsg := &GfSpRecoveryPieceTask{
 		ObjectInfo:    m.GetObjectInfo(),

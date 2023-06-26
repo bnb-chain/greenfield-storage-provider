@@ -481,4 +481,7 @@ type RecoveryPieceTask interface {
 	SetSignature([]byte)
 	// GetSignBytes returns the bytes from the task for primary SP to sign.
 	GetSignBytes() []byte
+	GetRecovered() bool
+	// SetRecoverDone set the recovery status as finish
+	SetRecoverDone()
 }

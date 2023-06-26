@@ -309,6 +309,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		recoveryKey        string
 		recoveryMinEcIndex = -1
 		err                error
+		finishRecovery     = false
 	)
 	defer func() {
 		if err != nil {
@@ -316,6 +317,11 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		}
 		if task.Error() != nil {
 			log.CtxErrorw(ctx, "recovery task failed", "error", task.Error())
+		}
+		if finishRecovery {
+			task.SetRecoverDone()
+			//	reportErr := e.ReportTask(ctx, task)
+			//	log.CtxDebugw(ctx, "recovery task report progress", "task_info", task.Info(), "error", reportErr)
 		}
 	}()
 
@@ -367,6 +373,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 			return
 		}
 		log.CtxDebugw(ctx, "secondary SP recovery successfully", "pieceKey:", recoveryKey)
+		finishRecovery = true
 		return
 	} else {
 		// recovery primary SP
@@ -442,6 +449,7 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 			log.CtxErrorw(ctx, "EC decode data write piece fail", "pieceKey:", recoveryKey, "error", err)
 			return
 		}
+		finishRecovery = true
 	}
 
 	log.CtxDebugw(ctx, "primary SP recovery successfully", "pieceKey:", recoveryKey)
