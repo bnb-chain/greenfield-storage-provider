@@ -2,20 +2,25 @@ package downloader
 
 import (
 	"context"
+	"fmt"
+
+	lru "github.com/hashicorp/golang-lru"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 )
 
 var _ module.Downloader = &DownloadModular{}
 
 type DownloadModular struct {
-	baseApp        *gfspapp.GfSpBaseApp
-	scope          rcmgr.ResourceScope
-	downloadQueue  taskqueue.TQueueOnStrategy
-	challengeQueue taskqueue.TQueueOnStrategy
+	baseApp           *gfspapp.GfSpBaseApp
+	scope             rcmgr.ResourceScope
+	pieceCache        *lru.Cache
+	downloading       int64
+	downloadParallel  int64
+	challenging       int64
+	challengeParallel int64
 
 	// bucketFreeQuota defines the free read quota per bucket, if exceed
 	// the quota, the account should buy traffic.
@@ -54,4 +59,8 @@ func (d *DownloadModular) ReserveResource(ctx context.Context, state *rcmgr.Scop
 
 func (d *DownloadModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
 	span.Done()
+}
+
+func cacheKey(pieceKey string, offset, length int64) string {
+	return fmt.Sprintf("piece:%s-offset:%d-length:%d", pieceKey, offset, length)
 }
