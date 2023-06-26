@@ -78,6 +78,10 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign replicate piece task", "error", err)
 		}
+	case *gfspserver.GfSpSignRequest_GfspRecoverPieceTask:
+		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspRecoverPieceTask.Key().String())
+		log.CtxDebugw(ctx, "signing recovery task")
+		signature, err = g.signer.SignRecoveryPieceTask(ctx, t.GfspRecoverPieceTask)
 	}
 	return &gfspserver.GfSpSignResponse{
 		Err:           gfsperrors.MakeGfSpError(err),

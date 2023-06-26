@@ -25,8 +25,7 @@ const (
 	TypeTaskReplicatePieceApproval
 	// TypeTaskUpload defines the type of uploading object to primary SP task.
 	TypeTaskUpload
-	// TypeTaskReplicatePiece defines the type of replicating pieces to secondary SPs
-	// task.
+	// TypeTaskReplicatePiece defines the type of replicating pieces to secondary SPs task.
 	TypeTaskReplicatePiece
 	// TypeTaskSealObject defines the type of sealing object to the chain task.
 	TypeTaskSealObject
@@ -44,6 +43,8 @@ const (
 	TypeTaskGCZombiePiece
 	// TypeTaskGCMeta defines the type of collecting SP metadata task.
 	TypeTaskGCMeta
+	// TypeTaskRecoverPiece defines the type of the recovering piece task.
+	TypeTaskRecoverPiece
 )
 
 var TypeTaskMap = map[TType]string{
@@ -60,6 +61,7 @@ var TypeTaskMap = map[TType]string{
 	TypeTaskGCObject:               "GCObjectTask",
 	TypeTaskGCZombiePiece:          "GCZombiePieceTask",
 	TypeTaskGCMeta:                 "GCMetaTask",
+	TypeTaskRecoverPiece:           "RecoverPieceTask",
 }
 
 func TaskTypeName(taskType TType) string {

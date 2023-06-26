@@ -4,8 +4,10 @@ import (
 	"context"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -19,6 +21,8 @@ import (
 
 // CurrentHeight the block height sub one as the stable height.
 func (g *Gnfd) CurrentHeight(ctx context.Context) (uint64, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_height").Observe(time.Since(startTime).Seconds())
 	resp, err := g.getCurrentWsClient().ABCIInfo(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "get latest block height failed", "node_addr",
@@ -30,6 +34,8 @@ func (g *Gnfd) CurrentHeight(ctx context.Context) (uint64, error) {
 
 // HasAccount returns an indication of the existence of address.
 func (g *Gnfd) HasAccount(ctx context.Context, address string) (bool, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_account").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: address})
 	if err != nil {
@@ -41,6 +47,8 @@ func (g *Gnfd) HasAccount(ctx context.Context, address string) (bool, error) {
 
 // ListSPs returns the list of storage provider info.
 func (g *Gnfd) ListSPs(ctx context.Context) ([]*sptypes.StorageProvider, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("list_sps").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	var spInfos []*sptypes.StorageProvider
 	resp, err := client.StorageProviders(ctx, &sptypes.QueryStorageProvidersRequest{
@@ -61,6 +69,8 @@ func (g *Gnfd) ListSPs(ctx context.Context) ([]*sptypes.StorageProvider, error) 
 
 // ListBondedValidators returns the list of bonded validators.
 func (g *Gnfd) ListBondedValidators(ctx context.Context) ([]stakingtypes.Validator, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("list_bonded_validators").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	var validators []stakingtypes.Validator
 	resp, err := client.Validators(ctx, &stakingtypes.QueryValidatorsRequest{Status: "BOND_STATUS_BONDED"})
@@ -76,6 +86,8 @@ func (g *Gnfd) ListBondedValidators(ctx context.Context) ([]stakingtypes.Validat
 
 // QueryStorageParams returns storage params
 func (g *Gnfd) QueryStorageParams(ctx context.Context) (params *storagetypes.Params, err error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_storage_params").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.StorageQueryClient.Params(ctx, &storagetypes.QueryParamsRequest{})
 	if err != nil {
@@ -86,10 +98,9 @@ func (g *Gnfd) QueryStorageParams(ctx context.Context) (params *storagetypes.Par
 }
 
 // QueryStorageParamsByTimestamp returns storage params by block create time.
-func (g *Gnfd) QueryStorageParamsByTimestamp(
-	ctx context.Context,
-	timestamp int64) (
-	params *storagetypes.Params, err error) {
+func (g *Gnfd) QueryStorageParamsByTimestamp(ctx context.Context, timestamp int64) (params *storagetypes.Params, err error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_storage_params_by_timestamp").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.StorageQueryClient.QueryParamsByTimestamp(ctx,
 		&storagetypes.QueryParamsByTimestampRequest{Timestamp: timestamp})
@@ -102,6 +113,8 @@ func (g *Gnfd) QueryStorageParamsByTimestamp(
 
 // QueryBucketInfo returns the bucket info by name.
 func (g *Gnfd) QueryBucketInfo(ctx context.Context, bucket string) (*storagetypes.BucketInfo, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_bucket").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if err != nil {
@@ -113,6 +126,8 @@ func (g *Gnfd) QueryBucketInfo(ctx context.Context, bucket string) (*storagetype
 
 // QueryObjectInfo returns the object info by name.
 func (g *Gnfd) QueryObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.ObjectInfo, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_object").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.HeadObject(ctx, &storagetypes.QueryHeadObjectRequest{
 		BucketName: bucket,
@@ -127,6 +142,8 @@ func (g *Gnfd) QueryObjectInfo(ctx context.Context, bucket, object string) (*sto
 
 // QueryObjectInfoByID returns the object info by name.
 func (g *Gnfd) QueryObjectInfoByID(ctx context.Context, objectID string) (*storagetypes.ObjectInfo, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_object_by_id").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.HeadObjectById(ctx, &storagetypes.QueryHeadObjectByIdRequest{
 		ObjectId: objectID,
@@ -155,20 +172,23 @@ func (g *Gnfd) QueryBucketInfoAndObjectInfo(ctx context.Context, bucket, object 
 // ListenObjectSeal returns an indication of the object is sealed.
 // TODO:: retrieve service support seal event subscription
 func (g *Gnfd) ListenObjectSeal(ctx context.Context, objectID uint64, timeoutHeight int) (bool, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("wait_object_seal").Observe(time.Since(startTime).Seconds())
 	var (
 		objectInfo *storagetypes.ObjectInfo
 		err        error
 	)
 	for i := 0; i < timeoutHeight; i++ {
-		time.Sleep(ExpectedOutputBlockInternal * time.Second)
 		objectInfo, err = g.QueryObjectInfoByID(ctx, strconv.FormatUint(objectID, 10))
 		if err != nil {
+			time.Sleep(ExpectedOutputBlockInternal * time.Second)
 			continue
 		}
 		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
 			log.CtxDebugw(ctx, "succeed to listen object stat")
 			return true, nil
 		}
+		time.Sleep(ExpectedOutputBlockInternal * time.Second)
 	}
 	if err == nil {
 		log.CtxErrorw(ctx, "seal object timeout", "object_id", objectID)
@@ -178,8 +198,33 @@ func (g *Gnfd) ListenObjectSeal(ctx context.Context, objectID uint64, timeoutHei
 	return false, err
 }
 
+// ListenRejectUnSealObject returns an indication of the object is rejected.
+// TODO:: retrieve service support reject unseal event subscription
+func (g *Gnfd) ListenRejectUnSealObject(ctx context.Context, objectID uint64, timeoutHeight int) (bool, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("wait_reject_unseal_object").Observe(time.Since(startTime).Seconds())
+	var err error
+	for i := 0; i < timeoutHeight; i++ {
+		_, err = g.QueryObjectInfoByID(ctx, strconv.FormatUint(objectID, 10))
+		if err != nil {
+			if strings.Contains(err.Error(), "No such object") {
+				return true, nil
+			}
+		}
+		time.Sleep(ExpectedOutputBlockInternal * time.Second)
+	}
+	if err == nil {
+		log.CtxErrorw(ctx, "reject unseal object timeout", "object_id", objectID)
+		return false, ErrRejectUnSealTimeout
+	}
+	log.CtxErrorw(ctx, "failed to listen reject unseal object", "object_id", objectID, "error", err)
+	return false, err
+}
+
 // QueryPaymentStreamRecord returns the steam record info by account.
 func (g *Gnfd) QueryPaymentStreamRecord(ctx context.Context, account string) (*paymenttypes.StreamRecord, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("query_payment_stream_record").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.StreamRecord(ctx, &paymenttypes.QueryGetStreamRecordRequest{
 		Account: account,
@@ -193,6 +238,8 @@ func (g *Gnfd) QueryPaymentStreamRecord(ctx context.Context, account string) (*p
 
 // VerifyGetObjectPermission verifies get object permission.
 func (g *Gnfd) VerifyGetObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("verify_get_object_permission").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{
 		Operator:   account,
@@ -212,6 +259,8 @@ func (g *Gnfd) VerifyGetObjectPermission(ctx context.Context, account, bucket, o
 
 // VerifyPutObjectPermission verifies put object permission.
 func (g *Gnfd) VerifyPutObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainHistogram.WithLabelValues("verify_put_object_permission").Observe(time.Since(startTime).Seconds())
 	_ = object
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{

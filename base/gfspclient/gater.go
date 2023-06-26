@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -26,6 +27,10 @@ const (
 	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
+	//RecoveryObjectPiecePath defines recovery-object path style
+	RecoveryObjectPiecePath = "/greenfield/recovery/v1/get-piece"
+	// GnfdRecoveryMsgHeader defines receive piece data meta
+	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(
@@ -54,7 +59,7 @@ func (s *GfSpClient) ReplicatePieceToSecondary(
 	receiveHeader := hex.EncodeToString(receiveMsg)
 	req.Header.Add(GnfdReplicatePieceApprovalHeader, approvalHeader)
 	req.Header.Add(GnfdReceiveMsgHeader, receiveHeader)
-	resp, err := s.HttpClient(ctx).Do(req)
+	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		return err
 	}
@@ -63,6 +68,34 @@ func (s *GfSpClient) ReplicatePieceToSecondary(
 		return fmt.Errorf("failed to replicate piece, StatusCode(%d) Endpoint(%s)", resp.StatusCode, endpoint)
 	}
 	return nil
+}
+
+func (s *GfSpClient) GetPieceFromECChunks(ctx context.Context, endpoint string, task coretask.RecoveryPieceTask) (io.ReadCloser, error) {
+	req, err := http.NewRequest(http.MethodGet, endpoint+RecoveryObjectPiecePath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
+		return nil, err
+	}
+
+	recoveryTask := task.(*gfsptask.GfSpRecoverPieceTask)
+	recoveryMsg, err := json.Marshal(recoveryTask)
+	if err != nil {
+		return nil, err
+	}
+	recoveryHeader := hex.EncodeToString(recoveryMsg)
+	req.Header.Add(GnfdRecoveryMsgHeader, recoveryHeader)
+
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client do recovery request to SPs", "error", err)
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get recovery piece, StatusCode(%d) Endpoint(%s)", resp.StatusCode, endpoint)
+	}
+
+	return resp.Body, nil
 }
 
 func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint string, approval coretask.ApprovalReplicatePieceTask,
@@ -87,7 +120,7 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	receiveHeader := hex.EncodeToString(receiveMsg)
 	req.Header.Add(GnfdReplicatePieceApprovalHeader, approvalHeader)
 	req.Header.Add(GnfdReceiveMsgHeader, receiveHeader)
-	resp, err := s.HttpClient(ctx).Do(req)
+	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		return nil, nil, err
 	}

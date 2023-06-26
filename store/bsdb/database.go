@@ -44,6 +44,10 @@ type Metadata interface {
 	GetBucketMetaByName(bucketName string, includePrivate bool) (*BucketFullMeta, error)
 	// ListGroupsByNameAndSourceType get groups list by specific parameters
 	ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int, includeRemoved bool) ([]*Group, int64, error)
+	// ListObjectsByObjectID list objects by object ids
+	ListObjectsByObjectID(ids []common.Hash, includeRemoved bool) ([]*Object, error)
+	// ListBucketsByBucketID list buckets by bucket ids
+	ListBucketsByBucketID(ids []common.Hash, includeRemoved bool) ([]*Bucket, error)
 }
 
 // BSDB contains all the methods required by block syncer database

@@ -3,13 +3,13 @@ package gfspclient
 import (
 	"context"
 
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
-	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
+	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
@@ -374,6 +374,27 @@ func (s *GfSpClient) GetUploadObjectState(ctx context.Context, objectID uint64, 
 	return int32(resp.GetState()), nil
 }
 
+func (s *GfSpClient) GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return 0, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpQueryResumableUploadSegmentRequest{
+		ObjectId: objectID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpQueryResumableUploadSegment(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get uploading object segment", "error", err)
+		return 0, ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return 0, resp.GetErr()
+	}
+	return resp.GetSegmentCount(), nil
+}
+
 func (s *GfSpClient) GetGroupList(
 	ctx context.Context,
 	name string,
@@ -403,4 +424,42 @@ func (s *GfSpClient) GetGroupList(
 		return nil, 0, ErrRpcUnknown
 	}
 	return resp.Groups, resp.Count, nil
+}
+
+func (s *GfSpClient) ListBucketsByBucketID(ctx context.Context, bucketIDs []uint64, includeRemoved bool, opts ...grpc.DialOption) (map[uint64]*types.Bucket, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListBucketsByBucketIDRequest{
+		BucketIds:      bucketIDs,
+		IncludeRemoved: includeRemoved,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListBucketsByBucketID(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list buckets by bucket ids", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Buckets, nil
+}
+
+func (s *GfSpClient) ListObjectsByObjectID(ctx context.Context, objectIDs []uint64, includeRemoved bool, opts ...grpc.DialOption) (map[uint64]*types.Object, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListObjectsByObjectIDRequest{
+		ObjectIds:      objectIDs,
+		IncludeRemoved: includeRemoved,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsByObjectID(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list objects by object ids", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Objects, nil
 }

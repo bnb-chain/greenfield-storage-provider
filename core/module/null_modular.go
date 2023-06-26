@@ -5,11 +5,12 @@ import (
 	"errors"
 	"io"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
@@ -20,7 +21,7 @@ var _ Modular = (*NullModular)(nil)
 var _ Approver = (*NullModular)(nil)
 var _ Uploader = (*NullModular)(nil)
 var _ Manager = (*NullModular)(nil)
-var _ Authorizer = (*NullModular)(nil)
+var _ Authenticator = (*NullModular)(nil)
 
 type NullModular struct{}
 
@@ -54,10 +55,22 @@ func (*NullModular) PreReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NullModular) HandleReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) (bool, error) {
 	return false, ErrNilModular
 }
+func (*NullModular) HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
+	return ErrNilModular
+}
 func (*NullModular) PostReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) {}
 func (*NullModular) PreUploadObject(ctx context.Context, task task.UploadObjectTask) error {
 	return ErrNilModular
 }
+func (*NullModular) PreResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error {
+	return ErrNilModular
+}
+func (*NullModular) PostResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) {
+}
+
 func (*NullModular) HandleUploadObjectTask(ctx context.Context, task task.UploadObjectTask, stream io.Reader) error {
 	return nil
 }
@@ -72,6 +85,12 @@ func (*NullModular) HandleCreateUploadObjectTask(context.Context, task.UploadObj
 	return ErrNilModular
 }
 func (*NullModular) HandleDoneUploadObjectTask(context.Context, task.UploadObjectTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleCreateResumableUploadObjectTask(context.Context, task.ResumableUploadObjectTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleDoneResumableUploadObjectTask(context.Context, task.ResumableUploadObjectTask) error {
 	return ErrNilModular
 }
 func (*NullModular) HandleReplicatePieceTask(context.Context, task.ReplicatePieceTask) error {
@@ -96,7 +115,7 @@ func (*NullModular) HandleDownloadObjectTask(context.Context, task.DownloadObjec
 func (*NullModular) HandleChallengePieceTask(context.Context, task.ChallengePieceTask) error {
 	return ErrNilModular
 }
-func (*NullModular) VerifyAuthorize(context.Context, AuthOpType, string, string, string) (bool, error) {
+func (*NullModular) VerifyAuthentication(context.Context, AuthOpType, string, string, string) (bool, error) {
 	return false, ErrNilModular
 }
 
@@ -151,7 +170,7 @@ func (*NilModular) PreChallengePiece(context.Context, task.ChallengePieceTask) e
 func (*NilModular) HandleChallengePiece(context.Context, task.ChallengePieceTask) ([]byte, [][]byte, []byte, error) {
 	return nil, nil, nil, ErrNilModular
 }
-func (*NilModular) AskTask(context.Context, rcmgr.Limit)                              {}
+func (*NilModular) AskTask(context.Context) error                                     { return nil }
 func (*NilModular) PostChallengePiece(context.Context, task.ChallengePieceTask)       {}
 func (*NilModular) ReportTask(context.Context, task.Task) error                       { return ErrNilModular }
 func (*NilModular) HandleReplicatePieceTask(context.Context, task.ReplicatePieceTask) {}
@@ -175,6 +194,9 @@ func (*NilModular) SignReplicatePieceApproval(context.Context, task.ApprovalRepl
 	return nil, ErrNilModular
 }
 func (*NilModular) SignReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
+	return nil, ErrNilModular
+}
+func (*NilModular) SignRecoveryPieceTask(context.Context, task.RecoveryPieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
 func (*NilModular) SignIntegrityHash(ctx context.Context, objectID uint64, hash [][]byte) ([]byte, []byte, error) {

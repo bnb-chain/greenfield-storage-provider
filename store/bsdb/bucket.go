@@ -140,3 +140,23 @@ func (b *BsDBImpl) GetBucketMetaByName(bucketName string, includePrivate bool) (
 
 	return bucketFullMeta, err
 }
+
+// ListBucketsByBucketID list buckets by bucket ids
+func (b *BsDBImpl) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool) ([]*Bucket, error) {
+	var (
+		buckets []*Bucket
+		err     error
+		filters []func(*gorm.DB) *gorm.DB
+	)
+
+	if !includeRemoved {
+		filters = append(filters, RemovedFilter(includeRemoved))
+	}
+
+	err = b.db.Table((&Bucket{}).TableName()).
+		Select("*").
+		Where("bucket_id in (?)", ids).
+		Scopes(filters...).
+		Find(&buckets).Error
+	return buckets, err
+}
