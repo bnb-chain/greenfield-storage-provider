@@ -66,9 +66,9 @@ const (
 	MinGCObjectRetry = 3
 	// MaxGCObjectRetry defines the min retry number to gc object.
 	MaxGCObjectRetry = 5
-	// MinRecoveryRetry defines the min retry number to gc object.
-	MinRecoveryRetry = 1
-	// MaxRecoveryRetry  defines the max retry number to gc object.
+	// MinRecoveryRetry defines the min retry number to recovery piece.
+	MinRecoveryRetry = 2
+	// MaxRecoveryRetry  defines the max retry number to recovery piece.
 	MaxRecoveryRetry = 3
 )
 

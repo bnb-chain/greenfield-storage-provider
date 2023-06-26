@@ -426,7 +426,6 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 // if it is used to recovery secondary SP and the handler is the corresponding primary SP,
 // it directly returns the EC piece data of the secondary SP.
 func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Request) {
-	log.CtxDebugw(context.Background(), "gateway recovery handler begin1")
 	var (
 		err         error
 		reqCtx      *RequestContext

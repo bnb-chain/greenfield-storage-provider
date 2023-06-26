@@ -256,6 +256,11 @@ var (
 		Help:    "Track the time of replicate piece to secondary.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"replicate_piece_time"})
+	RecoverPieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "recovery_piece_time",
+		Help:    "Track the time of recovery piece",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"recovery_piece_time"})
 	ExecutorReplicatePieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "replicate_task_count",
 		Help: "Track replicate task number.",

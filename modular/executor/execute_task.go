@@ -320,8 +320,6 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 		}
 		if finishRecovery {
 			task.SetRecoverDone()
-			//	reportErr := e.ReportTask(ctx, task)
-			//	log.CtxDebugw(ctx, "recovery task report progress", "task_info", task.Info(), "error", reportErr)
 		}
 	}()
 
@@ -345,7 +343,6 @@ func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coret
 
 	// recovery secondary SP
 	if ecIndex >= 0 {
-		log.CtxDebugw(ctx, "begin to recovery secondary SP object")
 		objectId := task.GetObjectInfo().Id.Uint64()
 		segmentIdx := task.GetSegmentIdx()
 		primarySPEndpoint, err := e.getObjectPrimarySPEndpoint(ctx, task.GetObjectInfo().BucketName)
@@ -477,12 +474,10 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 		signature []byte
 		pieceData []byte
 	)
-	/*
-		metrics.ReplicatePieceSizeCounter.WithLabelValues(e.Name()).Add(float64(len(data)))
-		startTime := time.Now()
-		defer func() {
-			metrics.ReplicatePieceTimeHistogram.WithLabelValues(e.Name()).Observe(time.Since(startTime).Seconds())
-		}() */
+	startTime := time.Now()
+	defer func() {
+		metrics.RecoverPieceTimeHistogram.WithLabelValues(e.Name()).Observe(time.Since(startTime).Seconds())
+	}()
 
 	signature, err = e.baseApp.GfSpClient().SignRecoveryTask(ctx, rTask)
 	if err != nil {
