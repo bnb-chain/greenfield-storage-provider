@@ -94,13 +94,8 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 	}
 	task.GetCreateBucketInfo().GetPrimarySpApproval().Sig = signature
 	startPushQueue := time.Now()
-	if err = a.bucketQueue.Push(task); err != nil {
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("update_queue_in_create_bucket_approval").
-			Observe(time.Since(startPushQueue).Seconds())
-		log.CtxErrorw(ctx, "failed to push the create bucket approval to queue", "error", err)
-		return false, err
-	}
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("update_queue_in_create_bucket_approval").
+	_ = a.bucketQueue.Push(task)
+	metrics.GnfdChainHistogram.WithLabelValues("update_queue_in_create_bucket_approval").
 		Observe(time.Since(startPushQueue).Seconds())
 	return true, nil
 }
@@ -159,12 +154,7 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 	}
 	task.GetMigrateBucketInfo().GetPrimarySpApproval().Sig = signature
 	startPushQueue := time.Now()
-	if err = a.bucketQueue.Push(task); err != nil {
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("update_queue_in_migrate_bucket_approval").
-			Observe(time.Since(startPushQueue).Seconds())
-		log.CtxErrorw(ctx, "failed to push the migrate bucket approval to queue", "error", err)
-		return false, err
-	}
+	_ = a.bucketQueue.Push(task)
 	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("update_queue_in_migrate_bucket_approval").
 		Observe(time.Since(startPushQueue).Seconds())
 	return true, nil
@@ -223,13 +213,8 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(ctx context.Context, ta
 	}
 	task.GetCreateObjectInfo().GetPrimarySpApproval().Sig = signature
 	startPushQueue := time.Now()
-	if err = a.objectQueue.Push(task); err != nil {
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("update_queue_in_create_object_approval").
-			Observe(time.Since(startPushQueue).Seconds())
-		log.CtxErrorw(ctx, "failed to push the create object task to queue", "error", err)
-		return false, err
-	}
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("update_queue_in_create_object_approval").
+	_ = a.objectQueue.Push(task)
+	metrics.GnfdChainHistogram.WithLabelValues("update_queue_in_create_object_approval").
 		Observe(time.Since(startPushQueue).Seconds())
 	return true, nil
 }
