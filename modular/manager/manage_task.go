@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -74,6 +75,14 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
+
+	task = m.recoveryQueue.TopByLimit(limit)
+	if task != nil {
+		log.CtxDebugw(ctx, "add confirm recovery piece to backup set", "recovery task_key", task.Key().String(),
+			"task_limit", task.EstimateLimit().String())
+		backupTasks = append(backupTasks, task)
+	}
+
 	task = m.PickUpTask(ctx, backupTasks)
 	if task == nil {
 		return nil, nil
@@ -181,6 +190,101 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 			return ErrGfSpDB
 		}
 		log.CtxDebugw(ctx, "succeed to done upload object and waiting for scheduling to replicate piece", "task_info", task.Info())
+		return nil
+	}()
+	return nil
+}
+
+func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error {
+	if task == nil {
+		log.CtxErrorw(ctx, "failed to handle begin upload object due to task pointer dangling")
+		return ErrDanglingTask
+	}
+	if m.UploadingObjectNumber() >= m.maxUploadObjectNumber {
+		log.CtxErrorw(ctx, "uploading object exceed", "uploading", m.uploadQueue.Len(),
+			"replicating", m.replicateQueue.Len(), "sealing", m.sealQueue.Len(), "resumable uploading", m.resumeableUploadQueue.Len())
+		return ErrExceedTask
+	}
+	if m.TaskUploading(ctx, task) {
+		log.CtxErrorw(ctx, "uploading object repeated", "task_info", task.Info())
+		return ErrRepeatedTask
+	}
+	if err := m.resumeableUploadQueue.Push(task); err != nil {
+		log.CtxErrorw(ctx, "failed to push resumable upload object task to queue", "task_info", task.Info(), "error", err)
+		return err
+	}
+	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
+		log.CtxErrorw(ctx, "failed to create resumable upload object progress", "task_info", task.Info(), "error", err)
+		// TODO(chris)
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			return nil
+		} else {
+			return ErrGfSpDB
+		}
+	}
+	return nil
+}
+
+func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error {
+	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
+		log.CtxErrorw(ctx, "failed to handle done upload object, pointer dangling")
+		return ErrDanglingTask
+	}
+	m.resumeableUploadQueue.PopByKey(task.Key())
+
+	startCheckUploadingTime := time.Now()
+	uploading := m.TaskUploading(ctx, task)
+	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_check_uploading").
+		Observe(time.Since(startCheckUploadingTime).Seconds())
+	if uploading {
+		log.CtxErrorw(ctx, "uploading object repeated")
+		return ErrRepeatedTask
+	}
+	if task.Error() != nil {
+		go func() error {
+			startUpdateSPDBTime := time.Now()
+			err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+				ErrorDescription: task.Error().Error(),
+			})
+			metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
+				Observe(time.Since(startUpdateSPDBTime).Seconds())
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to resumable update object task state", "error", err)
+			}
+			log.CtxErrorw(ctx, "reports failed resumable update object task", "task_info", task.Info(), "error", task.Error())
+			return nil
+		}()
+		return nil
+	}
+	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
+	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
+		m.baseApp.TaskPriority(replicateTask),
+		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
+		m.baseApp.TaskMaxRetry(replicateTask))
+
+	startPushReplicateQueueTime := time.Now()
+	err := m.replicateQueue.Push(replicateTask)
+	metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_push_replicate_queue").
+		Observe(time.Since(startPushReplicateQueueTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
+		return err
+	}
+	go func() error {
+		startUpdateSPDBTime := time.Now()
+		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			ObjectID:  task.GetObjectInfo().Id.Uint64(),
+			TaskState: types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
+		})
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_update_spdb").
+			Observe(time.Since(startUpdateSPDBTime).Seconds())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
+			return ErrGfSpDB
+		}
+		log.CtxDebugw(ctx, "succeed to done upload object and waiting for scheduling to replicate piece")
 		return nil
 	}()
 	return nil
@@ -432,6 +536,54 @@ func (m *ManageModular) HandleChallengePieceTask(ctx context.Context, task task.
 	return nil
 }
 
+func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
+	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
+		log.CtxErrorw(ctx, "failed to handle recovery piece due to pointer dangling")
+		return ErrDanglingTask
+	}
+
+	if task.GetRecovered() {
+		m.recoveryQueue.PopByKey(task.Key())
+		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
+		return nil
+	}
+
+	if task.Error() != nil {
+		log.CtxErrorw(ctx, "handler error recovery piece task", "task_info", task.Info(), "error", task.Error())
+		return m.handleFailedRecoverPieceTask(ctx, task)
+	}
+
+	if m.TaskRecovering(ctx, task) {
+		log.CtxErrorw(ctx, "recovering object repeated", "task_info", task.Info())
+		return ErrRepeatedTask
+	}
+
+	task.SetUpdateTime(time.Now().Unix())
+	if err := m.recoveryQueue.Push(task); err != nil {
+		log.CtxErrorw(ctx, "failed to push recovery object task to queue", "task_info", task.Info(), "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handleTask task.RecoveryPieceTask) error {
+	oldTask := m.recoveryQueue.PopByKey(handleTask.Key())
+	if oldTask == nil {
+		log.CtxErrorw(ctx, "task has been canceled", "task_info", handleTask.Info())
+		return ErrCanceledTask
+	}
+	handleTask = oldTask.(task.RecoveryPieceTask)
+	if !handleTask.ExceedRetry() {
+		handleTask.SetUpdateTime(time.Now().Unix())
+		err := m.recoveryQueue.Push(handleTask)
+		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
+	} else {
+		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
+	}
+	return nil
+}
+
 func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error) {
 	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(m.uploadQueue, subKey)
 	replicateTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.replicateQueue, subKey)
@@ -442,6 +594,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	gcMetaTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcMetaQueue, subKey)
 	downloadTasks, _ := taskqueue.ScanTQueueBySubKey(m.downloadQueue, subKey)
 	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(m.challengeQueue, subKey)
+	recoveryTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.recoveryQueue, subKey)
 
 	var tasks []task.Task
 	tasks = append(tasks, uploadTasks...)
@@ -453,6 +606,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, gcMetaTasks...)
 	tasks = append(tasks, downloadTasks...)
 	tasks = append(tasks, challengeTasks...)
+	tasks = append(tasks, recoveryTasks...)
 	return tasks, nil
 }
 

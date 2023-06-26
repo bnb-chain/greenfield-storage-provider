@@ -36,8 +36,9 @@ message GfSpSignRequest {
     base.types.gfspp2p.GfSpPong pong_msg = 8;
     base.types.gfsptask.GfSpReplicatePieceApprovalTask gfsp_replicate_piece_approval_task = 9;
     base.types.gfsptask.GfSpReceivePieceTask gfsp_receive_piece_task = 10;
-    greenfield.storage.MsgRejectSealObject reject_object_info = 11;
-    GfSpCreateGlobalVirtualGroup create_global_virtual_group = 12;
+    base.types.gfsptask.GfSpRecoverPieceTask gfsp_recover_piece_task = 11;
+    greenfield.storage.MsgRejectSealObject reject_object_info = 12;
+    GfSpCreateGlobalVirtualGroup create_global_virtual_group = 13;
   }
 }
 
