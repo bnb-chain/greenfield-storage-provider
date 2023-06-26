@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (m *GfSpRecoveryPieceTask) InitRecoveryPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
+func (m *GfSpRecoverPieceTask) InitRecoverPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
 	priority coretask.TPriority, segmentIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
@@ -27,8 +27,8 @@ func (m *GfSpRecoveryPieceTask) InitRecoveryPieceTask(object *storagetypes.Objec
 	m.SetPieceSize(pieceSize)
 }
 
-func (m *GfSpRecoveryPieceTask) Key() coretask.TKey {
-	return GfSpRecoveryPieceTaskKey(
+func (m *GfSpRecoverPieceTask) Key() coretask.TKey {
+	return GfSpRecoverPieceTaskKey(
 		m.GetObjectInfo().GetBucketName(),
 		m.GetObjectInfo().GetObjectName(),
 		m.GetObjectInfo().Id.String(),
@@ -38,132 +38,132 @@ func (m *GfSpRecoveryPieceTask) Key() coretask.TKey {
 	)
 }
 
-func (m *GfSpRecoveryPieceTask) Type() coretask.TType {
+func (m *GfSpRecoverPieceTask) Type() coretask.TType {
 	return coretask.TypeTaskRecoverPiece
 }
 
-func (m *GfSpRecoveryPieceTask) Info() string {
+func (m *GfSpRecoverPieceTask) Info() string {
 	return fmt.Sprintf("key[%s], type[%s], priority[%d], piece index[%d], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
 		m.GetSegmentIdx(), m.GetTask().Info())
 }
 
-func (m *GfSpRecoveryPieceTask) GetAddress() string {
+func (m *GfSpRecoverPieceTask) GetAddress() string {
 	return m.GetTask().GetAddress()
 }
 
-func (m *GfSpRecoveryPieceTask) SetAddress(address string) {
+func (m *GfSpRecoverPieceTask) SetAddress(address string) {
 	m.GetTask().SetAddress(address)
 }
 
-func (m *GfSpRecoveryPieceTask) GetCreateTime() int64 {
+func (m *GfSpRecoverPieceTask) GetCreateTime() int64 {
 	return m.GetTask().GetCreateTime()
 }
 
-func (m *GfSpRecoveryPieceTask) SetCreateTime(time int64) {
+func (m *GfSpRecoverPieceTask) SetCreateTime(time int64) {
 	m.GetTask().SetCreateTime(time)
 }
 
-func (m *GfSpRecoveryPieceTask) GetUpdateTime() int64 {
+func (m *GfSpRecoverPieceTask) GetUpdateTime() int64 {
 	return m.GetTask().GetUpdateTime()
 }
 
-func (m *GfSpRecoveryPieceTask) SetUpdateTime(time int64) {
+func (m *GfSpRecoverPieceTask) SetUpdateTime(time int64) {
 	m.GetTask().SetUpdateTime(time)
 }
 
-func (m *GfSpRecoveryPieceTask) GetTimeout() int64 {
+func (m *GfSpRecoverPieceTask) GetTimeout() int64 {
 	return m.GetTask().GetTimeout()
 }
 
-func (m *GfSpRecoveryPieceTask) SetTimeout(time int64) {
+func (m *GfSpRecoverPieceTask) SetTimeout(time int64) {
 	m.GetTask().SetTimeout(time)
 }
 
-func (m *GfSpRecoveryPieceTask) ExceedTimeout() bool {
+func (m *GfSpRecoverPieceTask) ExceedTimeout() bool {
 	return m.GetTask().ExceedTimeout()
 }
 
-func (m *GfSpRecoveryPieceTask) GetRetry() int64 {
+func (m *GfSpRecoverPieceTask) GetRetry() int64 {
 	return m.GetTask().GetRetry()
 }
 
-func (m *GfSpRecoveryPieceTask) IncRetry() {
+func (m *GfSpRecoverPieceTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpRecoveryPieceTask) SetRetry(retry int) {
+func (m *GfSpRecoverPieceTask) SetRetry(retry int) {
 	m.GetTask().SetRetry(retry)
 }
 
-func (m *GfSpRecoveryPieceTask) GetMaxRetry() int64 {
+func (m *GfSpRecoverPieceTask) GetMaxRetry() int64 {
 	return m.GetTask().GetMaxRetry()
 }
 
-func (m *GfSpRecoveryPieceTask) SetMaxRetry(limit int64) {
+func (m *GfSpRecoverPieceTask) SetMaxRetry(limit int64) {
 	m.GetTask().SetMaxRetry(limit)
 }
 
-func (m *GfSpRecoveryPieceTask) SetSegmentIndex(index uint32) {
+func (m *GfSpRecoverPieceTask) SetSegmentIndex(index uint32) {
 	m.SegmentIdx = index
 }
 
-func (m *GfSpRecoveryPieceTask) SetECIndex(index int32) {
+func (m *GfSpRecoverPieceTask) SetECIndex(index int32) {
 	m.EcIdx = index
 }
 
-func (m *GfSpRecoveryPieceTask) ExceedRetry() bool {
+func (m *GfSpRecoverPieceTask) ExceedRetry() bool {
 	return m.GetTask().ExceedRetry()
 }
 
-func (m *GfSpRecoveryPieceTask) Expired() bool {
+func (m *GfSpRecoverPieceTask) Expired() bool {
 	return m.GetTask().Expired()
 }
 
-func (m *GfSpRecoveryPieceTask) GetPriority() coretask.TPriority {
+func (m *GfSpRecoverPieceTask) GetPriority() coretask.TPriority {
 	return m.GetTask().GetPriority()
 }
 
-func (m *GfSpRecoveryPieceTask) SetPriority(priority coretask.TPriority) {
+func (m *GfSpRecoverPieceTask) SetPriority(priority coretask.TPriority) {
 	m.GetTask().SetPriority(priority)
 }
 
-func (m *GfSpRecoveryPieceTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
+func (m *GfSpRecoverPieceTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
 	m.ObjectInfo = object
 }
 
-func (m *GfSpRecoveryPieceTask) SetStorageParams(param *storagetypes.Params) {
+func (m *GfSpRecoverPieceTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
 }
 
-func (m *GfSpRecoveryPieceTask) Error() error {
+func (m *GfSpRecoverPieceTask) Error() error {
 	return m.GetTask().Error()
 }
 
-func (m *GfSpRecoveryPieceTask) SetError(err error) {
+func (m *GfSpRecoverPieceTask) SetError(err error) {
 	m.GetTask().SetError(err)
 }
 
-func (m *GfSpRecoveryPieceTask) EstimateLimit() corercmgr.Limit {
+func (m *GfSpRecoverPieceTask) EstimateLimit() corercmgr.Limit {
 	l := &gfsplimit.GfSpLimit{Memory: 2 * int64(m.GetObjectInfo().PayloadSize)}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
 }
 
-func (m *GfSpRecoveryPieceTask) SetSignature(signature []byte) {
+func (m *GfSpRecoverPieceTask) SetSignature(signature []byte) {
 	m.Signature = signature
 }
 
-func (m *GfSpRecoveryPieceTask) SetPieceSize(size uint64) {
+func (m *GfSpRecoverPieceTask) SetPieceSize(size uint64) {
 	m.PieceSize = size
 }
 
-func (m *GfSpRecoveryPieceTask) SetRecoverDone() {
+func (m *GfSpRecoverPieceTask) SetRecoverDone() {
 	m.Recovered = true
 }
 
-func (m *GfSpRecoveryPieceTask) GetSignBytes() []byte {
-	fakeMsg := &GfSpRecoveryPieceTask{
+func (m *GfSpRecoverPieceTask) GetSignBytes() []byte {
+	fakeMsg := &GfSpRecoverPieceTask{
 		ObjectInfo:    m.GetObjectInfo(),
 		StorageParams: m.GetStorageParams(),
 		Task:          &GfSpTask{CreateTime: m.GetCreateTime()},

@@ -82,7 +82,7 @@ func (*NullTask) SetApprovedSpApprovalAddress(string)                           
 func (*NullTask) InitUploadObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, int64) {}
 func (*NullTask) InitReplicatePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, int64, int64) {
 }
-func (*NullTask) InitRecoveryPieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, uint64, int64, int64) {
+func (*NullTask) InitRecoverPieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, uint64, int64, int64) {
 }
 func (*NullTask) GetSealed() bool                  { return false }
 func (*NullTask) SetSealed(bool)                   {}

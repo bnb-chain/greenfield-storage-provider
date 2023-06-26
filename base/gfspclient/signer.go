@@ -200,8 +200,8 @@ func (s *GfSpClient) SignRecoveryTask(ctx context.Context, recoveryTask coretask
 		return nil, ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpSignRequest{
-		Request: &gfspserver.GfSpSignRequest_GfspRecoveryPieceTask{
-			GfspRecoveryPieceTask: recoveryTask.(*gfsptask.GfSpRecoveryPieceTask),
+		Request: &gfspserver.GfSpSignRequest_GfspRecoverPieceTask{
+			GfspRecoverPieceTask: recoveryTask.(*gfsptask.GfSpRecoverPieceTask),
 		},
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)

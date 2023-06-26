@@ -391,8 +391,8 @@ func (d *DownloadModular) recoverChallengePiece(ctx context.Context, downloadPie
 		// no need to return recovery error to user
 		log.CtxErrorw(ctx, "fail to parse recovery segment index", "error", parseErr)
 	}
-	recoveryTask := &gfsptask.GfSpRecoveryPieceTask{}
-	recoveryTask.InitRecoveryPieceTask(downloadPieceTask.GetObjectInfo(), downloadPieceTask.GetStorageParams(),
+	recoveryTask := &gfsptask.GfSpRecoverPieceTask{}
+	recoveryTask.InitRecoverPieceTask(downloadPieceTask.GetObjectInfo(), downloadPieceTask.GetStorageParams(),
 		d.baseApp.TaskPriority(recoveryTask),
 		segmentIndex,
 		ECIndex,

@@ -25,8 +25,8 @@ var objectFlag = &cli.StringFlag{
 }
 
 var RecoverObjectCmd = &cli.Command{
-	Action: recoveryObjectAction,
-	Name:   "recovery.object",
+	Action: recoverObjectAction,
+	Name:   "recover.object",
 	Usage:  "Create random ObjectInfo and send to uploader for debugging and testing uploading primary sp",
 
 	Flags: []cli.Flag{
@@ -40,7 +40,7 @@ var RecoverObjectCmd = &cli.Command{
 and send it to uploader for debugging and testing upload primary sp on Dev Env.`,
 }
 
-func recoveryObjectAction(ctx *cli.Context) error {
+func recoverObjectAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
 		return err
@@ -94,8 +94,8 @@ func recoveryObjectAction(ctx *cli.Context) error {
 	if replicateIdx == -1 {
 		fmt.Printf("begin to recovery the primary SP object: %s \n", objectName)
 		for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
-			task := &gfsptask.GfSpRecoveryPieceTask{}
-			task.InitRecoveryPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(-1), maxSegmentSize, 0, 2)
+			task := &gfsptask.GfSpRecoverPieceTask{}
+			task.InitRecoverPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(-1), maxSegmentSize, 0, 2)
 			client.ReportTask(context.Background(), task)
 			time.Sleep(time.Second)
 		}
@@ -103,8 +103,8 @@ func recoveryObjectAction(ctx *cli.Context) error {
 		// recovery secondary SP
 		fmt.Printf("begin to recovery the secondary SP object: %s \n", objectName)
 		for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
-			task := &gfsptask.GfSpRecoveryPieceTask{}
-			task.InitRecoveryPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(replicateIdx), maxSegmentSize, 0, 2)
+			task := &gfsptask.GfSpRecoverPieceTask{}
+			task.InitRecoverPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(replicateIdx), maxSegmentSize, 0, 2)
 			client.ReportTask(context.Background(), task)
 			time.Sleep(time.Second)
 		}

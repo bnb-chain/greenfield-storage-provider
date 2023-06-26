@@ -420,12 +420,12 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	log.CtxDebugw(reqCtx.Context(), "succeed to replicate piece")
 }
 
-// recoveryPrimaryHandler handles the query for recovery request from secondary SP or primary SP.
+// recoverPrimaryHandler handles the query for recovery request from secondary SP or primary SP.
 // if it is used to recovery primary SP and the handler SP is the corresponding secondary,
 // it returns the EC piece data stored in the secondary SP for the requested object.
 // if it is used to recovery secondary SP and the handler is the corresponding primary SP,
 // it directly returns the EC piece data of the secondary SP.
-func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Request) {
+func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err         error
 		reqCtx      *RequestContext
@@ -447,7 +447,7 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 	// verification is by signature of the RecoveryTask
 	reqCtx, newErr := NewRequestContext(r, g)
 	if newErr != nil {
-		log.CtxDebugw(context.Background(), "recoveryPrimaryHandler new reqCtx error", "error", newErr)
+		log.CtxDebugw(context.Background(), "recoverPrimaryHandler new reqCtx error", "error", newErr)
 	}
 
 	recoveryMsg, err = hex.DecodeString(r.Header.Get(GnfdRecoveryMsgHeader))
@@ -458,7 +458,7 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	recoveryTask := gfsptask.GfSpRecoveryPieceTask{}
+	recoveryTask := gfsptask.GfSpRecoverPieceTask{}
 	err = json.Unmarshal(recoveryMsg, &recoveryTask)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal receive header",
@@ -512,13 +512,13 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 	var pieceData []byte
 	if redundancyIdx >= 0 {
 		// recovery secondary SP
-		pieceData, err = g.recoverySecondarySP(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
+		pieceData, err = g.recoverECPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
 		if err != nil {
 			return
 		}
 	} else {
 		// recovery primary SP
-		pieceData, err = g.recoveryPrimarySP(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
+		pieceData, err = g.recoverSegmentPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
 		if err != nil {
 			return
 		}
@@ -528,8 +528,8 @@ func (g *GateModular) recoveryPrimaryHandler(w http.ResponseWriter, r *http.Requ
 	log.CtxDebugw(reqCtx.Context(), "succeed to get one ec piece data")
 }
 
-func (g *GateModular) recoveryPrimarySP(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
-	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoveryPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
+func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
+	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	var err error
 	// the primary sp of the object should be consistent with task signature
 	if bucketInfo.PrimarySpAddress != signatureAddr.String() {
@@ -571,8 +571,8 @@ func (g *GateModular) recoveryPrimarySP(ctx context.Context, objectInfo *storage
 	return pieceData, nil
 }
 
-func (g *GateModular) recoverySecondarySP(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
-	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoveryPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
+func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
+	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
 

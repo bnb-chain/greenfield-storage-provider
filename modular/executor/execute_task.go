@@ -295,9 +295,9 @@ func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCM
 	log.CtxWarn(ctx, "gc meta future support")
 }
 
-// HandleRecoveryPieceTask handle the recovery piece task, it will send request to other SPs to get piece data to recovery,
+// HandleRecoverPieceTask handle the recovery piece task, it will send request to other SPs to get piece data to recovery,
 // recovery the original data, and write the recovered data to piece store
-func (e *ExecuteModular) HandleRecoveryPieceTask(ctx context.Context, task coretask.RecoveryPieceTask) {
+func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coretask.RecoveryPieceTask) {
 	log.CtxDebugw(ctx, "begin to handle recovery piece task in ExecuteModular", "task info", task.Info())
 	var (
 		dataShards         = task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()
@@ -486,7 +486,7 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 	}
 	rTask.SetSignature(signature)
 	// recovery primary sp segment pr secondary piece
-	respBody, err := e.baseApp.GfSpClient().GetPieceFromSecondary(ctx, endpoint, rTask)
+	respBody, err := e.baseApp.GfSpClient().GetPieceFromECChunks(ctx, endpoint, rTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to recovery piece", "objectID", rTask.GetObjectInfo().Id,
 			"segment_idx", rTask.GetSegmentIdx(), "secondary endpoint", endpoint, "error", err)

@@ -481,8 +481,8 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			segSize := g.baseApp.PieceOp().SegmentPieceSize(objectInfo.PayloadSize, segmentIndex, params.GetMaxSegmentSize())
-			recoveryTask := &gfsptask.GfSpRecoveryPieceTask{}
-			recoveryTask.InitRecoveryPieceTask(task.GetObjectInfo(), task.GetStorageParams(),
+			recoveryTask := &gfsptask.GfSpRecoverPieceTask{}
+			recoveryTask.InitRecoverPieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 				coretask.DefaultLargerTaskPriority,
 				segmentIndex,
 				int32(-1),

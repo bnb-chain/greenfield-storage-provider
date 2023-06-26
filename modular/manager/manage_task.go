@@ -519,7 +519,7 @@ func (m *ManageModular) HandleChallengePieceTask(ctx context.Context, task task.
 	return nil
 }
 
-func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
+func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to handle recovery piece due to pointer dangling")
 		return ErrDanglingTask
@@ -533,7 +533,7 @@ func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.R
 
 	if task.Error() != nil {
 		log.CtxErrorw(ctx, "handler error recovery piece task", "task_info", task.Info(), "error", task.Error())
-		return m.handleFailedRecoveryPieceTask(ctx, task)
+		return m.handleFailedRecoverPieceTask(ctx, task)
 	}
 
 	if m.TaskRecovering(ctx, task) {
@@ -550,7 +550,7 @@ func (m *ManageModular) HandleRecoveryPieceTask(ctx context.Context, task task.R
 	return nil
 }
 
-func (m *ManageModular) handleFailedRecoveryPieceTask(ctx context.Context, handleTask task.RecoveryPieceTask) error {
+func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handleTask task.RecoveryPieceTask) error {
 	oldTask := m.recoveryQueue.PopByKey(handleTask.Key())
 	if oldTask == nil {
 		log.CtxErrorw(ctx, "task has been canceled", "task_info", handleTask.Info())

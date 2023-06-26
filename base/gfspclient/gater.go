@@ -70,14 +70,14 @@ func (s *GfSpClient) ReplicatePieceToSecondary(
 	return nil
 }
 
-func (s *GfSpClient) GetPieceFromSecondary(ctx context.Context, endpoint string, task coretask.RecoveryPieceTask) (io.ReadCloser, error) {
+func (s *GfSpClient) GetPieceFromECChunks(ctx context.Context, endpoint string, task coretask.RecoveryPieceTask) (io.ReadCloser, error) {
 	req, err := http.NewRequest(http.MethodGet, endpoint+RecoveryObjectPiecePath, nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
-	recoveryTask := task.(*gfsptask.GfSpRecoveryPieceTask)
+	recoveryTask := task.(*gfsptask.GfSpRecoverPieceTask)
 	recoveryMsg, err := json.Marshal(recoveryTask)
 	if err != nil {
 		return nil, err

@@ -185,11 +185,11 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		atomic.AddInt64(&e.doingGCGCMetaTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingGCGCMetaTaskCnt, -1)
 		e.HandleGCMetaTask(ctx, t)
-	case *gfsptask.GfSpRecoveryPieceTask:
+	case *gfsptask.GfSpRecoverPieceTask:
 		metrics.ExecutorRecoveryTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
-		e.HandleRecoveryPieceTask(ctx, t)
+		e.HandleRecoverPieceTask(ctx, t)
 	default:
 		log.CtxErrorw(ctx, "unsupported task type")
 	}

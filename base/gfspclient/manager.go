@@ -87,8 +87,8 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 		return t.GcZombiePieceTask, nil
 	case *gfspserver.GfSpAskTaskResponse_GcMetaTask:
 		return t.GcMetaTask, nil
-	case *gfspserver.GfSpAskTaskResponse_RecoveryPieceTask:
-		return t.RecoveryPieceTask, nil
+	case *gfspserver.GfSpAskTaskResponse_RecoverPieceTask:
+		return t.RecoverPieceTask, nil
 	default:
 		return nil, ErrTypeMismatch
 	}
@@ -148,9 +148,9 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 		req.Request = &gfspserver.GfSpReportTaskRequest_ChallengePieceTask{
 			ChallengePieceTask: t,
 		}
-	case *gfsptask.GfSpRecoveryPieceTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_RecoveryPieceTask{
-			RecoveryPieceTask: t,
+	case *gfsptask.GfSpRecoverPieceTask:
+		req.Request = &gfspserver.GfSpReportTaskRequest_RecoverPieceTask{
+			RecoverPieceTask: t,
 		}
 	default:
 		log.CtxErrorw(ctx, "unsupported task type to report")

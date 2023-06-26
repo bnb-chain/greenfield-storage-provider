@@ -468,7 +468,7 @@ type RecoveryPieceTask interface {
 	ObjectTask
 	// InitRecoveryPieceTask inits the RecoveryPieceTask by ObjectInfo, params,
 	// task priority, pieceIndex, timeout and max retry.
-	InitRecoveryPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
+	InitRecoverPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
 		priority TPriority, pieceIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64)
 
 	// GetSegmentIdx return the segment index of recovery object segment

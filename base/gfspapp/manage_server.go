@@ -117,9 +117,9 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		resp.Response = &gfspserver.GfSpAskTaskResponse_GcMetaTask{
 			GcMetaTask: t,
 		}
-	case *gfsptask.GfSpRecoveryPieceTask:
-		resp.Response = &gfspserver.GfSpAskTaskResponse_RecoveryPieceTask{
-			RecoveryPieceTask: t,
+	case *gfsptask.GfSpRecoverPieceTask:
+		resp.Response = &gfspserver.GfSpAskTaskResponse_RecoverPieceTask{
+			RecoverPieceTask: t,
 		}
 		metrics.DispatchRecoverPieceTaskCounter.WithLabelValues(g.manager.Name()).Inc()
 	default:
@@ -267,13 +267,13 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 
 		err = g.manager.HandleChallengePieceTask(ctx, t.ChallengePieceTask)
-	case *gfspserver.GfSpReportTaskRequest_RecoveryPieceTask:
-		task := t.RecoveryPieceTask
+	case *gfspserver.GfSpReportTaskRequest_RecoverPieceTask:
+		task := t.RecoverPieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle recovery reported task", "task_info", task.Info())
 
-		err = g.manager.HandleRecoveryPieceTask(ctx, t.RecoveryPieceTask)
+		err = g.manager.HandleRecoverPieceTask(ctx, t.RecoverPieceTask)
 	default:
 		log.CtxErrorw(ctx, "receive unsupported task type")
 		return &gfspserver.GfSpReportTaskResponse{Err: ErrUnsupportedTaskType}, nil
