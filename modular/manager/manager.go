@@ -76,6 +76,8 @@ type ManageModular struct {
 	discontinueBucketKeepAliveDays int
 
 	virtualGroupManager vgmgr.VirtualGroupManager
+
+	subscribeSPExitEventInterval int
 }
 
 func (m *ManageModular) Name() string {
@@ -100,10 +102,10 @@ func (m *ManageModular) Start(ctx context.Context) error {
 		return err
 	}
 	m.scope = scope
-	//err = m.LoadTaskFromDB()
-	//if err != nil {
-	//	return err
-	//}
+	err = m.LoadTaskFromDB()
+	if err != nil {
+		return err
+	}
 
 	go m.eventLoop(ctx)
 	return nil

@@ -64,6 +64,8 @@ const (
 	// DefaultDiscontinueBucketKeepAliveDays defines the default bucket keep alive days, after
 	// the interval, buckets will be discontinued, used for test net.
 	DefaultDiscontinueBucketKeepAliveDays = 7
+	// DefaultSubscribeSPExitEventIntervalSec define the default time interval to subscribe sp exit event from metadata.
+	DefaultSubscribeSPExitEventIntervalSec = 1
 )
 
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -158,5 +160,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
 
 	manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus())
+	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
+		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalSec
+	}
 	return err
 }
