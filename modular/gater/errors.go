@@ -45,7 +45,7 @@ var (
 	ErrConsensus = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")
 
 	ErrApprovalExpired        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 550015, "approval expired")
-	ErrRecoverySP             = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50026, "The SP is not the correct SP to recovery")
+	ErrRecoverySP             = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50030, "The SP is not the correct SP to recovery")
 	ErrRecoveryRedundancyType = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50027, "The redundancy type of the recovering piece is not EC")
 	ErrRecoveryTimeout        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50028, "System busy, try to request later")
 )
