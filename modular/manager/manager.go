@@ -60,6 +60,7 @@ type ManageModular struct {
 	gcMetaQueue           taskqueue.TQueueOnStrategyWithLimit
 	downloadQueue         taskqueue.TQueueOnStrategy
 	challengeQueue        taskqueue.TQueueOnStrategy
+	recoveryQueue         taskqueue.TQueueOnStrategyWithLimit
 
 	maxUploadObjectNumber int
 
@@ -93,6 +94,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
+	m.recoveryQueue.SetRetireTaskStrategy(m.GCRecoverQueue)
+	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -341,6 +344,15 @@ func (m *ManageModular) TaskUploading(ctx context.Context, task task.Task) bool 
 	return false
 }
 
+func (m *ManageModular) TaskRecovering(ctx context.Context, task task.Task) bool {
+	if m.recoveryQueue.Has(task.Key()) {
+		log.CtxDebugw(ctx, "recovery object repeated")
+		return true
+	}
+
+	return false
+}
+
 func (m *ManageModular) UploadingObjectNumber() int {
 	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len() + m.resumeableUploadQueue.Len()
 }
@@ -417,6 +429,10 @@ func (m *ManageModular) GCReceiveQueue(qTask task.Task) bool {
 	return qTask.Expired()
 }
 
+func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
+	return qTask.ExceedRetry() || qTask.ExceedTimeout()
+}
+
 func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
 	task := qTask.(task.GCObjectTask)
 	if task.Expired() {
@@ -443,6 +459,7 @@ func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
 		return true
 	}
 	if qTask.GetRetry() == 0 {
+
 		return true
 	}
 	return false
@@ -528,9 +545,9 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
+		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
 		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
-		m.receiveQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
+		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
 		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(),
 		m.gcBlockHeight, m.gcSafeBlockDistance)
 }

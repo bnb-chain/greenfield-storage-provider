@@ -32,6 +32,9 @@ const (
 	// DefaultGlobalGCMetaParallel defines the default max parallel gc meta db in SP
 	// system.
 	DefaultGlobalGCMetaParallel int = 1
+	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP
+	// system.
+	DefaultGlobalRecoveryPieceParallel int = 7
 	// DefaultGlobalDownloadObjectTaskCacheSize defines the default max cache the download
 	// object tasks in manager.
 	DefaultGlobalDownloadObjectTaskCacheSize int = 4096
@@ -124,6 +127,10 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 		cfg.Parallel.DiscontinueBucketKeepAliveDays = DefaultDiscontinueBucketKeepAliveDays
 	}
 
+	if cfg.Parallel.GlobalRecoveryPieceParallel == 0 {
+		cfg.Parallel.GlobalRecoveryPieceParallel = DefaultGlobalRecoveryPieceParallel
+	}
+
 	manager.enableLoadTask = cfg.Manager.EnableLoadTask
 	manager.loadTaskLimitToReplicate = cfg.Parallel.GlobalReplicatePieceParallel
 	manager.loadTaskLimitToSeal = cfg.Parallel.GlobalSealObjectParallel
@@ -144,6 +151,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 		manager.Name()+"-resumeable-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-replicate-piece", cfg.Parallel.GlobalReplicatePieceParallel)
+	manager.recoveryQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-recovery-piece", cfg.Parallel.GlobalRecoveryPieceParallel)
 	manager.sealQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-seal-object", cfg.Parallel.GlobalSealObjectParallel)
 	manager.receiveQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(

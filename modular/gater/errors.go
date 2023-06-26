@@ -44,7 +44,10 @@ var (
 
 	ErrConsensus = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")
 
-	ErrApprovalExpired = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 550015, "approval expired")
+	ErrApprovalExpired        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 550015, "approval expired")
+	ErrRecoverySP             = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50030, "The SP is not the correct SP to recovery")
+	ErrRecoveryRedundancyType = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50031, "The redundancy type of the recovering piece is not EC")
+	ErrRecoveryTimeout        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50032, "System busy, try to request later")
 )
 
 func MakeErrorResponse(w http.ResponseWriter, err error) {

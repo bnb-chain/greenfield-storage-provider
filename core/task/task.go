@@ -461,3 +461,27 @@ type GCMetaTask interface {
 	// deleted object id and the number that has been deleted.
 	SetGCMetaStatus(uint64, uint64)
 }
+
+// The RecoveryPieceTask is the interface to record the information for recovering
+// TODO consider recovery secondary SP task
+type RecoveryPieceTask interface {
+	ObjectTask
+	// InitRecoveryPieceTask inits the RecoveryPieceTask by ObjectInfo, params,
+	// task priority, pieceIndex, timeout and max retry.
+	InitRecoverPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
+		priority TPriority, pieceIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64)
+
+	// GetSegmentIdx return the segment index of recovery object segment
+	GetSegmentIdx() uint32
+	// GetEcIdx return the ec index of recovery ec chunk
+	GetEcIdx() int32
+	// GetSignature returns the primary SP's signature
+	GetSignature() []byte
+	// SetSignature sets the primary SP's signature.
+	SetSignature([]byte)
+	// GetSignBytes returns the bytes from the task for primary SP to sign.
+	GetSignBytes() []byte
+	GetRecovered() bool
+	// SetRecoverDone set the recovery status as finish
+	SetRecoverDone()
+}

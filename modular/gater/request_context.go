@@ -99,7 +99,7 @@ func (r *RequestContext) String() string {
 	var headerToString = func(header http.Header) string {
 		var sb = strings.Builder{}
 		for k := range header {
-			if k == GnfdUnsignedApprovalMsgHeader || k == GnfdReplicatePieceApprovalHeader || k == GnfdReceiveMsgHeader {
+			if k == GnfdUnsignedApprovalMsgHeader || k == GnfdReplicatePieceApprovalHeader || k == GnfdReceiveMsgHeader || k == GnfdRecoveryMsgHeader {
 				continue
 			}
 			if sb.Len() != 0 {

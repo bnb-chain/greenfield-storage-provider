@@ -55,6 +55,9 @@ func (*NullModular) PreReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NullModular) HandleReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) (bool, error) {
 	return false, ErrNilModular
 }
+func (*NullModular) HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
+	return ErrNilModular
+}
 func (*NullModular) PostReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) {}
 func (*NullModular) PreUploadObject(ctx context.Context, task task.UploadObjectTask) error {
 	return ErrNilModular
@@ -191,6 +194,9 @@ func (*NilModular) SignReplicatePieceApproval(context.Context, task.ApprovalRepl
 	return nil, ErrNilModular
 }
 func (*NilModular) SignReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
+	return nil, ErrNilModular
+}
+func (*NilModular) SignRecoveryPieceTask(context.Context, task.RecoveryPieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
 func (*NilModular) SignIntegrityHash(ctx context.Context, objectID uint64, hash [][]byte) ([]byte, []byte, error) {

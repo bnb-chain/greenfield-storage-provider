@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -28,6 +29,7 @@ var (
 	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid, no such piece")
 	ErrPieceStore        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35101, "server slipped away, try again later")
 	ErrGfSpDB            = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35201, "server slipped away, try again later")
+	ErrKeyFormat         = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "invalid key format")
 )
 
 func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask) error {
@@ -170,42 +172,95 @@ func (d *DownloadModular) PostDownloadObject(ctx context.Context, downloadObject
 }
 
 func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTask task.DownloadPieceTask) error {
+	defer func() {
+		// report the task to the manager for monitor the download piece task
+		d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+	}()
+
 	if downloadPieceTask == nil || downloadPieceTask.GetObjectInfo() == nil || downloadPieceTask.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed pre download piece due to pointer dangling")
 		return ErrDanglingPointer
 	}
+
 	if downloadPieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.CtxErrorw(ctx, "failed to pre download piece due to object unsealed")
 		return ErrObjectUnsealed
 	}
 
-	checkQuotaTime := time.Now()
-	if downloadPieceTask.GetEnableCheck() {
-		if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
-			&spdb.ReadRecord{
-				BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
-				ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
-				UserAddress:     downloadPieceTask.GetUserAddress(),
-				BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
-				ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
-				ReadSize:        downloadPieceTask.GetTotalSize(),
-				ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
-			},
-			&spdb.BucketQuota{
-				ReadQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota() + d.bucketFreeQuota,
-			},
-		); err != nil {
-			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
-			log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
-			if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
-				return ErrExceedBucketQuota
-			}
-			// ignore the access db error, it is the system's inner error, will be let the request go.
-		}
+	primarySP := downloadPieceTask.GetBucketInfo().PrimarySpAddress
+	// if it is a request from the primary SP of the object, no need to check quota
+	if downloadPieceTask.GetUserAddress() == primarySP {
+		return nil
 	}
-	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
-	// report the task to the manager for monitor the download piece task
-	d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+
+	if downloadPieceTask.GetEnableCheck() {
+		// if it is a request from client, the task handler is the primary SP of the sp
+		if d.baseApp.OperatorAddress() == primarySP {
+			log.CtxDebugw(ctx, "downloading from primary SP, checking quota")
+			checkQuotaTime := time.Now()
+			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+				&spdb.ReadRecord{
+					BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
+					ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
+					UserAddress:     downloadPieceTask.GetUserAddress(),
+					BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
+					ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
+					ReadSize:        downloadPieceTask.GetTotalSize(),
+					ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+				},
+				&spdb.BucketQuota{
+					ReadQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota() + d.bucketFreeQuota,
+				},
+			); err != nil {
+				metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
+				log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
+				if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
+					return ErrExceedBucketQuota
+				}
+				// ignore the access db error, it is the system's inner error, will be let the request go.
+			}
+			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
+			return nil
+		}
+		// check quota for secondary read task
+		secondarySPs := downloadPieceTask.GetObjectInfo().SecondarySpAddresses
+		var isOneOfSecondary bool
+		for _, addr := range secondarySPs {
+			if d.baseApp.OperatorAddress() == addr {
+				isOneOfSecondary = true
+			}
+		}
+
+		// if it is a request from client, the task handler is the secondary SP of the object
+		if isOneOfSecondary {
+			// check free quota
+			log.CtxDebugw(ctx, "downloading piece from secondary SP, checking quota")
+			// TODO traffic db add read type to indicate secondary
+			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+				&spdb.ReadRecord{
+					BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
+					ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
+					UserAddress:     downloadPieceTask.GetUserAddress(),
+					BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
+					ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
+					ReadSize:        downloadPieceTask.GetTotalSize(),
+					ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+				},
+				&spdb.BucketQuota{
+					ReadQuotaSize: d.bucketFreeQuota,
+				},
+			); err != nil {
+				log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
+				if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
+					return ErrExceedBucketQuota
+				}
+				// ignore the access db error, it is the system's inner error, will be let the request go.
+			}
+			return nil
+		}
+
+	}
+
 	return nil
 }
 
@@ -312,8 +367,10 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
+		d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
 		return nil, nil, nil, ErrPieceStore
 	}
+
 	return integrity.IntegrityChecksum, integrity.PieceChecksumList, data, nil
 }
 
@@ -323,4 +380,25 @@ func (d *DownloadModular) PostChallengePiece(ctx context.Context, downloadPieceT
 func (d *DownloadModular) QueryTasks(ctx context.Context, subKey task.TKey) (
 	[]task.Task, error) {
 	return nil, nil
+}
+
+// recoverChallengePiece recover challenge piece by generating recovery background task if challenge task get piece fail
+func (d *DownloadModular) recoverChallengePiece(ctx context.Context, downloadPieceTask task.ChallengePieceTask, pieceKey string) {
+	// TODO check if it need to recovery if the piece data is not correct
+	var segmentIndex uint32
+	segmentIndex, ECIndex, parseErr := d.baseApp.PieceOp().ParseChallengeIdx(pieceKey)
+	if parseErr != nil {
+		// no need to return recovery error to user
+		log.CtxErrorw(ctx, "fail to parse recovery segment index", "error", parseErr)
+	}
+	recoveryTask := &gfsptask.GfSpRecoverPieceTask{}
+	recoveryTask.InitRecoverPieceTask(downloadPieceTask.GetObjectInfo(), downloadPieceTask.GetStorageParams(),
+		d.baseApp.TaskPriority(recoveryTask),
+		segmentIndex,
+		ECIndex,
+		uint64(0),
+		d.baseApp.TaskTimeout(recoveryTask, downloadPieceTask.GetStorageParams().GetMaxSegmentSize()),
+		d.baseApp.TaskMaxRetry(recoveryTask))
+
+	d.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
 }

@@ -46,6 +46,8 @@ const (
 	AuthOpTypeGetBucketQuota
 	// AuthOpTypeListBucketReadRecord defines the ListBucketReadRecord operator
 	AuthOpTypeListBucketReadRecord
+	// AuthOpTypeGetRecoveryPiece defines the GetRecoveryPiece operator
+	AuthOpTypeGetRecoveryPiece
 )
 
 // Authenticator is an abstract interface to verify users authentication.
@@ -191,6 +193,8 @@ type Manager interface {
 	HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) error
 	// HandleChallengePieceTask handles ChallengePieceTask, the request comes from Downloader.
 	HandleChallengePieceTask(ctx context.Context, task task.ChallengePieceTask) error
+	// HandleRecoverPieceTask handles the result of recovering piece task, the request comes from TaskExecutor.
+	HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
@@ -231,6 +235,8 @@ type Signer interface {
 	SignReplicatePieceApproval(ctx context.Context, task task.ApprovalReplicatePieceTask) ([]byte, error)
 	// SignReceivePieceTask signs the ReceivePieceTask for replicating pieces data between SPs.
 	SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
+	//SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
+	SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) ([]byte, error)
 	// SignIntegrityHash signs the integrity hash of object for sealing object.
 	SignIntegrityHash(ctx context.Context, objectID uint64, hash [][]byte) ([]byte, []byte, error)
 	// SignP2PPingMsg signs the ping msg for p2p node probing.

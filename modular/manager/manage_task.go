@@ -70,6 +70,14 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
+
+	task = m.recoveryQueue.TopByLimit(limit)
+	if task != nil {
+		log.CtxDebugw(ctx, "add confirm recovery piece to backup set", "recovery task_key", task.Key().String(),
+			"task_limit", task.EstimateLimit().String())
+		backupTasks = append(backupTasks, task)
+	}
+
 	task = m.PickUpTask(ctx, backupTasks)
 	if task == nil {
 		return nil, nil
@@ -508,6 +516,54 @@ func (m *ManageModular) HandleChallengePieceTask(ctx context.Context, task task.
 	return nil
 }
 
+func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
+	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
+		log.CtxErrorw(ctx, "failed to handle recovery piece due to pointer dangling")
+		return ErrDanglingTask
+	}
+
+	if task.GetRecovered() {
+		m.recoveryQueue.PopByKey(task.Key())
+		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
+		return nil
+	}
+
+	if task.Error() != nil {
+		log.CtxErrorw(ctx, "handler error recovery piece task", "task_info", task.Info(), "error", task.Error())
+		return m.handleFailedRecoverPieceTask(ctx, task)
+	}
+
+	if m.TaskRecovering(ctx, task) {
+		log.CtxErrorw(ctx, "recovering object repeated", "task_info", task.Info())
+		return ErrRepeatedTask
+	}
+
+	task.SetUpdateTime(time.Now().Unix())
+	if err := m.recoveryQueue.Push(task); err != nil {
+		log.CtxErrorw(ctx, "failed to push recovery object task to queue", "task_info", task.Info(), "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handleTask task.RecoveryPieceTask) error {
+	oldTask := m.recoveryQueue.PopByKey(handleTask.Key())
+	if oldTask == nil {
+		log.CtxErrorw(ctx, "task has been canceled", "task_info", handleTask.Info())
+		return ErrCanceledTask
+	}
+	handleTask = oldTask.(task.RecoveryPieceTask)
+	if !handleTask.ExceedRetry() {
+		handleTask.SetUpdateTime(time.Now().Unix())
+		err := m.recoveryQueue.Push(handleTask)
+		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
+	} else {
+		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
+	}
+	return nil
+}
+
 func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error) {
 	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(m.uploadQueue, subKey)
 	replicateTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.replicateQueue, subKey)
@@ -518,6 +574,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	gcMetaTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcMetaQueue, subKey)
 	downloadTasks, _ := taskqueue.ScanTQueueBySubKey(m.downloadQueue, subKey)
 	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(m.challengeQueue, subKey)
+	recoveryTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.recoveryQueue, subKey)
 
 	var tasks []task.Task
 	tasks = append(tasks, uploadTasks...)
@@ -529,5 +586,6 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, gcMetaTasks...)
 	tasks = append(tasks, downloadTasks...)
 	tasks = append(tasks, challengeTasks...)
+	tasks = append(tasks, recoveryTasks...)
 	return tasks, nil
 }
