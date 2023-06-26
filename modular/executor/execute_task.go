@@ -298,7 +298,6 @@ func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCM
 // HandleRecoverPieceTask handle the recovery piece task, it will send request to other SPs to get piece data to recovery,
 // recovery the original data, and write the recovered data to piece store
 func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coretask.RecoveryPieceTask) {
-	log.CtxDebugw(ctx, "begin to handle recovery piece task in ExecuteModular", "task info", task.Info())
 	var (
 		dataShards         = task.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()
 		maxSegmentSize     = task.GetStorageParams().VersionedParams.GetMaxSegmentSize()
