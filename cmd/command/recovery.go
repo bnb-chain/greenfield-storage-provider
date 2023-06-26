@@ -72,15 +72,12 @@ func recoveryObjectAction(ctx *cli.Context) error {
 
 	replicateIdx := 0
 
-	fmt.Println("chain info  primary SP:", bucketInfo.PrimarySpAddress)
-	fmt.Println("config SP address: ", cfg.SpAccount.SpOperatorAddress)
 	if strings.EqualFold(bucketInfo.PrimarySpAddress, cfg.SpAccount.SpOperatorAddress) {
 		replicateIdx = -1
 	}
 
 	var isSecondarySP bool
 	for i, addr := range objectInfo.GetSecondarySpAddresses() {
-		fmt.Println("chain info secondary SP:", addr)
 		if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
 			replicateIdx = i
 			isSecondarySP = true
@@ -88,30 +85,32 @@ func recoveryObjectAction(ctx *cli.Context) error {
 		}
 	}
 	if replicateIdx != -1 && !isSecondarySP {
-		return fmt.Errorf(" it is not primary SP nor secondarySP of the object")
+		return fmt.Errorf(" it is not primary SP nor secondarySP of the object, pls choose the right SP")
 	}
 
 	maxSegmentSize := storageParams.GetMaxSegmentSize()
 	segmentCount := segmentPieceCount(objectInfo.PayloadSize, maxSegmentSize)
 	// recovery primary SP
 	if replicateIdx == -1 {
+		fmt.Printf("begin to recovery the primary SP object: %s \n", objectName)
 		for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
 			task := &gfsptask.GfSpRecoveryPieceTask{}
-			task.InitRecoveryPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(-1), maxSegmentSize, 0, 0)
+			task.InitRecoveryPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(-1), maxSegmentSize, 0, 2)
 			client.ReportTask(context.Background(), task)
 			time.Sleep(time.Second)
 		}
 	} else {
 		// recovery secondary SP
+		fmt.Printf("begin to recovery the secondary SP object: %s \n", objectName)
 		for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
 			task := &gfsptask.GfSpRecoveryPieceTask{}
-			task.InitRecoveryPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(replicateIdx), maxSegmentSize, 0, 0)
+			task.InitRecoveryPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(replicateIdx), maxSegmentSize, 0, 2)
 			client.ReportTask(context.Background(), task)
 			time.Sleep(time.Second)
 		}
 	}
 	// TODO support query recovery task status command
-	fmt.Printf("succeed to recovery object: %s", objectName)
+	fmt.Printf("succeed to gerate recovery object %s task on background \n", objectName)
 	return nil
 }
 

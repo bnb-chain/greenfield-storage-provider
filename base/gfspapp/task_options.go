@@ -276,7 +276,7 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	case coretask.TypeTaskGCMeta:
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskRecoverPiece:
-		return coretask.DefaultLargerTaskPriority
+		return coretask.DefaultSmallerPriority
 	}
 	return coretask.UnKnownTaskPriority
 }
