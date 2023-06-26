@@ -121,6 +121,7 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		resp.Response = &gfspserver.GfSpAskTaskResponse_RecoveryPieceTask{
 			RecoveryPieceTask: t,
 		}
+		metrics.DispatchRecoverPieceTaskCounter.WithLabelValues(g.manager.Name()).Inc()
 	default:
 		log.CtxErrorw(ctx, "[BUG] Unsupported task type to dispatch")
 		return &gfspserver.GfSpAskTaskResponse{Err: ErrUnsupportedTaskType}, nil

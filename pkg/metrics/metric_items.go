@@ -346,6 +346,10 @@ var (
 		Name: "dispatch_gc_object_task",
 		Help: "Track gc object task total number",
 	}, []string{"dispatch_gc_object_task"})
+	DispatchRecoverPieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "dispatch_recovery_piece_task",
+		Help: "Track recovery task total number",
+	}, []string{"dispatch_recovery_piece_task"})
 
 	// signer metrics
 	SealObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{

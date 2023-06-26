@@ -44,9 +44,9 @@ const (
 	// MaxGCMetaTime defines the max timeout to gc meta.
 	MaxGCMetaTime int64 = 600
 	// MinRecoveryTime defines the min timeout to recovery object.
-	MinRecoveryTime int64 = 5
+	MinRecoveryTime int64 = 10
 	// MaxRecoveryTime defines the max timeout to replicate object.
-	MaxRecoveryTime int64 = 300
+	MaxRecoveryTime int64 = 50
 
 	// NotUseRetry defines the default task max retry.
 	NotUseRetry int64 = 0
