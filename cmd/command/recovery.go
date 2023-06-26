@@ -71,12 +71,16 @@ func recoveryObjectAction(ctx *cli.Context) error {
 	}
 
 	replicateIdx := 0
+
+	fmt.Println("chain info  primary SP:", bucketInfo.PrimarySpAddress)
+	fmt.Println("config SP address: ", cfg.SpAccount.SpOperatorAddress)
 	if strings.EqualFold(bucketInfo.PrimarySpAddress, cfg.SpAccount.SpOperatorAddress) {
 		replicateIdx = -1
 	}
 
 	var isSecondarySP bool
 	for i, addr := range objectInfo.GetSecondarySpAddresses() {
+		fmt.Println("chain info secondary SP:", addr)
 		if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
 			replicateIdx = i
 			isSecondarySP = true
@@ -93,7 +97,7 @@ func recoveryObjectAction(ctx *cli.Context) error {
 	if replicateIdx == -1 {
 		for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
 			task := &gfsptask.GfSpRecoveryPieceTask{}
-			task.InitRecoveryPieceTask(objectInfo, storageParams, coretask.DefaultLargerTaskPriority, segmentIdx, int32(-1), maxSegmentSize, 0, 0)
+			task.InitRecoveryPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(-1), maxSegmentSize, 0, 0)
 			client.ReportTask(context.Background(), task)
 			time.Sleep(time.Second)
 		}
@@ -101,7 +105,7 @@ func recoveryObjectAction(ctx *cli.Context) error {
 		// recovery secondary SP
 		for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
 			task := &gfsptask.GfSpRecoveryPieceTask{}
-			task.InitRecoveryPieceTask(objectInfo, storageParams, coretask.DefaultLargerTaskPriority, segmentIdx, int32(replicateIdx), maxSegmentSize, 0, 0)
+			task.InitRecoveryPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(replicateIdx), maxSegmentSize, 0, 0)
 			client.ReportTask(context.Background(), task)
 			time.Sleep(time.Second)
 		}
