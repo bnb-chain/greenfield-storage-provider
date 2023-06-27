@@ -99,6 +99,10 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		resp.Response = &gfspserver.GfSpAskTaskResponse_GcMetaTask{
 			GcMetaTask: t,
 		}
+	case *gfsptask.GfSpMigratePieceTask:
+		resp.Response = &gfspserver.GfSpAskTaskResponse_MigratePieceTask{
+			MigratePieceTask: t,
+		}
 	default:
 		log.CtxErrorw(ctx, "[BUG] Unsupported task type to dispatch")
 		return &gfspserver.GfSpAskTaskResponse{Err: ErrUnsupportedTaskType}, nil
@@ -228,8 +232,14 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 
 		err = g.manager.HandleChallengePieceTask(ctx, t.ChallengePieceTask)
+	case *gfspserver.GfSpReportTaskRequest_MigratePieceTask:
+		task := t.MigratePieceTask
+		ctx := log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
+		task.SetAddress(GetRPCRemoteAddress(ctx))
+		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
+		err = g.manager.HandleMigratePieceTask(ctx, t.MigratePieceTask)
 	default:
-		log.CtxErrorw(ctx, "receive unsupported task type")
+		log.CtxError(ctx, "receive unsupported task type")
 		return &gfspserver.GfSpReportTaskResponse{Err: ErrUnsupportedTaskType}, nil
 	}
 	if err != nil {

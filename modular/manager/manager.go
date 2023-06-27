@@ -51,15 +51,16 @@ type ManageModular struct {
 	loadTaskLimitToSeal      int
 	loadTaskLimitToGC        int
 
-	uploadQueue    taskqueue.TQueueOnStrategy
-	replicateQueue taskqueue.TQueueOnStrategyWithLimit
-	sealQueue      taskqueue.TQueueOnStrategyWithLimit
-	receiveQueue   taskqueue.TQueueOnStrategyWithLimit
-	gcObjectQueue  taskqueue.TQueueOnStrategyWithLimit
-	gcZombieQueue  taskqueue.TQueueOnStrategyWithLimit
-	gcMetaQueue    taskqueue.TQueueOnStrategyWithLimit
-	downloadQueue  taskqueue.TQueueOnStrategy
-	challengeQueue taskqueue.TQueueOnStrategy
+	uploadQueue       taskqueue.TQueueOnStrategy
+	replicateQueue    taskqueue.TQueueOnStrategyWithLimit
+	sealQueue         taskqueue.TQueueOnStrategyWithLimit
+	receiveQueue      taskqueue.TQueueOnStrategyWithLimit
+	gcObjectQueue     taskqueue.TQueueOnStrategyWithLimit
+	gcZombieQueue     taskqueue.TQueueOnStrategyWithLimit
+	gcMetaQueue       taskqueue.TQueueOnStrategyWithLimit
+	migratePieceQueue taskqueue.TQueueOnStrategyWithLimit
+	downloadQueue     taskqueue.TQueueOnStrategy
+	challengeQueue    taskqueue.TQueueOnStrategy
 
 	maxUploadObjectNumber int
 
@@ -94,16 +95,18 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
+	// m.migratePieceQueue.SetRetireTaskStrategy(m.GCMigrateQueue)
+	m.migratePieceQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
 		return err
 	}
 	m.scope = scope
-	//err = m.LoadTaskFromDB()
-	//if err != nil {
+	// err = m.LoadTaskFromDB()
+	// if err != nil {
 	//	return err
-	//}
+	// }
 
 	go m.eventLoop(ctx)
 	return nil
@@ -340,6 +343,14 @@ func (m *ManageModular) TaskUploading(ctx context.Context, task task.Task) bool 
 	return false
 }
 
+func (m *ManageModular) TaskMigrating(ctx context.Context, task task.Task) bool {
+	if m.migratePieceQueue.Has(task.Key()) {
+		log.CtxError(ctx, "migrate piece repeated")
+		return true
+	}
+	return false
+}
+
 func (m *ManageModular) UploadingObjectNumber() int {
 	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len()
 }
@@ -510,9 +521,9 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
+		"upload[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlockHeight[%d], gcSafeDistance[%d], migratePiece[%d]",
 		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
 		m.receiveQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
 		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(),
-		m.gcBlockHeight, m.gcSafeBlockDistance)
+		m.gcBlockHeight, m.gcSafeBlockDistance, m.migratePieceQueue.Len())
 }

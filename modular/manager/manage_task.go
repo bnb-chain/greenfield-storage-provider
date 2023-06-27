@@ -74,6 +74,12 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
+	task = m.migratePieceQueue.TopByLimit(limit)
+	if task != nil {
+		log.CtxDebugw(ctx, "add confirm migrate piece to backup test", "migrate task_key", task.Key().String(),
+			"task_limit", task.EstimateLimit().String())
+		backupTasks = append(backupTasks, task)
+	}
 	task = m.PickUpTask(ctx, backupTasks)
 	if task == nil {
 		return nil, nil
@@ -442,6 +448,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	gcMetaTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcMetaQueue, subKey)
 	downloadTasks, _ := taskqueue.ScanTQueueBySubKey(m.downloadQueue, subKey)
 	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(m.challengeQueue, subKey)
+	migratePieceTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.migratePieceQueue, subKey)
 
 	var tasks []task.Task
 	tasks = append(tasks, uploadTasks...)
@@ -453,6 +460,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, gcMetaTasks...)
 	tasks = append(tasks, downloadTasks...)
 	tasks = append(tasks, challengeTasks...)
+	tasks = append(tasks, migratePieceTasks...)
 	return tasks, nil
 }
 
@@ -531,4 +539,38 @@ func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32
 	}
 	log.CtxDebugw(ctx, "succeed to pick gvg", "gvg", gvg)
 	return gvg, nil
+}
+
+// TODO: waiting for completing
+func (m *ManageModular) HandleMigratePieceTask(ctx context.Context, task task.MigratePieceTask) error {
+	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
+		log.CtxError(ctx, "failed to handle migrate piece due to pointer dangling")
+		return ErrDanglingTask
+	}
+	if task.Error() != nil {
+		log.CtxErrorw(ctx, "handle error migrating piece task", "task_info", task.Info(), "error", task.Error())
+		return m.handleFailedMigratePieceTask(ctx, task)
+	}
+	task.SetUpdateTime(time.Now().Unix())
+	if err := m.migratePieceQueue.Push(task); err != nil {
+		log.CtxErrorw(ctx, "failed to push migrate piece task to queue", "task_info", task.Info(), "error", err)
+	}
+	return nil
+}
+
+func (m *ManageModular) handleFailedMigratePieceTask(ctx context.Context, handleTask task.MigratePieceTask) error {
+	oldTask := m.migratePieceQueue.PopByKey(handleTask.Key())
+	if oldTask == nil {
+		log.CtxErrorw(ctx, "task has been cancelled", "task_info", handleTask.Info())
+		return ErrCanceledTask
+	}
+	ta := oldTask.(task.MigratePieceTask)
+	if !ta.ExceedRetry() {
+		ta.SetUpdateTime(time.Now().Unix())
+		err := m.migratePieceQueue.Push(ta)
+		log.CtxDebugw(ctx, "push task again to retry", "task_info", ta.Info(), "error", err)
+	} else {
+		log.CtxErrorw(ctx, "delete expired confirm migrate piece task", "task_info", ta.Info())
+	}
+	return nil
 }

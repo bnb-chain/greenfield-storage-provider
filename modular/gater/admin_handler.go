@@ -1,16 +1,22 @@
 package gater
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -368,4 +374,174 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(GnfdIntegrityHashSignatureHeader, hex.EncodeToString(signature))
 	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to replicate piece")
+}
+
+const MigrateMinEcIndex = -1
+
+// transferObjectHandler handles the transfer data request between SPs which is used in SP exiting case.
+// First, gateway should verify Authorization header to ensure the requests are from correct SPs.
+// Second, retrieve and get data from downloader module including: PrimarySP and SecondarySP pieces
+// Third, transfer data to client which is a selected SP.
+func (g *GateModular) transferObjectHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err        error
+		reqCtx     *RequestContext
+		migrateMsg []byte
+		pieceData  []byte
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(err)
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	migrateHeader := r.Header.Get(GnfdMigratePieceMsgHeader)
+	migrateMsg, err = hex.DecodeString(migrateHeader)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate piece header", "header", migrateHeader)
+		err = ErrDecodeMsg
+		return
+	}
+
+	migratePieceTask := gfsptask.GfSpMigratePieceTask{}
+	err = json.Unmarshal(migrateMsg, &migratePieceTask)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate piece task msg", "header", migrateHeader)
+		err = ErrDecodeMsg
+		return
+	}
+
+	taskSig := migratePieceTask.GetSignature()
+	sigAddr, pk, err := RecoverAddr(crypto.Keccak256(migratePieceTask.GetSignBytes()), taskSig)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get migrate piece task address", "error", err)
+		err = ErrSignature
+		return
+	}
+
+	if !secp256k1.VerifySignature(pk.Bytes(), crypto.Keccak256(migratePieceTask.GetSignBytes()), taskSig[:len(taskSig)-1]) {
+		log.CtxError(reqCtx.Context(), "failed to verify migrate piece task signature")
+		err = ErrSignature
+		return
+	}
+
+	objectInfo := migratePieceTask.GetObjectInfo()
+	if objectInfo == nil {
+		log.CtxError(reqCtx.Context(), "failed to get migrate piece object info")
+		err = ErrInvalidHeader
+		return
+	}
+
+	isPrimaryHeader := r.Header.Get(GnfdIsPrimaryHeader)
+	if isPrimaryHeader == "" {
+		log.CtxError(reqCtx.Context(), "migrate piece is primary header is empty")
+	}
+	isPrimary, err := strconv.ParseBool(isPrimaryHeader)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate piece is primary header", "header",
+			isPrimaryHeader, "error", err)
+	}
+
+	chainObjectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp, objectInfo.GetObjectName(), objectInfo.GetBucketName())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object on chain meta", "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+	redundancyIdx := migratePieceTask.EcIdx
+	maxRedundancyIdx := int32(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()) - 1
+	if redundancyIdx < int32(MigrateMinEcIndex) || redundancyIdx > maxRedundancyIdx {
+		// TODO: customize an error to return to sp
+		return
+	}
+
+	// if isPrimary is equal to true, we should migrate pieces from primary SP
+	if isPrimary {
+		pieceData, err = g.getSegmentPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, params, migratePieceTask, sigAddr)
+		if err != nil {
+			return
+		}
+	} else { // in this case, we should migrate pieces from secondary SP
+		pieceData, err = g.getECPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, params, migratePieceTask, sigAddr)
+		if err != nil {
+			return
+		}
+	}
+
+	w.Write(pieceData)
+	log.CtxDebug(reqCtx.Context(), "succeed to migrate one piece")
+}
+
+func (g *GateModular) getSegmentPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo, bucketInfo *storagetypes.BucketInfo,
+	params *storagetypes.Params, migratePieceTask gfsptask.GfSpMigratePieceTask, sigAddr sdktypes.AccAddress) ([]byte, error) {
+	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, migratePieceTask.GetSegmentIdx(),
+		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
+	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
+	segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(migratePieceTask.GetObjectInfo().Id.Uint64(), migratePieceTask.GetSegmentIdx())
+	segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(objectInfo.PayloadSize, migratePieceTask.GetSegmentIdx(), params.GetMaxSegmentSize())
+	// TODO: refine how to get userAddress, mock temporarily
+	mockAddress := "mock"
+	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
+		false, mockAddress, uint64(ECPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
+		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
+	segmentPieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to download segment piece data", "error", err)
+		return nil, downloader.ErrPieceStore
+	}
+	return segmentPieceData, nil
+}
+
+func (g *GateModular) getECPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo, bucketInfo *storagetypes.BucketInfo,
+	params *storagetypes.Params, migratePieceTask gfsptask.GfSpMigratePieceTask, sigAddr sdktypes.AccAddress) ([]byte, error) {
+	ecPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, migratePieceTask.GetSegmentIdx(),
+		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
+	// TODO: should refine how to get ec index
+	ecIndex := 0
+	ecPieceKey := g.baseApp.PieceOp().ECPieceKey(migratePieceTask.GetObjectInfo().Id.Uint64(),
+		migratePieceTask.GetSegmentIdx(), uint32(ecIndex))
+	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
+	// TODO: refine how to get userAddress, mock temporarily
+	mockAddress := "mock"
+	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask), false, mockAddress,
+		uint64(ecPieceSize), ecPieceKey, 0, uint64(ecPieceSize), g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())),
+		g.baseApp.TaskMaxRetry(pieceTask))
+	ecPieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to download ec piece data", "error", err)
+		return nil, downloader.ErrPieceStore
+	}
+	return ecPieceData, nil
+}
+
+// TODO: this function should be deleted in the future
+func getObjectChainMeta(reqCtx *RequestContext, baseApp *gfspapp.GfSpBaseApp, objectName, bucketName string) (*storagetypes.ObjectInfo, *storagetypes.BucketInfo, *storagetypes.Params, error) {
+	objectInfo, err := baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), bucketName, objectName)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+		return nil, nil, nil, ErrConsensus
+	}
+
+	bucketInfo, err := baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
+		return nil, nil, nil, ErrConsensus
+	}
+
+	params, err := baseApp.Consensus().QueryStorageParamsByTimestamp(
+		reqCtx.Context(), objectInfo.GetCreateAt())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
+		return nil, nil, nil, ErrConsensus
+	}
+
+	return objectInfo, bucketInfo, params, nil
 }

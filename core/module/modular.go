@@ -47,6 +47,8 @@ const (
 	AuthOpTypeGetBucketQuota
 	// AuthOpTypeListBucketReadRecord defines the ListBucketReadRecord operator
 	AuthOpTypeListBucketReadRecord
+	// AuthOpTypeMigratePiece defines the MigratePiece operator
+	AuthOpTypeMigratePiece
 )
 
 // Authenticator is an abstract interface to verify users authentication.
@@ -184,6 +186,8 @@ type Manager interface {
 	HandleChallengePieceTask(ctx context.Context, task task.ChallengePieceTask) error
 	// PickVirtualGroupFamily is used to pick vgf for the new bucket.
 	PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error)
+	// HandleMigratePieceTask handles MigratePieceTask, the request comes from TaskExecutor
+	HandleMigratePieceTask(ctx context.Context, task task.MigratePieceTask) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
@@ -238,6 +242,7 @@ type Signer interface {
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
 	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
+	SignMigratePieceTask(ctx context.Context, task task.MigratePieceTask) ([]byte, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

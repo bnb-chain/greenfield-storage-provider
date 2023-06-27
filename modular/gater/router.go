@@ -31,6 +31,7 @@ const (
 	getGroupListRouterName                = "GetGroupList"
 	listBucketsByBucketIDRouterName       = "ListBucketsByBucketID"
 	listObjectsByObjectIDRouterName       = "ListObjectsByObjectID"
+	migratePieceRouterName                = "MigratePiece"
 )
 
 const (
@@ -134,6 +135,11 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Name(replicateObjectPieceRouterName).
 		Methods(http.MethodPut).
 		HandlerFunc(g.replicateHandler)
+	// migrate pieces between SPs which is used for SP exiting case
+	router.Path(MigratePiecePath).
+		Name(migratePieceRouterName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.transferObjectHandler)
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").
 		Name(downloadObjectByUniversalEndpointName).
@@ -144,7 +150,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Name(viewObjectByUniversalEndpointName).
 		Methods(http.MethodGet).
 		HandlerFunc(g.viewObjectByUniversalEndpointHandler)
-	//redirect for universal endpoint
+	// redirect for universal endpoint
 	http.Handle("/", router)
 
 	// off-chain-auth router

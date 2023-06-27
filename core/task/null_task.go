@@ -20,6 +20,7 @@ var _ ChallengePieceTask = (*NullTask)(nil)
 var _ GCTask = (*NullTask)(nil)
 var _ GCZombiePieceTask = (*NullTask)(nil)
 var _ GCMetaTask = (*NullTask)(nil)
+var _ MigratePieceTask = (*NullTask)(nil)
 
 type NullTask struct{}
 
@@ -132,3 +133,7 @@ func (*NullTask) SetPieceHash([][]byte)                  {}
 func (*NullTask) GetPieceDataSize() int64                { return 0 }
 func (*NullTask) SetPieceDataSize(int64)                 {}
 func (*NullTask) GetSignBytes() []byte                   { return nil }
+
+func (*NullTask) InitMigratePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, segmentIdx uint32, ecIdx int32, pieceSize uint64, timeout, retry int64) {
+}
+func (*NullTask) GetEcIdx() int32 { return 0 }

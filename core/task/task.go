@@ -452,3 +452,22 @@ type GCMetaTask interface {
 	// deleted object id and the number that has been deleted.
 	SetGCMetaStatus(uint64, uint64)
 }
+
+// MigratePieceTask is an abstract interface that migrate piece data when one SP want to leave Greenfield
+type MigratePieceTask interface {
+	ObjectTask
+	InitMigratePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, segmentIdx uint32, ecIdx int32,
+		pieceSize uint64, timeout, retry int64)
+	// GetSegmentIdx return the segment index of recovery object segment
+	GetSegmentIdx() uint32
+	// GetEcIdx return the ec index of recovery ec chunk
+	GetEcIdx() int32
+	// GetSignature returns the primary SP's signature
+	GetSignature() []byte
+	// SetSignature sets the primary SP's signature.
+	SetSignature([]byte)
+	// GetSignBytes returns the bytes from the task for primary SP to sign.
+	GetSignBytes() []byte
+	// IsPrimary returns whether the piece belongs to primary SP
+	// IsPrimary() bool
+}

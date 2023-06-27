@@ -43,6 +43,10 @@ const (
 	MinGCMetaTime int64 = 300
 	// MaxGCMetaTime defines the max timeout to gc meta.
 	MaxGCMetaTime int64 = 600
+	// MinMigratePieceTime defines the min timeout to migrate pieces
+	MinMigratePieceTime int64 = 30
+	// MaxMigratePieceTime defines the max timeout to migrate pieces
+	MaxMigratePieceTime int64 = 300
 
 	// NotUseRetry defines the default task max retry.
 	NotUseRetry int64 = 0
@@ -62,6 +66,10 @@ const (
 	MinGCObjectRetry = 3
 	// MaxGCObjectRetry defines the min retry number to gc object.
 	MaxGCObjectRetry = 5
+	// MinMigratePieceRetry defines the min retry number to migrate pieces
+	MinMigratePieceRetry = 2
+	// MaxMigratePieceRetry defines the max retry number to migrate pieces
+	MaxMigratePieceRetry = 5
 )
 
 // TaskTimeout returns the task timeout by task type and some task need payload size
@@ -151,6 +159,14 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 			return MaxGCMetaTime
 		}
 		return g.gcMetaTimeout
+	case coretask.TypeTaskMigratePiece:
+		if g.migratePieceTimeout < MinMigratePieceTime {
+			return MinMigratePieceTime
+		}
+		if g.migratePieceTimeout > MaxMigratePieceTime {
+			return MaxMigratePieceTime
+		}
+		return g.migratePieceTimeout
 	}
 	return NotUseTimeout
 }
@@ -218,6 +234,14 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 			return MaxGCObjectRetry
 		}
 		return g.gcMetaRetry
+	case coretask.TypeTaskMigratePiece:
+		if g.migratePieceRetry < MinMigratePieceRetry {
+			return MinMigratePieceRetry
+		}
+		if g.migratePieceRetry > MaxMigratePieceRetry {
+			return MaxMigratePieceRetry
+		}
+		return g.migratePieceRetry
 	}
 	return 0
 }
@@ -250,6 +274,8 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskGCMeta:
 		return coretask.UnSchedulingPriority
+	case coretask.TypeTaskMigratePiece:
+		return coretask.DefaultSmallerPriority
 	}
 	return coretask.UnKnownTaskPriority
 }

@@ -182,3 +182,12 @@ func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtual
 	_, err = s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
 	return err
 }
+
+func (s *SignModular) SignMigratePieceTask(ctx context.Context, task task.MigratePieceTask) ([]byte, error) {
+	// TODO: need to optimize serializing GfSpMigrateObject as byte
+	sig, err := s.client.Sign(SignOperator, task.GetSignBytes())
+	if err != nil {
+		return nil, err
+	}
+	return sig, nil
+}

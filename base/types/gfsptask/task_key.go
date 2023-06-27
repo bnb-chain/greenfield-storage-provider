@@ -19,6 +19,7 @@ const (
 	KeyPrefixGfSpReplicatePieceTask         = "Replicating"
 	KeyPrefixGfSpSealObjectTask             = "Sealing"
 	KeyPrefixGfSpReceivePieceTask           = "ReceivePiece"
+	keyPrefixGfSpMigratePieceTask           = "MigratePiece"
 )
 
 var (
@@ -91,6 +92,15 @@ func GfSpGCZombiePieceTaskKey(time int64) task.TKey {
 
 func GfSpGfSpGCMetaTaskKey(time int64) task.TKey {
 	return task.TKey(KeyPrefixGfSpGfSpGCMetaTask + CombineKey("time"+fmt.Sprint(time)))
+}
+
+func GfSpMigratePieceTaskKey(bucket, object, id string, segIdx uint32, ecIdx int32, time int64) task.TKey {
+	if ecIdx >= 0 {
+		return task.TKey(keyPrefixGfSpMigratePieceTask + CombineKey("bucket:"+bucket, "object:"+object, "id:"+id,
+			"segIdx:"+fmt.Sprint(segIdx), "ecIdx:"+fmt.Sprint(ecIdx), "time:"+fmt.Sprint(time)))
+	}
+	return task.TKey(keyPrefixGfSpMigratePieceTask + CombineKey("bucket:"+bucket, "object:"+object, "id:"+id,
+		"segIdx:"+fmt.Sprint(segIdx), "time:"+fmt.Sprint(time)))
 }
 
 func CombineKey(field ...string) string {

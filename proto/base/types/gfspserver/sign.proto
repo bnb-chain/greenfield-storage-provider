@@ -36,6 +36,7 @@ message GfSpSignRequest {
     base.types.gfsptask.GfSpReceivePieceTask gfsp_receive_piece_task = 9;
     greenfield.storage.MsgRejectSealObject reject_object_info = 10;
     GfSpCreateGlobalVirtualGroup create_global_virtual_group = 11;
+    base.types.gfsptask.GfSpMigratePieceTask gfsp_migrate_piece_task = 13;
   }
 }
 

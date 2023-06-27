@@ -30,6 +30,7 @@ message GfSpAskTaskResponse {
     base.types.gfsptask.GfSpGCObjectTask gc_object_task = 5;
     base.types.gfsptask.GfSpGCZombiePieceTask gc_zombie_piece_task = 6;
     base.types.gfsptask.GfSpGCMetaTask gc_meta_task = 7;
+    base.types.gfsptask.GfSpMigratePieceTask migrate_piece_task = 9;
   }
 }
 
@@ -44,6 +45,7 @@ message GfSpReportTaskRequest {
     base.types.gfsptask.GfSpDownloadObjectTask download_object_task = 7;
     base.types.gfsptask.GfSpChallengePieceTask challenge_piece_task = 8;
     base.types.gfsptask.GfSpReceivePieceTask receive_piece_task = 9;
+    base.types.gfsptask.GfSpMigratePieceTask migrate_piece_task = 12;
   }
 }
 

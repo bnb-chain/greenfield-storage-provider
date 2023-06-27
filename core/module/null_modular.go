@@ -120,6 +120,10 @@ func (*NullModular) VerifyOffChainSignature(ctx context.Context, account string,
 	return false, ErrNilModular
 }
 
+func (*NullModular) HandleMigratePieceTask(ctx context.Context, task task.MigratePieceTask) error {
+	return ErrNilModular
+}
+
 var _ TaskExecutor = (*NilModular)(nil)
 var _ P2P = (*NilModular)(nil)
 var _ Signer = (*NilModular)(nil)
@@ -206,6 +210,10 @@ func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontin
 
 func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
 	return nil
+}
+
+func (NilModular) SignMigratePieceTask(ctx context.Context, task task.MigratePieceTask) ([]byte, error) {
+	return nil, ErrNilModular
 }
 
 var _ Receiver = (*NullReceiveModular)(nil)

@@ -43,6 +43,8 @@ const (
 	TypeTaskGCZombiePiece
 	// TypeTaskGCMeta defines the type of collecting SP metadata task.
 	TypeTaskGCMeta
+	// TypeTaskMigratePiece defines the type of migrating pieces between SPs
+	TypeTaskMigratePiece
 )
 
 var TypeTaskMap = map[TType]string{
@@ -59,6 +61,7 @@ var TypeTaskMap = map[TType]string{
 	TypeTaskGCObject:               "GCObjectTask",
 	TypeTaskGCZombiePiece:          "GCZombiePieceTask",
 	TypeTaskGCMeta:                 "GCMetaTask",
+	TypeTaskMigratePiece:           "MigratePieceTask",
 }
 
 func TaskTypeName(taskType TType) string {

@@ -89,6 +89,15 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "error", err)
 		}
+	case *gfspserver.GfSpSignRequest_GfspMigratePieceTask:
+		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspMigratePieceTask.Key().String())
+		signature, err = g.signer.SignMigratePieceTask(ctx, t.GfspMigratePieceTask)
+	default:
+		log.CtxError(ctx, "unknown gfsp sign request type")
+		return &gfspserver.GfSpSignResponse{
+			Err:       gfsperrors.MakeGfSpError(ErrUnsupportedTaskType),
+			Signature: nil,
+		}, nil
 	}
 	return &gfspserver.GfSpSignResponse{
 		Err:       gfsperrors.MakeGfSpError(err),
