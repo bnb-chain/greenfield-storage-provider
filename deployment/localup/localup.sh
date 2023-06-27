@@ -130,6 +130,8 @@ function make_config() {
       sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\'16Uiu2HAmG4KTyFsK71BVwjY4z6WwcNBVb6vAiuuL9ASWdqiTzNZH@127.0.0.1:9633\'\]/g" config.toml
     fi
 
+    sed -i -e "s/MaxExecuteNumber = '.*'/MaxExecuteNumber = 1/g" config.toml
+
     # metrics and pprof
     sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
     sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
