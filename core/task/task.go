@@ -74,6 +74,12 @@ type Task interface {
 	// application resources to the rcmgr and decide whether it can be executed
 	// immediately.
 	EstimateLimit() rcmgr.Limit
+	// SetLogs sets the event logs to task
+	SetLogs(logs string)
+	// GetLogs returns the logs of task
+	GetLogs() string
+	// AppendLog appends the event log to task
+	AppendLog(log string)
 	// Info returns the task detail info for log and debug.
 	Info() string
 	// Error returns the task error. if the task is normal, returns nil.

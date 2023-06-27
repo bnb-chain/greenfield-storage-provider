@@ -128,6 +128,18 @@ func (m *GfSpDownloadObjectTask) EstimateLimit() corercmgr.Limit {
 	return l
 }
 
+func (m *GfSpDownloadObjectTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpDownloadObjectTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpDownloadObjectTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
 func (m *GfSpDownloadObjectTask) Error() error {
 	return m.GetTask().Error()
 }
@@ -275,6 +287,18 @@ func (m *GfSpDownloadPieceTask) EstimateLimit() corercmgr.Limit {
 	l := &gfsplimit.GfSpLimit{Memory: m.GetSize()}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
+}
+
+func (m *GfSpDownloadPieceTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpDownloadPieceTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpDownloadPieceTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
 }
 
 func (m *GfSpDownloadPieceTask) Error() error {
@@ -444,6 +468,18 @@ func (m *GfSpChallengePieceTask) EstimateLimit() corercmgr.Limit {
 	l := &gfsplimit.GfSpLimit{Memory: memSize}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
+}
+
+func (m *GfSpChallengePieceTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpChallengePieceTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpChallengePieceTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
 }
 
 func (m *GfSpChallengePieceTask) Error() error {

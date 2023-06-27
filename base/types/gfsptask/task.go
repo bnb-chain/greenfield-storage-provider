@@ -82,6 +82,15 @@ func (m *GfSpTask) EstimateLimit() rcmgr.Limit {
 	return nil
 }
 
+func (m *GfSpTask) SetLogs(logs string) {
+	m.Logs = logs
+}
+
+func (m *GfSpTask) AppendLog(log string) {
+	appendLog := time.Now().String() + "-" + log + "\n"
+	m.Logs = m.GetLogs() + appendLog
+}
+
 func (m *GfSpTask) Error() error {
 	if m.GetErr() == nil {
 		return nil
