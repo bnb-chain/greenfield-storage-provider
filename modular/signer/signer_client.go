@@ -65,12 +65,12 @@ type GreenfieldChainSignClient struct {
 	operatorAccNonce  uint64
 	sealAccNonce      uint64
 	gcAccNonce        uint64
-	sealBlsKm         keys.KeyManager
+	blsKm             keys.KeyManager
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
 func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoType]GasInfo, operatorPrivateKey, fundingPrivateKey,
-	sealPrivateKey, approvalPrivateKey, gcPrivateKey string, sealBlsPrivKey string) (*GreenfieldChainSignClient, error) {
+	sealPrivateKey, approvalPrivateKey, gcPrivateKey string, blsPrivKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
@@ -99,7 +99,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		return nil, err
 	}
 
-	sealBlsKM, err := keys.NewBlsPrivateKeyManager(sealBlsPrivKey)
+	blsKM, err := keys.NewBlsPrivateKeyManager(blsPrivKey)
 	if err != nil {
 		log.Errorw("failed to new bls private key manager", "error", err)
 		return nil, err
@@ -159,7 +159,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
 		operatorAccNonce:  operatorAccNonce,
-		sealBlsKm:         sealBlsKM,
+		blsKm:             blsKM,
 	}, nil
 }
 
@@ -463,9 +463,9 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 
 	msgCompleteMigrateBucket := &storagetypes.MsgCompleteMigrateBucket{
 		Operator:                   km.GetAddr().String(),
-		GlobalVirtualGroupFamilyId: completeMigration.GlobalVirtualGroupFamilyId,
-		NewLvgToGvgMappings:        completeMigration.NewLvgToGvgMappings,
 		BucketName:                 completeMigration.BucketName,
+		GlobalVirtualGroupFamilyId: completeMigration.GlobalVirtualGroupFamilyId,
+		GvgMappings:                completeMigration.GvgMappings,
 	}
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{

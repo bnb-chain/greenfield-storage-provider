@@ -93,13 +93,22 @@ func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.Receiv
 	return sig, nil
 }
 
-func (s *SignModular) SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
-	msg := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, hash.GenerateIntegrityHash(checksums)).GetSignBytes()
-	sig, err := s.client.sealBlsKm.Sign(msg[:])
+func (s *SignModular) SignSecondarySealBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
+	msg := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, hash.GenerateIntegrityHash(checksums)).GetBlsSignHash()
+	sig, err := s.client.blsKm.Sign(msg[:])
 	if err != nil {
 		return nil, err
 	}
 	// log.Debugw("bls signature length", "len", len(sig), "object_id", objectID, "gvg_id", gvgId, "checksums", checksums)
+	return sig, nil
+}
+
+func (s *SignModular) SignSecondaryCompleteMigrationBls(_ context.Context, bucketId uint64, spId, srcGvgId, destGvgId uint32) ([]byte, error) {
+	msg := storagetypes.NewSecondarySpMigrationBucketSignDoc(sdkmath.NewUint(bucketId), spId, srcGvgId, destGvgId).GetBlsSignHash()
+	sig, err := s.client.blsKm.Sign(msg[:])
+	if err != nil {
+		return nil, err
+	}
 	return sig, nil
 }
 

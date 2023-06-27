@@ -32,8 +32,8 @@ const (
 	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
 	// SpSealPrivKey defines env variable name for sp seal private key
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
-	// SpSealBlsPrivKey defines env variable name for sp seal bls private key
-	SpSealBlsPrivKey = "SIGNER_SEAL_BLS_PRIV_KEY"
+	// SpBlsPrivKey defines env variable name for sp bls private key
+	SpBlsPrivKey = "SIGNER_BLS_PRIV_KEY"
 	// SpGcPrivKey defines env variable name for sp gc private key
 	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
 )
@@ -89,8 +89,8 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 	if val, ok := os.LookupEnv(SpSealPrivKey); ok {
 		cfg.SpAccount.SealPrivateKey = val
 	}
-	if val, ok := os.LookupEnv(SpSealBlsPrivKey); ok {
-		cfg.SpAccount.SealBlsPrivateKey = val
+	if val, ok := os.LookupEnv(SpBlsPrivKey); ok {
+		cfg.SpAccount.BlsPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(SpApprovalPrivKey); ok {
 		cfg.SpAccount.ApprovalPrivateKey = val
@@ -123,7 +123,7 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 
 	client, err := NewGreenfieldChainSignClient(cfg.Chain.ChainAddress[0], cfg.Chain.ChainID,
 		gasInfo, cfg.SpAccount.OperatorPrivateKey, cfg.SpAccount.FundingPrivateKey,
-		cfg.SpAccount.SealPrivateKey, cfg.SpAccount.ApprovalPrivateKey, cfg.SpAccount.GcPrivateKey, cfg.SpAccount.SealBlsPrivateKey)
+		cfg.SpAccount.SealPrivateKey, cfg.SpAccount.ApprovalPrivateKey, cfg.SpAccount.GcPrivateKey, cfg.SpAccount.BlsPrivateKey)
 	if err != nil {
 		return err
 	}

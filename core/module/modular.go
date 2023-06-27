@@ -224,8 +224,10 @@ type Signer interface {
 	SignReplicatePieceApproval(ctx context.Context, task task.ApprovalReplicatePieceTask) ([]byte, error)
 	// SignReceivePieceTask signs the ReceivePieceTask for replicating pieces data between SPs.
 	SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
-	// SignSecondaryBls signs the secondary bls for sealing object.
-	SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, error)
+	// SignSecondarySealBls signs the secondary bls for sealing object.
+	SignSecondarySealBls(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, error)
+	// SignSecondaryCompleteMigrationBls signs the secondary bls for complete migration.
+	SignSecondaryCompleteMigrationBls(ctx context.Context, bucketId uint64, spId, srcGvgId, destGvgId uint32) ([]byte, error)
 	// SignP2PPingMsg signs the ping msg for p2p node probing.
 	SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error)
 	// SignP2PPongMsg signs the pong msg for p2p to response ping msg.
@@ -238,6 +240,8 @@ type Signer interface {
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
 	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
+	// CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to greenfield.
+	CompleteMigrateBucket(ctx context.Context, completeMigrateBucket *storagetypes.MsgCompleteMigrateBucket) error
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

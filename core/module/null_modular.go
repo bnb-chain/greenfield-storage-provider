@@ -185,8 +185,15 @@ func (*NilModular) SignReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NilModular) SignReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) SignSecondaryBls(context.Context, uint64, uint32, [][]byte) ([]byte, error) {
+func (*NilModular) SignSecondarySealBls(context.Context, uint64, uint32, [][]byte) ([]byte, error) {
 	return nil, ErrNilModular
+}
+func (m *NilModular) SignSecondaryCompleteMigrationBls(ctx context.Context, bucketId uint64, spId, srcGvgId, destGvgId uint32) ([]byte, error) {
+	return nil, ErrNilModular
+}
+
+func (m *NilModular) CompleteMigrateBucket(ctx context.Context, completeMigrateBucket *storagetypes.MsgCompleteMigrateBucket) error {
+	return ErrNilModular
 }
 func (*NilModular) SignP2PPingMsg(context.Context, *gfspp2p.GfSpPing) ([]byte, error) {
 	return nil, ErrNilModular

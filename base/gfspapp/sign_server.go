@@ -52,7 +52,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			log.CtxErrorw(ctx, "failed to discontinue bucket", "error", err)
 		}
 	case *gfspserver.GfSpSignRequest_SignSecondaryBls:
-		signature, err = g.signer.SignSecondaryBls(ctx, t.SignSecondaryBls.ObjectId,
+		signature, err = g.signer.SignSecondarySealBls(ctx, t.SignSecondaryBls.ObjectId,
 			t.SignSecondaryBls.GlobalVirtualGroupId, t.SignSecondaryBls.Checksums)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign secondary bls", "error", err)
