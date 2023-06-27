@@ -237,6 +237,28 @@ func (s *GfSpClient) SignReceiveTask(ctx context.Context, receiveTask coretask.R
 	return resp.GetSignature(), nil
 }
 
+func (s *GfSpClient) SignRecoveryTask(ctx context.Context, recoveryTask coretask.RecoveryPieceTask) ([]byte, error) {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_GfspRecoverPieceTask{
+			GfspRecoverPieceTask: recoveryTask.(*gfsptask.GfSpRecoverPieceTask),
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign recovery task", "object name", recoveryTask.GetObjectInfo().ObjectName, "error", err)
+		return nil, ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
+}
+
 func (s *GfSpClient) SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {

@@ -71,6 +71,7 @@ type GfSpBaseApp struct {
 	gcObjectRetry       int64
 	gcZombieRetry       int64
 	gcMetaRetry         int64
+	recoveryRetry       int64
 }
 
 // AppID returns the GfSpBaseApp ID, the default value is prefix(gfsp) add

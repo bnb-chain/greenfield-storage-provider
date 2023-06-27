@@ -32,6 +32,9 @@ const (
 	// DefaultGlobalGCMetaParallel defines the default max parallel gc meta db in SP
 	// system.
 	DefaultGlobalGCMetaParallel int = 1
+	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP
+	// system.
+	DefaultGlobalRecoveryPieceParallel int = 7
 	// DefaultGlobalDownloadObjectTaskCacheSize defines the default max cache the download
 	// object tasks in manager.
 	DefaultGlobalDownloadObjectTaskCacheSize int = 4096
@@ -64,6 +67,8 @@ const (
 	// DefaultDiscontinueBucketKeepAliveDays defines the default bucket keep alive days, after
 	// the interval, buckets will be discontinued, used for test net.
 	DefaultDiscontinueBucketKeepAliveDays = 7
+	// DefaultSubscribeSPExitEventIntervalSec define the default time interval to subscribe sp exit event from metadata.
+	DefaultSubscribeSPExitEventIntervalSec = 1
 )
 
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -124,6 +129,10 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		cfg.Parallel.DiscontinueBucketKeepAliveDays = DefaultDiscontinueBucketKeepAliveDays
 	}
 
+	if cfg.Parallel.GlobalRecoveryPieceParallel == 0 {
+		cfg.Parallel.GlobalRecoveryPieceParallel = DefaultGlobalRecoveryPieceParallel
+	}
+
 	manager.enableLoadTask = cfg.Manager.EnableLoadTask
 	manager.loadTaskLimitToReplicate = cfg.Parallel.GlobalReplicatePieceParallel
 	manager.loadTaskLimitToSeal = cfg.Parallel.GlobalSealObjectParallel
@@ -140,8 +149,12 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.discontinueBucketKeepAliveDays = cfg.Parallel.DiscontinueBucketKeepAliveDays
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
+	manager.resumeableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		manager.Name()+"-resumeable-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-replicate-piece", cfg.Parallel.GlobalReplicatePieceParallel)
+	manager.recoveryQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-recovery-piece", cfg.Parallel.GlobalRecoveryPieceParallel)
 	manager.sealQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-seal-object", cfg.Parallel.GlobalSealObjectParallel)
 	manager.receiveQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
@@ -158,5 +171,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
 
 	manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus())
+	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
+		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalSec
+	}
 	return err
 }

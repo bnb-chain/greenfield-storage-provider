@@ -101,6 +101,16 @@ func (s *SignModular) SignSecondaryBls(ctx context.Context, objectID uint64, gvg
 	return sig, nil
 }
 
+func (s *SignModular) SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) (
+	[]byte, error) {
+	msg := task.GetSignBytes()
+	sig, err := s.client.Sign(SignOperator, msg)
+	if err != nil {
+		return nil, err
+	}
+	return sig, nil
+}
+
 func (s *SignModular) SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error) {
 	msg := ping.GetSignBytes()
 	sig, err := s.client.Sign(SignOperator, msg)

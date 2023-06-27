@@ -51,15 +51,17 @@ type ManageModular struct {
 	loadTaskLimitToSeal      int
 	loadTaskLimitToGC        int
 
-	uploadQueue    taskqueue.TQueueOnStrategy
-	replicateQueue taskqueue.TQueueOnStrategyWithLimit
-	sealQueue      taskqueue.TQueueOnStrategyWithLimit
-	receiveQueue   taskqueue.TQueueOnStrategyWithLimit
-	gcObjectQueue  taskqueue.TQueueOnStrategyWithLimit
-	gcZombieQueue  taskqueue.TQueueOnStrategyWithLimit
-	gcMetaQueue    taskqueue.TQueueOnStrategyWithLimit
-	downloadQueue  taskqueue.TQueueOnStrategy
-	challengeQueue taskqueue.TQueueOnStrategy
+	uploadQueue           taskqueue.TQueueOnStrategy
+	resumeableUploadQueue taskqueue.TQueueOnStrategy
+	replicateQueue        taskqueue.TQueueOnStrategyWithLimit
+	sealQueue             taskqueue.TQueueOnStrategyWithLimit
+	receiveQueue          taskqueue.TQueueOnStrategyWithLimit
+	gcObjectQueue         taskqueue.TQueueOnStrategyWithLimit
+	gcZombieQueue         taskqueue.TQueueOnStrategyWithLimit
+	gcMetaQueue           taskqueue.TQueueOnStrategyWithLimit
+	downloadQueue         taskqueue.TQueueOnStrategy
+	challengeQueue        taskqueue.TQueueOnStrategy
+	recoveryQueue         taskqueue.TQueueOnStrategyWithLimit
 
 	maxUploadObjectNumber int
 
@@ -76,6 +78,8 @@ type ManageModular struct {
 	discontinueBucketKeepAliveDays int
 
 	virtualGroupManager vgmgr.VirtualGroupManager
+
+	subscribeSPExitEventInterval int
 }
 
 func (m *ManageModular) Name() string {
@@ -84,6 +88,7 @@ func (m *ManageModular) Name() string {
 
 func (m *ManageModular) Start(ctx context.Context) error {
 	m.uploadQueue.SetRetireTaskStrategy(m.GCUploadObjectQueue)
+	m.resumeableUploadQueue.SetRetireTaskStrategy(m.GCResumableUploadObjectQueue)
 	m.replicateQueue.SetRetireTaskStrategy(m.GCReplicatePieceQueue)
 	m.replicateQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.sealQueue.SetRetireTaskStrategy(m.GCSealObjectQueue)
@@ -94,16 +99,18 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
+	m.recoveryQueue.SetRetireTaskStrategy(m.GCRecoverQueue)
+	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
 		return err
 	}
 	m.scope = scope
-	//err = m.LoadTaskFromDB()
-	//if err != nil {
-	//	return err
-	//}
+	err = m.LoadTaskFromDB()
+	if err != nil {
+		return err
+	}
 
 	go m.eventLoop(ctx)
 	return nil
@@ -337,15 +344,45 @@ func (m *ManageModular) TaskUploading(ctx context.Context, task task.Task) bool 
 		log.CtxDebugw(ctx, "sealing object repeated")
 		return true
 	}
+	if m.resumeableUploadQueue.Has(task.Key()) {
+		log.CtxDebugw(ctx, "resumable uploading object repeated")
+		return true
+	}
+	return false
+}
+
+func (m *ManageModular) TaskRecovering(ctx context.Context, task task.Task) bool {
+	if m.recoveryQueue.Has(task.Key()) {
+		log.CtxDebugw(ctx, "recovery object repeated")
+		return true
+	}
+
 	return false
 }
 
 func (m *ManageModular) UploadingObjectNumber() int {
-	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len()
+	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len() + m.resumeableUploadQueue.Len()
 }
 
 func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 	task := qTask.(task.UploadObjectTask)
+	if task.Expired() {
+		go func() {
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+				ObjectID:         task.GetObjectInfo().Id.Uint64(),
+				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+				ErrorDescription: "expired",
+			}); err != nil {
+				log.Errorw("failed to update task state", "task_key", task.Key().String(), "error", err)
+			}
+		}()
+		return true
+	}
+	return false
+}
+
+func (m *ManageModular) GCResumableUploadObjectQueue(qTask task.Task) bool {
+	task := qTask.(task.ResumableUploadObjectTask)
 	if task.Expired() {
 		go func() {
 			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
@@ -399,6 +436,10 @@ func (m *ManageModular) GCReceiveQueue(qTask task.Task) bool {
 	return qTask.Expired()
 }
 
+func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
+	return qTask.ExceedRetry() || qTask.ExceedTimeout()
+}
+
 func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
 	task := qTask.(task.GCObjectTask)
 	if task.Expired() {
@@ -425,6 +466,7 @@ func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
 		return true
 	}
 	if qTask.GetRetry() == 0 {
+
 		return true
 	}
 	return false
@@ -510,9 +552,9 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
+		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
 		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
-		m.receiveQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
+		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
 		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(),
 		m.gcBlockHeight, m.gcSafeBlockDistance)
 }

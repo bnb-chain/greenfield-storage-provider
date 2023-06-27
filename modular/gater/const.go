@@ -44,6 +44,11 @@ const (
 	ActionQuery = "action"
 	// UploadProgressQuery defines upload progress query, which is used to route request
 	UploadProgressQuery = "upload-progress"
+	// UploadContextQuery defines an upload context query, which is used to route request, it includes upload offset,
+	UploadContextQuery      = "upload-context"
+	ResumableUploadComplete = "complete"
+	ResumableUploadOffset   = "offset"
+	GetSecondaryPieceData   = "get-piece"
 	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request
 	GetBucketReadQuotaQuery = "read-quota"
 	// GetBucketReadQuotaMonthQuery defines bucket read quota query month
@@ -96,6 +101,8 @@ const (
 	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
+	//RecoverObjectPiecePath defines recovery-object path style
+	RecoverObjectPiecePath = "/greenfield/recovery/v1/get-piece"
 	// AuthRequestNoncePath defines path to request auth nonce
 	AuthRequestNoncePath = "/auth/request_nonce"
 	// AuthUpdateKeyPath defines path to update user public key
@@ -106,6 +113,8 @@ const (
 	GnfdAuthorizationHeader = "Authorization"
 	// GnfdReceiveMsgHeader defines receive piece data meta
 	GnfdReceiveMsgHeader = "X-Gnfd-Receive-Msg"
+	// GnfdRecoveryMsgHeader defines receive piece data meta
+	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
 	// GnfdReplicatePieceApprovalHeader defines secondary approved msg for replicating piece
 	GnfdReplicatePieceApprovalHeader = "X-Gnfd-Replicate-Piece-Approval-Msg"
 	// GnfdObjectIDHeader defines object id
@@ -150,4 +159,9 @@ const (
 	GnfdOffChainAuthAppRegPublicKeyHeader = "X-Gnfd-App-Reg-Public-Key"
 	// GnfdOffChainAuthAppRegExpiryDateHeader defines the Expiry-Date is the ISO 8601 datetime string (e.g. 2021-09-30T16:25:24Z), used to register the EDDSA public key
 	GnfdOffChainAuthAppRegExpiryDateHeader = "X-Gnfd-App-Reg-Expiry-Date"
+
+	RecoveryTimeOutSeconds  = 15
+	RecoveryCheckInterval   = 2
+	RecoveryMinMilliseconds = 500
+	RecoveryMinEcIndex      = -1
 )

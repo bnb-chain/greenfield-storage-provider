@@ -167,6 +167,7 @@ func (t *GfSpTQueueWithLimit) topByLimit(limit corercmgr.Limit) coretask.Task {
 			delete(t.tasks, task.Key())
 		}
 	}()
+
 	for _, task := range t.tasks {
 		if t.gcFunc != nil {
 			if t.gcFunc(task) {

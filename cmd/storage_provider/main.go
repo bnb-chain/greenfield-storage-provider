@@ -113,6 +113,8 @@ func init() {
 		command.DebugCreateObjectApprovalCmd,
 		command.DebugReplicateApprovalCmd,
 		command.DebugPutObjectCmd,
+		// recovery commands
+		command.RecoverObjectCmd,
 	}
 	registerModular()
 }

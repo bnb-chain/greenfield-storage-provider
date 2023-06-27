@@ -43,6 +43,10 @@ const (
 	MinGCMetaTime int64 = 300
 	// MaxGCMetaTime defines the max timeout to gc meta.
 	MaxGCMetaTime int64 = 600
+	// MinRecoveryTime defines the min timeout to recovery object.
+	MinRecoveryTime int64 = 10
+	// MaxRecoveryTime defines the max timeout to replicate object.
+	MaxRecoveryTime int64 = 50
 
 	// NotUseRetry defines the default task max retry.
 	NotUseRetry int64 = 0
@@ -62,6 +66,10 @@ const (
 	MinGCObjectRetry = 3
 	// MaxGCObjectRetry defines the min retry number to gc object.
 	MaxGCObjectRetry = 5
+	// MinRecoveryRetry defines the min retry number to recovery piece.
+	MinRecoveryRetry = 2
+	// MaxRecoveryRetry  defines the max retry number to recovery piece.
+	MaxRecoveryRetry = 3
 )
 
 // TaskTimeout returns the task timeout by task type and some task need payload size
@@ -151,6 +159,15 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 			return MaxGCMetaTime
 		}
 		return g.gcMetaTimeout
+	case coretask.TypeTaskRecoverPiece:
+		timeout := int64(size)/(g.replicateSpeed+1)/(MinSpeed) + 100
+		if timeout < MinRecoveryTime {
+			return MinRecoveryTime
+		}
+		if timeout > MaxRecoveryTime {
+			return MaxRecoveryTime
+		}
+		return timeout
 	}
 	return NotUseTimeout
 }
@@ -218,6 +235,14 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 			return MaxGCObjectRetry
 		}
 		return g.gcMetaRetry
+	case coretask.TypeTaskRecoverPiece:
+		if g.recoveryRetry < MinRecoveryRetry {
+			return MinRecoveryRetry
+		}
+		if g.recoveryRetry > MaxRecoveryRetry {
+			return MaxRecoveryRetry
+		}
+		return g.recoveryRetry
 	}
 	return 0
 }
@@ -252,6 +277,8 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskGCMeta:
 		return coretask.UnSchedulingPriority
+	case coretask.TypeTaskRecoverPiece:
+		return coretask.DefaultSmallerPriority
 	}
 	return coretask.UnKnownTaskPriority
 }
