@@ -339,12 +339,9 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 	msgDiscontinueBucket := storagetypes.NewMsgDiscontinueBucket(km.GetAddr(),
 		discontinueBucket.BucketName, discontinueBucket.Reason)
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
-	txOpt := &ctypes.TxOption{
-		NoSimulate: true,
-		Mode:       &mode,
-		GasLimit:   client.gasInfo[DiscontinueBucket].GasLimit,
-		FeeAmount:  client.gasInfo[DiscontinueBucket].FeeAmount,
-		Nonce:      nonce,
+	txOpt := &ctypes.TxOption{ // allow simulation here to save gas cost
+		Mode:  &mode,
+		Nonce: nonce,
 	}
 
 	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgDiscontinueBucket}, txOpt)
@@ -352,8 +349,8 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 		// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
 		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
 		if nonceErr != nil {
-			log.CtxErrorw(ctx, "failed to get seal account nonce", "error", nonceErr)
-			ErrDiscontinueBucketOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", nonceErr))
+			log.CtxErrorw(ctx, "failed to get gc account nonce", "error", nonceErr)
+			ErrDiscontinueBucketOnChain.SetError(fmt.Errorf("failed to get gc account nonce, error: %v", nonceErr))
 			return nil, ErrDiscontinueBucketOnChain
 		}
 		client.gcAccNonce = nonce
