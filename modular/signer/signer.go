@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield-common/go/hash"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -93,12 +92,22 @@ func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.Receiv
 }
 
 func (s *SignModular) SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
-	msg := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, hash.GenerateIntegrityHash(checksums)).GetSignBytes()
+	msg := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, storagetypes.GenerateHash(checksums)).GetBlsSignHash()
 	sig, err := s.client.sealBlsKm.Sign(msg[:])
 	if err != nil {
 		return nil, err
 	}
 	// log.Debugw("bls signature length", "len", len(sig), "object_id", objectID, "gvg_id", gvgId, "checksums", checksums)
+	return sig, nil
+}
+
+func (s *SignModular) SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) (
+	[]byte, error) {
+	msg := task.GetSignBytes()
+	sig, err := s.client.Sign(SignOperator, msg)
+	if err != nil {
+		return nil, err
+	}
 	return sig, nil
 }
 

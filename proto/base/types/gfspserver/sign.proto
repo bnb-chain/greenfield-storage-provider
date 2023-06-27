@@ -26,17 +26,20 @@ message GfSpCreateGlobalVirtualGroup {
 message GfSpSignRequest {
   oneof request {
     greenfield.storage.MsgCreateBucket create_bucket_info = 1;
-    greenfield.storage.MsgCreateObject create_object_info = 2;
-    greenfield.storage.MsgSealObject seal_object_info = 3;
-    greenfield.storage.MsgDiscontinueBucket discontinue_bucket_info = 4;
-    GfSpSignSecondaryBls sign_secondary_bls = 5;
-    base.types.gfspp2p.GfSpPing ping_msg = 6;
-    base.types.gfspp2p.GfSpPong pong_msg = 7;
-    base.types.gfsptask.GfSpReplicatePieceApprovalTask gfsp_replicate_piece_approval_task = 8;
-    base.types.gfsptask.GfSpReceivePieceTask gfsp_receive_piece_task = 9;
-    greenfield.storage.MsgRejectSealObject reject_object_info = 10;
-    GfSpCreateGlobalVirtualGroup create_global_virtual_group = 11;
-    base.types.gfsptask.GfSpMigratePieceTask gfsp_migrate_piece_task = 13;
+    // TODO: modify to MsgMigrateBucket.
+    greenfield.storage.MsgCreateBucket migrate_bucket_info = 2;
+    greenfield.storage.MsgCreateObject create_object_info = 3;
+    greenfield.storage.MsgSealObject seal_object_info = 4;
+    greenfield.storage.MsgDiscontinueBucket discontinue_bucket_info = 5;
+    GfSpSignSecondaryBls sign_secondary_bls = 6;
+    base.types.gfspp2p.GfSpPing ping_msg = 7;
+    base.types.gfspp2p.GfSpPong pong_msg = 8;
+    base.types.gfsptask.GfSpReplicatePieceApprovalTask gfsp_replicate_piece_approval_task = 9;
+    base.types.gfsptask.GfSpReceivePieceTask gfsp_receive_piece_task = 10;
+    base.types.gfsptask.GfSpRecoverPieceTask gfsp_recover_piece_task = 11;
+    greenfield.storage.MsgRejectSealObject reject_object_info = 12;
+    GfSpCreateGlobalVirtualGroup create_global_virtual_group = 13;
+    base.types.gfsptask.GfSpMigratePieceTask gfsp_migrate_piece_task = 14;
   }
 }
 

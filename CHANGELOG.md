@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.2.3-alpha.1
+
+FEATURES  
+* [#638](https://github.com/bnb-chain/greenfield-storage-provider/pull/638) feat: support data recovery
+* [#660](https://github.com/bnb-chain/greenfield-storage-provider/pull/660) feat: add download cache 
+* [#480](https://github.com/bnb-chain/greenfield-storage-provider/pull/480) feat: support resumable upload
+
+REFACTOR
+* [#649](https://github.com/bnb-chain/greenfield-storage-provider/pull/649) docs: sp docs add flowchart
+
+BUGFIX
+* [#648](https://github.com/bnb-chain/greenfield-storage-provider/pull/648) fix: request cannot be nil in latestBlockHeight
+
+
 ## v0.2.2-alpha.1
 
 FEATURES

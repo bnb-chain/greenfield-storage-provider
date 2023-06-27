@@ -258,7 +258,7 @@ func veritySignature(ctx context.Context, objectID uint64, gvgId uint32, integri
 			"expect", hex.EncodeToString(expectedIntegrity))
 		return ErrInvalidIntegrity
 	}
-	originMsgHash := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, integrity).GetSignBytes()
+	originMsgHash := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, integrity).GetBlsSignHash()
 	err := types.VerifyBlsSignature(blsPubKey, originMsgHash, signature)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to verify signature", "error", err)

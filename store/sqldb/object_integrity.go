@@ -76,6 +76,36 @@ func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64) error {
 	}).Error
 }
 
+// AppendObjectChecksumIntegrity append checksum
+func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, checksum []byte) error {
+	integrityMeta, err := s.GetObjectIntegrity(objectID)
+	var checksums [][]byte
+	var integrity []byte
+	if err == gorm.ErrRecordNotFound {
+		integrityMetaNew := &corespdb.IntegrityMeta{
+			ObjectID:          objectID,
+			PieceChecksumList: append(checksums, checksum),
+			IntegrityChecksum: integrity,
+		}
+		err = s.SetObjectIntegrity(integrityMetaNew)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		newChecksums := append(integrityMeta.PieceChecksumList, checksum)
+		integrityMeta.PieceChecksumList = newChecksums
+		s.DeleteObjectIntegrity(objectID)
+		err = s.SetObjectIntegrity(integrityMeta)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // GetReplicatePieceChecksum gets replicate piece checksum.
 func (s *SpDBImpl) GetReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32) ([]byte, error) {
 	var (

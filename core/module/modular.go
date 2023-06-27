@@ -33,6 +33,8 @@ const (
 	AuthOpTypeUnKnown AuthOpType = iota
 	// AuthOpAskCreateBucketApproval defines the AskCreateBucketApproval operator
 	AuthOpAskCreateBucketApproval
+	// AuthOpAskMigrateBucketApproval defines the AskMigrateBucketApproval operator
+	AuthOpAskMigrateBucketApproval
 	// AuthOpAskCreateObjectApproval defines the AskCreateObjectApproval operator
 	AuthOpAskCreateObjectApproval
 	// AuthOpTypeGetChallengePieceInfo defines the GetChallengePieceInfo operator
@@ -49,6 +51,8 @@ const (
 	AuthOpTypeListBucketReadRecord
 	// AuthOpTypeMigratePiece defines the MigratePiece operator
 	AuthOpTypeMigratePiece
+	// AuthOpTypeGetRecoveryPiece defines the GetRecoveryPiece operator
+	AuthOpTypeGetRecoveryPiece
 )
 
 // Authenticator is an abstract interface to verify users authentication.
@@ -76,6 +80,15 @@ type Approver interface {
 	// PostCreateBucketApproval is called after HandleCreateBucketApprovalTask, it can recycle resources, make statistics
 	// and do some other operations.
 	PostCreateBucketApproval(ctx context.Context, task task.ApprovalCreateBucketTask)
+
+	// PreMigrateBucketApproval prepares to handle MigrateBucketApproval, it can do some
+	// checks such as checking for duplicates, if limitation of SP has been reached, etc.
+	PreMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask) error
+	// HandleMigrateBucketApprovalTask handles the MigrateBucketApproval, it can set expired height, sign the MsgMigrateBucket and so on.
+	HandleMigrateBucketApprovalTask(ctx context.Context, task task.ApprovalMigrateBucketTask) (bool, error)
+	// PostMigrateBucketApproval is called after HandleMigrateBucketApprovalTask, it can recycle resources, make statistics
+	// and do some other operations.
+	PostMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask)
 
 	// PreCreateObjectApproval prepares to handle CreateObjectApproval, it can do some
 	// checks such as check for duplicates, if limitation of SP has been reached, etc.
@@ -165,6 +178,16 @@ type Manager interface {
 	// HandleDoneUploadObjectTask handles the result of uploading object payload data to primary, Manager should
 	// generate ReplicatePieceTask for TaskExecutor to run.
 	HandleDoneUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error
+	// HandleCreateResumableUploadObjectTask handles the CreateUploadObject request from
+	// Uploader, before Uploader handles the user's UploadObject request, it should
+	// send CreateUploadObject request to Manager ask if it's ok. Through this
+	// interface that SP implements the global upload object strategy.
+	//
+	HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
+
+	// HandleDoneResumableUploadObjectTask handles the result of resumable uploading object payload data to primary,
+	// Manager should generate ReplicatePieceTask for TaskExecutor to run.
+	HandleDoneResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
 	// HandleReplicatePieceTask handles the result of replicating piece data to secondary SPs,
 	// the request comes from TaskExecutor.
 	HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask) error
@@ -188,6 +211,8 @@ type Manager interface {
 	PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error)
 	// HandleMigratePieceTask handles MigratePieceTask, the request comes from TaskExecutor
 	HandleMigratePieceTask(ctx context.Context, task task.MigratePieceTask) error
+	// HandleRecoverPieceTask handles the result of recovering piece task, the request comes from TaskExecutor.
+	HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
@@ -230,6 +255,8 @@ type Signer interface {
 	SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
 	// SignSecondaryBls signs the secondary bls for sealing object.
 	SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, error)
+	//SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
+	SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) ([]byte, error)
 	// SignP2PPingMsg signs the ping msg for p2p node probing.
 	SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error)
 	// SignP2PPongMsg signs the pong msg for p2p to response ping msg.
@@ -257,6 +284,16 @@ type Uploader interface {
 	// PostUploadObject is called after HandleUploadObjectTask, it can recycle
 	// resources, make statistics and do some other operations.
 	PostUploadObject(ctx context.Context, task task.UploadObjectTask)
+
+	// PreResumableUploadObject prepares to handle ResumableUploadObject, it can do some checks
+	// such as checking for duplicates, if limitation of SP has been reached, etc.
+	PreResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) error
+	// HandleResumableUploadObjectTask handles the ResumableUploadObject, store payload data into piece store by data stream.
+	HandleResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error
+	// PostResumableUploadObject is called after HandleResumableUploadObjectTask, it can recycle
+	// resources, statistics and other operations.
+	PostResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask)
+
 	// QueryTasks queries upload object tasks that running on uploading by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }

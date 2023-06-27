@@ -155,55 +155,6 @@ function make_config() {
   done
 }
 
-#############################################################
-# make integration test config.toml according sp.json       #
-#############################################################
-function make_integration_test_config() {
-  index=0
-  sp_json_file=$1
-  file='test/e2e/localup_env/integration_config/config.yml'
-
-  validator_private_key=("$(echo "y" | $gnfd_bin keys export validator0 --unarmored-hex --unsafe --keyring-backend test --home ${gnfd_workspace}/.local/validator0)")
-  echo "validator0 private key validator_private_key"
-  sed -i -e "s/20f92afe113b90e1faa241969e957ac091d80b920f84ffda80fc9d0588f62906/${validator_private_key}/g" $file
-
-  echo "SPs:" >> $file
-  sp0_opk=$(jq -r ".sp0.OperatorPrivateKey" ${sp_json_file})
-  sp0_fpk=$(jq -r ".sp0.FundingPrivateKey" ${sp_json_file})
-  sp0_spk=$(jq -r ".sp0.SealPrivateKey" ${sp_json_file})
-  sp0_apk=$(jq -r ".sp0.ApprovalPrivateKey" ${sp_json_file})
-  sp1_opk=$(jq -r ".sp1.OperatorPrivateKey" ${sp_json_file})
-  sp1_fpk=$(jq -r ".sp1.FundingPrivateKey" ${sp_json_file})
-  sp1_spk=$(jq -r ".sp1.SealPrivateKey" ${sp_json_file})
-  sp1_apk=$(jq -r ".sp1.ApprovalPrivateKey" ${sp_json_file})
-
-  sp0_op_addr=$(jq -r ".sp0.OperatorAddress" ${sp_json_file})
-  sp1_op_addr=$(jq -r ".sp1.OperatorAddress" ${sp_json_file})
-  sp2_op_addr=$(jq -r ".sp2.OperatorAddress" ${sp_json_file})
-  sp3_op_addr=$(jq -r ".sp3.OperatorAddress" ${sp_json_file})
-  sp4_op_addr=$(jq -r ".sp4.OperatorAddress" ${sp_json_file})
-  sp5_op_addr=$(jq -r ".sp5.OperatorAddress" ${sp_json_file})
-  sp6_op_addr=$(jq -r ".sp6.OperatorAddress" ${sp_json_file})
-
-  echo "  - OperatorSecret: "${sp0_opk}"" >> $file
-  echo "    FundingSecret: "${sp0_fpk}"" >> $file
-  echo "    ApprovalSecret: "${sp0_spk}"" >> $file
-  echo "    SealSecret: "${sp0_apk}"" >> $file
-  echo "  - OperatorSecret: "${sp1_opk}"" >> $file
-  echo "    FundingSecret: "${sp1_fpk}"" >> $file
-  echo "    ApprovalSecret: "${sp1_spk}"" >> $file
-  echo "    SealSecret: "${sp1_apk}"" >> $file
-  echo "SPAddr:" >> $file
-  echo "  - $sp0_op_addr" >> $file
-  echo "  - $sp1_op_addr" >> $file
-  echo "  - $sp2_op_addr" >> $file
-  echo "  - $sp3_op_addr" >> $file
-  echo "  - $sp4_op_addr" >> $file
-  echo "  - $sp5_op_addr" >> $file
-  echo "  - $sp6_op_addr" >> $file
-  cat $file
-}
-
 #############
 # start sps #
 #############
@@ -315,9 +266,6 @@ function main() {
     ;;
   --print)
     print_work_dir
-    ;;
-  --gene2e)
-    make_integration_test_config $2
     ;;
   --help|*)
     display_help

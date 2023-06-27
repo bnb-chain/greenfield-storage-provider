@@ -2,6 +2,7 @@ package gfsptask
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -10,14 +11,17 @@ import (
 const (
 	Delimiter                               = "-"
 	KeyPrefixGfSpCreateBucketApprovalTask   = "CreateBucketApproval"
+	KeyPrefixGfSpMigrateBucketApprovalTask  = "MigrateBucketApproval"
 	KeyPrefixGfSpCreateObjectApprovalTask   = "CreateObjectApproval"
 	KeyPrefixGfSpReplicatePieceApprovalTask = "ReplicatePieceApproval"
 	KeyPrefixGfSpDownloadObjectTask         = "DownloadObject"
 	KeyPrefixGfSpDownloadPieceTask          = "DownloadPiece"
 	KeyPrefixGfSpChallengeTask              = "ChallengePiece"
 	KeyPrefixGfSpUploadObjectTask           = "Uploading"
-	KeyPrefixGfSpReplicatePieceTask         = "Replicating"
-	KeyPrefixGfSpSealObjectTask             = "Sealing"
+	KeyPrefixGfSpReplicatePieceTask         = "Uploading"
+	KeyPrefixGfSpSealObjectTask             = "Uploading"
+	KeyPrefixGfSpResumableUploadObjectTask  = "ResuabmleUploading"
+	KeyPrefixGfSpRecoverPieceTask           = "Recovering"
 	KeyPrefixGfSpReceivePieceTask           = "ReceivePiece"
 	keyPrefixGfSpMigratePieceTask           = "MigratePiece"
 )
@@ -28,13 +32,19 @@ var (
 	KeyPrefixGfSpGfSpGCMetaTask    = strings.ToLower("GCMeta")
 )
 
-func GfSpCreateBucketApprovalTaskKey(bucket string) task.TKey {
-	return task.TKey(KeyPrefixGfSpCreateBucketApprovalTask + CombineKey("bucket:"+bucket))
+func GfSpCreateBucketApprovalTaskKey(bucket string, visibility int32) task.TKey {
+	return task.TKey(KeyPrefixGfSpCreateBucketApprovalTask + CombineKey("bucket:"+bucket,
+		"visibility:"+fmt.Sprint(visibility)))
 }
 
-func GfSpCreateObjectApprovalTaskKey(bucket, object string) task.TKey {
+func GfSpMigrateBucketApprovalTaskKey(bucket string, migrateBucketHash string) task.TKey {
+	return task.TKey(KeyPrefixGfSpMigrateBucketApprovalTask + CombineKey("bucket:"+bucket, "hash:"+migrateBucketHash))
+}
+
+func GfSpCreateObjectApprovalTaskKey(bucket, object string, visibility int32) task.TKey {
 	return task.TKey(KeyPrefixGfSpCreateObjectApprovalTask +
-		CombineKey("bucket:"+bucket, "object:"+object))
+		CombineKey("bucket:"+bucket, "object:"+object,
+			"visibility:"+fmt.Sprint(visibility)))
 }
 
 func GfSpReplicatePieceApprovalTaskKey(bucket, object, id string) task.TKey {
@@ -65,9 +75,22 @@ func GfSpUploadObjectTaskKey(bucket, object, id string) task.TKey {
 		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id))
 }
 
+func GfSpResumableUploadObjectTaskKey(bucket, object, id string, offset uint64) task.TKey {
+	return task.TKey(KeyPrefixGfSpResumableUploadObjectTask + CombineKey(bucket, object, id, strconv.FormatUint(offset, 10)))
+}
+
 func GfSpReplicatePieceTaskKey(bucket, object, id string) task.TKey {
 	return task.TKey(KeyPrefixGfSpReplicatePieceTask +
 		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id))
+}
+
+func GfSpRecoverPieceTaskKey(bucket, object, id string, pIdx uint32, replicateIdx int32, time int64) task.TKey {
+	if replicateIdx >= 0 {
+		return task.TKey(KeyPrefixGfSpRecoverPieceTask +
+			CombineKey("bucket:"+bucket, "object:"+object, "id:"+id, "segIdx:"+fmt.Sprint(pIdx), "ecIdx:"+fmt.Sprint(replicateIdx), "time"+fmt.Sprint(time)))
+	}
+	return task.TKey(KeyPrefixGfSpRecoverPieceTask +
+		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id, "segIdx:"+fmt.Sprint(pIdx), "time"+fmt.Sprint(time)))
 }
 
 func GfSpSealObjectTaskKey(bucket, object, id string) task.TKey {

@@ -35,6 +35,28 @@ func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.Uploa
 	return nil
 }
 
+func (s *GfSpClient) CreateResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask) error {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpBeginTaskRequest{
+		Request: &gfspserver.GfSpBeginTaskRequest_ResumableUploadObjectTask{
+			ResumableUploadObjectTask: task.(*gfsptask.GfSpResumableUploadObjectTask),
+		},
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpBeginTask(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to create resummable upload object task", "error", err)
+		return ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
+}
+
 func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coretask.Task, error) {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
@@ -67,6 +89,8 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 		return t.GcMetaTask, nil
 	case *gfspserver.GfSpAskTaskResponse_MigratePieceTask:
 		return t.MigratePieceTask, nil
+	case *gfspserver.GfSpAskTaskResponse_RecoverPieceTask:
+		return t.RecoverPieceTask, nil
 	default:
 		return nil, ErrTypeMismatch
 	}
@@ -86,6 +110,13 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 			UploadObjectTask: t,
 		}
 		metrics.PerfUploadTimeHistogram.WithLabelValues("report_upload_task_done_client").
+			Observe(time.Since(startReportDoneUploadTask).Seconds())
+	case *gfsptask.GfSpResumableUploadObjectTask:
+		startReportDoneUploadTask := time.Now()
+		req.Request = &gfspserver.GfSpReportTaskRequest_ResumableUploadObjectTask{
+			ResumableUploadObjectTask: t,
+		}
+		metrics.PerfUploadTimeHistogram.WithLabelValues("report_resumable_upload_task_done_client").
 			Observe(time.Since(startReportDoneUploadTask).Seconds())
 	case *gfsptask.GfSpReplicatePieceTask:
 		req.Request = &gfspserver.GfSpReportTaskRequest_ReplicatePieceTask{
@@ -122,6 +153,10 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 	case *gfsptask.GfSpMigratePieceTask:
 		req.Request = &gfspserver.GfSpReportTaskRequest_MigratePieceTask{
 			MigratePieceTask: t,
+		}
+	case *gfsptask.GfSpRecoverPieceTask:
+		req.Request = &gfspserver.GfSpReportTaskRequest_RecoverPieceTask{
+			RecoverPieceTask: t,
 		}
 	default:
 		log.CtxErrorw(ctx, "unsupported task type to report")

@@ -17,6 +17,9 @@ const (
 	// TypeTaskCreateBucketApproval defines the type of asking create bucket approval
 	// to primary SP task
 	TypeTaskCreateBucketApproval
+	// TypeTaskMigrateBucketApproval defines the type of asking migrate bucket approval
+	// to primary SP task
+	TypeTaskMigrateBucketApproval
 	// TypeTaskCreateObjectApproval defines the type of asking create object approval
 	// to primary SP task
 	TypeTaskCreateObjectApproval
@@ -45,6 +48,8 @@ const (
 	TypeTaskGCMeta
 	// TypeTaskMigratePiece defines the type of migrating pieces between SPs
 	TypeTaskMigratePiece
+	// TypeTaskRecoverPiece defines the type of the recovering piece task.
+	TypeTaskRecoverPiece
 )
 
 var TypeTaskMap = map[TType]string{
@@ -62,6 +67,7 @@ var TypeTaskMap = map[TType]string{
 	TypeTaskGCZombiePiece:          "GCZombiePieceTask",
 	TypeTaskGCMeta:                 "GCMetaTask",
 	TypeTaskMigratePiece:           "MigratePieceTask",
+	TypeTaskRecoverPiece:           "RecoverPieceTask",
 }
 
 func TaskTypeName(taskType TType) string {

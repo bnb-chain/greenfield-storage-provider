@@ -170,6 +170,7 @@ type ParallelConfig struct {
 	GlobalMigratePieceParallel         int
 	GlobalDownloadObjectTaskCacheSize  int
 	GlobalChallengePieceTaskCacheSize  int
+	GlobalRecoveryPieceParallel        int
 	GlobalBatchGcObjectTimeInterval    int
 	GlobalGcObjectBlockInterval        uint64
 	GlobalGcObjectSafeBlockDistance    uint64
@@ -236,5 +237,7 @@ type MetadataConfig struct {
 }
 
 type ManagerConfig struct {
-	EnableLoadTask bool
+	EnableLoadTask                         bool
+	SubscribeSPExitEventIntervalSec        int
+	SubscribeBucketMigrateEventIntervalSec int
 }

@@ -33,6 +33,10 @@ const (
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
 	// GnfdIsPrimaryHeader defines response header which is used to indicate migrated data whether belongs to PrimarySP
 	GnfdIsPrimaryHeader = "X-Gnfd-Is-Primary"
+	//RecoveryObjectPiecePath defines recovery-object path style
+	RecoveryObjectPiecePath = "/greenfield/recovery/v1/get-piece"
+	// GnfdRecoveryMsgHeader defines receive piece data meta
+	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
@@ -59,6 +63,34 @@ func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint str
 		return fmt.Errorf("failed to replicate piece, StatusCode(%d) Endpoint(%s)", resp.StatusCode, endpoint)
 	}
 	return nil
+}
+
+func (s *GfSpClient) GetPieceFromECChunks(ctx context.Context, endpoint string, task coretask.RecoveryPieceTask) (io.ReadCloser, error) {
+	req, err := http.NewRequest(http.MethodGet, endpoint+RecoveryObjectPiecePath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
+		return nil, err
+	}
+
+	recoveryTask := task.(*gfsptask.GfSpRecoverPieceTask)
+	recoveryMsg, err := json.Marshal(recoveryTask)
+	if err != nil {
+		return nil, err
+	}
+	recoveryHeader := hex.EncodeToString(recoveryMsg)
+	req.Header.Add(GnfdRecoveryMsgHeader, recoveryHeader)
+
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client do recovery request to SPs", "error", err)
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get recovery piece, StatusCode(%d) Endpoint(%s)", resp.StatusCode, endpoint)
+	}
+
+	return resp.Body, nil
 }
 
 func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint string,

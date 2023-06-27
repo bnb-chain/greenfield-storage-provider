@@ -113,6 +113,23 @@ type ApprovalCreateBucketTask interface {
 	SetCreateBucketInfo(*storagetypes.MsgCreateBucket)
 }
 
+// ApprovalMigrateBucketTask is an abstract interface to record the ask migrate bucket approval information.
+// The user account will migrate MsgMigrateBucket, SP
+// should decide whether approved the request based on the MsgMigrateBucket.
+// If so, SP will SetExpiredHeight and signs the MsgMigrateBucket.
+type ApprovalMigrateBucketTask interface {
+	ApprovalTask
+	// InitApprovalMigrateBucketTask inits the ApprovalMigrateBucketTask by
+	// MsgCreateBucket and task priority. SP only fill the MsgCreateBucket's
+	// PrimarySpApproval field, can not change other fields.
+	InitApprovalMigrateBucketTask(*storagetypes.MsgCreateBucket, TPriority)
+	// GetMigrateBucketInfo returns the user's MsgCreateBucket.
+	GetMigrateBucketInfo() *storagetypes.MsgCreateBucket
+	// SetMigrateBucketInfo sets the MsgCreateBucket. Should try to avoid calling
+	// this method, it will change the approval information.
+	SetMigrateBucketInfo(*storagetypes.MsgCreateBucket)
+}
+
 // ApprovalCreateObjectTask is an abstract interface to record the ask create object
 // approval information. The user account will create MsgCreateObject, SP
 // should decide whether approved the request based on the MsgCreateObject.
@@ -207,7 +224,25 @@ type UploadObjectTask interface {
 	GetVirtualGroupFamilyId() uint32
 }
 
-// ReplicatePieceTask is an abstract interface to record the information for replicating
+// The ResumableUploadObjectTask is the interface to record the information for uploading object
+// payload data to the primary SP.
+type ResumableUploadObjectTask interface {
+	ObjectTask
+	// InitResumableUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
+	InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, complete bool, offset uint64)
+	// GetResumeOffset return resumable offset user-supplied parameters
+	GetResumeOffset() uint64
+	// SetResumeOffset Set the `ResumeOffset` provided by the user for subsequent processing in the `HandleResumableUploadObjectTask`.
+	SetResumeOffset(offset uint64)
+	// GetCompleted The GetCompleted() function returns the value of completed set by the user in the request.
+	// The completed parameter represents the last upload request in the resumable upload process,
+	// after which integrity checks and replication procedures will be performed.
+	GetCompleted() bool
+	// SetCompleted sets the state from request in InitResumableUploadObjectTask
+	SetCompleted(completed bool)
+}
+
+// The ReplicatePieceTask is the interface to record the information for replicating
 // pieces of object pieces data to secondary SPs.
 type ReplicatePieceTask interface {
 	ObjectTask
@@ -451,6 +486,30 @@ type GCMetaTask interface {
 	// SetGCMetaStatus sets the status of collecting metadata, parma stands the last
 	// deleted object id and the number that has been deleted.
 	SetGCMetaStatus(uint64, uint64)
+}
+
+// The RecoveryPieceTask is the interface to record the information for recovering
+// TODO consider recovery secondary SP task
+type RecoveryPieceTask interface {
+	ObjectTask
+	// InitRecoveryPieceTask inits the RecoveryPieceTask by ObjectInfo, params,
+	// task priority, pieceIndex, timeout and max retry.
+	InitRecoverPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
+		priority TPriority, pieceIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64)
+
+	// GetSegmentIdx return the segment index of recovery object segment
+	GetSegmentIdx() uint32
+	// GetEcIdx return the ec index of recovery ec chunk
+	GetEcIdx() int32
+	// GetSignature returns the primary SP's signature
+	GetSignature() []byte
+	// SetSignature sets the primary SP's signature.
+	SetSignature([]byte)
+	// GetSignBytes returns the bytes from the task for primary SP to sign.
+	GetSignBytes() []byte
+	GetRecovered() bool
+	// SetRecoverDone set the recovery status as finish
+	SetRecoverDone()
 }
 
 // MigratePieceTask is an abstract interface that migrate piece data when one SP want to leave Greenfield

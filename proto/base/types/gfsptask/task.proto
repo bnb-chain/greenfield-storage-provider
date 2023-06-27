@@ -24,6 +24,12 @@ message GfSpCreateBucketApprovalTask {
   greenfield.storage.MsgCreateBucket create_bucket_info = 2;
 }
 
+message GfSpMigrateBucketApprovalTask {
+  GfSpTask task = 1;
+  // TODO: modify to migrate when chain proto upload to buf.
+  greenfield.storage.MsgCreateBucket migrate_bucket_info = 2;
+}
+
 message GfSpCreateObjectApprovalTask {
   GfSpTask task = 1;
   greenfield.storage.MsgCreateObject create_object_info = 2;
@@ -49,6 +55,15 @@ message GfSpUploadObjectTask {
   greenfield.storage.Params storage_params = 4;
 }
 
+message GfSpResumableUploadObjectTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  uint64 offset = 4;
+  uint64 length = 5;
+  bool completed = 6;
+}
+
 message GfSpReplicatePieceTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
@@ -60,6 +75,17 @@ message GfSpReplicatePieceTask {
   uint32 global_virtual_group_id = 7;
   repeated string secondary_endpoints = 8;
   // repeated greenfield.sp.StorageProvider secondary_sps = 8;
+}
+
+message GfSpRecoverPieceTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  uint32 segment_idx = 5;
+  int32 ec_idx = 6;
+  uint64 piece_size = 7;
+  bytes signature = 8;
+  bool recovered = 9;
 }
 
 message GfSpReceivePieceTask {

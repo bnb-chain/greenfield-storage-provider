@@ -21,6 +21,7 @@ var _ GCTask = (*NullTask)(nil)
 var _ GCZombiePieceTask = (*NullTask)(nil)
 var _ GCMetaTask = (*NullTask)(nil)
 var _ MigratePieceTask = (*NullTask)(nil)
+var _ RecoveryPieceTask = (*NullTask)(nil)
 
 type NullTask struct{}
 
@@ -90,6 +91,8 @@ func (*NullTask) GetGlobalVirtualGroupId() uint32 {
 
 func (*NullTask) InitReplicatePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, int64, int64) {
 }
+func (*NullTask) InitRecoverPieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, uint64, int64, int64) {
+}
 func (*NullTask) GetSealed() bool                  { return false }
 func (*NullTask) SetSealed(bool)                   {}
 func (*NullTask) GetSecondaryAddresses() []string  { return nil }
@@ -123,7 +126,10 @@ func (*NullTask) InitChallengePieceTask(*storagetypes.ObjectInfo, *storagetypes.
 func (*NullTask) SetBucketInfo(*storagetypes.BucketInfo) {}
 func (*NullTask) SetUserAddress(string)                  {}
 func (*NullTask) GetSegmentIdx() uint32                  { return 0 }
+func (*NullTask) GetEcIdx() int32                        { return 0 }
 func (*NullTask) SetSegmentIdx(uint32)                   {}
+func (*NullTask) GetRecovered() bool                     { return false }
+func (*NullTask) SetRecoverDone()                        {}
 func (*NullTask) GetRedundancyIdx() int32                { return 0 }
 func (*NullTask) SetRedundancyIdx(idx int32)             {}
 func (*NullTask) GetIntegrityHash() []byte               { return nil }
@@ -133,7 +139,5 @@ func (*NullTask) SetPieceHash([][]byte)                  {}
 func (*NullTask) GetPieceDataSize() int64                { return 0 }
 func (*NullTask) SetPieceDataSize(int64)                 {}
 func (*NullTask) GetSignBytes() []byte                   { return nil }
-
 func (*NullTask) InitMigratePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, segmentIdx uint32, ecIdx int32, pieceSize uint64, timeout, retry int64) {
 }
-func (*NullTask) GetEcIdx() int32 { return 0 }
