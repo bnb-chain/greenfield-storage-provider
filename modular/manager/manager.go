@@ -79,7 +79,9 @@ type ManageModular struct {
 
 	virtualGroupManager vgmgr.VirtualGroupManager
 
-	subscribeSPExitEventInterval int
+	subscribeSPExitEventInterval        int
+	subscribeBucketMigrateEventInterval int
+	subscribeSwapOutEventInterval       int
 }
 
 func (m *ManageModular) Name() string {

@@ -69,6 +69,10 @@ const (
 	DefaultDiscontinueBucketKeepAliveDays = 7
 	// DefaultSubscribeSPExitEventIntervalSec define the default time interval to subscribe sp exit event from metadata.
 	DefaultSubscribeSPExitEventIntervalSec = 1
+	// DefaultSubscribeBucketMigrateEventIntervalSec define the default time interval to subscribe bucket migrate event from metadata.
+	DefaultSubscribeBucketMigrateEventIntervalSec = 1
+	// DefaultSubscribeSwapOutEventIntervalSec define the default time interval to subscribe gvg swap out event from metadata.
+	DefaultSubscribeSwapOutEventIntervalSec = 1
 )
 
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -173,6 +177,12 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus())
 	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
 		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalSec
+	}
+	if cfg.Manager.SubscribeBucketMigrateEventIntervalSec == 0 {
+		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeSPExitEventIntervalSec
+	}
+	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
+		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalSec
 	}
 	return err
 }
