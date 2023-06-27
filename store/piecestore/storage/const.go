@@ -12,6 +12,8 @@ const (
 	DiskFileStore = "file"
 	// LdfsStore defines storage type for ldfs
 	LdfsStore = "ldfs"
+	// OssfsStore defines storage type for ossfs
+	AliyunfsStore = "aliyunfs"
 	// MemoryStore defines storage type for memory
 	MemoryStore = "memory"
 )
