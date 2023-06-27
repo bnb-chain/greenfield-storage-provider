@@ -33,6 +33,7 @@ message GfSpSignResponse {
   base.types.gfsperrors.GfSpError err = 1;
   bytes signature = 2;
   bytes integrity_hash = 3;
+  string tx_hash = 4;
 }
 
 service GfSpSignService {

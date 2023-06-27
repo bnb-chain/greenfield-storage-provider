@@ -38,7 +38,6 @@ type GfSpTQueue struct {
 }
 
 func NewGfSpTQueue(name string, cap int) taskqueue.TQueueOnStrategy {
-	metrics.QueueCapGauge.WithLabelValues(name).Set(float64(cap))
 	return &GfSpTQueue{
 		name:  name,
 		cap:   cap,
@@ -61,21 +60,33 @@ func (t *GfSpTQueue) Cap() int {
 // Has returns an indicator whether the task in queue.
 func (t *GfSpTQueue) Has(key coretask.TKey) bool {
 	t.mux.Lock()
-	defer t.mux.Unlock()
+	startTime := time.Now()
+	defer func() {
+		t.mux.Unlock()
+		metrics.QueueTime.WithLabelValues(t.name + "-has").Observe(time.Since(startTime).Seconds())
+	}()
 	return t.has(key)
 }
 
 // Top returns the top task in the queue, if the queue empty, returns nil.
 func (t *GfSpTQueue) Top() coretask.Task {
 	t.mux.Lock()
-	defer t.mux.Unlock()
+	startTime := time.Now()
+	defer func() {
+		t.mux.Unlock()
+		metrics.QueueTime.WithLabelValues(t.name + "-top").Observe(time.Since(startTime).Seconds())
+	}()
 	return t.top()
 }
 
 // Pop pops and returns the top task in queue, if the queue empty, returns nil.
 func (t *GfSpTQueue) Pop() coretask.Task {
 	t.mux.Lock()
-	defer t.mux.Unlock()
+	startTime := time.Now()
+	defer func() {
+		t.mux.Unlock()
+		metrics.QueueTime.WithLabelValues(t.name + "-pop").Observe(time.Since(startTime).Seconds())
+	}()
 	task := t.top()
 	if task != nil {
 		t.delete(task)
@@ -86,7 +97,11 @@ func (t *GfSpTQueue) Pop() coretask.Task {
 // PopByKey pops the task by the task key, if the task does not exist , returns nil.
 func (t *GfSpTQueue) PopByKey(key coretask.TKey) coretask.Task {
 	t.mux.Lock()
-	defer t.mux.Unlock()
+	startTime := time.Now()
+	defer func() {
+		t.mux.Unlock()
+		metrics.QueueTime.WithLabelValues(t.name + "-pop_by_key").Observe(time.Since(startTime).Seconds())
+	}()
 	if !t.has(key) {
 		return nil
 	}
@@ -101,7 +116,11 @@ func (t *GfSpTQueue) PopByKey(key coretask.TKey) coretask.Task {
 // Push pushes the task in queue tail, if the queue len greater the capacity, returns error.
 func (t *GfSpTQueue) Push(task coretask.Task) error {
 	t.mux.Lock()
-	defer t.mux.Unlock()
+	startTime := time.Now()
+	defer func() {
+		t.mux.Unlock()
+		metrics.QueueTime.WithLabelValues(t.name + "-push").Observe(time.Since(startTime).Seconds())
+	}()
 	if t.has(task.Key()) {
 		return ErrTaskRepeated
 	}
@@ -134,11 +153,14 @@ func (t *GfSpTQueue) exceed() bool {
 }
 
 func (t *GfSpTQueue) add(task coretask.Task) {
+	defer func() {
+		metrics.QueueSizeGauge.WithLabelValues(t.name).Set(float64(len(t.tasks)))
+		metrics.QueueCapGauge.WithLabelValues(t.name).Set(float64(t.cap))
+	}()
 	if task == nil || t.has(task.Key()) {
 		return
 	}
 	t.tasks[task.Key()] = task
-	metrics.QueueSizeGauge.WithLabelValues(t.name).Set(float64(len(t.tasks)))
 }
 
 func (t *GfSpTQueue) delete(task coretask.Task) {
@@ -146,9 +168,10 @@ func (t *GfSpTQueue) delete(task coretask.Task) {
 		return
 	}
 	defer func() {
-		metrics.TaskInQueueTimeHistogram.WithLabelValues(t.name).Observe(
-			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		metrics.QueueSizeGauge.WithLabelValues(t.name).Set(float64(len(t.tasks)))
+		metrics.QueueCapGauge.WithLabelValues(t.name).Set(float64(t.cap))
+		metrics.TaskInQueueTime.WithLabelValues(t.name).Observe(
+			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}()
 	delete(t.tasks, task.Key())
 }
