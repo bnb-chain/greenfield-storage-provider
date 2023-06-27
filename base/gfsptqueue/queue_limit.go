@@ -28,7 +28,6 @@ type GfSpTQueueWithLimit struct {
 }
 
 func NewGfSpTQueueWithLimit(name string, cap int) taskqueue.TQueueOnStrategyWithLimit {
-	metrics.QueueCapGauge.WithLabelValues(name).Set(float64(cap))
 	return &GfSpTQueueWithLimit{
 		name:  name,
 		cap:   cap,
@@ -126,11 +125,14 @@ func (t *GfSpTQueueWithLimit) exceed() bool {
 }
 
 func (t *GfSpTQueueWithLimit) add(task coretask.Task) {
+	defer func() {
+		metrics.QueueSizeGauge.WithLabelValues(t.name).Set(float64(len(t.tasks)))
+		metrics.QueueCapGauge.WithLabelValues(t.name).Set(float64(t.cap))
+	}()
 	if task == nil || t.has(task.Key()) {
 		return
 	}
 	t.tasks[task.Key()] = task
-	metrics.QueueSizeGauge.WithLabelValues(t.name).Set(float64(len(t.tasks)))
 }
 
 func (t *GfSpTQueueWithLimit) delete(task coretask.Task) {
@@ -138,9 +140,10 @@ func (t *GfSpTQueueWithLimit) delete(task coretask.Task) {
 		return
 	}
 	defer func() {
-		metrics.TaskInQueueTimeHistogram.WithLabelValues(t.name).Observe(
-			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		metrics.QueueSizeGauge.WithLabelValues(t.name).Set(float64(len(t.tasks)))
+		metrics.QueueCapGauge.WithLabelValues(t.name).Set(float64(t.cap))
+		metrics.TaskInQueueTime.WithLabelValues(t.name).Observe(
+			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}()
 	delete(t.tasks, task.Key())
 }

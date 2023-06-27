@@ -2,6 +2,7 @@ package gfspapp
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
@@ -35,16 +35,13 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		err           error
 		receiveSize   int
 	)
-
+	startTime := time.Now()
 	defer func() {
 		defer cancel()
 		if span != nil {
 			span.Done()
 		}
 		if task != nil {
-			g.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), corespdb.UploaderEndReceiveData, task.Key().String())
-			metrics.UploadObjectSizeHistogram.WithLabelValues(g.uploader.Name()).Observe(
-				float64(task.GetObjectInfo().GetPayloadSize()))
 			g.uploader.PostUploadObject(ctx, task)
 			log.CtxDebugw(ctx, "finish to receive object stream data", "info", task.Info(),
 				"receive_size", receiveSize, "error", err)
@@ -54,19 +51,20 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		}
 		if err != nil {
 			resp.Err = gfsperrors.MakeGfSpError(err)
+			metrics.ReqCounter.WithLabelValues(UploaderFailurePutObject).Inc()
+			metrics.ReqTime.WithLabelValues(UploaderFailurePutObject).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(UploaderSuccessPutObject).Inc()
+			metrics.ReqTime.WithLabelValues(UploaderSuccessPutObject).Observe(time.Since(startTime).Seconds())
 		}
 
-		closeTime := time.Now()
 		err = stream.SendAndClose(resp)
-		metrics.PerfUploadTimeHistogram.WithLabelValues("server_send_and_close_time").Observe(time.Since(closeTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to close upload object stream", "error", err)
 		}
 	}()
 
 	go func() {
-		serverStartTime := time.Now()
-		defer metrics.PerfUploadTimeHistogram.WithLabelValues("server_total_time").Observe(time.Since(serverStartTime).Seconds())
 		init := false
 		for {
 			select {
@@ -74,14 +72,10 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				return
 			default:
 			}
-			startReadFromGateway := time.Now()
 			req, err = stream.Recv()
-			metrics.PerfUploadTimeHistogram.WithLabelValues("producer_read_from_gateway").Observe(time.Since(startReadFromGateway).Seconds())
 			if err == io.EOF {
 				if len(req.GetPayload()) != 0 {
-					startForwardToConsumer := time.Now()
 					pWrite.Write(req.GetPayload())
-					metrics.PerfUploadTimeHistogram.WithLabelValues("producer_to_consumer").Observe(time.Since(startForwardToConsumer).Seconds())
 				}
 				log.CtxDebugw(ctx, "received last upload stream data")
 				err = nil
@@ -103,7 +97,6 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 					pWrite.CloseWithError(err)
 					return
 				}
-				g.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), corespdb.UploaderBeginReceiveData, task.Key().String())
 				ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 				span, err = g.uploader.ReserveResource(ctx, task.EstimateLimit().ScopeStat())
 				if err != nil {
@@ -113,6 +106,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 					return
 				}
 				err = g.uploader.PreUploadObject(ctx, task)
+				task.AppendLog(fmt.Sprintf("uploader-prepare-upload-task-cost:%d", time.Now().Unix()-startTime.Unix()))
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to pre upload object", "error", err)
 					pWrite.CloseWithError(err)
@@ -121,9 +115,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				initCh <- struct{}{}
 			}
 			receiveSize += len(req.GetPayload())
-			startForwardToConsumer := time.Now()
 			pWrite.Write(req.GetPayload())
-			metrics.PerfUploadTimeHistogram.WithLabelValues("producer_to_consumer").Observe(time.Since(startForwardToConsumer).Seconds())
 		}
 	}()
 
@@ -161,8 +153,6 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 			span.Done()
 		}
 		if task != nil {
-			metrics.UploadObjectSizeHistogram.WithLabelValues(g.uploader.Name()).Observe(
-				float64(task.GetObjectInfo().GetPayloadSize()))
 			g.uploader.PostResumableUploadObject(ctx, task)
 			log.CtxDebugw(ctx, "finish to receive object stream data", "info", task.Info(),
 				"receive_size", receiveSize, "error", err)
@@ -174,17 +164,13 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 			resp.Err = gfsperrors.MakeGfSpError(err)
 		}
 
-		closeTime := time.Now()
 		err = stream.SendAndClose(resp)
-		metrics.PerfUploadTimeHistogram.WithLabelValues("server_send_and_close_time").Observe(time.Since(closeTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to close upload object stream", "error", err)
 		}
 	}()
 
 	go func() {
-		serverStartTime := time.Now()
-		defer metrics.PerfUploadTimeHistogram.WithLabelValues("server_total_time").Observe(time.Since(serverStartTime).Seconds())
 		init := false
 		for {
 			select {
@@ -192,14 +178,10 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 				return
 			default:
 			}
-			startReadFromGateway := time.Now()
 			req, err = stream.Recv()
-			metrics.PerfUploadTimeHistogram.WithLabelValues("producer_read_from_gateway").Observe(time.Since(startReadFromGateway).Seconds())
 			if err == io.EOF {
 				if len(req.GetPayload()) != 0 {
-					startForwardToConsumer := time.Now()
 					pWrite.Write(req.GetPayload())
-					metrics.PerfUploadTimeHistogram.WithLabelValues("producer_to_consumer").Observe(time.Since(startForwardToConsumer).Seconds())
 				}
 				log.CtxDebugw(ctx, "received last upload stream data")
 				err = nil
@@ -238,9 +220,7 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 				initCh <- struct{}{}
 			}
 			receiveSize += len(req.GetPayload())
-			startForwardToConsumer := time.Now()
 			pWrite.Write(req.GetPayload())
-			metrics.PerfUploadTimeHistogram.WithLabelValues("producer_to_consumer").Observe(time.Since(startForwardToConsumer).Seconds())
 		}
 	}()
 
