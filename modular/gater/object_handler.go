@@ -475,7 +475,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			// TODO pieceStore should return exact error to indicate if the piece data lost
 			// for now, if get piece fail, it is suspected that the piece has been lost
 			// the recovery task will recovery the total segment (ignoring the offset and length of piece info)
-			if err == downloader.ErrPieceStore {
+			if strings.Contains(err.Error(), fmt.Sprintf("inner_code:%d", ErrPieceStoreInnerCode)) {
 				reoveredData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask, pInfo, task.GetStorageParams().GetMaxSegmentSize())
 				if err != nil {
 					log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", err)
@@ -631,7 +631,7 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	// no need to check quota when recovering primary SP segment data
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
-		true, reqCtx.Account(), objectInfo.PayloadSize, ECPieceKey, 0, uint64(ECPieceSize),
+		true, reqCtx.Account(), uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 	pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
