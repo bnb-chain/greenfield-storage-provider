@@ -516,13 +516,8 @@ func (g *GateModular) tryDownloadAfterRecovery(ctx context.Context, pieceTask *g
 	}
 	segSize := g.baseApp.PieceOp().SegmentPieceSize(pieceTask.ObjectInfo.PayloadSize, segmentIndex, maxSegmentSize)
 	recoveryTask := &gfsptask.GfSpRecoverPieceTask{}
-	recoveryTask.InitRecoverPieceTask(pieceTask.GetObjectInfo(), pieceTask.GetStorageParams(),
-		coretask.DefaultLargerTaskPriority,
-		segmentIndex,
-		int32(-1),
-		uint64(segSize),
-		g.baseApp.TaskTimeout(recoveryTask, maxSegmentSize),
-		3)
+	recoveryTask.InitRecoverPieceTask(pieceTask.GetObjectInfo(), pieceTask.GetStorageParams(), coretask.DefaultLargerTaskPriority, segmentIndex, int32(-1),
+		uint64(segSize), g.baseApp.TaskTimeout(recoveryTask, maxSegmentSize), 3)
 
 	g.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
 	log.CtxDebugw(ctx, "recovery task run successfully", "recovery object", pieceTask.ObjectInfo.ObjectName, "segment index:", segmentIndex)
