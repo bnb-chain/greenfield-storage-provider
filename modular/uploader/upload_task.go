@@ -85,8 +85,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		log.CtxDebugw(ctx, "finish to read data from stream", "info", uploadObjectTask.Info(),
 			"read_size", readSize, "error", err)
 		uploadObjectTask.AppendLog("uploader-report-upload-task")
-		reportCtx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-		go u.baseApp.GfSpClient().ReportTask(reportCtx, uploadObjectTask)
+		go u.baseApp.GfSpClient().ReportTask(context.Background(), uploadObjectTask)
 	}()
 	startTime := time.Now()
 	for {

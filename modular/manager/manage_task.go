@@ -168,7 +168,6 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 			return
 		}
 		log.Debugw("succeed to done upload object and waiting for scheduling to replicate piece", "task_info", task.Info())
-		return
 	}()
 	return nil
 }
@@ -292,7 +291,6 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 			}
 			log.Errorw("failed to update object task state", "task_info", task.Info())
 			// TODO: delete this upload db record?
-			return
 		}()
 		metrics.ManagerCounter.WithLabelValues(ManagerSuccessReplicateAndSeal).Inc()
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessReplicateAndSeal).Observe(

@@ -16,6 +16,7 @@ var MetricsItems = []prometheus.Collector{
 	// task queue metrics category
 	QueueSizeGauge,
 	QueueCapGauge,
+	QueueTime,
 	TaskInQueueTime,
 
 	// piece store metrics category
@@ -84,6 +85,11 @@ var (
 		Name: "queue_capacity",
 		Help: "Track the task queue capacity.",
 	}, []string{"queue_capacity"})
+	QueueTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "queue_time",
+		Help:    "Track the task of queue operator time.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"queue_time"})
 	TaskInQueueTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "task_in_queue_time",
 		Help:    "Track the task of alive time duration in queue from task is pushed.",
