@@ -211,7 +211,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 	switch t := reportTask.(type) {
 	case *gfspserver.GfSpReportTaskRequest_UploadObjectTask:
 		task := t.UploadObjectTask
-		task.AppendLog(fmt.Sprintf("manager-receive-upload-task-error:%s-retry:%d", task.Error().Error(), task.GetRetry()))
+		task.AppendLog(fmt.Sprintf("manager-receive-upload-task-retry:%d", task.GetRetry()))
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(GetRPCRemoteAddress(ctx))
 		_ = g.GfSpDB().InsertPutEvent(task)
@@ -227,7 +227,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		err = g.manager.HandleDoneResumableUploadObjectTask(ctx, t.ResumableUploadObjectTask)
 	case *gfspserver.GfSpReportTaskRequest_ReplicatePieceTask:
 		task := t.ReplicatePieceTask
-		task.AppendLog(fmt.Sprintf("manager-receive-replicate-task-error:%s-retry:%d", task.Error().Error(), task.GetRetry()))
+		task.AppendLog(fmt.Sprintf("manager-receive-replicate-task-retry:%d", task.GetRetry()))
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
@@ -236,7 +236,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		metrics.ReqTime.WithLabelValues(ManagerReportReplicateTask).Observe(time.Since(startTime).Seconds())
 	case *gfspserver.GfSpReportTaskRequest_SealObjectTask:
 		task := t.SealObjectTask
-		task.AppendLog(fmt.Sprintf("manager-receive-seal-task-error:%s-retry:%d", task.Error().Error(), task.GetRetry()))
+		task.AppendLog(fmt.Sprintf("manager-receive-seal-task-retry:%d", task.GetRetry()))
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
 		task.SetAddress(GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())

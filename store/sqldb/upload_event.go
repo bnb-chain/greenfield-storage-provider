@@ -23,13 +23,17 @@ func (s *SpDBImpl) InsertPutEvent(task coretask.Task) error {
 
 func (s *SpDBImpl) InsertUploadEvent(task coretask.UploadObjectTask) error {
 	updateTime := time.Now().String()
+	taskErr := ""
+	if task.Error() != nil {
+		taskErr = task.Error().Error()
+	}
 	s.db.Create(&PutObjectEventTable{
 		UpdateTime: updateTime,
 		ObjectID:   task.GetObjectInfo().Id.Uint64(),
 		Bucket:     task.GetObjectInfo().GetBucketName(),
 		Object:     task.GetObjectInfo().GetObjectName(),
 		State:      "Upload",
-		Error:      task.Error().Error(),
+		Error:      taskErr,
 		Logs:       task.GetLogs(),
 	})
 
@@ -39,7 +43,7 @@ func (s *SpDBImpl) InsertUploadEvent(task coretask.UploadObjectTask) error {
 			ObjectID:   task.GetObjectInfo().Id.Uint64(),
 			Bucket:     task.GetObjectInfo().GetBucketName(),
 			Object:     task.GetObjectInfo().GetObjectName(),
-			Error:      task.Error().Error(),
+			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
 	} else if task.GetCreateTime()-time.Now().Unix() > 2 {
@@ -48,7 +52,7 @@ func (s *SpDBImpl) InsertUploadEvent(task coretask.UploadObjectTask) error {
 			ObjectID:   task.GetObjectInfo().Id.Uint64(),
 			Bucket:     task.GetObjectInfo().GetBucketName(),
 			Object:     task.GetObjectInfo().GetObjectName(),
-			Error:      task.Error().Error(),
+			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
 	}
@@ -61,13 +65,17 @@ func (s *SpDBImpl) InsertReplicateEvent(task coretask.ReplicatePieceTask) error 
 	if task.GetSealed() {
 		state = "Replicate + Seal"
 	}
+	taskErr := ""
+	if task.Error() != nil {
+		taskErr = task.Error().Error()
+	}
 	s.db.Create(&PutObjectEventTable{
 		UpdateTime: updateTime,
 		ObjectID:   task.GetObjectInfo().Id.Uint64(),
 		Bucket:     task.GetObjectInfo().GetBucketName(),
 		Object:     task.GetObjectInfo().GetObjectName(),
 		State:      state,
-		Error:      task.Error().Error(),
+		Error:      taskErr,
 		Logs:       task.GetLogs(),
 	})
 
@@ -77,7 +85,7 @@ func (s *SpDBImpl) InsertReplicateEvent(task coretask.ReplicatePieceTask) error 
 			ObjectID:   task.GetObjectInfo().Id.Uint64(),
 			Bucket:     task.GetObjectInfo().GetBucketName(),
 			Object:     task.GetObjectInfo().GetObjectName(),
-			Error:      task.Error().Error(),
+			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
 	} else if task.GetCreateTime()-time.Now().Unix() > 10 {
@@ -86,7 +94,7 @@ func (s *SpDBImpl) InsertReplicateEvent(task coretask.ReplicatePieceTask) error 
 			ObjectID:   task.GetObjectInfo().Id.Uint64(),
 			Bucket:     task.GetObjectInfo().GetBucketName(),
 			Object:     task.GetObjectInfo().GetObjectName(),
-			Error:      task.Error().Error(),
+			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
 	} else if task.GetSealed() {
@@ -96,7 +104,7 @@ func (s *SpDBImpl) InsertReplicateEvent(task coretask.ReplicatePieceTask) error 
 			Bucket:     task.GetObjectInfo().GetBucketName(),
 			Object:     task.GetObjectInfo().GetObjectName(),
 			State:      "replicate+seal",
-			Error:      task.Error().Error(),
+			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
 	}
@@ -105,13 +113,17 @@ func (s *SpDBImpl) InsertReplicateEvent(task coretask.ReplicatePieceTask) error 
 
 func (s *SpDBImpl) InsertSealEvent(task coretask.SealObjectTask) error {
 	updateTime := time.Now().String()
+	taskErr := ""
+	if task.Error() != nil {
+		taskErr = task.Error().Error()
+	}
 	s.db.Create(&PutObjectEventTable{
 		UpdateTime: updateTime,
 		ObjectID:   task.GetObjectInfo().Id.Uint64(),
 		Bucket:     task.GetObjectInfo().GetBucketName(),
 		Object:     task.GetObjectInfo().GetObjectName(),
 		State:      "Seal",
-		Error:      task.Error().Error(),
+		Error:      taskErr,
 		Logs:       task.GetLogs(),
 	})
 
@@ -121,7 +133,7 @@ func (s *SpDBImpl) InsertSealEvent(task coretask.SealObjectTask) error {
 			ObjectID:   task.GetObjectInfo().Id.Uint64(),
 			Bucket:     task.GetObjectInfo().GetBucketName(),
 			Object:     task.GetObjectInfo().GetObjectName(),
-			Error:      task.Error().Error(),
+			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
 	} else if task.GetCreateTime()-time.Now().Unix() > 10 {
@@ -130,7 +142,7 @@ func (s *SpDBImpl) InsertSealEvent(task coretask.SealObjectTask) error {
 			ObjectID:   task.GetObjectInfo().Id.Uint64(),
 			Bucket:     task.GetObjectInfo().GetBucketName(),
 			Object:     task.GetObjectInfo().GetObjectName(),
-			Error:      task.Error().Error(),
+			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
 	} else {
@@ -140,7 +152,7 @@ func (s *SpDBImpl) InsertSealEvent(task coretask.SealObjectTask) error {
 			Bucket:     task.GetObjectInfo().GetBucketName(),
 			Object:     task.GetObjectInfo().GetObjectName(),
 			State:      "seal",
-			Error:      task.Error().Error(),
+			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
 	}
