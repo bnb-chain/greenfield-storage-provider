@@ -349,6 +349,7 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 			task.SetError(err)
 			return
 		}
+
 		// TODO if get piece from primary SP fail ,send request to other secondary SP
 		pieceData, err := e.doRecoveryPiece(ctx, task, primarySPEndpoint)
 		if err != nil {
@@ -377,6 +378,11 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 		log.CtxDebugw(ctx, "begin to recovery primary SP object")
 		secondaryEndpoints, err := e.getObjectSecondaryEndpoints(ctx, task.GetObjectInfo())
 		if err != nil {
+			return
+		}
+
+		if uint32(len(secondaryEndpoints)) != ecPieceCount {
+			task.SetError(ErrRecoveryPieceNotEnough)
 			return
 		}
 
