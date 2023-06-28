@@ -461,8 +461,8 @@ func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Reque
 	recoveryTask := gfsptask.GfSpRecoverPieceTask{}
 	err = json.Unmarshal(recoveryMsg, &recoveryTask)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal receive header",
-			"receive", r.Header.Get(GnfdReceiveMsgHeader))
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal recovery msg header",
+			"header", r.Header.Get(GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
