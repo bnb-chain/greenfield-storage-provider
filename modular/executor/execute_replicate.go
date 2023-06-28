@@ -65,13 +65,13 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_object_cost").Observe(time.Since(replicatePieceTotalTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("background_task_replicate_object_end").Observe(time.Since(startReplicateTime).Seconds())
 	if err != nil {
-		task.AppendLog(fmt.Sprintf("executor-begin-replicate-object-error%s", err.Error()))
+		task.AppendLog(fmt.Sprintf("executor-end-replicate-object-error%s", err.Error()))
 		log.CtxErrorw(ctx, "failed to replicate piece", "error", err)
 		metrics.ExecutorCounter.WithLabelValues(ExeutorFailureReplicateAllPiece).Inc()
 		metrics.ExecutorTime.WithLabelValues(ExeutorFailureReplicateAllPiece).Observe(time.Since(replicatePieceTotalTime).Seconds())
 		return
 	} else {
-		task.AppendLog("executor-begin-replicate-object")
+		task.AppendLog("executor-end-replicate-object")
 		metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessReplicateAllPiece).Inc()
 		metrics.ExecutorTime.WithLabelValues(ExeutorSuccessReplicateAllPiece).Observe(time.Since(replicatePieceTotalTime).Seconds())
 	}

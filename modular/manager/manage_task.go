@@ -289,7 +289,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 			}); err != nil {
 				log.Errorw("failed to update object task state", "task_info", task.Info(), "error", err)
 			}
-			log.Errorw("failed to update object task state", "task_info", task.Info())
+			log.Errorw("succeed to update object task state", "task_info", task.Info())
 			// TODO: delete this upload db record?
 		}()
 		metrics.ManagerCounter.WithLabelValues(ManagerSuccessReplicateAndSeal).Inc()
@@ -346,7 +346,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 	}
 	handleTask = oldTask.(task.ReplicatePieceTask)
 	if !handleTask.ExceedRetry() {
-		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-replicate-task-error:%s-repush:%d", handleTask.Error().Error(), handleTask.GetRetry()))
+		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-replicate-task-error:%s-repush:%d", shadowTask.Error().Error(), shadowTask.GetRetry()))
 		handleTask.SetUpdateTime(time.Now().Unix())
 		err := m.replicateQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
@@ -365,7 +365,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 				log.Errorw("failed to update object task state", "task_info", handleTask.Info(), "error", err)
 				return
 			}
-			log.Errorw("failed to update object task state", "task_info", handleTask.Info())
+			log.Errorw("succeed to update object task state", "task_info", handleTask.Info())
 		}()
 		log.CtxWarnw(ctx, "delete expired replicate piece task", "task_info", handleTask.Info())
 	}
@@ -419,7 +419,7 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 	}
 	handleTask = oldTask.(task.SealObjectTask)
 	if !handleTask.ExceedRetry() {
-		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-seal-task-error:%s-repush:%d", handleTask.Error().Error(), handleTask.GetRetry()))
+		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-seal-task-error:%s-repush:%d", shadowTask.Error().Error(), shadowTask.GetRetry()))
 		handleTask.SetUpdateTime(time.Now().Unix())
 		err := m.sealQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
@@ -439,7 +439,7 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 				log.Errorw("failed to update object task state", "task_info", handleTask.Info(), "error", err)
 				return
 			}
-			log.Errorw("failed to update object task state", "task_info", handleTask.Info())
+			log.Errorw("succeed to update object task state", "task_info", handleTask.Info())
 		}()
 		log.CtxWarnw(ctx, "delete expired seal object task", "task_info", handleTask.Info())
 	}
