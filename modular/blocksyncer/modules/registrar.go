@@ -12,7 +12,7 @@ import (
 	"github.com/forbole/juno/v4/modules/permission"
 	"github.com/forbole/juno/v4/modules/registrar"
 	sp "github.com/forbole/juno/v4/modules/storage_provider"
-	"github.com/forbole/juno/v4/modules/virtualgroup"
+	"github.com/forbole/juno/v4/modules/virtual_group"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/events"
@@ -51,13 +51,8 @@ func (r *BlockSyncerRegistrar) BuildModules(ctx registrar.Context) modules.Modul
 		prefixtree.NewModule(db),
 
 		//vg related module
-		virtualgroup.NewGVGModule(db),
-		virtualgroup.NewLVGModule(db),
-		virtualgroup.NewVGFModule(db),
-
+		virtualgroup.NewModule(db),
 		//vg event module
-		events.NewEventMigrationBucketModule(db),
-		events.NewEventMigrationBucketCompleteModule(db),
-		events.NewEventSwapOutModule(db),
+		events.NewModule(db),
 	}
 }

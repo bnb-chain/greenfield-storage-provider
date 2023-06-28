@@ -29,3 +29,19 @@ func (db *DB) SaveEventSwapOut(ctx context.Context, eventSwapOut *bsdb.EventSwap
 	}
 	return err
 }
+
+func (db *DB) SaveEventSPExit(ctx context.Context, eventSPExit *bsdb.EventStorageProviderExit) error {
+	err := db.Db.WithContext(ctx).Table((&bsdb.EventStorageProviderExit{}).TableName()).Create(eventSPExit).Error
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (db *DB) SaveEventSPCompleteExit(ctx context.Context, eventSpCompleteExit *bsdb.EventCompleteStorageProviderExit) error {
+	err := db.Db.WithContext(ctx).Table((&bsdb.EventCompleteStorageProviderExit{}).TableName()).Create(eventSpCompleteExit).Error
+	if err != nil {
+		return err
+	}
+	return err
+}
