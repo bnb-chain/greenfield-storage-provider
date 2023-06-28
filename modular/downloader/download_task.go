@@ -4,15 +4,18 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"sync/atomic"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -20,12 +23,13 @@ import (
 var (
 	ErrDanglingPointer   = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30001, "OoooH.... request lost")
 	ErrObjectUnsealed    = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30002, "object unsealed")
-	ErrRepeatedTask      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30003, "request repeated")
+	ErrExceedRequest     = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30003, "get piece request exceed")
 	ErrExceedBucketQuota = gfsperrors.Register(module.DownloadModularName, http.StatusNotAcceptable, 30004, "bucket quota overflow")
 	ErrInvalidParam      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30005, "request params invalid")
 	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid, no such piece")
 	ErrPieceStore        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35101, "server slipped away, try again later")
 	ErrGfSpDB            = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35201, "server slipped away, try again later")
+	ErrKeyFormat         = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "invalid key format")
 )
 
 func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask) error {
@@ -36,10 +40,6 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 	if downloadObjectTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.CtxErrorw(ctx, "failed to pre download object due to object unsealed")
 		return ErrObjectUnsealed
-	}
-	if d.downloadQueue.Has(downloadObjectTask.Key()) {
-		log.CtxErrorw(ctx, "failed to pre download object due to task repeated")
-		return ErrRepeatedTask
 	}
 	// TODO:: spilt check and add record steps, check in pre download, add record in post download
 	if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
@@ -63,7 +63,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 		// ignore the access db error, it is the system's inner error, will be let the request go.
 	}
 	// report the task to the manager for monitor the download task
-	d.baseApp.GfSpClient().ReportTask(ctx, downloadObjectTask)
+	_ = d.baseApp.GfSpClient().ReportTask(ctx, downloadObjectTask)
 	return nil
 }
 
@@ -75,11 +75,13 @@ func (d *DownloadModular) HandleDownloadObjectTask(ctx context.Context, download
 		}
 		log.CtxDebugw(ctx, downloadObjectTask.Info())
 	}()
-	if err = d.downloadQueue.Push(downloadObjectTask); err != nil {
-		log.CtxErrorw(ctx, "failed to push download queue", "error", err)
-		return nil, err
+	defer func() {
+		atomic.AddInt64(&d.downloading, -1)
+	}()
+	if atomic.AddInt64(&d.downloading, 1) >= atomic.LoadInt64(&d.downloadParallel) {
+		return nil, ErrExceedRequest
 	}
-	defer d.downloadQueue.PopByKey(downloadObjectTask.Key())
+
 	pieceInfos, err := SplitToSegmentPieceInfos(downloadObjectTask, d.baseApp.PieceOp())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to generate piece info to download", "error", err)
@@ -87,12 +89,19 @@ func (d *DownloadModular) HandleDownloadObjectTask(ctx context.Context, download
 	}
 	var data []byte
 	for _, pInfo := range pieceInfos {
+		key := cacheKey(pInfo.SegmentPieceKey, int64(pInfo.Offset), int64(pInfo.Length))
+		pieceData, has := d.pieceCache.Get(key)
+		if has {
+			data = append(data, pieceData.([]byte)...)
+			continue
+		}
 		piece, err := d.baseApp.PieceStore().GetPiece(ctx, pInfo.SegmentPieceKey,
 			int64(pInfo.Offset), int64(pInfo.Length))
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get piece data from piece store", "error", err)
 			return nil, ErrPieceStore
 		}
+		d.pieceCache.Add(key, piece)
 		data = append(data, piece...)
 	}
 	return data, nil
@@ -163,43 +172,95 @@ func (d *DownloadModular) PostDownloadObject(ctx context.Context, downloadObject
 }
 
 func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTask task.DownloadPieceTask) error {
+	defer func() {
+		// report the task to the manager for monitor the download piece task
+		d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+	}()
+
 	if downloadPieceTask == nil || downloadPieceTask.GetObjectInfo() == nil || downloadPieceTask.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed pre download piece due to pointer dangling")
 		return ErrDanglingPointer
 	}
+
 	if downloadPieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.CtxErrorw(ctx, "failed to pre download piece due to object unsealed")
 		return ErrObjectUnsealed
 	}
-	if d.downloadQueue.Has(downloadPieceTask.Key()) {
-		log.CtxErrorw(ctx, "failed to pre download piece due to task repeated")
-		return ErrRepeatedTask
+
+	primarySP := downloadPieceTask.GetBucketInfo().PrimarySpAddress
+	// if it is a request from the primary SP of the object, no need to check quota
+	if downloadPieceTask.GetUserAddress() == primarySP {
+		return nil
 	}
 
 	if downloadPieceTask.GetEnableCheck() {
-		if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
-			&spdb.ReadRecord{
-				BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
-				ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
-				UserAddress:     downloadPieceTask.GetUserAddress(),
-				BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
-				ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
-				ReadSize:        downloadPieceTask.GetTotalSize(),
-				ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
-			},
-			&spdb.BucketQuota{
-				ReadQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota() + d.bucketFreeQuota,
-			},
-		); err != nil {
-			log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
-			if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
-				return ErrExceedBucketQuota
+		// if it is a request from client, the task handler is the primary SP of the sp
+		if d.baseApp.OperatorAddress() == primarySP {
+			log.CtxDebugw(ctx, "downloading from primary SP, checking quota")
+			checkQuotaTime := time.Now()
+			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+				&spdb.ReadRecord{
+					BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
+					ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
+					UserAddress:     downloadPieceTask.GetUserAddress(),
+					BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
+					ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
+					ReadSize:        downloadPieceTask.GetTotalSize(),
+					ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+				},
+				&spdb.BucketQuota{
+					ReadQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota() + d.bucketFreeQuota,
+				},
+			); err != nil {
+				metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
+				log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
+				if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
+					return ErrExceedBucketQuota
+				}
+				// ignore the access db error, it is the system's inner error, will be let the request go.
 			}
-			// ignore the access db error, it is the system's inner error, will be let the request go.
+			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
+			return nil
 		}
+		// check quota for secondary read task
+		secondarySPs := downloadPieceTask.GetObjectInfo().SecondarySpAddresses
+		var isOneOfSecondary bool
+		for _, addr := range secondarySPs {
+			if d.baseApp.OperatorAddress() == addr {
+				isOneOfSecondary = true
+			}
+		}
+
+		// if it is a request from client, the task handler is the secondary SP of the object
+		if isOneOfSecondary {
+			// check free quota
+			log.CtxDebugw(ctx, "downloading piece from secondary SP, checking quota")
+			// TODO traffic db add read type to indicate secondary
+			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+				&spdb.ReadRecord{
+					BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
+					ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
+					UserAddress:     downloadPieceTask.GetUserAddress(),
+					BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
+					ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
+					ReadSize:        downloadPieceTask.GetTotalSize(),
+					ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+				},
+				&spdb.BucketQuota{
+					ReadQuotaSize: d.bucketFreeQuota,
+				},
+			); err != nil {
+				log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
+				if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
+					return ErrExceedBucketQuota
+				}
+				// ignore the access db error, it is the system's inner error, will be let the request go.
+			}
+			return nil
+		}
+
 	}
-	// report the task to the manager for monitor the download piece task
-	d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+
 	return nil
 }
 
@@ -215,17 +276,30 @@ func (d *DownloadModular) HandleDownloadPieceTask(ctx context.Context, downloadP
 		}
 		log.CtxDebugw(ctx, downloadPieceTask.Info())
 	}()
-	if err = d.downloadQueue.Push(downloadPieceTask); err != nil {
-		log.CtxErrorw(ctx, "failed to push download queue", "error", err)
-		return nil, err
-	}
-	defer d.downloadQueue.PopByKey(downloadPieceTask.Key())
 
+	defer func() {
+		atomic.AddInt64(&d.downloading, -1)
+	}()
+	if atomic.AddInt64(&d.downloading, 1) >= atomic.LoadInt64(&d.downloadParallel) {
+		return nil, ErrExceedRequest
+	}
+
+	key := cacheKey(downloadPieceTask.GetPieceKey(),
+		int64(downloadPieceTask.GetPieceOffset()),
+		int64(downloadPieceTask.GetPieceLength()))
+	data, has := d.pieceCache.Get(key)
+	if has {
+		return data.([]byte), nil
+	}
+
+	putPieceTime := time.Now()
 	if pieceData, err = d.baseApp.PieceStore().GetPiece(ctx, downloadPieceTask.GetPieceKey(),
 		int64(downloadPieceTask.GetPieceOffset()), int64(downloadPieceTask.GetPieceLength())); err != nil {
+		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_put_piece_time").Observe(time.Since(putPieceTime).Seconds())
 		log.CtxErrorw(ctx, "failed to get piece data from piece store", "task_info", downloadPieceTask.Info(), "error", err)
 		return nil, ErrPieceStore
 	}
+	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_put_piece_time").Observe(time.Since(putPieceTime).Seconds())
 	return pieceData, nil
 }
 
@@ -241,7 +315,7 @@ func (d *DownloadModular) PreChallengePiece(ctx context.Context, downloadPieceTa
 		log.CtxErrorw(ctx, "failed to pre challenge piece due to object unsealed")
 		return ErrObjectUnsealed
 	}
-	d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+	_ = d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
 	return nil
 }
 
@@ -258,16 +332,21 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 		}
 		log.CtxDebugw(ctx, downloadPieceTask.Info())
 	}()
-	if err = d.challengeQueue.Push(downloadPieceTask); err != nil {
-		log.CtxErrorw(ctx, "failed to push challenge piece queue", "error", err)
-		return nil, nil, nil, err
+
+	defer func() {
+		atomic.AddInt64(&d.challenging, -1)
+	}()
+	if atomic.AddInt64(&d.challenging, 1) >= atomic.LoadInt64(&d.challengeParallel) {
+		return nil, nil, nil, ErrExceedRequest
 	}
-	defer d.challengeQueue.PopByKey(downloadPieceTask.Key())
+
 	pieceKey := d.baseApp.PieceOp().ChallengePieceKey(
 		downloadPieceTask.GetObjectInfo().Id.Uint64(),
 		downloadPieceTask.GetSegmentIdx(),
 		downloadPieceTask.GetRedundancyIdx())
+	getIntegrityTime := time.Now()
 	integrity, err = d.baseApp.GfSpDB().GetObjectIntegrity(downloadPieceTask.GetObjectInfo().Id.Uint64())
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_integrity_time").Observe(time.Since(getIntegrityTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get integrity hash", "error", err)
 		return nil, nil, nil, ErrGfSpDB
@@ -276,11 +355,22 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 		log.CtxErrorw(ctx, "failed to get challenge info due to segment index wrong")
 		return nil, nil, nil, ErrNoSuchPiece
 	}
+
+	key := cacheKey(pieceKey, int64(0), int64(-1))
+	piece, has := d.pieceCache.Get(key)
+	if has {
+		return integrity.IntegrityChecksum, integrity.PieceChecksumList, piece.([]byte), nil
+	}
+
+	getPieceTime := time.Now()
 	data, err = d.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
+		d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
 		return nil, nil, nil, ErrPieceStore
 	}
+
 	return integrity.IntegrityChecksum, integrity.PieceChecksumList, data, nil
 }
 
@@ -289,7 +379,26 @@ func (d *DownloadModular) PostChallengePiece(ctx context.Context, downloadPieceT
 
 func (d *DownloadModular) QueryTasks(ctx context.Context, subKey task.TKey) (
 	[]task.Task, error) {
-	downloadTasks, _ := taskqueue.ScanTQueueBySubKey(d.downloadQueue, subKey)
-	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(d.challengeQueue, subKey)
-	return append(downloadTasks, challengeTasks...), nil
+	return nil, nil
+}
+
+// recoverChallengePiece recover challenge piece by generating recovery background task if challenge task get piece fail
+func (d *DownloadModular) recoverChallengePiece(ctx context.Context, downloadPieceTask task.ChallengePieceTask, pieceKey string) {
+	// TODO check if it need to recovery if the piece data is not correct
+	var segmentIndex uint32
+	segmentIndex, ECIndex, parseErr := d.baseApp.PieceOp().ParseChallengeIdx(pieceKey)
+	if parseErr != nil {
+		// no need to return recovery error to user
+		log.CtxErrorw(ctx, "fail to parse recovery segment index", "error", parseErr)
+	}
+	recoveryTask := &gfsptask.GfSpRecoverPieceTask{}
+	recoveryTask.InitRecoverPieceTask(downloadPieceTask.GetObjectInfo(), downloadPieceTask.GetStorageParams(),
+		d.baseApp.TaskPriority(recoveryTask),
+		segmentIndex,
+		ECIndex,
+		uint64(0),
+		d.baseApp.TaskTimeout(recoveryTask, downloadPieceTask.GetStorageParams().GetMaxSegmentSize()),
+		d.baseApp.TaskMaxRetry(recoveryTask))
+
+	d.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
 }

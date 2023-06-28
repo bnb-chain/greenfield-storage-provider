@@ -37,15 +37,15 @@ const (
 
 	// DefaultGfSpAppIDPrefix defines the default app id prefix.
 	DefaultGfSpAppIDPrefix = "gfsp"
-	// DefaultGrpcAddress defines the default Grpc address.
-	DefaultGrpcAddress = "localhost:9333"
+	// DefaultGRPCAddress defines the default gRPC address.
+	DefaultGRPCAddress = "localhost:9333"
 	// DefaultMetricsAddress defines the default metrics service address.
 	DefaultMetricsAddress = "localhost:24367"
-	// DefaultPprofAddress defines the default pprof service address.
-	DefaultPprofAddress = "localhost:24368"
+	// DefaultPProfAddress defines the default pprof service address.
+	DefaultPProfAddress = "localhost:24368"
 
-	// DefaultChainID defines the default greenfield chain ID.
-	DefaultChainID = "greenfield_9000-1741"
+	// DefaultChainID defines the default greenfield chainID.
+	DefaultChainID = "greenfield_9000-121"
 	// DefaultChainAddress defines the default greenfield address.
 	DefaultChainAddress = "http://localhost:26750"
 
@@ -73,11 +73,11 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		cfg.AppID = DefaultGfSpAppIDPrefix + "-" + servers
 	}
 	app.appID = cfg.AppID
-	if cfg.GrpcAddress == "" {
-		cfg.GrpcAddress = DefaultGrpcAddress
+	if cfg.GRPCAddress == "" {
+		cfg.GRPCAddress = DefaultGRPCAddress
 	}
-	app.grpcAddress = cfg.GrpcAddress
-	app.operateAddress = cfg.SpAccount.SpOperateAddress
+	app.grpcAddress = cfg.GRPCAddress
+	app.operatorAddress = cfg.SpAccount.SpOperatorAddress
 	app.chainID = cfg.Chain.ChainID
 	app.uploadSpeed = cfg.Task.UploadTaskSpeed
 	app.downloadSpeed = cfg.Task.DownloadTaskSpeed
@@ -94,7 +94,7 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	app.gcZombieRetry = cfg.Task.GcZombieTaskRetry
 	app.gcMetaRetry = cfg.Task.GcMetaTaskRetry
 	app.approver = &coremodule.NullModular{}
-	app.authorizer = &coremodule.NullModular{}
+	app.authenticator = &coremodule.NullModular{}
 	app.downloader = &coremodule.NilModular{}
 	app.executor = &coremodule.NilModular{}
 	app.gater = &coremodule.NullModular{}
@@ -110,34 +110,34 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 
 func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Endpoint.ApproverEndpoint == "" {
-		cfg.Endpoint.ApproverEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ApproverEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.ManagerEndpoint == "" {
-		cfg.Endpoint.ManagerEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ManagerEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.DownloaderEndpoint == "" {
-		cfg.Endpoint.DownloaderEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.DownloaderEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.ReceiverEndpoint == "" {
-		cfg.Endpoint.ReceiverEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ReceiverEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.MetadataEndpoint == "" {
-		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.MetadataEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.MetadataEndpoint == "" {
-		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.MetadataEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.UploaderEndpoint == "" {
-		cfg.Endpoint.UploaderEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.UploaderEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.P2PEndpoint == "" {
-		cfg.Endpoint.P2PEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.P2PEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.SignerEndpoint == "" {
-		cfg.Endpoint.SignerEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.SignerEndpoint = cfg.GRPCAddress
 	}
-	if cfg.Endpoint.AuthorizerEndpoint == "" {
-		cfg.Endpoint.AuthorizerEndpoint = cfg.GrpcAddress
+	if cfg.Endpoint.AuthenticatorEndpoint == "" {
+		cfg.Endpoint.AuthenticatorEndpoint = cfg.GRPCAddress
 	}
 	app.client = gfspclient.NewGfSpClient(
 		cfg.Endpoint.ApproverEndpoint,
@@ -148,7 +148,7 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		cfg.Endpoint.UploaderEndpoint,
 		cfg.Endpoint.P2PEndpoint,
 		cfg.Endpoint.SignerEndpoint,
-		cfg.Endpoint.AuthorizerEndpoint,
+		cfg.Endpoint.AuthenticatorEndpoint,
 		!cfg.Monitor.DisableMetrics)
 	return nil
 }
@@ -394,8 +394,8 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 		switch module.Name() {
 		case coremodule.ApprovalModularName:
 			app.approver = module.(coremodule.Approver)
-		case coremodule.AuthorizationModularName:
-			app.authorizer = module.(coremodule.Authorizer)
+		case coremodule.AuthenticationModularName:
+			app.authenticator = module.(coremodule.Authenticator)
 		case coremodule.DownloadModularName:
 			app.downloader = module.(coremodule.Downloader)
 		case coremodule.ExecuteModularName:
@@ -408,7 +408,7 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 			app.p2p = module.(coremodule.P2P)
 		case coremodule.ReceiveModularName:
 			app.receiver = module.(coremodule.Receiver)
-		case coremodule.SignerModularName:
+		case coremodule.SignModularName:
 			app.signer = module.(coremodule.Signer)
 		case coremodule.UploadModularName:
 			app.uploader = module.(coremodule.Uploader)
@@ -421,10 +421,10 @@ func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Monitor.DisableMetrics {
 		app.metrics = &coremodule.NullModular{}
 	}
-	if cfg.Monitor.MetricsHttpAddress == "" {
-		cfg.Monitor.MetricsHttpAddress = DefaultMetricsAddress
+	if cfg.Monitor.MetricsHTTPAddress == "" {
+		cfg.Monitor.MetricsHTTPAddress = DefaultMetricsAddress
 	}
-	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHttpAddress)
+	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHTTPAddress)
 	app.RegisterServices(app.metrics)
 	return nil
 }
@@ -433,10 +433,10 @@ func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error 
 	if cfg.Monitor.DisablePProf {
 		app.pprof = &coremodule.NullModular{}
 	}
-	if cfg.Monitor.PProfHttpAddress == "" {
-		cfg.Monitor.PProfHttpAddress = DefaultPprofAddress
+	if cfg.Monitor.PProfHTTPAddress == "" {
+		cfg.Monitor.PProfHTTPAddress = DefaultPProfAddress
 	}
-	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHttpAddress)
+	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHTTPAddress)
 	app.RegisterServices(app.pprof)
 	return nil
 }

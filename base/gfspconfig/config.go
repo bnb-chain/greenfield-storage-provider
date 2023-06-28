@@ -36,7 +36,7 @@ type GfSpConfig struct {
 	Env            string
 	AppID          string
 	Server         []string
-	GrpcAddress    string
+	GRPCAddress    string
 	Customize      *Customize
 	SpDB           storeconfig.SQLDBConfig
 	BsDB           storeconfig.SQLDBConfig
@@ -85,13 +85,18 @@ func (cfg *GfSpConfig) String() string {
 }
 
 type ChainConfig struct {
-	ChainID      string
-	ChainAddress []string
-	GasLimit     uint64
+	ChainID                    string
+	ChainAddress               []string
+	SealGasLimit               uint64
+	SealFeeAmount              uint64
+	RejectSealGasLimit         uint64
+	RejectSealFeeAmount        uint64
+	DiscontinueBucketGasLimit  uint64
+	DiscontinueBucketFeeAmount uint64
 }
 
 type SpAccountConfig struct {
-	SpOperateAddress   string
+	SpOperatorAddress  string
 	OperatorPrivateKey string
 	FundingPrivateKey  string
 	SealPrivateKey     string
@@ -100,15 +105,15 @@ type SpAccountConfig struct {
 }
 
 type EndpointConfig struct {
-	ApproverEndpoint   string
-	ManagerEndpoint    string
-	DownloaderEndpoint string
-	ReceiverEndpoint   string
-	MetadataEndpoint   string
-	UploaderEndpoint   string
-	P2PEndpoint        string
-	SignerEndpoint     string
-	AuthorizerEndpoint string
+	ApproverEndpoint      string
+	ManagerEndpoint       string
+	DownloaderEndpoint    string
+	ReceiverEndpoint      string
+	MetadataEndpoint      string
+	UploaderEndpoint      string
+	P2PEndpoint           string
+	SignerEndpoint        string
+	AuthenticatorEndpoint string
 }
 
 type ApprovalConfig struct {
@@ -125,8 +130,8 @@ type BucketConfig struct {
 }
 
 type GatewayConfig struct {
-	Domain      string
-	HttpAddress string
+	DomainName  string
+	HTTPAddress string
 }
 
 type ExecutorConfig struct {
@@ -160,6 +165,7 @@ type ParallelConfig struct {
 	GlobalGCMetaParallel               int
 	GlobalDownloadObjectTaskCacheSize  int
 	GlobalChallengePieceTaskCacheSize  int
+	GlobalRecoveryPieceParallel        int
 	GlobalBatchGcObjectTimeInterval    int
 	GlobalGcObjectBlockInterval        uint64
 	GlobalGcObjectSafeBlockDistance    uint64
@@ -197,8 +203,8 @@ type TaskConfig struct {
 type MonitorConfig struct {
 	DisableMetrics     bool
 	DisablePProf       bool
-	MetricsHttpAddress string
-	PProfHttpAddress   string
+	MetricsHTTPAddress string
+	PProfHTTPAddress   string
 }
 
 type RcmgrConfig struct {

@@ -72,6 +72,38 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: putObjectRouterName,
 		},
 		{
+			name:             "PutObjectByOffset router, path style",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              scheme + testDomain + "/" + bucketName + "/" + objectName + "?" + ResumableUploadComplete + "&" + ResumableUploadOffset,
+			shouldMatch:      true,
+			wantedRouterName: resumablePutObjectRouterName,
+		},
+		{
+			name:             "PutObjectByOffset router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              scheme + bucketName + "." + testDomain + "/" + objectName + "?" + ResumableUploadComplete + "&" + ResumableUploadOffset,
+			shouldMatch:      true,
+			wantedRouterName: resumablePutObjectRouterName,
+		},
+		{
+			name:             "QueryUploadOffset router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "/" + objectName + "?" + UploadContextQuery,
+			shouldMatch:      true,
+			wantedRouterName: queryResumeOffsetName,
+		},
+		{
+			name:             "QueryUploadOffset router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "/" + objectName + "?" + UploadContextQuery,
+			shouldMatch:      true,
+			wantedRouterName: queryResumeOffsetName,
+		},
+		{
 			name:             "Get object upload progress router, virtual host style",
 			router:           gwRouter,
 			method:           http.MethodGet,
@@ -213,6 +245,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: replicateObjectPieceRouterName,
 		},
 		{
+			name:             "Recovery router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + RecoverObjectPiecePath,
+			shouldMatch:      true,
+			wantedRouterName: recoveryPieceRouterName,
+		},
+		{
 			name:             "Get group list router",
 			router:           gwRouter,
 			method:           http.MethodGet,
@@ -311,6 +351,7 @@ func TestRouters(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Log(testCase.url)
 			request := httptest.NewRequest(testCase.method, testCase.url, strings.NewReader(""))
 			router := testCase.router
 

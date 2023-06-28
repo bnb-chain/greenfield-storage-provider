@@ -25,6 +25,7 @@ message GfSpSignRequest {
     base.types.gfsptask.GfSpReplicatePieceApprovalTask gfsp_replicate_piece_approval_task = 8;
     base.types.gfsptask.GfSpReceivePieceTask gfsp_receive_piece_task = 9;
     greenfield.storage.MsgRejectSealObject reject_object_info = 10;
+    base.types.gfsptask.GfSpRecoverPieceTask gfsp_recover_piece_task = 11;
   }
 }
 

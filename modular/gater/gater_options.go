@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	DefaultGatewayDomain    = "localhost:9133"
-	DefaultMaxListReadQuota = 100
-	DefaultMaxPayloadSize   = 2 * 1024 * 1024 * 1024
+	DefaultGatewayDomainName = "localhost:9133"
+	DefaultMaxListReadQuota  = 100
+	DefaultMaxPayloadSize    = 2 * 1024 * 1024 * 1024
 )
 
 func NewGateModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -23,11 +23,11 @@ func NewGateModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (corem
 }
 
 func DefaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
-	if cfg.Gateway.Domain == "" {
-		cfg.Gateway.Domain = DefaultGatewayDomain
+	if cfg.Gateway.DomainName == "" {
+		cfg.Gateway.DomainName = DefaultGatewayDomainName
 	}
-	if cfg.Gateway.HttpAddress == "" {
-		cfg.Gateway.HttpAddress = DefaultGatewayDomain
+	if cfg.Gateway.HTTPAddress == "" {
+		cfg.Gateway.HTTPAddress = DefaultGatewayDomainName
 	}
 	if cfg.Bucket.MaxListReadQuotaNumber == 0 {
 		cfg.Bucket.MaxListReadQuotaNumber = DefaultMaxListReadQuota
@@ -37,8 +37,8 @@ func DefaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 	}
 	gater.maxPayloadSize = cfg.Bucket.MaxPayloadSize
 	gater.env = cfg.Env
-	gater.domain = cfg.Gateway.Domain
-	gater.httpAddress = cfg.Gateway.HttpAddress
+	gater.domain = cfg.Gateway.DomainName
+	gater.httpAddress = cfg.Gateway.HTTPAddress
 	gater.maxListReadQuota = cfg.Bucket.MaxListReadQuotaNumber
 	rateCfg := makeAPIRateLimitCfg(cfg.APIRateLimiter)
 	if err := localhttp.NewAPILimiter(rateCfg); err != nil {

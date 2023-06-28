@@ -32,6 +32,9 @@ const (
 	// DefaultGlobalGCMetaParallel defines the default max parallel gc meta db in SP
 	// system.
 	DefaultGlobalGCMetaParallel int = 1
+	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP
+	// system.
+	DefaultGlobalRecoveryPieceParallel int = 7
 	// DefaultGlobalDownloadObjectTaskCacheSize defines the default max cache the download
 	// object tasks in manager.
 	DefaultGlobalDownloadObjectTaskCacheSize int = 4096
@@ -40,10 +43,10 @@ const (
 	DefaultGlobalChallengePieceTaskCacheSize int = 4096
 	// DefaultGlobalBatchGcObjectTimeInterval defines the default interval for generating
 	// gc object task.
-	DefaultGlobalBatchGcObjectTimeInterval int = 30 * 60
+	DefaultGlobalBatchGcObjectTimeInterval int = 1 * 60
 	// DefaultGlobalGcObjectBlockInterval defines the default blocks number for getting
 	// deleted objects.
-	DefaultGlobalGcObjectBlockInterval uint64 = 500
+	DefaultGlobalGcObjectBlockInterval uint64 = 1000
 	// DefaultGlobalGcObjectSafeBlockDistance defines the default distance form current block
 	// height to gc the deleted object.
 	DefaultGlobalGcObjectSafeBlockDistance uint64 = 1000
@@ -53,6 +56,10 @@ const (
 	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
+	// DefaultListenRejectUnSealTimeoutHeight defines the default listen reject unseal object
+	// on greenfield timeout height, if after current block height + timeout height, the object
+	// is not rejected, it is judged failed to reject unseal object on greenfield.
+	DefaultListenRejectUnSealTimeoutHeight int = 10
 
 	// DefaultDiscontinueTimeInterval defines the default interval for starting discontinue
 	// buckets task , used for test net.
@@ -120,6 +127,10 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 		cfg.Parallel.DiscontinueBucketKeepAliveDays = DefaultDiscontinueBucketKeepAliveDays
 	}
 
+	if cfg.Parallel.GlobalRecoveryPieceParallel == 0 {
+		cfg.Parallel.GlobalRecoveryPieceParallel = DefaultGlobalRecoveryPieceParallel
+	}
+
 	manager.enableLoadTask = cfg.Manager.EnableLoadTask
 	manager.loadTaskLimitToReplicate = cfg.Parallel.GlobalReplicatePieceParallel
 	manager.loadTaskLimitToSeal = cfg.Parallel.GlobalSealObjectParallel
@@ -136,8 +147,12 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	manager.discontinueBucketKeepAliveDays = cfg.Parallel.DiscontinueBucketKeepAliveDays
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
+	manager.resumeableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		manager.Name()+"-resumeable-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-replicate-piece", cfg.Parallel.GlobalReplicatePieceParallel)
+	manager.recoveryQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-recovery-piece", cfg.Parallel.GlobalRecoveryPieceParallel)
 	manager.sealQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-seal-object", cfg.Parallel.GlobalSealObjectParallel)
 	manager.receiveQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(

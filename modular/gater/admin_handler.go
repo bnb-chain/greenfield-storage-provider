@@ -1,6 +1,7 @@
 package gater
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"io"
@@ -8,17 +9,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/executor"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/p2p/p2pnode"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 )
 
 // getApprovalHandler handles the get create bucket/object approval request.
@@ -33,7 +38,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		approvalMsg          []byte
 		createBucketApproval = storagetypes.MsgCreateBucket{}
 		createObjectApproval = storagetypes.MsgCreateObject{}
-		authorized           bool
+		authenticated        bool
 		approved             bool
 	)
 	defer func() {
@@ -76,17 +81,17 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if reqCtx.NeedVerifyAuthorizer() {
-			startVerifyAuthorize := time.Now()
-			authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(
+		if reqCtx.NeedVerifyAuthentication() {
+			startVerifyAuthentication := time.Now()
+			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 				reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
 				reqCtx.Account(), createBucketApproval.GetBucketName(), "")
-			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthorize).Seconds())
+			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthentication).Seconds())
 			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
 			}
-			if !authorized {
+			if !authenticated {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
 				return
@@ -122,18 +127,18 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if reqCtx.NeedVerifyAuthorizer() {
-			startVerifyAuthorize := time.Now()
-			authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(
+		if reqCtx.NeedVerifyAuthentication() {
+			startVerifyAuthentication := time.Now()
+			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 				reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
 				reqCtx.Account(), createObjectApproval.GetBucketName(),
 				createObjectApproval.GetObjectName())
-			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthorize).Seconds())
+			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthentication).Seconds())
 			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
 			}
-			if !authorized {
+			if !authenticated {
 				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
 				err = ErrNoPermission
 				return
@@ -169,13 +174,14 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 // can verify the info whether are correct by comparing with the greenfield info.
 func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtx     *RequestContext
-		authorized bool
-		integrity  []byte
-		checksums  [][]byte
-		data       []byte
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		integrity     []byte
+		checksums     [][]byte
+		data          []byte
 	)
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -186,6 +192,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+		metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_total_time").Observe(time.Since(startTime).Seconds())
 	}()
 
 	reqCtx, err = NewRequestContext(r, g)
@@ -199,8 +206,11 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		err = ErrInvalidHeader
 		return
 	}
+
+	getObjectTime := time.Now()
 	objectInfo, err := g.baseApp.Consensus().QueryObjectInfoByID(reqCtx.Context(),
 		reqCtx.request.Header.Get(GnfdObjectIDHeader))
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_object_time").Observe(time.Since(getObjectTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		if strings.Contains(err.Error(), "No such object") {
@@ -210,22 +220,26 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		}
 		return
 	}
-	if reqCtx.NeedVerifyAuthorizer() {
-		authorized, err = g.baseApp.GfSpClient().VerifyAuthorize(reqCtx.Context(),
+	if reqCtx.NeedVerifyAuthentication() {
+		authTime := time.Now()
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetChallengePieceInfo, reqCtx.Account(), objectInfo.GetBucketName(),
 			objectInfo.GetObjectName())
+		metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_auth_time").Observe(time.Since(authTime).Seconds())
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 			return
 		}
-		if !authorized {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "failed to get challenge info due to no permission")
 			err = ErrNoPermission
 			return
 		}
 	}
 
+	getBucketTime := time.Now()
 	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_bucket_time").Observe(time.Since(getBucketTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensus
@@ -245,8 +259,10 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		err = ErrInvalidHeader
 		return
 	}
+	getParamTime := time.Now()
 	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(
 		reqCtx.Context(), objectInfo.GetCreateAt())
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_param_time").Observe(time.Since(getParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
 		return
@@ -264,7 +280,9 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	task.InitChallengePieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task), reqCtx.Account(),
 		redundancyIdx, segmentIdx, g.baseApp.TaskTimeout(task, pieceSize), g.baseApp.TaskMaxRetry(task))
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
+	getChallengeInfoTime := time.Now()
 	integrity, checksums, data, err = g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_info_time").Observe(time.Since(getChallengeInfoTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get challenge info", "error", err)
 		return
@@ -291,6 +309,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		currentHeight uint64
 		approval      = gfsptask.GfSpReplicatePieceApprovalTask{}
 	)
+	receivePieceStartTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -301,6 +320,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetHttpCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_total_time").Observe(time.Since(receivePieceStartTime).Seconds())
 	}()
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask
@@ -320,18 +340,23 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrDecodeMsg
 		return
 	}
-	if approval.GetApprovedSpOperatorAddress() != g.baseApp.OperateAddress() {
+	if approval.GetApprovedSpOperatorAddress() != g.baseApp.OperatorAddress() {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify replicate piece approval, sp mismatch")
 		err = ErrMismatchSp
 		return
 	}
-	err = p2pnode.VerifySignature(g.baseApp.OperateAddress(), approval.GetSignBytes(), approval.GetApprovedSignature())
+	verifySignatureTime := time.Now()
+	err = p2pnode.VerifySignature(g.baseApp.OperatorAddress(), approval.GetSignBytes(), approval.GetApprovedSignature())
+	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_verify_approval_time").Observe(time.Since(verifySignatureTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify replicate piece approval signature")
 		err = ErrSignature
 		return
 	}
+	getBlockHeightTime := time.Now()
+
 	currentHeight, err = g.baseApp.Consensus().CurrentHeight(reqCtx.Context())
+	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_get_block_height_time").Observe(time.Since(getBlockHeightTime).Seconds())
 	if err != nil {
 		// ignore the system's inner error,let the request go
 		log.CtxErrorw(reqCtx.Context(), "failed to get current block height")
@@ -341,7 +366,9 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	decodeTime := time.Now()
 	receiveMsg, err = hex.DecodeString(r.Header.Get(GnfdReceiveMsgHeader))
+	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_decode_task_time").Observe(time.Since(decodeTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse receive header",
 			"receive", r.Header.Get(GnfdReceiveMsgHeader))
@@ -363,20 +390,26 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidHeader
 		return
 	}
+	readDataTime := time.Now()
 	data, err = io.ReadAll(r.Body)
+	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_read_piece_time").Observe(time.Since(readDataTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to read replicate piece data", "error", err)
 		err = ErrExceptionStream
 		return
 	}
 	if receiveTask.GetPieceIdx() >= 0 {
+		handlePieceTime := time.Now()
 		err = g.baseApp.GfSpClient().ReplicatePiece(reqCtx.Context(), &receiveTask, data)
+		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_receive_data_time").Observe(time.Since(handlePieceTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to receive piece", "error", err)
 			return
 		}
 	} else {
+		donePieceTime := time.Now()
 		integrity, signature, err = g.baseApp.GfSpClient().DoneReplicatePiece(reqCtx.Context(), &receiveTask)
+		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_done_time").Observe(time.Since(donePieceTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to done receive piece", "error", err)
 			return
@@ -385,4 +418,224 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(GnfdIntegrityHashSignatureHeader, hex.EncodeToString(signature))
 	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to replicate piece")
+}
+
+// recoverPrimaryHandler handles the query for recovery request from secondary SP or primary SP.
+// if it is used to recovery primary SP and the handler SP is the corresponding secondary,
+// it returns the EC piece data stored in the secondary SP for the requested object.
+// if it is used to recovery secondary SP and the handler is the corresponding primary SP,
+// it directly returns the EC piece data of the secondary SP.
+func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		reqCtx      *RequestContext
+		recoveryMsg []byte
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	// ignore the error, because the recovery request only between SPs, the request
+	// verification is by signature of the RecoveryTask
+	reqCtx, newErr := NewRequestContext(r, g)
+	if newErr != nil {
+		log.CtxDebugw(context.Background(), "recoverPrimaryHandler new reqCtx error", "error", newErr)
+	}
+
+	recoveryMsg, err = hex.DecodeString(r.Header.Get(GnfdRecoveryMsgHeader))
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse recovery header",
+			"header", r.Header.Get(GnfdRecoveryMsgHeader))
+		err = ErrDecodeMsg
+		return
+	}
+
+	recoveryTask := gfsptask.GfSpRecoverPieceTask{}
+	err = json.Unmarshal(recoveryMsg, &recoveryTask)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal receive header",
+			"receive", r.Header.Get(GnfdReceiveMsgHeader))
+		err = ErrDecodeMsg
+		return
+	}
+
+	// check signature consistent
+	taskSignature := recoveryTask.GetSignature()
+	signatureAddr, pk, err := RecoverAddr(crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address", "error:", err)
+		err = ErrSignature
+		return
+	}
+
+	if !secp256k1.VerifySignature(pk.Bytes(), crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature[:len(taskSignature)-1]) {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task signature")
+		err = ErrSignature
+		return
+	}
+
+	// handle request from primary SP to recovery segment {
+	objectInfo := recoveryTask.GetObjectInfo()
+	if objectInfo == nil {
+		log.CtxErrorw(reqCtx.Context(), "recovery task params error")
+		err = ErrInvalidHeader
+		return
+	}
+
+	if objectInfo.RedundancyType != storagetypes.REDUNDANCY_EC_TYPE {
+		log.CtxErrorw(reqCtx.Context(), "recovery redundancy type only support EC")
+		err = ErrRecoveryRedundancyType
+		return
+	}
+
+	chainObjectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp, objectInfo.ObjectName, objectInfo.BucketName)
+	if err != nil {
+		err = ErrInvalidHeader
+		return
+	}
+
+	redundancyIdx := recoveryTask.EcIdx
+	maxRedundancyIndex := int32(params.GetRedundantParityChunkNum()+params.GetRedundantDataChunkNum()) - 1
+	if redundancyIdx < int32(RecoveryMinEcIndex) || redundancyIdx > maxRedundancyIndex {
+		err = executor.ErrRecoveryPieceIndex
+		return
+	}
+
+	var pieceData []byte
+	if redundancyIdx >= 0 {
+		// recovery secondary SP
+		pieceData, err = g.recoverECPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
+		if err != nil {
+			return
+		}
+	} else {
+		// recovery primary SP
+		pieceData, err = g.recoverSegmentPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
+		if err != nil {
+			return
+		}
+	}
+
+	w.Write(pieceData)
+	log.CtxDebugw(reqCtx.Context(), "succeed to get one ec piece data")
+}
+
+func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
+	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
+	var err error
+	// the primary sp of the object should be consistent with task signature
+	if bucketInfo.PrimarySpAddress != signatureAddr.String() {
+		log.CtxErrorw(ctx, "recovery request not come from primary sp")
+	}
+
+	isOneOfSecondary := false
+	handlerAddr := g.baseApp.OperatorAddress()
+	var ECIndex int
+	for idx, spAddr := range objectInfo.SecondarySpAddresses {
+		if spAddr == handlerAddr {
+			isOneOfSecondary = true
+			ECIndex = idx
+		}
+	}
+	// if the handler SP is not one of the secondary SP of the task object, return err
+	if !isOneOfSecondary {
+		err = ErrRecoverySP
+		return nil, err
+	}
+
+	// init download piece task, get piece data and return the data
+	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
+		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
+	ECPieceKey := g.baseApp.PieceOp().ECPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(), recoveryTask.GetSegmentIdx(), uint32(ECIndex))
+
+	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
+	// no need to check quota when recovering primary SP segment data
+	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
+		false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
+		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
+
+	pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to download piece", "error", err)
+		return nil, downloader.ErrPieceStore
+	}
+
+	return pieceData, nil
+}
+
+func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
+	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
+	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
+		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
+
+	// if the handler is not the primary SP of the object, return error
+	if bucketInfo.PrimarySpAddress != g.baseApp.OperatorAddress() {
+		log.CtxErrorw(ctx, "it is not the right the primary SP to handle secondary SP recovery", "expected primary Sp:", bucketInfo.PrimarySpAddress)
+		return nil, ErrRecoverySP
+	}
+
+	// if the sender is not one of the secondarySp,return err
+	isOneOfSecondary := false
+	var ECIndex int32
+	for idx, spAddr := range objectInfo.SecondarySpAddresses {
+		if spAddr == signatureAddr.String() {
+			isOneOfSecondary = true
+			ECIndex = int32(idx)
+		}
+	}
+	redundancyIdx := recoveryTask.EcIdx
+	// if the handler SP is not one of the secondary SP of the task object, return err
+	if !isOneOfSecondary || ECIndex != recoveryTask.EcIdx {
+		return nil, ErrRecoverySP
+	}
+
+	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
+	segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(),
+		recoveryTask.GetSegmentIdx())
+
+	// if recovery data chunk, just download the data part of segment in primarySP
+	// no need to check quota when recovering primary SP or secondary SP data
+	if redundancyIdx < int32(params.GetRedundantDataChunkNum())-1 {
+		pieceOffset := int64(redundancyIdx) * ECPieceSize
+		pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
+			false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), segmentPieceKey, uint64(pieceOffset), uint64(ECPieceSize),
+			g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
+
+		pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to download piece", "error", err)
+			return nil, downloader.ErrPieceStore
+		}
+		return pieceData, nil
+	}
+
+	// if recovery parity chunk, need to download the total segment and ec encode it
+	segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(), params.GetMaxSegmentSize())
+	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
+		false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
+		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
+
+	segmentData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to download piece", "error", err)
+		return nil, executor.ErrPieceStore
+	}
+
+	ecData, err := redundancy.EncodeRawSegment(segmentData,
+		int(params.GetRedundantDataChunkNum()),
+		int(params.GetRedundantParityChunkNum()))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to ec encode data when recovering secondary SP", "error", err)
+		return nil, err
+	}
+
+	return ecData[redundancyIdx], nil
 }

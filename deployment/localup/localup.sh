@@ -11,7 +11,7 @@ gnfd_workspace=${workspace}/../../greenfield/deployment/localup/
 #########################
 # the command line help #
 #########################
-display_help() {
+function display_help() {
     echo "Usage: $0 [option...] {help|generate|reset|start|stop|print}" >&2
     echo
     echo "   --help           display help info"
@@ -43,7 +43,7 @@ function generate_sp_db_info() {
   for ((i=0;i<${SP_NUM};i++));do
     mkdir -p ${workspace}/${SP_DEPLOY_DIR}/sp${i}
     cp -rf ${sp_bin} ${workspace}/${SP_DEPLOY_DIR}/sp${i}/${sp_bin_name}${i}
-    cd ${workspace}/${SP_DEPLOY_DIR}/sp${i}/
+    cd ${workspace}/${SP_DEPLOY_DIR}/sp${i}/ || exit 1
     ./${sp_bin_name}${i}  config.dump
 
     # generate sp info
@@ -83,15 +83,15 @@ function generate_sp_db_info() {
 #############################################################
 # make sp config.toml according to env.info/db.info/sp.info #
 #############################################################
-make_config() {
+function make_config() {
   index=0
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
     cur_port=$((SP_START_PORT+1000*$index))
-    cd ${sp_dir}
+    cd ${sp_dir} || exit 1
     source db.info
     source sp.info
     # app
-    sed -i -e "s/GrpcAddress = '.*'/GrpcAddress = '127.0.0.1:${cur_port}'/g" config.toml
+    sed -i -e "s/GRPCAddress = '.*'/GRPCAddress = '127.0.0.1:${cur_port}'/g" config.toml
 
     # db
     sed -i -e "s/User = '.*'/User = '${USER}'/g" config.toml
@@ -104,7 +104,7 @@ make_config() {
     sed -i -e "s/ChainAddress = \[.*\]/ChainAddress = \['http:\/\/${CHAIN_HTTP_ENDPOINT}'\]/g" config.toml
 
     # sp account
-    sed -i -e "s/SpOperateAddress = '.*'/SpOperateAddress = '${OPERATOR_ADDRESS}'/g" config.toml
+    sed -i -e "s/SpOperatorAddress = '.*'/SpOperatorAddress = '${OPERATOR_ADDRESS}'/g" config.toml
     sed -i -e "s/OperatorPrivateKey = '.*'/OperatorPrivateKey = '${OPERATOR_PRIVATE_KEY}'/g" config.toml
     sed -i -e "s/FundingPrivateKey = '.*'/FundingPrivateKey = '${FUNDING_PRIVATE_KEY}'/g" config.toml
     sed -i -e "s/SealPrivateKey = '.*'/SealPrivateKey = '${SEAL_PRIVATE_KEY}'/g" config.toml
@@ -112,8 +112,8 @@ make_config() {
     sed -i -e "s/GcPrivateKey = '.*'/GcPrivateKey = '${GC_PRIVATE_KEY}'/g" config.toml
 
     # gateway
-    sed -i -e "s/Domain = '.*'/Domain = 'gnfd.test-sp.com'/g" config.toml
-    sed -i -e "s/^HttpAddress = '.*'/HttpAddress = '${SP_ENDPOINT}'/g" config.toml
+    sed -i -e "s/DomainName = '.*'/DomainName = 'gnfd.test-sp.com'/g" config.toml
+    sed -i -e "s/^HTTPAddress = '.*'/HTTPAddress = '${SP_ENDPOINT}'/g" config.toml
 
     # metadata
     sed -i -e "s/IsMasterDB = .*/IsMasterDB = true/g" config.toml
@@ -134,9 +134,9 @@ make_config() {
     sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
     sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
     metrics_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 367))
-    sed -i -e "s/MetricsHttpAddress = '.*'/MetricsHttpAddress = '${metrics_address}'/g" config.toml
+    sed -i -e "s/MetricsHTTPAddress = '.*'/MetricsHTTPAddress = '${metrics_address}'/g" config.toml
     pprof_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 368))
-    sed -i -e "s/PProfHttpAddress = '.*'/PProfHttpAddress = '${pprof_address}'/g" config.toml
+    sed -i -e "s/PProfHTTPAddress = '.*'/PProfHTTPAddress = '${pprof_address}'/g" config.toml
 
     # blocksyncer
     sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\]/g" config.toml
@@ -151,62 +151,13 @@ make_config() {
   done
 }
 
-#############################################################
-# make integration test config.toml according sp.json       #
-#############################################################
-make_integration_test_config() {
-  index=0
-  sp_json_file=$1
-  file='test/e2e/localup_env/integration_config/config.yml'
-
-  validator_private_key=("$(echo "y" | $gnfd_bin keys export validator0 --unarmored-hex --unsafe --keyring-backend test --home ${gnfd_workspace}/.local/validator0)")
-  echo "validator0 private key validator_private_key"
-  sed -i -e "s/20f92afe113b90e1faa241969e957ac091d80b920f84ffda80fc9d0588f62906/${validator_private_key}/g" $file
-
-  echo "SPs:" >> $file
-  sp0_opk=$(jq -r ".sp0.OperatorPrivateKey" ${sp_json_file})
-  sp0_fpk=$(jq -r ".sp0.FundingPrivateKey" ${sp_json_file})
-  sp0_spk=$(jq -r ".sp0.SealPrivateKey" ${sp_json_file})
-  sp0_apk=$(jq -r ".sp0.ApprovalPrivateKey" ${sp_json_file})
-  sp1_opk=$(jq -r ".sp1.OperatorPrivateKey" ${sp_json_file})
-  sp1_fpk=$(jq -r ".sp1.FundingPrivateKey" ${sp_json_file})
-  sp1_spk=$(jq -r ".sp1.SealPrivateKey" ${sp_json_file})
-  sp1_apk=$(jq -r ".sp1.ApprovalPrivateKey" ${sp_json_file})
-
-  sp0_op_addr=$(jq -r ".sp0.OperatorAddress" ${sp_json_file})
-  sp1_op_addr=$(jq -r ".sp1.OperatorAddress" ${sp_json_file})
-  sp2_op_addr=$(jq -r ".sp2.OperatorAddress" ${sp_json_file})
-  sp3_op_addr=$(jq -r ".sp3.OperatorAddress" ${sp_json_file})
-  sp4_op_addr=$(jq -r ".sp4.OperatorAddress" ${sp_json_file})
-  sp5_op_addr=$(jq -r ".sp5.OperatorAddress" ${sp_json_file})
-  sp6_op_addr=$(jq -r ".sp6.OperatorAddress" ${sp_json_file})
-
-  echo "  - OperatorSecret: "${sp0_opk}"" >> $file
-  echo "    FundingSecret: "${sp0_fpk}"" >> $file
-  echo "    ApprovalSecret: "${sp0_spk}"" >> $file
-  echo "    SealSecret: "${sp0_apk}"" >> $file
-  echo "  - OperatorSecret: "${sp1_opk}"" >> $file
-  echo "    FundingSecret: "${sp1_fpk}"" >> $file
-  echo "    ApprovalSecret: "${sp1_spk}"" >> $file
-  echo "    SealSecret: "${sp1_apk}"" >> $file
-  echo "SPAddr:" >> $file
-  echo "  - $sp0_op_addr" >> $file
-  echo "  - $sp1_op_addr" >> $file
-  echo "  - $sp2_op_addr" >> $file
-  echo "  - $sp3_op_addr" >> $file
-  echo "  - $sp4_op_addr" >> $file
-  echo "  - $sp5_op_addr" >> $file
-  echo "  - $sp6_op_addr" >> $file
-  cat $file
-}
-
 #############
 # start sps #
 #############
-start_sp() {
+function start_sp() {
   index=0
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
-    cd ${sp_dir}
+    cd ${sp_dir} || exit 1
     nohup ./${sp_bin_name}${index} --config config.toml </dev/null >log.txt 2>&1&
     echo "succeed to start sp in "${sp_dir}
     cd - >/dev/null
@@ -218,7 +169,7 @@ start_sp() {
 ############
 # stop sps #
 ############
-stop_sp() {
+function stop_sp() {
   kill -9 $(pgrep -f ${sp_bin_name}) >/dev/null 2>&1
   echo "succeed to stop storage providers"
 }
@@ -226,9 +177,9 @@ stop_sp() {
 #############################################
 # drop databases and recreate new databases #
 #############################################
-reset_sql_db() {
+function reset_sql_db() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
-    cd ${sp_dir}
+    cd ${sp_dir} || exit 1
     source db.info
     hostname=$(echo ${ADDRESS} | cut -d : -f 1)
     port=$(echo ${ADDRESS} | cut -d : -f 2)
@@ -242,9 +193,9 @@ reset_sql_db() {
 ##########################
 # clean piece-store data #
 ##########################
-reset_piece_store() {
+function reset_piece_store() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
-    cd ${sp_dir}
+    cd ${sp_dir} || exit 1
     rm -rf ./data
     echo "succeed to reset piece store in "${sp_dir}
     cd - >/dev/null
@@ -254,7 +205,7 @@ reset_piece_store() {
 ##################
 # print work dir #
 ##################
-print_work_dir() {
+function print_work_dir() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
     echo "  "${sp_dir}
   done
@@ -282,7 +233,7 @@ function clean_local_sp_env() {
 #############
 # reset sps #
 #############
-reset_sp() {
+function reset_sp() {
   stop_sp
   reset_sql_db
   reset_piece_store
@@ -290,7 +241,7 @@ reset_sp() {
   make_config
 }
 
-main() {
+function main() {
   CMD=$1
   case ${CMD} in
   --generate)
@@ -311,9 +262,6 @@ main() {
     ;;
   --print)
     print_work_dir
-    ;;
-  --gene2e)
-    make_integration_test_config $2
     ;;
   --help|*)
     display_help

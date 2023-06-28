@@ -21,10 +21,10 @@ const (
 )
 
 type GfSpBaseApp struct {
-	appID          string
-	grpcAddress    string
-	operateAddress string
-	chainID        string
+	appID           string
+	grpcAddress     string
+	operatorAddress string
+	chainID         string
 
 	server *grpc.Server
 	client *gfspclient.GfSpClient
@@ -38,18 +38,18 @@ type GfSpBaseApp struct {
 	rcmgr        corercmgr.ResourceManager
 	chain        consensus.Consensus
 
-	approver   module.Approver
-	authorizer module.Authorizer
-	downloader module.Downloader
-	executor   module.TaskExecutor
-	gater      module.Modular
-	manager    module.Manager
-	p2p        module.P2P
-	receiver   module.Receiver
-	signer     module.Signer
-	uploader   module.Uploader
-	metrics    module.Modular
-	pprof      module.Modular
+	approver      module.Approver
+	authenticator module.Authenticator
+	downloader    module.Downloader
+	executor      module.TaskExecutor
+	gater         module.Modular
+	manager       module.Manager
+	p2p           module.P2P
+	receiver      module.Receiver
+	signer        module.Signer
+	uploader      module.Uploader
+	metrics       module.Modular
+	pprof         module.Modular
 
 	appCtx    context.Context
 	appCancel context.CancelFunc
@@ -71,6 +71,7 @@ type GfSpBaseApp struct {
 	gcObjectRetry       int64
 	gcZombieRetry       int64
 	gcMetaRetry         int64
+	recoveryRetry       int64
 }
 
 // AppID returns the GfSpBaseApp ID, the default value is prefix(gfsp) add
@@ -99,9 +100,9 @@ func (g *GfSpBaseApp) Consensus() consensus.Consensus {
 	return g.chain
 }
 
-// OperateAddress returns the sp operator address.
-func (g *GfSpBaseApp) OperateAddress() string {
-	return g.operateAddress
+// OperatorAddress returns the sp operator address.
+func (g *GfSpBaseApp) OperatorAddress() string {
+	return g.operatorAddress
 }
 
 // ChainID returns the chain ID used by this sp instance
@@ -147,7 +148,7 @@ func (g *GfSpBaseApp) ResourceManager() corercmgr.ResourceManager {
 
 // Start the GfSpBaseApp and blocks the progress until signal.
 func (g *GfSpBaseApp) Start(ctx context.Context) error {
-	err := g.StartRpcServer(ctx)
+	err := g.StartRPCServer(ctx)
 	if err != nil {
 		return err
 	}
@@ -160,7 +161,7 @@ func (g *GfSpBaseApp) Start(ctx context.Context) error {
 
 // close recycles the GfSpBaseApp resource on the stop time.
 func (g *GfSpBaseApp) close(ctx context.Context) error {
-	g.StopRpcServer(ctx)
+	g.StopRPCServer(ctx)
 	g.GfSpClient().Close()
 	g.rcmgr.Close()
 	g.chain.Close()

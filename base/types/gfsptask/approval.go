@@ -26,7 +26,8 @@ func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(bucket *stor
 }
 
 func (m *GfSpCreateBucketApprovalTask) Key() coretask.TKey {
-	return GfSpCreateBucketApprovalTaskKey(m.GetCreateBucketInfo().GetBucketName())
+	return GfSpCreateBucketApprovalTaskKey(m.GetCreateBucketInfo().GetBucketName(),
+		int32(m.GetCreateBucketInfo().GetVisibility()))
 }
 
 func (m *GfSpCreateBucketApprovalTask) Type() coretask.TType {
@@ -151,7 +152,8 @@ func (m *GfSpCreateObjectApprovalTask) InitApprovalCreateObjectTask(
 func (m *GfSpCreateObjectApprovalTask) Key() coretask.TKey {
 	return GfSpCreateObjectApprovalTaskKey(
 		m.GetCreateObjectInfo().GetBucketName(),
-		m.GetCreateObjectInfo().GetObjectName())
+		m.GetCreateObjectInfo().GetObjectName(),
+		int32(m.GetCreateObjectInfo().GetVisibility()))
 }
 
 func (m *GfSpCreateObjectApprovalTask) Type() coretask.TType {

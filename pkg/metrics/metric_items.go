@@ -16,6 +16,10 @@ var MetricsItems = []prometheus.Collector{
 	// Perf workflow category
 	PerfUploadTimeHistogram,
 	PerfGetApprovalTimeHistogram,
+	PerfAuthTimeHistogram,
+	PerfReceivePieceTimeHistogram,
+	PerfGetObjectTimeHistogram,
+	PerfChallengeTimeHistogram,
 	// TaskQueue metrics category
 	QueueSizeGauge,
 	QueueCapGauge,
@@ -106,6 +110,26 @@ var (
 		Help:    "Track get approval workflow costs.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"perf_get_approval_time"})
+	PerfAuthTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_auth_time",
+		Help:    "Track auth workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_auth_time"})
+	PerfReceivePieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_receive_time",
+		Help:    "Track receive piece workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_receive_time"})
+	PerfGetObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_get_object_time",
+		Help:    "Track get object workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_get_object_time"})
+	PerfChallengeTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "perf_challenge_piece_time",
+		Help:    "Track challenge piece workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"perf_challenge_piece_time"})
 
 	// task queue metrics
 	QueueSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -232,6 +256,11 @@ var (
 		Help:    "Track the time of replicate piece to secondary.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"replicate_piece_time"})
+	RecoverPieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "recovery_piece_time",
+		Help:    "Track the time of recovery piece",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"recovery_piece_time"})
 	ExecutorReplicatePieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "replicate_task_count",
 		Help: "Track replicate task number.",
@@ -256,6 +285,10 @@ var (
 		Name: "gc_meta_task_count",
 		Help: "Track gc meta task number.",
 	}, []string{"gc_meta_task_count"})
+	ExecutorRecoveryTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "recover_piece_task_count",
+		Help: "Track recovery task number.",
+	}, []string{"recovery__task_count"})
 
 	// manager mertics
 	UploadObjectTaskTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -318,6 +351,10 @@ var (
 		Name: "dispatch_gc_object_task",
 		Help: "Track gc object task total number",
 	}, []string{"dispatch_gc_object_task"})
+	DispatchRecoverPieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "dispatch_recovery_piece_task",
+		Help: "Track recovery task total number",
+	}, []string{"dispatch_recovery_piece_task"})
 
 	// signer metrics
 	SealObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
