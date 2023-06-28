@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -19,8 +20,6 @@ import (
 const (
 	// ReplicateObjectPiecePath defines replicate-object path style
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
-	// MigrateObjectPath defines migrate-data path which is used in SP exiting case
-	MigrateObjectPath = "greenfield/admin/v1/migrate-data"
 	// GnfdReplicatePieceApprovalHeader defines secondary approved msg for replicating piece
 	GnfdReplicatePieceApprovalHeader = "X-Gnfd-Replicate-Piece-Approval-Msg"
 	// GnfdReceiveMsgHeader defines receive piece data meta
@@ -29,14 +28,16 @@ const (
 	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
+	// RecoveryObjectPiecePath defines recovery-object path style
+	RecoveryObjectPiecePath = "/greenfield/recovery/v1/get-piece"
+	// GnfdRecoveryMsgHeader defines receive piece data meta
+	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
+	// MigratePiecePath defines migrate piece path which is used in SP exiting case
+	MigratePiecePath = "greenfield/admin/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
 	// GnfdIsPrimaryHeader defines response header which is used to indicate migrated data whether belongs to PrimarySP
 	GnfdIsPrimaryHeader = "X-Gnfd-Is-Primary"
-	//RecoveryObjectPiecePath defines recovery-object path style
-	RecoveryObjectPiecePath = "/greenfield/recovery/v1/get-piece"
-	// GnfdRecoveryMsgHeader defines receive piece data meta
-	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
@@ -124,25 +125,28 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	return signature, nil
 }
 
-func (s *GfSpClient) MigratePieceBetweenSPs(ctx context.Context, endpoint string, task coretask.MigratePieceTask) ([]byte, error) {
-	req, err := http.NewRequest(http.MethodGet, endpoint+MigrateObjectPath, nil)
+func (s *GfSpClient) MigratePieceBetweenSPs(ctx context.Context, task coretask.MigratePieceTask, endpoint string,
+	isPrimary bool) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodGet, endpoint+MigratePiecePath, nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
+
 	migratePieceTask := task.(*gfsptask.GfSpMigratePieceTask)
 	msg, err := json.Marshal(migratePieceTask)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add(GnfdMigratePieceMsgHeader, hex.EncodeToString(msg))
-	req.Header.Add(GnfdIsPrimaryHeader, "true")
+	req.Header.Add(GnfdIsPrimaryHeader, strconv.FormatBool(isPrimary))
 	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		log.Errorw("failed to send requests to migrate pieces", "error", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to migrate pieces, StatusCode(%d), Endpoint(%s)", resp.StatusCode, endpoint)
 	}

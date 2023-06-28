@@ -44,6 +44,7 @@ type ExecuteModular struct {
 	doingGCZombiePieceTaskCnt  int64
 	doingGCGCMetaTaskCnt       int64
 	doingRecoveryPieceTaskCnt  int64
+	doingMigratePieceTaskCnt   int64
 }
 
 func (e *ExecuteModular) Name() string {
@@ -190,6 +191,12 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
 		e.HandleRecoverPieceTask(ctx, t)
+	case *gfsptask.GfSpMigratePieceTask:
+		metrics.ExecutorMigratePieceTaskCounter.WithLabelValues(e.Name()).Inc()
+		atomic.AddInt64(&e.doingMigratePieceTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingMigratePieceTaskCnt, -1)
+		// TODO: this function should be called by Migrate?
+		_ = e.HandleMigratePieceTask(ctx, t, "")
 	default:
 		log.CtxErrorw(ctx, "unsupported task type")
 	}

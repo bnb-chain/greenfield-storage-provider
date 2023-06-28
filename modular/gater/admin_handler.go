@@ -539,19 +539,19 @@ func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *stora
 	isOneOfSecondary := false
 	ECIndex := 0
 	// the primary sp of the object should be consistent with task signature
-	//if bucketInfo.PrimarySpAddress != signatureAddr.String() {
+	// if bucketInfo.PrimarySpAddress != signatureAddr.String() {
 	//	log.CtxErrorw(ctx, "recovery request not come from primary sp")
-	//}
+	// }
 	//
-	//isOneOfSecondary := false
-	//handlerAddr := g.baseApp.OperatorAddress()
-	//var ECIndex int
-	//for idx, spAddr := range objectInfo.SecondarySpAddresses {
+	// isOneOfSecondary := false
+	// handlerAddr := g.baseApp.OperatorAddress()
+	// var ECIndex int
+	// for idx, spAddr := range objectInfo.SecondarySpAddresses {
 	//	if spAddr == handlerAddr {
 	//		isOneOfSecondary = true
 	//		ECIndex = idx
 	//	}
-	//}
+	// }
 	// if the handler SP is not one of the secondary SP of the task object, return err
 	if !isOneOfSecondary {
 		err = ErrRecoverySP
@@ -568,7 +568,7 @@ func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *stora
 	// TODO: refine it
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
 		false, "", uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
-		//false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
+		// false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 	pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
@@ -589,20 +589,20 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 	isOneOfSecondary := false
 	ECIndex := int32(0)
 	// if the handler is not the primary SP of the object, return error
-	//if bucketInfo.PrimarySpAddress != g.baseApp.OperatorAddress() {
+	// if bucketInfo.PrimarySpAddress != g.baseApp.OperatorAddress() {
 	//	log.CtxErrorw(ctx, "it is not the right the primary SP to handle secondary SP recovery", "expected primary Sp:", bucketInfo.PrimarySpAddress)
 	//	return nil, ErrRecoverySP
-	//}
+	// }
 	//
-	//// if the sender is not one of the secondarySp,return err
-	//isOneOfSecondary := false
-	//var ECIndex int32
-	//for idx, spAddr := range objectInfo.SecondarySpAddresses {
+	// // if the sender is not one of the secondarySp,return err
+	// isOneOfSecondary := false
+	// var ECIndex int32
+	// for idx, spAddr := range objectInfo.SecondarySpAddresses {
 	//	if spAddr == signatureAddr.String() {
 	//		isOneOfSecondary = true
 	//		ECIndex = int32(idx)
 	//	}
-	//}
+	// }
 	redundancyIdx := recoveryTask.EcIdx
 	// if the handler SP is not one of the secondary SP of the task object, return err
 	if !isOneOfSecondary || ECIndex != recoveryTask.EcIdx {
@@ -620,7 +620,7 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 		pieceOffset := int64(redundancyIdx) * ECPieceSize
 		pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
 			false, "", uint64(ECPieceSize), segmentPieceKey, uint64(pieceOffset), uint64(ECPieceSize),
-			//false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), segmentPieceKey, uint64(pieceOffset), uint64(ECPieceSize),
+			// false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), segmentPieceKey, uint64(pieceOffset), uint64(ECPieceSize),
 			g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 		pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
@@ -658,11 +658,11 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 
 const MigrateMinEcIndex = -1
 
-// transferObjectHandler handles the transfer data request between SPs which is used in SP exiting case.
+// migratePieceHandler handles the migrate piece request between SPs which is used in SP exiting case.
 // First, gateway should verify Authorization header to ensure the requests are from correct SPs.
 // Second, retrieve and get data from downloader module including: PrimarySP and SecondarySP pieces
 // Third, transfer data to client which is a selected SP.
-func (g *GateModular) transferObjectHandler(w http.ResponseWriter, r *http.Request) {
+func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error
 		reqCtx     *RequestContext

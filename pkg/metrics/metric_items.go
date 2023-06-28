@@ -288,7 +288,11 @@ var (
 	ExecutorRecoveryTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "recover_piece_task_count",
 		Help: "Track recovery task number.",
-	}, []string{"recovery__task_count"})
+	}, []string{"recovery_task_count"})
+	ExecutorMigratePieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "migrate_piece_task_count",
+		Help: "Track migrate piece task number",
+	}, []string{"migrate_piece_task_count"})
 
 	// manager mertics
 	UploadObjectTaskTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{

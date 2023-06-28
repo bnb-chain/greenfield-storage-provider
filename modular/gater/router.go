@@ -68,7 +68,10 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// replicate piece to receiver
 	router.Path(ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)
+	// data recovery
 	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.recoverPrimaryHandler)
+	// migrate pieces between SPs which is used for SP exiting case
+	router.Path(MigratePiecePath).Name(migratePieceRouterName).Methods(http.MethodGet).HandlerFunc(g.migratePieceHandler)
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
 		HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
@@ -145,12 +148,6 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Name(getUserBucketsRouterName).
 		Methods(http.MethodGet).
 		HandlerFunc(g.getUserBucketsHandler)
-
-	// migrate pieces between SPs which is used for SP exiting case
-	router.Path(MigratePiecePath).
-		Name(migratePieceRouterName).
-		Methods(http.MethodGet).
-		HandlerFunc(g.transferObjectHandler)
 
 	// bucket list router, path style
 	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)
