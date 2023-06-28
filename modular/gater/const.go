@@ -164,4 +164,5 @@ const (
 	RecoveryCheckInterval   = 2
 	RecoveryMinMilliseconds = 500
 	RecoveryMinEcIndex      = -1
+	ErrPieceStoreInnerCode  = 35101
 )
