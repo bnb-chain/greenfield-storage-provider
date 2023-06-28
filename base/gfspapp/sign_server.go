@@ -23,7 +23,6 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 	}
 	var (
 		signature []byte
-		integrity []byte
 		err       error
 	)
 	switch t := req.GetRequest().(type) {
@@ -52,10 +51,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to discontinue bucket", "error", err)
 		}
-	case *gfspserver.GfSpSignRequest_SignIntegrity:
-		signature, integrity, err = g.signer.SignIntegrityHash(ctx, t.SignIntegrity.ObjectId, t.SignIntegrity.GlobalVirtualGroupId, t.SignIntegrity.Checksums)
+	case *gfspserver.GfSpSignRequest_SignSecondaryBls:
+		signature, err = g.signer.SignSecondaryBls(ctx, t.SignSecondaryBls.ObjectId,
+			t.SignSecondaryBls.GlobalVirtualGroupId, t.SignSecondaryBls.Checksums)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign integrity hash", "error", err)
+			log.CtxErrorw(ctx, "failed to sign secondary bls", "error", err)
 		}
 	case *gfspserver.GfSpSignRequest_PingMsg:
 		signature, err = g.signer.SignP2PPingMsg(ctx, t.PingMsg)
@@ -80,19 +80,21 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			log.CtxErrorw(ctx, "failed to sign replicate piece task", "error", err)
 		}
 	case *gfspserver.GfSpSignRequest_CreateGlobalVirtualGroup:
-		// TODO: refine it.
 		err = g.signer.CreateGlobalVirtualGroup(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
 			PrimarySpAddress: g.operatorAddress,
 			FamilyId:         t.CreateGlobalVirtualGroup.GetVirtualGroupFamilyId(),
-			SecondarySpIds:   t.CreateGlobalVirtualGroup.SecondarySpIds,
+			SecondarySpIds:   t.CreateGlobalVirtualGroup.GetSecondarySpIds(),
 			Deposit:          *t.CreateGlobalVirtualGroup.GetDeposit(),
 		})
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "error", err)
 		}
+	case *gfspserver.GfSpSignRequest_GfspRecoverPieceTask:
+		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspRecoverPieceTask.Key().String())
+		log.CtxDebugw(ctx, "signing recovery task")
+		signature, err = g.signer.SignRecoveryPieceTask(ctx, t.GfspRecoverPieceTask)
 	}
 	return &gfspserver.GfSpSignResponse{
-		Err:           gfsperrors.MakeGfSpError(err),
-		Signature:     signature,
-		IntegrityHash: integrity}, nil
+		Err:       gfsperrors.MakeGfSpError(err),
+		Signature: signature}, nil
 }

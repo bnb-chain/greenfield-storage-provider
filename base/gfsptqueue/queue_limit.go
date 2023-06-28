@@ -167,6 +167,7 @@ func (t *GfSpTQueueWithLimit) topByLimit(limit corercmgr.Limit) coretask.Task {
 			delete(t.tasks, task.Key())
 		}
 	}()
+
 	for _, task := range t.tasks {
 		if t.gcFunc != nil {
 			if t.gcFunc(task) {
@@ -190,6 +191,9 @@ func (t *GfSpTQueueWithLimit) topByLimit(limit corercmgr.Limit) coretask.Task {
 	index := sort.Search(len(backupTasks), func(i int) bool { return backupTasks[i].GetCreateTime() > t.current })
 	if index == len(backupTasks) {
 		index = 0
+	}
+	if backupTasks[index] != nil {
+		t.current = backupTasks[index].GetCreateTime()
 	}
 	return backupTasks[index]
 }

@@ -42,12 +42,20 @@ func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreate
 func (*NullModular) HandleCreateBucketApprovalTask(context.Context, task.ApprovalCreateBucketTask) (bool, error) {
 	return false, ErrNilModular
 }
+func (*NullModular) PostCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) {}
+
+func (*NullModular) PreMigrateBucketApproval(context.Context, task.ApprovalMigrateBucketTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleMigrateBucketApprovalTask(context.Context, task.ApprovalMigrateBucketTask) (bool, error) {
+	return false, ErrNilModular
+}
+func (*NullModular) PostMigrateBucketApproval(context.Context, task.ApprovalMigrateBucketTask) {}
 
 func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateBucketTask) (uint32, error) {
 	return 0, ErrNilModular
 }
 
-func (*NullModular) PostCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) {}
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return ErrNilModular
 }
@@ -61,10 +69,22 @@ func (*NullModular) PreReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NullModular) HandleReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) (bool, error) {
 	return false, ErrNilModular
 }
+func (*NullModular) HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
+	return ErrNilModular
+}
 func (*NullModular) PostReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask) {}
 func (*NullModular) PreUploadObject(ctx context.Context, task task.UploadObjectTask) error {
 	return ErrNilModular
 }
+func (*NullModular) PreResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error {
+	return ErrNilModular
+}
+func (*NullModular) PostResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) {
+}
+
 func (*NullModular) HandleUploadObjectTask(ctx context.Context, task task.UploadObjectTask, stream io.Reader) error {
 	return nil
 }
@@ -79,6 +99,12 @@ func (*NullModular) HandleCreateUploadObjectTask(context.Context, task.UploadObj
 	return ErrNilModular
 }
 func (*NullModular) HandleDoneUploadObjectTask(context.Context, task.UploadObjectTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleCreateResumableUploadObjectTask(context.Context, task.ResumableUploadObjectTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleDoneResumableUploadObjectTask(context.Context, task.ResumableUploadObjectTask) error {
 	return ErrNilModular
 }
 func (*NullModular) HandleReplicatePieceTask(context.Context, task.ReplicatePieceTask) error {
@@ -185,8 +211,11 @@ func (*NilModular) SignReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NilModular) SignReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) SignIntegrityHash(ctx context.Context, objectID uint64, gvgid uint32, hash [][]byte) ([]byte, []byte, error) {
-	return nil, nil, ErrNilModular
+func (*NilModular) SignSecondaryBls(context.Context, uint64, uint32, [][]byte) ([]byte, error) {
+	return nil, ErrNilModular
+}
+func (*NilModular) SignRecoveryPieceTask(context.Context, task.RecoveryPieceTask) ([]byte, error) {
+	return nil, ErrNilModular
 }
 func (*NilModular) SignP2PPingMsg(context.Context, *gfspp2p.GfSpPing) ([]byte, error) {
 	return nil, ErrNilModular
@@ -225,6 +254,6 @@ func (*NullReceiveModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) 
 func (*NullReceiveModular) HandleReceivePieceTask(context.Context, task.ReceivePieceTask, []byte) error {
 	return ErrNilModular
 }
-func (*NullReceiveModular) HandleDoneReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, []byte, error) {
-	return nil, nil, ErrNilModular
+func (*NullReceiveModular) HandleDoneReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
+	return nil, ErrNilModular
 }

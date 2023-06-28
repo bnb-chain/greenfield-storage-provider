@@ -256,6 +256,11 @@ var (
 		Help:    "Track the time of replicate piece to secondary.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"replicate_piece_time"})
+	RecoverPieceTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "recovery_piece_time",
+		Help:    "Track the time of recovery piece",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"recovery_piece_time"})
 	ExecutorReplicatePieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "replicate_task_count",
 		Help: "Track replicate task number.",
@@ -280,6 +285,10 @@ var (
 		Name: "gc_meta_task_count",
 		Help: "Track gc meta task number.",
 	}, []string{"gc_meta_task_count"})
+	ExecutorRecoveryTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "recover_piece_task_count",
+		Help: "Track recovery task number.",
+	}, []string{"recovery__task_count"})
 
 	// manager mertics
 	UploadObjectTaskTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -342,6 +351,10 @@ var (
 		Name: "dispatch_gc_object_task",
 		Help: "Track gc object task total number",
 	}, []string{"dispatch_gc_object_task"})
+	DispatchRecoverPieceTaskCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "dispatch_recovery_piece_task",
+		Help: "Track recovery task total number",
+	}, []string{"dispatch_recovery_piece_task"})
 
 	// signer metrics
 	SealObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -383,6 +396,19 @@ var (
 		Name: "discontinue_bucket_failure",
 		Help: "Track discontinue bucket failure total number.",
 	}, []string{"discontinue_bucket_failure"})
+	CreateGlobalVirtualGroupTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "create_global_virtual_group_time",
+		Help:    "Track the time of create global virtual group time to chain.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"create_global_virtual_group_time"})
+	CreateGlobalVirtualGroupSucceedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "create_global_virtual_group_success",
+		Help: "Track create global virtual group success total number.",
+	}, []string{"create_global_virtual_group_success"})
+	CreateGlobalVirtualGroupFailedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "create_global_virtual_group_failure",
+		Help: "Track create global virtual group failure total number.",
+	}, []string{"create_global_virtual_group_failure"})
 
 	// spdb metrics
 	SPDBTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{

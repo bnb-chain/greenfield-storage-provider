@@ -11,14 +11,14 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/vmmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
-var _ vmmgr.VirtualGroupManager = &virtualGroupManager{}
+var _ vgmgr.VirtualGroupManager = &virtualGroupManager{}
 
 const (
 	VirtualGroupManagerSpace  = "VirtualGroupManager"
@@ -38,7 +38,7 @@ var (
 
 // virtualGroupFamilyManager is built by metadata data source.
 type virtualGroupFamilyManager struct {
-	vgfIDToVgf map[uint32]*vmmgr.VirtualGroupFamilyMeta // is used to pick VGF
+	vgfIDToVgf map[uint32]*vgmgr.VirtualGroupFamilyMeta // is used to pick VGF
 }
 
 // FreeStorageSizeWeightPicker is used to pick index by storage usage,
@@ -47,14 +47,14 @@ type FreeStorageSizeWeightPicker struct {
 	freeStorageSizeWeightMap map[uint32]float64
 }
 
-func (vgfp *FreeStorageSizeWeightPicker) addVirtualGroupFamily(vgf *vmmgr.VirtualGroupFamilyMeta) {
+func (vgfp *FreeStorageSizeWeightPicker) addVirtualGroupFamily(vgf *vgmgr.VirtualGroupFamilyMeta) {
 	if float64(vgf.FamilyUsedStorageSize) >= MaxStorageUsage*float64(vgf.FamilyStakingStorageSize) || vgf.FamilyStakingStorageSize == 0 {
 		return
 	}
 	vgfp.freeStorageSizeWeightMap[vgf.ID] = float64(vgf.FamilyStakingStorageSize-vgf.FamilyUsedStorageSize) / float64(vgf.FamilyStakingStorageSize)
 }
 
-func (vgfp *FreeStorageSizeWeightPicker) addGlobalVirtualGroup(gvg *vmmgr.GlobalVirtualGroupMeta) {
+func (vgfp *FreeStorageSizeWeightPicker) addGlobalVirtualGroup(gvg *vgmgr.GlobalVirtualGroupMeta) {
 	if float64(gvg.UsedStorageSize) >= MaxStorageUsage*float64(gvg.StakingStorageSize) || gvg.StakingStorageSize == 0 {
 		return
 	}
@@ -80,12 +80,13 @@ func (vgfp *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
 	return 0, fmt.Errorf("failed to pick weighted random index")
 }
 
-func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily() (*vmmgr.VirtualGroupFamilyMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily() (*vgmgr.VirtualGroupFamilyMeta, error) {
 	var (
 		picker   FreeStorageSizeWeightPicker
 		familyID uint32
 		err      error
 	)
+	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 	for _, f := range vgfm.vgfIDToVgf {
 		picker.addVirtualGroupFamily(f)
 	}
@@ -96,12 +97,13 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily() (*vmmgr.VirtualG
 	return vgfm.vgfIDToVgf[familyID], nil
 }
 
-func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vmmgr.GlobalVirtualGroupMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		picker               FreeStorageSizeWeightPicker
 		globalVirtualGroupID uint32
 		err                  error
 	)
+	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 	if _, existed := vgfm.vgfIDToVgf[vgfID]; !existed {
 		return nil, ErrStaledMetadata
 	}
@@ -121,44 +123,40 @@ type spManager struct {
 	secondarySPs []*sptypes.StorageProvider
 }
 
-func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vmmgr.GlobalVirtualGroupMeta, error) {
+func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	secondarySPNumber := int(param.GetRedundantDataChunkNum() + param.GetRedundantParityChunkNum())
 	if sm.primarySP == nil || len(sm.secondarySPs) < secondarySPNumber {
 		return nil, fmt.Errorf("no enough sp")
 	}
-	secondarySPIDs := make([]uint32, secondarySPNumber)
-	secondarySPs := make([]*sptypes.StorageProvider, secondarySPNumber)
+	secondarySPIDs := make([]uint32, 0)
 	for i, sp := range sm.secondarySPs {
 		if i < secondarySPNumber {
-			secondarySPIDs = append(secondarySPIDs, sp.Id)
-			secondarySPs = append(secondarySPs, sp)
+			secondarySPIDs = append(secondarySPIDs, sp.GetId())
 		}
 	}
-	return &vmmgr.GlobalVirtualGroupMeta{
+	return &vgmgr.GlobalVirtualGroupMeta{
 		PrimarySPID:        sm.primarySP.Id,
 		SecondarySPIDs:     secondarySPIDs,
-		SecondarySPs:       secondarySPs,
 		StakingStorageSize: DefaultStakingStorageSize,
 	}, nil
 }
 
+// TODO: add metadata service client.
 type virtualGroupManager struct {
 	selfOperatorAddress string
-	// metadataClient      *gfspclient.GfSpClient // query VG meta from metadata service
-	chainClient consensus.Consensus // query VG params from chain
-	mutex       sync.RWMutex
-	selfSPID    uint32
-	spManager   *spManager // is used to generate a new gvg
-	vgParams    *virtualgrouptypes.Params
-	vgfManager  *virtualGroupFamilyManager
+	chainClient         consensus.Consensus // query VG params from chain
+	mutex               sync.RWMutex
+	selfSPID            uint32
+	spManager           *spManager // is used to generate a new gvg
+	vgParams            *virtualgrouptypes.Params
+	vgfManager          *virtualGroupFamilyManager
 }
 
 // NewVirtualGroupManager returns a virtual group manager interface.
-func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Consensus) (vmmgr.VirtualGroupManager, error) {
+func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Consensus) (vgmgr.VirtualGroupManager, error) {
 	vgm := &virtualGroupManager{
 		selfOperatorAddress: selfOperatorAddress,
-		// metadataClient:      metadataClient,
-		chainClient: chainClient,
+		chainClient:         chainClient,
 	}
 	vgm.refreshMeta()
 	go func() {
@@ -176,7 +174,6 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 // refreshMetadata is used to refresh virtual group manager metadata in background.
 func (vgm *virtualGroupManager) refreshMeta() {
 	// TODO: support load from metadata.
-	// vgm.refreshMetaByMetaService()
 	vgm.refreshMetaByChain()
 }
 
@@ -191,14 +188,25 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		vgParams        *virtualgrouptypes.Params
 		vgfList         []*virtualgrouptypes.GlobalVirtualGroupFamily
 		vgfm            *virtualGroupFamilyManager
+		spMap           map[uint32]*sptypes.StorageProvider
 	)
 
+	spMap = make(map[uint32]*sptypes.StorageProvider)
+	toSPEndpoints := func(spIDs []uint32) []string {
+		spInfoEndpoints := make([]string, 0)
+		for _, id := range spIDs {
+			spInfoEndpoints = append(spInfoEndpoints, spMap[id].GetEndpoint())
+		}
+		return spInfoEndpoints
+	}
 	// query meta
 	if spList, err = vgm.chainClient.ListSPs(context.Background()); err != nil {
 		log.Errorw("failed to list sps", "error", err)
 		return
 	}
-
+	for _, sp := range spList {
+		spMap[sp.Id] = sp
+	}
 	for i, sp := range spList {
 		if strings.EqualFold(vgm.selfOperatorAddress, sp.OperatorAddress) {
 			spID = sp.Id
@@ -210,6 +218,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		primarySP:    primarySP,
 		secondarySPs: secondarySPList,
 	}
+	// log.Infow("list sp info", "primary_sp", primarySP, "secondary_sps", secondarySPList, "sp_map", spMap)
 
 	if spID == 0 {
 		log.Error("failed to refresh due to current sp is not in sp list")
@@ -220,19 +229,22 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		log.Errorw("failed to query virtual group params", "error", err)
 		return
 	}
+	// log.Infow("query virtual group params", "params", vgParams)
 
 	vgfm = &virtualGroupFamilyManager{
-		vgfIDToVgf: make(map[uint32]*vmmgr.VirtualGroupFamilyMeta),
+		vgfIDToVgf: make(map[uint32]*vgmgr.VirtualGroupFamilyMeta),
 	}
 	if vgfList, err = vgm.chainClient.ListVirtualGroupFamilies(context.Background(), spID); err != nil {
 		log.Errorw("failed to list virtual group family", "error", err)
 		return
 	}
+
+	// log.Infow("list virtual group family info", "vgf_list", vgfList)
 	for _, vgf := range vgfList {
-		vgfm.vgfIDToVgf[vgf.Id] = &vmmgr.VirtualGroupFamilyMeta{
+		vgfm.vgfIDToVgf[vgf.Id] = &vgmgr.VirtualGroupFamilyMeta{
 			ID:          vgf.Id,
 			PrimarySPID: spID,
-			GVGMap:      make(map[uint32]*vmmgr.GlobalVirtualGroupMeta),
+			GVGMap:      make(map[uint32]*vgmgr.GlobalVirtualGroupMeta),
 		}
 		for _, gvgID := range vgf.GlobalVirtualGroupIds {
 			var gvg *virtualgrouptypes.GlobalVirtualGroup
@@ -240,14 +252,17 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 				log.Errorw("failed to query global virtual group", "error", err)
 				return
 			}
-			gvgMeta := &vmmgr.GlobalVirtualGroupMeta{
-				ID:                 gvg.GetId(),
-				FamilyID:           vgf.Id,
-				PrimarySPID:        spID,
-				SecondarySPIDs:     gvg.GetSecondarySpIds(),
-				UsedStorageSize:    gvg.GetStoredSize(),
-				StakingStorageSize: gvg.TotalDeposit.Uint64() / vgParams.GvgStakingPrice.BigInt().Uint64(), // TODO: refine it.
+			gvgMeta := &vgmgr.GlobalVirtualGroupMeta{
+				ID:                   gvg.GetId(),
+				FamilyID:             vgf.Id,
+				PrimarySPID:          spID,
+				SecondarySPIDs:       gvg.GetSecondarySpIds(),
+				SecondarySPEndpoints: toSPEndpoints(gvg.GetSecondarySpIds()),
+				UsedStorageSize:      gvg.GetStoredSize(),
+				StakingStorageSize:   DefaultStakingStorageSize,
+				// StakingStorageSize: gvg.TotalDeposit.Mod(vgParams.GvgStakingPrice.TruncateInt()).Uint64(), // TODO: refine it.
 			}
+			log.Infow("query global virtual group info", "gvg_info", gvg, "gvg_meta", gvgMeta)
 			vgfm.vgfIDToVgf[vgf.Id].GVGMap[gvg.GetId()] = gvgMeta
 			vgfm.vgfIDToVgf[vgf.Id].FamilyUsedStorageSize += gvgMeta.UsedStorageSize
 			vgfm.vgfIDToVgf[vgf.Id].FamilyStakingStorageSize += gvgMeta.StakingStorageSize
@@ -263,16 +278,9 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 	vgm.mutex.Unlock()
 }
 
-/*
-func (vgm *virtualGroupManager) refreshMetaByMetaService() {
-	// TODO: impl
-}
-*/
-
 // PickVirtualGroupFamily pick a virtual group family(If failed to pick,
 // new VGF will be automatically created on the chain) in get create bucket approval workflow.
-// TODO: if returns VirtualGroupManagerSpace, the caller need create gvg and force refresh metadata and retry.
-func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vmmgr.VirtualGroupFamilyMeta, error) {
+func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vgmgr.VirtualGroupFamilyMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.vgfManager.pickVirtualGroupFamily()
@@ -280,11 +288,7 @@ func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vmmgr.VirtualGroupFam
 
 // PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
 // new GVG will be created by primary SP) in replicate/seal object workflow.
-// return (nil, nil), if there is no gvg in vgm.
-// TODO: If returns ErrFailedPickGVG, the caller need re-stake or create gvg and force refresh metadata and retry.
-// TODO: if returns ErrStaledMetadata, the caller need force refresh from metadata and retry.
-// TODO: check storage params.
-func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vmmgr.GlobalVirtualGroupMeta, error) {
+func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID)
@@ -293,14 +297,15 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vmmgr.Glo
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
 // if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
 func (vgm *virtualGroupManager) ForceRefreshMeta() error {
+	// sleep 2 seconds for waiting a new block
+	time.Sleep(2 * time.Second)
 	vgm.refreshMeta()
 	return nil
 }
 
-// GenerateGlobalVirtualGroupMeta is used to generate a new global virtual group meta, the caller need send a tx to chain.
-// TODO: support more generate policy.
-// TODO: add filter picker to support balance.
-func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*vmmgr.GlobalVirtualGroupMeta, error) {
+// GenerateGlobalVirtualGroupMeta is used to generate a gvg meta.
+// TODO: support more generation strategies.
+func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.spManager.generateVirtualGroupMeta(param)

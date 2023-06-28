@@ -7,9 +7,6 @@ import (
 	"sync/atomic"
 
 	"cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
@@ -18,6 +15,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (

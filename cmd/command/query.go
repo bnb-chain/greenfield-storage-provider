@@ -317,6 +317,5 @@ func getSegmentIntegrityAction(ctx *cli.Context) error {
 	for i, checksum := range integrity.PieceChecksumList {
 		fmt.Printf("piece[%d], checksum[%s]\n", i, hex.EncodeToString(checksum))
 	}
-	fmt.Printf("\nsignature[%s]\n", hex.EncodeToString(integrity.Signature))
 	return nil
 }

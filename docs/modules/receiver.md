@@ -9,9 +9,9 @@ type Receiver interface {
     Modular
     // HandleReceivePieceTask stores piece data into secondary SP.
     HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask, data []byte) error
-    // HandleDoneReceivePieceTask calculates the integrity hash of the object and sign it, returns to the primary
+    // HandleDoneReceivePieceTask calculates the secondary bls signature of the object and sign it, returns to the primary
     // SP for sealed object.
-    HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, []byte, error)
+    HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
     // QueryTasks queries replicate piece tasks that running on receiver by task sub-key.
     QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }
