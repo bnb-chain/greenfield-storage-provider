@@ -14,7 +14,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/gater"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
@@ -28,7 +27,7 @@ var (
 	ErrExceedBucketQuota = gfsperrors.Register(module.DownloadModularName, http.StatusNotAcceptable, 30004, "bucket quota overflow")
 	ErrInvalidParam      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30005, "request params invalid")
 	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid, no such piece")
-	ErrPieceStore        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, gater.ErrPieceStoreInnerCode, "server slipped away, try again later")
+	ErrPieceStore        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35101, "server slipped away, try again later")
 	ErrGfSpDB            = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35201, "server slipped away, try again later")
 	ErrKeyFormat         = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "invalid key format")
 )
