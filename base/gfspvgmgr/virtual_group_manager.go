@@ -310,3 +310,8 @@ func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetyp
 	defer vgm.mutex.RUnlock()
 	return vgm.spManager.generateVirtualGroupMeta(param)
 }
+
+// PickSPByFilter is used to pick sp by filter check.
+func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.PickFilter) (*sptypes.StorageProvider, error) {
+	return nil, nil
+}

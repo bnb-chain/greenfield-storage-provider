@@ -33,6 +33,13 @@ type VirtualGroupFamilyMigrateExecuteUnit struct {
 	primaryGVGMigrateUnits         []*GlobalVirtualGroupMigrateExecuteUnit
 }
 
+type PickDestSPFilter struct {
+}
+
+func (f *PickDestSPFilter) Check() bool {
+	return true
+}
+
 /*
 Conflict Description
 1.Current virtual group and sp status
@@ -59,7 +66,17 @@ Conflict Description
 	sp1 complete sp exit.
 */
 func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) checkConflict() error {
-	return nil
+	var (
+		err              error
+		secondarySPIDMap = make(map[uint32]bool)
+	)
+	for _, gvg := range vgfUnit.gvgList {
+		for _, secondarySPID := range gvg.GetSecondarySpIds() {
+			secondarySPIDMap[secondarySPID] = true
+		}
+	}
+
+	return err
 }
 
 type MigrateExecutePlan struct {
