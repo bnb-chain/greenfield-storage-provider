@@ -34,6 +34,8 @@ var (
 		"failed to pick global virtual group, need stake more storage size")
 	ErrStaledMetadata = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540003,
 		"metadata is staled, need force refresh metadata")
+	ErrFailedPickDestSP = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540004,
+		"failed to pick dest sp due to has conflict, need resolve conflict")
 )
 
 // virtualGroupFamilyManager is built by metadata data source.
@@ -139,6 +141,15 @@ func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vgmg
 		SecondarySPIDs:     secondarySPIDs,
 		StakingStorageSize: DefaultStakingStorageSize,
 	}, nil
+}
+
+func (sm *spManager) pickSPByFilter(filter vgmgr.PickFilter) (*sptypes.StorageProvider, error) {
+	for _, secondarySP := range sm.secondarySPs {
+		if pickSucceed := filter.Check(secondarySP.GetId()); pickSucceed {
+			return secondarySP, nil
+		}
+	}
+	return nil, ErrFailedPickDestSP
 }
 
 // TODO: add metadata service client.
@@ -311,7 +322,11 @@ func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetyp
 	return vgm.spManager.generateVirtualGroupMeta(param)
 }
 
+// TODO: add a generate gvg by filter api for migrate.
+
 // PickSPByFilter is used to pick sp by filter check.
 func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.PickFilter) (*sptypes.StorageProvider, error) {
-	return nil, nil
+	vgm.mutex.RLock()
+	defer vgm.mutex.RUnlock()
+	return vgm.spManager.pickSPByFilter(filter)
 }

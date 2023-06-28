@@ -7,6 +7,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -34,9 +35,13 @@ type VirtualGroupFamilyMigrateExecuteUnit struct {
 }
 
 type PickDestSPFilter struct {
+	currentSecondarySPMap map[uint32]bool
 }
 
-func (f *PickDestSPFilter) Check() bool {
+func (f *PickDestSPFilter) Check(spID uint32) bool {
+	if _, found := f.currentSecondarySPMap[spID]; found {
+		return false
+	}
 	return true
 }
 
@@ -65,17 +70,25 @@ Conflict Description
 
 	sp1 complete sp exit.
 */
-func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) checkConflict() error {
+func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) checkConflict(vgm vgmgr.VirtualGroupManager) error {
 	var (
 		err              error
 		secondarySPIDMap = make(map[uint32]bool)
+		destSP           *sptypes.StorageProvider
 	)
 	for _, gvg := range vgfUnit.gvgList {
 		for _, secondarySPID := range gvg.GetSecondarySpIds() {
 			secondarySPIDMap[secondarySPID] = true
 		}
 	}
-
+	filter := &PickDestSPFilter{
+		secondarySPIDMap,
+	}
+	if destSP, err = vgm.PickSPByFilter(filter); err != nil {
+		// TODO: has conflict
+	}
+	vgfUnit.destSPID = destSP.GetId()
+	// TODO: impl
 	return err
 }
 
@@ -111,7 +124,7 @@ func (plan *MigrateExecutePlan) Init() error {
 func (plan *MigrateExecutePlan) Start() error {
 	var err error
 	for _, fUnit := range plan.VGFMigrateUnits {
-		if err = fUnit.checkConflict(); err != nil {
+		if err = fUnit.checkConflict(plan.virtualGroupManager); err != nil {
 			log.Errorw("failed to start migrate execute plan due to check conflict", "family_unit", fUnit, "error", err)
 			return err
 		}
