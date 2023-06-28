@@ -2,10 +2,10 @@ package executor
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -25,7 +25,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	startReplicateTime := time.Now()
 	defer func() {
 		task.SetError(err)
-		metrics.PerfUploadTimeHistogram.WithLabelValues("background_replicate_time").Observe(time.Since(startReplicateTime).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("background_replicate_cost").Observe(time.Since(startReplicateTime).Seconds())
 	}()
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		err = ErrDanglingPointer
@@ -34,8 +34,8 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 
 	replicatePieceTotalTime := time.Now()
 	err = e.handleReplicatePiece(ctx, task)
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_replicate_object_time").Observe(time.Since(replicatePieceTotalTime).Seconds())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_task_replicate_object_end_time").Observe(time.Since(startReplicateTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_object_time").Observe(time.Since(replicatePieceTotalTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_task_replicate_object_end_time").Observe(time.Since(startReplicateTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to replicate piece", "task_info", task.Info(), "error", err)
 		return
@@ -46,6 +46,10 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 		log.CtxErrorw(ctx, "failed to generate multiple signatures",
 			"origin_signature", task.GetSecondarySignatures(), "error", err)
 		return
+	} else {
+		task.AppendLog("executor-end-replicate-object")
+		metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessReplicateAllPiece).Inc()
+		metrics.ExecutorTime.WithLabelValues(ExeutorSuccessReplicateAllPiece).Observe(time.Since(replicatePieceTotalTime).Seconds())
 	}
 	sealMsg := &storagetypes.MsgSealObject{
 		Operator:                    e.baseApp.OperatorAddress(),
@@ -56,8 +60,8 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	}
 	sealTime := time.Now()
 	sealErr := e.sealObject(ctx, task, sealMsg)
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_seal_object_time").Observe(time.Since(sealTime).Seconds())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_task_seal_object_end_time").Observe(time.Since(startReplicateTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_seal_object_cost").Observe(time.Since(sealTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_task_seal_object_end").Observe(time.Since(startReplicateTime).Seconds())
 	if sealErr == nil {
 		task.SetSealed(true)
 	}
@@ -104,9 +108,9 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 			signature, innerErr := e.doneReplicatePiece(ctx, rTask, sp, uint32(rIdx))
 			if innerErr == nil {
 				secondarySignatures[rIdx] = signature
-				metrics.ReplicateSucceedCounter.WithLabelValues(e.Name()).Inc()
+				metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Inc()
 			} else {
-				metrics.ReplicateFailedCounter.WithLabelValues(e.Name()).Inc()
+				metrics.ExecutorCounter.WithLabelValues(ExeutorFailureDoneReplicatePiece).Inc()
 				return innerErr
 			}
 		}
@@ -119,8 +123,8 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), pIdx)
 		startGetPieceTime := time.Now()
 		segData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
-		metrics.PerfUploadTimeHistogram.WithLabelValues("background_get_piece_time").Observe(time.Since(startGetPieceTime).Seconds())
-		metrics.PerfUploadTimeHistogram.WithLabelValues("background_get_piece_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_time").Observe(time.Since(startGetPieceTime).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get segment data form piece store", "error", err)
 			rTask.SetError(err)
@@ -131,8 +135,8 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 			ecData, err := redundancy.EncodeRawSegment(segData,
 				int(rTask.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()),
 				int(rTask.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()))
-			metrics.PerfUploadTimeHistogram.WithLabelValues("background_ec_time").Observe(time.Since(ecTime).Seconds())
-			metrics.PerfUploadTimeHistogram.WithLabelValues("background_ec_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
+			metrics.PerfPutObjectTime.WithLabelValues("background_ec_time").Observe(time.Since(ecTime).Seconds())
+			metrics.PerfPutObjectTime.WithLabelValues("background_ec_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to ec encode data", "error", err)
 				rTask.SetError(err)
@@ -143,12 +147,12 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 			doReplicateSegmentPiece(pIdx, segData)
 		}
 	}
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_replicate_all_piece_time").Observe(time.Since(startReplicatePieceTime).Seconds())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_replicate_all_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_time").Observe(time.Since(startReplicatePieceTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
 	doneTime := time.Now()
 	err = doneReplicate()
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_done_replicate_time").Observe(time.Since(doneTime).Seconds())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_done_replicate_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_time").Observe(time.Since(doneTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
 	if err == nil {
 		rTask.SetSecondarySignatures(secondarySignatures)
 	}
@@ -158,10 +162,18 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.WaitGroup, rTask coretask.ReplicatePieceTask,
 	spEndpoint string, replicateIdx uint32, pieceIdx uint32, data []byte) (err error) {
 	var signature []byte
-	metrics.ReplicatePieceSizeCounter.WithLabelValues(e.Name()).Add(float64(len(data)))
+	rTask.AppendLog(fmt.Sprintf("executor-begin-replicate-piece-sidx:%d-ridx-%d", pieceIdx, replicateIdx))
 	startTime := time.Now()
 	defer func() {
-		metrics.ReplicatePieceTimeHistogram.WithLabelValues(e.Name()).Observe(time.Since(startTime).Seconds())
+		if err != nil {
+			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sidx:%d-ridx-%d-error:%s", pieceIdx, replicateIdx, err.Error()))
+			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureReplicateOnePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExeutorFailureReplicateOnePiece).Observe(time.Since(startTime).Seconds())
+		} else {
+			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sidx:%d-ridx-%d", pieceIdx, replicateIdx))
+			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessReplicateOnePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessReplicateOnePiece).Observe(time.Since(startTime).Seconds())
+		}
 		waitGroup.Done()
 	}()
 	receive := &gfsptask.GfSpReceivePieceTask{}
@@ -171,8 +183,8 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
 	signTime := time.Now()
 	signature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_sign_receive_time").Observe(time.Since(signTime).Seconds())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_sign_receive_end_time").Observe(time.Since(startTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_sign_receive_cost").Observe(time.Since(signTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_sign_receive_end").Observe(time.Since(startTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign receive task", "replicate_idx", replicateIdx,
 			"piece_idx", pieceIdx, "error", err)
@@ -180,18 +192,15 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	}
 	receive.SetSignature(signature)
 	replicateOnePieceTime := time.Now()
-	e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorBeginReplicateOnePiece, receive.Info())
 	err = e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctx, spEndpoint, receive, data)
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_replicate_one_piece_time").Observe(time.Since(replicateOnePieceTime).Seconds())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_replicate_one_piece_end_time").Observe(time.Since(startTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_one_piece_cost").Observe(time.Since(replicateOnePieceTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_one_piece_end").Observe(time.Since(startTime).Seconds())
 	if err != nil {
-		e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndReplicateOnePiece, receive.Info()+":"+err.Error())
 		log.CtxErrorw(ctx, "failed to replicate piece", "replicate_idx", replicateIdx,
 			"piece_idx", pieceIdx, "error", err)
 		return
 	}
-	e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndReplicateOnePiece, receive.Info())
-	log.CtxDebugw(ctx, "succeed to replicate piece", "replicate_idx", replicateIdx,
+	log.CtxDebugw(ctx, "success to replicate piece", "replicate_idx", replicateIdx,
 		"piece_idx", pieceIdx)
 	return
 }
@@ -203,13 +212,27 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 		signature     []byte
 		taskSignature []byte
 	)
+	rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-ridx-%d", replicateIdx))
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-ridx-%d-error:%s", replicateIdx, err.Error()))
+			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureDoneReplicatePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExeutorFailureDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
+		} else {
+			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-ridx-%d", replicateIdx))
+			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
 		e.baseApp.TaskPriority(rTask), replicateIdx, -1, 0)
 	signTime := time.Now()
 	taskSignature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_sign_receive_time").Observe(time.Since(signTime).Seconds())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_sign_receive_end_time").Observe(time.Since(signTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_sign_receive_cost").Observe(time.Since(signTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_sign_receive_end").Observe(time.Since(signTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign done receive task",
 			"replicate_idx", replicateIdx, "error", err)
@@ -217,17 +240,14 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	}
 	receive.SetSignature(taskSignature)
 	doneReplicateTime := time.Now()
-	e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorBeginDoneReplicatePiece, receive.Info())
 	signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, spEndpoint, receive)
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_done_receive_http_time").Observe(time.Since(doneReplicateTime).Seconds())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_done_receive_http_end_time").Observe(time.Since(signTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_done_receive_http_cost").Observe(time.Since(doneReplicateTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_done_receive_http_end").Observe(time.Since(signTime).Seconds())
 	if err != nil {
-		e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndDoneReplicatePiece, receive.Info()+":"+err.Error())
 		log.CtxErrorw(ctx, "failed to done replicate piece", "endpoint", spEndpoint,
 			"replicate_idx", replicateIdx, "error", err)
 		return nil, err
 	}
-	e.baseApp.GfSpDB().InsertUploadEvent(rTask.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndDoneReplicatePiece, receive.Info())
 	if int(replicateIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
 		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds",
 			"replicate_idx", replicateIdx)
@@ -241,7 +261,7 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	// err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), rTask.GetGlobalVirtualGroupId(), integrity,
 	//	storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
 	// metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_time").Observe(time.Since(veritySignatureTime).Seconds())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed verify secondary signature", "endpoint", spEndpoint,
 			"replicate_idx", replicateIdx, "error", err)

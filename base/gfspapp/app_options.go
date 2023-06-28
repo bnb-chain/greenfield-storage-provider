@@ -51,6 +51,72 @@ const (
 	DefaultLowTaskLimit = 16
 )
 
+const (
+	ApproverSuccessGetBucketApproval = "approver_get_bucket_success"
+	ApproverFailureGetBucketApproval = "approver_get_bucket_failure"
+	ApproverSuccessGetObjectApproval = "approver_get_object_success"
+	ApproverFailureGetObjectApproval = "approver_get_object_failure"
+
+	AuthSuccess = "auth_success"
+	AuthFailure = "auth_failure"
+
+	DownloaderSuccessGetPiece         = "downloader_get_piece_success"
+	DownloaderFailureGetPiece         = "downloader_get_piece_failure"
+	DownloaderSuccessGetChallengeInfo = "downloader_get_challenge_info_success"
+	DownloaderFailureGetChallengeInfo = "downloader_get_challenge_info_failure"
+
+	ManagerBeginUpload           = "manager_begin_upload_success"
+	ManagerFailureBeginUpload    = "manager_begin_upload_failure"
+	ManagerSuccessDispatchTask   = "manager_dispatch_task_success"
+	ManagerDispatchReplicateTask = "manager_dispatch_replicate_task_success"
+	ManagerDispatchSealTask      = "manager_dispatch_seal_task_success"
+	ManagerDispatchReceiveTask   = "manager_dispatch_receive_task_success"
+	ManagerDispatchGCObjectTask  = "manager_dispatch_gc_object_task_success"
+	ManagerDispatchRecoveryTask  = "manager_dispatch_recovery_task_success"
+	ManagerNoDispatchTask        = "manager_no_dispatch_task_failure"
+	ManagerFailureDispatchTask   = "manager_dispatch_task_failure"
+	ManagerReportTask            = "manager_report_task_success"
+	ManagerReportUploadTask      = "manager_report_upload_task_success"
+	ManagerReportReplicateTask   = "manager_report_replicate_task_success"
+	ManagerReportSealTask        = "manager_report_seal_task_success"
+	ManagerReportReceiveTask     = "manager_report_receive_task_success"
+	ManagerReportGCObjectTask    = "manager_report_gc_object_task_success"
+	ManagerReportRecoveryTask    = "manager_report_recovery_task_success"
+
+	ReceiverSuccessReplicatePiece     = "receiver_replicate_piece_success"
+	ReceiverFailureReplicatePiece     = "receiver_replicate_piece_failure"
+	ReceiverSuccessDoneReplicatePiece = "receiver_done_replicate_piece_success"
+	ReceiverFailureDoneReplicatePiece = "receiver_done_replicate_piece_failure"
+
+	SingerSuccess                   = "singer_success"
+	SingerFailure                   = "singer_failure"
+	SingerSuccessBucketApproval     = "singer_bucket_approval_success"
+	SingerFailureBucketApproval     = "singer_bucket_approval_failure"
+	SingerSuccessObjectApproval     = "singer_object_approval_success"
+	SingerFailureObjectApproval     = "singer_object_approval_failure"
+	SingerSuccessSealObject         = "singer_seal_object_success"
+	SingerFailureSealObject         = "singer_seal_object_failure"
+	SingerSuccessRejectUnSealObject = "singer_reject_unseal_object_success"
+	SingerFailureRejectUnSealObject = "singer_reject_unseal_object_failure"
+	SingerSuccessDiscontinueBucket  = "singer_discontinue_bucket_success"
+	SingerFailureDiscontinueBucket  = "singer_discontinue_bucket_failure"
+	SingerSuccessIntegrityHash      = "singer_integrity_hash_success"
+	SingerFailureIntegrityHash      = "singer_integrity_hash_failure"
+	SingerSuccessPing               = "singer_ping_success"
+	SingerFailurePing               = "singer_ping_failure"
+	SingerSuccessPong               = "singer_pong_success"
+	SingerFailurePong               = "singer_pong_failure"
+	SingerSuccessReceiveTask        = "singer_receive_task_success"
+	SingerFailureReceiveTask        = "singer_receive_task_failure"
+	SingerSuccessReplicateApproval  = "singer_secondary_approval_success"
+	SingerFailureReplicateApproval  = "singer_secondary_approval_failure"
+	SingerSuccessRecoveryTask       = "singer_recovery_task_success"
+	SingerFailureRecoveryTask       = "singer_recovery_task_failure"
+
+	UploaderSuccessPutObject = "uploader_put_object_success"
+	UploaderFailurePutObject = "uploader_put_object_failure"
+)
+
 func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if len(cfg.Server) == 0 {
 		cfg.Server = GetRegisterModulus()

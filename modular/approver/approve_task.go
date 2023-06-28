@@ -40,63 +40,56 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 		log.CtxDebugw(ctx, task.Info())
 	}()
 	startQueryQueue := time.Now()
-	if a.bucketQueue.Has(task.Key()) {
+	has := a.bucketQueue.Has(task.Key())
+	metrics.PerfApprovalTime.WithLabelValues("approval_bucket_check_repeated_cost").Observe(time.Since(startQueryQueue).Seconds())
+	if has {
 		shadowTask := a.bucketQueue.PopByKey(task.Key())
 		task.SetCreateBucketInfo(shadowTask.(coretask.ApprovalCreateBucketTask).GetCreateBucketInfo())
 		_ = a.bucketQueue.Push(shadowTask)
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_repeated_in_create_bucket_approval").
-			Observe(time.Since(startQueryQueue).Seconds())
+
 		log.CtxErrorw(ctx, "repeated create bucket approval task is returned")
 		return true, nil
 	}
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_repeated_in_create_bucket_approval").
-		Observe(time.Since(startQueryQueue).Seconds())
 	// TODO: wait metadata server ready
-	/*
-		startQueryMetadata := time.Now()
-		buckets, err := a.baseApp.GfSpClient().GetUserBucketsCount(ctx, task.GetCreateBucketInfo().GetCreator(), false)
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_counter_in_create_bucket_approval").
-			Observe(time.Since(startQueryMetadata).Seconds())
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get account owns max bucket number", "error", err)
-			return false, err
-		}
-		if buckets >= a.accountBucketNumber {
-			log.CtxErrorw(ctx, "account owns bucket number exceed")
-			err = ErrExceedBucketNumber
-			return false, err
-		}
-	*/
+	//startQueryMetadata := time.Now()
+	//buckets, err := a.baseApp.GfSpClient().GetUserBucketsCount(ctx, task.GetCreateBucketInfo().GetCreator(), false)
+	//metrics.PerfApprovalTime.WithLabelValues("approval_bucket_get_bucket_count_cost").Observe(time.Since(startQueryMetadata).Seconds())
+	//metrics.PerfApprovalTime.WithLabelValues("approval_bucket_get_bucket_count_end").Observe(time.Since(startQueryQueue).Seconds())
+	//if err != nil {
+	//	log.CtxErrorw(ctx, "failed to get account owns max bucket number", "error", err)
+	//	return false, err
+	//}
+	//if buckets >= a.accountBucketNumber {
+	//	log.CtxErrorw(ctx, "account owns bucket number exceed")
+	//	err = ErrExceedBucketNumber
+	//	return false, err
+	//}
 
 	startPickVGF := time.Now()
 	vgfID, err := a.baseApp.GfSpClient().PickVirtualGroupFamilyID(ctx, task)
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("pick_vfg").Observe(time.Since(startPickVGF).Seconds())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pick virtual group family", "error", err)
+		log.CtxErrorw(ctx, "failed to pick virtual group family", "time_cost", time.Since(startPickVGF).Seconds(), "error", err)
 		return false, err
 	}
-	log.Debugw("succeed to pick vgf id", "vgf_id", vgfID)
+	log.Debugw("succeed to pick vgf id", "vgf_id", vgfID, "time_cost", time.Since(startPickVGF).Seconds())
 
 	task.GetCreateBucketInfo().PrimarySpApproval.GlobalVirtualGroupFamilyId = vgfID
 	// begin to sign the new approval task
 	startQueryChain := time.Now()
 	currentHeight = a.GetCurrentBlockHeight()
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("query_current_height_in_create_bucket_approval").
-		Observe(time.Since(startQueryChain).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_bucket_query_block_height_cost").Observe(time.Since(startQueryChain).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_bucket_query_block_height_end").Observe(time.Since(startQueryQueue).Seconds())
 	task.SetExpiredHeight(currentHeight + a.bucketApprovalTimeoutHeight)
 	startSignApproval := time.Now()
 	signature, err = a.baseApp.GfSpClient().SignCreateBucketApproval(ctx, task.GetCreateBucketInfo())
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("sign_in_create_bucket_approval").
-		Observe(time.Since(startSignApproval).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_bucket_sign_create_bucket_cost").Observe(time.Since(startSignApproval).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_bucket_sign_create_bucket_end").Observe(time.Since(startQueryQueue).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the create bucket approval", "error", err)
 		return false, ErrSigner
 	}
 	task.GetCreateBucketInfo().GetPrimarySpApproval().Sig = signature
-	startPushQueue := time.Now()
-	_ = a.bucketQueue.Push(task)
-	metrics.GnfdChainHistogram.WithLabelValues("update_queue_in_create_bucket_approval").
-		Observe(time.Since(startPushQueue).Seconds())
+	go a.bucketQueue.Push(task)
 	return true, nil
 }
 
@@ -124,39 +117,25 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		}
 		log.CtxDebugw(ctx, task.Info())
 	}()
-	startQueryQueue := time.Now()
 	if a.bucketQueue.Has(task.Key()) {
 		shadowTask := a.bucketQueue.PopByKey(task.Key())
 		task.SetMigrateBucketInfo(shadowTask.(coretask.ApprovalMigrateBucketTask).GetMigrateBucketInfo())
 		_ = a.bucketQueue.Push(shadowTask)
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_repeated_in_migrate_bucket_approval").
-			Observe(time.Since(startQueryQueue).Seconds())
 		log.CtxErrorw(ctx, "repeated migrate bucket approval task is returned")
 		return true, nil
 	}
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_repeated_in_migrate_bucket_approval").
-		Observe(time.Since(startQueryQueue).Seconds())
 
 	// begin to sign the new approval task
-	startQueryChain := time.Now()
 	currentHeight = a.GetCurrentBlockHeight()
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("query_current_height_in_migrate_bucket_approval").
-		Observe(time.Since(startQueryChain).Seconds())
 	task.SetExpiredHeight(currentHeight + a.bucketApprovalTimeoutHeight)
-	startSignApproval := time.Now()
 	// TODO: modify to migrate proto.
 	signature, err = a.baseApp.GfSpClient().SignMigrateBucketApproval(ctx, task.GetMigrateBucketInfo())
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("sign_in_migrate_bucket_approval").
-		Observe(time.Since(startSignApproval).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the migrate bucket approval", "error", err)
 		return false, ErrSigner
 	}
 	task.GetMigrateBucketInfo().GetPrimarySpApproval().Sig = signature
-	startPushQueue := time.Now()
 	_ = a.bucketQueue.Push(task)
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("update_queue_in_migrate_bucket_approval").
-		Observe(time.Since(startPushQueue).Seconds())
 	return true, nil
 }
 
@@ -185,37 +164,32 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(ctx context.Context, ta
 	}()
 
 	startQueryQueue := time.Now()
-	if a.objectQueue.Has(task.Key()) {
+	has := a.objectQueue.Has(task.Key())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_check_repeated_cost").Observe(time.Since(startQueryQueue).Seconds())
+	if has {
 		shadowTask := a.objectQueue.PopByKey(task.Key())
 		task.SetCreateObjectInfo(shadowTask.(coretask.ApprovalCreateObjectTask).GetCreateObjectInfo())
 		_ = a.objectQueue.Push(shadowTask)
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_repeated_in_create_object_approval").
-			Observe(time.Since(startQueryQueue).Seconds())
 		log.CtxErrorw(ctx, "repeated create object approval task is returned")
 		return true, nil
 	}
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("check_repeated_in_create_object_approval").
-		Observe(time.Since(startQueryQueue).Seconds())
 
 	// begin to sign the new approval task
 	startQueryChain := time.Now()
 	currentHeight = a.GetCurrentBlockHeight()
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("query_current_height_in_create_object_approval").
-		Observe(time.Since(startQueryChain).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_query_block_height_cost").Observe(time.Since(startQueryChain).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_query_block_height_end").Observe(time.Since(startQueryQueue).Seconds())
 	task.SetExpiredHeight(currentHeight + a.objectApprovalTimeoutHeight)
 	startSignApproval := time.Now()
 	signature, err = a.baseApp.GfSpClient().SignCreateObjectApproval(ctx, task.GetCreateObjectInfo())
-	metrics.PerfGetApprovalTimeHistogram.WithLabelValues("sign_in_create_object_approval").
-		Observe(time.Since(startSignApproval).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_bucket_cost").Observe(time.Since(startSignApproval).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_bucket_end").Observe(time.Since(startQueryQueue).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the create object approval", "error", err)
 		return false, err
 	}
 	task.GetCreateObjectInfo().GetPrimarySpApproval().Sig = signature
-	startPushQueue := time.Now()
-	_ = a.objectQueue.Push(task)
-	metrics.GnfdChainHistogram.WithLabelValues("update_queue_in_create_object_approval").
-		Observe(time.Since(startPushQueue).Seconds())
+	go a.objectQueue.Push(task)
 	return true, nil
 }
 

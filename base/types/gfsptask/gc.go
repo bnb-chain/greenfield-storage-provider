@@ -118,6 +118,18 @@ func (m *GfSpGCObjectTask) EstimateLimit() corercmgr.Limit {
 	return LimitEstimateByPriority(m.GetPriority())
 }
 
+func (m *GfSpGCObjectTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpGCObjectTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpGCObjectTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
 func (m *GfSpGCObjectTask) Error() error {
 	return m.GetTask().Error()
 }
@@ -241,6 +253,18 @@ func (m *GfSpGCZombiePieceTask) EstimateLimit() corercmgr.Limit {
 	return LimitEstimateByPriority(m.GetPriority())
 }
 
+func (m *GfSpGCZombiePieceTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpGCZombiePieceTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpGCZombiePieceTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
 func (m *GfSpGCZombiePieceTask) Error() error {
 	return m.GetTask().Error()
 }
@@ -346,6 +370,18 @@ func (m *GfSpGCMetaTask) SetPriority(priority coretask.TPriority) {
 
 func (m *GfSpGCMetaTask) EstimateLimit() corercmgr.Limit {
 	return LimitEstimateByPriority(m.GetPriority())
+}
+
+func (m *GfSpGCMetaTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpGCMetaTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpGCMetaTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
 }
 
 func (m *GfSpGCMetaTask) Error() error {

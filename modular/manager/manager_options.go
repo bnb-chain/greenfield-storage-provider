@@ -75,6 +75,22 @@ const (
 	DefaultSubscribeSwapOutEventIntervalSec = 1
 )
 
+const (
+	ManagerGCBlockNumber           = "manager_gc_block_number"
+	ManagerSuccessUpload           = "manager_upload_object_success"
+	ManagerFailureUpload           = "manager_upload_object_failure"
+	ManagerSuccessReplicate        = "manager_replicate_object_success"
+	ManagerFailureReplicate        = "manager_replicate_object_failure"
+	ManagerCancelReplicate         = "manager_replicate_object_cancel"
+	ManagerSuccessReplicateAndSeal = "manager_replicate_and_seal_object_success"
+	ManagerFailureReplicateAndSeal = "manager_replicate_and_seal_object_failure"
+	ManagerSuccessSeal             = "manager_seal_object_success"
+	ManagerFailureSeal             = "manager_seal_object_failure"
+	ManagerCancelSeal              = "manager_seal_object_cancel"
+	ManagerSuccessConfirmReceive   = "manager_confirm_receive_success"
+	ManagerFailureConfirmReceive   = "manager_confirm_receive_failure"
+)
+
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
 	manager := &ManageModular{baseApp: app}
 	if err := DefaultManagerOptions(manager, cfg); err != nil {

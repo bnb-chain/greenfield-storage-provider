@@ -131,6 +131,18 @@ func (m *GfSpUploadObjectTask) EstimateLimit() corercmgr.Limit {
 	return l
 }
 
+func (m *GfSpUploadObjectTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpUploadObjectTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpUploadObjectTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
 func (m *GfSpUploadObjectTask) Error() error {
 	return m.GetTask().Error()
 }
@@ -270,6 +282,18 @@ func (m *GfSpResumableUploadObjectTask) EstimateLimit() corercmgr.Limit {
 	}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
+}
+
+func (m *GfSpResumableUploadObjectTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpResumableUploadObjectTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpResumableUploadObjectTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
 }
 
 func (m *GfSpResumableUploadObjectTask) Error() error {
@@ -438,6 +462,18 @@ func (m *GfSpReplicatePieceTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
 }
 
+func (m *GfSpReplicatePieceTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpReplicatePieceTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpReplicatePieceTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
 func (m *GfSpReplicatePieceTask) Error() error {
 	return m.GetTask().Error()
 }
@@ -571,6 +607,18 @@ func (m *GfSpSealObjectTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
 
 func (m *GfSpSealObjectTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
+}
+
+func (m *GfSpSealObjectTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpSealObjectTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpSealObjectTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
 }
 
 func (m *GfSpSealObjectTask) Error() error {
@@ -713,6 +761,18 @@ func (m *GfSpReceivePieceTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
 
 func (m *GfSpReceivePieceTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
+}
+
+func (m *GfSpReceivePieceTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpReceivePieceTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpReceivePieceTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
 }
 
 func (m *GfSpReceivePieceTask) Error() error {

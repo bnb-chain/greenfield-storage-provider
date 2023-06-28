@@ -12,7 +12,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
@@ -103,6 +102,7 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 	atomic.AddInt64(&e.executingNum, 1)
 	defer atomic.AddInt64(&e.executingNum, -1)
 
+	startTime := time.Now()
 	limit, err := e.scope.RemainingResource()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get remaining resource", "error", err)
@@ -120,6 +120,8 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 
 	askTask, err := e.baseApp.GfSpClient().AskTask(ctx, limit)
 	if err != nil {
+		metrics.ReqCounter.WithLabelValues(ExeutorFailureAskNoTask).Inc()
+		metrics.ReqTime.WithLabelValues(ExeutorFailureAskNoTask).Observe(time.Since(startTime).Seconds())
 		if e.omitError(err) {
 			return err
 		}
@@ -128,6 +130,8 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 	}
 	// double confirm the safe task
 	if askTask == nil {
+		metrics.ReqCounter.WithLabelValues(ExeutorFailureAskTask).Inc()
+		metrics.ReqTime.WithLabelValues(ExeutorFailureAskTask).Observe(time.Since(startTime).Seconds())
 		log.CtxErrorw(ctx, "failed to ask task due to dangling pointer",
 			"remaining", limit.String(), "error", err)
 		return ErrDanglingPointer
@@ -139,57 +143,74 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		return err
 	}
 	metrics.RunningTaskNumberGauge.WithLabelValues("running_task_num").Set(float64(atomic.LoadInt64(&e.executingNum)))
-	metrics.MaxTaskNumberGauge.WithLabelValues("max_task_num").Set(float64(atomic.LoadInt64(&e.executingNum)))
+	metrics.MaxTaskNumberGauge.WithLabelValues("max_task_num").Set(float64(atomic.LoadInt64(&e.maxExecuteNum)))
+
 	defer e.ReleaseResource(ctx, span)
 	defer e.ReportTask(ctx, askTask)
+
+	defer func() {
+		metrics.ReqCounter.WithLabelValues(ExeutorSuccessAskTask).Inc()
+		metrics.ReqTime.WithLabelValues(ExeutorSuccessAskTask).Observe(time.Since(startTime).Seconds())
+	}()
+
 	ctx = log.WithValue(ctx, log.CtxKeyTask, askTask.Key().String())
 	switch t := askTask.(type) {
 	case *gfsptask.GfSpReplicatePieceTask:
-		metrics.ExecutorReplicatePieceTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingReplicatePieceTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingReplicatePieceTaskCnt, -1)
-		metrics.PerfUploadTimeHistogram.WithLabelValues("background_schedule_replicate_time").Observe(time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
-		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorBeginTask, t.Key().String())
 		e.HandleReplicatePieceTask(ctx, t)
 		if t.Error() != nil {
-			e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String()+":"+t.Error().Error())
+			metrics.ReqCounter.WithLabelValues(ExeutorFailureReplicateTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExeutorFailureReplicateTask).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(ExeutorSuccessReplicateTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExeutorSuccessReplicateTask).Observe(time.Since(startTime).Seconds())
 		}
-		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String())
 	case *gfsptask.GfSpSealObjectTask:
-		metrics.ExecutorSealObjectTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingSpSealObjectTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingSpSealObjectTaskCnt, -1)
-		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorBeginTask, t.Key().String())
 		e.HandleSealObjectTask(ctx, t)
 		if t.Error() != nil {
-			e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String()+":"+t.Error().Error())
+			metrics.ReqCounter.WithLabelValues(ExeutorFailureSealObjectTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExeutorFailureSealObjectTask).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(ExeutorSuccessSealObjectTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExeutorSuccessSealObjectTask).Observe(time.Since(startTime).Seconds())
 		}
-		e.baseApp.GfSpDB().InsertUploadEvent(t.GetObjectInfo().Id.Uint64(), corespdb.ExecutorEndTask, t.Key().String())
 	case *gfsptask.GfSpReceivePieceTask:
-		metrics.ExecutorReceiveTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingReceivePieceTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingReceivePieceTaskCnt, -1)
 		e.HandleReceivePieceTask(ctx, t)
+		if t.Error() != nil {
+			metrics.ReqCounter.WithLabelValues(ExeutorFailureReceiveTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExeutorFailureReceiveTask).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(ExeutorSuccessReceiveTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExeutorSuccessReceiveTask).Observe(time.Since(startTime).Seconds())
+		}
 	case *gfsptask.GfSpGCObjectTask:
-		metrics.ExecutorGCObjectTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingGCObjectTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingGCObjectTaskCnt, -1)
 		e.HandleGCObjectTask(ctx, t)
 	case *gfsptask.GfSpGCZombiePieceTask:
-		metrics.ExecutorGCZombieTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingGCZombiePieceTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingGCZombiePieceTaskCnt, -1)
 		e.HandleGCZombiePieceTask(ctx, t)
 	case *gfsptask.GfSpGCMetaTask:
-		metrics.ExecutorGCMetaTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingGCGCMetaTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingGCGCMetaTaskCnt, -1)
 		e.HandleGCMetaTask(ctx, t)
 	case *gfsptask.GfSpRecoverPieceTask:
-		metrics.ExecutorRecoveryTaskCounter.WithLabelValues(e.Name()).Inc()
 		atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
 		e.HandleRecoverPieceTask(ctx, t)
+		if t.Error() != nil {
+			metrics.ReqCounter.WithLabelValues(ExeutorFailureRecoveryTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExeutorFailureRecoveryTask).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(ExeutorSuccessRecoveryTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExeutorSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
+		}
 	default:
 		log.CtxErrorw(ctx, "unsupported task type")
 	}
@@ -199,8 +220,19 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 
 func (e *ExecuteModular) ReportTask(
 	ctx context.Context,
-	task coretask.Task) error {
-	err := e.baseApp.GfSpClient().ReportTask(ctx, task)
+	task coretask.Task) (err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.ReqCounter.WithLabelValues(ExeutorFailureReportTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExeutorFailureReportTask).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(ExeutorSuccessReportTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExeutorSuccessReportTask).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
+	err = e.baseApp.GfSpClient().ReportTask(ctx, task)
 	log.CtxDebugw(ctx, "finish to report task", "task_info", task.Info(), "error", err)
 	return err
 }
