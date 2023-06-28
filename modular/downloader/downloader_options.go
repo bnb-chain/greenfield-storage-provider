@@ -4,6 +4,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -35,12 +36,14 @@ func DefaultDownloaderOptions(downloader *DownloadModular, cfg *gfspconfig.GfSpC
 	if cfg.Bucket.FreeQuotaPerBucket == 0 {
 		cfg.Bucket.FreeQuotaPerBucket = DefaultBucketFreeQuota
 	}
-	downloader.downloadQueue = cfg.Customize.NewStrategyTQueueFunc(
-		downloader.Name()+"-download-queue",
-		cfg.Parallel.DownloadObjectParallelPerNode)
-	downloader.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
-		downloader.Name()+"-challenge-piece",
-		cfg.Parallel.ChallengePieceParallelPerNode)
+	cache, err := lru.New(cfg.Parallel.DownloadObjectParallelPerNode)
+	if err != nil {
+		return err
+	}
+
+	downloader.pieceCache = cache
+	downloader.downloadParallel = int64(cfg.Parallel.DownloadObjectParallelPerNode)
+	downloader.challengeParallel = int64(cfg.Parallel.ChallengePieceParallelPerNode)
 	downloader.bucketFreeQuota = cfg.Bucket.FreeQuotaPerBucket
 	return nil
 }

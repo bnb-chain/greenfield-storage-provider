@@ -22,4 +22,6 @@ const (
 	ServiceConfigTableName = "service_config"
 	// OffChainAuthKeyTableName defines the off chain auth key table name.
 	OffChainAuthKeyTableName = "off_chain_auth_key"
+	// UploadEventTableName defines the event of uploading object
+	UploadEventTableName = "upload_event"
 )

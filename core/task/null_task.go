@@ -2,7 +2,6 @@ package task
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -21,6 +20,7 @@ var _ ChallengePieceTask = (*NullTask)(nil)
 var _ GCTask = (*NullTask)(nil)
 var _ GCZombiePieceTask = (*NullTask)(nil)
 var _ GCMetaTask = (*NullTask)(nil)
+var _ RecoveryPieceTask = (*NullTask)(nil)
 
 type NullTask struct{}
 
@@ -90,14 +90,16 @@ func (*NullTask) GetGlobalVirtualGroupId() uint32 {
 
 func (*NullTask) InitReplicatePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, int64, int64) {
 }
-func (*NullTask) GetSealed() bool                             { return false }
-func (*NullTask) SetSealed(bool)                              {}
-func (*NullTask) GetSecondaryAddresses() []string             { return nil }
-func (*NullTask) GetSecondarySignatures() [][]byte            { return nil }
-func (*NullTask) SetSecondarySignatures([][]byte)             {}
-func (*NullTask) SetSecondaryAddresses([]string)              {}
-func (*NullTask) GetSecondarySps() []*sptypes.StorageProvider { return nil }
-func (*NullTask) InitSealObjectTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64) {
+func (*NullTask) InitRecoverPieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, uint64, int64, int64) {
+}
+func (*NullTask) GetSealed() bool                  { return false }
+func (*NullTask) SetSealed(bool)                   {}
+func (*NullTask) GetSecondaryAddresses() []string  { return nil }
+func (*NullTask) GetSecondarySignatures() [][]byte { return nil }
+func (*NullTask) SetSecondarySignatures([][]byte)  {}
+func (*NullTask) SetSecondaryAddresses([]string)   {}
+func (*NullTask) GetSecondaryEndpoints() []string  { return nil }
+func (*NullTask) InitSealObjectTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64) {
 }
 func (*NullTask) InitReceivePieceTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64) {
 }
@@ -123,7 +125,10 @@ func (*NullTask) InitChallengePieceTask(*storagetypes.ObjectInfo, *storagetypes.
 func (*NullTask) SetBucketInfo(*storagetypes.BucketInfo) {}
 func (*NullTask) SetUserAddress(string)                  {}
 func (*NullTask) GetSegmentIdx() uint32                  { return 0 }
+func (*NullTask) GetEcIdx() int32                        { return 0 }
 func (*NullTask) SetSegmentIdx(uint32)                   {}
+func (*NullTask) GetRecovered() bool                     { return false }
+func (*NullTask) SetRecoverDone()                        {}
 func (*NullTask) GetRedundancyIdx() int32                { return 0 }
 func (*NullTask) SetRedundancyIdx(idx int32)             {}
 func (*NullTask) GetIntegrityHash() []byte               { return nil }

@@ -16,17 +16,17 @@ const (
 	// MaxUploadTime defines the max timeout to upload object.
 	MaxUploadTime int64 = 300
 	// MinReplicateTime defines the min timeout to replicate object.
-	MinReplicateTime int64 = 15
+	MinReplicateTime int64 = 90
 	// MaxReplicateTime defines the max timeout to replicate object.
 	MaxReplicateTime int64 = 500
 	// MinReceiveTime defines the min timeout to confirm the received piece whether is sealed on greenfield.
-	MinReceiveTime int64 = 10
+	MinReceiveTime int64 = 90
 	// MaxReceiveTime defines the max timeout to confirm the received piece whether is sealed on greenfield.
-	MaxReceiveTime int64 = 30
+	MaxReceiveTime int64 = 300
 	// MinSealObjectTime defines the min timeout to seal object to greenfield.
-	MinSealObjectTime int64 = 2
+	MinSealObjectTime int64 = 90
 	// MaxSealObjectTime defines the max timeout to seal object to greenfield.
-	MaxSealObjectTime int64 = 5
+	MaxSealObjectTime int64 = 300
 	// MinDownloadTime defines the min timeout to download object.
 	MinDownloadTime int64 = 2
 	// MaxDownloadTime defines the max timeout to download object.
@@ -43,6 +43,10 @@ const (
 	MinGCMetaTime int64 = 300
 	// MaxGCMetaTime defines the max timeout to gc meta.
 	MaxGCMetaTime int64 = 600
+	// MinRecoveryTime defines the min timeout to recovery object.
+	MinRecoveryTime int64 = 10
+	// MaxRecoveryTime defines the max timeout to replicate object.
+	MaxRecoveryTime int64 = 50
 
 	// NotUseRetry defines the default task max retry.
 	NotUseRetry int64 = 0
@@ -51,9 +55,9 @@ const (
 	// MaxReplicateRetry defines the max retry number to replicate object.
 	MaxReplicateRetry = 6
 	// MinReceiveConfirmRetry defines the min retry number to confirm received piece is sealed on greenfield.
-	MinReceiveConfirmRetry = 20
+	MinReceiveConfirmRetry = 0
 	// MaxReceiveConfirmRetry defines the max retry number to confirm received piece is sealed on greenfield.
-	MaxReceiveConfirmRetry = 60
+	MaxReceiveConfirmRetry = 3
 	// MinSealObjectRetry defines the min retry number to seal object.
 	MinSealObjectRetry = 3
 	// MaxSealObjectRetry defines the max retry number to seal object.
@@ -62,6 +66,10 @@ const (
 	MinGCObjectRetry = 3
 	// MaxGCObjectRetry defines the min retry number to gc object.
 	MaxGCObjectRetry = 5
+	// MinRecoveryRetry defines the min retry number to recovery piece.
+	MinRecoveryRetry = 2
+	// MaxRecoveryRetry  defines the max retry number to recovery piece.
+	MaxRecoveryRetry = 3
 )
 
 // TaskTimeout returns the task timeout by task type and some task need payload size
@@ -151,6 +159,15 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 			return MaxGCMetaTime
 		}
 		return g.gcMetaTimeout
+	case coretask.TypeTaskRecoverPiece:
+		timeout := int64(size)/(g.replicateSpeed+1)/(MinSpeed) + 100
+		if timeout < MinRecoveryTime {
+			return MinRecoveryTime
+		}
+		if timeout > MaxRecoveryTime {
+			return MaxRecoveryTime
+		}
+		return timeout
 	}
 	return NotUseTimeout
 }
@@ -218,6 +235,14 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 			return MaxGCObjectRetry
 		}
 		return g.gcMetaRetry
+	case coretask.TypeTaskRecoverPiece:
+		if g.recoveryRetry < MinRecoveryRetry {
+			return MinRecoveryRetry
+		}
+		if g.recoveryRetry > MaxRecoveryRetry {
+			return MaxRecoveryRetry
+		}
+		return g.recoveryRetry
 	}
 	return 0
 }
@@ -228,6 +253,8 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	switch task.Type() {
 	case coretask.TypeTaskCreateBucketApproval:
 		return coretask.UnSchedulingPriority
+	case coretask.TypeTaskMigrateBucketApproval:
+		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskCreateObjectApproval:
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskReplicatePieceApproval:
@@ -235,11 +262,11 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	case coretask.TypeTaskUpload:
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskReplicatePiece:
-		return coretask.DefaultLargerTaskPriority
+		return coretask.MaxTaskPriority
 	case coretask.TypeTaskReceivePiece:
-		return coretask.MaxTaskPriority
+		return coretask.DefaultSmallerPriority
 	case coretask.TypeTaskSealObject:
-		return coretask.MaxTaskPriority
+		return coretask.DefaultLargerTaskPriority
 	case coretask.TypeTaskDownloadObject:
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskChallengePiece:
@@ -250,6 +277,8 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskGCMeta:
 		return coretask.UnSchedulingPriority
+	case coretask.TypeTaskRecoverPiece:
+		return coretask.DefaultSmallerPriority
 	}
 	return coretask.UnKnownTaskPriority
 }

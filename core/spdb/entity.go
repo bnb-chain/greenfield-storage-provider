@@ -18,11 +18,12 @@ const (
 
 // UploadObjectMeta defines the upload object state and related seal info, etc.
 type UploadObjectMeta struct {
-	ObjectID            uint64
-	TaskState           storetypes.TaskState
-	SecondaryAddresses  []string
-	SecondarySignatures [][]byte
-	ErrorDescription    string
+	ObjectID             uint64
+	TaskState            storetypes.TaskState
+	GlobalVirtualGroupID uint32
+	SecondaryEndpoints   []string
+	SecondarySignatures  [][]byte
+	ErrorDescription     string
 }
 
 // GCObjectMeta defines the gc object range progress info.
@@ -39,7 +40,6 @@ type IntegrityMeta struct {
 	ObjectID          uint64
 	IntegrityChecksum []byte
 	PieceChecksumList [][]byte
-	Signature         []byte
 }
 
 // ReadRecord defines a read request record, will decrease the bucket read quota.

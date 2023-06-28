@@ -94,6 +94,7 @@ func (g *GfSpBaseApp) OnDownloadPieceTask(ctx context.Context, downloadPieceTask
 		log.CtxError(ctx, "failed to download piece due to task pointer dangling")
 		return nil, ErrDownloadTaskDangling
 	}
+
 	err := g.downloader.PreDownloadPiece(ctx, downloadPieceTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to pre download piece", "task_info", downloadPieceTask.Info(), "error", err)

@@ -15,7 +15,7 @@ Write once, run on every storage service.
 
 The core function of PieceStore module is to be compatible with multiple object storage or KV storage such as S3, GCS, Azure Blob, Minio, Ceph, IPFS, DiskFile, Memory, etc. Different SP can use different object storage without caring about the underlying implementation.
 
-<div align=center><img src="../../../asset/11-SP-Piecestore-Arch.jpg" width="700px"></div>
+<div align=center><img src="../asset/09-piecestore_arch.jpg" width="700px"></div>
 <div align="center"><i>PieceStore Architecture</i></div>
 
 [PieceStore code](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/store/piecestore)
