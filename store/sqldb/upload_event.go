@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -8,6 +9,10 @@ import (
 )
 
 func (s *SpDBImpl) InsertPutEvent(task coretask.Task) error {
+	// TODO:: cancel th limit after debugging test
+	if !strings.Contains(task.Key().String(), "dstabilityt") {
+		return nil
+	}
 	go func() {
 		switch t := task.(type) {
 		case *gfsptask.GfSpUploadObjectTask:
