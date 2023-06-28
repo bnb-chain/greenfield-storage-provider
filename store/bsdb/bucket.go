@@ -1,8 +1,9 @@
 package bsdb
 
 import (
-	"cosmossdk.io/math"
 	"errors"
+
+	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
