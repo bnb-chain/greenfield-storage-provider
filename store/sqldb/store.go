@@ -24,13 +24,13 @@ const (
 	SpDBDataBase = "SP_DB_DATABASE"
 
 	// DefaultConnMaxLifetime defines the default max liveliness time of connection.
-	DefaultConnMaxLifetime = 60
+	DefaultConnMaxLifetime = 2048
 	// DefaultConnMaxIdleTime defines the default max idle time of connection.
-	DefaultConnMaxIdleTime = 30
+	DefaultConnMaxIdleTime = 2048
 	// DefaultMaxIdleConns defines the default max number of idle connections.
-	DefaultMaxIdleConns = 16
+	DefaultMaxIdleConns = 2048
 	// DefaultMaxOpenConns defines the default max number of open connections.
-	DefaultMaxOpenConns = 32
+	DefaultMaxOpenConns = 2048
 )
 
 var _ corespdb.SPDB = &SpDBImpl{}
@@ -74,8 +74,36 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to upload object progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&UploadEventTable{}); err != nil {
-		log.Errorw("failed to upload event progress table", "error", err)
+	if err = db.AutoMigrate(&PutObjectSuccessTable{}); err != nil {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&PutObjectEventTable{}); err != nil {
+		log.Errorw("failed to put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&UploadTimeoutTable{}); err != nil {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&UploadFailedTable{}); err != nil {
+		log.Errorw("failed to put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&ReplicateTimeoutTable{}); err != nil {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&ReplicateFailedTable{}); err != nil {
+		log.Errorw("failed to put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&SealTimeoutTable{}); err != nil {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&SealFailedTable{}); err != nil {
+		log.Errorw("failed to put event progress table", "error", err)
 		return nil, err
 	}
 	if err = db.AutoMigrate(&GCObjectProgressTable{}); err != nil {
