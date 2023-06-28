@@ -4,7 +4,7 @@ workspace=${GITHUB_WORKSPACE}
 
 # some constants
 GREENFIELD_REPO_TAG="v0.2.3-alpha.1"
-GREENFIELD_CMD_BRANCH="v0.2.3-alpha.1"
+GREENFIELD_CMD_BRANCH="adaptor-sp-e2e"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
