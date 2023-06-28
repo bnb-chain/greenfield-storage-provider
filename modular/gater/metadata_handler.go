@@ -8,7 +8,9 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
@@ -37,12 +39,18 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		b      bytes.Buffer
 		reqCtx *RequestContext
 	)
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", reqCtx.String())
 			MakeErrorResponse(w, err)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -95,13 +103,18 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		decodedContinuationToken []byte
 		queryParams              url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list objects by bucket name", reqCtx.String())
 			MakeErrorResponse(w, err)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -234,12 +247,18 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 		reqCtx *RequestContext
 	)
 
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get object meta", reqCtx.String())
 			MakeErrorResponse(w, err)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -285,13 +304,18 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 		b      bytes.Buffer
 		reqCtx *RequestContext
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get bucket meta", reqCtx.String())
 			MakeErrorResponse(w, err)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -339,13 +363,18 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 		effect      *permission_types.Effect
 		reqCtx      *RequestContext
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to verify permission", reqCtx.String())
 			MakeErrorResponse(w, err)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -422,13 +451,18 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		groups      []*types.Group
 		reqCtx      *RequestContext
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get group list", reqCtx.String())
 			MakeErrorResponse(w, err)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -519,13 +553,18 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 		objectIDs   bsdb.ObjectIDs
 		reqCtx      *RequestContext
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list objects by ids", reqCtx.String())
 			MakeErrorResponse(w, err)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -583,13 +622,18 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 		bucketIDs   bsdb.BucketIDs
 		reqCtx      *RequestContext
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list buckets by ids", reqCtx.String())
 			MakeErrorResponse(w, err)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 

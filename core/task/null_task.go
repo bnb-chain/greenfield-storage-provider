@@ -48,6 +48,9 @@ func (*NullTask) GetMaxRetry() int64                                            
 func (*NullTask) SetMaxRetry(int64)                                                     {}
 func (*NullTask) EstimateLimit() rcmgr.Limit                                            { return nil }
 func (*NullTask) Error() error                                                          { return nil }
+func (NullTask) SetLogs(logs string)                                                    {}
+func (NullTask) GetLogs() string                                                        { return "" }
+func (NullTask) AppendLog(log string)                                                   {}
 func (*NullTask) SetError(error)                                                        {}
 func (*NullTask) GetExpiredHeight() uint64                                              { return 0 }
 func (*NullTask) SetExpiredHeight(uint64)                                               {}

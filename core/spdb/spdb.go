@@ -3,6 +3,7 @@ package spdb
 import (
 	"time"
 
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 )
@@ -46,8 +47,8 @@ type UploadObjectProgressDB interface {
 	// GetUploadMetasToSeal queries the latest replicate_done/seal_doing object to continue seal.
 	// It is only used in startup.
 	GetUploadMetasToSeal(limit int) ([]*UploadObjectMeta, error)
-	// InsertUploadEvent inserts a new upload event progress.
-	InsertUploadEvent(objectID uint64, state string, description string) error
+	// InsertPutEvent inserts a new upload event progress.
+	InsertPutEvent(task coretask.Task) error
 }
 
 // GCObjectProgressDB interface which records gc object related progress.
