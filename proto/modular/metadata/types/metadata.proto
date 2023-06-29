@@ -10,7 +10,6 @@ import "greenfield/storage/events.proto";
 import "greenfield/virtualgroup/types.proto";
 import "greenfield/virtualgroup/events.proto";
 import "store/types/store.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types";
 
