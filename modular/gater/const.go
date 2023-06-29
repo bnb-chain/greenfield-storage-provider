@@ -192,4 +192,24 @@ const (
 	RecoveryCheckInterval   = 2
 	RecoveryMinMilliseconds = 500
 	RecoveryMinEcIndex      = -1
+	ErrPieceStoreInnerCode  = 35101
+)
+
+const (
+	GatewayTotalSuccess            = "gateway_total_success"
+	GatewayTotalFailure            = "gateway_total_failure"
+	GatewayGetObjectSize           = "gateway_get_object_size"
+	GatewayPutObjectSize           = "gateway_put_object_size"
+	GatewayChallengePieceSize      = "gateway_challenge_piece_size"
+	GatewayReplicatePieceSize      = "gateway_replicate_piece_size"
+	GatewaySuccessGetApproval      = "gateway_get_approval_success"
+	GatewayFailureGetApproval      = "gateway_get_approval_failure"
+	GatewaySuccessGetChallengeInfo = "gateway_get_challenge_info_success"
+	GatewayFailureGetChallengeInfo = "gateway_get_challenge_info_failure"
+	GatewaySuccessReplicatePiece   = "gateway_replicate_piece_success"
+	GatewayFailureReplicatePiece   = "gateway_replicate_piece_failure"
+	GatewaySuccessPutObject        = "gateway_put_object_success"
+	GatewayFailurePutObject        = "gateway_put_object_failure"
+	GatewaySuccessGetObject        = "gateway_get_object_success"
+	GatewayFailureGetObject        = "gateway_get_object_failure"
 )

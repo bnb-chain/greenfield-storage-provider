@@ -122,6 +122,18 @@ func (m *GfSpCreateBucketApprovalTask) Error() error {
 	return m.GetTask().Error()
 }
 
+func (m *GfSpCreateBucketApprovalTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpCreateBucketApprovalTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpCreateBucketApprovalTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
 func (m *GfSpCreateBucketApprovalTask) SetError(err error) {
 	m.GetTask().SetError(err)
 }
@@ -242,6 +254,18 @@ func (m *GfSpCreateObjectApprovalTask) EstimateLimit() corercmgr.Limit {
 	l := &gfsplimit.GfSpLimit{}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
+}
+
+func (m *GfSpCreateObjectApprovalTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpCreateObjectApprovalTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpCreateObjectApprovalTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
 }
 
 func (m *GfSpCreateObjectApprovalTask) Error() error {
@@ -380,6 +404,18 @@ func (m *GfSpReplicatePieceApprovalTask) EstimateLimit() corercmgr.Limit {
 	l := &gfsplimit.GfSpLimit{}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
+}
+
+func (m *GfSpReplicatePieceApprovalTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpReplicatePieceApprovalTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpReplicatePieceApprovalTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
 }
 
 func (m *GfSpReplicatePieceApprovalTask) Error() error {

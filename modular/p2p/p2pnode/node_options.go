@@ -91,7 +91,7 @@ func MakeBootstrapMultiaddr(bootstrap []string) (peersIDs []peer.ID, addrs []ma.
 			log.Errorw("failed to make bootstrap multi addr", "bootstrap", boot, "error", err)
 			return nil, nil, err
 		}
-		log.Infow("parse bootstrap node info", "id", bootID, "multiaddr", addr.String())
+		//log.Infow("parse bootstrap node info", "id", bootID, "multiaddr", addr.String())
 		peersIDs = append(peersIDs, bootID)
 		addrs = append(addrs, addr)
 	}

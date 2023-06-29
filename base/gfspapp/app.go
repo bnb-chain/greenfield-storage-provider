@@ -2,6 +2,7 @@ package gfspapp
 
 import (
 	"context"
+	"sync"
 	"syscall"
 
 	"google.golang.org/grpc"
@@ -54,6 +55,7 @@ type GfSpBaseApp struct {
 	appCtx    context.Context
 	appCancel context.CancelFunc
 	services  []corelifecycle.Service
+	mux       sync.Mutex
 
 	uploadSpeed    int64
 	downloadSpeed  int64

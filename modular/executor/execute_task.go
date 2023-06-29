@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -15,7 +16,6 @@ import (
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/manager"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
@@ -49,6 +49,7 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		task.SetError(ErrDanglingPointer)
 		return
 	}
+	task.AppendLog("executor-begin-handle-seal-task")
 	sealMsg := &storagetypes.MsgSealObject{
 		Operator:              e.baseApp.OperatorAddress(),
 		BucketName:            task.GetObjectInfo().GetBucketName(),
@@ -57,41 +58,50 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		SecondarySpSignatures: task.GetSecondarySignatures(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
+	task.AppendLog("executor-end-handle-seal-task")
 	log.CtxDebugw(ctx, "finish to handle seal object task", "error", task.Error())
 }
 
 func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTask, sealMsg *storagetypes.MsgSealObject) error {
-	var err error
-	for retry := int64(0); retry <= task.GetMaxRetry(); retry++ {
-		e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorBeginSealTx, task.Key().String())
-		err = e.baseApp.GfSpClient().SealObject(ctx, sealMsg)
+	var (
+		err    error
+		txHash string
+	)
+	startTime := time.Now()
+	defer func() {
 		if err != nil {
+			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureSealObject).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExeutorFailureSealObject).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessSealObject).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessSealObject).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+	for retry := int64(0); retry <= task.GetMaxRetry(); retry++ {
+		txHash, err = e.baseApp.GfSpClient().SealObject(ctx, sealMsg)
+		if err != nil {
+			task.AppendLog(fmt.Sprintf("executor-seal-tx-failed-error:%s-retry:%d", err.Error(), retry))
 			log.CtxErrorw(ctx, "failed to seal object", "retry", retry,
 				"max_retry", task.GetMaxRetry(), "error", err)
-			e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndSealTx, task.Key().String()+":"+err.Error())
 			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
 		} else {
-			e.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), spdb.ExecutorEndSealTx, task.Key().String())
+			task.AppendLog(fmt.Sprintf("executor-seal-tx-succeed-retry:%d-txHash:%s", retry, txHash))
 			break
 		}
 	}
 	// even though signer return error, maybe seal on chain successfully because
 	// signer use the async mode, so ignore the error and listen directly
-	err = e.listenSealObject(ctx, task.GetObjectInfo())
-	if err == nil {
-		metrics.PerfUploadTimeHistogram.WithLabelValues("upload_replicate_seal_total_time").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
-	}
+	err = e.listenSealObject(ctx, task, task.GetObjectInfo())
 	return err
 }
 
-func (e *ExecuteModular) listenSealObject(ctx context.Context, object *storagetypes.ObjectInfo) error {
+func (e *ExecuteModular) listenSealObject(ctx context.Context, task coretask.ObjectTask, object *storagetypes.ObjectInfo) error {
 	var err error
 	for retry := 0; retry < e.maxListenSealRetry; retry++ {
-		e.baseApp.GfSpDB().InsertUploadEvent(object.Id.Uint64(), spdb.ExecutorBeginConfirmSeal, "")
 		sealed, innerErr := e.baseApp.Consensus().ListenObjectSeal(ctx,
 			object.Id.Uint64(), e.listenSealTimeoutHeight)
 		if innerErr != nil {
-			e.baseApp.GfSpDB().InsertUploadEvent(object.Id.Uint64(), spdb.ExecutorEndConfirmSeal, "err:"+innerErr.Error())
+			task.AppendLog(fmt.Sprintf("executor-listen-seal-failed-error:%s-retry:%d", err.Error(), retry))
 			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
 				"max_retry", e.maxListenSealRetry, "error", err)
 			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
@@ -99,13 +109,13 @@ func (e *ExecuteModular) listenSealObject(ctx context.Context, object *storagety
 			continue
 		}
 		if !sealed {
-			e.baseApp.GfSpDB().InsertUploadEvent(object.Id.Uint64(), spdb.ExecutorEndConfirmSeal, "unsealed")
+			task.AppendLog(fmt.Sprintf("executor-listen-seal-failed(unseal)-retry:%d", retry))
 			log.CtxErrorw(ctx, "failed to seal object on chain", "retry", retry,
 				"max_retry", e.maxListenSealRetry, "error", err)
 			err = ErrUnsealed
 			continue
 		}
-		e.baseApp.GfSpDB().InsertUploadEvent(object.Id.Uint64(), spdb.ExecutorEndConfirmSeal, "sealed")
+		task.AppendLog(fmt.Sprintf("executor-listen-seal-succeed-retry:%d", retry))
 		err = nil
 		break
 	}
@@ -121,7 +131,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 		err           error
 		onChainObject *storagetypes.ObjectInfo
 	)
-	err = e.listenSealObject(ctx, task.GetObjectInfo())
+	err = e.listenSealObject(ctx, task, task.GetObjectInfo())
 	if err == nil {
 		task.SetSealed(true)
 	}
@@ -349,6 +359,7 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 			task.SetError(err)
 			return
 		}
+
 		// TODO if get piece from primary SP fail ,send request to other secondary SP
 		pieceData, err := e.doRecoveryPiece(ctx, task, primarySPEndpoint)
 		if err != nil {
@@ -377,6 +388,11 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 		log.CtxDebugw(ctx, "begin to recovery primary SP object")
 		secondaryEndpoints, err := e.getObjectSecondaryEndpoints(ctx, task.GetObjectInfo())
 		if err != nil {
+			return
+		}
+
+		if uint32(len(secondaryEndpoints)) != ecPieceCount {
+			task.SetError(ErrRecoveryPieceNotEnough)
 			return
 		}
 
@@ -473,11 +489,6 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 		signature []byte
 		pieceData []byte
 	)
-	startTime := time.Now()
-	defer func() {
-		metrics.RecoverPieceTimeHistogram.WithLabelValues(e.Name()).Observe(time.Since(startTime).Seconds())
-	}()
-
 	signature, err = e.baseApp.GfSpClient().SignRecoveryTask(ctx, rTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign recovery task", "object", rTask.GetObjectInfo().GetObjectName(), "error", err)
@@ -507,9 +518,9 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 }
 
 // getObjectSecondaryEndpoints return the secondary sp endpoints list of the specific object
-func (g *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, objectInfo *storagetypes.ObjectInfo) ([]string, error) {
+func (e *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, objectInfo *storagetypes.ObjectInfo) ([]string, error) {
 	secondarySPAddrs := objectInfo.GetSecondarySpAddresses()
-	spList, err := g.baseApp.Consensus().ListSPs(ctx)
+	spList, err := e.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -526,13 +537,13 @@ func (g *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, object
 	return secondaryEndpointList, nil
 }
 
-func (g *ExecuteModular) getObjectPrimarySPEndpoint(ctx context.Context, bucketName string) (string, error) {
-	spList, err := g.baseApp.Consensus().ListSPs(ctx)
+func (e *ExecuteModular) getObjectPrimarySPEndpoint(ctx context.Context, bucketName string) (string, error) {
+	spList, err := e.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
+	bucketInfo, err := e.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
 	if err != nil {
 		return "", err
 	}

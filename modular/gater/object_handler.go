@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
@@ -43,11 +42,19 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewayFailurePutObject).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayFailurePutObject).Observe(time.Since(uploadPrimaryStartTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+			metrics.ReqPieceSize.WithLabelValues(GatewayPutObjectSize).Observe(float64(objectInfo.GetPayloadSize()))
+			metrics.ReqTime.WithLabelValues(GatewaySuccessPutObject).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+			metrics.ReqPieceSize.WithLabelValues(GatewaySuccessPutObject).Observe(float64(objectInfo.GetPayloadSize()))
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
-		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_primary_total_time").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	}()
 
 	reqCtx, err = NewRequestContext(r, g)
@@ -58,7 +65,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		startAuthenticationTime := time.Now()
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 			return
@@ -72,7 +79,8 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	startGetObjectInfoTime := time.Now()
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
-	metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_get_object_info").Observe(time.Since(startGetObjectInfoTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_object_cost").Observe(time.Since(startGetObjectInfoTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
@@ -85,7 +93,8 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	startGetStorageParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_get_storage_param").Observe(time.Since(startGetStorageParamTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -93,14 +102,16 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	task := &gfsptask.GfSpUploadObjectTask{}
 	task.InitUploadObjectTask(objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()))
+	task.AppendLog(fmt.Sprintf("gateway-prepare-upload-task-cost:%d", time.Now().UnixMilli()-uploadPrimaryStartTime.UnixMilli()))
+	task.AppendLog("gateway-create-upload-task")
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
-	g.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), corespdb.GatewayBeginReceiveUpload, task.Key().String())
+	uploadDataTime := time.Now()
 	err = g.baseApp.GfSpClient().UploadObject(ctx, task, r.Body)
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
-		g.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), corespdb.GatewayEndReceiveUpload, task.Key().String()+":"+err.Error())
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
-	g.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), corespdb.GatewayEndReceiveUpload, task.Key().String())
 	log.CtxDebugw(ctx, "succeed to upload payload data")
 }
 
@@ -154,12 +165,14 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(uploadPrimaryStartTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(uploadPrimaryStartTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
-		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_primary_total_time").Observe(time.Since(uploadPrimaryStartTime).Seconds())
-
 	}()
 
 	reqCtx, err = NewRequestContext(r, g)
@@ -167,10 +180,8 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 	if reqCtx.NeedVerifyAuthentication() {
-		startAuthirzerTime := time.Now()
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_authorizer").Observe(time.Since(startAuthirzerTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 			return
@@ -182,9 +193,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	startGetObjectInfoTime := time.Now()
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
-	metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_get_object_info").Observe(time.Since(startGetObjectInfoTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
@@ -195,9 +204,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		err = ErrInvalidPayloadSize
 		return
 	}
-	startGetStorageParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
-	metrics.PerfUploadTimeHistogram.WithLabelValues("uploader_get_storage_param").Observe(time.Since(startGetStorageParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -258,14 +265,20 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 		segmentCount  uint32
 		offset        uint64
 	)
+
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
@@ -347,6 +360,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		lowOffset     int64
 		highOffset    int64
 		pieceInfos    []*downloader.SegmentPieceInfo
+		pieceData     []byte
 	)
 	getObjectStartTime := time.Now()
 	defer func() {
@@ -356,11 +370,18 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(getObjectStartTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewayFailureGetObject).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayFailureGetObject).Observe(time.Since(getObjectStartTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(getObjectStartTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewaySuccessGetObject).Inc()
+			metrics.ReqTime.WithLabelValues(GatewaySuccessGetObject).Observe(time.Since(getObjectStartTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
-		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_total_time").Observe(time.Since(getObjectStartTime).Seconds())
 	}()
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
@@ -456,6 +477,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	getDataTime := time.Now()
+	var reoveredData []byte
 	for idx, pInfo := range pieceInfos {
 		enableCheck := false
 		if idx == 0 { // only check in first piece
@@ -466,61 +488,61 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			enableCheck, reqCtx.Account(), uint64(highOffset-lowOffset+1), pInfo.SegmentPieceKey, pInfo.Offset,
 			pInfo.Length, g.baseApp.TaskTimeout(task, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(task))
 		getSegmentTime := time.Now()
-		pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_segment_data_time").Observe(time.Since(getSegmentTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
 			// TODO pieceStore should return exact error to indicate if the piece data lost
 			// for now, if get piece fail, it is suspected that the piece has been lost
 			// the recovery task will recovery the total segment (ignoring the offset and length of piece info)
-			log.CtxDebugw(reqCtx.Context(), "recovery task key:", "key:", pInfo.SegmentPieceKey)
-			segmentIndex, parseErr := g.baseApp.PieceOp().ParseSegmentIdx(pInfo.SegmentPieceKey)
-			if parseErr != nil {
-				// no need to return recovery error to user
-				log.CtxErrorw(reqCtx.Context(), "fail to parse recovery segment index", "error", err)
-				return
-			}
-			segSize := g.baseApp.PieceOp().SegmentPieceSize(objectInfo.PayloadSize, segmentIndex, params.GetMaxSegmentSize())
-			recoveryTask := &gfsptask.GfSpRecoverPieceTask{}
-			recoveryTask.InitRecoverPieceTask(task.GetObjectInfo(), task.GetStorageParams(),
-				coretask.DefaultLargerTaskPriority,
-				segmentIndex,
-				int32(-1),
-				uint64(segSize),
-				g.baseApp.TaskTimeout(recoveryTask, task.GetStorageParams().GetMaxSegmentSize()),
-				3)
+			if strings.Contains(err.Error(), fmt.Sprintf("inner_code:%d", ErrPieceStoreInnerCode)) {
+				reoveredData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask, pInfo, task.GetStorageParams().GetMaxSegmentSize())
+				if err != nil {
+					log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", err)
+					return
+				}
+				recoverDataLen := len(reoveredData)
+				// the recovery segment is a total segment data, if the offset and length meta is set, it is needed to adjust the piece data with the meta
+				if pInfo.Offset > 0 {
+					reoveredData = reoveredData[pInfo.Offset:]
+				}
 
-			g.baseApp.GfSpClient().ReportTask(reqCtx.Context(), recoveryTask)
-			log.CtxDebugw(reqCtx.Context(), "recovery task run successfully", "recovery object", objectInfo.ObjectName, "segment index:", idx)
-
-			reoverData, err := g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask)
-			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", err)
-				return
+				if pInfo.Offset+pInfo.Length < uint64(recoverDataLen) {
+					reoveredData = reoveredData[:pInfo.Length]
+					log.CtxErrorw(reqCtx.Context(), "adjust the piece data", "len:", len(reoveredData))
+				}
+				w.Write(reoveredData)
+				continue
 			}
-			// the recovery segment is a total segment data,
-			// if the offset and length meta is set, then it is needed to adjust the piece data with the meta
-			if pInfo.Offset > 0 {
-				reoverData = reoverData[pInfo.Offset:]
-			}
-
-			if pInfo.Offset+pInfo.Length < uint64(segSize) {
-				reoverData = reoverData[:pInfo.Length]
-				log.CtxErrorw(reqCtx.Context(), "adjust the piece data", "len:", len(reoverData))
-			}
-			w.Write(reoverData)
-			continue
+			return
 		}
 
 		writeTime := time.Now()
 		w.Write(pieceData)
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_write_time").Observe(time.Since(writeTime).Seconds())
 	}
+	metrics.ReqPieceSize.WithLabelValues(GatewayGetObjectSize).Observe(float64(highOffset - lowOffset + 1))
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_data_time").Observe(time.Since(getDataTime).Seconds())
 }
 
-// tryDownloadAfterRecovery try to get piece data after data been recovery
-func (g *GateModular) tryDownloadAfterRecovery(ctx context.Context, pieceTask *gfsptask.GfSpDownloadPieceTask) ([]byte, error) {
+// tryDownloadAfterRecovery generate the recovery task on background, and try to get piece data after data been recovery
+// return recovered data and error
+func (g *GateModular) tryDownloadAfterRecovery(ctx context.Context, pieceTask *gfsptask.GfSpDownloadPieceTask, pInfo *downloader.SegmentPieceInfo, maxSegmentSize uint64) ([]byte, error) {
+	log.CtxDebugw(ctx, "recovery task key:", "key:", pInfo.SegmentPieceKey)
+	segmentIndex, parseErr := g.baseApp.PieceOp().ParseSegmentIdx(pInfo.SegmentPieceKey)
+	if parseErr != nil {
+		// no need to return recovery error to user
+		log.CtxErrorw(ctx, "fail to parse recovery segment index", "error", parseErr)
+		return nil, nil
+	}
+	segSize := g.baseApp.PieceOp().SegmentPieceSize(pieceTask.ObjectInfo.PayloadSize, segmentIndex, maxSegmentSize)
+	recoveryTask := &gfsptask.GfSpRecoverPieceTask{}
+	recoveryTask.InitRecoverPieceTask(pieceTask.GetObjectInfo(), pieceTask.GetStorageParams(), coretask.DefaultLargerTaskPriority, segmentIndex, int32(-1),
+		uint64(segSize), g.baseApp.TaskTimeout(recoveryTask, maxSegmentSize), 3)
+
+	g.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
+	log.CtxDebugw(ctx, "recovery task run successfully", "recovery object", pieceTask.ObjectInfo.ObjectName, "segment index:", segmentIndex)
+
 	timeout := time.After(RecoveryTimeOutSeconds * time.Second)
 	ticker := time.NewTicker(RecoveryCheckInterval * time.Second)
 	defer ticker.Stop()
@@ -535,8 +557,7 @@ func (g *GateModular) tryDownloadAfterRecovery(ctx context.Context, pieceTask *g
 			return nil, ErrRecoveryTimeout
 		case <-ticker.C:
 			pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
-
-			if err == nil {
+			if err == nil && int64(len(pieceData)) == segSize {
 				log.CtxDebugw(ctx, "get piece successfully after recovering", "recovery object", pieceTask.GetPieceKey(),
 					"cost time:", time.Since(startTime))
 				return pieceData, nil
@@ -554,14 +575,19 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 		reqCtx        *RequestContext
 		authenticated bool
 	)
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
@@ -626,7 +652,7 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	// no need to check quota when recovering primary SP segment data
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
-		true, reqCtx.Account(), objectInfo.PayloadSize, ECPieceKey, 0, uint64(ECPieceSize),
+		true, reqCtx.Account(), uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 	pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
@@ -646,14 +672,19 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		objectInfo    *storagetypes.ObjectInfo
 		taskState     int32
 	)
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
@@ -727,6 +758,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		escapedObjectName    string
 		isRequestFromBrowser bool
 	)
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
@@ -744,11 +776,15 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 				html := strings.Replace(GnfdBuiltInUniversalEndpointDappErrorPage, "<% errorCode %>", errorCodeForPage, 1)
 
 				fmt.Fprintf(w, "%s", html)
+				metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+				metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 				return
 			} else {
 				reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 				reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 				MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+				metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+				metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 			}
 
 		} else {
