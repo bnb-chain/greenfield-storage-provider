@@ -3,13 +3,14 @@ package gfspclient
 import (
 	"context"
 
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
+	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
-	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
@@ -464,7 +465,7 @@ func (s *GfSpClient) ListObjectsByObjectID(ctx context.Context, objectIDs []uint
 	return resp.Objects, nil
 }
 
-func (s *GfSpClient) ListVirtualGroupFamiliesSpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*types.GlobalVirtualGroupFamily, error) {
+func (s *GfSpClient) ListVirtualGroupFamiliesSpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroupFamily, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -480,7 +481,7 @@ func (s *GfSpClient) ListVirtualGroupFamiliesSpID(ctx context.Context, spID uint
 	return resp.GlobalVirtualGroupFamilies, nil
 }
 
-func (s *GfSpClient) GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgID uint32, opts ...grpc.DialOption) (*types.GlobalVirtualGroup, error) {
+func (s *GfSpClient) GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroup, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -496,7 +497,7 @@ func (s *GfSpClient) GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgID uin
 	return resp.GlobalVirtualGroup, nil
 }
 
-func (s *GfSpClient) GetVirtualGroupFamilyBindingOnBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (*types.GlobalVirtualGroupFamily, error) {
+func (s *GfSpClient) GetVirtualGroupFamilyBindingOnBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroupFamily, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -614,7 +615,7 @@ func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAf
 	return resp.Objects, nil
 }
 
-func (s *GfSpClient) GfSpGetVirtualGroupFamily(ctx context.Context, vgfID uint32, opts ...grpc.DialOption) (*types.GlobalVirtualGroupFamily, error) {
+func (s *GfSpClient) GfSpGetVirtualGroupFamily(ctx context.Context, vgfID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroupFamily, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -630,7 +631,7 @@ func (s *GfSpClient) GfSpGetVirtualGroupFamily(ctx context.Context, vgfID uint32
 	return resp.Vgf, nil
 }
 
-func (s *GfSpClient) GfSpGetGlobalVirtualGroup(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (*types.GlobalVirtualGroup, error) {
+func (s *GfSpClient) GfSpGetGlobalVirtualGroup(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroup, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -649,7 +650,7 @@ func (s *GfSpClient) GfSpGetGlobalVirtualGroup(ctx context.Context, bucketID uin
 	return resp.Gvg, nil
 }
 
-func (s *GfSpClient) GfSpListMigrateBucketsEvent(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.EventMigrationBucket, error) {
+func (s *GfSpClient) GfSpListMigrateBucketsEvent(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*storage_types.EventMigrationBucket, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -668,7 +669,7 @@ func (s *GfSpClient) GfSpListMigrateBucketsEvent(ctx context.Context, blockID ui
 	return resp.Events, nil
 }
 
-func (s *GfSpClient) GfSpListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.EventSwapOut, error) {
+func (s *GfSpClient) GfSpListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.EventSwapOut, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -687,7 +688,7 @@ func (s *GfSpClient) GfSpListSwapOutEvents(ctx context.Context, blockID uint64, 
 	return resp.Events, nil
 }
 
-func (s *GfSpClient) GfSpListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*types.GlobalVirtualGroup, error) {
+func (s *GfSpClient) GfSpListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroup, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -705,7 +706,7 @@ func (s *GfSpClient) GfSpListGlobalVirtualGroupsByBucket(ctx context.Context, bu
 	return resp.Groups, nil
 }
 
-func (s *GfSpClient) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*types.GlobalVirtualGroup, error) {
+func (s *GfSpClient) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroup, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
