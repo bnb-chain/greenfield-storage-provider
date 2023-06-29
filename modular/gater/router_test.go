@@ -376,7 +376,7 @@ func TestRouters(t *testing.T) {
 			name:             "List expired buckets by sp router",
 			router:           gwRouter,
 			method:           http.MethodGet,
-			url:              scheme + testDomain + "/?" + ListExpiredBucketsBySpQuery + "&" + LimitQuery + "&" + CreateAtQuery + "&" + PrimarySpAddressQuery,
+			url:              scheme + testDomain + "/?" + ListExpiredBucketsBySpQuery + "&" + LimitQuery + "&" + CreateAtQuery + "&" + PrimarySpIDQuery,
 			shouldMatch:      true,
 			wantedRouterName: listExpiredBucketsBySpRouterName,
 		},

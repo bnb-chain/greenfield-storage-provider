@@ -990,16 +990,17 @@ func (g *GateModular) getUserBucketsCountHandler(w http.ResponseWriter, r *http.
 // listExpiredBucketsBySpHandler handle list buckets that are expired by specific sp
 func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err                     error
-		b                       bytes.Buffer
-		reqCtx                  *RequestContext
-		requestLimit            string
-		requestCreateAt         string
-		requestPrimarySpAddress string
-		limit                   int64
-		createAt                int64
-		buckets                 []*types.Bucket
-		queryParams             url.Values
+		err                error
+		b                  bytes.Buffer
+		reqCtx             *RequestContext
+		requestLimit       string
+		requestCreateAt    string
+		requestPrimarySpID string
+		limit              int64
+		createAt           int64
+		spID               uint32
+		buckets            []*types.Bucket
+		queryParams        url.Values
 	)
 
 	defer func() {
@@ -1016,7 +1017,7 @@ func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *ht
 	queryParams = reqCtx.request.URL.Query()
 	requestLimit = queryParams.Get(LimitQuery)
 	requestCreateAt = queryParams.Get(CreateAtQuery)
-	requestPrimarySpAddress = queryParams.Get(PrimarySpAddressQuery)
+	requestPrimarySpID = queryParams.Get(PrimarySpIDQuery)
 
 	if limit, err = util.StringToInt64(requestLimit); err != nil || limit <= 0 {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", requestLimit, "error", err)
@@ -1029,12 +1030,18 @@ func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *ht
 	}
 
 	if createAt, err = util.StringToInt64(requestCreateAt); err != nil || createAt < 0 {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse or check create at", "create-at", requestLimit, "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check create at", "create-at", requestCreateAt, "error", err)
 		err = ErrInvalidQuery
 		return
 	}
 
-	buckets, err = g.baseApp.GfSpClient().ListExpiredBucketsBySp(reqCtx.Context(), createAt, requestPrimarySpAddress, limit)
+	if spID, err = util.StringToUint32(requestPrimarySpID); err != nil || createAt < 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check sp id", "sp-id", requestPrimarySpID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	buckets, err = g.baseApp.GfSpClient().ListExpiredBucketsBySp(reqCtx.Context(), createAt, spID, limit)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list expired buckets by sp", "error", err)
 		return

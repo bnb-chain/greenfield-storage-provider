@@ -123,8 +123,8 @@ const (
 	LimitQuery = "limit"
 	// CreateAtQuery defines the create timestamp
 	CreateAtQuery = "create-at"
-	// PrimarySpAddressQuery defines the primary sp address
-	PrimarySpAddressQuery = "primary-sp-address"
+	// PrimarySpIDQuery defines the primary sp id
+	PrimarySpIDQuery = "primary-sp-id"
 	// GetChallengeInfoPath defines get challenge info path style suffix
 	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
