@@ -166,11 +166,11 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sidx:%d-ridx-%d-error:%s-endpoint:%s", pieceIdx, replicateIdx, err.Error(), approval.GetApprovedSpEndpoint()))
+			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sidx:%d-ridx-%d-error:%s-endpoint:%s", pieceIdx, replicateIdx, err.Error(), spEndpoint))
 			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureReplicateOnePiece).Inc()
 			metrics.ExecutorTime.WithLabelValues(ExeutorFailureReplicateOnePiece).Observe(time.Since(startTime).Seconds())
 		} else {
-			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sidx:%d-ridx-%d-endpoint:%s", pieceIdx, replicateIdx, approval.GetApprovedSpEndpoint()))
+			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sidx:%d-ridx-%d-endpoint:%s", pieceIdx, replicateIdx, spEndpoint))
 			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessReplicateOnePiece).Inc()
 			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessReplicateOnePiece).Observe(time.Since(startTime).Seconds())
 		}
@@ -216,11 +216,11 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-ridx-%d-error:%s-endpoint:%s", replicateIdx, err.Error(), approval.GetApprovedSpEndpoint()))
+			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-ridx-%d-error:%s-endpoint:%s", replicateIdx, err.Error(), spEndpoint))
 			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureDoneReplicatePiece).Inc()
 			metrics.ExecutorTime.WithLabelValues(ExeutorFailureDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
 		} else {
-			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-ridx-%d-endpoint:%s", replicateIdx, approval.GetApprovedSpEndpoint()))
+			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-ridx-%d-endpoint:%s", replicateIdx, spEndpoint))
 			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Inc()
 			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
 		}

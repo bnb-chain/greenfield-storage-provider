@@ -58,10 +58,7 @@ require (
 	gorm.io/gorm v1.24.5
 )
 
-require (
-	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
-	github.com/gogo/protobuf v1.3.3
-)
+require github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
 
 require (
 	cosmossdk.io/api v0.4.0 // indirect
@@ -88,6 +85,7 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
+	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang-jwt/jwt/v4 v4.3.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
