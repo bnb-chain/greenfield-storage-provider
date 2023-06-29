@@ -38,8 +38,6 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 		backupTasks []task.Task
 		task        task.Task
 	)
-	m.mux.Lock()
-	defer m.mux.Unlock()
 	task = m.replicateQueue.TopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add replicate piece task to backup set", "task_key", task.Key().String(),
@@ -122,7 +120,6 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		return ErrDanglingTask
 	}
 	m.uploadQueue.PopByKey(task.Key())
-
 	uploading := m.TaskUploading(ctx, task)
 	if uploading {
 		log.CtxErrorw(ctx, "uploading object repeated")
@@ -170,7 +167,6 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
 	}
-	replicateTask.AppendLog("manager-push-replicate-task-to-queue")
 	go func() {
 		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:  task.GetObjectInfo().Id.Uint64(),
@@ -281,19 +277,18 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 			time.Since(time.Unix(task.GetUpdateTime(), 0)).Seconds())
 		return nil
 	} else {
-		task.AppendLog(fmt.Sprintf("manager-handle-succeed-replicate-task-retry:%d", task.GetRetry()))
-		_ = m.baseApp.GfSpDB().InsertPutEvent(task)
 		metrics.ManagerCounter.WithLabelValues(ManagerSuccessReplicate).Inc()
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessReplicate).Observe(
 			time.Since(time.Unix(task.GetUpdateTime(), 0)).Seconds())
 	}
-
 	m.replicateQueue.PopByKey(task.Key())
 	if m.TaskUploading(ctx, task) {
 		log.CtxErrorw(ctx, "replicate piece object task repeated")
 		return ErrRepeatedTask
 	}
 	if task.GetSealed() {
+		task.AppendLog(fmt.Sprintf("manager-handle-succeed-replicate-task-retry:%d", task.GetRetry()))
+		_ = m.baseApp.GfSpDB().InsertPutEvent(task)
 		go func() {
 			log.Debugw("replicate piece object task has combined seal object task", "task_info", task.Info())
 			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
@@ -329,7 +324,6 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 		log.CtxErrorw(ctx, "failed to push seal object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
-	sealObject.AppendLog("manager-push-seal-task-to-queue")
 	go func() {
 		if err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:             task.GetObjectInfo().Id.Uint64(),
@@ -399,14 +393,14 @@ func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.Seal
 			time.Since(time.Unix(task.GetUpdateTime(), 0)).Seconds())
 		return nil
 	} else {
-		task.AppendLog(fmt.Sprintf("manager-handle-succeed-seal-task-retry:%d", task.GetRetry()))
-		_ = m.baseApp.GfSpDB().InsertPutEvent(task)
 		metrics.ManagerCounter.WithLabelValues(ManagerSuccessSeal).Inc()
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessSeal).Observe(
 			time.Since(time.Unix(task.GetUpdateTime(), 0)).Seconds())
 	}
 	go func() {
 		m.sealQueue.PopByKey(task.Key())
+		task.AppendLog(fmt.Sprintf("manager-handle-succeed-seal-task-retry:%d", task.GetRetry()))
+		_ = m.baseApp.GfSpDB().InsertPutEvent(task)
 		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:  task.GetObjectInfo().Id.Uint64(),
 			TaskState: types.TaskState_TASK_STATE_SEAL_OBJECT_DONE,

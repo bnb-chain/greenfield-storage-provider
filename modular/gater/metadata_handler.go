@@ -12,6 +12,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield/types/s3util"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/cosmos/gogoproto/jsonpb"
@@ -678,4 +679,382 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 
 	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 	w.Write(buf.Bytes())
+}
+
+// getPaymentByBucketIDHandler get payment by bucket id
+func (g *GateModular) getPaymentByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		buf         bytes.Buffer
+		payment     *payment_types.StreamRecord
+		bucketIDStr string
+		bucketID    int64
+		queryParams url.Values
+		reqCtx      *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get payment by bucket id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	bucketIDStr = queryParams.Get(BucketIDQuery)
+
+	if bucketID, err = util.StringToInt64(bucketIDStr); err != nil || bucketID < 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket-id", bucketIDStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	payment, err = g.baseApp.GfSpClient().GetPaymentByBucketID(reqCtx.Context(), bucketID, false)
+	if err != nil {
+		log.Errorf("failed to get payment by bucket id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetPaymentByBucketIDResponse{StreamRecord: payment}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&buf, grpcResponse); err != nil {
+		log.Errorf("failed to get payment by bucket id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(buf.Bytes())
+}
+
+// getPaymentByBucketNameHandler handle get payment by bucket name request
+func (g *GateModular) getPaymentByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err        error
+		b          bytes.Buffer
+		reqCtx     *RequestContext
+		bucketName string
+		payment    *payment_types.StreamRecord
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get payment by bucket name", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	bucketName = reqCtx.bucketName
+
+	if err = s3util.CheckValidBucketName(bucketName); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to check bucket name", "bucket-name", bucketName, "error", err)
+		return
+	}
+
+	payment, err = g.baseApp.GfSpClient().GetPaymentByBucketName(reqCtx.Context(), bucketName, false)
+	if err != nil {
+		log.Errorf("failed to get payment by bucket name", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetPaymentByBucketNameResponse{StreamRecord: payment}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to get payment by bucket name", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getBucketByBucketNameHandler handle get bucket by bucket name request
+func (g *GateModular) getBucketByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err        error
+		b          bytes.Buffer
+		reqCtx     *RequestContext
+		bucketName string
+		bucket     *types.Bucket
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get bucket by bucket name", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	bucketName = reqCtx.bucketName
+
+	if err = s3util.CheckValidBucketName(bucketName); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to check bucket name", "bucket-name", bucketName, "error", err)
+		return
+	}
+
+	bucket, err = g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), bucketName, false)
+	if err != nil {
+		log.Errorf("failed to get bucket by bucket name", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetBucketByBucketNameResponse{Bucket: bucket}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to get bucket by bucket name", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getBucketByBucketIDHandler handle get bucket by bucket id
+func (g *GateModular) getBucketByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		buf         bytes.Buffer
+		bucket      *types.Bucket
+		bucketIDStr string
+		bucketID    int64
+		queryParams url.Values
+		reqCtx      *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get bucket by bucket id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	bucketIDStr = queryParams.Get(BucketIDQuery)
+
+	if bucketID, err = util.StringToInt64(bucketIDStr); err != nil || bucketID < 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket-id", bucketIDStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	bucket, err = g.baseApp.GfSpClient().GetBucketByBucketID(reqCtx.Context(), bucketID, false)
+	if err != nil {
+		log.Errorf("failed to get bucket by bucket id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetBucketByBucketIDResponse{Bucket: bucket}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&buf, grpcResponse); err != nil {
+		log.Errorf("failed to get bucket by bucket id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(buf.Bytes())
+}
+
+// listDeletedObjectsByBlockNumberRangeHandler handle list deleted objects info by a block number range request
+func (g *GateModular) listDeletedObjectsByBlockNumberRangeHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err                        error
+		b                          bytes.Buffer
+		reqCtx                     *RequestContext
+		requestSpOperatorAddress   string
+		requestStartBlockNumberStr string
+		requestEndBlockNumberStr   string
+		startBlockNumber           uint64
+		endBlockNumber             uint64
+		block                      uint64
+		objects                    []*types.Object
+		queryParams                url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list deleted objects by block number range", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestSpOperatorAddress = queryParams.Get(SpOperatorAddressQuery)
+	requestStartBlockNumberStr = queryParams.Get(StartBlockNumberQuery)
+	requestEndBlockNumberStr = queryParams.Get(EndBlockNumberQuery)
+
+	if ok := common.IsHexAddress(requestSpOperatorAddress); !ok {
+		log.Errorw("failed to check operator", "sp-operator-address", requestSpOperatorAddress, "error", err)
+		return
+	}
+
+	if startBlockNumber, err = util.StringToUint64(requestStartBlockNumberStr); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check start block number", "start-block-number", requestStartBlockNumberStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if endBlockNumber, err = util.StringToUint64(requestEndBlockNumberStr); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check end block number", "end-block-number", requestEndBlockNumberStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	objects, block, err = g.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(reqCtx.Context(), requestSpOperatorAddress, startBlockNumber, endBlockNumber, true)
+	if err != nil {
+		log.Errorf("failed to list deleted objects by block number range", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListDeletedObjectsByBlockNumberRangeResponse{
+		Objects:        objects,
+		EndBlockNumber: int64(block),
+	}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to list deleted objects by block number range", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getUserBucketsCountHandler handle get user bucket count request
+func (g *GateModular) getUserBucketsCountHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		b      bytes.Buffer
+		reqCtx *RequestContext
+		count  int64
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get user buckets count", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	if ok := common.IsHexAddress(r.Header.Get(GnfdUserAddressHeader)); !ok {
+		log.Errorw("failed to check X-Gnfd-User-Address", "X-Gnfd-User-Address", reqCtx.account, "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+
+	count, err = g.baseApp.GfSpClient().GetUserBucketsCount(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader), true)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets count", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetUserBucketsCountResponse{Count: count}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets count", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listExpiredBucketsBySpHandler handle list buckets that are expired by specific sp
+func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err                error
+		b                  bytes.Buffer
+		reqCtx             *RequestContext
+		requestLimit       string
+		requestCreateAt    string
+		requestPrimarySpID string
+		limit              int64
+		createAt           int64
+		spID               uint32
+		buckets            []*types.Bucket
+		queryParams        url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list expired buckets by sp", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestLimit = queryParams.Get(LimitQuery)
+	requestCreateAt = queryParams.Get(CreateAtQuery)
+	requestPrimarySpID = queryParams.Get(PrimarySpIDQuery)
+
+	if limit, err = util.StringToInt64(requestLimit); err != nil || limit <= 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", requestLimit, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if limit > MaximumListObjectsAndBucketsSize {
+		limit = MaximumListObjectsAndBucketsSize
+	}
+
+	if createAt, err = util.StringToInt64(requestCreateAt); err != nil || createAt < 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check create at", "create-at", requestCreateAt, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if spID, err = util.StringToUint32(requestPrimarySpID); err != nil || createAt < 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check sp id", "sp-id", requestPrimarySpID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	buckets, err = g.baseApp.GfSpClient().ListExpiredBucketsBySp(reqCtx.Context(), createAt, spID, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list expired buckets by sp", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListExpiredBucketsBySpResponse{Buckets: buckets}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list expired buckets by sp", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
 }
