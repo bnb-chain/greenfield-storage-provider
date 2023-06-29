@@ -7,19 +7,10 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
-
-// if spID not in gvg secondary sps. return -1.
-func getSecondarySPIndex(gvg *virtualgrouptypes.GlobalVirtualGroup, spID uint32) int32 {
-	for index, secondarySPID := range gvg.GetSecondarySpIds() {
-		if secondarySPID == spID {
-			return int32(index)
-		}
-	}
-	return -1
-}
 
 type GlobalVirtualGroupMigrateExecuteUnit struct {
 	gvg            *virtualgrouptypes.GlobalVirtualGroup
@@ -124,7 +115,7 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 			}
 			// resolve conflict, swap out secondarySPIDBindingLeastGVGs.
 			for _, gvg := range vgfUnit.gvgList {
-				if secondaryIndex := getSecondarySPIndex(gvg, secondarySPIDBindingLeastGVGs); secondaryIndex > 0 {
+				if secondaryIndex, _ := util.GetSecondarySPIndexFromGVG(gvg, secondarySPIDBindingLeastGVGs); secondaryIndex > 0 {
 					// gvg has conflicts.
 					var (
 						srcSecondarySPID uint32
@@ -201,7 +192,7 @@ func (plan *SPExitExecutePlan) Start() error {
 			redundantIndex  int32
 			destSecondarySP *sptypes.StorageProvider
 		)
-		if redundantIndex = getSecondarySPIndex(gUnit.gvg, gUnit.srcSPID); redundantIndex < 0 {
+		if redundantIndex, err = util.GetSecondarySPIndexFromGVG(gUnit.gvg, gUnit.srcSPID); err != nil {
 			log.Errorw("failed to start migrate execute plan due to get secondary sp index", "gvg_unit", gUnit, "error", err)
 			return err
 		}
