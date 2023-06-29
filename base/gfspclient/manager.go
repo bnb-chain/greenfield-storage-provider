@@ -87,8 +87,6 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 		return t.GcZombiePieceTask, nil
 	case *gfspserver.GfSpAskTaskResponse_GcMetaTask:
 		return t.GcMetaTask, nil
-	case *gfspserver.GfSpAskTaskResponse_MigratePieceTask:
-		return t.MigratePieceTask, nil
 	case *gfspserver.GfSpAskTaskResponse_RecoverPieceTask:
 		return t.RecoverPieceTask, nil
 	default:
@@ -149,10 +147,6 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 	case *gfsptask.GfSpChallengePieceTask:
 		req.Request = &gfspserver.GfSpReportTaskRequest_ChallengePieceTask{
 			ChallengePieceTask: t,
-		}
-	case *gfsptask.GfSpMigratePieceTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_MigratePieceTask{
-			MigratePieceTask: t,
 		}
 	case *gfsptask.GfSpRecoverPieceTask:
 		req.Request = &gfspserver.GfSpReportTaskRequest_RecoverPieceTask{

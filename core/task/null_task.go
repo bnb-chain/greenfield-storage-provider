@@ -20,7 +20,6 @@ var _ ChallengePieceTask = (*NullTask)(nil)
 var _ GCTask = (*NullTask)(nil)
 var _ GCZombiePieceTask = (*NullTask)(nil)
 var _ GCMetaTask = (*NullTask)(nil)
-var _ MigratePieceTask = (*NullTask)(nil)
 var _ RecoveryPieceTask = (*NullTask)(nil)
 
 type NullTask struct{}

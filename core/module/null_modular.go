@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
@@ -146,10 +147,6 @@ func (*NullModular) VerifyOffChainSignature(ctx context.Context, account string,
 	return false, ErrNilModular
 }
 
-func (*NullModular) HandleMigratePieceTask(ctx context.Context, task task.MigratePieceTask) error {
-	return ErrNilModular
-}
-
 var _ TaskExecutor = (*NilModular)(nil)
 var _ P2P = (*NilModular)(nil)
 var _ Signer = (*NilModular)(nil)
@@ -241,8 +238,8 @@ func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.
 	return nil
 }
 
-func (NilModular) SignMigratePieceTask(ctx context.Context, task task.MigratePieceTask) ([]byte, error) {
-	return nil, ErrNilModular
+func (*NilModular) SignMigratePiece(ctx context.Context, mp *gfspserver.GfSpMigratePiece) ([]byte, error) {
+	return nil, nil
 }
 
 var _ Receiver = (*NullReceiveModular)(nil)

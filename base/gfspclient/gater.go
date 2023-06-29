@@ -36,8 +36,6 @@ const (
 	MigratePiecePath = "/greenfield/admin/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
-	// GnfdIsPrimaryHeader defines response header which is used to indicate migrated data whether belongs to PrimarySP
-	GnfdIsPrimaryHeader = "X-Gnfd-Is-Primary"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {

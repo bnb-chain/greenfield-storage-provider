@@ -101,7 +101,7 @@ const (
 	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
-	//RecoverObjectPiecePath defines recovery-object path style
+	// RecoverObjectPiecePath defines recovery-object path style
 	RecoverObjectPiecePath = "/greenfield/recovery/v1/get-piece"
 	// AuthRequestNoncePath defines path to request auth nonce
 	AuthRequestNoncePath = "/auth/request_nonce"
@@ -142,9 +142,7 @@ const (
 	// GnfdResponseXMLVersion defines the response xml version
 	GnfdResponseXMLVersion = "1.0"
 	// MigrateObjectPath defines migrate-data path which is used in SP exiting case
-	MigratePiecePath = "greenfield/admin/v1/migrate-piece"
-	// GnfdIsPrimaryHeader defines response header which is used to indicate migrated data whether belongs to PrimarySP
-	GnfdIsPrimaryHeader = "X-Gnfd-Is-Primary"
+	MigratePiecePath = "/greenfield/admin/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
 

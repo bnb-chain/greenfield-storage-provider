@@ -117,10 +117,6 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		resp.Response = &gfspserver.GfSpAskTaskResponse_GcMetaTask{
 			GcMetaTask: t,
 		}
-	case *gfsptask.GfSpMigratePieceTask:
-		resp.Response = &gfspserver.GfSpAskTaskResponse_MigratePieceTask{
-			MigratePieceTask: t,
-		}
 	case *gfsptask.GfSpRecoverPieceTask:
 		resp.Response = &gfspserver.GfSpAskTaskResponse_RecoverPieceTask{
 			RecoverPieceTask: t,
@@ -271,12 +267,6 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 
 		err = g.manager.HandleChallengePieceTask(ctx, t.ChallengePieceTask)
-	case *gfspserver.GfSpReportTaskRequest_MigratePieceTask:
-		task := t.MigratePieceTask
-		ctx := log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
-		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
-		err = g.manager.HandleMigratePieceTask(ctx, t.MigratePieceTask)
 	case *gfspserver.GfSpReportTaskRequest_RecoverPieceTask:
 		task := t.RecoverPieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())

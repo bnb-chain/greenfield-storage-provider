@@ -656,7 +656,7 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 	return ecData[redundancyIdx], nil
 }
 
-const migrateMinEcIndex = -1
+const primarySPECIdx = -1
 
 // migratePieceHandler handles the migrate piece request between SPs which is used in SP exiting case.
 // First, gateway should verify Authorization header to ensure the requests are from correct SPs.
@@ -743,12 +743,12 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	objectID := migratePiece.GetObjectInfo().Id.Uint64()
 	replicateIdx := migratePiece.GetReplicateIdx()
 	ecIdx := migratePiece.GetEcIdx()
-	if ecIdx < migrateMinEcIndex || ecIdx > maxECIdx {
+	if ecIdx < primarySPECIdx || ecIdx > maxECIdx {
 		// TODO: customize an error to return to sp
 		return
 	}
 	// if ecIdx less than 0, we should migrate pieces from primary SP
-	if ecIdx < 0 {
+	if ecIdx == primarySPECIdx {
 		segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(objectID, replicateIdx)
 		pieceData, err = g.baseApp.PieceStore().GetPiece(reqCtx.Context(), segmentPieceKey, 0, -1)
 		if err != nil {

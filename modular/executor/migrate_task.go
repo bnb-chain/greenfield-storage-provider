@@ -12,6 +12,8 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
+const primarySPECIdx = -1
+
 // HandleMigratePieceTask handle the migrate piece task, it will send requests to the exiting SP to get piece data
 // integrity hash and piece checksum to migrate the receiving SP. PieceData would be written to PieceStore, integrity hash
 // and piece checksum will be written sql db.
@@ -21,12 +23,9 @@ import (
 // we want to migrate: primary or secondary. Now we cannot use objectInfo operator address or secondaryAddress straightly.
 // We should encapsulate a new method to get.
 // objectInfo->lvg->gvg->(1 primarySP, 6 secondarySPs)
-
-const getPrimarySPEcIdx = -1
-
+// HandleMigratePieceTask(ctx context.Context, objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params, srcSPEndpoint string)
 func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params,
 	srcSPEndpoint string) error {
-	// send requests to srcSPEndpoint to get data; migrate object to own Uploader or receiver
 	var (
 		dataShards   = params.VersionedParams.GetRedundantDataChunkNum()
 		parityShards = params.VersionedParams.GetRedundantParityChunkNum()
@@ -44,18 +43,18 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, objectInfo 
 	migratePiece := &gfspserver.GfSpMigratePiece{
 		ObjectInfo:    objectInfo,
 		StorageParams: params,
-		ReplicateIdx:  0,
-		EcIdx:         0,
 	}
 	if index < 0 { // get all segment pieces of an object
-		migratePiece.EcIdx = getPrimarySPEcIdx
 		migratePiece.ReplicateIdx = e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(),
 			params.VersionedParams.GetMaxSegmentSize())
+		migratePiece.EcIdx = primarySPECIdx
 		if err = e.migrateSegmentPieces(ctx, migratePiece, srcSPEndpoint); err != nil {
 			log.CtxErrorw(ctx, "failed to migrate segment pieces", "error", err)
 			return err
 		}
 	} else {
+		migratePiece.ReplicateIdx = e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(),
+			params.VersionedParams.GetMaxSegmentSize())
 		migratePiece.EcIdx = int32(ecPieceCount)
 		if err = e.migrateECPieces(ctx, migratePiece, srcSPEndpoint); err != nil {
 			log.CtxErrorw(ctx, "failed to migrate ec pieces", "error", err)
@@ -64,6 +63,48 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, objectInfo 
 	}
 	return nil
 }
+
+// func mockHandleMigratePiece(ctx context.Context) error {
+// 	obectInfo := &storagetypes.ObjectInfo{
+// 		Owner:               "",
+// 		Creator:             "",
+// 		BucketName:          "",
+// 		ObjectName:          "",
+// 		Id:                  storagetypes.Uint{},
+// 		LocalVirtualGroupId: 0,
+// 		PayloadSize:         0,
+// 		Visibility:          0,
+// 		ContentType:         "",
+// 		CreateAt:            0,
+// 		ObjectStatus:        0,
+// 		RedundancyType:      0,
+// 		SourceType:          0,
+// 		Checksums:           nil,
+// 	}
+// 	params := &storagetypes.Params{
+// 		VersionedParams: storagetypes.VersionedParams{
+// 			MaxSegmentSize:          16,
+// 			RedundantDataChunkNum:   4,
+// 			RedundantParityChunkNum: 2,
+// 			MinChargeSize:           100000000,
+// 		},
+// 		MaxPayloadSize:            5 * 1024 * 1024 * 1024,
+// 		MirrorBucketRelayerFee:    "",
+// 		MirrorBucketAckRelayerFee: "",
+// 		MirrorObjectRelayerFee:    "",
+// 		MirrorObjectAckRelayerFee: "",
+// 		MirrorGroupRelayerFee:     "",
+// 		MirrorGroupAckRelayerFee:  "",
+// 		MaxBucketsPerAccount:      0,
+// 		DiscontinueCountingWindow: 0,
+// 		DiscontinueObjectMax:      0,
+// 		DiscontinueBucketMax:      0,
+// 		DiscontinueConfirmPeriod:  0,
+// 		DiscontinueDeletionMax:    0,
+// 		StalePolicyCleanupMax:     0,
+// 		MinQuotaUpdateInterval:    0,
+// 	}
+// }
 
 // TODO: to be completed
 // index indicates it's primarySP or secondarySP. If index < 0 represents it's primarySP, otherwise, it's a secondarySP
@@ -99,10 +140,8 @@ func (e *ExecuteModular) migrateSegmentPieces(ctx context.Context, migratePiece 
 		}(i)
 	}
 
-	select {
-	case <-quitCh: // all the task finished
-		log.CtxInfo(ctx, "migrate all segment pieces successfully")
-	}
+	ok := quitCh
+	log.CtxInfo(ctx, "migrate all ec pieces successfully", "ok", ok)
 
 	if err := e.setMigratePiecesMetadata(migratePiece.GetObjectInfo(), segDataList, 0); err != nil {
 		log.CtxErrorw(ctx, "failed to set segment piece checksum and integrity hash into spdb",
@@ -115,6 +154,7 @@ func (e *ExecuteModular) migrateSegmentPieces(ctx context.Context, migratePiece 
 		err := e.baseApp.PieceStore().PutPiece(ctx, pieceKey, j)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to put segment piece to primarySP", "pieceKey", pieceKey, "error", err)
+			return err
 		}
 	}
 	return nil
@@ -139,16 +179,14 @@ func (e *ExecuteModular) migrateECPieces(ctx context.Context, migratePiece *gfsp
 				return
 			}
 			ecDataList[ecIdx] = ecPieceData
-			if atomic.AddInt32(&ecNum, 1) == int32(ecPieceCount) {
+			if atomic.AddInt32(&ecNum, 1) == ecPieceCount {
 				quitCh <- true
 			}
 		}(i)
 	}
 
-	select {
-	case <-quitCh:
-		log.CtxInfo(ctx, "migrate all ec pieces successfully")
-	}
+	ok := quitCh
+	log.CtxInfo(ctx, "migrate all ec pieces successfully", "ok", ok)
 
 	if err := e.setMigratePiecesMetadata(migratePiece.GetObjectInfo(), ecDataList, int(replicateIdx)); err != nil {
 		log.CtxErrorw(ctx, "failed to set segment piece checksum and integrity hash into spdb", "error", err)
@@ -159,6 +197,7 @@ func (e *ExecuteModular) migrateECPieces(ctx context.Context, migratePiece *gfsp
 		err := e.baseApp.PieceStore().PutPiece(ctx, pieceKey, j)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to put ec piece to primarySP", "pieceKey", pieceKey, "error", err)
+			return err
 		}
 	}
 	return nil

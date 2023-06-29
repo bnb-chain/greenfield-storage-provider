@@ -15,7 +15,7 @@ func (g *GfSpMigratePiece) GetSignBytes() []byte {
 }
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&GfSpMigratePiece{}, "p2p/ReplicatePieceApprovalTask", nil)
+	cdc.RegisterConcrete(&GfSpMigratePiece{}, "executor/MigratePiece", nil)
 }
 
 var (

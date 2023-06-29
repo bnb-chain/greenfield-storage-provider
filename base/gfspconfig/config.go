@@ -167,7 +167,6 @@ type ParallelConfig struct {
 	GlobalGCObjectParallel             int
 	GlobalGCZombieParallel             int
 	GlobalGCMetaParallel               int
-	GlobalMigratePieceParallel         int
 	GlobalDownloadObjectTaskCacheSize  int
 	GlobalChallengePieceTaskCacheSize  int
 	GlobalRecoveryPieceParallel        int

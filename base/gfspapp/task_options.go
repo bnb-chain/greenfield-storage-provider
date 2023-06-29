@@ -43,10 +43,6 @@ const (
 	MinGCMetaTime int64 = 300
 	// MaxGCMetaTime defines the max timeout to gc meta.
 	MaxGCMetaTime int64 = 600
-	// MinMigratePieceTime defines the min timeout to migrate pieces
-	MinMigratePieceTime int64 = 30
-	// MaxMigratePieceTime defines the max timeout to migrate pieces
-	MaxMigratePieceTime int64 = 300
 	// MinRecoveryTime defines the min timeout to recovery object.
 	MinRecoveryTime int64 = 10
 	// MaxRecoveryTime defines the max timeout to replicate object.
@@ -70,10 +66,6 @@ const (
 	MinGCObjectRetry = 3
 	// MaxGCObjectRetry defines the min retry number to gc object.
 	MaxGCObjectRetry = 5
-	// MinMigratePieceRetry defines the min retry number to migrate pieces
-	MinMigratePieceRetry = 2
-	// MaxMigratePieceRetry defines the max retry number to migrate pieces
-	MaxMigratePieceRetry = 5
 	// MinRecoveryRetry defines the min retry number to recovery piece.
 	MinRecoveryRetry = 2
 	// MaxRecoveryRetry  defines the max retry number to recovery piece.
@@ -167,14 +159,6 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 			return MaxGCMetaTime
 		}
 		return g.gcMetaTimeout
-	case coretask.TypeTaskMigratePiece:
-		if g.migratePieceTimeout < MinMigratePieceTime {
-			return MinMigratePieceTime
-		}
-		if g.migratePieceTimeout > MaxMigratePieceTime {
-			return MaxMigratePieceTime
-		}
-		return g.migratePieceTimeout
 	case coretask.TypeTaskRecoverPiece:
 		timeout := int64(size)/(g.replicateSpeed+1)/(MinSpeed) + 100
 		if timeout < MinRecoveryTime {
@@ -251,14 +235,6 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 			return MaxGCObjectRetry
 		}
 		return g.gcMetaRetry
-	case coretask.TypeTaskMigratePiece:
-		if g.migratePieceRetry < MinMigratePieceRetry {
-			return MinMigratePieceRetry
-		}
-		if g.migratePieceRetry > MaxMigratePieceRetry {
-			return MaxMigratePieceRetry
-		}
-		return g.migratePieceRetry
 	case coretask.TypeTaskRecoverPiece:
 		if g.recoveryRetry < MinRecoveryRetry {
 			return MinRecoveryRetry
@@ -301,8 +277,6 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskGCMeta:
 		return coretask.UnSchedulingPriority
-	case coretask.TypeTaskMigratePiece:
-		return coretask.DefaultSmallerPriority
 	case coretask.TypeTaskRecoverPiece:
 		return coretask.DefaultSmallerPriority
 	}

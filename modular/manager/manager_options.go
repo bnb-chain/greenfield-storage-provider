@@ -32,8 +32,6 @@ const (
 	// DefaultGlobalGCMetaParallel defines the default max parallel gc meta db in SP
 	// system.
 	DefaultGlobalGCMetaParallel int = 1
-	// DefaultGlobalMigratePieceParallel defines the default max parallel migrate piece in SP system.
-	DefaultGlobalMigratePieceParallel int = 7
 	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP
 	// system.
 	DefaultGlobalRecoveryPieceParallel int = 7
@@ -110,9 +108,6 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if cfg.Parallel.GlobalGCMetaParallel == 0 {
 		cfg.Parallel.GlobalGCMetaParallel = DefaultGlobalGCMetaParallel
 	}
-	if cfg.Parallel.GlobalMigratePieceParallel == 0 {
-		cfg.Parallel.GlobalMigratePieceParallel = DefaultGlobalMigratePieceParallel
-	}
 	if cfg.Parallel.GlobalDownloadObjectTaskCacheSize == 0 {
 		cfg.Parallel.GlobalDownloadObjectTaskCacheSize = DefaultGlobalDownloadObjectTaskCacheSize
 	}
@@ -174,8 +169,6 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		manager.Name()+"-gc-zombie", cfg.Parallel.GlobalGCZombieParallel)
 	manager.gcMetaQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-gc-meta", cfg.Parallel.GlobalGCMetaParallel)
-	manager.migratePieceQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(manager.Name()+"-migrate-piece",
-		cfg.Parallel.GlobalMigratePieceParallel)
 	manager.downloadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-download-object", cfg.Parallel.GlobalDownloadObjectTaskCacheSize)
 	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(

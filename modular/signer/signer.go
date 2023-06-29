@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -192,8 +193,8 @@ func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtual
 	return err
 }
 
-func (s *SignModular) SignMigratePieceTask(ctx context.Context, task task.MigratePieceTask) ([]byte, error) {
-	sig, err := s.client.Sign(SignOperator, task.GetSignBytes())
+func (s *SignModular) SignMigratePiece(ctx context.Context, mp *gfspserver.GfSpMigratePiece) ([]byte, error) {
+	sig, err := s.client.Sign(SignOperator, mp.GetSignBytes())
 	if err != nil {
 		return nil, err
 	}

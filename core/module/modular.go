@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
@@ -49,8 +50,6 @@ const (
 	AuthOpTypeGetBucketQuota
 	// AuthOpTypeListBucketReadRecord defines the ListBucketReadRecord operator
 	AuthOpTypeListBucketReadRecord
-	// AuthOpTypeMigratePiece defines the MigratePiece operator
-	AuthOpTypeMigratePiece
 	// AuthOpTypeGetRecoveryPiece defines the GetRecoveryPiece operator
 	AuthOpTypeGetRecoveryPiece
 )
@@ -209,8 +208,6 @@ type Manager interface {
 	HandleChallengePieceTask(ctx context.Context, task task.ChallengePieceTask) error
 	// PickVirtualGroupFamily is used to pick vgf for the new bucket.
 	PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error)
-	// HandleMigratePieceTask handles MigratePieceTask, the request comes from TaskExecutor
-	HandleMigratePieceTask(ctx context.Context, task task.MigratePieceTask) error
 	// HandleRecoverPieceTask handles the result of recovering piece task, the request comes from TaskExecutor.
 	HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error
 }
@@ -255,7 +252,7 @@ type Signer interface {
 	SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
 	// SignSecondaryBls signs the secondary bls for sealing object.
 	SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, error)
-	//SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
+	// SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
 	SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) ([]byte, error)
 	// SignP2PPingMsg signs the ping msg for p2p node probing.
 	SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error)
@@ -269,7 +266,7 @@ type Signer interface {
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
 	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
-	SignMigratePieceTask(ctx context.Context, task task.MigratePieceTask) ([]byte, error)
+	SignMigratePiece(ctx context.Context, mp *gfspserver.GfSpMigratePiece) ([]byte, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

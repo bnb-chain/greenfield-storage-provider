@@ -102,6 +102,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
 	g.baseApp.GfSpDB().InsertUploadEvent(task.GetObjectInfo().Id.Uint64(), corespdb.GatewayEndReceiveUpload, task.Key().String())
+	log.Infow("VMVMVM: print object info and chain params", "objectInfo", objectInfo, "params", params)
 	log.CtxDebugw(ctx, "succeed to upload payload data")
 }
 
@@ -787,9 +788,9 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	}
 
 	// TODO: refine it.
-	//bucketPrimarySpAddress := getBucketInfoRes.GetBucketInfo().GetPrimarySpAddress()
-	//// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
-	//if !strings.EqualFold(bucketPrimarySpAddress, g.baseApp.OperatorAddress()) {
+	// bucketPrimarySpAddress := getBucketInfoRes.GetBucketInfo().GetPrimarySpAddress()
+	// // if bucket not in the current sp, 302 redirect to the sp that contains the bucket
+	// if !strings.EqualFold(bucketPrimarySpAddress, g.baseApp.OperatorAddress()) {
 	//	log.Debugw("primary sp address not matched ",
 	//		"bucketPrimarySpAddress", bucketPrimarySpAddress, "gateway.config.SpOperatorAddress", g.baseApp.OperatorAddress(),
 	//	)
@@ -807,7 +808,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	//
 	//	http.Redirect(w, r, redirectURL, 302)
 	//	return
-	//}
+	// }
 
 	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
