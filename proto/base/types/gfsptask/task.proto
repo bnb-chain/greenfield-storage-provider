@@ -27,8 +27,7 @@ message GfSpCreateBucketApprovalTask {
 
 message GfSpMigrateBucketApprovalTask {
   GfSpTask task = 1;
-  // TODO: modify to migrate when chain proto upload to buf.
-  greenfield.storage.MsgCreateBucket migrate_bucket_info = 2;
+  greenfield.storage.MsgMigrateBucket migrate_bucket_info = 2;
 }
 
 message GfSpCreateObjectApprovalTask {

@@ -37,7 +37,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		reqCtx                *RequestContext
 		approvalMsg           []byte
 		createBucketApproval  = storagetypes.MsgCreateBucket{}
-		migrateBucketApproval = storagetypes.MsgCreateBucket{} // TODO: update to MsgMigrateBucket when chain proto uploaded to buf.
+		migrateBucketApproval = storagetypes.MsgMigrateBucket{}
 		createObjectApproval  = storagetypes.MsgCreateObject{}
 		authenticated         bool
 		approved              bool
