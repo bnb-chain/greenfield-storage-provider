@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
@@ -15,7 +17,7 @@ import (
 func (r *MetadataModular) GfSpListVirtualGroupFamiliesBySpID(ctx context.Context, req *types.GfSpListVirtualGroupFamiliesBySpIDRequest) (resp *types.GfSpListVirtualGroupFamiliesBySpIDResponse, err error) {
 	var (
 		families []*model.VirtualGroupFamily
-		res      []*types.GlobalVirtualGroupFamily
+		res      []*virtual_types.GlobalVirtualGroupFamily
 	)
 
 	ctx = log.Context(ctx, req)
@@ -25,9 +27,9 @@ func (r *MetadataModular) GfSpListVirtualGroupFamiliesBySpID(ctx context.Context
 		return nil, err
 	}
 
-	res = make([]*types.GlobalVirtualGroupFamily, len(families))
+	res = make([]*virtual_types.GlobalVirtualGroupFamily, len(families))
 	for i, family := range families {
-		res[i] = &types.GlobalVirtualGroupFamily{
+		res[i] = &virtual_types.GlobalVirtualGroupFamily{
 			Id:                    family.GlobalVirtualGroupFamilyId,
 			GlobalVirtualGroupIds: family.GlobalVirtualGroupIds,
 			VirtualPaymentAddress: family.VirtualPaymentAddress.String(),
@@ -43,7 +45,7 @@ func (r *MetadataModular) GfSpListVirtualGroupFamiliesBySpID(ctx context.Context
 func (r *MetadataModular) GfSpGetGlobalVirtualGroupByGvgID(ctx context.Context, req *types.GfSpGetGlobalVirtualGroupByGvgIDRequest) (resp *types.GfSpGetGlobalVirtualGroupByGvgIDResponse, err error) {
 	var (
 		gvg *model.GlobalVirtualGroup
-		res *types.GlobalVirtualGroup
+		res *virtual_types.GlobalVirtualGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -53,7 +55,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroupByGvgID(ctx context.Context, 
 		return nil, err
 	}
 
-	res = &types.GlobalVirtualGroup{
+	res = &virtual_types.GlobalVirtualGroup{
 		Id:                    gvg.GlobalVirtualGroupId,
 		FamilyId:              gvg.FamilyId,
 		PrimarySpId:           gvg.PrimarySpId,
@@ -72,7 +74,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroupByGvgID(ctx context.Context, 
 func (r *MetadataModular) GfSpGetVirtualGroupFamilyBindingOnBucket(ctx context.Context, req *types.GfSpGetVirtualGroupFamilyBindingOnBucketRequest) (resp *types.GfSpGetVirtualGroupFamilyBindingOnBucketResponse, err error) {
 	var (
 		family *model.VirtualGroupFamily
-		res    *types.GlobalVirtualGroupFamily
+		res    *virtual_types.GlobalVirtualGroupFamily
 	)
 
 	ctx = log.Context(ctx, req)
@@ -82,7 +84,7 @@ func (r *MetadataModular) GfSpGetVirtualGroupFamilyBindingOnBucket(ctx context.C
 		return nil, err
 	}
 
-	res = &types.GlobalVirtualGroupFamily{
+	res = &virtual_types.GlobalVirtualGroupFamily{
 		Id:                    family.GlobalVirtualGroupFamilyId,
 		GlobalVirtualGroupIds: family.GlobalVirtualGroupIds,
 		VirtualPaymentAddress: family.VirtualPaymentAddress.String(),
@@ -97,7 +99,7 @@ func (r *MetadataModular) GfSpGetVirtualGroupFamilyBindingOnBucket(ctx context.C
 func (r *MetadataModular) GfSpGetVirtualGroupFamily(ctx context.Context, req *types.GfSpGetVirtualGroupFamilyRequest) (resp *types.GfSpGetVirtualGroupFamilyResponse, err error) {
 	var (
 		family *model.VirtualGroupFamily
-		res    *types.GlobalVirtualGroupFamily
+		res    *virtual_types.GlobalVirtualGroupFamily
 	)
 
 	ctx = log.Context(ctx, req)
@@ -107,7 +109,7 @@ func (r *MetadataModular) GfSpGetVirtualGroupFamily(ctx context.Context, req *ty
 		return nil, err
 	}
 
-	res = &types.GlobalVirtualGroupFamily{
+	res = &virtual_types.GlobalVirtualGroupFamily{
 		Id:                    family.GlobalVirtualGroupFamilyId,
 		GlobalVirtualGroupIds: family.GlobalVirtualGroupIds,
 		VirtualPaymentAddress: family.VirtualPaymentAddress.String(),
@@ -122,7 +124,7 @@ func (r *MetadataModular) GfSpGetVirtualGroupFamily(ctx context.Context, req *ty
 func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *types.GfSpGetGlobalVirtualGroupRequest) (resp *types.GfSpGetGlobalVirtualGroupResponse, err error) {
 	var (
 		gvg *model.GlobalVirtualGroup
-		res *types.GlobalVirtualGroup
+		res *virtual_types.GlobalVirtualGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -132,7 +134,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 		return nil, err
 	}
 
-	res = &types.GlobalVirtualGroup{
+	res = &virtual_types.GlobalVirtualGroup{
 		Id:                    gvg.GlobalVirtualGroupId,
 		FamilyId:              gvg.FamilyId,
 		PrimarySpId:           gvg.PrimarySpId,
@@ -151,7 +153,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *types.GfSpListMigrateBucketEventsRequest) (resp *types.GfSpListMigrateBucketEventsResponse, err error) {
 	var (
 		events []*model.EventMigrationBucket
-		res    []*types.EventMigrationBucket
+		res    []*storage_types.EventMigrationBucket
 	)
 
 	ctx = log.Context(ctx, req)
@@ -161,14 +163,12 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		return nil, err
 	}
 
-	res = make([]*types.EventMigrationBucket, len(events))
+	res = make([]*storage_types.EventMigrationBucket, len(events))
 	for i, event := range events {
-		res[i] = &types.EventMigrationBucket{
-			Operator:   event.Operator.String(),
-			BucketName: event.BucketName,
-			// TODO BARRY uncomment below code
-			//BucketId:       math.NewUintFromBigInt(event.BucketID.Big()),
-			BucketId:       event.BucketID.String(),
+		res[i] = &storage_types.EventMigrationBucket{
+			Operator:       event.Operator.String(),
+			BucketName:     event.BucketName,
+			BucketId:       math.NewUintFromBigInt(event.BucketID.Big()),
 			DstPrimarySpId: event.DstPrimarySpId,
 		}
 	}
@@ -182,7 +182,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.GfSpListSwapOutEventsRequest) (resp *types.GfSpListSwapOutEventsResponse, err error) {
 	var (
 		events []*model.EventSwapOut
-		res    []*types.EventSwapOut
+		res    []*virtual_types.EventSwapOut
 		gvgIDs []uint32
 	)
 
@@ -193,7 +193,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 		return nil, err
 	}
 
-	res = make([]*types.EventSwapOut, len(events))
+	res = make([]*virtual_types.EventSwapOut, len(events))
 	for i, event := range events {
 		gvgIDs = make([]uint32, len(event.GlobalVirtualGroupIds))
 		//// TODO: BARRY check the below value
@@ -201,7 +201,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 		for j, id := range event.GlobalVirtualGroupIds {
 			gvgIDs[j] = uint32(id)
 		}
-		res[i] = &types.EventSwapOut{
+		res[i] = &virtual_types.EventSwapOut{
 			StorageProviderId:          event.StorageProviderId,
 			GlobalVirtualGroupFamilyId: event.GlobalVirtualGroupFamilyId,
 			GlobalVirtualGroupIds:      gvgIDs,
@@ -218,7 +218,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 func (r *MetadataModular) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.Context, req *types.GfSpListGlobalVirtualGroupsBySecondarySPRequest) (resp *types.GfSpListGlobalVirtualGroupsBySecondarySPResponse, err error) {
 	var (
 		groups []*model.GlobalVirtualGroup
-		res    []*types.GlobalVirtualGroup
+		res    []*virtual_types.GlobalVirtualGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -228,9 +228,9 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.C
 		return nil, err
 	}
 
-	res = make([]*types.GlobalVirtualGroup, len(groups))
+	res = make([]*virtual_types.GlobalVirtualGroup, len(groups))
 	for i, gvg := range groups {
-		res[i] = &types.GlobalVirtualGroup{
+		res[i] = &virtual_types.GlobalVirtualGroup{
 			Id:                    gvg.GlobalVirtualGroupId,
 			FamilyId:              gvg.FamilyId,
 			PrimarySpId:           gvg.PrimarySpId,
@@ -250,7 +250,7 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.C
 func (r *MetadataModular) GfSpListGlobalVirtualGroupsByBucket(ctx context.Context, req *types.GfSpListGlobalVirtualGroupsByBucketRequest) (resp *types.GfSpListGlobalVirtualGroupsByBucketResponse, err error) {
 	var (
 		groups []*model.GlobalVirtualGroup
-		res    []*types.GlobalVirtualGroup
+		res    []*virtual_types.GlobalVirtualGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -260,9 +260,9 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsByBucket(ctx context.Contex
 		return nil, err
 	}
 
-	res = make([]*types.GlobalVirtualGroup, len(groups))
+	res = make([]*virtual_types.GlobalVirtualGroup, len(groups))
 	for i, gvg := range groups {
-		res[i] = &types.GlobalVirtualGroup{
+		res[i] = &virtual_types.GlobalVirtualGroup{
 			Id:                    gvg.GlobalVirtualGroupId,
 			FamilyId:              gvg.FamilyId,
 			PrimarySpId:           gvg.PrimarySpId,

@@ -6,8 +6,10 @@ import "gogoproto/gogo.proto";
 import "greenfield/payment/stream_record.proto";
 import "greenfield/storage/query.proto";
 import "greenfield/storage/types.proto";
+import "greenfield/storage/events.proto";
+import "greenfield/virtualgroup/types.proto";
+import "greenfield/virtualgroup/events.proto";
 import "store/types/store.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types";
 
@@ -415,94 +417,6 @@ message GfSpListObjectsByObjectIDResponse {
   map<uint64, Object> objects = 1;
 }
 
-//TODO: replace all gvg/vgf message to chain proto
-// A global virtual group consists of one primary SP (SP) and multiple secondary SP.
-// Every global virtual group must belong to a GVG family, and the objects of each
-// bucket must be stored in a GVG within a group family.
-message GlobalVirtualGroup {
-  uint32 id = 1;
-  uint32 family_id = 2;
-
-  uint32 primary_sp_id = 3;
-  repeated uint32 secondary_sp_ids = 4;
-
-  uint64 stored_size = 5;
-  string virtual_payment_address = 6 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // total_deposit defines the number of tokens deposited by this storage provider for staking.
-  string total_deposit = 7 [
-    (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-}
-
-// Local virtual group(LVG) uniquely associated with a global virtual group.
-// Each bucket maintains a mapping from local virtual group to global virtual group
-// Each local virtual group is associated with a unique virtual payment account,
-// where all object fees are streamed to.
-message LocalVirtualGroup {
-  uint32 id = 1;
-
-  // id is the unique identification for bucket.
-  string bucket_id = 2;
-  uint32 global_virtual_group_id = 3;
-  uint64 stored_size = 4;
-}
-
-// Global virtual group family serve as a means of grouping global virtual groups.
-// Each bucket must be associated with a unique global virtual group family and cannot cross families.
-message GlobalVirtualGroupFamily {
-  uint32 id = 1;
-
-  repeated uint32 global_virtual_group_ids = 2;
-  string virtual_payment_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-}
-
-message GlobalVirtualGroupsBindingOnBucket {
-  // id is the unique identification for bucket.
-  // TODO: change string to uint
-  string bucket_id = 1;
-  repeated uint32 global_virtual_group_ids = 2;
-  repeated uint32 local_virtual_group_ids = 3;
-}
-
-message GVGStatisticsWithinSP {
-  uint32 storage_provider_id = 1;
-  uint32 secondary_count = 3;
-}
-
-message EventMigrationBucket {
-  string operator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string bucket_name = 2;
-  // bucket_id define an u256 id for object
-  // TODO: change string to uint
-  string bucket_id = 3;
-  uint32 dst_primary_sp_id = 4;
-}
-
-message EventSwapOut {
-  uint32 storage_provider_id = 1;
-  uint32 global_virtual_group_family_id = 2;
-  repeated uint32 global_virtual_group_ids = 3;
-  uint32 successor_sp_id = 4;
-}
-
-message EventStorageProviderExit {
-  uint32 storage_provider_id = 1;
-  string operator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-}
-
-message EventCompleteStorageProviderExit {
-  uint32 storage_provider_id = 1;
-  string operator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // total_deposit defines the number of tokens deposited by this storage provider for staking.
-  string total_deposit = 7 [
-    (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-}
-
 // GfSpListVirtualGroupFamiliesBySpIDRequest is request type for the GfSpListVirtualGroupFamilies RPC method
 message GfSpListVirtualGroupFamiliesBySpIDRequest {
   // sp_id is the unique identification for sp
@@ -512,7 +426,7 @@ message GfSpListVirtualGroupFamiliesBySpIDRequest {
 // GfSpListVirtualGroupFamiliesBySpIDResponse is response type for the GfSpListVirtualGroupFamilies RPC method
 message GfSpListVirtualGroupFamiliesBySpIDResponse {
   // global_virtual_group_families is a list of global virtual group families
- repeated GlobalVirtualGroupFamily global_virtual_group_families = 1;
+ repeated greenfield.virtualgroup.GlobalVirtualGroupFamily global_virtual_group_families = 1;
 }
 
 // GfSpGetGlobalVirtualGroupByGvgIDRequest is request type for the GfSpQueryGlobalVirtualGroup RPC method
@@ -524,7 +438,7 @@ message GfSpGetGlobalVirtualGroupByGvgIDRequest {
 // GfSpGetGlobalVirtualGroupByGvgIDResponse is response type for the GfSpQueryGlobalVirtualGroup RPC method
 message GfSpGetGlobalVirtualGroupByGvgIDResponse {
   // global_virtual_group defines a global virtual group consists of one primary SP (SP) and multiple secondary SP
-  GlobalVirtualGroup global_virtual_group = 1;
+  greenfield.virtualgroup.GlobalVirtualGroup global_virtual_group = 1;
 }
 
 // GfSpGetVirtualGroupFamilyBindingOnBucketRequest is request type for the GfSpQueryVirtualGroupFamilyBindingOnBucket RPC method
@@ -536,7 +450,7 @@ message GfSpGetVirtualGroupFamilyBindingOnBucketRequest {
 // GfSpGetVirtualGroupFamilyBindingOnBucketResponse is response type for the GfSpQueryVirtualGroupFamilyBindingOnBucket RPC method
 message GfSpGetVirtualGroupFamilyBindingOnBucketResponse {
   // global_virtual_group_family defines a global virtual group family serve as a means of grouping global virtual groups
-  GlobalVirtualGroupFamily global_virtual_group_family = 1;
+  greenfield.virtualgroup.GlobalVirtualGroupFamily global_virtual_group_family = 1;
 }
 
 // GfSpListBucketsBindingOnPrimarySPRequest is request type for the GfSpListBucketsBindingOnPrimarySP RPC method
@@ -616,7 +530,7 @@ message GfSpGetVirtualGroupFamilyRequest {
 // GfSpGetVirtualGroupFamilyResponse is response type for the GfSpGetVirtualGroupFamily RPC method
 message GfSpGetVirtualGroupFamilyResponse {
   // vgf defines the vgf info
-  GlobalVirtualGroupFamily vgf = 1;
+  greenfield.virtualgroup.GlobalVirtualGroupFamily vgf = 1;
 }
 
 // GfSpGetGlobalVirtualGroupRequest is request type for the GfSpGetGlobalVirtualGroup RPC method
@@ -630,7 +544,7 @@ message GfSpGetGlobalVirtualGroupRequest {
 // GfSpGetGlobalVirtualGroupResponse is response type for the GfSpGetGlobalVirtualGroup RPC method
 message GfSpGetGlobalVirtualGroupResponse {
   // gvg defines the gvg info
-  GlobalVirtualGroup gvg = 1;
+  greenfield.virtualgroup.GlobalVirtualGroup gvg = 1;
 }
 
 // GfSpListObjectsInGVGRequest is request type for the GfSpListObjectsInGVG RPC method
@@ -662,7 +576,7 @@ message GfSpListMigrateBucketEventsRequest {
 // GfSpListMigrateBucketEventsResponse is response type for the GfSpListMigrateBucketEvents RPC method
 message GfSpListMigrateBucketEventsResponse {
   // events defines the migrate bucket event
-  repeated EventMigrationBucket events = 1;
+  repeated greenfield.storage.EventMigrationBucket events = 1;
 }
 
 // GfSpListSwapOutEventsRequest is request type for the GfSpListSwapOutEvents RPC method
@@ -676,7 +590,7 @@ message GfSpListSwapOutEventsRequest {
 // GfSpListSwapOutEventsResponse is response type for the GfSpListSwapOutEvents RPC method
 message GfSpListSwapOutEventsResponse {
   // events defines the swap out event
-  repeated EventSwapOut events = 1;
+  repeated greenfield.virtualgroup.EventSwapOut events = 1;
 }
 
 // GfSpListGlobalVirtualGroupsBySecondarySPRequest is request type for the GfSpListGlobalVirtualGroupsBySecondarySP RPC method
@@ -688,7 +602,7 @@ message GfSpListGlobalVirtualGroupsBySecondarySPRequest {
 // GfSpListGlobalVirtualGroupsBySecondarySPResponse is response type for the GfSpListGlobalVirtualGroupsBySecondarySP RPC method
 message GfSpListGlobalVirtualGroupsBySecondarySPResponse {
   // groups defines a list of gvg info
-  repeated GlobalVirtualGroup groups = 1;
+  repeated greenfield.virtualgroup.GlobalVirtualGroup groups = 1;
 }
 
 // GfSpListGlobalVirtualGroupsByBucketRequest is request type for the ListGlobalVirtualGroupsByBucket RPC method
@@ -700,7 +614,7 @@ message GfSpListGlobalVirtualGroupsByBucketRequest {
 // GfSpListGlobalVirtualGroupsByBucketResponse is response type for the ListGlobalVirtualGroupsByBucket RPC method
 message GfSpListGlobalVirtualGroupsByBucketResponse {
   // groups defines a list of gvg info
-  repeated GlobalVirtualGroup groups = 1;
+  repeated greenfield.virtualgroup.GlobalVirtualGroup groups = 1;
 }
 
 // GfSpListSPExitEventsRequest is request type for the GfSpListSPExitEvents RPC method
@@ -714,7 +628,7 @@ message GfSpListSPExitEventsRequest {
 // GfSpListSwapOutEventsResponse is response type for the GfSpListSPExitEvents RPC method
 message GfSpListSPExitEventsResponse {
   // events defines the sp exit event
-  repeated EventStorageProviderExit events = 1;
+  repeated greenfield.virtualgroup.EventStorageProviderExit events = 1;
 }
 
 service GfSpMetadataService {
