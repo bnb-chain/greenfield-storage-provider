@@ -354,7 +354,8 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 	}
 	handleTask = oldTask.(task.ReplicatePieceTask)
 	if !handleTask.ExceedRetry() {
-		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-replicate-task-error:%s-repush:%d", shadowTask.Error().Error(), shadowTask.GetRetry()))
+		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-replicate-task-repush:%d", shadowTask.GetRetry()))
+		handleTask.AppendLog(shadowTask.GetLogs())
 		handleTask.SetUpdateTime(time.Now().Unix())
 		err := m.replicateQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
@@ -428,6 +429,7 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 	handleTask = oldTask.(task.SealObjectTask)
 	if !handleTask.ExceedRetry() {
 		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-seal-task-error:%s-repush:%d", shadowTask.Error().Error(), shadowTask.GetRetry()))
+		handleTask.AppendLog(shadowTask.GetLogs())
 		handleTask.SetUpdateTime(time.Now().Unix())
 		err := m.sealQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
