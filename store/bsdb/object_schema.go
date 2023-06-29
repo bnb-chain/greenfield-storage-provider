@@ -15,6 +15,8 @@ type Object struct {
 	Operator common.Address `gorm:"operator"`
 	// Owner defines the account address of object owner
 	Owner common.Address `gorm:"owner"`
+	// LocalVirtualGroupId defines the local virtual group id of object
+	LocalVirtualGroupId uint32 `gorm:"local_virtual_group_id"`
 	// BucketName is the name of the bucket
 	BucketName string `gorm:"bucket_name"`
 	// ObjectName is the name of object
@@ -41,8 +43,6 @@ type Object struct {
 	SourceType string `gorm:"source_type"`
 	// CheckSums defines the root hash of the pieces which stored in a SP
 	Checksums pq.ByteaArray `gorm:"check_sums;type:text"`
-	// SecondarySpAddresses defines the addresses of secondary_sps
-	SecondarySpAddresses pq.StringArray `gorm:"secondary_sp_addresses;type:text"`
 	// LockedBalance defines locked balance of object
 	LockedBalance common.Hash `gorm:"locked_balance"`
 	// Removed defines the object is deleted or not
@@ -61,8 +61,6 @@ type Object struct {
 	UpdateTxHash common.Hash `gorm:"update_tx_hash"`
 	// SealTxHash defines the sealed transaction hash of object
 	SealTxHash common.Hash `gorm:"column:sealed_tx_hash"`
-	// LocalVirtualGroupId defines the local virtual group id of object
-	LocalVirtualGroupId uint32 `gorm:"local_virtual_group_id"`
 }
 
 // TableName is used to set Object table name in database
