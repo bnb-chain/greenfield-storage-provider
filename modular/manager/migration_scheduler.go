@@ -11,42 +11,76 @@ import (
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
+// if spID not in gvg secondary sps. return -1.
+func getSecondarySPIndex(gvg *virtualgrouptypes.GlobalVirtualGroup, spID uint32) int32 {
+	for index, secondarySPID := range gvg.GetSecondarySpIds() {
+		if secondarySPID == spID {
+			return int32(index)
+		}
+	}
+	return -1
+}
+
 type GlobalVirtualGroupByBucketMigrateExecuteUnit struct {
 	bucketID uint64
 	GlobalVirtualGroupMigrateExecuteUnit
 }
 
 type GlobalVirtualGroupMigrateExecuteUnit struct {
-	gvg          *virtualgrouptypes.GlobalVirtualGroup
-	migrateIndex int32 // -1 represents migrate primary
-	destSPID     uint32
-}
-
-func (gvgUnit *GlobalVirtualGroupMigrateExecuteUnit) pickMigrateDestSP() error {
-	return nil
+	gvg            *virtualgrouptypes.GlobalVirtualGroup
+	redundantIndex int32 // if < 0, represents migrate primary
+	srcSPID        uint32
+	destSPID       uint32
 }
 
 type VirtualGroupFamilyMigrateExecuteUnit struct {
-	vgf                            *virtualgrouptypes.GlobalVirtualGroupFamily
-	gvgList                        []*virtualgrouptypes.GlobalVirtualGroup
-	resolveConflictGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit
-	destSPID                       uint32
-	primaryGVGMigrateUnits         []*GlobalVirtualGroupMigrateExecuteUnit
+	vgf                                *virtualgrouptypes.GlobalVirtualGroupFamily
+	srcSPID                            uint32 // self sp id.
+	gvgList                            []*virtualgrouptypes.GlobalVirtualGroup
+	conflictedSecondaryGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // need be resolved firstly
+	destSPID                           uint32
+	primaryGVGMigrateUnits             []*GlobalVirtualGroupMigrateExecuteUnit
 }
 
+func NewVirtualGroupFamilyMigrateExecuteUnit(vgf *virtualgrouptypes.GlobalVirtualGroupFamily, selfSPID uint32) *VirtualGroupFamilyMigrateExecuteUnit {
+	return &VirtualGroupFamilyMigrateExecuteUnit{
+		vgf:                                vgf,
+		srcSPID:                            selfSPID,
+		gvgList:                            make([]*virtualgrouptypes.GlobalVirtualGroup, 0),
+		conflictedSecondaryGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		destSPID:                           0,
+		primaryGVGMigrateUnits:             make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+	}
+}
+
+// PickDestSPFilter is used to pick sp id which is not in excluded sp ids.
 type PickDestSPFilter struct {
-	currentSecondarySPMap map[uint32]bool
+	excludedSPIDs []uint32
+}
+
+func NewPickDestSPFilterWithMap(m map[uint32]int) *PickDestSPFilter {
+	spIDs := make([]uint32, 0)
+	for spID, _ := range m {
+		spIDs = append(spIDs, spID)
+	}
+	return &PickDestSPFilter{excludedSPIDs: spIDs}
+}
+
+func NewPickDestSPFilterWithSlice(s []uint32) *PickDestSPFilter {
+	return &PickDestSPFilter{excludedSPIDs: s}
 }
 
 func (f *PickDestSPFilter) Check(spID uint32) bool {
-	if _, found := f.currentSecondarySPMap[spID]; found {
-		return false
+	for _, v := range f.excludedSPIDs {
+		if v == spID {
+			return false
+		}
 	}
 	return true
 }
 
 /*
-Conflict Description
+Check Conflict Description
 1.Current virtual group and sp status
 
 	sp_list=[sp1,sp2,sp3,sp4,sp5,sp6,sp7,sp8]
@@ -70,33 +104,66 @@ Conflict Description
 
 	sp1 complete sp exit.
 */
-func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) checkConflict(vgm vgmgr.VirtualGroupManager) error {
+func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm vgmgr.VirtualGroupManager) error {
 	var (
-		err              error
-		secondarySPIDMap = make(map[uint32]bool)
-		destSP           *sptypes.StorageProvider
+		err                    error
+		hasPrimaryGVG          bool
+		familySecondarySPIDMap = make(map[uint32]int)
+		destFamilySP           *sptypes.StorageProvider
 	)
 	for _, gvg := range vgfUnit.gvgList {
 		for _, secondarySPID := range gvg.GetSecondarySpIds() {
-			secondarySPIDMap[secondarySPID] = true
+			familySecondarySPIDMap[secondarySPID] = familySecondarySPIDMap[secondarySPID] + 1
+		}
+		hasPrimaryGVG = true
+	}
+	if hasPrimaryGVG {
+		// check conflicts.
+		if destFamilySP, err = vgm.PickSPByFilter(NewPickDestSPFilterWithMap(familySecondarySPIDMap)); err != nil {
+			// primary family migrate has conflicts, choose a sp with fewer conflicts.
+			secondarySPIDBindingLeastGVGs := vgfUnit.gvgList[0].GetSecondarySpIds()[0]
+			for spID, count := range familySecondarySPIDMap {
+				if count < familySecondarySPIDMap[secondarySPIDBindingLeastGVGs] {
+					secondarySPIDBindingLeastGVGs = spID
+				}
+			}
+			// resolve conflict, swap out secondarySPIDBindingLeastGVGs.
+			for _, gvg := range vgfUnit.gvgList {
+				if secondaryIndex := getSecondarySPIndex(gvg, secondarySPIDBindingLeastGVGs); secondaryIndex > 0 {
+					// gvg has conflicts.
+					var (
+						srcSecondarySPID uint32
+						destSecondarySP  *sptypes.StorageProvider
+					)
+					srcSecondarySPID = gvg.GetSecondarySpIds()[secondaryIndex]
+					if destSecondarySP, err = vgm.PickSPByFilter(NewPickDestSPFilterWithSlice(gvg.GetSecondarySpIds())); err != nil {
+						log.Errorw("failed to check conflict due to pick secondary sp", "error", err)
+						return err
+					}
+					vgfUnit.conflictedSecondaryGVGMigrateUnits = append(vgfUnit.conflictedSecondaryGVGMigrateUnits,
+						&GlobalVirtualGroupMigrateExecuteUnit{
+							gvg, int32(secondaryIndex),
+							srcSecondarySPID, destSecondarySP.GetId()})
+				}
+			}
+		} else {
+			vgfUnit.destSPID = destFamilySP.GetId()
+			for _, gvg := range vgfUnit.gvgList {
+				vgfUnit.primaryGVGMigrateUnits = append(vgfUnit.primaryGVGMigrateUnits,
+					&GlobalVirtualGroupMigrateExecuteUnit{
+						gvg, -1,
+						vgfUnit.srcSPID, destFamilySP.GetId()})
+			}
 		}
 	}
-	filter := &PickDestSPFilter{
-		secondarySPIDMap,
-	}
-	if destSP, err = vgm.PickSPByFilter(filter); err != nil {
-		// TODO: has conflict
-	}
-	vgfUnit.destSPID = destSP.GetId()
-	// TODO: impl
-	return err
+	return nil
 }
 
 type MigrateExecutePlan struct {
-	virtualGroupManager     vgmgr.VirtualGroupManager
-	VGFMigrateUnits         []*VirtualGroupFamilyMigrateExecuteUnit         // sp exit
-	GVGMigrateUnits         []*GlobalVirtualGroupMigrateExecuteUnit         // sp exit
-	GVGByBucketMigrateUnits []*GlobalVirtualGroupByBucketMigrateExecuteUnit // bucket migrate
+	virtualGroupManager            vgmgr.VirtualGroupManager
+	PrimaryVGFMigrateUnits         []*VirtualGroupFamilyMigrateExecuteUnit         // sp exit, primary family, include gvg list
+	SecondaryGVGMigrateUnits       []*GlobalVirtualGroupMigrateExecuteUnit         // sp exit, secondary gvg
+	PrimaryGVGByBucketMigrateUnits []*GlobalVirtualGroupByBucketMigrateExecuteUnit // bucket migrate，primary gvg
 }
 
 func (plan *MigrateExecutePlan) loadFromDB() error {
@@ -115,6 +182,11 @@ func (plan *MigrateExecutePlan) updateProgress() error {
 	return nil
 }
 
+func (plan *MigrateExecutePlan) startSchedule() {
+	// TODO:
+	// send control msg to dest sp endpoint and trigger migrate.
+}
+
 // Init load from db.
 func (plan *MigrateExecutePlan) Init() error {
 	return plan.loadFromDB()
@@ -123,19 +195,34 @@ func (plan *MigrateExecutePlan) Init() error {
 // Start persist plan and task to db and task dispatcher
 func (plan *MigrateExecutePlan) Start() error {
 	var err error
-	for _, fUnit := range plan.VGFMigrateUnits {
-		if err = fUnit.checkConflict(plan.virtualGroupManager); err != nil {
-			log.Errorw("failed to start migrate execute plan due to check conflict", "family_unit", fUnit, "error", err)
+	for _, fUnit := range plan.PrimaryVGFMigrateUnits {
+		if err = fUnit.expandExecuteSubUnits(plan.virtualGroupManager); err != nil {
+			log.Errorw("failed to start migrate execute plan due to expand execute sub units", "family_unit", fUnit, "error", err)
 			return err
 		}
 	}
-	for _, gUnit := range plan.GVGMigrateUnits {
-		if err = gUnit.pickMigrateDestSP(); err != nil {
-			log.Errorw("failed to start migrate execute plan due to pick migrate dest sp", "gvg_unit", gUnit, "error", err)
+	for _, gUnit := range plan.SecondaryGVGMigrateUnits {
+		// expand execute unit
+		var (
+			redundantIndex  int32
+			destSecondarySP *sptypes.StorageProvider
+		)
+		if redundantIndex = getSecondarySPIndex(gUnit.gvg, gUnit.srcSPID); redundantIndex < 0 {
+			log.Errorw("failed to start migrate execute plan due to get secondary sp index", "gvg_unit", gUnit, "error", err)
 			return err
 		}
+		if destSecondarySP, err = plan.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithSlice(gUnit.gvg.GetSecondarySpIds())); err != nil {
+			log.Errorw("failed to start migrate execute plan due to get secondary dest sp", "gvg_unit", gUnit, "error", err)
+			return err
+		}
+		gUnit.redundantIndex = redundantIndex
+		gUnit.destSPID = destSecondarySP.GetId()
 	}
-
+	if err = plan.storeToDB(); err != nil {
+		log.Errorw("failed to start migrate execute plan due to store db", "error", err)
+		return err
+	}
+	go plan.startSchedule()
 	return nil
 }
 
@@ -214,16 +301,16 @@ func (s *MigrationScheduler) produceSPExitExecutePlan() (*MigrateExecutePlan, er
 		return plan, err
 	}
 	plan = &MigrateExecutePlan{
-		virtualGroupManager: s.manager.virtualGroupManager,
-		VGFMigrateUnits:     make([]*VirtualGroupFamilyMigrateExecuteUnit, 0),
-		GVGMigrateUnits:     make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		virtualGroupManager:      s.manager.virtualGroupManager,
+		PrimaryVGFMigrateUnits:   make([]*VirtualGroupFamilyMigrateExecuteUnit, 0),
+		SecondaryGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
 	}
 	for _, f := range vgfList {
-		plan.VGFMigrateUnits = append(plan.VGFMigrateUnits, &VirtualGroupFamilyMigrateExecuteUnit{vgf: f})
+		plan.PrimaryVGFMigrateUnits = append(plan.PrimaryVGFMigrateUnits, NewVirtualGroupFamilyMigrateExecuteUnit(f, s.spID))
 	}
 	// TODO: query metadata service to get secondary sp's gvg list.
 	for _, g := range secondaryGVGList {
-		plan.GVGMigrateUnits = append(plan.GVGMigrateUnits, &GlobalVirtualGroupMigrateExecuteUnit{gvg: g})
+		plan.SecondaryGVGMigrateUnits = append(plan.SecondaryGVGMigrateUnits, &GlobalVirtualGroupMigrateExecuteUnit{gvg: g, srcSPID: s.spID})
 	}
 	return plan, err
 }
