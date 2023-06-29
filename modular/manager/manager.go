@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -43,7 +42,6 @@ var _ module.Manager = &ManageModular{}
 type ManageModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
-	mux     sync.Mutex
 
 	// loading task at startup.
 	enableLoadTask           bool

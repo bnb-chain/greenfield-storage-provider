@@ -123,7 +123,7 @@ func (s *GfSpClient) GetBucketByBucketName(ctx context.Context, bucketName strin
 
 // GetBucketByBucketID get bucket info by a bucket id
 func (s *GfSpClient) GetBucketByBucketID(ctx context.Context, bucketId int64, includePrivate bool,
-	opts ...grpc.DialOption) (*types.GfSpGetBucketByBucketIDResponse, error) {
+	opts ...grpc.DialOption) (*types.Bucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func (s *GfSpClient) GetBucketByBucketID(ctx context.Context, bucketId int64, in
 		log.CtxErrorw(ctx, "failed to send get bucket by bucket id rpc", "error", err)
 		return nil, err
 	}
-	return resp, nil
+	return resp.GetBucket(), nil
 }
 
 // ListExpiredBucketsBySp list buckets that are expired by specific sp
