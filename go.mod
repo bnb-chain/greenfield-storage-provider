@@ -5,7 +5,7 @@ go 1.20
 replace (
 	cosmossdk.io/api => github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230425074444-eb5869b05fe9
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05fe9
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.2.3-0.20230628070126-b98c93531c5a // TODO: temp develop
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.2.3-0.20230629054947-b6d6df29e268 // TODO: temp develop
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.23.0
 	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v0.0.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
@@ -58,10 +58,7 @@ require (
 	gorm.io/gorm v1.24.5
 )
 
-require (
-	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
-)
+require github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
 
 require (
 	cosmossdk.io/api v0.4.0 // indirect
@@ -74,6 +71,7 @@ require (
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/creachadair/taskgroup v0.4.2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect

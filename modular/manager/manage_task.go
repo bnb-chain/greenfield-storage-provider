@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	"fmt"
 	"net/http"
 	"strings"
@@ -19,7 +20,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
-	sdktypes "github.com/bnb-chain/greenfield/sdk/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -679,16 +679,13 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 	if err != nil {
 		return err
 	}
-
 	return m.baseApp.GfSpClient().CreateGlobalVirtualGroup(context.Background(), &gfspserver.GfSpCreateGlobalVirtualGroup{
 		VirtualGroupFamilyId: vgfID,
 		PrimarySpAddress:     m.baseApp.OperatorAddress(), // it is useless
 		SecondarySpIds:       gvgMeta.SecondarySPIDs,
-		// TODO: refine it.
 		Deposit: &sdk.Coin{
 			Denom:  virtualGroupParams.GetDepositDenom(),
-			Amount: sdktypes.NewIntFromInt64WithDecimal(20000000, sdktypes.DecimalBNB),
-			// Amount: virtualGroupParams.GvgStakingPrice.MulInt64(int64(gvgMeta.StakingStorageSize)).TruncateInt(),
+			Amount: virtualGroupParams.GvgStakingPerBytes.Mul(math.NewIntFromUint64(gvgMeta.StakingStorageSize)),
 		},
 	})
 }

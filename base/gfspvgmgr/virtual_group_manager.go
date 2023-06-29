@@ -3,6 +3,7 @@ package gfspvgmgr
 import (
 	"context"
 	"fmt"
+	"math"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -21,10 +22,10 @@ import (
 var _ vgmgr.VirtualGroupManager = &virtualGroupManager{}
 
 const (
-	VirtualGroupManagerSpace  = "VirtualGroupManager"
-	RefreshMetaInterval       = 2 * time.Second
-	MaxStorageUsage           = 0.95
-	DefaultStakingStorageSize = 64 * 1024 * 1024 * 1024 // 64GB per GVG
+	VirtualGroupManagerSpace            = "VirtualGroupManager"
+	RefreshMetaInterval                 = 2 * time.Second
+	MaxStorageUsageRatio                = 0.95
+	DefaultInitialGVGStakingStorageSize = uint64(8) * 1024 * 1024 * 1024 // 8GB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 GB
 )
 
 var (
@@ -50,14 +51,14 @@ type FreeStorageSizeWeightPicker struct {
 }
 
 func (vgfp *FreeStorageSizeWeightPicker) addVirtualGroupFamily(vgf *vgmgr.VirtualGroupFamilyMeta) {
-	if float64(vgf.FamilyUsedStorageSize) >= MaxStorageUsage*float64(vgf.FamilyStakingStorageSize) || vgf.FamilyStakingStorageSize == 0 {
+	if float64(vgf.FamilyUsedStorageSize) >= MaxStorageUsageRatio*float64(vgf.FamilyStakingStorageSize) || vgf.FamilyStakingStorageSize == 0 {
 		return
 	}
 	vgfp.freeStorageSizeWeightMap[vgf.ID] = float64(vgf.FamilyStakingStorageSize-vgf.FamilyUsedStorageSize) / float64(vgf.FamilyStakingStorageSize)
 }
 
 func (vgfp *FreeStorageSizeWeightPicker) addGlobalVirtualGroup(gvg *vgmgr.GlobalVirtualGroupMeta) {
-	if float64(gvg.UsedStorageSize) >= MaxStorageUsage*float64(gvg.StakingStorageSize) || gvg.StakingStorageSize == 0 {
+	if float64(gvg.UsedStorageSize) >= MaxStorageUsageRatio*float64(gvg.StakingStorageSize) {
 		return
 	}
 	vgfp.freeStorageSizeWeightMap[gvg.ID] = float64(gvg.StakingStorageSize-gvg.UsedStorageSize) / float64(gvg.StakingStorageSize)
@@ -139,7 +140,7 @@ func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vgmg
 	return &vgmgr.GlobalVirtualGroupMeta{
 		PrimarySPID:        sm.primarySP.Id,
 		SecondarySPIDs:     secondarySPIDs,
-		StakingStorageSize: DefaultStakingStorageSize,
+		StakingStorageSize: DefaultInitialGVGStakingStorageSize,
 	}, nil
 }
 
@@ -270,8 +271,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 				SecondarySPIDs:       gvg.GetSecondarySpIds(),
 				SecondarySPEndpoints: toSPEndpoints(gvg.GetSecondarySpIds()),
 				UsedStorageSize:      gvg.GetStoredSize(),
-				StakingStorageSize:   DefaultStakingStorageSize,
-				// StakingStorageSize: gvg.TotalDeposit.Mod(vgParams.GvgStakingPrice.TruncateInt()).Uint64(), // TODO: refine it.
+				StakingStorageSize:   vgm.GetTotalStakingStoreSizeOfGVG(gvg),
 			}
 			log.Infow("query global virtual group info", "gvg_info", gvg, "gvg_meta", gvgMeta)
 			vgfm.vgfIDToVgf[vgf.Id].GVGMap[gvg.GetId()] = gvgMeta
@@ -329,4 +329,12 @@ func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.PickFilter) (*sptype
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.spManager.pickSPByFilter(filter)
+}
+
+func (vgm *virtualGroupManager) GetTotalStakingStoreSizeOfGVG(gvg *virtualgrouptypes.GlobalVirtualGroup) uint64 {
+	total := gvg.TotalDeposit.Quo(vgm.vgParams.GvgStakingPerBytes)
+	if !total.IsUint64() {
+		return math.MaxUint64
+	}
+	return total.Uint64()
 }
