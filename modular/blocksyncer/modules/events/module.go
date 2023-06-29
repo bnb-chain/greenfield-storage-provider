@@ -1,4 +1,4 @@
-package prefixtree
+package events
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	ModuleName = "prefix_tree"
+	SPExitRelatedEventsModuleName = "sp_exit_events"
 )
 
 var (
@@ -19,12 +19,10 @@ var (
 	_ modules.PrepareTablesModule = &Module{}
 )
 
-// Module represents the object module
 type Module struct {
 	db *database.DB
 }
 
-// NewModule builds a new Module instance
 func NewModule(db *database.DB) *Module {
 	return &Module{
 		db: db,
@@ -33,14 +31,24 @@ func NewModule(db *database.DB) *Module {
 
 // Name implements modules.Module
 func (m *Module) Name() string {
-	return ModuleName
+	return SPExitRelatedEventsModuleName
 }
 
-// PrepareTables implements
 func (m *Module) PrepareTables() error {
-	return m.db.PrepareTables(context.TODO(), []schema.Tabler{&bsdb.SlashPrefixTreeNode{}})
+	return m.db.PrepareTables(context.TODO(), []schema.Tabler{
+		&bsdb.EventSwapOut{},
+		&bsdb.EventMigrationBucket{},
+		&bsdb.EventCompleteMigrationBucket{},
+		&bsdb.EventStorageProviderExit{},
+		&bsdb.EventCompleteStorageProviderExit{},
+	})
 }
 
 func (m *Module) AutoMigrate() error {
-	return m.db.AutoMigrate(context.TODO(), []schema.Tabler{&bsdb.SlashPrefixTreeNode{}})
+	return m.db.AutoMigrate(context.TODO(), []schema.Tabler{
+		&bsdb.EventSwapOut{},
+		&bsdb.EventMigrationBucket{},
+		&bsdb.EventCompleteMigrationBucket{},
+		&bsdb.EventStorageProviderExit{},
+		&bsdb.EventCompleteStorageProviderExit{}})
 }

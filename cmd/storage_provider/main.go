@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/approver"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/authenticator"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
@@ -43,7 +44,7 @@ func registerModular() {
 	gfspapp.RegisterModular(module.SignModularName, module.SignModularDescription, signer.NewSignModular)
 	gfspapp.RegisterModular(metadata.MetadataModularName, metadata.MetadataModularDescription, metadata.NewMetadataModular)
 	gfspapp.RegisterModular(module.UploadModularName, module.UploadModularDescription, uploader.NewUploadModular)
-	// gfspapp.RegisterModular(blocksyncer.BlockSyncerModularName, blocksyncer.BlockSyncerModularDescription, blocksyncer.NewBlockSyncerModular)
+	gfspapp.RegisterModular(blocksyncer.BlockSyncerModularName, blocksyncer.BlockSyncerModularDescription, blocksyncer.NewBlockSyncerModular)
 }
 
 var (
