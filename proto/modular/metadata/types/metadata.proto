@@ -4,11 +4,11 @@ package modular.metadata.types;
 import "base/types/gfsperrors/error.proto";
 import "gogoproto/gogo.proto";
 import "greenfield/payment/stream_record.proto";
+import "greenfield/storage/events.proto";
 import "greenfield/storage/query.proto";
 import "greenfield/storage/types.proto";
-import "greenfield/storage/events.proto";
-import "greenfield/virtualgroup/types.proto";
 import "greenfield/virtualgroup/events.proto";
+import "greenfield/virtualgroup/types.proto";
 import "store/types/store.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types";
@@ -426,7 +426,7 @@ message GfSpListVirtualGroupFamiliesBySpIDRequest {
 // GfSpListVirtualGroupFamiliesBySpIDResponse is response type for the GfSpListVirtualGroupFamilies RPC method
 message GfSpListVirtualGroupFamiliesBySpIDResponse {
   // global_virtual_group_families is a list of global virtual group families
- repeated greenfield.virtualgroup.GlobalVirtualGroupFamily global_virtual_group_families = 1;
+  repeated greenfield.virtualgroup.GlobalVirtualGroupFamily global_virtual_group_families = 1;
 }
 
 // GfSpGetGlobalVirtualGroupByGvgIDRequest is request type for the GfSpQueryGlobalVirtualGroup RPC method
