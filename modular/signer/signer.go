@@ -3,7 +3,6 @@ package signer
 import (
 	"context"
 	"net/http"
-	"time"
 
 	sdkmath "cosmossdk.io/math"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -14,7 +13,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -129,65 +127,21 @@ func (s *SignModular) SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong
 	return sig, nil
 }
 
-func (s *SignModular) SealObject(ctx context.Context, object *storagetypes.MsgSealObject) error {
-	var (
-		err       error
-		startTime = time.Now()
-	)
-	defer func() {
-		metrics.SealObjectTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
-	}()
-	_, err = s.client.SealObject(ctx, SignSeal, object)
-	return err
+func (s *SignModular) SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error) {
+	return s.client.SealObject(ctx, SignSeal, object)
 }
 
-func (s *SignModular) RejectUnSealObject(ctx context.Context, rejectObject *storagetypes.MsgRejectSealObject) error {
-	var (
-		err       error
-		startTime = time.Now()
-	)
-	defer func() {
-		metrics.RejectUnSealObjectTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
-		if err == nil {
-			metrics.RejectUnSealObjectSucceedCounter.WithLabelValues(s.Name()).Inc()
-		} else {
-			metrics.RejectUnSealObjectFailedCounter.WithLabelValues(s.Name()).Inc()
-		}
-	}()
-	_, err = s.client.RejectUnSealObject(ctx, SignSeal, rejectObject)
-	return err
+func (s *SignModular) RejectUnSealObject(
+	ctx context.Context,
+	rejectObject *storagetypes.MsgRejectSealObject) (string, error) {
+	return s.client.RejectUnSealObject(ctx, SignSeal, rejectObject)
 }
 
-func (s *SignModular) DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error {
-	var (
-		err       error
-		startTime = time.Now()
-	)
-	defer func() {
-		metrics.DiscontinueBucketTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
-		if err == nil {
-			metrics.DiscontinueBucketSucceedCounter.WithLabelValues(s.Name()).Inc()
-		} else {
-			metrics.DiscontinueBucketFailedCounter.WithLabelValues(s.Name()).Inc()
-		}
-	}()
-	_, err = s.client.DiscontinueBucket(ctx, SignGc, bucket)
-	return err
+func (s *SignModular) DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error) {
+	return s.client.DiscontinueBucket(ctx, SignGc, bucket)
 }
 
 func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
-	var (
-		err       error
-		startTime = time.Now()
-	)
-	defer func() {
-		metrics.CreateGlobalVirtualGroupTimeHistogram.WithLabelValues(s.Name()).Observe(time.Since(startTime).Seconds())
-		if err == nil {
-			metrics.CreateGlobalVirtualGroupSucceedCounter.WithLabelValues(s.Name()).Inc()
-		} else {
-			metrics.CreateGlobalVirtualGroupFailedCounter.WithLabelValues(s.Name()).Inc()
-		}
-	}()
-	_, err = s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
+	_, err := s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
 	return err
 }

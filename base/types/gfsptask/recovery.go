@@ -136,6 +136,18 @@ func (m *GfSpRecoverPieceTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
 }
 
+func (m *GfSpRecoverPieceTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpRecoverPieceTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpRecoverPieceTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
 func (m *GfSpRecoverPieceTask) Error() error {
 	return m.GetTask().Error()
 }

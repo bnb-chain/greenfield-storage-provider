@@ -45,6 +45,7 @@ message GfSpSignRequest {
 message GfSpSignResponse {
   base.types.gfsperrors.GfSpError err = 1;
   bytes signature = 2;
+  string tx_hash = 3;
 }
 
 service GfSpSignService {
