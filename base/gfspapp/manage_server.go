@@ -170,6 +170,8 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 }
 
 func (g *GfSpBaseApp) OnAskTask(ctx context.Context, limit corercmgr.Limit) (coretask.Task, error) {
+	g.mux.Lock()
+	defer g.mux.Unlock()
 	startTime := time.Now()
 	gfspTask, err := g.manager.DispatchTask(ctx, limit)
 	if err != nil {
