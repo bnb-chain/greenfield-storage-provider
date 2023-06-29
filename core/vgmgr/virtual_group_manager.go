@@ -2,6 +2,7 @@ package vgmgr
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -27,6 +28,12 @@ type VirtualGroupFamilyMeta struct {
 	GVGMap                   map[uint32]*GlobalVirtualGroupMeta
 }
 
+// PickFilter is used to check gvg or sp pick condition.
+type PickFilter interface {
+	// Check returns true when match pick request condition.
+	Check(spID uint32) bool
+}
+
 // VirtualGroupManager is used to provide virtual group api.
 type VirtualGroupManager interface {
 	// PickVirtualGroupFamily pick a virtual group family(If failed to pick,
@@ -40,6 +47,8 @@ type VirtualGroupManager interface {
 	ForceRefreshMeta() error
 	// GenerateGlobalVirtualGroupMeta is used to generate a new global virtual group meta, the caller need send a tx to chain.
 	GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*GlobalVirtualGroupMeta, error)
+	// PickSPByFilter picks sp which is match pick filter condition.
+	PickSPByFilter(filter PickFilter) (*sptypes.StorageProvider, error)
 }
 
 // NewVirtualGroupManager is the virtual group manager init api.

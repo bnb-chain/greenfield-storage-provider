@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -43,7 +42,6 @@ var _ module.Manager = &ManageModular{}
 type ManageModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
-	mux     sync.Mutex
 
 	// loading task at startup.
 	enableLoadTask           bool
@@ -152,7 +150,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			task.InitGCObjectTask(m.baseApp.TaskPriority(task), start, end, m.baseApp.TaskTimeout(task, 0))
 			err = m.gcObjectQueue.Push(task)
 			if err == nil {
-				metrics.GCBlockNumberGauge.WithLabelValues(m.Name()).Set(float64(m.gcBlockHeight))
+				metrics.GCBlockNumberGauge.WithLabelValues(ManagerGCBlockNumber).Set(float64(m.gcBlockHeight))
 				m.gcBlockHeight = end + 1
 
 				if err = m.baseApp.GfSpDB().InsertGCObjectProgress(task.Key().String(), &spdb.GCObjectMeta{
@@ -168,7 +166,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			if !m.discontinueBucketEnabled {
 				continue
 			}
-			m.discontinueBuckets(ctx)
+			go m.discontinueBuckets(ctx)
 			log.Infow("finished to discontinue buckets", "time", time.Now())
 		}
 	}
@@ -191,7 +189,7 @@ func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 			BucketName: bucket.BucketInfo.BucketName,
 			Reason:     DiscontinueBucketReason,
 		}
-		err = m.baseApp.GfSpClient().DiscontinueBucket(ctx, discontinueBucket)
+		_, err = m.baseApp.GfSpClient().DiscontinueBucket(ctx, discontinueBucket)
 		if err != nil {
 			log.Errorw("failed to discontinue bucket on chain", "bucket_name",
 				discontinueBucket.BucketName, "error", err)
@@ -523,7 +521,6 @@ func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
 }
 
 func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storagetypes.ObjectInfo) error {
-	metrics.SealObjectFailedCounter.WithLabelValues(m.Name()).Inc()
 	rejectUnSealObjectMsg := &storagetypes.MsgRejectSealObject{
 		BucketName: object.GetBucketName(),
 		ObjectName: object.GetObjectName(),
@@ -531,7 +528,7 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 	var err error
 	for i := 0; i < RejectUnSealObjectRetry; i++ {
-		err = m.baseApp.GfSpClient().RejectUnSealObject(ctx, rejectUnSealObjectMsg)
+		_, err = m.baseApp.GfSpClient().RejectUnSealObject(ctx, rejectUnSealObjectMsg)
 		if err != nil {
 			time.Sleep(RejectUnSealObjectTimeout * time.Second)
 		} else {

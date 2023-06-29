@@ -6,36 +6,44 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 )
 
 const (
-	approvalRouterName                    = "GetApproval"
-	putObjectRouterName                   = "PutObject"
-	resumablePutObjectRouterName          = "ResumablePutObject"
-	queryResumeOffsetName                 = "QueryResumeOffsetName"
-	getObjectRouterName                   = "GetObject"
-	getChallengeInfoRouterName            = "GetChallengeInfo"
-	replicateObjectPieceRouterName        = "ReplicateObjectPiece"
-	getUserBucketsRouterName              = "GetUserBuckets"
-	listObjectsByBucketRouterName         = "ListObjectsByBucketName"
-	verifyPermissionRouterName            = "VerifyPermission"
-	getBucketReadQuotaRouterName          = "GetBucketReadQuota"
-	listBucketReadRecordRouterName        = "ListBucketReadRecord"
-	requestNonceName                      = "RequestNonce"
-	updateUserPublicKey                   = "UpdateUserPublicKey"
-	queryUploadProgressRouterName         = "QueryUploadProgress"
-	downloadObjectByUniversalEndpointName = "DownloadObjectByUniversalEndpoint"
-	viewObjectByUniversalEndpointName     = "ViewObjectByUniversalEndpoint"
-	getObjectMetaRouterName               = "GetObjectMeta"
-	getBucketMetaRouterName               = "GetBucketMeta"
-	getGroupListRouterName                = "GetGroupList"
-	listBucketsByBucketIDRouterName       = "ListBucketsByBucketID"
-	listObjectsByObjectIDRouterName       = "ListObjectsByObjectID"
-	migratePieceRouterName                = "MigratePiece"
-	recoveryPieceRouterName               = "RecoveryObjectPiece"
-	getPieceFromSecondaryRouterName       = "GetPieceFromSecondary"
+	approvalRouterName                             = "GetApproval"
+	putObjectRouterName                            = "PutObject"
+	resumablePutObjectRouterName                   = "ResumablePutObject"
+	queryResumeOffsetName                          = "QueryResumeOffsetName"
+	getObjectRouterName                            = "GetObject"
+	getChallengeInfoRouterName                     = "GetChallengeInfo"
+	replicateObjectPieceRouterName                 = "ReplicateObjectPiece"
+	getUserBucketsRouterName                       = "GetUserBuckets"
+	listObjectsByBucketRouterName                  = "ListObjectsByBucketName"
+	verifyPermissionRouterName                     = "VerifyPermission"
+	getBucketReadQuotaRouterName                   = "GetBucketReadQuota"
+	listBucketReadRecordRouterName                 = "ListBucketReadRecord"
+	requestNonceName                               = "RequestNonce"
+	updateUserPublicKey                            = "UpdateUserPublicKey"
+	queryUploadProgressRouterName                  = "QueryUploadProgress"
+	downloadObjectByUniversalEndpointName          = "DownloadObjectByUniversalEndpoint"
+	viewObjectByUniversalEndpointName              = "ViewObjectByUniversalEndpoint"
+	getObjectMetaRouterName                        = "GetObjectMeta"
+	getBucketMetaRouterName                        = "GetBucketMeta"
+	getGroupListRouterName                         = "GetGroupList"
+	listBucketsByBucketIDRouterName                = "ListBucketsByBucketID"
+	listObjectsByObjectIDRouterName                = "ListObjectsByObjectID"
+	recoveryPieceRouterName                        = "RecoveryObjectPiece"
+	getPieceFromSecondaryRouterName                = "GetPieceFromSecondary"
+	getPaymentByBucketIDRouterName                 = "GetPaymentByBucketID"
+	getPaymentByBucketNameRouterName               = "GetPaymentByBucketName"
+	getBucketByBucketNameRouterName                = "GetBucketByBucketName"
+	getBucketByBucketIDRouterName                  = "GetBucketByBucketID"
+	listDeletedObjectsByBlockNumberRangeRouterName = "ListDeletedObjectsByBlockNumberRange"
+	getUserBucketsCountRouterName                  = "GetUserBucketsCount"
+	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
+	migratePieceRouterName                         = "MigratePiece"
 )
 
 const (
@@ -54,6 +62,15 @@ func (g *GateModular) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 
 // RegisterHandler registers the handlers to the gateway router.
 func (g *GateModular) RegisterHandler(router *mux.Router) {
+	// off-chain-auth router
+	router.Path(AuthRequestNoncePath).
+		Name(requestNonceName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.requestNonceHandler)
+	router.Path(AuthUpdateKeyPath).
+		Name(updateUserPublicKey).
+		Methods(http.MethodPost).
+		HandlerFunc(g.updateUserPublicKeyHandler)
 
 	// verify permission router
 	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").Name(verifyPermissionRouterName).Methods(http.MethodGet).HandlerFunc(g.verifyPermissionHandler)
@@ -114,6 +131,14 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 			GetBucketReadQuotaQuery, "",
 			GetBucketReadQuotaMonthQuery, "{year_month}")
 
+		if g.env != gfspapp.EnvMainnet {
+			// Get Bucket By Bucket Name
+			r.NewRoute().Name(getBucketByBucketNameRouterName).Methods(http.MethodGet).Queries(GetBucketByBucketNameQuery, "").HandlerFunc(g.getBucketByBucketNameHandler)
+
+			// Get Payment By Bucket Name
+			r.NewRoute().Name(getPaymentByBucketNameRouterName).Methods(http.MethodGet).Queries(GetPaymentByBucketNameQuery, "").HandlerFunc(g.getPaymentByBucketNameHandler)
+		}
+
 		// List Bucket Read Record
 		r.NewRoute().Name(listBucketReadRecordRouterName).Methods(http.MethodGet).HandlerFunc(g.listBucketReadRecordHandler).Queries(
 			ListBucketReadRecordQuery, "",
@@ -137,13 +162,31 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	router.Path("/").
 		Name(listObjectsByObjectIDRouterName).
 		Methods(http.MethodPost).
-		Queries(ListObjectsByObjectID, "").
+		Queries(ListObjectsByObjectIDQuery, "").
 		HandlerFunc(g.listObjectsByObjectIDHandler)
 	router.Path("/").
 		Name(listBucketsByBucketIDRouterName).
 		Methods(http.MethodPost).
-		Queries(ListBucketsByBucketID, "").
+		Queries(ListBucketsByBucketIDQuery, "").
 		HandlerFunc(g.listBucketsByBucketIDHandler)
+
+	if g.env != gfspapp.EnvMainnet {
+		// Get Payment By Bucket ID
+		router.Path("/").Name(getPaymentByBucketIDRouterName).Methods(http.MethodGet).Queries(GetPaymentByBucketIDQuery, "").HandlerFunc(g.getPaymentByBucketIDHandler)
+
+		// Get Bucket By Bucket ID
+		router.Path("/").Name(getBucketByBucketIDRouterName).Methods(http.MethodGet).Queries(GetBucketByBucketIDQuery, "").HandlerFunc(g.getBucketByBucketIDHandler)
+
+		// List Deleted Objects
+		router.Path("/").Name(listDeletedObjectsByBlockNumberRangeRouterName).Methods(http.MethodGet).Queries(ListDeletedObjectsQuery, "").HandlerFunc(g.listDeletedObjectsByBlockNumberRangeHandler)
+
+		//Get User Buckets Count
+		router.Path("/").Name(getUserBucketsCountRouterName).Methods(http.MethodGet).Queries(GetUserBucketsCountQuery, "").HandlerFunc(g.getUserBucketsCountHandler)
+
+		//List Expired Buckets By Sp
+		router.Path("/").Name(listExpiredBucketsBySpRouterName).Methods(http.MethodGet).Queries(ListExpiredBucketsBySpQuery, "").HandlerFunc(g.listExpiredBucketsBySpHandler)
+	}
+
 	router.Path("/").
 		Name(getUserBucketsRouterName).
 		Methods(http.MethodGet).
@@ -154,16 +197,6 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// redirect for universal endpoint
 	http.Handle("/", router)
-
-	// off-chain-auth router
-	router.Path(AuthRequestNoncePath).
-		Name(requestNonceName).
-		Methods(http.MethodGet).
-		HandlerFunc(g.requestNonceHandler)
-	router.Path(AuthUpdateKeyPath).
-		Name(updateUserPublicKey).
-		Methods(http.MethodPost).
-		HandlerFunc(g.updateUserPublicKeyHandler)
 
 	router.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 	router.Use(localhttp.Limit)

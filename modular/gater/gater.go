@@ -16,6 +16,7 @@ import (
 var _ module.Modular = &GateModular{}
 
 type GateModular struct {
+	env         string
 	domain      string
 	httpAddress string
 	baseApp     *gfspapp.GfSpBaseApp

@@ -224,14 +224,14 @@ func (*NilModular) SignP2PPingMsg(context.Context, *gfspp2p.GfSpPing) ([]byte, e
 func (*NilModular) SignP2PPongMsg(context.Context, *gfspp2p.GfSpPong) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) SealObject(context.Context, *storagetypes.MsgSealObject) error {
-	return ErrNilModular
+func (*NilModular) SealObject(context.Context, *storagetypes.MsgSealObject) (string, error) {
+	return "", ErrNilModular
 }
-func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSealObject) error {
-	return ErrNilModular
+func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSealObject) (string, error) {
+	return "", ErrNilModular
 }
-func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) error {
-	return nil
+func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) (string, error) {
+	return "", nil
 }
 
 func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {

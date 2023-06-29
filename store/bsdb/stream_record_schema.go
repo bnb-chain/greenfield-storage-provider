@@ -24,9 +24,9 @@ type StreamRecord struct {
 	// Status defines the status of the stream account
 	Status string `gorm:"status"`
 	// SettleTimestamp defines the unix timestamp when the stream account will be settled
-	SettleTimestamp int64 `gorm:"column:settle_timestamp"`
-	// OutFlows defines the accumulated outflow rates of the stream account
-	OutFlows []byte `gorm:"out_flows;type:longblob"`
+	SettleTimestamp   int64       `gorm:"column:settle_timestamp"`
+	OutFlowCount      uint64      `gorm:"column:out_flow_count"`
+	FrozenNetflowRate *common.Big `gorm:"column:frozen_netflow_rate"`
 }
 
 // TableName is used to set StreamRecord table name in database

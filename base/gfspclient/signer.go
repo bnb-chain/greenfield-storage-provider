@@ -79,11 +79,11 @@ func (s *GfSpClient) SignCreateObjectApproval(ctx context.Context, object *stora
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSealObject) error {
+func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_SealObjectInfo{
@@ -93,12 +93,12 @@ func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSea
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to seal object approval", "error", err)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
-		return resp.GetErr()
+		return "", resp.GetErr()
 	}
-	return nil
+	return resp.GetTxHash(), nil
 }
 
 func (s *GfSpClient) CreateGlobalVirtualGroup(ctx context.Context, group *gfspserver.GfSpCreateGlobalVirtualGroup) error {
@@ -123,11 +123,11 @@ func (s *GfSpClient) CreateGlobalVirtualGroup(ctx context.Context, group *gfspse
 	return nil
 }
 
-func (s *GfSpClient) RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) error {
+func (s *GfSpClient) RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_RejectObjectInfo{
@@ -137,19 +137,19 @@ func (s *GfSpClient) RejectUnSealObject(ctx context.Context, object *storagetype
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to reject unseal object approval", "error", err)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
-		return resp.GetErr()
+		return "", resp.GetErr()
 	}
-	return nil
+	return resp.GetTxHash(), nil
 }
 
-func (s *GfSpClient) DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error {
+func (s *GfSpClient) DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_DiscontinueBucketInfo{
@@ -159,12 +159,12 @@ func (s *GfSpClient) DiscontinueBucket(ctx context.Context, bucket *storagetypes
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to discontinue bucket", "error", err)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
-		return resp.GetErr()
+		return "", resp.GetErr()
 	}
-	return nil
+	return resp.GetTxHash(), nil
 }
 
 func (s *GfSpClient) SignReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask) ([]byte, error) {

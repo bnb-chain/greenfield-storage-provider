@@ -28,9 +28,11 @@ type Bucket struct {
 	CreateTxHash common.Hash `gorm:"create_tx_hash"`
 	// PaymentAddress is the address of the payment account
 	PaymentAddress common.Address `gorm:"payment_address"`
-	// primary_sp_id is the unique id of the primary sp. Objects belongs to this bucket will never
+	// PrimarySpID is the unique id of the primary sp. Objects belongs to this bucket will never
 	// leave this SP, unless you explicitly shift them to another SP.
-	PrimarySpId uint32 `gorm:"primary_sp_address"`
+	PrimarySpID uint32 `gorm:"primary_sp_address"`
+	// GlobalVirtualGroupFamilyID defines the unique id of gvg family
+	GlobalVirtualGroupFamilyID uint32 `json:"global_virtual_group_family_id"`
 	// ReadQuota defines the traffic quota for read
 	ChargedReadQuota uint64 `gorm:"charged_read_quota"`
 	// PaymentPriceTime defines price time of payment

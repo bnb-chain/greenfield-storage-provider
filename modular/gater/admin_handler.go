@@ -43,14 +43,23 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		authenticated         bool
 		approved              bool
 	)
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewayFailureGetApproval).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayFailureGetApproval).Observe(time.Since(startTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewaySuccessGetApproval).Inc()
+			metrics.ReqTime.WithLabelValues(GatewaySuccessGetApproval).Observe(time.Since(startTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
@@ -88,7 +97,8 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 				reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
 				reqCtx.Account(), createBucketApproval.GetBucketName(), "")
-			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthentication).Seconds())
+			metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
+			metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_end").Observe(time.Since(startTime).Seconds())
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
@@ -104,7 +114,8 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		var approvalTask coretask.ApprovalCreateBucketTask
 		startAskCreateBucketApproval := time.Now()
 		approved, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("ask_create_bucket_approval").Observe(time.Since(startAskCreateBucketApproval).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_ask_approval_cost").Observe(time.Since(startAskCreateBucketApproval).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_ask_approval_end").Observe(time.Since(startTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask create bucket approval", "error", err)
 			return
@@ -130,11 +141,9 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if reqCtx.NeedVerifyAuthentication() {
-			startVerifyAuthentication := time.Now()
 			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 				reqCtx.Context(), coremodule.AuthOpAskMigrateBucketApproval,
 				reqCtx.Account(), migrateBucketApproval.GetBucketName(), "")
-			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthentication).Seconds())
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
@@ -148,9 +157,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task := &gfsptask.GfSpMigrateBucketApprovalTask{}
 		task.InitApprovalMigrateBucketTask(&migrateBucketApproval, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalMigrateBucketTask
-		startAskMigrateBucketApproval := time.Now()
 		approved, approvalTask, err = g.baseApp.GfSpClient().AskMigrateBucketApproval(reqCtx.Context(), task)
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("ask_migrate_bucket_approval").Observe(time.Since(startAskMigrateBucketApproval).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask migrate bucket approval", "error", err)
 			return
@@ -181,7 +188,8 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 				reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
 				reqCtx.Account(), createObjectApproval.GetBucketName(),
 				createObjectApproval.GetObjectName())
-			metrics.PerfGetApprovalTimeHistogram.WithLabelValues("verify_authorize").Observe(time.Since(startVerifyAuthentication).Seconds())
+			metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
+			metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_end").Observe(time.Since(startTime).Seconds())
 			if err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 				return
@@ -197,7 +205,8 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		var approvedTask coretask.ApprovalCreateObjectTask
 		startAskCreateObjectApproval := time.Now()
 		approved, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
-		metrics.PerfGetApprovalTimeHistogram.WithLabelValues("ask_create_object_approval").Observe(time.Since(startAskCreateObjectApproval).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
 			return
@@ -236,8 +245,16 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewayFailureGetChallengeInfo).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayFailureGetChallengeInfo).Observe(time.Since(startTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewaySuccessGetChallengeInfo).Inc()
+			metrics.ReqTime.WithLabelValues(GatewaySuccessGetChallengeInfo).Observe(time.Since(startTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 		metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_total_time").Observe(time.Since(startTime).Seconds())
@@ -335,10 +352,12 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		log.CtxErrorw(ctx, "failed to get challenge info", "error", err)
 		return
 	}
+
 	w.Header().Set(GnfdObjectIDHeader, util.Uint64ToString(objectID))
 	w.Header().Set(GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
 	w.Header().Set(GnfdPieceHashHeader, util.BytesSliceToString(checksums))
 	w.Write(data)
+	metrics.ReqPieceSize.WithLabelValues(GatewayChallengePieceSize).Observe(float64(len(data)))
 	log.CtxDebugw(reqCtx.Context(), "succeed to get challenge info")
 }
 
@@ -361,11 +380,18 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(receivePieceStartTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewayFailureReplicatePiece).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayFailureReplicatePiece).Observe(time.Since(receivePieceStartTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
+			log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(receivePieceStartTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewaySuccessReplicatePiece).Inc()
+			metrics.ReqTime.WithLabelValues(GatewaySuccessReplicatePiece).Observe(time.Since(receivePieceStartTime).Seconds())
 		}
-		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
-		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_total_time").Observe(time.Since(receivePieceStartTime).Seconds())
 	}()
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask
@@ -403,6 +429,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if receiveTask.GetPieceIdx() >= 0 {
+		metrics.ReqPieceSize.WithLabelValues(GatewayReplicatePieceSize).Observe(float64(len(data)))
 		handlePieceTime := time.Now()
 		err = g.baseApp.GfSpClient().ReplicatePiece(reqCtx.Context(), &receiveTask, data)
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_receive_data_time").Observe(time.Since(handlePieceTime).Seconds())
@@ -435,14 +462,19 @@ func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Reque
 		reqCtx      *RequestContext
 		recoveryMsg []byte
 	)
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
@@ -465,8 +497,8 @@ func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Reque
 	recoveryTask := gfsptask.GfSpRecoverPieceTask{}
 	err = json.Unmarshal(recoveryMsg, &recoveryTask)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal receive header",
-			"receive", r.Header.Get(GnfdReceiveMsgHeader))
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal recovery msg header",
+			"header", r.Header.Get(GnfdReceiveMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}

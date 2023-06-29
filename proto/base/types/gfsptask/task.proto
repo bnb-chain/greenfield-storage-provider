@@ -16,7 +16,8 @@ message GfSpTask {
   int32 task_priority = 5;
   int64 retry = 6;
   int64 max_retry = 7;
-  base.types.gfsperrors.GfSpError err = 8;
+  string logs = 8;
+  base.types.gfsperrors.GfSpError err = 9;
 }
 
 message GfSpCreateBucketApprovalTask {
