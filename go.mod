@@ -59,8 +59,8 @@ require (
 )
 
 require (
+	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
-	github.com/gogo/protobuf v1.3.3
 )
 
 require (
@@ -74,7 +74,6 @@ require (
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/creachadair/taskgroup v0.4.2 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
@@ -88,6 +87,7 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
+	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang-jwt/jwt/v4 v4.3.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
