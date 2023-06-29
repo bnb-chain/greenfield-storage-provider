@@ -6,6 +6,8 @@ import "base/types/gfspp2p/p2p.proto";
 import "base/types/gfsptask/task.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "greenfield/storage/tx.proto";
+import "greenfield/storage/params.proto";
+import "greenfield/storage/types.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
@@ -21,6 +23,14 @@ message GfSpCreateGlobalVirtualGroup {
   string primary_sp_address = 2;
   repeated uint32 secondary_sp_ids = 3;
   cosmos.base.v1beta1.Coin deposit = 4;
+}
+
+message GfSpMigratePiece {
+  greenfield.storage.ObjectInfo object_info = 1;
+  greenfield.storage.Params storage_params = 2;
+  uint32 replicate_idx = 3;
+  int32 ec_idx = 4;
+  bytes signature = 5;
 }
 
 message GfSpSignRequest {
@@ -39,7 +49,7 @@ message GfSpSignRequest {
     base.types.gfsptask.GfSpRecoverPieceTask gfsp_recover_piece_task = 11;
     greenfield.storage.MsgRejectSealObject reject_object_info = 12;
     GfSpCreateGlobalVirtualGroup create_global_virtual_group = 13;
-    base.types.gfsptask.GfSpMigratePieceTask gfsp_migrate_piece_task = 14;
+    GfSpMigratePiece gfsp_migrate_piece = 14;
   }
 }
 

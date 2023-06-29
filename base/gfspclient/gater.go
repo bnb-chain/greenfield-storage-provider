@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -33,7 +33,7 @@ const (
 	// GnfdRecoveryMsgHeader defines receive piece data meta
 	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
 	// MigratePiecePath defines migrate piece path which is used in SP exiting case
-	MigratePiecePath = "greenfield/admin/v1/migrate-piece"
+	MigratePiecePath = "/greenfield/admin/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
 	// GnfdIsPrimaryHeader defines response header which is used to indicate migrated data whether belongs to PrimarySP
@@ -125,21 +125,18 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	return signature, nil
 }
 
-func (s *GfSpClient) MigratePieceBetweenSPs(ctx context.Context, task coretask.MigratePieceTask, endpoint string,
-	isPrimary bool) ([]byte, error) {
-	req, err := http.NewRequest(http.MethodGet, endpoint+MigratePiecePath, nil)
+func (s *GfSpClient) MigratePieceBetweenSPs(ctx context.Context, mp *gfspserver.GfSpMigratePiece, endpoint string) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", endpoint, MigratePiecePath), nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
-	migratePieceTask := task.(*gfsptask.GfSpMigratePieceTask)
-	msg, err := json.Marshal(migratePieceTask)
+	msg, err := json.Marshal(mp)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add(GnfdMigratePieceMsgHeader, hex.EncodeToString(msg))
-	req.Header.Add(GnfdIsPrimaryHeader, strconv.FormatBool(isPrimary))
 	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		log.Errorw("failed to send requests to migrate pieces", "error", err)

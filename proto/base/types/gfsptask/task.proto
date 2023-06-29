@@ -169,13 +169,3 @@ message GfSpGCMetaTask {
   uint64 delete_count = 3;
   bool running = 4;
 }
-
-message GfSpMigratePieceTask {
-  GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.Params storage_params = 3;
-  uint32 segment_idx = 5;
-  int32 ec_idx = 6;
-  uint64 piece_size = 7;
-  bytes signature = 8;
-}
