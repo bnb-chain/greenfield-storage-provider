@@ -52,6 +52,15 @@ func (g *GateModular) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 
 // RegisterHandler registers the handlers to the gateway router.
 func (g *GateModular) RegisterHandler(router *mux.Router) {
+	// off-chain-auth router
+	router.Path(AuthRequestNoncePath).
+		Name(requestNonceName).
+		Methods(http.MethodGet).
+		HandlerFunc(g.requestNonceHandler)
+	router.Path(AuthUpdateKeyPath).
+		Name(updateUserPublicKey).
+		Methods(http.MethodPost).
+		HandlerFunc(g.updateUserPublicKeyHandler)
 
 	// verify permission router
 	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").Name(verifyPermissionRouterName).Methods(http.MethodGet).HandlerFunc(g.verifyPermissionHandler)
@@ -149,16 +158,6 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// redirect for universal endpoint
 	http.Handle("/", router)
-
-	// off-chain-auth router
-	router.Path(AuthRequestNoncePath).
-		Name(requestNonceName).
-		Methods(http.MethodGet).
-		HandlerFunc(g.requestNonceHandler)
-	router.Path(AuthUpdateKeyPath).
-		Name(updateUserPublicKey).
-		Methods(http.MethodPost).
-		HandlerFunc(g.updateUserPublicKeyHandler)
 
 	router.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 	router.Use(localhttp.Limit)
