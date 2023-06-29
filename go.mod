@@ -11,7 +11,7 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.2.3-0.20230626091810-fa69f41ddfc5
 	// TODO: Temporary succeed to compile
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230628062411-67d19406d07d
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230629134244-950c0e459a80
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
@@ -20,7 +20,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.1
 	github.com/aws/aws-sdk-go v1.44.159
-	github.com/bnb-chain/greenfield v0.2.3-0.20230628024113-2609d081ee4d
+	github.com/bnb-chain/greenfield v0.2.3-0.20230629054947-b6d6df29e268
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.1
@@ -58,7 +58,10 @@ require (
 	gorm.io/gorm v1.24.5
 )
 
-require github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
+require (
+	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
+	github.com/gogo/protobuf v1.3.3
+)
 
 require (
 	cosmossdk.io/api v0.4.0 // indirect
@@ -85,7 +88,6 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
-	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang-jwt/jwt/v4 v4.3.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
