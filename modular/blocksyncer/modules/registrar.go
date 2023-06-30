@@ -1,6 +1,7 @@
 package registrar
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/objectidmap"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/block"
 	"github.com/forbole/juno/v4/modules/bucket"
@@ -47,5 +48,6 @@ func (r *BlockSyncerRegistrar) BuildModules(ctx registrar.Context) modules.Modul
 		group.NewModule(db),
 		sp.NewModule(db),
 		prefixtree.NewModule(db),
+		objectidmap.NewModule(db),
 	}
 }

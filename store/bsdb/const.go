@@ -32,6 +32,8 @@ const (
 	MasterDBTableName = "master_db"
 	// PrefixTreeTableName defines the name of prefix tree node table
 	PrefixTreeTableName = "slash_prefix_tree_nodes"
+	// ObjectIDMapTableName defines the name of object id map table
+	ObjectIDMapTableName = "object_id_map"
 )
 
 // define the list objects const
