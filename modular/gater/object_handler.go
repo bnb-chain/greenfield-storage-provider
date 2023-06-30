@@ -53,6 +53,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(uploadPrimaryStartTime).Seconds())
 			metrics.ReqPieceSize.WithLabelValues(GatewayPutObjectSize).Observe(float64(objectInfo.GetPayloadSize()))
 			metrics.ReqTime.WithLabelValues(GatewaySuccessPutObject).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewaySuccessPutObject).Inc()
 			metrics.ReqPieceSize.WithLabelValues(GatewaySuccessPutObject).Observe(float64(objectInfo.GetPayloadSize()))
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())

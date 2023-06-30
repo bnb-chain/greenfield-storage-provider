@@ -63,6 +63,15 @@ func (s *SignModular) SignCreateBucketApproval(ctx context.Context, bucket *stor
 	return sig, nil
 }
 
+func (s *SignModular) SignMigrateBucketApproval(ctx context.Context, migrateBucket *storagetypes.MsgMigrateBucket) ([]byte, error) {
+	msg := migrateBucket.GetApprovalBytes()
+	sig, err := s.client.Sign(SignApproval, msg)
+	if err != nil {
+		return nil, err
+	}
+	return sig, nil
+}
+
 func (s *SignModular) SignCreateObjectApproval(ctx context.Context, object *storagetypes.MsgCreateObject) ([]byte, error) {
 	msg := object.GetApprovalBytes()
 	sig, err := s.client.Sign(SignApproval, msg)

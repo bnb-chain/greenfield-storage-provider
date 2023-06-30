@@ -34,7 +34,7 @@ func (s *GfSpClient) SignCreateBucketApproval(ctx context.Context, bucket *stora
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignMigrateBucketApproval(ctx context.Context, bucket *storagetypes.MsgCreateBucket) (
+func (s *GfSpClient) SignMigrateBucketApproval(ctx context.Context, bucket *storagetypes.MsgMigrateBucket) (
 	[]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {

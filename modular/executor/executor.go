@@ -100,9 +100,6 @@ func (e *ExecuteModular) omitError(err error) bool {
 }
 
 func (e *ExecuteModular) AskTask(ctx context.Context) error {
-	atomic.AddInt64(&e.executingNum, 1)
-	defer atomic.AddInt64(&e.executingNum, -1)
-
 	startTime := time.Now()
 	limit, err := e.scope.RemainingResource()
 	if err != nil {
@@ -137,6 +134,11 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 			"remaining", limit.String(), "error", err)
 		return ErrDanglingPointer
 	}
+	metrics.ReqCounter.WithLabelValues(ExeutorSuccessAskTask).Inc()
+	metrics.ReqTime.WithLabelValues(ExeutorSuccessAskTask).Observe(time.Since(startTime).Seconds())
+
+	atomic.AddInt64(&e.executingNum, 1)
+	defer atomic.AddInt64(&e.executingNum, -1)
 	span, err := e.ReserveResource(ctx, askTask.EstimateLimit().ScopeStat())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reserve resource", "task_require",
@@ -149,9 +151,10 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 	defer e.ReleaseResource(ctx, span)
 	defer e.ReportTask(ctx, askTask)
 
+	runTime := time.Now()
 	defer func() {
-		metrics.ReqCounter.WithLabelValues(ExeutorSuccessAskTask).Inc()
-		metrics.ReqTime.WithLabelValues(ExeutorSuccessAskTask).Observe(time.Since(startTime).Seconds())
+		metrics.ReqCounter.WithLabelValues(ExeutorRunTask).Inc()
+		metrics.ReqTime.WithLabelValues(ExeutorRunTask).Observe(time.Since(runTime).Seconds())
 	}()
 
 	ctx = log.WithValue(ctx, log.CtxKeyTask, askTask.Key().String())

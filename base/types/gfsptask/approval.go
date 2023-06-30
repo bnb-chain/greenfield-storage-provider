@@ -152,7 +152,7 @@ func (m *GfSpCreateBucketApprovalTask) SetCreateBucketInfo(bucket *storagetypes.
 	m.CreateBucketInfo = bucket
 }
 
-func (m *GfSpMigrateBucketApprovalTask) InitApprovalMigrateBucketTask(bucket *storagetypes.MsgCreateBucket, priority coretask.TPriority) {
+func (m *GfSpMigrateBucketApprovalTask) InitApprovalMigrateBucketTask(bucket *storagetypes.MsgMigrateBucket, priority coretask.TPriority) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.GetTask().SetCreateTime(time.Now().Unix())
@@ -263,14 +263,14 @@ func (m *GfSpMigrateBucketApprovalTask) SetError(err error) {
 }
 
 func (m *GfSpMigrateBucketApprovalTask) SetExpiredHeight(height uint64) {
-	m.GetMigrateBucketInfo().GetPrimarySpApproval().ExpiredHeight = height
+	m.GetMigrateBucketInfo().GetDstPrimarySpApproval().ExpiredHeight = height
 }
 
 func (m *GfSpMigrateBucketApprovalTask) GetExpiredHeight() uint64 {
-	return m.GetMigrateBucketInfo().GetPrimarySpApproval().GetExpiredHeight()
+	return m.GetMigrateBucketInfo().GetDstPrimarySpApproval().GetExpiredHeight()
 }
 
-func (m *GfSpMigrateBucketApprovalTask) SetMigrateBucketInfo(bucket *storagetypes.MsgCreateBucket) {
+func (m *GfSpMigrateBucketApprovalTask) SetMigrateBucketInfo(bucket *storagetypes.MsgMigrateBucket) {
 	m.MigrateBucketInfo = bucket
 }
 
