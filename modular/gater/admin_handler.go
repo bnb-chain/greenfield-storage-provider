@@ -698,6 +698,7 @@ const MaxMigratePieceRetry = 3
 // Second, retrieve and get data from downloader module including: PrimarySP and SecondarySP pieces
 // Third, transfer data to client which is a selected SP.
 func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request) {
+	log.Info("enter migratePieceHandler")
 	var (
 		err        error
 		reqCtx     *RequestContext
@@ -734,19 +735,19 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	migratePieceSig := migratePiece.GetSignature()
-	_, pk, err := RecoverAddr(crypto.Keccak256(migratePiece.GetSignBytes()), migratePieceSig)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get migrate piece address", "error", err)
-		err = ErrSignature
-		return
-	}
-
-	if !secp256k1.VerifySignature(pk.Bytes(), crypto.Keccak256(migratePiece.GetSignBytes()), migratePieceSig[:len(migratePieceSig)-1]) {
-		log.CtxError(reqCtx.Context(), "failed to verify migrate piece signature")
-		err = ErrSignature
-		return
-	}
+	// migratePieceSig := migratePiece.GetSignature()
+	// _, pk, err := RecoverAddr(crypto.Keccak256(migratePiece.GetSignBytes()), migratePieceSig)
+	// if err != nil {
+	// 	log.CtxErrorw(reqCtx.Context(), "failed to get migrate piece address", "error", err)
+	// 	err = ErrSignature
+	// 	return
+	// }
+	//
+	// if !secp256k1.VerifySignature(pk.Bytes(), crypto.Keccak256(migratePiece.GetSignBytes()), migratePieceSig[:len(migratePieceSig)-1]) {
+	// 	log.CtxError(reqCtx.Context(), "failed to verify migrate piece signature")
+	// 	err = ErrSignature
+	// 	return
+	// }
 
 	objectInfo := migratePiece.GetObjectInfo()
 	if objectInfo == nil {
@@ -777,6 +778,7 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(objectID, replicateIdx)
 		segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(migratePiece.ObjectInfo.GetPayloadSize(),
 			replicateIdx, params.GetMaxSegmentSize())
+		log.Infow("migrate primary sp", "segmentPieceKey", segmentPieceKey, "segmentPieceSize", segmentPieceSize)
 		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
 			uint64(segmentPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize), 30, MaxMigratePieceRetry)
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
@@ -788,9 +790,10 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		ecPieceKey := g.baseApp.PieceOp().ECPieceKey(objectID, replicateIdx, uint32(ecIdx))
 		ecPieceSize := g.baseApp.PieceOp().ECPieceSize(migratePiece.ObjectInfo.GetPayloadSize(), replicateIdx,
 			params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
+		log.Infow("migrate primary sp", "ecPieceKey", ecPieceKey, "ecPieceSize", ecPieceSize)
 		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
 			uint64(ecPieceSize), ecPieceKey, 0, uint64(ecPieceSize), 30, MaxMigratePieceRetry)
-		pieceData, err = g.baseApp.PieceStore().GetPiece(reqCtx.Context(), ecPieceKey, 0, -1)
+		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 		if err != nil {
 			return
 		}
