@@ -174,6 +174,12 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqCounter.WithLabelValues(SingerSuccessRecoveryTask).Inc()
 			metrics.ReqTime.WithLabelValues(SingerSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
 		}
+	default:
+		log.CtxError(ctx, "unknown gfsp sign request type")
+		return &gfspserver.GfSpSignResponse{
+			Err:       gfsperrors.MakeGfSpError(ErrUnsupportedTaskType),
+			Signature: nil,
+		}, nil
 	}
 	return &gfspserver.GfSpSignResponse{
 		Err:       gfsperrors.MakeGfSpError(err),

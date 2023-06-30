@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
@@ -253,7 +254,7 @@ type Signer interface {
 	SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
 	// SignSecondaryBls signs the secondary bls for sealing object.
 	SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, error)
-	//SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
+	// SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
 	SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) ([]byte, error)
 	// SignP2PPingMsg signs the ping msg for p2p node probing.
 	SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error)
@@ -267,6 +268,7 @@ type Signer interface {
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
 	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
+	SignMigratePiece(ctx context.Context, mp *gfspserver.GfSpMigratePiece) ([]byte, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

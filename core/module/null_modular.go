@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
@@ -238,6 +239,10 @@ func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontin
 
 func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
 	return nil
+}
+
+func (*NilModular) SignMigratePiece(ctx context.Context, mp *gfspserver.GfSpMigratePiece) ([]byte, error) {
+	return nil, nil
 }
 
 var _ Receiver = (*NullReceiveModular)(nil)

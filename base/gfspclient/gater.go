@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -27,10 +28,14 @@ const (
 	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
-	//RecoveryObjectPiecePath defines recovery-object path style
+	// RecoveryObjectPiecePath defines recovery-object path style
 	RecoveryObjectPiecePath = "/greenfield/recovery/v1/get-piece"
 	// GnfdRecoveryMsgHeader defines receive piece data meta
 	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
+	// MigratePiecePath defines migrate piece path which is used in SP exiting case
+	MigratePiecePath = "/greenfield/admin/v1/migrate-piece"
+	// GnfdMigratePieceMsgHeader defines migrate piece msg header
+	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
@@ -116,4 +121,35 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 		return nil, err
 	}
 	return signature, nil
+}
+
+func (s *GfSpClient) MigratePieceBetweenSPs(ctx context.Context, mp *gfspserver.GfSpMigratePiece, endpoint string) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", endpoint, MigratePiecePath), nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
+		return nil, err
+	}
+
+	msg, err := json.Marshal(mp)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add(GnfdMigratePieceMsgHeader, hex.EncodeToString(msg))
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.Errorw("failed to send requests to migrate pieces", "error", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to migrate pieces, StatusCode(%d), Endpoint(%s)", resp.StatusCode, endpoint)
+	}
+	buf := &bytes.Buffer{}
+	_, err = io.Copy(buf, resp.Body)
+	if err != nil {
+		log.Errorw("failed to get resp body", "error", err)
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }

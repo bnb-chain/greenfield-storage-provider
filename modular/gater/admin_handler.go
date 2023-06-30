@@ -11,6 +11,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -570,19 +571,19 @@ func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *stora
 	isOneOfSecondary := false
 	ECIndex := 0
 	// the primary sp of the object should be consistent with task signature
-	//if bucketInfo.PrimarySpAddress != signatureAddr.String() {
+	// if bucketInfo.PrimarySpAddress != signatureAddr.String() {
 	//	log.CtxErrorw(ctx, "recovery request not come from primary sp")
-	//}
+	// }
 	//
-	//isOneOfSecondary := false
-	//handlerAddr := g.baseApp.OperatorAddress()
-	//var ECIndex int
-	//for idx, spAddr := range objectInfo.SecondarySpAddresses {
+	// isOneOfSecondary := false
+	// handlerAddr := g.baseApp.OperatorAddress()
+	// var ECIndex int
+	// for idx, spAddr := range objectInfo.SecondarySpAddresses {
 	//	if spAddr == handlerAddr {
 	//		isOneOfSecondary = true
 	//		ECIndex = idx
 	//	}
-	//}
+	// }
 	// if the handler SP is not one of the secondary SP of the task object, return err
 	if !isOneOfSecondary {
 		err = ErrRecoverySP
@@ -599,7 +600,7 @@ func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *stora
 	// TODO: refine it
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
 		false, "", uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
-		//false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
+		// false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 	pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
@@ -620,20 +621,20 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 	isOneOfSecondary := false
 	ECIndex := int32(0)
 	// if the handler is not the primary SP of the object, return error
-	//if bucketInfo.PrimarySpAddress != g.baseApp.OperatorAddress() {
+	// if bucketInfo.PrimarySpAddress != g.baseApp.OperatorAddress() {
 	//	log.CtxErrorw(ctx, "it is not the right the primary SP to handle secondary SP recovery", "expected primary Sp:", bucketInfo.PrimarySpAddress)
 	//	return nil, ErrRecoverySP
-	//}
+	// }
 	//
-	//// if the sender is not one of the secondarySp,return err
-	//isOneOfSecondary := false
-	//var ECIndex int32
-	//for idx, spAddr := range objectInfo.SecondarySpAddresses {
+	// // if the sender is not one of the secondarySp,return err
+	// isOneOfSecondary := false
+	// var ECIndex int32
+	// for idx, spAddr := range objectInfo.SecondarySpAddresses {
 	//	if spAddr == signatureAddr.String() {
 	//		isOneOfSecondary = true
 	//		ECIndex = int32(idx)
 	//	}
-	//}
+	// }
 	redundancyIdx := recoveryTask.EcIdx
 	// if the handler SP is not one of the secondary SP of the task object, return err
 	if !isOneOfSecondary || ECIndex != recoveryTask.EcIdx {
@@ -651,7 +652,7 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 		pieceOffset := int64(redundancyIdx) * ECPieceSize
 		pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
 			false, "", uint64(ECPieceSize), segmentPieceKey, uint64(pieceOffset), uint64(ECPieceSize),
-			//false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), segmentPieceKey, uint64(pieceOffset), uint64(ECPieceSize),
+			// false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), segmentPieceKey, uint64(pieceOffset), uint64(ECPieceSize),
 			g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 		pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
@@ -685,4 +686,120 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 	}
 
 	return ecData[redundancyIdx], nil
+}
+
+const primarySPECIdx = -1
+
+// MaxMigratePieceRetry defines the max retry number to migrate piece.
+const MaxMigratePieceRetry = 3
+
+// migratePieceHandler handles the migrate piece request between SPs which is used in SP exiting case.
+// First, gateway should verify Authorization header to ensure the requests are from correct SPs.
+// Second, retrieve and get data from downloader module including: PrimarySP and SecondarySP pieces
+// Third, transfer data to client which is a selected SP.
+func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request) {
+	log.Info("enter migratePieceHandler")
+	var (
+		err        error
+		reqCtx     *RequestContext
+		migrateMsg []byte
+		pieceData  []byte
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(err)
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	migrateHeader := r.Header.Get(GnfdMigratePieceMsgHeader)
+	migrateMsg, err = hex.DecodeString(migrateHeader)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate piece header", "header", migrateHeader)
+		err = ErrDecodeMsg
+		return
+	}
+
+	migratePiece := gfspserver.GfSpMigratePiece{}
+	err = json.Unmarshal(migrateMsg, &migratePiece)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate piece msg", "header", migrateHeader)
+		err = ErrDecodeMsg
+		return
+	}
+
+	// migratePieceSig := migratePiece.GetSignature()
+	// _, pk, err := RecoverAddr(crypto.Keccak256(migratePiece.GetSignBytes()), migratePieceSig)
+	// if err != nil {
+	// 	log.CtxErrorw(reqCtx.Context(), "failed to get migrate piece address", "error", err)
+	// 	err = ErrSignature
+	// 	return
+	// }
+	//
+	// if !secp256k1.VerifySignature(pk.Bytes(), crypto.Keccak256(migratePiece.GetSignBytes()), migratePieceSig[:len(migratePieceSig)-1]) {
+	// 	log.CtxError(reqCtx.Context(), "failed to verify migrate piece signature")
+	// 	err = ErrSignature
+	// 	return
+	// }
+
+	objectInfo := migratePiece.GetObjectInfo()
+	if objectInfo == nil {
+		log.CtxError(reqCtx.Context(), "failed to get migrate piece object info")
+		err = ErrInvalidHeader
+		return
+	}
+
+	// TODO: Does this need to verify migratePiece.ObjectInfo to objectInfo on chain?
+	chainObjectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp, objectInfo.GetObjectName(), objectInfo.GetBucketName())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object on chain meta", "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+
+	maxECIdx := int32(migratePiece.GetStorageParams().GetRedundantDataChunkNum()+migratePiece.GetStorageParams().GetRedundantParityChunkNum()) - 1
+	objectID := migratePiece.GetObjectInfo().Id.Uint64()
+	replicateIdx := migratePiece.GetReplicateIdx()
+	ecIdx := migratePiece.GetEcIdx()
+	if ecIdx < primarySPECIdx || ecIdx > maxECIdx {
+		// TODO: customize an error to return to sp
+		return
+	}
+	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
+	// if ecIdx less than 0, we should migrate pieces from primary SP
+	if ecIdx == primarySPECIdx {
+		segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(objectID, replicateIdx)
+		segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(migratePiece.ObjectInfo.GetPayloadSize(),
+			replicateIdx, params.GetMaxSegmentSize())
+		log.Infow("migrate primary sp", "segmentPieceKey", segmentPieceKey, "segmentPieceSize", segmentPieceSize)
+		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
+			uint64(segmentPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize), 30, MaxMigratePieceRetry)
+		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to download segment piece", "error", err)
+			return
+		}
+	} else { // in this case, we should migrate pieces from secondary SP
+		ecPieceKey := g.baseApp.PieceOp().ECPieceKey(objectID, replicateIdx, uint32(ecIdx))
+		ecPieceSize := g.baseApp.PieceOp().ECPieceSize(migratePiece.ObjectInfo.GetPayloadSize(), replicateIdx,
+			params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
+		log.Infow("migrate primary sp", "ecPieceKey", ecPieceKey, "ecPieceSize", ecPieceSize)
+		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
+			uint64(ecPieceSize), ecPieceKey, 0, uint64(ecPieceSize), 30, MaxMigratePieceRetry)
+		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+		if err != nil {
+			return
+		}
+	}
+
+	w.Write(pieceData)
+	log.CtxDebug(reqCtx.Context(), "succeed to migrate one piece", "objectID", objectID, "replicateIdx",
+		replicateIdx, "ecIdx", ecIdx)
 }

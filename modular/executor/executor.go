@@ -106,6 +106,10 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		return err
 	}
 
+	// TODO: mock
+	// log.Info("Ask task function: do migration")
+	// e.mockHandleMigratePiece(ctx)
+
 	metrics.RemainingMemoryGauge.WithLabelValues(e.Name()).Set(float64(limit.GetMemoryLimit()))
 	metrics.RemainingTaskGauge.WithLabelValues(e.Name()).Set(float64(limit.GetTaskTotalLimit()))
 	metrics.RemainingHighPriorityTaskGauge.WithLabelValues(e.Name()).Set(

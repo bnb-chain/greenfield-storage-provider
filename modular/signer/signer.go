@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -153,4 +155,13 @@ func (s *SignModular) DiscontinueBucket(ctx context.Context, bucket *storagetype
 func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
 	_, err := s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
 	return err
+}
+
+func (s *SignModular) SignMigratePiece(ctx context.Context, mp *gfspserver.GfSpMigratePiece) ([]byte, error) {
+	sig, err := s.client.Sign(SignOperator, mp.GetSignBytes())
+	if err != nil {
+		log.Errorw("failed to sign migrate piece", "error", err)
+		return nil, err
+	}
+	return sig, nil
 }

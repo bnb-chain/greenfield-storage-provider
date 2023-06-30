@@ -294,7 +294,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		metrics.ReqCounter.WithLabelValues(ManagerReportRecoveryTask).Inc()
 		metrics.ReqTime.WithLabelValues(ManagerReportRecoveryTask).Observe(time.Since(startTime).Seconds())
 	default:
-		log.CtxErrorw(ctx, "receive unsupported task type")
+		log.CtxError(ctx, "receive unsupported task type")
 		return &gfspserver.GfSpReportTaskResponse{Err: ErrUnsupportedTaskType}, nil
 	}
 	if err != nil {
