@@ -3,7 +3,8 @@ package gfspvgmgr
 import (
 	"context"
 	"fmt"
-	"math"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
+
 	"math/rand"
 	"net/http"
 	"strings"
@@ -271,7 +272,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 				SecondarySPIDs:       gvg.GetSecondarySpIds(),
 				SecondarySPEndpoints: toSPEndpoints(gvg.GetSecondarySpIds()),
 				UsedStorageSize:      gvg.GetStoredSize(),
-				StakingStorageSize:   vgm.GetTotalStakingStoreSizeOfGVG(gvg),
+				StakingStorageSize:   util.TotalStakingStoreSizeOfGVG(gvg, vgParams.GvgStakingPerBytes),
 			}
 			log.Infow("query global virtual group info", "gvg_info", gvg, "gvg_meta", gvgMeta)
 			vgfm.vgfIDToVgf[vgf.Id].GVGMap[gvg.GetId()] = gvgMeta
@@ -329,12 +330,4 @@ func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.PickFilter) (*sptype
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.spManager.pickSPByFilter(filter)
-}
-
-func (vgm *virtualGroupManager) GetTotalStakingStoreSizeOfGVG(gvg *virtualgrouptypes.GlobalVirtualGroup) uint64 {
-	total := gvg.TotalDeposit.Quo(vgm.vgParams.GvgStakingPerBytes)
-	if !total.IsUint64() {
-		return math.MaxUint64
-	}
-	return total.Uint64()
 }
