@@ -243,6 +243,8 @@ type Signer interface {
 	Modular
 	// SignCreateBucketApproval signs the MsgCreateBucket for asking create bucket approval.
 	SignCreateBucketApproval(ctx context.Context, bucket *storagetypes.MsgCreateBucket) ([]byte, error)
+	// SignMigrateBucketApproval signs the MsgMigrateBucket for asking migrate bucket approval
+	SignMigrateBucketApproval(ctx context.Context, bucket *storagetypes.MsgMigrateBucket) ([]byte, error)
 	// SignCreateObjectApproval signs the MsgCreateObject for asking create object approval.
 	SignCreateObjectApproval(ctx context.Context, task *storagetypes.MsgCreateObject) ([]byte, error)
 	// SignReplicatePieceApproval signs the ApprovalReplicatePieceTask for asking replicate pieces to secondary SPs.

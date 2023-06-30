@@ -134,7 +134,7 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		log.CtxErrorw(ctx, "failed to sign the migrate bucket approval", "error", err)
 		return false, ErrSigner
 	}
-	task.GetMigrateBucketInfo().GetPrimarySpApproval().Sig = signature
+	task.GetMigrateBucketInfo().GetDstPrimarySpApproval().Sig = signature
 	_ = a.bucketQueue.Push(task)
 	return true, nil
 }

@@ -202,6 +202,9 @@ func (*NilModular) HandleQueryBootstrap(context.Context) ([]string, error) { ret
 func (*NilModular) SignCreateBucketApproval(context.Context, *storagetypes.MsgCreateBucket) ([]byte, error) {
 	return nil, ErrNilModular
 }
+func (*NilModular) SignMigrateBucketApproval(context.Context, *storagetypes.MsgMigrateBucket) ([]byte, error) {
+	return nil, ErrNilModular
+}
 func (*NilModular) SignCreateObjectApproval(context.Context, *storagetypes.MsgCreateObject) ([]byte, error) {
 	return nil, ErrNilModular
 }

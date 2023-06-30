@@ -128,12 +128,12 @@ type ApprovalMigrateBucketTask interface {
 	// InitApprovalMigrateBucketTask inits the ApprovalMigrateBucketTask by
 	// MsgCreateBucket and task priority. SP only fill the MsgCreateBucket's
 	// PrimarySpApproval field, can not change other fields.
-	InitApprovalMigrateBucketTask(*storagetypes.MsgCreateBucket, TPriority)
+	InitApprovalMigrateBucketTask(*storagetypes.MsgMigrateBucket, TPriority)
 	// GetMigrateBucketInfo returns the user's MsgCreateBucket.
-	GetMigrateBucketInfo() *storagetypes.MsgCreateBucket
+	GetMigrateBucketInfo() *storagetypes.MsgMigrateBucket
 	// SetMigrateBucketInfo sets the MsgCreateBucket. Should try to avoid calling
 	// this method, it will change the approval information.
-	SetMigrateBucketInfo(*storagetypes.MsgCreateBucket)
+	SetMigrateBucketInfo(*storagetypes.MsgMigrateBucket)
 }
 
 // ApprovalCreateObjectTask is an abstract interface to record the ask create object
