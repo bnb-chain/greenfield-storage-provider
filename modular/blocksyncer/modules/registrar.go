@@ -12,7 +12,7 @@ import (
 	"github.com/forbole/juno/v4/modules/permission"
 	"github.com/forbole/juno/v4/modules/registrar"
 	sp "github.com/forbole/juno/v4/modules/storage_provider"
-	"github.com/forbole/juno/v4/modules/virtual_group"
+	virtualgroup "github.com/forbole/juno/v4/modules/virtual_group"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/events"

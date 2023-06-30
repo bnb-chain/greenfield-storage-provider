@@ -56,6 +56,8 @@ func (e *ExecuteModular) Start(ctx context.Context) error {
 	}
 	e.scope = scope
 	go e.eventLoop(ctx)
+	log.Info("Ask task function: do migration")
+	go e.mockHandleMigratePiece(ctx)
 	return nil
 }
 
@@ -105,10 +107,6 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		log.CtxErrorw(ctx, "failed to get remaining resource", "error", err)
 		return err
 	}
-
-	// TODO: mock
-	// log.Info("Ask task function: do migration")
-	// e.mockHandleMigratePiece(ctx)
 
 	metrics.RemainingMemoryGauge.WithLabelValues(e.Name()).Set(float64(limit.GetMemoryLimit()))
 	metrics.RemainingTaskGauge.WithLabelValues(e.Name()).Set(float64(limit.GetTaskTotalLimit()))
