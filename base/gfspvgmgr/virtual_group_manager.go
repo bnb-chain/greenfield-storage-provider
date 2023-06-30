@@ -133,10 +133,17 @@ func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vgmg
 		return nil, fmt.Errorf("no enough sp")
 	}
 	secondarySPIDs := make([]uint32, 0)
-	for i, sp := range sm.otherSPs {
-		if i < secondarySPNumber {
-			secondarySPIDs = append(secondarySPIDs, sp.GetId())
+	for _, sp := range sm.otherSPs {
+		if !sp.IsInService() {
+			continue
 		}
+		secondarySPIDs = append(secondarySPIDs, sp.GetId())
+		if len(secondarySPIDs) == secondarySPNumber {
+			break
+		}
+	}
+	if len(secondarySPIDs) < secondarySPNumber {
+		return nil, fmt.Errorf("no enough sp")
 	}
 	return &vgmgr.GlobalVirtualGroupMeta{
 		PrimarySPID:        sm.selfSP.Id,
@@ -147,8 +154,23 @@ func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vgmg
 
 func (sm *spManager) pickSPByFilter(filter vgmgr.PickFilter) (*sptypes.StorageProvider, error) {
 	for _, destSP := range sm.otherSPs {
+		if !destSP.IsInService() {
+			continue
+		}
 		if pickSucceed := filter.Check(destSP.GetId()); pickSucceed {
 			return destSP, nil
+		}
+	}
+	return nil, ErrFailedPickDestSP
+}
+
+func (sm *spManager) querySPByID(spID uint32) (*sptypes.StorageProvider, error) {
+	if sm.selfSP.GetId() == spID {
+		return sm.selfSP, nil
+	}
+	for _, sp := range sm.otherSPs {
+		if sp.GetId() == spID {
+			return sp, nil
 		}
 	}
 	return nil, ErrFailedPickDestSP
@@ -330,4 +352,15 @@ func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.PickFilter) (*sptype
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.spManager.pickSPByFilter(filter)
+}
+
+func (vgm *virtualGroupManager) QuerySPByID(spID uint32) (*sptypes.StorageProvider, error) {
+	vgm.mutex.RLock()
+	sp, err := vgm.spManager.querySPByID(spID)
+	vgm.mutex.RUnlock()
+	if err == nil {
+		return sp, nil
+	}
+	// query chain if it is not found in memory topology.
+	return vgm.chainClient.QuerySPByID(context.Background(), spID)
 }

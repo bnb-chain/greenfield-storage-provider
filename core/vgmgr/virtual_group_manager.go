@@ -49,6 +49,8 @@ type VirtualGroupManager interface {
 	GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*GlobalVirtualGroupMeta, error)
 	// PickSPByFilter picks sp which is match pick filter condition.
 	PickSPByFilter(filter PickFilter) (*sptypes.StorageProvider, error)
+	// QuerySPByID returns sp proto.
+	QuerySPByID(spID uint32) (*sptypes.StorageProvider, error)
 }
 
 // NewVirtualGroupManager is the virtual group manager init api.

@@ -178,6 +178,21 @@ func (g *Gnfd) QuerySP(ctx context.Context, operatorAddress string) (*sptypes.St
 	return resp.GetStorageProvider(), nil
 }
 
+// QuerySPByID returns the sp info.
+func (g *Gnfd) QuerySPByID(ctx context.Context, spID uint32) (*sptypes.StorageProvider, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("query_sp_by_id").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.StorageProvider(ctx, &sptypes.QueryStorageProviderRequest{
+		Id: spID,
+	})
+	if err != nil {
+		log.Errorw("failed to query storage provider", "error", err)
+		return nil, err
+	}
+	return resp.GetStorageProvider(), nil
+}
+
 // ListBondedValidators returns the list of bonded validators.
 func (g *Gnfd) ListBondedValidators(ctx context.Context) (validators []stakingtypes.Validator, err error) {
 	startTime := time.Now()
