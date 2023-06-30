@@ -12,11 +12,17 @@ import (
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
+const (
+	// MaxRunningMigrateGVG defines src sp max running migrate gvg units, and avoid src sp overload
+	MaxRunningMigrateGVG = 100
+)
+
 type GlobalVirtualGroupMigrateExecuteUnit struct {
 	gvg            *virtualgrouptypes.GlobalVirtualGroup
 	redundantIndex int32 // if < 0, represents migrate primary
 	srcSP          *sptypes.StorageProvider
 	destSP         *sptypes.StorageProvider
+	// TODO: add status
 }
 
 type VirtualGroupFamilyMigrateExecuteUnit struct {
@@ -124,7 +130,7 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 					destSecondarySP, pickErr := vgm.PickSPByFilter(NewPickDestSPFilterWithSlice(gvg.GetSecondarySpIds()))
 					if pickErr != nil {
 						log.Errorw("failed to check conflict due to pick secondary sp", "error", pickErr)
-						return err
+						return pickErr
 					}
 					vgfUnit.conflictedSecondaryGVGMigrateUnits = append(vgfUnit.conflictedSecondaryGVGMigrateUnits,
 						&GlobalVirtualGroupMigrateExecuteUnit{
@@ -147,6 +153,7 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 
 type SPExitExecutePlan struct {
 	virtualGroupManager      vgmgr.VirtualGroupManager
+	runningMigrateGVG        int                                     // load from db
 	PrimaryVGFMigrateUnits   []*VirtualGroupFamilyMigrateExecuteUnit // sp exit, primary family, include gvg list
 	SecondaryGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // sp exit, secondary gvg
 }
@@ -167,10 +174,95 @@ func (plan *SPExitExecutePlan) updateProgress() error {
 	return nil
 }
 
+// ToMigrateExecuteUnitIterator is used to dispatch migrate units.
+type ToMigrateExecuteUnitIterator struct {
+}
+
+func NewToMigrateExecuteUnitIterator(plan *SPExitExecutePlan) *ToMigrateExecuteUnitIterator {
+	return nil
+}
+
+func (ti *ToMigrateExecuteUnitIterator) Valid() bool {
+	return true
+}
+
+func (ti *ToMigrateExecuteUnitIterator) Next() {
+	// check MaxRunningMigrateGVG
+}
+
+func (ti *ToMigrateExecuteUnitIterator) Value() *GlobalVirtualGroupMigrateExecuteUnit {
+	return nil
+}
+
+// MigratingExecuteUnitIterator is used to check migrating units.
+type MigratingExecuteUnitIterator struct {
+}
+
+func NewMigratingExecuteUnitIterator(plan *SPExitExecutePlan) *MigratingExecuteUnitIterator {
+	return nil
+}
+
+func (mi *MigratingExecuteUnitIterator) Valid() bool {
+	return true
+}
+
+func (mi *MigratingExecuteUnitIterator) Next() {
+}
+
+func (mi *MigratingExecuteUnitIterator) Value() *GlobalVirtualGroupMigrateExecuteUnit {
+	return nil
+}
+
 func (plan *SPExitExecutePlan) startSchedule() {
 	// TODO:
 	// send control msg to dest sp endpoint and trigger migrate.
+	go plan.dispatchMigrateExecuteUnitsToDestSP()
+	go plan.checkMigrateExecuteUnitsStatus()
+}
 
+func (plan *SPExitExecutePlan) dispatchMigrateExecuteUnitsToDestSP() {
+	// dispatch migrate unit to corresponding dest sp.
+	// maybe need get dest sp migrate approval.
+
+	var (
+		dispatchLoopNumber uint64
+		dispatchUnitNumber uint64
+	)
+	for {
+		time.Sleep(10 * time.Second)
+		dispatchLoopNumber++
+		dispatchUnitNumber = 0
+		iter := NewToMigrateExecuteUnitIterator(plan)
+		for ; iter.Valid(); iter.Next() {
+			dispatchUnitNumber++
+			toMigrateGVG := iter.Value()
+			_ = toMigrateGVG
+			// TODO:
+		}
+		log.Infow("dispatch migrate unit to dest sp", "loop_number", dispatchLoopNumber, "dispatch_number", dispatchUnitNumber)
+	}
+}
+
+func (plan *SPExitExecutePlan) checkMigrateExecuteUnitsStatus() {
+	// Periodically check whether the execution unit is executing normally in dest sp.
+	// maybe need retry the failed unit.
+	var (
+		checkLoopNumber uint64
+		checkUnitNumber uint64
+	)
+	for {
+		time.Sleep(10 * time.Second)
+		checkLoopNumber++
+		checkUnitNumber = 0
+		iter := NewMigratingExecuteUnitIterator(plan)
+		for ; iter.Valid(); iter.Next() {
+			checkUnitNumber++
+			toMigrateGVG := iter.Value()
+			_ = toMigrateGVG
+			// TODO:
+		}
+		log.Infow("check migrating unit status", "loop_number", checkLoopNumber, "dispatch_number", checkUnitNumber)
+	}
 }
 
 // Init load from db.
@@ -180,6 +272,7 @@ func (plan *SPExitExecutePlan) Init() error {
 
 // Start persist plan and task to db and task dispatcher
 func (plan *SPExitExecutePlan) Start() error {
+	// expand migrate units.
 	var err error
 	for _, fUnit := range plan.PrimaryVGFMigrateUnits {
 		if err = fUnit.expandExecuteSubUnits(plan.virtualGroupManager); err != nil {
@@ -215,11 +308,14 @@ func (plan *SPExitExecutePlan) Start() error {
 
 // SPExitScheduler subscribes sp exit events and produces a gvg migrate plan.
 type SPExitScheduler struct {
+	// sp exit workflow src sp.
 	manager                     *ManageModular
 	selfSP                      *sptypes.StorageProvider
-	currentSubscribeBlockHeight int  // load from db
-	isExiting                   bool // load from db
+	currentSubscribeBlockHeight uint64 // load from db
+	isExiting                   bool   // load from db
 	executePlan                 *SPExitExecutePlan
+	// sp exit workflow dest sp.
+	// migrate task runner
 }
 
 // Init function is used to load db subscribe block progress and migrate gvg progress.
@@ -248,7 +344,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 		select {
 		case <-subscribeSPExitEventsTicker.C:
 			// TODO: subscribe sp exit events from metadata service.
-			// spExitEvent, err = s.manager.baseApp.GfSpClient().ListSPExitEvents(s.currentSubscribeBlockHeight, s.manager.baseApp.OperatorAddress())
+			// spExitEvent, err = s.manager.baseApp.GfSpClient().GfSpListSpExitEvents(context.Background(), s.currentSubscribeBlockHeight, s.manager.baseApp.OperatorAddress())
 			if s.isExiting {
 				return
 			}

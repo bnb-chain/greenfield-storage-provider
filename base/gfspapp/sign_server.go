@@ -104,7 +104,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		signature, err = g.signer.SignSecondaryBls(ctx, t.SignSecondaryBls.ObjectId,
 			t.SignSecondaryBls.GlobalVirtualGroupId, t.SignSecondaryBls.Checksums)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign secondary bls", "error", err)
+			log.CtxErrorw(ctx, "failed to sign secondary bls signature", "error", err)
 			metrics.ReqCounter.WithLabelValues(SingerFailureIntegrityHash).Inc()
 			metrics.ReqTime.WithLabelValues(SingerFailureIntegrityHash).Observe(time.Since(startTime).Seconds())
 		} else {

@@ -206,7 +206,7 @@ func (s *GfSpClient) SignSecondaryBls(ctx context.Context, objectID uint64, gvgI
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to sign secondary bls", "error", err)
+		log.CtxErrorw(ctx, "client failed to sign secondary bls signature", "error", err)
 		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
