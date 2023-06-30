@@ -165,8 +165,8 @@ github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816/go.mod h1:+zsy
 github.com/bits-and-blooms/bitset v1.2.0 h1:Kn4yilvwNtMACtf1eYDlG8H77R07mZSPbMjLyS07ChA=
 github.com/bits-and-blooms/bitset v1.2.0/go.mod h1:gIdJ4wp64HaoK2YrL1Q5/N7Y16edYb8uY+O0FJTyyDA=
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
-github.com/bnb-chain/greenfield v0.2.3-0.20230629054947-b6d6df29e268 h1:6iwCjJEqCj4qGhFliIR+6gNbNIs5/jOUt+NuJmL0W/c=
-github.com/bnb-chain/greenfield v0.2.3-0.20230629054947-b6d6df29e268/go.mod h1:Sg6T0NvJhrHe+31+65r0gOoeS3f2ejt/OfH/vPW8sl8=
+github.com/bnb-chain/greenfield v0.2.3-0.20230629100544-51467d2002e3 h1:KIwMgY0y4sr7lkQhYzwCfZ2OGO0l1dQ+SbUaiSnWYo4=
+github.com/bnb-chain/greenfield v0.2.3-0.20230629100544-51467d2002e3/go.mod h1:Sg6T0NvJhrHe+31+65r0gOoeS3f2ejt/OfH/vPW8sl8=
 github.com/bnb-chain/greenfield-cometbft v0.0.1 h1:pX8S9oZKjWJCrxH07l6rbU3zee9txZ11+UwO9stsNMQ=
 github.com/bnb-chain/greenfield-cometbft v0.0.1/go.mod h1:9q11eHNRY9FDwFH+4pompzPNGv//Z3VcfvkELaHJPMs=
 github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf h1:5HxLNqgYHNV7Cfaepws3vejeI49aWry7ON2k+a23K10=
