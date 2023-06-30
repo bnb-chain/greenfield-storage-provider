@@ -2,7 +2,6 @@ package metadata
 
 import (
 	"context"
-
 	"cosmossdk.io/math"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -152,20 +151,22 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 // GfSpListMigrateBucketEvents list migrate bucket events
 func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *types.GfSpListMigrateBucketEventsRequest) (resp *types.GfSpListMigrateBucketEventsResponse, err error) {
 	var (
-		events []*model.EventMigrationBucket
-		res    []*storage_types.EventMigrationBucket
+		events           []*model.EventMigrationBucket
+		completeEvents   []*model.EventCompleteMigrationBucket
+		spEvent          []*storage_types.EventMigrationBucket
+		spCompleteEvents []*storage_types.EventCompleteMigrationBucket
 	)
 
 	ctx = log.Context(ctx, req)
-	events, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.BlockId, req.SpId)
+	events, completeEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.BlockId, req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
 		return nil, err
 	}
 
-	res = make([]*storage_types.EventMigrationBucket, len(events))
+	spEvent = make([]*storage_types.EventMigrationBucket, len(events))
 	for i, event := range events {
-		res[i] = &storage_types.EventMigrationBucket{
+		spEvent[i] = &storage_types.EventMigrationBucket{
 			Operator:       event.Operator.String(),
 			BucketName:     event.BucketName,
 			BucketId:       math.NewUintFromBigInt(event.BucketID.Big()),
@@ -173,7 +174,22 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		}
 	}
 
-	resp = &types.GfSpListMigrateBucketEventsResponse{Events: res}
+	spCompleteEvents = make([]*storage_types.EventCompleteMigrationBucket, len(completeEvents))
+	for i, event := range completeEvents {
+		spCompleteEvents[i] = &storage_types.EventCompleteMigrationBucket{
+			Operator:                   event.Operator.String(),
+			BucketName:                 event.BucketName,
+			BucketId:                   math.NewUintFromBigInt(event.BucketID.Big()),
+			GlobalVirtualGroupFamilyId: event.GlobalVirtualGroupFamilyId,
+			// TODO BARRY
+			//GvgMappings:                event.GvgMappings,
+		}
+	}
+
+	resp = &types.GfSpListMigrateBucketEventsResponse{
+		Events:         spEvent,
+		CompleteEvents: spCompleteEvents,
+	}
 	log.CtxInfow(ctx, "succeed to list migrate bucket events")
 	return resp, nil
 }
@@ -275,5 +291,46 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsByBucket(ctx context.Contex
 
 	resp = &types.GfSpListGlobalVirtualGroupsByBucketResponse{Groups: res}
 	log.CtxInfow(ctx, "succeed to list global virtual group by bucket id")
+	return resp, nil
+}
+
+// GfSpListSpExitEvents list migrate swap out events
+func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.GfSpListSpExitEventsRequest) (resp *types.GfSpListSpExitEventsResponse, err error) {
+	var (
+		events          []*model.EventStorageProviderExit
+		completeEvents  []*model.EventCompleteStorageProviderExit
+		spEvent         []*virtual_types.EventStorageProviderExit
+		spCompleteEvent []*virtual_types.EventCompleteStorageProviderExit
+	)
+
+	ctx = log.Context(ctx, req)
+	events, completeEvents, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, common.HexToAddress(req.OperatorAddress))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list migrate swap out events", "error", err)
+		return nil, err
+	}
+
+	spEvent = make([]*virtual_types.EventStorageProviderExit, len(events))
+	for i, event := range events {
+		spEvent[i] = &virtual_types.EventStorageProviderExit{
+			StorageProviderId: event.StorageProviderId,
+			OperatorAddress:   event.OperatorAddress.String(),
+		}
+	}
+
+	spCompleteEvent = make([]*virtual_types.EventCompleteStorageProviderExit, len(completeEvents))
+	for i, event := range completeEvents {
+		spCompleteEvent[i] = &virtual_types.EventCompleteStorageProviderExit{
+			StorageProviderId: event.StorageProviderId,
+			OperatorAddress:   event.OperatorAddress.String(),
+			TotalDeposit:      math.NewIntFromBigInt(event.TotalDeposit.Raw()),
+		}
+	}
+
+	resp = &types.GfSpListSpExitEventsResponse{
+		Events:         spEvent,
+		CompleteEvents: spCompleteEvent,
+	}
+	log.CtxInfow(ctx, "succeed to list migrate swap out events")
 	return resp, nil
 }

@@ -85,9 +85,11 @@ type Metadata interface {
 	// GetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
 	GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error)
 	// ListMigrateBucketEvents list migrate bucket events
-	ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, error)
+	ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, error)
 	// ListSwapOutEvents list swap out events
 	ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapOut, error)
+	// ListSpExitEvents list sp exit events
+	ListSpExitEvents(blockID uint64, operatorAddress common.Address) ([]*EventStorageProviderExit, []*EventCompleteStorageProviderExit, error)
 }
 
 // BSDB contains all the methods required by block syncer database

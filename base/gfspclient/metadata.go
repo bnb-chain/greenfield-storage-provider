@@ -723,3 +723,22 @@ func (s *GfSpClient) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.Contex
 	}
 	return resp.Groups, nil
 }
+
+func (s *GfSpClient) GfSpListSpExitEvents(ctx context.Context, blockID uint64, operatorAddress string, opts ...grpc.DialOption) ([]*virtual_types.EventStorageProviderExit, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListSpExitEventsRequest{
+		BlockId:         blockID,
+		OperatorAddress: operatorAddress,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListSpExitEvents(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list migrate swap out events", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Events, nil
+}
