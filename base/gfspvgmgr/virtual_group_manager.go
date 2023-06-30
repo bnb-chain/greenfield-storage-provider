@@ -181,7 +181,6 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 		}
 	}()
 	return vgm, nil
-
 }
 
 // refreshMetadata is used to refresh virtual group manager metadata in background.

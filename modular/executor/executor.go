@@ -56,8 +56,6 @@ func (e *ExecuteModular) Start(ctx context.Context) error {
 	}
 	e.scope = scope
 	go e.eventLoop(ctx)
-	log.Info("Ask task function: do migration")
-	go e.mockHandleMigratePiece(ctx)
 	return nil
 }
 
