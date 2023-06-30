@@ -75,7 +75,7 @@ func (e *ExecuteModular) mockHandleMigratePiece(ctx context.Context) {
 		log.Errorw("failed to query objectOne", "error", err)
 	}
 	log.Infow("print object one detailed messages", "objectOne", objectOne)
-	objectTwo, err := e.baseApp.Consensus().QueryObjectInfo(ctx, "mybu", "random1")
+	objectTwo, err := e.baseApp.Consensus().QueryObjectInfo(ctx, "mybu", "random")
 	if err != nil {
 		log.Errorw("failed to query objectTwo", "error", err)
 	}
