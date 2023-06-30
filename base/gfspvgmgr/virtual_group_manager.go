@@ -3,13 +3,13 @@ package gfspvgmgr
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-
 	"math/rand"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
@@ -37,7 +37,7 @@ var (
 	ErrStaledMetadata = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540003,
 		"metadata is staled, need force refresh metadata")
 	ErrFailedPickDestSP = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540004,
-		"failed to pick dest sp due to has conflict, need resolve conflict")
+		"failed to pick dest sp")
 )
 
 // virtualGroupFamilyManager is built by metadata data source.
@@ -123,32 +123,32 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vg
 }
 
 type spManager struct {
-	primarySP    *sptypes.StorageProvider
-	secondarySPs []*sptypes.StorageProvider
+	selfSP   *sptypes.StorageProvider
+	otherSPs []*sptypes.StorageProvider
 }
 
 func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	secondarySPNumber := int(param.GetRedundantDataChunkNum() + param.GetRedundantParityChunkNum())
-	if sm.primarySP == nil || len(sm.secondarySPs) < secondarySPNumber {
+	if sm.selfSP == nil || len(sm.otherSPs) < secondarySPNumber {
 		return nil, fmt.Errorf("no enough sp")
 	}
 	secondarySPIDs := make([]uint32, 0)
-	for i, sp := range sm.secondarySPs {
+	for i, sp := range sm.otherSPs {
 		if i < secondarySPNumber {
 			secondarySPIDs = append(secondarySPIDs, sp.GetId())
 		}
 	}
 	return &vgmgr.GlobalVirtualGroupMeta{
-		PrimarySPID:        sm.primarySP.Id,
+		PrimarySPID:        sm.selfSP.Id,
 		SecondarySPIDs:     secondarySPIDs,
 		StakingStorageSize: DefaultInitialGVGStakingStorageSize,
 	}, nil
 }
 
 func (sm *spManager) pickSPByFilter(filter vgmgr.PickFilter) (*sptypes.StorageProvider, error) {
-	for _, secondarySP := range sm.secondarySPs {
-		if pickSucceed := filter.Check(secondarySP.GetId()); pickSucceed {
-			return secondarySP, nil
+	for _, destSP := range sm.otherSPs {
+		if pickSucceed := filter.Check(destSP.GetId()); pickSucceed {
+			return destSP, nil
 		}
 	}
 	return nil, ErrFailedPickDestSP
@@ -192,16 +192,16 @@ func (vgm *virtualGroupManager) refreshMeta() {
 
 func (vgm *virtualGroupManager) refreshMetaByChain() {
 	var (
-		err             error
-		spList          []*sptypes.StorageProvider
-		primarySP       *sptypes.StorageProvider
-		secondarySPList []*sptypes.StorageProvider
-		spID            uint32
-		spm             *spManager
-		vgParams        *virtualgrouptypes.Params
-		vgfList         []*virtualgrouptypes.GlobalVirtualGroupFamily
-		vgfm            *virtualGroupFamilyManager
-		spMap           map[uint32]*sptypes.StorageProvider
+		err         error
+		spList      []*sptypes.StorageProvider
+		selfSP      *sptypes.StorageProvider
+		otherSPList []*sptypes.StorageProvider
+		spID        uint32
+		spm         *spManager
+		vgParams    *virtualgrouptypes.Params
+		vgfList     []*virtualgrouptypes.GlobalVirtualGroupFamily
+		vgfm        *virtualGroupFamilyManager
+		spMap       map[uint32]*sptypes.StorageProvider
 	)
 
 	spMap = make(map[uint32]*sptypes.StorageProvider)
@@ -223,13 +223,13 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 	for i, sp := range spList {
 		if strings.EqualFold(vgm.selfOperatorAddress, sp.OperatorAddress) {
 			spID = sp.Id
-			primarySP = sp
-			secondarySPList = append(spList[:i], spList[i+1:]...)
+			selfSP = sp
+			otherSPList = append(spList[:i], spList[i+1:]...)
 		}
 	}
 	spm = &spManager{
-		primarySP:    primarySP,
-		secondarySPs: secondarySPList,
+		selfSP:   selfSP,
+		otherSPs: otherSPList,
 	}
 	// log.Infow("list sp info", "primary_sp", primarySP, "secondary_sps", secondarySPList, "sp_map", spMap)
 
