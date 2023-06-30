@@ -32,7 +32,7 @@ func (plan *BucketMigrateExecutePlan) updateProgress() error {
 	return nil
 }
 
-func (plan *BucketMigrateExecutePlan) startSchedule() {
+func (plan *BucketMigrateExecutePlan) startDestSPSchedule() {
 	// TODO:
 	// dispatch to task-dispatcher
 }

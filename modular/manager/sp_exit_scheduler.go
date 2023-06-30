@@ -12,9 +12,13 @@ import (
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
+var _ vgmgr.PickFilter = &PickDestSPFilter{}
+
 const (
-	// MaxRunningMigrateGVG defines src sp max running migrate gvg units, and avoid src sp overload
-	MaxRunningMigrateGVG = 100
+	// MaxSrcRunningMigrateGVG defines src sp max running migrate gvg units, and avoid src sp overload.
+	MaxSrcRunningMigrateGVG = 100
+	// MaxDestRunningMigrateGVG defines dest sp max running migrate gvg units, and avoid dest sp overload.
+	MaxDestRunningMigrateGVG = 10
 )
 
 type GlobalVirtualGroupMigrateExecuteUnit struct {
@@ -22,7 +26,9 @@ type GlobalVirtualGroupMigrateExecuteUnit struct {
 	redundantIndex int32 // if < 0, represents migrate primary
 	srcSP          *sptypes.StorageProvider
 	destSP         *sptypes.StorageProvider
-	// TODO: add status
+	migrateStatus  string // update to proto enum, tomigrate/migrating/migrated
+	checkTimestamp uint64
+	checkStatus    string // update to proto enum
 }
 
 type VirtualGroupFamilyMigrateExecuteUnit struct {
@@ -134,8 +140,10 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 					}
 					vgfUnit.conflictedSecondaryGVGMigrateUnits = append(vgfUnit.conflictedSecondaryGVGMigrateUnits,
 						&GlobalVirtualGroupMigrateExecuteUnit{
-							gvg, secondaryIndex,
-							srcSP, destSecondarySP})
+							gvg:            gvg,
+							redundantIndex: secondaryIndex,
+							srcSP:          srcSP,
+							destSP:         destSecondarySP})
 				}
 			}
 		} else { // has no conflicts
@@ -143,8 +151,10 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 			for _, gvg := range vgfUnit.gvgList {
 				vgfUnit.primaryGVGMigrateUnits = append(vgfUnit.primaryGVGMigrateUnits,
 					&GlobalVirtualGroupMigrateExecuteUnit{
-						gvg, -1,
-						vgfUnit.srcSP, destFamilySP})
+						gvg:            gvg,
+						redundantIndex: -1,
+						srcSP:          vgfUnit.srcSP,
+						destSP:         destFamilySP})
 			}
 		}
 	}
@@ -213,11 +223,17 @@ func (mi *MigratingExecuteUnitIterator) Value() *GlobalVirtualGroupMigrateExecut
 	return nil
 }
 
-func (plan *SPExitExecutePlan) startSchedule() {
+func (plan *SPExitExecutePlan) startSrcSPSchedule() {
 	// TODO:
 	// send control msg to dest sp endpoint and trigger migrate.
 	go plan.dispatchMigrateExecuteUnitsToDestSP()
 	go plan.checkMigrateExecuteUnitsStatus()
+}
+
+func (plan *SPExitExecutePlan) startDestSPSchedule() {
+	// TODO:
+	// MaxDestRunningMigrateGVG
+
 }
 
 func (plan *SPExitExecutePlan) dispatchMigrateExecuteUnitsToDestSP() {
@@ -238,6 +254,7 @@ func (plan *SPExitExecutePlan) dispatchMigrateExecuteUnitsToDestSP() {
 			toMigrateGVG := iter.Value()
 			_ = toMigrateGVG
 			// TODO:
+			// send migrate gvg to dest sp, trigger dest sp pull the gvg object from src sp.
 		}
 		log.Infow("dispatch migrate unit to dest sp", "loop_number", dispatchLoopNumber, "dispatch_number", dispatchUnitNumber)
 	}
@@ -257,11 +274,12 @@ func (plan *SPExitExecutePlan) checkMigrateExecuteUnitsStatus() {
 		iter := NewMigratingExecuteUnitIterator(plan)
 		for ; iter.Valid(); iter.Next() {
 			checkUnitNumber++
-			toMigrateGVG := iter.Value()
-			_ = toMigrateGVG
+			MigratingGVG := iter.Value()
+			_ = MigratingGVG
 			// TODO:
+			// send check unit status request, and record status.
 		}
-		log.Infow("check migrating unit status", "loop_number", checkLoopNumber, "dispatch_number", checkUnitNumber)
+		log.Infow("check migrating unit status", "loop_number", checkLoopNumber, "check_number", checkUnitNumber)
 	}
 }
 
@@ -302,7 +320,7 @@ func (plan *SPExitExecutePlan) Start() error {
 		log.Errorw("failed to start migrate execute plan due to store db", "error", err)
 		return err
 	}
-	go plan.startSchedule()
+	go plan.startSrcSPSchedule()
 	return nil
 }
 
@@ -391,17 +409,4 @@ func (s *SPExitScheduler) produceSPExitExecutePlan() (*SPExitExecutePlan, error)
 
 func (s *SPExitScheduler) updateSPExitExecutePlan() {
 	// TODO: check
-}
-
-func (s *SPExitScheduler) produceBucketMigrateExecutePlan() (*SPExitExecutePlan, error) {
-	var (
-		err  error
-		plan *SPExitExecutePlan
-	)
-	// TODO:
-	return plan, err
-}
-
-func (s *SPExitScheduler) updateBucketMigrateExecutePlan() {
-	// TODO:
 }
