@@ -50,6 +50,16 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqCounter.WithLabelValues(SingerSuccessBucketApproval).Inc()
 			metrics.ReqTime.WithLabelValues(SingerSuccessBucketApproval).Observe(time.Since(startTime).Seconds())
 		}
+	case *gfspserver.GfSpSignRequest_MigrateBucketInfo:
+		signature, err = g.signer.SignMigrateBucketApproval(ctx, t.MigrateBucketInfo)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign create bucket approval", "error", err)
+			metrics.ReqCounter.WithLabelValues(SingerFailureMigrateBucketApproval).Inc()
+			metrics.ReqTime.WithLabelValues(SingerFailureMigrateBucketApproval).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SingerSuccessMigrateBucketApproval).Inc()
+			metrics.ReqTime.WithLabelValues(SingerSuccessMigrateBucketApproval).Observe(time.Since(startTime).Seconds())
+		}
 	case *gfspserver.GfSpSignRequest_CreateObjectInfo:
 		signature, err = g.signer.SignCreateObjectApproval(ctx, t.CreateObjectInfo)
 		if err != nil {
