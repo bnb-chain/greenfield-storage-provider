@@ -26,8 +26,7 @@ message GfSpCreateGlobalVirtualGroup {
 message GfSpSignRequest {
   oneof request {
     greenfield.storage.MsgCreateBucket create_bucket_info = 1;
-    // TODO: modify to MsgMigrateBucket.
-    greenfield.storage.MsgCreateBucket migrate_bucket_info = 2;
+    greenfield.storage.MsgMigrateBucket migrate_bucket_info = 2;
     greenfield.storage.MsgCreateObject create_object_info = 3;
     greenfield.storage.MsgSealObject seal_object_info = 4;
     greenfield.storage.MsgDiscontinueBucket discontinue_bucket_info = 5;
