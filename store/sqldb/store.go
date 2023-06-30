@@ -118,9 +118,12 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to create piece hash table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&IntegrityMetaTable{}); err != nil {
-		log.Errorw("failed to create integrity meta table", "error", err)
-		return nil, err
+	for i := 0; i < IntegrityMetasNumberOfShards; i++ {
+		shardTableName := fmt.Sprintf(IntegrityMetaTable{}.TableName()+"_%02d", i)
+		if err = db.Table(shardTableName).AutoMigrate(&IntegrityMetaTable{}); err != nil {
+			log.Errorw("failed to create integrity meta table", "error", err)
+			return nil, err
+		}
 	}
 	if err = db.AutoMigrate(&BucketTrafficTable{}); err != nil {
 		log.Errorw("failed to create bucket traffic table", "error", err)

@@ -71,7 +71,7 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (meta *corespdb.Integrity
 	}()
 
 	queryReturn := &IntegrityMetaTable{}
-	result := s.db.Model(&IntegrityMetaTable{}).
+	result := s.db.Table(GetIntegrityMetasTableName(objectID)).
 		Where("object_id = ?", objectID).
 		First(queryReturn)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -136,7 +136,7 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) (err error) 
 		IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
 		Signature:         hex.EncodeToString(meta.Signature),
 	}
-	result := s.db.Create(insertIntegrityMetaRecord)
+	result := s.db.Table(GetIntegrityMetasTableName(meta.ObjectID)).Create(insertIntegrityMetaRecord)
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
 		return nil
 	}
@@ -162,7 +162,8 @@ func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64) (err error) {
 			time.Since(startTime).Seconds())
 	}()
 
-	err = s.db.Delete(&IntegrityMetaTable{
+	shardTableName := GetIntegrityMetasTableName(objectID)
+	err = s.db.Table(shardTableName).Delete(&IntegrityMetaTable{
 		ObjectID: objectID, // should be the primary key
 	}).Error
 	return err
