@@ -45,11 +45,25 @@ func (s *SpDBImpl) QuerySwapOutSubscribeProgress() (uint64, error) {
 }
 func (s *SpDBImpl) UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error {
 	// TODO:
+
 	return nil
 }
 
 func (s *SpDBImpl) QueryBucketMigrateSubscribeProgress() (uint64, error) {
 	// TODO:
+	var (
+		result      *gorm.DB
+		queryReturn *MigrateSubscribeProgressTable
+	)
+	queryReturn = &MigrateSubscribeProgressTable{}
+	result = s.db.First(queryReturn, "event_name = ?", BucketMigrateProgressKey)
+	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return 0, nil
+	}
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return queryReturn.LastSubscribedBlockHeight, nil
 	return 0, nil
 }
 
