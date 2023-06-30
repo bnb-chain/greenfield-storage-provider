@@ -49,7 +49,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 		}
 
 		if includeRemoved {
-			err = b.db.Scopes(ReadObjectsTable(bucketName)).
+			err = b.db.Table(GetObjectsTableName(bucketName)).
 				Select("*").
 				Where("bucket_name = ?", bucketName).
 				Scopes(filters...).
@@ -57,7 +57,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 				Order("object_name asc").
 				Find(&results).Error
 		} else {
-			err = b.db.Scopes(ReadObjectsTable(bucketName)).
+			err = b.db.Table(GetObjectsTableName(bucketName)).
 				Select("*").
 				Where("bucket_name = ? and removed = false", bucketName).
 				Scopes(filters...).
@@ -135,14 +135,14 @@ func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, include
 	)
 
 	if includePrivate {
-		err = b.db.Scopes(ReadObjectsTable(bucketName)).
+		err = b.db.Table(GetObjectsTableName(bucketName)).
 			Select("*").
 			Where("object_name = ? and bucket_name = ? and removed = false", objectName, bucketName).
 			Take(&object).Error
 		return object, err
 	}
 
-	err = b.db.Scopes(ReadObjectsTable(bucketName)).
+	err = b.db.Table(GetObjectsTableName(bucketName)).
 		Select("objects.*").
 		Joins("left join objects on buckets.bucket_id = objects.bucket_id").
 		Where("objects.object_name = ? and objects.bucket_name = ? and objects.removed = false and "+
@@ -163,33 +163,31 @@ func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool)
 	if !includeRemoved {
 		filters = append(filters, RemovedFilter(includeRemoved))
 	}
-	//
-	//for idx, id := range ids {
-	//	getobjectbyid
-	//}
+	for _, id := range ids {
+		var object *Object
+		bucketName, err := b.GetBucketNameByObjectID(id)
+		if err != nil {
+			continue
+		}
+		err = b.db.Table(GetObjectsTableName(bucketName)).
+			Select("*").
+			Where("object_id = ?", id).
+			Scopes(filters...).
+			Take(&object).Error
+		objects = append(objects, object)
+	}
 
-	err = b.db.Table((&Object{}).TableName()).
-		Select("*").
-		Where("object_id in (?)", ids).
-		Scopes(filters...).
-		Find(&objects).Error
 	return objects, err
 }
 
 func GetObjectsTableName(bucketName string) string {
-	return GetObjectsTableNameByShardNumber(int(GetObjectsShardNumberByUID(bucketName)))
+	return GetObjectsTableNameByShardNumber(int(GetObjectsShardNumberByBucketName(bucketName)))
 }
 
-func GetObjectsShardNumberByUID(bucketName string) uint32 {
+func GetObjectsShardNumberByBucketName(bucketName string) uint32 {
 	return murmur3.Sum32([]byte(bucketName)) % ObjectsNumberOfShards
 }
 
 func GetObjectsTableNameByShardNumber(shard int) string {
 	return fmt.Sprintf("objects_%02d", shard)
-}
-
-var ReadObjectsTable = func(uid string) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		return db.Table(GetObjectsTableName(uid))
-	}
 }

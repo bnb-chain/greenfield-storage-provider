@@ -11,7 +11,7 @@ import (
 
 // CreatePrefixTree create prefix tree nodes by input slice
 func (db *DB) CreatePrefixTree(ctx context.Context, prefixTree []*bsdb.SlashPrefixTreeNode) error {
-	err := db.Db.WithContext(ctx).Create(&prefixTree).Error
+	err := db.Db.WithContext(ctx).Table(bsdb.GetPrefixesTableName(prefixTree[0].BucketName)).Create(&prefixTree).Error
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func (db *DB) DeletePrefixTree(ctx context.Context, prefixTree []*bsdb.SlashPref
 	if len(prefixTree) == 0 {
 		return nil
 	}
-	tx := db.Db.WithContext(ctx)
+	tx := db.Db.WithContext(ctx).Table(bsdb.GetPrefixesTableName(prefixTree[0].BucketName))
 	stmt := tx.Where("bucket_name = ? AND full_name = ? AND is_object = ?",
 		prefixTree[0].BucketName,
 		prefixTree[0].FullName,
@@ -42,10 +42,12 @@ func (db *DB) DeletePrefixTree(ctx context.Context, prefixTree []*bsdb.SlashPref
 	return nil
 }
 
+// same tree?
 // GetPrefixTree get prefix tree node by full name and bucket name
 func (db *DB) GetPrefixTree(ctx context.Context, fullName, bucketName string) (*bsdb.SlashPrefixTreeNode, error) {
 	var prefixTreeNode *bsdb.SlashPrefixTreeNode
-	err := db.Db.WithContext(ctx).Where("full_name = ? AND bucket_name = ? AND is_object = ?", fullName, bucketName, false).Take(&prefixTreeNode).Error
+	err := db.Db.WithContext(ctx).Table(bsdb.GetPrefixesTableName(bucketName)).
+		Where("full_name = ? AND bucket_name = ? AND is_object = ?", fullName, bucketName, false).Take(&prefixTreeNode).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -58,7 +60,15 @@ func (db *DB) GetPrefixTree(ctx context.Context, fullName, bucketName string) (*
 // GetPrefixTreeObject get prefix tree node object by object id
 func (db *DB) GetPrefixTreeObject(ctx context.Context, objectID common.Hash) (*bsdb.SlashPrefixTreeNode, error) {
 	var prefixTreeNode *bsdb.SlashPrefixTreeNode
-	err := db.Db.WithContext(ctx).Where("object_id = ?", objectID).Take(&prefixTreeNode).Error
+	bucketName, err := db.GetBucketNameByObjectID(objectID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	err = db.Db.WithContext(ctx).Table(bsdb.GetPrefixesTableName(bucketName)).
+		Where("object_id = ?", objectID).Take(&prefixTreeNode).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -71,7 +81,7 @@ func (db *DB) GetPrefixTreeObject(ctx context.Context, objectID common.Hash) (*b
 // GetPrefixTreeCount get prefix tree nodes count by path and bucket name
 func (db *DB) GetPrefixTreeCount(ctx context.Context, pathName, bucketName string) (int64, error) {
 	var count int64
-	err := db.Db.WithContext(ctx).Table((&bsdb.SlashPrefixTreeNode{}).TableName()).Where("bucket_name = ? AND path_name = ?", bucketName, pathName).Count(&count).Error
+	err := db.Db.WithContext(ctx).Table(bsdb.GetPrefixesTableName(bucketName)).Where("bucket_name = ? AND path_name = ?", bucketName, pathName).Count(&count).Error
 	if err != nil {
 		return 0, err
 	}

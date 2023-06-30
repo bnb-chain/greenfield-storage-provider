@@ -9,7 +9,7 @@ import (
 )
 
 func (db *DB) SaveObject(ctx context.Context, object *models.Object) error {
-	err := db.Db.WithContext(ctx).Scopes(bsdb.ReadObjectsTable(object.BucketName)).Clauses(clause.OnConflict{
+	err := db.Db.WithContext(ctx).Table(bsdb.GetObjectsTableName(object.BucketName)).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "object_id"}},
 		UpdateAll: true,
 	}).Create(object).Error
@@ -17,17 +17,32 @@ func (db *DB) SaveObject(ctx context.Context, object *models.Object) error {
 }
 
 func (db *DB) UpdateObject(ctx context.Context, object *models.Object) error {
-	err := db.Db.WithContext(ctx).Scopes(bsdb.ReadObjectsTable(object.BucketName)).Where("object_id = ?", object.ObjectID).Updates(object).Error
+	err := db.Db.WithContext(ctx).Table(bsdb.GetObjectsTableName(object.BucketName)).Where("object_id = ?", object.ObjectID).Updates(object).Error
 	return err
 }
 
 func (db *DB) GetObject(ctx context.Context, objectId common.Hash) (*models.Object, error) {
 	var object models.Object
 
-	err := db.Db.WithContext(ctx).Scopes(bsdb.ReadObjectsTable(object.BucketName)).Where(
+	err := db.Db.WithContext(ctx).Table(bsdb.GetObjectsTableName(object.BucketName)).Where(
 		"object_id = ? AND removed IS NOT TRUE", objectId).Find(&object).Error
 	if err != nil {
 		return nil, err
 	}
 	return &object, nil
+}
+
+// GetBucketNameByObjectID get bucket name info by an object id
+func (b *DB) GetBucketNameByObjectID(objectID common.Hash) (string, error) {
+	var (
+		objectIdMap *bsdb.ObjectIDMap
+		err         error
+	)
+
+	err = b.Db.Table((&bsdb.ObjectIDMap{}).TableName()).
+		Select("*").
+		Where("object_id = ?", objectID).
+		Take(&objectIdMap).Error
+
+	return objectIdMap.BucketName, err
 }
