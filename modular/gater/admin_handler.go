@@ -773,11 +773,11 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
-	// if ecIdx less than 0, we should migrate pieces from primary SP
+	// if ecIdx is equal to -1, we should migrate pieces from primary SP
 	if ecIdx == primarySPECIdx {
 		segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(objectID, replicateIdx)
 		segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(migratePiece.ObjectInfo.GetPayloadSize(),
-			replicateIdx, params.GetMaxSegmentSize())
+			replicateIdx, migratePiece.GetStorageParams().GetMaxSegmentSize())
 		log.Infow("migrate primary sp", "segmentPieceKey", segmentPieceKey, "segmentPieceSize", segmentPieceSize)
 		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
 			uint64(segmentPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize), 30, MaxMigratePieceRetry)
@@ -789,8 +789,8 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	} else { // in this case, we should migrate pieces from secondary SP
 		ecPieceKey := g.baseApp.PieceOp().ECPieceKey(objectID, replicateIdx, uint32(ecIdx))
 		ecPieceSize := g.baseApp.PieceOp().ECPieceSize(migratePiece.ObjectInfo.GetPayloadSize(), replicateIdx,
-			params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
-		log.Infow("migrate primary sp", "ecPieceKey", ecPieceKey, "ecPieceSize", ecPieceSize)
+			migratePiece.GetStorageParams().GetMaxSegmentSize(), migratePiece.GetStorageParams().GetRedundantDataChunkNum())
+		log.Infow("migrate secondary sp", "ecPieceKey", ecPieceKey, "ecPieceSize", ecPieceSize)
 		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
 			uint64(ecPieceSize), ecPieceKey, 0, uint64(ecPieceSize), 30, MaxMigratePieceRetry)
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
@@ -800,6 +800,6 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Write(pieceData)
-	log.CtxDebug(reqCtx.Context(), "succeed to migrate one piece", "objectID", objectID, "replicateIdx",
+	log.CtxInfow(reqCtx.Context(), "succeed to migrate one piece", "objectID", objectID, "replicateIdx",
 		replicateIdx, "ecIdx", ecIdx)
 }

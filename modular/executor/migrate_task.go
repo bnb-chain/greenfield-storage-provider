@@ -3,6 +3,7 @@ package executor
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -26,13 +27,7 @@ const primarySPECIdx = -1
 // HandleMigratePieceTask(ctx context.Context, objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params, srcSPEndpoint string)
 func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params,
 	srcSPEndpoint string) error {
-	var (
-		dataShards   = params.VersionedParams.GetRedundantDataChunkNum()
-		parityShards = params.VersionedParams.GetRedundantParityChunkNum()
-		ecPieceCount = dataShards + parityShards
-		err          error
-	)
-
+	var err error
 	if objectInfo == nil || params == nil || srcSPEndpoint == "" {
 		err = ErrDanglingPointer
 		return err
@@ -40,23 +35,19 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, objectInfo 
 
 	index := checkIsPrimary(objectInfo, srcSPEndpoint)
 	log.Infow("secondarySP index", "index", index)
-	migratePiece := &gfspserver.GfSpMigratePiece{
+	migratePiece := gfspserver.GfSpMigratePiece{
 		ObjectInfo:    objectInfo,
 		StorageParams: params,
 	}
 	if index < 0 { // get all segment pieces of an object
-		migratePiece.ReplicateIdx = e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(),
-			params.VersionedParams.GetMaxSegmentSize())
 		migratePiece.EcIdx = primarySPECIdx
-		if err = e.migrateSegmentPieces(ctx, migratePiece, srcSPEndpoint); err != nil {
+		if err = e.doPieceMigration(ctx, migratePiece, srcSPEndpoint, primarySPECIdx); err != nil {
 			log.CtxErrorw(ctx, "failed to migrate segment pieces", "error", err)
 			return err
 		}
 	} else {
-		migratePiece.ReplicateIdx = e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(),
-			params.VersionedParams.GetMaxSegmentSize())
-		migratePiece.EcIdx = int32(ecPieceCount)
-		if err = e.migrateECPieces(ctx, migratePiece, srcSPEndpoint); err != nil {
+		migratePiece.EcIdx = int32(index)
+		if err = e.doPieceMigration(ctx, migratePiece, srcSPEndpoint, index); err != nil {
 			log.CtxErrorw(ctx, "failed to migrate ec pieces", "error", err)
 			return err
 		}
@@ -64,7 +55,7 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, objectInfo 
 	return nil
 }
 
-// TODO: mock
+// TODO: mock function, this will be deleted in the future
 // func (e *ExecuteModular) mockHandleMigratePiece(ctx context.Context) {
 // 	log.Info("enter mockHandleMigratePiece function")
 // 	time.Sleep(15 * time.Second)
@@ -74,7 +65,7 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, objectInfo 
 // 		log.Errorw("failed to query objectOne", "error", err)
 // 	}
 // 	log.Infow("print object one detailed messages", "objectOne", objectOne)
-// 	objectTwo, err := e.baseApp.Consensus().QueryObjectInfo(ctx, "mybu", "random1")
+// 	objectTwo, err := e.baseApp.Consensus().QueryObjectInfo(ctx, "mybu", "random")
 // 	if err != nil {
 // 		log.Errorw("failed to query objectTwo", "error", err)
 // 	}
@@ -106,26 +97,21 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, objectInfo 
 //
 // 	log.Infow("start executing migrate piece: PrimarySP", "objectInfoOne", objectOne.Id.String())
 // 	ecPieceCount := params.VersionedParams.GetRedundantDataChunkNum() + params.VersionedParams.GetRedundantParityChunkNum()
-// 	migratePieceOne := &gfspserver.GfSpMigratePiece{
+// 	migratePieceOne := gfspserver.GfSpMigratePiece{
 // 		ObjectInfo:    objectOne,
 // 		StorageParams: params,
 // 	}
-// 	migratePieceOne.ReplicateIdx = e.baseApp.PieceOp().SegmentPieceCount(objectOne.GetPayloadSize(),
-// 		params.VersionedParams.GetMaxSegmentSize())
-// 	migratePieceOne.EcIdx = primarySPECIdx
-// 	if err := e.migrateSegmentPieces(ctx, migratePieceOne, "http://127.0.0.1:9033"); err != nil {
+// 	if err := e.doPieceMigration(ctx, migratePieceOne, "http://127.0.0.1:9033", primarySPECIdx); err != nil {
 // 		log.CtxErrorw(ctx, "failed to migrate segment pieces", "error", err)
 // 	}
 //
 // 	log.Infow("start executing migrate piece: SecondarySP", "objectInfoTwo", objectTwo.Id.String())
-// 	migratePieceTwo := &gfspserver.GfSpMigratePiece{
+// 	migratePieceTwo := gfspserver.GfSpMigratePiece{
 // 		ObjectInfo:    objectTwo,
 // 		StorageParams: params,
 // 	}
-// 	migratePieceTwo.ReplicateIdx = e.baseApp.PieceOp().SegmentPieceCount(objectTwo.GetPayloadSize(),
-// 		params.VersionedParams.GetMaxSegmentSize())
 // 	migratePieceTwo.EcIdx = int32(ecPieceCount)
-// 	if err := e.migrateECPieces(ctx, migratePieceTwo, "http://127.0.0.1:9033"); err != nil {
+// 	if err := e.doPieceMigration(ctx, migratePieceTwo, "http://127.0.0.1:9033", 0); err != nil {
 // 		log.CtxErrorw(ctx, "failed to migrate ec pieces", "error", err)
 // 	}
 // }
@@ -139,95 +125,68 @@ func checkIsPrimary(objectInfo *storagetypes.ObjectInfo, endpoint string) int {
 	return 0
 }
 
-func (e *ExecuteModular) migrateSegmentPieces(ctx context.Context, migratePiece *gfspserver.GfSpMigratePiece, endpoint string) error {
+// TODO: complete log info
+func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece gfspserver.GfSpMigratePiece, endpoint string,
+	index int) error {
 	var (
-		segmentCount    = migratePiece.GetReplicateIdx()
-		segDataList     = make([][]byte, segmentCount)
-		quitCh          = make(chan bool)
-		totalSegmentNum = int32(0)
+		segmentCount = e.baseApp.PieceOp().SegmentPieceCount(migratePiece.GetObjectInfo().GetPayloadSize(),
+			migratePiece.GetStorageParams().VersionedParams.GetMaxSegmentSize())
+		pieceDataList = make([][]byte, segmentCount)
+		quitCh        = make(chan bool)
+		pieceNum      = int32(0)
 	)
-	for i := 0; i < int(migratePiece.GetReplicateIdx()); i++ {
-		segDataList[i] = nil
-		go func(segIdx int) {
-			// 1. get segment data
-			pieceData, err := e.doPieceMigration(ctx, migratePiece, endpoint)
+	for i := 0; i < int(segmentCount); i++ {
+		go func(mp gfspserver.GfSpMigratePiece, segIdx int) {
+			pieceDataList[segIdx] = nil
+			// check migrating segment pieces or ec pieces
+			mp.ReplicateIdx = uint32(segIdx)
+			if index == primarySPECIdx {
+				mp.EcIdx = primarySPECIdx
+			} else {
+				mp.EcIdx = int32(index)
+			}
+			pieceData, err := e.sendRequest(ctx, mp, endpoint)
 			if err != nil {
-				log.CtxErrorw(ctx, "failed to migrate segment piece data", "objectID",
-					migratePiece.GetObjectInfo().Id.Uint64(), "object_name", migratePiece.GetObjectInfo().GetObjectName(),
-					"segment index", segIdx, "error", err)
+				log.CtxErrorw(ctx, "failed to migrate piece data", "objectID", mp.GetObjectInfo().Id.Uint64(),
+					"object_name", mp.GetObjectInfo().GetObjectName(), "segment index", segIdx, "ecIdx", index,
+					"SP endpoint", endpoint, "error", err)
 				return
 			}
-			segDataList[segIdx] = pieceData
-			if atomic.AddInt32(&totalSegmentNum, 1) == int32(segmentCount) {
+			pieceDataList[segIdx] = pieceData
+			if atomic.AddInt32(&pieceNum, 1) == int32(segmentCount) {
 				quitCh <- true
 			}
-		}(i)
+		}(migratePiece, i)
 	}
 
 	ok := <-quitCh
-	log.CtxInfow(ctx, "migrate all ec pieces successfully", "ok", ok)
+	if !ok {
+		log.CtxErrorw(ctx, "failed to get pieces from another SP", "SP endpoint", endpoint)
+	}
 
-	if err := e.setMigratePiecesMetadata(migratePiece.GetObjectInfo(), segDataList, 0); err != nil {
-		log.CtxErrorw(ctx, "failed to set segment piece checksum and integrity hash into spdb",
-			"objectID", migratePiece.GetObjectInfo().Id.Uint64(), "object_name",
-			migratePiece.GetObjectInfo().GetObjectName(), "error", err)
+	if err := e.setMigratePiecesMetadata(migratePiece.GetObjectInfo(), pieceDataList, index); err != nil {
+		log.CtxErrorw(ctx, "failed to set piece checksum and integrity hash into spdb", "objectID",
+			migratePiece.GetObjectInfo().Id.Uint64(), "object_name", migratePiece.GetObjectInfo().GetObjectName(), "error", err)
 		return err
 	}
-	for i, j := range segDataList {
-		pieceKey := e.baseApp.PieceOp().SegmentPieceKey(migratePiece.GetObjectInfo().Id.Uint64(), uint32(i))
-		err := e.baseApp.PieceStore().PutPiece(ctx, pieceKey, j)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to put segment piece to primarySP", "pieceKey", pieceKey, "error", err)
+	for i, j := range pieceDataList {
+		var pieceKey string
+		if index == primarySPECIdx {
+			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(migratePiece.GetObjectInfo().Id.Uint64(), uint32(i))
+		} else {
+			pieceKey = e.baseApp.PieceOp().ECPieceKey(migratePiece.GetObjectInfo().Id.Uint64(), uint32(i), uint32(index))
+		}
+		if err := e.baseApp.PieceStore().PutPiece(ctx, pieceKey, j); err != nil {
+			log.CtxErrorw(ctx, "failed to put piece data to primarySP", "pieceKey", pieceKey, "error", err)
 			return err
 		}
 	}
+	log.Infow("migrate all pieces successfully", "objectID", migratePiece.GetObjectInfo().Id.Uint64(),
+		"object_name", migratePiece.GetObjectInfo().GetObjectName(), "SP endpoint", endpoint)
 	return nil
 }
 
-func (e *ExecuteModular) migrateECPieces(ctx context.Context, migratePiece *gfspserver.GfSpMigratePiece, endpoint string) error {
-	var (
-		replicateIdx = migratePiece.GetReplicateIdx()
-		ecPieceCount = migratePiece.GetEcIdx()
-		ecDataList   = make([][]byte, ecPieceCount)
-		quitCh       = make(chan bool)
-		ecNum        = int32(0)
-	)
-	for i := 0; i < int(ecPieceCount); i++ {
-		ecDataList[i] = nil
-		go func(ecIdx int) {
-			ecPieceData, err := e.doPieceMigration(ctx, migratePiece, endpoint)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to migrate ec piece data", "objectID",
-					migratePiece.GetObjectInfo().Id.Uint64(), "object_name", migratePiece.GetObjectInfo().GetObjectName(),
-					"segment index", replicateIdx, "ec index", ecIdx, "error", err)
-				return
-			}
-			ecDataList[ecIdx] = ecPieceData
-			if atomic.AddInt32(&ecNum, 1) == ecPieceCount {
-				quitCh <- true
-			}
-		}(i)
-	}
-
-	ok := <-quitCh
-	log.CtxInfo(ctx, "migrate all ec pieces successfully", "ok", ok)
-
-	if err := e.setMigratePiecesMetadata(migratePiece.GetObjectInfo(), ecDataList, int(replicateIdx)); err != nil {
-		log.CtxErrorw(ctx, "failed to set segment piece checksum and integrity hash into spdb", "error", err)
-		return err
-	}
-	for i, j := range ecDataList {
-		pieceKey := e.baseApp.PieceOp().ECPieceKey(migratePiece.GetObjectInfo().Id.Uint64(), replicateIdx, uint32(i))
-		err := e.baseApp.PieceStore().PutPiece(ctx, pieceKey, j)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to put ec piece to primarySP", "pieceKey", pieceKey, "error", err)
-			return err
-		}
-	}
-	return nil
-}
-
-func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece *gfspserver.GfSpMigratePiece,
+func (e *ExecuteModular) sendRequest(ctx context.Context, migratePiece gfspserver.GfSpMigratePiece,
 	endpoint string) ([]byte, error) {
 	var (
 		// sig       []byte
@@ -248,8 +207,9 @@ func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece *gfs
 			migratePiece.GetObjectInfo().Id.Uint64(), "object_name", migratePiece.GetObjectInfo().GetObjectName(), "error", err)
 		return nil, err
 	}
-	log.CtxDebugw(ctx, "succeed to migrate piece data", "objectID", migratePiece.GetObjectInfo().Id.Uint64(),
-		"object_name", migratePiece.GetObjectInfo().GetObjectName())
+	log.CtxInfow(ctx, "succeed to get piece from another sp", "objectID", migratePiece.GetObjectInfo().Id.Uint64(),
+		"object_name", migratePiece.GetObjectInfo().GetObjectName(), "segIdx", migratePiece.GetReplicateIdx(),
+		"ecIdx", migratePiece.GetEcIdx())
 	return pieceData, nil
 }
 
@@ -261,12 +221,16 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	for i, v := range pieceData {
 		pieceChecksumList[i] = nil
 		checksum := hash.GenerateChecksum(v)
-		pieceChecksumList = append(pieceChecksumList, checksum)
+		pieceChecksumList[i] = checksum
 	}
 	migratedIntegrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
 	var chainIntegrityHash []byte
-	if index == 0 { // primarySP
-		chainIntegrityHash = objectInfo.GetChecksums()[index]
+	if index < -1 || index > 5 {
+		// TODO: define an error
+		return fmt.Errorf("invalid index")
+	}
+	if index == -1 { // primarySP
+		chainIntegrityHash = objectInfo.GetChecksums()[0]
 	} else { // secondarySP
 		chainIntegrityHash = objectInfo.GetChecksums()[index+1]
 	}
@@ -286,5 +250,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 		// TODO: define an sql db error
 		return err
 	}
+	log.Infow("succeed to compute and set object integrity", "object_id", objectInfo.Id.String(),
+		"object_name", objectInfo.GetObjectName())
 	return nil
 }
