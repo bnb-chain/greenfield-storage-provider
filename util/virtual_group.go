@@ -1,7 +1,9 @@
 package util
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"errors"
+	"math"
 
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
@@ -19,4 +21,13 @@ func GetSecondarySPIndexFromGVG(gvg *virtualgrouptypes.GlobalVirtualGroup, spID 
 		}
 	}
 	return -1, ErrNotInSecondarySPs
+}
+
+// TotalStakingStoreSizeOfGVG calculates the global virtual group total staking storage size
+func TotalStakingStoreSizeOfGVG(gvg *virtualgrouptypes.GlobalVirtualGroup, stakingPerBytes sdkmath.Int) uint64 {
+	total := gvg.TotalDeposit.Quo(stakingPerBytes)
+	if !total.IsUint64() {
+		return math.MaxUint64
+	}
+	return total.Uint64()
 }
