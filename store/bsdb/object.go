@@ -2,10 +2,11 @@ package bsdb
 
 import (
 	"fmt"
+	"sort"
+
 	"github.com/forbole/juno/v4/common"
 	"github.com/spaolacci/murmur3"
 	"gorm.io/gorm"
-	"sort"
 )
 
 const ObjectsNumberOfShards = 64
@@ -69,16 +70,18 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 	return results, err
 }
 
-type ByUpdateAtAndID []*Object
+type ByUpdateAtAndObjectID []*Object
 
-func (a ByUpdateAtAndID) Len() int { return len(a) }
-func (a ByUpdateAtAndID) Less(i, j int) bool {
+func (a ByUpdateAtAndObjectID) Len() int { return len(a) }
+
+// Less we want to sort as ascending here
+func (a ByUpdateAtAndObjectID) Less(i, j int) bool {
 	if a[i].UpdateAt == a[j].UpdateAt {
-		return a[i].ID < a[j].ID
+		return a[i].ObjectID.Big().Uint64() > a[j].ObjectID.Big().Uint64()
 	}
-	return a[i].UpdateAt < a[j].UpdateAt
+	return a[i].UpdateAt > a[j].UpdateAt
 }
-func (a ByUpdateAtAndID) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByUpdateAtAndObjectID) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
 func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
@@ -119,7 +122,7 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 		}
 	}
 
-	sort.Sort(ByUpdateAtAndID(totalObjects))
+	sort.Sort(ByUpdateAtAndObjectID(totalObjects))
 
 	if len(totalObjects) > DeletedObjectsDefaultSize {
 		totalObjects = totalObjects[0:DeletedObjectsDefaultSize]
@@ -174,6 +177,9 @@ func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool)
 			Where("object_id = ?", id).
 			Scopes(filters...).
 			Take(&object).Error
+		if err != nil {
+			continue
+		}
 		objects = append(objects, object)
 	}
 
@@ -189,5 +195,5 @@ func GetObjectsShardNumberByBucketName(bucketName string) uint32 {
 }
 
 func GetObjectsTableNameByShardNumber(shard int) string {
-	return fmt.Sprintf("objects_%02d", shard)
+	return fmt.Sprintf("%s_%02d", ObjectTableName, shard)
 }

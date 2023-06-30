@@ -2,8 +2,8 @@ package object
 
 import (
 	"context"
-	"github.com/forbole/juno/v4/models"
 
+	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
 	"gorm.io/gorm/schema"
 

@@ -18,21 +18,3 @@ func (b *BsDBImpl) GetBucketNameByObjectID(objectID common.Hash) (string, error)
 
 	return objectIdMap.BucketName, err
 }
-
-//func GetObjectIDMapsTableName(objectID common.Hash) string {
-//	return GetObjectsTableNameByShardNumber(int(GetObjectIDMapsShardNumberByUID(objectID)))
-//}
-//
-//func GetObjectIDMapsShardNumberByUID(objectID common.Hash) uint64 {
-//	return objectID.Big().Uint64() / 4;
-//}
-//
-//func GetObjectIDMapsTableNameByShardNumber(shard int) string {
-//	return fmt.Sprintf("object_id_maps_%02d", shard)
-//}
-
-//var ReadObjectsTable = func(uid string) func(db *gorm.DB) *gorm.DB {
-//	return func(db *gorm.DB) *gorm.DB {
-//		return db.Table(GetObjectsTableName(uid))
-//	}
-//}

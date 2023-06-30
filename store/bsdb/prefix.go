@@ -2,11 +2,11 @@ package bsdb
 
 import (
 	"fmt"
-	"github.com/spaolacci/murmur3"
 	"path/filepath"
 	"strings"
 
 	"github.com/forbole/juno/v4/common"
+	"github.com/spaolacci/murmur3"
 	"gorm.io/gorm"
 )
 
@@ -135,5 +135,5 @@ func GetPrefixesShardNumberByBucketName(bucketName string) uint32 {
 }
 
 func GetPrefixesTableNameByShardNumber(shard int) string {
-	return fmt.Sprintf("slash_prefix_tree_nodes_%02d", shard)
+	return fmt.Sprintf("%s_%02d", PrefixTreeTableName, shard)
 }
