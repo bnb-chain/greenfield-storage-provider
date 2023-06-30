@@ -48,7 +48,7 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 	}
 
 	operator, err = sdk.AccAddressFromHexUnsafe(req.Operator)
-	if err != nil {
+	if err != nil && err != sdk.ErrEmptyHexAddress {
 		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "req.Operator", operator.String(), "error", err)
 		return nil, err
 	}
