@@ -70,11 +70,6 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Methods(http.MethodPost).
 		HandlerFunc(g.updateUserPublicKeyHandler)
 
-	router.Name("listDeletedObjectsByBlockNumberRangeRouterName").
-		Methods(http.MethodGet).
-		Path("/delete/{start:.+}/{end:.+}/{is_full_list:.+}").
-		HandlerFunc(g.listDeletedObjectsByBlockNumberRangeHandler)
-
 	// verify permission router
 	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").Name(verifyPermissionRouterName).Methods(http.MethodGet).HandlerFunc(g.verifyPermissionHandler)
 

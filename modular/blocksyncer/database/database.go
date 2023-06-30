@@ -5,14 +5,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+
 	"github.com/forbole/juno/v4/database"
 	"github.com/forbole/juno/v4/database/mysql"
 	"github.com/forbole/juno/v4/database/sqlclient"
+	"github.com/forbole/juno/v4/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
-	"github.com/forbole/juno/v4/log"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 var _ database.Database = &DB{}
@@ -58,7 +59,7 @@ func (db *DB) AutoMigrate(ctx context.Context, tables []schema.Tabler) error {
 	m := db.Db.Migrator()
 	for _, t := range tables {
 		if t.TableName() == bsdb.PrefixTreeTableName || t.TableName() == bsdb.ObjectTableName {
-			for i := 0; i < 64; i++ {
+			for i := 0; i < bsdb.ObjectsNumberOfShards; i++ {
 				shardTableName := fmt.Sprintf(t.TableName()+"_%02d", i)
 				if err := q.Table(shardTableName).AutoMigrate(t); err != nil {
 					log.Errorw("migrate table failed", "table", t.TableName(), "err", err)
@@ -81,7 +82,7 @@ func (db *DB) PrepareTables(ctx context.Context, tables []schema.Tabler) error {
 
 	for _, t := range tables {
 		if t.TableName() == bsdb.PrefixTreeTableName || t.TableName() == bsdb.ObjectTableName {
-			for i := 0; i < 64; i++ {
+			for i := 0; i < bsdb.ObjectsNumberOfShards; i++ {
 				shardTableName := fmt.Sprintf(t.TableName()+"_%02d", i)
 				if m.HasTable(shardTableName) {
 					continue

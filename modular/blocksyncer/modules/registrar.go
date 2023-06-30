@@ -1,7 +1,6 @@
 package registrar
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/objectidmap"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/block"
 	"github.com/forbole/juno/v4/modules/bucket"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/object"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/objectidmap"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/prefixtree"
 )
 

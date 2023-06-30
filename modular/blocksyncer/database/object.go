@@ -2,10 +2,12 @@ package database
 
 import (
 	"context"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/models"
 	"gorm.io/gorm/clause"
+
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 func (db *DB) SaveObject(ctx context.Context, object *models.Object) error {
