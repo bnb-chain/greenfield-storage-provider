@@ -30,6 +30,7 @@ install-tools:
 	go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@latest
 
 buf-gen:
+	make clean
 	buf generate
 
 build:
