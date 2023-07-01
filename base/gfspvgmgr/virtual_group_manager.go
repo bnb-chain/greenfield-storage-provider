@@ -197,9 +197,9 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 	go func() {
 		RefreshMetaTicker := time.NewTicker(RefreshMetaInterval)
 		for range RefreshMetaTicker.C {
-			log.Info("start to refresh virtual group manager meta")
+			// log.Info("start to refresh virtual group manager meta")
 			vgm.refreshMeta()
-			log.Info("finish to refresh virtual group manager meta")
+			// log.Info("finish to refresh virtual group manager meta")
 		}
 	}()
 	return vgm, nil
@@ -295,7 +295,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 				UsedStorageSize:      gvg.GetStoredSize(),
 				StakingStorageSize:   util.TotalStakingStoreSizeOfGVG(gvg, vgParams.GvgStakingPerBytes),
 			}
-			log.Infow("query global virtual group info", "gvg_info", gvg, "gvg_meta", gvgMeta)
+			// log.Infow("query global virtual group info", "gvg_info", gvg, "gvg_meta", gvgMeta)
 			vgfm.vgfIDToVgf[vgf.Id].GVGMap[gvg.GetId()] = gvgMeta
 			vgfm.vgfIDToVgf[vgf.Id].FamilyUsedStorageSize += gvgMeta.UsedStorageSize
 			vgfm.vgfIDToVgf[vgf.Id].FamilyStakingStorageSize += gvgMeta.StakingStorageSize

@@ -172,7 +172,6 @@ message GfSpGCMetaTask {
   bool running = 4;
 }
 
-
 message GfSpMigrateGVGTask {
   GfSpTask task = 1;
   uint64 bucket_id = 2;
@@ -181,4 +180,13 @@ message GfSpMigrateGVGTask {
   greenfield.sp.StorageProvider src_sp = 5;
   greenfield.sp.StorageProvider dest_sp = 6;
   uint64 last_migrated_object_id = 7;
+}
+
+message GfSpMigratePieceTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  uint32 replicate_idx = 4;
+  int32 ec_idx = 5;
+  bytes signature = 6;
 }
