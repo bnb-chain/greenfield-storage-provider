@@ -79,7 +79,7 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 	task, reservedTasks = m.PickUpTask(ctx, backupTasks)
 
 	go func() {
-		if reservedTasks == nil || len(reservedTasks) == 0 {
+		if len(reservedTasks) == 0 {
 			return
 		}
 		for _, reservedTask := range reservedTasks {
