@@ -478,7 +478,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	getDataTime := time.Now()
-	var reoveredData []byte
+	//var reoveredData []byte
 	for idx, pInfo := range pieceInfos {
 		enableCheck := false
 		if idx == 0 { // only check in first piece
@@ -496,25 +496,25 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			// TODO pieceStore should return exact error to indicate if the piece data lost
 			// for now, if get piece fail, it is suspected that the piece has been lost
 			// the recovery task will recovery the total segment (ignoring the offset and length of piece info)
-			if strings.Contains(err.Error(), fmt.Sprintf("inner_code:%d", ErrPieceStoreInnerCode)) {
-				reoveredData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask, pInfo, task.GetStorageParams().GetMaxSegmentSize())
-				if err != nil {
-					log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", err)
-					return
-				}
-				recoverDataLen := len(reoveredData)
-				// the recovery segment is a total segment data, if the offset and length meta is set, it is needed to adjust the piece data with the meta
-				if pInfo.Offset > 0 {
-					reoveredData = reoveredData[pInfo.Offset:]
-				}
-
-				if pInfo.Offset+pInfo.Length < uint64(recoverDataLen) {
-					reoveredData = reoveredData[:pInfo.Length]
-					log.CtxErrorw(reqCtx.Context(), "adjust the piece data", "len:", len(reoveredData))
-				}
-				w.Write(reoveredData)
-				continue
-			}
+			//if strings.Contains(err.Error(), fmt.Sprintf("inner_code:%d", ErrPieceStoreInnerCode)) {
+			//	reoveredData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask, pInfo, task.GetStorageParams().GetMaxSegmentSize())
+			//	if err != nil {
+			//		log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", err)
+			//		return
+			//	}
+			//	recoverDataLen := len(reoveredData)
+			//	// the recovery segment is a total segment data, if the offset and length meta is set, it is needed to adjust the piece data with the meta
+			//	if pInfo.Offset > 0 {
+			//		reoveredData = reoveredData[pInfo.Offset:]
+			//	}
+			//
+			//	if pInfo.Offset+pInfo.Length < uint64(recoverDataLen) {
+			//		reoveredData = reoveredData[:pInfo.Length]
+			//		log.CtxErrorw(reqCtx.Context(), "adjust the piece data", "len:", len(reoveredData))
+			//	}
+			//	w.Write(reoveredData)
+			//	continue
+			//}
 			return
 		}
 
