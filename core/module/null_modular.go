@@ -56,6 +56,9 @@ func (*NullModular) PostMigrateBucketApproval(context.Context, task.ApprovalMigr
 func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateBucketTask) (uint32, error) {
 	return 0, ErrNilModular
 }
+func (*NullModular) NotifyMigrateGVG(context.Context, task.MigrateGVGTask) error {
+	return ErrNilModular
+}
 
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return ErrNilModular

@@ -43,6 +43,7 @@ const (
 	listDeletedObjectsByBlockNumberRangeRouterName = "ListDeletedObjectsByBlockNumberRange"
 	getUserBucketsCountRouterName                  = "GetUserBucketsCount"
 	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
+	notifyMigrateGVGRouterName                     = "NotifyMigrateGVG"
 	migratePieceRouterName                         = "MigratePiece"
 )
 
@@ -80,7 +81,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	router.Path(GetApprovalPath).Name(approvalRouterName).Methods(http.MethodGet).HandlerFunc(g.getApprovalHandler).Queries(
 		ActionQuery, "{action}")
 
-	// Challenge
+	// get challenge info
 	router.Path(GetChallengeInfoPath).Name(getChallengeInfoRouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoHandler)
 
 	// replicate piece to receiver
@@ -88,6 +89,8 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// data recovery
 	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.recoverPrimaryHandler)
 
+	// dest sp receive migrate gvg notify from src sp.
+	router.Path(NotifyMigrateGVGTaskPath).Name(notifyMigrateGVGRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateGVGHandler)
 	// migrate pieces between SPs which is used for SP exiting case
 	router.Path(MigratePiecePath).Name(migratePieceRouterName).Methods(http.MethodGet).HandlerFunc(g.migratePieceHandler)
 

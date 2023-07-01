@@ -18,6 +18,47 @@ const (
 	MaxMigratePieceRetry = 3
 )
 
+// dest sp receive migrate gvg notify from src sp.
+func (g *GateModular) notifyMigrateGVGHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err           error
+		reqCtx        *RequestContext
+		migrateGVGMsg []byte
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(err)
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+	migrateGVGHeader := r.Header.Get(GnfdMigrateGVGMsgHeader)
+	migrateGVGMsg, err = hex.DecodeString(migrateGVGHeader)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate gvg header", "header", migrateGVGHeader)
+		err = ErrDecodeMsg
+		return
+	}
+	migrateGVG := gfsptask.GfSpMigrateGVGTask{}
+	err = json.Unmarshal(migrateGVGMsg, &migrateGVG)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate gvg msg", "header", migrateGVGHeader)
+		err = ErrDecodeMsg
+		return
+	}
+	// TODO: check approval.
+	err = g.baseApp.GfSpClient().NotifyMigrateGVG(reqCtx.Context(), &migrateGVG)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to notify migrate gvg", "gvg", migrateGVG, "error", err)
+	}
+}
+
 // migratePieceHandler handles the migrate piece request between SPs which is used in SP exiting case.
 // First, gateway should verify Authorization header to ensure the requests are from correct SPs.
 // Second, retrieve and get data from downloader module including: PrimarySP and SecondarySP pieces

@@ -171,3 +171,19 @@ func (s *GfSpClient) PickVirtualGroupFamilyID(ctx context.Context, task coretask
 	}
 	return resp.VgfId, nil
 }
+
+func (s *GfSpClient) NotifyMigrateGVG(ctx context.Context, migrateTask coretask.MigrateGVGTask) error {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpNotifyMigrateGVGRequest{
+		MigrateGvgTask: migrateTask.(*gfsptask.GfSpMigrateGVGTask),
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyMigrateGVG(ctx, req)
+	if err != nil {
+		return err
+	}
+	return resp.GetErr()
+}
