@@ -30,54 +30,84 @@ var (
 
 func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error) {
 	var (
-		backupTasks []task.Task
-		task        task.Task
+		backupTasks   []task.Task
+		reservedTasks []task.Task
+		task          task.Task
 	)
-	task = m.replicateQueue.TopByLimit(limit)
+	task = m.replicateQueue.PopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add replicate piece task to backup set", "task_key", task.Key().String(),
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
-	task = m.sealQueue.TopByLimit(limit)
+	task = m.sealQueue.PopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add seal object task to backup set", "task_key", task.Key().String(),
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
-	task = m.gcObjectQueue.TopByLimit(limit)
+	task = m.gcObjectQueue.PopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add gc object task to backup set", "task_key", task.Key().String(),
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
-	task = m.gcZombieQueue.TopByLimit(limit)
+	task = m.gcZombieQueue.PopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add gc zombie piece task to backup set", "task_key", task.Key().String(),
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
-	task = m.gcMetaQueue.TopByLimit(limit)
+	task = m.gcMetaQueue.PopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add gc meta task to backup set", "task_key", task.Key().String(),
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
-	task = m.receiveQueue.TopByLimit(limit)
+	task = m.receiveQueue.PopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add confirm receive piece to backup set", "task_key", task.Key().String(),
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
-
-	task = m.recoveryQueue.TopByLimit(limit)
+	task = m.recoveryQueue.PopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add confirm recovery piece to backup set", "recovery task_key", task.Key().String(),
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
+	task, reservedTasks = m.PickUpTask(ctx, backupTasks)
 
-	task = m.PickUpTask(ctx, backupTasks)
+	go func() {
+		if reservedTasks == nil || len(reservedTasks) == 0 {
+			return
+		}
+		for _, reservedTask := range reservedTasks {
+			switch t := reservedTask.(type) {
+			case *gfsptask.GfSpReplicatePieceTask:
+				err := m.replicateQueue.Push(t)
+				log.Errorw("failed to retry push replicate task to queue after dispatch", "error", err)
+			case *gfsptask.GfSpSealObjectTask:
+				err := m.sealQueue.Push(t)
+				log.Errorw("failed to retry push seal task to queue after dispatch", "error", err)
+			case *gfsptask.GfSpReceivePieceTask:
+				err := m.receiveQueue.Push(t)
+				log.Errorw("failed to retry push receive task to queue after dispatch", "error", err)
+			case *gfsptask.GfSpGCObjectTask:
+				err := m.gcObjectQueue.Push(t)
+				log.Errorw("failed to retry push gc object task to queue after dispatch", "error", err)
+			case *gfsptask.GfSpGCZombiePieceTask:
+				err := m.gcZombieQueue.Push(t)
+				log.Errorw("failed to retry push gc zombie task to queue after dispatch", "error", err)
+			case *gfsptask.GfSpGCMetaTask:
+				err := m.gcMetaQueue.Push(t)
+				log.Errorw("failed to retry push gc meta task to queue after dispatch", "error", err)
+			case *gfsptask.GfSpRecoverPieceTask:
+				err := m.recoveryQueue.Push(t)
+				log.Errorw("failed to retry push recovery task to queue after dispatch", "error", err)
+			}
+		}
+	}()
 	if task == nil {
 		return nil, nil
 	}
