@@ -33,11 +33,13 @@ const (
 	// GnfdRecoveryMsgHeader defines receive piece data meta
 	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
 	// MigratePiecePath defines migrate piece path which is used in SP exiting case
-	MigratePiecePath = "/greenfield/admin/v1/migrate-piece"
+	MigratePiecePath = "/greenfield/migrate/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
-	//
-	GnfdDispatchMigrateGVGTaskQuery = ""
+	// DispatchMigrateGVGTaskPath defines dispatch migrate gvg task from src sp to dest sp.
+	DispatchMigrateGVGTaskPath = "/greenfield/migrate/v1/dispatch-migrate-gvg-task"
+	// GnfdMigrateGVGMsgHeader defines migrate gvg msg header
+	GnfdMigrateGVGMsgHeader = "X-Gnfd-Migrate-GVG-Msg"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
@@ -156,9 +158,28 @@ func (s *GfSpClient) MigratePiece(ctx context.Context, mp gfspserver.GfSpMigrate
 	return buf.Bytes(), nil
 }
 
-// DispatchMigrateGVGUnit is used by src sp dispatch migrate gvg unit to dest sp of migrate plan.
+// DispatchMigrateGVGTask is used by src sp dispatch migrate gvg unit to dest sp of migrate plan.
 // TODO: maybe need a approval.
-func (s *GfSpClient) DispatchMigrateGVGUnit(ctx context.Context, destEndpoint string, migrateTask coretask.MigrateGVGTask) error {
-	// TODO:
+func (s *GfSpClient) DispatchMigrateGVGTask(ctx context.Context, destEndpoint string, migrateTask coretask.MigrateGVGTask) error {
+	req, err := http.NewRequest(http.MethodPost, destEndpoint+DispatchMigrateGVGTaskPath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", destEndpoint, "error", err)
+		return err
+	}
+	msg, err := json.Marshal(migrateTask)
+	if err != nil {
+		return err
+	}
+	req.Header.Add(GnfdMigrateGVGMsgHeader, hex.EncodeToString(msg))
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.Errorw("failed to send migrate gvg msg", "error", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to migrate pieces, StatusCode(%d), Endpoint(%s)", resp.StatusCode, destEndpoint)
+	}
 	return nil
 }
