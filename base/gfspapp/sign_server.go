@@ -53,7 +53,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 	case *gfspserver.GfSpSignRequest_MigrateBucketInfo:
 		signature, err = g.signer.SignMigrateBucketApproval(ctx, t.MigrateBucketInfo)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign create bucket approval", "error", err)
+			log.CtxErrorw(ctx, "failed to sign migrate bucket approval", "error", err)
 			metrics.ReqCounter.WithLabelValues(SingerFailureMigrateBucketApproval).Inc()
 			metrics.ReqTime.WithLabelValues(SingerFailureMigrateBucketApproval).Observe(time.Since(startTime).Seconds())
 		} else {

@@ -169,7 +169,7 @@ const (
 	GnfdUserAddressHeader = "X-Gnfd-User-Address"
 	// GnfdResponseXMLVersion defines the response xml version
 	GnfdResponseXMLVersion = "1.0"
-	// MigrateObjectPath defines migrate-data path which is used in SP exiting case
+	// MigratePiecePath defines migrate-data path which is used in SP exiting case
 	MigratePiecePath = "/greenfield/admin/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"

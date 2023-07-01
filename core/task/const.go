@@ -48,11 +48,14 @@ const (
 	TypeTaskGCMeta
 	// TypeTaskRecoverPiece defines the type of the recovering piece task.
 	TypeTaskRecoverPiece
+	// TypeTaskMigrateGVG defines the type of migrate gvg task.
+	TypeTaskMigrateGVG
 )
 
 var TypeTaskMap = map[TType]string{
 	TypeTaskUnknown:                "UnknownTask",
 	TypeTaskCreateBucketApproval:   "CreateBucketApprovalTask",
+	TypeTaskMigrateBucketApproval:  "MigrateBucketApprovalTask",
 	TypeTaskCreateObjectApproval:   "CreateObjectApprovalTask",
 	TypeTaskReplicatePieceApproval: "ReplicatePieceApprovalTask",
 	TypeTaskUpload:                 "UploadObjectTask",
@@ -65,6 +68,7 @@ var TypeTaskMap = map[TType]string{
 	TypeTaskGCZombiePiece:          "GCZombiePieceTask",
 	TypeTaskGCMeta:                 "GCMetaTask",
 	TypeTaskRecoverPiece:           "RecoverPieceTask",
+	TypeTaskMigrateGVG:             "MigrateGVGTask",
 }
 
 func TaskTypeName(taskType TType) string {

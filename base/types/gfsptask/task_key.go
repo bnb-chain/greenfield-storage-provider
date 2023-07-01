@@ -3,7 +3,6 @@ package gfsptask
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 )
@@ -20,15 +19,13 @@ const (
 	KeyPrefixGfSpUploadObjectTask           = "Uploading"
 	KeyPrefixGfSpReplicatePieceTask         = "Uploading"
 	KeyPrefixGfSpSealObjectTask             = "Uploading"
-	KeyPrefixGfSpResumableUploadObjectTask  = "ResuabmleUploading"
+	KeyPrefixGfSpResumableUploadObjectTask  = "ResumableUploading"
 	KeyPrefixGfSpRecoverPieceTask           = "Recovering"
 	KeyPrefixGfSpReceivePieceTask           = "ReceivePiece"
-)
-
-var (
-	KeyPrefixGfSpGCObjectTask      = strings.ToLower("GCObject")
-	KeyPrefixGfSpGCZombiePieceTask = strings.ToLower("GCZombiePiece")
-	KeyPrefixGfSpGfSpGCMetaTask    = strings.ToLower("GCMeta")
+	KeyPrefixGfSpGCObjectTask               = "GCObject"
+	KeyPrefixGfSpGCZombiePieceTask          = "GCZombiePiece"
+	KeyPrefixGfSpGfSpGCMetaTask             = "GCMeta"
+	KeyPrefixGfSpGfSpMigrateGVGTask         = "MigrateGVG"
 )
 
 func GfSpCreateBucketApprovalTaskKey(bucket string, visibility int32) task.TKey {
@@ -106,6 +103,11 @@ func GfSpReceivePieceTaskKey(bucket, object, id string, rIdx uint32, pIdx int32)
 func GfSpGCObjectTaskKey(start, end uint64, time int64) task.TKey {
 	return task.TKey(KeyPrefixGfSpGCObjectTask + CombineKey(
 		"start"+fmt.Sprint(start), "end"+fmt.Sprint(end), "time"+fmt.Sprint(time)))
+}
+
+func GfSpMigrateGVGTaskKey(gvgID uint32, bucketID uint64, redundancyIndex int32) task.TKey {
+	return task.TKey(KeyPrefixGfSpGfSpMigrateGVGTask + CombineKey(
+		"gvgID"+fmt.Sprint(gvgID), "bucketID"+fmt.Sprint(bucketID), "redundancyIndex"+fmt.Sprint(redundancyIndex)))
 }
 
 func GfSpGCZombiePieceTaskKey(time int64) task.TKey {

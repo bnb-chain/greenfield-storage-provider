@@ -36,6 +36,8 @@ const (
 	MigratePiecePath = "/greenfield/admin/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
+	//
+	GnfdDispatchMigrateGVGTaskQuery = ""
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
@@ -123,7 +125,7 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	return signature, nil
 }
 
-func (s *GfSpClient) MigratePieceBetweenSPs(ctx context.Context, mp gfspserver.GfSpMigratePiece, endpoint string) ([]byte, error) {
+func (s *GfSpClient) MigratePiece(ctx context.Context, mp gfspserver.GfSpMigratePiece, endpoint string) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", endpoint, MigratePiecePath), nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
@@ -152,4 +154,11 @@ func (s *GfSpClient) MigratePieceBetweenSPs(ctx context.Context, mp gfspserver.G
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+// DispatchMigrateGVGUnit is used by src sp dispatch migrate gvg unit to dest sp of migrate plan.
+// TODO: maybe need a approval.
+func (s *GfSpClient) DispatchMigrateGVGUnit(ctx context.Context, destEndpoint string, migrateTask coretask.MigrateGVGTask) error {
+	// TODO:
+	return nil
 }

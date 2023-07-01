@@ -290,6 +290,7 @@ func (plan *SPExitExecutePlan) Init() error {
 
 // Start persist plan and task to db and task dispatcher
 func (plan *SPExitExecutePlan) Start() error {
+	// TODO: request other sp migrate approval, get dest sp set.
 	// expand migrate units.
 	var err error
 	for _, fUnit := range plan.PrimaryVGFMigrateUnits {

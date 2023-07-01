@@ -2,7 +2,9 @@ package task
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // Task is an abstract interface to describe the smallest unit of SP service how to interact.
@@ -498,7 +500,7 @@ type GCMetaTask interface {
 // TODO consider recovery secondary SP task
 type RecoveryPieceTask interface {
 	ObjectTask
-	// InitRecoveryPieceTask inits the RecoveryPieceTask by ObjectInfo, params,
+	// InitRecoverPieceTask inits the RecoveryPieceTask by ObjectInfo, params,
 	// task priority, pieceIndex, timeout and max retry.
 	InitRecoverPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
 		priority TPriority, pieceIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64)
@@ -516,4 +518,12 @@ type RecoveryPieceTask interface {
 	GetRecovered() bool
 	// SetRecoverDone set the recovery status as finish
 	SetRecoverDone()
+}
+
+// MigrateGVGTask is an abstract interface to record migrate gvg information.
+type MigrateGVGTask interface {
+	Task
+	// InitMigrateGVGTask inits migrate gvg task by bucket id, gvg.
+	InitMigrateGVGTask(priority TPriority, bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup,
+		redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider)
 }

@@ -5,6 +5,8 @@ import "base/types/gfsperrors/error.proto";
 import "greenfield/storage/params.proto";
 import "greenfield/storage/tx.proto";
 import "greenfield/storage/types.proto";
+import "greenfield/virtualgroup/types.proto";
+import "greenfield/sp/types.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask";
 
@@ -168,4 +170,15 @@ message GfSpGCMetaTask {
   uint64 current_idx = 2;
   uint64 delete_count = 3;
   bool running = 4;
+}
+
+
+message GfSpMigrateGVGTask {
+  GfSpTask task = 1;
+  uint64 bucket_id = 2;
+  greenfield.virtualgroup.GlobalVirtualGroup gvg = 3;
+  int32 redundancy_idx = 4;
+  greenfield.sp.StorageProvider src_sp = 5;
+  greenfield.sp.StorageProvider dest_sp = 6;
+  uint64 last_migrated_object_id = 7;
 }

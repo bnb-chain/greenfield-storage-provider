@@ -201,7 +201,7 @@ func (e *ExecuteModular) sendRequest(ctx context.Context, migratePiece gfspserve
 	// }
 	// migratePiece.Signature = sig
 	// migrate primarySP or secondarySP piece data
-	pieceData, err = e.baseApp.GfSpClient().MigratePieceBetweenSPs(ctx, migratePiece, endpoint)
+	pieceData, err = e.baseApp.GfSpClient().MigratePiece(ctx, migratePiece, endpoint)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to migrate piece data", "objectID",
 			migratePiece.GetObjectInfo().Id.Uint64(), "object_name", migratePiece.GetObjectInfo().GetObjectName(), "error", err)
