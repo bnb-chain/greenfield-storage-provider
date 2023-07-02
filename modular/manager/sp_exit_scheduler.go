@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -181,7 +182,7 @@ type SPExitExecutePlan struct {
 	PrimaryVGFMigrateUnits   []*VirtualGroupFamilyMigrateExecuteUnit // sp exit, primary family, include gvg list
 	SecondaryGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // sp exit, secondary gvg
 
-	// for scheduling, the slice only can append.
+	// for scheduling, the slice only can append to ensure iterator work fine.
 	ToMigrateMutex sync.RWMutex
 	ToMigrateGVG   []*GlobalVirtualGroupMigrateExecuteUnit
 	MigratingMutex sync.RWMutex
@@ -324,6 +325,7 @@ func (plan *SPExitExecutePlan) notifyDestSPMigrateExecuteUnits() {
 	// maybe need get dest sp migrate approval.
 
 	var (
+		err                error
 		dispatchLoopNumber uint64
 		dispatchUnitNumber uint64
 	)
@@ -335,12 +337,20 @@ func (plan *SPExitExecutePlan) notifyDestSPMigrateExecuteUnits() {
 		for iter.SeekToFirst(); iter.Valid(); iter.Next() {
 			dispatchUnitNumber++
 			toMigrateGVG := iter.Value()
-			_ = toMigrateGVG
-			// TODO:
-			// send migrate gvg to dest sp, trigger dest sp pull the gvg object from src sp.
-			// init migrate task
-			// plan.manager.baseApp.GfSpClient().NotifyDestSPMigrateGVG(context.Background(), toMigrateGVG.destSP.GetEndpoint(), toMigrateGVG)
+			migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
+			migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
+				0, toMigrateGVG.gvg, toMigrateGVG.redundantIndex,
+				toMigrateGVG.srcSP, toMigrateGVG.destSP)
+			err = plan.manager.baseApp.GfSpClient().NotifyDestSPMigrateGVG(context.Background(), toMigrateGVG.destSP.GetEndpoint(), migrateGVGTask)
+			log.Infow("notify dest sp migrate gvg", "migrate_gvg_task", migrateGVGTask, "error", err)
+			// ignore this error , fail over is handled in check phase.
+			toMigrateGVG.migrateStatus = Migrating
 
+			plan.MigratingMutex.Lock()
+			plan.MigratingGVG = append(plan.MigratingGVG, toMigrateGVG)
+			plan.MigratingMutex.Unlock()
+
+			// TODO: store to db
 		}
 		log.Infow("dispatch migrate unit to dest sp", "loop_number", dispatchLoopNumber, "dispatch_number", dispatchUnitNumber)
 	}
