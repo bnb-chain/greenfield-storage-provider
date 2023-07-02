@@ -171,4 +171,5 @@ type SPDB interface {
 	TrafficDB
 	SPInfoDB
 	OffChainAuthKeyDB
+	MigrateDB
 }
