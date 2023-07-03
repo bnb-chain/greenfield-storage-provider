@@ -444,7 +444,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 
 func (a *AuthenticationModular) validateSelfServeAsSecondarySP(ctx context.Context, bucketId uint64, lvgId uint32) error {
 	log.CtxInfo(ctx, "validateSelfServeAsSecondarySP")
-	gvg, err := a.baseApp.GfSpClient().GfSpGetGlobalVirtualGroup(ctx, bucketId, lvgId)
+	gvg, err := a.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketId, lvgId)
 	if err != nil {
 		return err
 	}
