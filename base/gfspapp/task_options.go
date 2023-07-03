@@ -47,6 +47,10 @@ const (
 	MinRecoveryTime int64 = 10
 	// MaxRecoveryTime defines the max timeout to replicate object.
 	MaxRecoveryTime int64 = 50
+	// MinMigratePieceTime defines the min timeout to migrate piece.
+	MinMigratePieceTime int64 = 10
+	// MaxMigratePieceTime defines the max timeout to migrate piece.
+	MaxMigratePieceTime int64 = 50
 
 	// NotUseRetry defines the default task max retry.
 	NotUseRetry int64 = 0
@@ -55,7 +59,7 @@ const (
 	// MaxReplicateRetry defines the max retry number to replicate object.
 	MaxReplicateRetry = 6
 	// MinReceiveConfirmRetry defines the min retry number to confirm received piece is sealed on greenfield.
-	MinReceiveConfirmRetry = 0
+	MinReceiveConfirmRetry = 1
 	// MaxReceiveConfirmRetry defines the max retry number to confirm received piece is sealed on greenfield.
 	MaxReceiveConfirmRetry = 3
 	// MinSealObjectRetry defines the min retry number to seal object.
@@ -70,6 +74,10 @@ const (
 	MinRecoveryRetry = 2
 	// MaxRecoveryRetry  defines the max retry number to recovery piece.
 	MaxRecoveryRetry = 3
+	// MinMigratePieceRetry defines the min retry number to recovery piece.
+	MinMigratePieceRetry = 2
+	// MaxMigratePieceRetry  defines the max retry number to recovery piece.
+	MaxMigratePieceRetry = 3
 )
 
 // TaskTimeout returns the task timeout by task type and some task need payload size
@@ -168,6 +176,13 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 			return MaxRecoveryTime
 		}
 		return timeout
+	case coretask.TypeTaskMigratePiece:
+		if g.migratePieceTimeout < MinMigratePieceTime {
+			return MinMigratePieceTime
+		}
+		if g.migratePieceTimeout > MaxMigratePieceTime {
+			return MaxMigratePieceTime
+		}
 	}
 	return NotUseTimeout
 }
@@ -243,6 +258,13 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 			return MaxRecoveryRetry
 		}
 		return g.recoveryRetry
+	case coretask.TypeTaskMigratePiece:
+		if g.migratePieceRetry < MinMigratePieceRetry {
+			return MinMigratePieceRetry
+		}
+		if g.migratePieceRetry > MaxMigratePieceRetry {
+			return MaxMigratePieceRetry
+		}
 	}
 	return 0
 }
@@ -264,9 +286,9 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	case coretask.TypeTaskReplicatePiece:
 		return coretask.MaxTaskPriority
 	case coretask.TypeTaskReceivePiece:
-		return coretask.DefaultSmallerPriority
+		return coretask.DefaultSmallerPriority / 4
 	case coretask.TypeTaskSealObject:
-		return coretask.DefaultLargerTaskPriority
+		return coretask.DefaultSmallerPriority
 	case coretask.TypeTaskDownloadObject:
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskChallengePiece:

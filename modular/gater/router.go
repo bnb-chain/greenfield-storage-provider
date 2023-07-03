@@ -45,6 +45,7 @@ const (
 	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
 	notifyMigrateGVGRouterName                     = "NotifyMigrateGVG"
 	migratePieceRouterName                         = "MigratePiece"
+	listVirtualGroupFamiliesBySpIDRouterName       = "ListVirtualGroupFamiliesBySpID"
 )
 
 const (
@@ -190,6 +191,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		//List Expired Buckets By Sp
 		router.Path("/").Name(listExpiredBucketsBySpRouterName).Methods(http.MethodGet).Queries(ListExpiredBucketsBySpQuery, "").HandlerFunc(g.listExpiredBucketsBySpHandler)
+
+		// Get Payment By Bucket ID
+		router.Path("/").Name(listVirtualGroupFamiliesBySpIDRouterName).Methods(http.MethodGet).Queries(ListVirtualGroupFamiliesBySpIDQuery, "").HandlerFunc(g.listVirtualGroupFamiliesBySpIDHandler)
 	}
 
 	router.Path("/").

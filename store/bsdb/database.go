@@ -64,7 +64,7 @@ type Metadata interface {
 	ListPrimaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error)
 	// ListSecondaryObjects list objects by primary sp id
 	ListSecondaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error)
-	// ListObjectsInGVG list objects by gvg id
+	// ListObjectsInGVG list objects by gvg and bucket id
 	ListObjectsInGVG(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error)
 	// ListGvgByPrimarySpID list gvg by primary sp id
 	ListGvgByPrimarySpID(spID uint32) ([]*GlobalVirtualGroup, error)

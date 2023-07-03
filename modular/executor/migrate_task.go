@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -35,7 +35,7 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, objectInfo 
 
 	index := checkIsPrimary(objectInfo, srcSPEndpoint)
 	log.Infow("secondarySP index", "index", index)
-	migratePiece := gfspserver.GfSpMigratePiece{
+	migratePiece := gfsptask.GfSpMigratePieceTask{
 		ObjectInfo:    objectInfo,
 		StorageParams: params,
 	}
@@ -126,7 +126,7 @@ func checkIsPrimary(objectInfo *storagetypes.ObjectInfo, endpoint string) int {
 }
 
 // TODO: complete log info
-func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece gfspserver.GfSpMigratePiece, endpoint string,
+func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece gfsptask.GfSpMigratePieceTask, endpoint string,
 	index int) error {
 	var (
 		segmentCount = e.baseApp.PieceOp().SegmentPieceCount(migratePiece.GetObjectInfo().GetPayloadSize(),
@@ -136,7 +136,7 @@ func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece gfsp
 		pieceNum      = int32(0)
 	)
 	for i := 0; i < int(segmentCount); i++ {
-		go func(mp gfspserver.GfSpMigratePiece, segIdx int) {
+		go func(mp gfsptask.GfSpMigratePieceTask, segIdx int) {
 			pieceDataList[segIdx] = nil
 			// check migrating segment pieces or ec pieces
 			mp.ReplicateIdx = uint32(segIdx)
@@ -186,14 +186,14 @@ func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece gfsp
 	return nil
 }
 
-func (e *ExecuteModular) sendRequest(ctx context.Context, migratePiece gfspserver.GfSpMigratePiece,
+func (e *ExecuteModular) sendRequest(ctx context.Context, migratePiece gfsptask.GfSpMigratePieceTask,
 	endpoint string) ([]byte, error) {
 	var (
 		// sig       []byte
 		pieceData []byte
 		err       error
 	)
-	// sig, err = e.baseApp.GfSpClient().SignMigratePiece(ctx, migratePiece)
+	// sig, err = e.baseApp.GfSpClient().SignMigratePiece(ctx, &migratePiece)
 	// if err != nil {
 	// 	log.CtxErrorw(ctx, "failed to sign migrate piece task", "objectID", migratePiece.GetObjectInfo().Id.Uint64(),
 	// 		"object_name", migratePiece.GetObjectInfo().GetObjectName(), "error", err)

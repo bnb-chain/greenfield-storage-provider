@@ -2,7 +2,6 @@ package gfspapp
 
 import (
 	"context"
-	"sync"
 	"syscall"
 
 	"google.golang.org/grpc"
@@ -55,17 +54,17 @@ type GfSpBaseApp struct {
 	appCtx    context.Context
 	appCancel context.CancelFunc
 	services  []corelifecycle.Service
-	mux       sync.Mutex
 
 	uploadSpeed    int64
 	downloadSpeed  int64
 	replicateSpeed int64
 	receiveSpeed   int64
 
-	sealObjectTimeout int64
-	gcObjectTimeout   int64
-	gcZombieTimeout   int64
-	gcMetaTimeout     int64
+	sealObjectTimeout   int64
+	gcObjectTimeout     int64
+	gcZombieTimeout     int64
+	gcMetaTimeout       int64
+	migratePieceTimeout int64
 
 	sealObjectRetry     int64
 	replicateRetry      int64
@@ -74,6 +73,7 @@ type GfSpBaseApp struct {
 	gcZombieRetry       int64
 	gcMetaRetry         int64
 	recoveryRetry       int64
+	migratePieceRetry   int64
 }
 
 // AppID returns the GfSpBaseApp ID, the default value is prefix(gfsp) add

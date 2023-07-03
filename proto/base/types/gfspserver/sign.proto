@@ -25,14 +25,6 @@ message GfSpCreateGlobalVirtualGroup {
   cosmos.base.v1beta1.Coin deposit = 4;
 }
 
-message GfSpMigratePiece {
-  greenfield.storage.ObjectInfo object_info = 1;
-  greenfield.storage.Params storage_params = 2;
-  uint32 replicate_idx = 3;
-  int32 ec_idx = 4;
-  bytes signature = 5;
-}
-
 message GfSpSignRequest {
   oneof request {
     greenfield.storage.MsgCreateBucket create_bucket_info = 1;
@@ -48,7 +40,7 @@ message GfSpSignRequest {
     base.types.gfsptask.GfSpRecoverPieceTask gfsp_recover_piece_task = 11;
     greenfield.storage.MsgRejectSealObject reject_object_info = 12;
     GfSpCreateGlobalVirtualGroup create_global_virtual_group = 13;
-    GfSpMigratePiece gfsp_migrate_piece = 14;
+    base.types.gfsptask.GfSpMigratePieceTask gfsp_migrate_piece_task = 14;
   }
 }
 

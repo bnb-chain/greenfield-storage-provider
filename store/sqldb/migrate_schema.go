@@ -12,6 +12,7 @@ func (MigrateSubscribeProgressTable) TableName() string {
 }
 
 // MigrateGVGTable table schema.
+// sp exit, bucket migrate
 type MigrateGVGTable struct {
 	AutoID                 uint64 `gorm:"primary_key;autoIncrement"`
 	GlobalVirtualGroupID   uint32 `gorm:"index:gvg_index"`

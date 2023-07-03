@@ -7,6 +7,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ coretask.MigrateGVGTask = &GfSpMigrateGVGTask{}
@@ -133,4 +134,20 @@ func (m *GfSpMigrateGVGTask) Error() error {
 
 func (m *GfSpMigrateGVGTask) SetError(err error) {
 	m.GetTask().SetError(err)
+}
+
+// ======================= MigratePieceTask =====================================
+
+func (g *GfSpMigratePieceTask) Key() coretask.TKey {
+	return GfSpMigratePieceTaskKey(g.GetObjectInfo().GetObjectName(), g.GetObjectInfo().Id.String(),
+		g.GetReplicateIdx(), g.GetEcIdx())
+}
+
+func (g *GfSpMigratePieceTask) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&GfSpMigratePieceTask{
+		ObjectInfo:    g.GetObjectInfo(),
+		StorageParams: g.GetStorageParams(),
+		ReplicateIdx:  g.GetReplicateIdx(),
+		EcIdx:         g.GetEcIdx(),
+	}))
 }
