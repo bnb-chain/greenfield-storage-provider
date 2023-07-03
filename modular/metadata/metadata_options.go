@@ -59,8 +59,6 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 func startDBSwitchListener(switchInterval time.Duration, cfg *gfspconfig.GfSpConfig, metadata *MetadataModular) {
 	// create a ticker to periodically check for a new database name
 	dbSwitchTicker := time.NewTicker(switchInterval)
-	// set the bsdb to be master db at start
-	cfg.Metadata.IsMasterDB = true
 	checkSignal(cfg, metadata)
 	// launch a goroutine to handle the ticker events
 	go func() {
