@@ -55,7 +55,7 @@ const (
 	// MaxReplicateRetry defines the max retry number to replicate object.
 	MaxReplicateRetry = 6
 	// MinReceiveConfirmRetry defines the min retry number to confirm received piece is sealed on greenfield.
-	MinReceiveConfirmRetry = 0
+	MinReceiveConfirmRetry = 1
 	// MaxReceiveConfirmRetry defines the max retry number to confirm received piece is sealed on greenfield.
 	MaxReceiveConfirmRetry = 3
 	// MinSealObjectRetry defines the min retry number to seal object.
@@ -262,9 +262,9 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	case coretask.TypeTaskReplicatePiece:
 		return coretask.MaxTaskPriority
 	case coretask.TypeTaskReceivePiece:
-		return coretask.DefaultSmallerPriority
+		return coretask.DefaultSmallerPriority / 4
 	case coretask.TypeTaskSealObject:
-		return coretask.DefaultLargerTaskPriority
+		return coretask.DefaultSmallerPriority
 	case coretask.TypeTaskDownloadObject:
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskChallengePiece:
