@@ -107,11 +107,11 @@ func (e *ExecuteModular) listenSealObject(ctx context.Context, task coretask.Obj
 		sealed, innerErr := e.baseApp.Consensus().ListenObjectSeal(ctx,
 			object.Id.Uint64(), e.listenSealTimeoutHeight)
 		if innerErr != nil {
+			err = innerErr
 			task.AppendLog(fmt.Sprintf("executor-listen-seal-failed-error:%s-retry:%d", err.Error(), retry))
 			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
 				"max_retry", e.maxListenSealRetry, "error", err)
 			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
-			err = innerErr
 			continue
 		}
 		if !sealed {

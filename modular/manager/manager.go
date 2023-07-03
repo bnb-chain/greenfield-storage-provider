@@ -95,7 +95,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.sealQueue.SetRetireTaskStrategy(m.GCSealObjectQueue)
 	m.sealQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.receiveQueue.SetRetireTaskStrategy(m.GCReceiveQueue)
-	m.receiveQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
+	m.receiveQueue.SetFilterTaskStrategy(m.FilterReceiveTask)
 	m.gcObjectQueue.SetRetireTaskStrategy(m.ResetGCObjectTask)
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
@@ -434,7 +434,7 @@ func (m *ManageModular) GCSealObjectQueue(qTask task.Task) bool {
 }
 
 func (m *ManageModular) GCReceiveQueue(qTask task.Task) bool {
-	return qTask.Expired()
+	return qTask.ExceedRetry()
 }
 
 func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
@@ -467,38 +467,48 @@ func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
 		return true
 	}
 	if qTask.GetRetry() == 0 {
-
 		return true
 	}
 	return false
 }
 
-func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) task.Task {
+func (m *ManageModular) FilterReceiveTask(qTask task.Task) bool {
+	if qTask.ExceedRetry() {
+		return false
+	}
+	if qTask.ExceedTimeout() {
+		return true
+	}
+	return false
+}
+
+func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) (task.Task, []task.Task) {
 	if len(tasks) == 0 {
-		return nil
+		return nil, nil
 	}
 	if len(tasks) == 1 {
 		log.CtxDebugw(ctx, "only one task for picking")
-		return tasks[0]
+		return tasks[0], nil
 	}
 	sort.Slice(tasks, func(i, j int) bool {
 		return tasks[i].GetPriority() < tasks[j].GetPriority()
 	})
 	var totalPriority int
-	for _, task := range tasks {
-		totalPriority += int(task.GetPriority())
+	for _, t := range tasks {
+		totalPriority += int(t.GetPriority())
 	}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	randPriority := r.Intn(totalPriority)
-	totalPriority = 0
+	log.Debugw("pick up task", "total_priority", totalPriority, "rand_priority", randPriority)
 
-	for _, task := range tasks {
-		totalPriority += int(task.GetPriority())
+	totalPriority = 0
+	for i, t := range tasks {
+		totalPriority += int(t.GetPriority())
 		if totalPriority >= randPriority {
-			return task
+			return t, append(tasks[:i], tasks[i+1:]...)
 		}
 	}
-	return nil
+	return nil, tasks
 }
 
 func (m *ManageModular) syncConsensusInfo(ctx context.Context) {
