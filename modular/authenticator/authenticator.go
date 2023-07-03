@@ -338,7 +338,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetRecoveryPiece:
-		_, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
 			if strings.Contains(err.Error(), "No such bucket") {
@@ -349,19 +349,10 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			}
 			return false, ErrConsensus
 		}
-
-		// TODO: refine it
-		//var isObjectSecondarySP bool
-		//for _, addr := range objectInfo.SecondarySpAddresses {
-		//	if a.baseApp.OperatorAddress() == addr {
-		//		isObjectSecondarySP = true
-		//	}
-		//}
-		//if !isObjectSecondarySP {
-		//	log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-		//		"require", objectInfo.SecondarySpAddresses)
-		//	return false, ErrMismatchSp
-		//}
+		err = a.validateSelfServeAsSecondarySP(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+		if err != nil {
+			return false, err
+		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
 			return false, ErrNotSealedState
@@ -421,7 +412,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrNoPermission
 		}
 		queryTime = time.Now()
-		bucketInfo, _, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_challenge_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
@@ -441,11 +432,37 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		if bucketInfo.GetPrimarySpId() == spID {
 			return true, nil
 		}
-		// TODO: check secondary
+		err = a.validateSelfServeAsSecondarySP(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+		if err != nil {
+			return false, err
+		}
 		return true, nil
-		// log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress())
-		// return false, ErrMismatchSp
 	default:
 		return false, ErrUnsupportedAuthType
 	}
+}
+
+func (a *AuthenticationModular) validateSelfServeAsSecondarySP(ctx context.Context, bucketId uint64, lvgId uint32) error {
+	log.CtxInfo(ctx, "validateSelfServeAsSecondarySP")
+	gvg, err := a.baseApp.GfSpClient().GfSpGetGlobalVirtualGroup(ctx, bucketId, lvgId)
+	if err != nil {
+		return err
+	}
+	var isObjectSecondarySP bool
+	spId, err := a.getSPID()
+	if err != nil {
+		return err
+	}
+	log.CtxInfof(ctx, "self sp id is %v , gvg is %v \n", spId, gvg.GetSecondarySpIds())
+	for _, sspId := range gvg.GetSecondarySpIds() {
+		if spId == sspId {
+			isObjectSecondarySP = true
+		}
+	}
+	if !isObjectSecondarySP {
+		log.CtxErrorw(ctx, "sp id mismatch", "current", a.spID,
+			"require", gvg.GetSecondarySpIds())
+		return ErrMismatchSp
+	}
+	return nil
 }
