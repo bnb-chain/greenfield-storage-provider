@@ -153,7 +153,11 @@ type MigrateDB interface {
 	// DeleteMigrateGVGUnit deletes the gvg migrate unit.
 	DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
 	// UpdateMigrateGVGUnit update the gvg migrate unit.
-	UpdateMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
+	// UpdateMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
+
+	// UpdateMigrateGVGUnitStatus updates gvg unit status.
+	UpdateMigrateGVGUnitStatus(meta *MigrateGVGUnitMeta, migrateStatus int) error
+
 	// QueryMigrateGVGUnit returns the gvg migrate unit info.
 	QueryMigrateGVGUnit(meta *MigrateGVGUnitMeta) (*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).

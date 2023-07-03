@@ -1,5 +1,7 @@
 package sqldb
 
+import "fmt"
+
 // MigrateSubscribeProgressTable table schema.
 type MigrateSubscribeProgressTable struct {
 	EventName                 string `gorm:"primary_key"`
@@ -14,7 +16,7 @@ func (MigrateSubscribeProgressTable) TableName() string {
 // MigrateGVGTable table schema.
 // sp exit, bucket migrate
 type MigrateGVGTable struct {
-	AutoID                 uint64 `gorm:"primary_key;autoIncrement"`
+	MigrateKey             string `gorm:"primary_key"`
 	GlobalVirtualGroupID   uint32 `gorm:"index:gvg_index"`
 	VirtualGroupFamilyID   uint32 `gorm:"index:vgf_index"`
 	MigrateRedundancyIndex int32
@@ -25,6 +27,12 @@ type MigrateGVGTable struct {
 	LastMigrateObjectID    uint64
 	MigrateStatus          int
 	CheckStatus            int
+}
+
+// MigrateGVGPrimaryKey defines MigrateGVGTable primary key.
+func MigrateGVGPrimaryKey(m *MigrateGVGTable) string {
+	return fmt.Sprintf("gvg_id[%d]-vgf_id[%d]-reduncdancy_idx[%d]-bucket_id[%d]-is_secondary[%d]",
+		m.GlobalVirtualGroupID, m.VirtualGroupFamilyID, m.MigrateRedundancyIndex, m.BucketID, m.BucketID)
 }
 
 // TableName is used to set MigrateGVGTable Schema's table name in database.
