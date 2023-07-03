@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -426,25 +425,33 @@ func (plan *SPExitExecutePlan) Start() error {
 // SPExitScheduler subscribes sp exit events and produces a gvg migrate plan.
 type SPExitScheduler struct {
 	// sp exit workflow src sp.
-	manager                     *ManageModular
-	selfSP                      *sptypes.StorageProvider
-	currentSubscribeBlockHeight uint64 // load from db
-	isExiting                   bool   // load from db
-	executePlan                 *SPExitExecutePlan
+	manager                         *ManageModular
+	selfSP                          *sptypes.StorageProvider
+	lastSubscribedSPExitBlockHeight uint64 // load from db
+	isExiting                       bool   // load from db
+	executePlan                     *SPExitExecutePlan
 	// sp exit workflow dest sp.
 	// migrate task runner
 }
 
 // Init function is used to load db subscribe block progress and migrate gvg progress.
-func (s *SPExitScheduler) Init() error {
-	if s.manager == nil {
-		return fmt.Errorf("manger is nil")
-	}
-	sp, err := s.manager.baseApp.Consensus().QuerySP(context.Background(), s.manager.baseApp.OperatorAddress())
-	if err != nil {
+func (s *SPExitScheduler) Init(m *ManageModular) error {
+	var (
+		err error
+		sp  *sptypes.StorageProvider
+	)
+	s.manager = m
+	if sp, err = s.manager.baseApp.Consensus().QuerySP(context.Background(), s.manager.baseApp.OperatorAddress()); err != nil {
+		log.Errorw("failed to init sp exit scheduler due to query sp error", "error", err)
 		return err
 	}
 	s.selfSP = sp
+	s.isExiting = sp.GetStatus() == sptypes.STATUS_GRACEFUL_EXITING
+	if s.lastSubscribedSPExitBlockHeight, err = s.manager.baseApp.GfSpDB().QuerySPExitSubscribeProgress(); err != nil {
+		log.Errorw("failed to init sp exit scheduler due to init subscribe sp exit progress", "error", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -471,6 +478,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 				return
 			}
 			s.isExiting = true
+			s.executePlan = plan
 			// TODO: update subscribe progress to db
 		case <-subscribeSwapOutEventsTicker.C:
 			// TODO:
