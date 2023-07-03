@@ -1419,8 +1419,8 @@ func (g *GateModular) listGlobalVirtualGroupsByBucketHandler(w http.ResponseWrit
 	w.Write(b.Bytes())
 }
 
-// listObjectsInGVGHandler list objects by gvg and bucket id
-func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Request) {
+// listObjectsInGVGAndBucketHandler list objects by gvg and bucket id
+func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err               error
 		b                 bytes.Buffer
@@ -1480,7 +1480,7 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	objects, err = g.baseApp.GfSpClient().ListObjectsInGVG(reqCtx.Context(), gvgID, bucketID, startAfter, limit)
+	objects, err = g.baseApp.GfSpClient().ListObjectsInGVGAndBucket(reqCtx.Context(), gvgID, bucketID, startAfter, limit)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket id", "error", err)
 		return
@@ -1491,6 +1491,76 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listObjectsInGVGHandler list objects by gvg id
+func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		b                 bytes.Buffer
+		reqCtx            *RequestContext
+		requestGvgID      string
+		gvgID             uint32
+		limit             uint32
+		limitStr          string
+		requestStartAfter string
+		startAfter        uint64
+		objects           []*types.Object
+		queryParams       url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestGvgID = queryParams.Get(GvgIDQuery)
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+
+	if gvgID, err = util.StringToUint32(requestGvgID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "gvg-id", requestGvgID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToUint32(limitStr); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	objects, err = g.baseApp.GfSpClient().ListObjectsInGVG(reqCtx.Context(), gvgID, startAfter, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListObjectsInGVGResponse{Objects: objects}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", "error", err)
 		return
 	}
 

@@ -208,8 +208,8 @@ func (b *BsDBImpl) ListSecondaryObjects(spID uint32, bucketID common.Hash, start
 	return objects, err
 }
 
-// ListObjectsInGVG list objects by gvg and bucket id
-func (b *BsDBImpl) ListObjectsInGVG(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
+// ListObjectsInGVGAndBucket list objects by gvg and bucket id
+func (b *BsDBImpl) ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
 	var (
 		localGroups []*LocalVirtualGroup
 		objects     []*Object
@@ -248,5 +248,30 @@ func (b *BsDBImpl) ListObjectsByLVGID(lvgIDs []uint32, startAfter common.Hash, l
 		Scopes(filters...).
 		Order("object_id").
 		Find(&objects).Error
+	return objects, err
+}
+
+// ListObjectsInGVG list objects by gvg and bucket id
+func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
+	var (
+		localGroups []*LocalVirtualGroup
+		objects     []*Object
+		gvgIDs      []uint32
+		lvgIDs      []uint32
+		err         error
+	)
+	gvgIDs = append(gvgIDs, gvgID)
+
+	localGroups, err = b.ListLvgByGvgID(gvgIDs)
+	if err != nil || localGroups == nil {
+		return nil, err
+	}
+
+	lvgIDs = make([]uint32, len(localGroups))
+	for i, group := range localGroups {
+		lvgIDs[i] = group.LocalVirtualGroupId
+	}
+
+	objects, err = b.ListObjectsByLVGID(lvgIDs, startAfter, limit)
 	return objects, err
 }

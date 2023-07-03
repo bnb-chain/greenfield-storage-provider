@@ -595,7 +595,28 @@ func (s *GfSpClient) ListSecondaryObjects(ctx context.Context, spID uint32, buck
 	return resp.Objects, nil
 }
 
-func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Object, error) {
+func (s *GfSpClient) ListObjectsInGVGAndBucket(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Object, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListObjectsInGVGAndBucketRequest{
+		GvgId:      gvgID,
+		BucketId:   bucketID,
+		StartAfter: startAfter,
+		Limit:      limit,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsInGVGAndBucket(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list objects by gvg id", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Objects, nil
+}
+
+func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Object, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -604,7 +625,6 @@ func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, bucketI
 	defer conn.Close()
 	req := &types.GfSpListObjectsInGVGRequest{
 		GvgId:      gvgID,
-		BucketId:   bucketID,
 		StartAfter: startAfter,
 		Limit:      limit,
 	}
