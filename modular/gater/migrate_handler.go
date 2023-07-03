@@ -61,7 +61,6 @@ func (g *GateModular) notifyMigrateGVGHandler(w http.ResponseWriter, r *http.Req
 // Second, retrieve and get data from downloader module including: PrimarySP and SecondarySP pieces
 // Third, transfer data to client which is a selected SP.
 func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request) {
-	log.Info("enter migratePieceHandler")
 	var (
 		err        error
 		reqCtx     *RequestContext

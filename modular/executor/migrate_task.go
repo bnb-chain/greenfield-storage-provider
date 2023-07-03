@@ -189,17 +189,17 @@ func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece gfsp
 func (e *ExecuteModular) sendRequest(ctx context.Context, migratePiece gfsptask.GfSpMigratePieceTask,
 	endpoint string) ([]byte, error) {
 	var (
-		sig       []byte
+		// sig       []byte
 		pieceData []byte
 		err       error
 	)
-	sig, err = e.baseApp.GfSpClient().SignMigratePiece(ctx, &migratePiece)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to sign migrate piece task", "objectID", migratePiece.GetObjectInfo().Id.Uint64(),
-			"object_name", migratePiece.GetObjectInfo().GetObjectName(), "error", err)
-		return nil, err
-	}
-	migratePiece.Signature = sig
+	// sig, err = e.baseApp.GfSpClient().SignMigratePiece(ctx, &migratePiece)
+	// if err != nil {
+	// 	log.CtxErrorw(ctx, "failed to sign migrate piece task", "objectID", migratePiece.GetObjectInfo().Id.Uint64(),
+	// 		"object_name", migratePiece.GetObjectInfo().GetObjectName(), "error", err)
+	// 	return nil, err
+	// }
+	// migratePiece.Signature = sig
 	// migrate primarySP or secondarySP piece data
 	pieceData, err = e.baseApp.GfSpClient().MigratePiece(ctx, migratePiece, endpoint)
 	if err != nil {
