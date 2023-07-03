@@ -99,25 +99,28 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			switch t := reservedTask.(type) {
 			case *gfsptask.GfSpReplicatePieceTask:
 				err := m.replicateQueue.Push(t)
-				log.Errorw("failed to retry push replicate task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push replicate task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpSealObjectTask:
 				err := m.sealQueue.Push(t)
-				log.Errorw("failed to retry push seal task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push seal task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpReceivePieceTask:
 				err := m.receiveQueue.Push(t)
-				log.Errorw("failed to retry push receive task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push receive task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpGCObjectTask:
 				err := m.gcObjectQueue.Push(t)
-				log.Errorw("failed to retry push gc object task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push gc object task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpGCZombiePieceTask:
 				err := m.gcZombieQueue.Push(t)
-				log.Errorw("failed to retry push gc zombie task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push gc zombie task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpGCMetaTask:
 				err := m.gcMetaQueue.Push(t)
-				log.Errorw("failed to retry push gc meta task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push gc meta task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpRecoverPieceTask:
 				err := m.recoveryQueue.Push(t)
-				log.Errorw("failed to retry push recovery task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push recovery task to queue after dispatching", "error", err)
+			case *gfsptask.GfSpMigrateGVGTask:
+				err := m.migrateGVGQueue.Push(t)
+				log.Errorw("failed to retry push migration gvg task to queue after dispatching", "error", err)
 			}
 		}
 	}()

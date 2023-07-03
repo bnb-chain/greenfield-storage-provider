@@ -147,3 +147,13 @@ func (*NullTask) GetSignBytes() []byte                   { return nil }
 func (*NullTask) InitMigrateGVGTask(priority TPriority, bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup,
 	redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider) {
 }
+func (*NullTask) GetGvg() *virtualgrouptypes.GlobalVirtualGroup { return nil }
+func (*NullTask) SetGvg(*virtualgrouptypes.GlobalVirtualGroup)  {}
+func (*NullTask) GetSrcSp() *sptypes.StorageProvider            { return nil }
+func (*NullTask) SetSrcSp(*sptypes.StorageProvider)             {}
+func (*NullTask) GetDestSp() *sptypes.StorageProvider           { return nil }
+func (*NullTask) SetDestSp(*sptypes.StorageProvider)            {}
+func (*NullTask) GetBucketId() uint64                           { return 0 }
+func (*NullTask) SetBucketID(uint64)                            {}
+func (*NullTask) GetLastMigratedObjectId() uint64               { return 0 }
+func (*NullTask) SetLastMigratedObjectID(uint64)                {}
