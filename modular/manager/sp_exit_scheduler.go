@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -32,7 +33,8 @@ var (
 
 type GlobalVirtualGroupMigrateExecuteUnit struct {
 	gvg            *virtualgrouptypes.GlobalVirtualGroup
-	redundantIndex int32 // if < 0, represents migrate primary
+	redundantIndex int32 // if < 0, represents migrate primary.
+	isConflict     bool  // only be used in sp exit.
 	srcSP          *sptypes.StorageProvider
 	destSP         *sptypes.StorageProvider
 	migrateStatus  MigrateStatus
@@ -150,6 +152,7 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 					gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
 						gvg:            gvg,
 						redundantIndex: secondaryIndex,
+						isConflict:     true,
 						srcSP:          srcSP,
 						destSP:         destSecondarySP,
 						migrateStatus:  WaitForMigrate}
@@ -176,6 +179,7 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 
 type SPExitExecutePlan struct {
 	manager                  *ManageModular
+	scheduler                *SPExitScheduler
 	virtualGroupManager      vgmgr.VirtualGroupManager
 	runningMigrateGVG        int                                     // load from db
 	PrimaryVGFMigrateUnits   []*VirtualGroupFamilyMigrateExecuteUnit // sp exit, primary family, include gvg list
@@ -188,10 +192,102 @@ type SPExitExecutePlan struct {
 	MigratingGVG   []*GlobalVirtualGroupMigrateExecuteUnit
 }
 
+func (plan *SPExitExecutePlan) makeGVGUnit(gvgMeta *spdb.MigrateGVGUnitMeta, isConflict bool) (*GlobalVirtualGroupMigrateExecuteUnit, error) {
+	gvg, queryGVGErr := plan.manager.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgMeta.GlobalVirtualGroupID)
+	if queryGVGErr != nil {
+		log.Errorw("failed to make gvg unit due to query gvg", "error", queryGVGErr)
+		return nil, queryGVGErr
+	}
+	srcSP, querySPErr := plan.virtualGroupManager.QuerySPByID(gvgMeta.SrcSPID)
+	if querySPErr != nil {
+		log.Errorw("failed to make gvg unit due to query sp", "error", querySPErr)
+		return nil, querySPErr
+	}
+	destSP, querySPErr := plan.virtualGroupManager.QuerySPByID(gvgMeta.DestSPID)
+	if querySPErr != nil {
+		log.Errorw("failed to make gvg unit due to query sp", "error", querySPErr)
+		return nil, querySPErr
+	}
+	gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
+		gvg:            gvg,
+		redundantIndex: gvgMeta.MigrateRedundancyIndex,
+		isConflict:     isConflict,
+		srcSP:          srcSP,
+		destSP:         destSP,
+		migrateStatus:  MigrateStatus(gvgMeta.MigrateStatus),
+	}
+	if gUnit.migrateStatus == WaitForMigrate {
+		plan.ToMigrateGVG = append(plan.ToMigrateGVG, gUnit)
+	}
+	if gUnit.migrateStatus == Migrating {
+		plan.MigratingGVG = append(plan.MigratingGVG, gUnit)
+	}
+	return gUnit, nil
+}
+
+// loadFromDB is used to rebuild the memory plan topology.
 func (plan *SPExitExecutePlan) loadFromDB() error {
-	// subscribe progress
-	// plan progress
-	// task progress
+	var (
+		err              error
+		vgfList          []*virtualgrouptypes.GlobalVirtualGroupFamily
+		secondaryGVGList []*virtualgrouptypes.GlobalVirtualGroup
+	)
+
+	if vgfList, err = plan.manager.baseApp.Consensus().ListVirtualGroupFamilies(context.Background(), plan.scheduler.selfSP.GetId()); err != nil {
+		log.Errorw("failed to load from db due to list virtual group family", "error", err)
+		return err
+	}
+	for _, f := range vgfList {
+		vgfUnit := NewVirtualGroupFamilyMigrateExecuteUnit(f, plan.scheduler.selfSP)
+		conflictGVGList, listConflictErr := plan.manager.baseApp.GfSpDB().ListConflictsMigrateGVGUnitsByFamilyID(f.GetId())
+		if listConflictErr != nil {
+			log.Errorw("failed to load from db due to list conflict gvg", "error", err)
+			return listConflictErr
+		}
+		for _, conflictGVG := range conflictGVGList {
+			gUnit, makeErr := plan.makeGVGUnit(conflictGVG, true)
+			if makeErr != nil {
+				log.Errorw("failed to load from db due to make gvg unit")
+				return makeErr
+			}
+			vgfUnit.conflictedSecondaryGVGMigrateUnits = append(vgfUnit.conflictedSecondaryGVGMigrateUnits, gUnit)
+		}
+		familyGVGList, listFamilyGVGErr := plan.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByFamilyID(f.GetId(), plan.scheduler.selfSP.GetId())
+		if listFamilyGVGErr != nil {
+			log.Errorw("failed to load from db due to list family gvg", "error", err)
+			return listFamilyGVGErr
+		}
+		for _, familyGVG := range familyGVGList {
+			gUnit, makeErr := plan.makeGVGUnit(familyGVG, false)
+			if makeErr != nil {
+				log.Errorw("failed to load from db due to make gvg unit")
+				return makeErr
+			}
+			vgfUnit.primaryGVGMigrateUnits = append(vgfUnit.primaryGVGMigrateUnits, gUnit)
+		}
+		plan.PrimaryVGFMigrateUnits = append(plan.PrimaryVGFMigrateUnits, vgfUnit)
+	}
+
+	// secondaryGVGList, ListSecondaryGVGError := plan.manager.baseApp.GfSpDB().ListSecondaryMigrateGVGUnits(plan.scheduler.selfSP.GetId())
+	// TODO: list from metadata.
+	for _, gvg := range secondaryGVGList {
+		// query secondary gvg status
+		// TODO: refine it
+		gvgMeta, queryError := plan.manager.baseApp.GfSpDB().QueryMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
+			GlobalVirtualGroupID: gvg.GetId(),
+		})
+		if queryError != nil {
+			log.Errorw("failed to load from db due to query gvg", "error", queryError)
+			return queryError
+		}
+		gUnit, makeErr := plan.makeGVGUnit(gvgMeta, false)
+		if makeErr != nil {
+			log.Errorw("failed to load from db due to make gvg unit")
+			return makeErr
+		}
+		plan.SecondaryGVGMigrateUnits = append(plan.SecondaryGVGMigrateUnits, gUnit)
+	}
+
 	return nil
 }
 func (plan *SPExitExecutePlan) storeToDB() error {
@@ -451,7 +547,19 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		log.Errorw("failed to init sp exit scheduler due to init subscribe sp exit progress", "error", err)
 		return err
 	}
-
+	s.executePlan = &SPExitExecutePlan{
+		manager:                  s.manager,
+		scheduler:                s,
+		virtualGroupManager:      s.manager.virtualGroupManager,
+		PrimaryVGFMigrateUnits:   make([]*VirtualGroupFamilyMigrateExecuteUnit, 0),
+		SecondaryGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		ToMigrateGVG:             make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		MigratingGVG:             make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+	}
+	if err = s.executePlan.Init(); err != nil {
+		log.Errorw("failed to init sp exit scheduler due to plan init", "error", err)
+		return err
+	}
 	return nil
 }
 
@@ -501,6 +609,7 @@ func (s *SPExitScheduler) produceSPExitExecutePlan() (*SPExitExecutePlan, error)
 	}
 	plan = &SPExitExecutePlan{
 		manager:                  s.manager,
+		scheduler:                s,
 		virtualGroupManager:      s.manager.virtualGroupManager,
 		PrimaryVGFMigrateUnits:   make([]*VirtualGroupFamilyMigrateExecuteUnit, 0),
 		SecondaryGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),

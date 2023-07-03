@@ -82,12 +82,23 @@ func (s *SpDBImpl) UpdateMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 	return nil
 }
 
+func (s *SpDBImpl) QueryMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) (*spdb.MigrateGVGUnitMeta, error) {
+	// TODO:
+	return nil, nil
+}
+
+// ListMigrateGVGUnitsByFamilyID is used to src sp load to build execute plan.
 func (s *SpDBImpl) ListMigrateGVGUnitsByFamilyID(familyID uint32, srcSP uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
 	// TODO:
 	return nil, nil
 }
 
-func (s *SpDBImpl) QuerySecondaryMigrateGVGUnit(gvgID uint32, srcSP uint32) (*spdb.MigrateGVGUnitMeta, error) {
+func (s *SpDBImpl) ListConflictsMigrateGVGUnitsByFamilyID(familyID uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
+	return nil, nil
+}
+
+// ListSecondaryMigrateGVGUnits is used to src sp load to build execute plan.
+func (s *SpDBImpl) ListSecondaryMigrateGVGUnits(srcSP uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
 	// TODO:
 	return nil, nil
 }
