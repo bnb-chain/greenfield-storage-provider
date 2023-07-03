@@ -337,14 +337,11 @@ func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 }
 
 // GenerateGlobalVirtualGroupMeta is used to generate a gvg meta.
-// TODO: support more generation strategies.
 func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.spManager.generateVirtualGroupMeta(param)
 }
-
-// TODO: add a generate gvg by filter api for migrate.
 
 // PickSPByFilter is used to pick sp by filter check.
 func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.PickFilter) (*sptypes.StorageProvider, error) {
@@ -353,6 +350,7 @@ func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.PickFilter) (*sptype
 	return vgm.spManager.pickSPByFilter(filter)
 }
 
+// QuerySPByID return sp info by sp id.
 func (vgm *virtualGroupManager) QuerySPByID(spID uint32) (*sptypes.StorageProvider, error) {
 	vgm.mutex.RLock()
 	sp, err := vgm.spManager.querySPByID(spID)

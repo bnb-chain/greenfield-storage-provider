@@ -302,7 +302,8 @@ func (plan *SPExitExecutePlan) storeToDB() error {
 				VirtualGroupFamilyID:   conflictGVG.gvg.GetFamilyId(),
 				MigrateRedundancyIndex: conflictGVG.redundantIndex,
 				BucketID:               0,
-				IsSecondaryGVG:         true,
+				IsSecondary:            true,
+				IsConflict:             true,
 				SrcSPID:                conflictGVG.srcSP.GetId(),
 				DestSPID:               conflictGVG.destSP.GetId(),
 				LastMigrateObjectID:    0,
@@ -318,7 +319,8 @@ func (plan *SPExitExecutePlan) storeToDB() error {
 				VirtualGroupFamilyID:   familyGVG.gvg.GetFamilyId(),
 				MigrateRedundancyIndex: -1,
 				BucketID:               0,
-				IsSecondaryGVG:         false,
+				IsSecondary:            false,
+				IsConflict:             false,
 				SrcSPID:                familyGVG.srcSP.GetId(),
 				DestSPID:               familyGVG.destSP.GetId(),
 				LastMigrateObjectID:    0,
@@ -335,7 +337,8 @@ func (plan *SPExitExecutePlan) storeToDB() error {
 			VirtualGroupFamilyID:   0,
 			MigrateRedundancyIndex: secondaryGVG.redundantIndex,
 			BucketID:               0,
-			IsSecondaryGVG:         true,
+			IsSecondary:            true,
+			IsConflict:             false,
 			SrcSPID:                secondaryGVG.srcSP.GetId(),
 			DestSPID:               secondaryGVG.destSP.GetId(),
 			LastMigrateObjectID:    0,
@@ -503,7 +506,8 @@ func (plan *SPExitExecutePlan) notifyDestSPMigrateExecuteUnits() {
 				VirtualGroupFamilyID:   toMigrateGVG.gvg.GetFamilyId(),
 				MigrateRedundancyIndex: toMigrateGVG.redundantIndex,
 				BucketID:               0,
-				IsSecondaryGVG:         toMigrateGVG.isSecondary,
+				IsSecondary:            toMigrateGVG.isSecondary,
+				IsConflict:             toMigrateGVG.isConflict,
 			}, int(Migrating))
 			log.Errorw("notify migrate gvg", "gvg_meta", toMigrateGVG, "error", err)
 		}
@@ -644,9 +648,13 @@ func (s *SPExitScheduler) subscribeEvents() {
 			if s.isExiting {
 				return
 			}
-			plan, _ := s.produceSPExitExecutePlan()
-			if err := plan.Start(); err != nil {
-				log.Errorw("failed to start sp exit execute plan", "error", err)
+			plan, err := s.produceSPExitExecutePlan()
+			if err != nil {
+				log.Errorw("failed to produce sp exit execute plan", "error", err)
+				return
+			}
+			if startErr := plan.Start(); startErr != nil {
+				log.Errorw("failed to start sp exit execute plan", "error", startErr)
 				return
 			}
 			updateErr := s.manager.baseApp.GfSpDB().UpdateSPExitSubscribeProgress(s.lastSubscribedSPExitBlockHeight + 1)
