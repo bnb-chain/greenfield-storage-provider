@@ -169,6 +169,8 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 					redundantIndex: -1,
 					srcSP:          vgfUnit.srcSP,
 					destSP:         destFamilySP,
+					isConflict:     false,
+					isSecondary:    false,
 					migrateStatus:  WaitForMigrate}
 				vgfUnit.primaryGVGMigrateUnits = append(vgfUnit.primaryGVGMigrateUnits, gUnit)
 				plan.ToMigrateGVG = append(plan.ToMigrateGVG, gUnit)
@@ -269,13 +271,23 @@ func (plan *SPExitExecutePlan) loadFromDB() error {
 		plan.PrimaryVGFMigrateUnits = append(plan.PrimaryVGFMigrateUnits, vgfUnit)
 	}
 
-	// secondaryGVGList, ListSecondaryGVGError := plan.manager.baseApp.GfSpDB().ListSecondaryMigrateGVGUnits(plan.scheduler.selfSP.GetId())
-	// TODO: list from metadata.
+	if secondaryGVGList, err = plan.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(context.Background(), plan.scheduler.selfSP.GetId()); err != nil {
+		log.Errorw("failed to list secondary virtual group", "error", err)
+		return err
+	}
 	for _, gvg := range secondaryGVGList {
-		// query secondary gvg status
-		// TODO: refine it
+		redundantIndex, getSecondaryIndexErr := util.GetSecondarySPIndexFromGVG(gvg, plan.scheduler.selfSP.GetId())
+		if getSecondaryIndexErr != nil {
+			log.Errorw("failed to get secondary sp index from gvg", "error", err)
+			return getSecondaryIndexErr
+		}
 		gvgMeta, queryError := plan.manager.baseApp.GfSpDB().QueryMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID: gvg.GetId(),
+			GlobalVirtualGroupID:   gvg.GetId(),
+			VirtualGroupFamilyID:   0,
+			MigrateRedundancyIndex: redundantIndex,
+			BucketID:               0,
+			IsSecondary:            true,
+			IsConflict:             false,
 		})
 		if queryError != nil {
 			log.Errorw("failed to load from db due to query gvg", "error", queryError)
@@ -555,7 +567,6 @@ func (plan *SPExitExecutePlan) Start() error {
 		}
 	}
 	for _, gUnit := range plan.SecondaryGVGMigrateUnits {
-		// expand execute unit
 		var (
 			redundantIndex  int32
 			destSecondarySP *sptypes.StorageProvider
@@ -571,6 +582,8 @@ func (plan *SPExitExecutePlan) Start() error {
 		gUnit.redundantIndex = redundantIndex
 		gUnit.destSP = destSecondarySP
 		gUnit.migrateStatus = WaitForMigrate
+		gUnit.isSecondary = true
+		gUnit.isConflict = false
 		plan.ToMigrateGVG = append(plan.ToMigrateGVG, gUnit)
 	}
 
@@ -588,7 +601,8 @@ type SPExitScheduler struct {
 	manager                         *ManageModular
 	selfSP                          *sptypes.StorageProvider
 	lastSubscribedSPExitBlockHeight uint64 // load from db
-	isExiting                       bool   // load from db
+	isExiting                       bool
+	isExited                        bool
 	executePlan                     *SPExitExecutePlan
 	// sp exit workflow dest sp.
 	// migrate task runner
@@ -639,34 +653,41 @@ func (s *SPExitScheduler) subscribeEvents() {
 	for {
 		select {
 		case <-subscribeSPExitEventsTicker.C:
-			// TODO: subscribe sp exit events from metadata service.
-			//spExitEvent, subscribeError := s.manager.baseApp.GfSpClient().GfSpListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
-			//if subscribeError != nil {
-			//	log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
-			//	return
-			//}
-			if s.isExiting {
+			spStartExitEvents, spEndExitExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
+			if subscribeError != nil {
+				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
 				return
 			}
-			plan, err := s.produceSPExitExecutePlan()
-			if err != nil {
-				log.Errorw("failed to produce sp exit execute plan", "error", err)
-				return
+			if len(spStartExitEvents) > 0 {
+				if s.isExiting || s.isExited {
+					return
+				}
+				plan, err := s.produceSPExitExecutePlan()
+				if err != nil {
+					log.Errorw("failed to produce sp exit execute plan", "error", err)
+					return
+				}
+				if startErr := plan.Start(); startErr != nil {
+					log.Errorw("failed to start sp exit execute plan", "error", startErr)
+					return
+				}
+				updateErr := s.manager.baseApp.GfSpDB().UpdateSPExitSubscribeProgress(s.lastSubscribedSPExitBlockHeight + 1)
+				if updateErr != nil {
+					log.Errorw("failed to update sp exit progress", "error", updateErr)
+					return
+				}
+				s.executePlan = plan
+				s.isExiting = true
+				s.lastSubscribedSPExitBlockHeight++
 			}
-			if startErr := plan.Start(); startErr != nil {
-				log.Errorw("failed to start sp exit execute plan", "error", startErr)
-				return
+			if len(spEndExitExitEvents) > 0 {
+				s.isExited = true
 			}
-			updateErr := s.manager.baseApp.GfSpDB().UpdateSPExitSubscribeProgress(s.lastSubscribedSPExitBlockHeight + 1)
-			if updateErr != nil {
-				log.Errorw("failed to update sp exit progress", "error", updateErr)
-				return
-			}
-			s.executePlan = plan
-			s.isExiting = true
-			s.lastSubscribedSPExitBlockHeight++
 
 		case <-subscribeSwapOutEventsTicker.C:
+			if s.isExited {
+				return
+			}
 			// TODO:
 			// TODO: is changing.
 			s.updateSPExitExecutePlan()
@@ -698,7 +719,10 @@ func (s *SPExitScheduler) produceSPExitExecutePlan() (*SPExitExecutePlan, error)
 	for _, f := range vgfList {
 		plan.PrimaryVGFMigrateUnits = append(plan.PrimaryVGFMigrateUnits, NewVirtualGroupFamilyMigrateExecuteUnit(f, s.selfSP))
 	}
-	// TODO: query metadata service to get secondary sp's gvg list.
+	if secondaryGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(context.Background(), s.selfSP.GetId()); err != nil {
+		log.Errorw("failed to list secondary virtual group", "error", err)
+		return plan, err
+	}
 	for _, g := range secondaryGVGList {
 		plan.SecondaryGVGMigrateUnits = append(plan.SecondaryGVGMigrateUnits, &GlobalVirtualGroupMigrateExecuteUnit{gvg: g, srcSP: s.selfSP})
 	}
