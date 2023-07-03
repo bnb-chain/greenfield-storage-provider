@@ -155,6 +155,8 @@ type TaskExecutor interface {
 	HandleGCZombiePieceTask(ctx context.Context, task task.GCZombiePieceTask)
 	// HandleGCMetaTask handles the GCMetaTask that is asked from manager module.
 	HandleGCMetaTask(ctx context.Context, task task.GCMetaTask)
+	// HandleMigrateGVGTask handles the MigrateGVGTask that is asked from manager module
+	HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error
 	// ReportTask reports the results or status of running task to manager module.
 	ReportTask(ctx context.Context, task task.Task) error
 }
@@ -212,6 +214,8 @@ type Manager interface {
 	HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error
 	// NotifyMigrateGVG is used to notify dest sp migrate gvg.
 	NotifyMigrateGVG(ctx context.Context, task task.MigrateGVGTask) error
+	// HandleMigrateGVGTask handles MigrateGVGTask, the request from TaskExecutor.
+	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.

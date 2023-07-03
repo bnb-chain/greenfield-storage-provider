@@ -127,6 +127,9 @@ func (*NullModular) HandleGCZombiePieceTask(context.Context, task.GCZombiePieceT
 	return ErrNilModular
 }
 func (*NullModular) HandleGCMetaTask(context.Context, task.GCMetaTask) error { return ErrNilModular }
+func (*NullModular) HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error {
+	return ErrNilModular
+}
 func (*NullModular) HandleDownloadObjectTask(context.Context, task.DownloadObjectTask) error {
 	return ErrNilModular
 }
@@ -239,13 +242,14 @@ func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSe
 func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) (string, error) {
 	return "", nil
 }
-
 func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
-	return nil
+	return ErrNilModular
 }
-
 func (*NilModular) SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
-	return nil, nil
+	return nil, ErrNilModular
+}
+func (*NilModular) HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error {
+	return ErrNilModular
 }
 
 var _ Receiver = (*NullReceiveModular)(nil)

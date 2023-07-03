@@ -83,6 +83,12 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 		backupTasks = append(backupTasks, task)
 	}
 
+	task = m.migrateGVGQueue.TopByLimit(limit)
+	if task != nil {
+		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", task.Key().String())
+		backupTasks = append(backupTasks, task)
+	}
+
 	task = m.PickUpTask(ctx, backupTasks)
 	if task == nil {
 		return nil, nil
@@ -611,6 +617,14 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 	return nil
 }
 
+func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error {
+	if task == nil {
+		log.CtxErrorw(ctx, "failed to handle migrate gvg due to pointer dangling")
+	}
+	// TODO: add more logics here
+	return nil
+}
+
 func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error) {
 	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(m.uploadQueue, subKey)
 	replicateTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.replicateQueue, subKey)
@@ -622,6 +636,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	downloadTasks, _ := taskqueue.ScanTQueueBySubKey(m.downloadQueue, subKey)
 	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(m.challengeQueue, subKey)
 	recoveryTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.recoveryQueue, subKey)
+	migrateGVGTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.migrateGVGQueue, subKey)
 
 	var tasks []task.Task
 	tasks = append(tasks, uploadTasks...)
@@ -634,6 +649,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, downloadTasks...)
 	tasks = append(tasks, challengeTasks...)
 	tasks = append(tasks, recoveryTasks...)
+	tasks = append(tasks, migrateGVGTasks...)
 	return tasks, nil
 }
 

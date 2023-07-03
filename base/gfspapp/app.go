@@ -67,6 +67,7 @@ type GfSpBaseApp struct {
 	gcZombieTimeout     int64
 	gcMetaTimeout       int64
 	migratePieceTimeout int64
+	migrateGVGTimeout   int64
 
 	sealObjectRetry     int64
 	replicateRetry      int64
@@ -76,6 +77,7 @@ type GfSpBaseApp struct {
 	gcMetaRetry         int64
 	recoveryRetry       int64
 	migratePieceRetry   int64
+	migrateGVGRetry     int64
 }
 
 // AppID returns the GfSpBaseApp ID, the default value is prefix(gfsp) add

@@ -9,13 +9,35 @@ import (
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-const primarySPECIdx = -1
+const (
+	primarySPECIdx = -1
+	queryLimit     = 100
+)
 
-// HandleMigratePieceTask handle the migrate piece task, it will send requests to the exiting SP to get piece data
+// HandleMigrateGVGTask handles the migrate gvg task.
+// There are two cases: sp exit and bucket migration
+func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask.MigrateGVGTask) error {
+	for {
+		if task.GetBucketId() == 0 {
+			// if bucketID is 0, it indicates that it is a bucket migration task
+		} else {
+			// if bucketID is not equal to 0, it indicates that it is a sp exiting task
+			objectInfoList, err := e.baseApp.GfSpClient().ListObjectsInGVG(ctx, task.GetGvg().GetId(), task.GetLastMigratedObjectId()+1, queryLimit)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to list objects in gvg", "gvg_id", task.GetGvg().GetId(),
+					"current_migrated_object_id", task.GetLastMigratedObjectId()+1, "error", err)
+			}
+		}
+		return nil
+	}
+}
+
+// HandleMigratePieceTask handles the migrate piece task, it will send requests to the exiting SP to get piece data
 // integrity hash and piece checksum to migrate the receiving SP. PieceData would be written to PieceStore, integrity hash
 // and piece checksum will be written sql db.
 // currently get and handle data one by one; in the future, use concurrency

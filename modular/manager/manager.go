@@ -60,6 +60,7 @@ type ManageModular struct {
 	downloadQueue         taskqueue.TQueueOnStrategy
 	challengeQueue        taskqueue.TQueueOnStrategy
 	recoveryQueue         taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueue       taskqueue.TQueueOnStrategyWithLimit
 
 	maxUploadObjectNumber int
 
@@ -102,6 +103,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.recoveryQueue.SetRetireTaskStrategy(m.GCRecoverQueue)
 	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
+	m.migrateGVGQueue.SetRetireTaskStrategy(m.GCMigrateGVGQueue)
+	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -441,6 +444,10 @@ func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
 	return qTask.ExceedRetry() || qTask.ExceedTimeout()
 }
 
+func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {
+	return qTask.ExceedRetry() || qTask.ExceedTimeout()
+}
+
 func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
 	task := qTask.(task.GCObjectTask)
 	if task.Expired() {
@@ -467,7 +474,6 @@ func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
 		return true
 	}
 	if qTask.GetRetry() == 0 {
-
 		return true
 	}
 	return false
@@ -552,9 +558,9 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
+		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
 		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
 		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
-		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(),
+		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(), m.migrateGVGQueue.Len(),
 		m.gcBlockHeight, m.gcSafeBlockDistance)
 }
