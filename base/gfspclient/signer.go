@@ -303,15 +303,15 @@ func (s *GfSpClient) SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong)
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignMigratePiece(ctx context.Context, migratePiece *gfspserver.GfSpMigratePiece) ([]byte, error) {
+func (s *GfSpClient) SignMigratePiece(ctx context.Context, migratePiece *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		log.Errorw("client failed to connect signer", "error", err)
 		return nil, err
 	}
 	req := &gfspserver.GfSpSignRequest{
-		Request: &gfspserver.GfSpSignRequest_GfspMigratePiece{
-			GfspMigratePiece: migratePiece,
+		Request: &gfspserver.GfSpSignRequest_GfspMigratePieceTask{
+			GfspMigratePieceTask: migratePiece,
 		},
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)

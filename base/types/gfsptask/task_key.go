@@ -25,7 +25,8 @@ const (
 	KeyPrefixGfSpGCObjectTask               = "GCObject"
 	KeyPrefixGfSpGCZombiePieceTask          = "GCZombiePiece"
 	KeyPrefixGfSpGfSpGCMetaTask             = "GCMeta"
-	KeyPrefixGfSpGfSpMigrateGVGTask         = "MigrateGVG"
+	KeyPrefixGfSpMigrateGVGTask             = "MigrateGVG"
+	KeyPrefixGfSpMigratePieceTask           = "MigratePiece"
 )
 
 func GfSpCreateBucketApprovalTaskKey(bucket string, visibility int32) task.TKey {
@@ -106,7 +107,7 @@ func GfSpGCObjectTaskKey(start, end uint64, time int64) task.TKey {
 }
 
 func GfSpMigrateGVGTaskKey(gvgID uint32, bucketID uint64, redundancyIndex int32) task.TKey {
-	return task.TKey(KeyPrefixGfSpGfSpMigrateGVGTask + CombineKey(
+	return task.TKey(KeyPrefixGfSpMigrateGVGTask + CombineKey(
 		"gvgID"+fmt.Sprint(gvgID), "bucketID"+fmt.Sprint(bucketID), "redundancyIndex"+fmt.Sprint(redundancyIndex)))
 }
 
@@ -116,6 +117,11 @@ func GfSpGCZombiePieceTaskKey(time int64) task.TKey {
 
 func GfSpGfSpGCMetaTaskKey(time int64) task.TKey {
 	return task.TKey(KeyPrefixGfSpGfSpGCMetaTask + CombineKey("time"+fmt.Sprint(time)))
+}
+
+func GfSpMigratePieceTaskKey(object, id string, redundancyIdx uint32, ecIdx int32) task.TKey {
+	return task.TKey(KeyPrefixGfSpMigratePieceTask + CombineKey("object:"+object, "id:", id, "segIdx:",
+		fmt.Sprint(redundancyIdx), "ecIdx:", fmt.Sprint(ecIdx)))
 }
 
 func CombineKey(field ...string) string {

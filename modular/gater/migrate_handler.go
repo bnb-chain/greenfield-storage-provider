@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -14,8 +13,6 @@ import (
 
 const (
 	primarySPECIdx = -1
-	// MaxMigratePieceRetry defines the max retry number to migrate piece.
-	MaxMigratePieceRetry = 3
 )
 
 // dest sp receive migrate gvg notify from src sp.
@@ -64,7 +61,6 @@ func (g *GateModular) notifyMigrateGVGHandler(w http.ResponseWriter, r *http.Req
 // Second, retrieve and get data from downloader module including: PrimarySP and SecondarySP pieces
 // Third, transfer data to client which is a selected SP.
 func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request) {
-	log.Info("enter migratePieceHandler")
 	var (
 		err        error
 		reqCtx     *RequestContext
@@ -93,7 +89,7 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	migratePiece := gfspserver.GfSpMigratePiece{}
+	migratePiece := gfsptask.GfSpMigratePieceTask{}
 	err = json.Unmarshal(migrateMsg, &migratePiece)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate piece msg", "header", migrateHeader)
@@ -146,7 +142,8 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 			replicateIdx, migratePiece.GetStorageParams().GetMaxSegmentSize())
 		log.Infow("migrate primary sp", "segmentPieceKey", segmentPieceKey, "segmentPieceSize", segmentPieceSize)
 		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
-			uint64(segmentPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize), 30, MaxMigratePieceRetry)
+			uint64(segmentPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
+			g.baseApp.TaskTimeout(pieceTask, objectInfo.GetPayloadSize()), g.baseApp.TaskMaxRetry(pieceTask))
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to download segment piece", "error", err)
@@ -158,7 +155,8 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 			migratePiece.GetStorageParams().GetMaxSegmentSize(), migratePiece.GetStorageParams().GetRedundantDataChunkNum())
 		log.Infow("migrate secondary sp", "ecPieceKey", ecPieceKey, "ecPieceSize", ecPieceSize)
 		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
-			uint64(ecPieceSize), ecPieceKey, 0, uint64(ecPieceSize), 30, MaxMigratePieceRetry)
+			uint64(ecPieceSize), ecPieceKey, 0, uint64(ecPieceSize),
+			g.baseApp.TaskTimeout(pieceTask, objectInfo.GetPayloadSize()), g.baseApp.TaskMaxRetry(pieceTask))
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 		if err != nil {
 			return

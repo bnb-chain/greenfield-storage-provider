@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -128,7 +127,7 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	return signature, nil
 }
 
-func (s *GfSpClient) MigratePiece(ctx context.Context, mp gfspserver.GfSpMigratePiece, endpoint string) ([]byte, error) {
+func (s *GfSpClient) MigratePiece(ctx context.Context, mp gfsptask.GfSpMigratePieceTask, endpoint string) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", endpoint, MigratePiecePath), nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
