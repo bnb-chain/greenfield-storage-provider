@@ -37,8 +37,6 @@ func (r *MetadataModular) Name() string {
 }
 
 func (r *MetadataModular) Start(ctx context.Context) error {
-	// Default the bsDB to master db at start
-	r.baseApp.SetGfBsDB(r.baseApp.GfBsDBMaster())
 	scope, err := r.baseApp.ResourceManager().OpenService(r.Name())
 	if err != nil {
 		return err
