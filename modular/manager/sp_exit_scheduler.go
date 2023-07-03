@@ -2,9 +2,10 @@ package manager
 
 import (
 	"context"
-	"fmt"
+	"sync"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -21,12 +22,20 @@ const (
 	MaxDestRunningMigrateGVG = 10
 )
 
+type MigrateStatus int32
+
+var (
+	WaitForMigrate MigrateStatus = 0
+	Migrating      MigrateStatus = 1
+	Migrated       MigrateStatus = 2
+)
+
 type GlobalVirtualGroupMigrateExecuteUnit struct {
 	gvg            *virtualgrouptypes.GlobalVirtualGroup
 	redundantIndex int32 // if < 0, represents migrate primary
 	srcSP          *sptypes.StorageProvider
 	destSP         *sptypes.StorageProvider
-	migrateStatus  string // update to proto enum, tomigrate/migrating/migrated
+	migrateStatus  MigrateStatus
 	checkTimestamp uint64
 	checkStatus    string // update to proto enum
 }
@@ -101,7 +110,7 @@ Check Conflict Description
 
 	sp1 complete sp exit.
 */
-func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm vgmgr.VirtualGroupManager) error {
+func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm vgmgr.VirtualGroupManager, plan *SPExitExecutePlan) error {
 	var (
 		err                    error
 		hasPrimaryGVG          bool
@@ -138,23 +147,27 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 						log.Errorw("failed to check conflict due to pick secondary sp", "error", pickErr)
 						return pickErr
 					}
-					vgfUnit.conflictedSecondaryGVGMigrateUnits = append(vgfUnit.conflictedSecondaryGVGMigrateUnits,
-						&GlobalVirtualGroupMigrateExecuteUnit{
-							gvg:            gvg,
-							redundantIndex: secondaryIndex,
-							srcSP:          srcSP,
-							destSP:         destSecondarySP})
+					gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
+						gvg:            gvg,
+						redundantIndex: secondaryIndex,
+						srcSP:          srcSP,
+						destSP:         destSecondarySP,
+						migrateStatus:  WaitForMigrate}
+					vgfUnit.conflictedSecondaryGVGMigrateUnits = append(vgfUnit.conflictedSecondaryGVGMigrateUnits, gUnit)
+					plan.ToMigrateGVG = append(plan.ToMigrateGVG, gUnit)
 				}
 			}
 		} else { // has no conflicts
 			vgfUnit.destSP = destFamilySP
 			for _, gvg := range vgfUnit.gvgList {
-				vgfUnit.primaryGVGMigrateUnits = append(vgfUnit.primaryGVGMigrateUnits,
-					&GlobalVirtualGroupMigrateExecuteUnit{
-						gvg:            gvg,
-						redundantIndex: -1,
-						srcSP:          vgfUnit.srcSP,
-						destSP:         destFamilySP})
+				gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
+					gvg:            gvg,
+					redundantIndex: -1,
+					srcSP:          vgfUnit.srcSP,
+					destSP:         destFamilySP,
+					migrateStatus:  WaitForMigrate}
+				vgfUnit.primaryGVGMigrateUnits = append(vgfUnit.primaryGVGMigrateUnits, gUnit)
+				plan.ToMigrateGVG = append(plan.ToMigrateGVG, gUnit)
 			}
 		}
 	}
@@ -162,10 +175,17 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 }
 
 type SPExitExecutePlan struct {
+	manager                  *ManageModular
 	virtualGroupManager      vgmgr.VirtualGroupManager
 	runningMigrateGVG        int                                     // load from db
 	PrimaryVGFMigrateUnits   []*VirtualGroupFamilyMigrateExecuteUnit // sp exit, primary family, include gvg list
 	SecondaryGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // sp exit, secondary gvg
+
+	// for scheduling, the slice only can append to ensure iterator work fine.
+	ToMigrateMutex sync.RWMutex
+	ToMigrateGVG   []*GlobalVirtualGroupMigrateExecuteUnit
+	MigratingMutex sync.RWMutex
+	MigratingGVG   []*GlobalVirtualGroupMigrateExecuteUnit
 }
 
 func (plan *SPExitExecutePlan) loadFromDB() error {
@@ -186,48 +206,111 @@ func (plan *SPExitExecutePlan) updateProgress() error {
 
 // ToMigrateExecuteUnitIterator is used to dispatch migrate units.
 type ToMigrateExecuteUnitIterator struct {
+	plan           *SPExitExecutePlan
+	toMigrateIndex int
+	isValid        bool
 }
 
 func NewToMigrateExecuteUnitIterator(plan *SPExitExecutePlan) *ToMigrateExecuteUnitIterator {
-	return nil
+	return &ToMigrateExecuteUnitIterator{
+		plan:           plan,
+		toMigrateIndex: 0,
+		isValid:        true,
+	}
+}
+
+func (ti *ToMigrateExecuteUnitIterator) SeekToFirst() {
+	ti.plan.ToMigrateMutex.RLock()
+	defer ti.plan.ToMigrateMutex.RUnlock()
+	for index, gvg := range ti.plan.ToMigrateGVG {
+		if gvg.migrateStatus == WaitForMigrate {
+			ti.toMigrateIndex = index
+			return
+		}
+	}
+	ti.isValid = false
 }
 
 func (ti *ToMigrateExecuteUnitIterator) Valid() bool {
+	if ti.plan.runningMigrateGVG >= MaxSrcRunningMigrateGVG {
+		return false
+	}
+	if !ti.isValid {
+		return false
+	}
+	ti.plan.ToMigrateMutex.RLock()
+	isValid := ti.toMigrateIndex < len(ti.plan.ToMigrateGVG)
+	ti.plan.ToMigrateMutex.RUnlock()
+	if !isValid {
+		return false
+	}
 	return true
 }
 
 func (ti *ToMigrateExecuteUnitIterator) Next() {
-	// check MaxRunningMigrateGVG
+	ti.toMigrateIndex++
 }
 
 func (ti *ToMigrateExecuteUnitIterator) Value() *GlobalVirtualGroupMigrateExecuteUnit {
-	return nil
+	ti.plan.ToMigrateMutex.RLock()
+	defer ti.plan.ToMigrateMutex.RUnlock()
+	return ti.plan.ToMigrateGVG[ti.toMigrateIndex]
 }
 
 // MigratingExecuteUnitIterator is used to check migrating units.
 type MigratingExecuteUnitIterator struct {
+	plan           *SPExitExecutePlan
+	MigratingIndex int
+	isValid        bool
 }
 
 func NewMigratingExecuteUnitIterator(plan *SPExitExecutePlan) *MigratingExecuteUnitIterator {
-	return nil
+	return &MigratingExecuteUnitIterator{
+		plan:           plan,
+		MigratingIndex: 0,
+		isValid:        true,
+	}
+}
+
+func (mi *MigratingExecuteUnitIterator) SeekToFirst() {
+	mi.plan.MigratingMutex.RLock()
+	defer mi.plan.MigratingMutex.RUnlock()
+	for index, gvg := range mi.plan.MigratingGVG {
+		if gvg.migrateStatus == Migrating {
+			mi.MigratingIndex = index
+			return
+		}
+	}
+	mi.isValid = false
 }
 
 func (mi *MigratingExecuteUnitIterator) Valid() bool {
+	if !mi.isValid {
+		return false
+	}
+	mi.plan.MigratingMutex.RLock()
+	isValid := mi.MigratingIndex < len(mi.plan.MigratingGVG)
+	mi.plan.MigratingMutex.RUnlock()
+	if !isValid {
+		return false
+	}
 	return true
 }
 
 func (mi *MigratingExecuteUnitIterator) Next() {
+	mi.MigratingIndex++
 }
 
 func (mi *MigratingExecuteUnitIterator) Value() *GlobalVirtualGroupMigrateExecuteUnit {
-	return nil
+	mi.plan.ToMigrateMutex.RLock()
+	defer mi.plan.ToMigrateMutex.RUnlock()
+	return mi.plan.MigratingGVG[mi.MigratingIndex]
 }
 
 func (plan *SPExitExecutePlan) startSrcSPSchedule() {
-	// TODO:
-	// send control msg to dest sp endpoint and trigger migrate.
-	go plan.dispatchMigrateExecuteUnitsToDestSP()
-	go plan.checkMigrateExecuteUnitsStatus()
+	// notify dest sp start migrate gvg and check them migrate status.
+	go plan.notifyDestSPMigrateExecuteUnits()
+	go plan.checkDestSPMigrateExecuteUnitsStatus()
 }
 
 func (plan *SPExitExecutePlan) startDestSPSchedule() {
@@ -236,11 +319,12 @@ func (plan *SPExitExecutePlan) startDestSPSchedule() {
 
 }
 
-func (plan *SPExitExecutePlan) dispatchMigrateExecuteUnitsToDestSP() {
+func (plan *SPExitExecutePlan) notifyDestSPMigrateExecuteUnits() {
 	// dispatch migrate unit to corresponding dest sp.
 	// maybe need get dest sp migrate approval.
 
 	var (
+		err                error
 		dispatchLoopNumber uint64
 		dispatchUnitNumber uint64
 	)
@@ -249,18 +333,29 @@ func (plan *SPExitExecutePlan) dispatchMigrateExecuteUnitsToDestSP() {
 		dispatchLoopNumber++
 		dispatchUnitNumber = 0
 		iter := NewToMigrateExecuteUnitIterator(plan)
-		for ; iter.Valid(); iter.Next() {
+		for iter.SeekToFirst(); iter.Valid(); iter.Next() {
 			dispatchUnitNumber++
 			toMigrateGVG := iter.Value()
-			_ = toMigrateGVG
-			// TODO:
-			// send migrate gvg to dest sp, trigger dest sp pull the gvg object from src sp.
+			migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
+			migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
+				0, toMigrateGVG.gvg, toMigrateGVG.redundantIndex,
+				toMigrateGVG.srcSP, toMigrateGVG.destSP)
+			err = plan.manager.baseApp.GfSpClient().NotifyDestSPMigrateGVG(context.Background(), toMigrateGVG.destSP.GetEndpoint(), migrateGVGTask)
+			log.Infow("notify dest sp migrate gvg", "migrate_gvg_task", migrateGVGTask, "error", err)
+			// ignore this error , fail over is handled in check phase.
+			toMigrateGVG.migrateStatus = Migrating
+
+			plan.MigratingMutex.Lock()
+			plan.MigratingGVG = append(plan.MigratingGVG, toMigrateGVG)
+			plan.MigratingMutex.Unlock()
+
+			// TODO: store to db
 		}
 		log.Infow("dispatch migrate unit to dest sp", "loop_number", dispatchLoopNumber, "dispatch_number", dispatchUnitNumber)
 	}
 }
 
-func (plan *SPExitExecutePlan) checkMigrateExecuteUnitsStatus() {
+func (plan *SPExitExecutePlan) checkDestSPMigrateExecuteUnitsStatus() {
 	// Periodically check whether the execution unit is executing normally in dest sp.
 	// maybe need retry the failed unit.
 	var (
@@ -272,7 +367,7 @@ func (plan *SPExitExecutePlan) checkMigrateExecuteUnitsStatus() {
 		checkLoopNumber++
 		checkUnitNumber = 0
 		iter := NewMigratingExecuteUnitIterator(plan)
-		for ; iter.Valid(); iter.Next() {
+		for iter.SeekToFirst(); iter.Valid(); iter.Next() {
 			checkUnitNumber++
 			MigratingGVG := iter.Value()
 			_ = MigratingGVG
@@ -294,7 +389,7 @@ func (plan *SPExitExecutePlan) Start() error {
 	// expand migrate units.
 	var err error
 	for _, fUnit := range plan.PrimaryVGFMigrateUnits {
-		if err = fUnit.expandExecuteSubUnits(plan.virtualGroupManager); err != nil {
+		if err = fUnit.expandExecuteSubUnits(plan.virtualGroupManager, plan); err != nil {
 			log.Errorw("failed to start migrate execute plan due to expand execute sub units", "family_unit", fUnit, "error", err)
 			return err
 		}
@@ -315,6 +410,8 @@ func (plan *SPExitExecutePlan) Start() error {
 		}
 		gUnit.redundantIndex = redundantIndex
 		gUnit.destSP = destSecondarySP
+		gUnit.migrateStatus = WaitForMigrate
+		plan.ToMigrateGVG = append(plan.ToMigrateGVG, gUnit)
 	}
 
 	if err = plan.storeToDB(); err != nil {
@@ -328,25 +425,33 @@ func (plan *SPExitExecutePlan) Start() error {
 // SPExitScheduler subscribes sp exit events and produces a gvg migrate plan.
 type SPExitScheduler struct {
 	// sp exit workflow src sp.
-	manager                     *ManageModular
-	selfSP                      *sptypes.StorageProvider
-	currentSubscribeBlockHeight uint64 // load from db
-	isExiting                   bool   // load from db
-	executePlan                 *SPExitExecutePlan
+	manager                         *ManageModular
+	selfSP                          *sptypes.StorageProvider
+	lastSubscribedSPExitBlockHeight uint64 // load from db
+	isExiting                       bool   // load from db
+	executePlan                     *SPExitExecutePlan
 	// sp exit workflow dest sp.
 	// migrate task runner
 }
 
 // Init function is used to load db subscribe block progress and migrate gvg progress.
-func (s *SPExitScheduler) Init() error {
-	if s.manager == nil {
-		return fmt.Errorf("manger is nil")
-	}
-	sp, err := s.manager.baseApp.Consensus().QuerySP(context.Background(), s.manager.baseApp.OperatorAddress())
-	if err != nil {
+func (s *SPExitScheduler) Init(m *ManageModular) error {
+	var (
+		err error
+		sp  *sptypes.StorageProvider
+	)
+	s.manager = m
+	if sp, err = s.manager.baseApp.Consensus().QuerySP(context.Background(), s.manager.baseApp.OperatorAddress()); err != nil {
+		log.Errorw("failed to init sp exit scheduler due to query sp error", "error", err)
 		return err
 	}
 	s.selfSP = sp
+	s.isExiting = sp.GetStatus() == sptypes.STATUS_GRACEFUL_EXITING
+	if s.lastSubscribedSPExitBlockHeight, err = s.manager.baseApp.GfSpDB().QuerySPExitSubscribeProgress(); err != nil {
+		log.Errorw("failed to init sp exit scheduler due to init subscribe sp exit progress", "error", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -373,6 +478,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 				return
 			}
 			s.isExiting = true
+			s.executePlan = plan
 			// TODO: update subscribe progress to db
 		case <-subscribeSwapOutEventsTicker.C:
 			// TODO:
@@ -394,9 +500,12 @@ func (s *SPExitScheduler) produceSPExitExecutePlan() (*SPExitExecutePlan, error)
 		return plan, err
 	}
 	plan = &SPExitExecutePlan{
+		manager:                  s.manager,
 		virtualGroupManager:      s.manager.virtualGroupManager,
 		PrimaryVGFMigrateUnits:   make([]*VirtualGroupFamilyMigrateExecuteUnit, 0),
 		SecondaryGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		ToMigrateGVG:             make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		MigratingGVG:             make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
 	}
 	for _, f := range vgfList {
 		plan.PrimaryVGFMigrateUnits = append(plan.PrimaryVGFMigrateUnits, NewVirtualGroupFamilyMigrateExecuteUnit(f, s.selfSP))

@@ -133,6 +133,37 @@ type OffChainAuthKeyDB interface {
 	InsertAuthKey(newRecord *OffChainAuthKey) error
 }
 
+// MigrateDB is used to support sp exit and bucket migrate.
+type MigrateDB interface {
+	// UpdateSPExitSubscribeProgress includes insert and update.
+	UpdateSPExitSubscribeProgress(blockHeight uint64) error
+	// QuerySPExitSubscribeProgress returns blockHeight which is called at startup.
+	QuerySPExitSubscribeProgress() (uint64, error)
+	// UpdateSwapOutSubscribeProgress includes insert and update.
+	UpdateSwapOutSubscribeProgress(blockHeight uint64) error
+	// QuerySwapOutSubscribeProgress returns blockHeight which is called at startup.
+	QuerySwapOutSubscribeProgress() (uint64, error)
+	// UpdateBucketMigrateSubscribeProgress includes insert and update.
+	UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error
+	// QueryBucketMigrateSubscribeProgress returns blockHeight which is called at startup.
+	QueryBucketMigrateSubscribeProgress() (uint64, error)
+
+	// InsertMigrateGVGUnit inserts a new gvg migrate unit.
+	InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
+	// DeleteMigrateGVGUnit deletes the gvg migrate unit.
+	DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
+	// UpdateMigrateGVGUnit update the gvg migrate unit.
+	UpdateMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
+	// ListMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
+	ListMigrateGVGUnitsByFamilyID(familyID uint32, srcSP uint32) ([]*MigrateGVGUnitMeta, error)
+	// QuerySecondaryMigrateGVGUnit is used to load at src sp startup(sp exit).
+	QuerySecondaryMigrateGVGUnit(gvgID uint32, srcSP uint32) (*MigrateGVGUnitMeta, error)
+	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
+	ListMigrateGVGUnitsByBucketID(bucketID uint32, destSP uint32) ([]*MigrateGVGUnitMeta, error)
+	// ListSecondaryMigrateGVGUnitsBySPID is used to load at dest sp startup(sp exit).
+	ListSecondaryMigrateGVGUnitsBySPID(destSP uint32) ([]*MigrateGVGUnitMeta, error)
+}
+
 type SPDB interface {
 	UploadObjectProgressDB
 	GCObjectProgressDB
@@ -140,4 +171,5 @@ type SPDB interface {
 	TrafficDB
 	SPInfoDB
 	OffChainAuthKeyDB
+	MigrateDB
 }

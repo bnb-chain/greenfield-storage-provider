@@ -31,12 +31,15 @@ const (
 	RecoveryObjectPiecePath = "/greenfield/recovery/v1/get-piece"
 	// GnfdRecoveryMsgHeader defines receive piece data meta
 	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
+
 	// MigratePiecePath defines migrate piece path which is used in SP exiting case
-	MigratePiecePath = "/greenfield/admin/v1/migrate-piece"
+	MigratePiecePath = "/greenfield/migrate/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
-	//
-	GnfdDispatchMigrateGVGTaskQuery = ""
+	// NotifyMigrateGVGTaskPath defines dispatch migrate gvg task from src sp to dest sp.
+	NotifyMigrateGVGTaskPath = "/greenfield/migrate/v1/notify-migrate-gvg-task"
+	// GnfdMigrateGVGMsgHeader defines migrate gvg msg header
+	GnfdMigrateGVGMsgHeader = "X-Gnfd-Migrate-GVG-Msg"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
@@ -155,9 +158,28 @@ func (s *GfSpClient) MigratePiece(ctx context.Context, mp gfsptask.GfSpMigratePi
 	return buf.Bytes(), nil
 }
 
-// DispatchMigrateGVGUnit is used by src sp dispatch migrate gvg unit to dest sp of migrate plan.
+// NotifyDestSPMigrateGVG is used to notify dest sp start migrate gvg task.
 // TODO: maybe need a approval.
-func (s *GfSpClient) DispatchMigrateGVGUnit(ctx context.Context, destEndpoint string, migrateTask coretask.MigrateGVGTask) error {
-	// TODO:
+func (s *GfSpClient) NotifyDestSPMigrateGVG(ctx context.Context, destEndpoint string, migrateTask coretask.MigrateGVGTask) error {
+	req, err := http.NewRequest(http.MethodPost, destEndpoint+NotifyMigrateGVGTaskPath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", destEndpoint, "error", err)
+		return err
+	}
+	msg, err := json.Marshal(migrateTask)
+	if err != nil {
+		return err
+	}
+	req.Header.Add(GnfdMigrateGVGMsgHeader, hex.EncodeToString(msg))
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.Errorw("failed to notify migrate gvg msg", "error", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to notify migrate gvg, StatusCode(%d), Endpoint(%s)", resp.StatusCode, destEndpoint)
+	}
 	return nil
 }

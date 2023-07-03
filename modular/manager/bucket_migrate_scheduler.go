@@ -17,17 +17,23 @@ type BucketMigrateExecutePlan struct {
 }
 
 func (plan *BucketMigrateExecutePlan) loadFromDB() error {
+	// TODO: MigrateDB interface impl.
+
 	// subscribe progress
 	// plan progress
 	// task progress
 	return nil
 }
 func (plan *BucketMigrateExecutePlan) storeToDB() error {
+	// TODO: MigrateDB interface impl.
+
 	// TODO:
 	return nil
 }
 
 func (plan *BucketMigrateExecutePlan) updateProgress() error {
+	// TODO: MigrateDB interface impl.
+	
 	// TODO: update memory and db.
 	return nil
 }

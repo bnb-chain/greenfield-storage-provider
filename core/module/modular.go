@@ -210,6 +210,8 @@ type Manager interface {
 	PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error)
 	// HandleRecoverPieceTask handles the result of recovering piece task, the request comes from TaskExecutor.
 	HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error
+	// NotifyMigrateGVG is used to notify dest sp migrate gvg.
+	NotifyMigrateGVG(ctx context.Context, task task.MigrateGVGTask) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.

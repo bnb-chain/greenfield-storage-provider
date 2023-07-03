@@ -315,3 +315,11 @@ func (g *GfSpBaseApp) GfSpPickVirtualGroupFamily(ctx context.Context,
 		VgfId: vgfID,
 	}, nil
 }
+
+func (g *GfSpBaseApp) GfSpNotifyMigrateGVG(ctx context.Context,
+	req *gfspserver.GfSpNotifyMigrateGVGRequest) (*gfspserver.GfSpNotifyMigrateGVGResponse, error) {
+	if err := g.manager.NotifyMigrateGVG(ctx, req.GetMigrateGvgTask()); err != nil {
+		return nil, err
+	}
+	return &gfspserver.GfSpNotifyMigrateGVGResponse{}, nil
+}

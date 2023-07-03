@@ -56,6 +56,22 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: approvalRouterName,
 		},
 		{
+			name:             "Notify migrate gvg task",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              scheme + testDomain + NotifyMigrateGVGTaskPath,
+			shouldMatch:      true,
+			wantedRouterName: notifyMigrateGVGRouterName,
+		},
+		{
+			name:             "Migrate piece data",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + MigratePiecePath,
+			shouldMatch:      true,
+			wantedRouterName: migratePieceRouterName,
+		},
+		{
 			name:             "Put object router，virtual host style",
 			router:           gwRouter,
 			method:           http.MethodPut,

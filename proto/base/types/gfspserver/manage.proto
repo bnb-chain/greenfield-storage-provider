@@ -64,9 +64,18 @@ message GfSpPickVirtualGroupFamilyResponse {
   uint32 vgf_id = 2;
 }
 
+message GfSpNotifyMigrateGVGRequest {
+  base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 1;
+}
+
+message GfSpNotifyMigrateGVGResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+}
+
 service GfSpManageService {
   rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
   rpc GfSpReportTask(GfSpReportTaskRequest) returns (GfSpReportTaskResponse) {}
   rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns (GfSpPickVirtualGroupFamilyResponse) {}
+  rpc GfSpNotifyMigrateGVG(GfSpNotifyMigrateGVGRequest) returns (GfSpNotifyMigrateGVGResponse) {}
 }

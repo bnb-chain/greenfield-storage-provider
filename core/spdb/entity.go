@@ -87,3 +87,17 @@ type OffChainAuthKey struct {
 	CreatedTime  time.Time
 	ModifiedTime time.Time
 }
+
+// MigrateGVGUnitMeta is used to record migrate type/meta/status/progress.
+type MigrateGVGUnitMeta struct {
+	GlobalVirtualGroupID   uint32
+	VirtualGroupFamilyID   uint32 // = 0 if it is bucket migrate.
+	MigrateRedundancyIndex int32  // < 0 if it migrates primary.
+	BucketID               uint64 // = 0 if it is SPExitType.
+	IsSecondaryGVG         bool   // = true if it is secondary migrate(sp exit secondary and conflicts).
+	SrcSPID                uint32
+	DestSPID               uint32
+	LastMigrateObjectID    uint64
+	MigrateStatus          int // scheduler assign unit status.
+	CheckStatus            int //  src sp check dest sp's migrate unit.
+}
