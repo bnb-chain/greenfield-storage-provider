@@ -595,6 +595,27 @@ func (s *GfSpClient) ListSecondaryObjects(ctx context.Context, spID uint32, buck
 	return resp.Objects, nil
 }
 
+func (s *GfSpClient) ListObjectsInGVGAndBucket(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Object, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListObjectsInGVGAndBucketRequest{
+		GvgId:      gvgID,
+		BucketId:   bucketID,
+		StartAfter: startAfter,
+		Limit:      limit,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsInGVGAndBucket(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list objects by gvg id", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Objects, nil
+}
+
 func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Object, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
@@ -615,7 +636,7 @@ func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAf
 	return resp.Objects, nil
 }
 
-func (s *GfSpClient) GfSpGetVirtualGroupFamily(ctx context.Context, vgfID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroupFamily, error) {
+func (s *GfSpClient) GetVirtualGroupFamily(ctx context.Context, vgfID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroupFamily, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -631,7 +652,7 @@ func (s *GfSpClient) GfSpGetVirtualGroupFamily(ctx context.Context, vgfID uint32
 	return resp.Vgf, nil
 }
 
-func (s *GfSpClient) GfSpGetGlobalVirtualGroup(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroup, error) {
+func (s *GfSpClient) GetGlobalVirtualGroup(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroup, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -650,11 +671,11 @@ func (s *GfSpClient) GfSpGetGlobalVirtualGroup(ctx context.Context, bucketID uin
 	return resp.Gvg, nil
 }
 
-func (s *GfSpClient) GfSpListMigrateBucketsEvent(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*storage_types.EventMigrationBucket, error) {
+func (s *GfSpClient) ListMigrateBucketEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*storage_types.EventMigrationBucket, []*storage_types.EventCompleteMigrationBucket, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return nil, ErrRpcUnknown
+		return nil, nil, ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &types.GfSpListMigrateBucketEventsRequest{
@@ -664,12 +685,12 @@ func (s *GfSpClient) GfSpListMigrateBucketsEvent(ctx context.Context, blockID ui
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListMigrateBucketEvents(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to list migrate bucket events", "error", err)
-		return nil, ErrRpcUnknown
+		return nil, nil, ErrRpcUnknown
 	}
-	return resp.Events, nil
+	return resp.Events, resp.CompleteEvents, nil
 }
 
-func (s *GfSpClient) GfSpListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.EventSwapOut, error) {
+func (s *GfSpClient) ListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.EventSwapOut, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -688,7 +709,7 @@ func (s *GfSpClient) GfSpListSwapOutEvents(ctx context.Context, blockID uint64, 
 	return resp.Events, nil
 }
 
-func (s *GfSpClient) GfSpListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroup, error) {
+func (s *GfSpClient) ListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroup, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -706,7 +727,7 @@ func (s *GfSpClient) GfSpListGlobalVirtualGroupsByBucket(ctx context.Context, bu
 	return resp.Groups, nil
 }
 
-func (s *GfSpClient) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroup, error) {
+func (s *GfSpClient) ListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroup, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -724,11 +745,11 @@ func (s *GfSpClient) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.Contex
 	return resp.Groups, nil
 }
 
-func (s *GfSpClient) GfSpListSpExitEvents(ctx context.Context, blockID uint64, operatorAddress string, opts ...grpc.DialOption) ([]*virtual_types.EventStorageProviderExit, error) {
+func (s *GfSpClient) ListSpExitEvents(ctx context.Context, blockID uint64, operatorAddress string, opts ...grpc.DialOption) ([]*virtual_types.EventStorageProviderExit, []*virtual_types.EventCompleteStorageProviderExit, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return nil, ErrRpcUnknown
+		return nil, nil, ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &types.GfSpListSpExitEventsRequest{
@@ -738,7 +759,7 @@ func (s *GfSpClient) GfSpListSpExitEvents(ctx context.Context, blockID uint64, o
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListSpExitEvents(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to list migrate swap out events", "error", err)
-		return nil, ErrRpcUnknown
+		return nil, nil, ErrRpcUnknown
 	}
-	return resp.Events, nil
+	return resp.Events, resp.CompleteEvents, nil
 }

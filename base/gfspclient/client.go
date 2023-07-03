@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -45,13 +46,14 @@ type GfSpClient struct {
 	signerEndpoint        string
 	authenticatorEndpoint string
 
-	mux          sync.RWMutex
-	managerConn  *grpc.ClientConn
-	approverConn *grpc.ClientConn
-	p2pConn      *grpc.ClientConn
-	signerConn   *grpc.ClientConn
-	httpClient   *http.Client
-	metrics      bool
+	mux            sync.RWMutex
+	downloaderConn *grpc.ClientConn
+	managerConn    *grpc.ClientConn
+	approverConn   *grpc.ClientConn
+	p2pConn        *grpc.ClientConn
+	signerConn     *grpc.ClientConn
+	httpClient     *http.Client
+	metrics        bool
 }
 
 func NewGfSpClient(
@@ -82,6 +84,24 @@ func NewGfSpClient(
 func (s *GfSpClient) Connection(ctx context.Context, address string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	options := append(DefaultClientOptions(), opts...)
 	return grpc.DialContext(ctx, address, options...)
+}
+
+func (s *GfSpClient) DownloaderConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	options := append(DefaultClientOptions(), opts...)
+	if s.metrics {
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	}
+	if s.downloaderConn == nil {
+		conn, err := s.Connection(ctx, s.downloaderEndpoint, options...)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to create connection", "error", err)
+			return nil, ErrRpcUnknown
+		}
+		s.downloaderConn = conn
+	}
+	return s.downloaderConn, nil
 }
 
 func (s *GfSpClient) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
@@ -175,6 +195,9 @@ func (s *GfSpClient) Close() error {
 	if s.managerConn != nil {
 		s.managerConn.Close()
 	}
+	if s.downloaderConn != nil {
+		s.downloaderConn.Close()
+	}
 	if s.approverConn != nil {
 		s.approverConn.Close()
 	}
@@ -192,5 +215,12 @@ func DefaultClientOptions() []grpc.DialOption {
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxClientCallMsgSize)))
 	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxClientCallMsgSize)))
+
+	var kacp = keepalive.ClientParameters{
+		Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
+		Timeout:             time.Second,      // wait 1 second for ping ack before considering the connection dead
+		PermitWithoutStream: true,             // send pings even without active streams
+	}
+	options = append(options, grpc.WithKeepaliveParams(kacp))
 	return options
 }

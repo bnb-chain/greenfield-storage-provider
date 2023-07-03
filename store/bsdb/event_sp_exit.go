@@ -16,12 +16,19 @@ func (b *BsDBImpl) ListSpExitEvents(blockID uint64, operatorAddress common.Addre
 		Select("*").
 		Where("operator_address = ? and create_at = ?", operatorAddress, blockID).
 		Find(&events).Error
+	if err != nil {
+		return nil, nil, err
+	}
 
 	err = b.db.Table((&EventCompleteStorageProviderExit{}).TableName()).
 		Select("*").
 		Where("operator_address = ? and create_at = ?", operatorAddress, blockID).
 		Find(&completeEvents).Error
+	if err != nil {
+		return nil, nil, err
+	}
 
+	eventsIDMap = make(map[uint32]*EventStorageProviderExit)
 	for _, event := range events {
 		eventsIDMap[event.StorageProviderId] = event
 	}

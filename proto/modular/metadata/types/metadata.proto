@@ -551,8 +551,6 @@ message GfSpGetGlobalVirtualGroupResponse {
 message GfSpListObjectsInGVGRequest {
   // gvg_id is the unique identification for gvg
   uint32 gvg_id = 1;
-  // bucket_id is the unique identification for bucket
-  uint64 bucket_id = 2;
   // start_after is where you want to start listing from
   uint64 start_after = 3;
   // defines the number of results that should be returned in response, the maximum is 1000, default 50
@@ -561,6 +559,24 @@ message GfSpListObjectsInGVGRequest {
 
 // GfSpListObjectsInGVGResponse is response type for the GfSpListObjectsInGVG RPC method
 message GfSpListObjectsInGVGResponse {
+  // objects defines the list of object
+  repeated Object objects = 1;
+}
+
+// GfSpListObjectsInGVGAndBucketRequest is request type for the GfSpListObjectsInGVGAndBucket RPC method
+message GfSpListObjectsInGVGAndBucketRequest {
+  // gvg_id is the unique identification for gvg
+  uint32 gvg_id = 1;
+  // bucket_id is the unique identification for bucket
+  uint64 bucket_id = 2;
+  // start_after is where you want to start listing from
+  uint64 start_after = 3;
+  // defines the number of results that should be returned in response, the maximum is 1000, default 50
+  uint32 limit = 4;
+}
+
+// GfSpListObjectsInGVGAndBucketResponse is response type for the GfSpListObjectsInGVGAndBucket RPC method
+message GfSpListObjectsInGVGAndBucketResponse {
   // objects defines the list of object
   repeated Object objects = 1;
 }
@@ -666,6 +682,7 @@ service GfSpMetadataService {
   rpc GfSpGetVirtualGroupFamily(GfSpGetVirtualGroupFamilyRequest) returns (GfSpGetVirtualGroupFamilyResponse) {}
   rpc GfSpGetGlobalVirtualGroup(GfSpGetGlobalVirtualGroupRequest) returns (GfSpGetGlobalVirtualGroupResponse) {}
   rpc GfSpListObjectsInGVG(GfSpListObjectsInGVGRequest) returns (GfSpListObjectsInGVGResponse) {}
+  rpc GfSpListObjectsInGVGAndBucket(GfSpListObjectsInGVGAndBucketRequest) returns (GfSpListObjectsInGVGAndBucketResponse) {}
   rpc GfSpListMigrateBucketEvents(GfSpListMigrateBucketEventsRequest) returns (GfSpListMigrateBucketEventsResponse) {}
   rpc GfSpListSwapOutEvents(GfSpListSwapOutEventsRequest) returns (GfSpListSwapOutEventsResponse) {}
   rpc GfSpListGlobalVirtualGroupsBySecondarySP(GfSpListGlobalVirtualGroupsBySecondarySPRequest) returns (GfSpListGlobalVirtualGroupsBySecondarySPResponse) {}
