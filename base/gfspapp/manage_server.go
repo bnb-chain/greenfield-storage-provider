@@ -108,6 +108,8 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		if t.GetRetry() == 1 {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_replicate_schedule_cost").Observe(
 				time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
+			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_wait_replicate_first_schedule_cost").Observe(
+				time.Since(time.Unix(t.GetUpdateTime(), 0)).Seconds())
 		} else {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_replicate_retry_schedule_cost").Observe(
 				time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
