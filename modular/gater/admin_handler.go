@@ -11,7 +11,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -727,7 +726,7 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	migratePiece := gfspserver.GfSpMigratePiece{}
+	migratePiece := gfsptask.GfSpMigratePieceTask{}
 	err = json.Unmarshal(migrateMsg, &migratePiece)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate piece msg", "header", migrateHeader)
@@ -780,7 +779,8 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 			replicateIdx, migratePiece.GetStorageParams().GetMaxSegmentSize())
 		log.Infow("migrate primary sp", "segmentPieceKey", segmentPieceKey, "segmentPieceSize", segmentPieceSize)
 		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
-			uint64(segmentPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize), 30, MaxMigratePieceRetry)
+			uint64(segmentPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
+			g.baseApp.TaskTimeout(pieceTask, objectInfo.GetPayloadSize()), g.baseApp.TaskMaxRetry(pieceTask))
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to download segment piece", "error", err)
@@ -792,7 +792,8 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 			migratePiece.GetStorageParams().GetMaxSegmentSize(), migratePiece.GetStorageParams().GetRedundantDataChunkNum())
 		log.Infow("migrate secondary sp", "ecPieceKey", ecPieceKey, "ecPieceSize", ecPieceSize)
 		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
-			uint64(ecPieceSize), ecPieceKey, 0, uint64(ecPieceSize), 30, MaxMigratePieceRetry)
+			uint64(ecPieceSize), ecPieceKey, 0, uint64(ecPieceSize),
+			g.baseApp.TaskTimeout(pieceTask, objectInfo.GetPayloadSize()), g.baseApp.TaskMaxRetry(pieceTask))
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 		if err != nil {
 			return

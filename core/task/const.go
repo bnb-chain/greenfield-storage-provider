@@ -48,8 +48,10 @@ const (
 	TypeTaskGCMeta
 	// TypeTaskRecoverPiece defines the type of the recovering piece task.
 	TypeTaskRecoverPiece
-	// TypeTaskMigrateGVG defines the type of migrate gvg task.
+	// TypeTaskMigrateGVG defines the type of migrating gvg task.
 	TypeTaskMigrateGVG
+	// TypeTaskMigratePiece defines the type of migrating piece task.
+	TypeTaskMigratePiece
 )
 
 var TypeTaskMap = map[TType]string{

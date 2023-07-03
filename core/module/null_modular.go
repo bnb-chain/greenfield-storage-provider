@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
@@ -241,7 +241,7 @@ func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.
 	return nil
 }
 
-func (*NilModular) SignMigratePiece(ctx context.Context, mp *gfspserver.GfSpMigratePiece) ([]byte, error) {
+func (*NilModular) SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
 	return nil, nil
 }
 

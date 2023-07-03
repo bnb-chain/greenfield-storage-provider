@@ -174,6 +174,12 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqCounter.WithLabelValues(SingerSuccessRecoveryTask).Inc()
 			metrics.ReqTime.WithLabelValues(SingerSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
 		}
+	case *gfspserver.GfSpSignRequest_GfspMigratePieceTask:
+		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspMigratePieceTask.Key().String())
+		signature, err = g.signer.SignMigratePiece(ctx, t.GfspMigratePieceTask)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign migrate piece task", "error", err)
+		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")
 		return &gfspserver.GfSpSignResponse{
