@@ -177,6 +177,7 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
 	replicateTask.SetCreateTime(task.GetCreateTime())
+	replicateTask.SetUpdateTime(time.Now().Unix())
 	replicateTask.SetLogs(task.GetLogs())
 	replicateTask.AppendLog("manager-create-replicate-task")
 	err := m.replicateQueue.Push(replicateTask)

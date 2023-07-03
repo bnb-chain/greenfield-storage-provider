@@ -8,7 +8,7 @@ import (
 
 const (
 	// DefaultExecutorMaxExecuteNum defines the default max parallel execute task number.
-	DefaultExecutorMaxExecuteNum int64 = 100
+	DefaultExecutorMaxExecuteNum int64 = 16
 	// DefaultExecutorAskTaskInterval defines the default ask task interval from manager.
 	DefaultExecutorAskTaskInterval int = 1
 	// DefaultExecutorAskReplicateApprovalTimeout defines the ask replicate piece approval

@@ -85,7 +85,11 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		log.CtxDebugw(ctx, "finish to read data from stream", "info", uploadObjectTask.Info(),
 			"read_size", readSize, "error", err)
 		uploadObjectTask.AppendLog("uploader-report-upload-task")
-		go u.baseApp.GfSpClient().ReportTask(context.Background(), uploadObjectTask)
+		go func() {
+			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_before_report_manager_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
+			_ = u.baseApp.GfSpClient().ReportTask(context.Background(), uploadObjectTask)
+			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_after_report_manager_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
+		}()
 	}()
 	startTime := time.Now()
 	for {

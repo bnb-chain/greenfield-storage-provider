@@ -87,7 +87,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.sealQueue.SetRetireTaskStrategy(m.GCSealObjectQueue)
 	m.sealQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.receiveQueue.SetRetireTaskStrategy(m.GCReceiveQueue)
-	m.receiveQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
+	m.receiveQueue.SetFilterTaskStrategy(m.FilterReceiveTask)
 	m.gcObjectQueue.SetRetireTaskStrategy(m.ResetGCObjectTask)
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
@@ -424,7 +424,7 @@ func (m *ManageModular) GCSealObjectQueue(qTask task.Task) bool {
 }
 
 func (m *ManageModular) GCReceiveQueue(qTask task.Task) bool {
-	return qTask.Expired()
+	return qTask.ExceedRetry()
 }
 
 func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
@@ -457,7 +457,16 @@ func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
 		return true
 	}
 	if qTask.GetRetry() == 0 {
+		return true
+	}
+	return false
+}
 
+func (m *ManageModular) FilterReceiveTask(qTask task.Task) bool {
+	if qTask.ExceedRetry() {
+		return false
+	}
+	if qTask.ExceedTimeout() {
 		return true
 	}
 	return false
