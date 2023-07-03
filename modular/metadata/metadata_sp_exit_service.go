@@ -195,7 +195,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 	return resp, nil
 }
 
-// GfSpListSwapOutEvents list migrate swap out events
+// GfSpListSwapOutEvents list swap out events
 func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.GfSpListSwapOutEventsRequest) (resp *types.GfSpListSwapOutEventsResponse, err error) {
 	var (
 		events []*model.EventSwapOut
@@ -295,7 +295,7 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsByBucket(ctx context.Contex
 	return resp, nil
 }
 
-// GfSpListSpExitEvents list migrate swap out events
+// GfSpListSpExitEvents list migrate sp exit events
 func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.GfSpListSpExitEventsRequest) (resp *types.GfSpListSpExitEventsResponse, err error) {
 	var (
 		events          []*model.EventStorageProviderExit

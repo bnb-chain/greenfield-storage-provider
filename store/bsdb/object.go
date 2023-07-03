@@ -208,7 +208,7 @@ func (b *BsDBImpl) ListSecondaryObjects(spID uint32, bucketID common.Hash, start
 	return objects, err
 }
 
-// ListObjectsInGVG list objects by gvg id
+// ListObjectsInGVG list objects by gvg and bucket id
 func (b *BsDBImpl) ListObjectsInGVG(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
 	var (
 		localGroups []*LocalVirtualGroup

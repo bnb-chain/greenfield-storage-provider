@@ -103,6 +103,8 @@ const (
 	GetUserBucketsCountQuery = "buckets-count"
 	// ListExpiredBucketsBySpQuery defines list buckets that are expired by specific sp, which is used to route request
 	ListExpiredBucketsBySpQuery = "expired-buckets"
+	// ListVirtualGroupFamiliesBySpIDQuery defines list virtual group families by sp id, which is used to route request
+	ListVirtualGroupFamiliesBySpIDQuery = "vgf-id"
 	// GetGroupListNameQuery defines get group list name query, which is used to route request
 	GetGroupListNameQuery = "name"
 	// GetGroupListPrefixQuery defines get group list prefix query, which is used to route request
@@ -125,6 +127,17 @@ const (
 	CreateAtQuery = "create-at"
 	// PrimarySpIDQuery defines the primary sp id
 	PrimarySpIDQuery = "primary-sp-id"
+	// SpIDQuery defines the sp id
+	SpIDQuery = "sp-id"
+	// VgfIDQuery defines the vgf id
+	VgfIDQuery = "vgf-id"
+	// GvgIDQuery defines the gvg id
+	GvgIDQuery = "gvg-id"
+	// LvgIDQuery defines the lvg id
+	LvgIDQuery = "lvg-id"
+	// BlockIDQuery defines the block id
+	BlockIDQuery         = "block-id"
+	OperatorAddressQuery = "operator-address"
 	// GetChallengeInfoPath defines get challenge info path style suffix
 	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style

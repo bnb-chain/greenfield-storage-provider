@@ -393,7 +393,7 @@ func (r *MetadataModular) GfSpListSecondaryObjects(ctx context.Context, req *typ
 	return resp, nil
 }
 
-// GfSpListObjectsInGVG list objects by gvg id
+// GfSpListObjectsInGVG list objects by gvg and bucket id
 func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.GfSpListObjectsInGVGRequest) (resp *types.GfSpListObjectsInGVGResponse, err error) {
 	var (
 		objects []*model.Object
