@@ -9,13 +9,47 @@ import (
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-const primarySPECIdx = -1
+const (
+	primarySPECIdx = -1
+	queryLimit     = 100
+)
 
-// HandleMigratePieceTask handle the migrate piece task, it will send requests to the exiting SP to get piece data
+// HandleMigrateGVGTask handles the migrate gvg task.
+// There are two cases: sp exit and bucket migration
+func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask.MigrateGVGTask) error {
+	for {
+		var (
+			gvgID                = task.GetGvg().GetId()
+			bucketID             = task.GetBucketId()
+			lastMigratedObjectID = task.GetLastMigratedObjectId()
+		)
+		if bucketID == 0 {
+			// if bucketID is 0, it indicates that it is a sp exiting task
+			objectInfoList, err := e.baseApp.GfSpClient().ListObjectsInGVG(ctx, gvgID, lastMigratedObjectID+1, queryLimit)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to list objects in gvg", "gvg_id", gvgID,
+					"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
+			}
+			log.Infow("sp exiting", "objectInfoList", objectInfoList)
+		} else {
+			// if bucketID is not equal to 0, it indicates that it is a bucket migration task
+			objectInfoList, err := e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, gvgID, bucketID, lastMigratedObjectID+1, queryLimit)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
+					"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
+			}
+			log.Infow("migrate bucket", "objectInfoList", objectInfoList)
+		}
+		return nil
+	}
+}
+
+// HandleMigratePieceTask handles the migrate piece task, it will send requests to the exiting SP to get piece data
 // integrity hash and piece checksum to migrate the receiving SP. PieceData would be written to PieceStore, integrity hash
 // and piece checksum will be written sql db.
 // currently get and handle data one by one; in the future, use concurrency

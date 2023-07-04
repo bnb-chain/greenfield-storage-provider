@@ -2,7 +2,9 @@ package task
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var _ Task = (*NullTask)(nil)
@@ -21,6 +23,7 @@ var _ GCTask = (*NullTask)(nil)
 var _ GCZombiePieceTask = (*NullTask)(nil)
 var _ GCMetaTask = (*NullTask)(nil)
 var _ RecoveryPieceTask = (*NullTask)(nil)
+var _ MigrateGVGTask = (*NullTask)(nil)
 
 type NullTask struct{}
 
@@ -141,5 +144,16 @@ func (*NullTask) SetPieceHash([][]byte)                  {}
 func (*NullTask) GetPieceDataSize() int64                { return 0 }
 func (*NullTask) SetPieceDataSize(int64)                 {}
 func (*NullTask) GetSignBytes() []byte                   { return nil }
-func (*NullTask) InitMigratePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, segmentIdx uint32, ecIdx int32, pieceSize uint64, timeout, retry int64) {
+func (*NullTask) InitMigrateGVGTask(priority TPriority, bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup,
+	redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider) {
 }
+func (*NullTask) GetGvg() *virtualgrouptypes.GlobalVirtualGroup { return nil }
+func (*NullTask) SetGvg(*virtualgrouptypes.GlobalVirtualGroup)  {}
+func (*NullTask) GetSrcSp() *sptypes.StorageProvider            { return nil }
+func (*NullTask) SetSrcSp(*sptypes.StorageProvider)             {}
+func (*NullTask) GetDestSp() *sptypes.StorageProvider           { return nil }
+func (*NullTask) SetDestSp(*sptypes.StorageProvider)            {}
+func (*NullTask) GetBucketId() uint64                           { return 0 }
+func (*NullTask) SetBucketID(uint64)                            {}
+func (*NullTask) GetLastMigratedObjectId() uint64               { return 0 }
+func (*NullTask) SetLastMigratedObjectID(uint64)                {}

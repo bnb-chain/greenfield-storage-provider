@@ -3,14 +3,14 @@ package manager
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"time"
-
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 )
 
 type GlobalVirtualGroupByBucketMigrateExecuteUnit struct {
