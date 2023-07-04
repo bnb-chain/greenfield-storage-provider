@@ -104,7 +104,29 @@ const (
 	// ListExpiredBucketsBySpQuery defines list buckets that are expired by specific sp, which is used to route request
 	ListExpiredBucketsBySpQuery = "expired-buckets"
 	// ListVirtualGroupFamiliesBySpIDQuery defines list virtual group families by sp id, which is used to route request
-	ListVirtualGroupFamiliesBySpIDQuery = "vgf-id"
+	ListVirtualGroupFamiliesBySpIDQuery = "vgf-sp-id"
+	// GetVirtualGroupFamilyBySpIDQuery defines get virtual group families by vgf id, which is used to route request
+	GetVirtualGroupFamilyBySpIDQuery = "vgf-id-query"
+	// GetGlobalVirtualGroupByGvgIDQuery defines get global virtual group by gvg id, which is used to route request
+	GetGlobalVirtualGroupByGvgIDQuery = "gvg-id-query"
+	// GetGlobalVirtualGroupQuery defines get global virtual group by lvg id and bucket id, which is used to route request
+	GetGlobalVirtualGroupQuery = "gvg-query"
+	// GetVirtualGroupFamilyBindingOnBucketQuery defines get virtual group family binding on bucket, which is used to route request
+	GetVirtualGroupFamilyBindingOnBucketQuery = "vgf-bucket-id"
+	// ListGlobalVirtualGroupsBySecondarySPQuery defines list global virtual group by secondary sp id, which is used to route request
+	ListGlobalVirtualGroupsBySecondarySPQuery = "gvg-secondary-sp"
+	// ListGlobalVirtualGroupsByBucketQuery defines list global virtual group by bucket id, which is used to route request
+	ListGlobalVirtualGroupsByBucketQuery = "gvg-bucket-id"
+	// ListObjectsInGVGAndBucketQuery defines list objects by gvg and bucket id, which is used to route request
+	ListObjectsInGVGAndBucketQuery = "objects-gvg-bucket"
+	// ListObjectsInGVGQuery defines list objects by gvg id, which is used to route request
+	ListObjectsInGVGQuery = "objects-gvg"
+	// ListMigrateBucketEventsQuery defines list migrate bucket events, which is used to route request
+	ListMigrateBucketEventsQuery = "migrate-bucket-events"
+	// ListSwapOutEventsQuery defines list swap out events, which is used to route request
+	ListSwapOutEventsQuery = "swap-out-events"
+	// ListSpExitEventsQuery defines list swap out events, which is used to route request
+	ListSpExitEventsQuery = "sp-exit-events"
 	// GetGroupListNameQuery defines get group list name query, which is used to route request
 	GetGroupListNameQuery = "name"
 	// GetGroupListPrefixQuery defines get group list prefix query, which is used to route request

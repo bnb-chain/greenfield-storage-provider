@@ -1,7 +1,9 @@
 package util
 
 import (
+	"context"
 	"errors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"math"
 
 	sdkmath "cosmossdk.io/math"
@@ -31,4 +33,18 @@ func TotalStakingStoreSizeOfGVG(gvg *virtualgrouptypes.GlobalVirtualGroup, staki
 		return math.MaxUint64
 	}
 	return total.Uint64()
+}
+
+// ValidateAndGetSPIndexWithinGVGSecondarySPs return whether current sp is one of the object gvg's secondary sp and its index within GVG(if is)
+func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client *gfspclient.GfSpClient, selfSpId uint32, bucketId uint64, lvgId uint32) (int, bool, error) {
+	gvg, err := client.GetGlobalVirtualGroup(ctx, bucketId, lvgId)
+	if err != nil {
+		return -1, false, err
+	}
+	for i, sspId := range gvg.GetSecondarySpIds() {
+		if selfSpId == sspId {
+			return i, true, nil
+		}
+	}
+	return -1, false, nil
 }

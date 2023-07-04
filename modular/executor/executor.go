@@ -44,6 +44,8 @@ type ExecuteModular struct {
 	doingGCGCMetaTaskCnt       int64
 	doingRecoveryPieceTaskCnt  int64
 	doingMigrationGVGTaskCnt   int64
+
+	spID uint32
 }
 
 func (e *ExecuteModular) Name() string {
@@ -282,4 +284,16 @@ func (e *ExecuteModular) Statistics() string {
 		atomic.LoadInt64(&e.doingGCZombiePieceTaskCnt),
 		atomic.LoadInt64(&e.doingGCGCMetaTaskCnt),
 		atomic.LoadInt64(&e.doingMigrationGVGTaskCnt))
+}
+
+func (e *ExecuteModular) getSPID() (uint32, error) {
+	if e.spID != 0 {
+		return e.spID, nil
+	}
+	spInfo, err := e.baseApp.Consensus().QuerySP(context.Background(), e.baseApp.OperatorAddress())
+	if err != nil {
+		return 0, err
+	}
+	e.spID = spInfo.GetId()
+	return e.spID, nil
 }

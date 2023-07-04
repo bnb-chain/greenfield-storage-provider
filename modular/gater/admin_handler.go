@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -566,27 +566,29 @@ func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Reque
 func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
 	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	var err error
-	// TODO: refine it
-	isOneOfSecondary := false
-	ECIndex := 0
+
 	// the primary sp of the object should be consistent with task signature
-	// if bucketInfo.PrimarySpAddress != signatureAddr.String() {
-	//	log.CtxErrorw(ctx, "recovery request not come from primary sp")
-	// }
-	//
-	// isOneOfSecondary := false
-	// handlerAddr := g.baseApp.OperatorAddress()
-	// var ECIndex int
-	// for idx, spAddr := range objectInfo.SecondarySpAddresses {
-	//	if spAddr == handlerAddr {
-	//		isOneOfSecondary = true
-	//		ECIndex = idx
-	//	}
-	// }
-	// if the handler SP is not one of the secondary SP of the task object, return err
-	if !isOneOfSecondary {
-		err = ErrRecoverySP
+	primarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketInfo.GetPrimarySpId())
+	if err != nil {
 		return nil, err
+	}
+	if primarySp.OperatorAddress != signatureAddr.String() {
+		log.CtxErrorw(ctx, "recovery request not come from primary sp")
+		return nil, ErrRecoverySP
+	}
+
+	// TODO get sp id from config file
+	spID, err := g.getSPID()
+	if err != nil {
+		return nil, ErrConsensus
+	}
+	ECIndex, isOneOfSecondary, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, g.baseApp.GfSpClient(), spID, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to global virtual group info from metaData", "error", err)
+		return nil, ErrConsensus
+	}
+	if !isOneOfSecondary {
+		return nil, ErrRecoverySP
 	}
 
 	// init download piece task, get piece data and return the data
@@ -596,10 +598,8 @@ func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *stora
 
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	// no need to check quota when recovering primary SP segment data
-	// TODO: refine it
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
-		false, "", uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
-		// false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
+		false, primarySp.OperatorAddress, uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 	pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
@@ -616,30 +616,38 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
 
-	// TODO: refine it
-	isOneOfSecondary := false
-	ECIndex := int32(0)
 	// if the handler is not the primary SP of the object, return error
-	// if bucketInfo.PrimarySpAddress != g.baseApp.OperatorAddress() {
-	//	log.CtxErrorw(ctx, "it is not the right the primary SP to handle secondary SP recovery", "expected primary Sp:", bucketInfo.PrimarySpAddress)
-	//	return nil, ErrRecoverySP
-	// }
-	//
-	// // if the sender is not one of the secondarySp,return err
-	// isOneOfSecondary := false
-	// var ECIndex int32
-	// for idx, spAddr := range objectInfo.SecondarySpAddresses {
-	//	if spAddr == signatureAddr.String() {
-	//		isOneOfSecondary = true
-	//		ECIndex = int32(idx)
-	//	}
-	// }
+	// TODO get sp id from config
+	spID, err := g.getSPID()
+	if err != nil {
+		return nil, ErrConsensus
+	}
+
+	if bucketInfo.GetPrimarySpId() != spID {
+		log.CtxErrorw(ctx, "it is not the right the primary SP to handle secondary SP recovery", "actual_sp_id", spID,
+			"expected_sp_id", bucketInfo.GetPrimarySpId())
+		return nil, ErrRecoverySP
+	}
+	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+	if err != nil {
+		return nil, ErrRecoverySP
+	}
+	isOneOfSecondary := false
+	var ECIndex int32
+	for idx, sspId := range gvg.GetSecondarySpIds() {
+		ssp, err := g.baseApp.Consensus().QuerySPByID(ctx, sspId)
+		if err != nil {
+			return nil, ErrConsensus
+		}
+		if ssp.OperatorAddress == signatureAddr.String() {
+			isOneOfSecondary = true
+			ECIndex = int32(idx)
+		}
+	}
 	redundancyIdx := recoveryTask.EcIdx
-	// if the handler SP is not one of the secondary SP of the task object, return err
 	if !isOneOfSecondary || ECIndex != recoveryTask.EcIdx {
 		return nil, ErrRecoverySP
 	}
-
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(),
 		recoveryTask.GetSegmentIdx())
@@ -647,11 +655,15 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 	// TODO: refine it
 	// if recovery data chunk, just download the data part of segment in primarySP
 	// no need to check quota when recovering primary SP or secondary SP data
+	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketInfo.GetPrimarySpId())
+	if err != nil {
+		return nil, err
+	}
 	if redundancyIdx < int32(params.GetRedundantDataChunkNum())-1 {
 		pieceOffset := int64(redundancyIdx) * ECPieceSize
+
 		pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
-			false, "", uint64(ECPieceSize), segmentPieceKey, uint64(pieceOffset), uint64(ECPieceSize),
-			// false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), segmentPieceKey, uint64(pieceOffset), uint64(ECPieceSize),
+			false, bucketPrimarySp.OperatorAddress, uint64(ECPieceSize), segmentPieceKey, uint64(pieceOffset), uint64(ECPieceSize),
 			g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 		pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
@@ -666,8 +678,7 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 	// if recovery parity chunk, need to download the total segment and ec encode it
 	segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(), params.GetMaxSegmentSize())
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),
-		false, "", uint64(ECPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
-		//	false, bucketInfo.PrimarySpAddress, uint64(ECPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
+		false, bucketPrimarySp.OperatorAddress, uint64(ECPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
 	segmentData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)

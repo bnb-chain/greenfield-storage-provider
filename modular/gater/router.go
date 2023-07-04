@@ -46,6 +46,17 @@ const (
 	notifyMigrateGVGRouterName                     = "NotifyMigrateGVG"
 	migratePieceRouterName                         = "MigratePiece"
 	listVirtualGroupFamiliesBySpIDRouterName       = "ListVirtualGroupFamiliesBySpID"
+	getVirtualGroupFamilyRouterName                = "GetVirtualGroupFamily"
+	getGlobalVirtualGroupByGvgIDRouterName         = "GetGlobalVirtualGroupByGvgID"
+	getGlobalVirtualGroupRouterName                = "GetGlobalVirtualGroup"
+	getVirtualGroupFamilyBindingOnBucketRouterName = "GetVirtualGroupFamilyBindingOnBucket"
+	listGlobalVirtualGroupsBySecondarySPRouterName = "ListGlobalVirtualGroupsBySecondarySP"
+	listGlobalVirtualGroupsByBucketRouterName      = "ListGlobalVirtualGroupsByBucket"
+	listObjectsInGVGAndBucketRouterName            = "ListObjectsInGVGAndBucket"
+	listObjectsInGVGRouterName                     = "ListObjectsInGVG"
+	listMigrateBucketEventsRouterName              = "ListMigrateBucketEvents"
+	listSwapOutEventsRouterName                    = "ListSwapOutEvents"
+	listSpExitEventsRouterName                     = "ListSpExitEvents"
 )
 
 const (
@@ -192,8 +203,41 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		//List Expired Buckets By Sp
 		router.Path("/").Name(listExpiredBucketsBySpRouterName).Methods(http.MethodGet).Queries(ListExpiredBucketsBySpQuery, "").HandlerFunc(g.listExpiredBucketsBySpHandler)
 
-		// Get Payment By Bucket ID
+		// List Virtual Group Families By Sp ID
 		router.Path("/").Name(listVirtualGroupFamiliesBySpIDRouterName).Methods(http.MethodGet).Queries(ListVirtualGroupFamiliesBySpIDQuery, "").HandlerFunc(g.listVirtualGroupFamiliesBySpIDHandler)
+
+		// Get Virtual Group Families By Vgf ID
+		router.Path("/").Name(getVirtualGroupFamilyRouterName).Methods(http.MethodGet).Queries(GetVirtualGroupFamilyBySpIDQuery, "").HandlerFunc(g.getVirtualGroupFamilyHandler)
+
+		// Get Global Virtual Group By Gvg ID
+		router.Path("/").Name(getGlobalVirtualGroupByGvgIDRouterName).Methods(http.MethodGet).Queries(GetGlobalVirtualGroupByGvgIDQuery, "").HandlerFunc(g.getGlobalVirtualGroupByGvgIDHandler)
+
+		// Get Global Virtual Group By Lvg ID And Bucket ID
+		router.Path("/").Name(getGlobalVirtualGroupRouterName).Methods(http.MethodGet).Queries(GetGlobalVirtualGroupQuery, "").HandlerFunc(g.getGlobalVirtualGroupHandler)
+
+		// Get Virtual Group family Binding On Bucket
+		router.Path("/").Name(getVirtualGroupFamilyBindingOnBucketRouterName).Methods(http.MethodGet).Queries(GetVirtualGroupFamilyBindingOnBucketQuery, "").HandlerFunc(g.getVirtualGroupFamilyBindingOnBucketHandler)
+
+		// List Global Virtual Group By Secondary Sp ID
+		router.Path("/").Name(listGlobalVirtualGroupsBySecondarySPRouterName).Methods(http.MethodGet).Queries(ListGlobalVirtualGroupsBySecondarySPQuery, "").HandlerFunc(g.listGlobalVirtualGroupsBySecondarySPHandler)
+
+		// List Global Virtual Group By Bucket ID
+		router.Path("/").Name(listGlobalVirtualGroupsByBucketRouterName).Methods(http.MethodGet).Queries(ListGlobalVirtualGroupsByBucketQuery, "").HandlerFunc(g.listGlobalVirtualGroupsByBucketHandler)
+
+		// List Objects By Gvg And Bucket ID
+		router.Path("/").Name(listObjectsInGVGAndBucketRouterName).Methods(http.MethodGet).Queries(ListObjectsInGVGAndBucketQuery, "").HandlerFunc(g.listObjectsInGVGAndBucketHandler)
+
+		// List Objects By Gvg And Bucket ID
+		router.Path("/").Name(listObjectsInGVGRouterName).Methods(http.MethodGet).Queries(ListObjectsInGVGQuery, "").HandlerFunc(g.listObjectsInGVGHandler)
+
+		// List Migrate Bucket Events
+		router.Path("/").Name(listMigrateBucketEventsRouterName).Methods(http.MethodGet).Queries(ListMigrateBucketEventsQuery, "").HandlerFunc(g.listMigrateBucketEventsHandler)
+
+		// List Swap Out Events
+		router.Path("/").Name(listSwapOutEventsRouterName).Methods(http.MethodGet).Queries(ListSwapOutEventsQuery, "").HandlerFunc(g.listSwapOutEventsHandler)
+
+		// List Sp Exit Events
+		router.Path("/").Name(listSpExitEventsRouterName).Methods(http.MethodGet).Queries(ListSpExitEventsQuery, "").HandlerFunc(g.listSpExitEventsHandler)
 	}
 
 	router.Path("/").
