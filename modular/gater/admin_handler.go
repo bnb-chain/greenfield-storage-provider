@@ -418,7 +418,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify receive task signature
-	requestAccount, err = reqCtx.VerifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
+	requestAccount, err = reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "fail to verify receive task", "error", err)
 		err = ErrSignature
