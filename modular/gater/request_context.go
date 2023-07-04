@@ -229,13 +229,18 @@ func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, e
 	return recoverAcc, pk, nil
 }
 
-func (r *RequestContext) VerifyTaskSignature(msg []byte, taskSignature []byte) (sdk.AccAddress, error) {
-	addr, pk, err := RecoverAddr(crypto.Keccak256(msg), taskSignature)
+// VerifyTaskSignature verify the task signature and return the sender address
+func (r *RequestContext) verifyTaskSignature(taskMsgBytes []byte, taskSignature []byte) (sdk.AccAddress, error) {
+	if len(taskMsgBytes) != 32 {
+		taskMsgBytes = crypto.Keccak256(taskMsgBytes)
+	}
+	
+	addr, pk, err := RecoverAddr(taskMsgBytes, taskSignature)
 	if err != nil {
 		log.CtxErrorw(r.Context(), "failed to recover address", "error", err)
 		return nil, err
 	}
-	if !secp256k1.VerifySignature(pk.Bytes(), crypto.Keccak256(msg), taskSignature[:len(taskSignature)-1]) {
+	if !secp256k1.VerifySignature(pk.Bytes(), taskMsgBytes, taskSignature[:len(taskSignature)-1]) {
 		log.CtxErrorw(r.ctx, "failed to verify task signature")
 		return nil, err
 	}
