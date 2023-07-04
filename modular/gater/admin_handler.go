@@ -628,7 +628,6 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 			"expected_sp_id", bucketInfo.GetPrimarySpId())
 		return nil, ErrRecoverySP
 	}
-	// todo Check sender is seconday sp, might need to pass signature sp id instead of signatureAddr
 	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
 	if err != nil {
 		return nil, ErrRecoverySP
