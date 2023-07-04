@@ -127,11 +127,13 @@ func (r *RequestContext) String() string {
 		getRequestIP(r.request), time.Since(r.startTime), r.err)
 }
 
-// NeedVerifyAuthentication is temporary to Compatible SignatureV2
-func (r *RequestContext) NeedVerifyAuthentication() bool {
-	requestSignature := r.request.Header.Get(GnfdAuthorizationHeader)
-	v1SignaturePrefix := signaturePrefix(SignTypeV1, SignAlgorithm)
-	return strings.HasPrefix(requestSignature, v1SignaturePrefix)
+// SkipVerifyAuthentication is temporary to Compatible SignatureV2
+func (r *RequestContext) SkipVerifyAuthentication() bool {
+	v2SignaturePrefix := signaturePrefix(SignTypeV2, SignAlgorithm)
+	if strings.HasPrefix(r.request.Header.Get(GnfdAuthorizationHeader), v2SignaturePrefix) {
+		return true
+	}
+	return false
 }
 
 // signaturePrefix return supported Authentication prefix
