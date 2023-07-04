@@ -1,13 +1,9 @@
 package bsdb
 
-import "github.com/forbole/juno/v4/common"
-
 // ListMigrateBucketEvents list migrate bucket events
 func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, error) {
 	var (
 		events         []*EventMigrationBucket
-		res            []*EventMigrationBucket
-		eventsIDMap    map[common.Hash]*EventMigrationBucket
 		completeEvents []*EventCompleteMigrationBucket
 		err            error
 	)
@@ -28,17 +24,5 @@ func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*Even
 		return nil, nil, err
 	}
 
-	eventsIDMap = make(map[common.Hash]*EventMigrationBucket)
-	for _, event := range events {
-		eventsIDMap[event.BucketID] = event
-	}
-
-	res = make([]*EventMigrationBucket, 0)
-	for _, event := range completeEvents {
-		if e, ok := eventsIDMap[event.BucketID]; ok {
-			res = append(res, e)
-		}
-	}
-
-	return res, completeEvents, err
+	return events, completeEvents, err
 }

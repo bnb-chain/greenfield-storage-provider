@@ -589,12 +589,18 @@ message GfSpListMigrateBucketEventsRequest {
   uint32 sp_id = 2;
 }
 
-// GfSpListMigrateBucketEventsResponse is response type for the GfSpListMigrateBucketEvents RPC method
-message GfSpListMigrateBucketEventsResponse {
+// ListMigrateBucketEvents is the combination of migrate bucket events
+message ListMigrateBucketEvents {
   // events defines the migration bucket event
   repeated greenfield.storage.EventMigrationBucket events = 1;
   // complete_events defines the complete migration bucket event
   repeated greenfield.storage.EventCompleteMigrationBucket complete_events = 2;
+}
+
+// GfSpListMigrateBucketEventsResponse is response type for the GfSpListMigrateBucketEvents RPC method
+message GfSpListMigrateBucketEventsResponse {
+  // ListMigrateBucketEvents is the combination of migrate bucket events
+  ListMigrateBucketEvents events = 1;
 }
 
 // GfSpListSwapOutEventsRequest is request type for the GfSpListSwapOutEvents RPC method
@@ -605,10 +611,16 @@ message GfSpListSwapOutEventsRequest {
   uint32 sp_id = 2;
 }
 
-// GfSpListSwapOutEventsResponse is response type for the GfSpListSwapOutEvents RPC method
-message GfSpListSwapOutEventsResponse {
+// ListSwapOutEvents is the combination of swap out events
+message ListSwapOutEvents {
   // events defines the swap out event
   repeated greenfield.virtualgroup.EventSwapOut events = 1;
+}
+
+// GfSpListSwapOutEventsResponse is response type for the GfSpListSwapOutEvents RPC method
+message GfSpListSwapOutEventsResponse {
+  // ListSwapOutEvents is the combination of swap out events
+  ListSwapOutEvents events = 1;
 }
 
 // GfSpListGlobalVirtualGroupsBySecondarySPRequest is request type for the GfSpListGlobalVirtualGroupsBySecondarySP RPC method
@@ -643,12 +655,18 @@ message GfSpListSpExitEventsRequest {
   string operator_address = 2;
 }
 
-// GfSpListSpExitEventsResponse is response type for the GfSpListSPExitEvents RPC method
-message GfSpListSpExitEventsResponse {
+// ListSpExitEvents is the combination of sp exit events
+message ListSpExitEvents {
   // events defines the sp exit event
   repeated greenfield.virtualgroup.EventStorageProviderExit events = 1;
   // complete_events defines the complete sp exit event
   repeated greenfield.virtualgroup.EventCompleteStorageProviderExit complete_events = 2;
+}
+
+// GfSpListSpExitEventsResponse is response type for the GfSpListSPExitEvents RPC method
+message GfSpListSpExitEventsResponse {
+  // ListSpExitEvents is the combination of sp exit events
+  ListSpExitEvents events = 1;
 }
 
 service GfSpMetadataService {
@@ -683,9 +701,9 @@ service GfSpMetadataService {
   rpc GfSpGetGlobalVirtualGroup(GfSpGetGlobalVirtualGroupRequest) returns (GfSpGetGlobalVirtualGroupResponse) {}
   rpc GfSpListObjectsInGVG(GfSpListObjectsInGVGRequest) returns (GfSpListObjectsInGVGResponse) {}
   rpc GfSpListObjectsInGVGAndBucket(GfSpListObjectsInGVGAndBucketRequest) returns (GfSpListObjectsInGVGAndBucketResponse) {}
-  rpc GfSpListMigrateBucketEvents(GfSpListMigrateBucketEventsRequest) returns (GfSpListMigrateBucketEventsResponse) {}
-  rpc GfSpListSwapOutEvents(GfSpListSwapOutEventsRequest) returns (GfSpListSwapOutEventsResponse) {}
   rpc GfSpListGlobalVirtualGroupsBySecondarySP(GfSpListGlobalVirtualGroupsBySecondarySPRequest) returns (GfSpListGlobalVirtualGroupsBySecondarySPResponse) {}
   rpc GfSpListGlobalVirtualGroupsByBucket(GfSpListGlobalVirtualGroupsByBucketRequest) returns (GfSpListGlobalVirtualGroupsByBucketResponse) {}
+  rpc GfSpListMigrateBucketEvents(GfSpListMigrateBucketEventsRequest) returns (GfSpListMigrateBucketEventsResponse) {}
+  rpc GfSpListSwapOutEvents(GfSpListSwapOutEventsRequest) returns (GfSpListSwapOutEventsResponse) {}
   rpc GfSpListSpExitEvents(GfSpListSpExitEventsRequest) returns (GfSpListSpExitEventsResponse) {}
 }

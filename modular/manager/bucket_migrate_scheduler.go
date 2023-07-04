@@ -127,6 +127,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 				err                           error
 			)
 			// 1. subscribe metadata event
+			// TODO: will replace GfBsDB() to GfClient()
 			migrationBucketEvents, migrationBucketCompleteEvents, err = s.manager.baseApp.GfBsDB().ListMigrateBucketEvents(s.lastSubscribedBlockHeight, s.spID)
 			if err != nil {
 				log.Errorw("failed to list migrate bucket events", "error", err)
