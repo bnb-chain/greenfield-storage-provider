@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -156,22 +155,21 @@ type BucketMigrateScheduler struct {
 	executePlanIDMap map[uint64]*BucketMigrateExecutePlan
 }
 
-// NewBucketMigrateScheduler returns a virtual group manager interface.
+// NewBucketMigrateScheduler returns a bucket migrate scheduler instance.
 func NewBucketMigrateScheduler(manager *ManageModular) (*BucketMigrateScheduler, error) {
-	bucketMigrateScheduler := &BucketMigrateScheduler{
-		manager: manager,
+	var err error
+	bucketMigrateScheduler := &BucketMigrateScheduler{}
+	if err = bucketMigrateScheduler.Init(manager); err != nil {
+		return nil, err
 	}
-
-	bucketMigrateScheduler.Init()
-	bucketMigrateScheduler.Start()
-
+	if err = bucketMigrateScheduler.Start(); err != nil {
+		return nil, err
+	}
 	return bucketMigrateScheduler, nil
 }
 
-func (s *BucketMigrateScheduler) Init() error {
-	if s.manager == nil {
-		return fmt.Errorf("manger is nil")
-	}
+func (s *BucketMigrateScheduler) Init(m *ManageModular) error {
+	s.manager = m
 	spInfo, err := s.manager.baseApp.Consensus().QuerySP(context.Background(), s.manager.baseApp.OperatorAddress())
 	if err != nil {
 		return err
@@ -192,7 +190,7 @@ func (s *BucketMigrateScheduler) Init() error {
 		PrimaryGVGIDMapMigrateUnits: make(map[uint32]*GlobalVirtualGroupMigrateExecuteUnit),
 	}
 	if err = executePlan.Init(); err != nil {
-		log.Errorw("failed to init sp exit Scheduler due to plan init", "error", err)
+		log.Errorw("failed to init bucket migrate scheduler due to plan init", "error", err)
 		return err
 	}
 	s.executePlanIDMap[executePlan.BucketID] = executePlan

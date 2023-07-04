@@ -198,7 +198,9 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
 
-	manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus())
+	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus()); err != nil {
+		return err
+	}
 	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
 		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalSec
 	}
@@ -209,7 +211,5 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalSec
 	}
 
-	manager.bucketMigrateScheduler, err = NewBucketMigrateScheduler(manager)
-
-	return err
+	return nil
 }

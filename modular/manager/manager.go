@@ -78,6 +78,7 @@ type ManageModular struct {
 
 	virtualGroupManager    vgmgr.VirtualGroupManager
 	bucketMigrateScheduler *BucketMigrateScheduler
+	spExitScheduler        *SPExitScheduler
 
 	subscribeSPExitEventInterval        int
 	subscribeBucketMigrateEventInterval int
@@ -112,20 +113,28 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	}
 	m.scope = scope
 
-	err = m.LoadTaskFromDB()
-	if err != nil {
+	if err = m.LoadTaskFromDB(); err != nil {
 		return err
 	}
-	if err = m.bucketMigrateScheduler.Init(); err != nil {
-		log.Errorw("failed to start manager due to bucket migrate scheduler init", "error", err)
-		return err
-	}
-	if err = m.bucketMigrateScheduler.Start(); err != nil {
-		log.Errorw("failed to start manager due to bucket migrate scheduler start", "error", err)
-		return err
-	}
+
+	go m.delayStartMigrateScheduler()
 	go m.eventLoop(ctx)
 	return nil
+}
+
+func (m *ManageModular) delayStartMigrateScheduler() {
+	// delay start to wait metadata service ready.
+	// migrate scheduler init depend metadata.
+	time.Sleep(60 * time.Second)
+
+	var err error
+	if m.bucketMigrateScheduler, err = NewBucketMigrateScheduler(m); err != nil {
+		log.Errorw("failed to new bucket migrate scheduler", "error", err)
+	}
+	if m.spExitScheduler, err = NewSPExitScheduler(m); err != nil {
+		log.Errorw("failed to new sp exit scheduler", "error", err)
+	}
+	log.Info("succeed to start migrate scheduler")
 }
 
 func (m *ManageModular) eventLoop(ctx context.Context) {

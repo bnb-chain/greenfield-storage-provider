@@ -609,6 +609,19 @@ type SPExitScheduler struct {
 	// migrate task runner
 }
 
+// NewSPExitScheduler returns a sp exit scheduler instance.
+func NewSPExitScheduler(manager *ManageModular) (*SPExitScheduler, error) {
+	var err error
+	spExitScheduler := &SPExitScheduler{}
+	if err = spExitScheduler.Init(manager); err != nil {
+		return nil, err
+	}
+	if err = spExitScheduler.Start(); err != nil {
+		return nil, err
+	}
+	return spExitScheduler, nil
+}
+
 // Init function is used to load db subscribe block progress and migrate gvg progress.
 func (s *SPExitScheduler) Init(m *ManageModular) error {
 	var (
@@ -655,36 +668,38 @@ func (s *SPExitScheduler) subscribeEvents() {
 		select {
 		case <-subscribeSPExitEventsTicker.C:
 			// TODO: will,uncomment the below code
-			// spStartExitEvents, spEndExitExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
-			//if subscribeError != nil {
-			//	log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
-			//	return
-			//}
-			//if len(spStartExitEvents) > 0 {
-			//	if s.isExiting || s.isExited {
-			//		return
-			//	}
-			//	plan, err := s.produceSPExitExecutePlan()
-			//	if err != nil {
-			//		log.Errorw("failed to produce sp exit execute plan", "error", err)
-			//		return
-			//	}
-			//	if startErr := plan.Start(); startErr != nil {
-			//		log.Errorw("failed to start sp exit execute plan", "error", startErr)
-			//		return
-			//	}
-			//	updateErr := s.manager.baseApp.GfSpDB().UpdateSPExitSubscribeProgress(s.lastSubscribedSPExitBlockHeight + 1)
-			//	if updateErr != nil {
-			//		log.Errorw("failed to update sp exit progress", "error", updateErr)
-			//		return
-			//	}
-			//	s.executePlan = plan
-			//	s.isExiting = true
-			//	s.lastSubscribedSPExitBlockHeight++
-			//}
-			//if len(spEndExitExitEvents) > 0 {
-			//	s.isExited = true
-			//}
+			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
+			if subscribeError != nil {
+				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
+				return
+			}
+			if spExitEvents.Event != nil {
+				if s.isExiting || s.isExited {
+					return
+				}
+				plan, err := s.produceSPExitExecutePlan()
+				if err != nil {
+					log.Errorw("failed to produce sp exit execute plan", "error", err)
+					return
+				}
+				if startErr := plan.Start(); startErr != nil {
+					log.Errorw("failed to start sp exit execute plan", "error", startErr)
+					return
+				}
+
+				s.executePlan = plan
+				s.isExiting = true
+			}
+			if spExitEvents.CompleteEvent != nil {
+				s.isExited = true
+			}
+			updateErr := s.manager.baseApp.GfSpDB().UpdateSPExitSubscribeProgress(s.lastSubscribedSPExitBlockHeight + 1)
+			if updateErr != nil {
+				log.Errorw("failed to update sp exit progress", "error", updateErr)
+				return
+			}
+			s.lastSubscribedSPExitBlockHeight++
+			log.Infow("sp exit subscribe progress", "last_subscribed_block_height", s.lastSubscribedSPExitBlockHeight)
 
 		case <-subscribeSwapOutEventsTicker.C:
 			if s.isExited {
