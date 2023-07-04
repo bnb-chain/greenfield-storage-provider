@@ -526,9 +526,9 @@ type MigrateGVGTask interface {
 	// InitMigrateGVGTask inits migrate gvg task by bucket id, gvg.
 	InitMigrateGVGTask(priority TPriority, bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup,
 		redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider)
-	// GetGlobalVirtualGroup returns the global virtual group
+	// GetGvg returns the global virtual group
 	GetGvg() *virtualgrouptypes.GlobalVirtualGroup
-	// SetGlobalVirtualGroup sets the global virtual group
+	// SetGvg sets the global virtual group
 	SetGvg(*virtualgrouptypes.GlobalVirtualGroup)
 	// GetSrcSp returns the src storage provider
 	GetSrcSp() *sptypes.StorageProvider
@@ -538,7 +538,7 @@ type MigrateGVGTask interface {
 	GetDestSp() *sptypes.StorageProvider
 	// SetDestSp sets the dest storage provider
 	SetDestSp(*sptypes.StorageProvider)
-	// GetBucketID returns the bucketID
+	// GetBucketId returns the bucketID
 	GetBucketId() uint64
 	// SetBucketID sets the bucketID
 	SetBucketID(uint64)
@@ -548,6 +548,6 @@ type MigrateGVGTask interface {
 	SetRedundancyIdx(int32)
 	// GetLastMigratedObjectId returns the last modified objectID
 	GetLastMigratedObjectId() uint64
-	// SetLastMigratedObjectId sets the last migrated objectID
+	// SetLastMigratedObjectID sets the last migrated objectID
 	SetLastMigratedObjectID(uint64)
 }

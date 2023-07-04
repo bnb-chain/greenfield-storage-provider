@@ -7,9 +7,11 @@ import (
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -22,31 +24,60 @@ const (
 // HandleMigrateGVGTask handles the migrate gvg task.
 // There are two cases: sp exit and bucket migration
 func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask.MigrateGVGTask) error {
-	for {
-		var (
-			gvgID                = task.GetGvg().GetId()
-			bucketID             = task.GetBucketId()
-			lastMigratedObjectID = task.GetLastMigratedObjectId()
-		)
-		if bucketID == 0 {
-			// if bucketID is 0, it indicates that it is a sp exiting task
-			objectInfoList, err := e.baseApp.GfSpClient().ListObjectsInGVG(ctx, gvgID, lastMigratedObjectID+1, queryLimit)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to list objects in gvg", "gvg_id", gvgID,
-					"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
-			}
-			log.Infow("sp exiting", "objectInfoList", objectInfoList)
-		} else {
-			// if bucketID is not equal to 0, it indicates that it is a bucket migration task
-			objectInfoList, err := e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, gvgID, bucketID, lastMigratedObjectID+1, queryLimit)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
-					"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
-			}
-			log.Infow("migrate bucket", "objectInfoList", objectInfoList)
+	var (
+		gvgID                = task.GetGvg().GetId()
+		bucketID             = task.GetBucketId()
+		lastMigratedObjectID = task.GetLastMigratedObjectId()
+		objectList           []*metadatatypes.Object
+		err                  error
+	)
+	if bucketID == 0 {
+		// if bucketID is 0, it indicates that it is a sp exiting task
+		objectList, err = e.baseApp.GfSpClient().ListObjectsInGVG(ctx, gvgID, lastMigratedObjectID+1, queryLimit)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to list objects in gvg", "gvg_id", gvgID,
+				"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
 		}
-		return nil
+		log.Infow("sp exiting", "objectList", objectList)
+	} else {
+		// if bucketID is not equal to 0, it indicates that it is a bucket migration task
+		objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, gvgID, bucketID, lastMigratedObjectID+1, queryLimit)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
+				"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
+		}
+		log.Infow("migrate bucket", "objectList", objectList)
 	}
+	for _, objectInfo := range objectList {
+		if objectInfo.GetRemoved() || objectInfo.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+			log.CtxInfow(ctx, "object has been removed or object status is not sealed", "removed",
+				objectInfo.GetRemoved(), "object_status", objectInfo.GetObjectInfo().GetObjectStatus(), "object_id",
+				objectInfo.GetObjectInfo().Id.String(), "object_name", objectInfo.GetObjectInfo().GetObjectName())
+			continue
+		}
+		params, err := e.baseApp.Consensus().QueryStorageParamsByTimestamp(ctx, objectInfo.GetObjectInfo().GetCreateAt())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to query storage params by timestamp", "object_id",
+				objectInfo.GetObjectInfo().Id.String(), "object_name", objectInfo.GetObjectInfo().GetObjectName(), "error", err)
+			return err
+		}
+		var ownSPID = uint32(1)
+		a, b, err := ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, e.baseApp.GfSpClient(), ownSPID, bucketID, objectInfo.GetObjectInfo().GetLocalVirtualGroupId())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to validate and get sp index within gvg secondary sps", "error", err)
+			return err
+		}
+		migratePieceTask := &gfsptask.GfSpMigratePieceTask{
+			ObjectInfo:    objectInfo.GetObjectInfo(),
+			StorageParams: params,
+			RedundancyIdx: task.GetRedundancyIdx(),
+		}
+		if a == primarySPECIdx && b == false {
+			migratePieceTask.RedundancyIdx = primarySPECIdx
+		}
+	}
+	return nil
+
 }
 
 // HandleMigratePieceTask handles the migrate piece task, it will send requests to the exiting SP to get piece data
@@ -74,13 +105,13 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, objectInfo 
 		StorageParams: params,
 	}
 	if index < 0 { // get all segment pieces of an object
-		migratePiece.EcIdx = primarySPECIdx
+		migratePiece.RedundancyIdx = primarySPECIdx
 		if err = e.doPieceMigration(ctx, migratePiece, srcSPEndpoint, primarySPECIdx); err != nil {
 			log.CtxErrorw(ctx, "failed to migrate segment pieces", "error", err)
 			return err
 		}
 	} else {
-		migratePiece.EcIdx = int32(index)
+		migratePiece.RedundancyIdx = int32(index)
 		if err = e.doPieceMigration(ctx, migratePiece, srcSPEndpoint, index); err != nil {
 			log.CtxErrorw(ctx, "failed to migrate ec pieces", "error", err)
 			return err
@@ -160,8 +191,7 @@ func checkIsPrimary(objectInfo *storagetypes.ObjectInfo, endpoint string) int {
 }
 
 // TODO: complete log info
-func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece gfsptask.GfSpMigratePieceTask, endpoint string,
-	index int) error {
+func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece gfsptask.GfSpMigratePieceTask, endpoint string) error {
 	var (
 		segmentCount = e.baseApp.PieceOp().SegmentPieceCount(migratePiece.GetObjectInfo().GetPayloadSize(),
 			migratePiece.GetStorageParams().VersionedParams.GetMaxSegmentSize())
@@ -173,17 +203,14 @@ func (e *ExecuteModular) doPieceMigration(ctx context.Context, migratePiece gfsp
 		go func(mp gfsptask.GfSpMigratePieceTask, segIdx int) {
 			pieceDataList[segIdx] = nil
 			// check migrating segment pieces or ec pieces
-			mp.ReplicateIdx = uint32(segIdx)
-			if index == primarySPECIdx {
-				mp.EcIdx = primarySPECIdx
-			} else {
-				mp.EcIdx = int32(index)
+			mp.SegmentIdx = uint32(segIdx)
+			if mp.GetRedundancyIdx() == primarySPECIdx {
+				mp.RedundancyIdx = primarySPECIdx
 			}
 			pieceData, err := e.sendRequest(ctx, mp, endpoint)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to migrate piece data", "objectID", mp.GetObjectInfo().Id.Uint64(),
-					"object_name", mp.GetObjectInfo().GetObjectName(), "segment index", segIdx, "ecIdx", index,
-					"SP endpoint", endpoint, "error", err)
+					"object_name", mp.GetObjectInfo().GetObjectName(), "segment index", segIdx, "SP endpoint", endpoint, "error", err)
 				return
 			}
 			pieceDataList[segIdx] = pieceData
@@ -242,8 +269,8 @@ func (e *ExecuteModular) sendRequest(ctx context.Context, migratePiece gfsptask.
 		return nil, err
 	}
 	log.CtxInfow(ctx, "succeed to get piece from another sp", "objectID", migratePiece.GetObjectInfo().Id.Uint64(),
-		"object_name", migratePiece.GetObjectInfo().GetObjectName(), "segIdx", migratePiece.GetReplicateIdx(),
-		"ecIdx", migratePiece.GetEcIdx())
+		"object_name", migratePiece.GetObjectInfo().GetObjectName(), "segIdx", migratePiece.GetSegmentIdx(),
+		"redundancyIdx", migratePiece.GetRedundancyIdx())
 	return pieceData, nil
 }
 
@@ -287,4 +314,19 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	log.Infow("succeed to compute and set object integrity", "object_id", objectInfo.Id.String(),
 		"object_name", objectInfo.GetObjectName())
 	return nil
+}
+
+// ValidateAndGetSPIndexWithinGVGSecondarySPs return whether current sp is one of the object gvg's secondary sp and its index within GVG(if is)
+func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client *gfspclient.GfSpClient, selfSpID uint32,
+	bucketID uint64, lvgID uint32) (int, bool, error) {
+	gvg, err := client.GetGlobalVirtualGroup(ctx, bucketID, lvgID)
+	if err != nil {
+		return -1, false, err
+	}
+	for i, sspID := range gvg.GetSecondarySpIds() {
+		if selfSpID == sspID {
+			return i, true, nil
+		}
+	}
+	return -1, false, nil
 }
