@@ -20,6 +20,10 @@ import (
 )
 
 const (
+	// ChainSuccessTotal defines the metrics label of successfully total chain rpc
+	ChainSuccessTotal = "chain_total_success"
+	// ChainFailureTotal defines the metrics label of unsuccessfully total chain rpc
+	ChainFailureTotal = "chain_total_failure"
 	// ChainSuccessCurrentHeight defines the metrics label of successfully get current block height
 	ChainSuccessCurrentHeight = "get_current_height_success"
 	// ChainFailureCurrentHeight defines the metrics label of unsuccessfully get current block height
@@ -90,10 +94,16 @@ func (g *Gnfd) CurrentHeight(ctx context.Context) (height uint64, err error) {
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureCurrentHeight).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureCurrentHeight).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessCurrentHeight).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessCurrentHeight).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -114,10 +124,16 @@ func (g *Gnfd) HasAccount(ctx context.Context, address string) (has bool, err er
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureHasAccount).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureHasAccount).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessHasAccount).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessHasAccount).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -138,10 +154,16 @@ func (g *Gnfd) ListSPs(ctx context.Context) (spInfos []*sptypes.StorageProvider,
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureListSPs).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureListSPs).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessListSPs).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessListSPs).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -170,10 +192,16 @@ func (g *Gnfd) ListBondedValidators(ctx context.Context) (validators []stakingty
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureListBondedValidators).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureListBondedValidators).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessListBondedValidators).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessListBondedValidators).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -197,10 +225,16 @@ func (g *Gnfd) QueryStorageParams(ctx context.Context) (params *storagetypes.Par
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryStorageParams).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryStorageParams).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryStorageParams).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryStorageParams).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -221,10 +255,16 @@ func (g *Gnfd) QueryStorageParamsByTimestamp(ctx context.Context, timestamp int6
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryStorageParamsByTimestamp).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryStorageParamsByTimestamp).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryStorageParamsByTimestamp).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryStorageParamsByTimestamp).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -246,10 +286,16 @@ func (g *Gnfd) QueryBucketInfo(ctx context.Context, bucket string) (bucketInfo *
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryBucketInfo).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryBucketInfo).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryBucketInfo).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryBucketInfo).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -270,10 +316,16 @@ func (g *Gnfd) QueryObjectInfo(ctx context.Context, bucket, object string) (obje
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryObjectInfo).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryObjectInfo).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryObjectInfo).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryObjectInfo).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -297,10 +349,16 @@ func (g *Gnfd) QueryObjectInfoByID(ctx context.Context, objectID string) (object
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryObjectInfoByID).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryObjectInfoByID).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryObjectInfoByID).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryObjectInfoByID).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -325,10 +383,16 @@ func (g *Gnfd) QueryBucketInfoAndObjectInfo(ctx context.Context, bucket, object 
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryBucketInfoAndObjectInfo).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryBucketInfoAndObjectInfo).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryBucketInfoAndObjectInfo).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryBucketInfoAndObjectInfo).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -352,10 +416,16 @@ func (g *Gnfd) ListenObjectSeal(ctx context.Context, objectID uint64, timeoutHei
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureListenObjectSeal).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureListenObjectSeal).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessListenObjectSeal).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessListenObjectSeal).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -389,10 +459,16 @@ func (g *Gnfd) ListenRejectUnSealObject(ctx context.Context, objectID uint64, ti
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureListenRejectUnSealObject).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureListenRejectUnSealObject).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessListenRejectUnSealObject).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessListenRejectUnSealObject).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -421,10 +497,16 @@ func (g *Gnfd) QueryPaymentStreamRecord(ctx context.Context, account string) (st
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryPaymentStreamRecord).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryPaymentStreamRecord).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryPaymentStreamRecord).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryPaymentStreamRecord).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -447,10 +529,16 @@ func (g *Gnfd) VerifyGetObjectPermission(ctx context.Context, account, bucket, o
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureVerifyGetObjectPermission).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureVerifyGetObjectPermission).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessVerifyGetObjectPermission).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessVerifyGetObjectPermission).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -479,10 +567,16 @@ func (g *Gnfd) VerifyPutObjectPermission(ctx context.Context, account, bucket, o
 			metrics.GnfdChainCounter.WithLabelValues(ChainFailureVerifyPutObjectPermission).Inc()
 			metrics.GnfdChainTime.WithLabelValues(ChainFailureVerifyPutObjectPermission).Observe(
 				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
 			return
 		}
 		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessVerifyPutObjectPermission).Inc()
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessVerifyPutObjectPermission).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
