@@ -16,7 +16,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/gater"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
@@ -371,7 +370,7 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
 		// if read piece store error, try to recover the error data
-		if strings.Contains(err.Error(), fmt.Sprintf("inner_code:%d", gater.ErrPieceStoreInnerCode)) {
+		if strings.Contains(err.Error(), fmt.Sprintf("inner_code:%d", ErrPieceStoreInnerCode)) {
 			d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
 		}
 		return nil, nil, nil, ErrPieceStore
