@@ -234,7 +234,7 @@ func (r *RequestContext) verifyTaskSignature(taskMsgBytes []byte, taskSignature 
 	if len(taskMsgBytes) != 32 {
 		taskMsgBytes = crypto.Keccak256(taskMsgBytes)
 	}
-	
+
 	addr, pk, err := RecoverAddr(taskMsgBytes, taskSignature)
 	if err != nil {
 		log.CtxErrorw(r.Context(), "failed to recover address", "error", err)
