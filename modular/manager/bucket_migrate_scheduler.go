@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 )
 
 type GlobalVirtualGroupByBucketMigrateExecuteUnit struct {
@@ -19,6 +19,7 @@ type GlobalVirtualGroupByBucketMigrateExecuteUnit struct {
 }
 
 type BucketMigrateExecutePlan struct {
+	manager                        *ManageModular
 	virtualGroupManager            vgmgr.VirtualGroupManager
 	PrimaryGVGByBucketMigrateUnits []*GlobalVirtualGroupByBucketMigrateExecuteUnit // bucket migrate，primary gvg
 }
@@ -33,8 +34,25 @@ func (plan *BucketMigrateExecutePlan) loadFromDB() error {
 }
 func (plan *BucketMigrateExecutePlan) storeToDB() error {
 	// TODO: MigrateDB interface impl.
-
-	// TODO:
+	var err error
+	for _, primaryGVGUnit := range plan.PrimaryGVGByBucketMigrateUnits {
+		migrateGVGUnit := primaryGVGUnit.gvgMigrateUnit
+		if err = plan.manager.baseApp.GfSpDB().InsertMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
+			GlobalVirtualGroupID:   migrateGVGUnit.gvg.GetId(),
+			VirtualGroupFamilyID:   0,
+			MigrateRedundancyIndex: -1,
+			BucketID:               primaryGVGUnit.bucketID,
+			IsSecondary:            false,
+			IsConflict:             false,
+			SrcSPID:                migrateGVGUnit.srcSP.GetId(),
+			DestSPID:               migrateGVGUnit.destSP.GetId(),
+			LastMigrateObjectID:    0,
+			MigrateStatus:          int(migrateGVGUnit.migrateStatus),
+		}); err != nil {
+			log.Errorw("failed to store to db", "error", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -45,46 +63,9 @@ func (plan *BucketMigrateExecutePlan) updateProgress() error {
 	return nil
 }
 
-func (plan *BucketMigrateExecutePlan) startSrcSPSchedule() {
-	// notify dest sp start migrate gvg and check them migrate status.
-	go plan.notifyDestSPMigrateExecuteUnits()
-	go plan.checkDestSPMigrateExecuteUnitsStatus()
-}
-
-func (plan *BucketMigrateExecutePlan) startDestSPSchedule() {
+func (plan *BucketMigrateExecutePlan) startSPSchedule() {
 	// TODO:
 	// dispatch to task-dispatcher
-}
-
-func (plan *BucketMigrateExecutePlan) notifyDestSPMigrateExecuteUnits() {
-	// dispatch migrate unit to corresponding dest sp.
-	// maybe need get dest sp migrate approval.
-
-	var (
-		dispatchLoopNumber uint64
-		dispatchUnitNumber uint64
-	)
-	for {
-		time.Sleep(10 * time.Second)
-		dispatchLoopNumber++
-		dispatchUnitNumber = 0
-		log.Infow("dispatch migrate unit to dest sp", "loop_number", dispatchLoopNumber, "dispatch_number", dispatchUnitNumber)
-	}
-}
-
-func (plan *BucketMigrateExecutePlan) checkDestSPMigrateExecuteUnitsStatus() {
-	// Periodically check whether the execution unit is executing normally in dest sp.
-	// maybe need retry the failed unit.
-	var (
-		checkLoopNumber uint64
-		checkUnitNumber uint64
-	)
-	for {
-		time.Sleep(10 * time.Second)
-		checkLoopNumber++
-		checkUnitNumber = 0
-		log.Infow("check migrating unit status", "loop_number", checkLoopNumber, "check_number", checkUnitNumber)
-	}
 }
 
 func (plan *BucketMigrateExecutePlan) Init() error {
@@ -164,7 +145,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 			for _, _ = range migrationBucketCompleteEvents {
 				// TODO Complete event ?
 			}
-			// TODO: pdate subscribe progress to db
+			// TODO: update subscribe progress to db
 			// 3.update plan
 		}
 	}
