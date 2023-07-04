@@ -22,6 +22,7 @@ type MigrateGVGTable struct {
 	BucketID               uint64 `gorm:"index:bucket_index"`    // is used by bucket migrate
 	IsSecondary            bool   `gorm:"index:secondary_index"` // is used by sp exit
 	IsConflict             bool   `gorm:"index:conflict_index"`  // is used by sp exit
+	IsSrc                  bool   `gorm:"index:src_index"`       // is used by sp exit
 	MigrateRedundancyIndex int32
 	SrcSPID                uint32
 	DestSPID               uint32
@@ -32,9 +33,9 @@ type MigrateGVGTable struct {
 
 // MigrateGVGPrimaryKey defines MigrateGVGTable primary key.
 func MigrateGVGPrimaryKey(m *MigrateGVGTable) string {
-	return fmt.Sprintf("gvg_id[%d]-vgf_id[%d]-reduncdancy_idx[%d]-bucket_id[%d]-is_secondary[%t]-is_conflict[%t]",
+	return fmt.Sprintf("gvg_id[%d]-vgf_id[%d]-reduncdancy_idx[%d]-bucket_id[%d]-is_secondary[%t]-is_conflict[%t]-is_src[%t]",
 		m.GlobalVirtualGroupID, m.VirtualGroupFamilyID, m.MigrateRedundancyIndex, m.BucketID,
-		m.IsSecondary, m.IsConflict)
+		m.IsSecondary, m.IsConflict, m.IsSrc)
 }
 
 // TableName is used to set MigrateGVGTable Schema's table name in database.

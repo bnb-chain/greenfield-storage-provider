@@ -36,6 +36,7 @@ type GlobalVirtualGroupMigrateExecuteUnit struct {
 	redundantIndex      int32 // if < 0, represents migrate primary.
 	isConflict          bool  // only be used in sp exit.
 	isSecondary         bool  // only be used in sp exit.
+	isSrc               bool  // only be used in sp exit.
 	srcSP               *sptypes.StorageProvider
 	destSP              *sptypes.StorageProvider
 	migrateStatus       MigrateStatus
@@ -181,6 +182,7 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 	return nil
 }
 
+// SPExitExecutePlan is used to record the execution of subtasks in src sp.
 type SPExitExecutePlan struct {
 	manager                  *ManageModular
 	scheduler                *SPExitScheduler
@@ -478,12 +480,6 @@ func (plan *SPExitExecutePlan) startSrcSPSchedule() {
 	go plan.checkDestSPMigrateExecuteUnitsStatus()
 }
 
-func (plan *SPExitExecutePlan) startDestSPSchedule() {
-	// TODO:
-	// MaxDestRunningMigrateGVG
-
-}
-
 func (plan *SPExitExecutePlan) notifyDestSPMigrateExecuteUnits() {
 	// dispatch migrate unit to corresponding dest sp.
 	// maybe need get dest sp migrate approval.
@@ -596,17 +592,50 @@ func (plan *SPExitExecutePlan) Start() error {
 	return nil
 }
 
-// SPExitScheduler subscribes sp exit events and produces a gvg migrate plan.
+// MigrateTaskRunner is used to manage task migrate progress/status in dest sp.
+type MigrateTaskRunner struct {
+	mutex          sync.RWMutex
+	runningUnitMap map[string]*GlobalVirtualGroupMigrateExecuteUnit
+}
+
+func (runner *MigrateTaskRunner) Init() error {
+	// TODO: load db
+	return nil
+}
+
+func (runner *MigrateTaskRunner) Start() error {
+	// TODO:
+	go runner.startDestSPSchedule()
+	return nil
+}
+
+func (runner *MigrateTaskRunner) AddNewMigrateGVGUnit(key string, unit *GlobalVirtualGroupMigrateExecuteUnit) error {
+	// TODO: update db
+	return nil
+}
+
+func (runner *MigrateTaskRunner) startDestSPSchedule() {
+	// TODO:
+	// MaxDestRunningMigrateGVG
+	// push task queue
+
+}
+
+// SPExitScheduler is used to manage and schedule sp exit process.
 type SPExitScheduler struct {
+	manager *ManageModular
+	selfSP  *sptypes.StorageProvider
+
 	// sp exit workflow src sp.
-	manager                         *ManageModular
-	selfSP                          *sptypes.StorageProvider
-	lastSubscribedSPExitBlockHeight uint64 // load from db
+	// manage subscribe progress and execute plan.
+	lastSubscribedSPExitBlockHeight uint64
 	isExiting                       bool
 	isExited                        bool
 	executePlan                     *SPExitExecutePlan
+
 	// sp exit workflow dest sp.
-	// migrate task runner
+	// manage specific gvg execution tasks
+	migrateTaskRunner *MigrateTaskRunner
 }
 
 // NewSPExitScheduler returns a sp exit scheduler instance.
@@ -652,6 +681,9 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		log.Errorw("failed to init sp exit scheduler due to plan init", "error", err)
 		return err
 	}
+	s.migrateTaskRunner = &MigrateTaskRunner{
+		runningUnitMap: make(map[string]*GlobalVirtualGroupMigrateExecuteUnit),
+	}
 	return nil
 }
 
@@ -661,13 +693,16 @@ func (s *SPExitScheduler) Start() error {
 	return nil
 }
 
+func (s *SPExitScheduler) AddNewMigrateGVGUnit(key string, unit *GlobalVirtualGroupMigrateExecuteUnit) error {
+	return s.migrateTaskRunner.AddNewMigrateGVGUnit(key, unit)
+}
+
 func (s *SPExitScheduler) subscribeEvents() {
 	subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
 	subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
 	for {
 		select {
 		case <-subscribeSPExitEventsTicker.C:
-			// TODO: will,uncomment the below code
 			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
 			if subscribeError != nil {
 				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
