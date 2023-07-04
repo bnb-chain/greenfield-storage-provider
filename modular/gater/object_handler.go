@@ -824,29 +824,38 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		return
 	}
 
-	// TODO: refine it.
-	// bucketPrimarySpAddress := getBucketInfoRes.GetBucketInfo().GetPrimarySpAddress()
-	// // if bucket not in the current sp, 302 redirect to the sp that contains the bucket
-	// if !strings.EqualFold(bucketPrimarySpAddress, g.baseApp.OperatorAddress()) {
-	//	log.Debugw("primary sp address not matched ",
-	//		"bucketPrimarySpAddress", bucketPrimarySpAddress, "gateway.config.SpOperatorAddress", g.baseApp.OperatorAddress(),
-	//	)
-	//
-	//	spEndpoint, getEndpointErr := g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), bucketPrimarySpAddress)
-	//
-	//	if getEndpointErr != nil || spEndpoint == "" {
-	//		log.Errorw("failed to get endpoint by address ", "sp_address", reqCtx.bucketName, "error", getEndpointErr)
-	//		err = getEndpointErr
-	//		return
-	//	}
-	//
-	//	redirectURL = spEndpoint + r.RequestURI
-	//	log.Debugw("getting redirect url:", "redirectURL", redirectURL)
-	//
-	//	http.Redirect(w, r, redirectURL, 302)
-	//	return
-	// }
+	bucketPrimarySpId := getBucketInfoRes.GetBucketInfo().GetPrimarySpId()
+	// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
+	// TODO get from config
+	spID, err := g.getSPID()
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
+	if spID != bucketPrimarySpId {
+		log.Debugw("primary sp id not matched ",
+			"bucketPrimarySpId", bucketPrimarySpId, "self sp id", spID,
+		)
 
+		// TODO might need to edit GetEndpointBySpId to reduce call to chain
+		sp, err := g.baseApp.Consensus().QuerySPByID(context.Background(), spID)
+		if err != nil {
+			err = ErrConsensus
+			return
+		}
+		spEndpoint, getEndpointErr := g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), sp.OperatorAddress)
+		if getEndpointErr != nil || spEndpoint == "" {
+			log.Errorw("failed to get endpoint by address ", "sp_address", reqCtx.bucketName, "error", getEndpointErr)
+			err = getEndpointErr
+			return
+		}
+
+		redirectURL := spEndpoint + r.RequestURI
+		log.Debugw("getting redirect url:", "redirectURL", redirectURL)
+
+		http.Redirect(w, r, redirectURL, 302)
+		return
+	}
 	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
 		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
@@ -860,10 +869,8 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		err = ErrNoSuchObject
 		return
 	}
-
 	if isPrivateObject(getBucketInfoRes.GetBucketInfo(), getObjectInfoRes.GetObjectInfo()) {
 		// for private files, we return a built-in dapp and help users provide a signature for verification
-
 		var (
 			expiry    string
 			signature string

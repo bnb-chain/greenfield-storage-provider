@@ -5,14 +5,13 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"os"
-	"strconv"
-
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/urfave/cli/v2"
+	"os"
+	"strconv"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
@@ -288,22 +287,18 @@ func getSegmentIntegrityAction(ctx *cli.Context) error {
 		return err
 	}
 	objectIDStr := ctx.String(objectIDFlag.Name)
-	objectInfo, err := chain.QueryObjectInfoByID(context.Background(), objectIDStr)
-	// TODO:
-	_ = objectInfo
+	_, _ = chain.QueryObjectInfoByID(context.Background(), objectIDStr)
 	if err != nil {
 		return fmt.Errorf("failed to query object info, error: %v", err)
 	}
-
 	replicateIdx := -1
-	// TODO:
+	// TODO: use meta client to get GVG by bucketId and lvgId from objectInfo
 	//for i, addr := range objectInfo.GetSecondarySpAddresses() {
 	//	if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
 	//		replicateIdx = i
 	//		break
 	//	}
 	//}
-
 	objectID, err := strconv.ParseUint(objectIDStr, 10, 64)
 	if err != nil {
 		return err
