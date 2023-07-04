@@ -148,6 +148,10 @@ func (m *GfSpMigrateGVGTask) SetDestSp(destSP *sptypes.StorageProvider) {
 	m.DestSp = destSP
 }
 
+func (m *GfSpMigrateGVGTask) GetBucketID() uint64 {
+	return m.GetBucketId()
+}
+
 func (m *GfSpMigrateGVGTask) SetBucketID(bucketID uint64) {
 	m.BucketId = bucketID
 }
@@ -156,22 +160,30 @@ func (m *GfSpMigrateGVGTask) SetRedundancyIdx(rIdx int32) {
 	m.RedundancyIdx = rIdx
 }
 
+func (m *GfSpMigrateGVGTask) GetLastMigratedObjectID() uint64 {
+	return m.GetLastMigratedObjectId()
+}
+
 func (m *GfSpMigrateGVGTask) SetLastMigratedObjectID(lastMigratedObjectID uint64) {
 	m.LastMigratedObjectId = lastMigratedObjectID
+}
+
+func (m *GfSpMigrateGVGTask) SetFinished(finished bool) {
+	m.Finished = finished
 }
 
 // ======================= MigratePieceTask =====================================
 
 func (g *GfSpMigratePieceTask) Key() coretask.TKey {
 	return GfSpMigratePieceTaskKey(g.GetObjectInfo().GetObjectName(), g.GetObjectInfo().Id.String(),
-		g.GetReplicateIdx(), g.GetEcIdx())
+		g.GetSegmentIdx(), g.GetRedundancyIdx())
 }
 
 func (g *GfSpMigratePieceTask) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&GfSpMigratePieceTask{
 		ObjectInfo:    g.GetObjectInfo(),
 		StorageParams: g.GetStorageParams(),
-		ReplicateIdx:  g.GetReplicateIdx(),
-		EcIdx:         g.GetEcIdx(),
+		SegmentIdx:    g.GetSegmentIdx(),
+		RedundancyIdx: g.GetRedundancyIdx(),
 	}))
 }

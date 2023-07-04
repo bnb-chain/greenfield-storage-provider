@@ -128,18 +128,18 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 
 	maxECIdx := int32(migratePiece.GetStorageParams().GetRedundantDataChunkNum()+migratePiece.GetStorageParams().GetRedundantParityChunkNum()) - 1
 	objectID := migratePiece.GetObjectInfo().Id.Uint64()
-	replicateIdx := migratePiece.GetReplicateIdx()
-	ecIdx := migratePiece.GetEcIdx()
-	if ecIdx < primarySPECIdx || ecIdx > maxECIdx {
+	segmentIdx := migratePiece.GetSegmentIdx()
+	redundancyIdx := migratePiece.GetRedundancyIdx()
+	if redundancyIdx < primarySPECIdx || redundancyIdx > maxECIdx {
 		// TODO: customize an error to return to sp
 		return
 	}
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	// if ecIdx is equal to -1, we should migrate pieces from primary SP
-	if ecIdx == primarySPECIdx {
-		segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(objectID, replicateIdx)
+	if redundancyIdx == primarySPECIdx {
+		segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(objectID, segmentIdx)
 		segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(migratePiece.ObjectInfo.GetPayloadSize(),
-			replicateIdx, migratePiece.GetStorageParams().GetMaxSegmentSize())
+			segmentIdx, migratePiece.GetStorageParams().GetMaxSegmentSize())
 		log.Infow("migrate primary sp", "segmentPieceKey", segmentPieceKey, "segmentPieceSize", segmentPieceSize)
 		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
 			uint64(segmentPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
@@ -150,8 +150,8 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 			return
 		}
 	} else { // in this case, we should migrate pieces from secondary SP
-		ecPieceKey := g.baseApp.PieceOp().ECPieceKey(objectID, replicateIdx, uint32(ecIdx))
-		ecPieceSize := g.baseApp.PieceOp().ECPieceSize(migratePiece.ObjectInfo.GetPayloadSize(), replicateIdx,
+		ecPieceKey := g.baseApp.PieceOp().ECPieceKey(objectID, segmentIdx, uint32(redundancyIdx))
+		ecPieceSize := g.baseApp.PieceOp().ECPieceSize(migratePiece.ObjectInfo.GetPayloadSize(), segmentIdx,
 			migratePiece.GetStorageParams().GetMaxSegmentSize(), migratePiece.GetStorageParams().GetRedundantDataChunkNum())
 		log.Infow("migrate secondary sp", "ecPieceKey", ecPieceKey, "ecPieceSize", ecPieceSize)
 		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
@@ -164,6 +164,6 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Write(pieceData)
-	log.CtxInfow(reqCtx.Context(), "succeed to migrate one piece", "objectID", objectID, "replicateIdx",
-		replicateIdx, "ecIdx", ecIdx)
+	log.CtxInfow(reqCtx.Context(), "succeed to migrate one piece", "objectID", objectID, "segmentIdx",
+		segmentIdx, "redundancyIdx", redundancyIdx)
 }

@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"

@@ -187,7 +187,8 @@ message GfSpMigratePieceTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
-  uint32 replicate_idx = 4;
-  int32 ec_idx = 5;
-  bytes signature = 6;
+  string src_sp_endpoint = 4;
+  uint32 segment_idx = 5;
+  int32 redundancy_idx = 6;
+  bytes signature = 7;
 }
