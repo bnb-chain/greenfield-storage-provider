@@ -39,6 +39,19 @@ const (
 	// AWSSessionToken defines env variable name for aws session token
 	AWSSessionToken = "AWS_SESSION_TOKEN"
 
+	// AliyunRoleARN defines env variable for aws role arn
+	AliyunRoleARN = "ALIYUN_ROLE_ARN"
+	// AliyunWebIdentityTokenFile defines env variable for aws identity token file
+	AliyunWebIdentityTokenFile = "ALIYUN_WEB_IDENTITY_TOKEN_FILE"
+	// AliyunAccessKey defines env variable name for aws access key
+	AliyunAccessKey = "ALIYUN_ACCESS_KEY"
+	// AliyunSecretKey defines env variable name for aws secret key
+	AliyunSecretKey = "ALIYUN_SECRET_KEY"
+	// AliyunSessionToken defines env variable name for aws session token
+	AliyunSessionToken = "ALIYUN_SESSION_TOKEN"
+	// AliyunSessionToken defines env variable name for aws session token
+	AliyunRegion = "ALIYUN_SESSION_TOKEN"
+
 	// MinioRegion defines env variable name for minio region
 	MinioRegion = "MINIO_REGION"
 	// MinioAccessKey defines env variable name for minio access key
