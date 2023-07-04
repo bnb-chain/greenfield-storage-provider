@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"net/http"
 	"strconv"
 	"strings"
@@ -233,6 +234,8 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			}
 			return false, ErrConsensus
 		}
+
+		// TODO get sp id from config
 		spID, err := a.getSPID()
 		if err != nil {
 			return false, ErrConsensus
@@ -349,9 +352,17 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			}
 			return false, ErrConsensus
 		}
-		err = a.validateSelfServeAsSecondarySP(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+		spID, err := a.getSPID()
 		if err != nil {
-			return false, err
+			return false, ErrConsensus
+		}
+		_, isSecondarySp, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, a.baseApp.GfSpClient(), spID, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to global virtual group info from metaData", "error", err)
+			return false, ErrConsensus
+		}
+		if !isSecondarySp {
+			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
@@ -432,37 +443,16 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		if bucketInfo.GetPrimarySpId() == spID {
 			return true, nil
 		}
-		err = a.validateSelfServeAsSecondarySP(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+		_, isSecondarySp, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, a.baseApp.GfSpClient(), spID, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
 		if err != nil {
-			return false, err
+			log.CtxErrorw(ctx, "failed to global virtual group info from metaData", "error", err)
+			return false, ErrConsensus
+		}
+		if !isSecondarySp {
+			return false, ErrMismatchSp
 		}
 		return true, nil
 	default:
 		return false, ErrUnsupportedAuthType
 	}
-}
-
-func (a *AuthenticationModular) validateSelfServeAsSecondarySP(ctx context.Context, bucketId uint64, lvgId uint32) error {
-	log.CtxInfo(ctx, "validateSelfServeAsSecondarySP")
-	gvg, err := a.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketId, lvgId)
-	if err != nil {
-		return err
-	}
-	var isObjectSecondarySP bool
-	spId, err := a.getSPID()
-	if err != nil {
-		return err
-	}
-	log.CtxInfof(ctx, "self sp id is %v , gvg is %v \n", spId, gvg.GetSecondarySpIds())
-	for _, sspId := range gvg.GetSecondarySpIds() {
-		if spId == sspId {
-			isObjectSecondarySP = true
-		}
-	}
-	if !isObjectSecondarySP {
-		log.CtxErrorw(ctx, "sp id mismatch", "current", a.spID,
-			"require", gvg.GetSecondarySpIds())
-		return ErrMismatchSp
-	}
-	return nil
 }
