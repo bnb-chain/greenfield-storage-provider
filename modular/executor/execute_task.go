@@ -99,7 +99,7 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 func (e *ExecuteModular) listenSealObject(ctx context.Context, task coretask.ObjectTask, object *storagetypes.ObjectInfo) error {
 	var (
 		err    error
-		sealed = false
+		sealed bool
 	)
 	for retry := 0; retry < e.maxListenSealRetry; retry++ {
 		sealed, err = e.baseApp.Consensus().ListenObjectSeal(ctx,
