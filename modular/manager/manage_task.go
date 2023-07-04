@@ -658,6 +658,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 	if task == nil {
 		log.CtxErrorw(ctx, "failed to handle migrate gvg due to pointer dangling")
 	}
+	m.bucketMigrateScheduler.HandleMigrateGVGTask(task)
 	// TODO: add more logics here
 	return nil
 }

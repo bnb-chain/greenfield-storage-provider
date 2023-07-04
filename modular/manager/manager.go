@@ -111,11 +111,13 @@ func (m *ManageModular) Start(ctx context.Context) error {
 		return err
 	}
 	m.scope = scope
+	m.bucketMigrateScheduler.Init()
 	err = m.LoadTaskFromDB()
 	if err != nil {
 		return err
 	}
 
+	m.bucketMigrateScheduler.Start()
 	go m.eventLoop(ctx)
 	return nil
 }

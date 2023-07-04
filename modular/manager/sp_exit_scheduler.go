@@ -32,15 +32,16 @@ var (
 )
 
 type GlobalVirtualGroupMigrateExecuteUnit struct {
-	gvg            *virtualgrouptypes.GlobalVirtualGroup
-	redundantIndex int32 // if < 0, represents migrate primary.
-	isConflict     bool  // only be used in sp exit.
-	isSecondary    bool  // only be used in sp exit.
-	srcSP          *sptypes.StorageProvider
-	destSP         *sptypes.StorageProvider
-	migrateStatus  MigrateStatus
-	checkTimestamp uint64
-	checkStatus    string // update to proto enum
+	gvg                 *virtualgrouptypes.GlobalVirtualGroup
+	redundantIndex      int32 // if < 0, represents migrate primary.
+	isConflict          bool  // only be used in sp exit.
+	isSecondary         bool  // only be used in sp exit.
+	srcSP               *sptypes.StorageProvider
+	destSP              *sptypes.StorageProvider
+	migrateStatus       MigrateStatus
+	checkTimestamp      uint64
+	checkStatus         string // update to proto enum
+	lastMigrateObjectID uint64 // migrate progress
 }
 
 type VirtualGroupFamilyMigrateExecuteUnit struct {
