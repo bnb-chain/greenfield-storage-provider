@@ -6,8 +6,6 @@ import "github.com/forbole/juno/v4/common"
 func (b *BsDBImpl) ListSpExitEvents(blockID uint64, operatorAddress common.Address) ([]*EventStorageProviderExit, []*EventCompleteStorageProviderExit, error) {
 	var (
 		events         []*EventStorageProviderExit
-		res            []*EventStorageProviderExit
-		eventsIDMap    map[uint32]*EventStorageProviderExit
 		completeEvents []*EventCompleteStorageProviderExit
 		err            error
 	)
@@ -28,17 +26,5 @@ func (b *BsDBImpl) ListSpExitEvents(blockID uint64, operatorAddress common.Addre
 		return nil, nil, err
 	}
 
-	eventsIDMap = make(map[uint32]*EventStorageProviderExit)
-	for _, event := range events {
-		eventsIDMap[event.StorageProviderId] = event
-	}
-
-	res = make([]*EventStorageProviderExit, 0)
-	for _, event := range completeEvents {
-		if e, ok := eventsIDMap[event.StorageProviderId]; ok {
-			res = append(res, e)
-		}
-	}
-
-	return res, completeEvents, err
+	return events, completeEvents, err
 }

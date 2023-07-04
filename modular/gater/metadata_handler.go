@@ -1578,8 +1578,7 @@ func (g *GateModular) listMigrateBucketEventsHandler(w http.ResponseWriter, r *h
 		requestBlockID string
 		spID           uint32
 		blockID        uint64
-		events         []*storage_types.EventMigrationBucket
-		completeEvents []*storage_types.EventCompleteMigrationBucket
+		events         *types.ListMigrateBucketEvents
 		queryParams    url.Values
 	)
 
@@ -1610,16 +1609,13 @@ func (g *GateModular) listMigrateBucketEventsHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	events, completeEvents, err = g.baseApp.GfSpClient().ListMigrateBucketEvents(reqCtx.Context(), blockID, spID)
+	events, err = g.baseApp.GfSpClient().ListMigrateBucketEvents(reqCtx.Context(), blockID, spID)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list migrate bucket events", "error", err)
 		return
 	}
 
-	grpcResponse := &types.GfSpListMigrateBucketEventsResponse{
-		Events:         events,
-		CompleteEvents: completeEvents,
-	}
+	grpcResponse := &types.GfSpListMigrateBucketEventsResponse{Events: events}
 
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
@@ -1641,7 +1637,7 @@ func (g *GateModular) listSwapOutEventsHandler(w http.ResponseWriter, r *http.Re
 		requestBlockID string
 		spID           uint32
 		blockID        uint64
-		events         []*virtual_types.EventSwapOut
+		events         *types.ListSwapOutEvents
 		queryParams    url.Values
 	)
 
@@ -1698,8 +1694,7 @@ func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Req
 		requestOperatorAddress string
 		requestBlockID         string
 		blockID                uint64
-		events                 []*virtual_types.EventStorageProviderExit
-		completeEvents         []*virtual_types.EventCompleteStorageProviderExit
+		events                 *types.ListSpExitEvents
 		queryParams            url.Values
 	)
 
@@ -1729,16 +1724,13 @@ func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	events, completeEvents, err = g.baseApp.GfSpClient().ListSpExitEvents(reqCtx.Context(), blockID, requestOperatorAddress)
+	events, err = g.baseApp.GfSpClient().ListSpExitEvents(reqCtx.Context(), blockID, requestOperatorAddress)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list sp exit events", "error", err)
 		return
 	}
 
-	grpcResponse := &types.GfSpListSpExitEventsResponse{
-		Events:         events,
-		CompleteEvents: completeEvents,
-	}
+	grpcResponse := &types.GfSpListSpExitEventsResponse{Events: events}
 
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {

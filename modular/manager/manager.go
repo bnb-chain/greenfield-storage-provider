@@ -77,7 +77,7 @@ type ManageModular struct {
 	discontinueBucketKeepAliveDays int
 
 	virtualGroupManager    vgmgr.VirtualGroupManager
-	bucketMigrateScheduler BucketMigrateScheduler
+	bucketMigrateScheduler *BucketMigrateScheduler
 
 	subscribeSPExitEventInterval        int
 	subscribeBucketMigrateEventInterval int
@@ -111,11 +111,19 @@ func (m *ManageModular) Start(ctx context.Context) error {
 		return err
 	}
 	m.scope = scope
+
 	err = m.LoadTaskFromDB()
 	if err != nil {
 		return err
 	}
-
+	if err = m.bucketMigrateScheduler.Init(); err != nil {
+		log.Errorw("failed to start manager due to bucket migrate scheduler init", "error", err)
+		return err
+	}
+	if err = m.bucketMigrateScheduler.Start(); err != nil {
+		log.Errorw("failed to start manager due to bucket migrate scheduler start", "error", err)
+		return err
+	}
 	go m.eventLoop(ctx)
 	return nil
 }

@@ -32,15 +32,16 @@ var (
 )
 
 type GlobalVirtualGroupMigrateExecuteUnit struct {
-	gvg            *virtualgrouptypes.GlobalVirtualGroup
-	redundantIndex int32 // if < 0, represents migrate primary.
-	isConflict     bool  // only be used in sp exit.
-	isSecondary    bool  // only be used in sp exit.
-	srcSP          *sptypes.StorageProvider
-	destSP         *sptypes.StorageProvider
-	migrateStatus  MigrateStatus
-	checkTimestamp uint64
-	checkStatus    string // update to proto enum
+	gvg                 *virtualgrouptypes.GlobalVirtualGroup
+	redundantIndex      int32 // if < 0, represents migrate primary.
+	isConflict          bool  // only be used in sp exit.
+	isSecondary         bool  // only be used in sp exit.
+	srcSP               *sptypes.StorageProvider
+	destSP              *sptypes.StorageProvider
+	migrateStatus       MigrateStatus
+	checkTimestamp      uint64
+	checkStatus         string // update to proto enum
+	lastMigrateObjectID uint64 // migrate progress
 }
 
 type VirtualGroupFamilyMigrateExecuteUnit struct {
@@ -653,36 +654,37 @@ func (s *SPExitScheduler) subscribeEvents() {
 	for {
 		select {
 		case <-subscribeSPExitEventsTicker.C:
-			spStartExitEvents, spEndExitExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
-			if subscribeError != nil {
-				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
-				return
-			}
-			if len(spStartExitEvents) > 0 {
-				if s.isExiting || s.isExited {
-					return
-				}
-				plan, err := s.produceSPExitExecutePlan()
-				if err != nil {
-					log.Errorw("failed to produce sp exit execute plan", "error", err)
-					return
-				}
-				if startErr := plan.Start(); startErr != nil {
-					log.Errorw("failed to start sp exit execute plan", "error", startErr)
-					return
-				}
-				updateErr := s.manager.baseApp.GfSpDB().UpdateSPExitSubscribeProgress(s.lastSubscribedSPExitBlockHeight + 1)
-				if updateErr != nil {
-					log.Errorw("failed to update sp exit progress", "error", updateErr)
-					return
-				}
-				s.executePlan = plan
-				s.isExiting = true
-				s.lastSubscribedSPExitBlockHeight++
-			}
-			if len(spEndExitExitEvents) > 0 {
-				s.isExited = true
-			}
+			// TODO: will,uncomment the below code
+			// spStartExitEvents, spEndExitExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
+			//if subscribeError != nil {
+			//	log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
+			//	return
+			//}
+			//if len(spStartExitEvents) > 0 {
+			//	if s.isExiting || s.isExited {
+			//		return
+			//	}
+			//	plan, err := s.produceSPExitExecutePlan()
+			//	if err != nil {
+			//		log.Errorw("failed to produce sp exit execute plan", "error", err)
+			//		return
+			//	}
+			//	if startErr := plan.Start(); startErr != nil {
+			//		log.Errorw("failed to start sp exit execute plan", "error", startErr)
+			//		return
+			//	}
+			//	updateErr := s.manager.baseApp.GfSpDB().UpdateSPExitSubscribeProgress(s.lastSubscribedSPExitBlockHeight + 1)
+			//	if updateErr != nil {
+			//		log.Errorw("failed to update sp exit progress", "error", updateErr)
+			//		return
+			//	}
+			//	s.executePlan = plan
+			//	s.isExiting = true
+			//	s.lastSubscribedSPExitBlockHeight++
+			//}
+			//if len(spEndExitExitEvents) > 0 {
+			//	s.isExited = true
+			//}
 
 		case <-subscribeSwapOutEventsTicker.C:
 			if s.isExited {

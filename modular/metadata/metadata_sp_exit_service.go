@@ -2,6 +2,8 @@ package metadata
 
 import (
 	"context"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"net/http"
 
 	"cosmossdk.io/math"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
@@ -11,6 +13,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+)
+
+var (
+	ErrNoEvents = gfsperrors.Register(MetadataModularName, http.StatusNotFound, 90004, "not found events")
 )
 
 // GfSpListVirtualGroupFamiliesBySpID list virtual group families by sp id
@@ -165,6 +171,10 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		return nil, err
 	}
 
+	if events == nil && completeEvents == nil {
+		return nil, ErrNoEvents
+	}
+
 	spEvent = make([]*storage_types.EventMigrationBucket, len(events))
 	for i, event := range events {
 		spEvent[i] = &storage_types.EventMigrationBucket{
@@ -187,10 +197,10 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		}
 	}
 
-	resp = &types.GfSpListMigrateBucketEventsResponse{
+	resp = &types.GfSpListMigrateBucketEventsResponse{Events: &types.ListMigrateBucketEvents{
 		Events:         spEvent,
 		CompleteEvents: spCompleteEvents,
-	}
+	}}
 	log.CtxInfow(ctx, "succeed to list migrate bucket events")
 	return resp, nil
 }
@@ -226,7 +236,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 		}
 	}
 
-	resp = &types.GfSpListSwapOutEventsResponse{Events: res}
+	resp = &types.GfSpListSwapOutEventsResponse{Events: &types.ListSwapOutEvents{Events: res}}
 	log.CtxInfow(ctx, "succeed to list migrate swap out events")
 	return resp, nil
 }
@@ -311,6 +321,10 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		return nil, err
 	}
 
+	if events == nil && completeEvents == nil {
+		return nil, ErrNoEvents
+	}
+
 	spEvent = make([]*virtual_types.EventStorageProviderExit, len(events))
 	for i, event := range events {
 		spEvent[i] = &virtual_types.EventStorageProviderExit{
@@ -328,10 +342,10 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		}
 	}
 
-	resp = &types.GfSpListSpExitEventsResponse{
+	resp = &types.GfSpListSpExitEventsResponse{Events: &types.ListSpExitEvents{
 		Events:         spEvent,
 		CompleteEvents: spCompleteEvent,
-	}
+	}}
 	log.CtxInfow(ctx, "succeed to list migrate swap out events")
 	return resp, nil
 }

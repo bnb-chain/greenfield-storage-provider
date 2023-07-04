@@ -26,7 +26,7 @@ var objectFlag = &cli.StringFlag{
 var RecoverObjectCmd = &cli.Command{
 	Action: recoverObjectAction,
 	Name:   "recover.object",
-	Usage:  "Create random ObjectInfo and send to uploader for debugging and testing uploading primary sp",
+	Usage:  "Generate recover piece data task to recover the object data",
 
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
@@ -34,9 +34,9 @@ var RecoverObjectCmd = &cli.Command{
 		objectFlag,
 	},
 
-	Category: "DEBUG COMMANDS",
-	Description: `The debug.delete.piece command create a random ObjectInfo 
-and send it to uploader for debugging and testing upload primary sp on Dev Env.`,
+	Category: "RECOVERY COMMANDS",
+	Description: `The recover.object command is used to recover the object piece data on the primarySP or the secondary SP", 
+  `,
 }
 
 func recoverObjectAction(ctx *cli.Context) error {

@@ -165,7 +165,7 @@ type MigrateDB interface {
 	// ListConflictsMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
 	ListConflictsMigrateGVGUnitsByFamilyID(familyID uint32) ([]*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
-	ListMigrateGVGUnitsByBucketID(bucketID uint32, destSP uint32) ([]*MigrateGVGUnitMeta, error)
+	ListMigrateGVGUnitsByBucketID(bucketID uint64, destSP uint32) ([]*MigrateGVGUnitMeta, error)
 }
 
 type SPDB interface {

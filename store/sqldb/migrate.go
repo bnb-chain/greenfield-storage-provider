@@ -307,7 +307,7 @@ func (s *SpDBImpl) ListConflictsMigrateGVGUnitsByFamilyID(familyID uint32) ([]*s
 	return returns, nil
 }
 
-func (s *SpDBImpl) ListMigrateGVGUnitsByBucketID(bucketID uint32, destSP uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
+func (s *SpDBImpl) ListMigrateGVGUnitsByBucketID(bucketID uint64, destSP uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
 	var queryReturns []MigrateGVGTable
 	result := s.db.Where("buck_id = ? and dest_spid = ?", bucketID, destSP).Find(&queryReturns)
 	if result.Error != nil {

@@ -3,11 +3,11 @@ package downloader
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"time"
-
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -19,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -376,7 +377,10 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
-		d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
+		// if read piece store error, try to recover the error data
+		if strings.Contains(err.Error(), fmt.Sprintf("inner_code:%d", ErrPieceStoreInnerCode)) {
+			d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
+		}
 		return nil, nil, nil, ErrPieceStore
 	}
 
