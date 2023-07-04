@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
@@ -17,17 +18,17 @@ import (
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
-//type GlobalVirtualGroupByBucketMigrateExecuteUnit struct {
+// type GlobalVirtualGroupByBucketMigrateExecuteUnit struct {
 //
 //	gvgMigrateUnit *GlobalVirtualGroupMigrateExecuteUnit
-//}
+// }
 
 type BucketMigrateExecutePlan struct {
 	Manager             *ManageModular
 	Scheduler           *BucketMigrateScheduler
 	VirtualGroupManager vgmgr.VirtualGroupManager
 	BucketID            uint64
-	//PrimaryGVGByBucketMigrateUnits []*GlobalVirtualGroupByBucketMigrateExecuteUnit          // bucket migrate，primary gvg
+	// PrimaryGVGByBucketMigrateUnits []*GlobalVirtualGroupByBucketMigrateExecuteUnit          // bucket migrate，primary gvg
 	PrimaryGVGIDMapMigrateUnits map[uint32]*GlobalVirtualGroupMigrateExecuteUnit // gvgID -> GlobalVirtualGroupByBucketMigrateExecuteUnit
 }
 
@@ -70,7 +71,7 @@ func (plan *BucketMigrateExecutePlan) UpdateProgress(task task.MigrateGVGTask) e
 	migrateExecuteUnit, ok := plan.PrimaryGVGIDMapMigrateUnits[gvgID]
 	if ok {
 		// TODO: Task if finished, deleted from PrimaryGVGIDMapMigrateUnits
-		migrateExecuteUnit.lastMigrateObjectID = task.GetLastMigratedObjectId()
+		migrateExecuteUnit.lastMigrateObjectID = task.GetLastMigratedObjectID()
 	} else {
 		return errors.New("no such migrate gvg task")
 	}
@@ -84,7 +85,7 @@ func (plan *BucketMigrateExecutePlan) UpdateProgress(task task.MigrateGVGTask) e
 		BucketID:               plan.BucketID,
 		IsSecondary:            migrateExecuteUnit.isSecondary,
 		IsConflict:             migrateExecuteUnit.isConflict,
-		LastMigrateObjectID:    task.GetLastMigratedObjectId(),
+		LastMigrateObjectID:    task.GetLastMigratedObjectID(),
 	}, int(migrateStatus))
 	log.Debugw("update migrate gvg progress", "gvg_meta", migrateExecuteUnit, "error", err)
 	return nil
@@ -151,7 +152,7 @@ type BucketMigrateScheduler struct {
 	selfSP                    *sptypes.StorageProvider
 	lastSubscribedBlockHeight uint64 // load from db
 	isExiting                 bool   // load from db
-	//executePlan               []*BucketMigrateExecutePlan // bucketid -> BucketMigrateExecutePlan
+	// executePlan               []*BucketMigrateExecutePlan // bucketid -> BucketMigrateExecutePlan
 	executePlanIDMap map[uint64]*BucketMigrateExecutePlan
 }
 
@@ -280,7 +281,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 }
 
 func (s *BucketMigrateScheduler) HandleMigrateGVGTask(task task.MigrateGVGTask) error {
-	err := s.executePlanIDMap[task.GetBucketId()].UpdateProgress(task)
+	err := s.executePlanIDMap[task.GetBucketID()].UpdateProgress(task)
 	return err
 }
 
