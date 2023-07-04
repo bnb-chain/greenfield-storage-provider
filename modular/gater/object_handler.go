@@ -63,7 +63,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthentication() {
+	if !reqCtx.SkipVerifyAuthentication() {
 		startAuthenticationTime := time.Now()
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
@@ -110,7 +110,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	uploadDataTime := time.Now()
 	err = g.baseApp.GfSpClient().UploadObject(ctx, task, r.Body)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
@@ -182,7 +182,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthentication() {
+	if !reqCtx.SkipVerifyAuthentication() {
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
@@ -290,7 +290,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthentication() {
+	if !reqCtx.SkipVerifyAuthentication() {
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
@@ -403,7 +403,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
 			return
 		}
-		if reqCtx.NeedVerifyAuthentication() {
+		if !reqCtx.SkipVerifyAuthentication() {
 			authTime := time.Now()
 			if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
@@ -610,7 +610,7 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
 			return
 		}
-		if reqCtx.NeedVerifyAuthentication() {
+		if !reqCtx.SkipVerifyAuthentication() {
 			if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 				coremodule.AuthOpTypeGetRecoveryPiece, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
@@ -696,7 +696,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthentication() {
+	if !reqCtx.SkipVerifyAuthentication() {
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {

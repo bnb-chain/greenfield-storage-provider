@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/bnb-chain/greenfield-common/go/redundancy"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -91,7 +92,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if reqCtx.NeedVerifyAuthentication() {
+		if !reqCtx.SkipVerifyAuthentication() {
 			startVerifyAuthentication := time.Now()
 			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 				reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
@@ -139,7 +140,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if reqCtx.NeedVerifyAuthentication() {
+		if !reqCtx.SkipVerifyAuthentication() {
 			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 				reqCtx.Context(), coremodule.AuthOpAskMigrateBucketApproval,
 				reqCtx.Account(), migrateBucketApproval.GetBucketName(), "")
@@ -181,7 +182,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if reqCtx.NeedVerifyAuthentication() {
+		if !reqCtx.SkipVerifyAuthentication() {
 			startVerifyAuthentication := time.Now()
 			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 				reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
@@ -284,7 +285,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		}
 		return
 	}
-	if reqCtx.NeedVerifyAuthentication() {
+	if !reqCtx.SkipVerifyAuthentication() {
 		authTime := time.Now()
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetChallengePieceInfo, reqCtx.Account(), objectInfo.GetBucketName(),

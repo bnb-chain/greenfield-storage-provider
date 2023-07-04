@@ -92,6 +92,7 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
 		} else {
 			task.AppendLog(fmt.Sprintf("executor-seal-tx-succeed-retry:%d-txHash:%s", retry, txHash))
+			err = nil
 			break
 		}
 	}
@@ -102,12 +103,14 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 }
 
 func (e *ExecuteModular) listenSealObject(ctx context.Context, task coretask.ObjectTask, object *storagetypes.ObjectInfo) error {
-	var err error
+	var (
+		err    error
+		sealed bool
+	)
 	for retry := 0; retry < e.maxListenSealRetry; retry++ {
-		sealed, innerErr := e.baseApp.Consensus().ListenObjectSeal(ctx,
+		sealed, err = e.baseApp.Consensus().ListenObjectSeal(ctx,
 			object.Id.Uint64(), e.listenSealTimeoutHeight)
-		if innerErr != nil {
-			err = innerErr
+		if err != nil {
 			task.AppendLog(fmt.Sprintf("executor-listen-seal-failed-error:%s-retry:%d", err.Error(), retry))
 			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
 				"max_retry", e.maxListenSealRetry, "error", err)
@@ -134,24 +137,16 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 		return
 	}
 	var (
-		err           error
-		onChainObject *storagetypes.ObjectInfo
+		err            error
+		offChainObject *storagetypes.ObjectInfo
 	)
-	err = e.listenSealObject(ctx, task, task.GetObjectInfo())
-	if err == nil {
-		task.SetSealed(true)
-	}
-	log.CtxDebugw(ctx, "finish to listen seal object for receive piece task, "+
-		"begin to check secondary sp", "error", err)
-
-	onChainObject, err = e.baseApp.Consensus().QueryObjectInfo(ctx, task.GetObjectInfo().GetBucketName(),
-		task.GetObjectInfo().GetObjectName())
+	offChainObject, err = e.baseApp.GfSpClient().GetObjectByID(ctx, task.GetObjectInfo().Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get object info", "error", err)
 		task.SetError(err)
 		return
 	}
-	if onChainObject.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+	if offChainObject.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.CtxErrorw(ctx, "failed to confirm receive task, object is unsealed")
 		task.SetError(ErrUnsealed)
 		return
@@ -160,12 +155,12 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 	// sealed state to let the manager clear the task.
 	task.SetSealed(true)
 	// TODO: might add api GetGvgByObjectId in meta
-	bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, onChainObject.BucketName, true)
+	bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, offChainObject.BucketName, true)
 	if err != nil {
 		log.Errorf("failed to get bucket by bucket name", "error", err)
 		return
 	}
-	gvg, err := e.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), onChainObject.LocalVirtualGroupId)
+	gvg, err := e.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), offChainObject.LocalVirtualGroupId)
 	if err != nil {
 		return
 	}
@@ -191,14 +186,14 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 			log.CtxErrorw(ctx, "failed to delete integrity")
 		}
 		var pieceKey string
-		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(onChainObject.GetPayloadSize(),
+		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(offChainObject.GetPayloadSize(),
 			task.GetStorageParams().GetMaxPayloadSize())
 		for i := uint32(0); i < segmentCount; i++ {
 			if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-				pieceKey = e.baseApp.PieceOp().ECPieceKey(onChainObject.Id.Uint64(),
+				pieceKey = e.baseApp.PieceOp().ECPieceKey(offChainObject.Id.Uint64(),
 					i, task.GetReplicateIdx())
 			} else {
-				pieceKey = e.baseApp.PieceOp().SegmentPieceKey(onChainObject.Id.Uint64(), i)
+				pieceKey = e.baseApp.PieceOp().SegmentPieceKey(offChainObject.Id.Uint64(), i)
 			}
 			err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
 			if err != nil {
