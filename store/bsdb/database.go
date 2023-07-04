@@ -64,8 +64,10 @@ type Metadata interface {
 	ListPrimaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error)
 	// ListSecondaryObjects list objects by primary sp id
 	ListSecondaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error)
-	// ListObjectsInGVG list objects by gvg and bucket id
-	ListObjectsInGVG(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	// ListObjectsInGVGAndBucket ListObjectsInGVG list objects by gvg and bucket id
+	ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	// ListObjectsInGVG list objects by gvg
+	ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error)
 	// ListGvgByPrimarySpID list gvg by primary sp id
 	ListGvgByPrimarySpID(spID uint32) ([]*GlobalVirtualGroup, error)
 	// ListGvgBySecondarySpID list gvg by secondary sp id
@@ -74,8 +76,10 @@ type Metadata interface {
 	ListGvgByBucketID(bucketID common.Hash) ([]*GlobalVirtualGroup, error)
 	// ListVgfByGvgID list vgf by gvg ids
 	ListVgfByGvgID(gvgIDs []uint32) ([]*VirtualGroupFamily, error)
-	// ListLvgByGvgAndBucketID list vgf by gvg ids
+	// ListLvgByGvgAndBucketID list lvg by gvg and bucket ids
 	ListLvgByGvgAndBucketID(bucketID common.Hash, gvgIDs []uint32) ([]*LocalVirtualGroup, error)
+	// ListLvgByGvgID list lvg by gvg ids
+	ListLvgByGvgID(gvgIDs []uint32) ([]*LocalVirtualGroup, error)
 	// ListBucketsByVgfID list buckets by vgf ids
 	ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
 	// ListObjectsByLVGID list objects by lvg id

@@ -136,6 +136,30 @@ func (m *GfSpMigrateGVGTask) SetError(err error) {
 	m.GetTask().SetError(err)
 }
 
+func (m *GfSpMigrateGVGTask) SetGvg(gvg *virtualgrouptypes.GlobalVirtualGroup) {
+	m.Gvg = gvg
+}
+
+func (m *GfSpMigrateGVGTask) SetSrcSp(srcSP *sptypes.StorageProvider) {
+	m.SrcSp = srcSP
+}
+
+func (m *GfSpMigrateGVGTask) SetDestSp(destSP *sptypes.StorageProvider) {
+	m.DestSp = destSP
+}
+
+func (m *GfSpMigrateGVGTask) SetBucketID(bucketID uint64) {
+	m.BucketId = bucketID
+}
+
+func (m *GfSpMigrateGVGTask) SetRedundancyIdx(rIdx int32) {
+	m.RedundancyIdx = rIdx
+}
+
+func (m *GfSpMigrateGVGTask) SetLastMigratedObjectID(lastMigratedObjectID uint64) {
+	m.LastMigratedObjectId = lastMigratedObjectID
+}
+
 // ======================= MigratePieceTask =====================================
 
 func (g *GfSpMigratePieceTask) Key() coretask.TKey {

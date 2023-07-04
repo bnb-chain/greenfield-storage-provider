@@ -31,11 +31,11 @@ const (
 
 var (
 	ErrFailedPickVGF = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540001,
-		"failed to pick virtual group family, need create global virtual group")
+		"failed to pick virtual group family, need creating global virtual group")
 	ErrFailedPickGVG = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540002,
-		"failed to pick global virtual group, need stake more storage size")
+		"failed to pick global virtual group, need staking more storage size")
 	ErrStaledMetadata = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540003,
-		"metadata is staled, need force refresh metadata")
+		"metadata is staled, need forcing refresh metadata")
 	ErrFailedPickDestSP = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540004,
 		"failed to pick dest sp")
 )
@@ -337,14 +337,11 @@ func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 }
 
 // GenerateGlobalVirtualGroupMeta is used to generate a gvg meta.
-// TODO: support more generation strategies.
 func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.spManager.generateVirtualGroupMeta(param)
 }
-
-// TODO: add a generate gvg by filter api for migrate.
 
 // PickSPByFilter is used to pick sp by filter check.
 func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.PickFilter) (*sptypes.StorageProvider, error) {
@@ -353,6 +350,7 @@ func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.PickFilter) (*sptype
 	return vgm.spManager.pickSPByFilter(filter)
 }
 
+// QuerySPByID return sp info by sp id.
 func (vgm *virtualGroupManager) QuerySPByID(spID uint32) (*sptypes.StorageProvider, error) {
 	vgm.mutex.RLock()
 	sp, err := vgm.spManager.querySPByID(spID)

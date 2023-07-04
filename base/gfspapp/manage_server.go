@@ -163,6 +163,10 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		}
 		metrics.ReqCounter.WithLabelValues(ManagerDispatchRecoveryTask).Inc()
 		metrics.ReqTime.WithLabelValues(ManagerDispatchRecoveryTask).Observe(time.Since(startTime).Seconds())
+	case *gfsptask.GfSpMigrateGVGTask:
+		resp.Response = &gfspserver.GfSpAskTaskResponse_MigrateGvgTask{
+			MigrateGvgTask: t,
+		}
 	default:
 		log.CtxErrorw(ctx, "[BUG] Unsupported task type to dispatch")
 		return &gfspserver.GfSpAskTaskResponse{Err: ErrUnsupportedTaskType}, nil
@@ -293,6 +297,12 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		err = g.manager.HandleRecoverPieceTask(ctx, t.RecoverPieceTask)
 		metrics.ReqCounter.WithLabelValues(ManagerReportRecoveryTask).Inc()
 		metrics.ReqTime.WithLabelValues(ManagerReportRecoveryTask).Observe(time.Since(startTime).Seconds())
+	case *gfspserver.GfSpReportTaskRequest_MigrateGvgTask:
+		task := t.MigrateGvgTask
+		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
+		task.SetAddress(GetRPCRemoteAddress(ctx))
+		log.CtxInfow(ctx, "begin to handle reported migrate gvg task", "task_info", task.Info())
+		err = g.manager.HandleMigrateGVGTask(ctx, t.MigrateGvgTask)
 	default:
 		log.CtxError(ctx, "receive unsupported task type")
 		return &gfspserver.GfSpReportTaskResponse{Err: ErrUnsupportedTaskType}, nil

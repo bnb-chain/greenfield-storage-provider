@@ -84,6 +84,13 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 	}
 	task, reservedTasks = m.PickUpTask(ctx, backupTasks)
 
+	task = m.migrateGVGQueue.TopByLimit(limit)
+	if task != nil {
+		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", task.Key().String())
+		backupTasks = append(backupTasks, task)
+	}
+
+	task, reservedTasks = m.PickUpTask(ctx, backupTasks)
 	go func() {
 		if len(reservedTasks) == 0 {
 			return
@@ -92,25 +99,28 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			switch t := reservedTask.(type) {
 			case *gfsptask.GfSpReplicatePieceTask:
 				err := m.replicateQueue.Push(t)
-				log.Errorw("failed to retry push replicate task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push replicate task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpSealObjectTask:
 				err := m.sealQueue.Push(t)
-				log.Errorw("failed to retry push seal task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push seal task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpReceivePieceTask:
 				err := m.receiveQueue.Push(t)
-				log.Errorw("failed to retry push receive task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push receive task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpGCObjectTask:
 				err := m.gcObjectQueue.Push(t)
-				log.Errorw("failed to retry push gc object task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push gc object task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpGCZombiePieceTask:
 				err := m.gcZombieQueue.Push(t)
-				log.Errorw("failed to retry push gc zombie task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push gc zombie task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpGCMetaTask:
 				err := m.gcMetaQueue.Push(t)
-				log.Errorw("failed to retry push gc meta task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push gc meta task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpRecoverPieceTask:
 				err := m.recoveryQueue.Push(t)
-				log.Errorw("failed to retry push recovery task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push recovery task to queue after dispatching", "error", err)
+			case *gfsptask.GfSpMigrateGVGTask:
+				err := m.migrateGVGQueue.Push(t)
+				log.Errorw("failed to retry push migration gvg task to queue after dispatching", "error", err)
 			}
 		}
 	}()
@@ -645,6 +655,14 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 	return nil
 }
 
+func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error {
+	if task == nil {
+		log.CtxErrorw(ctx, "failed to handle migrate gvg due to pointer dangling")
+	}
+	// TODO: add more logics here
+	return nil
+}
+
 func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error) {
 	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(m.uploadQueue, subKey)
 	replicateTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.replicateQueue, subKey)
@@ -656,6 +674,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	downloadTasks, _ := taskqueue.ScanTQueueBySubKey(m.downloadQueue, subKey)
 	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(m.challengeQueue, subKey)
 	recoveryTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.recoveryQueue, subKey)
+	migrateGVGTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.migrateGVGQueue, subKey)
 
 	var tasks []task.Task
 	tasks = append(tasks, uploadTasks...)
@@ -668,6 +687,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, downloadTasks...)
 	tasks = append(tasks, challengeTasks...)
 	tasks = append(tasks, recoveryTasks...)
+	tasks = append(tasks, migrateGVGTasks...)
 	return tasks, nil
 }
 

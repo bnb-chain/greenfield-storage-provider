@@ -180,6 +180,7 @@ message GfSpMigrateGVGTask {
   greenfield.sp.StorageProvider src_sp = 5;
   greenfield.sp.StorageProvider dest_sp = 6;
   uint64 last_migrated_object_id = 7;
+  bool finished = 8;
 }
 
 message GfSpMigratePieceTask {

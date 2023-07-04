@@ -35,6 +35,8 @@ const (
 	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP
 	// system.
 	DefaultGlobalRecoveryPieceParallel int = 7
+	// DefaultGlobalMigrateGVGParallel defines the default max parallel migrating gvg in SP system.
+	DefaultGlobalMigrateGVGParallel int = 10
 	// DefaultGlobalDownloadObjectTaskCacheSize defines the default max cache the download
 	// object tasks in manager.
 	DefaultGlobalDownloadObjectTaskCacheSize int = 4096
@@ -124,12 +126,20 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if cfg.Parallel.GlobalGCMetaParallel == 0 {
 		cfg.Parallel.GlobalGCMetaParallel = DefaultGlobalGCMetaParallel
 	}
+	if cfg.Parallel.GlobalRecoveryPieceParallel == 0 {
+		cfg.Parallel.GlobalRecoveryPieceParallel = DefaultGlobalRecoveryPieceParallel
+	}
+	if cfg.Parallel.GlobalMigrateGVGParallel == 0 {
+		cfg.Parallel.GlobalMigrateGVGParallel = DefaultGlobalMigrateGVGParallel
+	}
+
 	if cfg.Parallel.GlobalDownloadObjectTaskCacheSize == 0 {
 		cfg.Parallel.GlobalDownloadObjectTaskCacheSize = DefaultGlobalDownloadObjectTaskCacheSize
 	}
 	if cfg.Parallel.GlobalChallengePieceTaskCacheSize == 0 {
 		cfg.Parallel.GlobalChallengePieceTaskCacheSize = DefaultGlobalChallengePieceTaskCacheSize
 	}
+
 	if cfg.Parallel.GlobalBatchGcObjectTimeInterval == 0 {
 		cfg.Parallel.GlobalBatchGcObjectTimeInterval = DefaultGlobalBatchGcObjectTimeInterval
 	}
@@ -147,10 +157,6 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	}
 	if cfg.Parallel.DiscontinueBucketKeepAliveDays == 0 {
 		cfg.Parallel.DiscontinueBucketKeepAliveDays = DefaultDiscontinueBucketKeepAliveDays
-	}
-
-	if cfg.Parallel.GlobalRecoveryPieceParallel == 0 {
-		cfg.Parallel.GlobalRecoveryPieceParallel = DefaultGlobalRecoveryPieceParallel
 	}
 
 	manager.enableLoadTask = cfg.Manager.EnableLoadTask
@@ -183,6 +189,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		manager.Name()+"-gc-object", cfg.Parallel.GlobalGCObjectParallel)
 	manager.gcZombieQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-gc-zombie", cfg.Parallel.GlobalGCZombieParallel)
+	manager.migrateGVGQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-migrate-gvg", cfg.Parallel.GlobalMigrateGVGParallel)
 	manager.gcMetaQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-gc-meta", cfg.Parallel.GlobalGCMetaParallel)
 	manager.downloadQueue = cfg.Customize.NewStrategyTQueueFunc(

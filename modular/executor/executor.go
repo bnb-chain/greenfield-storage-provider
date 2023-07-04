@@ -43,6 +43,7 @@ type ExecuteModular struct {
 	doingGCZombiePieceTaskCnt  int64
 	doingGCGCMetaTaskCnt       int64
 	doingRecoveryPieceTaskCnt  int64
+	doingMigrationGVGTaskCnt   int64
 
 	spID uint32
 }
@@ -216,6 +217,10 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 			metrics.ReqCounter.WithLabelValues(ExeutorSuccessRecoveryTask).Inc()
 			metrics.ReqTime.WithLabelValues(ExeutorSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
 		}
+	case *gfsptask.GfSpMigrateGVGTask:
+		atomic.AddInt64(&e.doingMigrationGVGTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingMigrationGVGTaskCnt, -1)
+		e.HandleMigrateGVGTask(ctx, t)
 	default:
 		log.CtxErrorw(ctx, "unsupported task type")
 	}
@@ -270,14 +275,15 @@ func (e *ExecuteModular) ReleaseResource(
 
 func (e *ExecuteModular) Statistics() string {
 	return fmt.Sprintf(
-		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d]",
+		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], migrateGVG[%d]",
 		&e.maxExecuteNum, atomic.LoadInt64(&e.executingNum),
 		atomic.LoadInt64(&e.doingReplicatePieceTaskCnt),
 		atomic.LoadInt64(&e.doingSpSealObjectTaskCnt),
 		atomic.LoadInt64(&e.doingReceivePieceTaskCnt),
 		atomic.LoadInt64(&e.doingGCObjectTaskCnt),
 		atomic.LoadInt64(&e.doingGCZombiePieceTaskCnt),
-		atomic.LoadInt64(&e.doingGCGCMetaTaskCnt))
+		atomic.LoadInt64(&e.doingGCGCMetaTaskCnt),
+		atomic.LoadInt64(&e.doingMigrationGVGTaskCnt))
 }
 
 func (e *ExecuteModular) getSPID() (uint32, error) {
