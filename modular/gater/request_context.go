@@ -130,10 +130,7 @@ func (r *RequestContext) String() string {
 // SkipVerifyAuthentication is temporary to Compatible SignatureV2
 func (r *RequestContext) SkipVerifyAuthentication() bool {
 	v2SignaturePrefix := signaturePrefix(SignTypeV2, SignAlgorithm)
-	if strings.HasPrefix(r.request.Header.Get(GnfdAuthorizationHeader), v2SignaturePrefix) {
-		return true
-	}
-	return false
+	return strings.HasPrefix(r.request.Header.Get(GnfdAuthorizationHeader), v2SignaturePrefix)
 }
 
 // signaturePrefix return supported Authentication prefix
