@@ -39,10 +39,6 @@ func (plan *BucketMigrateExecutePlan) loadFromDB() error {
 	// task progress
 	// multi bucket
 
-	//plan.Manager.baseApp.GfSpDB().ListMigrateGVGUnits(plan.Scheduler.selfSP)
-	//for _, primaryGVGUnit := range plan.PrimaryGVGByBucketMigrateUnits {
-	//}
-
 	return nil
 }
 func (plan *BucketMigrateExecutePlan) storeToDB() error {
@@ -107,6 +103,32 @@ func (plan *BucketMigrateExecutePlan) startSPSchedule() {
 	}
 }
 
+func (plan *BucketMigrateExecutePlan) makeGVGUnit(gvgMeta []*spdb.MigrateGVGUnitMeta) error {
+	var (
+		primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup
+		err              error
+	)
+
+	for _, migrateGVG := range gvgMeta {
+		srcSP, queryErr := plan.Manager.virtualGroupManager.QuerySPByID(migrateGVG.SrcSPID)
+		destSP, queryErr := plan.Manager.virtualGroupManager.QuerySPByID(migrateGVG.DestSPID)
+		if queryErr != nil {
+			log.Errorw("failed to query sp", "error", queryErr)
+			return queryErr
+		}
+		primarySPGVGList, err = plan.Manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), uint64(plan.Scheduler.selfSP.GetId()))
+		if err != nil {
+			log.Errorw("failed to list gvg ", "error", err)
+			return errors.New("failed to list gvg")
+		}
+		for _, gvg := range primarySPGVGList {
+			gvgUnit := &GlobalVirtualGroupMigrateExecuteUnit{gvg: gvg, srcSP: srcSP, destSP: destSP}
+			plan.PrimaryGVGIDMapMigrateUnits[gvg.Id] = gvgUnit
+		}
+	}
+	return nil
+}
+
 func (plan *BucketMigrateExecutePlan) Init() error {
 	plan.loadFromDB()
 	return nil
@@ -131,6 +153,18 @@ type BucketMigrateScheduler struct {
 	isExiting                 bool   // load from db
 	//executePlan               []*BucketMigrateExecutePlan // bucketid -> BucketMigrateExecutePlan
 	executePlanIDMap map[uint64]*BucketMigrateExecutePlan
+}
+
+// NewBucketMigrateScheduler returns a virtual group manager interface.
+func NewBucketMigrateScheduler(manager *ManageModular) (*BucketMigrateScheduler, error) {
+	bucketMigrateScheduler := &BucketMigrateScheduler{
+		manager: manager,
+	}
+
+	bucketMigrateScheduler.Init()
+	bucketMigrateScheduler.Start()
+
+	return bucketMigrateScheduler, nil
 }
 
 func (s *BucketMigrateScheduler) Init() error {
@@ -215,6 +249,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 	var (
 		primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup
 		plan             *BucketMigrateExecutePlan
+		err              error
 	)
 
 	plan = &BucketMigrateExecutePlan{
@@ -224,15 +259,21 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 	}
 
 	// TODO: query metadata service to get primary sp's gvg list.
+	primarySPGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), uint64(s.selfSP.GetId()))
+	if err != nil {
+		log.Errorw("failed to list gvg ", "error", err)
+		return nil, errors.New("failed to list gvg")
+	}
+
 	srcSP, queryErr := s.manager.virtualGroupManager.QuerySPByID(s.selfSP.GetId())
 	destSP, queryErr := s.manager.virtualGroupManager.QuerySPByID(event.DstPrimarySpId)
 	if queryErr != nil {
 		log.Errorw("failed to query sp", "error", queryErr)
 		return nil, queryErr
 	}
-	for _, g := range primarySPGVGList {
-		gvgUnit := &GlobalVirtualGroupMigrateExecuteUnit{gvg: g, srcSP: srcSP, destSP: destSP}
-		plan.PrimaryGVGIDMapMigrateUnits[g.Id] = gvgUnit
+	for _, gvg := range primarySPGVGList {
+		gvgUnit := &GlobalVirtualGroupMigrateExecuteUnit{gvg: gvg, srcSP: srcSP, destSP: destSP}
+		plan.PrimaryGVGIDMapMigrateUnits[gvg.Id] = gvgUnit
 	}
 
 	return plan, nil
@@ -240,5 +281,46 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 
 func (s *BucketMigrateScheduler) HandleMigrateGVGTask(task task.MigrateGVGTask) error {
 	err := s.executePlanIDMap[task.GetBucketId()].UpdateProgress(task)
+	return err
+}
+
+func (s *BucketMigrateScheduler) LoadBucketMigrateExecutePlansFromDB() error {
+	var (
+		bucketIDs             []uint64
+		migrationBucketEvents *types.ListMigrateBucketEvents
+		migrateGVGUnitMeta    []*spdb.MigrateGVGUnitMeta
+		err                   error
+	)
+
+	// get bucket id, TODO: if you have any good idea
+	migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
+	if err != nil {
+		log.Errorw("failed to list migrate bucket events", "error", err)
+		return errors.New("failed to list migrate bucket events")
+	}
+	for _, event := range migrationBucketEvents.Events {
+		bucketIDs = append(bucketIDs, event.BucketId.Uint64())
+	}
+
+	for _, bucketID := range bucketIDs {
+		migrateGVGUnitMeta, err = s.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByBucketID(bucketID, s.selfSP.GetId())
+		if err != nil {
+		}
+		// construct plan
+		// plan load from db, TODO (multi execute plan)
+		executePlan := &BucketMigrateExecutePlan{
+			Manager:                     s.manager,
+			Scheduler:                   s,
+			BucketID:                    bucketID,
+			VirtualGroupManager:         s.manager.virtualGroupManager,
+			PrimaryGVGIDMapMigrateUnits: make(map[uint32]*GlobalVirtualGroupMigrateExecuteUnit),
+		}
+
+		if err = executePlan.makeGVGUnit(migrateGVGUnitMeta); err != nil {
+			log.Errorw("failed to init sp exit Scheduler due to plan init", "error", err)
+			return err
+		}
+		s.executePlanIDMap[executePlan.BucketID] = executePlan
+	}
 	return err
 }
