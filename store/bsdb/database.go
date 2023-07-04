@@ -93,7 +93,7 @@ type Metadata interface {
 	// ListSwapOutEvents list swap out events
 	ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapOut, error)
 	// ListSpExitEvents list sp exit events
-	ListSpExitEvents(blockID uint64, operatorAddress common.Address) ([]*EventStorageProviderExit, []*EventCompleteStorageProviderExit, error)
+	ListSpExitEvents(blockID uint64, operatorAddress common.Address) (*EventStorageProviderExit, *EventCompleteStorageProviderExit, error)
 }
 
 // BSDB contains all the methods required by block syncer database

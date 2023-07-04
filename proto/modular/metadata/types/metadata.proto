@@ -658,9 +658,9 @@ message GfSpListSpExitEventsRequest {
 // ListSpExitEvents is the combination of sp exit events
 message ListSpExitEvents {
   // events defines the sp exit event
-  repeated greenfield.virtualgroup.EventStorageProviderExit events = 1;
+  greenfield.virtualgroup.EventStorageProviderExit event = 1;
   // complete_events defines the complete sp exit event
-  repeated greenfield.virtualgroup.EventCompleteStorageProviderExit complete_events = 2;
+  greenfield.virtualgroup.EventCompleteStorageProviderExit complete_event = 2;
 }
 
 // GfSpListSpExitEventsResponse is response type for the GfSpListSPExitEvents RPC method

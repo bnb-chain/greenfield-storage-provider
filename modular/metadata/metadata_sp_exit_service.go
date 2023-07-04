@@ -308,43 +308,37 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsByBucket(ctx context.Contex
 // GfSpListSpExitEvents list migrate sp exit events
 func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.GfSpListSpExitEventsRequest) (resp *types.GfSpListSpExitEventsResponse, err error) {
 	var (
-		events          []*model.EventStorageProviderExit
-		completeEvents  []*model.EventCompleteStorageProviderExit
-		spEvent         []*virtual_types.EventStorageProviderExit
-		spCompleteEvent []*virtual_types.EventCompleteStorageProviderExit
+		event           *model.EventStorageProviderExit
+		completeEvent   *model.EventCompleteStorageProviderExit
+		spEvent         *virtual_types.EventStorageProviderExit
+		spCompleteEvent *virtual_types.EventCompleteStorageProviderExit
 	)
 
 	ctx = log.Context(ctx, req)
-	events, completeEvents, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, common.HexToAddress(req.OperatorAddress))
+	event, completeEvent, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, common.HexToAddress(req.OperatorAddress))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate swap out events", "error", err)
 		return nil, err
 	}
 
-	if events == nil && completeEvents == nil {
+	if event == nil && completeEvent == nil {
 		return nil, ErrNoEvents
 	}
 
-	spEvent = make([]*virtual_types.EventStorageProviderExit, len(events))
-	for i, event := range events {
-		spEvent[i] = &virtual_types.EventStorageProviderExit{
-			StorageProviderId: event.StorageProviderId,
-			OperatorAddress:   event.OperatorAddress.String(),
-		}
+	spEvent = &virtual_types.EventStorageProviderExit{
+		StorageProviderId: event.StorageProviderId,
+		OperatorAddress:   event.OperatorAddress.String(),
 	}
 
-	spCompleteEvent = make([]*virtual_types.EventCompleteStorageProviderExit, len(completeEvents))
-	for i, event := range completeEvents {
-		spCompleteEvent[i] = &virtual_types.EventCompleteStorageProviderExit{
-			StorageProviderId: event.StorageProviderId,
-			OperatorAddress:   event.OperatorAddress.String(),
-			TotalDeposit:      math.NewIntFromBigInt(event.TotalDeposit.Raw()),
-		}
+	spCompleteEvent = &virtual_types.EventCompleteStorageProviderExit{
+		StorageProviderId: completeEvent.StorageProviderId,
+		OperatorAddress:   completeEvent.OperatorAddress.String(),
+		TotalDeposit:      math.NewIntFromBigInt(completeEvent.TotalDeposit.Raw()),
 	}
 
 	resp = &types.GfSpListSpExitEventsResponse{Events: &types.ListSpExitEvents{
-		Events:         spEvent,
-		CompleteEvents: spCompleteEvent,
+		Event:         spEvent,
+		CompleteEvent: spCompleteEvent,
 	}}
 	log.CtxInfow(ctx, "succeed to list migrate swap out events")
 	return resp, nil
