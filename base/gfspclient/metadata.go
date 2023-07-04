@@ -463,3 +463,31 @@ func (s *GfSpClient) ListObjectsByObjectID(ctx context.Context, objectIDs []uint
 	}
 	return resp.Objects, nil
 }
+
+func (s *GfSpClient) GetObjectByID(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (*storage_types.ObjectInfo, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListObjectsByObjectIDRequest{
+		ObjectIds:      []uint64{objectID},
+		IncludeRemoved: false,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsByObjectID(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list objects by object ids", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	if len(resp.GetObjects()) == 0 {
+		return nil, ErrNoSuchObject
+	}
+	if _, ok := resp.GetObjects()[objectID]; !ok {
+		return nil, ErrNoSuchObject
+	}
+	if resp.GetObjects()[objectID].GetObjectInfo() == nil {
+		return nil, ErrNoSuchObject
+	}
+	return resp.GetObjects()[objectID].GetObjectInfo(), nil
+}
