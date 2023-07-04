@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/bnb-chain/greenfield-common/go/redundancy"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"

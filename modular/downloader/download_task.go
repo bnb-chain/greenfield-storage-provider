@@ -3,10 +3,11 @@ package downloader
 import (
 	"context"
 	"errors"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"net/http"
 	"sync/atomic"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"

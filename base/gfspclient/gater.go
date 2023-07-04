@@ -127,14 +127,15 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	return signature, nil
 }
 
-func (s *GfSpClient) MigratePiece(ctx context.Context, mp gfsptask.GfSpMigratePieceTask, endpoint string) ([]byte, error) {
+func (s *GfSpClient) MigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
+	endpoint := task.GetSrcSpEndpoint()
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", endpoint, MigratePiecePath), nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
-	msg, err := json.Marshal(mp)
+	msg, err := json.Marshal(task)
 	if err != nil {
 		return nil, err
 	}

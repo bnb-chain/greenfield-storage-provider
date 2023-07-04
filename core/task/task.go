@@ -538,16 +538,20 @@ type MigrateGVGTask interface {
 	GetDestSp() *sptypes.StorageProvider
 	// SetDestSp sets the dest storage provider
 	SetDestSp(*sptypes.StorageProvider)
-	// GetBucketId returns the bucketID
-	GetBucketId() uint64
+	// GetBucketID returns the bucketID
+	GetBucketID() uint64
 	// SetBucketID sets the bucketID
 	SetBucketID(uint64)
 	// GetRedundancyIdx returns the redundancy index
 	GetRedundancyIdx() int32
 	// SetRedundancyIdx sets the redundancy index
 	SetRedundancyIdx(int32)
-	// GetLastMigratedObjectId returns the last modified objectID
-	GetLastMigratedObjectId() uint64
+	// GetLastMigratedObjectID returns the last modified objectID
+	GetLastMigratedObjectID() uint64
 	// SetLastMigratedObjectID sets the last migrated objectID
 	SetLastMigratedObjectID(uint64)
+	// GetFinished returns the task whether finished
+	GetFinished() bool
+	// SetFinished sets the migrated gvg task status when finished
+	SetFinished(bool)
 }
