@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"errors"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"time"
 
@@ -301,6 +302,9 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 		primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup
 		plan             *BucketMigrateExecutePlan
 		err              error
+		vgfID            uint32
+		params           *storage_types.Params
+		destGVG          *vgmgr.GlobalVirtualGroupMeta
 	)
 
 	plan = newBucketMigrateExecutePlan(s.manager, event.BucketId.Uint64())
@@ -323,9 +327,15 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 		return nil, err
 	}
 
+	vgfID = 0
+	if params, err = s.manager.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix()); err != nil {
+		return nil, err
+	}
 	for _, gvg := range primarySPGVGList {
-		gvgUnit := &GlobalVirtualGroupMigrateExecuteUnit{gvg: gvg, srcSP: srcSP, destSP: destSP, migrateStatus: WaitForMigrate}
 		// TODO how to get dest gvg
+		destGVG, err = s.manager.pickGlobalVirtualGroupForBucketMigrate(context.Background(), vgfID, params, gvg, destSP)
+		vgfID = destGVG.FamilyID
+		gvgUnit := &GlobalVirtualGroupMigrateExecuteUnit{gvg: gvg, srcSP: srcSP, destSP: destSP, migrateStatus: WaitForMigrate, destGVGID: destGVG.ID}
 
 		plan.PrimaryGVGIDMapMigrateUnits[gvg.Id] = gvgUnit
 	}
