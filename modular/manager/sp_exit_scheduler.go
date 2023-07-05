@@ -23,28 +23,6 @@ const (
 	MaxDestRunningMigrateGVG = 10
 )
 
-type MigrateStatus int32
-
-var (
-	WaitForMigrate MigrateStatus = 0
-	Migrating      MigrateStatus = 1
-	Migrated       MigrateStatus = 2
-)
-
-type GlobalVirtualGroupMigrateExecuteUnit struct {
-	gvg                 *virtualgrouptypes.GlobalVirtualGroup
-	redundantIndex      int32 // if < 0, represents migrate primary.
-	isConflict          bool  // only be used in sp exit.
-	isSecondary         bool  // only be used in sp exit.
-	isSrc               bool  // only be used in sp exit.
-	srcSP               *sptypes.StorageProvider
-	destSP              *sptypes.StorageProvider
-	migrateStatus       MigrateStatus
-	checkTimestamp      uint64
-	checkStatus         string // update to proto enum
-	lastMigrateObjectID uint64 // migrate progress
-}
-
 type VirtualGroupFamilyMigrateExecuteUnit struct {
 	vgf                                *virtualgrouptypes.GlobalVirtualGroupFamily
 	srcSP                              *sptypes.StorageProvider
@@ -610,7 +588,12 @@ func (runner *MigrateTaskRunner) Start() error {
 }
 
 func (runner *MigrateTaskRunner) AddNewMigrateGVGUnit(key string, unit *GlobalVirtualGroupMigrateExecuteUnit) error {
-	// TODO: update db
+	runner.mutex.Lock()
+	defer runner.mutex.Unlock()
+	if _, found := runner.runningUnitMap[key]; found {
+		return nil
+	}
+	runner.runningUnitMap[key] = unit
 	return nil
 }
 

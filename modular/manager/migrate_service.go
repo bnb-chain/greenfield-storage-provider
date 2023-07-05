@@ -18,5 +18,6 @@ func (m *ManageModular) NotifyMigrateGVG(ctx context.Context, task task.MigrateG
 		isSrc:          false,
 		srcSP:          task.GetSrcSp(),
 		destSP:         task.GetDestSp(),
+		migrateStatus:  WaitForMigrate,
 	})
 }
