@@ -33,6 +33,7 @@ type Customize struct {
 
 // GfSpConfig defines the GfSp configuration.
 type GfSpConfig struct {
+	Env            string
 	AppID          string
 	Server         []string
 	GRPCAddress    string

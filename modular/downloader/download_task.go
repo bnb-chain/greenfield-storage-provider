@@ -3,7 +3,9 @@ package downloader
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -367,7 +369,10 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
-		d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
+		// if read piece store error, try to recover the error data
+		if strings.Contains(err.Error(), fmt.Sprintf("inner_code:%d", ErrPieceStoreInnerCode)) {
+			d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
+		}
 		return nil, nil, nil, ErrPieceStore
 	}
 

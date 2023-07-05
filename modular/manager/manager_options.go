@@ -22,7 +22,7 @@ const (
 	DefaultGlobalSealObjectParallel int = 10240
 	// DefaultGlobalReceiveObjectParallel defines the default max parallel confirming
 	// receive pieces on greenfield in SP system.
-	DefaultGlobalReceiveObjectParallel int = 10240
+	DefaultGlobalReceiveObjectParallel int = 10240 * 10
 	// DefaultGlobalGCObjectParallel defines the default max parallel gc objects in SP
 	// system.
 	DefaultGlobalGCObjectParallel int = 4

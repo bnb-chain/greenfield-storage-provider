@@ -8,11 +8,14 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 )
 
 var (
 	testDomain = "www.route-test.com"
 	gw         = &GateModular{
+		env:    gfspapp.EnvLocal,
 		domain: testDomain,
 	}
 	scheme     = "https://"
@@ -261,16 +264,121 @@ func TestRouters(t *testing.T) {
 			name:             "List objects by object ids router",
 			router:           gwRouter,
 			method:           http.MethodPost,
-			url:              scheme + testDomain + "/?" + ListObjectsByObjectID,
+			url:              scheme + testDomain + "/?" + ListObjectsByObjectIDQuery,
 			shouldMatch:      true,
 			wantedRouterName: listObjectsByObjectIDRouterName,
-		}, {
+		},
+		{
 			name:             "List buckets by bucket ids router",
 			router:           gwRouter,
 			method:           http.MethodPost,
-			url:              scheme + testDomain + "/?" + ListBucketsByBucketID,
+			url:              scheme + testDomain + "/?" + ListBucketsByBucketIDQuery,
 			shouldMatch:      true,
 			wantedRouterName: listBucketsByBucketIDRouterName,
+		},
+		{
+			name:             "universal endpoint download router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/download/test_bucket_name/test_object_name",
+			shouldMatch:      true,
+			wantedRouterName: downloadObjectByUniversalEndpointName,
+		},
+		{
+			name:             "universal endpoint view router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/view/test_bucket_name/test_object_name",
+			shouldMatch:      true,
+			wantedRouterName: viewObjectByUniversalEndpointName,
+		},
+		{
+			name:             "offchain-auth request nonce router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + AuthRequestNoncePath,
+			shouldMatch:      true,
+			wantedRouterName: requestNonceName,
+		},
+		{
+			name:             "offchain-auth update key router",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              scheme + testDomain + AuthUpdateKeyPath,
+			shouldMatch:      true,
+			wantedRouterName: updateUserPublicKey,
+		},
+		{
+			name:             "Get payment by bucket id router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetPaymentByBucketIDQuery + "&" + BucketIDQuery,
+			shouldMatch:      true,
+			wantedRouterName: getPaymentByBucketIDRouterName,
+		},
+		{
+			name:             "Get payment by bucket name router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "?" + GetPaymentByBucketNameQuery,
+			shouldMatch:      true,
+			wantedRouterName: getPaymentByBucketNameRouterName,
+		},
+		{
+			name:             "Get payment by bucket name router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/" + bucketName + "?" + GetPaymentByBucketNameQuery,
+			shouldMatch:      true,
+			wantedRouterName: getPaymentByBucketNameRouterName,
+		},
+		{
+			name:             "Get bucket by bucket name router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "?" + GetBucketByBucketNameQuery,
+			shouldMatch:      true,
+			wantedRouterName: getBucketByBucketNameRouterName,
+		},
+		{
+			name:             "Get bucket by bucket name router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/" + bucketName + "?" + GetBucketByBucketNameQuery,
+			shouldMatch:      true,
+			wantedRouterName: getBucketByBucketNameRouterName,
+		},
+		{
+			name:             "Get bucket by bucket id router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetBucketByBucketIDQuery + "&" + BucketIDQuery,
+			shouldMatch:      true,
+			wantedRouterName: getBucketByBucketIDRouterName,
+		},
+		{
+			name:             "List deleted objects by block number range router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + ListDeletedObjectsQuery + "&" + SpOperatorAddressQuery + "&" + StartBlockNumberQuery + "&" + EndBlockNumberQuery,
+			shouldMatch:      true,
+			wantedRouterName: listDeletedObjectsByBlockNumberRangeRouterName,
+		},
+		{
+			name:             "Get user buckets count router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetUserBucketsCountQuery,
+			shouldMatch:      true,
+			wantedRouterName: getUserBucketsCountRouterName,
+		},
+		{
+			name:             "List expired buckets by sp router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + ListExpiredBucketsBySpQuery + "&" + LimitQuery + "&" + CreateAtQuery + "&" + PrimarySpAddressQuery,
+			shouldMatch:      true,
+			wantedRouterName: listExpiredBucketsBySpRouterName,
 		},
 	}
 	for _, testCase := range testCases {

@@ -122,7 +122,7 @@ func (s *GfSpClient) GetBucketByBucketName(ctx context.Context, bucketName strin
 
 // GetBucketByBucketID get bucket info by a bucket id
 func (s *GfSpClient) GetBucketByBucketID(ctx context.Context, bucketId int64, includePrivate bool,
-	opts ...grpc.DialOption) (*types.GfSpGetBucketByBucketIDResponse, error) {
+	opts ...grpc.DialOption) (*types.Bucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (s *GfSpClient) GetBucketByBucketID(ctx context.Context, bucketId int64, in
 		log.CtxErrorw(ctx, "failed to send get bucket by bucket id rpc", "error", err)
 		return nil, err
 	}
-	return resp, nil
+	return resp.GetBucket(), nil
 }
 
 // ListExpiredBucketsBySp list buckets that are expired by specific sp
@@ -462,4 +462,32 @@ func (s *GfSpClient) ListObjectsByObjectID(ctx context.Context, objectIDs []uint
 		return nil, ErrRpcUnknown
 	}
 	return resp.Objects, nil
+}
+
+func (s *GfSpClient) GetObjectByID(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (*storage_types.ObjectInfo, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListObjectsByObjectIDRequest{
+		ObjectIds:      []uint64{objectID},
+		IncludeRemoved: false,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsByObjectID(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list objects by object ids", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	if len(resp.GetObjects()) == 0 {
+		return nil, ErrNoSuchObject
+	}
+	if _, ok := resp.GetObjects()[objectID]; !ok {
+		return nil, ErrNoSuchObject
+	}
+	if resp.GetObjects()[objectID].GetObjectInfo() == nil {
+		return nil, ErrNoSuchObject
+	}
+	return resp.GetObjects()[objectID].GetObjectInfo(), nil
 }
