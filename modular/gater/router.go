@@ -83,7 +83,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// replicate piece to receiver
 	router.Path(ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)
-	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.recoverPrimaryHandler)
+	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.getRecoverDataHandler)
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
 		HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
