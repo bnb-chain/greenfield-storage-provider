@@ -156,7 +156,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 	task.SetSealed(true)
 	// TODO: might add api GetGvgByObjectId in meta
 	bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, offChainObject.BucketName, true)
-	if err != nil {
+	if err != nil || bucketInfo == nil {
 		log.Errorf("failed to get bucket by bucket name", "error", err)
 		return
 	}
@@ -283,7 +283,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 				"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 		}
 		bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, objectInfo.BucketName, true)
-		if err != nil {
+		if err != nil || bucketInfo == nil {
 			log.Errorf("failed to get bucket by bucket name", "error", err)
 			return
 		}
