@@ -375,6 +375,7 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
 		// if read piece store error, try to recover the error data
 		d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
+
 		return nil, nil, nil, ErrPieceStore
 	}
 

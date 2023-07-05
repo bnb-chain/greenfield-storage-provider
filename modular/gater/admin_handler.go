@@ -476,12 +476,12 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	log.CtxDebugw(reqCtx.Context(), "succeed to replicate piece")
 }
 
-// recoverPrimaryHandler handles the query for recovery request from secondary SP or primary SP.
+// getRecoverDataHandler handles the query for recovery request from secondary SP or primary SP.
 // if it is used to recovery primary SP and the handler SP is the corresponding secondary,
 // it returns the EC piece data stored in the secondary SP for the requested object.
 // if it is used to recovery secondary SP and the handler is the corresponding primary SP,
 // it directly returns the EC piece data of the secondary SP.
-func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Request) {
+func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err         error
 		reqCtx      *RequestContext
@@ -506,10 +506,7 @@ func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Reque
 
 	// ignore the error, because the recovery request only between SPs, the request
 	// verification is by signature of the RecoveryTask
-	reqCtx, newErr := NewRequestContext(r, g)
-	if newErr != nil {
-		log.CtxDebugw(context.Background(), "recoverPrimaryHandler new reqCtx error", "error", newErr)
-	}
+	reqCtx, _ = NewRequestContext(r, g)
 
 	recoveryMsg, err = hex.DecodeString(r.Header.Get(GnfdRecoveryMsgHeader))
 	if err != nil {
@@ -571,15 +568,15 @@ func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	var pieceData []byte
-	if redundancyIdx >= 0 {
-		// recovery secondary SP
-		pieceData, err = g.recoverECPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
+	if redundancyIdx >= 0 && g.baseApp.OperatorAddress() == bucketInfo.GetPrimarySpAddress() {
+		// get segment piece data from primary SP
+		pieceData, err = g.getRecoverSegment(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
 		if err != nil {
 			return
 		}
 	} else {
-		// recovery primary SP
-		pieceData, err = g.recoverSegmentPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
+		// get EC piece data from secondary SP
+		pieceData, err = g.getRecoverPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
 		if err != nil {
 			return
 		}
@@ -589,30 +586,47 @@ func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Reque
 	log.CtxDebugw(reqCtx.Context(), "succeed to get one ec piece data")
 }
 
-func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
+// getRecoverPiece get EC piece data from handler and return
+func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
 	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	var err error
+
 	// the primary sp of the object should be consistent with task signature
 	if bucketInfo.PrimarySpAddress != signatureAddr.String() {
-		log.CtxErrorw(ctx, "recovery request not come from primary sp")
+		log.CtxDebugw(ctx, "recovery request not come from primary sp")
+		// judge if the sender is not one of the secondary SP
+		isRequestFromSecondary := false
+		var taskECIndex int32
+		for idx, spAddr := range objectInfo.SecondarySpAddresses {
+			if spAddr == signatureAddr.String() {
+				isRequestFromSecondary = true
+				taskECIndex = int32(idx)
+			}
+		}
+
+		if !isRequestFromSecondary || (isRequestFromSecondary && taskECIndex != recoveryTask.GetEcIdx()) {
+			log.CtxErrorw(ctx, "recovery request not come from the correct secondary sp")
+			err = ErrRecoverySP
+			return nil, err
+		}
 	}
 
 	isOneOfSecondary := false
-	handlerAddr := g.baseApp.OperatorAddress()
 	var ECIndex int
 	for idx, spAddr := range objectInfo.SecondarySpAddresses {
-		if spAddr == handlerAddr {
+		if spAddr == g.baseApp.OperatorAddress() {
 			isOneOfSecondary = true
 			ECIndex = idx
+			break
 		}
 	}
+
 	// if the handler SP is not one of the secondary SP of the task object, return err
 	if !isOneOfSecondary {
 		err = ErrRecoverySP
 		return nil, err
 	}
 
-	// init download piece task, get piece data and return the data
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
 	ECPieceKey := g.baseApp.PieceOp().ECPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(), recoveryTask.GetSegmentIdx(), uint32(ECIndex))
@@ -632,18 +646,20 @@ func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *stora
 	return pieceData, nil
 }
 
-func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
+// getRecoverSegment get segment piece data from handler and return the EC piece data based on recovery task info
+func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
 	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
 
+	handlerAddr := g.baseApp.OperatorAddress()
 	// if the handler is not the primary SP of the object, return error
-	if bucketInfo.PrimarySpAddress != g.baseApp.OperatorAddress() {
-		log.CtxErrorw(ctx, "it is not the right the primary SP to handle secondary SP recovery", "expected primary Sp:", bucketInfo.PrimarySpAddress)
+	if bucketInfo.PrimarySpAddress != handlerAddr {
+		log.CtxErrorw(ctx, "it is not the right  SP to handle secondary SP recovery", "expected primary Sp:", bucketInfo.PrimarySpAddress)
 		return nil, ErrRecoverySP
 	}
 
-	// if the sender is not one of the secondarySp,return err
+	// if the sender is not one of the secondarySp, return err
 	isOneOfSecondary := false
 	var ECIndex int32
 	for idx, spAddr := range objectInfo.SecondarySpAddresses {
