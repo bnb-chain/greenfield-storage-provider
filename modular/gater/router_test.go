@@ -408,7 +408,7 @@ func TestRouters(t *testing.T) {
 			name:             "Get virtual group families by vgf id",
 			router:           gwRouter,
 			method:           http.MethodGet,
-			url:              scheme + testDomain + "/?" + GetVirtualGroupFamilyBySpIDQuery + "&" + VgfIDQuery,
+			url:              scheme + testDomain + "/?" + GetVirtualGroupFamilyQuery + "&" + VgfIDQuery,
 			shouldMatch:      true,
 			wantedRouterName: getVirtualGroupFamilyRouterName,
 		},
@@ -427,14 +427,6 @@ func TestRouters(t *testing.T) {
 			url:              scheme + testDomain + "/?" + GetGlobalVirtualGroupQuery + "&" + LvgIDQuery + "&" + BucketIDQuery,
 			shouldMatch:      true,
 			wantedRouterName: getGlobalVirtualGroupRouterName,
-		},
-		{
-			name:             "Get virtual group family binding on bucket",
-			router:           gwRouter,
-			method:           http.MethodGet,
-			url:              scheme + testDomain + "/?" + GetVirtualGroupFamilyBindingOnBucketQuery + "&" + BucketIDQuery,
-			shouldMatch:      true,
-			wantedRouterName: getVirtualGroupFamilyBindingOnBucketRouterName,
 		},
 		{
 			name:             "List global virtual group by secondary sp id",
