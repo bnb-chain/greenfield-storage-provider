@@ -158,10 +158,13 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 // GfSpListMigrateBucketEvents list migrate bucket events
 func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *types.GfSpListMigrateBucketEventsRequest) (resp *types.GfSpListMigrateBucketEventsResponse, err error) {
 	var (
-		events           []*model.EventMigrationBucket
-		completeEvents   []*model.EventCompleteMigrationBucket
-		spEvent          []*storage_types.EventMigrationBucket
-		spCompleteEvents []*storage_types.EventCompleteMigrationBucket
+		events            []*model.EventMigrationBucket
+		completeEvents    []*model.EventCompleteMigrationBucket
+		spEvent           []*storage_types.EventMigrationBucket
+		spCompleteEvents  []*storage_types.EventCompleteMigrationBucket
+		eventsMap         map[storage_types.Uint]*storage_types.EventMigrationBucket
+		completeEventsMap map[storage_types.Uint]*storage_types.EventCompleteMigrationBucket
+		res               []*types.ListMigrateBucketEvents
 	)
 
 	ctx = log.Context(ctx, req)
@@ -175,19 +178,23 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		return nil, ErrNoEvents
 	}
 
+	eventsMap = make(map[storage_types.Uint]*storage_types.EventMigrationBucket)
 	spEvent = make([]*storage_types.EventMigrationBucket, len(events))
 	for i, event := range events {
-		spEvent[i] = &storage_types.EventMigrationBucket{
+		e := &storage_types.EventMigrationBucket{
 			Operator:       event.Operator.String(),
 			BucketName:     event.BucketName,
 			BucketId:       math.NewUintFromBigInt(event.BucketID.Big()),
 			DstPrimarySpId: event.DstPrimarySpId,
 		}
+		spEvent[i] = e
+		eventsMap[e.BucketId] = e
 	}
 
+	completeEventsMap = make(map[storage_types.Uint]*storage_types.EventCompleteMigrationBucket)
 	spCompleteEvents = make([]*storage_types.EventCompleteMigrationBucket, len(completeEvents))
 	for i, event := range completeEvents {
-		spCompleteEvents[i] = &storage_types.EventCompleteMigrationBucket{
+		e := &storage_types.EventCompleteMigrationBucket{
 			Operator:                   event.Operator.String(),
 			BucketName:                 event.BucketName,
 			BucketId:                   math.NewUintFromBigInt(event.BucketID.Big()),
@@ -195,12 +202,26 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 			// TODO BARRY
 			//GvgMappings:                event.GvgMappings,
 		}
+		spCompleteEvents[i] = e
+		completeEventsMap[e.BucketId] = e
 	}
 
-	resp = &types.GfSpListMigrateBucketEventsResponse{Events: &types.ListMigrateBucketEvents{
-		Events:         spEvent,
-		CompleteEvents: spCompleteEvents,
-	}}
+	res = make([]*types.ListMigrateBucketEvents, len(events))
+	for _, event := range eventsMap {
+		if e, ok := completeEventsMap[event.BucketId]; ok {
+			res = append(res, &types.ListMigrateBucketEvents{
+				Events:         event,
+				CompleteEvents: e,
+			})
+		} else {
+			res = append(res, &types.ListMigrateBucketEvents{
+				Events:         event,
+				CompleteEvents: nil,
+			})
+		}
+	}
+
+	resp = &types.GfSpListMigrateBucketEventsResponse{Events: res}
 	log.CtxInfow(ctx, "succeed to list migrate bucket events")
 	return resp, nil
 }
@@ -209,7 +230,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.GfSpListSwapOutEventsRequest) (resp *types.GfSpListSwapOutEventsResponse, err error) {
 	var (
 		events []*model.EventSwapOut
-		res    []*virtual_types.EventSwapOut
+		res    []*types.ListSwapOutEvents
 		gvgIDs []uint32
 	)
 
@@ -220,7 +241,11 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 		return nil, err
 	}
 
-	res = make([]*virtual_types.EventSwapOut, len(events))
+	if events == nil {
+		return nil, ErrNoEvents
+	}
+
+	res = make([]*types.ListSwapOutEvents, len(events))
 	for i, event := range events {
 		gvgIDs = make([]uint32, len(event.GlobalVirtualGroupIds))
 		//// TODO: BARRY check the below value
@@ -228,15 +253,16 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 		for j, id := range event.GlobalVirtualGroupIds {
 			gvgIDs[j] = uint32(id)
 		}
-		res[i] = &virtual_types.EventSwapOut{
+		e := &virtual_types.EventSwapOut{
 			StorageProviderId:          event.StorageProviderId,
 			GlobalVirtualGroupFamilyId: event.GlobalVirtualGroupFamilyId,
 			GlobalVirtualGroupIds:      gvgIDs,
 			SuccessorSpId:              event.SuccessorSpId,
 		}
+		res[i] = &types.ListSwapOutEvents{Events: e}
 	}
 
-	resp = &types.GfSpListSwapOutEventsResponse{Events: &types.ListSwapOutEvents{Events: res}}
+	resp = &types.GfSpListSwapOutEventsResponse{Events: res}
 	log.CtxInfow(ctx, "succeed to list migrate swap out events")
 	return resp, nil
 }

@@ -1578,7 +1578,7 @@ func (g *GateModular) listMigrateBucketEventsHandler(w http.ResponseWriter, r *h
 		requestBlockID string
 		spID           uint32
 		blockID        uint64
-		events         *types.ListMigrateBucketEvents
+		events         []*types.ListMigrateBucketEvents
 		queryParams    url.Values
 	)
 
@@ -1637,7 +1637,7 @@ func (g *GateModular) listSwapOutEventsHandler(w http.ResponseWriter, r *http.Re
 		requestBlockID string
 		spID           uint32
 		blockID        uint64
-		events         *types.ListSwapOutEvents
+		events         []*types.ListSwapOutEvents
 		queryParams    url.Values
 	)
 

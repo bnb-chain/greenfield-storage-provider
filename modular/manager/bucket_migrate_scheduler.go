@@ -7,7 +7,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -214,44 +213,45 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 	for {
 		select {
 		case <-subscribeBucketMigrateEventsTicker.C:
-			var (
-				migrationBucketEvents *types.ListMigrateBucketEvents
-				err                   error
-			)
-			// 1. subscribe migrate bucket events
-			migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
-			if err != nil {
-				log.Errorw("failed to list migrate bucket events", "error", err)
-				return
-			}
-			// 2. make plan, start plan
-			// TODO
-			if migrationBucketEvents.CompleteEvents != nil {
-				s.isExited = true
-			}
-			for _, event := range migrationBucketEvents.Events {
-				if s.isExiting || s.isExited {
-					return
-				}
-				// TODO plan ?
-				plan, _ := s.produceBucketMigrateExecutePlan(event)
-				if err := plan.Start(); err != nil {
-					log.Errorw("failed to start bucket migrate execute plan", "error", err)
-					return
-				}
-				s.executePlanIDMap[plan.BucketID] = plan
-				s.isExiting = true
-			}
-
-			// 3.update subscribe progress to db
-			updateErr := s.manager.baseApp.GfSpDB().UpdateBucketMigrateSubscribeProgress(s.lastSubscribedBlockHeight + 1)
-			if updateErr != nil {
-				log.Errorw("failed to update sp exit progress", "error", updateErr)
-				return
-			}
-
-			s.isExiting = true
-			s.lastSubscribedBlockHeight++
+			// TODO:Will, fix the below code
+			//var (
+			//	migrationBucketEvents *types.ListMigrateBucketEvents
+			//	err                   error
+			//)
+			//// 1. subscribe migrate bucket events
+			//migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
+			//if err != nil {
+			//	log.Errorw("failed to list migrate bucket events", "error", err)
+			//	return
+			//}
+			//// 2. make plan, start plan
+			//// TODO
+			//if migrationBucketEvents.CompleteEvents != nil {
+			//	s.isExited = true
+			//}
+			//for _, event := range migrationBucketEvents.Events {
+			//	if s.isExiting || s.isExited {
+			//		return
+			//	}
+			//	// TODO plan ?
+			//	plan, _ := s.produceBucketMigrateExecutePlan(event)
+			//	if err := plan.Start(); err != nil {
+			//		log.Errorw("failed to start bucket migrate execute plan", "error", err)
+			//		return
+			//	}
+			//	s.executePlanIDMap[plan.BucketID] = plan
+			//	s.isExiting = true
+			//}
+			//
+			//// 3.update subscribe progress to db
+			//updateErr := s.manager.baseApp.GfSpDB().UpdateBucketMigrateSubscribeProgress(s.lastSubscribedBlockHeight + 1)
+			//if updateErr != nil {
+			//	log.Errorw("failed to update sp exit progress", "error", updateErr)
+			//	return
+			//}
+			//
+			//s.isExiting = true
+			//s.lastSubscribedBlockHeight++
 		}
 	}
 }
@@ -297,21 +297,23 @@ func (s *BucketMigrateScheduler) HandleMigrateGVGTask(task task.MigrateGVGTask) 
 
 func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	var (
-		bucketIDs             []uint64
-		migrationBucketEvents *types.ListMigrateBucketEvents
-		migrateGVGUnitMeta    []*spdb.MigrateGVGUnitMeta
-		err                   error
+		bucketIDs []uint64
+		// TODO:Will, fix the below code
+		//migrationBucketEvents *types.ListMigrateBucketEvents
+		migrateGVGUnitMeta []*spdb.MigrateGVGUnitMeta
+		err                error
 	)
 
 	// get bucket id, TODO: if you have any good idea
-	migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
-	if err != nil {
-		log.Errorw("failed to list migrate bucket events", "error", err)
-		return errors.New("failed to list migrate bucket events")
-	}
-	for _, event := range migrationBucketEvents.Events {
-		bucketIDs = append(bucketIDs, event.BucketId.Uint64())
-	}
+	// TODO:Will, fix the below code
+	//migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
+	//if err != nil {
+	//	log.Errorw("failed to list migrate bucket events", "error", err)
+	//	return errors.New("failed to list migrate bucket events")
+	//}
+	//for _, event := range migrationBucketEvents.Events {
+	//	bucketIDs = append(bucketIDs, event.BucketId.Uint64())
+	//}
 
 	for _, bucketID := range bucketIDs {
 		// load from db & construct plan
