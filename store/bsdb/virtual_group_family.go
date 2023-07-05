@@ -23,7 +23,7 @@ func (b *BsDBImpl) ListVirtualGroupFamiliesBySpID(spID uint32) ([]*VirtualGroupF
 		Where("primary_sp_id = ?", spID).
 		Scopes(filters...).
 		Find(&groups).Error
-	if err != nil {
+	if err != nil || len(groups) == 0 {
 		return nil, err
 	}
 
