@@ -10,6 +10,7 @@ import (
 	"time"
 
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -305,11 +306,16 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrPaymentState
 		}
 		permissionTime := time.Now()
-		allow, err := a.baseApp.Consensus().VerifyGetObjectPermission(ctx, account, bucket, object)
+		var permission *permissiontypes.Effect
+		var allow bool
+		permission, err = a.baseApp.GfSpClient().VerifyPermission(ctx, account, bucket, object, permissiontypes.ACTION_GET_OBJECT)
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
+			log.CtxErrorw(ctx, "failed to get bucket and object info from meta", "error", err)
 			return false, ErrConsensus
+		}
+		if *permission == permissiontypes.EFFECT_ALLOW {
+			allow = true
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetRecoveryPiece:
@@ -341,10 +347,15 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrNotSealedState
 		}
 
-		allow, err := a.baseApp.Consensus().VerifyGetObjectPermission(ctx, account, bucket, object)
+		var permission *permissiontypes.Effect
+		var allow bool
+		permission, err = a.baseApp.GfSpClient().VerifyPermission(ctx, account, bucket, object, permissiontypes.ACTION_GET_OBJECT)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
+			log.CtxErrorw(ctx, "failed to get bucket and object info from meta", "error", err)
 			return false, ErrConsensus
+		}
+		if *permission == permissiontypes.EFFECT_ALLOW {
+			allow = true
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetBucketQuota, coremodule.AuthOpTypeListBucketReadRecord:

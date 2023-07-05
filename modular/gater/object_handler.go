@@ -14,6 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield/types/s3util"
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -387,11 +388,18 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
-	if authenticated, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
-		reqCtx.bucketName, reqCtx.objectName); err != nil {
+	var permission *permissiontypes.Effect
+	if permission, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(),
+		sdk.AccAddress{}.String(),
+		reqCtx.bucketName,
+		reqCtx.objectName,
+		permissiontypes.ACTION_GET_OBJECT); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
 		err = ErrConsensus
 		return
+	}
+	if *permission == permissiontypes.EFFECT_ALLOW {
+		authenticated = true
 	}
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_verify_object_permission_time").Observe(time.Since(verifyObjectPermissionTime).Seconds())
 
@@ -594,11 +602,18 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 	}()
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
-	if authenticated, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
-		reqCtx.bucketName, reqCtx.objectName); err != nil {
+	var permission *permissiontypes.Effect
+	if permission, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(),
+		sdk.AccAddress{}.String(),
+		reqCtx.bucketName,
+		reqCtx.objectName,
+		permissiontypes.ACTION_GET_OBJECT); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
 		err = ErrConsensus
 		return
+	}
+	if *permission == permissiontypes.EFFECT_ALLOW {
+		authenticated = true
 	}
 
 	// the authorization is same as getObject handler
