@@ -327,6 +327,14 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vgmgr.Glo
 	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID)
 }
 
+// PickMigrateDestGlobalVirtualGroup picks a global virtual group(If failed to pick,
+// new GVG will be created by primary SP) in replicate/seal object workflow.
+func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
+	vgm.mutex.RLock()
+	defer vgm.mutex.RUnlock()
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID)
+}
+
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
 // if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
 func (vgm *virtualGroupManager) ForceRefreshMeta() error {

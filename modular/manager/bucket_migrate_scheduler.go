@@ -62,21 +62,14 @@ func (plan *BucketMigrateExecutePlan) storeToDB() error {
 // UpdateProgress persistent user updates and periodic progress reporting by Executor
 func (plan *BucketMigrateExecutePlan) UpdateProgress(task task.MigrateGVGTask) error {
 	var (
-		migrateStatus MigrateStatus
-		err           error
+		err error
 	)
 	gvgID := task.GetGvg().GetId()
 	migrateExecuteUnit, ok := plan.PrimaryGVGIDMapMigrateUnits[gvgID]
 	if ok {
 		// update memory
 		migrateExecuteUnit.lastMigrateObjectID = task.GetLastMigratedObjectID()
-		if task.GetFinished() == true {
-			migrateStatus = Migrated
-			plan.finished++
-		} else {
-			migrateStatus = Migrating
-		}
-		migrateExecuteUnit.migrateStatus = migrateStatus
+
 	} else {
 		return errors.New("no such migrate gvg task")
 	}
@@ -91,17 +84,36 @@ func (plan *BucketMigrateExecutePlan) UpdateProgress(task task.MigrateGVGTask) e
 		LastMigrateObjectID:    task.GetLastMigratedObjectID(),
 	}
 
-	// update migrateStatus
-	err = plan.Manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(gvgMeta, int(migrateStatus))
-	if err != nil {
-		log.Debugw("update migrate gvg migrateGVGUnit migrateStatus", "gvg_meta", gvgMeta, "error", err)
-		return err
-	}
-
 	// update LastMigrateObjectID
 	err = plan.Manager.baseApp.GfSpDB().UpdateMigrateGVGUnitLastMigrateObjectID(gvgMeta, task.GetLastMigratedObjectID())
 	if err != nil {
 		log.Debugw("update migrate gvg migrateGVGUnit lastMigrateObjectID", "gvg_meta", gvgMeta, "error", err)
+		return err
+	}
+
+	// update migratestatus
+	if task.GetFinished() == true {
+		err = plan.updateMigrateStatus(gvgMeta, migrateExecuteUnit, Migrated)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (plan *BucketMigrateExecutePlan) updateMigrateStatus(gvgMeta *spdb.MigrateGVGUnitMeta, migrateExecuteUnit *GlobalVirtualGroupMigrateExecuteUnit, migrateStatus MigrateStatus) error {
+	var (
+		err error
+	)
+
+	plan.finished++
+	migrateExecuteUnit.migrateStatus = migrateStatus
+
+	// update migrateStatus
+	err = plan.Manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(gvgMeta, int(migrateStatus))
+	if err != nil {
+		log.Debugw("update migrate gvg migrateGVGUnit migrateStatus", "gvg_meta", gvgMeta, "error", err)
 		return err
 	}
 
@@ -313,6 +325,8 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 
 	for _, gvg := range primarySPGVGList {
 		gvgUnit := &GlobalVirtualGroupMigrateExecuteUnit{gvg: gvg, srcSP: srcSP, destSP: destSP, migrateStatus: WaitForMigrate}
+		// TODO how to get dest gvg
+
 		plan.PrimaryGVGIDMapMigrateUnits[gvg.Id] = gvgUnit
 	}
 
