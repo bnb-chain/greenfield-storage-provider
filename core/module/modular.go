@@ -274,7 +274,8 @@ type Signer interface {
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
 	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
-	SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMigratePieceTask) ([]byte, error)
+	SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error)
+	CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

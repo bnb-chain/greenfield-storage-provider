@@ -19,12 +19,13 @@ import (
 )
 
 var (
-	ErrSignMsg                   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
-	ErrSealObjectOnChain         = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
-	ErrRejectUnSealObjectOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
-	ErrDiscontinueBucketOnChain  = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
-	ErrDanglingPointer           = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
-	ErrCreateGVGOnChain          = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
+	ErrSignMsg                      = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
+	ErrSealObjectOnChain            = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
+	ErrRejectUnSealObjectOnChain    = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
+	ErrDiscontinueBucketOnChain     = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
+	ErrDanglingPointer              = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
+	ErrCreateGVGOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
+	ErrCompleteMigrateBucketOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120008, "send complete migrate bucket failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -142,9 +143,7 @@ func (s *SignModular) SealObject(ctx context.Context, object *storagetypes.MsgSe
 	return s.client.SealObject(ctx, SignSeal, object)
 }
 
-func (s *SignModular) RejectUnSealObject(
-	ctx context.Context,
-	rejectObject *storagetypes.MsgRejectSealObject) (string, error) {
+func (s *SignModular) RejectUnSealObject(ctx context.Context, rejectObject *storagetypes.MsgRejectSealObject) (string, error) {
 	return s.client.RejectUnSealObject(ctx, SignSeal, rejectObject)
 }
 
@@ -164,4 +163,8 @@ func (s *SignModular) SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMig
 		return nil, err
 	}
 	return sig, nil
+}
+
+func (s *SignModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+	return s.client.CompleteMigrateBucket(ctx, SignOperator, migrateBucket)
 }

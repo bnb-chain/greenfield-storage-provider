@@ -204,6 +204,9 @@ func (*NilModular) HandleGCMetaTask(context.Context, task.GCMetaTask)           
 func (*NilModular) HandleReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask, int32, int32, int64) ([]task.ApprovalReplicatePieceTask, error) {
 	return nil, ErrNilModular
 }
+func (*NilModular) HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error {
+	return ErrNilModular
+}
 func (*NilModular) HandleQueryBootstrap(context.Context) ([]string, error) { return nil, ErrNilModular }
 
 func (*NilModular) SignCreateBucketApproval(context.Context, *storagetypes.MsgCreateBucket) ([]byte, error) {
@@ -245,11 +248,11 @@ func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontin
 func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
 	return ErrNilModular
 }
-func (*NilModular) SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
+func (*NilModular) SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error {
-	return ErrNilModular
+func (*NilModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+	return "", ErrNilModular
 }
 
 var _ Receiver = (*NullReceiveModular)(nil)

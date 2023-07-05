@@ -303,7 +303,7 @@ func (s *GfSpClient) SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong)
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignMigratePiece(ctx context.Context, migratePiece *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
+func (s *GfSpClient) SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		log.Errorw("client failed to connect signer", "error", err)
@@ -311,17 +311,39 @@ func (s *GfSpClient) SignMigratePiece(ctx context.Context, migratePiece *gfsptas
 	}
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_GfspMigratePieceTask{
-			GfspMigratePieceTask: migratePiece,
+			GfspMigratePieceTask: task,
 		},
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to sign migrate piece", "object_name",
-			migratePiece.GetObjectInfo().GetObjectName(), "error", err)
+			task.GetObjectInfo().GetObjectName(), "error", err)
 		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
 	}
 	return resp.GetSignature(), nil
+}
+
+func (s *GfSpClient) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect signer", "error", err)
+		return "", err
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_CompleteMigrateBucket{
+			CompleteMigrateBucket: migrateBucket,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign complete migrate bucket", "error", err)
+		return "", ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
 }

@@ -55,6 +55,7 @@ const (
 	RejectSeal               GasInfoType = "RejectSeal"
 	DiscontinueBucket        GasInfoType = "DiscontinueBucket"
 	CreateGlobalVirtualGroup GasInfoType = "CreateGlobalVirtualGroup"
+	CompleteMigrateBucket    GasInfoType = "CompleteMigrateBucket"
 )
 
 type GasInfo struct {
@@ -391,34 +392,80 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 		Nonce:     nonce,
 	}
 
-	resp, err := client.greenfieldClients[scope].BroadcastTx(ctx, []sdk.Msg{msgCreateGlobalVirtualGroup}, txOpt)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast tx", "err", err, "global_virtual_group", msgCreateGlobalVirtualGroup.String())
-		if strings.Contains(err.Error(), "account sequence mismatch") {
-			// if nonce mismatch, reset nonce by querying the nonce on chain
-			nonce, err := client.greenfieldClients[scope].GetNonce()
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to get approval account nonce", "err", err)
-				return nil, ErrCreateGVGOnChain
-			}
-			client.operatorAccNonce = nonce
+	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCreateGlobalVirtualGroup}, txOpt)
+	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		if nonceErr != nil {
+			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
+			ErrCreateGVGOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+			return nil, ErrCreateGVGOnChain
 		}
-		return nil, ErrCreateGVGOnChain
+		client.operatorAccNonce = nonce
+	}
+	// failed to broadcast tx
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast global virtual group", "error", err, "global_virtual_group",
+			msgCreateGlobalVirtualGroup.String())
+		ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast create global virtual group, error: %v", err))
+		return nil, ErrCompleteMigrateBucketOnChain
 	}
 
-	if resp.TxResponse.Code != 0 {
-		log.CtxErrorw(ctx, "failed to broadcast tx", "code", resp.TxResponse.Code,
-			"msg", resp.TxResponse.String(),
-			"global_virtual_group", msgCreateGlobalVirtualGroup.String())
-		return nil, ErrCreateGVGOnChain
-	}
-	txHash, err := hex.DecodeString(resp.TxResponse.TxHash)
+	txHashByte, err := hex.DecodeString(txHash)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to marshal tx hash", "err", err, "global_virtual_group", msgCreateGlobalVirtualGroup.String())
+		log.CtxErrorw(ctx, "failed to marshal tx hash", "error", err, "global_virtual_group",
+			msgCreateGlobalVirtualGroup.String())
 		return nil, ErrCreateGVGOnChain
 	}
 
 	// update nonce when tx is successful submitted
+	client.operatorAccNonce = nonce + 1
+	return txHashByte, nil
+}
+
+func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Context, scope SignType,
+	migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+	log.Infow("signer starts to complete migrate bucket", "scope", scope)
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.sealLock.Lock()
+	defer client.sealLock.Unlock()
+	nonce := client.operatorAccNonce
+
+	msgCompleteMigrateBucket := storagetypes.NewMsgCompleteMigrateBucket(km.GetAddr(), migrateBucket.GetBucketName(),
+		migrateBucket.GetGlobalVirtualGroupFamilyId(), migrateBucket.GetGvgMappings())
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
+	txOpt := &ctypes.TxOption{
+		Mode:      &mode,
+		GasLimit:  client.gasInfo[CompleteMigrateBucket].GasLimit,
+		FeeAmount: client.gasInfo[CompleteMigrateBucket].FeeAmount,
+		Nonce:     nonce,
+	}
+
+	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteMigrateBucket}, txOpt)
+	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		if nonceErr != nil {
+			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
+			ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+			return "", ErrCompleteMigrateBucketOnChain
+		}
+		client.operatorAccNonce = nonce
+	}
+	// failed to broadcast tx
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast complete migrate bucket", "error", err, "complete_migrate_bucket",
+			msgCompleteMigrateBucket.String())
+		ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast complete migrate bucket, error: %v", err))
+		return "", ErrCompleteMigrateBucketOnChain
+	}
+
+	// update nonce when tx is successfully submitted
 	client.operatorAccNonce = nonce + 1
 	return txHash, nil
 }
@@ -437,10 +484,8 @@ func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gn
 	return nonce, nil
 }
 
-func (client *GreenfieldChainSignClient) broadcastTx(
-	ctx context.Context, gnfdClient *client.GreenfieldClient,
-	msgs []sdk.Msg, txOpt *ctypes.TxOption, opts ...grpc.CallOption,
-) (string, error) {
+func (client *GreenfieldChainSignClient) broadcastTx(ctx context.Context, gnfdClient *client.GreenfieldClient,
+	msgs []sdk.Msg, txOpt *ctypes.TxOption, opts ...grpc.CallOption) (string, error) {
 	resp, err := gnfdClient.BroadcastTx(ctx, msgs, txOpt, opts...)
 	if err != nil {
 		if strings.Contains(err.Error(), "account sequence mismatch") {

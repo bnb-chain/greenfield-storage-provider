@@ -2,8 +2,9 @@ package metadata
 
 import (
 	"context"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"net/http"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 
 	"cosmossdk.io/math"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
