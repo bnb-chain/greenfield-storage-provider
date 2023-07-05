@@ -251,7 +251,7 @@ func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.
 func (*NilModular) SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) SignCompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+func (*NilModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return "", ErrNilModular
 }
 

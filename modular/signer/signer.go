@@ -165,6 +165,6 @@ func (s *SignModular) SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMig
 	return sig, nil
 }
 
-func (s *SignModular) SignCompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+func (s *SignModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return s.client.CompleteMigrateBucket(ctx, SignOperator, migrateBucket)
 }
