@@ -16,8 +16,6 @@ const (
 	DefaultChallengePieceParallelPerNode = 10240
 	// DefaultBucketFreeQuota defines the default free read quota per bucket
 	DefaultBucketFreeQuota = 10 * 1024 * 1024 * 1024
-	// ErrPieceStoreInnerCode defines the inner code of ErrPieceStore
-	ErrPieceStoreInnerCode = 35101
 )
 
 func NewDownloadModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
