@@ -94,6 +94,7 @@ type MigrateGVGUnitMeta struct {
 	VirtualGroupFamilyID   uint32 // is used by sp exit
 	MigrateRedundancyIndex int32  // is used by sp exit
 	BucketID               uint64 // is used by bucket migrate
+	IsSrc                  bool   // is used by sp exit
 	IsSecondary            bool   // is used by sp exit
 	IsConflict             bool   // is used by sp exit
 	SrcSPID                uint32

@@ -19,8 +19,6 @@ var _ vgmgr.PickFilter = &PickDestSPFilter{}
 const (
 	// MaxSrcRunningMigrateGVG defines src sp max running migrate gvg units, and avoid src sp overload.
 	MaxSrcRunningMigrateGVG = 100
-	// MaxDestRunningMigrateGVG defines dest sp max running migrate gvg units, and avoid dest sp overload.
-	MaxDestRunningMigrateGVG = 10
 )
 
 type VirtualGroupFamilyMigrateExecuteUnit struct {
@@ -572,8 +570,10 @@ func (plan *SPExitExecutePlan) Start() error {
 
 // MigrateTaskRunner is used to manage task migrate progress/status in dest sp.
 type MigrateTaskRunner struct {
-	mutex          sync.RWMutex
-	runningUnitMap map[string]*GlobalVirtualGroupMigrateExecuteUnit
+	manager     *ManageModular
+	mutex       sync.RWMutex
+	keyIndexMap map[string]int
+	gvgUnits    []*GlobalVirtualGroupMigrateExecuteUnit
 }
 
 func (runner *MigrateTaskRunner) Init() error {
@@ -582,7 +582,6 @@ func (runner *MigrateTaskRunner) Init() error {
 }
 
 func (runner *MigrateTaskRunner) Start() error {
-	// TODO:
 	go runner.startDestSPSchedule()
 	return nil
 }
@@ -590,18 +589,48 @@ func (runner *MigrateTaskRunner) Start() error {
 func (runner *MigrateTaskRunner) AddNewMigrateGVGUnit(key string, unit *GlobalVirtualGroupMigrateExecuteUnit) error {
 	runner.mutex.Lock()
 	defer runner.mutex.Unlock()
-	if _, found := runner.runningUnitMap[key]; found {
+	if _, found := runner.keyIndexMap[key]; found {
 		return nil
 	}
-	runner.runningUnitMap[key] = unit
+	runner.gvgUnits = append(runner.gvgUnits, unit)
+	runner.keyIndexMap[key] = len(runner.gvgUnits) - 1
 	return nil
 }
 
 func (runner *MigrateTaskRunner) startDestSPSchedule() {
-	// TODO:
-	// MaxDestRunningMigrateGVG
-	// push task queue
-
+	// loop try push
+	for {
+		time.Sleep(1 * time.Second)
+		runner.mutex.RLock()
+		for _, unit := range runner.gvgUnits {
+			if unit.migrateStatus == WaitForMigrate {
+				var err error
+				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
+				migrateGVGTask.InitMigrateGVGTask(runner.manager.baseApp.TaskPriority(migrateGVGTask),
+					0, unit.gvg, unit.redundantIndex,
+					unit.srcSP, unit.destSP)
+				if err = runner.manager.migrateGVGQueue.Push(migrateGVGTask); err != nil {
+					log.Errorw("failed to push migrate gvg task to queue", "error", err)
+					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
+				}
+				if err = runner.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(&spdb.MigrateGVGUnitMeta{
+					GlobalVirtualGroupID:   unit.gvg.GetId(),
+					VirtualGroupFamilyID:   unit.gvg.GetFamilyId(),
+					MigrateRedundancyIndex: unit.redundantIndex,
+					BucketID:               0,
+					IsSrc:                  false,
+					IsSecondary:            unit.isSecondary,
+					IsConflict:             unit.isConflict,
+				}, int(Migrating)); err != nil {
+					log.Errorw("failed to update task status", "error", err)
+					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
+				}
+				unit.migrateStatus = Migrating
+				break
+			}
+		}
+		runner.mutex.RUnlock()
+	}
 }
 
 // SPExitScheduler is used to manage and schedule sp exit process.
@@ -665,7 +694,9 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		return err
 	}
 	s.migrateTaskRunner = &MigrateTaskRunner{
-		runningUnitMap: make(map[string]*GlobalVirtualGroupMigrateExecuteUnit),
+		manager:     s.manager,
+		keyIndexMap: make(map[string]int),
+		gvgUnits:    make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
 	}
 	return nil
 }

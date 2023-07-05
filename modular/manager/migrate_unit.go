@@ -7,11 +7,16 @@ import (
 
 type MigrateStatus int32
 
-// TODO: should enrich migrate status.
+// TODO: refine it.
+// sp exit: MigrateInit->WaitForNotifyDestSP->NotifiedDestSP->WaitForMigrate->Migrating->Migrated.
+// bucket migrate: MigrateInit->WaitForMigrate->Migrating->Migrated.
 var (
-	WaitForMigrate MigrateStatus = 0
-	Migrating      MigrateStatus = 1
-	Migrated       MigrateStatus = 2
+	MigrateInit         MigrateStatus = 0
+	WaitForNotifyDestSP MigrateStatus = 1
+	NotifiedDestSP      MigrateStatus = 2
+	WaitForMigrate      MigrateStatus = 3
+	Migrating           MigrateStatus = 4
+	Migrated            MigrateStatus = 5
 )
 
 // GlobalVirtualGroupMigrateExecuteUnit define basic migrate unit, which is used by sp exit and bucket migrate.
