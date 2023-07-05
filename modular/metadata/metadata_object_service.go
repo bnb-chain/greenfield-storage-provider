@@ -402,6 +402,7 @@ func (r *MetadataModular) GfSpListObjectsInGVGAndBucket(ctx context.Context, req
 	)
 
 	ctx = log.Context(ctx, req)
+	limit = int(req.Limit)
 	if req.Limit == 0 {
 		limit = model.ListObjectsDefaultMaxKeys
 	}
@@ -415,7 +416,7 @@ func (r *MetadataModular) GfSpListObjectsInGVGAndBucket(ctx context.Context, req
 		return nil, err
 	}
 
-	res = make([]*types.Object, 0)
+	res = make([]*types.Object, len(objects))
 	for i, object := range objects {
 		res[i] = &types.Object{
 			ObjectInfo: &storage_types.ObjectInfo{
@@ -460,6 +461,7 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 	)
 
 	ctx = log.Context(ctx, req)
+	limit = int(req.Limit)
 	if req.Limit == 0 {
 		limit = model.ListObjectsDefaultMaxKeys
 	}
@@ -473,7 +475,7 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 		return nil, err
 	}
 
-	res = make([]*types.Object, 0)
+	res = make([]*types.Object, len(objects))
 	for i, object := range objects {
 		res[i] = &types.Object{
 			ObjectInfo: &storage_types.ObjectInfo{

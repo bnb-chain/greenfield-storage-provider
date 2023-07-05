@@ -54,8 +54,6 @@ type Metadata interface {
 	GetVirtualGroupFamiliesByVgfID(vgfID uint32) (*VirtualGroupFamily, error)
 	// GetGlobalVirtualGroupByGvgID get global virtual group by gvg id
 	GetGlobalVirtualGroupByGvgID(gvgID uint32) (*GlobalVirtualGroup, error)
-	// GetVirtualGroupFamilyBindingOnBucket get virtual group family binding on bucket
-	GetVirtualGroupFamilyBindingOnBucket(bucketID common.Hash) (*VirtualGroupFamily, error)
 	// ListBucketsBindingOnPrimarySP list buckets by primary sp id
 	ListBucketsBindingOnPrimarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
 	// ListBucketsBindingOnSecondarySP list buckets by secondary sp id

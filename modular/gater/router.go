@@ -49,7 +49,6 @@ const (
 	getVirtualGroupFamilyRouterName                = "GetVirtualGroupFamily"
 	getGlobalVirtualGroupByGvgIDRouterName         = "GetGlobalVirtualGroupByGvgID"
 	getGlobalVirtualGroupRouterName                = "GetGlobalVirtualGroup"
-	getVirtualGroupFamilyBindingOnBucketRouterName = "GetVirtualGroupFamilyBindingOnBucket"
 	listGlobalVirtualGroupsBySecondarySPRouterName = "ListGlobalVirtualGroupsBySecondarySP"
 	listGlobalVirtualGroupsByBucketRouterName      = "ListGlobalVirtualGroupsByBucket"
 	listObjectsInGVGAndBucketRouterName            = "ListObjectsInGVGAndBucket"
@@ -207,16 +206,13 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		router.Path("/").Name(listVirtualGroupFamiliesBySpIDRouterName).Methods(http.MethodGet).Queries(ListVirtualGroupFamiliesBySpIDQuery, "").HandlerFunc(g.listVirtualGroupFamiliesBySpIDHandler)
 
 		// Get Virtual Group Families By Vgf ID
-		router.Path("/").Name(getVirtualGroupFamilyRouterName).Methods(http.MethodGet).Queries(GetVirtualGroupFamilyBySpIDQuery, "").HandlerFunc(g.getVirtualGroupFamilyHandler)
+		router.Path("/").Name(getVirtualGroupFamilyRouterName).Methods(http.MethodGet).Queries(GetVirtualGroupFamilyQuery, "").HandlerFunc(g.getVirtualGroupFamilyHandler)
 
 		// Get Global Virtual Group By Gvg ID
 		router.Path("/").Name(getGlobalVirtualGroupByGvgIDRouterName).Methods(http.MethodGet).Queries(GetGlobalVirtualGroupByGvgIDQuery, "").HandlerFunc(g.getGlobalVirtualGroupByGvgIDHandler)
 
 		// Get Global Virtual Group By Lvg ID And Bucket ID
 		router.Path("/").Name(getGlobalVirtualGroupRouterName).Methods(http.MethodGet).Queries(GetGlobalVirtualGroupQuery, "").HandlerFunc(g.getGlobalVirtualGroupHandler)
-
-		// Get Virtual Group family Binding On Bucket
-		router.Path("/").Name(getVirtualGroupFamilyBindingOnBucketRouterName).Methods(http.MethodGet).Queries(GetVirtualGroupFamilyBindingOnBucketQuery, "").HandlerFunc(g.getVirtualGroupFamilyBindingOnBucketHandler)
 
 		// List Global Virtual Group By Secondary Sp ID
 		router.Path("/").Name(listGlobalVirtualGroupsBySecondarySPRouterName).Methods(http.MethodGet).Queries(ListGlobalVirtualGroupsBySecondarySPQuery, "").HandlerFunc(g.listGlobalVirtualGroupsBySecondarySPHandler)

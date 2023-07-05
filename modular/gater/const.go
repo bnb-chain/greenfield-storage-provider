@@ -105,14 +105,12 @@ const (
 	ListExpiredBucketsBySpQuery = "expired-buckets"
 	// ListVirtualGroupFamiliesBySpIDQuery defines list virtual group families by sp id, which is used to route request
 	ListVirtualGroupFamiliesBySpIDQuery = "vgf-sp-id"
-	// GetVirtualGroupFamilyBySpIDQuery defines get virtual group families by vgf id, which is used to route request
-	GetVirtualGroupFamilyBySpIDQuery = "vgf-id-query"
+	// GetVirtualGroupFamilyQuery defines get virtual group families by vgf id, which is used to route request
+	GetVirtualGroupFamilyQuery = "vgf-id-query"
 	// GetGlobalVirtualGroupByGvgIDQuery defines get global virtual group by gvg id, which is used to route request
 	GetGlobalVirtualGroupByGvgIDQuery = "gvg-id-query"
 	// GetGlobalVirtualGroupQuery defines get global virtual group by lvg id and bucket id, which is used to route request
 	GetGlobalVirtualGroupQuery = "gvg-query"
-	// GetVirtualGroupFamilyBindingOnBucketQuery defines get virtual group family binding on bucket, which is used to route request
-	GetVirtualGroupFamilyBindingOnBucketQuery = "vgf-bucket-id"
 	// ListGlobalVirtualGroupsBySecondarySPQuery defines list global virtual group by secondary sp id, which is used to route request
 	ListGlobalVirtualGroupsBySecondarySPQuery = "gvg-secondary-sp"
 	// ListGlobalVirtualGroupsByBucketQuery defines list global virtual group by bucket id, which is used to route request

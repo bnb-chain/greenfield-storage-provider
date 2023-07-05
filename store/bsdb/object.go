@@ -149,7 +149,7 @@ func (b *BsDBImpl) ListPrimaryObjects(spID uint32, bucketID common.Hash, startAf
 	)
 
 	groups, err = b.ListGvgByPrimarySpID(spID)
-	if err != nil || groups == nil {
+	if err != nil || len(groups) == 0 {
 		return nil, err
 	}
 
@@ -159,7 +159,7 @@ func (b *BsDBImpl) ListPrimaryObjects(spID uint32, bucketID common.Hash, startAf
 	}
 
 	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
-	if err != nil || localGroups == nil {
+	if err != nil || len(localGroups) == 0 {
 		return nil, err
 	}
 
@@ -185,7 +185,7 @@ func (b *BsDBImpl) ListSecondaryObjects(spID uint32, bucketID common.Hash, start
 	)
 
 	groups, err = b.ListGvgBySecondarySpID(spID)
-	if err != nil || groups == nil {
+	if err != nil || len(groups) == 0 {
 		return nil, err
 	}
 
@@ -195,7 +195,7 @@ func (b *BsDBImpl) ListSecondaryObjects(spID uint32, bucketID common.Hash, start
 	}
 
 	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
-	if err != nil || localGroups == nil {
+	if err != nil || len(localGroups) == 0 {
 		return nil, err
 	}
 
@@ -220,7 +220,7 @@ func (b *BsDBImpl) ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32,
 	gvgIDs = append(gvgIDs, gvgID)
 
 	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
-	if err != nil || localGroups == nil {
+	if err != nil || len(localGroups) == 0 {
 		return nil, err
 	}
 

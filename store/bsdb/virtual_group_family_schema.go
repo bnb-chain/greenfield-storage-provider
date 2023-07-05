@@ -1,12 +1,15 @@
 package bsdb
 
-import "github.com/forbole/juno/v4/common"
+import (
+	"github.com/forbole/juno/v4/common"
+	"github.com/lib/pq"
+)
 
 // VirtualGroupFamily defines a set of physical nodes, which only serve part of the buckets
 type VirtualGroupFamily struct {
 	ID                         uint64         `gorm:"column:id;primaryKey"`
-	GlobalVirtualGroupFamilyId uint32         `gorm:"column:global_virtual_group_family_id;type:BINARY(32);index:idx_vgf_id"`
-	GlobalVirtualGroupIds      []uint32       `gorm:"column:global_virtual_group_ids"`
+	GlobalVirtualGroupFamilyId uint32         `gorm:"column:global_virtual_group_family_id;index:idx_vgf_id"`
+	GlobalVirtualGroupIds      pq.StringArray `gorm:"column:global_virtual_group_ids;type:MEDIUMTEXT"`
 	VirtualPaymentAddress      common.Address `gorm:"column:virtual_payment_address;type:BINARY(20)"`
 
 	CreateAt     int64       `gorm:"column:create_at"`

@@ -17,9 +17,9 @@ func (b *BsDBImpl) GetGlobalVirtualGroupByGvgID(gvgID uint32) (*GlobalVirtualGro
 	)
 
 	filters = append(filters, RemovedFilter(false))
-	err = b.db.Table((&VirtualGroupFamily{}).TableName()).
+	err = b.db.Table((&GlobalVirtualGroup{}).TableName()).
 		Select("*").
-		Where("gvg_id = ?", gvgID).
+		Where("global_virtual_group_id = ?", gvgID).
 		Scopes(filters...).
 		Take(&gvg).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -54,7 +54,7 @@ func (b *BsDBImpl) ListGvgBySecondarySpID(spID uint32) ([]*GlobalVirtualGroup, e
 		query string
 		err   error
 	)
-	query = fmt.Sprintf("select * from global_virtual_group where FIND_IN_SET('%d', secondary_sp_ids) > 0 and removed = false; ", spID)
+	query = fmt.Sprintf("select * from global_virtual_groups where FIND_IN_SET('%d', secondary_sp_ids) > 0 and removed = false; ", spID)
 	err = b.db.Raw(query).Find(&gvg).Error
 
 	return gvg, err
@@ -98,7 +98,7 @@ func (b *BsDBImpl) ListGvgByBucketID(bucketID common.Hash) ([]*GlobalVirtualGrou
 		Where("bucket_id = ?", bucketID).
 		Scopes(filters...).
 		Find(&localGroups).Error
-	if err != nil || localGroups == nil {
+	if err != nil || len(localGroups) == 0 {
 		return nil, err
 	}
 

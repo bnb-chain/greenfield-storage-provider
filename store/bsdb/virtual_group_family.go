@@ -4,27 +4,35 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 )
 
 // ListVirtualGroupFamiliesBySpID list virtual group families by sp id
 func (b *BsDBImpl) ListVirtualGroupFamiliesBySpID(spID uint32) ([]*VirtualGroupFamily, error) {
 	var (
+		groups   []*GlobalVirtualGroup
 		families []*VirtualGroupFamily
+		gvgIDs   []uint32
 		filters  []func(*gorm.DB) *gorm.DB
 		err      error
 	)
 
 	filters = append(filters, RemovedFilter(false))
-	err = b.db.Table((&VirtualGroupFamily{}).TableName()).
+	err = b.db.Table((&GlobalVirtualGroup{}).TableName()).
 		Select("*").
-		Where("sp_id = ?", spID).
-		//TODO: BARRY add order by variables
-		Order("global_virtual_group_family_id").
+		Where("primary_sp_id = ?", spID).
 		Scopes(filters...).
-		Find(&families).Error
+		Find(&groups).Error
+	if err != nil {
+		return nil, err
+	}
 
+	gvgIDs = make([]uint32, len(groups))
+	for i, group := range groups {
+		gvgIDs[i] = group.GlobalVirtualGroupId
+	}
+
+	families, err = b.ListVgfByGvgID(gvgIDs)
 	return families, err
 }
 
@@ -49,26 +57,6 @@ func (b *BsDBImpl) GetVirtualGroupFamiliesByVgfID(vgfID uint32) (*VirtualGroupFa
 	return family, err
 }
 
-// GetVirtualGroupFamilyBindingOnBucket get virtual group family binding on bucket
-func (b *BsDBImpl) GetVirtualGroupFamilyBindingOnBucket(bucketID common.Hash) (*VirtualGroupFamily, error) {
-	var (
-		family  *VirtualGroupFamily
-		filters []func(*gorm.DB) *gorm.DB
-		err     error
-	)
-
-	filters = append(filters, RemovedFilter(false))
-	err = b.db.Table((&VirtualGroupFamily{}).TableName()).
-		Select("*").
-		Where("bucket_id = ?", bucketID).
-		Scopes(filters...).
-		Take(&family).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
-	return family, err
-}
-
 // ListVgfByGvgID list vgf by gvg id
 func (b *BsDBImpl) ListVgfByGvgID(gvgIDs []uint32) ([]*VirtualGroupFamily, error) {
 	var (
@@ -81,7 +69,7 @@ func (b *BsDBImpl) ListVgfByGvgID(gvgIDs []uint32) ([]*VirtualGroupFamily, error
 	if len(gvgIDs) == 0 {
 		return nil, nil
 	}
-	query = fmt.Sprintf("select * from virtual_group_family where (FIND_IN_SET('%d', global_virtual_group_ids) > 0", gvgIDs[0])
+	query = fmt.Sprintf("select * from global_virtual_group_families where (FIND_IN_SET('%d', global_virtual_group_ids) > 0", gvgIDs[0])
 	if len(gvgIDs) > 1 {
 		for _, id := range gvgIDs[1:] {
 			subQuery := fmt.Sprintf("or FIND_IN_SET('%d', global_virtual_group_ids) > 0", id)
@@ -89,7 +77,7 @@ func (b *BsDBImpl) ListVgfByGvgID(gvgIDs []uint32) ([]*VirtualGroupFamily, error
 		}
 	}
 	query = query + ") and removed = false;"
-	err = b.db.Raw(query).Find(&families).Error
+	err = b.db.Table((&VirtualGroupFamily{}).TableName()).Raw(query).Find(&families).Error
 	//query = "SELECT * FROM virtual_group_family WHERE FIND_IN_SET(?, global_virtual_group_ids) > 0"
 	//args := make([]interface{}, len(gvgIDs))
 	//

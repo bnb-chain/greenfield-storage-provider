@@ -9,7 +9,7 @@ func (b *BsDBImpl) ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapO
 
 	err = b.db.Table((&EventSwapOut{}).TableName()).
 		Select("*").
-		Where("successor_sp_id = ? and create_at = ?", spID, blockID).
+		Where("storage_provider_id = ? and create_at = ?", spID, blockID).
 		Find(&events).Error
 	return events, err
 }

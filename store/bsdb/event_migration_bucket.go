@@ -21,7 +21,7 @@ func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*Even
 		Where("dst_primary_sp_id = ? and create_at = ?", spID, blockID).
 		Find(&completeEvents).Error
 	if err != nil {
-		return nil, nil, err
+		return events, nil, err
 	}
 
 	return events, completeEvents, err

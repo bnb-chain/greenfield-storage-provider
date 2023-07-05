@@ -1269,56 +1269,6 @@ func (g *GateModular) getGlobalVirtualGroupHandler(w http.ResponseWriter, r *htt
 	w.Write(b.Bytes())
 }
 
-// getVirtualGroupFamilyBindingOnBucketHandler get virtual group family binding on bucket
-func (g *GateModular) getVirtualGroupFamilyBindingOnBucketHandler(w http.ResponseWriter, r *http.Request) {
-	var (
-		err         error
-		b           bytes.Buffer
-		reqCtx      *RequestContext
-		bucketIDStr string
-		bucketID    uint64
-		family      *virtual_types.GlobalVirtualGroupFamily
-		queryParams url.Values
-	)
-
-	defer func() {
-		reqCtx.Cancel()
-		if err != nil {
-			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get virtual group family binding on bucket", reqCtx.String())
-			MakeErrorResponse(w, err)
-		}
-	}()
-
-	reqCtx, _ = NewRequestContext(r, g)
-
-	queryParams = reqCtx.request.URL.Query()
-	bucketIDStr = queryParams.Get(BucketIDQuery)
-
-	if bucketID, err = util.StringToUint64(bucketIDStr); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket-id", bucketIDStr, "error", err)
-		err = ErrInvalidQuery
-		return
-	}
-
-	family, err = g.baseApp.GfSpClient().GetVirtualGroupFamilyBindingOnBucket(reqCtx.Context(), bucketID)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get virtual group family binding on bucket", "error", err)
-		return
-	}
-
-	grpcResponse := &types.GfSpGetVirtualGroupFamilyBindingOnBucketResponse{GlobalVirtualGroupFamily: family}
-
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get virtual group family binding on bucket", "error", err)
-		return
-	}
-
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
-}
-
 // listGlobalVirtualGroupsBySecondarySPHandler list global virtual group by secondary sp id
 func (g *GateModular) listGlobalVirtualGroupsBySecondarySPHandler(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -1466,10 +1416,12 @@ func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
-		err = ErrInvalidQuery
-		return
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
 	}
 
 	if limitStr != "" {

@@ -30,7 +30,7 @@ func (b *BsDBImpl) ListSpExitEvents(blockID uint64, operatorAddress common.Addre
 		Take(&completeEvent).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, nil, nil
+			return event, nil, nil
 		}
 		return nil, nil, err
 	}

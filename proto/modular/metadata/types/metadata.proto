@@ -441,18 +441,6 @@ message GfSpGetGlobalVirtualGroupByGvgIDResponse {
   greenfield.virtualgroup.GlobalVirtualGroup global_virtual_group = 1;
 }
 
-// GfSpGetVirtualGroupFamilyBindingOnBucketRequest is request type for the GfSpQueryVirtualGroupFamilyBindingOnBucket RPC method
-message GfSpGetVirtualGroupFamilyBindingOnBucketRequest {
-  // bucket_id is the unique identification for bucket
-  uint64 bucket_id = 1;
-}
-
-// GfSpGetVirtualGroupFamilyBindingOnBucketResponse is response type for the GfSpQueryVirtualGroupFamilyBindingOnBucket RPC method
-message GfSpGetVirtualGroupFamilyBindingOnBucketResponse {
-  // global_virtual_group_family defines a global virtual group family serve as a means of grouping global virtual groups
-  greenfield.virtualgroup.GlobalVirtualGroupFamily global_virtual_group_family = 1;
-}
-
 // GfSpListBucketsBindingOnPrimarySPRequest is request type for the GfSpListBucketsBindingOnPrimarySP RPC method
 message GfSpListBucketsBindingOnPrimarySPRequest {
   // sp_id is the unique identification for sp
@@ -692,7 +680,6 @@ service GfSpMetadataService {
   rpc GfSpListObjectsByObjectID(GfSpListObjectsByObjectIDRequest) returns (GfSpListObjectsByObjectIDResponse) {}
   rpc GfSpListVirtualGroupFamiliesBySpID(GfSpListVirtualGroupFamiliesBySpIDRequest) returns (GfSpListVirtualGroupFamiliesBySpIDResponse) {}
   rpc GfSpGetGlobalVirtualGroupByGvgID(GfSpGetGlobalVirtualGroupByGvgIDRequest) returns (GfSpGetGlobalVirtualGroupByGvgIDResponse) {}
-  rpc GfSpGetVirtualGroupFamilyBindingOnBucket(GfSpGetVirtualGroupFamilyBindingOnBucketRequest) returns (GfSpGetVirtualGroupFamilyBindingOnBucketResponse) {}
   rpc GfSpListBucketsBindingOnPrimarySP(GfSpListBucketsBindingOnPrimarySPRequest) returns (GfSpListBucketsBindingOnPrimarySPResponse) {}
   rpc GfSpListBucketsBindingOnSecondarySP(GfSpListBucketsBindingOnSecondarySPRequest) returns (GfSpListBucketsBindingOnSecondarySPResponse) {}
   rpc GfSpListPrimaryObjects(GfSpListPrimaryObjectsRequest) returns (GfSpListPrimaryObjectsResponse) {}

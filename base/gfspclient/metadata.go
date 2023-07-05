@@ -497,22 +497,6 @@ func (s *GfSpClient) GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgID uin
 	return resp.GlobalVirtualGroup, nil
 }
 
-func (s *GfSpClient) GetVirtualGroupFamilyBindingOnBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroupFamily, error) {
-	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
-	if connErr != nil {
-		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return nil, ErrRpcUnknown
-	}
-	defer conn.Close()
-	req := &types.GfSpGetVirtualGroupFamilyBindingOnBucketRequest{BucketId: bucketID}
-	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetVirtualGroupFamilyBindingOnBucket(ctx, req)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to get virtual group family binding on bucket", "error", err)
-		return nil, ErrRpcUnknown
-	}
-	return resp.GlobalVirtualGroupFamily, nil
-}
-
 func (s *GfSpClient) ListBucketsBindingOnPrimarySP(ctx context.Context, spID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Bucket, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {

@@ -51,7 +51,7 @@ func (b *BsDBImpl) GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&LocalVirtualGroup{}).TableName()).
 		Select("*").
-		Where("bucket_id = ? and global_virtual_group_id = ?", bucketID, lvgID).
+		Where("bucket_id = ? and local_virtual_group_id = ?", bucketID, lvgID).
 		Scopes(filters...).
 		Take(&lvg).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {

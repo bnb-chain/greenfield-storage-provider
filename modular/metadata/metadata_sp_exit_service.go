@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-
 	"cosmossdk.io/math"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -14,6 +12,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 var (
@@ -23,6 +23,7 @@ var (
 // GfSpListVirtualGroupFamiliesBySpID list virtual group families by sp id
 func (r *MetadataModular) GfSpListVirtualGroupFamiliesBySpID(ctx context.Context, req *types.GfSpListVirtualGroupFamiliesBySpIDRequest) (resp *types.GfSpListVirtualGroupFamiliesBySpIDResponse, err error) {
 	var (
+		gvgIDs   []uint32
 		families []*model.VirtualGroupFamily
 		res      []*virtual_types.GlobalVirtualGroupFamily
 	)
@@ -36,9 +37,14 @@ func (r *MetadataModular) GfSpListVirtualGroupFamiliesBySpID(ctx context.Context
 
 	res = make([]*virtual_types.GlobalVirtualGroupFamily, len(families))
 	for i, family := range families {
+		gvgIDs, err = util.StringArrayToUint32Slice(family.GlobalVirtualGroupIds)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to parse global virtual group ids", "error", err)
+			return nil, err
+		}
 		res[i] = &virtual_types.GlobalVirtualGroupFamily{
 			Id:                    family.GlobalVirtualGroupFamilyId,
-			GlobalVirtualGroupIds: family.GlobalVirtualGroupIds,
+			GlobalVirtualGroupIds: gvgIDs,
 			VirtualPaymentAddress: family.VirtualPaymentAddress.String(),
 		}
 	}
@@ -51,8 +57,9 @@ func (r *MetadataModular) GfSpListVirtualGroupFamiliesBySpID(ctx context.Context
 // GfSpGetGlobalVirtualGroupByGvgID get global virtual group by gvg id
 func (r *MetadataModular) GfSpGetGlobalVirtualGroupByGvgID(ctx context.Context, req *types.GfSpGetGlobalVirtualGroupByGvgIDRequest) (resp *types.GfSpGetGlobalVirtualGroupByGvgIDResponse, err error) {
 	var (
-		gvg *model.GlobalVirtualGroup
-		res *virtual_types.GlobalVirtualGroup
+		secondarySpIDs []uint32
+		gvg            *model.GlobalVirtualGroup
+		res            *virtual_types.GlobalVirtualGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -62,14 +69,21 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroupByGvgID(ctx context.Context, 
 		return nil, err
 	}
 
-	res = &virtual_types.GlobalVirtualGroup{
-		Id:                    gvg.GlobalVirtualGroupId,
-		FamilyId:              gvg.FamilyId,
-		PrimarySpId:           gvg.PrimarySpId,
-		SecondarySpIds:        gvg.SecondarySpIds,
-		StoredSize:            gvg.StoredSize,
-		VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
-		TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
+	if gvg != nil {
+		secondarySpIDs, err = util.StringArrayToUint32Slice(gvg.SecondarySpIds)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to parse global virtual group ids", "error", err)
+			return nil, err
+		}
+		res = &virtual_types.GlobalVirtualGroup{
+			Id:                    gvg.GlobalVirtualGroupId,
+			FamilyId:              gvg.FamilyId,
+			PrimarySpId:           gvg.PrimarySpId,
+			SecondarySpIds:        secondarySpIDs,
+			StoredSize:            gvg.StoredSize,
+			VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
+			TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
+		}
 	}
 
 	resp = &types.GfSpGetGlobalVirtualGroupByGvgIDResponse{GlobalVirtualGroup: res}
@@ -77,34 +91,10 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroupByGvgID(ctx context.Context, 
 	return resp, nil
 }
 
-// GfSpGetVirtualGroupFamilyBindingOnBucket get virtual group family binding on bucket
-func (r *MetadataModular) GfSpGetVirtualGroupFamilyBindingOnBucket(ctx context.Context, req *types.GfSpGetVirtualGroupFamilyBindingOnBucketRequest) (resp *types.GfSpGetVirtualGroupFamilyBindingOnBucketResponse, err error) {
-	var (
-		family *model.VirtualGroupFamily
-		res    *virtual_types.GlobalVirtualGroupFamily
-	)
-
-	ctx = log.Context(ctx, req)
-	family, err = r.baseApp.GfBsDB().GetVirtualGroupFamilyBindingOnBucket(common.BigToHash(math.NewUint(req.BucketId).BigInt()))
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to get virtual group family binding on bucket", "error", err)
-		return nil, err
-	}
-
-	res = &virtual_types.GlobalVirtualGroupFamily{
-		Id:                    family.GlobalVirtualGroupFamilyId,
-		GlobalVirtualGroupIds: family.GlobalVirtualGroupIds,
-		VirtualPaymentAddress: family.VirtualPaymentAddress.String(),
-	}
-
-	resp = &types.GfSpGetVirtualGroupFamilyBindingOnBucketResponse{GlobalVirtualGroupFamily: res}
-	log.CtxInfow(ctx, "succeed to get virtual group family binding on bucket")
-	return resp, nil
-}
-
 // GfSpGetVirtualGroupFamily get virtual group families by vgf id
 func (r *MetadataModular) GfSpGetVirtualGroupFamily(ctx context.Context, req *types.GfSpGetVirtualGroupFamilyRequest) (resp *types.GfSpGetVirtualGroupFamilyResponse, err error) {
 	var (
+		gvgIDs []uint32
 		family *model.VirtualGroupFamily
 		res    *virtual_types.GlobalVirtualGroupFamily
 	)
@@ -116,10 +106,18 @@ func (r *MetadataModular) GfSpGetVirtualGroupFamily(ctx context.Context, req *ty
 		return nil, err
 	}
 
-	res = &virtual_types.GlobalVirtualGroupFamily{
-		Id:                    family.GlobalVirtualGroupFamilyId,
-		GlobalVirtualGroupIds: family.GlobalVirtualGroupIds,
-		VirtualPaymentAddress: family.VirtualPaymentAddress.String(),
+	if family != nil {
+		gvgIDs, err = util.StringArrayToUint32Slice(family.GlobalVirtualGroupIds)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to parse global virtual group ids", "error", err)
+			return nil, err
+		}
+
+		res = &virtual_types.GlobalVirtualGroupFamily{
+			Id:                    family.GlobalVirtualGroupFamilyId,
+			GlobalVirtualGroupIds: gvgIDs,
+			VirtualPaymentAddress: family.VirtualPaymentAddress.String(),
+		}
 	}
 
 	resp = &types.GfSpGetVirtualGroupFamilyResponse{Vgf: res}
@@ -130,8 +128,9 @@ func (r *MetadataModular) GfSpGetVirtualGroupFamily(ctx context.Context, req *ty
 // GfSpGetGlobalVirtualGroup get global virtual group by lvg id and bucket id
 func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *types.GfSpGetGlobalVirtualGroupRequest) (resp *types.GfSpGetGlobalVirtualGroupResponse, err error) {
 	var (
-		gvg *model.GlobalVirtualGroup
-		res *virtual_types.GlobalVirtualGroup
+		secondarySpIDs []uint32
+		gvg            *model.GlobalVirtualGroup
+		res            *virtual_types.GlobalVirtualGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -141,14 +140,21 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 		return nil, err
 	}
 
-	res = &virtual_types.GlobalVirtualGroup{
-		Id:                    gvg.GlobalVirtualGroupId,
-		FamilyId:              gvg.FamilyId,
-		PrimarySpId:           gvg.PrimarySpId,
-		SecondarySpIds:        gvg.SecondarySpIds,
-		StoredSize:            gvg.StoredSize,
-		VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
-		TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
+	if gvg != nil {
+		secondarySpIDs, err = util.StringArrayToUint32Slice(gvg.SecondarySpIds)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to parse global virtual group ids", "error", err)
+			return nil, err
+		}
+		res = &virtual_types.GlobalVirtualGroup{
+			Id:                    gvg.GlobalVirtualGroupId,
+			FamilyId:              gvg.FamilyId,
+			PrimarySpId:           gvg.PrimarySpId,
+			SecondarySpIds:        secondarySpIDs,
+			StoredSize:            gvg.StoredSize,
+			VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
+			TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
+		}
 	}
 
 	resp = &types.GfSpGetGlobalVirtualGroupResponse{Gvg: res}
@@ -207,7 +213,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		completeEventsMap[e.BucketId] = e
 	}
 
-	res = make([]*types.ListMigrateBucketEvents, len(events))
+	res = make([]*types.ListMigrateBucketEvents, 0)
 	for _, event := range eventsMap {
 		if e, ok := completeEventsMap[event.BucketId]; ok {
 			res = append(res, &types.ListMigrateBucketEvents{
@@ -271,8 +277,9 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 // GfSpListGlobalVirtualGroupsBySecondarySP list global virtual group by secondary sp id
 func (r *MetadataModular) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.Context, req *types.GfSpListGlobalVirtualGroupsBySecondarySPRequest) (resp *types.GfSpListGlobalVirtualGroupsBySecondarySPResponse, err error) {
 	var (
-		groups []*model.GlobalVirtualGroup
-		res    []*virtual_types.GlobalVirtualGroup
+		secondarySpIDs []uint32
+		groups         []*model.GlobalVirtualGroup
+		res            []*virtual_types.GlobalVirtualGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -284,11 +291,16 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.C
 
 	res = make([]*virtual_types.GlobalVirtualGroup, len(groups))
 	for i, gvg := range groups {
+		secondarySpIDs, err = util.StringArrayToUint32Slice(gvg.SecondarySpIds)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to parse global virtual group ids", "error", err)
+			return nil, err
+		}
 		res[i] = &virtual_types.GlobalVirtualGroup{
 			Id:                    gvg.GlobalVirtualGroupId,
 			FamilyId:              gvg.FamilyId,
 			PrimarySpId:           gvg.PrimarySpId,
-			SecondarySpIds:        gvg.SecondarySpIds,
+			SecondarySpIds:        secondarySpIDs,
 			StoredSize:            gvg.StoredSize,
 			VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
 			TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
@@ -303,8 +315,9 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.C
 // GfSpListGlobalVirtualGroupsByBucket list global virtual group by bucket id
 func (r *MetadataModular) GfSpListGlobalVirtualGroupsByBucket(ctx context.Context, req *types.GfSpListGlobalVirtualGroupsByBucketRequest) (resp *types.GfSpListGlobalVirtualGroupsByBucketResponse, err error) {
 	var (
-		groups []*model.GlobalVirtualGroup
-		res    []*virtual_types.GlobalVirtualGroup
+		secondarySpIDs []uint32
+		groups         []*model.GlobalVirtualGroup
+		res            []*virtual_types.GlobalVirtualGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -316,11 +329,16 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsByBucket(ctx context.Contex
 
 	res = make([]*virtual_types.GlobalVirtualGroup, len(groups))
 	for i, gvg := range groups {
+		secondarySpIDs, err = util.StringArrayToUint32Slice(gvg.SecondarySpIds)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to parse global virtual group ids", "error", err)
+			return nil, err
+		}
 		res[i] = &virtual_types.GlobalVirtualGroup{
 			Id:                    gvg.GlobalVirtualGroupId,
 			FamilyId:              gvg.FamilyId,
 			PrimarySpId:           gvg.PrimarySpId,
-			SecondarySpIds:        gvg.SecondarySpIds,
+			SecondarySpIds:        secondarySpIDs,
 			StoredSize:            gvg.StoredSize,
 			VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
 			TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
@@ -352,15 +370,19 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		return nil, ErrNoEvents
 	}
 
-	spEvent = &virtual_types.EventStorageProviderExit{
-		StorageProviderId: event.StorageProviderId,
-		OperatorAddress:   event.OperatorAddress.String(),
+	if event != nil {
+		spEvent = &virtual_types.EventStorageProviderExit{
+			StorageProviderId: event.StorageProviderId,
+			OperatorAddress:   event.OperatorAddress.String(),
+		}
 	}
 
-	spCompleteEvent = &virtual_types.EventCompleteStorageProviderExit{
-		StorageProviderId: completeEvent.StorageProviderId,
-		OperatorAddress:   completeEvent.OperatorAddress.String(),
-		TotalDeposit:      math.NewIntFromBigInt(completeEvent.TotalDeposit.Raw()),
+	if completeEvent != nil {
+		spCompleteEvent = &virtual_types.EventCompleteStorageProviderExit{
+			StorageProviderId: completeEvent.StorageProviderId,
+			OperatorAddress:   completeEvent.OperatorAddress.String(),
+			TotalDeposit:      math.NewIntFromBigInt(completeEvent.TotalDeposit.Raw()),
+		}
 	}
 
 	resp = &types.GfSpListSpExitEventsResponse{Events: &types.ListSpExitEvents{
