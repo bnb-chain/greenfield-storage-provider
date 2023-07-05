@@ -223,6 +223,28 @@ func (s *SpDBImpl) UpdateMigrateGVGUnitStatus(meta *spdb.MigrateGVGUnitMeta, mig
 	return nil
 }
 
+func (s *SpDBImpl) UpdateMigrateGVGUnitLastMigrateObjectID(meta *spdb.MigrateGVGUnitMeta, lastMigrateObjectID uint64) error {
+	var (
+		result     *gorm.DB
+		queryMeta  *MigrateGVGTable
+		migrateKey string
+	)
+	queryMeta = &MigrateGVGTable{
+		GlobalVirtualGroupID:   meta.GlobalVirtualGroupID,
+		VirtualGroupFamilyID:   meta.VirtualGroupFamilyID,
+		MigrateRedundancyIndex: meta.MigrateRedundancyIndex,
+		BucketID:               meta.BucketID,
+		IsSecondary:            meta.IsSecondary,
+	}
+	migrateKey = MigrateGVGPrimaryKey(queryMeta)
+	if result = s.db.Model(&MigrateGVGTable{}).Where("migrate_key = ?", migrateKey).Updates(&MigrateGVGTable{
+		LastMigrateObjectID: lastMigrateObjectID,
+	}); result.Error != nil {
+		return fmt.Errorf("failed to update migrate gvg record: %s", result.Error)
+	}
+	return nil
+}
+
 func (s *SpDBImpl) QueryMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) (*spdb.MigrateGVGUnitMeta, error) {
 	var (
 		result      *gorm.DB

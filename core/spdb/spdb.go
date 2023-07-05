@@ -157,6 +157,8 @@ type MigrateDB interface {
 
 	// UpdateMigrateGVGUnitStatus updates gvg unit status.
 	UpdateMigrateGVGUnitStatus(meta *MigrateGVGUnitMeta, migrateStatus int) error
+	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID
+	UpdateMigrateGVGUnitLastMigrateObjectID(meta *MigrateGVGUnitMeta, lastMigrateObjectID uint64) error
 
 	// QueryMigrateGVGUnit returns the gvg migrate unit info.
 	QueryMigrateGVGUnit(meta *MigrateGVGUnitMeta) (*MigrateGVGUnitMeta, error)

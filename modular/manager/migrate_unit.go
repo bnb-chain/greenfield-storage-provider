@@ -9,7 +9,7 @@ type MigrateStatus int32
 
 // TODO: refine it.
 // sp exit: MigrateInit->WaitForNotifyDestSP->NotifiedDestSP->WaitForMigrate->Migrating->Migrated.
-// bucket migrate: MigrateInit->WaitForMigrate->Migrating->Migrated.
+// bucket migrate: WaitForMigrate(created)->Migrating(schedule success)->Migrated(executor report success).
 var (
 	MigrateInit         MigrateStatus = 0
 	WaitForNotifyDestSP MigrateStatus = 1
