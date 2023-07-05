@@ -121,8 +121,8 @@ func (m *Module) handleSwapOut(ctx context.Context, block *tmctypes.ResultBlock,
 	eventSwapOut := &bsdb.EventSwapOut{
 		StorageProviderId:          swapOut.StorageProviderId,
 		GlobalVirtualGroupFamilyId: swapOut.GlobalVirtualGroupFamilyId,
-		//GlobalVirtualGroupIds:      swapOut.GlobalVirtualGroupIds,
-		SuccessorSpId: swapOut.SuccessorSpId,
+		GlobalVirtualGroupIds:      swapOut.GlobalVirtualGroupIds,
+		SuccessorSpId:              swapOut.SuccessorSpId,
 
 		CreateAt:     block.Block.Height,
 		CreateTxHash: txHash,
