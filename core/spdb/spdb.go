@@ -156,16 +156,18 @@ type MigrateDB interface {
 	// UpdateMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
 
 	// UpdateMigrateGVGUnitStatus updates gvg unit status.
-	UpdateMigrateGVGUnitStatus(meta *MigrateGVGUnitMeta, migrateStatus int) error
+	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
 	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID
-	UpdateMigrateGVGUnitLastMigrateObjectID(meta *MigrateGVGUnitMeta, lastMigrateObjectID uint64) error
+	UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error
 
 	// QueryMigrateGVGUnit returns the gvg migrate unit info.
-	QueryMigrateGVGUnit(meta *MigrateGVGUnitMeta) (*MigrateGVGUnitMeta, error)
+	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
 	ListMigrateGVGUnitsByFamilyID(familyID uint32, srcSP uint32) ([]*MigrateGVGUnitMeta, error)
-	// ListConflictsMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
-	ListConflictsMigrateGVGUnitsByFamilyID(familyID uint32) ([]*MigrateGVGUnitMeta, error)
+	// ListConflictedMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
+	ListConflictedMigrateGVGUnitsByFamilyID(familyID uint32) ([]*MigrateGVGUnitMeta, error)
+	// ListRemotedMigrateGVGUnits is used to load at dest sp startup(sp exit).
+	ListRemotedMigrateGVGUnits() ([]*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
 	ListMigrateGVGUnitsByBucketID(bucketID uint64, destSP uint32) ([]*MigrateGVGUnitMeta, error)
 }

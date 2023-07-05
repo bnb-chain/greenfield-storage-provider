@@ -22,21 +22,19 @@ const (
 )
 
 type VirtualGroupFamilyMigrateExecuteUnit struct {
-	vgf                                *virtualgrouptypes.GlobalVirtualGroupFamily
-	srcSP                              *sptypes.StorageProvider
-	gvgList                            []*virtualgrouptypes.GlobalVirtualGroup
-	conflictedSecondaryGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // need be resolved firstly
-	destSP                             *sptypes.StorageProvider
-	primaryGVGMigrateUnits             []*GlobalVirtualGroupMigrateExecuteUnit
+	vgf                       *virtualgrouptypes.GlobalVirtualGroupFamily
+	srcSP                     *sptypes.StorageProvider
+	conflictedGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // need be resolved firstly
+	destSP                    *sptypes.StorageProvider
+	primaryGVGMigrateUnits    []*GlobalVirtualGroupMigrateExecuteUnit
 }
 
 func NewVirtualGroupFamilyMigrateExecuteUnit(vgf *virtualgrouptypes.GlobalVirtualGroupFamily, selfSP *sptypes.StorageProvider) *VirtualGroupFamilyMigrateExecuteUnit {
 	return &VirtualGroupFamilyMigrateExecuteUnit{
-		vgf:                                vgf,
-		srcSP:                              selfSP,
-		gvgList:                            make([]*virtualgrouptypes.GlobalVirtualGroup, 0),
-		conflictedSecondaryGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
-		primaryGVGMigrateUnits:             make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		vgf:                       vgf,
+		srcSP:                     selfSP,
+		conflictedGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		primaryGVGMigrateUnits:    make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
 	}
 }
 
@@ -97,8 +95,14 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 		hasPrimaryGVG          bool
 		familySecondarySPIDMap = make(map[uint32]int)
 		destFamilySP           *sptypes.StorageProvider
+		familyGVGs             []*virtualgrouptypes.GlobalVirtualGroup
 	)
-	for _, gvg := range vgfUnit.gvgList {
+	if familyGVGs, err = plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), plan.scheduler.selfSP.GetId(), vgfUnit.vgf.GetId()); err != nil {
+		log.Errorw("failed to load from db due to list virtual groups by family id", "error", err)
+		return err
+	}
+
+	for _, gvg := range familyGVGs {
 		for _, secondarySPID := range gvg.GetSecondarySpIds() {
 			familySecondarySPIDMap[secondarySPID] = familySecondarySPIDMap[secondarySPID] + 1
 		}
@@ -108,7 +112,7 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 		// check conflicts.
 		if destFamilySP, err = vgm.PickSPByFilter(NewPickDestSPFilterWithMap(familySecondarySPIDMap)); err != nil {
 			// primary family migrate has conflicts, choose a sp with fewer conflicts.
-			secondarySPIDBindingLeastGVGs := vgfUnit.gvgList[0].GetSecondarySpIds()[0]
+			secondarySPIDBindingLeastGVGs := familyGVGs[0].GetSecondarySpIds()[0]
 			for spID, count := range familySecondarySPIDMap {
 				if count < familySecondarySPIDMap[secondarySPIDBindingLeastGVGs] {
 					secondarySPIDBindingLeastGVGs = spID
@@ -120,7 +124,7 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 				return queryErr
 			}
 			// resolve conflict, swap out secondarySPIDBindingLeastGVGs.
-			for _, gvg := range vgfUnit.gvgList {
+			for _, gvg := range familyGVGs {
 				if secondaryIndex, _ := util.GetSecondarySPIndexFromGVG(gvg, secondarySPIDBindingLeastGVGs); secondaryIndex > 0 {
 					// gvg has conflicts.
 					destSecondarySP, pickErr := vgm.PickSPByFilter(NewPickDestSPFilterWithSlice(gvg.GetSecondarySpIds()))
@@ -129,29 +133,32 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 						return pickErr
 					}
 					gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
-						gvg:            gvg,
-						redundantIndex: secondaryIndex,
-						isConflict:     true,
-						srcSP:          srcSP,
-						destSP:         destSecondarySP,
-						migrateStatus:  WaitForMigrate}
-					vgfUnit.conflictedSecondaryGVGMigrateUnits = append(vgfUnit.conflictedSecondaryGVGMigrateUnits, gUnit)
-					plan.ToMigrateGVG = append(plan.ToMigrateGVG, gUnit)
+						gvg:             gvg,
+						redundancyIndex: secondaryIndex,
+						isSecondary:     true,
+						isRemoted:       false,
+						isConflicted:    true,
+						srcSP:           srcSP,
+						destSP:          destSecondarySP,
+						migrateStatus:   WaitForNotifyDestSP}
+					vgfUnit.conflictedGVGMigrateUnits = append(vgfUnit.conflictedGVGMigrateUnits, gUnit)
+					plan.WaitForNotifyDestSPGVGs = append(plan.WaitForNotifyDestSPGVGs, gUnit)
 				}
 			}
 		} else { // has no conflicts
 			vgfUnit.destSP = destFamilySP
-			for _, gvg := range vgfUnit.gvgList {
+			for _, gvg := range familyGVGs {
 				gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
-					gvg:            gvg,
-					redundantIndex: -1,
-					srcSP:          vgfUnit.srcSP,
-					destSP:         destFamilySP,
-					isConflict:     false,
-					isSecondary:    false,
-					migrateStatus:  WaitForMigrate}
+					gvg:             gvg,
+					redundancyIndex: -1,
+					srcSP:           vgfUnit.srcSP,
+					destSP:          destFamilySP,
+					isConflicted:    false,
+					isRemoted:       false,
+					isSecondary:     false,
+					migrateStatus:   WaitForNotifyDestSP}
 				vgfUnit.primaryGVGMigrateUnits = append(vgfUnit.primaryGVGMigrateUnits, gUnit)
-				plan.ToMigrateGVG = append(plan.ToMigrateGVG, gUnit)
+				plan.WaitForNotifyDestSPGVGs = append(plan.WaitForNotifyDestSPGVGs, gUnit)
 			}
 		}
 	}
@@ -168,13 +175,13 @@ type SPExitExecutePlan struct {
 	SecondaryGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // sp exit, secondary gvg
 
 	// for scheduling, the slice only can append to ensure iterator work fine.
-	ToMigrateMutex sync.RWMutex
-	ToMigrateGVG   []*GlobalVirtualGroupMigrateExecuteUnit
-	MigratingMutex sync.RWMutex
-	MigratingGVG   []*GlobalVirtualGroupMigrateExecuteUnit
+	WaitForNotifyDestSPMutex sync.RWMutex
+	WaitForNotifyDestSPGVGs  []*GlobalVirtualGroupMigrateExecuteUnit
+	NotifiedDestSPMutex      sync.RWMutex
+	NotifiedDestSPGVGs       []*GlobalVirtualGroupMigrateExecuteUnit
 }
 
-func (plan *SPExitExecutePlan) makeGVGUnit(gvgMeta *spdb.MigrateGVGUnitMeta, isConflict bool) (*GlobalVirtualGroupMigrateExecuteUnit, error) {
+func (plan *SPExitExecutePlan) makeGVGUnit(gvgMeta *spdb.MigrateGVGUnitMeta, isConflicted bool, isSecondary bool) (*GlobalVirtualGroupMigrateExecuteUnit, error) {
 	gvg, queryGVGErr := plan.manager.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgMeta.GlobalVirtualGroupID)
 	if queryGVGErr != nil {
 		log.Errorw("failed to make gvg unit due to query gvg", "error", queryGVGErr)
@@ -191,18 +198,20 @@ func (plan *SPExitExecutePlan) makeGVGUnit(gvgMeta *spdb.MigrateGVGUnitMeta, isC
 		return nil, querySPErr
 	}
 	gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
-		gvg:            gvg,
-		redundantIndex: gvgMeta.MigrateRedundancyIndex,
-		isConflict:     isConflict,
-		srcSP:          srcSP,
-		destSP:         destSP,
-		migrateStatus:  MigrateStatus(gvgMeta.MigrateStatus),
+		gvg:             gvg,
+		redundancyIndex: gvgMeta.RedundancyIndex,
+		isConflicted:    isConflicted,
+		isRemoted:       false,
+		isSecondary:     isSecondary,
+		srcSP:           srcSP,
+		destSP:          destSP,
+		migrateStatus:   MigrateStatus(gvgMeta.MigrateStatus),
 	}
-	if gUnit.migrateStatus == WaitForMigrate {
-		plan.ToMigrateGVG = append(plan.ToMigrateGVG, gUnit)
+	if gUnit.migrateStatus == WaitForNotifyDestSP {
+		plan.WaitForNotifyDestSPGVGs = append(plan.WaitForNotifyDestSPGVGs, gUnit)
 	}
-	if gUnit.migrateStatus == Migrating {
-		plan.MigratingGVG = append(plan.MigratingGVG, gUnit)
+	if gUnit.migrateStatus == NotifiedDestSP {
+		plan.NotifiedDestSPGVGs = append(plan.NotifiedDestSPGVGs, gUnit)
 	}
 	return gUnit, nil
 }
@@ -221,28 +230,29 @@ func (plan *SPExitExecutePlan) loadFromDB() error {
 	}
 	for _, f := range vgfList {
 		vgfUnit := NewVirtualGroupFamilyMigrateExecuteUnit(f, plan.scheduler.selfSP)
-		conflictGVGList, listConflictErr := plan.manager.baseApp.GfSpDB().ListConflictsMigrateGVGUnitsByFamilyID(f.GetId())
-		if listConflictErr != nil {
-			log.Errorw("failed to load from db due to list conflict gvg", "error", err)
-			return listConflictErr
+		conflictedGVGList, listConflictedErr := plan.manager.baseApp.GfSpDB().ListConflictedMigrateGVGUnitsByFamilyID(f.GetId())
+		if listConflictedErr != nil {
+			log.Errorw("failed to load from db due to list conflict gvg", "error", listConflictedErr)
+			return listConflictedErr
 		}
-		for _, conflictGVG := range conflictGVGList {
-			gUnit, makeErr := plan.makeGVGUnit(conflictGVG, true)
+		for _, conflictedGVG := range conflictedGVGList {
+			gUnit, makeErr := plan.makeGVGUnit(conflictedGVG, true, true)
 			if makeErr != nil {
-				log.Errorw("failed to load from db due to make gvg unit")
+				log.Errorw("failed to load from db due to make gvg unit", "error", makeErr)
 				return makeErr
 			}
-			vgfUnit.conflictedSecondaryGVGMigrateUnits = append(vgfUnit.conflictedSecondaryGVGMigrateUnits, gUnit)
+			vgfUnit.conflictedGVGMigrateUnits = append(vgfUnit.conflictedGVGMigrateUnits, gUnit)
 		}
+		// gvg which has no conflict.
 		familyGVGList, listFamilyGVGErr := plan.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByFamilyID(f.GetId(), plan.scheduler.selfSP.GetId())
 		if listFamilyGVGErr != nil {
-			log.Errorw("failed to load from db due to list family gvg", "error", err)
+			log.Errorw("failed to load from db due to list family gvg", "error", listFamilyGVGErr)
 			return listFamilyGVGErr
 		}
 		for _, familyGVG := range familyGVGList {
-			gUnit, makeErr := plan.makeGVGUnit(familyGVG, false)
+			gUnit, makeErr := plan.makeGVGUnit(familyGVG, false, false)
 			if makeErr != nil {
-				log.Errorw("failed to load from db due to make gvg unit")
+				log.Errorw("failed to load from db due to make gvg unit", "error", makeErr)
 				return makeErr
 			}
 			vgfUnit.primaryGVGMigrateUnits = append(vgfUnit.primaryGVGMigrateUnits, gUnit)
@@ -255,24 +265,18 @@ func (plan *SPExitExecutePlan) loadFromDB() error {
 		return err
 	}
 	for _, gvg := range secondaryGVGList {
-		redundantIndex, getSecondaryIndexErr := util.GetSecondarySPIndexFromGVG(gvg, plan.scheduler.selfSP.GetId())
+		redundancyIndex, getSecondaryIndexErr := util.GetSecondarySPIndexFromGVG(gvg, plan.scheduler.selfSP.GetId())
 		if getSecondaryIndexErr != nil {
-			log.Errorw("failed to get secondary sp index from gvg", "error", err)
+			log.Errorw("failed to get secondary sp index from gvg", "error", getSecondaryIndexErr)
 			return getSecondaryIndexErr
 		}
-		gvgMeta, queryError := plan.manager.baseApp.GfSpDB().QueryMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID:   gvg.GetId(),
-			VirtualGroupFamilyID:   0,
-			MigrateRedundancyIndex: redundantIndex,
-			BucketID:               0,
-			IsSecondary:            true,
-			IsConflict:             false,
-		})
+		migrateKey := MakeSecondaryGVGMigrateKey(gvg.GetId(), gvg.GetFamilyId(), redundancyIndex)
+		gvgMeta, queryError := plan.manager.baseApp.GfSpDB().QueryMigrateGVGUnit(migrateKey)
 		if queryError != nil {
-			log.Errorw("failed to load from db due to query gvg", "error", queryError)
+			log.Errorw("failed to load from db due to query gvg", "migrate_key", migrateKey, "error", queryError)
 			return queryError
 		}
-		gUnit, makeErr := plan.makeGVGUnit(gvgMeta, false)
+		gUnit, makeErr := plan.makeGVGUnit(gvgMeta, false, true)
 		if makeErr != nil {
 			log.Errorw("failed to load from db due to make gvg unit")
 			return makeErr
@@ -287,18 +291,20 @@ func (plan *SPExitExecutePlan) loadFromDB() error {
 func (plan *SPExitExecutePlan) storeToDB() error {
 	var err error
 	for _, vgfUnit := range plan.PrimaryVGFMigrateUnits {
-		for _, conflictGVG := range vgfUnit.conflictedSecondaryGVGMigrateUnits {
+		for _, conflictGVG := range vgfUnit.conflictedGVGMigrateUnits {
 			if err = plan.manager.baseApp.GfSpDB().InsertMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
-				GlobalVirtualGroupID:   conflictGVG.gvg.GetId(),
-				VirtualGroupFamilyID:   conflictGVG.gvg.GetFamilyId(),
-				MigrateRedundancyIndex: conflictGVG.redundantIndex,
-				BucketID:               0,
-				IsSecondary:            true,
-				IsConflict:             true,
-				SrcSPID:                conflictGVG.srcSP.GetId(),
-				DestSPID:               conflictGVG.destSP.GetId(),
-				LastMigrateObjectID:    0,
-				MigrateStatus:          int(conflictGVG.migrateStatus),
+				MigrateGVGKey:        conflictGVG.Key(),
+				GlobalVirtualGroupID: conflictGVG.gvg.GetId(),
+				VirtualGroupFamilyID: conflictGVG.gvg.GetFamilyId(),
+				RedundancyIndex:      conflictGVG.redundancyIndex,
+				BucketID:             0,
+				IsSecondary:          true,
+				IsConflicted:         true,
+				IsRemoted:            false,
+				SrcSPID:              conflictGVG.srcSP.GetId(),
+				DestSPID:             conflictGVG.destSP.GetId(),
+				LastMigrateObjectID:  0,
+				MigrateStatus:        int(conflictGVG.migrateStatus),
 			}); err != nil {
 				log.Errorw("failed to store to db", "error", err)
 				return err
@@ -306,16 +312,18 @@ func (plan *SPExitExecutePlan) storeToDB() error {
 		}
 		for _, familyGVG := range vgfUnit.primaryGVGMigrateUnits {
 			if err = plan.manager.baseApp.GfSpDB().InsertMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
-				GlobalVirtualGroupID:   familyGVG.gvg.GetId(),
-				VirtualGroupFamilyID:   familyGVG.gvg.GetFamilyId(),
-				MigrateRedundancyIndex: -1,
-				BucketID:               0,
-				IsSecondary:            false,
-				IsConflict:             false,
-				SrcSPID:                familyGVG.srcSP.GetId(),
-				DestSPID:               familyGVG.destSP.GetId(),
-				LastMigrateObjectID:    0,
-				MigrateStatus:          int(familyGVG.migrateStatus),
+				MigrateGVGKey:        familyGVG.Key(),
+				GlobalVirtualGroupID: familyGVG.gvg.GetId(),
+				VirtualGroupFamilyID: familyGVG.gvg.GetFamilyId(),
+				RedundancyIndex:      -1,
+				BucketID:             0,
+				IsSecondary:          false,
+				IsConflicted:         false,
+				IsRemoted:            false,
+				SrcSPID:              familyGVG.srcSP.GetId(),
+				DestSPID:             familyGVG.destSP.GetId(),
+				LastMigrateObjectID:  0,
+				MigrateStatus:        int(familyGVG.migrateStatus),
 			}); err != nil {
 				log.Errorw("failed to store to db", "error", err)
 				return err
@@ -324,16 +332,18 @@ func (plan *SPExitExecutePlan) storeToDB() error {
 	}
 	for _, secondaryGVG := range plan.SecondaryGVGMigrateUnits {
 		if err = plan.manager.baseApp.GfSpDB().InsertMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID:   secondaryGVG.gvg.GetId(),
-			VirtualGroupFamilyID:   0,
-			MigrateRedundancyIndex: secondaryGVG.redundantIndex,
-			BucketID:               0,
-			IsSecondary:            true,
-			IsConflict:             false,
-			SrcSPID:                secondaryGVG.srcSP.GetId(),
-			DestSPID:               secondaryGVG.destSP.GetId(),
-			LastMigrateObjectID:    0,
-			MigrateStatus:          int(secondaryGVG.migrateStatus),
+			MigrateGVGKey:        secondaryGVG.Key(),
+			GlobalVirtualGroupID: secondaryGVG.gvg.GetId(),
+			VirtualGroupFamilyID: 0,
+			RedundancyIndex:      secondaryGVG.redundancyIndex,
+			BucketID:             0,
+			IsSecondary:          true,
+			IsConflicted:         false,
+			IsRemoted:            false,
+			SrcSPID:              secondaryGVG.srcSP.GetId(),
+			DestSPID:             secondaryGVG.destSP.GetId(),
+			LastMigrateObjectID:  0,
+			MigrateStatus:        int(secondaryGVG.migrateStatus),
 		}); err != nil {
 			log.Errorw("failed to store to db", "error", err)
 			return err
@@ -347,107 +357,107 @@ func (plan *SPExitExecutePlan) updateProgress() error {
 	return nil
 }
 
-// ToMigrateExecuteUnitIterator is used to dispatch migrate units.
-type ToMigrateExecuteUnitIterator struct {
-	plan           *SPExitExecutePlan
-	toMigrateIndex int
-	isValid        bool
+// WaitForNotifyDestSPIterator is used to notify migrate units to dest sp.
+type WaitForNotifyDestSPIterator struct {
+	plan               *SPExitExecutePlan
+	waitForNotifyIndex int
+	isValid            bool
 }
 
-func NewToMigrateExecuteUnitIterator(plan *SPExitExecutePlan) *ToMigrateExecuteUnitIterator {
-	return &ToMigrateExecuteUnitIterator{
-		plan:           plan,
-		toMigrateIndex: 0,
-		isValid:        true,
+func NewWaitForNotifyDestSPIterator(plan *SPExitExecutePlan) *WaitForNotifyDestSPIterator {
+	return &WaitForNotifyDestSPIterator{
+		plan:               plan,
+		waitForNotifyIndex: 0,
+		isValid:            true,
 	}
 }
 
-func (ti *ToMigrateExecuteUnitIterator) SeekToFirst() {
-	ti.plan.ToMigrateMutex.RLock()
-	defer ti.plan.ToMigrateMutex.RUnlock()
-	for index, gvg := range ti.plan.ToMigrateGVG {
+func (ti *WaitForNotifyDestSPIterator) SeekToFirst() {
+	ti.plan.WaitForNotifyDestSPMutex.RLock()
+	defer ti.plan.WaitForNotifyDestSPMutex.RUnlock()
+	for index, gvg := range ti.plan.WaitForNotifyDestSPGVGs {
 		if gvg.migrateStatus == WaitForMigrate {
-			ti.toMigrateIndex = index
+			ti.waitForNotifyIndex = index
 			return
 		}
 	}
 	ti.isValid = false
 }
 
-func (ti *ToMigrateExecuteUnitIterator) Valid() bool {
+func (ti *WaitForNotifyDestSPIterator) Valid() bool {
 	if ti.plan.runningMigrateGVG >= MaxSrcRunningMigrateGVG {
 		return false
 	}
 	if !ti.isValid {
 		return false
 	}
-	ti.plan.ToMigrateMutex.RLock()
-	isValid := ti.toMigrateIndex < len(ti.plan.ToMigrateGVG)
-	ti.plan.ToMigrateMutex.RUnlock()
+	ti.plan.WaitForNotifyDestSPMutex.RLock()
+	isValid := ti.waitForNotifyIndex < len(ti.plan.WaitForNotifyDestSPGVGs)
+	ti.plan.WaitForNotifyDestSPMutex.RUnlock()
 	if !isValid {
 		return false
 	}
 	return true
 }
 
-func (ti *ToMigrateExecuteUnitIterator) Next() {
-	ti.toMigrateIndex++
+func (ti *WaitForNotifyDestSPIterator) Next() {
+	ti.waitForNotifyIndex++
 }
 
-func (ti *ToMigrateExecuteUnitIterator) Value() *GlobalVirtualGroupMigrateExecuteUnit {
-	ti.plan.ToMigrateMutex.RLock()
-	defer ti.plan.ToMigrateMutex.RUnlock()
-	return ti.plan.ToMigrateGVG[ti.toMigrateIndex]
+func (ti *WaitForNotifyDestSPIterator) Value() *GlobalVirtualGroupMigrateExecuteUnit {
+	ti.plan.WaitForNotifyDestSPMutex.RLock()
+	defer ti.plan.WaitForNotifyDestSPMutex.RUnlock()
+	return ti.plan.WaitForNotifyDestSPGVGs[ti.waitForNotifyIndex]
 }
 
-// MigratingExecuteUnitIterator is used to check migrating units.
-type MigratingExecuteUnitIterator struct {
-	plan           *SPExitExecutePlan
-	MigratingIndex int
-	isValid        bool
+// NotifiedDestSPIterator is used to check dest migrating units.
+type NotifiedDestSPIterator struct {
+	plan          *SPExitExecutePlan
+	notifiedIndex int
+	isValid       bool
 }
 
-func NewMigratingExecuteUnitIterator(plan *SPExitExecutePlan) *MigratingExecuteUnitIterator {
-	return &MigratingExecuteUnitIterator{
-		plan:           plan,
-		MigratingIndex: 0,
-		isValid:        true,
+func NewNotifiedDestSPIterator(plan *SPExitExecutePlan) *NotifiedDestSPIterator {
+	return &NotifiedDestSPIterator{
+		plan:          plan,
+		notifiedIndex: 0,
+		isValid:       true,
 	}
 }
 
-func (mi *MigratingExecuteUnitIterator) SeekToFirst() {
-	mi.plan.MigratingMutex.RLock()
-	defer mi.plan.MigratingMutex.RUnlock()
-	for index, gvg := range mi.plan.MigratingGVG {
-		if gvg.migrateStatus == Migrating {
-			mi.MigratingIndex = index
+func (mi *NotifiedDestSPIterator) SeekToFirst() {
+	mi.plan.NotifiedDestSPMutex.RLock()
+	defer mi.plan.NotifiedDestSPMutex.RUnlock()
+	for index, gvg := range mi.plan.NotifiedDestSPGVGs {
+		if gvg.migrateStatus == NotifiedDestSP {
+			mi.notifiedIndex = index
 			return
 		}
 	}
 	mi.isValid = false
 }
 
-func (mi *MigratingExecuteUnitIterator) Valid() bool {
+func (mi *NotifiedDestSPIterator) Valid() bool {
 	if !mi.isValid {
 		return false
 	}
-	mi.plan.MigratingMutex.RLock()
-	isValid := mi.MigratingIndex < len(mi.plan.MigratingGVG)
-	mi.plan.MigratingMutex.RUnlock()
+	mi.plan.NotifiedDestSPMutex.RLock()
+	isValid := mi.notifiedIndex < len(mi.plan.NotifiedDestSPGVGs)
+	mi.plan.NotifiedDestSPMutex.RUnlock()
 	if !isValid {
 		return false
 	}
 	return true
 }
 
-func (mi *MigratingExecuteUnitIterator) Next() {
-	mi.MigratingIndex++
+func (mi *NotifiedDestSPIterator) Next() {
+	mi.notifiedIndex++
 }
 
-func (mi *MigratingExecuteUnitIterator) Value() *GlobalVirtualGroupMigrateExecuteUnit {
-	mi.plan.ToMigrateMutex.RLock()
-	defer mi.plan.ToMigrateMutex.RUnlock()
-	return mi.plan.MigratingGVG[mi.MigratingIndex]
+func (mi *NotifiedDestSPIterator) Value() *GlobalVirtualGroupMigrateExecuteUnit {
+	mi.plan.NotifiedDestSPMutex.RLock()
+	defer mi.plan.NotifiedDestSPMutex.RUnlock()
+	return mi.plan.NotifiedDestSPGVGs[mi.notifiedIndex]
 }
 
 func (plan *SPExitExecutePlan) startSrcSPSchedule() {
@@ -469,32 +479,25 @@ func (plan *SPExitExecutePlan) notifyDestSPMigrateExecuteUnits() {
 		time.Sleep(10 * time.Second)
 		notifyLoopNumber++
 		notifyUnitNumber = 0
-		iter := NewToMigrateExecuteUnitIterator(plan)
+		iter := NewWaitForNotifyDestSPIterator(plan)
 		for iter.SeekToFirst(); iter.Valid(); iter.Next() {
 			notifyUnitNumber++
-			toMigrateGVG := iter.Value()
+			waitForMigrateGVG := iter.Value()
 			migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 			migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
-				0, toMigrateGVG.gvg, toMigrateGVG.redundantIndex,
-				toMigrateGVG.srcSP, toMigrateGVG.destSP)
-			err = plan.manager.baseApp.GfSpClient().NotifyDestSPMigrateGVG(context.Background(), toMigrateGVG.destSP.GetEndpoint(), migrateGVGTask)
+				0, waitForMigrateGVG.gvg, waitForMigrateGVG.redundancyIndex,
+				waitForMigrateGVG.srcSP, waitForMigrateGVG.destSP)
+			err = plan.manager.baseApp.GfSpClient().NotifyDestSPMigrateGVG(context.Background(), waitForMigrateGVG.destSP.GetEndpoint(), migrateGVGTask)
 			log.Infow("notify dest sp migrate gvg", "migrate_gvg_task", migrateGVGTask, "error", err)
 			// ignore this error , fail over is handled in check phase.
-			toMigrateGVG.migrateStatus = Migrating
+			waitForMigrateGVG.migrateStatus = NotifiedDestSP
 
-			plan.MigratingMutex.Lock()
-			plan.MigratingGVG = append(plan.MigratingGVG, toMigrateGVG)
-			plan.MigratingMutex.Unlock()
+			plan.NotifiedDestSPMutex.Lock()
+			plan.NotifiedDestSPGVGs = append(plan.NotifiedDestSPGVGs, waitForMigrateGVG)
+			plan.NotifiedDestSPMutex.Unlock()
 
-			err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(&spdb.MigrateGVGUnitMeta{
-				GlobalVirtualGroupID:   toMigrateGVG.gvg.GetId(),
-				VirtualGroupFamilyID:   toMigrateGVG.gvg.GetFamilyId(),
-				MigrateRedundancyIndex: toMigrateGVG.redundantIndex,
-				BucketID:               0,
-				IsSecondary:            toMigrateGVG.isSecondary,
-				IsConflict:             toMigrateGVG.isConflict,
-			}, int(Migrating))
-			log.Errorw("notify migrate gvg", "gvg_meta", toMigrateGVG, "error", err)
+			err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(waitForMigrateGVG.Key(), int(NotifiedDestSP))
+			log.Errorw("notify migrate gvg", "gvg_meta", waitForMigrateGVG, "error", err)
 		}
 		log.Infow("notify migrate unit to dest sp", "loop_number", notifyLoopNumber, "notify_number", notifyUnitNumber)
 	}
@@ -511,7 +514,7 @@ func (plan *SPExitExecutePlan) checkDestSPMigrateExecuteUnitsStatus() {
 		time.Sleep(10 * time.Second)
 		checkLoopNumber++
 		checkUnitNumber = 0
-		iter := NewMigratingExecuteUnitIterator(plan)
+		iter := NewNotifiedDestSPIterator(plan)
 		for iter.SeekToFirst(); iter.Valid(); iter.Next() {
 			checkUnitNumber++
 			MigratingGVG := iter.Value()
@@ -541,10 +544,10 @@ func (plan *SPExitExecutePlan) Start() error {
 	}
 	for _, gUnit := range plan.SecondaryGVGMigrateUnits {
 		var (
-			redundantIndex  int32
+			redundancyIndex int32
 			destSecondarySP *sptypes.StorageProvider
 		)
-		if redundantIndex, err = util.GetSecondarySPIndexFromGVG(gUnit.gvg, gUnit.srcSP.GetId()); err != nil {
+		if redundancyIndex, err = util.GetSecondarySPIndexFromGVG(gUnit.gvg, gUnit.srcSP.GetId()); err != nil {
 			log.Errorw("failed to start migrate execute plan due to get secondary sp index", "gvg_unit", gUnit, "error", err)
 			return err
 		}
@@ -552,12 +555,12 @@ func (plan *SPExitExecutePlan) Start() error {
 			log.Errorw("failed to start migrate execute plan due to get secondary dest sp", "gvg_unit", gUnit, "error", err)
 			return err
 		}
-		gUnit.redundantIndex = redundantIndex
+		gUnit.redundancyIndex = redundancyIndex
 		gUnit.destSP = destSecondarySP
-		gUnit.migrateStatus = WaitForMigrate
+		gUnit.migrateStatus = WaitForNotifyDestSP
 		gUnit.isSecondary = true
-		gUnit.isConflict = false
-		plan.ToMigrateGVG = append(plan.ToMigrateGVG, gUnit)
+		gUnit.isConflicted = false
+		plan.WaitForNotifyDestSPGVGs = append(plan.WaitForNotifyDestSPGVGs, gUnit)
 	}
 
 	if err = plan.storeToDB(); err != nil {
@@ -570,15 +573,60 @@ func (plan *SPExitExecutePlan) Start() error {
 
 // MigrateTaskRunner is used to manage task migrate progress/status in dest sp.
 type MigrateTaskRunner struct {
-	manager     *ManageModular
-	mutex       sync.RWMutex
-	keyIndexMap map[string]int
-	gvgUnits    []*GlobalVirtualGroupMigrateExecuteUnit
+	manager             *ManageModular
+	virtualGroupManager vgmgr.VirtualGroupManager
+	mutex               sync.RWMutex
+	keyIndexMap         map[string]int
+	gvgUnits            []*GlobalVirtualGroupMigrateExecuteUnit
+}
+
+func (runner *MigrateTaskRunner) addGVGUnit(gvgMeta *spdb.MigrateGVGUnitMeta) error {
+	gvg, queryGVGErr := runner.manager.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgMeta.GlobalVirtualGroupID)
+	if queryGVGErr != nil {
+		log.Errorw("failed to make gvg unit due to query gvg", "error", queryGVGErr)
+		return queryGVGErr
+	}
+	srcSP, querySPErr := runner.virtualGroupManager.QuerySPByID(gvgMeta.SrcSPID)
+	if querySPErr != nil {
+		log.Errorw("failed to make gvg unit due to query sp", "error", querySPErr)
+		return querySPErr
+	}
+	destSP, querySPErr := runner.virtualGroupManager.QuerySPByID(gvgMeta.DestSPID)
+	if querySPErr != nil {
+		log.Errorw("failed to make gvg unit due to query sp", "error", querySPErr)
+		return querySPErr
+	}
+	gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
+		gvg:             gvg,
+		redundancyIndex: gvgMeta.RedundancyIndex,
+		srcSP:           srcSP,
+		destSP:          destSP,
+		isRemoted:       true,
+		migrateStatus:   MigrateStatus(gvgMeta.MigrateStatus),
+	}
+
+	runner.mutex.Lock()
+	defer runner.mutex.Unlock()
+	runner.gvgUnits = append(runner.gvgUnits, gUnit)
+	runner.keyIndexMap[gUnit.Key()] = len(runner.gvgUnits) - 1
+	return nil
+}
+
+func (runner *MigrateTaskRunner) loadFromDB() error {
+	remotedGVGList, listRemotedErr := runner.manager.baseApp.GfSpDB().ListRemotedMigrateGVGUnits()
+	if listRemotedErr != nil {
+		return listRemotedErr
+	}
+	for _, gvgMeta := range remotedGVGList {
+		if addErr := runner.addGVGUnit(gvgMeta); addErr != nil {
+			return addErr
+		}
+	}
+	return nil
 }
 
 func (runner *MigrateTaskRunner) Init() error {
-	// TODO: load db
-	return nil
+	return runner.loadFromDB()
 }
 
 func (runner *MigrateTaskRunner) Start() error {
@@ -586,14 +634,35 @@ func (runner *MigrateTaskRunner) Start() error {
 	return nil
 }
 
-func (runner *MigrateTaskRunner) AddNewMigrateGVGUnit(key string, unit *GlobalVirtualGroupMigrateExecuteUnit) error {
+func (runner *MigrateTaskRunner) AddNewMigrateGVGUnit(remotedGVGUnit *GlobalVirtualGroupMigrateExecuteUnit) error {
 	runner.mutex.Lock()
-	defer runner.mutex.Unlock()
-	if _, found := runner.keyIndexMap[key]; found {
+	if _, found := runner.keyIndexMap[remotedGVGUnit.Key()]; found {
+		runner.mutex.Unlock()
 		return nil
 	}
-	runner.gvgUnits = append(runner.gvgUnits, unit)
-	runner.keyIndexMap[key] = len(runner.gvgUnits) - 1
+	runner.gvgUnits = append(runner.gvgUnits, remotedGVGUnit)
+	runner.keyIndexMap[remotedGVGUnit.Key()] = len(runner.gvgUnits) - 1
+	runner.mutex.Unlock()
+
+	// add to db
+	if err := runner.manager.baseApp.GfSpDB().InsertMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
+		MigrateGVGKey:        remotedGVGUnit.Key(),
+		GlobalVirtualGroupID: remotedGVGUnit.gvg.GetId(),
+		VirtualGroupFamilyID: remotedGVGUnit.gvg.GetFamilyId(),
+		RedundancyIndex:      remotedGVGUnit.redundancyIndex,
+		BucketID:             0,
+		IsSecondary:          remotedGVGUnit.isSecondary,
+		IsConflicted:         remotedGVGUnit.isConflicted,
+		IsRemoted:            remotedGVGUnit.isRemoted,
+		SrcSPID:              remotedGVGUnit.srcSP.GetId(),
+		DestSPID:             remotedGVGUnit.destSP.GetId(),
+		LastMigrateObjectID:  0,
+		MigrateStatus:        int(remotedGVGUnit.migrateStatus),
+	}); err != nil {
+		log.Errorw("failed to store to db", "error", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -607,21 +676,13 @@ func (runner *MigrateTaskRunner) startDestSPSchedule() {
 				var err error
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(runner.manager.baseApp.TaskPriority(migrateGVGTask),
-					0, unit.gvg, unit.redundantIndex,
+					0, unit.gvg, unit.redundancyIndex,
 					unit.srcSP, unit.destSP)
 				if err = runner.manager.migrateGVGQueue.Push(migrateGVGTask); err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
 				}
-				if err = runner.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(&spdb.MigrateGVGUnitMeta{
-					GlobalVirtualGroupID:   unit.gvg.GetId(),
-					VirtualGroupFamilyID:   unit.gvg.GetFamilyId(),
-					MigrateRedundancyIndex: unit.redundantIndex,
-					BucketID:               0,
-					IsSrc:                  false,
-					IsSecondary:            unit.isSecondary,
-					IsConflict:             unit.isConflict,
-				}, int(Migrating)); err != nil {
+				if err = runner.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(unit.Key(), int(Migrating)); err != nil {
 					log.Errorw("failed to update task status", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
 				}
@@ -646,7 +707,7 @@ type SPExitScheduler struct {
 	executePlan                     *SPExitExecutePlan
 
 	// sp exit workflow dest sp.
-	// manage specific gvg execution tasks
+	// manage specific gvg execution tasks.
 	migrateTaskRunner *MigrateTaskRunner
 }
 
@@ -686,8 +747,8 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		virtualGroupManager:      s.manager.virtualGroupManager,
 		PrimaryVGFMigrateUnits:   make([]*VirtualGroupFamilyMigrateExecuteUnit, 0),
 		SecondaryGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
-		ToMigrateGVG:             make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
-		MigratingGVG:             make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		WaitForNotifyDestSPGVGs:  make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		NotifiedDestSPGVGs:       make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
 	}
 	if err = s.executePlan.Init(); err != nil {
 		log.Errorw("failed to init sp exit scheduler due to plan init", "error", err)
@@ -707,8 +768,8 @@ func (s *SPExitScheduler) Start() error {
 	return nil
 }
 
-func (s *SPExitScheduler) AddNewMigrateGVGUnit(key string, unit *GlobalVirtualGroupMigrateExecuteUnit) error {
-	return s.migrateTaskRunner.AddNewMigrateGVGUnit(key, unit)
+func (s *SPExitScheduler) AddNewMigrateGVGUnit(remotedUnit *GlobalVirtualGroupMigrateExecuteUnit) error {
+	return s.migrateTaskRunner.AddNewMigrateGVGUnit(remotedUnit)
 }
 
 func (s *SPExitScheduler) subscribeEvents() {
@@ -779,8 +840,8 @@ func (s *SPExitScheduler) produceSPExitExecutePlan() (*SPExitExecutePlan, error)
 		virtualGroupManager:      s.manager.virtualGroupManager,
 		PrimaryVGFMigrateUnits:   make([]*VirtualGroupFamilyMigrateExecuteUnit, 0),
 		SecondaryGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
-		ToMigrateGVG:             make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
-		MigratingGVG:             make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		WaitForNotifyDestSPGVGs:  make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		NotifiedDestSPGVGs:       make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
 	}
 	for _, f := range vgfList {
 		plan.PrimaryVGFMigrateUnits = append(plan.PrimaryVGFMigrateUnits, NewVirtualGroupFamilyMigrateExecuteUnit(f, s.selfSP))
