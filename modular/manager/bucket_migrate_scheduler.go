@@ -30,6 +30,7 @@ func newBucketMigrateExecutePlan(manager *ManageModular, bucketID uint64) *Bucke
 		BucketID:                    bucketID,
 		PrimaryGVGIDMapMigrateUnits: make(map[uint32]*GlobalVirtualGroupMigrateExecuteUnit),
 		stopSignal:                  make(chan struct{}),
+		finished:                    0,
 	}
 
 	return executePlan
@@ -71,6 +72,7 @@ func (plan *BucketMigrateExecutePlan) UpdateProgress(task task.MigrateGVGTask) e
 		migrateExecuteUnit.lastMigrateObjectID = task.GetLastMigratedObjectID()
 		if task.GetFinished() == true {
 			migrateStatus = Migrated
+			plan.finished++
 		} else {
 			migrateStatus = Migrating
 		}
@@ -101,6 +103,26 @@ func (plan *BucketMigrateExecutePlan) UpdateProgress(task task.MigrateGVGTask) e
 	if err != nil {
 		log.Debugw("update migrate gvg migrateGVGUnit lastMigrateObjectID", "gvg_meta", gvgMeta, "error", err)
 		return err
+	}
+
+	// all migrate units success, send CompleteMigrationBucket to chain
+	if plan.finished == len(plan.PrimaryGVGIDMapMigrateUnits) {
+		// BucketName GlobalVirtualGroupFamilyId,GvgMappings
+		var bucket *types.Bucket
+		bucket, err = plan.Manager.baseApp.GfSpClient().GetBucketByBucketID(context.Background(), int64(plan.BucketID), true)
+		if err != nil {
+			return err
+		}
+		bucketName := bucket.BucketInfo.BucketName
+		var gvgMappings []*storage_types.GVGMapping
+		for _, migrateGVGUnit := range plan.PrimaryGVGIDMapMigrateUnits {
+			gvgMappings = append(gvgMappings, &storage_types.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.srcSP.GetId(),
+				DstGlobalVirtualGroupId: migrateGVGUnit.destSP.GetId()})
+		}
+
+		migrateBucket := &storage_types.MsgCompleteMigrateBucket{Operator: plan.Manager.baseApp.OperatorAddress(),
+			BucketName: bucketName, GvgMappings: gvgMappings}
+		plan.Manager.baseApp.GfSpClient().CompleteMigrateBucket(context.Background(), migrateBucket)
 	}
 	return nil
 }
