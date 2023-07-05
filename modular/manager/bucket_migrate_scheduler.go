@@ -3,8 +3,9 @@ package manager
 import (
 	"context"
 	"errors"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"

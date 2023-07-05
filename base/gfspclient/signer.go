@@ -347,3 +347,32 @@ func (s *GfSpClient) CompleteMigrateBucket(ctx context.Context, migrateBucket *s
 	}
 	return resp.GetTxHash(), nil
 }
+
+func (s *GfSpClient) SignSecondarySPMigrationBucket(ctx context.Context, chainID string, bucketID uint64, spID,
+	srcGVGID, dstGVGID uint32) ([]byte, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_SignSecondarySpMigrationBucket{
+			SignSecondarySpMigrationBucket: &gfspserver.GfSpSignSecondarySPMigrationBucket{
+				ChainId:  chainID,
+				BucketId: bucketID,
+				SpId:     spID,
+				SrcGvgId: srcGVGID,
+				DstGvgId: dstGVGID,
+			},
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to sign secondary sp bls migration bucket", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
+}

@@ -23,6 +23,14 @@ message GfSpCreateGlobalVirtualGroup {
   cosmos.base.v1beta1.Coin deposit = 4;
 }
 
+message GfSpSignSecondarySPMigrationBucket {
+  string chain_id = 1;
+  uint64 bucket_id = 2;
+  uint32 sp_id = 3;
+  uint32 src_gvg_id = 4;
+  uint32 dst_gvg_id = 5;
+}
+
 message GfSpSignRequest {
   oneof request {
     greenfield.storage.MsgCreateBucket create_bucket_info = 1;
@@ -40,6 +48,7 @@ message GfSpSignRequest {
     GfSpCreateGlobalVirtualGroup create_global_virtual_group = 13;
     base.types.gfsptask.GfSpMigratePieceTask gfsp_migrate_piece_task = 14;
     greenfield.storage.MsgCompleteMigrateBucket complete_migrate_bucket = 15;
+    GfSpSignSecondarySPMigrationBucket sign_secondary_sp_migration_bucket = 16;
   }
 }
 
