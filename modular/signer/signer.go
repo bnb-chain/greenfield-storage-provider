@@ -169,10 +169,8 @@ func (s *SignModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *
 	return s.client.CompleteMigrateBucket(ctx, SignOperator, migrateBucket)
 }
 
-func (s *SignModular) SignSecondarySPMigrationBucket(ctx context.Context, chainID string, bucketID uint64, spID, srcGVGID,
-	dstGVGID uint32) ([]byte, error) {
-	msg := storagetypes.NewSecondarySpMigrationBucketSignDoc(s.baseApp.ChainID(), sdkmath.NewUint(bucketID), spID,
-		srcGVGID, dstGVGID).GetBlsSignHash()
+func (s *SignModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
+	msg := signDoc.GetBlsSignHash()
 	sig, err := s.client.blsKm.Sign(msg[:])
 	if err != nil {
 		return nil, err

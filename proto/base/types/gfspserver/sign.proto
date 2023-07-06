@@ -6,6 +6,7 @@ import "base/types/gfspp2p/p2p.proto";
 import "base/types/gfsptask/task.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "greenfield/storage/tx.proto";
+import "greenfield/storage/common.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
@@ -48,7 +49,7 @@ message GfSpSignRequest {
     GfSpCreateGlobalVirtualGroup create_global_virtual_group = 13;
     base.types.gfsptask.GfSpMigratePieceTask gfsp_migrate_piece_task = 14;
     greenfield.storage.MsgCompleteMigrateBucket complete_migrate_bucket = 15;
-    GfSpSignSecondarySPMigrationBucket sign_secondary_sp_migration_bucket = 16;
+    greenfield.storage.SecondarySpMigrationBucketSignDoc sign_secondary_sp_migration_bucket = 16;
   }
 }
 

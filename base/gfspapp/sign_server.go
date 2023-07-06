@@ -186,9 +186,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			log.CtxErrorw(ctx, "failed to sign complete migrate bucket", "error", err)
 		}
 	case *gfspserver.GfSpSignRequest_SignSecondarySpMigrationBucket:
-		signature, err = g.signer.SignSecondarySPMigrationBucket(ctx, t.SignSecondarySpMigrationBucket.GetChainId(),
-			t.SignSecondarySpMigrationBucket.GetBucketId(), t.SignSecondarySpMigrationBucket.GetSpId(),
-			t.SignSecondarySpMigrationBucket.GetSrcGvgId(), t.SignSecondarySpMigrationBucket.GetDstGvgId())
+		signature, err = g.signer.SignSecondarySPMigrationBucket(ctx, t.SignSecondarySpMigrationBucket)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign secondary sp bls migration bucket", "error", err)
 		}

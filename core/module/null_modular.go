@@ -254,7 +254,7 @@ func (*NilModular) SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigr
 func (*NilModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return "", ErrNilModular
 }
-func (*NilModular) SignSecondarySPMigrationBucket(ctx context.Context, chainID string, bucketID uint64, spID, srcGVGID, dstGVGID uint32) ([]byte, error) {
+func (*NilModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
 	return nil, ErrNilModular
 }
 

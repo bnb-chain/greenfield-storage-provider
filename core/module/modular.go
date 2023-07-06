@@ -279,7 +279,7 @@ type Signer interface {
 	// CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to greenfield.
 	CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
 	// SignSecondarySPMigrationBucket signs secondary sp bls for bucket migration
-	SignSecondarySPMigrationBucket(ctx context.Context, chainID string, bucketID uint64, spID, srcGVGID, dstGVGID uint32) ([]byte, error)
+	SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store
