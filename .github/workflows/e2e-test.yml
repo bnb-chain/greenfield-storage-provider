@@ -24,6 +24,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      # Checkout Greenfield-SP
+      - name: Checkout Greenfield-SP
+        uses: actions/checkout@v3
+      # Run MySQL
+      - name: Run MySQL
+        run: |
+          sudo /etc/init.d/mysql start
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
@@ -38,17 +49,6 @@ jobs:
         run: |
           echo "Private key: ${{ steps.generate-private-key.outputs.private_key }}"
           echo "Account address: ${{ steps.generate-private-key.outputs.account_address }}"
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-      # Checkout Greenfield-SP
-      - name: Checkout Greenfield-SP
-        uses: actions/checkout@v3
-      # Run MySQL
-      - name: Run MySQL
-        run: |
-          sudo /etc/init.d/mysql start
       # Build and Start Greenfield Blockchain
       - name: Build and Start Greenfield Blockchain
         run: |
