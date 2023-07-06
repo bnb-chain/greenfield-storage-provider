@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -123,49 +122,36 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vg
 	return vgfm.vgfIDToVgf[vgfID].GVGMap[globalVirtualGroupID], nil
 }
 
-func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(vgfID uint32, srcGVG *virtualgrouptypes.GlobalVirtualGroup, destSP *sptypes.StorageProvider) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(filter vgmgr.GVGPickFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		picker               FreeStorageSizeWeightPicker
 		globalVirtualGroupID uint32
 		err                  error
 	)
-	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
-	if vgfID == 0 {
-		// Iterate through VGFs one by one and perform a query. If a suitable GVG is found, return it. Otherwise, continue searching until all VGFs have been queried.
-		for _, vgf := range vgfm.vgfIDToVgf {
-			for _, g := range vgf.GVGMap {
-				if g.PrimarySPID != destSP.GetId() || reflect.DeepEqual(g.SecondarySPIDs, srcGVG.SecondarySpIds) {
-					continue
-				}
-				picker.addGlobalVirtualGroup(g)
-			}
-			if globalVirtualGroupID, err = picker.pickIndex(); err != nil {
-				log.Errorw("failed to pick gvg at current vgf", "vgf_id", vgfID, "error", err)
-				continue
-			}
-			return vgf.GVGMap[globalVirtualGroupID], nil
-		}
 
-		return nil, ErrFailedPickGVG
-	} else {
-		if _, existed := vgfm.vgfIDToVgf[vgfID]; !existed {
-			return nil, ErrStaledMetadata
+	for vgfID, vgf := range vgfm.vgfIDToVgf {
+		picker.freeStorageSizeWeightMap = make(map[uint32]float64)
+		if !filter.CheckFamily(vgfID) {
+			continue
 		}
-		for _, g := range vgfm.vgfIDToVgf[vgfID].GVGMap {
-			// match srcGVG ()
-			if destSP.GetId() != g.PrimarySPID || reflect.DeepEqual(g.SecondarySPIDs, srcGVG.SecondarySpIds) {
-				continue
+		for _, gvg := range vgf.GVGMap {
+			if filter.CheckGVG(&vgmgr.GlobalVirtualGroupMeta{
+				SecondarySPIDs: gvg.SecondarySPIDs,
+			}) {
+				picker.addGlobalVirtualGroup(gvg)
 			}
-			picker.addGlobalVirtualGroup(g)
 		}
-
+		if len(picker.freeStorageSizeWeightMap) == 0 {
+			continue
+		}
 		if globalVirtualGroupID, err = picker.pickIndex(); err != nil {
-			log.Errorw("failed to pick gvg", "vgf_id", vgfID, "error", err)
-			return nil, ErrFailedPickGVG
+			log.Errorw("failed to pick gvg at current vgf", "vgf_id", vgfID, "error", err)
+			continue
 		}
 		return vgfm.vgfIDToVgf[vgfID].GVGMap[globalVirtualGroupID], nil
 	}
-
+	log.Errorw("failed to pick gvg for migrate bucket")
+	return nil, ErrFailedPickGVG
 }
 
 type spManager struct {
@@ -198,7 +184,7 @@ func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vgmg
 	}, nil
 }
 
-func (sm *spManager) pickSPByFilter(filter vgmgr.PickFilter) (*sptypes.StorageProvider, error) {
+func (sm *spManager) pickSPByFilter(filter vgmgr.SPPickFilter) (*sptypes.StorageProvider, error) {
 	for _, destSP := range sm.otherSPs {
 		if !destSP.IsInService() {
 			continue
@@ -374,11 +360,11 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vgmgr.Glo
 }
 
 // PickGlobalVirtualGroupForBucketMigrate picks a global virtual group(If failed to pick,
-// new GVG will be created by primary SP) in replicate/seal object workflow.
-func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(vgfID uint32, srcGVG *virtualgrouptypes.GlobalVirtualGroup, destSP *sptypes.StorageProvider) (*vgmgr.GlobalVirtualGroupMeta, error) {
+// new GVG will be created by primary SP) in migrate bucket workflow.
+func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(filter vgmgr.GVGPickFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG, destSP)
+	return vgm.vgfManager.pickGlobalVirtualGroupForBucketMigrate(filter)
 }
 
 // PickMigrateDestGlobalVirtualGroup picks a global virtual group(If failed to pick,
@@ -406,7 +392,7 @@ func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetyp
 }
 
 // PickSPByFilter is used to pick sp by filter check.
-func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.PickFilter) (*sptypes.StorageProvider, error) {
+func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.SPPickFilter) (*sptypes.StorageProvider, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	return vgm.spManager.pickSPByFilter(filter)
