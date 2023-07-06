@@ -22,16 +22,16 @@ var (
 
 // GlobalVirtualGroupMigrateExecuteUnit define basic migrate unit, which is used by sp exit and bucket migrate.
 type GlobalVirtualGroupMigrateExecuteUnit struct {
-	gvg                 *virtualgrouptypes.GlobalVirtualGroup
-	destGVGID           uint32 // destGVG
-	redundancyIndex     int32  // if < 0, represents migrate primary.
-	isConflicted        bool   // only be used in sp exit.
-	isSecondary         bool   // only be used in sp exit.
-	isRemoted           bool   // only be used in sp exit.
-	srcSP               *sptypes.StorageProvider
-	destSP              *sptypes.StorageProvider
-	migrateStatus       MigrateStatus
-	lastMigrateObjectID uint64 // migrate progress
+	gvg                  *virtualgrouptypes.GlobalVirtualGroup
+	destGVGID            uint32 // destGVG
+	redundancyIndex      int32  // if < 0, represents migrate primary.
+	isConflicted         bool   // only be used in sp exit.
+	isSecondary          bool   // only be used in sp exit.
+	isRemoted            bool   // only be used in sp exit.
+	srcSP                *sptypes.StorageProvider
+	destSP               *sptypes.StorageProvider
+	migrateStatus        MigrateStatus
+	lastMigratedObjectID uint64 // migrate progress
 }
 
 // Key is used to as primary key.

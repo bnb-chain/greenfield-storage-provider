@@ -243,6 +243,7 @@ func (plan *SPExitExecutePlan) loadFromDB() error {
 			}
 			vgfUnit.conflictedGVGMigrateUnits = append(vgfUnit.conflictedGVGMigrateUnits, gUnit)
 		}
+		// TODO: refine it, need check whether complete conflicted gvg migrate.
 		// gvg which has no conflict.
 		familyGVGList, listFamilyGVGErr := plan.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByFamilyID(f.GetId(), plan.scheduler.selfSP.GetId())
 		if listFamilyGVGErr != nil {
@@ -385,9 +386,10 @@ func (ti *WaitForNotifyDestSPIterator) SeekToFirst() {
 }
 
 func (ti *WaitForNotifyDestSPIterator) Valid() bool {
-	if ti.plan.runningMigrateGVG >= MaxSrcRunningMigrateGVG {
-		return false
-	}
+	// TODO: refine it.
+	// if ti.plan.runningMigrateGVG >= MaxSrcRunningMigrateGVG {
+	// 	return false
+	// }
 	if !ti.isValid {
 		return false
 	}
@@ -815,8 +817,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 			if s.isExited {
 				return
 			}
-			// TODO:
-			// TODO: is changing.
+			// TODO: refine it, proto is changing.
 			s.updateSPExitExecutePlan()
 		}
 	}
