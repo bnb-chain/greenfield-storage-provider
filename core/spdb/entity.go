@@ -100,7 +100,7 @@ type MigrateGVGUnitMeta struct {
 	IsConflicted         bool   // is used by sp exit
 	SrcSPID              uint32
 	DestSPID             uint32
-	LastMigrateObjectID  uint64
+	LastMigratedObjectID uint64
 	MigrateStatus        int // scheduler assign unit status.
 	CheckStatus          int //  src sp check dest sp's migrate unit.
 }

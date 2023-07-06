@@ -152,8 +152,6 @@ type MigrateDB interface {
 	InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
 	// DeleteMigrateGVGUnit deletes the gvg migrate unit.
 	DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
-	// UpdateMigrateGVGUnit update the gvg migrate unit.
-	// UpdateMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
 
 	// UpdateMigrateGVGUnitStatus updates gvg unit status.
 	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
@@ -169,7 +167,7 @@ type MigrateDB interface {
 	// ListRemotedMigrateGVGUnits is used to load at dest sp startup(sp exit).
 	ListRemotedMigrateGVGUnits() ([]*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
-	ListMigrateGVGUnitsByBucketID(bucketID uint64, destSP uint32) ([]*MigrateGVGUnitMeta, error)
+	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
 }
 
 type SPDB interface {

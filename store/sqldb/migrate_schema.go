@@ -24,7 +24,7 @@ type MigrateGVGTable struct {
 	RedundancyIndex      int32  `gorm:"index:redundancy_index"` // is used by sp exit
 	SrcSPID              uint32
 	DestSPID             uint32
-	LastMigrateObjectID  uint64
+	LastMigratedObjectID uint64
 	MigrateStatus        int
 	CheckStatus          int
 }

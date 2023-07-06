@@ -53,7 +53,7 @@ func (plan *BucketMigrateExecutePlan) storeToDB() error {
 			IsRemoted:            false,
 			SrcSPID:              migrateGVGUnit.srcSP.GetId(),
 			DestSPID:             migrateGVGUnit.destSP.GetId(),
-			LastMigrateObjectID:  migrateGVGUnit.lastMigratedObjectID,
+			LastMigratedObjectID: migrateGVGUnit.lastMigratedObjectID,
 			MigrateStatus:        int(migrateGVGUnit.migrateStatus),
 		}); err != nil {
 			log.Errorw("failed to store to db", "error", err)
@@ -372,7 +372,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	}
 	// load from db by BucketID & construct plan
 	for _, bucketID := range bucketIDs {
-		migrateGVGUnitMeta, err = s.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByBucketID(bucketID, s.selfSP.GetId())
+		migrateGVGUnitMeta, err = s.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByBucketID(bucketID)
 		if err != nil {
 			return err
 		}
@@ -393,7 +393,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 				return errors.New("failed to list gvg")
 			}
 			for _, gvg := range primarySPGVGList {
-				bucketUnit := newGlobalVirtualGroupMigrateExecuteUnitByBucket(bucketID, gvg, srcSP, destSP, WaitForMigrate, migrateGVG.DestSPID, migrateGVG.LastMigrateObjectID,
+				bucketUnit := newGlobalVirtualGroupMigrateExecuteUnitByBucket(bucketID, gvg, srcSP, destSP, WaitForMigrate, migrateGVG.DestSPID, migrateGVG.LastMigratedObjectID,
 					migrateGVG.IsSecondary, migrateGVG.IsConflicted, migrateGVG.IsRemoted)
 				executePlan.gvgUnitMap[gvg.Id] = bucketUnit
 			}

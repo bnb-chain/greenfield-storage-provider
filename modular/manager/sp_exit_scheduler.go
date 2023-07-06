@@ -16,29 +16,12 @@ import (
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
-var _ vgmgr.PickFilter = &PickDestSPFilter{}
-
 const (
 	// MaxSrcRunningMigrateGVG defines src sp max running migrate gvg units, and avoid src sp overload.
 	MaxSrcRunningMigrateGVG = 100
 )
 
-type VirtualGroupFamilyMigrateExecuteUnit struct {
-	vgf                       *virtualgrouptypes.GlobalVirtualGroupFamily
-	srcSP                     *sptypes.StorageProvider
-	conflictedGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // need be resolved firstly
-	destSP                    *sptypes.StorageProvider
-	primaryGVGMigrateUnits    []*GlobalVirtualGroupMigrateExecuteUnit
-}
-
-func NewVirtualGroupFamilyMigrateExecuteUnit(vgf *virtualgrouptypes.GlobalVirtualGroupFamily, selfSP *sptypes.StorageProvider) *VirtualGroupFamilyMigrateExecuteUnit {
-	return &VirtualGroupFamilyMigrateExecuteUnit{
-		vgf:                       vgf,
-		srcSP:                     selfSP,
-		conflictedGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
-		primaryGVGMigrateUnits:    make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
-	}
-}
+var _ vgmgr.PickFilter = &PickDestSPFilter{}
 
 // PickDestSPFilter is used to pick sp id which is not in excluded sp ids.
 type PickDestSPFilter struct {
@@ -64,6 +47,23 @@ func (f *PickDestSPFilter) Check(spID uint32) bool {
 		}
 	}
 	return true
+}
+
+type VirtualGroupFamilyMigrateExecuteUnit struct {
+	vgf                       *virtualgrouptypes.GlobalVirtualGroupFamily
+	srcSP                     *sptypes.StorageProvider
+	conflictedGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // need be resolved firstly
+	destSP                    *sptypes.StorageProvider
+	primaryGVGMigrateUnits    []*GlobalVirtualGroupMigrateExecuteUnit
+}
+
+func NewVirtualGroupFamilyMigrateExecuteUnit(vgf *virtualgrouptypes.GlobalVirtualGroupFamily, selfSP *sptypes.StorageProvider) *VirtualGroupFamilyMigrateExecuteUnit {
+	return &VirtualGroupFamilyMigrateExecuteUnit{
+		vgf:                       vgf,
+		srcSP:                     selfSP,
+		conflictedGVGMigrateUnits: make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+		primaryGVGMigrateUnits:    make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
+	}
 }
 
 /*
@@ -122,21 +122,21 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 			}
 			srcSP, queryErr := vgm.QuerySPByID(secondarySPIDBindingLeastGVGs)
 			if queryErr != nil {
-				log.Errorw("failed to query sp", "error", queryErr)
+				log.Errorw("failed to query sp", "sp_id", secondarySPIDBindingLeastGVGs, "error", queryErr)
 				return queryErr
 			}
 			// resolve conflict, swap out secondarySPIDBindingLeastGVGs.
 			for _, gvg := range familyGVGs {
-				if secondaryIndex, _ := util.GetSecondarySPIndexFromGVG(gvg, secondarySPIDBindingLeastGVGs); secondaryIndex > 0 {
+				if redundancyIndex, _ := util.GetSecondarySPIndexFromGVG(gvg, secondarySPIDBindingLeastGVGs); redundancyIndex > 0 {
 					// gvg has conflicts.
 					destSecondarySP, pickErr := vgm.PickSPByFilter(NewPickDestSPFilterWithSlice(gvg.GetSecondarySpIds()))
 					if pickErr != nil {
-						log.Errorw("failed to check conflict due to pick secondary sp", "error", pickErr)
+						log.Errorw("failed to check conflict due to pick secondary sp", "gvg", gvg, "error", pickErr)
 						return pickErr
 					}
 					gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
 						gvg:             gvg,
-						redundancyIndex: secondaryIndex,
+						redundancyIndex: redundancyIndex,
 						isSecondary:     true,
 						isRemoted:       false,
 						isConflicted:    true,
@@ -172,8 +172,8 @@ type SPExitExecutePlan struct {
 	manager                  *ManageModular
 	scheduler                *SPExitScheduler
 	virtualGroupManager      vgmgr.VirtualGroupManager
-	runningMigrateGVG        int                                     // load from db
-	PrimaryVGFMigrateUnits   []*VirtualGroupFamilyMigrateExecuteUnit // sp exit, primary family, include gvg list
+	runningMigrateGVG        int                                     // TODO: refine it.
+	PrimaryVGFMigrateUnits   []*VirtualGroupFamilyMigrateExecuteUnit // sp exit, primary family, include gvg list, maybe has conflicted.
 	SecondaryGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // sp exit, secondary gvg
 
 	// for scheduling, the slice only can append to ensure iterator work fine.
@@ -306,7 +306,7 @@ func (plan *SPExitExecutePlan) storeToDB() error {
 				IsRemoted:            false,
 				SrcSPID:              conflictGVG.srcSP.GetId(),
 				DestSPID:             conflictGVG.destSP.GetId(),
-				LastMigrateObjectID:  0,
+				LastMigratedObjectID: 0,
 				MigrateStatus:        int(conflictGVG.migrateStatus),
 			}); err != nil {
 				log.Errorw("failed to store to db", "error", err)
@@ -325,7 +325,7 @@ func (plan *SPExitExecutePlan) storeToDB() error {
 				IsRemoted:            false,
 				SrcSPID:              familyGVG.srcSP.GetId(),
 				DestSPID:             familyGVG.destSP.GetId(),
-				LastMigrateObjectID:  0,
+				LastMigratedObjectID: 0,
 				MigrateStatus:        int(familyGVG.migrateStatus),
 			}); err != nil {
 				log.Errorw("failed to store to db", "error", err)
@@ -345,7 +345,7 @@ func (plan *SPExitExecutePlan) storeToDB() error {
 			IsRemoted:            false,
 			SrcSPID:              secondaryGVG.srcSP.GetId(),
 			DestSPID:             secondaryGVG.destSP.GetId(),
-			LastMigrateObjectID:  0,
+			LastMigratedObjectID: 0,
 			MigrateStatus:        int(secondaryGVG.migrateStatus),
 		}); err != nil {
 			log.Errorw("failed to store to db", "error", err)
@@ -698,7 +698,7 @@ func (runner *MigrateTaskRunner) AddNewMigrateGVGUnit(remotedGVGUnit *GlobalVirt
 		IsRemoted:            remotedGVGUnit.isRemoted,
 		SrcSPID:              remotedGVGUnit.srcSP.GetId(),
 		DestSPID:             remotedGVGUnit.destSP.GetId(),
-		LastMigrateObjectID:  0,
+		LastMigratedObjectID: 0,
 		MigrateStatus:        int(remotedGVGUnit.migrateStatus),
 	}); err != nil {
 		log.Errorw("failed to store to db", "error", err)
