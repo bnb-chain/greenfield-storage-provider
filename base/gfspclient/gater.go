@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // spilt server and client const definition avoids circular references
@@ -40,6 +41,10 @@ const (
 	NotifyMigrateGVGTaskPath = "/greenfield/migrate/v1/notify-migrate-gvg-task"
 	// GnfdMigrateGVGMsgHeader defines migrate gvg msg header
 	GnfdMigrateGVGMsgHeader = "X-Gnfd-Migrate-GVG-Msg"
+	// SecondarySPMigrationBucketApprovalPath defines secondary sp sign migration bucket approval
+	SecondarySPMigrationBucketApprovalPath = "/greenfield/migrate/v1/migration-bucket-approval"
+	// GnfdSecondarySPMigrationBucketApprovalHeader defines secondary sp migration bucket sign doc header.
+	GnfdSecondarySPMigrationBucketApprovalHeader = "X-Gnfd-Secondary-Migration-Bucket-Approval"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
@@ -183,4 +188,34 @@ func (s *GfSpClient) NotifyDestSPMigrateGVG(ctx context.Context, destEndpoint st
 		return fmt.Errorf("failed to notify migrate gvg, StatusCode(%d), Endpoint(%s)", resp.StatusCode, destEndpoint)
 	}
 	return nil
+}
+
+func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, secondarySPEndpoint string,
+	signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodGet, secondarySPEndpoint+SecondarySPMigrationBucketApprovalPath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect gateway", "secondary_sp_endpoint", secondarySPEndpoint, "error", err)
+		return nil, err
+	}
+	msg, err := storagetypes.ModuleCdc.Marshal(signDoc)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add(GnfdSecondarySPMigrationBucketApprovalHeader, hex.EncodeToString(msg))
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.Errorw("failed to send requests to get secondary sp migration bucket approval", "secondary_sp_endpoint",
+			secondarySPEndpoint, "error", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get resp body, StatusCode(%d), Endpoint(%s)", resp.StatusCode, secondarySPEndpoint)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorw("failed to read response body", "error", err)
+	}
+	return data, nil
 }
