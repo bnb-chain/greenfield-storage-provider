@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - develop
+      - ci-*
       - release*
       - fix-release*
 
@@ -14,6 +15,7 @@ on:
   pull_request:
     branches:
       - master
+      - ci-*
       - develop
       - release*
       - fix-release*
