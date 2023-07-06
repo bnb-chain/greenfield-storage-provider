@@ -5,16 +5,16 @@ import (
 	"errors"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -115,6 +115,7 @@ func (plan *BucketMigrateExecutePlan) updateMigrateStatus(migrateKey string, mig
 	if plan.finished == len(plan.gvgUnitMap) {
 		// BucketName GlobalVirtualGroupFamilyId,GvgMappings
 		var bucket *types.Bucket
+		// TODO: need a functional context
 		bucket, err = plan.manager.baseApp.GfSpClient().GetBucketByBucketID(context.Background(), int64(plan.bucketID), true)
 		if err != nil {
 			return err
@@ -122,8 +123,13 @@ func (plan *BucketMigrateExecutePlan) updateMigrateStatus(migrateKey string, mig
 		bucketName := bucket.BucketInfo.BucketName
 		var gvgMappings []*storage_types.GVGMapping
 		for _, migrateGVGUnit := range plan.gvgUnitMap {
+			aggBlsSig, err := plan.getBlsAggregateSigForBucketMigration(context.Background(), migrateExecuteUnit)
+			if err != nil {
+				log.Errorw("failed to get bls aggregate signature", "error", err)
+				return err
+			}
 			gvgMappings = append(gvgMappings, &storage_types.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.gvg.GetId(),
-				DstGlobalVirtualGroupId: migrateGVGUnit.destGVGID})
+				DstGlobalVirtualGroupId: migrateGVGUnit.destGVGID, SecondarySpBlsSignature: aggBlsSig})
 		}
 
 		migrateBucket := &storage_types.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
@@ -131,6 +137,32 @@ func (plan *BucketMigrateExecutePlan) updateMigrateStatus(migrateKey string, mig
 		plan.manager.baseApp.GfSpClient().CompleteMigrateBucket(context.Background(), migrateBucket)
 	}
 	return nil
+}
+
+// getBlsAggregateSigForBucketMigration get bls sign from secondary sp which is used for bucket migration
+func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx context.Context, migrateExecuteUnit *GlobalVirtualGroupMigrateExecuteUnitByBucket) ([]byte, error) {
+	signDoc := storage_types.NewSecondarySpMigrationBucketSignDoc(plan.manager.baseApp.ChainID(),
+		sdkmath.NewUint(plan.bucketID), migrateExecuteUnit.destSP.GetId(), migrateExecuteUnit.gvg.GetId(), migrateExecuteUnit.destGVGID)
+	secondarySigs := make([][]byte, 0)
+	for _, spID := range migrateExecuteUnit.gvg.GetSecondarySpIds() {
+		spInfo, err := plan.manager.baseApp.Consensus().QuerySPByID(ctx, spID)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to query sp by id", "error", err)
+			return nil, err
+		}
+		sig, err := plan.manager.baseApp.GfSpClient().GetSecondarySPMigrationBucketApproval(ctx, spInfo.GetEndpoint(), signDoc)
+		if err != nil {
+			log.Errorw("failed to get secondary sp migration bucket approval", "error", err)
+			return nil, err
+		}
+		secondarySigs = append(secondarySigs, sig)
+	}
+	aggBlsSig, err := util.BlsAggregate(secondarySigs)
+	if err != nil {
+		log.Errorw("failed to aggregate secondary sp bls signatures", "error", err)
+		return nil, err
+	}
+	return aggBlsSig, nil
 }
 
 func (plan *BucketMigrateExecutePlan) startSPSchedule() {

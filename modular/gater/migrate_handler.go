@@ -9,6 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 const (
@@ -38,14 +39,14 @@ func (g *GateModular) notifyMigrateGVGHandler(w http.ResponseWriter, r *http.Req
 	migrateGVGHeader := r.Header.Get(GnfdMigrateGVGMsgHeader)
 	migrateGVGMsg, err = hex.DecodeString(migrateGVGHeader)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate gvg header", "header", migrateGVGHeader)
+		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate gvg header", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
 	migrateGVG := gfsptask.GfSpMigrateGVGTask{}
 	err = json.Unmarshal(migrateGVGMsg, &migrateGVG)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate gvg msg", "header", migrateGVGHeader)
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate gvg msg", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
@@ -84,7 +85,7 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	migrateHeader := r.Header.Get(GnfdMigratePieceMsgHeader)
 	migrateMsg, err = hex.DecodeString(migrateHeader)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate piece header", "header", migrateHeader)
+		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate piece header", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
@@ -92,7 +93,7 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	migratePiece := gfsptask.GfSpMigratePieceTask{}
 	err = json.Unmarshal(migrateMsg, &migratePiece)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate piece msg", "header", migrateHeader)
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate piece msg", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
@@ -166,4 +167,48 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	w.Write(pieceData)
 	log.CtxInfow(reqCtx.Context(), "succeed to migrate one piece", "objectID", objectID, "segmentIdx",
 		segmentIdx, "redundancyIdx", redundancyIdx)
+}
+
+// getSecondaryBlsMigrationBucketApprovalHandler handles the bucket migration approval request for secondarySP using bls
+func (g *GateModular) getSecondaryBlsMigrationBucketApprovalHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err                        error
+		reqCtx                     *RequestContext
+		migrationBucketApprovalMsg []byte
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(err)
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+	migrationBucketApprovalHeader := r.Header.Get(GnfdSecondarySPMigrationBucketApproval)
+	migrationBucketApprovalMsg, err = hex.DecodeString(migrationBucketApprovalHeader)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse secondary migration bucket approval header", "error", err)
+		err = ErrDecodeMsg
+		return
+	}
+
+	signDoc := &storagetypes.SecondarySpMigrationBucketSignDoc{}
+	if err = storagetypes.ModuleCdc.UnmarshalJSON(migrationBucketApprovalMsg, signDoc); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migration bucket approval msg", "error", err)
+		err = ErrDecodeMsg
+		return
+	}
+	signature, err := g.baseApp.GfSpClient().SignSecondarySPMigrationBucket(reqCtx.Context(), signDoc)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to sign secondary sp migration bucket", "error", err)
+		return
+	}
+	w.Write(signature)
+	log.CtxInfow(reqCtx.Context(), "succeed to sign secondary sp migration bucket approval", "buket_id",
+		signDoc.BucketId.String())
 }
