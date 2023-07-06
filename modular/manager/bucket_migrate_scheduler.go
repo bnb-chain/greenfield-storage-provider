@@ -79,9 +79,9 @@ func (plan *BucketMigrateExecutePlan) UpdateProgress(task task.MigrateGVGTask) e
 	}
 
 	migrateKey := MakeBucketMigrateKey(migrateExecuteUnit.bucketID, migrateExecuteUnit.gvg.GetId())
-	err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitLastMigrateObjectID(MakeBucketMigrateKey(plan.bucketID, migrateExecuteUnit.gvg.GetId()), task.GetLastMigratedObjectID())
+	err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey, task.GetLastMigratedObjectID())
 	if err != nil {
-		log.Debugw("update migrate gvg migrateGVGUnit lastMigrateObjectID", "migrateKey", migrateKey, "error", err)
+		log.Debugw("update migrate gvg migrateGVGUnit lastMigrateObjectID", "migrate_key", migrateKey, "error", err)
 		return err
 	}
 
@@ -335,7 +335,7 @@ func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*Buc
 	}
 }
 
-func (s *BucketMigrateScheduler) HandleMigrateGVGTask(task task.MigrateGVGTask) error {
+func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error {
 	executePlan, err := s.getExecutePlanByBucketID(task.GetBucketID())
 	if err != nil {
 		return err

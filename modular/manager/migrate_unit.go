@@ -46,6 +46,11 @@ func MakeSecondaryGVGMigrateKey(gvgID uint32, vgfID uint32, redundancyIndex int3
 		gvgID, vgfID, redundancyIndex, true, false, false)
 }
 
+func MakeRemotedGVGMigrateKey(gvgID uint32, vgfID uint32, redundancyIndex int32) string {
+	return fmt.Sprintf("SPExit-gvg_id[%d]-vgf_id[%d]-redundancy_idx[%d]-is_secondary[%t]-is_conflict[%t]-is_remoted[%t]",
+		gvgID, vgfID, redundancyIndex, false, false, true)
+}
+
 type GlobalVirtualGroupMigrateExecuteUnitByBucket struct {
 	bucketID uint64
 	GlobalVirtualGroupMigrateExecuteUnit

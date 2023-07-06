@@ -2,11 +2,13 @@ package manager
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -636,6 +638,44 @@ func (runner *MigrateTaskRunner) Start() error {
 	return nil
 }
 
+func (runner *MigrateTaskRunner) UpdateMigrateGVGLastMigratedObjectID(migrateKey string, lastMigratedObjectID uint64) error {
+	runner.mutex.Lock()
+
+	if _, found := runner.keyIndexMap[migrateKey]; !found {
+		runner.mutex.Unlock()
+		return fmt.Errorf("gvg unit is not found")
+	}
+	index := runner.keyIndexMap[migrateKey]
+	if index >= len(runner.gvgUnits) {
+		runner.mutex.Unlock()
+		return fmt.Errorf("gvg unit index is invalid")
+	}
+	unit := runner.gvgUnits[index]
+	unit.lastMigratedObjectID = lastMigratedObjectID
+	runner.mutex.Unlock()
+
+	return runner.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey, lastMigratedObjectID)
+}
+
+func (runner *MigrateTaskRunner) UpdateMigrateGVGStatus(migrateKey string, st MigrateStatus) error {
+	runner.mutex.Lock()
+
+	if _, found := runner.keyIndexMap[migrateKey]; !found {
+		runner.mutex.Unlock()
+		return fmt.Errorf("gvg unit is not found")
+	}
+	index := runner.keyIndexMap[migrateKey]
+	if index >= len(runner.gvgUnits) {
+		runner.mutex.Unlock()
+		return fmt.Errorf("gvg unit index is invalid")
+	}
+	unit := runner.gvgUnits[index]
+	unit.migrateStatus = st
+	runner.mutex.Unlock()
+
+	return runner.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(st))
+}
+
 func (runner *MigrateTaskRunner) AddNewMigrateGVGUnit(remotedGVGUnit *GlobalVirtualGroupMigrateExecuteUnit) error {
 	runner.mutex.Lock()
 	if _, found := runner.keyIndexMap[remotedGVGUnit.Key()]; found {
@@ -859,4 +899,18 @@ func (s *SPExitScheduler) produceSPExitExecutePlan() (*SPExitExecutePlan, error)
 
 func (s *SPExitScheduler) updateSPExitExecutePlan() {
 	// TODO: check
+}
+
+func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error {
+	var (
+		err        error
+		migrateKey string
+	)
+	migrateKey = MakeRemotedGVGMigrateKey(task.GetGvg().GetId(), task.GetGvg().GetFamilyId(), task.GetRedundancyIdx())
+	if task.GetFinished() {
+		err = s.migrateTaskRunner.UpdateMigrateGVGStatus(migrateKey, Migrated)
+	} else {
+		err = s.migrateTaskRunner.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID())
+	}
+	return err
 }

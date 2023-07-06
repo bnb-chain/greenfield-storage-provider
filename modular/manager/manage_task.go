@@ -3,11 +3,12 @@ package manager
 import (
 	"context"
 	"fmt"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"net/http"
 	"strings"
 	"time"
+
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 
 	"cosmossdk.io/math"
 
@@ -660,10 +661,15 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error {
 	if task == nil {
 		log.CtxErrorw(ctx, "failed to handle migrate gvg due to pointer dangling")
+		return ErrDanglingTask
 	}
-	m.bucketMigrateScheduler.HandleMigrateGVGTask(task)
-	// TODO: add more logics here
-	return nil
+	var err error
+	if task.GetBucketID() != 0 {
+		err = m.bucketMigrateScheduler.UpdateMigrateProgress(task)
+	} else {
+		err = m.spExitScheduler.UpdateMigrateProgress(task)
+	}
+	return err
 }
 
 func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error) {

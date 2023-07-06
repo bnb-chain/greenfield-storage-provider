@@ -16,6 +16,8 @@ func (m *ManageModular) NotifyMigrateGVG(ctx context.Context, task task.MigrateG
 		gvg:             task.GetGvg(),
 		redundancyIndex: task.GetRedundancyIdx(),
 		isRemoted:       true, // from src sp
+		isConflicted:    false,
+		isSecondary:     false,
 		srcSP:           task.GetSrcSp(),
 		destSP:          task.GetDestSp(),
 		migrateStatus:   WaitForMigrate,
