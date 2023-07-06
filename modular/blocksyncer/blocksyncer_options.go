@@ -262,6 +262,7 @@ func (b *BlockSyncerModular) fetchData(count, cycle, startHeight uint64, latestB
 				return
 			}
 			for {
+
 				block, err := b.parserCtx.Node.Block(int64(height))
 				if err != nil {
 					log.Warnf("failed to get block from node: %s", err)
