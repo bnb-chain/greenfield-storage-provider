@@ -113,7 +113,7 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 		SrcSpEndpoint: task.GetSrcSp().GetEndpoint(),
 		RedundancyIdx: task.GetRedundancyIdx(),
 	}
-	if redundancyIdx == primarySPRedundancyIdx && isPrimary == false {
+	if redundancyIdx == primarySPRedundancyIdx && !isPrimary {
 		migratePieceTask.RedundancyIdx = primarySPRedundancyIdx
 	} else {
 		migratePieceTask.RedundancyIdx = int32(redundancyIdx)

@@ -86,8 +86,6 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
-	task, reservedTasks = m.PickUpTask(ctx, backupTasks)
-
 	task = m.migrateGVGQueue.TopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", task.Key().String())
@@ -775,11 +773,7 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 
 func (m *ManageModular) createGlobalVirtualGroupForBucketMigrate(vgfID uint32, params *storagetypes.Params, srcGVG *virtualgrouptypes.GlobalVirtualGroup, destSP *sptypes.StorageProvider) error {
 	var err error
-	if params == nil {
-		if params, err = m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix()); err != nil {
-			return err
-		}
-	}
+	_ = params
 	// TODO dest sp corresponding SecondarySpIds ?
 	log.Infow("begin to create a gvg", "srcGVG", srcGVG)
 	virtualGroupParams, err := m.baseApp.Consensus().QueryVirtualGroupParams(context.Background())
