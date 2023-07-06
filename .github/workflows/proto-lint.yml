@@ -8,6 +8,7 @@ on:
       - ci-*
       - release*
       - fix-release*
+      - feat-*
 
     paths:
       - 'proto/**'
@@ -19,6 +20,7 @@ on:
       - develop
       - release*
       - fix-release*
+      - feat-*
 
     paths:
       - 'proto/**'
