@@ -51,6 +51,27 @@ type GlobalVirtualGroupMigrateExecuteUnitByBucket struct {
 	GlobalVirtualGroupMigrateExecuteUnit
 }
 
+func newGlobalVirtualGroupMigrateExecuteUnitByBucket(bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup, srcSP, destSP *sptypes.StorageProvider,
+	migrateStatus MigrateStatus, destGVG uint32, lastMigrateObjectID uint64, isSecondary, isConflicted, isRemoted bool) *GlobalVirtualGroupMigrateExecuteUnitByBucket {
+
+	bucketUnit := &GlobalVirtualGroupMigrateExecuteUnitByBucket{}
+	bucketUnit.bucketID = bucketID
+	bucketUnit.gvg = gvg
+	bucketUnit.srcSP = srcSP
+	bucketUnit.destSP = destSP
+	bucketUnit.migrateStatus = migrateStatus
+	bucketUnit.destGVGID = destGVG
+
+	bucketUnit.redundancyIndex = -1
+	bucketUnit.lastMigratedObjectID = lastMigrateObjectID
+
+	bucketUnit.isSecondary = isSecondary
+	bucketUnit.isConflicted = isConflicted
+	bucketUnit.isRemoted = isRemoted
+
+	return bucketUnit
+}
+
 // Key is used to as primary key.
 func (ub *GlobalVirtualGroupMigrateExecuteUnitByBucket) Key() string {
 	return fmt.Sprintf("MigrateBucket-bucket_id[%d]-gvg_id[%d]", ub.bucketID, ub.gvg.GetId())

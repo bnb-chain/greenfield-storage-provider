@@ -788,7 +788,7 @@ func (m *ManageModular) createGlobalVirtualGroupForBucketMigrate(vgfID uint32, p
 		Deposit: &sdk.Coin{
 			Denom: virtualGroupParams.GetDepositDenom(),
 			// TODO if correct
-			Amount: virtualGroupParams.GvgStakingPerBytes.Mul(math.NewIntFromUint64(srcGVG.StoredSize)),
+			Amount: virtualGroupParams.GvgStakingPerBytes.Mul(math.NewIntFromUint64(srcGVG.GetStoredSize())),
 		},
 	})
 }
@@ -824,14 +824,14 @@ func (m *ManageModular) pickGlobalVirtualGroupForBucketMigrate(ctx context.Conte
 		gvg *vgmgr.GlobalVirtualGroupMeta
 	)
 
-	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG); err != nil {
+	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG, destSP); err != nil {
 		// create a new gvg, and retry pick.
 		if err = m.createGlobalVirtualGroupForBucketMigrate(vgfID, param, srcGVG, destSP); err != nil {
-			log.CtxErrorw(ctx, "failed to create global virtual group", "vgf_id", vgfID, "error", err)
+			log.CtxErrorw(ctx, "failed to create global virtual group for bucket migrate", "vgf_id", vgfID, "error", err)
 			return gvg, err
 		}
 		m.virtualGroupManager.ForceRefreshMeta()
-		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG); err != nil {
+		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG, destSP); err != nil {
 			log.CtxErrorw(ctx, "failed to pick gvg", "vgf_id", vgfID, "error", err)
 			return gvg, err
 		}

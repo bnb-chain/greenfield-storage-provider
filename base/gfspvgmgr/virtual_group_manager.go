@@ -123,7 +123,7 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vg
 	return vgfm.vgfIDToVgf[vgfID].GVGMap[globalVirtualGroupID], nil
 }
 
-func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(vgfID uint32, srcGVG *virtualgrouptypes.GlobalVirtualGroup) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(vgfID uint32, srcGVG *virtualgrouptypes.GlobalVirtualGroup, destSP *sptypes.StorageProvider) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		picker               FreeStorageSizeWeightPicker
 		globalVirtualGroupID uint32
@@ -131,14 +131,29 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(vg
 	)
 	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 	if vgfID == 0 {
-		// TODO scan all vgfs
-		return nil, nil
+		// Iterate through VGFs one by one and perform a query. If a suitable GVG is found, return it. Otherwise, continue searching until all VGFs have been queried.
+		for _, vgf := range vgfm.vgfIDToVgf {
+			for _, g := range vgf.GVGMap {
+				if g.PrimarySPID != destSP.GetId() || reflect.DeepEqual(g.SecondarySPIDs, srcGVG.SecondarySpIds) {
+					continue
+				}
+				picker.addGlobalVirtualGroup(g)
+			}
+			if globalVirtualGroupID, err = picker.pickIndex(); err != nil {
+				log.Errorw("failed to pick gvg at current vgf", "vgf_id", vgfID, "error", err)
+				continue
+			}
+			return vgf.GVGMap[globalVirtualGroupID], nil
+		}
+
+		return nil, ErrFailedPickGVG
 	} else {
 		if _, existed := vgfm.vgfIDToVgf[vgfID]; !existed {
 			return nil, ErrStaledMetadata
 		}
 		for _, g := range vgfm.vgfIDToVgf[vgfID].GVGMap {
-			if g.PrimarySPID != srcGVG.PrimarySpId || reflect.DeepEqual(g.SecondarySPIDs, srcGVG.SecondarySpIds) {
+			// match srcGVG ()
+			if destSP.GetId() != g.PrimarySPID || reflect.DeepEqual(g.SecondarySPIDs, srcGVG.SecondarySpIds) {
 				continue
 			}
 			picker.addGlobalVirtualGroup(g)
@@ -360,10 +375,10 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vgmgr.Glo
 
 // PickGlobalVirtualGroupForBucketMigrate picks a global virtual group(If failed to pick,
 // new GVG will be created by primary SP) in replicate/seal object workflow.
-func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(vgfID uint32, srcGVG *virtualgrouptypes.GlobalVirtualGroup) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(vgfID uint32, srcGVG *virtualgrouptypes.GlobalVirtualGroup, destSP *sptypes.StorageProvider) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG)
+	return vgm.vgfManager.pickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG, destSP)
 }
 
 // PickMigrateDestGlobalVirtualGroup picks a global virtual group(If failed to pick,

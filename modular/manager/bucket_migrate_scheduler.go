@@ -122,8 +122,8 @@ func (plan *BucketMigrateExecutePlan) updateMigrateStatus(migrateKey string, mig
 		bucketName := bucket.BucketInfo.BucketName
 		var gvgMappings []*storage_types.GVGMapping
 		for _, migrateGVGUnit := range plan.gvgUnitMap {
-			gvgMappings = append(gvgMappings, &storage_types.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.srcSP.GetId(),
-				DstGlobalVirtualGroupId: migrateGVGUnit.destSP.GetId()})
+			gvgMappings = append(gvgMappings, &storage_types.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.gvg.GetId(),
+				DstGlobalVirtualGroupId: migrateGVGUnit.destGVGID})
 		}
 
 		migrateBucket := &storage_types.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
@@ -318,17 +318,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 		// TODO how to get dest gvg
 		destGVG, err = s.manager.pickGlobalVirtualGroupForBucketMigrate(context.Background(), vgfID, params, gvg, destSP)
 		vgfID = destGVG.FamilyID
-		bucketUnit := &GlobalVirtualGroupMigrateExecuteUnitByBucket{}
-		bucketUnit.bucketID = plan.bucketID
-		bucketUnit.gvg = gvg
-		bucketUnit.destGVGID = destGVG.ID
-		bucketUnit.srcSP = srcSP
-		bucketUnit.destSP = destSP
-		bucketUnit.isRemoted = false
-		bucketUnit.isSecondary = false
-		bucketUnit.isConflicted = false
-		bucketUnit.redundancyIndex = -1
-		bucketUnit.migrateStatus = WaitForMigrate
+		bucketUnit := newGlobalVirtualGroupMigrateExecuteUnitByBucket(plan.bucketID, gvg, srcSP, destSP, WaitForMigrate, destGVG.ID, 0, false, false, false)
 		plan.gvgUnitMap[gvg.Id] = bucketUnit
 	}
 
@@ -403,17 +393,8 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 				return errors.New("failed to list gvg")
 			}
 			for _, gvg := range primarySPGVGList {
-				bucketUnit := &GlobalVirtualGroupMigrateExecuteUnitByBucket{}
-				bucketUnit.bucketID = bucketID
-				bucketUnit.gvg = gvg
-				bucketUnit.srcSP = srcSP
-				bucketUnit.destSP = destSP
-				bucketUnit.migrateStatus = MigrateStatus(migrateGVG.MigrateStatus)
-				bucketUnit.isSecondary = migrateGVG.IsSecondary
-				bucketUnit.isConflicted = migrateGVG.IsConflicted
-				bucketUnit.isRemoted = migrateGVG.IsRemoted
-				bucketUnit.redundancyIndex = migrateGVG.RedundancyIndex
-				bucketUnit.lastMigratedObjectID = migrateGVG.LastMigrateObjectID
+				bucketUnit := newGlobalVirtualGroupMigrateExecuteUnitByBucket(bucketID, gvg, srcSP, destSP, WaitForMigrate, migrateGVG.DestSPID, migrateGVG.LastMigrateObjectID,
+					migrateGVG.IsSecondary, migrateGVG.IsConflicted, migrateGVG.IsRemoted)
 				executePlan.gvgUnitMap[gvg.Id] = bucketUnit
 			}
 		}
