@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync/atomic"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -79,6 +80,7 @@ func (i *Impl) Process(height uint64) error {
 	flag := flagAny.(int64)
 	heightKey := fmt.Sprintf("%s-%d", i.GetServiceName(), height)
 	if flag == -1 || flag >= int64(height) {
+		log.Infof("get data from map")
 		blockAny, okb := blockMap.Load(heightKey)
 		eventsAny, oke := eventMap.Load(heightKey)
 		txsAny, okt := txMap.Load(heightKey)
@@ -90,6 +92,7 @@ func (i *Impl) Process(height uint64) error {
 			return ErrBlockNotFound
 		}
 	} else {
+		startTime := time.Now().UnixMilli()
 		// get block info
 		block, err = i.Node.Block(int64(height))
 		if err != nil {
@@ -110,13 +113,14 @@ func (i *Impl) Process(height uint64) error {
 			log.Errorf("failed to get block results from node: %s", err)
 			return err
 		}
+		log.Infof("block:%d cost: %d", height, time.Now().UnixMilli()-startTime)
 	}
 
 	beginBlockEvents := events.BeginBlockEvents
 	endBlockEvents := events.EndBlockEvents
 
 	// 1. handle events in startBlock
-
+	startTime := time.Now().UnixMilli()
 	if len(beginBlockEvents) > 0 {
 		err = i.ExportEventsWithoutTx(context.Background(), block, beginBlockEvents)
 		if err != nil {
@@ -151,6 +155,7 @@ func (i *Impl) Process(height uint64) error {
 	eventMap.Delete(heightKey)
 	txMap.Delete(heightKey)
 	i.ProcessedHeight = height
+	log.Infof("handle block:%d, cost:%d", height, time.Now().UnixMilli()-startTime)
 
 	return nil
 }
