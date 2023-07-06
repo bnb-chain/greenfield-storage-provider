@@ -575,6 +575,7 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 		reqCtxErr     error
 		reqCtx        *RequestContext
 		authenticated bool
+		pieceData     []byte
 	)
 	startTime := time.Now()
 	defer func() {
@@ -656,9 +657,10 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 		true, reqCtx.Account(), uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
-	pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+	pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
+		return
 	}
 	w.Write(pieceData)
 	log.CtxDebugw(reqCtx.Context(), "succeed to get secondary piece data")
