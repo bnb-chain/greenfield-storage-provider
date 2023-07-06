@@ -45,6 +45,7 @@ const (
 	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
 	notifyMigrateGVGRouterName                     = "NotifyMigrateGVG"
 	migratePieceRouterName                         = "MigratePiece"
+	migrationBucketApproval                        = "MigrationBucketApproval"
 	listVirtualGroupFamiliesBySpIDRouterName       = "ListVirtualGroupFamiliesBySpID"
 	getVirtualGroupFamilyRouterName                = "GetVirtualGroupFamily"
 	getGlobalVirtualGroupByGvgIDRouterName         = "GetGlobalVirtualGroupByGvgID"
@@ -104,6 +105,8 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	router.Path(NotifyMigrateGVGTaskPath).Name(notifyMigrateGVGRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateGVGHandler)
 	// migrate pieces between SPs which is used for SP exiting case
 	router.Path(MigratePiecePath).Name(migratePieceRouterName).Methods(http.MethodGet).HandlerFunc(g.migratePieceHandler)
+	// migration bucket approval for secondary sp bls signature
+	router.Path(SecondarySPMigrationBucketApprovalPath).Name(migrationBucketApproval).Methods(http.MethodGet).HandlerFunc(g.getSecondaryBlsMigrationBucketApprovalHandler)
 
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
@@ -196,10 +199,10 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		// List Deleted Objects
 		router.Path("/").Name(listDeletedObjectsByBlockNumberRangeRouterName).Methods(http.MethodGet).Queries(ListDeletedObjectsQuery, "").HandlerFunc(g.listDeletedObjectsByBlockNumberRangeHandler)
 
-		//Get User Buckets Count
+		// Get User Buckets Count
 		router.Path("/").Name(getUserBucketsCountRouterName).Methods(http.MethodGet).Queries(GetUserBucketsCountQuery, "").HandlerFunc(g.getUserBucketsCountHandler)
 
-		//List Expired Buckets By Sp
+		// List Expired Buckets By Sp
 		router.Path("/").Name(listExpiredBucketsBySpRouterName).Methods(http.MethodGet).Queries(ListExpiredBucketsBySpQuery, "").HandlerFunc(g.listExpiredBucketsBySpHandler)
 
 		// List Virtual Group Families By Sp ID
