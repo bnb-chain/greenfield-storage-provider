@@ -103,7 +103,7 @@ func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.Receiv
 
 func (s *SignModular) SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
 	msg := storagetypes.NewSecondarySpSealObjectSignDoc(s.baseApp.ChainID(), gvgId, sdkmath.NewUint(objectID), storagetypes.GenerateHash(checksums)).GetBlsSignHash()
-	sig, err := s.client.sealBlsKm.Sign(msg[:])
+	sig, err := s.client.blsKm.Sign(msg[:])
 	if err != nil {
 		return nil, err
 	}
@@ -167,4 +167,13 @@ func (s *SignModular) SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMig
 
 func (s *SignModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return s.client.CompleteMigrateBucket(ctx, SignOperator, migrateBucket)
+}
+
+func (s *SignModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
+	msg := signDoc.GetBlsSignHash()
+	sig, err := s.client.blsKm.Sign(msg[:])
+	if err != nil {
+		return nil, err
+	}
+	return sig, nil
 }

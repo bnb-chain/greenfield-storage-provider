@@ -7,6 +7,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 )
@@ -48,4 +49,14 @@ func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client *gfs
 		}
 	}
 	return -1, false, nil
+}
+
+// BlsAggregate aggregate secondary sp bls signature
+func BlsAggregate(secondarySigs [][]byte) ([]byte, error) {
+	blsSigs, err := bls.MultipleSignaturesFromBytes(secondarySigs)
+	if err != nil {
+		return nil, err
+	}
+	aggBlsSig := bls.AggregateSignatures(blsSigs).Marshal()
+	return aggBlsSig, nil
 }
