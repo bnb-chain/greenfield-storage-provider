@@ -27,10 +27,10 @@ const (
 	DefaultExecutorListenSealTimeoutHeight int = 10
 	// DefaultExecutorListenSealRetryTimeout defines the sleep time when listen seal object
 	// fail, until retry ExecutorMaxListenSealRetry times, the task is set error.
-	DefaultExecutorListenSealRetryTimeout int = 2
+	DefaultExecutorListenSealRetryTimeout int = 3
 	// DefaultExecutorMaxListenSealRetry defines the default max retry number for listening
 	// object.
-	DefaultExecutorMaxListenSealRetry int = 3
+	DefaultExecutorMaxListenSealRetry int = 10
 	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60

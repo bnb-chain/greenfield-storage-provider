@@ -38,8 +38,8 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		approvalMsg          []byte
 		createBucketApproval = storagetypes.MsgCreateBucket{}
 		createObjectApproval = storagetypes.MsgCreateObject{}
-		authenticated        bool
-		approved             bool
+		//authenticated        bool
+		approved bool
 	)
 	startTime := time.Now()
 	defer func() {
@@ -90,23 +90,23 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if !reqCtx.SkipVerifyAuthentication() {
-			startVerifyAuthentication := time.Now()
-			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
-				reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
-				reqCtx.Account(), createBucketApproval.GetBucketName(), "")
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_end").Observe(time.Since(startTime).Seconds())
-			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-				return
-			}
-			if !authenticated {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
-				return
-			}
-		}
+		//if !reqCtx.SkipVerifyAuthentication() {
+		//	startVerifyAuthentication := time.Now()
+		//	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
+		//		reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
+		//		reqCtx.Account(), createBucketApproval.GetBucketName(), "")
+		//	metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
+		//	metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_end").Observe(time.Since(startTime).Seconds())
+		//	if err != nil {
+		//		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		//		return
+		//	}
+		//	if !authenticated {
+		//		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		//		err = ErrNoPermission
+		//		return
+		//	}
+		//}
 		task := &gfsptask.GfSpCreateBucketApprovalTask{}
 		task.InitApprovalCreateBucketTask(&createBucketApproval, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalCreateBucketTask
@@ -138,24 +138,24 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if !reqCtx.SkipVerifyAuthentication() {
-			startVerifyAuthentication := time.Now()
-			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
-				reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
-				reqCtx.Account(), createObjectApproval.GetBucketName(),
-				createObjectApproval.GetObjectName())
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_end").Observe(time.Since(startTime).Seconds())
-			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-				return
-			}
-			if !authenticated {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
-				return
-			}
-		}
+		//if !reqCtx.SkipVerifyAuthentication() {
+		//	startVerifyAuthentication := time.Now()
+		//	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
+		//		reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
+		//		reqCtx.Account(), createObjectApproval.GetBucketName(),
+		//		createObjectApproval.GetObjectName())
+		//	metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
+		//	metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_end").Observe(time.Since(startTime).Seconds())
+		//	if err != nil {
+		//		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		//		return
+		//	}
+		//	if !authenticated {
+		//		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		//		err = ErrNoPermission
+		//		return
+		//	}
+		//}
 		task := &gfsptask.GfSpCreateObjectApprovalTask{}
 		task.InitApprovalCreateObjectTask(&createObjectApproval, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask
@@ -227,10 +227,8 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		err = ErrInvalidHeader
 		return
 	}
-
 	getObjectTime := time.Now()
-	objectInfo, err := g.baseApp.Consensus().QueryObjectInfoByID(reqCtx.Context(),
-		reqCtx.request.Header.Get(GnfdObjectIDHeader))
+	objectInfo, err := g.baseApp.GfSpClient().GetObjectByID(reqCtx.Context(), objectID)
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_object_time").Observe(time.Since(getObjectTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
@@ -259,13 +257,14 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	getBucketTime := time.Now()
-	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
+	bucket, err := g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), objectInfo.GetBucketName(), true)
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_bucket_time").Observe(time.Since(getBucketTime).Seconds())
-	if err != nil {
+	if err != nil || bucket.GetBucketInfo() == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
+	bucketInfo := bucket.GetBucketInfo()
 	redundancyIdx, err := util.StringToInt32(reqCtx.request.Header.Get(GnfdRedundancyIndexHeader))
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse redundancy index", "redundancy_idx",
@@ -281,8 +280,9 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 	getParamTime := time.Now()
-	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(
-		reqCtx.Context(), objectInfo.GetCreateAt())
+	//params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(
+	//	reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err := g.GetStorageParams()
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_param_time").Observe(time.Since(getParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)

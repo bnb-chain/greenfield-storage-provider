@@ -98,12 +98,11 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 
 func (e *ExecuteModular) listenSealObject(ctx context.Context, task coretask.ObjectTask, object *storagetypes.ObjectInfo) error {
 	var (
-		err    error
-		sealed bool
+		err            error
+		offChainObject *storagetypes.ObjectInfo
 	)
 	for retry := 0; retry < e.maxListenSealRetry; retry++ {
-		sealed, err = e.baseApp.Consensus().ListenObjectSeal(ctx,
-			object.Id.Uint64(), e.listenSealTimeoutHeight)
+		offChainObject, err = e.baseApp.GfSpClient().GetObjectByID(ctx, task.GetObjectInfo().Id.Uint64())
 		if err != nil {
 			task.AppendLog(fmt.Sprintf("executor-listen-seal-failed-error:%s-retry:%d", err.Error(), retry))
 			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
@@ -111,7 +110,7 @@ func (e *ExecuteModular) listenSealObject(ctx context.Context, task coretask.Obj
 			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
 			continue
 		}
-		if !sealed {
+		if offChainObject.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 			task.AppendLog(fmt.Sprintf("executor-listen-seal-failed(unseal)-retry:%d", retry))
 			log.CtxErrorw(ctx, "failed to seal object on chain", "retry", retry,
 				"max_retry", e.maxListenSealRetry, "error", err)

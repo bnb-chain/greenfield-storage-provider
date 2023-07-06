@@ -58,12 +58,13 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName)
-	if err != nil {
+	bucket, err := g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), reqCtx.bucketName, true)
+	if err != nil || bucket.GetBucketInfo() == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
+	bucketInfo = bucket.GetBucketInfo()
 	charge, free, consume, err = g.baseApp.GfSpClient().GetBucketReadQuota(
 		reqCtx.Context(), bucketInfo, reqCtx.vars["year_month"])
 	if err != nil {
@@ -148,13 +149,13 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		}
 	}
 
-	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName)
-	if err != nil {
+	bucket, err := g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), reqCtx.bucketName, true)
+	if err != nil || bucket.GetBucketInfo() == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
-
+	bucketInfo := bucket.GetBucketInfo()
 	startTimestampUs, err = util.StringToInt64(reqCtx.vars["start_ts"])
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse start_ts query", "error", err)

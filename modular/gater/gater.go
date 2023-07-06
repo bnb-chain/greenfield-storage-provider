@@ -3,7 +3,10 @@ package gater
 import (
 	"context"
 	"net/http"
+	"sync"
+	"time"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -25,6 +28,9 @@ type GateModular struct {
 
 	maxListReadQuota int64
 	maxPayloadSize   uint64
+
+	param *storagetypes.Params
+	mux   sync.RWMutex
 }
 
 func (g *GateModular) Name() string {
@@ -56,6 +62,7 @@ func (g *GateModular) server(ctx context.Context) {
 		log.Errorw("failed to listen", "error", err)
 		return
 	}
+	go g.eventLoop(ctx)
 }
 
 func (g *GateModular) Stop(ctx context.Context) error {
@@ -83,4 +90,32 @@ func (g *GateModular) ReleaseResource(
 	ctx context.Context,
 	span rcmgr.ResourceScopeSpan) {
 	span.Done()
+}
+
+func (g *GateModular) eventLoop(ctx context.Context) {
+	ticker := time.NewTicker(60 * time.Second)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			params, err := g.baseApp.Consensus().QueryStorageParams(ctx)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to query storage params from chain", "error", err)
+				continue
+			}
+			g.mux.Lock()
+			g.param = params
+			g.mux.Unlock()
+		}
+	}
+}
+
+func (g *GateModular) GetStorageParams() (*storagetypes.Params, error) {
+	g.mux.RLock()
+	defer g.mux.RUnlock()
+	if g.param == nil {
+		return nil, ErrConsensus
+	}
+	return g.param, nil
 }
