@@ -31,11 +31,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			metrics.ReqCounter.WithLabelValues(SingerFailure).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailure).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailure).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailure).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccess).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -44,114 +44,114 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		signature, err = g.signer.SignCreateBucketApproval(ctx, t.CreateBucketInfo)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign create bucket approval", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailureBucketApproval).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailureBucketApproval).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailureBucketApproval).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureBucketApproval).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessBucketApproval).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessBucketApproval).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessBucketApproval).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessBucketApproval).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_MigrateBucketInfo:
 		signature, err = g.signer.SignMigrateBucketApproval(ctx, t.MigrateBucketInfo)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign migrate bucket approval", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailureMigrateBucketApproval).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailureMigrateBucketApproval).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailureMigrateBucketApproval).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureMigrateBucketApproval).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessMigrateBucketApproval).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessMigrateBucketApproval).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessMigrateBucketApproval).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessMigrateBucketApproval).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CreateObjectInfo:
 		signature, err = g.signer.SignCreateObjectApproval(ctx, t.CreateObjectInfo)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign create object approval", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailureObjectApproval).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailureObjectApproval).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailureObjectApproval).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureObjectApproval).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessObjectApproval).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessObjectApproval).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessObjectApproval).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessObjectApproval).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_SealObjectInfo:
 		txHash, err = g.signer.SealObject(ctx, t.SealObjectInfo)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to seal object", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailureSealObject).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailureSealObject).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailureSealObject).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureSealObject).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessSealObject).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessSealObject).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessSealObject).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessSealObject).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_RejectObjectInfo:
 		txHash, err = g.signer.RejectUnSealObject(ctx, t.RejectObjectInfo)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to reject unseal object", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailureRejectUnSealObject).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailureRejectUnSealObject).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailureRejectUnSealObject).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureRejectUnSealObject).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessRejectUnSealObject).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessRejectUnSealObject).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessRejectUnSealObject).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessRejectUnSealObject).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_DiscontinueBucketInfo:
 		txHash, err = g.signer.DiscontinueBucket(ctx, t.DiscontinueBucketInfo)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to discontinue bucket", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailureDiscontinueBucket).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailureDiscontinueBucket).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailureDiscontinueBucket).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureDiscontinueBucket).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessDiscontinueBucket).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessDiscontinueBucket).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessDiscontinueBucket).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessDiscontinueBucket).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_SignSecondaryBls:
 		signature, err = g.signer.SignSecondaryBls(ctx, t.SignSecondaryBls.ObjectId,
 			t.SignSecondaryBls.GlobalVirtualGroupId, t.SignSecondaryBls.Checksums)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign secondary bls signature", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailureIntegrityHash).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailureIntegrityHash).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailureIntegrityHash).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureIntegrityHash).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessIntegrityHash).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessIntegrityHash).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessIntegrityHash).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessIntegrityHash).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_PingMsg:
 		signature, err = g.signer.SignP2PPingMsg(ctx, t.PingMsg)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign p2p ping msg", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailurePing).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailurePing).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailurePing).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailurePing).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessPing).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessPing).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessPing).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessPing).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_PongMsg:
 		signature, err = g.signer.SignP2PPongMsg(ctx, t.PongMsg)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign p2p pong msg", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailurePong).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailurePong).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailurePong).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailurePong).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessPong).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessPong).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessPong).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessPong).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_GfspReceivePieceTask:
 		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspReceivePieceTask.Key().String())
 		signature, err = g.signer.SignReceivePieceTask(ctx, t.GfspReceivePieceTask)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign receive piece task", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailureReceiveTask).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailureReceiveTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailureReceiveTask).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureReceiveTask).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessReceiveTask).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessReceiveTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessReceiveTask).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessReceiveTask).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_GfspReplicatePieceApprovalTask:
 		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspReplicatePieceApprovalTask.Key().String())
 		signature, err = g.signer.SignReplicatePieceApproval(ctx, t.GfspReplicatePieceApprovalTask)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign replicate piece task", "error", err)
-			metrics.ReqCounter.WithLabelValues(SingerFailureReplicateApproval).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailureReplicateApproval).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailureReplicateApproval).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureReplicateApproval).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessReplicateApproval).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessReplicateApproval).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessReplicateApproval).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessReplicateApproval).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CreateGlobalVirtualGroup:
 		err = g.signer.CreateGlobalVirtualGroup(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
@@ -168,11 +168,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		log.CtxDebugw(ctx, "signing recovery task")
 		signature, err = g.signer.SignRecoveryPieceTask(ctx, t.GfspRecoverPieceTask)
 		if err != nil {
-			metrics.ReqCounter.WithLabelValues(SingerFailureRecoveryTask).Inc()
-			metrics.ReqTime.WithLabelValues(SingerFailureRecoveryTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerFailureRecoveryTask).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureRecoveryTask).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SingerSuccessRecoveryTask).Inc()
-			metrics.ReqTime.WithLabelValues(SingerSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessRecoveryTask).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_GfspMigratePieceTask:
 		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspMigratePieceTask.Key().String())
