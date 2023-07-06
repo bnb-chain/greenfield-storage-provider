@@ -10,6 +10,7 @@ on:
       - ci-*
       - release*
       - fix-release*
+      - feat-*
 
   pull_request:
     branches:
@@ -18,6 +19,7 @@ on:
       - ci-*
       - release*
       - fix-release*
+      - feat-*
 
 jobs:
   golangci:
