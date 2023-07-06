@@ -79,21 +79,23 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	startGetObjectInfoTime := time.Now()
-	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	object, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, true)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_object_cost").Observe(time.Since(startGetObjectInfoTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
-	if err != nil {
+	if err != nil || object.GetObjectInfo() == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
+	objectInfo = object.GetObjectInfo()
 	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > g.maxPayloadSize {
 		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
 		err = ErrInvalidPayloadSize
 		return
 	}
 	startGetStorageParamTime := time.Now()
-	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	//params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err = g.GetStorageParams()
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
@@ -195,18 +197,20 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
-	if err != nil {
+	object, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, true)
+	if err != nil || object.GetObjectInfo() == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
+	objectInfo = object.GetObjectInfo()
 	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > g.maxPayloadSize {
 		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
 		err = ErrInvalidPayloadSize
 		return
 	}
-	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	//params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	params, err = g.GetStorageParams()
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -303,15 +307,16 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
-	if err != nil {
+	object, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, true)
+	if err != nil || object.GetObjectInfo() == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
-
-	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(
-		reqCtx.Context(), objectInfo.GetCreateAt())
+	objectInfo = object.GetObjectInfo()
+	//params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(
+	//	reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err := g.GetStorageParams()
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -420,25 +425,26 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	} // else anonymous users can get public object.
 
 	getObjectTime := time.Now()
-	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	object, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, true)
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_object_info_time").Observe(time.Since(getObjectTime).Seconds())
-	if err != nil {
+	if err != nil || object.GetObjectInfo() == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
-
+	objectInfo = object.GetObjectInfo()
 	getBucketTime := time.Now()
-	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
+	bucket, err := g.baseApp.GfSpClient().GetBucketByBucketName(reqCtx.Context(), objectInfo.GetBucketName(), true)
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_bucket_info_time").Observe(time.Since(getBucketTime).Seconds())
-	if err != nil {
+	if err != nil || bucket.GetBucketInfo() == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
-
+	bucketInfo = bucket.GetBucketInfo()
 	getParamTime := time.Now()
-	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	//params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err = g.GetStorageParams()
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_storage_param_time").Observe(time.Since(getParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
@@ -711,12 +717,13 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		}
 	}
 
-	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
-	if err != nil {
+	object, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, true)
+	if err != nil || object.GetObjectInfo() == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
 		return
 	}
+	objectInfo = object.GetObjectInfo()
 
 	taskState, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
 	if err != nil {
@@ -945,8 +952,9 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 	}
 
-	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(
-		reqCtx.Context(), getObjectInfoRes.GetObjectInfo().GetCreateAt())
+	//params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(
+	//	reqCtx.Context(), getObjectInfoRes.GetObjectInfo().GetCreateAt())
+	params, err = g.GetStorageParams()
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
