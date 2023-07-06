@@ -283,6 +283,22 @@ func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, spID, vgfID uint32) 
 	return resp.GetGlobalVirtualGroupFamily(), nil
 }
 
+// ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
+func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, spID, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_by_family_id").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupByFamilyID(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupByFamilyIDRequest{
+		StorageProviderId:          spID,
+		GlobalVirtualGroupFamilyId: vgfID,
+	})
+	if err != nil {
+		log.Errorw("failed to query virtual group family", "error", err)
+		return nil, err
+	}
+	return resp.GetGlobalVirtualGroups(), nil
+}
+
 // QueryGlobalVirtualGroup returns the global virtual group info.
 func (g *Gnfd) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
 	startTime := time.Now()

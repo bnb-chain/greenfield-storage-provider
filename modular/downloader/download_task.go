@@ -3,9 +3,7 @@ package downloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -378,9 +376,7 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
 		// if read piece store error, try to recover the error data
-		if strings.Contains(err.Error(), fmt.Sprintf("inner_code:%d", ErrPieceStoreInnerCode)) {
-			d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
-		}
+		d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
 		return nil, nil, nil, ErrPieceStore
 	}
 
@@ -411,7 +407,7 @@ func (d *DownloadModular) recoverChallengePiece(ctx context.Context, downloadPie
 		ECIndex,
 		uint64(0),
 		d.baseApp.TaskTimeout(recoveryTask, downloadPieceTask.GetStorageParams().GetMaxSegmentSize()),
-		d.baseApp.TaskMaxRetry(recoveryTask))
+		2)
 
 	d.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
 }

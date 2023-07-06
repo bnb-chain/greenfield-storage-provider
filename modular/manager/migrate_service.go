@@ -12,12 +12,14 @@ func (m *ManageModular) NotifyMigrateGVG(ctx context.Context, task task.MigrateG
 		return ErrNotifyMigrateGVG
 	}
 
-	return m.spExitScheduler.AddNewMigrateGVGUnit(string(task.Key()), &GlobalVirtualGroupMigrateExecuteUnit{
-		gvg:            task.GetGvg(),
-		redundantIndex: task.GetRedundancyIdx(),
-		isSrc:          false,
-		srcSP:          task.GetSrcSp(),
-		destSP:         task.GetDestSp(),
-		migrateStatus:  WaitForMigrate,
+	return m.spExitScheduler.AddNewMigrateGVGUnit(&GlobalVirtualGroupMigrateExecuteUnit{
+		gvg:             task.GetGvg(),
+		redundancyIndex: task.GetRedundancyIdx(),
+		isRemoted:       true, // from src sp
+		isConflicted:    false,
+		isSecondary:     false,
+		srcSP:           task.GetSrcSp(),
+		destSP:          task.GetDestSp(),
+		migrateStatus:   WaitForMigrate,
 	})
 }

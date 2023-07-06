@@ -4,6 +4,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // GlobalVirtualGroupMeta defines global virtual group meta which is used by sp.
@@ -42,6 +43,9 @@ type VirtualGroupManager interface {
 	// PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
 	// new GVG will be created by primary SP) in replicate/seal object workflow.
 	PickGlobalVirtualGroup(vgfID uint32) (*GlobalVirtualGroupMeta, error)
+	// PickGlobalVirtualGroupForBucketMigrate picks a global virtual group(If failed to pick,
+	// new GVG will be created by primary SP) in replicate/seal object workflow.
+	PickGlobalVirtualGroupForBucketMigrate(vgfID uint32, srcGVG *virtualgrouptypes.GlobalVirtualGroup, destSP *sptypes.StorageProvider) (*GlobalVirtualGroupMeta, error)
 	// ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
 	// if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
 	ForceRefreshMeta() error

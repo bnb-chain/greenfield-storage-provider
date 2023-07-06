@@ -175,14 +175,14 @@ func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 		insertMigrateGVG *MigrateGVGTable
 	)
 	insertMigrateGVG = &MigrateGVGTable{
-		GlobalVirtualGroupID:   meta.GlobalVirtualGroupID,
-		VirtualGroupFamilyID:   meta.VirtualGroupFamilyID,
-		MigrateRedundancyIndex: meta.MigrateRedundancyIndex,
-		BucketID:               meta.BucketID,
-		IsSecondary:            meta.IsSecondary,
-		MigrateStatus:          meta.MigrateStatus,
+		MigrateKey:           meta.MigrateGVGKey,
+		GlobalVirtualGroupID: meta.GlobalVirtualGroupID,
+		VirtualGroupFamilyID: meta.VirtualGroupFamilyID,
+		RedundancyIndex:      meta.RedundancyIndex,
+		BucketID:             meta.BucketID,
+		IsSecondary:          meta.IsSecondary,
+		MigrateStatus:        meta.MigrateStatus,
 	}
-	insertMigrateGVG.MigrateKey = MigrateGVGPrimaryKey(insertMigrateGVG)
 	result = s.db.Create(insertMigrateGVG)
 	if result.Error != nil || result.RowsAffected != 1 {
 		err = fmt.Errorf("failed to insert migrate gvg table: %s", result.Error)
@@ -196,158 +196,143 @@ func (s *SpDBImpl) DeleteMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 	return nil
 }
 
-func (s *SpDBImpl) UpdateMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
-	// TODO:
-	return nil
-}
-
-func (s *SpDBImpl) UpdateMigrateGVGUnitStatus(meta *spdb.MigrateGVGUnitMeta, migrateStatus int) error {
-	var (
-		result     *gorm.DB
-		queryMeta  *MigrateGVGTable
-		migrateKey string
-	)
-	queryMeta = &MigrateGVGTable{
-		GlobalVirtualGroupID:   meta.GlobalVirtualGroupID,
-		VirtualGroupFamilyID:   meta.VirtualGroupFamilyID,
-		MigrateRedundancyIndex: meta.MigrateRedundancyIndex,
-		BucketID:               meta.BucketID,
-		IsSecondary:            meta.IsSecondary,
-	}
-	migrateKey = MigrateGVGPrimaryKey(queryMeta)
-	if result = s.db.Model(&MigrateGVGTable{}).Where("migrate_key = ?", migrateKey).Updates(&MigrateGVGTable{
+func (s *SpDBImpl) UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error {
+	if result := s.db.Model(&MigrateGVGTable{}).Where("migrate_key = ?", migrateKey).Updates(&MigrateGVGTable{
 		MigrateStatus: migrateStatus,
 	}); result.Error != nil {
-		return fmt.Errorf("failed to update migrate gvg record: %s", result.Error)
+		return fmt.Errorf("failed to update migrate gvg status: %s", result.Error)
 	}
 	return nil
 }
 
-func (s *SpDBImpl) UpdateMigrateGVGUnitLastMigrateObjectID(meta *spdb.MigrateGVGUnitMeta, lastMigrateObjectID uint64) error {
-	var (
-		result     *gorm.DB
-		queryMeta  *MigrateGVGTable
-		migrateKey string
-	)
-	queryMeta = &MigrateGVGTable{
-		GlobalVirtualGroupID:   meta.GlobalVirtualGroupID,
-		VirtualGroupFamilyID:   meta.VirtualGroupFamilyID,
-		MigrateRedundancyIndex: meta.MigrateRedundancyIndex,
-		BucketID:               meta.BucketID,
-		IsSecondary:            meta.IsSecondary,
-	}
-	migrateKey = MigrateGVGPrimaryKey(queryMeta)
-	if result = s.db.Model(&MigrateGVGTable{}).Where("migrate_key = ?", migrateKey).Updates(&MigrateGVGTable{
-		LastMigrateObjectID: lastMigrateObjectID,
+func (s *SpDBImpl) UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigratedObjectID uint64) error {
+	if result := s.db.Model(&MigrateGVGTable{}).Where("migrate_key = ?", migrateKey).Updates(&MigrateGVGTable{
+		LastMigratedObjectID: lastMigratedObjectID,
 	}); result.Error != nil {
-		return fmt.Errorf("failed to update migrate gvg record: %s", result.Error)
+		return fmt.Errorf("failed to update migrate gvg progress: %s", result.Error)
 	}
 	return nil
 }
 
-func (s *SpDBImpl) QueryMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) (*spdb.MigrateGVGUnitMeta, error) {
+func (s *SpDBImpl) QueryMigrateGVGUnit(migrateKey string) (*spdb.MigrateGVGUnitMeta, error) {
 	var (
 		result      *gorm.DB
-		queryMeta   *MigrateGVGTable
-		migrateKey  string
 		queryReturn *MigrateGVGTable
 	)
-	queryMeta = &MigrateGVGTable{
-		GlobalVirtualGroupID:   meta.GlobalVirtualGroupID,
-		VirtualGroupFamilyID:   meta.VirtualGroupFamilyID,
-		MigrateRedundancyIndex: meta.MigrateRedundancyIndex,
-		BucketID:               meta.BucketID,
-		IsSecondary:            meta.IsSecondary,
-	}
-	migrateKey = MigrateGVGPrimaryKey(queryMeta)
 	queryReturn = &MigrateGVGTable{}
 	result = s.db.First(queryReturn, "migrate_key = ?", migrateKey)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return &spdb.MigrateGVGUnitMeta{
-		GlobalVirtualGroupID:   queryReturn.GlobalVirtualGroupID,
-		VirtualGroupFamilyID:   queryReturn.VirtualGroupFamilyID,
-		MigrateRedundancyIndex: queryReturn.MigrateRedundancyIndex,
-		BucketID:               queryReturn.BucketID,
-		IsSecondary:            queryReturn.IsSecondary,
-		IsConflict:             queryReturn.IsConflict,
-		SrcSPID:                queryReturn.SrcSPID,
-		DestSPID:               queryReturn.DestSPID,
-		LastMigrateObjectID:    queryReturn.LastMigrateObjectID,
-		MigrateStatus:          queryReturn.MigrateStatus,
+		GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
+		VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
+		RedundancyIndex:      queryReturn.RedundancyIndex,
+		BucketID:             queryReturn.BucketID,
+		IsSecondary:          queryReturn.IsSecondary,
+		IsConflicted:         queryReturn.IsConflicted,
+		SrcSPID:              queryReturn.SrcSPID,
+		DestSPID:             queryReturn.DestSPID,
+		LastMigratedObjectID: queryReturn.LastMigratedObjectID,
+		MigrateStatus:        queryReturn.MigrateStatus,
 	}, nil
 }
 
 // ListMigrateGVGUnitsByFamilyID is used to src sp load to build execute plan.
 func (s *SpDBImpl) ListMigrateGVGUnitsByFamilyID(familyID uint32, srcSP uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
 	var queryReturns []MigrateGVGTable
-	result := s.db.Where("is_conflict = false and is_conflict = false and bucket_id = 0 and virtual_group_family_id = ? and src_spid = ?", familyID, srcSP).Find(&queryReturns)
+	result := s.db.Where("is_conflicted = false and is_secondary = false and is_remoted = false and redundancy_index = 0 and bucket_id = 0 and virtual_group_family_id = ? and src_sp_id = ?",
+		familyID, srcSP).Find(&queryReturns)
 	if result.Error != nil {
-		return nil, fmt.Errorf("failed to query migrate gvg table: %s", result.Error)
+		return nil, fmt.Errorf("failed to list migrate gvg table: %s", result.Error)
 	}
 	returns := make([]*spdb.MigrateGVGUnitMeta, 0)
 	for _, queryReturn := range queryReturns {
 		returns = append(returns, &spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID:   queryReturn.GlobalVirtualGroupID,
-			VirtualGroupFamilyID:   queryReturn.VirtualGroupFamilyID,
-			MigrateRedundancyIndex: queryReturn.MigrateRedundancyIndex,
-			BucketID:               queryReturn.BucketID,
-			IsSecondary:            queryReturn.IsSecondary,
-			IsConflict:             queryReturn.IsConflict,
-			SrcSPID:                queryReturn.SrcSPID,
-			DestSPID:               queryReturn.DestSPID,
-			LastMigrateObjectID:    queryReturn.LastMigrateObjectID,
-			MigrateStatus:          queryReturn.MigrateStatus,
+			GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
+			VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
+			RedundancyIndex:      queryReturn.RedundancyIndex,
+			BucketID:             queryReturn.BucketID,
+			IsSecondary:          queryReturn.IsSecondary,
+			IsConflicted:         queryReturn.IsConflicted,
+			SrcSPID:              queryReturn.SrcSPID,
+			DestSPID:             queryReturn.DestSPID,
+			LastMigratedObjectID: queryReturn.LastMigratedObjectID,
+			MigrateStatus:        queryReturn.MigrateStatus,
 		})
 	}
 	return returns, nil
 }
 
-// ListConflictsMigrateGVGUnitsByFamilyID is used to src sp load to build execute plan.
-func (s *SpDBImpl) ListConflictsMigrateGVGUnitsByFamilyID(familyID uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
+// ListConflictedMigrateGVGUnitsByFamilyID is used to src sp load to build execute plan.
+func (s *SpDBImpl) ListConflictedMigrateGVGUnitsByFamilyID(familyID uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
 	var queryReturns []MigrateGVGTable
-	result := s.db.Where("is_conflict = true and virtual_group_family_id = ?", familyID).Find(&queryReturns)
+	result := s.db.Where("is_conflicted = true and virtual_group_family_id = ?", familyID).Find(&queryReturns)
 	if result.Error != nil {
-		return nil, fmt.Errorf("failed to query migrate gvg table: %s", result.Error)
+		return nil, fmt.Errorf("failed to list migrate gvg table: %s", result.Error)
 	}
 	returns := make([]*spdb.MigrateGVGUnitMeta, 0)
 	for _, queryReturn := range queryReturns {
 		returns = append(returns, &spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID:   queryReturn.GlobalVirtualGroupID,
-			VirtualGroupFamilyID:   queryReturn.VirtualGroupFamilyID,
-			MigrateRedundancyIndex: queryReturn.MigrateRedundancyIndex,
-			BucketID:               queryReturn.BucketID,
-			IsSecondary:            queryReturn.IsSecondary,
-			IsConflict:             queryReturn.IsConflict,
-			SrcSPID:                queryReturn.SrcSPID,
-			DestSPID:               queryReturn.DestSPID,
-			LastMigrateObjectID:    queryReturn.LastMigrateObjectID,
-			MigrateStatus:          queryReturn.MigrateStatus,
+			GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
+			VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
+			RedundancyIndex:      queryReturn.RedundancyIndex,
+			BucketID:             queryReturn.BucketID,
+			IsSecondary:          queryReturn.IsSecondary,
+			IsConflicted:         queryReturn.IsConflicted,
+			SrcSPID:              queryReturn.SrcSPID,
+			DestSPID:             queryReturn.DestSPID,
+			LastMigratedObjectID: queryReturn.LastMigratedObjectID,
+			MigrateStatus:        queryReturn.MigrateStatus,
 		})
 	}
 	return returns, nil
 }
 
-func (s *SpDBImpl) ListMigrateGVGUnitsByBucketID(bucketID uint64, destSP uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
+// ListRemotedMigrateGVGUnits is used to dest sp load to build migrate task runner.
+func (s *SpDBImpl) ListRemotedMigrateGVGUnits() ([]*spdb.MigrateGVGUnitMeta, error) {
 	var queryReturns []MigrateGVGTable
-	result := s.db.Where("buck_id = ? and dest_spid = ?", bucketID, destSP).Find(&queryReturns)
+	result := s.db.Where("is_remoted = true").Find(&queryReturns)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to list migrate gvg table: %s", result.Error)
+	}
+	returns := make([]*spdb.MigrateGVGUnitMeta, 0)
+	for _, queryReturn := range queryReturns {
+		returns = append(returns, &spdb.MigrateGVGUnitMeta{
+			GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
+			VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
+			RedundancyIndex:      queryReturn.RedundancyIndex,
+			BucketID:             queryReturn.BucketID,
+			IsSecondary:          queryReturn.IsSecondary,
+			IsConflicted:         queryReturn.IsConflicted,
+			SrcSPID:              queryReturn.SrcSPID,
+			DestSPID:             queryReturn.DestSPID,
+			LastMigratedObjectID: queryReturn.LastMigratedObjectID,
+			MigrateStatus:        queryReturn.MigrateStatus,
+		})
+	}
+	return returns, nil
+}
+
+func (s *SpDBImpl) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*spdb.MigrateGVGUnitMeta, error) {
+	var queryReturns []MigrateGVGTable
+	result := s.db.Where("bucket_id = ?", bucketID).Find(&queryReturns)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query migrate gvg table: %s", result.Error)
 	}
 	returns := make([]*spdb.MigrateGVGUnitMeta, 0)
 	for _, queryReturn := range queryReturns {
 		returns = append(returns, &spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID:   queryReturn.GlobalVirtualGroupID,
-			VirtualGroupFamilyID:   queryReturn.VirtualGroupFamilyID,
-			MigrateRedundancyIndex: queryReturn.MigrateRedundancyIndex,
-			BucketID:               queryReturn.BucketID,
-			IsSecondary:            queryReturn.IsSecondary,
-			IsConflict:             queryReturn.IsConflict,
-			SrcSPID:                queryReturn.SrcSPID,
-			DestSPID:               queryReturn.DestSPID,
-			LastMigrateObjectID:    queryReturn.LastMigrateObjectID,
-			MigrateStatus:          queryReturn.MigrateStatus,
+			GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
+			VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
+			RedundancyIndex:      queryReturn.RedundancyIndex,
+			BucketID:             queryReturn.BucketID,
+			IsSecondary:          queryReturn.IsSecondary,
+			IsConflicted:         queryReturn.IsConflicted,
+			SrcSPID:              queryReturn.SrcSPID,
+			DestSPID:             queryReturn.DestSPID,
+			LastMigratedObjectID: queryReturn.LastMigratedObjectID,
+			MigrateStatus:        queryReturn.MigrateStatus,
 		})
 	}
 	return returns, nil

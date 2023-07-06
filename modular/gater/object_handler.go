@@ -14,6 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield/types/s3util"
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -104,6 +105,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	task := &gfsptask.GfSpUploadObjectTask{}
 	task.InitUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()))
+	task.SetCreateTime(uploadPrimaryStartTime.Unix())
 	task.AppendLog(fmt.Sprintf("gateway-prepare-upload-task-cost:%d", time.Now().UnixMilli()-uploadPrimaryStartTime.UnixMilli()))
 	task.AppendLog("gateway-create-upload-task")
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
@@ -389,11 +391,18 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
-	if authenticated, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
-		reqCtx.bucketName, reqCtx.objectName); err != nil {
+	var permission *permissiontypes.Effect
+	if permission, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(),
+		sdk.AccAddress{}.String(),
+		reqCtx.bucketName,
+		reqCtx.objectName,
+		permissiontypes.ACTION_GET_OBJECT); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
 		err = ErrConsensus
 		return
+	}
+	if *permission == permissiontypes.EFFECT_ALLOW {
+		authenticated = true
 	}
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_verify_object_permission_time").Observe(time.Since(verifyObjectPermissionTime).Seconds())
 
@@ -480,7 +489,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	getDataTime := time.Now()
-	var reoveredData []byte
 	for idx, pInfo := range pieceInfos {
 		enableCheck := false
 		if idx == 0 { // only check in first piece
@@ -499,22 +507,23 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			// for now, if get piece fail, it is suspected that the piece has been lost
 			// the recovery task will recovery the total segment (ignoring the offset and length of piece info)
 			if strings.Contains(err.Error(), fmt.Sprintf("inner_code:%d", ErrPieceStoreInnerCode)) {
-				reoveredData, err = g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask, pInfo, task.GetStorageParams().GetMaxSegmentSize())
-				if err != nil {
-					log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", err)
+				recoveredPiece, recoverErr := g.tryDownloadAfterRecovery(reqCtx.Context(), pieceTask, pInfo, task.GetStorageParams().GetMaxSegmentSize())
+				if recoverErr != nil {
+					log.CtxErrorw(reqCtx.Context(), "fail to get piece after recovery task submitted", "error", recoverErr)
+					err = recoverErr
 					return
 				}
-				recoverDataLen := len(reoveredData)
+				recoverDataLen := len(recoveredPiece)
 				// the recovery segment is a total segment data, if the offset and length meta is set, it is needed to adjust the piece data with the meta
 				if pInfo.Offset > 0 {
-					reoveredData = reoveredData[pInfo.Offset:]
+					recoveredPiece = recoveredPiece[pInfo.Offset:]
 				}
 
 				if pInfo.Offset+pInfo.Length < uint64(recoverDataLen) {
-					reoveredData = reoveredData[:pInfo.Length]
-					log.CtxErrorw(reqCtx.Context(), "adjust the piece data", "len:", len(reoveredData))
+					recoveredPiece = recoveredPiece[:pInfo.Length]
+					log.CtxErrorw(reqCtx.Context(), "adjust the piece data", "len:", len(recoveredPiece))
 				}
-				w.Write(reoveredData)
+				w.Write(recoveredPiece)
 				continue
 			}
 			return
@@ -577,6 +586,7 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 		reqCtxErr     error
 		reqCtx        *RequestContext
 		authenticated bool
+		pieceData     []byte
 	)
 	startTime := time.Now()
 	defer func() {
@@ -596,11 +606,18 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 	}()
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
-	if authenticated, err = g.baseApp.Consensus().VerifyGetObjectPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
-		reqCtx.bucketName, reqCtx.objectName); err != nil {
+	var permission *permissiontypes.Effect
+	if permission, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(),
+		sdk.AccAddress{}.String(),
+		reqCtx.bucketName,
+		reqCtx.objectName,
+		permissiontypes.ACTION_GET_OBJECT); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
 		err = ErrConsensus
 		return
+	}
+	if *permission == permissiontypes.EFFECT_ALLOW {
+		authenticated = true
 	}
 
 	// the authorization is same as getObject handler
@@ -658,9 +675,10 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 		true, reqCtx.Account(), uint64(ECPieceSize), ECPieceKey, 0, uint64(ECPieceSize),
 		g.baseApp.TaskTimeout(pieceTask, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(pieceTask))
 
-	pieceData, err := g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+	pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
+		return
 	}
 	w.Write(pieceData)
 	log.CtxDebugw(reqCtx.Context(), "succeed to get secondary piece data")
