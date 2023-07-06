@@ -28,11 +28,11 @@ import (
 // putObjectHandler handles the upload object request.
 func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err           error
-		reqCtx        *RequestContext
-		authenticated bool
-		objectInfo    *storagetypes.ObjectInfo
-		params        *storagetypes.Params
+		err    error
+		reqCtx *RequestContext
+		//authenticated bool
+		objectInfo *storagetypes.ObjectInfo
+		params     *storagetypes.Params
 	)
 
 	uploadPrimaryStartTime := time.Now()
@@ -62,21 +62,21 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	if !reqCtx.SkipVerifyAuthentication() {
-		startAuthenticationTime := time.Now()
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-			return
-		}
-		if !authenticated {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-			err = ErrNoPermission
-			return
-		}
-	}
+	//if !reqCtx.SkipVerifyAuthentication() {
+	//	startAuthenticationTime := time.Now()
+	//	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+	//		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	//	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+	//	if err != nil {
+	//		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+	//		return
+	//	}
+	//	if !authenticated {
+	//		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+	//		err = ErrNoPermission
+	//		return
+	//	}
+	//}
 
 	startGetObjectInfoTime := time.Now()
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
@@ -402,21 +402,21 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
 			return
 		}
-		if !reqCtx.SkipVerifyAuthentication() {
-			authTime := time.Now()
-			if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
-				metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-				return
-			}
-			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
-			if !authenticated {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
-				return
-			}
-		}
+		//if !reqCtx.SkipVerifyAuthentication() {
+		//	authTime := time.Now()
+		//	if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+		//		coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
+		//		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
+		//		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		//		return
+		//	}
+		//	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
+		//	if !authenticated {
+		//		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		//		err = ErrNoPermission
+		//		return
+		//	}
+		//}
 	} // else anonymous users can get public object.
 
 	getObjectTime := time.Now()
