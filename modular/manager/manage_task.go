@@ -7,9 +7,6 @@ import (
 	"strings"
 	"time"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-
 	"cosmossdk.io/math"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -739,29 +736,6 @@ func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.Ap
 	return vgf.ID, nil
 }
 
-// PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.
-func (m *ManageModular) PickVirtualGroupFamilyForBucketMigrate(ctx context.Context) (uint32, error) {
-	var (
-		err error
-		vgf *vgmgr.VirtualGroupFamilyMeta
-	)
-
-	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
-		// create a new gvg, and retry pick.
-		if err = m.createGlobalVirtualGroup(0, nil); err != nil {
-			log.CtxErrorw(ctx, "failed to create global virtual group", "error", err)
-			return 0, err
-		}
-		m.virtualGroupManager.ForceRefreshMeta()
-		if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
-			log.CtxErrorw(ctx, "failed to pick vgf", "task_info", "error", err)
-			return 0, err
-		}
-		return vgf.ID, nil
-	}
-	return vgf.ID, nil
-}
-
 func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagetypes.Params) error {
 	var err error
 	if params == nil {
@@ -789,28 +763,6 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 	})
 }
 
-func (m *ManageModular) createGlobalVirtualGroupForBucketMigrate(vgfID uint32, params *storagetypes.Params, srcGVG *virtualgrouptypes.GlobalVirtualGroup, destSP *sptypes.StorageProvider) error {
-	var err error
-	_ = params
-	// TODO dest sp corresponding SecondarySpIds ?
-	log.Infow("begin to create a gvg", "srcGVG", srcGVG)
-	virtualGroupParams, err := m.baseApp.Consensus().QueryVirtualGroupParams(context.Background())
-	if err != nil {
-		return err
-	}
-	return m.baseApp.GfSpClient().CreateGlobalVirtualGroup(context.Background(), &gfspserver.GfSpCreateGlobalVirtualGroup{
-		VirtualGroupFamilyId: vgfID,
-		// TODO m.baseApp.OperatorAddress()?
-		PrimarySpAddress: destSP.OperatorAddress, // it is useless
-		SecondarySpIds:   srcGVG.SecondarySpIds,
-		Deposit: &sdk.Coin{
-			Denom: virtualGroupParams.GetDepositDenom(),
-			// TODO if correct
-			Amount: virtualGroupParams.GvgStakingPerBytes.Mul(math.NewIntFromUint64(srcGVG.GetStoredSize())),
-		},
-	})
-}
-
 // pickGlobalVirtualGroup is used to pick a suitable gvg for replicating object.
 func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32, param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
@@ -826,30 +778,6 @@ func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32
 		}
 		m.virtualGroupManager.ForceRefreshMeta()
 		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
-			log.CtxErrorw(ctx, "failed to pick gvg", "vgf_id", vgfID, "error", err)
-			return gvg, err
-		}
-		return gvg, nil
-	}
-	log.CtxDebugw(ctx, "succeed to pick gvg", "gvg", gvg)
-	return gvg, nil
-}
-
-// pickGlobalVirtualGroupForBucketMigrate is used to pick a suitable gvg for replicating object.
-func (m *ManageModular) pickGlobalVirtualGroupForBucketMigrate(ctx context.Context, vgfID uint32, param *storagetypes.Params, srcGVG *virtualgrouptypes.GlobalVirtualGroup, destSP *sptypes.StorageProvider) (*vgmgr.GlobalVirtualGroupMeta, error) {
-	var (
-		err error
-		gvg *vgmgr.GlobalVirtualGroupMeta
-	)
-
-	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG, destSP); err != nil {
-		// create a new gvg, and retry pick.
-		if err = m.createGlobalVirtualGroupForBucketMigrate(vgfID, param, srcGVG, destSP); err != nil {
-			log.CtxErrorw(ctx, "failed to create global virtual group for bucket migrate", "vgf_id", vgfID, "error", err)
-			return gvg, err
-		}
-		m.virtualGroupManager.ForceRefreshMeta()
-		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG, destSP); err != nil {
 			log.CtxErrorw(ctx, "failed to pick gvg", "vgf_id", vgfID, "error", err)
 			return gvg, err
 		}

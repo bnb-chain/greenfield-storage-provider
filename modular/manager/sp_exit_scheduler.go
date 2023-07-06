@@ -21,7 +21,7 @@ const (
 	MaxSrcRunningMigrateGVG = 100
 )
 
-var _ vgmgr.PickFilter = &PickDestSPFilter{}
+var _ vgmgr.SPPickFilter = &PickDestSPFilter{}
 
 // PickDestSPFilter is used to pick sp id which is not in excluded sp ids.
 type PickDestSPFilter struct {
