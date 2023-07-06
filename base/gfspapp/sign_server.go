@@ -155,10 +155,10 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		}
 	case *gfspserver.GfSpSignRequest_CreateGlobalVirtualGroup:
 		err = g.signer.CreateGlobalVirtualGroup(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
-			PrimarySpAddress: g.operatorAddress,
-			FamilyId:         t.CreateGlobalVirtualGroup.GetVirtualGroupFamilyId(),
-			SecondarySpIds:   t.CreateGlobalVirtualGroup.GetSecondarySpIds(),
-			Deposit:          *t.CreateGlobalVirtualGroup.GetDeposit(),
+			StorageProvider: g.operatorAddress,
+			FamilyId:        t.CreateGlobalVirtualGroup.GetVirtualGroupFamilyId(),
+			SecondarySpIds:  t.CreateGlobalVirtualGroup.GetSecondarySpIds(),
+			Deposit:         *t.CreateGlobalVirtualGroup.GetDeposit(),
 		})
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "error", err)
