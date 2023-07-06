@@ -77,9 +77,9 @@ func (a ByUpdateAtAndObjectID) Len() int { return len(a) }
 // Less we want to sort as ascending here
 func (a ByUpdateAtAndObjectID) Less(i, j int) bool {
 	if a[i].UpdateAt == a[j].UpdateAt {
-		return a[i].ObjectID.Big().Uint64() > a[j].ObjectID.Big().Uint64()
+		return a[i].ObjectID.Big().Uint64() < a[j].ObjectID.Big().Uint64()
 	}
-	return a[i].UpdateAt > a[j].UpdateAt
+	return a[i].UpdateAt < a[j].UpdateAt
 }
 func (a ByUpdateAtAndObjectID) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
