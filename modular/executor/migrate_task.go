@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"sync/atomic"
+	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -127,68 +128,68 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 }
 
 // TODO: mock function, this will be deleted in the future
-// func (e *ExecuteModular) mockHandleMigratePiece(ctx context.Context) {
-// 	log.Info("enter mockHandleMigratePiece function")
-// 	time.Sleep(15 * time.Second)
-// 	log.Info("let's do!!!")
-// 	objectOne, err := e.baseApp.Consensus().QueryObjectInfo(ctx, "migratepiece", "random_file")
-// 	if err != nil {
-// 		log.Errorw("failed to query objectOne", "error", err)
-// 	}
-// 	log.Infow("print object one detailed messages", "objectOne", objectOne)
-// 	objectTwo, err := e.baseApp.Consensus().QueryObjectInfo(ctx, "mybu", "random")
-// 	if err != nil {
-// 		log.Errorw("failed to query objectTwo", "error", err)
-// 	}
-// 	log.Infow("print object two detailed messages", "objectTwo", objectTwo)
-// 	params := &storagetypes.Params{
-// 		VersionedParams: storagetypes.VersionedParams{
-// 			MaxSegmentSize:          16777216,
-// 			RedundantDataChunkNum:   4,
-// 			RedundantParityChunkNum: 2,
-// 			MinChargeSize:           1048576,
-// 		},
-// 		MaxPayloadSize:                   2147483648,
-// 		MirrorBucketRelayerFee:           "250000000000000",
-// 		MirrorBucketAckRelayerFee:        "250000000000000",
-// 		MirrorObjectRelayerFee:           "250000000000000",
-// 		MirrorObjectAckRelayerFee:        "250000000000000",
-// 		MirrorGroupRelayerFee:            "250000000000000",
-// 		MirrorGroupAckRelayerFee:         "250000000000000",
-// 		MaxBucketsPerAccount:             100,
-// 		DiscontinueCountingWindow:        10000,
-// 		DiscontinueObjectMax:             18446744073709551615,
-// 		DiscontinueBucketMax:             18446744073709551615,
-// 		DiscontinueConfirmPeriod:         5,
-// 		DiscontinueDeletionMax:           100,
-// 		StalePolicyCleanupMax:            200,
-// 		MinQuotaUpdateInterval:           2592000,
-// 		MaxLocalVirtualGroupNumPerBucket: 10,
-// 	}
-//
-// 	log.Infow("start executing migrate piece: PrimarySP", "objectInfoOne", objectOne.Id.String())
-// 	ecPieceCount := params.VersionedParams.GetRedundantDataChunkNum() + params.VersionedParams.GetRedundantParityChunkNum()
-// 	migratePieceOne := &gfsptask.GfSpMigratePieceTask{
-// 		ObjectInfo:    objectOne,
-// 		StorageParams: params,
-// 		SrcSpEndpoint: "http://127.0.0.1:9033",
-// 		RedundancyIdx: primarySPRedundancyIdx,
-// 	}
-// 	if err := e.HandleMigratePieceTask(ctx, migratePieceOne); err != nil {
-// 		log.CtxErrorw(ctx, "failed to migrate segment pieces", "error", err)
-// 	}
-//
-// 	log.Infow("start executing migrate piece: SecondarySP", "objectInfoTwo", objectTwo.Id.String())
-// 	migratePieceTwo := &gfsptask.GfSpMigratePieceTask{
-// 		ObjectInfo:    objectTwo,
-// 		StorageParams: params,
-// 		SrcSpEndpoint: "http://127.0.0.1:9033",
-// 		RedundancyIdx: int32(ecPieceCount),
-// 	}
-// 	if err := e.HandleMigratePieceTask(ctx, migratePieceTwo); err != nil {
-// 		log.CtxErrorw(ctx, "failed to migrate ec pieces", "error", err)
-// 	}
-// }
+func (e *ExecuteModular) mockHandleMigratePiece(ctx context.Context) {
+	log.Info("enter mockHandleMigratePiece function")
+	time.Sleep(15 * time.Second)
+	log.Info("let's do!!!")
+	objectOne, err := e.baseApp.Consensus().QueryObjectInfo(ctx, "migratepiece", "random_file")
+	if err != nil {
+		log.Errorw("failed to query objectOne", "error", err)
+	}
+	log.Infow("print object one detailed messages", "objectOne", objectOne)
+	objectTwo, err := e.baseApp.Consensus().QueryObjectInfo(ctx, "mybu", "random")
+	if err != nil {
+		log.Errorw("failed to query objectTwo", "error", err)
+	}
+	log.Infow("print object two detailed messages", "objectTwo", objectTwo)
+	params := &storagetypes.Params{
+		VersionedParams: storagetypes.VersionedParams{
+			MaxSegmentSize:          16777216,
+			RedundantDataChunkNum:   4,
+			RedundantParityChunkNum: 2,
+			MinChargeSize:           1048576,
+		},
+		MaxPayloadSize:                   2147483648,
+		MirrorBucketRelayerFee:           "250000000000000",
+		MirrorBucketAckRelayerFee:        "250000000000000",
+		MirrorObjectRelayerFee:           "250000000000000",
+		MirrorObjectAckRelayerFee:        "250000000000000",
+		MirrorGroupRelayerFee:            "250000000000000",
+		MirrorGroupAckRelayerFee:         "250000000000000",
+		MaxBucketsPerAccount:             100,
+		DiscontinueCountingWindow:        10000,
+		DiscontinueObjectMax:             18446744073709551615,
+		DiscontinueBucketMax:             18446744073709551615,
+		DiscontinueConfirmPeriod:         5,
+		DiscontinueDeletionMax:           100,
+		StalePolicyCleanupMax:            200,
+		MinQuotaUpdateInterval:           2592000,
+		MaxLocalVirtualGroupNumPerBucket: 10,
+	}
+
+	log.Infow("start executing migrate piece: PrimarySP", "objectInfoOne", objectOne.Id.String())
+	ecPieceCount := params.VersionedParams.GetRedundantDataChunkNum() + params.VersionedParams.GetRedundantParityChunkNum()
+	migratePieceOne := &gfsptask.GfSpMigratePieceTask{
+		ObjectInfo:    objectOne,
+		StorageParams: params,
+		SrcSpEndpoint: "http://127.0.0.1:9033",
+		RedundancyIdx: primarySPRedundancyIdx,
+	}
+	if err := e.HandleMigratePieceTask(ctx, migratePieceOne); err != nil {
+		log.CtxErrorw(ctx, "failed to migrate segment pieces", "error", err)
+	}
+
+	log.Infow("start executing migrate piece: SecondarySP", "objectInfoTwo", objectTwo.Id.String())
+	migratePieceTwo := &gfsptask.GfSpMigratePieceTask{
+		ObjectInfo:    objectTwo,
+		StorageParams: params,
+		SrcSpEndpoint: "http://127.0.0.1:9033",
+		RedundancyIdx: int32(ecPieceCount),
+	}
+	if err := e.HandleMigratePieceTask(ctx, migratePieceTwo); err != nil {
+		log.CtxErrorw(ctx, "failed to migrate ec pieces", "error", err)
+	}
+}
 
 // HandleMigratePieceTask handles the migrate piece task, it will send requests to the exiting SP to get piece data
 // integrity hash and piece checksum to migrate the receiving SP. PieceData would be written to PieceStore, integrity hash
