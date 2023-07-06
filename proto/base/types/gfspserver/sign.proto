@@ -5,8 +5,8 @@ import "base/types/gfsperrors/error.proto";
 import "base/types/gfspp2p/p2p.proto";
 import "base/types/gfsptask/task.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "greenfield/storage/tx.proto";
 import "greenfield/storage/common.proto";
+import "greenfield/storage/tx.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
