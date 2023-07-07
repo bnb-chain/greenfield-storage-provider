@@ -414,3 +414,25 @@ func (s *GfSpClient) CompleteSwapOut(ctx context.Context, completeSwapOut *virtu
 	}
 	return resp.GetTxHash(), nil
 }
+
+func (s *GfSpClient) CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect signer", "error", err)
+		return "", err
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_CompleteSpExit{
+			CompleteSpExit: completeSPExit,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign complete sp exit", "error", err)
+		return "", ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
