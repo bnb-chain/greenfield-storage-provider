@@ -43,11 +43,25 @@ const (
 	listDeletedObjectsByBlockNumberRangeRouterName = "ListDeletedObjectsByBlockNumberRange"
 	getUserBucketsCountRouterName                  = "GetUserBucketsCount"
 	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
+	notifyMigrateGVGRouterName                     = "NotifyMigrateGVG"
+	migratePieceRouterName                         = "MigratePiece"
+	listVirtualGroupFamiliesBySpIDRouterName       = "ListVirtualGroupFamiliesBySpID"
+	getVirtualGroupFamilyRouterName                = "GetVirtualGroupFamily"
+	getGlobalVirtualGroupByGvgIDRouterName         = "GetGlobalVirtualGroupByGvgID"
+	getGlobalVirtualGroupRouterName                = "GetGlobalVirtualGroup"
+	listGlobalVirtualGroupsBySecondarySPRouterName = "ListGlobalVirtualGroupsBySecondarySP"
+	listGlobalVirtualGroupsByBucketRouterName      = "ListGlobalVirtualGroupsByBucket"
+	listObjectsInGVGAndBucketRouterName            = "ListObjectsInGVGAndBucket"
+	listObjectsInGVGRouterName                     = "ListObjectsInGVG"
+	listMigrateBucketEventsRouterName              = "ListMigrateBucketEvents"
+	listSwapOutEventsRouterName                    = "ListSwapOutEvents"
+	listSpExitEventsRouterName                     = "ListSpExitEvents"
 )
 
 const (
-	createBucketApprovalAction = "CreateBucket"
-	createObjectApprovalAction = "CreateObject"
+	createBucketApprovalAction  = "CreateBucket"
+	createObjectApprovalAction  = "CreateObject"
+	migrateBucketApprovalAction = "MigrateBucket"
 )
 
 // notFoundHandler log not found request info.
@@ -78,12 +92,19 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	router.Path(GetApprovalPath).Name(approvalRouterName).Methods(http.MethodGet).HandlerFunc(g.getApprovalHandler).Queries(
 		ActionQuery, "{action}")
 
-	// Challenge
+	// get challenge info
 	router.Path(GetChallengeInfoPath).Name(getChallengeInfoRouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoHandler)
 
 	// replicate piece to receiver
 	router.Path(ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)
+	// data recovery
 	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.recoverPrimaryHandler)
+
+	// dest sp receive migrate gvg notify from src sp.
+	router.Path(NotifyMigrateGVGTaskPath).Name(notifyMigrateGVGRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateGVGHandler)
+	// migrate pieces between SPs which is used for SP exiting case
+	router.Path(MigratePiecePath).Name(migratePieceRouterName).Methods(http.MethodGet).HandlerFunc(g.migratePieceHandler)
+
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
 		HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
@@ -180,6 +201,39 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		//List Expired Buckets By Sp
 		router.Path("/").Name(listExpiredBucketsBySpRouterName).Methods(http.MethodGet).Queries(ListExpiredBucketsBySpQuery, "").HandlerFunc(g.listExpiredBucketsBySpHandler)
+
+		// List Virtual Group Families By Sp ID
+		router.Path("/").Name(listVirtualGroupFamiliesBySpIDRouterName).Methods(http.MethodGet).Queries(ListVirtualGroupFamiliesBySpIDQuery, "").HandlerFunc(g.listVirtualGroupFamiliesBySpIDHandler)
+
+		// Get Virtual Group Families By Vgf ID
+		router.Path("/").Name(getVirtualGroupFamilyRouterName).Methods(http.MethodGet).Queries(GetVirtualGroupFamilyQuery, "").HandlerFunc(g.getVirtualGroupFamilyHandler)
+
+		// Get Global Virtual Group By Gvg ID
+		router.Path("/").Name(getGlobalVirtualGroupByGvgIDRouterName).Methods(http.MethodGet).Queries(GetGlobalVirtualGroupByGvgIDQuery, "").HandlerFunc(g.getGlobalVirtualGroupByGvgIDHandler)
+
+		// Get Global Virtual Group By Lvg ID And Bucket ID
+		router.Path("/").Name(getGlobalVirtualGroupRouterName).Methods(http.MethodGet).Queries(GetGlobalVirtualGroupQuery, "").HandlerFunc(g.getGlobalVirtualGroupHandler)
+
+		// List Global Virtual Group By Secondary Sp ID
+		router.Path("/").Name(listGlobalVirtualGroupsBySecondarySPRouterName).Methods(http.MethodGet).Queries(ListGlobalVirtualGroupsBySecondarySPQuery, "").HandlerFunc(g.listGlobalVirtualGroupsBySecondarySPHandler)
+
+		// List Global Virtual Group By Bucket ID
+		router.Path("/").Name(listGlobalVirtualGroupsByBucketRouterName).Methods(http.MethodGet).Queries(ListGlobalVirtualGroupsByBucketQuery, "").HandlerFunc(g.listGlobalVirtualGroupsByBucketHandler)
+
+		// List Objects By Gvg And Bucket ID
+		router.Path("/").Name(listObjectsInGVGAndBucketRouterName).Methods(http.MethodGet).Queries(ListObjectsInGVGAndBucketQuery, "").HandlerFunc(g.listObjectsInGVGAndBucketHandler)
+
+		// List Objects By Gvg And Bucket ID
+		router.Path("/").Name(listObjectsInGVGRouterName).Methods(http.MethodGet).Queries(ListObjectsInGVGQuery, "").HandlerFunc(g.listObjectsInGVGHandler)
+
+		// List Migrate Bucket Events
+		router.Path("/").Name(listMigrateBucketEventsRouterName).Methods(http.MethodGet).Queries(ListMigrateBucketEventsQuery, "").HandlerFunc(g.listMigrateBucketEventsHandler)
+
+		// List Swap Out Events
+		router.Path("/").Name(listSwapOutEventsRouterName).Methods(http.MethodGet).Queries(ListSwapOutEventsQuery, "").HandlerFunc(g.listSwapOutEventsHandler)
+
+		// List Sp Exit Events
+		router.Path("/").Name(listSpExitEventsRouterName).Methods(http.MethodGet).Queries(ListSpExitEventsQuery, "").HandlerFunc(g.listSpExitEventsHandler)
 	}
 
 	router.Path("/").

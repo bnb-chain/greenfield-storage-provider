@@ -32,6 +32,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err           error
 		reqCtx        *RequestContext
 		authenticated bool
+		bucketInfo    *storagetypes.BucketInfo
 		objectInfo    *storagetypes.ObjectInfo
 		params        *storagetypes.Params
 	)
@@ -80,7 +81,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	startGetObjectInfoTime := time.Now()
-	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	bucketInfo, objectInfo, err = g.baseApp.Consensus().QueryBucketInfoAndObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_object_cost").Observe(time.Since(startGetObjectInfoTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
@@ -103,7 +104,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	task := &gfsptask.GfSpUploadObjectTask{}
-	task.InitUploadObjectTask(objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()))
+	task.InitUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()))
 	task.SetCreateTime(uploadPrimaryStartTime.Unix())
 	task.AppendLog(fmt.Sprintf("gateway-prepare-upload-task-cost:%d", time.Now().UnixMilli()-uploadPrimaryStartTime.UnixMilli()))
 	task.AppendLog("gateway-create-upload-task")
@@ -115,6 +116,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
+	log.Infow("VMVMVM: print object info and chain params", "objectInfo", objectInfo, "params", params)
 	log.CtxDebugw(ctx, "succeed to upload payload data")
 }
 
@@ -157,6 +159,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		err           error
 		reqCtx        *RequestContext
 		authenticated bool
+		bucketInfo    *storagetypes.BucketInfo
 		objectInfo    *storagetypes.ObjectInfo
 		params        *storagetypes.Params
 	)
@@ -196,7 +199,10 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	startGetObjectInfoTime := time.Now()
+	bucketInfo, objectInfo, err = g.baseApp.Consensus().QueryBucketInfoAndObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_object_cost").Observe(time.Since(startGetObjectInfoTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensus
@@ -207,7 +213,10 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		err = ErrInvalidPayloadSize
 		return
 	}
+	startGetStorageParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensus
@@ -248,9 +257,16 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	}
 
 	task := &gfsptask.GfSpResumableUploadObjectTask{}
-	task.InitResumableUploadObjectTask(objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()), complete, offset)
+	task.InitResumableUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()), complete, offset)
+	task.SetCreateTime(uploadPrimaryStartTime.Unix())
+	task.AppendLog(fmt.Sprintf("gateway-prepare-resumable-upload-task-cost:%d", time.Now().UnixMilli()-uploadPrimaryStartTime.UnixMilli()))
+	task.AppendLog("gateway-create-resumable-upload-task")
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
+	uploadDataTime := time.Now()
 	err = g.baseApp.GfSpClient().ResumableUploadObject(ctx, task, r.Body)
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_data_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
@@ -766,13 +782,13 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
 func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request, isDownload bool) {
 	var (
-		err                  error
-		reqCtx               *RequestContext
-		authenticated        bool
-		isRange              bool
-		rangeStart           int64
-		rangeEnd             int64
-		redirectURL          string
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		isRange       bool
+		rangeStart    int64
+		rangeEnd      int64
+		// redirectURL          string
 		params               *storagetypes.Params
 		escapedObjectName    string
 		isRequestFromBrowser bool
@@ -840,28 +856,38 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		return
 	}
 
-	bucketPrimarySpAddress := getBucketInfoRes.GetBucketInfo().GetPrimarySpAddress()
+	bucketPrimarySpId := getBucketInfoRes.GetBucketInfo().GetPrimarySpId()
 	// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
-	if !strings.EqualFold(bucketPrimarySpAddress, g.baseApp.OperatorAddress()) {
-		log.Debugw("primary sp address not matched ",
-			"bucketPrimarySpAddress", bucketPrimarySpAddress, "gateway.config.SpOperatorAddress", g.baseApp.OperatorAddress(),
+	// TODO get from config
+	spID, err := g.getSPID()
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
+	if spID != bucketPrimarySpId {
+		log.Debugw("primary sp id not matched ",
+			"bucketPrimarySpId", bucketPrimarySpId, "self sp id", spID,
 		)
 
-		spEndpoint, getEndpointErr := g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), bucketPrimarySpAddress)
-
+		// TODO might need to edit GetEndpointBySpId to reduce call to chain
+		sp, queryErr := g.baseApp.Consensus().QuerySPByID(context.Background(), spID)
+		if queryErr != nil {
+			err = ErrConsensus
+			return
+		}
+		spEndpoint, getEndpointErr := g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), sp.OperatorAddress)
 		if getEndpointErr != nil || spEndpoint == "" {
 			log.Errorw("failed to get endpoint by address ", "sp_address", reqCtx.bucketName, "error", getEndpointErr)
 			err = getEndpointErr
 			return
 		}
 
-		redirectURL = spEndpoint + r.RequestURI
+		redirectURL := spEndpoint + r.RequestURI
 		log.Debugw("getting redirect url:", "redirectURL", redirectURL)
 
 		http.Redirect(w, r, redirectURL, 302)
 		return
 	}
-
 	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
 		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
@@ -875,10 +901,8 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		err = ErrNoSuchObject
 		return
 	}
-
 	if isPrivateObject(getBucketInfoRes.GetBucketInfo(), getObjectInfoRes.GetObjectInfo()) {
 		// for private files, we return a built-in dapp and help users provide a signature for verification
-
 		var (
 			expiry    string
 			signature string

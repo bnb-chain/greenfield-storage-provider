@@ -27,6 +27,7 @@ It sorts from 50...
 * `51`: is used for PieceStore code.
 * `52`: is used for SpDB code.
 * `53`: is used for Resource manager code.
+* `54`: is used for VirtualGroup manager code.
 
 ### Modular Code
 It sorts from 0... to 49

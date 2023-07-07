@@ -2,9 +2,11 @@ syntax = "proto3";
 package base.types.gfsptask;
 
 import "base/types/gfsperrors/error.proto";
+import "greenfield/sp/types.proto";
 import "greenfield/storage/params.proto";
 import "greenfield/storage/tx.proto";
 import "greenfield/storage/types.proto";
+import "greenfield/virtualgroup/types.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask";
 
@@ -23,6 +25,11 @@ message GfSpTask {
 message GfSpCreateBucketApprovalTask {
   GfSpTask task = 1;
   greenfield.storage.MsgCreateBucket create_bucket_info = 2;
+}
+
+message GfSpMigrateBucketApprovalTask {
+  GfSpTask task = 1;
+  greenfield.storage.MsgMigrateBucket migrate_bucket_info = 2;
 }
 
 message GfSpCreateObjectApprovalTask {
@@ -45,8 +52,9 @@ message GfSpReplicatePieceApprovalTask {
 
 message GfSpUploadObjectTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.Params storage_params = 3;
+  uint32 virtual_group_family_id = 2;
+  greenfield.storage.ObjectInfo object_info = 3;
+  greenfield.storage.Params storage_params = 4;
 }
 
 message GfSpResumableUploadObjectTask {
@@ -56,6 +64,7 @@ message GfSpResumableUploadObjectTask {
   uint64 offset = 4;
   uint64 length = 5;
   bool completed = 6;
+  uint32 virtual_group_family_id = 7;
 }
 
 message GfSpReplicatePieceTask {
@@ -65,6 +74,10 @@ message GfSpReplicatePieceTask {
   repeated string secondary_addresses = 4;
   repeated bytes secondary_signatures = 5;
   bool sealed = 6;
+  // TODO: refine it.
+  uint32 global_virtual_group_id = 7;
+  repeated string secondary_endpoints = 8;
+  // repeated greenfield.sp.StorageProvider secondary_sps = 8;
 }
 
 message GfSpRecoverPieceTask {
@@ -88,6 +101,7 @@ message GfSpReceivePieceTask {
   bytes piece_checksum = 7;
   bytes signature = 8;
   bool sealed = 9;
+  uint32 global_virtual_group_id = 10;
 }
 
 message GfSpSealObjectTask {
@@ -96,6 +110,8 @@ message GfSpSealObjectTask {
   greenfield.storage.Params storage_params = 3;
   repeated string secondary_addresses = 4;
   repeated bytes secondary_signatures = 5;
+  uint32 global_virtual_group_id = 6;
+  repeated string secondary_endpoints = 7;
 }
 
 message GfSpDownloadObjectTask {
@@ -155,4 +171,25 @@ message GfSpGCMetaTask {
   uint64 current_idx = 2;
   uint64 delete_count = 3;
   bool running = 4;
+}
+
+message GfSpMigrateGVGTask {
+  GfSpTask task = 1;
+  uint64 bucket_id = 2;
+  greenfield.virtualgroup.GlobalVirtualGroup gvg = 3;
+  int32 redundancy_idx = 4;
+  greenfield.sp.StorageProvider src_sp = 5;
+  greenfield.sp.StorageProvider dest_sp = 6;
+  uint64 last_migrated_object_id = 7;
+  bool finished = 8;
+}
+
+message GfSpMigratePieceTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  string src_sp_endpoint = 4;
+  uint32 segment_idx = 5;
+  int32 redundancy_idx = 6;
+  bytes signature = 7;
 }

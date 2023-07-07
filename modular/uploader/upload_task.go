@@ -71,7 +71,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		err       error
 		segIdx    uint32 = 0
 		pieceKey  string
-		signature []byte
 		integrity []byte
 		checksums [][]byte
 		readN     int
@@ -121,16 +120,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 					return ErrPieceStore
 				}
 			}
-			startSignSignature := time.Now()
-			signature, integrity, err = u.baseApp.GfSpClient().SignIntegrityHash(ctx,
-				uploadObjectTask.GetObjectInfo().Id.Uint64(), checksums)
-			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_sign_integrity_cost").Observe(time.Since(startSignSignature).Seconds())
-			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_sign_integrity_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
-				return err
-			}
-			if !bytes.Equal(integrity, uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
+			if !bytes.Equal(hash.GenerateIntegrityHash(checksums), uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
 					"actual_integrity", hex.EncodeToString(integrity),
 					"expected_integrity", hex.EncodeToString(uploadObjectTask.GetObjectInfo().GetChecksums()[0]))
@@ -141,7 +131,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				ObjectID:          uploadObjectTask.GetObjectInfo().Id.Uint64(),
 				PieceChecksumList: checksums,
 				IntegrityChecksum: integrity,
-				Signature:         signature,
 			}
 			startUpdateSignature := time.Now()
 			err = u.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
@@ -241,7 +230,6 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		err           error
 		segIdx        uint32 = uint32(int64(offset) / segmentSize)
 		pieceKey      string
-		signature     []byte
 		integrity     []byte
 		readN         int
 		readSize      int
@@ -290,21 +278,15 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 					log.CtxErrorw(ctx, "failed to get object integrity hash", "error", err)
 					return err
 				}
-				signature, integrity, err = u.baseApp.GfSpClient().SignIntegrityHash(ctx,
-					task.GetObjectInfo().Id.Uint64(), integrityMeta.PieceChecksumList)
-				if err != nil {
-					log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
-					return err
-				}
-				if !bytes.Equal(integrity, task.GetObjectInfo().GetChecksums()[0]) {
+				integrityHash := hash.GenerateIntegrityHash(integrityMeta.PieceChecksumList)
+				if !bytes.Equal(integrityHash, task.GetObjectInfo().GetChecksums()[0]) {
 					log.CtxErrorw(ctx, "invalid integrity hash",
 						"integrity", hex.EncodeToString(integrity),
 						"expect", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
 					err = ErrInvalidIntegrity
 					return ErrInvalidIntegrity
 				}
-				integrityMeta.IntegrityChecksum = integrity
-				integrityMeta.Signature = signature
+				integrityMeta.IntegrityChecksum = integrityHash
 				err = u.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)

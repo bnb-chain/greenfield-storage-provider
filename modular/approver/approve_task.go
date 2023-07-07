@@ -46,6 +46,7 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 		shadowTask := a.bucketQueue.PopByKey(task.Key())
 		task.SetCreateBucketInfo(shadowTask.(coretask.ApprovalCreateBucketTask).GetCreateBucketInfo())
 		_ = a.bucketQueue.Push(shadowTask)
+
 		log.CtxErrorw(ctx, "repeated create bucket approval task is returned")
 		return true, nil
 	}
@@ -63,6 +64,15 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 		return false, err
 	}
 
+	startPickVGF := time.Now()
+	vgfID, err := a.baseApp.GfSpClient().PickVirtualGroupFamilyID(ctx, task)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pick virtual group family", "time_cost", time.Since(startPickVGF).Seconds(), "error", err)
+		return false, err
+	}
+	log.Debugw("succeed to pick vgf id", "vgf_id", vgfID, "time_cost", time.Since(startPickVGF).Seconds())
+
+	task.GetCreateBucketInfo().PrimarySpApproval.GlobalVirtualGroupFamilyId = vgfID
 	// begin to sign the new approval task
 	startQueryChain := time.Now()
 	currentHeight = a.GetCurrentBlockHeight()
@@ -83,6 +93,52 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 }
 
 func (a *ApprovalModular) PostCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) {
+}
+
+func (a *ApprovalModular) PreMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask) error {
+	// TODO: check sp id.
+	return nil
+}
+
+func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, task coretask.ApprovalMigrateBucketTask) (bool, error) {
+	var (
+		err           error
+		signature     []byte
+		currentHeight uint64
+	)
+	if task == nil || task.GetMigrateBucketInfo() == nil {
+		log.CtxErrorw(ctx, "failed to pre migrate bucket approval due to pointer nil")
+		return false, ErrDanglingPointer
+	}
+	defer func() {
+		if err != nil {
+			task.SetError(err)
+		}
+		log.CtxDebugw(ctx, task.Info())
+	}()
+	if a.bucketQueue.Has(task.Key()) {
+		shadowTask := a.bucketQueue.PopByKey(task.Key())
+		task.SetMigrateBucketInfo(shadowTask.(coretask.ApprovalMigrateBucketTask).GetMigrateBucketInfo())
+		_ = a.bucketQueue.Push(shadowTask)
+		log.CtxErrorw(ctx, "repeated migrate bucket approval task is returned")
+		return true, nil
+	}
+
+	// begin to sign the new approval task
+	currentHeight = a.GetCurrentBlockHeight()
+	task.SetExpiredHeight(currentHeight + a.bucketApprovalTimeoutHeight)
+	// TODO: modify to migrate proto.
+	signature, err = a.baseApp.GfSpClient().SignMigrateBucketApproval(ctx, task.GetMigrateBucketInfo())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to sign the migrate bucket approval", "error", err)
+		return false, ErrSigner
+	}
+	task.GetMigrateBucketInfo().GetDstPrimarySpApproval().Sig = signature
+	_ = a.bucketQueue.Push(task)
+	return true, nil
+}
+
+func (a *ApprovalModular) PostMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask) {
 }
 
 func (a *ApprovalModular) PreCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) error {
@@ -139,10 +195,7 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(ctx context.Context, ta
 func (a *ApprovalModular) PostCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) {
 }
 
-func (a *ApprovalModular) QueryTasks(
-	ctx context.Context,
-	subKey coretask.TKey) (
-	[]coretask.Task, error) {
+func (a *ApprovalModular) QueryTasks(ctx context.Context, subKey coretask.TKey) ([]coretask.Task, error) {
 	bucketApprovalTasks, _ := taskqueue.ScanTQueueBySubKey(a.bucketQueue, subKey)
 	objectApprovalTasks, _ := taskqueue.ScanTQueueBySubKey(a.objectQueue, subKey)
 	return append(bucketApprovalTasks, objectApprovalTasks...), nil

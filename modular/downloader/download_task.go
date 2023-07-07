@@ -17,6 +17,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -30,6 +31,8 @@ var (
 	ErrPieceStore        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35101, "server slipped away, try again later")
 	ErrGfSpDB            = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35201, "server slipped away, try again later")
 	ErrKeyFormat         = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "invalid key format")
+
+	ErrConsensus = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35002, "server slipped away, try again later")
 )
 
 func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask) error {
@@ -187,15 +190,18 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		return ErrObjectUnsealed
 	}
 
-	primarySP := downloadPieceTask.GetBucketInfo().PrimarySpAddress
 	// if it is a request from the primary SP of the object, no need to check quota
-	if downloadPieceTask.GetUserAddress() == primarySP {
+	bucketInfo := downloadPieceTask.GetBucketInfo()
+	bucketPrimarySp, err := d.baseApp.Consensus().QuerySPByID(ctx, bucketInfo.GetPrimarySpId())
+	if err != nil {
+		return err
+	}
+	if downloadPieceTask.GetUserAddress() == bucketPrimarySp.OperatorAddress {
 		return nil
 	}
-
 	if downloadPieceTask.GetEnableCheck() {
 		// if it is a request from client, the task handler is the primary SP of the sp
-		if d.baseApp.OperatorAddress() == primarySP {
+		if d.baseApp.OperatorAddress() == bucketPrimarySp.OperatorAddress {
 			log.CtxDebugw(ctx, "downloading from primary SP, checking quota")
 			checkQuotaTime := time.Now()
 			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
@@ -223,14 +229,16 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 			return nil
 		}
 		// check quota for secondary read task
-		secondarySPs := downloadPieceTask.GetObjectInfo().SecondarySpAddresses
-		var isOneOfSecondary bool
-		for _, addr := range secondarySPs {
-			if d.baseApp.OperatorAddress() == addr {
-				isOneOfSecondary = true
-			}
+		// TODO get sp id from config file
+		spID, err := d.getSPID()
+		if err != nil {
+			return ErrConsensus
 		}
-
+		_, isOneOfSecondary, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, d.baseApp.GfSpClient(), spID, downloadPieceTask.GetBucketInfo().Id.Uint64(), downloadPieceTask.GetObjectInfo().LocalVirtualGroupId)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to global virtual group info from metaData", "error", err)
+			return ErrConsensus
+		}
 		// if it is a request from client, the task handler is the secondary SP of the object
 		if isOneOfSecondary {
 			// check free quota

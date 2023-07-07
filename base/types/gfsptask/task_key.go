@@ -3,7 +3,6 @@ package gfsptask
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 )
@@ -11,6 +10,7 @@ import (
 const (
 	Delimiter                               = "-"
 	KeyPrefixGfSpCreateBucketApprovalTask   = "CreateBucketApproval"
+	KeyPrefixGfSpMigrateBucketApprovalTask  = "MigrateBucketApproval"
 	KeyPrefixGfSpCreateObjectApprovalTask   = "CreateObjectApproval"
 	KeyPrefixGfSpReplicatePieceApprovalTask = "ReplicatePieceApproval"
 	KeyPrefixGfSpDownloadObjectTask         = "DownloadObject"
@@ -19,20 +19,23 @@ const (
 	KeyPrefixGfSpUploadObjectTask           = "Uploading"
 	KeyPrefixGfSpReplicatePieceTask         = "Uploading"
 	KeyPrefixGfSpSealObjectTask             = "Uploading"
-	KeyPrefixGfSpResumableUploadObjectTask  = "ResuabmleUploading"
+	KeyPrefixGfSpResumableUploadObjectTask  = "ResumableUploading"
 	KeyPrefixGfSpRecoverPieceTask           = "Recovering"
 	KeyPrefixGfSpReceivePieceTask           = "ReceivePiece"
-)
-
-var (
-	KeyPrefixGfSpGCObjectTask      = strings.ToLower("GCObject")
-	KeyPrefixGfSpGCZombiePieceTask = strings.ToLower("GCZombiePiece")
-	KeyPrefixGfSpGfSpGCMetaTask    = strings.ToLower("GCMeta")
+	KeyPrefixGfSpGCObjectTask               = "GCObject"
+	KeyPrefixGfSpGCZombiePieceTask          = "GCZombiePiece"
+	KeyPrefixGfSpGfSpGCMetaTask             = "GCMeta"
+	KeyPrefixGfSpMigrateGVGTask             = "MigrateGVG"
+	KeyPrefixGfSpMigratePieceTask           = "MigratePiece"
 )
 
 func GfSpCreateBucketApprovalTaskKey(bucket string, visibility int32) task.TKey {
 	return task.TKey(KeyPrefixGfSpCreateBucketApprovalTask + CombineKey("bucket:"+bucket,
 		"visibility:"+fmt.Sprint(visibility)))
+}
+
+func GfSpMigrateBucketApprovalTaskKey(bucket string, migrateBucketHash string) task.TKey {
+	return task.TKey(KeyPrefixGfSpMigrateBucketApprovalTask + CombineKey("bucket:"+bucket, "hash:"+migrateBucketHash))
 }
 
 func GfSpCreateObjectApprovalTaskKey(bucket, object string, visibility int32) task.TKey {
@@ -109,6 +112,16 @@ func GfSpGCZombiePieceTaskKey(time int64) task.TKey {
 
 func GfSpGfSpGCMetaTaskKey(time int64) task.TKey {
 	return task.TKey(KeyPrefixGfSpGfSpGCMetaTask + CombineKey("time"+fmt.Sprint(time)))
+}
+
+func GfSpMigrateGVGTaskKey(gvgID uint32, bucketID uint64, redundancyIndex int32) task.TKey {
+	return task.TKey(KeyPrefixGfSpMigrateGVGTask + CombineKey(
+		"gvgID"+fmt.Sprint(gvgID), "bucketID"+fmt.Sprint(bucketID), "redundancyIndex"+fmt.Sprint(redundancyIndex)))
+}
+
+func GfSpMigratePieceTaskKey(object, id string, redundancyIdx uint32, ecIdx int32) task.TKey {
+	return task.TKey(KeyPrefixGfSpMigratePieceTask + CombineKey("object:"+object, "id:", id, "segIdx:",
+		fmt.Sprint(redundancyIdx), "redundancyIndex:", fmt.Sprint(ecIdx)))
 }
 
 func CombineKey(field ...string) string {
