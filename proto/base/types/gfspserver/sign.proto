@@ -44,6 +44,7 @@ message GfSpSignRequest {
     greenfield.storage.MsgCompleteMigrateBucket complete_migrate_bucket = 15;
     greenfield.storage.SecondarySpMigrationBucketSignDoc sign_secondary_sp_migration_bucket = 16;
     greenfield.virtualgroup.MsgSwapOut swap_out = 17;
+    greenfield.virtualgroup.MsgCompleteSwapOut complete_swap_out = 18;
   }
 }
 

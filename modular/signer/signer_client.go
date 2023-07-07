@@ -57,6 +57,7 @@ const (
 	CreateGlobalVirtualGroup GasInfoType = "CreateGlobalVirtualGroup"
 	CompleteMigrateBucket    GasInfoType = "CompleteMigrateBucket"
 	SwapOut                  GasInfoType = "SwapOut"
+	CompleteSwapOut          GasInfoType = "CompleteSwapOut"
 )
 
 type GasInfo struct {
@@ -524,6 +525,57 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 		log.CtxErrorw(ctx, "failed to broadcast swap out", "error", err, "swap_out", msgSwapOut.String())
 		ErrSwapOutOnChain.SetError(fmt.Errorf("failed to broadcast swap out, error: %v", err))
 		return "", ErrSwapOutOnChain
+	}
+
+	// update nonce when tx is successfully submitted
+	client.operatorAccNonce = nonce + 1
+	return txHash, nil
+}
+
+func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, scope SignType,
+	completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
+	log.Infow("signer starts to complete swap out", "scope", scope)
+	if completeSwapOut == nil {
+		log.CtxError(ctx, "complete swap out msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+	nonce := client.operatorAccNonce
+
+	msgCompleteSwapOut := virtualgrouptypes.NewMsgCompleteSwapOut(km.GetAddr(), completeSwapOut.GetGlobalVirtualGroupFamilyId(),
+		completeSwapOut.GetGlobalVirtualGroupIds())
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
+	txOpt := &ctypes.TxOption{
+		Mode:      &mode,
+		GasLimit:  client.gasInfo[CompleteSwapOut].GasLimit,
+		FeeAmount: client.gasInfo[CompleteSwapOut].FeeAmount,
+		Nonce:     nonce,
+	}
+
+	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSwapOut}, txOpt)
+	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		if nonceErr != nil {
+			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
+			ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+			return "", ErrCompleteSwapOutOnChain
+		}
+		client.operatorAccNonce = nonce
+	}
+	// failed to broadcast tx
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast complete swap out", "error", err, "complete_swap_out",
+			msgCompleteSwapOut.String())
+		ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to broadcast complete swap out, error: %v", err))
+		return "", ErrCompleteSwapOutOnChain
 	}
 
 	// update nonce when tx is successfully submitted
