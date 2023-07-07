@@ -8,8 +8,11 @@ GREENFIELD_CMD_BRANCH="adaptor-sp-e2e"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
-TEST_ACCOUNT_ADDRESS="0x76263999b87D08228eFB098F36d17363Acf40c2c"
-TEST_ACCOUNT_PRIVATE_KEY="da942d31bc4034577f581057e4a3644404ac12828a84052f87086d508fdcf095"
+TEST_ACCOUNT_ADDRESS=${ACCOUNT_ADDR}
+TEST_ACCOUNT_PRIVATE_KEY=${PRIVATE_KEY}
+echo "TEST_ACCOUNT_ADDRESS is "$TEST_ACCOUNT_ADDRESS
+echo "TEST_ACCOUNT_PRIVATE_KEY is "$TEST_ACCOUNT_PRIVATE_KEY
+
 BUCKET_NAME="spbucket"
 
 #########################################
@@ -155,6 +158,7 @@ function check_md5() {
 #######################
 function run_e2e() {
   set -e
+  echo 'run test_create_bucket'
   test_create_bucket
   test_file_size_less_than_16_mb
   test_file_size_greater_than_16_mb
