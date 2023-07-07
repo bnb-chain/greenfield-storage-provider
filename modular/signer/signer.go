@@ -27,7 +27,7 @@ var (
 	ErrCreateGVGOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
 	ErrCompleteMigrateBucketOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120007, "send complete migrate bucket failed")
 	ErrSwapOutOnChain               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120008, "send swap out failed")
-	ErrCompleteSwapOutOnChain       = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120008, "send complete swap out failed")
+	ErrCompleteSwapOutOnChain       = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120009, "send complete swap out failed")
 )
 
 var _ module.Signer = &SignModular{}
