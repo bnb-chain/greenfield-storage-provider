@@ -856,8 +856,8 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		)
 
 		// TODO might need to edit GetEndpointBySpId to reduce call to chain
-		sp, err := g.baseApp.Consensus().QuerySPByID(context.Background(), spID)
-		if err != nil {
+		sp, queryErr := g.baseApp.Consensus().QuerySPByID(context.Background(), spID)
+		if queryErr != nil {
 			err = ErrConsensus
 			return
 		}

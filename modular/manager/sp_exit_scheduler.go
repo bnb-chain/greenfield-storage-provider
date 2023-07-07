@@ -30,7 +30,7 @@ type PickDestSPFilter struct {
 
 func NewPickDestSPFilterWithMap(m map[uint32]int) *PickDestSPFilter {
 	spIDs := make([]uint32, 0)
-	for spID, _ := range m {
+	for spID := range m {
 		spIDs = append(spIDs, spID)
 	}
 	return &PickDestSPFilter{excludedSPIDs: spIDs}
@@ -169,10 +169,10 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 
 // SPExitExecutePlan is used to record the execution of subtasks in src sp.
 type SPExitExecutePlan struct {
-	manager                  *ManageModular
-	scheduler                *SPExitScheduler
-	virtualGroupManager      vgmgr.VirtualGroupManager
-	runningMigrateGVG        int                                     // TODO: refine it.
+	manager             *ManageModular
+	scheduler           *SPExitScheduler
+	virtualGroupManager vgmgr.VirtualGroupManager
+	// runningMigrateGVG        int                                     // TODO: refine it.
 	PrimaryVGFMigrateUnits   []*VirtualGroupFamilyMigrateExecuteUnit // sp exit, primary family, include gvg list, maybe has conflicted.
 	SecondaryGVGMigrateUnits []*GlobalVirtualGroupMigrateExecuteUnit // sp exit, secondary gvg
 
@@ -355,10 +355,10 @@ func (plan *SPExitExecutePlan) storeToDB() error {
 	return nil
 }
 
-func (plan *SPExitExecutePlan) updateProgress() error {
-	// TODO: update memory and db.
-	return nil
-}
+//func (plan *SPExitExecutePlan) updateProgress() error {
+//	// TODO: update memory and db.
+//	return nil
+//}
 
 // WaitForNotifyDestSPIterator is used to notify migrate units to dest sp.
 type WaitForNotifyDestSPIterator struct {
@@ -398,10 +398,7 @@ func (ti *WaitForNotifyDestSPIterator) Valid() bool {
 	ti.plan.WaitForNotifyDestSPMutex.RLock()
 	isValid := ti.waitForNotifyIndex < len(ti.plan.WaitForNotifyDestSPGVGs)
 	ti.plan.WaitForNotifyDestSPMutex.RUnlock()
-	if !isValid {
-		return false
-	}
-	return true
+	return isValid
 }
 
 func (ti *WaitForNotifyDestSPIterator) Next() {
@@ -448,10 +445,7 @@ func (mi *NotifiedDestSPIterator) Valid() bool {
 	mi.plan.NotifiedDestSPMutex.RLock()
 	isValid := mi.notifiedIndex < len(mi.plan.NotifiedDestSPGVGs)
 	mi.plan.NotifiedDestSPMutex.RUnlock()
-	if !isValid {
-		return false
-	}
-	return true
+	return isValid
 }
 
 func (mi *NotifiedDestSPIterator) Next() {
