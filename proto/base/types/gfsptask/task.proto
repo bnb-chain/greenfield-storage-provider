@@ -64,6 +64,7 @@ message GfSpResumableUploadObjectTask {
   uint64 offset = 4;
   uint64 length = 5;
   bool completed = 6;
+  uint32 virtual_group_family_id = 7;
 }
 
 message GfSpReplicatePieceTask {

@@ -282,15 +282,33 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 			log.CtxErrorw(ctx, "reports failed resumable update object task", "task_info", task.Info(), "error", task.Error())
 			return nil
 		}()
+		metrics.ManagerCounter.WithLabelValues(ManagerFailureUpload).Inc()
+		metrics.ManagerTime.WithLabelValues(ManagerFailureUpload).Observe(
+			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		return nil
+	} else {
+		metrics.ManagerCounter.WithLabelValues(ManagerSuccessUpload).Inc()
+		metrics.ManagerTime.WithLabelValues(ManagerSuccessUpload).Observe(
+			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
+
+	// TODO: refine it.
+	startPickGVGTime := time.Now()
+	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "error", err)
+		return err
+	}
+
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
+	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
+	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
 
-	err := m.replicateQueue.Push(replicateTask)
+	err = m.replicateQueue.Push(replicateTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
