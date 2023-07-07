@@ -481,6 +481,9 @@ func (plan *SPExitExecutePlan) notifyDestSPMigrateExecuteUnits() {
 		for iter.SeekToFirst(); iter.Valid(); iter.Next() {
 			notifyUnitNumber++
 			waitForMigrateGVG := iter.Value()
+
+			// TODO: need get swap out approval and start swap out tx.
+
 			migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 			migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
 				0, waitForMigrateGVG.gvg, waitForMigrateGVG.redundancyIndex,
@@ -667,6 +670,8 @@ func (runner *MigrateTaskRunner) UpdateMigrateGVGStatus(migrateKey string, st Mi
 	unit.migrateStatus = st
 	runner.mutex.Unlock()
 
+	// TODO: send complete swap out tx
+
 	return runner.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(st))
 }
 
@@ -737,10 +742,11 @@ type SPExitScheduler struct {
 
 	// sp exit workflow src sp.
 	// manage subscribe progress and execute plan.
-	lastSubscribedSPExitBlockHeight uint64
-	isExiting                       bool
-	isExited                        bool
-	executePlan                     *SPExitExecutePlan
+	lastSubscribedSPExitBlockHeight  uint64
+	lastSubscribedSwapOutBlockHeight uint64
+	isExiting                        bool
+	isExited                         bool
+	executePlan                      *SPExitExecutePlan
 
 	// sp exit workflow dest sp.
 	// manage specific gvg execution tasks.
@@ -775,6 +781,10 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 	s.isExiting = sp.GetStatus() == sptypes.STATUS_GRACEFUL_EXITING
 	if s.lastSubscribedSPExitBlockHeight, err = s.manager.baseApp.GfSpDB().QuerySPExitSubscribeProgress(); err != nil {
 		log.Errorw("failed to init sp exit scheduler due to init subscribe sp exit progress", "error", err)
+		return err
+	}
+	if s.lastSubscribedSwapOutBlockHeight, err = s.manager.baseApp.GfSpDB().QuerySwapOutSubscribeProgress(); err != nil {
+		log.Errorw("failed to init sp exit scheduler due to init subscribe swap out progress", "error", err)
 		return err
 	}
 	s.executePlan = &SPExitExecutePlan{
@@ -848,9 +858,29 @@ func (s *SPExitScheduler) subscribeEvents() {
 			log.Infow("sp exit subscribe progress", "last_subscribed_block_height", s.lastSubscribedSPExitBlockHeight)
 
 		case <-subscribeSwapOutEventsTicker.C:
-			if s.isExited {
+			if !s.isExiting {
 				return
 			}
+			if s.lastSubscribedSwapOutBlockHeight >= s.lastSubscribedSPExitBlockHeight {
+				return
+			}
+
+			swapOutEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSwapOutEvents(context.Background(), s.lastSubscribedSwapOutBlockHeight+1, s.selfSP.GetId())
+			if subscribeError != nil {
+				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
+				return
+			}
+			for _, swapOutEvent := range swapOutEvents {
+				if swapOutEvent.GetEvents() != nil {
+					// start
+				}
+
+				// TODO: complete swap out workflow.
+				// if all completed, send complete sp exit tx.
+				// swapout
+
+			}
+
 			// TODO: refine it, proto is changing.
 			s.updateSPExitExecutePlan()
 		}

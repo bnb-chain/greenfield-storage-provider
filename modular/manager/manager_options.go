@@ -205,7 +205,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalSec
 	}
 	if cfg.Manager.SubscribeBucketMigrateEventIntervalSec == 0 {
-		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeSPExitEventIntervalSec
+		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalSec
 	}
 	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
 		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalSec
