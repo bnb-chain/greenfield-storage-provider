@@ -209,8 +209,8 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 
 	res = make([]*types.ListMigrateBucketEvents, 0)
 	for _, event := range eventsMap {
-		complete, _ := completeEventsMap[event.BucketId]
-		cancel, _ := cancelEventsMap[event.BucketId]
+		complete := completeEventsMap[event.BucketId]
+		cancel := cancelEventsMap[event.BucketId]
 		res = append(res, &types.ListMigrateBucketEvents{
 			Events:         event,
 			CompleteEvents: complete,
@@ -293,8 +293,8 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 	res = make([]*types.ListSwapOutEvents, 0)
 	for _, event := range eventsMap {
 		idx := fmt.Sprintf("%d+%d", event.StorageProviderId, event.GlobalVirtualGroupFamilyId)
-		complete, _ := completeEventsMap[idx]
-		cancel, _ := cancelEventsMap[idx]
+		complete := completeEventsMap[idx]
+		cancel := cancelEventsMap[idx]
 		res = append(res, &types.ListSwapOutEvents{
 			Events:         event,
 			CompleteEvents: complete,
