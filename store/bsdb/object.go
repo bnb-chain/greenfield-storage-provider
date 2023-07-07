@@ -7,6 +7,8 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"github.com/spaolacci/murmur3"
 	"gorm.io/gorm"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const ObjectsNumberOfShards = 64
@@ -170,6 +172,7 @@ func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool)
 		var object *Object
 		bucketName, err := b.GetBucketNameByObjectID(id)
 		if err != nil {
+			log.Errorw("failed to get bucket name by object id in ListObjectsByObjectID", "error", err)
 			continue
 		}
 		err = b.db.Table(GetObjectsTableName(bucketName)).
@@ -178,6 +181,7 @@ func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool)
 			Scopes(filters...).
 			Take(&object).Error
 		if err != nil {
+			log.Errorw("failed to get object by object id in ListObjectsByObjectID", "error", err)
 			continue
 		}
 		objects = append(objects, object)
