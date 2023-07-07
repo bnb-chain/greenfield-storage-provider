@@ -7,13 +7,14 @@ import (
 	"github.com/forbole/juno/v4/modules/epoch"
 	"github.com/forbole/juno/v4/modules/group"
 	"github.com/forbole/juno/v4/modules/messages"
-	"github.com/forbole/juno/v4/modules/object"
 	"github.com/forbole/juno/v4/modules/payment"
 	"github.com/forbole/juno/v4/modules/permission"
 	"github.com/forbole/juno/v4/modules/registrar"
 	sp "github.com/forbole/juno/v4/modules/storage_provider"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/object"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/objectidmap"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/prefixtree"
 )
 
@@ -47,5 +48,6 @@ func (r *BlockSyncerRegistrar) BuildModules(ctx registrar.Context) modules.Modul
 		group.NewModule(db),
 		sp.NewModule(db),
 		prefixtree.NewModule(db),
+		objectidmap.NewModule(db),
 	}
 }

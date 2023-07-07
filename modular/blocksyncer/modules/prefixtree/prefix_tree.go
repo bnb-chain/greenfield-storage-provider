@@ -118,7 +118,7 @@ func (m *Module) handleCreateObject(ctx context.Context, sealObject *storagetype
 		}
 	}
 
-	object, err := m.db.GetPrefixTreeObject(ctx, common.BigToHash(objectID.BigInt()))
+	object, err := m.db.GetPrefixTreeObject(ctx, common.BigToHash(objectID.BigInt()), bucketName)
 	if err != nil {
 		log.Errorw("failed to get prefix tree object", "error", err)
 		return err

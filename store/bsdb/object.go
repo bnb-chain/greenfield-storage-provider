@@ -1,9 +1,17 @@
 package bsdb
 
 import (
+	"fmt"
+	"sort"
+
 	"github.com/forbole/juno/v4/common"
+	"github.com/spaolacci/murmur3"
 	"gorm.io/gorm"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
+
+const ObjectsNumberOfShards = 64
 
 // ListObjectsByBucketName lists objects information by a bucket name.
 // The function takes the following parameters:
@@ -44,7 +52,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 		}
 
 		if includeRemoved {
-			err = b.db.Table((&Object{}).TableName()).
+			err = b.db.Table(GetObjectsTableName(bucketName)).
 				Select("*").
 				Where("bucket_name = ?", bucketName).
 				Scopes(filters...).
@@ -52,7 +60,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 				Order("object_name asc").
 				Find(&results).Error
 		} else {
-			err = b.db.Table((&Object{}).TableName()).
+			err = b.db.Table(GetObjectsTableName(bucketName)).
 				Select("*").
 				Where("bucket_name = ? and removed = false", bucketName).
 				Scopes(filters...).
@@ -64,32 +72,64 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 	return results, err
 }
 
+type ByUpdateAtAndObjectID []*Object
+
+func (a ByUpdateAtAndObjectID) Len() int { return len(a) }
+
+// Less we want to sort as ascending here
+func (a ByUpdateAtAndObjectID) Less(i, j int) bool {
+	if a[i].UpdateAt == a[j].UpdateAt {
+		return a[i].ObjectID.Big().Uint64() < a[j].ObjectID.Big().Uint64()
+	}
+	return a[i].UpdateAt < a[j].UpdateAt
+}
+func (a ByUpdateAtAndObjectID) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
 // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
 func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
 	var (
-		objects []*Object
-		err     error
+		totalObjects []*Object
+		objects      []*Object
+		err          error
 	)
 
 	if includePrivate {
-		err = b.db.Table((&Object{}).TableName()).
-			Select("*").
-			Where("update_at >= ? and update_at <= ? and removed = ?", startBlockNumber, endBlockNumber, true).
-			Limit(DeletedObjectsDefaultSize).
-			Order("update_at,object_id asc").
-			Find(&objects).Error
-		return objects, err
+		for i := 0; i < ObjectsNumberOfShards; i++ {
+			err = b.db.Table(GetObjectsTableNameByShardNumber(i)).
+				Select("*").
+				Where("update_at >= ? and update_at <= ? and removed = ?", startBlockNumber, endBlockNumber, true).
+				Limit(DeletedObjectsDefaultSize).
+				Order("update_at,object_id asc").
+				Find(&objects).Error
+			totalObjects = append(totalObjects, objects...)
+		}
+	} else {
+		for i := 0; i < ObjectsNumberOfShards; i++ {
+			objectTableName := GetObjectsTableNameByShardNumber(i)
+			joins := fmt.Sprintf("right join buckets on buckets.bucket_id = %s.bucket_id", objectTableName)
+			order := fmt.Sprintf("%s.update_at, %s.object_id asc", objectTableName, objectTableName)
+			where := fmt.Sprintf("%s.update_at >= ? and %s.update_at <= ? and %s.removed = ? and "+
+				"((%s.visibility='VISIBILITY_TYPE_PUBLIC_READ') or "+
+				"(%s.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
+				objectTableName, objectTableName, objectTableName, objectTableName, objectTableName)
+
+			err = b.db.Table(objectTableName).
+				Select(objectTableName+".*").
+				Joins(joins).
+				Where(where, startBlockNumber, endBlockNumber, true).
+				Limit(DeletedObjectsDefaultSize).
+				Order(order).
+				Find(&objects).Error
+			totalObjects = append(totalObjects, objects...)
+		}
 	}
-	err = b.db.Table((&Bucket{}).TableName()).
-		Select("objects.*").
-		Joins("left join objects on buckets.bucket_id = objects.bucket_id").
-		Where("objects.update_at >= ? and objects.update_at <= ? and objects.removed = ? and "+
-			"((objects.visibility='VISIBILITY_TYPE_PUBLIC_READ') or (objects.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
-			startBlockNumber, endBlockNumber, true).
-		Limit(DeletedObjectsDefaultSize).
-		Order("objects.update_at, objects.object_id asc").
-		Find(&objects).Error
-	return objects, err
+
+	sort.Sort(ByUpdateAtAndObjectID(totalObjects))
+
+	if len(totalObjects) > DeletedObjectsDefaultSize {
+		totalObjects = totalObjects[0:DeletedObjectsDefaultSize]
+	}
+	return totalObjects, err
 }
 
 // GetObjectByName get object info by an object name
@@ -100,14 +140,14 @@ func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, include
 	)
 
 	if includePrivate {
-		err = b.db.Table((&Object{}).TableName()).
+		err = b.db.Table(GetObjectsTableName(bucketName)).
 			Select("*").
 			Where("object_name = ? and bucket_name = ? and removed = false", objectName, bucketName).
 			Take(&object).Error
 		return object, err
 	}
 
-	err = b.db.Table((&Bucket{}).TableName()).
+	err = b.db.Table(GetObjectsTableName(bucketName)).
 		Select("objects.*").
 		Joins("left join objects on buckets.bucket_id = objects.bucket_id").
 		Where("objects.object_name = ? and objects.bucket_name = ? and objects.removed = false and "+
@@ -128,11 +168,36 @@ func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool)
 	if !includeRemoved {
 		filters = append(filters, RemovedFilter(includeRemoved))
 	}
+	for _, id := range ids {
+		var object *Object
+		bucketName, err := b.GetBucketNameByObjectID(id)
+		if err != nil {
+			log.Errorw("failed to get bucket name by object id in ListObjectsByObjectID", "error", err)
+			continue
+		}
+		err = b.db.Table(GetObjectsTableName(bucketName)).
+			Select("*").
+			Where("object_id = ?", id).
+			Scopes(filters...).
+			Take(&object).Error
+		if err != nil {
+			log.Errorw("failed to get object by object id in ListObjectsByObjectID", "error", err)
+			continue
+		}
+		objects = append(objects, object)
+	}
 
-	err = b.db.Table((&Object{}).TableName()).
-		Select("*").
-		Where("object_id in (?)", ids).
-		Scopes(filters...).
-		Find(&objects).Error
 	return objects, err
+}
+
+func GetObjectsTableName(bucketName string) string {
+	return GetObjectsTableNameByShardNumber(int(GetObjectsShardNumberByBucketName(bucketName)))
+}
+
+func GetObjectsShardNumberByBucketName(bucketName string) uint32 {
+	return murmur3.Sum32([]byte(bucketName)) % ObjectsNumberOfShards
+}
+
+func GetObjectsTableNameByShardNumber(shard int) string {
+	return fmt.Sprintf("%s_%02d", ObjectTableName, shard)
 }
