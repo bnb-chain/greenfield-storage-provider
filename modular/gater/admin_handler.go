@@ -38,8 +38,8 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		approvalMsg          []byte
 		createBucketApproval = storagetypes.MsgCreateBucket{}
 		createObjectApproval = storagetypes.MsgCreateObject{}
-		authenticated        bool
-		approved             bool
+		//authenticated        bool
+		approved bool
 	)
 	startTime := time.Now()
 	defer func() {
@@ -90,23 +90,23 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if !reqCtx.SkipVerifyAuthentication() {
-			startVerifyAuthentication := time.Now()
-			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
-				reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
-				reqCtx.Account(), createBucketApproval.GetBucketName(), "")
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_end").Observe(time.Since(startTime).Seconds())
-			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-				return
-			}
-			if !authenticated {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
-				return
-			}
-		}
+		//if !reqCtx.SkipVerifyAuthentication() {
+		//	startVerifyAuthentication := time.Now()
+		//	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
+		//		reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
+		//		reqCtx.Account(), createBucketApproval.GetBucketName(), "")
+		//	metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
+		//	metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_end").Observe(time.Since(startTime).Seconds())
+		//	if err != nil {
+		//		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		//		return
+		//	}
+		//	if !authenticated {
+		//		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		//		err = ErrNoPermission
+		//		return
+		//	}
+		//}
 		task := &gfsptask.GfSpCreateBucketApprovalTask{}
 		task.InitApprovalCreateBucketTask(&createBucketApproval, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalCreateBucketTask
@@ -138,24 +138,24 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if !reqCtx.SkipVerifyAuthentication() {
-			startVerifyAuthentication := time.Now()
-			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
-				reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
-				reqCtx.Account(), createObjectApproval.GetBucketName(),
-				createObjectApproval.GetObjectName())
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_end").Observe(time.Since(startTime).Seconds())
-			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-				return
-			}
-			if !authenticated {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
-				return
-			}
-		}
+		//if !reqCtx.SkipVerifyAuthentication() {
+		//	startVerifyAuthentication := time.Now()
+		//	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
+		//		reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
+		//		reqCtx.Account(), createObjectApproval.GetBucketName(),
+		//		createObjectApproval.GetObjectName())
+		//	metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
+		//	metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_end").Observe(time.Since(startTime).Seconds())
+		//	if err != nil {
+		//		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		//		return
+		//	}
+		//	if !authenticated {
+		//		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		//		err = ErrNoPermission
+		//		return
+		//	}
+		//}
 		task := &gfsptask.GfSpCreateObjectApprovalTask{}
 		task.InitApprovalCreateObjectTask(&createObjectApproval, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask

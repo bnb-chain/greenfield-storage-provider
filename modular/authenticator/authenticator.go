@@ -8,8 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
@@ -207,29 +206,29 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		}
 		return true, nil
 	case coremodule.AuthOpTypePutObject:
-		queryTime := time.Now()
-		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
-		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_put_object_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
-			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
-			if strings.Contains(err.Error(), "No such bucket") {
-				return false, ErrNoSuchBucket
-			}
-			if strings.Contains(err.Error(), "No such object") {
-				return false, ErrNoSuchObject
-			}
-			return false, ErrConsensus
-		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", bucketInfo.GetPrimarySpAddress())
-			return false, ErrMismatchSp
-		}
-		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
-			return false, ErrNotCreatedState
-		}
+		//queryTime := time.Now()
+		//bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		//metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_put_object_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
+		//if err != nil {
+		//	log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
+		//	// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+		//	if strings.Contains(err.Error(), "No such bucket") {
+		//		return false, ErrNoSuchBucket
+		//	}
+		//	if strings.Contains(err.Error(), "No such object") {
+		//		return false, ErrNoSuchObject
+		//	}
+		//	return false, ErrConsensus
+		//}
+		//if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
+		//	log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
+		//		"require", bucketInfo.GetPrimarySpAddress())
+		//	return false, ErrMismatchSp
+		//}
+		//if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+		//	log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
+		//	return false, ErrNotCreatedState
+		//}
 		permissionTime := time.Now()
 		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_put_object_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
@@ -271,40 +270,40 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetObject:
-		queryTime := time.Now()
-		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
-		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
-			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
-			if strings.Contains(err.Error(), "No such bucket") {
-				return false, ErrNoSuchBucket
-			}
-			if strings.Contains(err.Error(), "No such object") {
-				return false, ErrNoSuchObject
-			}
-			return false, ErrConsensus
-		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", bucketInfo.GetPrimarySpAddress())
-			return false, ErrMismatchSp
-		}
-		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
-			return false, ErrNotSealedState
-		}
-		streamTime := time.Now()
-		streamRecord, err := a.baseApp.Consensus().QueryPaymentStreamRecord(ctx, bucketInfo.GetPaymentAddress())
-		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_query_stream_time").Observe(time.Since(streamTime).Seconds())
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to query payment stream record from consensus", "error", err)
-			return false, ErrConsensus
-		}
-		if streamRecord.Status != paymenttypes.STREAM_ACCOUNT_STATUS_ACTIVE {
-			log.CtxErrorw(ctx, "failed to check payment due to account status is not active", "status", streamRecord.Status)
-			return false, ErrPaymentState
-		}
+		//queryTime := time.Now()
+		//bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		//metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
+		//if err != nil {
+		//	log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
+		//	// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+		//	if strings.Contains(err.Error(), "No such bucket") {
+		//		return false, ErrNoSuchBucket
+		//	}
+		//	if strings.Contains(err.Error(), "No such object") {
+		//		return false, ErrNoSuchObject
+		//	}
+		//	return false, ErrConsensus
+		//}
+		//if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
+		//	log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
+		//		"require", bucketInfo.GetPrimarySpAddress())
+		//	return false, ErrMismatchSp
+		//}
+		//if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+		//	log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
+		//	return false, ErrNotSealedState
+		//}
+		//streamTime := time.Now()
+		//streamRecord, err := a.baseApp.Consensus().QueryPaymentStreamRecord(ctx, bucketInfo.GetPaymentAddress())
+		//metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_query_stream_time").Observe(time.Since(streamTime).Seconds())
+		//if err != nil {
+		//	log.CtxErrorw(ctx, "failed to query payment stream record from consensus", "error", err)
+		//	return false, ErrConsensus
+		//}
+		//if streamRecord.Status != paymenttypes.STREAM_ACCOUNT_STATUS_ACTIVE {
+		//	log.CtxErrorw(ctx, "failed to check payment due to account status is not active", "status", streamRecord.Status)
+		//	return false, ErrPaymentState
+		//}
 		permissionTime := time.Now()
 		var permission *permissiontypes.Effect
 		var allow bool
