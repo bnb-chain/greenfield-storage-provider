@@ -284,6 +284,8 @@ type Signer interface {
 	SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error)
 	// CompleteSwapOut signs the MsgCompleteSwapOut and broadcast the tx to greenfield.
 	CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error)
+	// CompleteSPExit signs the MsgCompleteStorageProviderExit and broadcast the tx to greenfield.
+	CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store
