@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"cosmossdk.io/math"
@@ -145,21 +146,24 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 	var (
 		events            []*model.EventMigrationBucket
 		completeEvents    []*model.EventCompleteMigrationBucket
+		cancelEvents      []*model.EventCancelMigrationBucket
 		spEvent           []*storage_types.EventMigrationBucket
 		spCompleteEvents  []*storage_types.EventCompleteMigrationBucket
+		spCancelEvents    []*storage_types.EventCancelMigrationBucket
 		eventsMap         map[storage_types.Uint]*storage_types.EventMigrationBucket
 		completeEventsMap map[storage_types.Uint]*storage_types.EventCompleteMigrationBucket
+		cancelEventsMap   map[storage_types.Uint]*storage_types.EventCancelMigrationBucket
 		res               []*types.ListMigrateBucketEvents
 	)
 
 	ctx = log.Context(ctx, req)
-	events, completeEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.BlockId, req.SpId)
+	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.BlockId, req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
 		return nil, err
 	}
 
-	if events == nil && completeEvents == nil {
+	if events == nil && completeEvents == nil && cancelEvents == nil {
 		return nil, ErrNoEvents
 	}
 
@@ -191,19 +195,27 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		completeEventsMap[e.BucketId] = e
 	}
 
+	cancelEventsMap = make(map[storage_types.Uint]*storage_types.EventCancelMigrationBucket)
+	spCancelEvents = make([]*storage_types.EventCancelMigrationBucket, len(cancelEvents))
+	for i, event := range cancelEvents {
+		e := &storage_types.EventCancelMigrationBucket{
+			Operator:   event.Operator.String(),
+			BucketName: event.BucketName,
+			BucketId:   math.NewUintFromBigInt(event.BucketID.Big()),
+		}
+		spCancelEvents[i] = e
+		cancelEventsMap[e.BucketId] = e
+	}
+
 	res = make([]*types.ListMigrateBucketEvents, 0)
 	for _, event := range eventsMap {
-		if e, ok := completeEventsMap[event.BucketId]; ok {
-			res = append(res, &types.ListMigrateBucketEvents{
-				Events:         event,
-				CompleteEvents: e,
-			})
-		} else {
-			res = append(res, &types.ListMigrateBucketEvents{
-				Events:         event,
-				CompleteEvents: nil,
-			})
-		}
+		complete, _ := completeEventsMap[event.BucketId]
+		cancel, _ := cancelEventsMap[event.BucketId]
+		res = append(res, &types.ListMigrateBucketEvents{
+			Events:         event,
+			CompleteEvents: complete,
+			CancelEvents:   cancel,
+		})
 	}
 
 	resp = &types.GfSpListMigrateBucketEventsResponse{Events: res}
@@ -214,22 +226,31 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 // GfSpListSwapOutEvents list swap out events
 func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.GfSpListSwapOutEventsRequest) (resp *types.GfSpListSwapOutEventsResponse, err error) {
 	var (
-		events []*model.EventSwapOut
-		res    []*types.ListSwapOutEvents
+		events            []*model.EventSwapOut
+		completeEvents    []*model.EventCompleteSwapOut
+		cancelEvents      []*model.EventCancelSwapOut
+		spEvent           []*virtual_types.EventSwapOut
+		spCompleteEvents  []*virtual_types.EventCompleteSwapOut
+		spCancelEvents    []*virtual_types.EventCancelSwapOut
+		eventsMap         map[string]*virtual_types.EventSwapOut
+		completeEventsMap map[string]*virtual_types.EventCompleteSwapOut
+		cancelEventsMap   map[string]*virtual_types.EventCancelSwapOut
+		res               []*types.ListSwapOutEvents
 	)
 
 	ctx = log.Context(ctx, req)
-	events, err = r.baseApp.GfBsDB().ListSwapOutEvents(req.BlockId, req.SpId)
+	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListSwapOutEvents(req.BlockId, req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate swap out events", "error", err)
 		return nil, err
 	}
 
-	if events == nil {
+	if events == nil && completeEvents == nil && cancelEvents == nil {
 		return nil, ErrNoEvents
 	}
 
-	res = make([]*types.ListSwapOutEvents, len(events))
+	eventsMap = make(map[string]*virtual_types.EventSwapOut)
+	spEvent = make([]*virtual_types.EventSwapOut, len(events))
 	for i, event := range events {
 		e := &virtual_types.EventSwapOut{
 			StorageProviderId:          event.StorageProviderId,
@@ -237,7 +258,48 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 			GlobalVirtualGroupIds:      event.GlobalVirtualGroupIds,
 			SuccessorSpId:              event.SuccessorSpId,
 		}
-		res[i] = &types.ListSwapOutEvents{Events: e}
+		spEvent[i] = e
+		// StorageProviderId and GlobalVirtualGroupFamilyId can be identified continuous event
+		idx := fmt.Sprintf("%d+%d", event.StorageProviderId, event.GlobalVirtualGroupFamilyId)
+		eventsMap[idx] = e
+	}
+
+	completeEventsMap = make(map[string]*virtual_types.EventCompleteSwapOut)
+	spCompleteEvents = make([]*virtual_types.EventCompleteSwapOut, len(completeEvents))
+	for i, event := range completeEvents {
+		e := &virtual_types.EventCompleteSwapOut{
+			StorageProviderId:          event.StorageProviderId,
+			GlobalVirtualGroupFamilyId: event.GlobalVirtualGroupFamilyId,
+			GlobalVirtualGroupIds:      event.GlobalVirtualGroupIds,
+		}
+		spCompleteEvents[i] = e
+		idx := fmt.Sprintf("%d+%d", event.StorageProviderId, event.GlobalVirtualGroupFamilyId)
+		completeEventsMap[idx] = e
+	}
+
+	cancelEventsMap = make(map[string]*virtual_types.EventCancelSwapOut)
+	spCancelEvents = make([]*virtual_types.EventCancelSwapOut, len(cancelEvents))
+	for i, event := range cancelEvents {
+		e := &virtual_types.EventCancelSwapOut{
+			StorageProviderId:          event.StorageProviderId,
+			GlobalVirtualGroupFamilyId: event.GlobalVirtualGroupFamilyId,
+			GlobalVirtualGroupIds:      event.GlobalVirtualGroupIds,
+		}
+		spCancelEvents[i] = e
+		idx := fmt.Sprintf("%d+%d", event.StorageProviderId, event.GlobalVirtualGroupFamilyId)
+		cancelEventsMap[idx] = e
+	}
+
+	res = make([]*types.ListSwapOutEvents, 0)
+	for _, event := range eventsMap {
+		idx := fmt.Sprintf("%d+%d", event.StorageProviderId, event.GlobalVirtualGroupFamilyId)
+		complete, _ := completeEventsMap[idx]
+		cancel, _ := cancelEventsMap[idx]
+		res = append(res, &types.ListSwapOutEvents{
+			Events:         event,
+			CompleteEvents: complete,
+			CancelEvents:   cancel,
+		})
 	}
 
 	resp = &types.GfSpListSwapOutEventsResponse{Events: res}

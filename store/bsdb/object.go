@@ -168,7 +168,6 @@ func (b *BsDBImpl) ListPrimaryObjects(spID uint32, bucketID common.Hash, startAf
 		lvgIDs[i] = group.LocalVirtualGroupId
 	}
 
-	//TODO check the removed logic here
 	objects, err = b.ListObjectsByLVGID(lvgIDs, startAfter, limit)
 	return objects, err
 }

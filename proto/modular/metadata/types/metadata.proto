@@ -581,8 +581,10 @@ message GfSpListMigrateBucketEventsRequest {
 message ListMigrateBucketEvents {
   // events defines the migration bucket event
   greenfield.storage.EventMigrationBucket events = 1;
+  // cancel_events defines the migration bucket event
+  greenfield.storage.EventCancelMigrationBucket cancel_events = 2;
   // complete_events defines the complete migration bucket event
-  greenfield.storage.EventCompleteMigrationBucket complete_events = 2;
+  greenfield.storage.EventCompleteMigrationBucket complete_events = 3;
 }
 
 // GfSpListMigrateBucketEventsResponse is response type for the GfSpListMigrateBucketEvents RPC method
@@ -603,6 +605,10 @@ message GfSpListSwapOutEventsRequest {
 message ListSwapOutEvents {
   // events defines the swap out event
   greenfield.virtualgroup.EventSwapOut events = 1;
+  // cancel_events defines the cancel swap out event
+  greenfield.virtualgroup.EventCancelSwapOut cancel_events = 2;
+  // complete_events defines the complete swap out event
+  greenfield.virtualgroup.EventCompleteSwapOut complete_events = 3;
 }
 
 // GfSpListSwapOutEventsResponse is response type for the GfSpListSwapOutEvents RPC method
