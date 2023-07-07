@@ -190,6 +190,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign secondary sp bls migration bucket", "error", err)
 		}
+	case *gfspserver.GfSpSignRequest_SwapOut:
+		txHash, err = g.signer.SwapOut(ctx, t.SwapOut)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign swap out", "error", err)
+		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")
 		return &gfspserver.GfSpSignResponse{
