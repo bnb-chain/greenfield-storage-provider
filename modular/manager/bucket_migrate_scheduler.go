@@ -205,7 +205,7 @@ func (plan *BucketMigrateExecutePlan) startSPSchedule() {
 		case <-plan.stopSignal:
 			return // Terminate the scheduling
 		default:
-			log.Debugf("BucketMigrateExecutePlan Start startSPSchedule", plan.gvgUnitMap)
+			log.Debugw("BucketMigrateExecutePlan Start startSPSchedule", "gvgUnitMap", plan.gvgUnitMap)
 			for _, migrateGVGUnit := range plan.gvgUnitMap {
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
@@ -216,7 +216,7 @@ func (plan *BucketMigrateExecutePlan) startSPSchedule() {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
 				}
-				log.Debugf("push queue success")
+				log.Debugw("BucketMigrateExecutePlan Start push queue success", "migrateGVGUnit", migrateGVGUnit, "migrateGVGTask", migrateGVGTask)
 
 				// Update database: migrateStatus to migrating
 				migrateGVGUnit.migrateStatus = Migrating
@@ -307,24 +307,24 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 		)
 
 		// Mock
-		{
-			migrationBucketEvent := &types.ListMigrateBucketEvents{Events: &storage_types.EventMigrationBucket{
-				Operator:       "0x382F66A79e051957d2ABE4DCb6fcEc9bA3DE9C4d",
-				BucketName:     "spbucket",
-				BucketId:       sdkmath.NewUint(1),
-				DstPrimarySpId: 1,
-			}}
-			migrationBucketEvents = append(migrationBucketEvents, migrationBucketEvent)
-		}
-
-		log.Debugw("BucketMigrateScheduler subscribeEvents  ", migrationBucketEvents)
-
-		//// 1. subscribe migrate bucket events
-		//migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
-		//if err != nil {
-		//	log.Errorw("failed to list migrate bucket events", "error", err)
-		//	return
+		//{
+		//	migrationBucketEvent := &types.ListMigrateBucketEvents{Events: &storage_types.EventMigrationBucket{
+		//		Operator:       "0x5D2D31e29441425E9b9C1851D638d0B682719417",
+		//		BucketName:     "spbucket",
+		//		BucketId:       sdkmath.NewUint(1),
+		//		DstPrimarySpId: 8,
+		//	}}
+		//	migrationBucketEvents = append(migrationBucketEvents, migrationBucketEvent)
 		//}
+
+		log.Debugw("BucketMigrateScheduler subscribeEvents  ", "migrationBucketEvents", migrationBucketEvents)
+
+		// 1. subscribe migrate bucket events
+		migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
+		if err != nil {
+			log.Errorw("failed to list migrate bucket events", "error", err)
+			return
+		}
 		// 2. make plan, start plan
 		for _, migrateBucketEvents := range migrationBucketEvents {
 			// when receive chain CompleteMigrationBucket event
@@ -343,7 +343,8 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 				log.Debugf("parse migrateBucketEvents.Events, then produceBucketMigrateExecutePlan")
 				executePlan, err = s.produceBucketMigrateExecutePlan(migrateBucketEvents.Events)
 				if err != nil {
-					log.Errorw("failed to profuce bucket migrate execute plan", "error", err)
+					log.Errorw("failed to produce bucket migrate execute plan", "error", err)
+					return
 				}
 				if err = executePlan.Start(); err != nil {
 					log.Errorw("failed to start bucket migrate execute plan", "error", err)
@@ -403,8 +404,9 @@ func (s *BucketMigrateScheduler) createGlobalVirtualGroupForBucketMigrate(vgfID 
 		PrimarySpAddress:     s.manager.baseApp.OperatorAddress(), // it is useless
 		SecondarySpIds:       secondarySPIDs,
 		Deposit: &sdk.Coin{
-			Denom:  virtualGroupParams.GetDepositDenom(),
-			Amount: virtualGroupParams.GvgStakingPerBytes.Mul(sdkmath.NewIntFromUint64(stakingSize)),
+			Denom: virtualGroupParams.GetDepositDenom(),
+			// TODO this be zero, how to fix ?
+			Amount: sdkmath.NewInt(1000000),
 		},
 	})
 }
@@ -450,7 +452,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 		destFamilyID = destGVG.FamilyID
 		bucketUnit := newGlobalVirtualGroupMigrateExecuteUnitByBucket(plan.bucketID, srcGVG, srcSP, destSP, WaitForMigrate, destGVG.ID, 0)
 		plan.gvgUnitMap[srcGVG.GetId()] = bucketUnit
-		log.Debugw("generate a new MigrateExecuteUnitByBucket", bucketUnit)
+		log.Debugw("generate a new ", "MigrateExecuteUnitByBucket", bucketUnit)
 	}
 
 	return plan, nil
