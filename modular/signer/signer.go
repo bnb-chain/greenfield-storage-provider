@@ -104,7 +104,7 @@ func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.Receiv
 	return sig, nil
 }
 
-func (s *SignModular) SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
+func (s *SignModular) SignSecondarySealBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
 	msg := storagetypes.NewSecondarySpSealObjectSignDoc(s.baseApp.ChainID(), gvgId, sdkmath.NewUint(objectID), storagetypes.GenerateHash(checksums)).GetBlsSignHash()
 	sig, err := s.client.blsKm.Sign(msg[:])
 	if err != nil {

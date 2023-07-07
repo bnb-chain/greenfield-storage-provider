@@ -224,7 +224,7 @@ func (*NilModular) SignReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NilModular) SignReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) SignSecondaryBls(context.Context, uint64, uint32, [][]byte) ([]byte, error) {
+func (*NilModular) SignSecondarySealBls(context.Context, uint64, uint32, [][]byte) ([]byte, error) {
 	return nil, ErrNilModular
 }
 func (*NilModular) SignRecoveryPieceTask(context.Context, task.RecoveryPieceTask) ([]byte, error) {

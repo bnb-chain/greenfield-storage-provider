@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -14,7 +16,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
@@ -139,7 +140,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		return nil, ErrUnfinishedTask
 	}
 	signTime := time.Now()
-	signature, err := r.baseApp.GfSpClient().SignSecondaryBls(ctx,
+	signature, err := r.baseApp.GfSpClient().SignSecondarySealBls(ctx,
 		task.GetObjectInfo().Id.Uint64(), task.GetGlobalVirtualGroupId(), task.GetObjectInfo().GetChecksums())
 
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_sign_time").Observe(time.Since(signTime).Seconds())
