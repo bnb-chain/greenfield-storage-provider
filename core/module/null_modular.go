@@ -257,6 +257,9 @@ func (*NilModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *sto
 func (*NilModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
 	return nil, ErrNilModular
 }
+func (*NilModular) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
+	return "", ErrNilModular
+}
 
 var _ Receiver = (*NullReceiveModular)(nil)
 

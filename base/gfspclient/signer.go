@@ -9,6 +9,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 func (s *GfSpClient) SignCreateBucketApproval(ctx context.Context, bucket *storagetypes.MsgCreateBucket) (
@@ -368,4 +369,26 @@ func (s *GfSpClient) SignSecondarySPMigrationBucket(ctx context.Context, signDoc
 		return nil, resp.GetErr()
 	}
 	return resp.GetSignature(), nil
+}
+
+func (s *GfSpClient) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect signer", "error", err)
+		return "", err
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_SwapOut{
+			SwapOut: swapOut,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign swap out", "error", err)
+		return "", ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
 }
