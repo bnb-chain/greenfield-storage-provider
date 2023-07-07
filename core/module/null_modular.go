@@ -263,6 +263,9 @@ func (*NilModular) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSw
 func (*NilModular) CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
 	return "", ErrNilModular
 }
+func (*NilModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
+	return "", ErrNilModular
+}
 
 var _ Receiver = (*NullReceiveModular)(nil)
 
