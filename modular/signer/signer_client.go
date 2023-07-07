@@ -65,6 +65,7 @@ type GasInfo struct {
 
 // GreenfieldChainSignClient the greenfield chain client
 type GreenfieldChainSignClient struct {
+	opLock   sync.Mutex
 	sealLock sync.Mutex
 	gcLock   sync.Mutex
 
@@ -378,8 +379,8 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 		return nil, ErrSignMsg
 	}
 
-	client.sealLock.Lock()
-	defer client.sealLock.Unlock()
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
 	nonce := client.operatorAccNonce
 
 	msgCreateGlobalVirtualGroup := virtualgrouptypes.NewMsgCreateGlobalVirtualGroup(km.GetAddr(),
@@ -432,8 +433,8 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 		return "", ErrSignMsg
 	}
 
-	client.sealLock.Lock()
-	defer client.sealLock.Unlock()
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
 	nonce := client.operatorAccNonce
 
 	msgCompleteMigrateBucket := storagetypes.NewMsgCompleteMigrateBucket(km.GetAddr(), migrateBucket.GetBucketName(),
