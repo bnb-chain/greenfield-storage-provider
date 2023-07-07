@@ -171,7 +171,7 @@ func (t *GfSpTQueue) delete(task coretask.Task) {
 		metrics.QueueSizeGauge.WithLabelValues(t.name).Set(float64(len(t.tasks)))
 		metrics.QueueCapGauge.WithLabelValues(t.name).Set(float64(t.cap))
 		metrics.TaskInQueueTime.WithLabelValues(t.name).Observe(
-			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+			time.Since(time.UnixMilli(task.GetCreateTime())).Seconds())
 	}()
 	delete(t.tasks, task.Key())
 }

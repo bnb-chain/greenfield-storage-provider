@@ -19,8 +19,8 @@ var _ coretask.ApprovalReplicatePieceTask = &GfSpReplicatePieceApprovalTask{}
 func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(bucket *storagetypes.MsgCreateBucket, priority coretask.TPriority) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.GetTask().SetCreateTime(time.Now().Unix())
-	m.GetTask().SetUpdateTime(time.Now().Unix())
+	m.GetTask().SetCreateTime(time.Now().UnixMilli())
+	m.GetTask().SetUpdateTime(time.Now().UnixMilli())
 	m.SetCreateBucketInfo(bucket)
 	m.SetPriority(priority)
 }
@@ -155,8 +155,8 @@ func (m *GfSpCreateObjectApprovalTask) InitApprovalCreateObjectTask(
 	priority coretask.TPriority) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.GetTask().SetCreateTime(time.Now().Unix())
-	m.GetTask().SetUpdateTime(time.Now().Unix())
+	m.GetTask().SetCreateTime(time.Now().UnixMilli())
+	m.GetTask().SetUpdateTime(time.Now().UnixMilli())
 	m.SetCreateObjectInfo(object)
 	m.SetPriority(priority)
 }
@@ -293,8 +293,8 @@ func (m *GfSpReplicatePieceApprovalTask) InitApprovalReplicatePieceTask(object *
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetStorageParams(params)
-	m.GetTask().SetCreateTime(time.Now().Unix())
-	m.GetTask().SetUpdateTime(time.Now().Unix())
+	m.GetTask().SetCreateTime(time.Now().UnixMilli())
+	m.GetTask().SetUpdateTime(time.Now().UnixMilli())
 	m.SetObjectInfo(object)
 	m.SetPriority(priority)
 	m.SetAskSpOperatorAddress(askOpAddress)
