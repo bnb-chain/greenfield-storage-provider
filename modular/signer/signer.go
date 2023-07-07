@@ -25,7 +25,8 @@ var (
 	ErrDiscontinueBucketOnChain     = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
 	ErrDanglingPointer              = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
 	ErrCreateGVGOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
-	ErrCompleteMigrateBucketOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120008, "send complete migrate bucket failed")
+	ErrCompleteMigrateBucketOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120007, "send complete migrate bucket failed")
+	ErrSwapOutOnChain               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120008, "send swap out failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -176,4 +177,8 @@ func (s *SignModular) SignSecondarySPMigrationBucket(ctx context.Context, signDo
 		return nil, err
 	}
 	return sig, nil
+}
+
+func (s *SignModular) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
+	return s.client.SwapOut(ctx, SignOperator, swapOut)
 }
