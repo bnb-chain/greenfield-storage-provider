@@ -3,9 +3,10 @@
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_REPO_TAG="d3bebb2f4d64f9780cb136169d4aaea51f6c973f"
-#GREENFIELD_CMD_BRANCH="feat-adaptor-sp-exit"
-GREENFIELD_CMD_BRANCH="7874e5dd1dd6874f2449495da9c248f340791b60"
+#GREENFIELD_REPO_TAG="virtual_group_dev"
+GREENFIELD_REPO_TAG="b375189374384628ec299fd702e92c69a22277c9"
+#GREENFIELD_CMD_TAG="feat-adaptor-sp-exit"
+GREENFIELD_CMD_TAG="7874e5dd1dd6874f2449495da9c248f340791b60"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
@@ -73,7 +74,7 @@ function build_cmd() {
   # build sp
   git clone https://github.com/bnb-chain/greenfield-cmd.git
   cd greenfield-cmd/
-  git checkout ${GREENFIELD_CMD_BRANCH}
+  git checkout ${GREENFIELD_CMD_TAG}
   make build
   cd build/
 

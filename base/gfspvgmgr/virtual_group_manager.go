@@ -141,9 +141,6 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(fi
 				picker.addGlobalVirtualGroup(gvg)
 			}
 		}
-		if len(picker.freeStorageSizeWeightMap) == 0 {
-			continue
-		}
 		if globalVirtualGroupID, err = picker.pickIndex(); err != nil {
 			log.Errorw("failed to pick gvg at current vgf", "vgf_id", vgfID, "error", err)
 			continue
