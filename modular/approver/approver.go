@@ -94,7 +94,7 @@ func (a *ApprovalModular) eventLoop(ctx context.Context) {
 // if the approval is expired, it can be deleted.
 func (a *ApprovalModular) GCApprovalQueue(qTask task.Task) bool {
 	task := qTask.(task.ApprovalTask)
-	if task.GetCreateTime()+DefaultApprovalExpiredTimeout < time.Now().Unix() {
+	if task.GetCreateTime()+DefaultApprovalExpiredTimeout*1000 < time.Now().UnixMilli() {
 		log.Debugw("expire approval task", "info", task.Info())
 		return true
 	}

@@ -51,7 +51,7 @@ func (s *SpDBImpl) InsertUploadEvent(task coretask.UploadObjectTask) error {
 			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
-	} else if time.Now().Unix()-task.GetCreateTime() > 2 {
+	} else if time.Now().UnixMilli()-task.GetCreateTime() > 2000 {
 		s.db.Create(&UploadTimeoutTable{
 			UpdateTime: updateTime,
 			ObjectID:   task.GetObjectInfo().Id.Uint64(),
@@ -93,7 +93,7 @@ func (s *SpDBImpl) InsertReplicateEvent(task coretask.ReplicatePieceTask) error 
 			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
-	} else if time.Now().Unix()-task.GetCreateTime() > 10 {
+	} else if time.Now().UnixMilli()-task.GetCreateTime() > 10000 {
 		s.db.Create(&ReplicateTimeoutTable{
 			UpdateTime: updateTime,
 			ObjectID:   task.GetObjectInfo().Id.Uint64(),
@@ -141,7 +141,7 @@ func (s *SpDBImpl) InsertSealEvent(task coretask.SealObjectTask) error {
 			Error:      taskErr,
 			Logs:       task.GetLogs(),
 		})
-	} else if time.Now().Unix()-task.GetCreateTime() > 10 {
+	} else if time.Now().UnixMilli()-task.GetCreateTime() > 10000 {
 		s.db.Create(&SealTimeoutTable{
 			UpdateTime: updateTime,
 			ObjectID:   task.GetObjectInfo().Id.Uint64(),
