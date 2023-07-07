@@ -42,14 +42,20 @@ const (
 	EventMigrationTableName = "event_migration_bucket"
 	// EventCompleteMigrationTableName defines the name of event complete migrate bucket table
 	EventCompleteMigrationTableName = "event_complete_migration_bucket"
+	// EventCancelMigrationTableName defines the name of event cancel migrate bucket table
+	EventCancelMigrationTableName = "event_cancel_migration_bucket"
 	// EventStorageProviderExitTableName defines the name of event sp exit table
 	EventStorageProviderExitTableName = "event_sp_exit"
 	// EventCompleteStorageProviderExitTableName defines the name of event sp exit complete table
 	EventCompleteStorageProviderExitTableName = "event_sp_exit_complete"
-	// EventSwapOutTableName defines the name of event sp exit complete table
+	// EventSwapOutTableName defines the name of event swap out table
 	EventSwapOutTableName = "event_swap_out"
 	// ObjectIDMapTableName defines the name of object id map table
 	ObjectIDMapTableName = "object_id_map"
+	// EventCancelSwapOutTableName defines the name of event cancel swap out table
+	EventCancelSwapOutTableName = "event_cancel_swap_out"
+	// EventCompleteSwapOutTableName defines the name of event complete swap out table
+	EventCompleteSwapOutTableName = "event_complete_swap_out"
 )
 
 // define the list objects const

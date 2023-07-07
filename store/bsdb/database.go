@@ -87,9 +87,9 @@ type Metadata interface {
 	// GetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
 	GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error)
 	// ListMigrateBucketEvents list migrate bucket events
-	ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, error)
+	ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error)
 	// ListSwapOutEvents list swap out events
-	ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapOut, error)
+	ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapOut, []*EventCompleteSwapOut, []*EventCancelSwapOut, error)
 	// ListSpExitEvents list sp exit events
 	ListSpExitEvents(blockID uint64, operatorAddress common.Address) (*EventStorageProviderExit, *EventCompleteStorageProviderExit, error)
 }

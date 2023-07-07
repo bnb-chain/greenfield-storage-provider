@@ -65,7 +65,6 @@ func (b *BsDBImpl) ListVgfByGvgID(gvgIDs []uint32) ([]*VirtualGroupFamily, error
 		err      error
 	)
 
-	//TODO BARRY check the sql logic here by debug log
 	if len(gvgIDs) == 0 {
 		return nil, nil
 	}
@@ -78,17 +77,6 @@ func (b *BsDBImpl) ListVgfByGvgID(gvgIDs []uint32) ([]*VirtualGroupFamily, error
 	}
 	query = query + ") and removed = false;"
 	err = b.db.Table((&VirtualGroupFamily{}).TableName()).Raw(query).Find(&families).Error
-	//query = "SELECT * FROM virtual_group_family WHERE FIND_IN_SET(?, global_virtual_group_ids) > 0"
-	//args := make([]interface{}, len(gvgIDs))
-	//
-	//for i, id := range gvgIDs {
-	//	if i != 0 {
-	//		query += " OR FIND_IN_SET(?, global_virtual_group_ids) > 0"
-	//	}
-	//	args[i] = id
-	//}
-	//
-	//err = b.db.Raw(query, args...).Find(&families).Error
 
 	return families, err
 }
