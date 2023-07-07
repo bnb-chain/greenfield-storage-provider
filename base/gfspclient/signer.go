@@ -190,15 +190,15 @@ func (s *GfSpClient) SignReplicatePieceApproval(ctx context.Context, task coreta
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
+func (s *GfSpClient) SignSecondarySealBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
 		return nil, ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpSignRequest{
-		Request: &gfspserver.GfSpSignRequest_SignSecondaryBls{
-			SignSecondaryBls: &gfspserver.GfSpSignSecondaryBls{
+		Request: &gfspserver.GfSpSignRequest_SignSecondarySealBls{
+			SignSecondarySealBls: &gfspserver.GfSpSignSecondarySealBls{
 				ObjectId:             objectID,
 				GlobalVirtualGroupId: gvgId,
 				Checksums:            checksums,

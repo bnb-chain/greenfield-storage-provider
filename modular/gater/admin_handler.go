@@ -10,21 +10,20 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/executor"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 )
 
 // getApprovalHandler handles the get create bucket/object approval request.
@@ -41,7 +40,6 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		migrateBucketApproval = storagetypes.MsgMigrateBucket{}
 		createObjectApproval  = storagetypes.MsgCreateObject{}
 		authenticated         bool
-		approved              bool
 	)
 	startTime := time.Now()
 	defer func() {
@@ -113,14 +111,14 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task.InitApprovalCreateBucketTask(&createBucketApproval, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalCreateBucketTask
 		startAskCreateBucketApproval := time.Now()
-		approved, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
+		authenticated, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_ask_approval_cost").Observe(time.Since(startAskCreateBucketApproval).Seconds())
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_ask_approval_end").Observe(time.Since(startTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask create bucket approval", "error", err)
 			return
 		}
-		if !approved {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask create bucket approval")
 			err = ErrRefuseApproval
 			return
@@ -157,12 +155,12 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task := &gfsptask.GfSpMigrateBucketApprovalTask{}
 		task.InitApprovalMigrateBucketTask(&migrateBucketApproval, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalMigrateBucketTask
-		approved, approvalTask, err = g.baseApp.GfSpClient().AskMigrateBucketApproval(reqCtx.Context(), task)
+		authenticated, approvalTask, err = g.baseApp.GfSpClient().AskMigrateBucketApproval(reqCtx.Context(), task)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask migrate bucket approval", "error", err)
 			return
 		}
-		if !approved {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask migrate bucket approval")
 			err = ErrRefuseApproval
 			return
@@ -204,14 +202,14 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task.InitApprovalCreateObjectTask(&createObjectApproval, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask
 		startAskCreateObjectApproval := time.Now()
-		approved, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
+		authenticated, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
 			return
 		}
-		if !approved {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
 			err = ErrRefuseApproval
 			return
