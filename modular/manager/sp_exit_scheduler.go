@@ -45,10 +45,49 @@ func (f *PickDestSPFilter) Check(spID uint32) bool {
 }
 
 type SwapOutUnit struct {
-	isFamily     bool
-	isConflicted bool
-	isSecondary  bool
-	swapOut      *virtualgrouptypes.MsgSwapOut
+	isFamily     bool                          // is used by src sp.
+	isConflicted bool                          // is used by src sp.
+	isSecondary  bool                          // is used by src sp.
+	swapOut      *virtualgrouptypes.MsgSwapOut // is used by srd/dest sp.
+
+	// check completed swap out's gvg, and send tx
+	completedGVGMutex sync.RWMutex
+	completedGVG      map[uint32]*GlobalVirtualGroupMigrateExecuteUnit // is used by dest sp.
+}
+
+// CheckAndSendCompleteSwapOutTx check whether complete swap out's gvg, if all finish, send tx to chain.
+func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *GlobalVirtualGroupMigrateExecuteUnit, runner *MigrateTaskRunner) error {
+	s.completedGVGMutex.Lock()
+	defer s.completedGVGMutex.Unlock()
+	s.completedGVG[gUnit.gvg.GetId()] = gUnit
+
+	needCompleted := make([]uint32, 0)
+	if s.isFamily {
+		srcSP, err := runner.manager.baseApp.Consensus().QuerySP(context.Background(), s.swapOut.GetStorageProvider())
+		if err != nil {
+			return err
+		}
+		familyGVGs, err := runner.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), srcSP.GetId(), s.swapOut.GetGlobalVirtualGroupFamilyId())
+		if err != nil {
+			return err
+		}
+		for _, g := range familyGVGs {
+			needCompleted = append(needCompleted, g.GetId())
+		}
+	} else {
+		for _, gvgID := range s.swapOut.GetGlobalVirtualGroupIds() {
+			needCompleted = append(needCompleted, gvgID)
+		}
+	}
+
+	for _, gvgID := range needCompleted {
+		if _, found := s.completedGVG[gvgID]; !found {
+			return nil
+		}
+	}
+
+	// TODO: send complete swap out tx.
+	return nil
 }
 
 func GetSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
@@ -66,8 +105,14 @@ type SwapOutPlan struct {
 	virtualGroupManager vgmgr.VirtualGroupManager
 
 	// src sp swap unit plan.
-	SwapOutUnitMapMutex sync.RWMutex
-	SwapOutUnitMap      map[string]*SwapOutUnit
+	swapOutUnitMapMutex sync.RWMutex
+	swapOutUnitMap      map[string]*SwapOutUnit
+	completedSwapOut    map[string]*SwapOutUnit
+}
+
+func (plan *SwapOutPlan) CheckAndSendCompleteSPExitTx(event *virtualgrouptypes.EventCompleteSwapOut) error {
+	// TODO:
+	return nil
 }
 
 // loadFromDB is used to rebuild the memory plan topology.
@@ -90,8 +135,8 @@ type NotifyDestSPIterator struct {
 }
 
 func NewNotifyDestSPIterator(plan *SwapOutPlan) *NotifyDestSPIterator {
-	plan.SwapOutUnitMapMutex.Lock()
-	defer plan.SwapOutUnitMapMutex.Unlock()
+	plan.swapOutUnitMapMutex.Lock()
+	defer plan.swapOutUnitMapMutex.Unlock()
 
 	iter := &NotifyDestSPIterator{
 		plan:        plan,
@@ -99,7 +144,7 @@ func NewNotifyDestSPIterator(plan *SwapOutPlan) *NotifyDestSPIterator {
 		swapOuts:    make([]*virtualgrouptypes.MsgSwapOut, 0),
 	}
 
-	for _, s := range plan.SwapOutUnitMap {
+	for _, s := range plan.swapOutUnitMap {
 		iter.swapOuts = append(iter.swapOuts, s.swapOut)
 	}
 
@@ -176,8 +221,7 @@ type MigrateTaskRunner struct {
 	mutex               sync.RWMutex
 	keyIndexMap         map[string]int
 	gvgUnits            []*GlobalVirtualGroupMigrateExecuteUnit
-
-	// TODO: check swap out finish
+	SwapOutUnitMap      map[string]*SwapOutUnit
 }
 
 func (runner *MigrateTaskRunner) addGVGUnit(gvgMeta *spdb.MigrateGVGUnitMeta) error {
@@ -207,21 +251,29 @@ func (runner *MigrateTaskRunner) addGVGUnit(gvgMeta *spdb.MigrateGVGUnitMeta) er
 
 	runner.mutex.Lock()
 	defer runner.mutex.Unlock()
+	if _, found := runner.keyIndexMap[gUnit.Key()]; found {
+		return nil
+	}
 	runner.gvgUnits = append(runner.gvgUnits, gUnit)
 	runner.keyIndexMap[gUnit.Key()] = len(runner.gvgUnits) - 1
 	return nil
 }
 
+func (runner *MigrateTaskRunner) addSwapOut(swapOut *virtualgrouptypes.MsgSwapOut) error {
+	runner.mutex.Lock()
+	defer runner.mutex.Unlock()
+	if _, found := runner.SwapOutUnitMap[GetSwapOutKey(swapOut)]; found {
+		return nil
+	}
+	runner.SwapOutUnitMap[GetSwapOutKey(swapOut)] = &SwapOutUnit{
+		swapOut:      swapOut,
+		completedGVG: make(map[uint32]*GlobalVirtualGroupMigrateExecuteUnit),
+	}
+	return nil
+}
+
 func (runner *MigrateTaskRunner) loadFromDB() error {
-	remotedGVGList, listRemotedErr := runner.manager.baseApp.GfSpDB().ListRemotedMigrateGVGUnits()
-	if listRemotedErr != nil {
-		return listRemotedErr
-	}
-	for _, gvgMeta := range remotedGVGList {
-		if addErr := runner.addGVGUnit(gvgMeta); addErr != nil {
-			return addErr
-		}
-	}
+	// TODO:
 	return nil
 }
 
@@ -255,21 +307,25 @@ func (runner *MigrateTaskRunner) UpdateMigrateGVGLastMigratedObjectID(migrateKey
 
 func (runner *MigrateTaskRunner) UpdateMigrateGVGStatus(migrateKey string, st MigrateStatus) error {
 	runner.mutex.Lock()
+	defer runner.mutex.Unlock()
 
 	if _, found := runner.keyIndexMap[migrateKey]; !found {
-		runner.mutex.Unlock()
 		return fmt.Errorf("gvg unit is not found")
 	}
 	index := runner.keyIndexMap[migrateKey]
 	if index >= len(runner.gvgUnits) {
-		runner.mutex.Unlock()
 		return fmt.Errorf("gvg unit index is invalid")
 	}
 	unit := runner.gvgUnits[index]
 	unit.migrateStatus = st
-	runner.mutex.Unlock()
 
-	// TODO: send complete swap out tx
+	if _, found := runner.SwapOutUnitMap[unit.swapOutKey]; !found {
+		return nil
+	}
+	if err := runner.SwapOutUnitMap[unit.swapOutKey].CheckAndSendCompleteSwapOutTx(unit, runner); err != nil {
+		log.Errorw("failed to check and send complete swap out", "error", err)
+		return err
+	}
 
 	return runner.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(st))
 }
@@ -454,6 +510,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 			isRemoted:       true, // from src sp
 			isConflicted:    false,
 			isSecondary:     false,
+			swapOutKey:      GetSwapOutKey(swapOut),
 			srcSP:           srcSP,
 			destSP:          s.selfSP,
 			migrateStatus:   WaitForMigrate,
@@ -463,8 +520,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 			return err
 		}
 	}
-
-	return nil
+	return s.taskRunner.addSwapOut(swapOut)
 }
 
 func (s *SPExitScheduler) subscribeEvents() {
@@ -577,7 +633,7 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits() ([]*SwapOutUnit, er
 		destFamilySP           *sptypes.StorageProvider
 		swapOutUnits           = make([]*SwapOutUnit, 0)
 	)
-	if familyGVGs, err = checker.plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), checker.selfSP.GetId(), checker.selfSP.GetId()); err != nil {
+	if familyGVGs, err = checker.plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), checker.selfSP.GetId(), checker.vgf.GetId()); err != nil {
 		log.Errorw("failed to generate swap out units due to list virtual groups by family id", "error", err)
 		return nil, err
 	}
@@ -658,7 +714,8 @@ func (s *SPExitScheduler) produceSwapOutPlan() (*SwapOutPlan, error) {
 		manager:             s.manager,
 		scheduler:           s,
 		virtualGroupManager: s.manager.virtualGroupManager,
-		SwapOutUnitMap:      make(map[string]*SwapOutUnit),
+		swapOutUnitMap:      make(map[string]*SwapOutUnit),
+		completedSwapOut:    make(map[string]*SwapOutUnit),
 	}
 	for _, f := range vgfList {
 		conflictChecker := &FamilyConflictChecker{
@@ -672,7 +729,7 @@ func (s *SPExitScheduler) produceSwapOutPlan() (*SwapOutPlan, error) {
 			return nil, getFamilySwapOutErr
 		}
 		for _, sUnit := range swapOutUnits {
-			plan.SwapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
+			plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
 		}
 	}
 	if secondaryGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(context.Background(), s.selfSP.GetId()); err != nil {
@@ -700,30 +757,13 @@ func (s *SPExitScheduler) produceSwapOutPlan() (*SwapOutPlan, error) {
 			isSecondary:  true,
 			swapOut:      swapOut,
 		}
-		plan.SwapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
+		plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
 	}
 	return plan, err
 }
 
-func (s *SPExitScheduler) checkPlanFinished() bool {
-	return true
-}
-
-func (s *SPExitScheduler) sendCompleteSPExitTx() error {
-	return nil
-}
-
-func (s *SPExitScheduler) updateSPExitExecutePlan(event *virtualgrouptypes.EventCompleteSwapOut) {
-	if event.GetGlobalVirtualGroupFamilyId() != 0 {
-		// update vgf status
-
-	} else {
-
-	}
-
-	if s.checkPlanFinished() {
-		s.sendCompleteSPExitTx()
-	}
+func (s *SPExitScheduler) updateSPExitExecutePlan(event *virtualgrouptypes.EventCompleteSwapOut) error {
+	return s.swapOutPlan.CheckAndSendCompleteSPExitTx(event)
 }
 
 // UpdateMigrateProgress is used to update migrate status from task executor.
