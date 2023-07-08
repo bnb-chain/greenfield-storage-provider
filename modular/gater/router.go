@@ -43,7 +43,7 @@ const (
 	listDeletedObjectsByBlockNumberRangeRouterName = "ListDeletedObjectsByBlockNumberRange"
 	getUserBucketsCountRouterName                  = "GetUserBucketsCount"
 	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
-	notifyMigrateGVGRouterName                     = "NotifyMigrateGVG"
+	notifyMigrateSwapOutRouterName                 = "NotifyMigrateSwapOut"
 	migratePieceRouterName                         = "MigratePiece"
 	migrationBucketApprovalName                    = "MigrationBucketApproval"
 	swapOutApprovalName                            = "SwapOutApproval"
@@ -102,8 +102,8 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// data recovery
 	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.recoverPrimaryHandler)
 
-	// dest sp receive migrate gvg notify from src sp.
-	router.Path(NotifyMigrateGVGTaskPath).Name(notifyMigrateGVGRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateGVGHandler)
+	// dest sp receive swap out notify from src sp.
+	router.Path(NotifyMigrateSwapOutTaskPath).Name(notifyMigrateSwapOutRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateGVGHandler)
 	// migrate pieces between SPs which is used for SP exiting case
 	router.Path(MigratePiecePath).Name(migratePieceRouterName).Methods(http.MethodGet).HandlerFunc(g.migratePieceHandler)
 	// migration bucket approval for secondary sp bls signature

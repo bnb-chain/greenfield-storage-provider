@@ -326,10 +326,10 @@ func (g *GfSpBaseApp) GfSpPickVirtualGroupFamily(ctx context.Context,
 	}, nil
 }
 
-func (g *GfSpBaseApp) GfSpNotifyMigrateGVG(ctx context.Context,
-	req *gfspserver.GfSpNotifyMigrateGVGRequest) (*gfspserver.GfSpNotifyMigrateGVGResponse, error) {
-	if err := g.manager.NotifyMigrateGVG(ctx, req.GetMigrateGvgTask()); err != nil {
+func (g *GfSpBaseApp) GfSpNotifyMigrateSwapOut(ctx context.Context,
+	req *gfspserver.GfSpNotifyMigrateSwapOutRequest) (*gfspserver.GfSpNotifyMigrateSwapOutResponse, error) {
+	if err := g.manager.NotifyMigrateSwapOut(ctx, req.GetSwapOut()); err != nil {
 		return nil, err
 	}
-	return &gfspserver.GfSpNotifyMigrateGVGResponse{}, nil
+	return &gfspserver.GfSpNotifyMigrateSwapOutResponse{}, nil
 }
