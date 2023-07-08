@@ -16,11 +16,6 @@ import (
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
-const (
-	// MaxSrcRunningMigrateGVG defines src sp max running migrate gvg units, and avoid src sp overload.
-	MaxSrcRunningMigrateGVG = 100
-)
-
 var _ vgmgr.SPPickFilter = &PickDestSPFilter{}
 
 // PickDestSPFilter is used to pick sp id which is not in excluded sp ids.
@@ -135,7 +130,12 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 						return pickErr
 					}
 
-					swapOut := &virtualgrouptypes.MsgSwapOut{}
+					swapOut := &virtualgrouptypes.MsgSwapOut{
+						StorageProvider:            plan.manager.baseApp.OperatorAddress(),
+						GlobalVirtualGroupFamilyId: 0,
+						GlobalVirtualGroupIds:      []uint32{gvg.GetId()},
+						SuccessorSpId:              destSecondarySP.GetId(),
+					}
 					// TODO: get secondary swap out approval
 
 					gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
@@ -149,30 +149,20 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 						migrateStatus:   WaitForNotifyDestSP}
 					vgfUnit.conflictedGVGMigrateUnits[gvg.GetId()] = gUnit
 
+					// TODO: this swap out has approval
 					plan.addNotify(swapOut)
 				}
 			}
 		} else { // has no conflicts
 			vgfUnit.destSP = destFamilySP
-			//for _, gvg := range familyGVGs {
-			//	gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
-			//		gvg:             gvg,
-			//		redundancyIndex: -1,
-			//		srcSP:           vgfUnit.srcSP,
-			//		destSP:          destFamilySP,
-			//		isConflicted:    false,
-			//		isRemoted:       false,
-			//		isSecondary:     false,
-			//		migrateStatus:   WaitForNotifyDestSP}
-			//	//vgfUnit.primaryGVGMigrateUnits[gvg.GetId()] = gUnit
-			//	//plan.addWaitForNotify(gUnit)
-			//	_ = gUnit
-			//	// TODO: notify family
-			//}
-			// TODO: get secondary swap out approval
-			swapOut := &virtualgrouptypes.MsgSwapOut{}
-
+			swapOut := &virtualgrouptypes.MsgSwapOut{
+				StorageProvider:            plan.manager.baseApp.OperatorAddress(),
+				GlobalVirtualGroupFamilyId: vgfUnit.vgf.GetId(),
+				SuccessorSpId:              destFamilySP.GetId(),
+			}
 			// TODO: get family swap out approval
+
+			// TODO: this swap out has approval
 			plan.addNotify(swapOut)
 		}
 	}
@@ -181,20 +171,13 @@ func (vgfUnit *VirtualGroupFamilyMigrateExecuteUnit) expandExecuteSubUnits(vgm v
 
 // SPExitExecutePlan is used to record the execution of subtasks in src sp.
 type SPExitExecutePlan struct {
-	manager             *ManageModular
-	scheduler           *SPExitScheduler
-	virtualGroupManager vgmgr.VirtualGroupManager
-	// runningMigrateGVG        int                                     // TODO: refine it.
+	manager                  *ManageModular
+	scheduler                *SPExitScheduler
+	virtualGroupManager      vgmgr.VirtualGroupManager
 	PrimaryVGFMigrateUnits   map[uint32]*VirtualGroupFamilyMigrateExecuteUnit // sp exit, primary family, include gvg list, maybe has conflicted.
 	SecondaryGVGMigrateUnits map[uint32]*GlobalVirtualGroupMigrateExecuteUnit // sp exit, secondary gvg
 
-	// for scheduling, the slice only can append to ensure iterator work fine.
-	//WaitForNotifyDestSPMutex sync.RWMutex
-	//WaitForNotifyDestSPGVGs  []*GlobalVirtualGroupMigrateExecuteUnit
-	//NotifiedDestSPMutex      sync.RWMutex
-	//NotifiedDestSPGVGs       []*GlobalVirtualGroupMigrateExecuteUnit
-
-	// TODO: notify swap out.
+	// notify swap out to dest sp.
 	NotifyDestSPMutex    sync.RWMutex
 	NotifyDestSPSwapOuts map[string]*virtualgrouptypes.MsgSwapOut
 }
@@ -235,12 +218,6 @@ func (plan *SPExitExecutePlan) makeGVGUnit(gvgMeta *spdb.MigrateGVGUnitMeta, isC
 		destSP:          destSP,
 		migrateStatus:   MigrateStatus(gvgMeta.MigrateStatus),
 	}
-	//if gUnit.migrateStatus == WaitForNotifyDestSP {
-	//	plan.addWaitForNotify(gUnit)
-	//}
-	//if gUnit.migrateStatus == NotifiedDestSP {
-	//	plan.addNotified(gUnit)
-	//}
 	return gUnit, nil
 }
 
@@ -504,7 +481,12 @@ func (plan *SPExitExecutePlan) Start() error {
 		gUnit.isConflicted = false
 
 		// TODO: get secondary swap out approval
-		swapOut := &virtualgrouptypes.MsgSwapOut{}
+		swapOut := &virtualgrouptypes.MsgSwapOut{
+			StorageProvider:            plan.manager.baseApp.OperatorAddress(),
+			GlobalVirtualGroupFamilyId: 0,
+			GlobalVirtualGroupIds:      []uint32{gUnit.gvg.GetId()},
+			SuccessorSpId:              destSecondarySP.GetId(),
+		}
 
 		// TODO: get family swap out approval
 		plan.addNotify(swapOut)
@@ -526,7 +508,7 @@ type MigrateTaskRunner struct {
 	keyIndexMap         map[string]int
 	gvgUnits            []*GlobalVirtualGroupMigrateExecuteUnit
 
-	// TODO: family
+	// TODO: check swap out finish
 }
 
 func (runner *MigrateTaskRunner) addGVGUnit(gvgMeta *spdb.MigrateGVGUnitMeta) error {
@@ -698,7 +680,7 @@ type SPExitScheduler struct {
 
 	// sp exit workflow dest sp.
 	// manage specific gvg execution tasks.
-	migrateTaskRunner *MigrateTaskRunner
+	taskRunner *MigrateTaskRunner
 }
 
 // NewSPExitScheduler returns a sp exit scheduler instance.
@@ -747,7 +729,7 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		log.Errorw("failed to init sp exit scheduler due to plan init", "error", err)
 		return err
 	}
-	s.migrateTaskRunner = &MigrateTaskRunner{
+	s.taskRunner = &MigrateTaskRunner{
 		manager:     s.manager,
 		keyIndexMap: make(map[string]int),
 		gvgUnits:    make([]*GlobalVirtualGroupMigrateExecuteUnit, 0),
@@ -761,8 +743,62 @@ func (s *SPExitScheduler) Start() error {
 	return nil
 }
 
-func (s *SPExitScheduler) AddNewMigrateGVGUnit(remotedUnit *GlobalVirtualGroupMigrateExecuteUnit) error {
-	return s.migrateTaskRunner.AddNewMigrateGVGUnit(remotedUnit)
+func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgSwapOut) error {
+	var (
+		err             error
+		srcSP           *sptypes.StorageProvider
+		swapOutFamilyID uint32
+		gvgList         []*virtualgrouptypes.GlobalVirtualGroup
+	)
+	if srcSP, err = s.manager.baseApp.Consensus().QuerySP(context.Background(), swapOut.GetStorageProvider()); err != nil {
+		log.Errorw("failed to add swap out to task runner", "error", err)
+		return err
+	}
+	swapOutFamilyID = swapOut.GetGlobalVirtualGroupFamilyId()
+	gvgList = make([]*virtualgrouptypes.GlobalVirtualGroup, 0)
+
+	if swapOutFamilyID != 0 {
+		if gvgList, err = s.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), srcSP.GetId(), swapOutFamilyID); err != nil {
+			log.Errorw("failed to add swap out to task runner due to list virtual groups by family id", "error", err)
+			return err
+		}
+	} else {
+		var gvg *virtualgrouptypes.GlobalVirtualGroup
+		for _, gvgID := range swapOut.GetGlobalVirtualGroupIds() {
+			if gvg, err = s.manager.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgID); err != nil {
+				log.Errorw("failed to add swap out to task runner due to query gvg", "error", err)
+				return err
+			}
+			gvg.FamilyId = 0
+			gvgList = append(gvgList, gvg)
+		}
+	}
+
+	for _, gvg := range gvgList {
+		redundancyIndex := int32(0)
+		if gvg.GetFamilyId() == 0 {
+			if redundancyIndex, err = util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId()); err != nil {
+				log.Errorw("failed to add swap out to task runner due to get redundancy index", "error", err)
+				return err
+			}
+		}
+		gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
+			gvg:             gvg,
+			redundancyIndex: redundancyIndex,
+			isRemoted:       true, // from src sp
+			isConflicted:    false,
+			isSecondary:     false,
+			srcSP:           srcSP,
+			destSP:          s.selfSP,
+			migrateStatus:   WaitForMigrate,
+		}
+		if err = s.taskRunner.AddNewMigrateGVGUnit(gUnit); err != nil {
+			log.Errorw("failed to add swap out to task runner", "error", err)
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *SPExitScheduler) subscribeEvents() {
@@ -868,6 +904,14 @@ func (s *SPExitScheduler) produceSPExitExecutePlan() (*SPExitExecutePlan, error)
 	return plan, err
 }
 
+func (s *SPExitScheduler) checkPlanFinished() bool {
+	return true
+}
+
+func (s *SPExitScheduler) sendCompleteSPExitTx() error {
+	return nil
+}
+
 func (s *SPExitScheduler) updateSPExitExecutePlan(event *virtualgrouptypes.EventCompleteSwapOut) {
 	if event.GlobalVirtualGroupFamilyId != 0 {
 		// update vgf status
@@ -876,7 +920,9 @@ func (s *SPExitScheduler) updateSPExitExecutePlan(event *virtualgrouptypes.Event
 
 	}
 
-	// TODO: check finished.
+	if s.checkPlanFinished() {
+		s.sendCompleteSPExitTx()
+	}
 }
 
 // UpdateMigrateProgress is used to update migrate status from task executor.
@@ -887,9 +933,9 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 	)
 	migrateKey = MakeRemotedGVGMigrateKey(task.GetGvg().GetId(), task.GetGvg().GetFamilyId(), task.GetRedundancyIdx())
 	if task.GetFinished() {
-		err = s.migrateTaskRunner.UpdateMigrateGVGStatus(migrateKey, Migrated)
+		err = s.taskRunner.UpdateMigrateGVGStatus(migrateKey, Migrated)
 	} else {
-		err = s.migrateTaskRunner.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID())
+		err = s.taskRunner.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID())
 	}
 	return err
 }
