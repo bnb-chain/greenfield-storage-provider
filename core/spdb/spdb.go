@@ -8,29 +8,6 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 )
 
-const (
-	GatewayBeginReceiveUpload           = "gateway_begin_receive_upload"
-	GatewayEndReceiveUpload             = "gateway_end_receive_upload"
-	UploaderBeginReceiveData            = "uploader_begin_receive_data"
-	UploaderEndReceiveData              = "uploader_end_receive_data"
-	ManagerReceiveAndWaitSchedulingTask = "manager_receive_and_wait_scheduling_task"
-	ManagerSchedulingTask               = "manager_scheduling_task"
-	ExecutorBeginTask                   = "executor_begin_task"
-	ExecutorEndTask                     = "executor_end_task"
-	ExecutorBeginP2P                    = "executor_begin_p2p"
-	ExecutorEndP2P                      = "executor_end_p2p"
-	ExecutorBeginReplicateOnePiece      = "executor_begin_replicate_one_piece"
-	ExecutorEndReplicateOnePiece        = "executor_end_replicate_one_piece"
-	ExecutorBeginReplicateAllPiece      = "executor_begin_replicate_all_piece"
-	ExecutorEndReplicateAllPiece        = "executor_end_replicate_all_piece"
-	ExecutorBeginDoneReplicatePiece     = "executor_begin_done_replicate_piece"
-	ExecutorEndDoneReplicatePiece       = "executor_end_done_replicate_piece"
-	ExecutorBeginSealTx                 = "executor_begin_seal_tx"
-	ExecutorEndSealTx                   = "executor_end_seal_tx"
-	ExecutorBeginConfirmSeal            = "executor_begin_confirm_seal"
-	ExecutorEndConfirmSeal              = "executor_end_confirm_seal"
-)
-
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
 type UploadObjectProgressDB interface {
 	// InsertUploadProgress inserts a new upload object progress.
@@ -147,6 +124,11 @@ type MigrateDB interface {
 	UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error
 	// QueryBucketMigrateSubscribeProgress returns blockHeight which is called at startup.
 	QueryBucketMigrateSubscribeProgress() (uint64, error)
+
+	// TODO:
+	InsertSwapOutUnit(meta *SwapOutMeta) error
+	QuerySwapOutUnit(swapOutKey string) (*SwapOutMeta, error)
+	ListDestSPSwapOutUnits() ([]*SwapOutMeta, error) // runner load
 
 	// InsertMigrateGVGUnit inserts a new gvg migrate unit.
 	InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
