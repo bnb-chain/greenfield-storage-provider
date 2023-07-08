@@ -49,6 +49,8 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 				log.CtxErrorw(ctx, "failed to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
 					"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
 			}
+			log.CtxDebugw(ctx, "success to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
+				"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
 			log.Infow("migrate bucket", "objectList", objectList)
 		}
 		for index, object := range objectList {

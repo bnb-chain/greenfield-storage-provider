@@ -275,8 +275,6 @@ func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 		GlobalVirtualGroupID: meta.GlobalVirtualGroupID,
 		VirtualGroupFamilyID: meta.VirtualGroupFamilyID,
 		BucketID:             meta.BucketID,
-		IsSecondary:          meta.IsSecondary,
-		IsConflicted:         meta.IsConflicted,
 		IsRemoted:            meta.IsRemoted,
 		RedundancyIndex:      meta.RedundancyIndex,
 

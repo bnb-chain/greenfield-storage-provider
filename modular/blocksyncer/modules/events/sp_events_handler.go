@@ -43,6 +43,7 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 		return err
 	}
 
+	log.Debugw("HandleEvent", "event", event)
 	switch event.Type {
 	case EventMigrationBucket:
 		migrationBucket, ok := typedEvent.(*storagetypes.EventMigrationBucket)
@@ -50,6 +51,7 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 			log.Errorw("type assert error", "type", "EventMigrationBucket", "event", typedEvent)
 			return errors.New("migration bucket event assert error")
 		}
+		log.Debugw("HandleEvent EventMigrationBucket", "migrationBucket", migrationBucket)
 		return m.handleMigrationBucket(ctx, block, txHash, migrationBucket)
 	case EventSwapOut:
 		swapOut, ok := typedEvent.(*vgtypes.EventSwapOut)

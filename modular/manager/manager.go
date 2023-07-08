@@ -463,7 +463,9 @@ func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
 }
 
 func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {
-	return qTask.ExceedRetry() || qTask.ExceedTimeout()
+	// TODO if add some expire mechanism
+	return false
+	//return qTask.ExceedRetry() || qTask.ExceedTimeout()
 }
 
 func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {

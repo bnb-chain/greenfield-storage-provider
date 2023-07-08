@@ -525,7 +525,7 @@ type MigrateGVGTask interface {
 	Task
 	// InitMigrateGVGTask inits migrate gvg task by bucket id, gvg.
 	InitMigrateGVGTask(priority TPriority, bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup,
-		redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider)
+		redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider, timeout int64, retry int64)
 	// GetGvg returns the global virtual group
 	GetGvg() *virtualgrouptypes.GlobalVirtualGroup
 	// SetGvg sets the global virtual group
