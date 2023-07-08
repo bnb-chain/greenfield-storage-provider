@@ -234,10 +234,14 @@ const (
 	NotifyMigrateGVGTaskPath = "/greenfield/migrate/v1/notify-migrate-gvg-task"
 	// GnfdMigrateGVGMsgHeader defines migrate gvg msg header.
 	GnfdMigrateGVGMsgHeader = "X-Gnfd-Migrate-GVG-Msg"
-	// SecondarySPMigrationBucketApprovalPath defines secondary sp sign migration bucket approval
+	// SecondarySPMigrationBucketApprovalPath defines secondary sp sign migration bucket approval path
 	SecondarySPMigrationBucketApprovalPath = "/greenfield/migrate/v1/migration-bucket-approval"
 	// GnfdSecondarySPMigrationBucket defines secondary sp migration bucket sign doc header.
 	GnfdSecondarySPMigrationBucketApproval = "X-Gnfd-Secondary-Migration-Bucket-Approval"
+	// GnfdSwapOutApprovalHeader defines swap out approval
+	GnfdSwapOutApprovalHeader = "X-Gnfd-Swap-Out-Approval"
+	// SwapOutApprovalPath defines get swap out approval path
+	SwapOutApprovalPath = "/greenfield/migrate/v1/get-swap-out-approval"
 )
 
 const (

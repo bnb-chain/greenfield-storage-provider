@@ -371,6 +371,28 @@ func (s *GfSpClient) SignSecondarySPMigrationBucket(ctx context.Context, signDoc
 	return resp.GetSignature(), nil
 }
 
+func (s *GfSpClient) SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect signer", "error", err)
+		return nil, err
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_SignSwapOut{
+			SignSwapOut: swapOut,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign swap out", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
+}
+
 func (s *GfSpClient) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {

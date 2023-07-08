@@ -10,6 +10,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
@@ -206,9 +207,58 @@ func (g *GateModular) getSecondaryBlsMigrationBucketApprovalHandler(w http.Respo
 	signature, err := g.baseApp.GfSpClient().SignSecondarySPMigrationBucket(reqCtx.Context(), signDoc)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to sign secondary sp migration bucket", "error", err)
+		// TODO: define an error
 		return
 	}
 	w.Write(signature)
 	log.CtxInfow(reqCtx.Context(), "succeed to sign secondary sp migration bucket approval", "buket_id",
 		signDoc.BucketId.String())
+}
+
+func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request) {
+	var (
+		err                error
+		reqCtx             *RequestContext
+		swapOutApprovalMsg []byte
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(err)
+			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHttpCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+	swapOutApprovalHeader := r.Header.Get(GnfdSwapOutApprovalHeader)
+	swapOutApprovalMsg, err = hex.DecodeString(swapOutApprovalHeader)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse swap out approval header", "error", err)
+		err = ErrDecodeMsg
+		return
+	}
+
+	swapOutApproval := &virtualgrouptypes.MsgSwapOut{}
+	if err = virtualgrouptypes.ModuleCdc.UnmarshalJSON(swapOutApprovalMsg, swapOutApproval); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal swap out approval msg", "error", err)
+		err = ErrDecodeMsg
+		return
+	}
+	if err = swapOutApproval.ValidateBasic(); err != nil {
+		log.Errorw("failed to basic check approval msg", "swap_out_approval", swapOutApproval, "error", err)
+		err = ErrValidateMsg
+		return
+	}
+	signature, err := g.baseApp.GfSpClient().SignSwapOut(reqCtx.Context(), swapOutApproval)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to sign swap out", "error", err)
+		// TODO: define an error
+		return
+	}
+	w.Write(signature)
+	log.CtxInfow(reqCtx.Context(), "succeed to sign swap out approval", "swap_out", swapOutApproval.String())
 }

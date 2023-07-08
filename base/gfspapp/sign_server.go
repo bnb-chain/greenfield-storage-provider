@@ -195,6 +195,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign swap out", "error", err)
 		}
+	case *gfspserver.GfSpSignRequest_SignSwapOut:
+		signature, err = g.signer.SignSwapOut(ctx, t.SignSwapOut)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign swap out approval", "error", err)
+		}
 	case *gfspserver.GfSpSignRequest_CompleteSwapOut:
 		txHash, err = g.signer.CompleteSwapOut(ctx, t.CompleteSwapOut)
 		if err != nil {

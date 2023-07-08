@@ -45,7 +45,8 @@ const (
 	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
 	notifyMigrateGVGRouterName                     = "NotifyMigrateGVG"
 	migratePieceRouterName                         = "MigratePiece"
-	migrationBucketApproval                        = "MigrationBucketApproval"
+	migrationBucketApprovalName                    = "MigrationBucketApproval"
+	swapOutApprovalName                            = "SwapOutApproval"
 	listVirtualGroupFamiliesBySpIDRouterName       = "ListVirtualGroupFamiliesBySpID"
 	getVirtualGroupFamilyRouterName                = "GetVirtualGroupFamily"
 	getGlobalVirtualGroupByGvgIDRouterName         = "GetGlobalVirtualGroupByGvgID"
@@ -106,7 +107,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// migrate pieces between SPs which is used for SP exiting case
 	router.Path(MigratePiecePath).Name(migratePieceRouterName).Methods(http.MethodGet).HandlerFunc(g.migratePieceHandler)
 	// migration bucket approval for secondary sp bls signature
-	router.Path(SecondarySPMigrationBucketApprovalPath).Name(migrationBucketApproval).Methods(http.MethodGet).HandlerFunc(g.getSecondaryBlsMigrationBucketApprovalHandler)
+	router.Path(SecondarySPMigrationBucketApprovalPath).Name(migrationBucketApprovalName).Methods(http.MethodGet).HandlerFunc(g.getSecondaryBlsMigrationBucketApprovalHandler)
+	// swap out approval for sp exiting
+	router.Path(SwapOutApprovalPath).Name(swapOutApprovalName).Methods(http.MethodGet).HandlerFunc(g.getSwapOutApproval)
 
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
