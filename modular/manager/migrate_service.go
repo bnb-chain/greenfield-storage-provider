@@ -3,7 +3,7 @@ package manager
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 func (m *ManageModular) getSPID() (uint32, error) {
@@ -18,20 +18,21 @@ func (m *ManageModular) getSPID() (uint32, error) {
 	return m.spID, nil
 }
 
-// NotifyMigrateGVG is used to receive migrate gvg task from src sp.
-func (m *ManageModular) NotifyMigrateGVG(ctx context.Context, task task.MigrateGVGTask) error {
+// NotifyMigrateSwapOut is used to receive migrate gvg task from src sp.
+func (m *ManageModular) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error {
 	if m.spExitScheduler == nil {
 		return ErrNotifyMigrateGVG
 	}
 
-	return m.spExitScheduler.AddNewMigrateGVGUnit(&GlobalVirtualGroupMigrateExecuteUnit{
-		gvg:             task.GetGvg(),
-		redundancyIndex: task.GetRedundancyIdx(),
-		isRemoted:       true, // from src sp
-		isConflicted:    false,
-		isSecondary:     false,
-		srcSP:           task.GetSrcSp(),
-		destSP:          task.GetDestSp(),
-		migrateStatus:   WaitForMigrate,
-	})
+	//return m.spExitScheduler.AddNewMigrateGVGUnit(&GlobalVirtualGroupMigrateExecuteUnit{
+	//	gvg:             task.GetGvg(),
+	//	redundancyIndex: task.GetRedundancyIdx(),
+	//	isRemoted:       true, // from src sp
+	//	isConflicted:    false,
+	//	isSecondary:     false,
+	//	srcSP:           task.GetSrcSp(),
+	//	destSP:          task.GetDestSp(),
+	//	migrateStatus:   WaitForMigrate,
+	//})
+	return nil
 }

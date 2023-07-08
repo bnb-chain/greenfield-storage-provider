@@ -10,6 +10,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
@@ -19,9 +20,9 @@ const (
 // dest sp receive migrate gvg notify from src sp.
 func (g *GateModular) notifyMigrateGVGHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err           error
-		reqCtx        *RequestContext
-		migrateGVGMsg []byte
+		err        error
+		reqCtx     *RequestContext
+		swapOutMsg []byte
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -36,24 +37,24 @@ func (g *GateModular) notifyMigrateGVGHandler(w http.ResponseWriter, r *http.Req
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	migrateGVGHeader := r.Header.Get(GnfdMigrateGVGMsgHeader)
-	migrateGVGMsg, err = hex.DecodeString(migrateGVGHeader)
+	migrateSwapOutHeader := r.Header.Get(GnfdMigrateSwapOutMsgHeader)
+	swapOutMsg, err = hex.DecodeString(migrateSwapOutHeader)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate gvg header", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate swap out header", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
-	migrateGVG := gfsptask.GfSpMigrateGVGTask{}
-	err = json.Unmarshal(migrateGVGMsg, &migrateGVG)
+	swapOut := virtualgrouptypes.MsgSwapOut{}
+	err = json.Unmarshal(swapOutMsg, &swapOut)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate gvg msg", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate swap out msg", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
 	// TODO: check approval.
-	err = g.baseApp.GfSpClient().NotifyMigrateGVG(reqCtx.Context(), &migrateGVG)
+	err = g.baseApp.GfSpClient().NotifyMigrateSwapOut(reqCtx.Context(), &swapOut)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to notify migrate gvg", "gvg", migrateGVG, "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to notify migrate swap out", "swap_out", swapOut, "error", err)
 	}
 }
 

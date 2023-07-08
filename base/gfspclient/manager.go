@@ -9,6 +9,7 @@ import (
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.UploadObjectTask) error {
@@ -181,16 +182,16 @@ func (s *GfSpClient) PickVirtualGroupFamilyID(ctx context.Context, task coretask
 	return resp.VgfId, nil
 }
 
-func (s *GfSpClient) NotifyMigrateGVG(ctx context.Context, migrateTask coretask.MigrateGVGTask) error {
+func (s *GfSpClient) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
 		return ErrRpcUnknown
 	}
-	req := &gfspserver.GfSpNotifyMigrateGVGRequest{
-		MigrateGvgTask: migrateTask.(*gfsptask.GfSpMigrateGVGTask),
+	req := &gfspserver.GfSpNotifyMigrateSwapOutRequest{
+		SwapOut: swapOut,
 	}
-	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyMigrateGVG(ctx, req)
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyMigrateSwapOut(ctx, req)
 	if err != nil {
 		return err
 	}

@@ -13,6 +13,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // spilt server and client const definition avoids circular references
@@ -39,8 +40,8 @@ const (
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
 	// NotifyMigrateGVGTaskPath defines dispatch migrate gvg task from src sp to dest sp.
 	NotifyMigrateGVGTaskPath = "/greenfield/migrate/v1/notify-migrate-gvg-task"
-	// GnfdMigrateGVGMsgHeader defines migrate gvg msg header
-	GnfdMigrateGVGMsgHeader = "X-Gnfd-Migrate-GVG-Msg"
+	// GnfdMigrateSwapOutMsgHeader defines migrate swap out msg header
+	GnfdMigrateSwapOutMsgHeader = "X-Gnfd-Migrate-Swap-Out-Msg"
 	// SecondarySPMigrationBucketApprovalPath defines secondary sp sign migration bucket approval
 	SecondarySPMigrationBucketApprovalPath = "/greenfield/migrate/v1/migration-bucket-approval"
 	// GnfdSecondarySPMigrationBucketApprovalHeader defines secondary sp migration bucket sign doc header.
@@ -164,22 +165,21 @@ func (s *GfSpClient) MigratePiece(ctx context.Context, task *gfsptask.GfSpMigrat
 	return buf.Bytes(), nil
 }
 
-// NotifyDestSPMigrateGVG is used to notify dest sp start migrate gvg task.
-// TODO: maybe need a approval.
-func (s *GfSpClient) NotifyDestSPMigrateGVG(ctx context.Context, destEndpoint string, migrateTask coretask.MigrateGVGTask) error {
+// NotifyDestSPMigrateSwapOut is used to notify dest sp start migrate swap out task.
+func (s *GfSpClient) NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoint string, swapOut *virtual_types.MsgSwapOut) error {
 	req, err := http.NewRequest(http.MethodPost, destEndpoint+NotifyMigrateGVGTaskPath, nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", destEndpoint, "error", err)
 		return err
 	}
-	msg, err := json.Marshal(migrateTask)
+	msg, err := json.Marshal(swapOut)
 	if err != nil {
 		return err
 	}
-	req.Header.Add(GnfdMigrateGVGMsgHeader, hex.EncodeToString(msg))
+	req.Header.Add(GnfdMigrateSwapOutMsgHeader, hex.EncodeToString(msg))
 	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
-		log.Errorw("failed to notify migrate gvg msg", "error", err)
+		log.Errorw("failed to notify migrate swap out msg", "error", err)
 		return err
 	}
 	defer resp.Body.Close()

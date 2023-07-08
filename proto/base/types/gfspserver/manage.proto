@@ -1,9 +1,12 @@
 syntax = "proto3";
 package base.types.gfspserver;
 
+import "greenfield/virtualgroup/tx.proto";
+
 import "base/types/gfsperrors/error.proto";
 import "base/types/gfsplimit/limit.proto";
 import "base/types/gfsptask/task.proto";
+
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
@@ -66,11 +69,11 @@ message GfSpPickVirtualGroupFamilyResponse {
   uint32 vgf_id = 2;
 }
 
-message GfSpNotifyMigrateGVGRequest {
-  base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 1;
+message GfSpNotifyMigrateSwapOutRequest {
+  greenfield.virtualgroup.MsgSwapOut swap_out = 1;
 }
 
-message GfSpNotifyMigrateGVGResponse {
+message GfSpNotifyMigrateSwapOutResponse {
   base.types.gfsperrors.GfSpError err = 1;
 }
 
@@ -79,5 +82,5 @@ service GfSpManageService {
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
   rpc GfSpReportTask(GfSpReportTaskRequest) returns (GfSpReportTaskResponse) {}
   rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns (GfSpPickVirtualGroupFamilyResponse) {}
-  rpc GfSpNotifyMigrateGVG(GfSpNotifyMigrateGVGRequest) returns (GfSpNotifyMigrateGVGResponse) {}
+  rpc GfSpNotifyMigrateSwapOut(GfSpNotifyMigrateSwapOutRequest) returns (GfSpNotifyMigrateSwapOutResponse) {}
 }

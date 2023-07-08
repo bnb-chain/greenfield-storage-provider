@@ -232,13 +232,13 @@ const (
 	MigratePiecePath = "/greenfield/migrate/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header.
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
-	// NotifyMigrateGVGTaskPath defines dispatch migrate gvg task from src sp to dest sp.
-	NotifyMigrateGVGTaskPath = "/greenfield/migrate/v1/notify-migrate-gvg-task"
-	// GnfdMigrateGVGMsgHeader defines migrate gvg msg header.
-	GnfdMigrateGVGMsgHeader = "X-Gnfd-Migrate-GVG-Msg"
+	// NotifyMigrateSwapOutTaskPath defines dispatch swap out from src sp to dest sp.
+	NotifyMigrateSwapOutTaskPath = "/greenfield/migrate/v1/notify-migrate-swap-out-task"
+	// 	GnfdMigrateSwapOutMsgHeader = "X-Gnfd-Migrate-Swap-Out-Msg" defines migrate gvg msg header.
+	GnfdMigrateSwapOutMsgHeader = "X-Gnfd-Migrate-Swap-Out-Msg"
 	// SecondarySPMigrationBucketApprovalPath defines secondary sp sign migration bucket approval
 	SecondarySPMigrationBucketApprovalPath = "/greenfield/migrate/v1/migration-bucket-approval"
-	// GnfdSecondarySPMigrationBucket defines secondary sp migration bucket sign doc header.
+	// GnfdSecondarySPMigrationBucketApproval defines secondary sp migration bucket sign doc header.
 	GnfdSecondarySPMigrationBucketApproval = "X-Gnfd-Secondary-Migration-Bucket-Approval"
 )
 
