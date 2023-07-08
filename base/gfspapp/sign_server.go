@@ -200,6 +200,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign complete swap out", "error", err)
 		}
+	case *gfspserver.GfSpSignRequest_SpExit:
+		txHash, err = g.signer.SPExit(ctx, t.SpExit)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign sp exit", "error", err)
+		}
 	case *gfspserver.GfSpSignRequest_CompleteSpExit:
 		txHash, err = g.signer.CompleteSPExit(ctx, t.CompleteSpExit)
 		if err != nil {
