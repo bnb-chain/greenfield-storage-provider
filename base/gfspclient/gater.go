@@ -231,7 +231,7 @@ func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint stri
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "dest_sp_endpoint", destSPEndpoint, "error", err)
 		return nil, err
 	}
-	msg, err := virtualgrouptypes.ModuleCdc.Marshal(swapOutApproval)
+	msg, err := virtualgrouptypes.ModuleCdc.MarshalJSON(swapOutApproval)
 	if err != nil {
 		return nil, err
 	}
