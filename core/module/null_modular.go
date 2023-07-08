@@ -56,7 +56,7 @@ func (*NullModular) PostMigrateBucketApproval(context.Context, task.ApprovalMigr
 func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateBucketTask) (uint32, error) {
 	return 0, ErrNilModular
 }
-func (*NullModular) NotifyMigrateGVG(context.Context, task.MigrateGVGTask) error {
+func (*NullModular) NotifyMigrateSwapOut(context.Context, *virtualgrouptypes.MsgSwapOut) error {
 	return ErrNilModular
 }
 

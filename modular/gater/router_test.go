@@ -59,9 +59,9 @@ func TestRouters(t *testing.T) {
 			name:             "Notify migrate gvg task",
 			router:           gwRouter,
 			method:           http.MethodPost,
-			url:              scheme + testDomain + NotifyMigrateGVGTaskPath,
+			url:              scheme + testDomain + NotifyMigrateSwapOutTaskPath,
 			shouldMatch:      true,
-			wantedRouterName: notifyMigrateGVGRouterName,
+			wantedRouterName: notifyMigrateSwapOutRouterName,
 		},
 		{
 			name:             "Migrate piece data",
