@@ -13,7 +13,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // spilt server and client const definition avoids circular references
@@ -46,12 +46,16 @@ const (
 	SecondarySPMigrationBucketApprovalPath = "/greenfield/migrate/v1/migration-bucket-approval"
 	// GnfdSecondarySPMigrationBucketApprovalHeader defines secondary sp migration bucket sign doc header.
 	GnfdSecondarySPMigrationBucketApprovalHeader = "X-Gnfd-Secondary-Migration-Bucket-Approval"
+	// GnfdSwapOutApprovalHeader defines swap out approval
+	GnfdSwapOutApprovalHeader = "X-Gnfd-Swap-Out-Approval"
+	// SwapOutApprovalPath defines get swap out approval path
+	SwapOutApprovalPath = "/greenfield/migrate/v1/get-swap-out-approval"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
 	req, err := http.NewRequest(http.MethodPut, endpoint+ReplicateObjectPiecePath, bytes.NewReader(data))
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", endpoint, "error", err)
 		return err
 	}
 
@@ -77,7 +81,7 @@ func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint str
 func (s *GfSpClient) GetPieceFromECChunks(ctx context.Context, endpoint string, task coretask.RecoveryPieceTask) (io.ReadCloser, error) {
 	req, err := http.NewRequest(http.MethodGet, endpoint+RecoveryObjectPiecePath, nil)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
@@ -106,7 +110,7 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	receive coretask.ReceivePieceTask) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodPut, endpoint+ReplicateObjectPiecePath, nil)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
@@ -137,7 +141,7 @@ func (s *GfSpClient) MigratePiece(ctx context.Context, task *gfsptask.GfSpMigrat
 	endpoint := task.GetSrcSpEndpoint()
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", endpoint, MigratePiecePath), nil)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", endpoint, "error", err)
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
@@ -166,10 +170,10 @@ func (s *GfSpClient) MigratePiece(ctx context.Context, task *gfsptask.GfSpMigrat
 }
 
 // NotifyDestSPMigrateSwapOut is used to notify dest sp start migrate swap out task.
-func (s *GfSpClient) NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoint string, swapOut *virtual_types.MsgSwapOut) error {
+func (s *GfSpClient) NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoint string, swapOut *virtualgrouptypes.MsgSwapOut) error {
 	req, err := http.NewRequest(http.MethodPost, destEndpoint+NotifyMigrateGVGTaskPath, nil)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect gateway", "endpoint", destEndpoint, "error", err)
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", destEndpoint, "error", err)
 		return err
 	}
 	msg, err := json.Marshal(swapOut)
@@ -194,7 +198,7 @@ func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, 
 	signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, secondarySPEndpoint+SecondarySPMigrationBucketApprovalPath, nil)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to connect gateway", "secondary_sp_endpoint", secondarySPEndpoint, "error", err)
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "secondary_sp_endpoint", secondarySPEndpoint, "error", err)
 		return nil, err
 	}
 	msg, err := storagetypes.ModuleCdc.Marshal(signDoc)
@@ -212,6 +216,36 @@ func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, 
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get resp body, StatusCode(%d), Endpoint(%s)", resp.StatusCode, secondarySPEndpoint)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorw("failed to read response body", "error", err)
+	}
+	return data, nil
+}
+
+func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint string, swapOutApproval *virtualgrouptypes.MsgSwapOut) (
+	[]byte, error) {
+	req, err := http.NewRequest(http.MethodGet, destSPEndpoint+SwapOutApprovalPath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "dest_sp_endpoint", destSPEndpoint, "error", err)
+		return nil, err
+	}
+	msg, err := virtualgrouptypes.ModuleCdc.MarshalJSON(swapOutApproval)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add(GnfdSwapOutApprovalHeader, hex.EncodeToString(msg))
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.Errorw("failed to send requests to get swap out approval", "dest_sp_endpoint",
+			destSPEndpoint, "error", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get resp body, StatusCode(%d), Endpoint(%s)", resp.StatusCode, destSPEndpoint)
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
