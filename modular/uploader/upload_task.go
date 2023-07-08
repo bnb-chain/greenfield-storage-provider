@@ -48,8 +48,10 @@ func (u *UploadModular) PreUploadObject(ctx context.Context, uploadObjectTask co
 	}
 	createUploadTime := time.Now()
 	err := u.baseApp.GfSpClient().CreateUploadObject(ctx, uploadObjectTask)
-	metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_report_upload_manager_cost").Observe(time.Since(createUploadTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_report_upload_manager_end").Observe(time.Now().Sub(time.UnixMilli(uploadObjectTask.GetCreateTime())).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_report_upload_manager_cost").Observe(
+		time.Since(createUploadTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_report_upload_manager_end").Observe(
+		float64(time.Now().UnixMilli()-uploadObjectTask.GetCreateTime()) / 1000)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to begin upload object task")
 		return err
@@ -79,7 +81,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		data      = make([]byte, segmentSize)
 	)
 	metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_begin_from_task_create").Observe(
-		time.Now().Sub(time.UnixMilli(uploadObjectTask.GetCreateTime())).Seconds())
+		float64(time.Now().UnixMilli()-uploadObjectTask.GetCreateTime()) / 1000)
 	defer func() {
 		if err != nil {
 			uploadObjectTask.SetError(err)
@@ -88,13 +90,13 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			"read_size", readSize, "error", err)
 		uploadObjectTask.AppendLog("uploader-report-upload-task")
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_end_from_task_create").Observe(
-			time.Now().Sub(time.UnixMilli(uploadObjectTask.GetCreateTime())).Seconds())
+			float64(time.Now().UnixMilli()-uploadObjectTask.GetCreateTime()) / 1000)
 		go func() {
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_before_report_manager_end").Observe(
-				time.Now().Sub(time.UnixMilli(uploadObjectTask.GetCreateTime())).Seconds())
+				float64(time.Now().UnixMilli()-uploadObjectTask.GetCreateTime()) / 1000)
 			_ = u.baseApp.GfSpClient().ReportTask(context.Background(), uploadObjectTask)
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_after_report_manager_end").Observe(
-				time.Now().Sub(time.UnixMilli(uploadObjectTask.GetCreateTime())).Seconds())
+				float64(time.Now().UnixMilli()-uploadObjectTask.GetCreateTime()) / 1000)
 		}()
 	}()
 	startTime := time.Now()
@@ -107,7 +109,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		readN, err = StreamReadAt(stream, data)
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_read_data_cost").Observe(time.Since(startReadFromGateway).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_read_data_end").Observe(
-			time.Now().Sub(time.UnixMilli(uploadObjectTask.GetCreateTime())).Seconds())
+			float64(time.Now().UnixMilli()-uploadObjectTask.GetCreateTime()) / 1000)
 		readSize += readN
 		data = data[0:readN]
 
@@ -129,9 +131,10 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			startSignSignature := time.Now()
 			signature, integrity, err = u.baseApp.GfSpClient().SignIntegrityHash(ctx,
 				uploadObjectTask.GetObjectInfo().Id.Uint64(), checksums)
-			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_sign_integrity_cost").Observe(time.Since(startSignSignature).Seconds())
+			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_sign_integrity_cost").Observe(
+				time.Since(startSignSignature).Seconds())
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_sign_integrity_end").Observe(
-				time.Now().Sub(time.UnixMilli(uploadObjectTask.GetCreateTime())).Seconds())
+				float64(time.Now().UnixMilli()-uploadObjectTask.GetCreateTime()) / 1000)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
 				return err
@@ -151,9 +154,10 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			}
 			startUpdateSignature := time.Now()
 			err = u.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
-			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_set_integrity_cost").Observe(time.Since(startUpdateSignature).Seconds())
+			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_set_integrity_cost").Observe(
+				time.Since(startUpdateSignature).Seconds())
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_set_integrity_end").Observe(
-				time.Now().Sub(time.UnixMilli(uploadObjectTask.GetCreateTime())).Seconds())
+				float64(time.Now().UnixMilli()-uploadObjectTask.GetCreateTime()) / 1000)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
 				return ErrGfSpDB
@@ -169,9 +173,10 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		checksums = append(checksums, hash.GenerateChecksum(data))
 		startPutPiece := time.Now()
 		err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
-		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_cost").Observe(time.Since(startPutPiece).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_cost").Observe(
+			time.Since(startPutPiece).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_end").Observe(
-			time.Now().Sub(time.UnixMilli(uploadObjectTask.GetCreateTime())).Seconds())
+			float64(time.Now().UnixMilli()-uploadObjectTask.GetCreateTime()) / 1000)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to put segment piece to piece store", "error", err)
 			return ErrPieceStore
