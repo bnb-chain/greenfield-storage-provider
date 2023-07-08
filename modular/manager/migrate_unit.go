@@ -28,6 +28,7 @@ type GlobalVirtualGroupMigrateExecuteUnit struct {
 	isConflicted         bool   // only be used in sp exit.
 	isSecondary          bool   // only be used in sp exit.
 	isRemoted            bool   // only be used in sp exit.
+	swapOutKey           string // only be used in sp exit.
 	srcSP                *sptypes.StorageProvider
 	destSP               *sptypes.StorageProvider
 	migrateStatus        MigrateStatus
