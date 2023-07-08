@@ -19,6 +19,7 @@ import (
 var _ vgmgr.SPPickFilter = &PickDestSPFilter{}
 
 // PickDestSPFilter is used to pick sp id which is not in excluded sp ids.
+// which is used by src sp to pick dest sp.
 type PickDestSPFilter struct {
 	excludedSPIDs []uint32
 }
@@ -44,11 +45,13 @@ func (f *PickDestSPFilter) Check(spID uint32) bool {
 	return true
 }
 
+// SwapOutUnit is used by swap out plan and task runner.
 type SwapOutUnit struct {
-	isFamily     bool                          // is used by src sp.
-	isConflicted bool                          // is used by src sp.
-	isSecondary  bool                          // is used by src sp.
-	swapOut      *virtualgrouptypes.MsgSwapOut // is used by srd/dest sp.
+	isFamily           bool                          // is used by src sp.
+	isConflicted       bool                          // is used by src sp.
+	conflictedFamilyID uint32                        // is meaningful when swap out is conflicted
+	isSecondary        bool                          // is used by src sp.
+	swapOut            *virtualgrouptypes.MsgSwapOut // is used by srd/dest sp.
 
 	// check completed swap out's gvg, and send tx
 	completedGVGMutex sync.RWMutex
@@ -98,6 +101,14 @@ func GetSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
 	}
 }
 
+func GetEventSwapOutKey(swapOut *virtualgrouptypes.EventCompleteSwapOut) string {
+	if swapOut.GetGlobalVirtualGroupFamilyId() == 0 {
+		return util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
+	} else {
+		return util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
+	}
+}
+
 // SwapOutPlan is used to record the execution of swap out in src sp.
 type SwapOutPlan struct {
 	manager             *ManageModular
@@ -110,9 +121,78 @@ type SwapOutPlan struct {
 	completedSwapOut    map[string]*SwapOutUnit
 }
 
-func (plan *SwapOutPlan) CheckAndSendCompleteSPExitTx(event *virtualgrouptypes.EventCompleteSwapOut) error {
-	// TODO:
+// add family swap out if all conflicted is resolved.
+func (plan *SwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit) error {
+	familyGVGs, err := plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), plan.scheduler.selfSP.GetId(), s.conflictedFamilyID)
+	if err != nil {
+		return err
+	}
+	familySecondarySPIDMap := make(map[uint32]int)
+	for _, gvg := range familyGVGs {
+		for _, secondarySPID := range gvg.GetSecondarySpIds() {
+			familySecondarySPIDMap[secondarySPID] = familySecondarySPIDMap[secondarySPID] + 1
+		}
+	}
+	destFamilySP, err := plan.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithMap(familySecondarySPIDMap))
+	if err != nil {
+		// still has conflict
+		return nil
+	}
+
+	swapOut := &virtualgrouptypes.MsgSwapOut{
+		StorageProvider:            plan.scheduler.selfSP.GetOperatorAddress(),
+		GlobalVirtualGroupFamilyId: s.conflictedFamilyID,
+		SuccessorSpId:              destFamilySP.GetId(),
+	}
+
+	// TODO: get family swap out approval
+	// TODO: send start swap out tx
+	sUnit := &SwapOutUnit{
+		isFamily:     true,
+		isConflicted: false,
+		isSecondary:  false,
+		swapOut:      swapOut,
+	}
+
+	plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
 	return nil
+}
+
+func (plan *SwapOutPlan) checkAllCompletedAndSendCompleteSPExitTx() error {
+	// check completed
+	for key, runningSwapOut := range plan.swapOutUnitMap {
+		if _, found := plan.completedSwapOut[key]; !found {
+			return nil
+		}
+		if runningSwapOut.isConflicted {
+			if _, found := plan.completedSwapOut[util.Uint32ToString(runningSwapOut.conflictedFamilyID)]; !found {
+				return nil
+			}
+		}
+	}
+
+	// TODO: send complete sp exit tx.
+
+	return nil
+}
+
+func (plan *SwapOutPlan) CheckAndSendCompleteSPExitTx(event *virtualgrouptypes.EventCompleteSwapOut) error {
+	var err error
+	plan.swapOutUnitMapMutex.Lock()
+	defer plan.swapOutUnitMapMutex.Unlock()
+
+	if _, found := plan.swapOutUnitMap[GetEventSwapOutKey(event)]; !found {
+		return fmt.Errorf("not found swap out key")
+	}
+
+	unit := plan.swapOutUnitMap[GetEventSwapOutKey(event)]
+	if unit.isConflicted {
+		err = plan.recheckConflictAndAddFamilySwapOut(unit)
+		if err != nil {
+			return err
+		}
+	}
+	return plan.checkAllCompletedAndSendCompleteSPExitTx()
 }
 
 // loadFromDB is used to rebuild the memory plan topology.
@@ -191,10 +271,10 @@ func (plan *SwapOutPlan) notifyDestSPSwapOut() {
 			}
 
 			err = plan.manager.baseApp.GfSpClient().NotifyDestSPMigrateSwapOut(context.Background(), sp.GetEndpoint(), swapOut)
-			log.Infow("notify dest sp migrate gvg", "swap_out", swapOut, "error", err)
+			log.Infow("notify dest sp swap out", "swap_out", swapOut, "error", err)
 
 		}
-		log.Infow("notify migrate unit to dest sp", "loop_number", notifyLoopNumber, "notify_number", notifyUnitNumber)
+		log.Infow("notify swap out to dest sp", "loop_number", notifyLoopNumber, "notify_number", notifyUnitNumber)
 	}
 }
 
@@ -672,10 +752,11 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits() ([]*SwapOutUnit, er
 					// TODO: get secondary swap out approval
 
 					swapOutUnits = append(swapOutUnits, &SwapOutUnit{
-						isFamily:     false,
-						isConflicted: true,
-						isSecondary:  true,
-						swapOut:      swapOut,
+						isFamily:           false,
+						isConflicted:       true,
+						conflictedFamilyID: checker.vgf.GetId(),
+						isSecondary:        true,
+						swapOut:            swapOut,
 					})
 				}
 			}
