@@ -83,7 +83,7 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
-	task = m.migrateGVGQueue.TopByLimit(limit)
+	task = m.migrateGVGQueue.PopByLimit(limit)
 	if task != nil {
 		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", task.Key().String())
 		backupTasks = append(backupTasks, task)
