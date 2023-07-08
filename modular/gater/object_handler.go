@@ -111,7 +111,8 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	uploadDataTime := time.Now()
 	err = g.baseApp.GfSpClient().UploadObject(ctx, task, r.Body)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_end").Observe(float64(time.Since(time.UnixMilli(task.GetCreateTime())).Milliseconds()) / float64(time.Second))
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_end").Observe(
+		time.Now().Sub(time.UnixMilli(task.GetCreateTime())).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
