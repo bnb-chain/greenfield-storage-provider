@@ -107,12 +107,12 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		}
 		if t.GetRetry() == 1 {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_replicate_schedule_cost").Observe(
-				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / 1000)
+				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / float64(time.Second))
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_wait_replicate_first_schedule_cost").Observe(
-				float64(time.Since(time.UnixMilli(t.GetUpdateTime())).Milliseconds()) / 1000)
+				float64(time.Since(time.UnixMilli(t.GetUpdateTime())).Milliseconds()) / float64(time.Second))
 		} else {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_replicate_retry_schedule_cost").Observe(
-				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / 1000)
+				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / float64(time.Second))
 		}
 		metrics.ReqCounter.WithLabelValues(ManagerDispatchReplicateTask).Inc()
 		metrics.ReqTime.WithLabelValues(ManagerDispatchReplicateTask).Observe(time.Since(startTime).Seconds())
@@ -123,10 +123,10 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		}
 		if t.GetRetry() == 1 {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_seal_schedule_cost").Observe(
-				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / 1000)
+				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / float64(time.Second))
 		} else {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_seal_retry_schedule_cost").Observe(
-				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / 1000)
+				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / float64(time.Second))
 		}
 		metrics.ReqCounter.WithLabelValues(ManagerDispatchSealTask).Inc()
 		metrics.ReqTime.WithLabelValues(ManagerDispatchSealTask).Observe(time.Since(startTime).Seconds())
@@ -136,10 +136,10 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		}
 		if t.GetRetry() == 1 {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_receive_schedule_cost").Observe(
-				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / 1000)
+				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / float64(time.Second))
 		} else {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_receive_retry_schedule_cost").Observe(
-				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / 1000)
+				float64(time.Since(time.UnixMilli(t.GetCreateTime())).Milliseconds()) / float64(time.Second))
 		}
 		metrics.ReqCounter.WithLabelValues(ManagerDispatchReceiveTask).Inc()
 		metrics.ReqTime.WithLabelValues(ManagerDispatchReceiveTask).Observe(time.Since(startTime).Seconds())
