@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	DefaultSealGasLimit                      = 1200 // fix gas limit for msgSealObject is 1200
+	DefaultSealGasLimit                      = 1200 // fix gas limit for MsgSealObject is 1200
 	DefaultSealFeeAmount                     = 6000000000000
 	DefaultRejectSealGasLimit                = 12000 // fix gas limit for MsgRejectSealObject is 12000
 	DefaultRejectSealFeeAmount               = 60000000000000
@@ -21,6 +21,8 @@ const (
 	DefaultDiscontinueBucketFeeAmount        = 12000000000000
 	DefaultCreateGlobalVirtualGroupGasLimit  = 1200 // fix gas limit for MsgCreateGlobalVirtualGroup is 1200
 	DefaultCreateGlobalVirtualGroupFeeAmount = 6000000000000
+	DefaultCompleteMigrateBucketGasLimit     = 1200 // fix gas limit for MsgCompleteMigrateBucket is 1200
+	DefaultCompleteMigrateBucketFeeAmount    = 6000000000000
 
 	// SpOperatorPrivKey defines env variable name for sp operator private key
 	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
@@ -71,6 +73,12 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 	}
 	if cfg.Chain.CreateGlobalVirtualGroupFeeAmount == 0 {
 		cfg.Chain.CreateGlobalVirtualGroupFeeAmount = DefaultCreateGlobalVirtualGroupFeeAmount
+	}
+	if cfg.Chain.CompleteMigrateBucketGasLimit == 0 {
+		cfg.Chain.CompleteMigrateBucketGasLimit = DefaultCompleteMigrateBucketGasLimit
+	}
+	if cfg.Chain.CompleteMigrateBucketFeeAmount == 0 {
+		cfg.Chain.CompleteMigrateBucketFeeAmount = DefaultCompleteMigrateBucketFeeAmount
 	}
 	if val, ok := os.LookupEnv(SpOperatorPrivKey); ok {
 		cfg.SpAccount.OperatorPrivateKey = val

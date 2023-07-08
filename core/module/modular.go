@@ -282,6 +282,8 @@ type Signer interface {
 	SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error)
 	// SwapOut signs the MsgSwapOut and broadcast the tx to greenfield.
 	SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error)
+	// SignSwapOut signs the MsgSwapOut for asking swap out approval.
+	SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error)
 	// CompleteSwapOut signs the MsgCompleteSwapOut and broadcast the tx to greenfield.
 	CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error)
 	// CompleteSPExit signs the MsgCompleteStorageProviderExit and broadcast the tx to greenfield.
