@@ -59,8 +59,8 @@ func GetSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
 	}
 }
 
-// SPSwapOutPlan is used to record the execution of subtasks in src sp.
-type SPSwapOutPlan struct {
+// SwapOutPlan is used to record the execution of swap out in src sp.
+type SwapOutPlan struct {
 	manager             *ManageModular
 	scheduler           *SPExitScheduler
 	virtualGroupManager vgmgr.VirtualGroupManager
@@ -71,25 +71,25 @@ type SPSwapOutPlan struct {
 }
 
 // loadFromDB is used to rebuild the memory plan topology.
-func (plan *SPSwapOutPlan) loadFromDB() error {
+func (plan *SwapOutPlan) loadFromDB() error {
 	// TODO:
 	return nil
 }
 
 // it is called at start of the execute plan.
-func (plan *SPSwapOutPlan) storeToDB() error {
+func (plan *SwapOutPlan) storeToDB() error {
 	// TODO:
 	return nil
 }
 
 // NotifyDestSPIterator is used to notify/check migrate units to dest sp.
 type NotifyDestSPIterator struct {
-	plan        *SPSwapOutPlan
+	plan        *SwapOutPlan
 	notifyIndex int
 	swapOuts    []*virtualgrouptypes.MsgSwapOut
 }
 
-func NewNotifyDestSPIterator(plan *SPSwapOutPlan) *NotifyDestSPIterator {
+func NewNotifyDestSPIterator(plan *SwapOutPlan) *NotifyDestSPIterator {
 	plan.SwapOutUnitMapMutex.Lock()
 	defer plan.SwapOutUnitMapMutex.Unlock()
 
@@ -118,13 +118,13 @@ func (iter *NotifyDestSPIterator) Value() *virtualgrouptypes.MsgSwapOut {
 	return iter.swapOuts[iter.notifyIndex]
 }
 
-func (plan *SPSwapOutPlan) startSrcSPSchedule() {
+func (plan *SwapOutPlan) startSrcSPSchedule() {
 	// notify dest sp start migrate swap out and check them migrate status.
 	go plan.notifyDestSPSwapOut()
 }
 
 // dispatch swap out to corresponding dest sp.
-func (plan *SPSwapOutPlan) notifyDestSPSwapOut() {
+func (plan *SwapOutPlan) notifyDestSPSwapOut() {
 	var (
 		err              error
 		notifyLoopNumber uint64
@@ -154,12 +154,12 @@ func (plan *SPSwapOutPlan) notifyDestSPSwapOut() {
 }
 
 // Init load from db.
-func (plan *SPSwapOutPlan) Init() error {
+func (plan *SwapOutPlan) Init() error {
 	return plan.loadFromDB()
 }
 
 // Start persist plan and task to db and task dispatcher
-func (plan *SPSwapOutPlan) Start() error {
+func (plan *SwapOutPlan) Start() error {
 	var err error
 	if err = plan.storeToDB(); err != nil {
 		log.Errorw("failed to start migrate execute plan due to store db", "error", err)
@@ -345,11 +345,11 @@ type SPExitScheduler struct {
 	lastSubscribedSwapOutBlockHeight uint64
 	isExiting                        bool
 	isExited                         bool
-	executePlan                      *SPSwapOutPlan
+	swapOutPlan                      *SwapOutPlan // swap out unit
 
 	// sp exit workflow dest sp.
 	// manage specific gvg execution tasks.
-	taskRunner *MigrateTaskRunner
+	taskRunner *MigrateTaskRunner // gvg migrate unit
 }
 
 // NewSPExitScheduler returns a sp exit scheduler instance.
@@ -386,12 +386,12 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		log.Errorw("failed to init sp exit scheduler due to init subscribe swap out progress", "error", err)
 		return err
 	}
-	s.executePlan = &SPSwapOutPlan{
+	s.swapOutPlan = &SwapOutPlan{
 		manager:             s.manager,
 		scheduler:           s,
 		virtualGroupManager: s.manager.virtualGroupManager,
 	}
-	if err = s.executePlan.Init(); err != nil {
+	if err = s.swapOutPlan.Init(); err != nil {
 		log.Errorw("failed to init sp exit scheduler due to plan init", "error", err)
 		return err
 	}
@@ -492,7 +492,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 					return
 				}
 
-				s.executePlan = plan
+				s.swapOutPlan = plan
 				s.isExiting = true
 			}
 			if spExitEvents.CompleteEvent != nil {
@@ -564,7 +564,7 @@ FamilyConflictChecker
 */
 type FamilyConflictChecker struct {
 	vgf    *virtualgrouptypes.GlobalVirtualGroupFamily
-	plan   *SPSwapOutPlan
+	plan   *SwapOutPlan
 	selfSP *sptypes.StorageProvider
 }
 
@@ -642,19 +642,19 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits() ([]*SwapOutUnit, er
 	return swapOutUnits, nil
 }
 
-func (s *SPExitScheduler) produceSwapOutPlan() (*SPSwapOutPlan, error) {
+func (s *SPExitScheduler) produceSwapOutPlan() (*SwapOutPlan, error) {
 	var (
 		err              error
 		vgfList          []*virtualgrouptypes.GlobalVirtualGroupFamily
 		secondaryGVGList []*virtualgrouptypes.GlobalVirtualGroup
-		plan             *SPSwapOutPlan
+		plan             *SwapOutPlan
 	)
 
 	if vgfList, err = s.manager.baseApp.Consensus().ListVirtualGroupFamilies(context.Background(), s.selfSP.GetId()); err != nil {
 		log.Errorw("failed to list virtual group family", "error", err)
 		return plan, err
 	}
-	plan = &SPSwapOutPlan{
+	plan = &SwapOutPlan{
 		manager:             s.manager,
 		scheduler:           s,
 		virtualGroupManager: s.manager.virtualGroupManager,
