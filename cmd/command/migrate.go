@@ -15,10 +15,10 @@ var spOperatorAddressFlag = &cli.StringFlag{
 
 var SPExitCmd = &cli.Command{
 	Name:  "exit",
-	Usage: "Used for sp exit from the Greenfield storage network",
+	Usage: "Used for sp exits from the Greenfield storage network",
 	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared
 		to exit from Greenfield storage network`,
-	Category: "EXIT COMMANDS",
+	Category: "MIGRATE COMMANDS",
 	Action:   spExit,
 	Flags: []cli.Flag{
 		spOperatorAddressFlag,

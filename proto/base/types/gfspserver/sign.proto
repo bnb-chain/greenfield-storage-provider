@@ -44,9 +44,9 @@ message GfSpSignRequest {
     greenfield.storage.MsgCompleteMigrateBucket complete_migrate_bucket = 15;
     greenfield.storage.SecondarySpMigrationBucketSignDoc sign_secondary_sp_migration_bucket = 16;
     greenfield.virtualgroup.MsgSwapOut swap_out = 17;
-    greenfield.virtualgroup.MsgCompleteSwapOut complete_swap_out = 18;
-    greenfield.virtualgroup.MsgStorageProviderExit sp_exit = 19;
-    greenfield.virtualgroup.MsgCompleteStorageProviderExit complete_sp_exit = 20;
+    greenfield.virtualgroup.MsgCompleteSwapOut complete_swap_out = 19;
+    greenfield.virtualgroup.MsgStorageProviderExit sp_exit = 20;
+    greenfield.virtualgroup.MsgCompleteStorageProviderExit complete_sp_exit = 21;
   }
 }
 
