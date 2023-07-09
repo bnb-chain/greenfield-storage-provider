@@ -86,8 +86,6 @@ func (plan *BucketMigrateExecutePlan) storeToDB() error {
 			VirtualGroupFamilyID: migrateGVGUnit.gvg.GetFamilyId(),
 			RedundancyIndex:      -1,
 			BucketID:             migrateGVGUnit.bucketID,
-			IsSecondary:          false,
-			IsConflicted:         false,
 			IsRemoted:            false,
 			SrcSPID:              migrateGVGUnit.srcSP.GetId(),
 			DestSPID:             migrateGVGUnit.destSP.GetId(),
@@ -420,7 +418,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 			return nil, err
 		}
 		destFamilyID = destGVG.FamilyID
-		bucketUnit := newGlobalVirtualGroupMigrateExecuteUnitByBucket(plan.bucketID, srcGVG, srcSP, destSP, WaitForMigrate, destGVG.ID, 0, false, false, false)
+		bucketUnit := newGlobalVirtualGroupMigrateExecuteUnitByBucket(plan.bucketID, srcGVG, srcSP, destSP, WaitForMigrate, destGVG.ID, 0)
 		plan.gvgUnitMap[srcGVG.GetId()] = bucketUnit
 	}
 
@@ -499,8 +497,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 				return errors.New("failed to list gvg")
 			}
 			for _, gvg := range primarySPGVGList {
-				bucketUnit := newGlobalVirtualGroupMigrateExecuteUnitByBucket(bucketID, gvg, srcSP, destSP, WaitForMigrate, migrateGVG.DestSPID, migrateGVG.LastMigratedObjectID,
-					migrateGVG.IsSecondary, migrateGVG.IsConflicted, migrateGVG.IsRemoted)
+				bucketUnit := newGlobalVirtualGroupMigrateExecuteUnitByBucket(bucketID, gvg, srcSP, destSP, WaitForMigrate, migrateGVG.DestSPID, migrateGVG.LastMigratedObjectID)
 				executePlan.gvgUnitMap[gvg.Id] = bucketUnit
 			}
 		}

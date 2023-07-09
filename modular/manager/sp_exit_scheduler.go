@@ -109,7 +109,7 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 		err        error
 		migrateKey string
 	)
-	migrateKey = MakeRemotedGVGMigrateKey(task.GetGvg().GetId(), task.GetGvg().GetFamilyId(), task.GetRedundancyIdx())
+	migrateKey = MakeGVGMigrateKey(task.GetGvg().GetId(), task.GetGvg().GetFamilyId(), task.GetRedundancyIdx())
 	if task.GetFinished() {
 		err = s.taskRunner.UpdateMigrateGVGStatus(migrateKey, Migrated)
 	} else {
@@ -145,13 +145,12 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 				log.Errorw("failed to add swap out to task runner due to query gvg", "error", err)
 				return err
 			}
-			gvg.FamilyId = 0
 			gvgList = append(gvgList, gvg)
 		}
 	}
 
 	for _, gvg := range gvgList {
-		redundancyIndex := int32(0)
+		redundancyIndex := int32(-1)
 		if gvg.GetFamilyId() == 0 {
 			if redundancyIndex, err = util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId()); err != nil {
 				log.Errorw("failed to add swap out to task runner due to get redundancy index", "error", err)
@@ -161,9 +160,6 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 		gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
 			gvg:             gvg,
 			redundancyIndex: redundancyIndex,
-			isRemoted:       true, // from src sp
-			isConflicted:    false,
-			isSecondary:     false,
 			swapOutKey:      GetSwapOutKey(swapOut),
 			srcSP:           srcSP,
 			destSP:          s.selfSP,
@@ -174,7 +170,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 			return err
 		}
 	}
-	return s.taskRunner.addSwapOut(swapOut)
+	return s.taskRunner.AddNewSwapOut(swapOut)
 }
 
 func (s *SPExitScheduler) subscribeEvents() {
@@ -477,11 +473,9 @@ func (plan *SrcSPSwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit)
 	plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
 
 	if err = plan.manager.baseApp.GfSpDB().InsertSwapOutUnit(&spdb.SwapOutMeta{
-		SwapOutKey:         GetSwapOutKey(sUnit.swapOut),
-		IsDestSP:           false,
-		IsConflicted:       sUnit.isConflicted,
-		ConflictedFamilyID: sUnit.conflictedFamilyID,
-		SwapOutMsg:         sUnit.swapOut,
+		SwapOutKey: GetSwapOutKey(sUnit.swapOut),
+		IsDestSP:   false,
+		SwapOutMsg: sUnit.swapOut,
 	}); err != nil {
 		log.Infow("failed to store swap out plan to db", "swap_unit", sUnit, "error", err)
 		return err
@@ -532,11 +526,9 @@ func (plan *SrcSPSwapOutPlan) storeToDB() error {
 	var err error
 	for key, swapOutUnit := range plan.swapOutUnitMap {
 		if err = plan.manager.baseApp.GfSpDB().InsertSwapOutUnit(&spdb.SwapOutMeta{
-			SwapOutKey:         key,
-			IsDestSP:           false,
-			IsConflicted:       swapOutUnit.isConflicted,
-			ConflictedFamilyID: swapOutUnit.conflictedFamilyID,
-			SwapOutMsg:         swapOutUnit.swapOut,
+			SwapOutKey: key,
+			IsDestSP:   false,
+			SwapOutMsg: swapOutUnit.swapOut,
 		}); err != nil {
 			log.Infow("failed to store swap out plan to db", "error", err)
 			return err
@@ -643,56 +635,89 @@ func NewDestSPTaskRunner(m *ManageModular, v vgmgr.VirtualGroupManager) *DestSPT
 	}
 }
 
-func (runner *DestSPTaskRunner) addGVGUnit(gvgMeta *spdb.MigrateGVGUnitMeta) error {
-	gvg, queryGVGErr := runner.manager.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgMeta.GlobalVirtualGroupID)
-	if queryGVGErr != nil {
-		log.Errorw("failed to make gvg unit due to query gvg", "error", queryGVGErr)
-		return queryGVGErr
-	}
-	srcSP, querySPErr := runner.virtualGroupManager.QuerySPByID(gvgMeta.SrcSPID)
-	if querySPErr != nil {
-		log.Errorw("failed to make gvg unit due to query sp", "error", querySPErr)
-		return querySPErr
-	}
-	destSP, querySPErr := runner.virtualGroupManager.QuerySPByID(gvgMeta.DestSPID)
-	if querySPErr != nil {
-		log.Errorw("failed to make gvg unit due to query sp", "error", querySPErr)
-		return querySPErr
-	}
-	gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
-		gvg:             gvg,
-		redundancyIndex: gvgMeta.RedundancyIndex,
-		srcSP:           srcSP,
-		destSP:          destSP,
-		isRemoted:       true,
-		migrateStatus:   MigrateStatus(gvgMeta.MigrateStatus),
-	}
-
-	runner.mutex.Lock()
-	defer runner.mutex.Unlock()
-	if _, found := runner.keyIndexMap[gUnit.Key()]; found {
-		return nil
-	}
-	runner.gvgUnits = append(runner.gvgUnits, gUnit)
-	runner.keyIndexMap[gUnit.Key()] = len(runner.gvgUnits) - 1
-	return nil
-}
-
-func (runner *DestSPTaskRunner) addSwapOut(swapOut *virtualgrouptypes.MsgSwapOut) error {
-	runner.mutex.Lock()
-	defer runner.mutex.Unlock()
-	if _, found := runner.swapOutUnitMap[GetSwapOutKey(swapOut)]; found {
-		return nil
-	}
-	runner.swapOutUnitMap[GetSwapOutKey(swapOut)] = &SwapOutUnit{
-		swapOut:      swapOut,
-		completedGVG: make(map[uint32]*GlobalVirtualGroupMigrateExecuteUnit),
-	}
-	return nil
-}
-
 func (runner *DestSPTaskRunner) LoadFromDB() error {
-	// TODO: swap out and gvg
+	var (
+		err          error
+		swapOutList  []*spdb.SwapOutMeta
+		completedMap = make(map[uint32]*GlobalVirtualGroupMigrateExecuteUnit)
+	)
+	if swapOutList, err = runner.manager.baseApp.GfSpDB().ListDestSPSwapOutUnits(); err != nil {
+		return err
+	}
+
+	for _, swapOut := range swapOutList {
+		for _, completedID := range swapOut.CompletedGVGs {
+			completedMap[completedID] = nil
+		}
+		runner.swapOutUnitMap[swapOut.SwapOutKey] = &SwapOutUnit{
+			swapOut:      swapOut.SwapOutMsg,
+			completedGVG: completedMap,
+		}
+		srcSP, querySPError := runner.manager.baseApp.Consensus().QuerySP(context.Background(), swapOut.SwapOutMsg.GetStorageProvider())
+		if srcSP != nil {
+			log.Errorw("failed to add swap out to task runner", "error", querySPError)
+			return querySPError
+		}
+
+		if swapOut.SwapOutMsg.GetGlobalVirtualGroupFamilyId() != 0 {
+			allGVGList, queryGVGError := runner.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(),
+				srcSP.GetId(), swapOut.SwapOutMsg.GetGlobalVirtualGroupFamilyId())
+			if queryGVGError != nil {
+				log.Errorw("failed to add swap out to task runner due to list virtual groups by family id", "error", queryGVGError)
+				return queryGVGError
+			}
+			for _, gvg := range allGVGList {
+				if _, found := completedMap[gvg.GetId()]; !found {
+					migrateKey := MakeGVGMigrateKey(gvg.GetId(), gvg.GetFamilyId(), -1)
+					gvgMeta, queryErr := runner.manager.baseApp.GfSpDB().QueryMigrateGVGUnit(migrateKey)
+					if queryErr != nil {
+						return queryErr
+					}
+					gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
+						gvg:                  gvg,
+						redundancyIndex:      gvgMeta.RedundancyIndex,
+						swapOutKey:           gvgMeta.SwapOutKey,
+						lastMigratedObjectID: gvgMeta.LastMigratedObjectID,
+					}
+					runner.gvgUnits = append(runner.gvgUnits, gUnit)
+					runner.keyIndexMap[gUnit.Key()] = len(runner.gvgUnits) - 1
+				}
+			}
+		} else {
+			notFinishedGVGList := make([]*virtualgrouptypes.GlobalVirtualGroup, 0)
+			for _, gvgID := range swapOut.SwapOutMsg.GetGlobalVirtualGroupIds() {
+				if _, found := completedMap[gvgID]; !found {
+					gvg, queryGVGError := runner.manager.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgID)
+					if queryGVGError != nil {
+						log.Errorw("failed to add swap out to task runner due to query gvg", "error", queryGVGError)
+						return queryGVGError
+					}
+					notFinishedGVGList = append(notFinishedGVGList, gvg)
+				}
+			}
+			for _, gvg := range notFinishedGVGList {
+				redundancyIndex, getIndexErr := util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId())
+				if getIndexErr != nil {
+					log.Errorw("failed to add swap out to task runner due to get redundancy index", "error", getIndexErr)
+					return getIndexErr
+				}
+				migrateKey := MakeGVGMigrateKey(gvg.GetId(), gvg.GetFamilyId(), redundancyIndex)
+				gvgMeta, queryErr := runner.manager.baseApp.GfSpDB().QueryMigrateGVGUnit(migrateKey)
+				if queryErr != nil {
+					return queryErr
+				}
+				gUnit := &GlobalVirtualGroupMigrateExecuteUnit{
+					gvg:                  gvg,
+					redundancyIndex:      gvgMeta.RedundancyIndex,
+					swapOutKey:           gvgMeta.SwapOutKey,
+					lastMigratedObjectID: gvgMeta.LastMigratedObjectID,
+				}
+				runner.gvgUnits = append(runner.gvgUnits, gUnit)
+				runner.keyIndexMap[gUnit.Key()] = len(runner.gvgUnits) - 1
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -758,22 +783,46 @@ func (runner *DestSPTaskRunner) AddNewMigrateGVGUnit(remotedGVGUnit *GlobalVirtu
 	// add to db
 	if err := runner.manager.baseApp.GfSpDB().InsertMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
 		MigrateGVGKey:        remotedGVGUnit.Key(),
+		SwapOutKey:           remotedGVGUnit.swapOutKey,
 		GlobalVirtualGroupID: remotedGVGUnit.gvg.GetId(),
 		VirtualGroupFamilyID: remotedGVGUnit.gvg.GetFamilyId(),
 		RedundancyIndex:      remotedGVGUnit.redundancyIndex,
 		BucketID:             0,
-		IsSecondary:          remotedGVGUnit.isSecondary,
-		IsConflicted:         remotedGVGUnit.isConflicted,
-		IsRemoted:            remotedGVGUnit.isRemoted,
 		SrcSPID:              remotedGVGUnit.srcSP.GetId(),
 		DestSPID:             remotedGVGUnit.destSP.GetId(),
 		LastMigratedObjectID: 0,
 		MigrateStatus:        int(remotedGVGUnit.migrateStatus),
+		IsRemoted:            true,
 	}); err != nil {
 		log.Errorw("failed to store to db", "error", err)
 		return err
 	}
 
+	return nil
+}
+
+func (runner *DestSPTaskRunner) AddNewSwapOut(swapOut *virtualgrouptypes.MsgSwapOut) error {
+	var err error
+	runner.mutex.Lock()
+	if _, found := runner.swapOutUnitMap[GetSwapOutKey(swapOut)]; found {
+		runner.mutex.Unlock()
+		return nil
+	}
+	runner.swapOutUnitMap[GetSwapOutKey(swapOut)] = &SwapOutUnit{
+		swapOut:      swapOut,
+		completedGVG: make(map[uint32]*GlobalVirtualGroupMigrateExecuteUnit),
+	}
+	runner.mutex.Unlock()
+
+	// add to db
+	if err = runner.manager.baseApp.GfSpDB().InsertSwapOutUnit(&spdb.SwapOutMeta{
+		SwapOutKey: GetSwapOutKey(swapOut),
+		IsDestSP:   true,
+		SwapOutMsg: swapOut,
+	}); err != nil {
+		log.Infow("failed to add new swap out", "swap_unit", swapOut, "error", err)
+		return err
+	}
 	return nil
 }
 

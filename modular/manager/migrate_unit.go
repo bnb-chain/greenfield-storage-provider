@@ -10,14 +10,11 @@ import (
 type MigrateStatus int32
 
 // TODO: refine it, and move to proto.
-// sp exit: WaitForNotifyDestSP->NotifiedDestSP->WaitForMigrate->Migrating->Migrated.
-// bucket migrate: WaitForMigrate(created)->Migrating(schedule success)->Migrated(executor report success).
+// migrate: WaitForMigrate(created)->Migrating(schedule success)->Migrated(executor report success).
 var (
-	WaitForNotifyDestSP MigrateStatus = 0
-	NotifiedDestSP      MigrateStatus = 1
-	WaitForMigrate      MigrateStatus = 2
-	Migrating           MigrateStatus = 3
-	Migrated            MigrateStatus = 4
+	WaitForMigrate MigrateStatus = 0
+	Migrating      MigrateStatus = 1
+	Migrated       MigrateStatus = 2
 )
 
 // GlobalVirtualGroupMigrateExecuteUnit define basic migrate unit, which is used by sp exit and bucket migrate.
@@ -25,9 +22,6 @@ type GlobalVirtualGroupMigrateExecuteUnit struct {
 	gvg                  *virtualgrouptypes.GlobalVirtualGroup
 	destGVGID            uint32 // destGVG
 	redundancyIndex      int32  // if < 0, represents migrate primary.
-	isConflicted         bool   // only be used in sp exit.
-	isSecondary          bool   // only be used in sp exit.
-	isRemoted            bool   // only be used in sp exit.
 	swapOutKey           string // only be used in sp exit.
 	srcSP                *sptypes.StorageProvider
 	destSP               *sptypes.StorageProvider
@@ -37,19 +31,13 @@ type GlobalVirtualGroupMigrateExecuteUnit struct {
 
 // Key is used to as primary key.
 func (u *GlobalVirtualGroupMigrateExecuteUnit) Key() string {
-	return fmt.Sprintf("SPExit-gvg_id[%d]-vgf_id[%d]-redundancy_idx[%d]-is_secondary[%t]-is_conflict[%t]-is_remoted[%t]",
-		u.gvg.GetId(), u.gvg.GetFamilyId(), u.redundancyIndex,
-		u.isSecondary, u.isConflicted, u.isRemoted)
+	return fmt.Sprintf("SPExit-gvg_id[%d]-vgf_id[%d]-redundancy_idx[%d]",
+		u.gvg.GetId(), u.gvg.GetFamilyId(), u.redundancyIndex)
 }
 
-func MakeSecondaryGVGMigrateKey(gvgID uint32, vgfID uint32, redundancyIndex int32) string {
-	return fmt.Sprintf("SPExit-gvg_id[%d]-vgf_id[%d]-redundancy_idx[%d]-is_secondary[%t]-is_conflict[%t]-is_remoted[%t]",
-		gvgID, vgfID, redundancyIndex, true, false, false)
-}
-
-func MakeRemotedGVGMigrateKey(gvgID uint32, vgfID uint32, redundancyIndex int32) string {
-	return fmt.Sprintf("SPExit-gvg_id[%d]-vgf_id[%d]-redundancy_idx[%d]-is_secondary[%t]-is_conflict[%t]-is_remoted[%t]",
-		gvgID, vgfID, redundancyIndex, false, false, true)
+func MakeGVGMigrateKey(gvgID uint32, vgfID uint32, redundancyIndex int32) string {
+	return fmt.Sprintf("SPExit-gvg_id[%d]-vgf_id[%d]-redundancy_idx[%d]",
+		gvgID, vgfID, redundancyIndex)
 }
 
 type GlobalVirtualGroupMigrateExecuteUnitByBucket struct {
@@ -58,7 +46,7 @@ type GlobalVirtualGroupMigrateExecuteUnitByBucket struct {
 }
 
 func newGlobalVirtualGroupMigrateExecuteUnitByBucket(bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup, srcSP, destSP *sptypes.StorageProvider,
-	migrateStatus MigrateStatus, destGVG uint32, lastMigrateObjectID uint64, isSecondary, isConflicted, isRemoted bool) *GlobalVirtualGroupMigrateExecuteUnitByBucket {
+	migrateStatus MigrateStatus, destGVG uint32, lastMigrateObjectID uint64) *GlobalVirtualGroupMigrateExecuteUnitByBucket {
 
 	bucketUnit := &GlobalVirtualGroupMigrateExecuteUnitByBucket{}
 	bucketUnit.bucketID = bucketID
@@ -70,10 +58,6 @@ func newGlobalVirtualGroupMigrateExecuteUnitByBucket(bucketID uint64, gvg *virtu
 
 	bucketUnit.redundancyIndex = -1
 	bucketUnit.lastMigratedObjectID = lastMigrateObjectID
-
-	bucketUnit.isSecondary = isSecondary
-	bucketUnit.isConflicted = isConflicted
-	bucketUnit.isRemoted = isRemoted
 
 	return bucketUnit
 }
