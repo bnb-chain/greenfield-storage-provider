@@ -98,8 +98,6 @@ type MigrateGVGUnitMeta struct {
 	RedundancyIndex      int32  // is used by sp exit
 	BucketID             uint64 // is used by bucket migrate
 	IsRemoted            bool   // is used by sp exit
-	IsSecondary          bool   // is used by sp exit
-	IsConflicted         bool   // is used by sp exit
 	SrcSPID              uint32
 	DestSPID             uint32
 	LastMigratedObjectID uint64
@@ -109,9 +107,11 @@ type MigrateGVGUnitMeta struct {
 
 // SwapOutMeta is used to record swap out meta.
 type SwapOutMeta struct {
-	SwapOutKey         string // as primary key
-	IsDestSP           bool
-	IsConflicted       bool // is used by src sp
-	ConflictedFamilyID uint32
-	SwapOutMsg         *virtualgrouptypes.MsgSwapOut
+	SwapOutKey    string // as primary key
+	IsDestSP      bool
+	SwapOutMsg    *virtualgrouptypes.MsgSwapOut
+	CompletedGVGs []uint32
+	// TODO: improve it in the future
+	// IsConflicted       bool
+	// ConflictedFamilyID uint32
 }

@@ -119,6 +119,18 @@ func Uint32SliceToString(ids []uint32) string {
 	return JoinWithComma(stringList)
 }
 
+func StringToUint32Slice(str string) ([]uint32, error) {
+	var err error
+	stringList := SplitByComma(str)
+	idList := make([]uint32, len(stringList))
+	for idx := range stringList {
+		if idList[idx], err = StringToUint32(stringList[idx]); err != nil {
+			return nil, err
+		}
+	}
+	return idList, nil
+}
+
 // StringToBytesSlice is used to deserialize
 func StringToBytesSlice(str string) ([][]byte, error) {
 	var err error
