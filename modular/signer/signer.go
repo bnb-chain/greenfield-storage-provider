@@ -186,6 +186,15 @@ func (s *SignModular) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.Ms
 	return s.client.SwapOut(ctx, SignOperator, swapOut)
 }
 
+func (s *SignModular) SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error) {
+	msg := swapOut.GetApprovalBytes()
+	sig, err := s.client.Sign(SignApproval, msg)
+	if err != nil {
+		return nil, err
+	}
+	return sig, nil
+}
+
 func (s *SignModular) CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
 	return s.client.CompleteSwapOut(ctx, SignOperator, completeSwapOut)
 }

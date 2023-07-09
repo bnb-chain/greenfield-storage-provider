@@ -260,6 +260,9 @@ func (*NilModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *
 func (*NilModular) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
 	return "", ErrNilModular
 }
+func (*NilModular) SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error) {
+	return nil, ErrNilModular
+}
 func (*NilModular) CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
 	return "", ErrNilModular
 }

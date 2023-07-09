@@ -11,6 +11,8 @@ func (MigrateSubscribeProgressTable) TableName() string {
 	return MigrateSubscribeProgressTableName
 }
 
+// TODO: swap out table.
+
 // MigrateGVGTable table schema.
 // sp exit, bucket migrate
 type MigrateGVGTable struct {

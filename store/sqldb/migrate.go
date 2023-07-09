@@ -168,6 +168,21 @@ func (s *SpDBImpl) QueryBucketMigrateSubscribeProgress() (uint64, error) {
 	return queryReturn.LastSubscribedBlockHeight, nil
 }
 
+func (s *SpDBImpl) InsertSwapOutUnit(meta *spdb.SwapOutMeta) error {
+	// TODO:
+	return nil
+}
+
+func (s *SpDBImpl) QuerySwapOutUnit(swapOutKey string) (*spdb.SwapOutMeta, error) {
+	// TODO:
+	return nil, nil
+}
+
+func (s *SpDBImpl) ListDestSPSwapOutUnits() ([]*spdb.SwapOutMeta, error) {
+	// TODO:
+	return nil, nil
+}
+
 func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 	var (
 		err              error
