@@ -4,6 +4,7 @@ import (
 	"time"
 
 	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // SpAddressType identify address type of SP.
@@ -106,11 +107,11 @@ type MigrateGVGUnitMeta struct {
 	CheckStatus          int //  src sp check dest sp's migrate unit.
 }
 
-// TODO:
+// SwapOutMeta is used to record swap out meta.
 type SwapOutMeta struct {
 	SwapOutKey         string // as primary key
 	IsDestSP           bool
 	IsConflicted       bool // is used by src sp
 	ConflictedFamilyID uint32
-	SwapOutMsg         string // MsgSwapOut
+	SwapOutMsg         *virtualgrouptypes.MsgSwapOut
 }

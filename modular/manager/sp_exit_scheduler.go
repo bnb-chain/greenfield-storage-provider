@@ -2,8 +2,6 @@ package manager
 
 import (
 	"context"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -80,8 +78,7 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		return err
 	}
 	if s.isExiting {
-		s.swapOutPlan = NewSrcSPSwapOutPlan(s.manager, s, s.manager.virtualGroupManager)
-		if err = s.swapOutPlan.LoadFromDB(); err != nil {
+		if s.swapOutPlan, err = s.produceSwapOutPlan(true); err != nil {
 			log.Errorw("failed to init sp exit scheduler due to plan init", "error", err)
 			return err
 		}
@@ -195,7 +192,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 				if s.isExiting || s.isExited {
 					return
 				}
-				plan, err := s.produceSwapOutPlan()
+				plan, err := s.produceSwapOutPlan(false)
 				if err != nil {
 					log.Errorw("failed to produce sp exit execute plan", "error", err)
 					return
@@ -255,7 +252,7 @@ func (s *SPExitScheduler) updateSPExitExecutePlan(event *virtualgrouptypes.Event
 }
 
 // TODO: swap out approval + swap out approval
-func (s *SPExitScheduler) produceSwapOutPlan() (*SrcSPSwapOutPlan, error) {
+func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutPlan, error) {
 	var (
 		err              error
 		vgfList          []*virtualgrouptypes.GlobalVirtualGroupFamily
@@ -270,7 +267,7 @@ func (s *SPExitScheduler) produceSwapOutPlan() (*SrcSPSwapOutPlan, error) {
 	plan = NewSrcSPSwapOutPlan(s.manager, s, s.manager.virtualGroupManager)
 	for _, f := range vgfList {
 		conflictChecker := NewFamilyConflictChecker(f, plan, s.selfSP)
-		swapOutUnits, getFamilySwapOutErr := conflictChecker.GenerateSwapOutUnits()
+		swapOutUnits, getFamilySwapOutErr := conflictChecker.GenerateSwapOutUnits(buildMetaByDB)
 		if getFamilySwapOutErr != nil {
 			log.Errorw("failed to produce swap out plan", "error", getFamilySwapOutErr)
 			return nil, getFamilySwapOutErr
@@ -296,8 +293,21 @@ func (s *SPExitScheduler) produceSwapOutPlan() (*SrcSPSwapOutPlan, error) {
 			GlobalVirtualGroupIds:      []uint32{g.GetId()},
 			SuccessorSpId:              destSecondarySP.GetId(),
 		}
-		// TODO: get secondary swap out approval
-		// TODO: send secondary swap out tx
+		needSendTX := true
+		if buildMetaByDB {
+			// check db meta, avoid repeated send tx
+			swapOutDBMeta, _ := s.manager.baseApp.GfSpDB().QuerySwapOutUnitInSrcSP(GetSwapOutKey(swapOut))
+			if swapOutDBMeta != nil {
+				if swapOutDBMeta.SwapOutMsg.SuccessorSpId == swapOut.SuccessorSpId {
+					needSendTX = false
+				}
+			}
+		}
+
+		if needSendTX {
+			// TODO: get secondary swap out approval
+			// TODO: send start secondary swap out tx
+		}
 
 		sUnit := &SwapOutUnit{
 			isFamily:     false,
@@ -378,11 +388,12 @@ func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *GlobalVirtualGroupMig
 	}
 
 	for _, gvgID := range needCompleted {
-		if _, found := s.completedGVG[gvgID]; !found {
+		if _, found := s.completedGVG[gvgID]; !found { // not completed
 			return nil
 		}
 	}
 
+	// all gvg are completed
 	// TODO: send complete swap out tx.
 	return nil
 }
@@ -432,7 +443,6 @@ func (plan *SrcSPSwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit)
 		familyGVGs             []*virtualgrouptypes.GlobalVirtualGroup
 		familySecondarySPIDMap = make(map[uint32]int)
 		destFamilySP           *sptypes.StorageProvider
-		swapOutMarshal         []byte
 	)
 	if familyGVGs, err = plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(),
 		plan.scheduler.selfSP.GetId(), s.conflictedFamilyID); err != nil {
@@ -466,17 +476,12 @@ func (plan *SrcSPSwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit)
 
 	plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
 
-	swapOutMarshal, err = json.Marshal(sUnit.swapOut)
-	if err != nil {
-		log.Infow("failed to store swap out plan to db", "swap_unit", sUnit, "error", err)
-		return err
-	}
 	if err = plan.manager.baseApp.GfSpDB().InsertSwapOutUnit(&spdb.SwapOutMeta{
 		SwapOutKey:         GetSwapOutKey(sUnit.swapOut),
 		IsDestSP:           false,
 		IsConflicted:       sUnit.isConflicted,
 		ConflictedFamilyID: sUnit.conflictedFamilyID,
-		SwapOutMsg:         hex.EncodeToString(swapOutMarshal),
+		SwapOutMsg:         sUnit.swapOut,
 	}); err != nil {
 		log.Infow("failed to store swap out plan to db", "swap_unit", sUnit, "error", err)
 		return err
@@ -522,31 +527,16 @@ func (plan *SrcSPSwapOutPlan) CheckAndSendCompleteSPExitTx(event *virtualgroupty
 	return plan.checkAllCompletedAndSendCompleteSPExitTx()
 }
 
-// LoadFromDB is used to rebuild the memory plan topology.
-func (plan *SrcSPSwapOutPlan) LoadFromDB() error {
-	// TODO:
-	return nil
-}
-
 // it is called at start of the execute plan.
 func (plan *SrcSPSwapOutPlan) storeToDB() error {
-	var (
-		err            error
-		swapOutMarshal []byte
-	)
-
+	var err error
 	for key, swapOutUnit := range plan.swapOutUnitMap {
-		swapOutMarshal, err = json.Marshal(swapOutUnit.swapOut)
-		if err != nil {
-			log.Infow("failed to store swap out plan to db", "error", err)
-			return err
-		}
 		if err = plan.manager.baseApp.GfSpDB().InsertSwapOutUnit(&spdb.SwapOutMeta{
 			SwapOutKey:         key,
 			IsDestSP:           false,
 			IsConflicted:       swapOutUnit.isConflicted,
 			ConflictedFamilyID: swapOutUnit.conflictedFamilyID,
-			SwapOutMsg:         hex.EncodeToString(swapOutMarshal),
+			SwapOutMsg:         swapOutUnit.swapOut,
 		}); err != nil {
 			log.Infow("failed to store swap out plan to db", "error", err)
 			return err
@@ -856,7 +846,7 @@ func NewFamilyConflictChecker(f *virtualgrouptypes.GlobalVirtualGroupFamily, p *
 
 // GenerateSwapOutUnits generate the family swap out units.
 // TODO: swap out approval + swap out approval
-func (checker *FamilyConflictChecker) GenerateSwapOutUnits() ([]*SwapOutUnit, error) {
+func (checker *FamilyConflictChecker) GenerateSwapOutUnits(buildMetaByDB bool) ([]*SwapOutUnit, error) {
 	var (
 		err                    error
 		familyGVGs             []*virtualgrouptypes.GlobalVirtualGroup
@@ -901,8 +891,22 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits() ([]*SwapOutUnit, er
 						GlobalVirtualGroupIds:      []uint32{gvg.GetId()},
 						SuccessorSpId:              destSecondarySP.GetId(),
 					}
-					// TODO: get secondary swap out approval
-					// TODO: send start secondary swap out tx
+
+					needSendTX := true
+					if buildMetaByDB {
+						// check db meta, avoid repeated send tx
+						swapOutDBMeta, _ := checker.plan.manager.baseApp.GfSpDB().QuerySwapOutUnitInSrcSP(GetSwapOutKey(swapOut))
+						if swapOutDBMeta != nil {
+							if swapOutDBMeta.SwapOutMsg.SuccessorSpId == swapOut.SuccessorSpId {
+								needSendTX = false
+							}
+						}
+					}
+
+					if needSendTX {
+						// TODO: get secondary swap out approval
+						// TODO: send start secondary swap out tx
+					}
 
 					swapOutUnits = append(swapOutUnits, &SwapOutUnit{
 						isFamily:           false,
@@ -919,8 +923,21 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits() ([]*SwapOutUnit, er
 				GlobalVirtualGroupFamilyId: checker.vgf.GetId(),
 				SuccessorSpId:              destFamilySP.GetId(),
 			}
-			// TODO: get family swap out approval
-			// TODO: swap start family swap out tx
+			needSendTX := true
+			if buildMetaByDB {
+				// check db meta, avoid repeated send tx
+				swapOutDBMeta, _ := checker.plan.manager.baseApp.GfSpDB().QuerySwapOutUnitInSrcSP(GetSwapOutKey(swapOut))
+				if swapOutDBMeta != nil {
+					if swapOutDBMeta.SwapOutMsg.SuccessorSpId == swapOut.SuccessorSpId {
+						needSendTX = false
+					}
+				}
+			}
+
+			if needSendTX {
+				// TODO: get secondary swap out approval
+				// TODO: send start secondary swap out tx
+			}
 
 			swapOutUnits = append(swapOutUnits, &SwapOutUnit{
 				isFamily:     true,
