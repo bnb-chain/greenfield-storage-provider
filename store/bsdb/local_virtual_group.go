@@ -18,7 +18,8 @@ func (b *BsDBImpl) ListLvgByGvgAndBucketID(bucketID common.Hash, gvgIDs []uint32
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&LocalVirtualGroup{}).TableName()).
 		Select("*").
-		Where("global_virtual_group_id in (?) and bucket_id = ?", gvgIDs, bucketID).
+		Where("global_virtual_group_id in (?)", gvgIDs).
+		//Where("global_virtual_group_id in (?) and bucket_id = ?", gvgIDs, bucketID).
 		Scopes(filters...).
 		Find(&groups).Error
 	return groups, err

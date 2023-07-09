@@ -274,9 +274,15 @@ func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 		SwapOutKey:           meta.SwapOutKey,
 		GlobalVirtualGroupID: meta.GlobalVirtualGroupID,
 		VirtualGroupFamilyID: meta.VirtualGroupFamilyID,
-		RedundancyIndex:      meta.RedundancyIndex,
 		BucketID:             meta.BucketID,
+		IsRemoted:            meta.IsRemoted,
+		RedundancyIndex:      meta.RedundancyIndex,
+
+		SrcSPID:              meta.SrcSPID,
+		DestSPID:             meta.DestSPID,
+		LastMigratedObjectID: meta.LastMigratedObjectID,
 		MigrateStatus:        meta.MigrateStatus,
+		CheckStatus:          meta.CheckStatus,
 	}
 	result = s.db.Create(insertMigrateGVG)
 	if result.Error != nil || result.RowsAffected != 1 {

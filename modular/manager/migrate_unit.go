@@ -21,6 +21,7 @@ var (
 type GlobalVirtualGroupMigrateExecuteUnit struct {
 	gvg                  *virtualgrouptypes.GlobalVirtualGroup
 	destGVGID            uint32 // destGVG
+	destGVG              *virtualgrouptypes.GlobalVirtualGroup
 	redundancyIndex      int32  // if < 0, represents migrate primary.
 	swapOutKey           string // only be used in sp exit.
 	srcSP                *sptypes.StorageProvider
@@ -46,15 +47,16 @@ type GlobalVirtualGroupMigrateExecuteUnitByBucket struct {
 }
 
 func newGlobalVirtualGroupMigrateExecuteUnitByBucket(bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup, srcSP, destSP *sptypes.StorageProvider,
-	migrateStatus MigrateStatus, destGVG uint32, lastMigrateObjectID uint64) *GlobalVirtualGroupMigrateExecuteUnitByBucket {
+	migrateStatus MigrateStatus, destGVGID uint32, lastMigrateObjectID uint64, destGVG *virtualgrouptypes.GlobalVirtualGroup) *GlobalVirtualGroupMigrateExecuteUnitByBucket {
 
 	bucketUnit := &GlobalVirtualGroupMigrateExecuteUnitByBucket{}
 	bucketUnit.bucketID = bucketID
 	bucketUnit.gvg = gvg
+	bucketUnit.destGVG = destGVG
 	bucketUnit.srcSP = srcSP
 	bucketUnit.destSP = destSP
 	bucketUnit.migrateStatus = migrateStatus
-	bucketUnit.destGVGID = destGVG
+	bucketUnit.destGVGID = destGVGID
 
 	bucketUnit.redundancyIndex = -1
 	bucketUnit.lastMigratedObjectID = lastMigrateObjectID
