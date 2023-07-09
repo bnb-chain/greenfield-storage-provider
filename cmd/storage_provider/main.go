@@ -115,6 +115,8 @@ func init() {
 		command.DebugPutObjectCmd,
 		// recovery commands
 		command.RecoverObjectCmd,
+		// sp exit and migrate
+		command.SPExitCmd,
 	}
 	registerModular()
 }

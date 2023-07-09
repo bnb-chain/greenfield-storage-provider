@@ -34,9 +34,8 @@ var RecoverObjectCmd = &cli.Command{
 		objectFlag,
 	},
 
-	Category: "RECOVERY COMMANDS",
-	Description: `The recover.object command is used to recover the object piece data on the primarySP or the secondary SP", 
-  `,
+	Category:    "RECOVERY COMMANDS",
+	Description: `The recover.object command is used to recover the object piece data on the primarySP or the secondary SP`,
 }
 
 func recoverObjectAction(ctx *cli.Context) error {
@@ -60,10 +59,10 @@ func recoverObjectAction(ctx *cli.Context) error {
 	}
 
 	// TODO: refine it
-	//bucketInfo, err := chain.QueryBucketInfo(context.Background(), bucketName)
-	//if err != nil {
+	// bucketInfo, err := chain.QueryBucketInfo(context.Background(), bucketName)
+	// if err != nil {
 	//	return err
-	//}
+	// }
 
 	storageParams, err := chain.QueryStorageParams(context.Background())
 	if err != nil {
@@ -74,18 +73,18 @@ func recoverObjectAction(ctx *cli.Context) error {
 
 	// TODO: refine it
 	isSecondarySP := true
-	//if strings.EqualFold(bucketInfo.PrimarySpAddress, cfg.SpAccount.SpOperatorAddress) {
+	// if strings.EqualFold(bucketInfo.PrimarySpAddress, cfg.SpAccount.SpOperatorAddress) {
 	//	replicateIdx = -1
-	//}
+	// }
 	//
-	//var isSecondarySP bool
-	//for i, addr := range objectInfo.GetSecondarySpAddresses() {
+	// var isSecondarySP bool
+	// for i, addr := range objectInfo.GetSecondarySpAddresses() {
 	//	if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
 	//		replicateIdx = i
 	//		isSecondarySP = true
 	//		break
 	//	}
-	//}
+	// }
 	if replicateIdx != -1 && !isSecondarySP {
 		return fmt.Errorf(" it is not primary SP nor secondarySP of the object, pls choose the right SP")
 	}
