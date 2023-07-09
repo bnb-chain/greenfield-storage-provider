@@ -1,12 +1,10 @@
 syntax = "proto3";
 package base.types.gfspserver;
 
-import "greenfield/virtualgroup/tx.proto";
-
 import "base/types/gfsperrors/error.proto";
 import "base/types/gfsplimit/limit.proto";
 import "base/types/gfsptask/task.proto";
-
+import "greenfield/virtualgroup/tx.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
