@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
@@ -190,7 +192,7 @@ func (g *GateModular) getSecondaryBlsMigrationBucketApprovalHandler(w http.Respo
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	migrationBucketApprovalHeader := r.Header.Get(GnfdSecondarySPMigrationBucketApproval)
+	migrationBucketApprovalHeader := r.Header.Get(GnfdSecondarySPMigrationBucketMsgHeader)
 	migrationBucketApprovalMsg, err = hex.DecodeString(migrationBucketApprovalHeader)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse secondary migration bucket approval header", "error", err)
@@ -210,7 +212,7 @@ func (g *GateModular) getSecondaryBlsMigrationBucketApprovalHandler(w http.Respo
 		// TODO: define an error
 		return
 	}
-	w.Write(signature)
+	w.Header().Set(GnfdSecondarySPMigrationBucketApprovalHeader, hex.EncodeToString(signature))
 	log.CtxInfow(reqCtx.Context(), "succeed to sign secondary sp migration bucket approval", "buket_id",
 		signDoc.BucketId.String())
 }
@@ -234,7 +236,7 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	swapOutApprovalHeader := r.Header.Get(GnfdSwapOutApprovalHeader)
+	swapOutApprovalHeader := r.Header.Get(GnfdUnsignedApprovalMsgHeader)
 	swapOutApprovalMsg, err = hex.DecodeString(swapOutApprovalHeader)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse swap out approval header", "error", err)
@@ -259,6 +261,10 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 		// TODO: define an error
 		return
 	}
-	w.Write(signature)
+	// TODO: optimize expired height
+	swapOutApproval.SuccessorSpApproval.ExpiredHeight = 10
+	swapOutApproval.SuccessorSpApproval.Sig = signature
+	bz := storagetypes.ModuleCdc.MustMarshalJSON(swapOutApproval)
+	w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	log.CtxInfow(reqCtx.Context(), "succeed to sign swap out approval", "swap_out", swapOutApproval.String())
 }

@@ -44,12 +44,16 @@ const (
 	GnfdMigrateSwapOutMsgHeader = "X-Gnfd-Migrate-Swap-Out-Msg"
 	// SecondarySPMigrationBucketApprovalPath defines secondary sp sign migration bucket approval
 	SecondarySPMigrationBucketApprovalPath = "/greenfield/migrate/v1/migration-bucket-approval"
-	// GnfdSecondarySPMigrationBucketApprovalHeader defines secondary sp migration bucket sign doc header.
-	GnfdSecondarySPMigrationBucketApprovalHeader = "X-Gnfd-Secondary-Migration-Bucket-Approval"
-	// GnfdSwapOutApprovalHeader defines swap out approval
-	GnfdSwapOutApprovalHeader = "X-Gnfd-Swap-Out-Approval"
 	// SwapOutApprovalPath defines get swap out approval path
 	SwapOutApprovalPath = "/greenfield/migrate/v1/get-swap-out-approval"
+	// GnfdSecondarySPMigrationBucketMsgHeader defines secondary sp migration bucket sign doc header.
+	GnfdSecondarySPMigrationBucketMsgHeader = "X-Gnfd-Secondary-Migration-Bucket-Msg"
+	// GnfdSecondarySPMigrationBucketApprovalHeader defines secondary sp migration bucket bls approval header.
+	GnfdSecondarySPMigrationBucketApprovalHeader = "X-Gnfd-Secondary-Migration-Bucket-Approval"
+	// GnfdUnsignedApprovalMsgHeader defines unsigned msg, which is used by get-approval
+	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
+	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval
+	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
@@ -201,11 +205,11 @@ func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, 
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "secondary_sp_endpoint", secondarySPEndpoint, "error", err)
 		return nil, err
 	}
-	msg, err := storagetypes.ModuleCdc.Marshal(signDoc)
+	msg, err := storagetypes.ModuleCdc.MarshalJSON(signDoc)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add(GnfdSecondarySPMigrationBucketApprovalHeader, hex.EncodeToString(msg))
+	req.Header.Add(GnfdSecondarySPMigrationBucketMsgHeader, hex.EncodeToString(msg))
 	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		log.Errorw("failed to send requests to get secondary sp migration bucket approval", "secondary_sp_endpoint",
@@ -217,11 +221,11 @@ func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get resp body, StatusCode(%d), Endpoint(%s)", resp.StatusCode, secondarySPEndpoint)
 	}
-	data, err := io.ReadAll(resp.Body)
+	signature, err := hex.DecodeString(resp.Header.Get(GnfdSecondarySPMigrationBucketApprovalHeader))
 	if err != nil {
-		log.Errorw("failed to read response body", "error", err)
+		return nil, err
 	}
-	return data, nil
+	return signature, nil
 }
 
 func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint string, swapOutApproval *virtualgrouptypes.MsgSwapOut) (
@@ -235,7 +239,7 @@ func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint stri
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add(GnfdSwapOutApprovalHeader, hex.EncodeToString(msg))
+	req.Header.Add(GnfdUnsignedApprovalMsgHeader, hex.EncodeToString(msg))
 	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		log.Errorw("failed to send requests to get swap out approval", "dest_sp_endpoint",
@@ -247,9 +251,9 @@ func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint stri
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get resp body, StatusCode(%d), Endpoint(%s)", resp.StatusCode, destSPEndpoint)
 	}
-	data, err := io.ReadAll(resp.Body)
+	signature, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
 	if err != nil {
-		log.Errorw("failed to read response body", "error", err)
+		return nil, err
 	}
-	return data, nil
+	return signature, nil
 }

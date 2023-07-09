@@ -238,10 +238,10 @@ const (
 	GnfdMigrateSwapOutMsgHeader = "X-Gnfd-Migrate-Swap-Out-Msg"
 	// SecondarySPMigrationBucketApprovalPath defines secondary sp sign migration bucket approval
 	SecondarySPMigrationBucketApprovalPath = "/greenfield/migrate/v1/migration-bucket-approval"
-	// GnfdSecondarySPMigrationBucketApproval defines secondary sp migration bucket sign doc header.
-	GnfdSecondarySPMigrationBucketApproval = "X-Gnfd-Secondary-Migration-Bucket-Approval"
-	// GnfdSwapOutApprovalHeader defines swap out approval
-	GnfdSwapOutApprovalHeader = "X-Gnfd-Swap-Out-Approval"
+	// GnfdSecondarySPMigrationBucketMsgHeader defines secondary sp migration bucket sign doc header.
+	GnfdSecondarySPMigrationBucketMsgHeader = "X-Gnfd-Secondary-Migration-Bucket-Msg"
+	// GnfdSecondarySPMigrationBucketApprovalHeader defines secondary sp migration bucket bls approval header.
+	GnfdSecondarySPMigrationBucketApprovalHeader = "X-Gnfd-Secondary-Migration-Bucket-Approval"
 	// SwapOutApprovalPath defines get swap out approval path
 	SwapOutApprovalPath = "/greenfield/migrate/v1/get-swap-out-approval"
 )
