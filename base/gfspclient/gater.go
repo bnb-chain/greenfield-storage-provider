@@ -229,7 +229,7 @@ func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, 
 }
 
 func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint string, swapOutApproval *virtualgrouptypes.MsgSwapOut) (
-	[]byte, error) {
+	*virtualgrouptypes.MsgSwapOut, error) {
 	req, err := http.NewRequest(http.MethodGet, destSPEndpoint+SwapOutApprovalPath, nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "dest_sp_endpoint", destSPEndpoint, "error", err)
@@ -251,9 +251,13 @@ func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint stri
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get resp body, StatusCode(%d), Endpoint(%s)", resp.StatusCode, destSPEndpoint)
 	}
-	signature, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
+	swapOutSlice, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
 	if err != nil {
 		return nil, err
 	}
-	return signature, nil
+	swapOut := &virtualgrouptypes.MsgSwapOut{}
+	if err = json.Unmarshal(swapOutSlice, swapOut); err != nil {
+		return nil, err
+	}
+	return swapOut, nil
 }
