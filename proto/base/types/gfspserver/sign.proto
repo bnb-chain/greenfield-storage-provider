@@ -46,7 +46,8 @@ message GfSpSignRequest {
     greenfield.virtualgroup.MsgSwapOut swap_out = 17;
     greenfield.virtualgroup.MsgSwapOut sign_swap_out = 18;
     greenfield.virtualgroup.MsgCompleteSwapOut complete_swap_out = 19;
-    greenfield.virtualgroup.MsgCompleteStorageProviderExit complete_sp_exit = 20;
+    greenfield.virtualgroup.MsgStorageProviderExit sp_exit = 20;
+    greenfield.virtualgroup.MsgCompleteStorageProviderExit complete_sp_exit = 21;
   }
 }
 

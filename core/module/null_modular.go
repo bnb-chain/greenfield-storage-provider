@@ -266,6 +266,9 @@ func (*NilModular) SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.M
 func (*NilModular) CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
 	return "", ErrNilModular
 }
+func (*NilModular) SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
+	return "", ErrNilModular
+}
 func (*NilModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
 	return "", ErrNilModular
 }

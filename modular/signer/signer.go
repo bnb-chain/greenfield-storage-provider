@@ -28,7 +28,8 @@ var (
 	ErrCompleteMigrateBucketOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120007, "send complete migrate bucket failed")
 	ErrSwapOutOnChain               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120008, "send swap out failed")
 	ErrCompleteSwapOutOnChain       = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120009, "send complete swap out failed")
-	ErrCompleteSPExitOnChain        = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120010, "send complete sp exit failed")
+	ErrSPExitOnChain                = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120010, "send sp exit failed")
+	ErrCompleteSPExitOnChain        = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120011, "send complete sp exit failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -196,6 +197,10 @@ func (s *SignModular) SignSwapOut(ctx context.Context, swapOut *virtualgrouptype
 
 func (s *SignModular) CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
 	return s.client.CompleteSwapOut(ctx, SignOperator, completeSwapOut)
+}
+
+func (s *SignModular) SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
+	return s.client.SPExit(ctx, SignOperator, spExit)
 }
 
 func (s *SignModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {

@@ -58,6 +58,7 @@ const (
 	CompleteMigrateBucket    GasInfoType = "CompleteMigrateBucket"
 	SwapOut                  GasInfoType = "SwapOut"
 	CompleteSwapOut          GasInfoType = "CompleteSwapOut"
+	SPExit                   GasInfoType = "SPExit"
 	CompleteSPExit           GasInfoType = "CompleteSPExit"
 )
 
@@ -577,6 +578,56 @@ func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, sc
 			msgCompleteSwapOut.String())
 		ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to broadcast complete swap out, error: %v", err))
 		return "", ErrCompleteSwapOutOnChain
+	}
+
+	// update nonce when tx is successfully submitted
+	client.operatorAccNonce = nonce + 1
+	return txHash, nil
+}
+
+func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignType,
+	spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
+	log.Infow("signer starts to sp exit", "scope", scope)
+	if spExit == nil {
+		log.CtxError(ctx, "sp exit msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+	nonce := client.operatorAccNonce
+
+	msgSPExit := virtualgrouptypes.NewMsgStorageProviderExit(km.GetAddr())
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
+	txOpt := &ctypes.TxOption{
+		Mode:      &mode,
+		GasLimit:  client.gasInfo[SPExit].GasLimit,
+		FeeAmount: client.gasInfo[SPExit].FeeAmount,
+		Nonce:     nonce,
+	}
+
+	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSPExit}, txOpt)
+	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		if nonceErr != nil {
+			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
+			ErrSPExitOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+			return "", ErrSPExitOnChain
+		}
+		client.operatorAccNonce = nonce
+	}
+	// failed to broadcast tx
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast sp exit", "error", err, "sp_exit",
+			msgSPExit.String())
+		ErrSPExitOnChain.SetError(fmt.Errorf("failed to broadcast sp exit, error: %v", err))
+		return "", ErrSPExitOnChain
 	}
 
 	// update nonce when tx is successfully submitted
