@@ -88,6 +88,9 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", task.Key().String())
 		backupTasks = append(backupTasks, task)
 	}
+	if m.migrateGVGQueue.Len() != 0 {
+		log.CtxDebugw(ctx, "ManageModular DispatchTask", "migrateGVGQueue len", m.migrateGVGQueue.Len())
+	}
 
 	task, reservedTasks = m.PickUpTask(ctx, backupTasks)
 	go func() {

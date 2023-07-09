@@ -206,6 +206,16 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrRepeatedBucket
 		}
 		return true, nil
+	case coremodule.AuthOpAskMigrateBucketApproval:
+		queryTime := time.Now()
+		bucketInfo, _ := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_migrate_bucket_approval_query_bucket_time").Observe(time.Since(queryTime).Seconds())
+		if bucketInfo == nil {
+			log.CtxErrorw(ctx, "failed to verify authentication of asking migrate bucket "+
+				"approval, bucket not existed", "bucket", bucket)
+			return false, ErrRepeatedBucket
+		}
+		return true, nil
 	case coremodule.AuthOpAskCreateObjectApproval:
 		queryTime := time.Now()
 		bucketInfo, objectInfo, _ := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
