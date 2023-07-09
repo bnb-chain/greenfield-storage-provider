@@ -111,6 +111,6 @@ type SwapOutMeta struct {
 	SwapOutKey         string // as primary key
 	IsDestSP           bool
 	IsConflicted       bool // is used by src sp
-	ConflictedFamilyID bool
+	ConflictedFamilyID uint32
 	SwapOutMsg         string // MsgSwapOut
 }

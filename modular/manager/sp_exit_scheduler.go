@@ -2,6 +2,8 @@ package manager
 
 import (
 	"context"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -425,22 +427,28 @@ func NewSrcSPSwapOutPlan(m *ManageModular, s *SPExitScheduler, v vgmgr.VirtualGr
 
 // add family swap out if all conflicted is resolved.
 func (plan *SrcSPSwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit) error {
-	familyGVGs, err := plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), plan.scheduler.selfSP.GetId(), s.conflictedFamilyID)
-	if err != nil {
+	var (
+		err                    error
+		familyGVGs             []*virtualgrouptypes.GlobalVirtualGroup
+		familySecondarySPIDMap = make(map[uint32]int)
+		destFamilySP           *sptypes.StorageProvider
+		swapOutMarshal         []byte
+	)
+	if familyGVGs, err = plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(),
+		plan.scheduler.selfSP.GetId(), s.conflictedFamilyID); err != nil {
 		return err
 	}
-	familySecondarySPIDMap := make(map[uint32]int)
 	for _, gvg := range familyGVGs {
 		for _, secondarySPID := range gvg.GetSecondarySpIds() {
 			familySecondarySPIDMap[secondarySPID] = familySecondarySPIDMap[secondarySPID] + 1
 		}
 	}
-	destFamilySP, err := plan.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithMap(familySecondarySPIDMap))
-	if err != nil {
+	if destFamilySP, err = plan.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithMap(familySecondarySPIDMap)); err != nil {
 		// still has conflict
 		return nil
 	}
 
+	// conflict has resolved, produce family swap out.
 	swapOut := &virtualgrouptypes.MsgSwapOut{
 		StorageProvider:            plan.scheduler.selfSP.GetOperatorAddress(),
 		GlobalVirtualGroupFamilyId: s.conflictedFamilyID,
@@ -457,24 +465,39 @@ func (plan *SrcSPSwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit)
 	}
 
 	plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
-	// TODO: store to db.
 
+	swapOutMarshal, err = json.Marshal(sUnit.swapOut)
+	if err != nil {
+		log.Infow("failed to store swap out plan to db", "swap_unit", sUnit, "error", err)
+		return err
+	}
+	if err = plan.manager.baseApp.GfSpDB().InsertSwapOutUnit(&spdb.SwapOutMeta{
+		SwapOutKey:         GetSwapOutKey(sUnit.swapOut),
+		IsDestSP:           false,
+		IsConflicted:       sUnit.isConflicted,
+		ConflictedFamilyID: sUnit.conflictedFamilyID,
+		SwapOutMsg:         hex.EncodeToString(swapOutMarshal),
+	}); err != nil {
+		log.Infow("failed to store swap out plan to db", "swap_unit", sUnit, "error", err)
+		return err
+	}
 	return nil
 }
 
 func (plan *SrcSPSwapOutPlan) checkAllCompletedAndSendCompleteSPExitTx() error {
 	// check completed
 	for key, runningSwapOut := range plan.swapOutUnitMap {
-		if _, found := plan.completedSwapOut[key]; !found {
+		if _, found := plan.completedSwapOut[key]; !found { // not completed
 			return nil
 		}
 		if runningSwapOut.isConflicted {
-			if _, found := plan.completedSwapOut[util.Uint32ToString(runningSwapOut.conflictedFamilyID)]; !found {
+			if _, found := plan.completedSwapOut[util.Uint32ToString(runningSwapOut.conflictedFamilyID)]; !found { // not completed
 				return nil
 			}
 		}
 	}
 
+	// all is completed
 	// TODO: send complete sp exit tx.
 
 	return nil
@@ -507,7 +530,29 @@ func (plan *SrcSPSwapOutPlan) LoadFromDB() error {
 
 // it is called at start of the execute plan.
 func (plan *SrcSPSwapOutPlan) storeToDB() error {
-	// TODO: swapOutUnitMap
+	var (
+		err            error
+		swapOutMarshal []byte
+	)
+
+	for key, swapOutUnit := range plan.swapOutUnitMap {
+		swapOutMarshal, err = json.Marshal(swapOutUnit.swapOut)
+		if err != nil {
+			log.Infow("failed to store swap out plan to db", "error", err)
+			return err
+		}
+		if err = plan.manager.baseApp.GfSpDB().InsertSwapOutUnit(&spdb.SwapOutMeta{
+			SwapOutKey:         key,
+			IsDestSP:           false,
+			IsConflicted:       swapOutUnit.isConflicted,
+			ConflictedFamilyID: swapOutUnit.conflictedFamilyID,
+			SwapOutMsg:         hex.EncodeToString(swapOutMarshal),
+		}); err != nil {
+			log.Infow("failed to store swap out plan to db", "error", err)
+			return err
+		}
+	}
+	log.Infow("succeed to store swap out plan to db")
 	return nil
 }
 

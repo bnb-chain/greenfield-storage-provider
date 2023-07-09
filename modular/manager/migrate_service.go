@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"fmt"
 
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
@@ -20,10 +21,20 @@ func (m *ManageModular) getSPID() (uint32, error) {
 
 // NotifyMigrateSwapOut is used to receive migrate gvg task from src sp.
 func (m *ManageModular) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error {
+	var (
+		err      error
+		selfSPID uint32
+	)
 	if m.spExitScheduler == nil {
 		return ErrNotifyMigrateSwapOut
 	}
+	selfSPID, err = m.getSPID()
+	if err != nil {
+		return err
+	}
+	if selfSPID != swapOut.SuccessorSpId {
+		return fmt.Errorf("successor sp id is mismatch")
+	}
 
-	// TODO: check SuccessorSpId
 	return m.spExitScheduler.AddSwapOutToTaskRunner(swapOut)
 }

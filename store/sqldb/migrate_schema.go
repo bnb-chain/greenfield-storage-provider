@@ -11,12 +11,24 @@ func (MigrateSubscribeProgressTable) TableName() string {
 	return MigrateSubscribeProgressTableName
 }
 
-// TODO: swap out table.
+// SwapOutTable table schema.
+type SwapOutTable struct {
+	SwapOutKey         string `gorm:"primary_key"`
+	IsDestSP           bool   `gorm:"primary_key"`
+	IsConflicted       bool
+	ConflictedFamilyID uint32
+	SwapOutMsg         string
+}
+
+func (SwapOutTable) TableName() string {
+	return SwapOutTableName
+}
 
 // MigrateGVGTable table schema.
 // sp exit, bucket migrate
 type MigrateGVGTable struct {
 	MigrateKey           string `gorm:"primary_key"`
+	SwapOutKey           string `gorm:"index:swap_out_index"`
 	GlobalVirtualGroupID uint32 `gorm:"index:gvg_index"`        // is used by sp exit/bucket migrate
 	VirtualGroupFamilyID uint32 `gorm:"index:vgf_index"`        // is used by sp exit
 	BucketID             uint64 `gorm:"index:bucket_index"`     // is used by bucket migrate

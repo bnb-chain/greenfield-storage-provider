@@ -169,7 +169,23 @@ func (s *SpDBImpl) QueryBucketMigrateSubscribeProgress() (uint64, error) {
 }
 
 func (s *SpDBImpl) InsertSwapOutUnit(meta *spdb.SwapOutMeta) error {
-	// TODO:
+	var (
+		err           error
+		result        *gorm.DB
+		insertSwapOut *SwapOutTable
+	)
+	insertSwapOut = &SwapOutTable{
+		SwapOutKey:         meta.SwapOutKey,
+		IsDestSP:           meta.IsDestSP,
+		IsConflicted:       meta.IsConflicted,
+		ConflictedFamilyID: meta.ConflictedFamilyID,
+		SwapOutMsg:         meta.SwapOutMsg,
+	}
+	result = s.db.Create(insertSwapOut)
+	if result.Error != nil || result.RowsAffected != 1 {
+		err = fmt.Errorf("failed to insert swap out table: %s", result.Error)
+		return err
+	}
 	return nil
 }
 
