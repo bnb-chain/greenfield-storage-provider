@@ -18,7 +18,7 @@ const (
 )
 
 // dest sp receive migrate gvg notify from src sp.
-func (g *GateModular) notifyMigrateGVGHandler(w http.ResponseWriter, r *http.Request) {
+func (g *GateModular) notifyMigrateSwapOutHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error
 		reqCtx     *RequestContext

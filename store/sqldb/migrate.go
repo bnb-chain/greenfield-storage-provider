@@ -1,10 +1,13 @@
 package sqldb
 
 import (
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"gorm.io/gorm"
 )
 
@@ -170,16 +173,21 @@ func (s *SpDBImpl) QueryBucketMigrateSubscribeProgress() (uint64, error) {
 
 func (s *SpDBImpl) InsertSwapOutUnit(meta *spdb.SwapOutMeta) error {
 	var (
-		err           error
-		result        *gorm.DB
-		insertSwapOut *SwapOutTable
+		err            error
+		result         *gorm.DB
+		insertSwapOut  *SwapOutTable
+		swapOutMarshal []byte
 	)
+	if swapOutMarshal, err = json.Marshal(meta.SwapOutMsg); err != nil {
+		return err
+	}
+
 	insertSwapOut = &SwapOutTable{
 		SwapOutKey:         meta.SwapOutKey,
 		IsDestSP:           meta.IsDestSP,
 		IsConflicted:       meta.IsConflicted,
 		ConflictedFamilyID: meta.ConflictedFamilyID,
-		SwapOutMsg:         meta.SwapOutMsg,
+		SwapOutMsg:         hex.EncodeToString(swapOutMarshal),
 	}
 	result = s.db.Create(insertSwapOut)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -189,9 +197,34 @@ func (s *SpDBImpl) InsertSwapOutUnit(meta *spdb.SwapOutMeta) error {
 	return nil
 }
 
-func (s *SpDBImpl) QuerySwapOutUnit(swapOutKey string) (*spdb.SwapOutMeta, error) {
-	// TODO:
-	return nil, nil
+func (s *SpDBImpl) QuerySwapOutUnitInSrcSP(swapOutKey string) (*spdb.SwapOutMeta, error) {
+	var (
+		err            error
+		result         *gorm.DB
+		queryReturn    *SwapOutTable
+		swapOutMarshal []byte
+	)
+	queryReturn = &SwapOutTable{}
+	result = s.db.First(queryReturn, "is_dest_sp = false and swap_out_key = ?", swapOutKey)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if swapOutMarshal, err = hex.DecodeString(queryReturn.SwapOutMsg); err != nil {
+		return nil, err
+	}
+	swapOut := virtualgrouptypes.MsgSwapOut{}
+	if err = json.Unmarshal(swapOutMarshal, &swapOut); err != nil {
+		return nil, err
+	}
+
+	return &spdb.SwapOutMeta{
+		SwapOutKey:         queryReturn.SwapOutKey,
+		IsDestSP:           queryReturn.IsDestSP,
+		IsConflicted:       queryReturn.IsConflicted,
+		ConflictedFamilyID: queryReturn.ConflictedFamilyID,
+		SwapOutMsg:         &swapOut,
+	}, nil
 }
 
 func (s *SpDBImpl) ListDestSPSwapOutUnits() ([]*spdb.SwapOutMeta, error) {

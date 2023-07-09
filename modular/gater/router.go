@@ -103,7 +103,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.recoverPrimaryHandler)
 
 	// dest sp receive swap out notify from src sp.
-	router.Path(NotifyMigrateSwapOutTaskPath).Name(notifyMigrateSwapOutRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateGVGHandler)
+	router.Path(NotifyMigrateSwapOutTaskPath).Name(notifyMigrateSwapOutRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateSwapOutHandler)
 	// migrate pieces between SPs which is used for SP exiting case
 	router.Path(MigratePiecePath).Name(migratePieceRouterName).Methods(http.MethodGet).HandlerFunc(g.migratePieceHandler)
 	// migration bucket approval for secondary sp bls signature

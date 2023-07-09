@@ -125,9 +125,10 @@ type MigrateDB interface {
 	// QueryBucketMigrateSubscribeProgress returns blockHeight which is called at startup.
 	QueryBucketMigrateSubscribeProgress() (uint64, error)
 
-	// TODO:
+	// InsertSwapOutUnit is used to insert new swap out unit.
 	InsertSwapOutUnit(meta *SwapOutMeta) error
-	QuerySwapOutUnit(swapOutKey string) (*SwapOutMeta, error)
+	// QuerySwapOutUnitInSrcSP is used to rebuild swap out plan at startup.
+	QuerySwapOutUnitInSrcSP(swapOutKey string) (*SwapOutMeta, error)
 	ListDestSPSwapOutUnits() ([]*SwapOutMeta, error) // runner load
 
 	// InsertMigrateGVGUnit inserts a new gvg migrate unit.
