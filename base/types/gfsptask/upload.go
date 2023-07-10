@@ -23,8 +23,8 @@ var _ coretask.ReceivePieceTask = &GfSpReceivePieceTask{}
 func (m *GfSpUploadObjectTask) InitUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.SetCreateTime(time.Now().UnixMilli())
-	m.SetUpdateTime(time.Now().UnixMilli())
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
 	m.SetTimeout(timeout)
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)
@@ -162,8 +162,8 @@ func (m *GfSpResumableUploadObjectTask) InitResumableUploadObjectTask(object *st
 	timeout int64, complete bool, offset uint64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.SetCreateTime(time.Now().UnixMilli())
-	m.SetUpdateTime(time.Now().UnixMilli())
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
 	m.SetTimeout(timeout)
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)
@@ -315,8 +315,8 @@ func (m *GfSpReplicatePieceTask) InitReplicatePieceTask(object *storagetypes.Obj
 	priority coretask.TPriority, timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.SetCreateTime(time.Now().UnixMilli())
-	m.SetUpdateTime(time.Now().UnixMilli())
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)
 	m.SetPriority(priority)
@@ -485,8 +485,8 @@ func (m *GfSpSealObjectTask) InitSealObjectTask(object *storagetypes.ObjectInfo,
 	addresses []string, signatures [][]byte, timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.SetCreateTime(time.Now().UnixMilli())
-	m.SetUpdateTime(time.Now().UnixMilli())
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)
 	m.SetPriority(priority)
@@ -631,8 +631,8 @@ func (m *GfSpReceivePieceTask) InitReceivePieceTask(object *storagetypes.ObjectI
 	priority coretask.TPriority, replicateIdx uint32, pieceIdx int32, pieceSize int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.SetCreateTime(time.Now().UnixMilli())
-	m.SetUpdateTime(time.Now().UnixMilli())
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)
 	m.SetPriority(priority)

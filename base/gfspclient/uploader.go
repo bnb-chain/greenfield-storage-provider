@@ -36,12 +36,12 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 	}
 	buf := make([]byte, DefaultStreamBufSize)
 	metrics.PerfPutObjectTime.WithLabelValues("client_put_object_prepare_cost").Observe(time.Since(startTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("client_put_object_prepare_end").Observe(time.Since(time.UnixMilli(task.GetCreateTime())).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("client_put_object_prepare_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	for {
 		startReadFromSDK := time.Now()
 		n, streamErr := stream.Read(buf)
 		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_read_data_cost").Observe(time.Since(startReadFromSDK).Seconds())
-		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_read_data_end").Observe(time.Since(time.UnixMilli(task.GetCreateTime())).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_read_data_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		sendSize += n
 		if streamErr == io.EOF {
 			if n != 0 {
@@ -52,7 +52,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 				startSendUploader := time.Now()
 				err = client.Send(req)
 				metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_cost").Observe(time.Since(startSendUploader).Seconds())
-				metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_end").Observe(time.Since(time.UnixMilli(task.GetCreateTime())).Seconds())
+				metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to send the last upload stream data", "error", err)
 					return ErrRpcUnknown
@@ -61,7 +61,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 			startCloseClient := time.Now()
 			resp, closeErr := client.CloseAndRecv()
 			metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_last_cost").Observe(time.Since(startCloseClient).Seconds())
-			metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_last_end").Observe(time.Since(time.UnixMilli(task.GetCreateTime())).Seconds())
+			metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_last_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 			if closeErr != nil {
 				log.CtxErrorw(ctx, "failed to close upload stream", "error", closeErr)
 				return ErrRpcUnknown
@@ -82,7 +82,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 		startSendUploader := time.Now()
 		err = client.Send(req)
 		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_cost").Observe(time.Since(startSendUploader).Seconds())
-		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_end").Observe(time.Since(time.UnixMilli(task.GetCreateTime())).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to send the upload stream data", "error", err)
 			return ErrRpcUnknown
