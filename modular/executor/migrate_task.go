@@ -44,13 +44,13 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 			log.Infow("sp exiting", "objectList", objectList)
 		} else {
 			// if bucketID is not equal to 0, it indicates that it is a bucket migration task
-			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, gvgID, bucketID, lastMigratedObjectID+1, queryLimit)
+			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, gvgID, bucketID, lastMigratedObjectID, queryLimit)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
-					"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
+					"current_migrated_object_id", lastMigratedObjectID, "error", err)
 			}
 			log.CtxDebugw(ctx, "success to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
-				"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
+				"current_migrated_object_id", lastMigratedObjectID, "error", err)
 			log.Infow("migrate bucket", "objectList", objectList)
 		}
 		for index, object := range objectList {
