@@ -16,8 +16,9 @@ message GfSpTask {
   int32 task_priority = 5;
   int64 retry = 6;
   int64 max_retry = 7;
-  string logs = 8;
-  base.types.gfsperrors.GfSpError err = 9;
+  string user_address = 8;
+  string logs = 9;
+  base.types.gfsperrors.GfSpError err = 10;
 }
 
 message GfSpCreateBucketApprovalTask {
@@ -103,9 +104,8 @@ message GfSpDownloadObjectTask {
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.BucketInfo bucket_info = 3;
   greenfield.storage.Params storage_params = 4;
-  string user_address = 5;
-  int64 low = 6;
-  int64 high = 7;
+  int64 low = 5;
+  int64 high = 6;
 }
 
 message GfSpDownloadPieceTask {
@@ -114,11 +114,10 @@ message GfSpDownloadPieceTask {
   greenfield.storage.BucketInfo bucket_info = 3;
   greenfield.storage.Params storage_params = 4;
   bool enable_check = 5; // check read quota, only in first piece
-  string user_address = 6;
-  uint64 total_size = 7;
-  string piece_key = 8;
-  uint64 piece_offset = 9;
-  uint64 piece_length = 10;
+  uint64 total_size = 6;
+  string piece_key = 7;
+  uint64 piece_offset = 8;
+  uint64 piece_length = 9;
 }
 
 message GfSpChallengePieceTask {
@@ -126,12 +125,11 @@ message GfSpChallengePieceTask {
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.BucketInfo bucket_info = 3;
   greenfield.storage.Params storage_params = 4;
-  string user_address = 5;
-  uint32 segment_idx = 6;
-  int32 redundancy_idx = 7;
-  bytes integrity_hash = 8;
-  repeated bytes piece_hash = 9;
-  int64 piece_data_size = 10;
+  uint32 segment_idx = 5;
+  int32 redundancy_idx = 6;
+  bytes integrity_hash = 7;
+  repeated bytes piece_hash = 8;
+  int64 piece_data_size = 9;
 }
 
 message GfSpGCObjectTask {
