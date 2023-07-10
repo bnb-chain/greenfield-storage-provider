@@ -82,6 +82,10 @@ func (m *GfSpTask) EstimateLimit() rcmgr.Limit {
 	return nil
 }
 
+func (m *GfSpTask) SetUserAddress(address string) {
+	m.UserAddress = address
+}
+
 func (m *GfSpTask) SetLogs(logs string) {
 	m.Logs = logs
 }

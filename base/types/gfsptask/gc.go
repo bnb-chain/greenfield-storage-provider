@@ -118,6 +118,14 @@ func (m *GfSpGCObjectTask) EstimateLimit() corercmgr.Limit {
 	return LimitEstimateByPriority(m.GetPriority())
 }
 
+func (m *GfSpGCObjectTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpGCObjectTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
+}
+
 func (m *GfSpGCObjectTask) SetLogs(logs string) {
 	m.GetTask().SetLogs(logs)
 }
@@ -253,6 +261,14 @@ func (m *GfSpGCZombiePieceTask) EstimateLimit() corercmgr.Limit {
 	return LimitEstimateByPriority(m.GetPriority())
 }
 
+func (m *GfSpGCZombiePieceTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpGCZombiePieceTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
+}
+
 func (m *GfSpGCZombiePieceTask) SetLogs(logs string) {
 	m.GetTask().SetLogs(logs)
 }
@@ -370,6 +386,14 @@ func (m *GfSpGCMetaTask) SetPriority(priority coretask.TPriority) {
 
 func (m *GfSpGCMetaTask) EstimateLimit() corercmgr.Limit {
 	return LimitEstimateByPriority(m.GetPriority())
+}
+
+func (m *GfSpGCMetaTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpGCMetaTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
 }
 
 func (m *GfSpGCMetaTask) SetLogs(logs string) {

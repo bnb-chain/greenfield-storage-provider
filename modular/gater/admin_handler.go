@@ -108,7 +108,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		//	}
 		//}
 		task := &gfsptask.GfSpCreateBucketApprovalTask{}
-		task.InitApprovalCreateBucketTask(&createBucketApproval, g.baseApp.TaskPriority(task))
+		task.InitApprovalCreateBucketTask(reqCtx.Account(), &createBucketApproval, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalCreateBucketTask
 		startAskCreateBucketApproval := time.Now()
 		approved, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
@@ -157,7 +157,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		//	}
 		//}
 		task := &gfsptask.GfSpCreateObjectApprovalTask{}
-		task.InitApprovalCreateObjectTask(&createObjectApproval, g.baseApp.TaskPriority(task))
+		task.InitApprovalCreateObjectTask(reqCtx.Account(), &createObjectApproval, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask
 		startAskCreateObjectApproval := time.Now()
 		approved, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
