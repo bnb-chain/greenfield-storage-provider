@@ -76,7 +76,7 @@ const (
 
 // notFoundHandler log not found request info.
 func (g *GateModular) notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	log.Errorw("failed to find the corresponding handler", "header", r.Header, "host", r.Host, "url", r.URL)
+	log.Errorw("failed to find the corresponding handler", "method", r.Method, "host", r.Host, "url", r.URL)
 	if _, err := io.ReadAll(r.Body); err != nil {
 		log.Errorw("failed to read the unknown request", "error", err)
 	}
