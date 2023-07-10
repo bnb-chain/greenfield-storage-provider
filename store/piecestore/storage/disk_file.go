@@ -77,7 +77,9 @@ func (d *diskFileStore) GetObject(ctx context.Context, key string, offset, limit
 		}
 	}
 	if limit > 0 {
-		defer f.Close()
+		defer func() {
+			_ = f.Close()
+		}()
 		buf := make([]byte, limit)
 		n, err := f.Read(buf)
 		if err != nil {

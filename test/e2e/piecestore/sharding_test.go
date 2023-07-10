@@ -71,10 +71,10 @@ func createFiles(fileNum int) error {
 			log.Errorw("failed to create files", "error", err)
 			return err
 		}
-		defer f.Close()
 		writer := bufio.NewWriter(f)
 		writer.WriteString(fmt.Sprintf("test sharding func: %d\n", i))
 		writer.Flush()
+		_ = f.Close()
 	}
 	return nil
 }
