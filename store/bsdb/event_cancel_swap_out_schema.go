@@ -1,8 +1,6 @@
 package bsdb
 
-import (
-	"github.com/forbole/juno/v4/common"
-)
+import "github.com/forbole/juno/v4/common"
 
 type EventCancelSwapOut struct {
 	ID                         uint64      `gorm:"column:id;primaryKey"`
@@ -16,5 +14,5 @@ type EventCancelSwapOut struct {
 }
 
 func (*EventCancelSwapOut) TableName() string {
-	return EventSwapOutTableName
+	return EventCancelSwapOutTableName
 }

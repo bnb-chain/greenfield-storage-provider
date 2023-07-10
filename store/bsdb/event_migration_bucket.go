@@ -28,7 +28,7 @@ func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*Even
 	err = b.db.Table((&EventCancelMigrationBucket{}).TableName()).
 		Select("*").
 		Where("create_at <= ?", blockID).
-		Find(&completeEvents).Error
+		Find(&cancelEvents).Error
 	if err != nil {
 		return events, nil, nil, err
 	}

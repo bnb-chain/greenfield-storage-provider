@@ -50,10 +50,10 @@ const (
 	EventCompleteStorageProviderExitTableName = "event_sp_exit_complete"
 	// EventSwapOutTableName defines the name of event swap out table
 	EventSwapOutTableName = "event_swap_out"
-	// EventCancelSwapOutTableName defines the name of event cancel swap out table
+	// EventCompleteSwapOutTableName defines the name of event swap out complete table
+	EventCompleteSwapOutTableName = "event_swap_out_complete"
+	// EventCancelSwapOutTableName defines the name of event swap out cancel table
 	EventCancelSwapOutTableName = "event_cancel_swap_out"
-	// EventCompleteSwapOutTableName defines the name of event complete swap out table
-	EventCompleteSwapOutTableName = "event_complete_swap_out"
 )
 
 // define the list objects const
