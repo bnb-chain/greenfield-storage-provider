@@ -64,6 +64,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: notifyMigrateSwapOutRouterName,
 		},
 		{
+			name:             "Swap out approval",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + SwapOutApprovalPath,
+			shouldMatch:      true,
+			wantedRouterName: swapOutApprovalName,
+		},
+		{
 			name:             "Migrate piece data",
 			router:           gwRouter,
 			method:           http.MethodGet,

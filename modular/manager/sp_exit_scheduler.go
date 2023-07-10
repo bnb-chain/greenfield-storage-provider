@@ -176,7 +176,8 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 
 func (s *SPExitScheduler) subscribeEvents() {
 	go func() {
-		subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
+		// subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
+		subscribeSPExitEventsTicker := time.NewTicker(100 * time.Millisecond)
 		defer subscribeSPExitEventsTicker.Stop()
 		for range subscribeSPExitEventsTicker.C {
 			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
@@ -216,7 +217,8 @@ func (s *SPExitScheduler) subscribeEvents() {
 	}()
 
 	go func() {
-		subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
+		// subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
+		subscribeSwapOutEventsTicker := time.NewTicker(100 * time.Millisecond)
 		defer subscribeSwapOutEventsTicker.Stop()
 		for range subscribeSwapOutEventsTicker.C {
 			if s.lastSubscribedSwapOutBlockHeight >= s.lastSubscribedSPExitBlockHeight {
@@ -1032,9 +1034,11 @@ func GetApprovalAndSendTx(client *gfspclient.GfSpClient, destSP *sptypes.Storage
 	ctx := context.Background()
 	approvalSwapOut, err := client.GetSwapOutApproval(ctx, destSP.GetEndpoint(), originMsg)
 	if err != nil {
+		log.Errorw("failed to get swap out approval from dest sp", "dest_sp", destSP.GetEndpoint(), "error", err)
 		return nil, err
 	}
 	if _, err = client.SwapOut(ctx, approvalSwapOut); err != nil {
+		log.Errorw("failed to send swap out tx to chain", "swap_out_msg", approvalSwapOut, "error", err)
 		return nil, err
 	}
 	return approvalSwapOut, nil
