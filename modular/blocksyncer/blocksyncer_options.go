@@ -245,7 +245,9 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 		if latestBlockHeight == int64(endBlock) {
 			continue
 		}
-		if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
+		log.Info(count*(cycle+1) + startHeight - 1)
+		log.Info(latestBlockHeight)
+		if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
 			startBlock = count*cycle + startHeight
 			endBlock = count*(cycle+1) + startHeight - 1
 		} else {
@@ -264,6 +266,7 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 }
 
 func (b *BlockSyncerModular) fetchData(start, end uint64) {
+	log.Infof("fetch data start:%d end:%d", start, end)
 	wg := &sync.WaitGroup{}
 	wg.Add(int(end - start + 1))
 	for i := start; i <= end; i++ {
