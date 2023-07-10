@@ -237,7 +237,9 @@ type UploadObjectTask interface {
 type ResumableUploadObjectTask interface {
 	ObjectTask
 	// InitResumableUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, complete bool, offset uint64)
+	InitResumableUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, complete bool, offset uint64)
+	// GetVirtualGroupFamilyId returns the object's virtual group family which is bind in bucket.
+	GetVirtualGroupFamilyId() uint32
 	// GetResumeOffset return resumable offset user-supplied parameters
 	GetResumeOffset() uint64
 	// SetResumeOffset Set the `ResumeOffset` provided by the user for subsequent processing in the `HandleResumableUploadObjectTask`.

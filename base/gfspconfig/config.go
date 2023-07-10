@@ -1,18 +1,17 @@
 package gfspconfig
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	"github.com/pelletier/go-toml/v2"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	"github.com/pelletier/go-toml/v2"
 )
 
 type Option = func(cfg *GfSpConfig) error
@@ -106,6 +105,7 @@ type SpAccountConfig struct {
 	OperatorPrivateKey string
 	FundingPrivateKey  string
 	SealPrivateKey     string
+	SealBlsPrivateKey  string
 	ApprovalPrivateKey string
 	GcPrivateKey       string
 	BlsPrivateKey      string

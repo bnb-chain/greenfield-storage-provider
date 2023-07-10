@@ -33,6 +33,7 @@ const (
 	// SpSealPrivKey defines env variable name for sp seal private key
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
 	// SpBlsPrivKey defines env variable name for sp bls private key
+	// SpBlsPrivKey defines env variable name for sp bls private key
 	SpBlsPrivKey = "SIGNER_BLS_PRIV_KEY"
 	// SpGcPrivKey defines env variable name for sp gc private key
 	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
