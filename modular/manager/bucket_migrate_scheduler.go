@@ -209,6 +209,12 @@ func (plan *BucketMigrateExecutePlan) startSPSchedule() {
 		default:
 			log.Debugw("BucketMigrateExecutePlan Start startSPSchedule", "gvgUnitMap", plan.gvgUnitMap)
 			for _, migrateGVGUnit := range plan.gvgUnitMap {
+
+				// Skipping units that have already been scheduled
+				if migrateGVGUnit.migrateStatus != WaitForMigrate {
+					continue
+				}
+
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
 					plan.bucketID, migrateGVGUnit.gvg, migrateGVGUnit.redundancyIndex,
