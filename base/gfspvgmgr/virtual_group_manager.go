@@ -226,9 +226,9 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 	go func() {
 		RefreshMetaTicker := time.NewTicker(RefreshMetaInterval)
 		for range RefreshMetaTicker.C {
-			log.Info("start to refresh virtual group manager meta")
+			// log.Info("start to refresh virtual group manager meta")
 			vgm.refreshMeta()
-			log.Info("finish to refresh virtual group manager meta")
+			// log.Info("finish to refresh virtual group manager meta")
 		}
 	}()
 	return vgm, nil
@@ -376,6 +376,7 @@ func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32) 
 // if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
 func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 	// sleep 2 seconds for waiting a new block
+	// TODO: pre-allocator improve it.
 	time.Sleep(2 * time.Second)
 	vgm.refreshMeta()
 	return nil
