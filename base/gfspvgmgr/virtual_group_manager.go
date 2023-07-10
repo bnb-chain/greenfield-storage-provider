@@ -226,9 +226,9 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 	go func() {
 		RefreshMetaTicker := time.NewTicker(RefreshMetaInterval)
 		for range RefreshMetaTicker.C {
-			log.Info("start to refresh virtual group manager meta")
+			// log.Info("start to refresh virtual group manager meta")
 			vgm.refreshMeta()
-			log.Info("finish to refresh virtual group manager meta")
+			// log.Info("finish to refresh virtual group manager meta")
 		}
 	}()
 	return vgm, nil
