@@ -25,6 +25,7 @@ var (
 	DsnBlockSyncerSwitched = "BLOCK_SYNCER_DSN_SWITCHED"
 	ErrDSNNotSet           = errors.New("dsn config is not set in environment")
 	ErrBlockNotFound       = errors.New("failed to get block from map need retry")
+	ErrHandleEvent         = errors.New("failed to handle event")
 )
 
 const (
