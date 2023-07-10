@@ -251,12 +251,12 @@ func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint stri
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get resp body, StatusCode(%d), Endpoint(%s)", resp.StatusCode, destSPEndpoint)
 	}
-	swapOutSlice, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
+	signedMsg, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
 	if err != nil {
 		return nil, err
 	}
 	swapOut := &virtualgrouptypes.MsgSwapOut{}
-	if err = json.Unmarshal(swapOutSlice, swapOut); err != nil {
+	if err = virtualgrouptypes.ModuleCdc.UnmarshalJSON(signedMsg, swapOut); err != nil {
 		return nil, err
 	}
 	return swapOut, nil
