@@ -69,6 +69,8 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 				select {
 				case <-ctx.Done():
 				default:
+					// TODO: remove it
+					time.Sleep(100 * time.Millisecond)
 					err := e.AskTask(ctx)
 					if err != nil {
 						rand.New(rand.NewSource(time.Now().Unix()))
