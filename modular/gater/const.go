@@ -73,6 +73,8 @@ const (
 	ListObjectsDelimiterQuery = "delimiter"
 	// ListObjectsPrefixQuery defines limits the response to keys that begin with the specified prefix
 	ListObjectsPrefixQuery = "prefix"
+	// ListObjectsIncludeRemovedQuery defines whether include removed objects
+	ListObjectsIncludeRemovedQuery = "include-removed"
 	// GetBucketMetaQuery defines get bucket metadata query, which is used to route request
 	GetBucketMetaQuery = "bucket-meta"
 	// GetObjectMetaQuery defines get object metadata query, which is used to route request
