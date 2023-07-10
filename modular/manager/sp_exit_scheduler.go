@@ -177,28 +177,28 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 }
 
 func (s *SPExitScheduler) subscribeEvents() {
-	subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
-	subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
-	for {
-		select {
-		case <-subscribeSPExitEventsTicker.C:
+	go func() {
+		subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
+		defer subscribeSPExitEventsTicker.Stop()
+		for range subscribeSPExitEventsTicker.C {
 			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
 			if subscribeError != nil {
 				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
-				return
+				continue
 			}
+			log.Infow("loop subscribe sp exit event", "sp_exit_events", spExitEvents)
 			if spExitEvents.Event != nil {
 				if s.isExiting || s.isExited {
-					return
+					continue
 				}
 				plan, err := s.produceSwapOutPlan(false)
 				if err != nil {
 					log.Errorw("failed to produce sp exit execute plan", "error", err)
-					return
+					continue
 				}
 				if startErr := plan.Start(); startErr != nil {
 					log.Errorw("failed to start sp exit execute plan", "error", startErr)
-					return
+					continue
 				}
 
 				s.swapOutPlan = plan
@@ -210,24 +210,27 @@ func (s *SPExitScheduler) subscribeEvents() {
 			updateErr := s.manager.baseApp.GfSpDB().UpdateSPExitSubscribeProgress(s.lastSubscribedSPExitBlockHeight + 1)
 			if updateErr != nil {
 				log.Errorw("failed to update sp exit progress", "error", updateErr)
-				return
+				continue
 			}
 			s.lastSubscribedSPExitBlockHeight++
 			log.Infow("sp exit subscribe progress", "last_subscribed_block_height", s.lastSubscribedSPExitBlockHeight)
+		}
+	}()
 
-		case <-subscribeSwapOutEventsTicker.C:
-			if !s.isExiting {
-				return
-			}
+	go func() {
+		subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
+		defer subscribeSwapOutEventsTicker.Stop()
+		for range subscribeSwapOutEventsTicker.C {
 			if s.lastSubscribedSwapOutBlockHeight >= s.lastSubscribedSPExitBlockHeight {
-				return
+				continue
 			}
 
 			swapOutEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSwapOutEvents(context.Background(), s.lastSubscribedSwapOutBlockHeight+1, s.selfSP.GetId())
 			if subscribeError != nil {
 				log.Errorw("failed to subscribe swap out event", "error", subscribeError)
-				return
+				continue
 			}
+			log.Infow("loop subscribe swap out event", "swap_out_events", swapOutEvents)
 			for _, swapOutEvent := range swapOutEvents {
 				if swapOutEvent.GetCompleteEvents() != nil {
 					s.updateSPExitExecutePlan(swapOutEvent.GetCompleteEvents())
@@ -237,13 +240,12 @@ func (s *SPExitScheduler) subscribeEvents() {
 			updateErr := s.manager.baseApp.GfSpDB().UpdateSwapOutSubscribeProgress(s.lastSubscribedSwapOutBlockHeight + 1)
 			if updateErr != nil {
 				log.Errorw("failed to update swap out progress", "error", updateErr)
-				return
+				continue
 			}
 			s.lastSubscribedSwapOutBlockHeight++
 			log.Infow("swap out subscribe progress", "last_subscribed_block_height", s.lastSubscribedSwapOutBlockHeight)
-
 		}
-	}
+	}()
 }
 
 func (s *SPExitScheduler) updateSPExitExecutePlan(event *virtualgrouptypes.EventCompleteSwapOut) error {
@@ -318,6 +320,7 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 		plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
 	}
 
+	log.Infow("succeed to produce swap out plan")
 	err = plan.storeToDB()
 	return plan, err
 }

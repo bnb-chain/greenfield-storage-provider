@@ -242,5 +242,6 @@ type MetadataConfig struct {
 type ManagerConfig struct {
 	EnableLoadTask                         bool
 	SubscribeSPExitEventIntervalSec        int
+	SubscribeSwapOutExitEventIntervalSec   int
 	SubscribeBucketMigrateEventIntervalSec int
 }
