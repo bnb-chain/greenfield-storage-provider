@@ -3,6 +3,7 @@ package gater
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
+
+const ReadHeaderTimeout = 20 * time.Minute
 
 var _ module.Modular = &GateModular{}
 
@@ -50,8 +53,9 @@ func (g *GateModular) server(ctx context.Context) {
 	}
 	g.RegisterHandler(router)
 	server := &http.Server{
-		Addr:    g.httpAddress,
-		Handler: router,
+		Addr:              g.httpAddress,
+		Handler:           router,
+		ReadHeaderTimeout: ReadHeaderTimeout,
 	}
 	g.httpServer = server
 	if err := server.ListenAndServe(); err != nil {
