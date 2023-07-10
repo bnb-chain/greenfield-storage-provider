@@ -256,10 +256,10 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 		}
 
 		processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
-		if processedHeight != 0 && startBlock-processedHeight > MaxHeightGapFactor*count {
-			time.Sleep(time.Second)
-			continue
-		}
+		//if processedHeight != 0 && startBlock-processedHeight > MaxHeightGapFactor*count {
+		//	time.Sleep(time.Second)
+		//	continue
+		//}
 		b.fetchData(startBlock, endBlock)
 		cycle++
 	}
