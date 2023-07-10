@@ -150,7 +150,7 @@ func (r *RequestContext) VerifySignature() (string, error) {
 	}
 	v2SignaturePrefix := signaturePrefix(SignTypeV2, SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
-		return "", nil
+		return "signV2", nil
 	}
 
 	OffChainSignaturePrefix := signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)

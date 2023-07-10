@@ -136,6 +136,14 @@ func (m *GfSpRecoverPieceTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
 }
 
+func (m *GfSpRecoverPieceTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpRecoverPieceTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
+}
+
 func (m *GfSpRecoverPieceTask) SetLogs(logs string) {
 	m.GetTask().SetLogs(logs)
 }
