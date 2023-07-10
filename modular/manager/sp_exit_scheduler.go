@@ -66,26 +66,26 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		log.Errorw("failed to init sp exit scheduler due to init subscribe sp exit progress", "error", err)
 		return err
 	}
-	spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(),
+	_, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(),
 		s.lastSubscribedSPExitBlockHeight, s.manager.baseApp.OperatorAddress())
 	log.Infow("print blockID", "lastSubscribedSPExitBlockHeight", s.lastSubscribedSwapOutBlockHeight)
 	if subscribeError != nil {
 		log.Errorw("failed to init due to subscribe sp exit", "error", subscribeError)
 		return subscribeError
 	}
-	s.isExiting = spExitEvents.GetEvent() != nil
-	s.isExited = spExitEvents.GetCompleteEvent() != nil
+	// s.isExiting = spExitEvents.GetEvent() != nil
+	// s.isExited = spExitEvents.GetCompleteEvent() != nil
 
 	if s.lastSubscribedSwapOutBlockHeight, err = s.manager.baseApp.GfSpDB().QuerySwapOutSubscribeProgress(); err != nil {
 		log.Errorw("failed to init sp exit scheduler due to init subscribe swap out progress", "error", err)
 		return err
 	}
-	if s.isExiting {
-		if s.swapOutPlan, err = s.produceSwapOutPlan(true); err != nil {
-			log.Errorw("failed to init sp exit scheduler due to plan init", "error", err)
-			return err
-		}
-	}
+	// if s.isExiting {
+	// 	if s.swapOutPlan, err = s.produceSwapOutPlan(true); err != nil {
+	// 		log.Errorw("failed to init sp exit scheduler due to plan init", "error", err)
+	// 		return err
+	// 	}
+	// }
 
 	s.taskRunner = NewDestSPTaskRunner(s.manager, s.manager.virtualGroupManager)
 	return s.taskRunner.LoadFromDB()
