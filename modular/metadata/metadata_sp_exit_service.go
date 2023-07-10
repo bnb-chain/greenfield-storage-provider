@@ -387,10 +387,6 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		return nil, err
 	}
 
-	if event == nil && completeEvent == nil {
-		return nil, ErrNoEvents
-	}
-
 	if event != nil {
 		spEvent = &virtual_types.EventStorageProviderExit{
 			StorageProviderId: event.StorageProviderId,
