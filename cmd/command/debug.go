@@ -93,7 +93,7 @@ func createBucketApproval(ctx *cli.Context) error {
 		PrimarySpApproval: &storagetypes.Approval{},
 	}
 	task := &gfsptask.GfSpCreateBucketApprovalTask{}
-	task.InitApprovalCreateBucketTask(msg, coretask.UnSchedulingPriority)
+	task.InitApprovalCreateBucketTask("cmd_debug", msg, coretask.UnSchedulingPriority)
 	allow, res, err := client.AskCreateBucketApproval(context.Background(), task)
 	if err != nil {
 		return err
@@ -120,7 +120,7 @@ func createObjectApproval(ctx *cli.Context) error {
 		PrimarySpApproval: &storagetypes.Approval{},
 	}
 	task := &gfsptask.GfSpCreateObjectApprovalTask{}
-	task.InitApprovalCreateObjectTask(msg, coretask.UnSchedulingPriority)
+	task.InitApprovalCreateObjectTask("cmd_debug", msg, coretask.UnSchedulingPriority)
 	allow, res, err := client.AskCreateObjectApproval(context.Background(), task)
 	if err != nil {
 		return err

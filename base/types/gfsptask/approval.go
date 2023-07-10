@@ -16,17 +16,21 @@ var _ coretask.ApprovalCreateBucketTask = &GfSpCreateBucketApprovalTask{}
 var _ coretask.ApprovalCreateObjectTask = &GfSpCreateObjectApprovalTask{}
 var _ coretask.ApprovalReplicatePieceTask = &GfSpReplicatePieceApprovalTask{}
 
-func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(bucket *storagetypes.MsgCreateBucket, priority coretask.TPriority) {
+func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(
+	account string, bucket *storagetypes.MsgCreateBucket, priority coretask.TPriority) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.GetTask().SetCreateTime(time.Now().Unix())
 	m.GetTask().SetUpdateTime(time.Now().Unix())
+	m.SetUserAddress(account)
 	m.SetCreateBucketInfo(bucket)
 	m.SetPriority(priority)
 }
 
 func (m *GfSpCreateBucketApprovalTask) Key() coretask.TKey {
-	return GfSpCreateBucketApprovalTaskKey(m.GetCreateBucketInfo().GetBucketName(),
+	return GfSpCreateBucketApprovalTaskKey(
+		m.GetCreateBucketInfo().GetBucketName(),
+		m.GetUserAddress(),
 		int32(m.GetCreateBucketInfo().GetVisibility()))
 }
 
@@ -122,6 +126,14 @@ func (m *GfSpCreateBucketApprovalTask) Error() error {
 	return m.GetTask().Error()
 }
 
+func (m *GfSpCreateBucketApprovalTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpCreateBucketApprovalTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
+}
+
 func (m *GfSpCreateBucketApprovalTask) SetLogs(logs string) {
 	m.GetTask().SetLogs(logs)
 }
@@ -151,12 +163,14 @@ func (m *GfSpCreateBucketApprovalTask) SetCreateBucketInfo(bucket *storagetypes.
 }
 
 func (m *GfSpCreateObjectApprovalTask) InitApprovalCreateObjectTask(
+	account string,
 	object *storagetypes.MsgCreateObject,
 	priority coretask.TPriority) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.GetTask().SetCreateTime(time.Now().Unix())
 	m.GetTask().SetUpdateTime(time.Now().Unix())
+	m.SetUserAddress(account)
 	m.SetCreateObjectInfo(object)
 	m.SetPriority(priority)
 }
@@ -165,6 +179,7 @@ func (m *GfSpCreateObjectApprovalTask) Key() coretask.TKey {
 	return GfSpCreateObjectApprovalTaskKey(
 		m.GetCreateObjectInfo().GetBucketName(),
 		m.GetCreateObjectInfo().GetObjectName(),
+		m.GetUserAddress(),
 		int32(m.GetCreateObjectInfo().GetVisibility()))
 }
 
@@ -254,6 +269,14 @@ func (m *GfSpCreateObjectApprovalTask) EstimateLimit() corercmgr.Limit {
 	l := &gfsplimit.GfSpLimit{}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
+}
+
+func (m *GfSpCreateObjectApprovalTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpCreateObjectApprovalTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
 }
 
 func (m *GfSpCreateObjectApprovalTask) SetLogs(logs string) {
@@ -404,6 +427,14 @@ func (m *GfSpReplicatePieceApprovalTask) EstimateLimit() corercmgr.Limit {
 	l := &gfsplimit.GfSpLimit{}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
+}
+
+func (m *GfSpReplicatePieceApprovalTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpReplicatePieceApprovalTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
 }
 
 func (m *GfSpReplicatePieceApprovalTask) SetLogs(logs string) {
