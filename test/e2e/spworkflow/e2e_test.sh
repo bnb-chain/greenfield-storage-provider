@@ -31,8 +31,8 @@ function greenfield_chain() {
   make proto-gen & make build
 
   # start Greenfield chain
-  bash ./deployment/localup/localup.sh all 1 7
-  bash ./deployment/localup/localup.sh export_sps 1 7 > sp.json
+  bash ./deployment/localup/localup.sh all 1 8
+  bash ./deployment/localup/localup.sh export_sps 1 8 > sp.json
 
   # transfer some BNB tokens
   transfer_account
